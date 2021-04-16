@@ -1,0 +1,22 @@
+{
+  "name": "foo",
+  "version": "0.1.0",
+  "publishConfig": {
+    "main": "./lib/index.js",
+    "types": "./lib/index.d.ts"
+  },
+  "main": "./src/index.ts",
+  "scripts": {
+    "build": "monorepo-scripts build",
+    "lint": "monorepo-scripts lint",
+    "test": "monorepo-scripts test",
+    "types": "monorepo-scripts types"
+  },
+  "dependencies": {
+    "bar": "*"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.22",
+    "monorepo-scripts": "*"
+  }
+}

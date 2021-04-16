@@ -1,0 +1,22 @@
+{
+  "name": "monorepo-template",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "scripts"
+    ]
+  },
+  "scripts": {
+    "clean": "git clean -fdx -e node_modules",
+    "build": "lage build",
+    "types": "lage types",
+    "test": "lage test",
+    "lint": "lage lint",
+    "lage": "lage"
+  },
+  "devDependencies": {
+    "lage": "0.29.0",
+    "beachball": "^2.1.0"
+  }
+}
