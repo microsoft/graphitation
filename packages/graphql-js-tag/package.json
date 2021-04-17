@@ -1,5 +1,5 @@
 {
-  "name": "graphql-js-tag",
+  "name": "@graphitation/graphql-js-tag",
   "description": "A simple graphql-js AST based `graphql` tagged template function.",
   "version": "0.0.1",
   "main": "./src/index.ts",
