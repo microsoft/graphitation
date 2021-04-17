@@ -322,14 +322,16 @@ fragment RelayMockPayloadGeneratorTestFragment on User {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
+    "__typename": "Query",
     "node": {
       "__typename": "User",
-      "id": "<mock-id-1>",
+      "id": "<mock-id-2>",
       "name": "<mock-value-for-field-\\"name\\">",
       "profile_picture": {
+        "__typename": "Image",
         "uri": "<mock-value-for-field-\\"uri\\">",
-        "width": "<mock-value-for-field-\\"width\\">",
-        "height": "<mock-value-for-field-\\"height\\">"
+        "width": 42,
+        "height": 42
       }
     }
   }
@@ -643,10 +645,8 @@ query RelayMockPayloadGeneratorTest2Query {
 }
 
 fragment RelayMockPayloadGeneratorTest1Fragment on Actor {
-  __isActor: __typename
   id
   ... on Named {
-    __isNamed: __typename
     name
   }
   ... on User {
@@ -661,13 +661,13 @@ fragment RelayMockPayloadGeneratorTest1Fragment on Actor {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
+    "__typename": "Query",
     "viewer": {
+      "__typename": "Viewer",
       "actor": {
-        "__typename": "User",
-        "__isActor": true,
-        "id": "<mock-id-1>",
-        "__isNamed": true,
+        "id": "<mock-id-2>",
         "name": "<mock-value-for-field-\\"name\\">",
+        "__typename": "User",
         "firstName": "<mock-value-for-field-\\"firstName\\">",
         "lastName": "<mock-value-for-field-\\"lastName\\">"
       }
