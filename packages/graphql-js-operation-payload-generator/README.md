@@ -37,7 +37,7 @@ This will output something like the following:
 {
   "data": {
     "__typename": "Query",
-    "node": {
+    "user": {
       "__typename": "User",
       "id": "<mock-id-2>",
       "name": "<mock-value-for-field-\\"name\\">",

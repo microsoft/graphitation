@@ -27,7 +27,7 @@ export type MockData = Record<string, unknown>;
 export type ValueResolver = (
   typeName: string | null,
   context: MockResolverContext,
-  plural: boolean | null,
+  plural: boolean,
   defaultValue?: unknown
 ) => unknown;
 
