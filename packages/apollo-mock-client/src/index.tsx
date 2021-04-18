@@ -6,7 +6,6 @@ import {
   FetchResult,
   ApolloClient,
   InMemoryCache,
-  ApolloProvider,
   NormalizedCacheObject,
 } from "@apollo/client";
 import invariant from "invariant";
@@ -41,16 +40,16 @@ export interface ApolloMockClient
 
 class MockLink extends ApolloLink {
   public schema: GraphQLSchema;
-  public mock: _MockEnvironment;
+  public mock: Mock;
 
   constructor(schema: GraphQLSchema) {
     super();
     this.schema = schema;
-    this.mock = new _MockEnvironment();
+    this.mock = new Mock();
   }
 
   public mockClear() {
-    this.mock = new _MockEnvironment();
+    this.mock = new Mock();
   }
 
   public request(operation: Operation): Observable<FetchResult> | null {
@@ -61,7 +60,7 @@ class MockLink extends ApolloLink {
   }
 }
 
-class _MockEnvironment implements MockFunctions {
+class Mock implements MockFunctions {
   private operations: [
     operation: Operation,
     observer: ZenObservable.SubscriptionObserver<FetchResult>
@@ -71,7 +70,6 @@ class _MockEnvironment implements MockFunctions {
     this.operations = [];
   }
 
-  // TODO: This should remain file private
   public addOperation(
     operation: Operation,
     observer: ZenObservable.SubscriptionObserver<FetchResult>
@@ -187,44 +185,5 @@ export function createMockClient(schema: GraphQLSchema): ApolloMockClient {
     link,
   }) as ApolloMockClient;
 
-  // Object.defineProperties(client, {
-  //   mock: {
-  //     get() {
-  //       return link.mock;
-  //     },
-  //   },
-  //   mockClear: {
-  //     value: () => link.mockClear(),
-  //   },
-  // });
-
   return Object.assign(client, ext);
 }
-
-// export const ApolloMockProvider: React.FC<{
-//   environment: MockEnvironment;
-// }> = ({ children, environment }) => {
-//   // Build a list of abstract types and their possible types.
-//   // TODO: Cache this on the schema?
-//   const schema = (environment as _MockEnvironment).schema;
-//   const possibleTypes: Record<string, string[]> = {};
-//   Object.keys(schema.getTypeMap()).forEach((typeName) => {
-//     const type = schema.getType(typeName);
-//     assertType(type);
-//     if (isAbstractType(type)) {
-//       possibleTypes[typeName] = schema
-//         .getPossibleTypes(type)
-//         .map((possibleType) => possibleType.name);
-//     }
-//   });
-
-//   const client = new ApolloClient({
-//     cache: new InMemoryCache({
-//       possibleTypes,
-//       addTypename: false,
-//     }),
-//     link: new MockLink(environment as _MockEnvironment),
-//   });
-
-//   return <ApolloProvider client={client}>{children}</ApolloProvider>;
-// };
