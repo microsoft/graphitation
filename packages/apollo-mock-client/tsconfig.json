@@ -8,5 +8,8 @@
     "jsx": "react"
   },
   "include": ["src"],
-  "references": []
+  "references": [
+    { "path": "../graphql-js-tag" },
+    { "path": "../graphql-js-operation-payload-generator" }
+  ]
 }
