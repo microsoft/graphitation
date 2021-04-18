@@ -22,16 +22,17 @@ exports[`ReactRelayTestMocker with Containers Subscription Tests should resolve 
   Feedback: 
   &lt;mock-value-for-field-"text"&gt;
   <span
-    reactionType="Viewer does not like it"
-    testID="reaction"
-  />
+    id="reaction"
+  >
+    Viewer does not like it
+  </span>
 </div>
 `;
 
 exports[`ReactRelayTestMocker with Containers Test Mutations should reject mutation: Should render error message 1`] = `
 <div>
   <span
-    testID="errorMessage"
+    id="errorMessage"
   >
     Uh-oh
   </span>
@@ -39,8 +40,8 @@ exports[`ReactRelayTestMocker with Containers Test Mutations should reject mutat
   &lt;mock-value-for-field-"text"&gt;
   <button
     disabled={false}
+    id="likeButton"
     onClick={[Function]}
-    testID="likeButton"
   >
     Like
   </button>
@@ -53,8 +54,8 @@ exports[`ReactRelayTestMocker with Containers Test Mutations should resolve muta
   &lt;mock-value-for-field-"text"&gt;
   <button
     disabled={false}
+    id="likeButton"
     onClick={[Function]}
-    testID="likeButton"
   >
     Like
   </button>
@@ -67,8 +68,8 @@ exports[`ReactRelayTestMocker with Containers Test Mutations should resolve muta
   &lt;mock-value-for-field-"text"&gt;
   <button
     disabled={true}
+    id="likeButton"
     onClick={[Function]}
-    testID="likeButton"
   >
     Unlike
   </button>
@@ -81,8 +82,8 @@ exports[`ReactRelayTestMocker with Containers Test Mutations should resolve muta
   &lt;mock-value-for-field-"text"&gt;
   <button
     disabled={false}
+    id="likeButton"
     onClick={[Function]}
-    testID="likeButton"
   >
     Unlike
   </button>

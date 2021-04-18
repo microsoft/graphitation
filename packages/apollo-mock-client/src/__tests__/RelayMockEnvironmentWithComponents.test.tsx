@@ -93,9 +93,9 @@ describe("ReactRelayTestMocker with Containers", () => {
         if (props) {
           return `My id ${props.user.id} and name is ${props.user.name}` as any;
         } else if (error) {
-          return React.createElement("div", { testID: "error" }, error.message);
+          return <div id="error">{error.message}</div>;
         }
-        return React.createElement("div", { testID: "loading" }, "Loading...");
+        return <div id="loading">Loading...</div>;
       };
       ReactTestRenderer.act(() => {
         testComponentTree = ReactTestRenderer.create(
@@ -123,7 +123,7 @@ describe("ReactRelayTestMocker with Containers", () => {
     it("should resolve query", async () => {
       // Should render loading state
       expect(() => {
-        testComponentTree.root.find((node) => node.props.testID === "loading");
+        testComponentTree.root.find((node) => node.props.id === "loading");
       }).not.toThrow();
 
       await ReactTestRenderer.act(async () => {
@@ -145,7 +145,7 @@ describe("ReactRelayTestMocker with Containers", () => {
       });
 
       const errorMessage = testComponentTree.root.find(
-        (node) => node.props.testID === "error"
+        (node) => node.props.id === "error"
       );
       // Should render error
       expect(errorMessage.props.children).toBe("Uh-oh");
@@ -161,7 +161,7 @@ describe("ReactRelayTestMocker with Containers", () => {
       });
 
       const errorMessage = testComponentTree.root.find(
-        (node) => node.props.testID === "error"
+        (node) => node.props.id === "error"
       );
       // Should render error
       expect(errorMessage.props.children).toBe(
@@ -206,7 +206,7 @@ describe("ReactRelayTestMocker with Containers", () => {
     //     (props) => {
     //       return (
     //         <img
-    //           testID="profile_picture"
+    //           id="profile_picture"
     //           src={props.user.profile_picture.uri}
     //           alt={props.user.name}
     //         />
@@ -261,7 +261,7 @@ describe("ReactRelayTestMocker with Containers", () => {
         })
       );
       const image = testComponentTree.root.find(
-        (node) => node.props.testID === "profile_picture"
+        (node) => node.props.id === "profile_picture"
       );
       expect(image.props.src).toBe("http://test.com/image-url");
     });
@@ -306,7 +306,7 @@ describe("ReactRelayTestMocker with Containers", () => {
     //     const [isLoading, setIsLoading] = useState(props.relay.isLoading());
     //     return (
     //       <>
-    //         <ul testID="list">
+    //         <ul id="list">
     //           {props.user.friends.edges.map(({ node, cursor }) => {
     //             return (
     //               <li key={node.id}>
@@ -316,7 +316,7 @@ describe("ReactRelayTestMocker with Containers", () => {
     //             );
     //           })}
     //         </ul>
-    //         {isLoading && <div testID="loadingMore">Loading more...</div>}
+    //         {isLoading && <div id="loadingMore">Loading more...</div>}
     //         <button
     //           disabled={isLoading || !props.relay.hasMore()}
     //           onClick={() => {
@@ -325,7 +325,7 @@ describe("ReactRelayTestMocker with Containers", () => {
     //               setIsLoading(false);
     //             });
     //           }}
-    //           testID="loadMore"
+    //           id="loadMore"
     //         />
     //       </>
     //     );
@@ -375,9 +375,9 @@ describe("ReactRelayTestMocker with Containers", () => {
     //             </div>
     //           );
     //         } else if (error) {
-    //           return <div testID="error">{error.message}</div>;
+    //           return <div id="error">{error.message}</div>;
     //         }
-    //         return <div testID="loading">Loading...</div>;
+    //         return <div id="loading">Loading...</div>;
     //       }}
     //     />
     //   );
@@ -410,7 +410,7 @@ describe("ReactRelayTestMocker with Containers", () => {
         );
       });
       const list = testComponentTree.root.find(
-        (node) => node.props.testID === "list"
+        (node) => node.props.id === "list"
       );
       expect(list.props.children).toBeInstanceOf(Array);
       expect(list.props.children.length).toEqual(1);
@@ -450,7 +450,7 @@ describe("ReactRelayTestMocker with Containers", () => {
         );
       });
       const loadMore = testComponentTree.root.find(
-        (node) => node.props.testID === "loadMore"
+        (node) => node.props.id === "loadMore"
       );
       expect(loadMore.props.disabled).toBe(false);
       ReactTestRenderer.act(() => {
@@ -458,9 +458,7 @@ describe("ReactRelayTestMocker with Containers", () => {
       });
       // Should show preloader
       expect(() => {
-        testComponentTree.root.find(
-          (node) => node.props.testID === "loadingMore"
-        );
+        testComponentTree.root.find((node) => node.props.id === "loadingMore");
       }).not.toThrow();
 
       // Resolve pagination request
@@ -490,11 +488,11 @@ describe("ReactRelayTestMocker with Containers", () => {
         );
       });
       const list = testComponentTree.root.find(
-        (node) => node.props.testID === "list"
+        (node) => node.props.id === "list"
       );
       expect(list.props.children).toBeInstanceOf(Array);
       expect(list.props.children.length).toEqual(2);
-      const listItems = list.props.children.map((li) => li.props.children);
+      const listItems = list.props.children.map((li: any) => li.props.children);
       expect(listItems[0].includes("Alice")).toEqual(true);
       expect(listItems[1].includes("Bob")).toEqual(true);
       expect(testComponentTree).toMatchSnapshot(
@@ -542,11 +540,11 @@ describe("ReactRelayTestMocker with Containers", () => {
     //     const [isLoading, setIsLoading] = useState(false);
     //     return (
     //       <>
-    //         <div testID="hometown">{props.page.name}</div>
+    //         <div id="hometown">{props.page.name}</div>
     //         <div>Websites: {props.page.websites}</div>
-    //         {isLoading && <div testID="refetching">Refetching...</div>}
+    //         {isLoading && <div id="refetching">Refetching...</div>}
     //         <button
-    //           testID="refetch"
+    //           id="refetch"
     //           disabled={isLoading}
     //           onClick={() => {
     //             setIsLoading(true);
@@ -589,9 +587,9 @@ describe("ReactRelayTestMocker with Containers", () => {
     //             </div>
     //           );
     //         } else if (error) {
-    //           return <div testID="error">{error.message}</div>;
+    //           return <div id="error">{error.message}</div>;
     //         }
-    //         return <div testID="loading">Loading...</div>;
+    //         return <div id="loading">Loading...</div>;
     //       }}
     //     />
     //   );
@@ -613,21 +611,19 @@ describe("ReactRelayTestMocker with Containers", () => {
       );
       // Make sure we're rendered correct hometown
       expect(
-        testComponentTree.root.find((node) => node.props.testID === "hometown")
+        testComponentTree.root.find((node) => node.props.id === "hometown")
           .children
       ).toEqual(["PHL"]);
 
       const refetch = testComponentTree.root.find(
-        (node) => node.props.testID === "refetch"
+        (node) => node.props.id === "refetch"
       );
       ReactTestRenderer.act(() => {
         refetch.props.onClick();
       });
       // Should load loading state
       expect(() => {
-        testComponentTree.root.find(
-          (node) => node.props.testID === "refetching"
-        );
+        testComponentTree.root.find((node) => node.props.id === "refetching");
       }).not.toThrow();
 
       // Verify the query params
@@ -651,7 +647,7 @@ describe("ReactRelayTestMocker with Containers", () => {
         })
       );
       expect(
-        testComponentTree.root.find((node) => node.props.testID === "hometown")
+        testComponentTree.root.find((node) => node.props.id === "hometown")
           .children
       ).toEqual(["SFO"]);
       expect(testComponentTree).toMatchSnapshot(
@@ -729,11 +725,11 @@ describe("ReactRelayTestMocker with Containers", () => {
         return (
           <div>
             {errorMessage != null && (
-              <span testID="errorMessage">{errorMessage}</span>
+              <span id="errorMessage">{errorMessage}</span>
             )}
             Feedback: {props.feedback.message.text}
             <button
-              testID="likeButton"
+              id="likeButton"
               disabled={busy}
               onClick={() => {
                 setBusy(true);
@@ -763,9 +759,9 @@ describe("ReactRelayTestMocker with Containers", () => {
         if (props) {
           return <FeedbackComponent feedback={props.feedback} />;
         } else if (error) {
-          return React.createElement("div", { testID: "error" }, error.message);
+          return <div id="error">error.message</div>;
         }
-        return React.createElement("div", { testID: "loading" }, "Loading...");
+        return <div id="loading">Loading...</div>;
       };
       ReactTestRenderer.act(() => {
         testComponentTree = ReactTestRenderer.create(
@@ -794,7 +790,7 @@ describe("ReactRelayTestMocker with Containers", () => {
 
     it("should resolve mutation", async () => {
       const likeButton = testComponentTree.root.find(
-        (node) => node.props.testID === "likeButton"
+        (node) => node.props.id === "likeButton"
       );
       expect(likeButton.props.disabled).toBe(false);
       expect(likeButton.props.children).toEqual("Like");
@@ -836,7 +832,7 @@ describe("ReactRelayTestMocker with Containers", () => {
 
     it("should reject mutation", async () => {
       const likeButton = testComponentTree.root.find(
-        (node) => node.props.testID === "likeButton"
+        (node) => node.props.id === "likeButton"
       );
       // Should apply optimistic updates
       ReactTestRenderer.act(() => {
@@ -920,14 +916,11 @@ describe("ReactRelayTestMocker with Containers", () => {
         return (
           <div>
             Feedback: {props.feedback.message.text}
-            <span
-              testID="reaction"
-              reactionType={
-                props.feedback.doesViewerLike ?? false
-                  ? "Viewer likes it"
-                  : "Viewer does not like it"
-              }
-            />
+            <span id="reaction">
+              {props.feedback.doesViewerLike ?? false
+                ? "Viewer likes it"
+                : "Viewer does not like it"}
+            </span>
           </div>
         );
       }
@@ -943,9 +936,9 @@ describe("ReactRelayTestMocker with Containers", () => {
         if (props) {
           return <FeedbackComponent feedback={props.feedback} />;
         } else if (error) {
-          return React.createElement("div", { testID: "error" }, error.message);
+          return <div id="error">error.message</div>;
         }
-        return React.createElement("div", { testID: "loading" }, "Loading...");
+        return <div id="loading">Loading...</div>;
       };
       ReactTestRenderer.act(() => {
         testComponentTree = ReactTestRenderer.create(
@@ -978,9 +971,9 @@ describe("ReactRelayTestMocker with Containers", () => {
       });
 
       const reaction = testComponentTree.root.find(
-        (node) => node.props.testID === "reaction"
+        (node) => node.props.id === "reaction"
       );
-      expect(reaction.props.reactionType).toBe("Viewer does not like it");
+      expect(reaction.props.children).toBe("Viewer does not like it");
 
       const operation = client.mock.getMostRecentOperation();
       expect(getOperationName(operation.query)).toBe(
@@ -1008,12 +1001,12 @@ describe("ReactRelayTestMocker with Containers", () => {
         );
         await delay();
       });
-      expect(reaction.props.reactionType).toBe("Viewer likes it");
+      expect(reaction.props.children).toBe("Viewer likes it");
     });
   });
 
   describe("Multiple Query Renderers", () => {
-    let testComponentTree;
+    let testComponentTree: ReactTestRenderer.ReactTestRenderer;
 
     beforeEach(() => {
       const UserQuery = graphql`
@@ -1046,7 +1039,7 @@ describe("ReactRelayTestMocker with Containers", () => {
             variables={{ userId: "my-user-id" }}
             render={({ error, props }) => {
               if (props) {
-                return <div testID="user">{props.user.name}</div>;
+                return <div id="user">{props.user.name}</div>;
               } else if (error) {
                 return <div>{error.message}</div>;
               }
@@ -1059,7 +1052,7 @@ describe("ReactRelayTestMocker with Containers", () => {
             variables={{ pageId: "my-page-id" }}
             render={({ error, props }) => {
               if (props) {
-                return <div testID="page">{props.page.name}</div>;
+                return <div id="page">{props.page.name}</div>;
               } else if (error) {
                 return <div>{error.message}</div>;
               }
@@ -1105,12 +1098,10 @@ describe("ReactRelayTestMocker with Containers", () => {
         })
       );
       expect(
-        testComponentTree.root.find((node) => node.props.testID === "user")
-          .children
+        testComponentTree.root.find((node) => node.props.id === "user").children
       ).toEqual(["Alice"]);
       expect(
-        testComponentTree.root.find((node) => node.props.testID === "page")
-          .children
+        testComponentTree.root.find((node) => node.props.id === "page").children
       ).toEqual(["My Page"]);
       expect(testComponentTree).toMatchSnapshot();
     });
@@ -1138,9 +1129,9 @@ describe("ReactRelayTestMocker with Containers", () => {
           variables={{ userId: "my-user-id" }}
           render={({ error, props }) => {
             if (props) {
-              return <div testID="user">{props.user.name}</div>;
+              return <div id="user">{props.user.name}</div>;
             } else if (error) {
-              return <div testID="error">{error.message}</div>;
+              return <div id="error">{error.message}</div>;
             }
             return <div>Loading...</div>;
           }}
