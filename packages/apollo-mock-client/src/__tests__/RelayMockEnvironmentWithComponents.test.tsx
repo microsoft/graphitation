@@ -1075,7 +1075,7 @@ describe("ReactRelayTestMocker with Containers", () => {
   });
 
   describe("resolve/reject next with components", () => {
-    let TestComponent;
+    let TestComponent: React.FC;
 
     beforeEach(() => {
       const UserQuery = graphql`
@@ -1089,41 +1089,45 @@ describe("ReactRelayTestMocker with Containers", () => {
         }
       `;
 
-      TestComponent = () => (
-        <QueryRenderer
-          environment={client}
-          query={UserQuery}
-          variables={{ userId: "my-user-id" }}
-          render={({ error, props }) => {
-            if (props) {
-              return <div id="user">{props.user.name}</div>;
-            } else if (error) {
-              return <div id="error">{error.message}</div>;
-            }
-            return <div>Loading...</div>;
-          }}
-        />
-      );
+      TestComponent = () => {
+        const { data: props, error } = useQuery<{
+          user: { id: string; name: string };
+        }>(UserQuery);
+        if (props) {
+          return <div id="user">{props.user.name}</div>;
+        } else if (error) {
+          return <div id="error">{error.message}</div>;
+        }
+        return <div id="loading">Loading...</div>;
+      };
     });
 
-    xit("should resolve next operation", () => {
+    it("should resolve next operation", async () => {
       client.mock.queueOperationResolver((operation) =>
         MockPayloadGenerator.generate(operation)
       );
       let testComponentTree;
-      ReactTestRenderer.act(() => {
-        testComponentTree = ReactTestRenderer.create(<TestComponent />);
+      await ReactTestRenderer.act(async () => {
+        testComponentTree = ReactTestRenderer.create(
+          <ApolloProvider client={client}>
+            <TestComponent />
+          </ApolloProvider>
+        );
       });
       expect(testComponentTree).toMatchSnapshot(
         "should render component with the data"
       );
     });
 
-    xit("should reject next operation", () => {
+    it("should reject next operation", async () => {
       client.mock.queueOperationResolver(() => new Error("Uh-oh"));
       let testComponentTree;
-      ReactTestRenderer.act(() => {
-        testComponentTree = ReactTestRenderer.create(<TestComponent />);
+      await ReactTestRenderer.act(async () => {
+        testComponentTree = ReactTestRenderer.create(
+          <ApolloProvider client={client}>
+            <TestComponent />
+          </ApolloProvider>
+        );
       });
       expect(testComponentTree).toMatchSnapshot(
         "should render component with the error"

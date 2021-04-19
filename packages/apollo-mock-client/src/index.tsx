@@ -28,6 +28,10 @@ export interface OperationDescriptor {
   readonly request: RequestDescriptor;
 }
 
+type OperationMockResolver = (
+  operation: OperationDescriptor
+) => MockData | Error | undefined | null;
+
 interface MockFunctions {
   getAllOperations(): OperationDescriptor[];
   getMostRecentOperation(): OperationDescriptor;
@@ -80,6 +84,8 @@ interface MockFunctions {
   rejectMostRecentOperation(
     error: Error | ((operation: OperationDescriptor) => Error)
   ): Promise<void>;
+
+  queueOperationResolver: (resolver: OperationMockResolver) => void;
 }
 
 interface ApolloClientExtension {
@@ -127,14 +133,30 @@ class Mock implements MockFunctions {
     ZenObservable.SubscriptionObserver<FetchResult>
   >;
 
+  private resolversQueue: OperationMockResolver[];
+
   constructor() {
     this.operations = new Map();
+    this.resolversQueue = [];
   }
 
   public addOperation(
     operation: OperationDescriptor,
     observer: ZenObservable.SubscriptionObserver<FetchResult>
   ) {
+    for (const resolver of this.resolversQueue) {
+      const resolved = resolver(operation);
+      if (resolved) {
+        if (resolved instanceof Error) {
+          observer.error(resolved);
+        } else {
+          observer.next(resolved);
+        }
+        observer.complete();
+        return;
+      }
+    }
+    // If not immediately resolved, store it for later
     this.operations.set(operation, observer);
   }
 
@@ -222,6 +244,10 @@ class Mock implements MockFunctions {
       operation,
       typeof error === "function" ? error(operation) : error
     );
+  }
+
+  public queueOperationResolver(resolver: OperationMockResolver) {
+    this.resolversQueue.push(resolver);
   }
 }
 
