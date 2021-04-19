@@ -36,25 +36,35 @@ import {
 } from "./vendor/RelayMockPayloadGenerator";
 export { MockResolvers } from "./vendor/RelayMockPayloadGenerator";
 
+export interface RequestDescriptor {
+  readonly node: DocumentNode;
+  readonly variables: Record<string, any>;
+}
+
+export interface OperationDescriptor {
+  readonly schema: GraphQLSchema;
+  readonly request: RequestDescriptor;
+}
+
 const TYPENAME_KEY = "__typename";
 
 export function generate(
-  document: DocumentNode,
-  schema: GraphQLSchema,
+  operation: OperationDescriptor,
   mockResolvers: MockResolvers | null = DEFAULT_MOCK_RESOLVERS
 ) {
   mockResolvers = { ...DEFAULT_MOCK_RESOLVERS, ...mockResolvers };
   const resolveValue = createValueResolver(mockResolvers);
+  const definitions = operation.request.node.definitions;
 
-  const operationDefinitionNode = document.definitions.find(
+  const operationDefinitionNode = definitions.find(
     (def) => def.kind === "OperationDefinition"
   ) as OperationDefinitionNode | undefined;
   invariant(operationDefinitionNode, "Expected an operation definition node");
 
   const result = visitDocumentDefinitionNode(
     operationDefinitionNode,
-    schema,
-    document.definitions,
+    operation.schema,
+    definitions,
     mockResolvers,
     resolveValue
   );

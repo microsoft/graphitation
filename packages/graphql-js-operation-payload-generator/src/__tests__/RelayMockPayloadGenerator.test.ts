@@ -37,7 +37,10 @@ function testGeneratedData(
   documentNode: DocumentNode,
   mockResolvers?: MockResolvers | null
 ): void {
-  const payload = generate(documentNode, schema, mockResolvers);
+  const payload = generate(
+    { schema, request: { node: documentNode, variables: {} } },
+    mockResolvers
+  );
   expect({
     [FIXTURE_TAG]: true,
     input: printGraphQLDocument(documentNode),
