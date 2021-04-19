@@ -5,12 +5,12 @@ exports[`ReactRelayTestMocker with Containers Basic Resolve/Reject Operations sh
 exports[`ReactRelayTestMocker with Containers Multiple Query Renderers should resolve both queries 1`] = `
 Array [
   <div
-    testID="user"
+    id="user"
   >
     Alice
   </div>,
   <div
-    testID="page"
+    id="page"
   >
     My Page
   </div>,

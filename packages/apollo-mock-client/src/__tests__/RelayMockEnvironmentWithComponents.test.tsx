@@ -15,7 +15,7 @@ import * as React from "react";
 
 import { graphql } from "@graphitation/graphql-js-tag";
 import { readFileSync } from "fs";
-import { buildSchema } from "graphql";
+import { buildSchema, DocumentNode } from "graphql";
 import * as ReactTestRenderer from "react-test-renderer";
 import {
   ApolloProvider,
@@ -994,72 +994,76 @@ describe("ReactRelayTestMocker with Containers", () => {
         }
       `;
 
-      const TestComponent = () => (
-        <>
-          <QueryRenderer
-            environment={client}
-            query={UserQuery}
-            variables={{ userId: "my-user-id" }}
-            render={({ error, props }) => {
-              if (props) {
-                return <div id="user">{props.user.name}</div>;
-              } else if (error) {
-                return <div>{error.message}</div>;
-              }
-              return <div>Loading...</div>;
-            }}
-          />
-          <QueryRenderer
-            environment={client}
-            query={PageQuery}
-            variables={{ pageId: "my-page-id" }}
-            render={({ error, props }) => {
-              if (props) {
-                return <div id="page">{props.page.name}</div>;
-              } else if (error) {
-                return <div>{error.message}</div>;
-              }
-              return <div>Loading...</div>;
-            }}
-          />
-        </>
-      );
+      const QueryComponent: React.FC<{
+        document: DocumentNode;
+        type: "user" | "page";
+        variables: Record<string, any>;
+      }> = ({ document, type, variables }) => {
+        const { data: props, error } = useQuery<
+          Record<typeof type, { id: string; name: string }>
+        >(document, { variables });
+        if (props) {
+          return <div id={type}>{props[type].name}</div>;
+        } else if (error) {
+          return <div id="error">{error.message}</div>;
+        }
+        return <div id="loading">Loading...</div>;
+      };
+      const TestComponent: React.FC = () => {
+        return (
+          <ApolloProvider client={client}>
+            <QueryComponent
+              document={UserQuery}
+              variables={{ userId: "my-user-id" }}
+              type="user"
+            />
+            <QueryComponent
+              document={PageQuery}
+              variables={{ pageId: "my-page-id" }}
+              type="page"
+            />
+          </ApolloProvider>
+        );
+      };
+
       ReactTestRenderer.act(() => {
         testComponentTree = ReactTestRenderer.create(<TestComponent />);
       });
     });
 
-    xit("should resolve both queries", () => {
+    it("should resolve both queries", async () => {
       const userQuery = client.mock.findOperation(
         (operation) =>
-          operation.fragment.node.name ===
+          getOperationName(operation.request.node) ===
           "RelayMockEnvironmentWithComponentsTestSwiftPerformanceQuery"
       );
       const pageQuery = client.mock.findOperation(
         (operation) =>
-          operation.fragment.node.name ===
+          getOperationName(operation.request.node) ===
           "RelayMockEnvironmentWithComponentsTestRedefiningSolutionQuery"
       );
-      client.mock.resolve(
-        userQuery,
-        MockPayloadGenerator.generate(userQuery, {
-          Node: () => ({
-            // $FlowFixMe[prop-missing]
-            id: userQuery.request.variables.userId,
-            name: "Alice",
-          }),
-        })
-      );
-      client.mock.resolve(
-        pageQuery,
-        MockPayloadGenerator.generate(pageQuery, {
-          Node: () => ({
-            // $FlowFixMe[prop-missing]
-            id: pageQuery.request.variables.pageId,
-            name: "My Page",
-          }),
-        })
-      );
+      await ReactTestRenderer.act(async () => {
+        client.mock.resolve(
+          userQuery,
+          MockPayloadGenerator.generate(userQuery, {
+            Node: () => ({
+              // $FlowFixMe[prop-missing]
+              id: userQuery.request.variables.userId,
+              name: "Alice",
+            }),
+          })
+        );
+        client.mock.resolve(
+          pageQuery,
+          MockPayloadGenerator.generate(pageQuery, {
+            Node: () => ({
+              // $FlowFixMe[prop-missing]
+              id: pageQuery.request.variables.pageId,
+              name: "My Page",
+            }),
+          })
+        );
+      });
       expect(
         testComponentTree.root.find((node) => node.props.id === "user").children
       ).toEqual(["Alice"]);
