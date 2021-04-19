@@ -33,40 +33,68 @@ type OperationMockResolver = (
 ) => MockData | Error | undefined | null;
 
 interface MockFunctions {
+  /**
+   * Get all operation executed during the test by the current time.
+   */
   getAllOperations(): OperationDescriptor[];
+
+  /**
+   * Return the most recent operation. This method will throw if no operations were executed prior this call.
+   */
   getMostRecentOperation(): OperationDescriptor;
+
+  /**
+   * Find a particular operation in the list of all executed operations. This method will throw if the operation is not
+   * found.
+   */
   findOperation(
     findFn: (operation: OperationDescriptor) => boolean
   ): OperationDescriptor;
+
   /**
+   * Provide a payload for an operation, but not complete the request. Practically useful when testing incremental
+   * updates and subscriptions.
+   *
    * @note
    *
    * ApolloClient requires a delay until the next tick of the runloop before it updates,
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
   nextValue(operation: OperationDescriptor, data: MockData): Promise<void>;
+
   /**
+   * Complete the operation. No more payloads are expected for this operation.
+   *
    * @note
    *
    * ApolloClient requires a delay until the next tick of the runloop before it updates,
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
   complete(operation: OperationDescriptor): Promise<void>;
+
   /**
+   * Resolve the request with the provided payload. This is a shortcut for `nextValue(...)` and `complete(...)`.
+   *
    * @note
    *
    * ApolloClient requires a delay until the next tick of the runloop before it updates,
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
   resolve(operation: OperationDescriptor, data: MockData): Promise<void>;
+
   /**
+   * Reject the request with a given error.
+   *
    * @note
    *
    * ApolloClient requires a delay until the next tick of the runloop before it updates,
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
   reject(operation: OperationDescriptor, error: Error): Promise<void>;
+
   /**
+   * A shortcut for `getMostRecentOperation()` and `resolve()`.
+   *
    * @note
    *
    * ApolloClient requires a delay until the next tick of the runloop before it updates,
@@ -75,7 +103,9 @@ interface MockFunctions {
   resolveMostRecentOperation(
     resolver: (operation: OperationDescriptor) => MockData
   ): Promise<void>;
+
   /**
+   * A shortcut for `getMostRecentOperation()` and `reject()`.
    * @note
    *
    * ApolloClient requires a delay until the next tick of the runloop before it updates,
@@ -85,6 +115,9 @@ interface MockFunctions {
     error: Error | ((operation: OperationDescriptor) => Error)
   ): Promise<void>;
 
+  /**
+   * Adds a resolver function that will be used to resolve/reject operations as they appear.
+   */
   queueOperationResolver: (resolver: OperationMockResolver) => void;
 }
 
