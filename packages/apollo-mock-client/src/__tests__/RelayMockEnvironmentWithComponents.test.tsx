@@ -371,19 +371,6 @@ describe("ReactRelayTestMocker with Containers", () => {
           doesViewerLike: boolean;
         };
       }) {
-        // useEffect(() => {
-        //   const subscription = requestSubscription(props.environment, {
-        //     subscription: FeedbackLikeSubscription,
-        //     variables: {
-        //       input: {
-        //         feedbackId: props.feedback.id,
-        //       },
-        //     },
-        //   });
-        //   return () => {
-        //     subscription.dispose();
-        //   };
-        // });
         useSubscription(FeedbackLikeSubscription, {
           variables: {
             input: {
