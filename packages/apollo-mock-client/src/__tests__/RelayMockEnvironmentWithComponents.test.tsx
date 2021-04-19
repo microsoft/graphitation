@@ -9,8 +9,6 @@
  * @flow strict-local
  */
 
-// flowlint ambiguous-object-type:error
-
 "use strict";
 
 import * as React from "react";
@@ -25,34 +23,11 @@ import {
   useQuery,
   useSubscription,
 } from "@apollo/client";
-import {
-  getFragmentDefinitions,
-  getOperationName,
-} from "@apollo/client/utilities";
+import { getOperationName } from "@apollo/client/utilities";
 import * as MockPayloadGenerator from "@graphitation/graphql-js-operation-payload-generator";
 
-// import { MockEnvironmentContext } from "./ApolloMockPayloadGenerator";
 import { ApolloMockClient, createMockClient } from "../index";
-import { useEffect, useState } from "react";
-
-// const React = require('react');
-// const ReactTestRenderer = require('react-test-renderer');
-
-// const {MockPayloadGenerator, createMockEnvironment} = require('../');
-// const {
-//   QueryRenderer,
-//   createFragmentContainer,
-//   createPaginationContainer,
-//   createRefetchContainer,
-// } = require('react-relay');
-// const {
-//   graphql,
-//   commitMutation,
-//   requestSubscription,
-//   DefaultHandlerProvider,
-// } = require('relay-runtime');
-
-// const {useState, useEffect} = React;
+import { useState } from "react";
 
 const schema = buildSchema(
   readFileSync(
@@ -60,10 +35,6 @@ const schema = buildSchema(
     "utf8"
   )
 );
-
-// ApolloClient requires a delay until the next tick of the runloop before it updates,
-// as per https://www.apollographql.com/docs/react/development-testing/testing/
-const delay = () => new Promise((resolve) => setImmediate(resolve));
 
 describe("ReactRelayTestMocker with Containers", () => {
   let client: ApolloMockClient;
@@ -126,23 +97,21 @@ describe("ReactRelayTestMocker with Containers", () => {
         testComponentTree.root.find((node) => node.props.id === "loading");
       }).not.toThrow();
 
-      await ReactTestRenderer.act(async () => {
+      await ReactTestRenderer.act(() =>
         // Make sure request was issued
         client.mock.resolveMostRecentOperation((operation) =>
           MockPayloadGenerator.generate(operation.query, schema)
-        );
-        await delay();
-      });
+        )
+      );
 
       // Should render some data
       expect(testComponentTree).toMatchSnapshot();
     });
 
     it("should reject query", async () => {
-      await ReactTestRenderer.act(async () => {
-        client.mock.rejectMostRecentOperation(new Error("Uh-oh"));
-        await delay();
-      });
+      await ReactTestRenderer.act(() =>
+        client.mock.rejectMostRecentOperation(new Error("Uh-oh"))
+      );
 
       const errorMessage = testComponentTree.root.find(
         (node) => node.props.id === "error"
@@ -152,13 +121,12 @@ describe("ReactRelayTestMocker with Containers", () => {
     });
 
     it("should reject query with function", async () => {
-      await ReactTestRenderer.act(async () => {
+      await ReactTestRenderer.act(() =>
         client.mock.rejectMostRecentOperation(
           (operation) =>
             new Error(`Uh-oh: ${getOperationName(operation.query)}`)
-        );
-        await delay();
-      });
+        )
+      );
 
       const errorMessage = testComponentTree.root.find(
         (node) => node.props.id === "error"
@@ -770,7 +738,7 @@ describe("ReactRelayTestMocker with Containers", () => {
           </ApolloProvider>
         );
       });
-      await ReactTestRenderer.act(async () => {
+      await ReactTestRenderer.act(() =>
         client.mock.resolveMostRecentOperation((operation) =>
           MockPayloadGenerator.generate(operation.query, schema, {
             ID() {
@@ -783,9 +751,8 @@ describe("ReactRelayTestMocker with Containers", () => {
               };
             },
           })
-        );
-        await delay();
-      });
+        )
+      );
     });
 
     it("should resolve mutation", async () => {
@@ -801,7 +768,6 @@ describe("ReactRelayTestMocker with Containers", () => {
       // Should apply optimistic updates
       await ReactTestRenderer.act(async () => {
         likeButton.props.onClick();
-        await delay();
       });
 
       expect(likeButton.props.disabled).toBe(true);
@@ -821,7 +787,7 @@ describe("ReactRelayTestMocker with Containers", () => {
             },
           })
         );
-        await delay();
+        // await delay();
       });
       expect(likeButton.props.disabled).toBe(false);
       expect(likeButton.props.children).toEqual("Unlike");
@@ -840,10 +806,9 @@ describe("ReactRelayTestMocker with Containers", () => {
       });
 
       // Trigger error
-      await ReactTestRenderer.act(async () => {
-        client.mock.rejectMostRecentOperation(new Error("Uh-oh"));
-        await delay();
-      });
+      await ReactTestRenderer.act(() =>
+        client.mock.rejectMostRecentOperation(new Error("Uh-oh"))
+      );
       expect(testComponentTree).toMatchSnapshot("Should render error message");
     });
   });
@@ -947,7 +912,7 @@ describe("ReactRelayTestMocker with Containers", () => {
           </ApolloProvider>
         );
       });
-      await ReactTestRenderer.act(async () => {
+      await ReactTestRenderer.act(() =>
         client.mock.resolveMostRecentOperation((operation) =>
           MockPayloadGenerator.generate(operation.query, schema, {
             ID() {
@@ -960,9 +925,8 @@ describe("ReactRelayTestMocker with Containers", () => {
               };
             },
           })
-        );
-        await delay();
-      });
+        )
+      );
     });
 
     it("should resolve subscription", async () => {
@@ -986,7 +950,7 @@ describe("ReactRelayTestMocker with Containers", () => {
       //     },
       //   });
 
-      await ReactTestRenderer.act(async () => {
+      await ReactTestRenderer.act(() =>
         client.mock.nextValue(
           operation,
           MockPayloadGenerator.generate(operation.query, schema, {
@@ -998,9 +962,8 @@ describe("ReactRelayTestMocker with Containers", () => {
               };
             },
           })
-        );
-        await delay();
-      });
+        )
+      );
       expect(reaction.props.children).toBe("Viewer likes it");
     });
   });

@@ -17,16 +17,52 @@ interface MockFunctions {
   getAllOperations(): Operation[];
   getMostRecentOperation(): Operation;
   findOperation(findFn: (operation: Operation) => boolean): Operation;
-  nextValue(operation: Operation, data: MockData): void;
-  complete(operation: Operation): void;
-  resolve(operation: Operation, data: MockData): void;
-  reject(operation: Operation, error: Error): void;
+  /**
+   * @note
+   *
+   * ApolloClient requires a delay until the next tick of the runloop before it updates,
+   * as per https://www.apollographql.com/docs/react/development-testing/testing/
+   */
+  nextValue(operation: Operation, data: MockData): Promise<void>;
+  /**
+   * @note
+   *
+   * ApolloClient requires a delay until the next tick of the runloop before it updates,
+   * as per https://www.apollographql.com/docs/react/development-testing/testing/
+   */
+  complete(operation: Operation): Promise<void>;
+  /**
+   * @note
+   *
+   * ApolloClient requires a delay until the next tick of the runloop before it updates,
+   * as per https://www.apollographql.com/docs/react/development-testing/testing/
+   */
+  resolve(operation: Operation, data: MockData): Promise<void>;
+  /**
+   * @note
+   *
+   * ApolloClient requires a delay until the next tick of the runloop before it updates,
+   * as per https://www.apollographql.com/docs/react/development-testing/testing/
+   */
+  reject(operation: Operation, error: Error): Promise<void>;
+  /**
+   * @note
+   *
+   * ApolloClient requires a delay until the next tick of the runloop before it updates,
+   * as per https://www.apollographql.com/docs/react/development-testing/testing/
+   */
   resolveMostRecentOperation(
     resolver: (operation: Operation) => MockData
-  ): void;
+  ): Promise<void>;
+  /**
+   * @note
+   *
+   * ApolloClient requires a delay until the next tick of the runloop before it updates,
+   * as per https://www.apollographql.com/docs/react/development-testing/testing/
+   */
   rejectMostRecentOperation(
     error: Error | ((operation: Operation) => Error)
-  ): void;
+  ): Promise<void>;
 }
 
 interface ApolloClientExtension {
@@ -94,39 +130,39 @@ class Mock implements MockFunctions {
 
   // ---
 
-  public nextValue(operation: Operation, data: MockData): void {
+  public async nextValue(operation: Operation, data: MockData): Promise<void> {
     const [_, observer] = this.operations[this.findOperationIndex(operation)];
     observer.next(data);
   }
 
-  public complete(operation: Operation): void {
+  public async complete(operation: Operation): Promise<void> {
     const index = this.findOperationIndex(operation);
     const [_, observer] = this.operations[index];
     observer.complete();
     this.operations.splice(index, 1);
   }
 
-  public resolve(operation: Operation, data: MockData): void {
+  public async resolve(operation: Operation, data: MockData): Promise<void> {
     this.nextValue(operation, data);
     this.complete(operation);
   }
 
-  public reject(operation: Operation, error: Error): void {
+  public async reject(operation: Operation, error: Error): Promise<void> {
     const [_, observer] = this.operations[this.findOperationIndex(operation)];
     observer.error(error);
     this.complete(operation);
   }
 
-  public resolveMostRecentOperation(
+  public async resolveMostRecentOperation(
     resolver: (operation: Operation) => MockData
-  ): void {
+  ): Promise<void> {
     const operation = this.getMostRecentOperation();
     this.resolve(operation, resolver(operation));
   }
 
-  public rejectMostRecentOperation(
+  public async rejectMostRecentOperation(
     error: Error | ((operation: Operation) => Error)
-  ): void {
+  ): Promise<void> {
     const operation = this.getMostRecentOperation();
     this.reject(
       operation,
@@ -168,22 +204,24 @@ export function createMockClient(schema: GraphQLSchema): ApolloMockClient {
 
   const link = new MockLink(schema);
 
-  const ext: ApolloClientExtension = {
-    get mock() {
-      return link.mock;
-    },
-    mockClear() {
-      link.mockClear();
-    },
-  };
-
-  const client = new ApolloClient({
-    cache: new InMemoryCache({
-      possibleTypes,
-      addTypename: false,
+  return Object.assign<
+    ApolloClient<NormalizedCacheObject>,
+    ApolloClientExtension
+  >(
+    new ApolloClient({
+      cache: new InMemoryCache({
+        possibleTypes,
+        addTypename: false,
+      }),
+      link,
     }),
-    link,
-  }) as ApolloMockClient;
-
-  return Object.assign(client, ext);
+    {
+      get mock() {
+        return link.mock;
+      },
+      mockClear() {
+        link.mockClear();
+      },
+    }
+  );
 }
