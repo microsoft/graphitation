@@ -13,7 +13,10 @@
     "types": "lage types",
     "test": "lage test",
     "lint": "lage lint",
-    "lage": "lage"
+    "lage": "lage",
+    "change": "beachball change",
+    "checkchange": "beachball check",
+    "release": "beachball publish"
   },
   "devDependencies": {
     "beachball": "^2.1.0",
