@@ -97,49 +97,68 @@ class MockLink extends ApolloLink {
 }
 
 class Mock implements MockFunctions {
-  private operations: [
-    operation: Operation,
-    observer: ZenObservable.SubscriptionObserver<FetchResult>
-  ][];
+  private operations: Map<
+    Operation,
+    ZenObservable.SubscriptionObserver<FetchResult>
+  >;
 
   constructor() {
-    this.operations = [];
+    this.operations = new Map();
   }
 
   public addOperation(
     operation: Operation,
     observer: ZenObservable.SubscriptionObserver<FetchResult>
   ) {
-    this.operations.push([operation, observer]);
+    this.operations.set(operation, observer);
   }
 
-  // ---
+  private getObserver(operation: Operation) {
+    const observer = this.operations.get(operation);
+    invariant(observer, "Could not find operation in execution queue");
+    return observer;
+  }
+
+  /**
+   * MockFunctions
+   */
 
   public getAllOperations(): Operation[] {
-    return this.operations.map(([op, _]) => op);
+    return Array.from(this.operations.keys());
   }
 
   public getMostRecentOperation(): Operation {
+    const operations = this.getAllOperations();
     invariant(
-      this.operations.length > 0,
+      operations.length > 0,
       "Expected at least one operation to have been started"
     );
-    const [op, _] = this.operations[this.operations.length - 1];
-    return op;
+    return operations[operations.length - 1];
   }
 
-  // ---
+  public findOperation(findFn: (operation: Operation) => boolean): Operation {
+    let result: Operation | null = null;
+    for (const operation of this.operations.keys()) {
+      if (findFn(operation)) {
+        result = operation;
+        break;
+      }
+    }
+    invariant(
+      result,
+      "Operation was not found in the list of pending operations"
+    );
+    return result;
+  }
 
   public async nextValue(operation: Operation, data: MockData): Promise<void> {
-    const [_, observer] = this.operations[this.findOperationIndex(operation)];
-    observer.next(data);
+    this.getObserver(operation).next(data);
   }
 
   public async complete(operation: Operation): Promise<void> {
-    const index = this.findOperationIndex(operation);
-    const [_, observer] = this.operations[index];
+    const observer = this.getObserver(operation);
     observer.complete();
-    this.operations.splice(index, 1);
+    this.operations.delete(operation);
   }
 
   public async resolve(operation: Operation, data: MockData): Promise<void> {
@@ -148,8 +167,7 @@ class Mock implements MockFunctions {
   }
 
   public async reject(operation: Operation, error: Error): Promise<void> {
-    const [_, observer] = this.operations[this.findOperationIndex(operation)];
-    observer.error(error);
+    this.getObserver(operation).error(error);
     this.complete(operation);
   }
 
@@ -168,23 +186,6 @@ class Mock implements MockFunctions {
       operation,
       typeof error === "function" ? error(operation) : error
     );
-  }
-
-  public findOperation(findFn: (operation: Operation) => boolean): Operation {
-    const operation = this.operations.find(([op, _]) => findFn(op));
-    invariant(
-      operation,
-      "Operation was not found in the list of pending operations"
-    );
-    return operation[0];
-  }
-
-  // ----
-
-  private findOperationIndex(operation: Operation) {
-    const index = this.operations.findIndex(([op, _]) => op === operation);
-    invariant(index >= 0, "Expected to find operation");
-    return index;
   }
 }
 
