@@ -4,15 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @emails oncall+relay
- * @format
- * @flow strict-local
+ * https://github.com/facebook/relay/blob/5d7e2d4a318c5015e2ac91f5f4e7ca602658890c/LICENSE
  */
 
-"use strict";
-
 import * as React from "react";
-
+import { useState } from "react";
 import { graphql } from "@graphitation/graphql-js-tag";
 import { readFileSync } from "fs";
 import { buildSchema, DocumentNode } from "graphql";
@@ -27,7 +23,6 @@ import { getOperationName } from "@apollo/client/utilities";
 import * as MockPayloadGenerator from "@graphitation/graphql-js-operation-payload-generator";
 
 import { ApolloMockClient, createMockClient } from "../index";
-import { useState } from "react";
 
 const schema = buildSchema(
   readFileSync(
@@ -263,7 +258,6 @@ describe("ReactRelayTestMocker with Containers", () => {
         client.mock.resolveMostRecentOperation((operation) =>
           MockPayloadGenerator.generate(operation, {
             ID() {
-              // $FlowFixMe[prop-missing]
               return operation.request.variables.id;
             },
             Feedback() {
@@ -301,14 +295,12 @@ describe("ReactRelayTestMocker with Containers", () => {
           MockPayloadGenerator.generate(operation, {
             Feedback() {
               return {
-                // $FlowFixMe[prop-missing]
                 id: operation.request.variables.input?.feedbackId,
                 doesViewerLike: true,
               };
             },
           })
         );
-        // await delay();
       });
       expect(likeButton.props.disabled).toBe(false);
       expect(likeButton.props.children).toEqual("Unlike");
@@ -418,7 +410,7 @@ describe("ReactRelayTestMocker with Containers", () => {
             message: { text: string };
             doesViewerLike: boolean;
           };
-        }>(FeedbackQuery);
+        }>(FeedbackQuery, { variables: { id: "my-feedback-id" } });
         if (props) {
           return <FeedbackComponent feedback={props.feedback} />;
         } else if (error) {
@@ -437,7 +429,6 @@ describe("ReactRelayTestMocker with Containers", () => {
         client.mock.resolveMostRecentOperation((operation) =>
           MockPayloadGenerator.generate(operation, {
             ID() {
-              // $FlowFixMe[prop-missing]
               return operation.request.variables.id;
             },
             Feedback() {
@@ -464,12 +455,11 @@ describe("ReactRelayTestMocker with Containers", () => {
       expect(getOperationName(operation.request.node)).toBe(
         "RelayMockEnvironmentWithComponentsTestRemarkableFixSubscription"
       );
-      // FIXME:
-      //   expect(operation.variables).toEqual({
-      //     input: {
-      //       feedbackId: "my-feedback-id",
-      //     },
-      //   });
+      expect(operation.request.variables).toEqual({
+        input: {
+          feedbackId: "my-feedback-id",
+        },
+      });
 
       await ReactTestRenderer.act(() =>
         client.mock.nextValue(
@@ -477,7 +467,6 @@ describe("ReactRelayTestMocker with Containers", () => {
           MockPayloadGenerator.generate(operation, {
             Feedback() {
               return {
-                // $FlowFixMe[prop-missing]
                 id: operation.request.variables.input?.feedbackId,
                 doesViewerLike: true,
               };
@@ -568,7 +557,6 @@ describe("ReactRelayTestMocker with Containers", () => {
           userQuery,
           MockPayloadGenerator.generate(userQuery, {
             Node: () => ({
-              // $FlowFixMe[prop-missing]
               id: userQuery.request.variables.userId,
               name: "Alice",
             }),
@@ -578,7 +566,6 @@ describe("ReactRelayTestMocker with Containers", () => {
           pageQuery,
           MockPayloadGenerator.generate(pageQuery, {
             Node: () => ({
-              // $FlowFixMe[prop-missing]
               id: pageQuery.request.variables.pageId,
               name: "My Page",
             }),
