@@ -1,4 +1,4 @@
-import { tscTask, esbuildTask, jestTask, eslintTask } from "just-scripts";
+import { tscTask, esbuildTask, jestTask, eslintTask, argv } from "just-scripts";
 import * as path from "path";
 import * as glob from "fast-glob";
 
@@ -10,9 +10,12 @@ export const build = () =>
     outdir: "lib",
   });
 
-export const test = jestTask({
-  config: path.join(__dirname, "config", "jest.config.js"),
-});
+export const test = () => {
+  return jestTask({
+    config: path.join(__dirname, "config", "jest.config.js"),
+    watch: argv().watch,
+  });
+};
 
 export const lint = eslintTask({
   files: [path.join(process.cwd(), "src")],
