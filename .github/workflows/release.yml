@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14.x]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.repo_pat }}
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: yarn
+      - run: yarn build
+      - run: yarn test
+      - run: |
+          git config user.email "gql-svc@microsoft.com"
+          git config user.name "Graphitation Service Account"
+      - run: yarn release -y -n $NPM_AUTHTOKEN
+        env:
+          NPM_AUTHTOKEN: ${{ secrets.npm_authtoken }}
