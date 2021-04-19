@@ -9,42 +9,59 @@ import {
   NormalizedCacheObject,
 } from "@apollo/client";
 import invariant from "invariant";
-import { assertType, GraphQLSchema, isAbstractType } from "graphql";
+import {
+  assertType,
+  DocumentNode,
+  GraphQLSchema,
+  isAbstractType,
+} from "graphql";
 
 type MockData = Record<string, unknown>;
 
+export interface RequestDescriptor {
+  readonly node: DocumentNode;
+  readonly variables: Record<string, any>;
+}
+
+export interface OperationDescriptor {
+  readonly schema: GraphQLSchema;
+  readonly request: RequestDescriptor;
+}
+
 interface MockFunctions {
-  getAllOperations(): Operation[];
-  getMostRecentOperation(): Operation;
-  findOperation(findFn: (operation: Operation) => boolean): Operation;
+  getAllOperations(): OperationDescriptor[];
+  getMostRecentOperation(): OperationDescriptor;
+  findOperation(
+    findFn: (operation: OperationDescriptor) => boolean
+  ): OperationDescriptor;
   /**
    * @note
    *
    * ApolloClient requires a delay until the next tick of the runloop before it updates,
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
-  nextValue(operation: Operation, data: MockData): Promise<void>;
+  nextValue(operation: OperationDescriptor, data: MockData): Promise<void>;
   /**
    * @note
    *
    * ApolloClient requires a delay until the next tick of the runloop before it updates,
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
-  complete(operation: Operation): Promise<void>;
+  complete(operation: OperationDescriptor): Promise<void>;
   /**
    * @note
    *
    * ApolloClient requires a delay until the next tick of the runloop before it updates,
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
-  resolve(operation: Operation, data: MockData): Promise<void>;
+  resolve(operation: OperationDescriptor, data: MockData): Promise<void>;
   /**
    * @note
    *
    * ApolloClient requires a delay until the next tick of the runloop before it updates,
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
-  reject(operation: Operation, error: Error): Promise<void>;
+  reject(operation: OperationDescriptor, error: Error): Promise<void>;
   /**
    * @note
    *
@@ -52,7 +69,7 @@ interface MockFunctions {
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
   resolveMostRecentOperation(
-    resolver: (operation: Operation) => MockData
+    resolver: (operation: OperationDescriptor) => MockData
   ): Promise<void>;
   /**
    * @note
@@ -61,7 +78,7 @@ interface MockFunctions {
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
   rejectMostRecentOperation(
-    error: Error | ((operation: Operation) => Error)
+    error: Error | ((operation: OperationDescriptor) => Error)
   ): Promise<void>;
 }
 
@@ -89,16 +106,24 @@ class MockLink extends ApolloLink {
   }
 
   public request(operation: Operation): Observable<FetchResult> | null {
-    operation.setContext({ schema: this.schema });
     return new Observable<FetchResult>((observer) => {
-      this.mock.addOperation(operation, observer);
+      this.mock.addOperation(
+        {
+          schema: this.schema,
+          request: {
+            node: operation.query,
+            variables: operation.variables || {},
+          },
+        },
+        observer
+      );
     });
   }
 }
 
 class Mock implements MockFunctions {
   private operations: Map<
-    Operation,
+    OperationDescriptor,
     ZenObservable.SubscriptionObserver<FetchResult>
   >;
 
@@ -107,13 +132,13 @@ class Mock implements MockFunctions {
   }
 
   public addOperation(
-    operation: Operation,
+    operation: OperationDescriptor,
     observer: ZenObservable.SubscriptionObserver<FetchResult>
   ) {
     this.operations.set(operation, observer);
   }
 
-  private getObserver(operation: Operation) {
+  private getObserver(operation: OperationDescriptor) {
     const observer = this.operations.get(operation);
     invariant(observer, "Could not find operation in execution queue");
     return observer;
@@ -123,11 +148,11 @@ class Mock implements MockFunctions {
    * MockFunctions
    */
 
-  public getAllOperations(): Operation[] {
+  public getAllOperations(): OperationDescriptor[] {
     return Array.from(this.operations.keys());
   }
 
-  public getMostRecentOperation(): Operation {
+  public getMostRecentOperation(): OperationDescriptor {
     const operations = this.getAllOperations();
     invariant(
       operations.length > 0,
@@ -136,8 +161,10 @@ class Mock implements MockFunctions {
     return operations[operations.length - 1];
   }
 
-  public findOperation(findFn: (operation: Operation) => boolean): Operation {
-    let result: Operation | null = null;
+  public findOperation(
+    findFn: (operation: OperationDescriptor) => boolean
+  ): OperationDescriptor {
+    let result: OperationDescriptor | null = null;
     for (const operation of this.operations.keys()) {
       if (findFn(operation)) {
         result = operation;
@@ -151,35 +178,44 @@ class Mock implements MockFunctions {
     return result;
   }
 
-  public async nextValue(operation: Operation, data: MockData): Promise<void> {
+  public async nextValue(
+    operation: OperationDescriptor,
+    data: MockData
+  ): Promise<void> {
     this.getObserver(operation).next(data);
   }
 
-  public async complete(operation: Operation): Promise<void> {
+  public async complete(operation: OperationDescriptor): Promise<void> {
     const observer = this.getObserver(operation);
     observer.complete();
     this.operations.delete(operation);
   }
 
-  public async resolve(operation: Operation, data: MockData): Promise<void> {
+  public async resolve(
+    operation: OperationDescriptor,
+    data: MockData
+  ): Promise<void> {
     this.nextValue(operation, data);
     this.complete(operation);
   }
 
-  public async reject(operation: Operation, error: Error): Promise<void> {
+  public async reject(
+    operation: OperationDescriptor,
+    error: Error
+  ): Promise<void> {
     this.getObserver(operation).error(error);
     this.complete(operation);
   }
 
   public async resolveMostRecentOperation(
-    resolver: (operation: Operation) => MockData
+    resolver: (operation: OperationDescriptor) => MockData
   ): Promise<void> {
     const operation = this.getMostRecentOperation();
     this.resolve(operation, resolver(operation));
   }
 
   public async rejectMostRecentOperation(
-    error: Error | ((operation: Operation) => Error)
+    error: Error | ((operation: OperationDescriptor) => Error)
   ): Promise<void> {
     const operation = this.getMostRecentOperation();
     this.reject(

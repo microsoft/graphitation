@@ -83,10 +83,10 @@ describe("ReactRelayTestMocker with Containers", () => {
 
     it("should return most recent operation", () => {
       const operation = client.mock.getMostRecentOperation();
-      expect(getOperationName(operation.query)).toBe(
+      expect(getOperationName(operation.request.node)).toBe(
         "RelayMockEnvironmentWithComponentsTestFantasticEffortQuery"
       );
-      expect(operation.variables).toEqual({
+      expect(operation.request.variables).toEqual({
         id: "<default>",
       });
     });
@@ -100,7 +100,7 @@ describe("ReactRelayTestMocker with Containers", () => {
       await ReactTestRenderer.act(() =>
         // Make sure request was issued
         client.mock.resolveMostRecentOperation((operation) =>
-          MockPayloadGenerator.generate(operation.query, schema)
+          MockPayloadGenerator.generate(operation)
         )
       );
 
@@ -124,7 +124,7 @@ describe("ReactRelayTestMocker with Containers", () => {
       await ReactTestRenderer.act(() =>
         client.mock.rejectMostRecentOperation(
           (operation) =>
-            new Error(`Uh-oh: ${getOperationName(operation.query)}`)
+            new Error(`Uh-oh: ${getOperationName(operation.request.node)}`)
         )
       );
 
@@ -213,14 +213,14 @@ describe("ReactRelayTestMocker with Containers", () => {
 
     xit("should render data", () => {
       client.mock.resolveMostRecentOperation((operation) =>
-        MockPayloadGenerator.generate(operation.query, schema)
+        MockPayloadGenerator.generate(operation)
       );
       expect(testComponentTree).toMatchSnapshot();
     });
 
     xit("should render data with mock resolvers", () => {
       client.mock.resolveMostRecentOperation((operation) =>
-        MockPayloadGenerator.generate(operation.query, schema, {
+        MockPayloadGenerator.generate(operation, {
           Image() {
             return {
               uri: "http://test.com/image-url",
@@ -357,11 +357,11 @@ describe("ReactRelayTestMocker with Containers", () => {
     xit("should render data", () => {
       ReactTestRenderer.act(() => {
         client.mock.resolveMostRecentOperation((operation) =>
-          MockPayloadGenerator.generate(operation.query, schema, {
+          MockPayloadGenerator.generate(operation, {
             ID({ path }, generateId) {
               if (path != null && path.join(".") === "user.id") {
                 // $FlowFixMe[prop-missing]
-                return operation.variables.id;
+                return operation.request.variables.id;
               }
             },
             User() {
@@ -395,12 +395,12 @@ describe("ReactRelayTestMocker with Containers", () => {
     xit("should load more data for pagination container", () => {
       ReactTestRenderer.act(() => {
         client.mock.resolveMostRecentOperation((operation) =>
-          MockPayloadGenerator.generate(operation.query, schema, {
+          MockPayloadGenerator.generate(operation, {
             ID({ path }, generateId) {
               // Just to make sure we're generating list data for the same parent id
               if (path != null && path.join(".") === "user.id") {
                 // $FlowFixMe[prop-missing]
-                return operation.variables.id;
+                return operation.request.variables.id;
               }
               return `my-custom-id-${generateId() + 5}`;
             },
@@ -433,12 +433,12 @@ describe("ReactRelayTestMocker with Containers", () => {
       // We need to add additional resolvers
       ReactTestRenderer.act(() => {
         client.mock.resolveMostRecentOperation((operation) =>
-          MockPayloadGenerator.generate(operation.query, schema, {
+          MockPayloadGenerator.generate(operation, {
             ID({ path }, generateId) {
               // Just to make sure we're generating list data for the same parent id
               if (path != null && path.join(".") === "user.id") {
                 // $FlowFixMe[prop-missing]
-                return operation.variables.id;
+                return operation.request.variables.id;
               }
               return `my-custom-id-${generateId() + 10}`;
             },
@@ -568,7 +568,7 @@ describe("ReactRelayTestMocker with Containers", () => {
 
     xit("should refetch query", () => {
       client.mock.resolveMostRecentOperation((operation) =>
-        MockPayloadGenerator.generate(operation.query, schema, {
+        MockPayloadGenerator.generate(operation, {
           Page() {
             return {
               id: "my-page-id",
@@ -596,15 +596,15 @@ describe("ReactRelayTestMocker with Containers", () => {
 
       // Verify the query params
       const operation = client.mock.getMostRecentOperation();
-      expect(getOperationName(operation.query)).toBe(
+      expect(getOperationName(operation.request.node)).toBe(
         "RelayMockEnvironmentWithComponentsTestImpressiveResultQuery"
       );
-      expect(operation.variables).toEqual({ id: "my-page-id" });
+      expect(operation.request.variables).toEqual({ id: "my-page-id" });
 
       // Resolve refetch query
       client.mock.resolve(
         operation,
-        MockPayloadGenerator.generate(operation.query, schema, {
+        MockPayloadGenerator.generate(operation, {
           Node() {
             return {
               __typename: "Page",
@@ -740,10 +740,10 @@ describe("ReactRelayTestMocker with Containers", () => {
       });
       await ReactTestRenderer.act(() =>
         client.mock.resolveMostRecentOperation((operation) =>
-          MockPayloadGenerator.generate(operation.query, schema, {
+          MockPayloadGenerator.generate(operation, {
             ID() {
               // $FlowFixMe[prop-missing]
-              return operation.variables.id;
+              return operation.request.variables.id;
             },
             Feedback() {
               return {
@@ -777,11 +777,11 @@ describe("ReactRelayTestMocker with Containers", () => {
       );
       await ReactTestRenderer.act(async () => {
         client.mock.resolveMostRecentOperation((operation) =>
-          MockPayloadGenerator.generate(operation.query, schema, {
+          MockPayloadGenerator.generate(operation, {
             Feedback() {
               return {
                 // $FlowFixMe[prop-missing]
-                id: operation.variables?.input?.feedbackId,
+                id: operation.request.variables.input?.feedbackId,
                 doesViewerLike: true,
               };
             },
@@ -914,10 +914,10 @@ describe("ReactRelayTestMocker with Containers", () => {
       });
       await ReactTestRenderer.act(() =>
         client.mock.resolveMostRecentOperation((operation) =>
-          MockPayloadGenerator.generate(operation.query, schema, {
+          MockPayloadGenerator.generate(operation, {
             ID() {
               // $FlowFixMe[prop-missing]
-              return operation.variables.id;
+              return operation.request.variables.id;
             },
             Feedback() {
               return {
@@ -940,7 +940,7 @@ describe("ReactRelayTestMocker with Containers", () => {
       expect(reaction.props.children).toBe("Viewer does not like it");
 
       const operation = client.mock.getMostRecentOperation();
-      expect(getOperationName(operation.query)).toBe(
+      expect(getOperationName(operation.request.node)).toBe(
         "RelayMockEnvironmentWithComponentsTestRemarkableFixSubscription"
       );
       // FIXME:
@@ -953,11 +953,11 @@ describe("ReactRelayTestMocker with Containers", () => {
       await ReactTestRenderer.act(() =>
         client.mock.nextValue(
           operation,
-          MockPayloadGenerator.generate(operation.query, schema, {
+          MockPayloadGenerator.generate(operation, {
             Feedback() {
               return {
                 // $FlowFixMe[prop-missing]
-                id: operation.variables?.input?.feedbackId,
+                id: operation.request.variables.input?.feedbackId,
                 doesViewerLike: true,
               };
             },
