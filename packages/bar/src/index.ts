@@ -1,3 +1,3 @@
 export function bar(input: string) {
-  return `bar ${input}`;
+  return `bar ${input} - adding change without a change file`;
 }
