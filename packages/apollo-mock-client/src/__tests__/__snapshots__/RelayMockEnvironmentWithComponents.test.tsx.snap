@@ -1,0 +1,107 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReactRelayTestMocker with Containers Basic Resolve/Reject Operations should resolve query 1`] = `"My id <mock-id-1> and name is <mock-value-for-field-\\"name\\">"`;
+
+exports[`ReactRelayTestMocker with Containers Multiple Query Renderers should resolve both queries 1`] = `
+Array [
+  <div
+    id="user"
+  >
+    Alice
+  </div>,
+  <div
+    id="page"
+  >
+    My Page
+  </div>,
+]
+`;
+
+exports[`ReactRelayTestMocker with Containers Subscription Tests should resolve subscription 1`] = `
+<div>
+  Feedback: 
+  &lt;mock-value-for-field-"text"&gt;
+  <span
+    id="reaction"
+  >
+    Viewer does not like it
+  </span>
+</div>
+`;
+
+exports[`ReactRelayTestMocker with Containers Test Mutations should reject mutation: Should render error message 1`] = `
+<div>
+  <span
+    id="errorMessage"
+  >
+    Uh-oh
+  </span>
+  Feedback: 
+  &lt;mock-value-for-field-"text"&gt;
+  <button
+    disabled={false}
+    id="likeButton"
+    onClick={[Function]}
+  >
+    Like
+  </button>
+</div>
+`;
+
+exports[`ReactRelayTestMocker with Containers Test Mutations should resolve mutation: Button should be enabled. Text should be "Like". 1`] = `
+<div>
+  Feedback: 
+  &lt;mock-value-for-field-"text"&gt;
+  <button
+    disabled={false}
+    id="likeButton"
+    onClick={[Function]}
+  >
+    Like
+  </button>
+</div>
+`;
+
+exports[`ReactRelayTestMocker with Containers Test Mutations should resolve mutation: Should apply optimistic update. Button should says "Unlike". And it should be disabled 1`] = `
+<div>
+  Feedback: 
+  &lt;mock-value-for-field-"text"&gt;
+  <button
+    disabled={true}
+    id="likeButton"
+    onClick={[Function]}
+  >
+    Unlike
+  </button>
+</div>
+`;
+
+exports[`ReactRelayTestMocker with Containers Test Mutations should resolve mutation: Should render response from the server. Button should be enabled. And text still "Unlike" 1`] = `
+<div>
+  Feedback: 
+  &lt;mock-value-for-field-"text"&gt;
+  <button
+    disabled={false}
+    id="likeButton"
+    onClick={[Function]}
+  >
+    Unlike
+  </button>
+</div>
+`;
+
+exports[`ReactRelayTestMocker with Containers resolve/reject next with components should reject next operation: should render component with the error 1`] = `
+<div
+  id="error"
+>
+  Uh-oh
+</div>
+`;
+
+exports[`ReactRelayTestMocker with Containers resolve/reject next with components should resolve next operation: should render component with the data 1`] = `
+<div
+  id="user"
+>
+  &lt;mock-value-for-field-"name"&gt;
+</div>
+`;
