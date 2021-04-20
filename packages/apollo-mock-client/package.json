@@ -23,8 +23,8 @@
   },
   "publishConfig": {
     "main": "./lib/index.js",
-    "react": "^17.0.2",
-    "types": "./lib/index.d.ts"
+    "types": "./lib/index.d.ts",
+    "access": "public"
   },
   "peerDependencies": {
     "@apollo/client": "^3.3.0",
