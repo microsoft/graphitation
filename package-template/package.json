@@ -1,5 +1,5 @@
 {
-  "name": "bar",
+  "name": "@graphitation/template",
   "version": "0.1.0",
   "main": "./src/index.ts",
   "scripts": {
@@ -15,6 +15,7 @@
   },
   "publishConfig": {
     "main": "./lib/index.js",
-    "types": "./lib/index.d.ts"
+    "types": "./lib/index.d.ts",
+    "access": "public"
   }
 }

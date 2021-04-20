@@ -17,7 +17,8 @@
   },
   "publishConfig": {
     "main": "./lib/index.js",
-    "types": "./lib/index.d.ts"
+    "types": "./lib/index.d.ts",
+    "access": "public"
   },
   "dependencies": {
     "graphql": "^15.0.0",
