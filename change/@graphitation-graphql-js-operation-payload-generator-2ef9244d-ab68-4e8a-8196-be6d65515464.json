@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Fixes the publishConfig to have access \"public\"",
-  "packageName": "@graphitation/graphql-js-operation-payload-generator",
-  "email": "kchau@microsoft.com",
-  "dependentChangeType": "patch"
-}

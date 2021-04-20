@@ -1,6 +1,6 @@
 {
   "name": "@graphitation/graphql-js-operation-payload-generator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "./src/index.ts",
   "scripts": {
     "build": "monorepo-scripts build",
@@ -10,7 +10,7 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@graphitation/graphql-js-tag": "^0.1.0",
+    "@graphitation/graphql-js-tag": "^0.1.1",
     "@types/jest": "^26.0.22",
     "monorepo-scripts": "*",
     "relay-test-utils-internal": "^11.0.2"

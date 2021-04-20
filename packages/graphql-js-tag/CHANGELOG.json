@@ -1,0 +1,20 @@
+{
+  "name": "@graphitation/graphql-js-tag",
+  "entries": [
+    {
+      "date": "Tue, 20 Apr 2021 17:30:37 GMT",
+      "tag": "@graphitation/graphql-js-tag_v0.1.1",
+      "version": "0.1.1",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Fixes the publishConfig to have access \"public\"",
+            "author": "kchau@microsoft.com",
+            "commit": "545d28ec52016917f7375f01e6db6a94bebb7579",
+            "package": "@graphitation/graphql-js-tag"
+          }
+        ]
+      }
+    }
+  ]
+}
