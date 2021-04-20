@@ -12,11 +12,10 @@ import invariant from "invariant";
 import {
   assertType,
   DocumentNode,
+  ExecutionResult,
   GraphQLSchema,
   isAbstractType,
 } from "graphql";
-
-type MockData = Record<string, unknown>;
 
 export interface RequestDescriptor {
   readonly node: DocumentNode;
@@ -30,7 +29,7 @@ export interface OperationDescriptor {
 
 type OperationMockResolver = (
   operation: OperationDescriptor
-) => MockData | Error | undefined | null;
+) => ExecutionResult | Error | undefined | null;
 
 interface MockFunctions {
   /**
@@ -60,7 +59,10 @@ interface MockFunctions {
    * ApolloClient requires a delay until the next tick of the runloop before it updates,
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
-  nextValue(operation: OperationDescriptor, data: MockData): Promise<void>;
+  nextValue(
+    operation: OperationDescriptor,
+    data: ExecutionResult
+  ): Promise<void>;
 
   /**
    * Complete the operation. No more payloads are expected for this operation.
@@ -80,7 +82,7 @@ interface MockFunctions {
    * ApolloClient requires a delay until the next tick of the runloop before it updates,
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
-  resolve(operation: OperationDescriptor, data: MockData): Promise<void>;
+  resolve(operation: OperationDescriptor, data: ExecutionResult): Promise<void>;
 
   /**
    * Reject the request with a given error.
@@ -101,7 +103,7 @@ interface MockFunctions {
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
   resolveMostRecentOperation(
-    resolver: (operation: OperationDescriptor) => MockData
+    resolver: (operation: OperationDescriptor) => ExecutionResult
   ): Promise<void>;
 
   /**
@@ -118,12 +120,12 @@ interface MockFunctions {
   /**
    * Adds a resolver function that will be used to resolve/reject operations as they appear.
    */
-  queueOperationResolver: (resolver: OperationMockResolver) => void;
+  queueOperationResolver: (resolver: OperationMockResolver) => Promise<void>;
 }
 
 interface ApolloClientExtension {
   mock: MockFunctions;
-  mockClear: () => void;
+  // mockClear: () => void;
 }
 
 export interface ApolloMockClient
@@ -140,9 +142,11 @@ class MockLink extends ApolloLink {
     this.mock = new Mock();
   }
 
-  public mockClear() {
-    this.mock = new Mock();
-  }
+  // FIXME: This does't actually work well and is likely due to the client
+  //        being in a tainted state.
+  // public mockClear() {
+  //   this.mock = new Mock();
+  // }
 
   public request(operation: Operation): Observable<FetchResult> | null {
     return new Observable<FetchResult>((observer) => {
@@ -158,6 +162,24 @@ class MockLink extends ApolloLink {
       );
     });
   }
+}
+
+function executeOperationMockResolver(
+  resolver: OperationMockResolver,
+  operation: OperationDescriptor,
+  observer: ZenObservable.SubscriptionObserver<FetchResult>
+) {
+  const resolved = resolver(operation);
+  if (resolved) {
+    if (resolved instanceof Error) {
+      observer.error(resolved);
+    } else {
+      observer.next(resolved);
+    }
+    observer.complete();
+    return true;
+  }
+  return false;
 }
 
 class Mock implements MockFunctions {
@@ -178,14 +200,7 @@ class Mock implements MockFunctions {
     observer: ZenObservable.SubscriptionObserver<FetchResult>
   ) {
     for (const resolver of this.resolversQueue) {
-      const resolved = resolver(operation);
-      if (resolved) {
-        if (resolved instanceof Error) {
-          observer.error(resolved);
-        } else {
-          observer.next(resolved);
-        }
-        observer.complete();
+      if (executeOperationMockResolver(resolver, operation, observer)) {
         return;
       }
     }
@@ -235,7 +250,7 @@ class Mock implements MockFunctions {
 
   public async nextValue(
     operation: OperationDescriptor,
-    data: MockData
+    data: ExecutionResult
   ): Promise<void> {
     this.getObserver(operation).next(data);
   }
@@ -248,7 +263,7 @@ class Mock implements MockFunctions {
 
   public async resolve(
     operation: OperationDescriptor,
-    data: MockData
+    data: ExecutionResult
   ): Promise<void> {
     this.nextValue(operation, data);
     this.complete(operation);
@@ -263,7 +278,7 @@ class Mock implements MockFunctions {
   }
 
   public async resolveMostRecentOperation(
-    resolver: (operation: OperationDescriptor) => MockData
+    resolver: (operation: OperationDescriptor) => ExecutionResult
   ): Promise<void> {
     const operation = this.getMostRecentOperation();
     this.resolve(operation, resolver(operation));
@@ -279,8 +294,13 @@ class Mock implements MockFunctions {
     );
   }
 
-  public queueOperationResolver(resolver: OperationMockResolver) {
+  public async queueOperationResolver(resolver: OperationMockResolver) {
     this.resolversQueue.push(resolver);
+    for (const [operation, observer] of this.operations) {
+      if (executeOperationMockResolver(resolver, operation, observer)) {
+        this.operations.delete(operation);
+      }
+    }
   }
 }
 
@@ -315,9 +335,9 @@ export function createMockClient(schema: GraphQLSchema): ApolloMockClient {
       get mock() {
         return link.mock;
       },
-      mockClear() {
-        link.mockClear();
-      },
+      // mockClear() {
+      //   link.mockClear();
+      // },
     }
   );
 }
