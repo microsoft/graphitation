@@ -1,0 +1,12 @@
+type Query {
+  user(id: ID!): User!
+}
+
+type Subscription {
+  userNameChanged(id: ID!): User!
+}
+
+type User {
+  id: ID!
+  name: String!
+}

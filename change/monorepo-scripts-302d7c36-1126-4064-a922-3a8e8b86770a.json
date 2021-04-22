@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "Exclude artefacts",
+  "packageName": "monorepo-scripts",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "none"
+}
