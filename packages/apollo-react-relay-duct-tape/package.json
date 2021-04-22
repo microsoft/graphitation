@@ -7,17 +7,20 @@
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
     "types": "monorepo-scripts types",
-    "just": "monorepo-scripts"
+    "just": "monorepo-scripts",
+    "relay": "relay-compiler --language typescript --schema ./src/__tests__/schema.graphql --src ./src"
   },
   "devDependencies": {
     "@apollo/client": "^3.3.15",
     "@graphitation/apollo-mock-client": "^0.1.0",
-    "@graphitation/graphql-js-tag": "^0.1.0",
     "@graphitation/graphql-js-operation-payload-generator": "^0.1.0",
+    "@graphitation/graphql-js-tag": "^0.1.0",
     "@types/jest": "^26.0.22",
     "@types/react": "^17.0.3",
     "monorepo-scripts": "*",
-    "react": "^17.0.2"
+    "react": "^17.0.2",
+    "relay-compiler": "^11.0.2",
+    "relay-compiler-language-typescript": "^14.0.0"
   },
   "peerDependencies": {
     "graphql": "^15.5.0",

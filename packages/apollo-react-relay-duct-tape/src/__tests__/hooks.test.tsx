@@ -1,10 +1,13 @@
 import * as React from "react";
-import { buildASTSchema } from "graphql";
+import { buildSchema } from "graphql";
+import { readFileSync } from "fs";
+import { join } from "path";
 import {
   act,
   create as createTestRenderer,
   ReactTestRenderer,
 } from "react-test-renderer";
+import { ApolloProvider } from "@apollo/client";
 
 import { graphql } from "@graphitation/graphql-js-tag";
 import * as MockPayloadGenerator from "@graphitation/graphql-js-operation-payload-generator";
@@ -12,9 +15,6 @@ import {
   ApolloMockClient,
   createMockClient,
 } from "@graphitation/apollo-mock-client/src/index"; // FIXME
-
-// import { NovaFacadeProvider } from "@nova-facade/react";
-// import { NovaFacade } from "@nova-facade/types";
 
 import {
   GraphQLTaggedNode,
@@ -24,22 +24,23 @@ import {
 } from "../hooks";
 // import { GraphQLTaggedNode } from "./taggedNode";
 import { FragmentRefs } from "../types";
-import { ApolloProvider } from "@apollo/client";
 
-const schema = buildASTSchema(graphql`
-  type Query {
-    user(id: ID!): User!
-  }
+import { hooksTestQuery } from "./__generated__/hooksTestQuery.graphql";
+import { hooksTestSubscription } from "./__generated__/hooksTestSubscription.graphql";
 
-  type Subscription {
-    userNameChanged(id: ID!): User!
-  }
+const schema = buildSchema(
+  readFileSync(join(__dirname, "schema.graphql"), "utf8")
+);
 
-  type User {
-    id: ID!
-    name: String!
+const query = graphql`
+  query hooksTestQuery($id: ID!) {
+    user(id: $id) {
+      __typename
+      id
+      name
+    }
   }
-`);
+`;
 
 let client: ApolloMockClient;
 
@@ -49,17 +50,8 @@ beforeEach(() => {
 
 describe(useLazyLoadQuery, () => {
   it("uses Apollo's useQuery hook", async () => {
-    const query = graphql`
-      query TestQuery($id: ID!) {
-        user(id: $id) {
-          __typename
-          name
-        }
-      }
-    `;
-
     const Subject: React.FC = () => {
-      const { data, error } = useLazyLoadQuery<any>(query, {
+      const { data, error } = useLazyLoadQuery<hooksTestQuery>(query, {
         id: "some-user-id",
       });
       if (error) {
@@ -121,7 +113,7 @@ describe(useFragment, () => {
 
 describe(useSubscription, () => {
   const subscription = graphql`
-    subscription TestSubscription($id: ID!) {
+    subscription hooksTestSubscription($id: ID!) {
       userNameChanged(id: $id) {
         __typename
         id
@@ -141,7 +133,7 @@ describe(useSubscription, () => {
     onError = jest.fn(),
     children,
   }) => {
-    useSubscription({
+    useSubscription<hooksTestSubscription>({
       subscription,
       variables: { id: "some-user-id" },
       onNext,
@@ -152,18 +144,9 @@ describe(useSubscription, () => {
 
   it("uses Apollo's useSubscription hook", async () => {
     const QueryComponent = () => {
-      const { data } = useLazyLoadQuery<any>(
-        graphql`
-          query {
-            user {
-              __typename
-              id
-              name
-            }
-          }
-        `,
-        {}
-      );
+      const { data } = useLazyLoadQuery<hooksTestQuery>(query, {
+        id: "some-user-id",
+      });
       return data ? <div>{data.user.name}</div> : null;
     };
 
