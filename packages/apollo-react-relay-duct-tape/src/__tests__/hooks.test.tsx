@@ -32,14 +32,21 @@ const schema = buildSchema(
   readFileSync(join(__dirname, "schema.graphql"), "utf8")
 );
 
+const fragment = graphql`
+  fragment hooksTestFragment on User {
+    id
+    name
+  }
+`;
+
 const query = graphql`
   query hooksTestQuery($id: ID!) {
     user(id: $id) {
       __typename
-      id
-      name
+      ...hooksTestFragment
     }
   }
+  ${fragment}
 `;
 
 let client: ApolloMockClient;
