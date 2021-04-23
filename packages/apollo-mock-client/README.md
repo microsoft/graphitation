@@ -1,6 +1,8 @@
 # ApolloMockClient
 
-An Apollo Client that allows mocking of payloads in response to operations, rather than having to provide them all upfront. It is API-wise a port of [Relay’s RelayMockEnvironment](https://relay.dev/docs/guides/testing-relay-components/#relaymockenvironment-api-overview).
+An Apollo Client that allows mocking of payloads in response to operations, rather than having to provide them all upfront.
+
+It is API-wise a port of [Relay’s RelayMockEnvironment](https://relay.dev/docs/guides/testing-relay-components/#relaymockenvironment-api-overview).
 
 While not required, it works hand-in-hand with `@graphitation/graphql-js-operation-payload-generator`.
 

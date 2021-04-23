@@ -1,5 +1,7 @@
 {
   "name": "@graphitation/graphql-js-operation-payload-generator",
+  "description": "Generates a payload for a given GraphQL operation expressed in graphql-js AST and a GraphQL Schema.",
+  "license": "MIT",
   "version": "0.1.1",
   "main": "./src/index.ts",
   "scripts": {

@@ -1,5 +1,7 @@
 {
   "name": "@graphitation/apollo-react-relay-duct-tape",
+  "description": "A compatibility wrapper that provides the react-relay API on top of Apollo Client.",
+  "license": "MIT",
   "version": "0.1.0",
   "main": "./src/index.ts",
   "scripts": {

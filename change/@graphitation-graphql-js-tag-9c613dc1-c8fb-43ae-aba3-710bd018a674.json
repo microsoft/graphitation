@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "First proper release",
+  "packageName": "@graphitation/graphql-js-tag",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}
