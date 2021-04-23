@@ -6,7 +6,7 @@ export const types = tscTask({ emitDeclarationOnly: true });
 
 export const build = () =>
   esbuildTask({
-    entryPoints: glob.sync("src/**/*.ts"),
+    entryPoints: glob.sync("src/**/*.{ts,tsx}"),
     outdir: "lib",
   });
 
