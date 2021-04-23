@@ -1,6 +1,6 @@
 # relay-compiler-language-graphitation
 
-A relay-compiler plugin that wraps [the TypeScript plugin]() and augments it slightly for our needs:
+A relay-compiler plugin that wraps [the TypeScript plugin](https://github.com/relay-tools/relay-compiler-language-typescript) and augments it slightly for our needs:
 
 - Currently only emit typings, no relay-runtime metadata
 - Allow interpolation of GraphQL fragment documents

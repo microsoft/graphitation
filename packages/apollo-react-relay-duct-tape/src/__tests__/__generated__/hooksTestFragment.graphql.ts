@@ -6,6 +6,7 @@ import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type hooksTestFragment = {
     readonly id: string;
     readonly name: string;
+    readonly __typename: "User";
     readonly " $refType": "hooksTestFragment";
 };
 export type hooksTestFragment$data = hooksTestFragment;

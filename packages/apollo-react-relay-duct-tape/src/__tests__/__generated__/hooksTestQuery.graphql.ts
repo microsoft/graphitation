@@ -8,7 +8,6 @@ export type hooksTestQueryVariables = {
 };
 export type hooksTestQueryResponse = {
     readonly user: {
-        readonly __typename: string;
         readonly " $fragmentRefs": FragmentRefs<"hooksTestFragment">;
     };
 };
