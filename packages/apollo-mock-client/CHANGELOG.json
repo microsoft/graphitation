@@ -2,6 +2,67 @@
   "name": "@graphitation/apollo-mock-client",
   "entries": [
     {
+      "date": "Fri, 23 Apr 2021 21:44:28 GMT",
+      "tag": "@graphitation/apollo-mock-client_v0.6.0",
+      "version": "0.6.0",
+      "comments": {
+        "minor": [
+          {
+            "comment": "Use queued resolver for existing operations",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-mock-client"
+          },
+          {
+            "comment": "First proper release",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-mock-client"
+          }
+        ],
+        "patch": [
+          {
+            "comment": "fixing the publish process, publishing a new patch level (again)",
+            "author": "kchau@microsoft.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-mock-client"
+          },
+          {
+            "comment": "fixing the publish process, publishing a new patch level",
+            "author": "kchau@microsoft.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-mock-client"
+          },
+          {
+            "comment": "Include correct files",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-mock-client"
+          },
+          {
+            "comment": "Bump @graphitation/graphql-js-operation-payload-generator to v0.5.0",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-mock-client"
+          },
+          {
+            "comment": "Bump @graphitation/graphql-js-tag to v0.5.0",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-mock-client"
+          }
+        ],
+        "none": [
+          {
+            "comment": "fixing publish again - leveraging the previously generated change files to publish",
+            "author": "kchau@microsoft.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-mock-client"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 20 Apr 2021 17:30:37 GMT",
       "tag": "@graphitation/apollo-mock-client_v0.1.1",
       "version": "0.1.1",

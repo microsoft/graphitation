@@ -1,0 +1,84 @@
+{
+  "name": "@graphitation/apollo-react-relay-duct-tape",
+  "entries": [
+    {
+      "date": "Fri, 23 Apr 2021 21:44:28 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v0.3.0",
+      "version": "0.3.0",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Include correct files",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          },
+          {
+            "comment": "fixing the publish process, publishing a new patch level",
+            "author": "kchau@microsoft.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          },
+          {
+            "comment": "fixing the publish process, publishing a new patch level (again)",
+            "author": "kchau@microsoft.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          },
+          {
+            "comment": "Bump @graphitation/graphql-js-operation-payload-generator to v0.5.0",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          },
+          {
+            "comment": "Bump @graphitation/apollo-mock-client to v0.6.0",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          },
+          {
+            "comment": "Bump @graphitation/graphql-js-tag to v0.5.0",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          }
+        ],
+        "none": [
+          {
+            "comment": "fixing publish again - leveraging the previously generated change files to publish",
+            "author": "kchau@microsoft.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          },
+          {
+            "comment": "Initial import",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          },
+          {
+            "comment": "Use generated typings in tests",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          },
+          {
+            "comment": "Bump relay-compiler-language-graphitation to v0.5.0",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          }
+        ],
+        "minor": [
+          {
+            "comment": "First proper release",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          }
+        ]
+      }
+    }
+  ]
+}

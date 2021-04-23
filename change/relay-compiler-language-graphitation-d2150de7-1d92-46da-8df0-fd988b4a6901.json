@@ -1,7 +1,0 @@
-{
-  "type": "none",
-  "comment": "fixing publish again - leveraging the previously generated change files to publish",
-  "packageName": "relay-compiler-language-graphitation",
-  "email": "kchau@microsoft.com",
-  "dependentChangeType": "none"
-}

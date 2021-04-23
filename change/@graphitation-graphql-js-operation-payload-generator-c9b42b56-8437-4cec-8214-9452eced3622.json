@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Include correct files",
-  "packageName": "@graphitation/graphql-js-operation-payload-generator",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}

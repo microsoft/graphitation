@@ -2,7 +2,7 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "description": "Generates a payload for a given GraphQL operation expressed in graphql-js AST and a GraphQL Schema.",
   "license": "MIT",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "main": "./src/index.ts",
   "scripts": {
     "build": "monorepo-scripts build",
@@ -12,7 +12,7 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@graphitation/graphql-js-tag": "^0.4.0",
+    "@graphitation/graphql-js-tag": "^0.5.0",
     "@types/jest": "^26.0.22",
     "monorepo-scripts": "*",
     "relay-test-utils-internal": "^11.0.2"

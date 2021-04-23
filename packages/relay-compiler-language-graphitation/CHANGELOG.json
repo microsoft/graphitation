@@ -1,37 +1,29 @@
 {
-  "name": "@graphitation/graphql-js-tag",
+  "name": "relay-compiler-language-graphitation",
   "entries": [
     {
       "date": "Fri, 23 Apr 2021 21:44:28 GMT",
-      "tag": "@graphitation/graphql-js-tag_v0.5.0",
+      "tag": "relay-compiler-language-graphitation_v0.5.0",
       "version": "0.5.0",
       "comments": {
-        "none": [
-          {
-            "comment": "fixing publish again - leveraging the previously generated change files to publish",
-            "author": "kchau@microsoft.com",
-            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
-            "package": "@graphitation/graphql-js-tag"
-          }
-        ],
         "patch": [
           {
             "comment": "fixing the publish process, publishing a new patch level",
             "author": "kchau@microsoft.com",
             "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
-            "package": "@graphitation/graphql-js-tag"
+            "package": "relay-compiler-language-graphitation"
           },
           {
             "comment": "fixing the publish process, publishing a new patch level (again)",
             "author": "kchau@microsoft.com",
             "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
-            "package": "@graphitation/graphql-js-tag"
+            "package": "relay-compiler-language-graphitation"
           },
           {
             "comment": "Include correct files",
             "author": "eloy.de.enige@gmail.com",
             "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
-            "package": "@graphitation/graphql-js-tag"
+            "package": "relay-compiler-language-graphitation"
           }
         ],
         "minor": [
@@ -39,22 +31,21 @@
             "comment": "First proper release",
             "author": "eloy.de.enige@gmail.com",
             "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
-            "package": "@graphitation/graphql-js-tag"
+            "package": "relay-compiler-language-graphitation"
           }
-        ]
-      }
-    },
-    {
-      "date": "Tue, 20 Apr 2021 17:30:37 GMT",
-      "tag": "@graphitation/graphql-js-tag_v0.1.1",
-      "version": "0.1.1",
-      "comments": {
-        "patch": [
+        ],
+        "none": [
           {
-            "comment": "Fixes the publishConfig to have access \"public\"",
+            "comment": "Initial import",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "relay-compiler-language-graphitation"
+          },
+          {
+            "comment": "fixing publish again - leveraging the previously generated change files to publish",
             "author": "kchau@microsoft.com",
-            "commit": "545d28ec52016917f7375f01e6db6a94bebb7579",
-            "package": "@graphitation/graphql-js-tag"
+            "commit": "2834a8b6a60213e786c15b923ca3270ed2dcfe4e",
+            "package": "relay-compiler-language-graphitation"
           }
         ]
       }
