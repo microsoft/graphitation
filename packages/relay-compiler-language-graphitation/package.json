@@ -5,8 +5,6 @@
   "scripts": {
     "build": "tsc",
     "lint": "monorepo-scripts lint",
-    "test": "monorepo-scripts test",
-    "types": "monorepo-scripts types",
     "just": "monorepo-scripts"
   },
   "dependencies": {
