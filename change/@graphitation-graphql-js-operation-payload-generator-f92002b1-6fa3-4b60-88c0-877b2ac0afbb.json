@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "fixing publish again - leveraging the previously generated change files to publish",
+  "packageName": "@graphitation/graphql-js-operation-payload-generator",
+  "email": "kchau@microsoft.com",
+  "dependentChangeType": "none"
+}
