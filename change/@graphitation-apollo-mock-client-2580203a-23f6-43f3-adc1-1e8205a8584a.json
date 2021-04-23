@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Use queued resolver for existing operations",
-  "packageName": "@graphitation/apollo-mock-client",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}

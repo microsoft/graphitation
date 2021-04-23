@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "fixing the publish process, publishing a new patch level (again)",
-  "packageName": "@graphitation/apollo-mock-client",
-  "email": "kchau@microsoft.com",
-  "dependentChangeType": "patch"
-}

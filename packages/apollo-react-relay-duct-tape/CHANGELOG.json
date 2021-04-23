@@ -1,0 +1,78 @@
+{
+  "name": "@graphitation/apollo-react-relay-duct-tape",
+  "entries": [
+    {
+      "date": "Fri, 23 Apr 2021 20:06:13 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v0.2.0",
+      "version": "0.2.0",
+      "comments": {
+        "minor": [
+          {
+            "comment": "First proper release",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2cb18397cdf8092120777938b8cf804da6411589",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          }
+        ],
+        "patch": [
+          {
+            "comment": "fixing the publish process, publishing a new patch level",
+            "author": "kchau@microsoft.com",
+            "commit": "2cb18397cdf8092120777938b8cf804da6411589",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          },
+          {
+            "comment": "fixing the publish process, publishing a new patch level (again)",
+            "author": "kchau@microsoft.com",
+            "commit": "2cb18397cdf8092120777938b8cf804da6411589",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          },
+          {
+            "comment": "Include correct files",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2cb18397cdf8092120777938b8cf804da6411589",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          },
+          {
+            "comment": "Bump @graphitation/apollo-mock-client to v0.5.0",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2cb18397cdf8092120777938b8cf804da6411589",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          },
+          {
+            "comment": "Bump @graphitation/graphql-js-operation-payload-generator to v0.4.0",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2cb18397cdf8092120777938b8cf804da6411589",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          },
+          {
+            "comment": "Bump @graphitation/graphql-js-tag to v0.4.0",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2cb18397cdf8092120777938b8cf804da6411589",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          }
+        ],
+        "none": [
+          {
+            "comment": "Initial import",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2cb18397cdf8092120777938b8cf804da6411589",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          },
+          {
+            "comment": "Use generated typings in tests",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2cb18397cdf8092120777938b8cf804da6411589",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          },
+          {
+            "comment": "Bump relay-compiler-language-graphitation to v0.4.0",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2cb18397cdf8092120777938b8cf804da6411589",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          }
+        ]
+      }
+    }
+  ]
+}
