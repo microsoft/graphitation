@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "fixing the publish process, publishing a new patch level (again)",
+  "packageName": "@graphitation/graphql-js-operation-payload-generator",
+  "email": "kchau@microsoft.com",
+  "dependentChangeType": "patch"
+}
