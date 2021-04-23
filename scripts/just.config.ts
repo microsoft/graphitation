@@ -14,7 +14,7 @@ export const test = () => {
   return jestTask({
     config: path.join(__dirname, "config", "jest.config.js"),
     watch: argv().watch,
-    _: argv()._
+    _: argv()._,
   });
 };
 

@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "composite": false,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo",
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "Node",
+    "rootDir": "src",
+    "outDir": "lib",
+    "declaration": false,
+    "declarationMap": false,
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
+  },
+  "include": ["src"],
+  "references": []
+}

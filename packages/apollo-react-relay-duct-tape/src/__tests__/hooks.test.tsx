@@ -8,6 +8,7 @@ import {
   ReactTestRenderer,
 } from "react-test-renderer";
 import { ApolloProvider } from "@apollo/client";
+import { expectType } from "ts-expect";
 
 import { graphql } from "@graphitation/graphql-js-tag";
 import * as MockPayloadGenerator from "@graphitation/graphql-js-operation-payload-generator";
@@ -16,31 +17,97 @@ import {
   createMockClient,
 } from "@graphitation/apollo-mock-client/src/index"; // FIXME
 
-import {
-  GraphQLTaggedNode,
-  useFragment,
-  useLazyLoadQuery,
-  useSubscription,
-} from "../hooks";
-// import { GraphQLTaggedNode } from "./taggedNode";
-import { FragmentRefs } from "../types";
+import { useFragment, useLazyLoadQuery, useSubscription } from "../hooks";
 
 import { hooksTestQuery } from "./__generated__/hooksTestQuery.graphql";
 import { hooksTestSubscription } from "./__generated__/hooksTestSubscription.graphql";
+import { hooksTestFragment$key } from "./__generated__/hooksTestFragment.graphql";
 
 const schema = buildSchema(
   readFileSync(join(__dirname, "schema.graphql"), "utf8")
 );
 
+/**
+ * Fragment test subject
+ */
+
+const fragment = graphql`
+  fragment hooksTestFragment on User {
+    __typename
+    id
+    name
+  }
+`;
+
+const FragmentComponent: React.FC<{ user: hooksTestFragment$key }> = (
+  props
+) => {
+  const user = useFragment(fragment, props.user);
+  return <div id={user.__typename}>{user.name}</div>;
+};
+
+/**
+ * Query test subject
+ */
+
 const query = graphql`
   query hooksTestQuery($id: ID!) {
     user(id: $id) {
-      __typename
-      id
-      name
+      ...hooksTestFragment
     }
   }
+  ${fragment}
 `;
+
+const QueryComponent: React.FC = () => {
+  const { data, error } = useLazyLoadQuery<hooksTestQuery>(query, {
+    id: "some-user-id",
+  });
+  if (error) {
+    return <div id="error">{error.message}</div>;
+  } else if (data) {
+    return <FragmentComponent user={data.user} />;
+  } else {
+    return <div id="loading">Loading...</div>;
+  }
+};
+
+/**
+ * Subscription test subject
+ */
+
+const subscription = graphql`
+  subscription hooksTestSubscription($id: ID!) {
+    userNameChanged(id: $id) {
+      ...hooksTestFragment
+    }
+  }
+  ${fragment}
+`;
+
+type SubscriptionHookParams = Parameters<typeof useSubscription>[0];
+interface SubjectProps {
+  onNext?: SubscriptionHookParams["onNext"];
+  onError?: SubscriptionHookParams["onError"] | null;
+}
+
+const SubscriptionComponent: React.FC<SubjectProps> = ({
+  onNext = jest.fn(),
+  onError = jest.fn(),
+  children,
+}) => {
+  useSubscription<hooksTestSubscription>({
+    subscription,
+    variables: { id: "some-user-id" },
+    onNext,
+    onError: onError || undefined,
+  });
+  return <>{children}</>;
+};
+
+/**
+ * Tests
+ */
 
 let client: ApolloMockClient;
 
@@ -50,24 +117,11 @@ beforeEach(() => {
 
 describe(useLazyLoadQuery, () => {
   it("uses Apollo's useQuery hook", async () => {
-    const Subject: React.FC = () => {
-      const { data, error } = useLazyLoadQuery<hooksTestQuery>(query, {
-        id: "some-user-id",
-      });
-      if (error) {
-        return <div id="error">{error.message}</div>;
-      } else if (data) {
-        return <div id={data.user.__typename}>{data.user.name}</div>;
-      } else {
-        return <div id="loading">Loading...</div>;
-      }
-    };
-
     let tree: ReactTestRenderer;
     act(() => {
       tree = createTestRenderer(
         <ApolloProvider client={client}>
-          <Subject />
+          <QueryComponent />
         </ApolloProvider>
       );
     });
@@ -89,74 +143,27 @@ describe(useLazyLoadQuery, () => {
 
 describe(useFragment, () => {
   it("currently simply passes through the data it receives", () => {
-    const fragment = ({} as unknown) as GraphQLTaggedNode;
-    const fragmentRef = { someKey: "some-data" } as any;
+    const fragmentRef: hooksTestFragment$key = {} as any;
     expect(useFragment(fragment, fragmentRef)).toEqual(fragmentRef);
   });
 
   it("unmasks the opaque data's typing that gets emitted by the compiler", () => {
-    type SomeFragment$data = { someKey: string };
-    type SomeFragment$key = {
-      readonly " $data"?: SomeFragment$data;
-      readonly " $fragmentRefs": FragmentRefs<"SomeFragment">;
-    };
-
-    const fragment = ({} as unknown) as GraphQLTaggedNode;
-    const opaqueFragmentRef = ({} as unknown) as SomeFragment$key;
-
-    // This test just checks that there are no TS errors. Alas the test suite currently won't fail if that were the
-    // case, but at least there's a test that covers the intent.
-    const data: SomeFragment$data = useFragment(fragment, opaqueFragmentRef);
-    void data;
+    const fragmentRef: hooksTestFragment$key = {} as any;
+    const user = useFragment(fragment, fragmentRef);
+    expectType<string>(user.id);
+    expectType<string>(user.name);
   });
 });
 
 describe(useSubscription, () => {
-  const subscription = graphql`
-    subscription hooksTestSubscription($id: ID!) {
-      userNameChanged(id: $id) {
-        __typename
-        id
-        name
-      }
-    }
-  `;
-
-  type SubscriptionHookParams = Parameters<typeof useSubscription>[0];
-  interface SubjectProps {
-    onNext?: SubscriptionHookParams["onNext"];
-    onError?: SubscriptionHookParams["onError"] | null;
-  }
-
-  const Subject: React.FC<SubjectProps> = ({
-    onNext = jest.fn(),
-    onError = jest.fn(),
-    children,
-  }) => {
-    useSubscription<hooksTestSubscription>({
-      subscription,
-      variables: { id: "some-user-id" },
-      onNext,
-      onError: onError || undefined,
-    });
-    return <>{children}</>;
-  };
-
-  it("uses Apollo's useSubscription hook", async () => {
-    const QueryComponent = () => {
-      const { data } = useLazyLoadQuery<hooksTestQuery>(query, {
-        id: "some-user-id",
-      });
-      return data ? <div>{data.user.name}</div> : null;
-    };
-
+  it("uses Apollo's useSubscription hook and updates the store", async () => {
     let tree: ReactTestRenderer;
     act(() => {
       tree = createTestRenderer(
         <ApolloProvider client={client}>
-          <Subject>
+          <SubscriptionComponent>
             <QueryComponent />
-          </Subject>
+          </SubscriptionComponent>
         </ApolloProvider>
       );
     });
@@ -217,7 +224,7 @@ describe(useSubscription, () => {
       act(() => {
         createTestRenderer(
           <ApolloProvider client={client}>
-            <Subject onNext={onNext} />
+            <SubscriptionComponent onNext={onNext} />
           </ApolloProvider>
         );
       });
@@ -246,7 +253,7 @@ describe(useSubscription, () => {
       act(() => {
         createTestRenderer(
           <ApolloProvider client={client}>
-            <Subject onError={onError} />
+            <SubscriptionComponent onError={onError} />
           </ApolloProvider>
         );
       });
@@ -265,7 +272,7 @@ describe(useSubscription, () => {
       act(() => {
         createTestRenderer(
           <ApolloProvider client={client}>
-            <Subject onError={null} />
+            <SubscriptionComponent onError={null} />
           </ApolloProvider>
         );
       });
