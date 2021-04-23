@@ -1,0 +1,4 @@
+/src/
+**/__tests__/
+.eslintrc.json
+tsconfig.json

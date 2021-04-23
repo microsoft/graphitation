@@ -1,5 +1,4 @@
 export interface Variables {
-  // eslint-disable-next-line msteams/no-explicit-any-with-exceptions
   [name: string]: any;
 }
 
@@ -13,12 +12,10 @@ export interface OperationType {
  * relay-compiler-language-typescript support for fragment references
  */
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export interface _RefType<Ref extends string> {
   " $refType": Ref;
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export interface _FragmentRefs<Refs extends string> {
   " $fragmentRefs": FragmentRefs<Refs>;
 }

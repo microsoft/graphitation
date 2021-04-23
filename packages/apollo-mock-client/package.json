@@ -2,7 +2,7 @@
   "name": "@graphitation/apollo-mock-client",
   "description": "An Apollo Client that allows mocking of payloads in response to operations, rather than having to provide them all upfront.",
   "license": "MIT",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "main": "./src/index.ts",
   "scripts": {
     "build": "monorepo-scripts build",
@@ -26,8 +26,7 @@
   },
   "peerDependencies": {
     "@apollo/client": "^3.3.0",
-    "graphql": "^15.5.0",
-    "react": "^17.0.2"
+    "graphql": "^15.5.0"
   },
   "dependencies": {
     "invariant": "^2.2.4"

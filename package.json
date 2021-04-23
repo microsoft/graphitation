@@ -14,6 +14,7 @@
     "test": "lage test",
     "lint": "lage lint",
     "lage": "lage",
+    "ci": "yarn lage build test lint && yarn checkchange",
     "change": "beachball change -b origin/main",
     "checkchange": "beachball check -b origin/main",
     "release": "beachball publish -b origin/main"
