@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "[package] Bump minor versions",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}
