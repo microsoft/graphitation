@@ -15,9 +15,10 @@
     "lint": "lage lint",
     "lage": "lage",
     "ci": "yarn lage build test lint && yarn checkchange",
-    "change": "beachball change -b origin/main",
-    "checkchange": "beachball check -b origin/main",
-    "release": "beachball publish -b origin/main"
+    "beachball": "beachball -b origin/main",
+    "change": "yarn beachball change",
+    "checkchange": "yarn beachball check",
+    "release": "yarn beachball publish"
   },
   "devDependencies": {
     "beachball": "^2.1.0",
