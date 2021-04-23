@@ -1,6 +1,8 @@
 # graphql-js-operation-payload-generator
 
-A graphql-js AST port of [Relay’s MockPayloadGenerator](https://relay.dev/docs/guides/testing-relay-components/#mock-payload-generator-and-the-relay_test_operation-directive).
+Generates a payload for a given GraphQL operation expressed in graphql-js AST and a GraphQL Schema.
+
+It is API-wise a port of [Relay’s MockPayloadGenerator](https://relay.dev/docs/guides/testing-relay-components/#mock-payload-generator-and-the-relay_test_operation-directive).
 
 ```ts
 import { graphql } from "@graphitation/graphql-js-tag";
