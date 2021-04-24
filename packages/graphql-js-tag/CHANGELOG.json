@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-tag",
   "entries": [
     {
+      "date": "Sat, 24 Apr 2021 23:10:54 GMT",
+      "tag": "@graphitation/graphql-js-tag_v0.5.3",
+      "version": "0.5.3",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Include commonjs modules",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "1959ee4fa8b12688916df580b3c4dd0afa93f2ba",
+            "package": "@graphitation/graphql-js-tag"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 23 Apr 2021 22:48:59 GMT",
       "tag": "@graphitation/graphql-js-tag_v0.5.2",
       "version": "0.5.2",
