@@ -1,14 +1,34 @@
-import { tscTask, esbuildTask, jestTask, eslintTask, argv } from "just-scripts";
+import {
+  tscTask,
+  esbuildTask,
+  jestTask,
+  eslintTask,
+  argv,
+  parallel,
+  EsbuildBuildOptions,
+} from "just-scripts";
 import * as path from "path";
 import * as glob from "fast-glob";
 
 export const types = tscTask({ emitDeclarationOnly: true });
 
-export const build = () =>
-  esbuildTask({
-    entryPoints: glob.sync("src/**/*.{ts,tsx}"),
+export const build = () => {
+  const baseEsbuildOptions: EsbuildBuildOptions = {
+    entryPoints: glob.sync(["src/**/*.{ts,tsx}", "!src/**/__tests__/**"]),
     outdir: "lib",
-  });
+  };
+  return parallel(
+    esbuildTask({
+      ...baseEsbuildOptions,
+      format: "esm",
+      outExtension: { ".js": ".mjs" },
+    }),
+    esbuildTask({
+      ...baseEsbuildOptions,
+      format: "cjs",
+    })
+  );
+};
 
 export const test = () => {
   return jestTask({
