@@ -5,7 +5,7 @@
   "version": "0.5.0",
   "main": "./lib/index",
   "scripts": {
-    "build": "tsc",
+    "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
     "just": "monorepo-scripts"
   },
