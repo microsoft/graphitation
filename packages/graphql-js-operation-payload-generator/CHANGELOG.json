@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Tue, 27 Apr 2021 21:34:50 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.5.4",
+      "version": "0.5.4",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Only es6 features and make types castable",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "a6b3ad721b0bcb71de889bbdde778fcd87503217",
+            "package": "@graphitation/graphql-js-operation-payload-generator"
+          }
+        ]
+      }
+    },
+    {
       "date": "Sat, 24 Apr 2021 23:10:54 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.5.3",
       "version": "0.5.3",
