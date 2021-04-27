@@ -16,38 +16,41 @@ import {
   isAbstractType,
 } from "graphql";
 
-export interface RequestDescriptor {
-  readonly node: DocumentNode;
+export interface RequestDescriptor<Node = DocumentNode> {
+  readonly node: Node;
   readonly variables: Record<string, any>;
 }
 
-export interface OperationDescriptor {
-  readonly schema: GraphQLSchema;
-  readonly request: RequestDescriptor;
+export interface OperationDescriptor<
+  Schema = GraphQLSchema,
+  Node = DocumentNode
+> {
+  readonly schema: Schema;
+  readonly request: RequestDescriptor<Node>;
 }
 
-type OperationMockResolver = (
-  operation: OperationDescriptor
+type OperationMockResolver<Schema = GraphQLSchema, Node = DocumentNode> = (
+  operation: OperationDescriptor<Schema, Node>
 ) => ExecutionResult | Error | undefined | null;
 
-interface MockFunctions {
+export interface MockFunctions<Schema = GraphQLSchema, Node = DocumentNode> {
   /**
    * Get all operation executed during the test by the current time.
    */
-  getAllOperations(): OperationDescriptor[];
+  getAllOperations(): OperationDescriptor<Schema, Node>[];
 
   /**
    * Return the most recent operation. This method will throw if no operations were executed prior this call.
    */
-  getMostRecentOperation(): OperationDescriptor;
+  getMostRecentOperation(): OperationDescriptor<Schema, Node>;
 
   /**
    * Find a particular operation in the list of all executed operations. This method will throw if the operation is not
    * found.
    */
   findOperation(
-    findFn: (operation: OperationDescriptor) => boolean
-  ): OperationDescriptor;
+    findFn: (operation: OperationDescriptor<Schema, Node>) => boolean
+  ): OperationDescriptor<Schema, Node>;
 
   /**
    * Provide a payload for an operation, but not complete the request. Practically useful when testing incremental
@@ -59,7 +62,7 @@ interface MockFunctions {
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
   nextValue(
-    operation: OperationDescriptor,
+    operation: OperationDescriptor<Schema, Node>,
     data: ExecutionResult
   ): Promise<void>;
 
@@ -71,7 +74,7 @@ interface MockFunctions {
    * ApolloClient requires a delay until the next tick of the runloop before it updates,
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
-  complete(operation: OperationDescriptor): Promise<void>;
+  complete(operation: OperationDescriptor<Schema, Node>): Promise<void>;
 
   /**
    * Resolve the request with the provided payload. This is a shortcut for `nextValue(...)` and `complete(...)`.
@@ -81,7 +84,10 @@ interface MockFunctions {
    * ApolloClient requires a delay until the next tick of the runloop before it updates,
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
-  resolve(operation: OperationDescriptor, data: ExecutionResult): Promise<void>;
+  resolve(
+    operation: OperationDescriptor<Schema, Node>,
+    data: ExecutionResult
+  ): Promise<void>;
 
   /**
    * Reject the request with a given error.
@@ -91,7 +97,10 @@ interface MockFunctions {
    * ApolloClient requires a delay until the next tick of the runloop before it updates,
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
-  reject(operation: OperationDescriptor, error: Error): Promise<void>;
+  reject(
+    operation: OperationDescriptor<Schema, Node>,
+    error: Error
+  ): Promise<void>;
 
   /**
    * A shortcut for `getMostRecentOperation()` and `resolve()`.
@@ -102,7 +111,7 @@ interface MockFunctions {
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
   resolveMostRecentOperation(
-    resolver: (operation: OperationDescriptor) => ExecutionResult
+    resolver: (operation: OperationDescriptor<Schema, Node>) => ExecutionResult
   ): Promise<void>;
 
   /**
@@ -113,13 +122,15 @@ interface MockFunctions {
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
   rejectMostRecentOperation(
-    error: Error | ((operation: OperationDescriptor) => Error)
+    error: Error | ((operation: OperationDescriptor<Schema, Node>) => Error)
   ): Promise<void>;
 
   /**
    * Adds a resolver function that will be used to resolve/reject operations as they appear.
    */
-  queueOperationResolver: (resolver: OperationMockResolver) => Promise<void>;
+  queueOperationResolver: (
+    resolver: OperationMockResolver<Schema, Node>
+  ) => Promise<void>;
 }
 
 interface ApolloClientExtension {
