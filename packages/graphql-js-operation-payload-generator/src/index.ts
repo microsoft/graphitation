@@ -36,14 +36,17 @@ import {
 } from "./vendor/RelayMockPayloadGenerator";
 export { MockResolvers } from "./vendor/RelayMockPayloadGenerator";
 
-export interface RequestDescriptor {
-  readonly node: DocumentNode;
+export interface RequestDescriptor<Node = DocumentNode> {
+  readonly node: Node;
   readonly variables: Record<string, any>;
 }
 
-export interface OperationDescriptor {
-  readonly schema: GraphQLSchema;
-  readonly request: RequestDescriptor;
+export interface OperationDescriptor<
+  Schema = GraphQLSchema,
+  Node = DocumentNode
+> {
+  readonly schema: Schema;
+  readonly request: RequestDescriptor<Node>;
 }
 
 const TYPENAME_KEY = "__typename";
