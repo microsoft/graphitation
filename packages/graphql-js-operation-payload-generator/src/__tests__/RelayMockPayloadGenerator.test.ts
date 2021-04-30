@@ -233,8 +233,8 @@ xtest("generate mock with connection", () => {
   `);
 });
 
-xtest("generate basic mock data", () => {
-  graphql`
+test("generate basic mock data", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest6Fragment on User {
       id
       name
@@ -248,9 +248,12 @@ xtest("generate basic mock data", () => {
     graphql`
       query RelayMockPayloadGeneratorTest6Query {
         node(id: "my-id") {
+          __typename
           ...RelayMockPayloadGeneratorTest6Fragment
+          id
         }
       }
+      ${fragment}
     `,
     null // Mock Resolvers
   );
