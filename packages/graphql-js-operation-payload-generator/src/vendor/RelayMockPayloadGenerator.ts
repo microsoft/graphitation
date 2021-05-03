@@ -22,7 +22,10 @@ type MockResolver = (
 
 export type MockResolvers = Record<string, MockResolver>;
 
-export type MockData = Record<string, unknown>;
+export interface MockData {
+  __typename?: string;
+  [fieldName: string]: unknown;
+}
 
 export type ValueResolver = (
   typeName: string | null,

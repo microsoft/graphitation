@@ -255,12 +255,13 @@ fragment RelayMockPayloadGeneratorTest9Fragment on Page {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
+    "__typename": "Query",
     "node": {
       "__typename": "Page",
       "actor": {
-        "__typename": "__MockObject",
+        "__typename": "User",
         "id": "<mock-id-1>",
-        "name": "<mock-value-for-field-\\"name\\">"
+        "name": "Mark"
       },
       "id": "<mock-id-2>"
     }
@@ -671,9 +672,9 @@ fragment RelayMockPayloadGeneratorTest1Fragment on Actor {
     "viewer": {
       "__typename": "Viewer",
       "actor": {
+        "__typename": "User",
         "id": "<mock-id-2>",
         "name": "<mock-value-for-field-\\"name\\">",
-        "__typename": "User",
         "firstName": "<mock-value-for-field-\\"firstName\\">",
         "lastName": "<mock-value-for-field-\\"lastName\\">"
       }
@@ -1413,6 +1414,7 @@ query RelayMockPayloadGeneratorTest25Query {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
+    "__typename": "Query",
     "node": {
       "__typename": "Page",
       "id": "my-page-id",

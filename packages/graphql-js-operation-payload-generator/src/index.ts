@@ -1,5 +1,6 @@
 import {
   assertCompositeType,
+  ASTKindToNode,
   DefinitionNode,
   DocumentNode,
   FieldNode,
@@ -20,6 +21,7 @@ import {
   SelectionSetNode,
   TypeInfo,
   visit,
+  Visitor,
   visitWithTypeInfo,
 } from "graphql";
 import { Maybe } from "graphql/jsutils/Maybe";
@@ -49,6 +51,14 @@ export interface OperationDescriptor<
   readonly request: RequestDescriptor<Node>;
 }
 
+type NodeWithMockData = { userMockData: unknown };
+
+type VisitorWithMockData = Visitor<
+  ASTKindToNode & {
+    Field: Partial<NodeWithMockData>;
+  }
+>;
+
 const TYPENAME_KEY = "__typename";
 
 export function generate(
@@ -75,6 +85,20 @@ export function generate(
   return { data: result };
 }
 
+function isNodeWithMockData(node: any): node is FieldNode & NodeWithMockData {
+  return (
+    node !== undefined &&
+    node.kind === "Field" &&
+    (node as Partial<NodeWithMockData>).userMockData !== undefined
+  );
+}
+
+/**
+ * Transforms a graphql-js AST to mock data.
+ *
+ * We generate the data upon entering a node and return the data when leaving
+ * the node.
+ */
 function visitDocumentDefinitionNode(
   documentDefinitionNode:
     | OperationDefinitionNode
@@ -86,139 +110,182 @@ function visitDocumentDefinitionNode(
   resolveValue: ValueResolver
 ): MockData {
   const typeInfo = new TypeInfo(schema);
-  return visit(
-    documentDefinitionNode,
-    visitWithTypeInfo(typeInfo, {
-      OperationDefinition: {
-        leave(operationDefinitionNode) {
-          return operationDefinitionNode.selectionSet;
-        },
+  const visitor: VisitorWithMockData = {
+    OperationDefinition: {
+      /**
+       * Return collected mock data
+       */
+      leave(operationDefinitionNode) {
+        return operationDefinitionNode.selectionSet;
       },
-      FragmentDefinition: {
-        leave(fragmentDefinitionNode) {
-          return fragmentDefinitionNode.selectionSet;
-        },
+    },
+    FragmentDefinition: {
+      /**
+       * Return collected mock data
+       */
+      leave(fragmentDefinitionNode) {
+        return fragmentDefinitionNode.selectionSet;
       },
-      SelectionSet: {
-        enter(selectionSetNode) {
-          if (isAbstractType(typeInfo.getType())) {
-            /**
-             * Only generate data for a single object type.
-             */
-            return reduceToSingleObjectTypeSelection(
-              selectionSetNode,
-              schema,
-              allDocumentDefinitionNodes,
-              typeInfo
-            );
-          }
-        },
-        leave(selectionSetNode) {
-          /**
-           * Always add __typename to object types so it's made available in cases
-           * where an abstract parent type had a field selection for it;in which
-           * case it needs an object type name, not the abstract type's name.
-           */
-          const type = typeInfo.getType();
-          const startWith = isObjectType(type)
-            ? { [TYPENAME_KEY]: type.name }
-            : {};
-          const selections = (selectionSetNode.selections as unknown[]) as MockData[];
-          // TODO: Clean this up
-          const data: MockData = startWith;
-          selections.forEach((selection) => {
-            // Only leave an abstract __typename in case there's no other object __typename
-            if (
-              selection[TYPENAME_KEY] === DEFAULT_MOCK_TYPENAME &&
-              selections.some(
-                (sel) =>
-                  typeof sel[TYPENAME_KEY] === "string" &&
-                  sel[TYPENAME_KEY] !== DEFAULT_MOCK_TYPENAME
-              )
-            ) {
-              selection = { ...selection };
-              delete selection[TYPENAME_KEY];
-            }
-            Object.assign(data, selection);
-          });
-          return data;
-        },
+    },
+    InlineFragment: {
+      /**
+       * Return collected mock data
+       */
+      leave(inlineFragmentNode) {
+        return inlineFragmentNode.selectionSet;
       },
-      Field: {
-        leave(fieldNode) {
-          const mockFieldName = fieldNode.alias?.value || fieldNode.name.value;
-          const type = typeInfo.getType();
-          invariant(
-            type,
-            `Expected field to have a type: ${JSON.stringify(fieldNode)}`
+    },
+    FragmentSpread: {
+      /**
+       * Visit referenced fragment and return collected MockData
+       */
+      leave(fragmentSpreadNode) {
+        const fragmentDefinitionNode = findFragmentDefinitionNode(
+          allDocumentDefinitionNodes,
+          fragmentSpreadNode.name.value
+        );
+        return visitDocumentDefinitionNode(
+          fragmentDefinitionNode,
+          schema,
+          allDocumentDefinitionNodes,
+          mockResolvers,
+          resolveValue
+        );
+      },
+    },
+    SelectionSet: {
+      /**
+       * Reduce possible concrete types for abstract type to a single one.
+       */
+      enter(selectionSetNode, _key, parent) {
+        if (isAbstractType(typeInfo.getType())) {
+          return reduceToSingleObjectTypeSelection(
+            selectionSetNode,
+            isNodeWithMockData(parent)
+              ? (parent.userMockData as MockData)[TYPENAME_KEY]
+              : undefined,
+            schema,
+            allDocumentDefinitionNodes,
+            typeInfo
           );
-          const namedType = getNamedType(type);
-          if (isScalarType(namedType)) {
-            return {
-              [mockFieldName]: mockScalar(
-                fieldNode,
-                namedType,
-                typeInfo.getParentType()!,
-                resolveValue
-              ),
-            };
-          } else if (fieldNode.selectionSet) {
-            // TODO: Clean this up
-            const defaultData = (fieldNode.selectionSet as unknown) as MockData;
-            const mockData = mockCompositeType(
+        }
+      },
+      /**
+       * Merge mock data of all selections and return it
+       */
+      leave(selectionSetNode) {
+        const type = typeInfo.getType();
+        const mocksData = (selectionSetNode.selections as unknown[]) as MockData[];
+
+        /**
+         * Always add __typename to object types so it's made available in cases
+         * where an abstract parent type had a field selection for it; in which
+         * case it needs an object type name, not the abstract type's name.
+         */
+        // First search for a schema typename...
+        let typename = mocksData.find(
+          (sel) =>
+            typeof sel[TYPENAME_KEY] === "string" &&
+            sel[TYPENAME_KEY] !== DEFAULT_MOCK_TYPENAME
+        )?.[TYPENAME_KEY];
+        // ...otherwise use the current type, if it's an object type...
+        if (!typename && isObjectType(type)) {
+          typename = type.name;
+        }
+        // ...or fallback to a DEFAULT_MOCK_TYPENAME selection.
+        if (
+          !typename &&
+          mocksData.some((sel) => sel[TYPENAME_KEY] === DEFAULT_MOCK_TYPENAME)
+        ) {
+          typename = DEFAULT_MOCK_TYPENAME;
+        }
+
+        const mockData: MockData = Object.assign({}, ...mocksData);
+        if (typename) {
+          delete mockData[TYPENAME_KEY];
+          return {
+            [TYPENAME_KEY]: typename,
+            ...mockData,
+          };
+        } else {
+          return mockData;
+        }
+      },
+    },
+    Field: {
+      /**
+       * Generate mock data
+       */
+      enter(fieldNode) {
+        const type = typeInfo.getType();
+        invariant(
+          type,
+          `Expected field to have a type: ${JSON.stringify(fieldNode)}`
+        );
+        const namedType = getNamedType(type);
+        if (isScalarType(namedType)) {
+          const fieldWithMockData: typeof fieldNode = {
+            ...fieldNode,
+            userMockData: mockScalar(
+              fieldNode,
+              namedType,
+              typeInfo.getParentType()!,
+              resolveValue
+            ),
+          };
+          return fieldWithMockData;
+        } else {
+          invariant(
+            fieldNode.selectionSet,
+            "Expected field with selection set"
+          );
+          const fieldWithMockData: typeof fieldNode = {
+            ...fieldNode,
+            userMockData: mockCompositeType(
               fieldNode,
               assertCompositeType(namedType),
               typeInfo.getParentType()!,
               resolveValue
-            );
-            const data: MockData = {};
-            if (mockData) {
-              // Only use fields from the mockData that were actually selected
-              Object.keys(defaultData).forEach((fieldName) => {
-                data[fieldName] = mockData.hasOwnProperty(fieldName)
-                  ? mockData[fieldName]
-                  : defaultData[fieldName];
-              });
-            } else {
-              Object.assign(data, defaultData);
-            }
+            ),
+          };
+          return fieldWithMockData;
+        }
+      },
+      /**
+       * Merge default mock data and explicit user mock data and return it
+       */
+      leave(fieldNode) {
+        const mockData = fieldNode.userMockData;
+        const mockFieldName = fieldNode.alias?.value || fieldNode.name.value;
 
-            const isList = isListType(getNullableType(type));
-            return {
-              [mockFieldName]: isList ? [data] : data,
-            };
-          } else {
-            console.log(
-              `UNHANDLED TYPE '${type}' for field '${JSON.stringify(
-                fieldNode
-              )}'`
-            );
-          }
-          return undefined;
-        },
+        if (!fieldNode.selectionSet) {
+          return {
+            [mockFieldName]: mockData,
+          };
+        }
+
+        const defaultData = (fieldNode.selectionSet as unknown) as MockData;
+        const data: MockData = {};
+        if (mockData) {
+          // Only use fields from the mockData that were actually selected
+          Object.keys(defaultData).forEach((fieldName) => {
+            data[fieldName] = (mockData as MockData).hasOwnProperty(fieldName)
+              ? (mockData as MockData)[fieldName]
+              : defaultData[fieldName];
+          });
+        } else {
+          Object.assign(data, defaultData);
+        }
+
+        const type = typeInfo.getType();
+        const isList = isListType(getNullableType(type!));
+        return {
+          [mockFieldName]: isList ? [data] : data,
+        };
       },
-      InlineFragment: {
-        leave(inlineFragmentNode) {
-          return inlineFragmentNode.selectionSet;
-        },
-      },
-      FragmentSpread: {
-        leave(fragmentSpreadNode) {
-          const fragmentDefinitionNode = findFragmentDefinitionNode(
-            allDocumentDefinitionNodes,
-            fragmentSpreadNode.name.value
-          );
-          return visitDocumentDefinitionNode(
-            fragmentDefinitionNode,
-            schema,
-            allDocumentDefinitionNodes,
-            mockResolvers,
-            resolveValue
-          );
-        },
-      },
-    })
-  );
+    },
+  };
+  return visit(documentDefinitionNode, visitWithTypeInfo(typeInfo, visitor));
 }
 
 /**
@@ -227,6 +294,7 @@ function visitDocumentDefinitionNode(
  */
 function reduceToSingleObjectTypeSelection(
   selectionSetNode: SelectionSetNode,
+  explicitTypename: string | undefined,
   schema: GraphQLSchema,
   allDocumentDefinitionNodes: ReadonlyArray<DefinitionNode>,
   typeInfo: TypeInfo
@@ -234,9 +302,20 @@ function reduceToSingleObjectTypeSelection(
   let reduceToObjectType: GraphQLObjectType | null = null;
   const reducer = (type: Maybe<GraphQLOutputType>) => {
     if (isObjectType(type)) {
-      if (!reduceToObjectType) {
+      if (
+        // Select the first type we come across...
+        reduceToObjectType === null &&
+        // ...but only if the name matches, when an explicit one is given.
+        (explicitTypename === undefined || type.name === explicitTypename)
+      ) {
         reduceToObjectType = type;
-      } else if (reduceToObjectType !== type) {
+      } else if (
+        // If no types matched the explicit name yet...
+        reduceToObjectType === null ||
+        // ...or if the type is not the selected type...
+        reduceToObjectType !== type
+      ) {
+        // ...remove this fragment.
         return null;
       }
     }
@@ -279,7 +358,6 @@ function findFragmentDefinitionNode(
 function mockScalar(
   fieldNode: FieldNode,
   type: GraphQLScalarType,
-  // type: GraphQLNamedType,
   parentType: GraphQLCompositeType,
   resolveValue: ValueResolver
 ) {
