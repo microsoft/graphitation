@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-This log was last generated on Tue, 27 Apr 2021 21:34:50 GMT and should not be manually modified.
+This log was last generated on Tue, 04 May 2021 15:15:49 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.5.5
+
+Tue, 04 May 2021 15:15:49 GMT
+
+### Patches
+
+- [operation-payload-generator] Let user choose concrete type (eloy.de.enige@gmail.com)
 
 ## 0.5.4
 

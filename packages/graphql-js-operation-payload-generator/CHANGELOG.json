@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Tue, 04 May 2021 15:15:49 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.5.5",
+      "version": "0.5.5",
+      "comments": {
+        "patch": [
+          {
+            "comment": "[operation-payload-generator] Let user choose concrete type",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "0933b2155e24f057379c24917d0872c8b5491fec",
+            "package": "@graphitation/graphql-js-operation-payload-generator"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 27 Apr 2021 21:34:50 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.5.4",
       "version": "0.5.4",
