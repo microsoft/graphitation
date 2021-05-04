@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "[operation-payload-generator] Let user choose concrete type",
+  "packageName": "@graphitation/graphql-js-operation-payload-generator",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}
