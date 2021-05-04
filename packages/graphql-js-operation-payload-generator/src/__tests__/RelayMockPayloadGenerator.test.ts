@@ -233,8 +233,8 @@ xtest("generate mock with connection", () => {
   `);
 });
 
-xtest("generate basic mock data", () => {
-  graphql`
+test("generate basic mock data", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest6Fragment on User {
       id
       name
@@ -248,9 +248,12 @@ xtest("generate basic mock data", () => {
     graphql`
       query RelayMockPayloadGeneratorTest6Query {
         node(id: "my-id") {
+          __typename
           ...RelayMockPayloadGeneratorTest6Fragment
+          id
         }
       }
+      ${fragment}
     `,
     null // Mock Resolvers
   );
@@ -287,10 +290,11 @@ xtest("generate mock using custom mock functions", () => {
   );
 });
 
-xtest("generate mock using custom mock functions for object type", () => {
-  graphql`
+test("generate mock using custom mock functions for object type", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest8Fragment on Page {
       actor {
+        __typename
         id
         name
       }
@@ -304,9 +308,12 @@ xtest("generate mock using custom mock functions for object type", () => {
     graphql`
       query RelayMockPayloadGeneratorTest8Query {
         node(id: "my-id") {
+          __typename
           ...RelayMockPayloadGeneratorTest8Fragment
+          id
         }
       }
+      ${fragment}
     `,
     {
       Image: () => {
@@ -320,10 +327,13 @@ xtest("generate mock using custom mock functions for object type", () => {
   );
 });
 
-xtest("generate mock for objects without concrete type", () => {
-  graphql`
+// NOTE: The snapshot here is different becuase we can better
+// resolve the possible concrete type that an interface can implement.
+test("generate mock for objects without concrete type", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest9Fragment on Page {
       actor {
+        __typename
         id
         name
       }
@@ -333,9 +343,12 @@ xtest("generate mock for objects without concrete type", () => {
     graphql`
       query RelayMockPayloadGeneratorTest9Query {
         node(id: "my-id") {
+          __typename
           ...RelayMockPayloadGeneratorTest9Fragment
+          id
         }
       }
+      ${fragment}
     `,
     {
       Actor: () => {
@@ -921,11 +934,12 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with Mock Resolvers for Interface Type with multiple fragment spreads", () => {
+  test("generate mock with Mock Resolvers for Interface Type with multiple fragment spreads", () => {
     testGeneratedData(
       graphql`
-        query RelayMockPayloadGeneratorTest25Query @relay_test_operation {
+        query RelayMockPayloadGeneratorTest25Query {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               name
@@ -934,6 +948,7 @@ describe("with @relay_test_operation", () => {
               id
               pageName: name
             }
+            id
           }
         }
       `,
