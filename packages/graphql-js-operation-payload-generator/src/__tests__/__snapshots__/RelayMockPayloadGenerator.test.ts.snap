@@ -1398,17 +1398,23 @@ exports[`with @relay_test_operation generate mock with Mock Resolvers for Interf
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
 query RelayMockPayloadGeneratorTest25Query {
   node(id: "my-id") {
-    __typename
-    ... on User {
-      id
-      name
-    }
-    ... on Page {
-      id
-      pageName: name
-    }
-    id
+    ...RelayMockPayloadGeneratorTest25Fragment2
   }
+}
+
+fragment RelayMockPayloadGeneratorTest25Fragment2 on Node {
+  __typename
+  ... on User {
+    id
+    name
+  }
+  ...RelayMockPayloadGeneratorTest25Fragment1
+  id
+}
+
+fragment RelayMockPayloadGeneratorTest25Fragment1 on Page {
+  id
+  pageName: name
 }
 
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~

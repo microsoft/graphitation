@@ -85,10 +85,9 @@ export function generate(
   return { data: result };
 }
 
-function isNodeWithMockData(node: any): node is FieldNode & NodeWithMockData {
+function isNodeWithMockData(node: any): node is NodeWithMockData {
   return (
     node !== undefined &&
-    node.kind === "Field" &&
     (node as Partial<NodeWithMockData>).userMockData !== undefined
   );
 }
@@ -102,8 +101,7 @@ function isNodeWithMockData(node: any): node is FieldNode & NodeWithMockData {
 function visitDocumentDefinitionNode(
   documentDefinitionNode:
     | OperationDefinitionNode
-    | FragmentDefinitionNode
-    | InlineFragmentNode,
+    | (FragmentDefinitionNode & Partial<NodeWithMockData>),
   schema: GraphQLSchema,
   allDocumentDefinitionNodes: ReadonlyArray<DefinitionNode>,
   mockResolvers: MockResolvers,
@@ -139,13 +137,20 @@ function visitDocumentDefinitionNode(
       /**
        * Visit referenced fragment and return collected MockData
        */
-      leave(fragmentSpreadNode) {
+      leave(fragmentSpreadNode, _key, _parent, _path, ancestors) {
+        // From the parent Field/FragmentDefinition node, get existing user
+        // mock data and make it available to the new visitor.
+        const parentNodeWithMockData = ancestors[ancestors.length - 2];
+        const userMockData = isNodeWithMockData(parentNodeWithMockData)
+          ? parentNodeWithMockData.userMockData
+          : undefined;
+
         const fragmentDefinitionNode = findFragmentDefinitionNode(
           allDocumentDefinitionNodes,
           fragmentSpreadNode.name.value
         );
         return visitDocumentDefinitionNode(
-          fragmentDefinitionNode,
+          { ...fragmentDefinitionNode, userMockData },
           schema,
           allDocumentDefinitionNodes,
           mockResolvers,
