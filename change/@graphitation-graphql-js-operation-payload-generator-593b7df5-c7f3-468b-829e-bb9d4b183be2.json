@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "[operation-payload-generator] Add test case that visits across multiple fragment boundaries",
+  "packageName": "@graphitation/graphql-js-operation-payload-generator",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}

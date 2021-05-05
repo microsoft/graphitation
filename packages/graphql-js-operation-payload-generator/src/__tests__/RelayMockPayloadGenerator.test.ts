@@ -327,7 +327,7 @@ test("generate mock using custom mock functions for object type", () => {
   );
 });
 
-// NOTE: The snapshot here is different becuase we can better
+// NOTE: The snapshot here is different because we can better
 // resolve the possible concrete type that an interface can implement.
 test("generate mock for objects without concrete type", () => {
   const fragment = graphql`
@@ -934,23 +934,34 @@ describe("with @relay_test_operation", () => {
     );
   });
 
+  // Added more fragments here to test resolving across fragment definition boundaries.
   test("generate mock with Mock Resolvers for Interface Type with multiple fragment spreads", () => {
+    const fragment1 = graphql`
+      fragment RelayMockPayloadGeneratorTest25Fragment1 on Page {
+        id
+        pageName: name
+      }
+    `;
+    const fragment2 = graphql`
+      fragment RelayMockPayloadGeneratorTest25Fragment2 on Node {
+        __typename
+        ... on User {
+          id
+          name
+        }
+        ...RelayMockPayloadGeneratorTest25Fragment1
+        id
+      }
+      ${fragment1}
+    `;
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest25Query {
           node(id: "my-id") {
-            __typename
-            ... on User {
-              id
-              name
-            }
-            ... on Page {
-              id
-              pageName: name
-            }
-            id
+            ...RelayMockPayloadGeneratorTest25Fragment2
           }
         }
+        ${fragment2}
       `,
       {
         Node() {
