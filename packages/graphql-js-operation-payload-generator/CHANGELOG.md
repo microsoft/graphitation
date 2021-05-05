@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-This log was last generated on Tue, 04 May 2021 15:15:49 GMT and should not be manually modified.
+This log was last generated on Wed, 05 May 2021 19:48:35 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.5.6
+
+Wed, 05 May 2021 19:48:35 GMT
+
+### Patches
+
+- [operation-payload-generator] Add test case that visits across multiple fragment boundaries (eloy.de.enige@gmail.com)
 
 ## 0.5.5
 

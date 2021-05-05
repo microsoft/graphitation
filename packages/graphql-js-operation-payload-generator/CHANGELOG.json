@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Wed, 05 May 2021 19:48:35 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.5.6",
+      "version": "0.5.6",
+      "comments": {
+        "patch": [
+          {
+            "comment": "[operation-payload-generator] Add test case that visits across multiple fragment boundaries",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "120ae2d106a4622d6b1ea25ac912663a77ce4980",
+            "package": "@graphitation/graphql-js-operation-payload-generator"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 04 May 2021 15:15:49 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.5.5",
       "version": "0.5.5",
