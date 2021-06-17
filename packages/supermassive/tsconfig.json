@@ -3,9 +3,9 @@
   "compilerOptions": {
     "composite": true,
     "tsBuildInfoFile": ".tsbuildinfo",
-    "rootDir": ".",
+    "rootDir": "src",
     "outDir": "lib"
   },
-  "include": ["src/**/*.ts", "benchmarks/**/*.ts"],
+  "include": ["src", "benchmarks"],
   "references": []
 }
