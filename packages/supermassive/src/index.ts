@@ -1,4 +1,4 @@
-import { DocumentNode } from "graphql";
+import { DocumentNode, ExecutionResult, GraphQLError } from "graphql";
 import { IExecutableSchemaDefinition } from "@graphql-tools/schema";
 
 type Maybe<T> = null | T;
@@ -12,8 +12,8 @@ export interface ExecuteArgs {
   operationName?: Maybe<string>;
 }
 
-export async function execute(args: ExecuteArgs) {
+export async function execute(args: ExecuteArgs): Promise<ExecutionResult> {
   return {
-    errors: ["Not implemented"],
+    errors: [new GraphQLError("Not implemented")],
   };
 }

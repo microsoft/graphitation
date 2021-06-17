@@ -1,8 +1,7 @@
-import fs from "fs";
-import path from "path";
 import { parse, execute as graphQLExecute } from "graphql";
 import { execute } from ".";
 import schema from "../benchmarks/swapi-schema";
+import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
 
 describe("execute", () => {
@@ -17,14 +16,16 @@ describe("execute", () => {
     const document = parse(query);
 
     expect.assertions(1);
-    const result = await execute({
-      resolvers,
+
+    const args = {
       document,
-    });
-    const validResult = await graphQLExecute({
-      schema,
-      document,
-    });
+      contextValue: {
+        models,
+      },
+    };
+
+    const result = await execute({ ...args, resolvers });
+    const validResult = await graphQLExecute({ ...args, schema });
     expect(result).toEqual(validResult);
   });
 });
