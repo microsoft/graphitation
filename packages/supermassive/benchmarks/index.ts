@@ -18,7 +18,7 @@ const parsedQuery = parse(query);
 const compiledQuery = compileQuery(schema, parsedQuery);
 
 const queryRunningSuite = new NiceBenchmark("Query Running");
-queryRunningSuite.add("string queries graphql-js", async () => {
+queryRunningSuite.add("graphql-js - string queries", async () => {
   const result = await graphql({
     schema,
     source: query,
@@ -28,7 +28,7 @@ queryRunningSuite.add("string queries graphql-js", async () => {
     throw new Error("Stuff ain't executing");
   }
 });
-queryRunningSuite.add("parsed queries graphql-js", async () => {
+queryRunningSuite.add("graphql-js - parsed queries", async () => {
   const result = await execute({
     schema,
     document: parsedQuery,
@@ -38,7 +38,18 @@ queryRunningSuite.add("parsed queries graphql-js", async () => {
     throw new Error("Stuff ain't executing");
   }
 });
-queryRunningSuite.add("graphql-jit", async () => {
+queryRunningSuite.add("graphql-jit - uncompiled", async () => {
+  const freshCompiledQuery = compileQuery(schema, parsedQuery);
+  if (isCompiledQuery(freshCompiledQuery)) {
+    const result = await freshCompiledQuery.query({}, { models }, {});
+    if (result.errors || !result.data) {
+      throw new Error("Stuff ain't executing");
+    }
+  } else {
+    throw new Error("Wrong query");
+  }
+});
+queryRunningSuite.add("graphql-jit - precompiled", async () => {
   if (isCompiledQuery(compiledQuery)) {
     const result = await compiledQuery.query({}, { models }, {});
     if (result.errors || !result.data) {
