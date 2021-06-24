@@ -1,0 +1,20 @@
+{
+  "name": "@graphitation/supermassive",
+  "entries": [
+    {
+      "date": "Thu, 24 Jun 2021 12:32:15 GMT",
+      "tag": "@graphitation/supermassive_v0.1.0",
+      "version": "0.1.0",
+      "comments": {
+        "none": [
+          {
+            "comment": "Test and benchmark setup for supermassive",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "ebbad29ec11dae814bbe8c2e492d1baf5382c138",
+            "package": "@graphitation/supermassive"
+          }
+        ]
+      }
+    }
+  ]
+}
