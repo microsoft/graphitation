@@ -15,7 +15,7 @@ export default class NiceBenchmark {
   add(name: string, fn: () => Promise<any>) {
     this.suite.add(name, {
       defer: true,
-      fn: async (deferred) => {
+      fn: async (deferred: any) => {
         await fn();
         deferred.resolve();
       },
