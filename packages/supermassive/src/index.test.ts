@@ -5,7 +5,7 @@ import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
 
 describe("execute", () => {
-  it("executes a basic query", async () => {
+  it.skip("executes a basic query", async () => {
     const query = `
     {
       person(id: 1) {
