@@ -12,6 +12,7 @@
     "benchmark": "ts-node -T -O '{\"module\":\"commonjs\"}' ./benchmarks/index.ts"
   },
   "devDependencies": {
+    "@graphitation/graphql-js-tag": "*",
     "@graphql-tools/schema": "^7.1.5",
     "@types/benchmark": "^2.1.0",
     "@types/jest": "^26.0.22",

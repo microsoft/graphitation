@@ -6,6 +6,6 @@
     "rootDir": ".",
     "outDir": "lib"
   },
-  "include": ["src", "benchmarks"],
+  "include": ["src/**/*.ts", "benchmarks/**/*.ts"],
   "references": []
 }
