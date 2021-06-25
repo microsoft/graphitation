@@ -14,9 +14,17 @@ const schema = buildASTSchema(graphql`
     allFilms: [Film]
   }
 
+  type Mutation {
+    createFilm(input: CreateFilmInput!): Film
+  }
+
   type Film {
     title: String!
     actors: [String!]
+  }
+
+  input CreateFilmInput {
+    title: String!
   }
 `);
 
@@ -133,6 +141,68 @@ describe(addTypesToRequestDocument, () => {
                 "kind": "Name",
                 "value": "String",
               },
+            },
+          },
+        }
+      `);
+    });
+  });
+
+  describe("concerning field arguments", () => {
+    it("adds a scalar type node", () => {
+      const document = addTypesToRequestDocument(
+        schema,
+        graphql`
+          query {
+            film(id: 42) {
+              title
+            }
+          }
+        `
+      );
+
+      const operationNode = document.definitions[0] as OperationDefinitionNode;
+      const fieldNode = operationNode.selectionSet.selections[0] as FieldNode;
+      const argumentNode = fieldNode.arguments![0];
+
+      expect(argumentNode.__type).toMatchInlineSnapshot(`
+        Object {
+          "kind": "NonNullType",
+          "type": Object {
+            "kind": "NamedType",
+            "name": Object {
+              "kind": "Name",
+              "value": "ID",
+            },
+          },
+        }
+      `);
+    });
+
+    it("adds an input object type node", () => {
+      const document = addTypesToRequestDocument(
+        schema,
+        graphql`
+          mutation {
+            createFilm(input: { title: "The Phantom Menace" }) {
+              title
+            }
+          }
+        `
+      );
+
+      const operationNode = document.definitions[0] as OperationDefinitionNode;
+      const fieldNode = operationNode.selectionSet.selections[0] as FieldNode;
+      const argumentNode = fieldNode.arguments![0];
+
+      expect(argumentNode.__type).toMatchInlineSnapshot(`
+        Object {
+          "kind": "NonNullType",
+          "type": Object {
+            "kind": "NamedType",
+            "name": Object {
+              "kind": "Name",
+              "value": "CreateFilmInput",
             },
           },
         }

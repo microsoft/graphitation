@@ -182,7 +182,7 @@ export interface FieldNode {
 }
 
 export interface ArgumentNode {
-  readonly __type: TypeNode; // [SUPERMASSIVE] Add the input type
+  readonly __type: TypeNode; // [SUPERMASSIVE] Add the value type
   readonly kind: "Argument";
   readonly loc?: Location;
   readonly name: NameNode;
