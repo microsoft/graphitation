@@ -178,17 +178,17 @@ export function useSubscription<TSubscriptionPayload extends OperationType>(
 }
 
 interface IMutationCommitterOptions<TMutationPayload extends OperationType> {
-  variables: TMutationPayload["variables"];
-  optimisticResponse: Partial<TMutationPayload["response"]>;
+  variables?: TMutationPayload["variables"];
+  optimisticResponse?: Partial<TMutationPayload["response"]> | null;
 }
 
-type IMutationCommiter<TMutationPayload extends OperationType> = (
+type MutationCommiter<TMutationPayload extends OperationType> = (
   options: IMutationCommitterOptions<TMutationPayload>
 ) => Promise<{ errors?: Error[]; data?: TMutationPayload["response"] }>;
 
 export function useMutation<TMutationPayload extends OperationType>(
   mutation: GraphQLTaggedNode
-): [IMutationCommiter<TMutationPayload>, Boolean] {
+): [MutationCommiter<TMutationPayload>, boolean] {
   const [apolloUpdater, { loading: mutationLoading }] = useApolloMutation(
     mutation
   );
@@ -196,7 +196,7 @@ export function useMutation<TMutationPayload extends OperationType>(
   return [
     async (options: IMutationCommitterOptions<TMutationPayload>) => {
       const apolloResult = await apolloUpdater({
-        variables: options.variables,
+        variables: options.variables || {},
         optimisticResponse: options.optimisticResponse,
       });
       if (apolloResult.errors) {
