@@ -4,6 +4,7 @@ import invariant from "invariant";
 import {
   useSubscription as useApolloSubscription,
   useQuery as useApolloQuery,
+  useMutation as useApolloMutation,
 } from "@apollo/client";
 
 // import { GraphQLTaggedNode } from "./taggedNode";
@@ -174,4 +175,40 @@ export function useSubscription<TSubscriptionPayload extends OperationType>(
       );
     }
   }
+}
+
+interface IMutationCommitterOptions<TMutationPayload extends OperationType> {
+  variables: TMutationPayload["variables"];
+  optimisticResponse: Partial<TMutationPayload["response"]>;
+}
+
+type IMutationCommiter<TMutationPayload extends OperationType> = (
+  options: IMutationCommitterOptions<TMutationPayload>
+) => Promise<{ errors?: Error[]; data?: TMutationPayload["response"] }>;
+
+export function useMutation<TMutationPayload extends OperationType>(
+  mutation: GraphQLTaggedNode
+): [IMutationCommiter<TMutationPayload>, Boolean] {
+  const [apolloUpdater, { loading: mutationLoading }] = useApolloMutation(
+    mutation
+  );
+
+  return [
+    async (options: IMutationCommitterOptions<TMutationPayload>) => {
+      const apolloResult = await apolloUpdater({
+        variables: options.variables,
+        optimisticResponse: options.optimisticResponse,
+      });
+      if (apolloResult.errors) {
+        return {
+          errors: Array.from(Object.values(apolloResult.errors)),
+          data: apolloResult.data,
+        };
+      }
+      return {
+        data: apolloResult.data,
+      };
+    },
+    mutationLoading,
+  ];
 }
