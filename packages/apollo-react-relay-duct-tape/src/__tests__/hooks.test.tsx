@@ -17,11 +17,17 @@ import {
   createMockClient,
 } from "@graphitation/apollo-mock-client/src/index"; // FIXME
 
-import { useFragment, useLazyLoadQuery, useSubscription } from "../hooks";
+import {
+  useFragment,
+  useLazyLoadQuery,
+  useMutation,
+  useSubscription,
+} from "../hooks";
 
 import { hooksTestQuery } from "./__generated__/hooksTestQuery.graphql";
 import { hooksTestSubscription } from "./__generated__/hooksTestSubscription.graphql";
 import { hooksTestFragment$key } from "./__generated__/hooksTestFragment.graphql";
+import { hooksTestMutation as hooksTestMutation$key } from "./__generated__/hooksTestMutation.graphql";
 
 const schema = buildSchema(
   readFileSync(join(__dirname, "schema.graphql"), "utf8")
@@ -85,6 +91,20 @@ const subscription = graphql`
   ${fragment}
 `;
 
+/**
+ * Mutation test subject
+ */
+
+const mutation = graphql`
+  mutation hooksTestMutation($id: ID!, $name: String!) {
+    updateUserName(id: $id, name: $name) {
+      ...hooksTestFragment
+    }
+  }
+
+  ${fragment}
+`;
+
 type SubscriptionHookParams = Parameters<typeof useSubscription>[0];
 interface SubjectProps {
   onNext?: SubscriptionHookParams["onNext"];
@@ -103,6 +123,28 @@ const SubscriptionComponent: React.FC<SubjectProps> = ({
     onError: onError || undefined,
   });
   return <>{children}</>;
+};
+
+const MutationComponent: React.FC<{
+  variables: any;
+  optimisticResponse: any;
+}> = (props) => {
+  const { variables, optimisticResponse } = props;
+  const [commit, isInFlight] = useMutation<hooksTestMutation$key>(mutation);
+  const [result, setResult] = React.useState<any>(null);
+  React.useEffect(() => {
+    (async function () {
+      const result = await commit({ variables, optimisticResponse });
+      setResult(result);
+    })();
+  }, [variables, optimisticResponse]);
+  if (isInFlight) {
+    return <div>Loading</div>;
+  } else if (result) {
+    return <div>{JSON.stringify(result)}</div>;
+  } else {
+    return <div>Not loading</div>;
+  }
 };
 
 /**
@@ -282,6 +324,65 @@ describe(useSubscription, () => {
       );
 
       expect(spy).toHaveBeenCalledWith(expect.stringContaining("Oh noes"));
+    });
+  });
+});
+
+describe("useMutation", () => {
+  it("uses Apollo's useMutation hook", async () => {
+    let tree: ReactTestRenderer;
+    tree = createTestRenderer(
+      <ApolloProvider client={client}>
+        <MutationComponent
+          variables={{ name: "foo", id: "1" }}
+          optimisticResponse={null}
+        />
+      </ApolloProvider>
+    );
+    expect(tree).toMatchInlineSnapshot(`
+      <div>
+        Not loading
+      </div>
+    `);
+    act(() => {
+      tree.update(
+        <ApolloProvider client={client}>
+          <MutationComponent
+            variables={{ name: "foo", id: "1" }}
+            optimisticResponse={{
+              __typename: "Mutation",
+              updateUserName: {
+                __typename: "User",
+                id: "&lt;User-mock-id-1&gt;",
+                name: '&lt;mock-value-for-field-"name"&gt;',
+              },
+            }}
+          />
+        </ApolloProvider>
+      );
+    });
+    expect(tree).toMatchInlineSnapshot(`
+      <div>
+        Loading
+      </div>
+    `);
+    await act(async () => {
+      await client.mock.resolveMostRecentOperation((operation) =>
+        MockPayloadGenerator.generate(operation)
+      );
+    });
+    expect(tree).toMatchInlineSnapshot(`
+      <div>
+        {"data":{"__typename":"Mutation","updateUserName":{"__typename":"User","id":"&lt;User-mock-id-1&gt;","name":"&lt;mock-value-for-field-\\"name\\"&gt;"}}}
+      </div>
+    `);
+
+    const [mutationOperation] = client.mock.getAllOperations();
+
+    expect(mutationOperation.request.node).toBe(mutation);
+    expect(mutationOperation.request.variables).toEqual({
+      name: "foo",
+      id: "1",
     });
   });
 });

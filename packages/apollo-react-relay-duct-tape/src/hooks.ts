@@ -186,6 +186,53 @@ type MutationCommiter<TMutationPayload extends OperationType> = (
   options: IMutationCommitterOptions<TMutationPayload>
 ) => Promise<{ errors?: Error[]; data?: TMutationPayload["response"] }>;
 
+/**
+ * Declare use of a mutation within component. Returns an array of a function and loading state boolean.
+ *
+ * Returned function can be called to perform the actual mutation with provided variables.
+ *
+ * @param mutation Mutation document
+ * @returns [commitMutationFn, isInFlight]
+ *
+ * commitMutationFn
+ * @param options.variables map of variables to pass to mutation
+ * @param options.optimisticResponse proposed response to apply to the store while mutation is in flight
+ * @returns A Promise to an object with either errors or/and the result data
+ * 
+ * Example
+ ```
+
+ const mutation = graphql`
+ mutation SomeReactComponentMutation($newName: String!) {
+   someMutation(newName: $newName) {
+     __typeName
+     id
+     newName
+   }
+ }
+ `
+
+ export const SomeReactComponent: React.FunctionComponent<SomeReactComponentProps> = props => {
+   const [commitMutation, isInFlight] = useMutation(mutation);
+   return (
+     <div>
+       <button onClick={() => commitMutation({
+         variables: {
+            newName: "foo"
+         },
+         optimisticResponse: {
+            someMutation: {
+              __typename: "SomeMutationPayload",
+              id: "1",
+              newName: "foo",
+            }
+         }
+       })} disabled={isInFlight}/>
+     </div>
+   );
+ }
+ ```
+ */
 export function useMutation<TMutationPayload extends OperationType>(
   mutation: GraphQLTaggedNode
 ): [MutationCommiter<TMutationPayload>, boolean] {
