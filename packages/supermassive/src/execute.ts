@@ -1,11 +1,8 @@
-import { IObjectTypeResolver } from "@graphql-tools/utils/Interfaces";
-
 import type { Path } from "./jsutils/Path";
 import type { ObjMap } from "./jsutils/ObjMap";
 import type { PromiseOrValue } from "graphql/jsutils/PromiseOrValue";
 import type { Maybe } from "graphql/jsutils/Maybe";
 import { inspect } from "./jsutils/inspect";
-import { memoize3 } from "./jsutils/memoize3";
 import { invariant } from "./jsutils/invariant";
 import { devAssert } from "./jsutils/devAssert";
 import { isPromise } from "./jsutils/isPromise";
@@ -18,28 +15,13 @@ import { isIterableObject } from "./jsutils/isIterableObject";
 import type { GraphQLFormattedError } from "graphql/error/formatError";
 import { GraphQLError } from "graphql/error/GraphQLError";
 import { locatedError } from "graphql/error/locatedError";
-
-import type {
-  DocumentNode,
-  OperationDefinitionNode,
-  FieldNode,
-  FragmentDefinitionNode,
-  OperationTypeDefinitionNode,
-  TypeNode,
-} from "graphql/language/ast";
 import { Kind } from "graphql/language/kinds";
 
 import type { GraphQLSchema } from "graphql/type/schema";
 import {
   GraphQLObjectType,
-  GraphQLOutputType,
   GraphQLLeafType,
-  GraphQLAbstractType,
   GraphQLField,
-  GraphQLFieldResolver,
-  GraphQLResolveInfo,
-  GraphQLTypeResolver,
-  GraphQLList,
   GraphQLEnumType,
   GraphQLScalarType,
   GraphQLInputObjectType,
@@ -49,13 +31,8 @@ import {
   TypeMetaFieldDef,
   TypeNameMetaFieldDef,
 } from "graphql/type/introspection";
-import {
-  isObjectType,
-  isAbstractType,
-  isLeafType,
-  isListType,
-  isNonNullType,
-} from "graphql/type/definition";
+import { isLeafType } from "graphql/type/definition";
+import { ASTNode as GraphQLASTNode } from "graphql";
 
 import {
   getVariableValues,
@@ -68,19 +45,23 @@ import {
   InterfaceTypeResolver,
   Resolvers,
   ResolveInfo,
-  TypeAnnotatedFieldNode,
   TypeResolver,
   UnionTypeResolver,
   ObjectTypeResolver,
   Resolver,
-  TypeAnnotatedOperationDefinitionNode,
-  TypeAnnotatedDocumentNode,
-  TypeAnnotatedFragmentDefinitionNode,
 } from "./types";
 import { typeNameFromAST } from "./utilities/typeNameFromAST";
 
 import { collectFields } from "./collectFields";
 import { GraphQLString } from "graphql";
+import {
+  DocumentNode,
+  FieldNode,
+  FragmentDefinitionNode,
+  OperationDefinitionNode,
+  OperationTypeDefinitionNode,
+  TypeNode,
+} from "./ast/TypedAST";
 
 /**
  * Terminology
@@ -110,10 +91,10 @@ import { GraphQLString } from "graphql";
  */
 export interface ExecutionContext {
   resolvers: Resolvers;
-  fragments: ObjMap<TypeAnnotatedFragmentDefinitionNode>;
+  fragments: ObjMap<FragmentDefinitionNode>;
   rootValue: unknown;
   contextValue: unknown;
-  operation: TypeAnnotatedOperationDefinitionNode;
+  operation: OperationDefinitionNode;
   variableValues: { [variable: string]: unknown };
   fieldResolver: FieldResolver<any, any>;
   typeResolver: TypeResolver<any, any>;
@@ -147,7 +128,7 @@ export interface FormattedExecutionResult<
 
 export interface ExecutionArgs {
   resolvers: Resolvers;
-  document: TypeAnnotatedDocumentNode;
+  document: DocumentNode;
   rootValue?: unknown;
   contextValue?: unknown;
   variableValues?: Maybe<{ [variable: string]: unknown }>;
@@ -235,7 +216,7 @@ function buildResponse(
  * @internal
  */
 export function assertValidExecutionArguments(
-  document: TypeAnnotatedDocumentNode,
+  document: DocumentNode,
   rawVariableValues: Maybe<{ [variable: string]: unknown }>
 ): void {
   devAssert(document, "Must provide document.");
@@ -257,7 +238,7 @@ export function assertValidExecutionArguments(
  */
 export function buildExecutionContext(
   resolvers: Resolvers,
-  document: TypeAnnotatedDocumentNode,
+  document: DocumentNode,
   rootValue: unknown,
   contextValue: unknown,
   rawVariableValues: Maybe<{ [variable: string]: unknown }>,
@@ -265,10 +246,8 @@ export function buildExecutionContext(
   fieldResolver: Maybe<FieldResolver<unknown, unknown>>,
   typeResolver?: Maybe<TypeResolver<unknown, unknown>>
 ): Array<GraphQLError> | ExecutionContext {
-  let operation: TypeAnnotatedOperationDefinitionNode | undefined;
-  const fragments: ObjMap<TypeAnnotatedFragmentDefinitionNode> = Object.create(
-    null
-  );
+  let operation: OperationDefinitionNode | undefined;
+  const fragments: ObjMap<FragmentDefinitionNode> = Object.create(null);
   for (const definition of document.definitions) {
     switch (definition.kind) {
       case Kind.OPERATION_DEFINITION:
@@ -330,7 +309,7 @@ export function buildExecutionContext(
  */
 function executeOperation(
   exeContext: ExecutionContext,
-  operation: TypeAnnotatedOperationDefinitionNode,
+  operation: OperationDefinitionNode,
   rootValue: unknown
 ): PromiseOrValue<ObjMap<unknown> | null> {
   const typeName = getOperationRootTypeName(operation);
@@ -376,7 +355,7 @@ function executeFieldsSerially(
   parentTypeName: string,
   sourceValue: unknown,
   path: Path | undefined,
-  fields: Map<string, Array<TypeAnnotatedFieldNode>>
+  fields: Map<string, Array<FieldNode>>
 ): PromiseOrValue<ObjMap<unknown>> {
   return promiseReduce(
     fields.entries(),
@@ -414,7 +393,7 @@ function executeFields(
   parentTypeName: string,
   sourceValue: unknown,
   path: Path | undefined,
-  fields: Map<string, Array<TypeAnnotatedFieldNode>>
+  fields: Map<string, Array<FieldNode>>
 ): PromiseOrValue<ObjMap<unknown>> {
   const results = Object.create(null);
   let containsPromise = false;
@@ -458,7 +437,7 @@ function executeField(
   exeContext: ExecutionContext,
   parentTypeName: string,
   source: unknown,
-  fieldNodes: Array<TypeAnnotatedFieldNode>,
+  fieldNodes: Array<FieldNode>,
   path: Path
 ): PromiseOrValue<unknown> {
   // const fieldDef = getFieldDef(exeContext.schema, parentType, fieldNodes[0]);
@@ -535,7 +514,7 @@ function executeField(
       return completed.then(undefined, (rawError) => {
         const error = locatedError(
           rawError,
-          fieldNodes as Array<FieldNode>,
+          fieldNodes as ReadonlyArray<GraphQLASTNode>,
           pathToArray(path)
         );
         return handleFieldError(error, returnTypeNode, exeContext);
@@ -545,7 +524,7 @@ function executeField(
   } catch (rawError) {
     const error = locatedError(
       rawError,
-      fieldNodes as Array<FieldNode>,
+      fieldNodes as ReadonlyArray<GraphQLASTNode>,
       pathToArray(path)
     );
     return handleFieldError(error, returnTypeNode, exeContext);
@@ -558,7 +537,7 @@ function executeField(
 export function buildResolveInfo(
   exeContext: ExecutionContext,
   fieldName: string,
-  fieldNodes: Array<TypeAnnotatedFieldNode>,
+  fieldNodes: Array<FieldNode>,
   parentTypeName: string,
   returnTypeName: string,
   returnTypeNode: TypeNode,
@@ -621,7 +600,7 @@ function handleFieldError(
 function completeValue(
   exeContext: ExecutionContext,
   returnTypeNode: TypeNode,
-  fieldNodes: Array<TypeAnnotatedFieldNode>,
+  fieldNodes: Array<FieldNode>,
   info: ResolveInfo,
   path: Path,
   result: unknown
@@ -723,7 +702,7 @@ function completeValue(
 function completeListValue(
   exeContext: ExecutionContext,
   returnTypeNode: TypeNode,
-  fieldNodes: Array<TypeAnnotatedFieldNode>,
+  fieldNodes: Array<FieldNode>,
   info: ResolveInfo,
   path: Path,
   result: unknown
@@ -772,7 +751,7 @@ function completeListValue(
         return completedItem.then(undefined, (rawError) => {
           const error = locatedError(
             rawError,
-            fieldNodes as Array<FieldNode>,
+            fieldNodes as ReadonlyArray<GraphQLASTNode>,
             pathToArray(itemPath)
           );
           return handleFieldError(error, returnTypeNode, exeContext);
@@ -782,7 +761,7 @@ function completeListValue(
     } catch (rawError) {
       const error = locatedError(
         rawError,
-        fieldNodes as Array<FieldNode>,
+        fieldNodes as ReadonlyArray<GraphQLASTNode>,
         pathToArray(itemPath)
       );
       return handleFieldError(error, returnTypeNode, exeContext);
@@ -817,7 +796,7 @@ function completeLeafValue(
 function completeAbstractValue(
   exeContext: ExecutionContext,
   returnType: UnionTypeResolver | InterfaceTypeResolver,
-  fieldNodes: Array<TypeAnnotatedFieldNode>,
+  fieldNodes: Array<FieldNode>,
   info: ResolveInfo,
   path: Path,
   result: unknown
@@ -880,7 +859,7 @@ function ensureValidRuntimeType(
 function completeObjectValue(
   exeContext: ExecutionContext,
   returnTypeName: string,
-  fieldNodes: Array<TypeAnnotatedFieldNode>,
+  fieldNodes: Array<FieldNode>,
   info: ResolveInfo,
   path: Path,
   result: unknown
@@ -901,7 +880,7 @@ function invalidReturnTypeError(
 ): GraphQLError {
   return new GraphQLError(
     `Expected value of type "${returnType.name}" but got: ${inspect(result)}.`,
-    fieldNodes
+    fieldNodes as ReadonlyArray<GraphQLASTNode>
   );
 }
 
@@ -914,8 +893,8 @@ function invalidReturnTypeError(
 function collectSubfields(
   exeContext: ExecutionContext,
   returnTypeName: string,
-  fieldNodes: Array<TypeAnnotatedFieldNode>
-): Map<string, Array<TypeAnnotatedFieldNode>> {
+  fieldNodes: Array<FieldNode>
+): Map<string, Array<FieldNode>> {
   let subFieldNodes = new Map();
   const visitedFragmentNames = new Set<string>();
   for (const node of fieldNodes) {
@@ -1013,7 +992,7 @@ export function getFieldDef(
 
 // TODO(freiksenet): Custom root type names maybe?
 function getOperationRootTypeName(
-  operation: TypeAnnotatedOperationDefinitionNode | OperationTypeDefinitionNode
+  operation: OperationDefinitionNode | OperationTypeDefinitionNode
 ): string {
   switch (operation.operation) {
     case "query":

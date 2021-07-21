@@ -1,30 +1,13 @@
-import type {
-  SelectionSetNode,
-  FieldNode,
-  FragmentSpreadNode,
-  InlineFragmentNode,
-  FragmentDefinitionNode,
-} from "graphql/language/ast";
 import { Kind } from "graphql/language/kinds";
-
-import type { GraphQLSchema } from "graphql/type/schema";
-import type { GraphQLObjectType } from "graphql/type/definition";
 import {
-  GraphQLIncludeDirective,
-  GraphQLSkipDirective,
-} from "graphql/type/directives";
-import { isAbstractType } from "graphql/type/definition";
-
+  FieldNode,
+  FragmentDefinitionNode,
+  InlineFragmentNode,
+  SelectionNode,
+  SelectionSetNode,
+} from "./ast/TypedAST";
 import type { ObjMap } from "./jsutils/ObjMap";
-import { typeNameFromAST } from "./utilities/typeNameFromAST";
-import { getDirectiveValues } from "./values";
-import {
-  Resolvers,
-  TypeAnnotatedFieldNode,
-  TypeAnnotatedFragmentDefinitionNode,
-  TypeAnnotatedSelectionNode,
-  TypeAnnotatedSelectionSetNode,
-} from "./types";
+import { Resolvers } from "./types";
 
 /**
  * Given a selectionSet, adds all of the fields in that selection to
@@ -38,13 +21,13 @@ import {
  */
 export function collectFields(
   resolvers: Resolvers,
-  fragments: ObjMap<TypeAnnotatedFragmentDefinitionNode>,
+  fragments: ObjMap<FragmentDefinitionNode>,
   variableValues: { [variable: string]: unknown },
   runtimeTypeName: string,
-  selectionSet: TypeAnnotatedSelectionSetNode,
-  fields: Map<string, Array<TypeAnnotatedFieldNode>>,
+  selectionSet: SelectionSetNode,
+  fields: Map<string, Array<FieldNode>>,
   visitedFragmentNames: Set<string>
-): Map<string, Array<TypeAnnotatedFieldNode>> {
+): Map<string, Array<FieldNode>> {
   for (const selection of selectionSet.selections) {
     switch (selection.kind) {
       case Kind.FIELD: {
@@ -116,7 +99,7 @@ export function collectFields(
  */
 function shouldIncludeNode(
   variableValues: { [variable: string]: unknown },
-  node: TypeAnnotatedSelectionNode
+  node: SelectionNode
 ): boolean {
   return true; // TODO
   // const skip = getDirectiveValues(GraphQLSkipDirective, node, variableValues);
@@ -159,6 +142,6 @@ function doesFragmentConditionMatch(
 /**
  * Implements the logic to compute the key of a given field's entry
  */
-function getFieldEntryKey(node: TypeAnnotatedFieldNode): string {
+function getFieldEntryKey(node: FieldNode): string {
   return node.alias ? node.alias.value : node.name.value;
 }
