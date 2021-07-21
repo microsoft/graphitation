@@ -2,6 +2,10 @@ type Query {
   user(id: ID!): User!
 }
 
+type Mutation {
+  updateUserName(id: ID!, name: String!): User!
+}
+
 type Subscription {
   userNameChanged(id: ID!): User!
 }
