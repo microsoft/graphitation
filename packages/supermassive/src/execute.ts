@@ -1,59 +1,23 @@
-import type { Path } from "./jsutils/Path";
-import type { ObjMap } from "./jsutils/ObjMap";
-import type { PromiseOrValue } from "graphql/jsutils/PromiseOrValue";
-import type { Maybe } from "graphql/jsutils/Maybe";
-import { inspect } from "./jsutils/inspect";
-import { invariant } from "./jsutils/invariant";
-import { devAssert } from "./jsutils/devAssert";
-import { isPromise } from "./jsutils/isPromise";
-import { isObjectLike } from "./jsutils/isObjectLike";
-import { promiseReduce } from "./jsutils/promiseReduce";
-import { promiseForObject } from "./jsutils/promiseForObject";
-import { addPath, pathToArray } from "./jsutils/Path";
-import { isIterableObject } from "./jsutils/isIterableObject";
-
-import type { GraphQLFormattedError } from "graphql/error/formatError";
-import { GraphQLError } from "graphql/error/GraphQLError";
-import { locatedError } from "graphql/error/locatedError";
-import { Kind } from "graphql/language/kinds";
-
-import type { GraphQLSchema } from "graphql/type/schema";
 import {
-  GraphQLObjectType,
-  GraphQLLeafType,
-  GraphQLField,
+  ASTNode as GraphQLASTNode,
   GraphQLEnumType,
-  GraphQLScalarType,
+  GraphQLError,
+  GraphQLField,
+  GraphQLFormattedError,
   GraphQLInputObjectType,
-} from "graphql/type/definition";
-import {
+  GraphQLLeafType,
+  GraphQLObjectType,
+  GraphQLScalarType,
+  GraphQLSchema,
+  GraphQLString,
+  isLeafType,
+  Kind,
+  locatedError,
   SchemaMetaFieldDef,
   TypeMetaFieldDef,
   TypeNameMetaFieldDef,
-} from "graphql/type/introspection";
-import { isLeafType } from "graphql/type/definition";
-import { ASTNode as GraphQLASTNode } from "graphql";
+} from "graphql";
 
-import {
-  getVariableValues,
-  getArgumentValues,
-  specifiedScalars,
-} from "./values";
-
-import {
-  FieldResolver,
-  InterfaceTypeResolver,
-  Resolvers,
-  ResolveInfo,
-  TypeResolver,
-  UnionTypeResolver,
-  ObjectTypeResolver,
-  Resolver,
-} from "./types";
-import { typeNameFromAST } from "./utilities/typeNameFromAST";
-
-import { collectFields } from "./collectFields";
-import { GraphQLString } from "graphql";
 import {
   DocumentNode,
   FieldNode,
@@ -62,6 +26,36 @@ import {
   OperationTypeDefinitionNode,
   TypeNode,
 } from "./ast/TypedAST";
+import { collectFields } from "./collectFields";
+import { devAssert } from "./jsutils/devAssert";
+import { inspect } from "./jsutils/inspect";
+import { invariant } from "./jsutils/invariant";
+import { isIterableObject } from "./jsutils/isIterableObject";
+import { isObjectLike } from "./jsutils/isObjectLike";
+import { isPromise } from "./jsutils/isPromise";
+import type { Maybe } from "./jsutils/Maybe";
+import type { ObjMap } from "./jsutils/ObjMap";
+import type { Path } from "./jsutils/Path";
+import { addPath, pathToArray } from "./jsutils/Path";
+import { promiseForObject } from "./jsutils/promiseForObject";
+import type { PromiseOrValue } from "./jsutils/PromiseOrValue";
+import { promiseReduce } from "./jsutils/promiseReduce";
+import {
+  FieldResolver,
+  InterfaceTypeResolver,
+  ObjectTypeResolver,
+  ResolveInfo,
+  Resolver,
+  Resolvers,
+  TypeResolver,
+  UnionTypeResolver,
+} from "./types";
+import { typeNameFromAST } from "./utilities/typeNameFromAST";
+import {
+  getArgumentValues,
+  getVariableValues,
+  specifiedScalars,
+} from "./values";
 
 /**
  * Terminology
@@ -649,7 +643,7 @@ function completeValue(
   const returnTypeName = returnTypeNode.name.value;
   let returnType: Resolver<any, any> = exeContext.resolvers[returnTypeName];
   if (!returnType) {
-    returnType = specifiedScalars[returnTypeName] || GraphQLString;
+    returnType = specifiedScalars[returnTypeName];
   }
 
   // If field type is a leaf type, Scalar or Enum, serialize to a valid value,
@@ -837,20 +831,20 @@ function ensureValidRuntimeType(
       exeContext.resolvers[runtimeTypeName];
 
     if (!runtimeType) {
-      throw new Error("TODO");
+      throw new Error("TODO - no such type");
     } else if (
       runtimeType instanceof GraphQLScalarType ||
       runtimeType instanceof GraphQLEnumType ||
       runtimeType instanceof GraphQLInputObjectType ||
       runtimeType.__resolveType
     ) {
-      throw new Error("TODO");
+      throw new Error("TODO - invalid runtime type");
     } else {
       return runtimeTypeName;
     }
   }
 
-  throw new Error("TODO");
+  throw new Error("TODO - Could not determine runtime type for abstract type");
 }
 
 /**
@@ -924,11 +918,8 @@ function collectSubfields(
  * isTypeOf for the object being coerced, returning the first type that matches.
  */
 export const defaultTypeResolver: TypeResolver<unknown, unknown> = function (
-  value,
-  contextValue,
-  info
+  value
 ) {
-  // First, look for `__typename`.
   if (isObjectLike(value) && typeof value.__typename === "string") {
     return value.__typename;
   }

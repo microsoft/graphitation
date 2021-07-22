@@ -12,7 +12,7 @@ export default class NiceBenchmark {
     });
   }
 
-  add(name: string, fn: () => Promise<any>) {
+  add(name: string, fn: () => Promise<void> | void) {
     this.suite.add(name, {
       defer: true,
       fn: async (deferred: any) => {

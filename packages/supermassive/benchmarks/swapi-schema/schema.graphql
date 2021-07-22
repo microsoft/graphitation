@@ -7,7 +7,18 @@ union SearchResult =
   | Planet
   | Film
 
+enum NodeType {
+  Person
+  Starship
+  Transport
+  Species
+  Vehicle
+  Planet
+  Film
+}
+
 type Query {
+  node(nodeType: NodeType!, id: Int!): Node
   search(search: String): [SearchResult]
 
   person(id: Int!): Person
@@ -33,7 +44,11 @@ type Query {
   allTransports: [Transport]
 }
 
-type Film {
+interface Node {
+  id: Int
+}
+
+type Film implements Node {
   title: String!
   starships: [Starship]
   edited: String
@@ -50,7 +65,7 @@ type Film {
   id: Int
 }
 
-type Vehicle {
+type Vehicle implements Node {
   id: Int
   name: String
   vehicle_class: String
@@ -69,7 +84,7 @@ type Vehicle {
   cost_in_credits: Int
 }
 
-type Person {
+type Person implements Node {
   id: Int
   edited: String
   name: String
@@ -88,7 +103,7 @@ type Person {
   films: [Film]
 }
 
-type Starship {
+type Starship implements Node {
   id: Int
 
   films: [Film]
@@ -112,7 +127,7 @@ type Starship {
   image: String
 }
 
-type Planet {
+type Planet implements Node {
   id: Int
   edited: String
   climate: String
@@ -129,7 +144,7 @@ type Planet {
   films: [Film]
 }
 
-type Species {
+type Species implements Node {
   edited: String
   classification: String
   name: String
@@ -146,7 +161,7 @@ type Species {
   id: Int
 }
 
-type Transport {
+type Transport implements Node {
   edited: String
   consumables: String
   name: String

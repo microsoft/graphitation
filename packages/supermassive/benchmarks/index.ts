@@ -2,9 +2,13 @@ import fs from "fs";
 import path from "path";
 import NiceBenchmark from "./nice-benchmark";
 import schema from "./swapi-schema";
+import resolvers from "./swapi-schema/resolvers";
 import models from "./swapi-schema/models";
-import { graphql, execute, parse } from "graphql";
+import { graphql, execute as graphqlExecute, parse } from "graphql";
 import { compileQuery, isCompiledQuery } from "graphql-jit";
+import { execute as supermassiveExecute } from "../src/execute";
+import { addTypesToRequestDocument } from "../src/ast/addTypesToRequestDocument";
+import { Resolvers } from "../src/types";
 
 const query = fs.readFileSync(
   path.join(__dirname, "./fixtures/query1.graphql"),
@@ -16,6 +20,8 @@ const query = fs.readFileSync(
 const parsedQuery = parse(query);
 
 const compiledQuery = compileQuery(schema, parsedQuery);
+
+const typeAnnotatedQuery = addTypesToRequestDocument(schema, parsedQuery);
 
 const queryRunningSuite = new NiceBenchmark("Query Running");
 queryRunningSuite.add("graphql-js - string queries", async () => {
@@ -29,7 +35,7 @@ queryRunningSuite.add("graphql-js - string queries", async () => {
   }
 });
 queryRunningSuite.add("graphql-js - parsed queries", async () => {
-  const result = await execute({
+  const result = await graphqlExecute({
     schema,
     document: parsedQuery,
     contextValue: { models },
@@ -59,6 +65,16 @@ queryRunningSuite.add("graphql-jit - precompiled", async () => {
     throw new Error("Wrong query");
   }
 });
+queryRunningSuite.add("supermassive - runtime schemaless", async () => {
+  const result = await supermassiveExecute({
+    resolvers: (resolvers as unknown) as Resolvers<any, any>,
+    document: typeAnnotatedQuery,
+    contextValue: { models },
+  });
+  if (result.errors || !result.data) {
+    throw new Error("Stuff ain't executing");
+  }
+});
 
 const queryParsingSuite = new NiceBenchmark("Query parsing");
 queryParsingSuite.add("graphql-js", async () => {
@@ -70,9 +86,15 @@ queryCompilingSuite.add("graphql-jit", async () => {
   await compileQuery(schema, parsedQuery);
 });
 
+const queryAnnotationSuite = new NiceBenchmark("Query annotation");
+queryAnnotationSuite.add("supermassive", () => {
+  addTypesToRequestDocument(schema, parsedQuery);
+});
+
 async function main() {
-  await queryParsingSuite.run();
   await queryCompilingSuite.run();
+  await queryParsingSuite.run();
+  await queryAnnotationSuite.run();
   await queryRunningSuite.run();
 }
 

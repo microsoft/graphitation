@@ -1,42 +1,38 @@
-import type { ObjMap } from "./jsutils/ObjMap";
-import type { Maybe } from "./jsutils/Maybe";
-import { keyMap } from "./jsutils/keyMap";
-import { inspect } from "./jsutils/inspect";
-import { printPathArray } from "./jsutils/printPathArray";
-
-import { GraphQLError } from "graphql/error/GraphQLError";
-
 import {
-  GraphQLID,
-  GraphQLString,
-  GraphQLInt,
-  GraphQLFloat,
+  ArgumentNode as GraphQLArgumentNode,
   GraphQLBoolean,
+  GraphQLError,
+  GraphQLFloat,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLScalarType,
+  GraphQLString,
+  GraphQLType,
+  isInputType,
+  isNonNullType,
   Kind,
   print,
   TypeNode as GraphQLTypeNode,
   ValueNode as GraphQLValueNode,
   VariableDefinitionNode as GraphQLVariableDefinitionNode,
-  ArgumentNode as GraphQLArgumentNode,
 } from "graphql";
-
-import type {
-  GraphQLInputType,
-  GraphQLScalarType,
-} from "graphql/type/definition";
-import { isInputType, isNonNullType } from "graphql/type/definition";
-
-// import { typeFromAST } from "graphql/utilities/typeFromAST";
-import { typeNameFromAST } from "./utilities/typeNameFromAST";
-import { valueFromAST } from "graphql/utilities/valueFromAST";
 import { coerceInputValue } from "graphql/utilities/coerceInputValue";
-import { Resolvers } from "./types";
+import { valueFromAST } from "graphql/utilities/valueFromAST";
 import {
-  VariableDefinitionNode,
-  FieldNode,
-  DirectiveNode,
   ArgumentNode,
+  DirectiveNode,
+  FieldNode,
+  TypeNode,
+  VariableDefinitionNode,
 } from "./ast/TypedAST";
+import { inspect } from "./jsutils/inspect";
+import { keyMap } from "./jsutils/keyMap";
+import type { Maybe } from "./jsutils/Maybe";
+import type { ObjMap } from "./jsutils/ObjMap";
+import { printPathArray } from "./jsutils/printPathArray";
+import { Resolvers } from "./types";
 
 type CoercedVariableValues =
   | { errors: Array<GraphQLError>; coerced?: never }
@@ -96,9 +92,7 @@ function coerceVariableValues(
   for (const varDefNode of varDefNodes) {
     const varName = varDefNode.variable.name.value;
     const varTypeAst = varDefNode.type;
-    const varTypeName = typeNameFromAST(varTypeAst);
-    const varType: GraphQLInputType | any =
-      specifiedScalars[varTypeName] || resolvers[varTypeName] || GraphQLString;
+    const varType: GraphQLType = graphqlTypeFromTypeAst(resolvers, varTypeAst);
 
     if (!isInputType(varType)) {
       // Must use input types for variables. This should be caught during
@@ -196,13 +190,14 @@ export function getArgumentValues(
   for (const argumentNode of argumentNodes) {
     const name = argumentNode.name.value;
     const argTypeNode = argumentNode.__type;
-    const argTypeName = typeNameFromAST(argTypeNode);
-    const argType: GraphQLInputType | any =
-      specifiedScalars[argTypeName] || resolvers[argTypeName] || GraphQLString;
+    const argType = graphqlTypeFromTypeAst(resolvers, argTypeNode);
 
     if (!isInputType(argType)) {
+      console.log(argType, isInputType(argType));
       throw new GraphQLError(
-        `Argument "$${name}" expected value of type "${argTypeName}" which cannot be used as an input type.`,
+        `Argument "$${name}" expected value of type "${inspect(
+          argType
+        )}" which cannot be used as an input type.`,
         argumentNode as GraphQLArgumentNode
       );
     }
@@ -289,3 +284,18 @@ export const specifiedScalars: { [key: string]: GraphQLScalarType } = {
   Float: GraphQLFloat,
   Boolean: GraphQLBoolean,
 };
+
+function graphqlTypeFromTypeAst(
+  resolvers: Resolvers,
+  node: TypeNode
+): GraphQLType {
+  if (node.kind === Kind.NON_NULL_TYPE) {
+    return new GraphQLNonNull(graphqlTypeFromTypeAst(resolvers, node.type));
+  } else if (node.kind === Kind.LIST_TYPE) {
+    return new GraphQLList(graphqlTypeFromTypeAst(resolvers, node.type));
+  } else {
+    const typeName = node.name.value;
+    const type = specifiedScalars[typeName] || resolvers[typeName];
+    return type;
+  }
+}
