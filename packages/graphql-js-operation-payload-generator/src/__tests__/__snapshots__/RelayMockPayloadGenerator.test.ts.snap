@@ -120,6 +120,47 @@ fragment RelayMockPayloadGeneratorTest14Fragment on User {
 }
 `;
 
+exports[`generate mock for enum 1`] = `
+~~~~~~~~~~ INPUT ~~~~~~~~~~
+query RelayMockPayloadGeneratorTest1Query {
+  node(id: "my-id") {
+    __typename
+    ...RelayMockPayloadGeneratorTestFragment
+    id
+  }
+}
+
+fragment RelayMockPayloadGeneratorTestFragment on User {
+  id
+  name
+  profile_picture {
+    uri
+    width
+    height
+    test_enums
+  }
+}
+
+~~~~~~~~~~ OUTPUT ~~~~~~~~~~
+{
+  "data": {
+    "__typename": "Query",
+    "node": {
+      "__typename": "User",
+      "id": "<mock-id-2>",
+      "name": "<mock-value-for-field-\\"name\\">",
+      "profile_picture": {
+        "__typename": "Image",
+        "uri": "<mock-value-for-field-\\"uri\\">",
+        "width": 42,
+        "height": 42,
+        "test_enums": "mark"
+      }
+    }
+  }
+}
+`;
+
 exports[`generate mock for fragment with @argumentsDefinition 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
 query RelayMockPayloadGeneratorTest15Query(
