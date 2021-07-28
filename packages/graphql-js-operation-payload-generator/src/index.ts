@@ -27,6 +27,7 @@ import {
 } from "graphql";
 import { Maybe } from "graphql/jsutils/Maybe";
 import invariant from "invariant";
+import deepmerge from "deepmerge";
 
 import {
   createValueResolver,
@@ -206,7 +207,7 @@ function visitDocumentDefinitionNode(
           typename = DEFAULT_MOCK_TYPENAME;
         }
 
-        const mockData: MockData = Object.assign({}, ...mocksData);
+        const mockData: MockData = deepmerge.all(mocksData) as MockData;
         if (typename) {
           delete mockData[TYPENAME_KEY];
           return {
