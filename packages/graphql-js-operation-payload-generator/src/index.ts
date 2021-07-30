@@ -1,25 +1,26 @@
-import {
-  assertCompositeType,
+import type {
   ASTKindToNode,
   DefinitionNode,
   DocumentNode,
   FieldNode,
   FragmentDefinitionNode,
-  getNamedType,
-  getNullableType,
+  OperationDefinitionNode,
+  SelectionSetNode,
   GraphQLCompositeType,
   GraphQLObjectType,
   GraphQLOutputType,
   GraphQLScalarType,
   GraphQLSchema,
-  GraphQLEnumType,
-  InlineFragmentNode,
+} from "graphql";
+import {
+  assertCompositeType,
+  getNamedType,
+  getNullableType,
   isAbstractType,
+  isEnumType,
   isListType,
   isObjectType,
   isScalarType,
-  OperationDefinitionNode,
-  SelectionSetNode,
   TypeInfo,
   visit,
   Visitor,
@@ -241,7 +242,7 @@ function visitDocumentDefinitionNode(
             ),
           };
           return fieldWithMockData;
-        } else if (namedType instanceof GraphQLEnumType) {
+        } else if (isEnumType(namedType)) {
           const fieldWithMockData: typeof fieldNode = {
             ...fieldNode,
             userMockData: namedType.getValues()[0].value,
