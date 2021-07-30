@@ -11,6 +11,9 @@
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts"
   },
+  "dependencies": {
+    "deepmerge": "^4.2.2"
+  },
   "devDependencies": {
     "@graphitation/graphql-js-tag": "^0.5.3",
     "@types/jest": "^26.0.22",

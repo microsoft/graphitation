@@ -41,6 +41,53 @@ fragment RelayMockPayloadGeneratorTest11Fragment on Viewer {
 }
 `;
 
+exports[`deeply merges fragment data 1`] = `
+~~~~~~~~~~ INPUT ~~~~~~~~~~
+query RelayMockPayloadGeneratorTestDeepMergeQuery {
+  node(id: "my-id") {
+    ...RelayMockPayloadGeneratorTestDeepMergeFragment1
+    ...RelayMockPayloadGeneratorTestDeepMergeFragment2
+  }
+}
+
+fragment RelayMockPayloadGeneratorTestDeepMergeFragment1 on Page {
+  author {
+    environment
+    address {
+      city
+    }
+    ...RelayMockPayloadGeneratorTestDeepMergeFragment2
+  }
+}
+
+fragment RelayMockPayloadGeneratorTestDeepMergeFragment2 on User {
+  environment
+  address {
+    city
+    country
+  }
+}
+
+~~~~~~~~~~ OUTPUT ~~~~~~~~~~
+{
+  "data": {
+    "__typename": "Query",
+    "node": {
+      "__typename": "Page",
+      "author": {
+        "__typename": "User",
+        "environment": "WEB",
+        "address": {
+          "__typename": "StreetAddress",
+          "city": "<mock-value-for-field-\\"city\\">",
+          "country": "<mock-value-for-field-\\"country\\">"
+        }
+      }
+    }
+  }
+}
+`;
+
 exports[`generate basic mock data 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
 query RelayMockPayloadGeneratorTest6Query {

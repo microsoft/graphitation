@@ -1727,3 +1727,38 @@ test("generate mock for enum", () => {
     ${fragment}
   `);
 });
+
+test("deeply merges fragment data", () => {
+  const RelayMockPayloadGeneratorTestDeepMergeFragment1 = graphql`
+    fragment RelayMockPayloadGeneratorTestDeepMergeFragment1 on Page {
+      author {
+        environment
+        address {
+          city
+        }
+        ...RelayMockPayloadGeneratorTestDeepMergeFragment2
+      }
+    }
+  `;
+  const RelayMockPayloadGeneratorTestDeepMergeFragment2 = graphql`
+    fragment RelayMockPayloadGeneratorTestDeepMergeFragment2 on User {
+      environment
+      address {
+        city
+        country
+      }
+    }
+  `;
+  testGeneratedData(
+    graphql`
+      query RelayMockPayloadGeneratorTestDeepMergeQuery {
+        node(id: "my-id") {
+          ...RelayMockPayloadGeneratorTestDeepMergeFragment1
+          ...RelayMockPayloadGeneratorTestDeepMergeFragment2
+        }
+      }
+      ${RelayMockPayloadGeneratorTestDeepMergeFragment1}
+      ${RelayMockPayloadGeneratorTestDeepMergeFragment2}
+    `
+  );
+});

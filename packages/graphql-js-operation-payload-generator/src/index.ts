@@ -1,25 +1,26 @@
-import {
-  assertCompositeType,
+import type {
   ASTKindToNode,
   DefinitionNode,
   DocumentNode,
   FieldNode,
   FragmentDefinitionNode,
-  getNamedType,
-  getNullableType,
+  OperationDefinitionNode,
+  SelectionSetNode,
   GraphQLCompositeType,
   GraphQLObjectType,
   GraphQLOutputType,
   GraphQLScalarType,
   GraphQLSchema,
-  GraphQLEnumType,
-  InlineFragmentNode,
+} from "graphql";
+import {
+  assertCompositeType,
+  getNamedType,
+  getNullableType,
   isAbstractType,
+  isEnumType,
   isListType,
   isObjectType,
   isScalarType,
-  OperationDefinitionNode,
-  SelectionSetNode,
   TypeInfo,
   visit,
   Visitor,
@@ -27,6 +28,7 @@ import {
 } from "graphql";
 import { Maybe } from "graphql/jsutils/Maybe";
 import invariant from "invariant";
+import deepmerge from "deepmerge";
 
 import {
   createValueResolver,
@@ -206,7 +208,7 @@ function visitDocumentDefinitionNode(
           typename = DEFAULT_MOCK_TYPENAME;
         }
 
-        const mockData: MockData = Object.assign({}, ...mocksData);
+        const mockData: MockData = deepmerge.all(mocksData) as MockData;
         if (typename) {
           delete mockData[TYPENAME_KEY];
           return {
@@ -240,7 +242,7 @@ function visitDocumentDefinitionNode(
             ),
           };
           return fieldWithMockData;
-        } else if (namedType instanceof GraphQLEnumType) {
+        } else if (isEnumType(namedType)) {
           const fieldWithMockData: typeof fieldNode = {
             ...fieldNode,
             userMockData: namedType.getValues()[0].value,
