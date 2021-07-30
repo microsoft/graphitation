@@ -1702,3 +1702,28 @@ describe("with @relay_test_operation", () => {
     );
   });
 });
+
+test("generate mock for enum", () => {
+  const fragment = graphql`
+    fragment RelayMockPayloadGeneratorTestFragment on User {
+      id
+      name
+      profile_picture {
+        uri
+        width
+        height
+        test_enums
+      }
+    }
+  `;
+  testGeneratedData(graphql`
+    query RelayMockPayloadGeneratorTest1Query {
+      node(id: "my-id") {
+        __typename
+        ...RelayMockPayloadGeneratorTestFragment
+        id
+      }
+    }
+    ${fragment}
+  `);
+});

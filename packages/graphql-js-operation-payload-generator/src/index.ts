@@ -12,6 +12,7 @@ import {
   GraphQLOutputType,
   GraphQLScalarType,
   GraphQLSchema,
+  GraphQLEnumType,
   InlineFragmentNode,
   isAbstractType,
   isListType,
@@ -237,6 +238,12 @@ function visitDocumentDefinitionNode(
               typeInfo.getParentType()!,
               resolveValue
             ),
+          };
+          return fieldWithMockData;
+        } else if (namedType instanceof GraphQLEnumType) {
+          const fieldWithMockData: typeof fieldNode = {
+            ...fieldNode,
+            userMockData: namedType.getValues()[0].value,
           };
           return fieldWithMockData;
         } else {
