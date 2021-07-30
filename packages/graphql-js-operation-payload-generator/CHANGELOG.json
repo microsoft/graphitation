@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Fri, 30 Jul 2021 21:57:33 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.5.7",
+      "version": "0.5.7",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Add support for enum mock generation",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "17478cbf5d33c03408bf2e23949619b00a66bce5",
+            "package": "@graphitation/graphql-js-operation-payload-generator"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 05 May 2021 19:48:35 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.5.6",
       "version": "0.5.6",

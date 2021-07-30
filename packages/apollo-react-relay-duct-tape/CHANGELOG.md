@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Tue, 13 Jul 2021 19:42:21 GMT and should not be manually modified.
+This log was last generated on Fri, 30 Jul 2021 21:57:33 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.4.1
+
+Fri, 30 Jul 2021 21:57:33 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-mock-client to v0.6.7 (eloy.de.enige@gmail.com)
 
 ## 0.4.0
 

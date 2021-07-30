@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-This log was last generated on Wed, 05 May 2021 19:48:35 GMT and should not be manually modified.
+This log was last generated on Fri, 30 Jul 2021 21:57:33 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.5.7
+
+Fri, 30 Jul 2021 21:57:33 GMT
+
+### Patches
+
+- Add support for enum mock generation (eloy.de.enige@gmail.com)
 
 ## 0.5.6
 
