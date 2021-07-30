@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Fri, 30 Jul 2021 23:21:22 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.5.8",
+      "version": "0.5.8",
+      "comments": {
+        "patch": [
+          {
+            "comment": "[operation-payload-generator] Deeply merge fragment data",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "f78957783804c777d9e38adc433882058367b6cd",
+            "package": "@graphitation/graphql-js-operation-payload-generator"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 30 Jul 2021 21:57:33 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.5.7",
       "version": "0.5.7",

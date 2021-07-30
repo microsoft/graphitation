@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-This log was last generated on Fri, 30 Jul 2021 21:57:33 GMT and should not be manually modified.
+This log was last generated on Fri, 30 Jul 2021 23:21:22 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.5.8
+
+Fri, 30 Jul 2021 23:21:22 GMT
+
+### Patches
+
+- [operation-payload-generator] Deeply merge fragment data (eloy.de.enige@gmail.com)
 
 ## 0.5.7
 
