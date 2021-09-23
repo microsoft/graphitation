@@ -29,15 +29,19 @@ const TodosConnection = new GraphQLObjectType({
   name: "TodosConnection",
   fields: {
     edges: {
-      type: new GraphQLList(
-        new GraphQLObjectType({
-          name: "TodosConnectionEdge",
-          fields: {
-            node: {
-              type: Todo,
-            },
-          },
-        })
+      type: new GraphQLNonNull(
+        new GraphQLList(
+          new GraphQLNonNull(
+            new GraphQLObjectType({
+              name: "TodosConnectionEdge",
+              fields: {
+                node: {
+                  type: new GraphQLNonNull(Todo),
+                },
+              },
+            })
+          )
+        )
       ),
     },
   },
@@ -48,7 +52,7 @@ export const schema = new GraphQLSchema({
     name: "Query",
     fields: {
       todos: {
-        type: TodosConnection,
+        type: new GraphQLNonNull(TodosConnection),
       },
     },
   }),

@@ -1,0 +1,18 @@
+type Query {
+  todos: TodosConnection!
+}
+
+type TodosConnection {
+  edges: [TodosConnectionEdge!]!
+}
+
+type TodosConnectionEdge {
+  node: Todo!
+}
+
+type Todo {
+  id: ID!
+  description: String!
+  isCompleted: Boolean!
+}
+

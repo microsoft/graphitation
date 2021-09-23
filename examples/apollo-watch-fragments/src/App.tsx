@@ -1,10 +1,13 @@
 import React from "react";
-import { useQuery, gql as graphql } from "@apollo/client";
+import { useLazyLoadQuery } from "@graphitation/apollo-react-relay-duct-tape";
+import { graphql } from "@graphitation/graphql-js-tag";
+
+import { AppQuery } from "./__generated__/AppQuery.graphql";
 
 const App: React.FC = () => {
-  const result = useQuery(
+  const result = useLazyLoadQuery<AppQuery>(
     graphql`
-      query {
+      query AppQuery {
         todos {
           edges {
             node {
@@ -40,7 +43,7 @@ const App: React.FC = () => {
         <ul className="todo-list">
           {/* <!-- These are here just to show the structure of the list items --> */}
           {/* <!-- List items should get the class `editing` when editing and `completed` when marked as completed --> */}
-          {result.data.todos.edges.map(({ node }: any) => {
+          {result.data.todos.edges.map(({ node }) => {
             return (
               <li key={node.id} className={node.isCompleted ? "completed" : ""}>
                 <div className="view">

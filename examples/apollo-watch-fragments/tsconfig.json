@@ -16,5 +16,14 @@
     "jsx": "react",
     "sourceMap": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "references": [
+    { "path": "../../packages/graphql-js-tag" },
+    { "path": "../../packages/graphql-js-operation-payload-generator" }
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  }
 }

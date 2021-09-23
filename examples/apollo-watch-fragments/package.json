@@ -4,17 +4,17 @@
   "private": true,
   "dependencies": {
     "@apollo/client": "^3.4.13",
-    "@types/node": "^12.0.0",
-    "@types/react": "^17.0.0",
-    "@types/react-dom": "^17.0.0",
+    "@graphitation/apollo-react-relay-duct-tape": "^0.4.2",
+    "@graphitation/graphql-js-tag": "^0.5.3",
     "graphql": "^15.6.0",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "typescript": "^4.1.2"
+    "react-dom": "^17.0.2"
   },
   "scripts": {
     "start": "webpack serve --open",
-    "build": "webpack"
+    "build": "webpack",
+    "dump-schema": "ts-node ./scripts/dump-schema.ts > ./data/schema.graphql",
+    "relay": "yarn dump-schema && relay-compiler --schema ./data/schema.graphql --src ./src --language graphitation"
   },
   "eslintConfig": {
     "extends": [
@@ -34,7 +34,14 @@
     ]
   },
   "devDependencies": {
+    "@types/node": "^12.0.0",
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "relay-compiler": "^10",
+    "relay-compiler-language-graphitation": "^0.5.1",
     "ts-loader": "^9.2.6",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.1.2",
     "webpack": "^5.53.0",
     "webpack-cli": "^4.8.0",
     "webpack-dev-server": "^4.2.1"
