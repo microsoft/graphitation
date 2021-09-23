@@ -9,6 +9,7 @@ import {
 } from "graphql";
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { SchemaLink } from "@apollo/client/link/schema";
+import { GraphQLInt } from "graphql";
 
 const Todo = new GraphQLObjectType({
   name: "Todo",
@@ -28,6 +29,12 @@ const Todo = new GraphQLObjectType({
 const TodosConnection = new GraphQLObjectType({
   name: "TodosConnection",
   fields: {
+    totalCount: {
+      type: new GraphQLNonNull(GraphQLInt),
+    },
+    uncompletedCount: {
+      type: new GraphQLNonNull(GraphQLInt),
+    },
     edges: {
       type: new GraphQLNonNull(
         new GraphQLList(
@@ -63,6 +70,8 @@ export const client = new ApolloClient({
     schema,
     rootValue: {
       todos: {
+        totalCount: 2,
+        uncompletedCount: 1,
         edges: [
           {
             node: {

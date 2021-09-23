@@ -3,21 +3,21 @@ import { useLazyLoadQuery } from "@graphitation/apollo-react-relay-duct-tape";
 import { graphql } from "@graphitation/graphql-js-tag";
 
 import { AppQuery } from "./__generated__/AppQuery.graphql";
+import { TodoList, TodoList_todosFragment } from "./TodoList";
+import { TodoListFooter, TodoListFooter_todosFragment } from "./TodoListFooter";
 
 const App: React.FC = () => {
   const result = useLazyLoadQuery<AppQuery>(
     graphql`
       query AppQuery {
         todos {
-          edges {
-            node {
-              id
-              description
-              isCompleted
-            }
-          }
+          totalCount
+          ...TodoList_todosFragment
+          ...TodoListFooter_todosFragment
         }
       }
+      ${TodoList_todosFragment}
+      ${TodoListFooter_todosFragment}
     `,
     { variables: {} }
   );
@@ -36,55 +36,14 @@ const App: React.FC = () => {
           autoFocus
         />
       </header>
-      {/* <!-- This section should be hidden by default and shown when there are todos --> */}
       <section className="main">
         <input id="toggle-all" className="toggle-all" type="checkbox" />
         <label htmlFor="toggle-all">Mark all as complete</label>
-        <ul className="todo-list">
-          {/* <!-- These are here just to show the structure of the list items --> */}
-          {/* <!-- List items should get the class `editing` when editing and `completed` when marked as completed --> */}
-          {result.data.todos.edges.map(({ node }) => {
-            return (
-              <li key={node.id} className={node.isCompleted ? "completed" : ""}>
-                <div className="view">
-                  <input
-                    className="toggle"
-                    type="checkbox"
-                    checked={node.isCompleted}
-                    onChange={() => console.log("CHANGE!")}
-                  />
-                  <label>{node.description}</label>
-                  <button className="destroy"></button>
-                </div>
-                {/* <input className="edit" value="Create a TodoMVC template" /> */}
-              </li>
-            );
-          })}
-        </ul>
+        <TodoList todos={result.data.todos} />
       </section>
-      {/* <!-- This footer should be hidden by default and shown when there are todos --> */}
-      <footer className="footer">
-        {/* <!-- This should be `0 items left` by default --> */}
-        <span className="todo-count">
-          <strong>0</strong> item left
-        </span>
-        {/* <!-- Remove this if you don't implement routing --> */}
-        <ul className="filters">
-          <li>
-            <a className="selected" href="#/">
-              All
-            </a>
-          </li>
-          <li>
-            <a href="#/active">Active</a>
-          </li>
-          <li>
-            <a href="#/completed">Completed</a>
-          </li>
-        </ul>
-        {/* <!-- Hidden if no completed items are left ↓ --> */}
-        <button className="clear-completed">Clear completed</button>
-      </footer>
+      {result.data.todos.totalCount > 0 && (
+        <TodoListFooter todos={result.data.todos} />
+      )}
     </section>
   );
 };

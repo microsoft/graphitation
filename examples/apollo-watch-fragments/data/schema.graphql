@@ -3,6 +3,8 @@ type Query {
 }
 
 type TodosConnection {
+  totalCount: Int!
+  uncompletedCount: Int!
   edges: [TodosConnectionEdge!]!
 }
 
