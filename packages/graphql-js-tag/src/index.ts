@@ -54,5 +54,5 @@ export function graphql(
   fragments.forEach((doc) =>
     doc.definitions.forEach((def) => definitions.add(def))
   );
-  return { kind: "Document", definitions: [...definitions] };
+  return { kind: "Document", definitions: Array.from(definitions) };
 }
