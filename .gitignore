@@ -1,6 +1,7 @@
 node_modules
 lib
 .tsbuildinfo
+dist
 
 # This is purely pre-cautionary; when linting becomes slow, delete this eslintcache entry
 .eslintcache
