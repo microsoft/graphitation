@@ -35,3 +35,5 @@ export const TodoList: React.FC<{ todos: TodoList_todosFragment$key }> = ({
     </ul>
   );
 };
+
+(TodoList as any).whyDidYouRender = true;

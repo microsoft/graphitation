@@ -53,4 +53,6 @@ const App: React.FC = () => {
   );
 };
 
+(App as any).whyDidYouRender = true;
+
 export default App;

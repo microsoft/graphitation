@@ -31,3 +31,5 @@ export const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({
     </>
   );
 };
+
+(Todo as any).whyDidYouRender = true;
