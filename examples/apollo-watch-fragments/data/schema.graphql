@@ -18,3 +18,15 @@ type Todo {
   isCompleted: Boolean!
 }
 
+type Mutation {
+  addTodo(input: AddTodoInput!): AddTodoPayload
+}
+
+type AddTodoPayload {
+  todoEdge: TodosConnectionEdge
+}
+
+input AddTodoInput {
+  description: String!
+}
+

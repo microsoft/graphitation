@@ -2,7 +2,9 @@ import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
 import { ApolloProvider } from "@apollo/client";
-import { client } from "./graphql";
+import { createClient } from "./graphql";
+
+const client = createClient();
 
 ReactDOM.render(
   <React.StrictMode>

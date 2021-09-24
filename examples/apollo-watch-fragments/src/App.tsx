@@ -1,39 +1,44 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { useLazyLoadQuery } from "@graphitation/apollo-react-relay-duct-tape";
 import { graphql } from "@graphitation/graphql-js-tag";
 
-import { AppQuery } from "./__generated__/AppQuery.graphql";
+import { TodoTextInput } from "./TodoTextInput";
 import { TodoList, TodoList_todosFragment } from "./TodoList";
 import { TodoListFooter, TodoListFooter_todosFragment } from "./TodoListFooter";
+import { useAddTodoMutation } from "./useAddTodoMutation";
+
+import { AppQuery as AppQueryType } from "./__generated__/AppQuery.graphql";
+
+export const AppQuery = graphql`
+  query AppQuery {
+    todos {
+      totalCount
+      ...TodoList_todosFragment
+      ...TodoListFooter_todosFragment
+    }
+  }
+  ${TodoList_todosFragment}
+  ${TodoListFooter_todosFragment}
+`;
 
 const App: React.FC = () => {
-  const result = useLazyLoadQuery<AppQuery>(
-    graphql`
-      query AppQuery {
-        todos {
-          totalCount
-          ...TodoList_todosFragment
-          ...TodoListFooter_todosFragment
-        }
-      }
-      ${TodoList_todosFragment}
-      ${TodoListFooter_todosFragment}
-    `,
-    { variables: {} }
-  );
+  const addTodo = useAddTodoMutation();
+
+  const result = useLazyLoadQuery<AppQueryType>(AppQuery, { variables: {} });
   if (result.error) {
     throw result.error;
   } else if (!result.data) {
     return null;
   }
+
   return (
     <section className="todoapp">
       <header className="header">
         <h1>todos</h1>
-        <input
+        <TodoTextInput
           className="new-todo"
           placeholder="What needs to be done?"
-          autoFocus
+          onSave={addTodo}
         />
       </header>
       <section className="main">
