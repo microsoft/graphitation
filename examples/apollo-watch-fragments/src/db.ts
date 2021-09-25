@@ -28,6 +28,12 @@ export class DB {
     return this.todos.filter((todo) => !todo.isCompleted).length;
   }
 
+  public setTodoStatus(id: number, isCompleted: boolean) {
+    const todo = this.todos.find((t) => t.id === id)!;
+    todo.isCompleted = isCompleted;
+    return todo;
+  }
+
   public addTodo(todoData: { description: string; isCompleted?: boolean }) {
     const todo: TodoData = {
       isCompleted: false,

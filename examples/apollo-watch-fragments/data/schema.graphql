@@ -20,6 +20,7 @@ type Todo {
 
 type Mutation {
   addTodo(input: AddTodoInput!): AddTodoPayload
+  changeTodoStatus(input: ChangeTodoStatusInput!): ChangeTodoStatusPayload
 }
 
 type AddTodoPayload {
@@ -28,5 +29,14 @@ type AddTodoPayload {
 
 input AddTodoInput {
   description: String!
+}
+
+type ChangeTodoStatusPayload {
+  todo: Todo!
+}
+
+input ChangeTodoStatusInput {
+  id: ID!
+  isCompleted: Boolean!
 }
 

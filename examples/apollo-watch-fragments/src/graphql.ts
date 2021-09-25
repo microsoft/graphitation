@@ -109,6 +109,41 @@ export const schema = new GraphQLSchema({
           };
         },
       },
+      changeTodoStatus: {
+        type: new GraphQLObjectType({
+          name: "ChangeTodoStatusPayload",
+          fields: {
+            todo: {
+              type: new GraphQLNonNull(Todo),
+            },
+          },
+        }),
+        args: {
+          input: {
+            type: new GraphQLNonNull(
+              new GraphQLInputObjectType({
+                name: "ChangeTodoStatusInput",
+                fields: {
+                  id: {
+                    type: new GraphQLNonNull(GraphQLID),
+                  },
+                  isCompleted: {
+                    type: new GraphQLNonNull(GraphQLBoolean),
+                  },
+                },
+              })
+            ),
+          },
+        },
+        resolve(_source, args, context, _info) {
+          const input: { id: string; isCompleted: boolean } = args.input;
+          const todo = context.db.setTodoStatus(
+            parseInt(input.id.split(":")[1], 10),
+            input.isCompleted
+          );
+          return { todo };
+        },
+      },
     },
   }),
 });

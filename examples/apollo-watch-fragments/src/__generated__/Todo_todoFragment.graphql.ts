@@ -4,6 +4,7 @@
 ;
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type Todo_todoFragment = {
+    readonly id: string;
     readonly description: string;
     readonly isCompleted: boolean;
     readonly " $refType": "Todo_todoFragment";
