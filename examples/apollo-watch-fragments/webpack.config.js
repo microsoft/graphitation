@@ -11,6 +11,10 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /schema\.graphql?$/,
+        type: "asset/source",
+      },
+      {
         test: /\.tsx?$/,
         use: "ts-loader",
         exclude: /node_modules/,

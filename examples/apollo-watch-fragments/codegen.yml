@@ -1,0 +1,12 @@
+overwrite: true
+schema: "./data/schema.graphql"
+generates:
+  ./src/graphql/resolver-typings.ts:
+    plugins:
+      - "typescript"
+      - "typescript-resolvers"
+    config:
+      allowParentTypeOverride: true
+      defaultMapper: Partial<{T}>
+      mappers:
+        Todo: ../db#TodoData
