@@ -18,6 +18,11 @@ const mutation = graphql`
           description
         }
       }
+      todos {
+        id
+        totalCount
+        uncompletedCount
+      }
     }
   }
 `;

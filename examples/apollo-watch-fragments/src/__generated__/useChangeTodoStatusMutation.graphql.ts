@@ -15,6 +15,11 @@ export type useChangeTodoStatusMutationResponse = {
             readonly id: string;
             readonly isCompleted: boolean;
         };
+        readonly todos: {
+            readonly id: string;
+            readonly totalCount: number;
+            readonly uncompletedCount: number;
+        };
     } | null;
 };
 export type useChangeTodoStatusMutation = {

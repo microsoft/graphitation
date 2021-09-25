@@ -13,6 +13,11 @@ const mutation = graphql`
         id
         isCompleted
       }
+      todos {
+        id
+        totalCount
+        uncompletedCount
+      }
     }
   }
 `;

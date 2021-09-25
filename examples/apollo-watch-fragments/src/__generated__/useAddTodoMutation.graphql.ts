@@ -18,6 +18,11 @@ export type useAddTodoMutationResponse = {
                 readonly description: string;
             };
         } | null;
+        readonly todos: {
+            readonly id: string;
+            readonly totalCount: number;
+            readonly uncompletedCount: number;
+        };
     } | null;
 };
 export type useAddTodoMutation = {

@@ -22,6 +22,7 @@ export type AddTodoInput = {
 export type AddTodoPayload = {
   __typename?: 'AddTodoPayload';
   todoEdge?: Maybe<TodosConnectionEdge>;
+  todos: TodosConnection;
 };
 
 export type ChangeTodoStatusInput = {
@@ -32,6 +33,7 @@ export type ChangeTodoStatusInput = {
 export type ChangeTodoStatusPayload = {
   __typename?: 'ChangeTodoStatusPayload';
   todo: Todo;
+  todos: TodosConnection;
 };
 
 export type Mutation = {
@@ -65,6 +67,7 @@ export type Todo = {
 export type TodosConnection = {
   __typename?: 'TodosConnection';
   edges: Array<TodosConnectionEdge>;
+  id: Scalars['ID'];
   totalCount: Scalars['Int'];
   uncompletedCount: Scalars['Int'];
 };
@@ -144,10 +147,10 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   AddTodoInput: ResolverTypeWrapper<Partial<AddTodoInput>>;
-  AddTodoPayload: ResolverTypeWrapper<Partial<Omit<AddTodoPayload, 'todoEdge'> & { todoEdge?: Maybe<ResolversTypes['TodosConnectionEdge']> }>>;
+  AddTodoPayload: ResolverTypeWrapper<Partial<Omit<AddTodoPayload, 'todoEdge' | 'todos'> & { todoEdge?: Maybe<ResolversTypes['TodosConnectionEdge']>, todos: ResolversTypes['TodosConnection'] }>>;
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']>>;
   ChangeTodoStatusInput: ResolverTypeWrapper<Partial<ChangeTodoStatusInput>>;
-  ChangeTodoStatusPayload: ResolverTypeWrapper<Partial<Omit<ChangeTodoStatusPayload, 'todo'> & { todo: ResolversTypes['Todo'] }>>;
+  ChangeTodoStatusPayload: ResolverTypeWrapper<Partial<Omit<ChangeTodoStatusPayload, 'todo' | 'todos'> & { todo: ResolversTypes['Todo'], todos: ResolversTypes['TodosConnection'] }>>;
   ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
   Mutation: ResolverTypeWrapper<{}>;
@@ -161,10 +164,10 @@ export type ResolversTypes = {
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   AddTodoInput: Partial<AddTodoInput>;
-  AddTodoPayload: Partial<Omit<AddTodoPayload, 'todoEdge'> & { todoEdge?: Maybe<ResolversParentTypes['TodosConnectionEdge']> }>;
+  AddTodoPayload: Partial<Omit<AddTodoPayload, 'todoEdge' | 'todos'> & { todoEdge?: Maybe<ResolversParentTypes['TodosConnectionEdge']>, todos: ResolversParentTypes['TodosConnection'] }>;
   Boolean: Partial<Scalars['Boolean']>;
   ChangeTodoStatusInput: Partial<ChangeTodoStatusInput>;
-  ChangeTodoStatusPayload: Partial<Omit<ChangeTodoStatusPayload, 'todo'> & { todo: ResolversParentTypes['Todo'] }>;
+  ChangeTodoStatusPayload: Partial<Omit<ChangeTodoStatusPayload, 'todo' | 'todos'> & { todo: ResolversParentTypes['Todo'], todos: ResolversParentTypes['TodosConnection'] }>;
   ID: Partial<Scalars['ID']>;
   Int: Partial<Scalars['Int']>;
   Mutation: {};
@@ -177,11 +180,13 @@ export type ResolversParentTypes = {
 
 export type AddTodoPayloadResolvers<ContextType = any, ParentType = ResolversParentTypes['AddTodoPayload']> = {
   todoEdge?: Resolver<Maybe<ResolversTypes['TodosConnectionEdge']>, ParentType, ContextType>;
+  todos?: Resolver<ResolversTypes['TodosConnection'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type ChangeTodoStatusPayloadResolvers<ContextType = any, ParentType = ResolversParentTypes['ChangeTodoStatusPayload']> = {
   todo?: Resolver<ResolversTypes['Todo'], ParentType, ContextType>;
+  todos?: Resolver<ResolversTypes['TodosConnection'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -203,6 +208,7 @@ export type TodoResolvers<ContextType = any, ParentType = ResolversParentTypes['
 
 export type TodosConnectionResolvers<ContextType = any, ParentType = ResolversParentTypes['TodosConnection']> = {
   edges?: Resolver<Array<ResolversTypes['TodosConnectionEdge']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   totalCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   uncompletedCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

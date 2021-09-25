@@ -21,6 +21,7 @@ const resolvers: Resolvers<Context> = {
         todoEdge: {
           node: todo,
         },
+        todos: {},
       };
     },
     changeTodoStatus: (_source, { input }, context, _info) => {
@@ -28,13 +29,14 @@ const resolvers: Resolvers<Context> = {
         parseInt(input.id.split(":")[1], 10),
         input.isCompleted
       );
-      return { todo };
+      return { todo, todos: {} };
     },
   },
   Todo: {
     id: (todo) => `Todo:${todo.id}`,
   },
   TodosConnection: {
+    id: () => "TodosConnection:singleton",
     totalCount: (_source, _args, context) => context.db.getTotalTodoCount(),
     uncompletedCount: (_source, _args, context) =>
       context.db.getUncompletedTodoCount(),

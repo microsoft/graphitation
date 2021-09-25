@@ -12,6 +12,7 @@ import { AppQuery as AppQueryType } from "./__generated__/AppQuery.graphql";
 export const AppQuery = graphql`
   query AppQuery {
     todos {
+      id
       totalCount
       ...TodoList_todosFragment
       ...TodoListFooter_todosFragment
