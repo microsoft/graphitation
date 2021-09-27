@@ -1,5 +1,10 @@
+interface Node {
+  id: ID!
+}
+
 type Query {
   todos: TodosConnection!
+  node(id: ID!): Node
 }
 
 type TodosConnection {
@@ -13,7 +18,7 @@ type TodosConnectionEdge {
   node: Todo!
 }
 
-type Todo {
+type Todo implements Node {
   id: ID!
   description: String!
   isCompleted: Boolean!

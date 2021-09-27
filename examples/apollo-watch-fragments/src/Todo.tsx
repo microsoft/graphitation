@@ -6,7 +6,7 @@ import { Todo_todoFragment$key } from "./__generated__/Todo_todoFragment.graphql
 import useChangeTodoStatusMutation from "./useChangeTodoStatusMutation";
 
 export const Todo_todoFragment = graphql`
-  fragment Todo_todoFragment on Todo {
+  fragment Todo_todoFragment on Todo @watchNode {
     id
     description
     isCompleted
