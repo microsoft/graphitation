@@ -19,11 +19,13 @@
     "beachball": "beachball -b origin/main",
     "change": "yarn beachball change",
     "checkchange": "yarn beachball check",
-    "release": "yarn beachball publish"
+    "release": "yarn beachball publish",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "beachball": "2.2.0",
     "lage": "0.29.1",
+    "patch-package": "^6.4.7",
     "prettier": "^2.2.1"
   }
 }

@@ -52,12 +52,22 @@ export type MutationChangeTodoStatusArgs = {
   input: ChangeTodoStatusInput;
 };
 
+export type Node = {
+  id: Scalars['ID'];
+};
+
 export type Query = {
   __typename?: 'Query';
+  node?: Maybe<Node>;
   todos: TodosConnection;
 };
 
-export type Todo = {
+
+export type QueryNodeArgs = {
+  id: Scalars['ID'];
+};
+
+export type Todo = Node & {
   __typename?: 'Todo';
   description: Scalars['String'];
   id: Scalars['ID'];
@@ -154,6 +164,7 @@ export type ResolversTypes = {
   ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
   Mutation: ResolverTypeWrapper<{}>;
+  Node: ResolversTypes['Todo'];
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
   Todo: ResolverTypeWrapper<TodoData>;
@@ -171,6 +182,7 @@ export type ResolversParentTypes = {
   ID: Partial<Scalars['ID']>;
   Int: Partial<Scalars['Int']>;
   Mutation: {};
+  Node: ResolversParentTypes['Todo'];
   Query: {};
   String: Partial<Scalars['String']>;
   Todo: TodoData;
@@ -195,7 +207,13 @@ export type MutationResolvers<ContextType = any, ParentType = ResolversParentTyp
   changeTodoStatus?: Resolver<Maybe<ResolversTypes['ChangeTodoStatusPayload']>, ParentType, ContextType, RequireFields<MutationChangeTodoStatusArgs, 'input'>>;
 };
 
+export type NodeResolvers<ContextType = any, ParentType = ResolversParentTypes['Node']> = {
+  __resolveType: TypeResolveFn<'Todo', ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+};
+
 export type QueryResolvers<ContextType = any, ParentType = ResolversParentTypes['Query']> = {
+  node?: Resolver<Maybe<ResolversTypes['Node']>, ParentType, ContextType, RequireFields<QueryNodeArgs, 'id'>>;
   todos?: Resolver<ResolversTypes['TodosConnection'], ParentType, ContextType>;
 };
 
@@ -223,6 +241,7 @@ export type Resolvers<ContextType = any> = {
   AddTodoPayload?: AddTodoPayloadResolvers<ContextType>;
   ChangeTodoStatusPayload?: ChangeTodoStatusPayloadResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
+  Node?: NodeResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Todo?: TodoResolvers<ContextType>;
   TodosConnection?: TodosConnectionResolvers<ContextType>;
