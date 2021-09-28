@@ -5,6 +5,7 @@
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type TodoListFooter_todosFragment = {
     readonly uncompletedCount: number;
+    readonly id: string;
     readonly " $refType": "TodoListFooter_todosFragment";
 };
 export type TodoListFooter_todosFragment$data = TodoListFooter_todosFragment;

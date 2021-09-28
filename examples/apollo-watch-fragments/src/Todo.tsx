@@ -14,7 +14,7 @@ import { useQuery as useApolloQuery } from "@apollo/client";
 import { documentNode as watchNodeQuery } from "./__generated__/Todo_todoWatchNodeQuery.graphql";
 
 export const Todo_todoFragment = graphql`
-  fragment Todo_todoFragment on Todo @watchNode {
+  fragment Todo_todoFragment on Todo {
     id
     description
     isCompleted

@@ -6,7 +6,7 @@ import { TodoList_todosFragment$key } from "./__generated__/TodoList_todosFragme
 import { Todo, Todo_todoFragment } from "./Todo";
 
 export const TodoList_todosFragment = graphql`
-  fragment TodoList_todosFragment on TodosConnection @watchNode {
+  fragment TodoList_todosFragment on TodosConnection {
     edges {
       node {
         id

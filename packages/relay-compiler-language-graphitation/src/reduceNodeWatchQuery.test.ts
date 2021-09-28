@@ -91,7 +91,7 @@ describe(reduceNodeWatchQuery, () => {
     );
   });
 
-  it.only("does NOT remove the first fragment spread on the node field of a refetch query", () => {
+  it("does NOT remove the first fragment spread on the node field of a refetch query", () => {
     const result = reduceNodeWatchQuery(
       schema,
       graphql`

@@ -4,17 +4,10 @@
 /* istanbul ignore file */
 
 import { FormatModule } from "relay-compiler/lib/language/RelayLanguagePluginInterface";
-import { buildSchema, DocumentNode, parse, print, Source } from "graphql";
-import invariant from "invariant";
-import { readFileSync } from "fs";
+import { DocumentNode, parse, print } from "graphql";
 import { reduceNodeWatchQuery } from "./reduceNodeWatchQuery";
-
-// TODO: Just a dirty hack to side-step this issue for now.
-const schemaPath = process.env.SCHEMA_PATH;
-invariant(schemaPath, "Expected the SCHEMA_PATH env variable to be set");
-const schema = buildSchema(
-  new Source(readFileSync(schemaPath, "utf-8"), schemaPath)
-);
+import { schema } from "./schema";
+import invariant from "invariant";
 
 function emitDocument(document: DocumentNode, exportName: string) {
   return `
@@ -35,6 +28,7 @@ export const formatModule: FormatModule = ({
       append += emitDocument(originalDocument, "executionQueryDocument");
       append += "\n";
     }
+    invariant(schema, "Expected a schema to be passed in or set in the env");
     const reducedDocument = reduceNodeWatchQuery(schema, originalDocument);
     append += emitDocument(reducedDocument, "watchQueryDocument");
   }
