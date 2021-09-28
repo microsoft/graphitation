@@ -22,12 +22,19 @@ function emitDocument(document: DocumentNode, exportName: string) {
 export const ${exportName} = ${JSON.stringify(document)};`;
 }
 
-export const formatModule: FormatModule = ({ docText, hash, typeText }) => {
+export const formatModule: FormatModule = ({
+  docText,
+  hash,
+  moduleName,
+  typeText,
+}) => {
   let append = "";
   if (docText) {
     const originalDocument = parse(docText, { noLocation: true });
-    append += emitDocument(originalDocument, "executionQueryDocument");
-    append += "\n";
+    if (!moduleName.endsWith("WatchNodeQuery.graphql")) {
+      append += emitDocument(originalDocument, "executionQueryDocument");
+      append += "\n";
+    }
     const reducedDocument = reduceNodeWatchQuery(schema, originalDocument);
     append += emitDocument(reducedDocument, "watchQueryDocument");
   }
