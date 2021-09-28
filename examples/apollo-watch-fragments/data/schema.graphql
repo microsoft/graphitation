@@ -7,7 +7,7 @@ type Query {
   node(id: ID!): Node
 }
 
-type TodosConnection {
+type TodosConnection implements Node {
   id: ID!
   totalCount: Int!
   uncompletedCount: Int!

@@ -15,7 +15,7 @@
     "start": "yarn generate-resolver-typings && concurrently 'yarn relay --watch' 'yarn serve'",
     "serve": "webpack serve --open",
     "build": "webpack",
-    "relay": "relay-compiler --schema ./data/schema.graphql --src ./src --language graphitation",
+    "relay": "SCHEMA_PATH=./data/schema.graphql relay-compiler --schema ./data/schema.graphql --src ./src --language graphitation",
     "generate-resolver-typings": "graphql-codegen --config codegen.yml"
   },
   "eslintConfig": {

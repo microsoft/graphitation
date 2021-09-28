@@ -11,6 +11,7 @@ export type TodoList_todosFragment = {
             readonly " $fragmentRefs": FragmentRefs<"Todo_todoFragment">;
         };
     }>;
+    readonly id: string;
     readonly " $refType": "TodoList_todosFragment";
 };
 export type TodoList_todosFragment$data = TodoList_todosFragment;
