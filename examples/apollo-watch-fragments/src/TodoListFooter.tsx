@@ -28,6 +28,9 @@ export const TodoListFooter: React.FC<{
   });
   const todos = (response.data!
     .node as any) as TodoListFooter_todosFragmentType;
+
+  console.log("TodoListFooter watch data:", todos);
+
   return (
     <footer className="footer">
       <span className="todo-count">

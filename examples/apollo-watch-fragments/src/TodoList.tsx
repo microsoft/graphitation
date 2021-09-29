@@ -35,6 +35,9 @@ export const TodoList: React.FC<{ todos: TodoList_todosFragment$key }> = ({
     fetchPolicy: "cache-only",
   });
   const todos = (response.data!.node as any) as TodoList_todosFragmentType;
+
+  console.log("TodoList watch data:", todos);
+
   /* <!-- List items should get the class `editing` when editing and `completed` when marked as completed --> */
   return (
     <ul className="todo-list">

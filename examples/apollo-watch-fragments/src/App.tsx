@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useLazyLoadQuery } from "@graphitation/apollo-react-relay-duct-tape";
+import React from "react";
 import { graphql } from "@graphitation/graphql-js-tag";
 
 import { TodoTextInput } from "./TodoTextInput";
@@ -16,6 +15,7 @@ import {
   useApolloClient,
   useQuery as useApolloQuery,
 } from "@apollo/client";
+import { useExecuteAndWatchQuery } from "./useExecuteAndWatchQuery";
 import {
   executionQueryDocument,
   watchQueryDocument,
@@ -33,49 +33,6 @@ export const AppQuery = graphql`
   ${TodoList_todosFragment}
   ${TodoListFooter_todosFragment}
 `;
-
-function useExecuteAndWatchQuery(
-  executionQuery: DocumentNode,
-  watchQuery: DocumentNode,
-  variables: Record<string, any>
-) {
-  const client = useApolloClient();
-  const inFlightQuery = useRef<Promise<ApolloQueryResult<unknown>>>();
-
-  const [[completed, error], setCompletionStatus] = useState<
-    [completed: boolean, error: Error | undefined]
-  >([false, undefined]);
-
-  if (error) {
-    throw error;
-  }
-
-  useEffect(() => {
-    if (!completed && inFlightQuery.current === undefined) {
-      inFlightQuery.current = client.query({
-        query: executionQuery,
-        variables,
-      });
-      inFlightQuery.current
-        .then((result) => setCompletionStatus([true, result.error]))
-        .catch((error) => setCompletionStatus([true, error]))
-        .then(() => {
-          // No need to hang onto this any longer than necessary.
-          // TODO: How does Apollo evict from the store?
-          inFlightQuery.current = undefined;
-        });
-    }
-    return () => {
-      // TODO: How does Apollo evict from the store?
-      inFlightQuery.current = undefined;
-    };
-  }, [completed, inFlightQuery.current]);
-
-  return useApolloQuery(watchQuery, {
-    fetchPolicy: "cache-only",
-    skip: !completed,
-  });
-}
 
 const App: React.FC = () => {
   const addTodo = useAddTodoMutation();
@@ -95,6 +52,8 @@ const App: React.FC = () => {
   } else if (!result.data) {
     return null;
   }
+
+  console.log("App watch data:", result.data);
 
   return (
     <section className="todoapp">

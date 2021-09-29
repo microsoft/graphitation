@@ -32,6 +32,8 @@ export const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({
   });
   const todo = (response.data!.node as any) as Todo_todoFragmentType;
 
+  console.log("Todo watch data:", todo);
+
   const [changeTodoStatus] = useChangeTodoStatusMutation();
   const handleCompleteChange = useCallback(
     (e: React.SyntheticEvent<HTMLInputElement>) => {
