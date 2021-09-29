@@ -178,7 +178,7 @@ export function useSubscription<TSubscriptionPayload extends OperationType>(
 }
 
 interface IMutationCommitterOptions<TMutationPayload extends OperationType> {
-  variables: TMutationPayload["variables"];
+  variables?: TMutationPayload["variables"];
   optimisticResponse?: Partial<TMutationPayload["response"]> | null;
 }
 
