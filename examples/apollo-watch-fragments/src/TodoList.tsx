@@ -25,7 +25,7 @@ export const TodoList_todosFragment = graphql`
   ${Todo_todoFragment}
 `;
 
-export const TodoList: React.FC<{ todos: TodoList_todosFragment$key }> = ({
+const TodoList: React.FC<{ todos: TodoList_todosFragment$key }> = ({
   todos: todosRef,
 }) => {
   // TODO: This needs to be replaced by the webpack loader
@@ -53,3 +53,6 @@ export const TodoList: React.FC<{ todos: TodoList_todosFragment$key }> = ({
 };
 
 (TodoList as any).whyDidYouRender = true;
+
+const MemoizedTodoList = React.memo(TodoList);
+export { MemoizedTodoList as TodoList };

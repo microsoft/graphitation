@@ -21,9 +21,7 @@ export const Todo_todoFragment = graphql`
   }
 `;
 
-export const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({
-  todo: todoRef,
-}) => {
+const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({ todo: todoRef }) => {
   // TODO: This needs to be replaced by the webpack loader
   // const todo = useFragment(Todo_todoFragment, todoRef);
   const response = useApolloQuery(watchQueryDocument as any, {
@@ -61,3 +59,6 @@ export const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({
 };
 
 (Todo as any).whyDidYouRender = true;
+
+const MemoizedTodo = React.memo(Todo);
+export { MemoizedTodo as Todo };
