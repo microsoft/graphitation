@@ -139,6 +139,11 @@ async function compareQueryResults(
     ...((resolvers as unknown) as Resolvers<any, any>),
   };
   const document = parse(query);
+  // const util = require("util");
+
+  // console.log(
+  //   util.inspect(addTypesToRequestDocument(schema, document), { depth: null })
+  // );
   const result = await execute({
     document: addTypesToRequestDocument(schema, document),
     contextValue: {
