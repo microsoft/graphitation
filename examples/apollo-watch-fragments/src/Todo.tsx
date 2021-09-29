@@ -11,7 +11,7 @@ import {
 
 // TODO: This needs to be done by a webpack loader:
 import { useQuery as useApolloQuery } from "@apollo/client";
-import { documentNode as watchNodeQuery } from "./__generated__/Todo_todoWatchNodeQuery.graphql";
+import { watchQueryDocument } from "./__generated__/Todo_todoWatchNodeQuery.graphql";
 
 export const Todo_todoFragment = graphql`
   fragment Todo_todoFragment on Todo {
@@ -26,7 +26,7 @@ export const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({
 }) => {
   // TODO: This needs to be replaced by the webpack loader
   // const todo = useFragment(Todo_todoFragment, todoRef);
-  const response = useApolloQuery(watchNodeQuery as any, {
+  const response = useApolloQuery(watchQueryDocument as any, {
     variables: { id: (todoRef as any).id },
     fetchPolicy: "cache-only",
   });

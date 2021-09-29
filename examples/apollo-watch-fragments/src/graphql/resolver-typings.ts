@@ -74,7 +74,7 @@ export type Todo = Node & {
   isCompleted: Scalars['Boolean'];
 };
 
-export type TodosConnection = {
+export type TodosConnection = Node & {
   __typename?: 'TodosConnection';
   edges: Array<TodosConnectionEdge>;
   id: Scalars['ID'];
@@ -164,7 +164,7 @@ export type ResolversTypes = {
   ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
   Mutation: ResolverTypeWrapper<{}>;
-  Node: ResolversTypes['Todo'];
+  Node: ResolversTypes['Todo'] | ResolversTypes['TodosConnection'];
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
   Todo: ResolverTypeWrapper<TodoData>;
@@ -182,7 +182,7 @@ export type ResolversParentTypes = {
   ID: Partial<Scalars['ID']>;
   Int: Partial<Scalars['Int']>;
   Mutation: {};
-  Node: ResolversParentTypes['Todo'];
+  Node: ResolversParentTypes['Todo'] | ResolversParentTypes['TodosConnection'];
   Query: {};
   String: Partial<Scalars['String']>;
   Todo: TodoData;
@@ -208,7 +208,7 @@ export type MutationResolvers<ContextType = any, ParentType = ResolversParentTyp
 };
 
 export type NodeResolvers<ContextType = any, ParentType = ResolversParentTypes['Node']> = {
-  __resolveType: TypeResolveFn<'Todo', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'Todo' | 'TodosConnection', ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
 };
 
