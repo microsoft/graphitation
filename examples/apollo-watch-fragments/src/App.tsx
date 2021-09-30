@@ -1,5 +1,6 @@
 import React from "react";
 import { graphql } from "@graphitation/graphql-js-tag";
+import { useLazyLoadQuery } from "@graphitation/apollo-react-relay-duct-tape";
 
 import { TodoTextInput } from "./TodoTextInput";
 import { TodoList, TodoList_todosFragment } from "./TodoList";
@@ -7,19 +8,6 @@ import { TodoListFooter, TodoListFooter_todosFragment } from "./TodoListFooter";
 import { useAddTodoMutation } from "./useAddTodoMutation";
 
 import { AppQuery as AppQueryType } from "./__generated__/AppQuery.graphql";
-
-// TODO: This needs to be done by a webpack loader:
-import {
-  ApolloQueryResult,
-  DocumentNode,
-  useApolloClient,
-  useQuery as useApolloQuery,
-} from "@apollo/client";
-import { useExecuteAndWatchQuery } from "./move-to-libs/useExecuteAndWatchQuery";
-import {
-  executionQueryDocument,
-  watchQueryDocument,
-} from "./__generated__/AppQuery.graphql";
 
 export const AppQuery = graphql`
   query AppQuery {
@@ -37,16 +25,7 @@ export const AppQuery = graphql`
 const App: React.FC = () => {
   const addTodo = useAddTodoMutation();
 
-  // TODO: This needs to be done by a webpack loader:
-  // * copy over the variables from the original query
-  //
-  // const result = useLazyLoadQuery<AppQueryType>(AppQuery, { variables: {} });
-  const result = useExecuteAndWatchQuery(
-    executionQueryDocument as any,
-    watchQueryDocument as any,
-    { variables: {} }
-  );
-
+  const result = useLazyLoadQuery<AppQueryType>(AppQuery, { variables: {} });
   if (result.error) {
     throw result.error;
   } else if (!result.data) {
