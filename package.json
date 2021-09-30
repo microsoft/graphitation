@@ -27,5 +27,8 @@
     "lage": "0.29.1",
     "patch-package": "^6.4.7",
     "prettier": "^2.2.1"
+  },
+  "resolutions": {
+    "@types/webpack": "^5.28.0"
   }
 }

@@ -1,6 +1,9 @@
-const path = require("path");
+import * as path from "path";
+import * as webpack from "webpack";
+import "webpack-dev-server";
+import { createWatchNodeQueryTransform } from "./src/move-to-libs/createWatchNodeQueryTransform";
 
-module.exports = {
+const config: webpack.Configuration = {
   mode: "development",
   entry: "./src/index.tsx",
   devtool: "inline-source-map",
@@ -16,8 +19,13 @@ module.exports = {
       },
       {
         test: /\.tsx?$/,
-        use: "ts-loader",
+        loader: "ts-loader",
         exclude: /node_modules/,
+        options: {
+          getCustomTransformers: () => ({
+            before: [createWatchNodeQueryTransform()],
+          }),
+        },
       },
     ],
   },
@@ -29,3 +37,5 @@ module.exports = {
     path: path.resolve(__dirname, "public"),
   },
 };
+
+export default config;
