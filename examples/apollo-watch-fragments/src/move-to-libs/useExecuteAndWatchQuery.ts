@@ -19,23 +19,23 @@ export function useExecuteAndWatchQuery(
   const client = useApolloClient();
   const inFlightQuery = useRef<Promise<ApolloQueryResult<unknown>>>();
 
-  const [[completed, error], setCompletionStatus] = useState<
+  const [[loading, error], setLoadingStatus] = useState<
     [completed: boolean, error: Error | undefined]
-  >([false, undefined]);
+  >([true, undefined]);
 
   if (error) {
     throw error;
   }
 
   useEffect(() => {
-    if (!completed && inFlightQuery.current === undefined) {
+    if (loading && inFlightQuery.current === undefined) {
       inFlightQuery.current = client.query({
         query: executionQuery,
         variables,
       });
       inFlightQuery.current
-        .then((result) => setCompletionStatus([true, result.error]))
-        .catch((error) => setCompletionStatus([true, error]))
+        .then((result) => setLoadingStatus([false, result.error]))
+        .catch((error) => setLoadingStatus([false, error]))
         .then(() => {
           // No need to hang onto this any longer than necessary.
           // TODO: How does Apollo evict from the store?
@@ -47,14 +47,11 @@ export function useExecuteAndWatchQuery(
       // TODO: How does Apollo evict from the store?
       inFlightQuery.current = undefined;
     };
-  }, [completed, inFlightQuery.current]);
+  }, [loading, inFlightQuery.current]);
 
   const watchQueryResponse = useApolloQuery(watchQuery, {
     fetchPolicy: "cache-only",
-    skip: !completed,
+    skip: loading,
   });
-  return {
-    ...watchQueryResponse,
-    loading: !completed,
-  };
+  return { ...watchQueryResponse, loading };
 }
