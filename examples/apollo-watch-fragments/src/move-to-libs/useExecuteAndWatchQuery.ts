@@ -1,8 +1,3 @@
-/**
- * TODO: Rewrite this to mimic Relay's preload APIs and move it to
- *       @graphitation/apollo-react-relay-duct-tape.
- */
-
 import {
   useApolloClient,
   ApolloQueryResult,
@@ -11,6 +6,10 @@ import {
 import { DocumentNode } from "graphql";
 import { useRef, useState, useEffect } from "react";
 
+/**
+ * TODO: Rewrite this to mimic Relay's preload APIs and move it to
+ *       @graphitation/apollo-react-relay-duct-tape.
+ */
 export function useExecuteAndWatchQuery(
   executionQuery: DocumentNode,
   watchQuery: DocumentNode,

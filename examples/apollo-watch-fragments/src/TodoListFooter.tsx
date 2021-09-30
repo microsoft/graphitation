@@ -1,6 +1,7 @@
 import React from "react";
 import { useFragment } from "@graphitation/apollo-react-relay-duct-tape";
 import { graphql } from "@graphitation/graphql-js-tag";
+import { shallowCompareFragmentReferences } from "./move-to-libs/shallowCompareFragmentReferences";
 
 import {
   TodoListFooter_todosFragment$key,
@@ -17,7 +18,7 @@ export const TodoListFooter_todosFragment = graphql`
   }
 `;
 
-export const TodoListFooter: React.FC<{
+const TodoListFooter: React.FC<{
   todos: TodoListFooter_todosFragment$key;
 }> = ({ todos: todosRef }) => {
   // TODO: This needs to be replaced by the webpack loader
@@ -43,3 +44,9 @@ export const TodoListFooter: React.FC<{
     </footer>
   );
 };
+
+const MemoizedTodoListFooter = React.memo(
+  TodoListFooter,
+  shallowCompareFragmentReferences("todos")
+);
+export { MemoizedTodoListFooter as TodoListFooter };

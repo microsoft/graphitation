@@ -15,7 +15,7 @@ import {
   useApolloClient,
   useQuery as useApolloQuery,
 } from "@apollo/client";
-import { useExecuteAndWatchQuery } from "./useExecuteAndWatchQuery";
+import { useExecuteAndWatchQuery } from "./move-to-libs/useExecuteAndWatchQuery";
 import {
   executionQueryDocument,
   watchQueryDocument,

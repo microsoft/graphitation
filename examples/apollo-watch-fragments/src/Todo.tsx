@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { useFragment } from "@graphitation/apollo-react-relay-duct-tape";
 import { graphql } from "@graphitation/graphql-js-tag";
+import { shallowCompareFragmentReferences } from "./move-to-libs/shallowCompareFragmentReferences";
 
 import useChangeTodoStatusMutation from "./useChangeTodoStatusMutation";
 
@@ -60,5 +61,5 @@ const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({ todo: todoRef }) => {
 
 (Todo as any).whyDidYouRender = true;
 
-const MemoizedTodo = React.memo(Todo);
+const MemoizedTodo = React.memo(Todo, shallowCompareFragmentReferences("todo"));
 export { MemoizedTodo as Todo };

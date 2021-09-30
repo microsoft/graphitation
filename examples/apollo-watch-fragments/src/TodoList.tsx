@@ -1,6 +1,7 @@
 import React from "react";
 import { useFragment } from "@graphitation/apollo-react-relay-duct-tape";
 import { graphql } from "@graphitation/graphql-js-tag";
+import { shallowCompareFragmentReferences } from "./move-to-libs/shallowCompareFragmentReferences";
 
 import {
   TodoList_todosFragment$key,
@@ -54,5 +55,8 @@ const TodoList: React.FC<{ todos: TodoList_todosFragment$key }> = ({
 
 (TodoList as any).whyDidYouRender = true;
 
-const MemoizedTodoList = React.memo(TodoList);
+const MemoizedTodoList = React.memo(
+  TodoList,
+  shallowCompareFragmentReferences("todos")
+);
 export { MemoizedTodoList as TodoList };
