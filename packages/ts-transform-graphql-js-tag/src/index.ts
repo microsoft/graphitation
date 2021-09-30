@@ -59,13 +59,14 @@ function getVisitor(
         tag.getText() === "gql" &&
         (isTemplateExpression || isTemplateLiteral)
       ) {
-        const interpolations: ts.VisitResult<ts.Node> = [];
-
         let source = template.getText().slice(1, -1);
 
+        let interpolations: Array<
+          ts.Identifier | ts.PropertyAccessExpression
+        > = [];
         // `gql` tag with fragment interpolation
         if (isTemplateExpression) {
-          collectTemplateInterpolations(template, interpolations, context);
+          interpolations = collectTemplateInterpolations(template, context);
 
           // remove embed expressions
           source = source.replace(/\$\{(.*)\}/g, "");
@@ -85,30 +86,36 @@ function getVisitor(
 
 function collectTemplateInterpolations(
   node: ts.Node,
-  interpolations: Array<ts.Node>,
   context: ts.TransformationContext
-): ts.VisitResult<ts.Node> {
-  if (ts.isTemplateSpan(node)) {
-    const interpolation = node.getChildAt(0);
+): Array<ts.Identifier | ts.PropertyAccessExpression> {
+  const interpolations: Array<ts.Identifier | ts.PropertyAccessExpression> = [];
+  function collectTemplateInterpolationsImpl(
+    node: ts.Node,
+    context: ts.TransformationContext
+  ): ts.Node {
+    if (ts.isTemplateSpan(node)) {
+      const interpolation = node.getChildAt(0);
 
-    if (
-      !ts.isIdentifier(interpolation) &&
-      !ts.isPropertyAccessExpression(interpolation)
-    ) {
-      throw new Error(
-        "Only identifiers or property access expressions are allowed by this transformer as an interpolation in a GraphQL template literal."
-      );
+      if (
+        !ts.isIdentifier(interpolation) &&
+        !ts.isPropertyAccessExpression(interpolation)
+      ) {
+        throw new Error(
+          "Only identifiers or property access expressions are allowed by this transformer as an interpolation in a GraphQL template literal."
+        );
+      }
+
+      interpolations.push(interpolation);
     }
 
-    interpolations.push(interpolation);
+    return ts.visitEachChild(
+      node,
+      (childNode) => collectTemplateInterpolationsImpl(childNode, context),
+      context
+    );
   }
-
-  return ts.visitEachChild(
-    node,
-    (childNode) =>
-      collectTemplateInterpolations(childNode, interpolations, context),
-    context
-  );
+  collectTemplateInterpolationsImpl(node, context);
+  return interpolations;
 }
 
 function getDefinitions(
@@ -160,6 +167,7 @@ function createDocument(
       ? extraDefinitions
       : [ts.factory.createArrayLiteralExpression()]
   );
+
   return ts.factory.createObjectLiteralExpression([
     ts.factory.createPropertyAssignment(
       "kind",
