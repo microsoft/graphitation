@@ -2,6 +2,7 @@ import {
   useApolloClient,
   ApolloQueryResult,
   useQuery as useApolloQuery,
+  QueryResult,
 } from "@apollo/client";
 import { DocumentNode } from "graphql";
 import { useRef, useState, useEffect } from "react";
@@ -14,7 +15,7 @@ export function useExecuteAndWatchQuery(
   executionQuery: DocumentNode,
   watchQuery: DocumentNode,
   variables: Record<string, any>
-) {
+): QueryResult {
   const client = useApolloClient();
   const inFlightQuery = useRef<Promise<ApolloQueryResult<unknown>>>();
 
@@ -48,8 +49,12 @@ export function useExecuteAndWatchQuery(
     };
   }, [completed, inFlightQuery.current]);
 
-  return useApolloQuery(watchQuery, {
+  const watchQueryResponse = useApolloQuery(watchQuery, {
     fetchPolicy: "cache-only",
     skip: !completed,
   });
+  return {
+    ...watchQueryResponse,
+    loading: !completed,
+  };
 }
