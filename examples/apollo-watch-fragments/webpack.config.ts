@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as webpack from "webpack";
 import "webpack-dev-server";
-import { createWatchNodeQueryTransform } from "./src/move-to-libs/createWatchNodeQueryTransform";
+import { createWatchNodeQueryTransform } from "@graphitation/apollo-react-relay-duct-tape";
 
 const config: webpack.Configuration = {
   mode: "development",
@@ -9,6 +9,12 @@ const config: webpack.Configuration = {
   devtool: "inline-source-map",
   devServer: {
     static: "./public",
+    client: {
+      overlay: {
+        errors: true,
+        warnings: false,
+      },
+    },
   },
   stats: "minimal",
   module: {

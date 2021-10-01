@@ -31,7 +31,6 @@ const App: React.FC = () => {
   } else if (!result.data) {
     return null;
   }
-
   console.log("App watch data:", result.data);
 
   return (

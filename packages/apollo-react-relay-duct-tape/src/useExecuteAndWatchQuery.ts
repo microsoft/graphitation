@@ -12,9 +12,11 @@ import { useRef, useState, useEffect } from "react";
  *       @graphitation/apollo-react-relay-duct-tape.
  */
 export function useExecuteAndWatchQuery(
-  executionQuery: DocumentNode,
-  watchQuery: DocumentNode,
-  variables: Record<string, any>
+  documents: {
+    executionQueryDocument: DocumentNode;
+    watchQueryDocument: DocumentNode;
+  },
+  options: { variables: Record<string, any> }
 ): QueryResult {
   const client = useApolloClient();
   const inFlightQuery = useRef<Promise<ApolloQueryResult<unknown>>>();
@@ -30,8 +32,8 @@ export function useExecuteAndWatchQuery(
   useEffect(() => {
     if (loading && inFlightQuery.current === undefined) {
       inFlightQuery.current = client.query({
-        query: executionQuery,
-        variables,
+        query: documents.executionQueryDocument,
+        variables: options.variables,
       });
       inFlightQuery.current
         .then((result) => setLoadingStatus([false, result.error]))
@@ -49,7 +51,8 @@ export function useExecuteAndWatchQuery(
     };
   }, [loading, inFlightQuery.current]);
 
-  const watchQueryResponse = useApolloQuery(watchQuery, {
+  const watchQueryResponse = useApolloQuery(documents.watchQueryDocument, {
+    variables: options.variables,
     fetchPolicy: "cache-only",
     skip: loading,
   });

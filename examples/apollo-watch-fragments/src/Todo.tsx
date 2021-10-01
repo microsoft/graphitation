@@ -1,18 +1,13 @@
 import React, { useCallback } from "react";
-import { useFragment } from "@graphitation/apollo-react-relay-duct-tape";
+import {
+  useFragment,
+  shallowCompareFragmentReferences,
+} from "@graphitation/apollo-react-relay-duct-tape";
 import { graphql } from "@graphitation/graphql-js-tag";
-import { shallowCompareFragmentReferences } from "./move-to-libs/shallowCompareFragmentReferences";
 
 import useChangeTodoStatusMutation from "./useChangeTodoStatusMutation";
 
-import {
-  Todo_todoFragment$key,
-  Todo_todoFragment as Todo_todoFragmentType,
-} from "./__generated__/Todo_todoFragment.graphql";
-
-// TODO: This needs to be done by a webpack loader:
-import { useQuery as useApolloQuery } from "@apollo/client";
-import { watchQueryDocument } from "./__generated__/Todo_todoWatchNodeQuery.graphql";
+import { Todo_todoFragment$key } from "./__generated__/Todo_todoFragment.graphql";
 
 export const Todo_todoFragment = graphql`
   fragment Todo_todoFragment on Todo {
@@ -23,14 +18,7 @@ export const Todo_todoFragment = graphql`
 `;
 
 const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({ todo: todoRef }) => {
-  // TODO: This needs to be replaced by the webpack loader
-  // const todo = useFragment(Todo_todoFragment, todoRef);
-  const response = useApolloQuery(watchQueryDocument as any, {
-    variables: { id: (todoRef as any).id },
-    fetchPolicy: "cache-only",
-  });
-  const todo = (response.data!.node as any) as Todo_todoFragmentType;
-
+  const todo = useFragment(Todo_todoFragment, todoRef);
   console.log("Todo watch data:", todo);
 
   const [changeTodoStatus] = useChangeTodoStatusMutation();
