@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Initial release",
+  "packageName": "@graphitation/ts-transform-graphql-js-tag",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
