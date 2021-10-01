@@ -1,50 +1,136 @@
 import ts from "typescript";
 import {
-  DefinitionNode,
   FragmentDefinitionNode,
   OperationDefinitionNode,
   parse,
   Kind,
 } from "graphql";
-import { collapseTextChangeRangesAcrossMultipleVersions } from "relay-compiler/node_modules/typescript";
-// import astify, { InterpolationNode } from "./astify";
 
+interface GraphQLTagTransformContext {
+  graphqlTagModuleRegexp: RegExp;
+  graphqlTagModuleExport: string;
+}
 export interface GraphQLTagTransformOptions {
-  graphqlTagModuleRegex: RegExp;
+  graphqlTagModule?: string;
+  graphqlTagModuleExport?: "default" | string;
 }
 
-const DefaultOptions: GraphQLTagTransformOptions = {
-  graphqlTagModuleRegex: new RegExp(/^['"]@graphitation\/graphql-js-tag['"]$/),
+const DefaultContext: GraphQLTagTransformContext = {
+  graphqlTagModuleRegexp: new RegExp(/^['"]@graphitation\/graphql-js-tag['"]$/),
+  graphqlTagModuleExport: "gql",
 };
 
 export function getTransformer(
   options: Partial<GraphQLTagTransformOptions>
 ): ts.TransformerFactory<ts.SourceFile> {
-  const fullOptions: GraphQLTagTransformOptions = {
-    ...DefaultOptions,
-    ...options,
-  };
-
+  const transformerContext = createTransformerContext(options);
   return (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
     return (sourceFile: ts.SourceFile) =>
-      ts.visitNode(sourceFile, getVisitor(fullOptions, context, sourceFile));
+      ts.visitNode(
+        sourceFile,
+        getVisitor(transformerContext, context, sourceFile)
+      );
   };
 }
 
+export function createTransformerContext(
+  options: GraphQLTagTransformOptions
+): GraphQLTagTransformContext {
+  const context: GraphQLTagTransformContext = {
+    ...DefaultContext,
+  };
+  const moduleRegexp = options.graphqlTagModule
+    ? new RegExp(`^['"]${options.graphqlTagModule}['"]$`)
+    : null;
+
+  if (moduleRegexp) {
+    context.graphqlTagModuleRegexp = moduleRegexp;
+  }
+
+  if (options.graphqlTagModuleExport) {
+    context.graphqlTagModuleExport = options.graphqlTagModuleExport;
+  }
+
+  return context;
+}
+
 function getVisitor(
-  options: GraphQLTagTransformOptions,
+  transformerContext: GraphQLTagTransformContext,
   context: ts.TransformationContext,
   sourceFile: ts.SourceFile
 ): ts.Visitor {
+  let templateLiteralName: string | null = null;
   const visitor: ts.Visitor = (node: ts.Node): ts.VisitResult<ts.Node> => {
     // `graphql-tag` import declaration detected
     if (ts.isImportDeclaration(node)) {
       const moduleName = (node as ts.ImportDeclaration).moduleSpecifier.getText(
         sourceFile
       );
-      if (options.graphqlTagModuleRegex.test(moduleName)) {
-        // delete it
-        return undefined;
+      // here we want to remove export, but only if there are no other exports. if there are other exports
+      // we remove only the one we need. Logic is complex cause tag can be default or not-default export
+      if (
+        transformerContext.graphqlTagModuleRegexp.test(moduleName) &&
+        node.importClause
+      ) {
+        if (transformerContext.graphqlTagModuleExport === "default") {
+          if (node.importClause.name) {
+            templateLiteralName = node.importClause.name.text;
+            if (node.importClause.namedBindings) {
+              return ts.factory.createImportDeclaration(
+                node.decorators,
+                node.modifiers,
+                ts.factory.updateImportClause(
+                  node.importClause,
+                  node.importClause.isTypeOnly,
+                  undefined,
+                  node.importClause.namedBindings
+                ),
+                node.moduleSpecifier
+              );
+            } else {
+              return undefined;
+            }
+          }
+        } else {
+          const newImportSpecifiers: Array<ts.ImportSpecifier> = [];
+          if (node.importClause.namedBindings) {
+            if (ts.isNamedImports(node.importClause.namedBindings)) {
+              const importSpecifiers = node.importClause.namedBindings.elements;
+              for (const importSpecifier of importSpecifiers) {
+                if (
+                  importSpecifier.name.text ===
+                  transformerContext.graphqlTagModuleExport
+                ) {
+                  templateLiteralName = importSpecifier.propertyName
+                    ? importSpecifier.propertyName.text
+                    : importSpecifier.name.text;
+                } else {
+                  newImportSpecifiers.push(importSpecifier);
+                }
+              }
+            } else {
+              throw new Error("Namespace imports are not supported");
+            }
+          }
+          if (newImportSpecifiers.length || node.importClause.name) {
+            const result = ts.factory.createImportDeclaration(
+              node.decorators,
+              node.modifiers,
+              ts.factory.updateImportClause(
+                node.importClause,
+                node.importClause.isTypeOnly,
+                node.importClause.name,
+                newImportSpecifiers.length
+                  ? ts.factory.createNamedImports(newImportSpecifiers)
+                  : undefined
+              ),
+              node.moduleSpecifier
+            );
+            return result;
+          } else {
+            return undefined;
+          }
+        }
       }
     }
 
