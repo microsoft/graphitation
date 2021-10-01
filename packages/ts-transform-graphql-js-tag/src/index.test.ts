@@ -63,6 +63,35 @@ describe("transformer tests", () => {
     `);
   });
 
+  it("should apply transformersn", () => {
+    expect.assertions(1);
+    const transformer = new Transformer()
+      .addTransformer((program: ts.Program) =>
+        getTransformer({
+          transformer: (document) => "haha, imma here, breaking your graphql",
+        })
+      )
+      .addMock({
+        name: "@graphitation/graphql-js-tag",
+        content: `export const gql:any = () => {}`,
+      })
+      .setFilePath("/index.tsx");
+
+    const actual = transformer.transform(`
+    import { gql } from "@graphitation/graphql-js-tag"
+
+    export const query = gql\`
+      query Foo {
+        foo
+      }
+     \`
+   `);
+    expect(actual).toMatchInlineSnapshot(`
+      "export const query = { kind: \\"Document\\", definitions: [\\"haha, imma here, breaking your graphql\\"].concat([]) };
+      "
+    `);
+  });
+
   describe("graphql tag options", () => {
     it("should remove single import", () => {
       expect.assertions(1);

@@ -9,10 +9,16 @@ import {
 interface GraphQLTagTransformContext {
   graphqlTagModuleRegexp: RegExp;
   graphqlTagModuleExport: string;
+  transformer?: (
+    node: FragmentDefinitionNode | OperationDefinitionNode
+  ) => unknown;
 }
 export interface GraphQLTagTransformOptions {
   graphqlTagModule?: string;
   graphqlTagModuleExport?: "default" | string;
+  transformer?: (
+    node: FragmentDefinitionNode | OperationDefinitionNode
+  ) => unknown;
 }
 
 const DefaultContext: GraphQLTagTransformContext = {
@@ -50,6 +56,8 @@ export function createTransformerContext(
   if (options.graphqlTagModuleExport) {
     context.graphqlTagModuleExport = options.graphqlTagModuleExport;
   }
+
+  context.transformer = options.transformer;
 
   return context;
 }
@@ -158,7 +166,10 @@ function getVisitor(
           source = source.replace(/\$\{(.*)\}/g, "");
         }
 
-        let definitions = getDefinitions(source);
+        let definitions = getDefinitions(
+          source,
+          transformerContext.transformer
+        );
 
         return createDocument(definitions, interpolations);
       }
@@ -205,8 +216,9 @@ function collectTemplateInterpolations(
 }
 
 function getDefinitions(
-  source: string
-): Array<OperationDefinitionNode | FragmentDefinitionNode> {
+  source: string,
+  transformer: GraphQLTagTransformContext["transformer"] | undefined
+): Array<unknown> {
   const queryDocument = parse(source, {
     noLocation: true,
   });
@@ -219,9 +231,9 @@ function getDefinitions(
           `If a GraphQL query document contains multiple operations, each operation must be named.\n${source}`
         );
       }
-      definitions.push(definition);
+      definitions.push(transformer ? transformer(definition) : definition);
     } else if (definition.kind === Kind.FRAGMENT_DEFINITION) {
-      definitions.push(definition);
+      definitions.push(transformer ? transformer(definition) : definition);
     }
   }
 
@@ -229,7 +241,7 @@ function getDefinitions(
 }
 
 function createDocument(
-  definitions: Array<OperationDefinitionNode | FragmentDefinitionNode>,
+  definitions: Array<unknown>,
   interpolations: Array<ts.Identifier | ts.PropertyAccessExpression>
 ): ts.ObjectLiteralExpression {
   const baseDefinitions = ts.factory.createArrayLiteralExpression(
