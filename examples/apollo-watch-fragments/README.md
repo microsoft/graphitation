@@ -28,3 +28,9 @@ $client.cache.modify({
   fields: { totalCount: () => 42 },
 });
 ```
+
+### Completing a todo
+
+- The todo item is first rendered with the existing state, then twice with the new state
+- There should not be a reason to render TodoList
+- There should not be a reason to render TodoListFooter
