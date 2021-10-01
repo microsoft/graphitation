@@ -63,7 +63,7 @@ describe("transformer tests", () => {
     `);
   });
 
-  it("should apply transformersn", () => {
+  it("should apply transformer", () => {
     expect.assertions(1);
     const transformer = new Transformer()
       .addTransformer((program: ts.Program) =>
