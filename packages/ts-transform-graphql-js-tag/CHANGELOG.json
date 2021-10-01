@@ -1,0 +1,20 @@
+{
+  "name": "@graphitation/ts-transform-graphql-js-tag",
+  "entries": [
+    {
+      "date": "Fri, 01 Oct 2021 13:17:55 GMT",
+      "tag": "@graphitation/ts-transform-graphql-js-tag_v0.2.0",
+      "version": "0.2.0",
+      "comments": {
+        "minor": [
+          {
+            "comment": "Initial release",
+            "author": "mnovikov@microsoft.com",
+            "commit": "db4de80c95d6f2501592f131896ec77d6ea5bfbf",
+            "package": "@graphitation/ts-transform-graphql-js-tag"
+          }
+        ]
+      }
+    }
+  ]
+}
