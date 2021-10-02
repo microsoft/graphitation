@@ -5,12 +5,18 @@ import {
   useSubscription as useApolloSubscription,
   useQuery as useApolloQuery,
   useMutation as useApolloMutation,
+  ApolloQueryResult,
+  QueryResult,
+  useApolloClient,
 } from "@apollo/client";
 
 // import { GraphQLTaggedNode } from "./taggedNode";
 import { KeyType, KeyTypeData, OperationType, Variables } from "./types";
+import { useRef, useState, useEffect } from "react";
 
-export type GraphQLTaggedNode = DocumentNode;
+export type GraphQLTaggedNode =
+  | (DocumentNode & { watchQueryDocument?: never })
+  | { watchQueryDocument: DocumentNode; executeQueryDocument?: DocumentNode };
 
 /**
  * Executes a GraphQL query.
@@ -62,7 +68,67 @@ export function useLazyLoadQuery<TQuery extends OperationType>(
   variables: TQuery["variables"],
   options?: { fetchPolicy: "cache-first" }
 ): { error?: Error; data?: TQuery["response"] } {
-  return useApolloQuery(query as any, { variables, ...options });
+  if (query.watchQueryDocument) {
+    return useCompiledLazyLoadQuery(query as any, { variables, ...options });
+  } else {
+    return useApolloQuery(query, { variables, ...options });
+  }
+}
+
+/**
+ * @todo Rewrite this to mimic Relay's preload APIs
+ *
+ * @param documents Compiled execute and watch query documents that are used to
+ *                  setup a narrow observable for just the data selected by the
+ *                  original fragment.
+ * @param options An object containing a variables field.
+ */
+function useCompiledLazyLoadQuery(
+  documents: {
+    executionQueryDocument: DocumentNode;
+    watchQueryDocument: DocumentNode;
+  },
+  options: { variables: Record<string, any> }
+): QueryResult {
+  const client = useApolloClient();
+  const inFlightQuery = useRef<Promise<ApolloQueryResult<unknown>>>();
+
+  const [[loading, error], setLoadingStatus] = useState<
+    [completed: boolean, error: Error | undefined]
+  >([true, undefined]);
+
+  if (error) {
+    throw error;
+  }
+
+  useEffect(() => {
+    if (loading && inFlightQuery.current === undefined) {
+      inFlightQuery.current = client.query({
+        query: documents.executionQueryDocument,
+        variables: options.variables,
+      });
+      inFlightQuery.current
+        .then((result) => setLoadingStatus([false, result.error]))
+        .catch((error) => setLoadingStatus([false, error]))
+        .then(() => {
+          // No need to hang onto this any longer than necessary.
+          // TODO: How does Apollo evict from the store?
+          inFlightQuery.current = undefined;
+        });
+    }
+    return () => {
+      // TODO: [How to] Cancel in-flight request?
+      // TODO: How does Apollo evict from the store?
+      inFlightQuery.current = undefined;
+    };
+  }, [loading, inFlightQuery.current]);
+
+  const watchQueryResponse = useApolloQuery(documents.watchQueryDocument, {
+    variables: options.variables,
+    fetchPolicy: "cache-only",
+    skip: loading,
+  });
+  return { ...watchQueryResponse, loading };
 }
 
 /**
@@ -130,10 +196,36 @@ export function useLazyLoadQuery<TQuery extends OperationType>(
  * @returns The data corresponding to the field selections.
  */
 export function useFragment<TKey extends KeyType>(
-  _fragmentInput: GraphQLTaggedNode,
+  fragmentInput: GraphQLTaggedNode,
   fragmentRef: TKey
 ): KeyTypeData<TKey> {
-  return fragmentRef as unknown;
+  if (fragmentInput.watchQueryDocument) {
+    return useCompiledFragment(fragmentInput, fragmentRef as any);
+  } else {
+    return fragmentRef as unknown;
+  }
+}
+
+/**
+ * @param documents Compiled watch query document that is used to setup a narrow
+ *                  observable for just the data selected by the original fragment.
+ * @param fragmentReference A Node object that has a globally unique `id` field.
+ */
+function useCompiledFragment(
+  documents: {
+    watchQueryDocument: DocumentNode;
+  },
+  fragmentReference: { id: unknown }
+) {
+  const result = useApolloQuery(documents.watchQueryDocument, {
+    variables: { id: fragmentReference.id },
+    fetchPolicy: "cache-only",
+  });
+  invariant(
+    result.data?.node,
+    "Expected Apollo to response with previously seeded node data"
+  );
+  return result.data.node;
 }
 
 // https://github.com/facebook/relay/blob/master/website/docs/api-reference/types/GraphQLSubscriptionConfig.md
@@ -152,20 +244,24 @@ interface GraphQLSubscriptionConfig<
 export function useSubscription<TSubscriptionPayload extends OperationType>(
   config: GraphQLSubscriptionConfig<TSubscriptionPayload>
 ): void {
-  const { error } = useApolloSubscription(config.subscription, {
-    variables: config.variables,
-    onSubscriptionData: ({ subscriptionData }) => {
-      // Supposedly this never gets triggered for an error by design:
-      // https://github.com/apollographql/react-apollo/issues/3177#issuecomment-506758144
-      invariant(
-        !subscriptionData.error,
-        "Did not expect to receive an error here"
-      );
-      if (subscriptionData.data && config.onNext) {
-        config.onNext(subscriptionData.data);
-      }
-    },
-  });
+  const { error } = useApolloSubscription(
+    // TODO: Right now we don't replace mutation documents with imported artefacts.
+    config.subscription as DocumentNode,
+    {
+      variables: config.variables,
+      onSubscriptionData: ({ subscriptionData }) => {
+        // Supposedly this never gets triggered for an error by design:
+        // https://github.com/apollographql/react-apollo/issues/3177#issuecomment-506758144
+        invariant(
+          !subscriptionData.error,
+          "Did not expect to receive an error here"
+        );
+        if (subscriptionData.data && config.onNext) {
+          config.onNext(subscriptionData.data);
+        }
+      },
+    }
+  );
   if (error) {
     if (config.onError) {
       config.onError(error);
@@ -237,7 +333,8 @@ export function useMutation<TMutationPayload extends OperationType>(
   mutation: GraphQLTaggedNode
 ): [MutationCommiter<TMutationPayload>, boolean] {
   const [apolloUpdater, { loading: mutationLoading }] = useApolloMutation(
-    mutation
+    // TODO: Right now we don't replace mutation documents with imported artefacts.
+    mutation as DocumentNode
   );
 
   return [

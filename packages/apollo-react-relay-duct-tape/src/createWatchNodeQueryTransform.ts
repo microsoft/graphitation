@@ -7,11 +7,9 @@
 
 import invariant from "invariant";
 import * as ts from "typescript";
-import { NoUndefinedVariablesRule, parse as parseGraphQL } from "graphql";
+import { parse as parseGraphQL } from "graphql";
 
 const PREFIX = "__graphitation_";
-const WATCH_HOOK = "useWatchQuery";
-const EXECUTE_AND_WATCH_HOOK = "useExecuteAndWatchQuery";
 const QUERIES_NAMESPACE = "generatedQueries";
 
 export function createWatchNodeQueryTransform(): ts.TransformerFactory<ts.SourceFile> {
@@ -29,28 +27,6 @@ export function createWatchNodeQueryTransform(): ts.TransformerFactory<ts.Source
           const [importDeclaration, replacementNode] = documentNodes;
           imports.push(importDeclaration);
           return replacementNode;
-        }
-      } else if (
-        ts.isCallExpression(node) &&
-        ts.isIdentifier(node.expression)
-      ) {
-        if (node.expression.escapedText === "useLazyLoadQuery") {
-          const [importDeclaration, replacementNode] = createHookNodes(
-            node,
-            EXECUTE_AND_WATCH_HOOK
-          );
-          imports.push(importDeclaration);
-          return replacementNode;
-        } else if (node.expression.escapedText === "useFragment") {
-          const [importDeclaration, replacementNode] = createHookNodes(
-            node,
-            WATCH_HOOK
-          );
-          imports.push(importDeclaration);
-          return ts.factory.createPropertyAccessExpression(
-            ts.factory.createPropertyAccessExpression(replacementNode, "data"),
-            "node"
-          );
         }
       }
       return ts.visitEachChild(node, visitor, context);
@@ -124,34 +100,4 @@ function createGraphQLDocumentNodes(
     ];
   }
   invariant(false, `Unhandled GraphQL definition type: ${definitionNode.kind}`);
-}
-
-function createHookNodes(
-  inputHookNode: ts.CallExpression,
-  outputHookName: string
-): [ts.ImportDeclaration, ts.CallExpression] {
-  return [
-    ts.factory.createImportDeclaration(
-      undefined,
-      undefined,
-      ts.factory.createImportClause(
-        false,
-        undefined,
-        ts.factory.createNamedImports([
-          ts.factory.createImportSpecifier(
-            ts.factory.createIdentifier(outputHookName),
-            ts.factory.createIdentifier(PREFIX + outputHookName)
-          ),
-        ])
-      ),
-      ts.factory.createStringLiteral(
-        "@graphitation/apollo-react-relay-duct-tape"
-      )
-    ),
-    ts.factory.createCallExpression(
-      ts.factory.createIdentifier(PREFIX + outputHookName),
-      undefined,
-      inputHookNode.arguments
-    ),
-  ];
 }
