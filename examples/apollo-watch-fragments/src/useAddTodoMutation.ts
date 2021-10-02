@@ -5,6 +5,7 @@ import { graphql } from "@graphitation/graphql-js-tag";
 
 import { AppQuery } from "./App";
 import { useAddTodoMutationResponse } from "./__generated__/useAddTodoMutation.graphql";
+import invariant from "invariant";
 
 const mutation = graphql`
   mutation useAddTodoMutation($input: AddTodoInput!) {
@@ -50,21 +51,17 @@ const mutation = graphql`
 export function useAddTodoMutation() {
   const [commit] = useMutation<useAddTodoMutationResponse>(mutation, {
     update(cache, { data }) {
-      const newTodoEdge = data?.addTodo?.todoEdge;
-      const existingTodoEdges = cache.readQuery({
-        query: AppQuery,
-      }) as any;
-
-      if (existingTodoEdges && newTodoEdge) {
-        cache.writeQuery({
-          query: AppQuery,
-          data: {
-            todos: {
-              edges: [...existingTodoEdges.todos.edges, newTodoEdge],
-            },
+      invariant(data?.addTodo, "Expected success result");
+      const connectionId = data.addTodo.todos.id;
+      const newTodoEdge = data.addTodo.todoEdge;
+      cache.modify({
+        id: `TodosConnection:${connectionId}`,
+        fields: {
+          edges(current) {
+            return [...current, newTodoEdge];
           },
-        });
-      }
+        },
+      });
     },
   });
   return useCallback(
