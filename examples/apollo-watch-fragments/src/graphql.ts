@@ -1,4 +1,8 @@
-import { ApolloClient, InMemoryCache } from "@apollo/client";
+import {
+  ApolloClient,
+  InMemoryCache,
+  defaultDataIdFromObject,
+} from "@apollo/client";
 import { SchemaLink } from "@apollo/client/link/schema";
 import { DB } from "./db";
 import { makeExecutableSchema } from "@graphql-tools/schema";
@@ -69,6 +73,14 @@ export function createClient() {
   return new ApolloClient({
     link: new SchemaLink({ schema, context }),
     cache: new InMemoryCache({
+      // Disable Apollo Client's default behaviour of prefixing the id with the typename.
+      // Node ids should be globally unique already.
+      dataIdFromObject(responseObject) {
+        return (
+          (responseObject.id as string | undefined) ||
+          defaultDataIdFromObject(responseObject)
+        );
+      },
       typePolicies: {
         Query: {
           fields: {
@@ -76,8 +88,8 @@ export function createClient() {
               read: (existing, options) => {
                 // TODO: Does the result get written to the store? If so, return `existing` immediately if it's defined.
 
-                const nodeId = options.args!.id;
-                invariant(nodeId, "Expected a node id");
+                const id = options.args!.id;
+                invariant(id, "Expected a node id");
 
                 const fragmentNames = (options.field!.selectionSet!.selections.filter(
                   (sel) => sel.kind === "FragmentSpread"
@@ -96,7 +108,6 @@ export function createClient() {
                 ) as FragmentDefinitionNode;
                 invariant(fragment, "Expected to find a fragment");
 
-                const id = `${fragment.typeCondition.name.value}:${nodeId}`;
                 const data =
                   // TODO: Check if we can just pass all fragments at once?
                   options.cache.readFragment({
@@ -105,7 +116,8 @@ export function createClient() {
                   });
                 invariant(data, "Expected to find cached data");
 
-                // TODO: Work with multiple fragments
+                // TODO: Work with multiple fragments, although this is only relevant when having fragments
+                //       on non-node types.
 
                 return data;
               },
