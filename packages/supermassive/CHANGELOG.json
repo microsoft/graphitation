@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Mon, 04 Oct 2021 13:48:04 GMT",
+      "tag": "@graphitation/supermassive_v0.1.1",
+      "version": "0.1.1",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Bump @graphitation/graphql-js-tag to v0.5.4",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "ceb24aa25210090e38251be53d010d75abdad9ba",
+            "package": "@graphitation/supermassive"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 24 Jun 2021 12:32:15 GMT",
       "tag": "@graphitation/supermassive_v0.1.0",
       "version": "0.1.0",

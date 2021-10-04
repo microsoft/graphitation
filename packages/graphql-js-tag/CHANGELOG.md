@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-tag
 
-This log was last generated on Sat, 24 Apr 2021 23:10:54 GMT and should not be manually modified.
+This log was last generated on Mon, 04 Oct 2021 13:48:04 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.5.4
+
+Mon, 04 Oct 2021 13:48:04 GMT
+
+### Patches
+
+- Remove need to configure tsc to allow Set spread. (eloy.de.enige@gmail.com)
 
 ## 0.5.3
 
