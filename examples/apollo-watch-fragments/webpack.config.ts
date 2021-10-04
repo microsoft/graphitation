@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as webpack from "webpack";
 import "webpack-dev-server";
-import { createWatchNodeQueryTransform } from "@graphitation/apollo-react-relay-duct-tape";
+import { createImportDocumentsTransform } from "@graphitation/apollo-react-relay-duct-tape";
 
 const config: webpack.Configuration = {
   mode: "development",
@@ -14,6 +14,9 @@ const config: webpack.Configuration = {
         errors: true,
         warnings: false,
       },
+    },
+    open: {
+      app: "Microsoft Edge",
     },
   },
   stats: "minimal",
@@ -29,7 +32,7 @@ const config: webpack.Configuration = {
         exclude: /node_modules/,
         options: {
           getCustomTransformers: () => ({
-            before: [createWatchNodeQueryTransform()],
+            before: [createImportDocumentsTransform()],
           }),
         },
       },

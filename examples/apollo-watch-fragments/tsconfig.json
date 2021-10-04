@@ -16,12 +16,9 @@
     "jsx": "react",
     "sourceMap": true
   },
-  "include": [
-    "src",
-    "../../packages/apollo-react-relay-duct-tape/src/createWatchNodeQueryTransform.test.ts",
-    "../../packages/apollo-react-relay-duct-tape/src/shallowCompareFragmentReferences.ts"
-  ],
+  "include": ["src"],
   "references": [
+    { "path": "../../packages/apollo-react-relay-duct-tape" },
     { "path": "../../packages/graphql-js-tag" },
     { "path": "../../packages/graphql-js-operation-payload-generator" }
   ],

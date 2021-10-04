@@ -12,7 +12,7 @@ import { parse as parseGraphQL } from "graphql";
 const PREFIX = "__graphitation_";
 const QUERIES_NAMESPACE = "generatedQueries";
 
-export function createWatchNodeQueryTransform(): ts.TransformerFactory<ts.SourceFile> {
+export function createImportDocumentsTransform(): ts.TransformerFactory<ts.SourceFile> {
   return (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
     const imports: ts.ImportDeclaration[] = [];
 

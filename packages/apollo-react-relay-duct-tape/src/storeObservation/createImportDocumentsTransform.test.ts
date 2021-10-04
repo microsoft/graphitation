@@ -1,5 +1,5 @@
 import * as ts from "typescript";
-import { createWatchNodeQueryTransform } from "./createWatchNodeQueryTransform";
+import { createImportDocumentsTransform } from "./createImportDocumentsTransform";
 
 expect.addSnapshotSerializer({
   test: (val) => typeof val === "string",
@@ -14,12 +14,12 @@ function transform(sourceText: string): string {
     sourceText,
     ts.ScriptTarget.Latest
   );
-  const result = ts.transform(sourceFile, [createWatchNodeQueryTransform()]);
+  const result = ts.transform(sourceFile, [createImportDocumentsTransform()]);
   const printer = ts.createPrinter();
   return printer.printFile(result.transformed[0]);
 }
 
-describe(createWatchNodeQueryTransform, () => {
+describe(createImportDocumentsTransform, () => {
   it("works with documents without interpolation", () => {
     const source = `
       const doc = graphql\`
