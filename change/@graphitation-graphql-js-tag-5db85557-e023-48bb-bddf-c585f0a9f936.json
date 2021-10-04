@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Remove need to configure tsc to allow Set spread.",
+  "packageName": "@graphitation/graphql-js-tag",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}
