@@ -15,7 +15,6 @@ import {
   GraphQLTagFinder,
 } from "relay-compiler/lib/language/RelayLanguagePluginInterface";
 import { rewriteGraphitationDirectives } from "./rewriteGraphitationDirectives";
-import { enableNodeWatchQuery } from "./enableNodeWatchQuery";
 
 /**
  * @note Difference from the TS language plugin is that we only support hooks, so no need for HOCs.
@@ -65,8 +64,7 @@ function getTemplateNode(quasi: ts.TaggedTemplateExpression) {
  * @note The difference here is that we rewrite graphitation specific directives to relay ones.
  */
 function getGraphQLText(quasi: ts.TaggedTemplateExpression) {
-  // return rewriteGraphitationDirectives(getTemplateNode(quasi).text);
-  return enableNodeWatchQuery(getTemplateNode(quasi).text);
+  return rewriteGraphitationDirectives(getTemplateNode(quasi).text);
 }
 
 function getSourceLocationOffset(quasi: ts.TaggedTemplateExpression) {

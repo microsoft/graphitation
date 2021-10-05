@@ -1,3 +1,4 @@
+// import { useNovaFacade } from "@nova-facade/react";
 import { DocumentNode } from "graphql";
 import invariant from "invariant";
 import {
@@ -6,15 +7,10 @@ import {
   useMutation as useApolloMutation,
 } from "@apollo/client";
 
-import { KeyType, KeyTypeData, OperationType } from "./types";
-import {
-  useCompiledFragment,
-  useCompiledLazyLoadQuery,
-} from "./storeObservation/hooks";
+// import { GraphQLTaggedNode } from "./taggedNode";
+import { KeyType, KeyTypeData, OperationType, Variables } from "./types";
 
-export type GraphQLTaggedNode =
-  | (DocumentNode & { watchQueryDocument?: never })
-  | { watchQueryDocument: DocumentNode; executeQueryDocument?: DocumentNode };
+export type GraphQLTaggedNode = DocumentNode;
 
 /**
  * Executes a GraphQL query.
@@ -66,11 +62,7 @@ export function useLazyLoadQuery<TQuery extends OperationType>(
   variables: TQuery["variables"],
   options?: { fetchPolicy: "cache-first" }
 ): { error?: Error; data?: TQuery["response"] } {
-  if (query.watchQueryDocument) {
-    return useCompiledLazyLoadQuery(query as any, { variables, ...options });
-  } else {
-    return useApolloQuery(query, { variables, ...options });
-  }
+  return useApolloQuery(query as any, { variables, ...options });
 }
 
 /**
@@ -138,14 +130,10 @@ export function useLazyLoadQuery<TQuery extends OperationType>(
  * @returns The data corresponding to the field selections.
  */
 export function useFragment<TKey extends KeyType>(
-  fragmentInput: GraphQLTaggedNode,
+  _fragmentInput: GraphQLTaggedNode,
   fragmentRef: TKey
 ): KeyTypeData<TKey> {
-  if (fragmentInput.watchQueryDocument) {
-    return useCompiledFragment(fragmentInput, fragmentRef as any);
-  } else {
-    return fragmentRef as unknown;
-  }
+  return fragmentRef as unknown;
 }
 
 // https://github.com/facebook/relay/blob/master/website/docs/api-reference/types/GraphQLSubscriptionConfig.md
@@ -164,24 +152,20 @@ interface GraphQLSubscriptionConfig<
 export function useSubscription<TSubscriptionPayload extends OperationType>(
   config: GraphQLSubscriptionConfig<TSubscriptionPayload>
 ): void {
-  const { error } = useApolloSubscription(
-    // TODO: Right now we don't replace mutation documents with imported artefacts.
-    config.subscription as DocumentNode,
-    {
-      variables: config.variables,
-      onSubscriptionData: ({ subscriptionData }) => {
-        // Supposedly this never gets triggered for an error by design:
-        // https://github.com/apollographql/react-apollo/issues/3177#issuecomment-506758144
-        invariant(
-          !subscriptionData.error,
-          "Did not expect to receive an error here"
-        );
-        if (subscriptionData.data && config.onNext) {
-          config.onNext(subscriptionData.data);
-        }
-      },
-    }
-  );
+  const { error } = useApolloSubscription(config.subscription, {
+    variables: config.variables,
+    onSubscriptionData: ({ subscriptionData }) => {
+      // Supposedly this never gets triggered for an error by design:
+      // https://github.com/apollographql/react-apollo/issues/3177#issuecomment-506758144
+      invariant(
+        !subscriptionData.error,
+        "Did not expect to receive an error here"
+      );
+      if (subscriptionData.data && config.onNext) {
+        config.onNext(subscriptionData.data);
+      }
+    },
+  });
   if (error) {
     if (config.onError) {
       config.onError(error);
@@ -253,8 +237,7 @@ export function useMutation<TMutationPayload extends OperationType>(
   mutation: GraphQLTaggedNode
 ): [MutationCommiter<TMutationPayload>, boolean] {
   const [apolloUpdater, { loading: mutationLoading }] = useApolloMutation(
-    // TODO: Right now we don't replace mutation documents with imported artefacts.
-    mutation as DocumentNode
+    mutation
   );
 
   return [

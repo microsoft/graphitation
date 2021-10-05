@@ -1,16 +1,8 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Tue, 05 Oct 2021 08:17:41 GMT and should not be manually modified.
+This log was last generated on Mon, 04 Oct 2021 13:48:04 GMT and should not be manually modified.
 
 <!-- Start content -->
-
-## 0.5.0-store-observation.1
-
-Tue, 05 Oct 2021 08:17:41 GMT
-
-### Changes
-
-- Introduces ability to narrow down store observation to fragment level (eloy.de.enige@gmail.com)
 
 ## 0.4.3
 

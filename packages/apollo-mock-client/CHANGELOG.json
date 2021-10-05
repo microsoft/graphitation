@@ -2,21 +2,6 @@
   "name": "@graphitation/apollo-mock-client",
   "entries": [
     {
-      "date": "Tue, 05 Oct 2021 08:17:41 GMT",
-      "tag": "@graphitation/apollo-mock-client_v0.6.9",
-      "version": "0.6.9",
-      "comments": {
-        "none": [
-          {
-            "comment": "Use consistent @apollo/client version across monorepo",
-            "author": "eloy.de.enige@gmail.com",
-            "commit": "9d2a2f88ca216a108f467e8cdea02bb84d35fea9",
-            "package": "@graphitation/apollo-mock-client"
-          }
-        ]
-      }
-    },
-    {
       "date": "Mon, 04 Oct 2021 13:48:04 GMT",
       "tag": "@graphitation/apollo-mock-client_v0.6.9",
       "version": "0.6.9",
