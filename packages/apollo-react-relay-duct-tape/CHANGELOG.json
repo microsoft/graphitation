@@ -2,6 +2,29 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Tue, 05 Oct 2021 08:17:41 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v0.5.0-store-observation.1",
+      "version": "0.5.0-store-observation.1",
+      "comments": {
+        "prerelease": [
+          {
+            "comment": "Introduces ability to narrow down store observation to fragment level",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "9d2a2f88ca216a108f467e8cdea02bb84d35fea9",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          }
+        ],
+        "none": [
+          {
+            "comment": "Bump @graphitation/apollo-mock-client to v0.6.9",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "9d2a2f88ca216a108f467e8cdea02bb84d35fea9",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 04 Oct 2021 13:48:04 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v0.4.3",
       "version": "0.4.3",
