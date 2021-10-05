@@ -7,3 +7,5 @@ dist
 .eslintcache
 
 *.tgz
+
+relay-preload-hooks.ts
