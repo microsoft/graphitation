@@ -2,7 +2,7 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "description": "A compatibility wrapper that provides the react-relay API on top of Apollo Client.",
   "license": "MIT",
-  "version": "0.5.0-store-observation.0",
+  "version": "0.5.0-store-observation.1",
   "main": "./src/index.ts",
   "scripts": {
     "build": "monorepo-scripts build",
