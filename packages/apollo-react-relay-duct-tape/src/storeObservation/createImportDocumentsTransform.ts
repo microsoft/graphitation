@@ -8,6 +8,8 @@
 import invariant from "invariant";
 import * as ts from "typescript";
 import { parse as parseGraphQL } from "graphql";
+import * as path from "path";
+import * as fs from "fs";
 
 const PREFIX = "__graphitation_";
 const QUERIES_NAMESPACE = "generatedQueries";
@@ -25,8 +27,16 @@ export function createImportDocumentsTransform(): ts.TransformerFactory<ts.Sourc
         const documentNodes = createGraphQLDocumentNodes(node);
         if (documentNodes) {
           const [importDeclaration, replacementNode] = documentNodes;
-          imports.push(importDeclaration);
-          return replacementNode;
+          // TODO: This file checking should not exist and is probably not performant.
+          const artefactFile =
+            path.join(
+              path.dirname(node.getSourceFile().fileName),
+              (importDeclaration.moduleSpecifier as ts.StringLiteral).text
+            ) + ".ts";
+          if (fs.existsSync(artefactFile)) {
+            imports.push(importDeclaration);
+            return replacementNode;
+          }
         }
       }
       return ts.visitEachChild(node, visitor, context);
