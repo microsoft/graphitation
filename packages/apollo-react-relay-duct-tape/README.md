@@ -5,3 +5,7 @@ A compatibility wrapper that provides the react-relay API on top of Apollo Clien
 _The name is a reference to the Apollo 13 mission._
 
 Use this together with [relay-compiler-language-graphitation](../relay-compiler-language-graphitation) to have typings generated.
+
+# Narrow Store Observation
+
+TODO
