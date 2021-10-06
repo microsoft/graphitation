@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as webpack from "webpack";
 import "webpack-dev-server";
-import { createImportDocumentsTransform } from "@graphitation/apollo-react-relay-duct-tape";
+import { createImportDocumentsTransform } from "@graphitation/apollo-react-relay-duct-tape/src/storeObservation/createImportDocumentsTransform";
 
 const config: webpack.Configuration = {
   mode: "development",
