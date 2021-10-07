@@ -1,16 +1,11 @@
-import {
-  ApolloClient,
-  InMemoryCache,
-  defaultDataIdFromObject,
-} from "@apollo/client";
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { SchemaLink } from "@apollo/client/link/schema";
 import { DB } from "./db";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 
 import { Resolvers } from "./graphql/resolver-typings";
-import { FragmentDefinitionNode, FragmentSpreadNode } from "graphql";
 import invariant from "invariant";
-import { createNodeFromCacheFieldPolicy } from "@graphitation/apollo-react-relay-duct-tape";
+import { nodeFromCacheFieldPolicy } from "@graphitation/apollo-react-relay-duct-tape";
 const schemaSource: string = require("../data/schema.graphql");
 
 interface Context {
@@ -74,19 +69,11 @@ export function createClient() {
   return new ApolloClient({
     link: new SchemaLink({ schema, context }),
     cache: new InMemoryCache({
-      // Disable Apollo Client's default behaviour of prefixing the id with the typename.
-      // Node ids should be globally unique already.
-      dataIdFromObject(responseObject) {
-        return (
-          (responseObject.id as string | undefined) ||
-          defaultDataIdFromObject(responseObject)
-        );
-      },
       typePolicies: {
         Query: {
           fields: {
             node: {
-              read: createNodeFromCacheFieldPolicy(false),
+              read: nodeFromCacheFieldPolicy,
             },
           },
         },
