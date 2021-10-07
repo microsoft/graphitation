@@ -55,7 +55,7 @@ export function useAddTodoMutation() {
       const connectionId = data.addTodo.todos.id;
       const newTodoEdge = data.addTodo.todoEdge;
       cache.modify({
-        id: connectionId,
+        id: `TodosConnection:${connectionId}`,
         fields: {
           edges(current) {
             return [...current, newTodoEdge];
