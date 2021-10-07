@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Tue, 05 Oct 2021 08:17:41 GMT and should not be manually modified.
+This log was last generated on Thu, 07 Oct 2021 13:10:18 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.5.0-store-observation.5
+
+Thu, 07 Oct 2021 13:10:18 GMT
+
+### Changes
+
+- Fix node field-policy with default typename prefixing of ids and add test coverage (eloy.de.enige@gmail.com)
 
 ## 0.5.0-store-observation.1
 

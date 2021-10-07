@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Thu, 07 Oct 2021 13:10:18 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v0.5.0-store-observation.5",
+      "version": "0.5.0-store-observation.5",
+      "comments": {
+        "prerelease": [
+          {
+            "comment": "Fix node field-policy with default typename prefixing of ids and add test coverage",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "1e57e78cffd349c5d9ee65a5a4a4ad6e22c7422f",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 05 Oct 2021 08:17:41 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v0.5.0-store-observation.1",
       "version": "0.5.0-store-observation.1",
