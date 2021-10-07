@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "Fix node field-policy with default typename prefixing of ids and add test coverage",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}
