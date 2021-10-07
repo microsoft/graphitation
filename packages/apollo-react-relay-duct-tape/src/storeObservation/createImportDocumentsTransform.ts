@@ -27,13 +27,26 @@ export function createImportDocumentsTransform(): ts.TransformerFactory<ts.Sourc
         const documentNodes = createGraphQLDocumentNodes(node);
         if (documentNodes) {
           const [importDeclaration, replacementNode] = documentNodes;
-          // TODO: This file checking should not exist and is probably not performant.
-          const artefactFile =
-            path.join(
-              path.dirname(node.getSourceFile().fileName),
-              (importDeclaration.moduleSpecifier as ts.StringLiteral).text
-            ) + ".ts";
-          if (fs.existsSync(artefactFile)) {
+          // Because we currently only emit new watch queries for fragments
+          // on Node types, we cannot just assume the artefact exists for
+          // every fragment definition. So check if it exists before emitting
+          // the import.
+          //
+          // TODO: This file checking should not exist and is probably not
+          //       performant.
+          //
+          // NOTE: In our test case node.getSourceFile() returns undefined.
+          let emitImport = true;
+          const sourceFile: ts.SourceFile | undefined = node.getSourceFile();
+          if (sourceFile) {
+            const artefactFile =
+              path.join(
+                path.dirname(sourceFile.fileName),
+                (importDeclaration.moduleSpecifier as ts.StringLiteral).text
+              ) + ".ts";
+            emitImport = fs.existsSync(artefactFile);
+          }
+          if (emitImport) {
             imports.push(importDeclaration);
             return replacementNode;
           }
