@@ -2,6 +2,29 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Fri, 08 Oct 2021 22:54:51 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v0.5.0",
+      "version": "0.5.0",
+      "comments": {
+        "none": [
+          {
+            "comment": "Beachball sync",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "359e9c535021f12511b80c311cb768222f51d6a8",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          }
+        ],
+        "patch": [
+          {
+            "comment": "Bump relay-compiler-language-graphitation to v0.6.0-store-observation.2",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "359e9c535021f12511b80c311cb768222f51d6a8",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 07 Oct 2021 13:10:18 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v0.5.0-store-observation.5",
       "version": "0.5.0-store-observation.5",
