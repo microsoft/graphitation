@@ -5,6 +5,14 @@ import { find as findGraphQLTags } from "./findGraphQLTags";
 import { formatModule } from "./formatModule";
 import { generateFactory } from "./typeGenerator";
 
+// TODO: Ideally this would be done from here, but this module is either loaded too late
+//       or it's mutating the individual modules and the cli bin being used is the bundled
+//       relay-compiler bin file.
+//
+// import { IRTransforms } from "relay-compiler";
+// import { enableNodeWatchQueryTransform } from "./enableNodeWatchQueryTransform";
+// IRTransforms.commonTransforms.unshift(enableNodeWatchQueryTransform);
+
 const pluginInitializer: PluginInitializer = () => {
   const typescriptPlugin = typescriptPluginInitializer();
   return {

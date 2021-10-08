@@ -2,19 +2,6 @@
 /* eslint-disable */
 // @ts-nocheck
 ;
-import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
-export type TodoList_todosWatchNodeQueryVariables = {
-    id: string;
-};
-export type TodoList_todosWatchNodeQueryResponse = {
-    readonly node: {
-        readonly " $fragmentRefs": FragmentRefs<"TodoList_todosFragment">;
-    } | null;
-};
-export type TodoList_todosWatchNodeQuery = {
-    readonly response: TodoList_todosWatchNodeQueryResponse;
-    readonly variables: TodoList_todosWatchNodeQueryVariables;
-};
 
 /*
 query TodoList_todosWatchNodeQuery($id: ID!) {
