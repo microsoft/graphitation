@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "Move enable node watch query transform to post-parse time so new types in the schema implementing the Node interface will get picked up after having been read and cached.",
-  "packageName": "relay-compiler-language-graphitation",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}
