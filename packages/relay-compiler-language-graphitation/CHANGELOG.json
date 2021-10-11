@@ -2,6 +2,21 @@
   "name": "relay-compiler-language-graphitation",
   "entries": [
     {
+      "date": "Mon, 11 Oct 2021 20:36:14 GMT",
+      "tag": "relay-compiler-language-graphitation_v0.6.0-store-observation.3",
+      "version": "0.6.0-store-observation.3",
+      "comments": {
+        "prerelease": [
+          {
+            "comment": "Move enable node watch query transform to post-parse time so new types in the schema implementing the Node interface will get picked up after having been read and cached.",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2c3b1c38f68484c376094f159444444f59b03d52",
+            "package": "relay-compiler-language-graphitation"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 08 Oct 2021 22:54:51 GMT",
       "tag": "relay-compiler-language-graphitation_v0.6.0-store-observation.2",
       "version": "0.6.0-store-observation.2",

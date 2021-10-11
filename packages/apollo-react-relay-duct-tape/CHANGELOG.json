@@ -2,6 +2,29 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Mon, 11 Oct 2021 20:36:14 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v0.5.0",
+      "version": "0.5.0",
+      "comments": {
+        "prerelease": [
+          {
+            "comment": "Use synchronous API to fetch fragment data.",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2c3b1c38f68484c376094f159444444f59b03d52",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          }
+        ],
+        "patch": [
+          {
+            "comment": "Bump relay-compiler-language-graphitation to v0.6.0-store-observation.3",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "2c3b1c38f68484c376094f159444444f59b03d52",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 08 Oct 2021 22:54:51 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v0.5.0",
       "version": "0.5.0",
