@@ -1,0 +1,7 @@
+{
+  "type": "prerelease",
+  "comment": "Use synchronous API to fetch fragment data.",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}
