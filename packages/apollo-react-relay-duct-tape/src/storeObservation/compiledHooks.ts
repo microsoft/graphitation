@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import {
   QueryResult,
   useApolloClient,
@@ -75,10 +75,21 @@ export function useCompiledFragment(
   },
   fragmentReference: { id: unknown }
 ) {
-  const result = useApolloQuery(documents.watchQueryDocument, {
-    variables: { id: fragmentReference.id },
-    fetchPolicy: "cache-only",
-  });
+  const client = useApolloClient();
+  const observableQuery = useMemo(
+    () =>
+      client.watchQuery<{ node: null | {} }>({
+        query: documents.watchQueryDocument,
+        variables: { id: fragmentReference.id },
+        fetchPolicy: "cache-only",
+      }),
+    [fragmentReference.id, client]
+  );
+  const [result, setResult] = useState(observableQuery.getCurrentResult());
+  useEffect(() => {
+    const subscription = observableQuery.subscribe(setResult);
+    return () => subscription.unsubscribe();
+  }, [observableQuery]);
   invariant(
     result.data?.node,
     "Expected Apollo to response with previously seeded node data"
