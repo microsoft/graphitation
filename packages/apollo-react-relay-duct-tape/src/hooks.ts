@@ -10,7 +10,7 @@ import { KeyType, KeyTypeData, OperationType } from "./types";
 import {
   useCompiledFragment,
   useCompiledLazyLoadQuery,
-} from "./storeObservation/hooks";
+} from "./storeObservation/compiledHooks";
 
 export type GraphQLTaggedNode =
   | (DocumentNode & { watchQueryDocument?: never })
