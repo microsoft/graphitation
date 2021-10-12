@@ -85,11 +85,19 @@ export function useCompiledFragment(
       }),
     [fragmentReference.id, client]
   );
-  const [result, setResult] = useState(observableQuery.getCurrentResult());
+  const [forceUpdateCount, forceUpdate] = useState(0);
   useEffect(() => {
-    const subscription = observableQuery.subscribe(setResult);
+    let skipFirst = true;
+    const subscription = observableQuery.subscribe(() => {
+      if (skipFirst) {
+        skipFirst = false;
+      } else {
+        forceUpdate(forceUpdateCount + 1);
+      }
+    });
     return () => subscription.unsubscribe();
   }, [observableQuery]);
+  const result = observableQuery.getCurrentResult();
   invariant(
     result.data?.node,
     "Expected Apollo to response with previously seeded node data"
