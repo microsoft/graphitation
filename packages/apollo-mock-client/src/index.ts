@@ -6,6 +6,7 @@ import {
   ApolloClient,
   InMemoryCache,
   NormalizedCacheObject,
+  InMemoryCacheConfig,
 } from "@apollo/client";
 import invariant from "invariant";
 import {
@@ -314,7 +315,10 @@ class Mock implements MockFunctions {
   }
 }
 
-export function createMockClient(schema: GraphQLSchema): ApolloMockClient {
+export function createMockClient(
+  schema: GraphQLSchema,
+  options?: { cache?: InMemoryCacheConfig }
+): ApolloMockClient {
   // Build a list of abstract types and their possible types.
   // TODO: Cache this on the schema?
   const possibleTypes: Record<string, string[]> = {};
@@ -336,6 +340,7 @@ export function createMockClient(schema: GraphQLSchema): ApolloMockClient {
   >(
     new ApolloClient({
       cache: new InMemoryCache({
+        ...options?.cache,
         possibleTypes,
         addTypename: true,
       }),
