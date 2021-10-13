@@ -113,7 +113,7 @@ export function useCompiledFragment(
   const result = observableQuery.getCurrentResult();
   invariant(
     result.data?.node,
-    "Expected Apollo to response with previously seeded node data"
+    "Expected Apollo to respond with previously seeded node data"
   );
   return result.data.node;
 }
