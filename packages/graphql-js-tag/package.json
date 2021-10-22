@@ -3,6 +3,11 @@
   "description": "A simple graphql-js AST based `graphql` tagged template function.",
   "license": "MIT",
   "version": "0.8.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/graphitation.git",
+    "directory": "packages/graphql-js-tag"
+  },
   "main": "./src/index.ts",
   "scripts": {
     "build": "monorepo-scripts build",
