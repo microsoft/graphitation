@@ -15,7 +15,11 @@ import * as MockPayloadGenerator from "@graphitation/graphql-js-operation-payloa
 import * as fs from "fs";
 import * as path from "path";
 
-import { useCompiledFragment, useCompiledLazyLoadQuery } from "./compiledHooks";
+import {
+  useCompiledFragment,
+  useCompiledLazyLoadQuery,
+  useCompiledRefetchableFragment,
+} from "./compiledHooks";
 import { nodeFromCacheFieldPolicy } from "./nodeFromCacheFieldPolicy";
 
 /**
@@ -23,6 +27,8 @@ import { nodeFromCacheFieldPolicy } from "./nodeFromCacheFieldPolicy";
  */
 import * as compiledHooks_Root_executionQuery_documents from "./__generated__/compiledHooks_Root_executionQuery.graphql";
 import * as compiledHooks_ChildFragment_documents from "./__generated__/compiledHooks_ChildWatchNodeQuery.graphql";
+// TODO: Emit this import from transform
+import * as compiledHooks_RefetchableFragment_documents from "./__generated__/compiledHooks_RefetchableFragment_RefetchQuery.graphql";
 
 const schema = buildSchema(
   fs.readFileSync(
@@ -37,31 +43,50 @@ const Child_fragment = graphql`
   }
 `;
 
+const Refetchable_fragment = graphql`
+  fragment compiledHooks_RefetchableFragment on User
+  @refetchable(queryName: "compiledHooks_RefetchableFragment_RefetchQuery") {
+    petName
+  }
+`;
+
 const Root_executionQueryDocument = graphql`
   query compiledHooks_Root_executionQuery {
     user(id: 42) {
       name
       ...compiledHooks_ChildFragment
+      ...compiledHooks_RefetchableFragment
     }
   }
   ${Child_fragment}
+  ${Refetchable_fragment}
 `;
 
 describe("compiledHooks", () => {
   let client: ApolloMockClient;
   let testRenderer: ReactTestRenderer;
 
-  let lastUseFragmentResult: any | null = null;
+  let lastUseFragmentResult: any[];
+  let lastUseRefetchableFragmentResult: any[];
   let lastUseLazyLoadQueryResult: QueryResult | null = null;
-  let useFragmentRenderCount: number | null;
 
   const ChildComponent: React.FC<{ user: { id: any } }> = (props) => {
-    useFragmentRenderCount!++;
     const result = useCompiledFragment(
       compiledHooks_ChildFragment_documents as any,
       props.user
     );
-    lastUseFragmentResult = result;
+    lastUseFragmentResult.push(result);
+    return null;
+  };
+
+  const ChildRefetchableComponent: React.FC<{ user: { id: any } }> = (
+    props
+  ) => {
+    const result = useCompiledRefetchableFragment(
+      compiledHooks_RefetchableFragment_documents as any,
+      props.user
+    );
+    lastUseRefetchableFragmentResult.push(result);
     return null;
   };
 
@@ -71,11 +96,78 @@ describe("compiledHooks", () => {
       { variables: {} }
     );
     lastUseLazyLoadQueryResult = result;
-    return result.data ? <ChildComponent user={result.data.user} /> : null;
+    return result.data ? (
+      <>
+        <ChildComponent user={result.data.user} />
+        <ChildRefetchableComponent user={result.data.user} />
+      </>
+    ) : null;
   };
 
+  function itBehavesLikeFragment(returnedResults: () => any[]) {
+    beforeEach(async () => {
+      await act(() =>
+        client.mock.resolveMostRecentOperation((operation) =>
+          MockPayloadGenerator.generate(operation, {
+            User: () => ({ id: 42 }),
+          })
+        )
+      );
+    });
+
+    it("only returns the fields selected in the watch query to the component", () => {
+      expect(returnedResults()[0]).toMatchInlineSnapshot(`
+        Object {
+          "__typename": "User",
+          "id": 42,
+          "petName": "<mock-value-for-field-\\"petName\\">",
+        }
+      `);
+    });
+
+    it("returns the same object when a field that was not selected in the watch query is updated in the store", async () => {
+      const before = returnedResults()[0];
+      await act(async () => {
+        client.cache.modify({
+          id: "User:42",
+          fields: {
+            name: () => "Satya",
+          },
+        });
+        return new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      expect(returnedResults().length).toBe(2);
+      expect(returnedResults()[1]).toBe(before);
+    });
+
+    it("returns a new object when a field that was selected in the watch query is updated in the store", async () => {
+      await act(async () => {
+        client.cache.modify({
+          id: "User:42",
+          fields: {
+            petName: () => "Phoenix",
+          },
+        });
+        return new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      expect(returnedResults().length).toBe(2);
+      expect(returnedResults()[1]).toMatchInlineSnapshot(`
+        Object {
+          "__typename": "User",
+          "id": 42,
+          "petName": "Phoenix",
+        }
+      `);
+    });
+
+    it("returns data synchronously", () => {
+      expect(returnedResults().length).toBe(1);
+    });
+  }
+
   beforeEach(() => {
-    useFragmentRenderCount = 0;
+    lastUseFragmentResult = [];
+    lastUseRefetchableFragmentResult = [];
     client = createMockClient(schema, {
       cache: {
         typePolicies: {
@@ -99,9 +191,7 @@ describe("compiledHooks", () => {
   });
 
   afterEach(() => {
-    useFragmentRenderCount = null;
     lastUseLazyLoadQueryResult = null;
-    lastUseFragmentResult = null;
   });
 
   describe(useCompiledLazyLoadQuery, () => {
@@ -198,67 +288,10 @@ describe("compiledHooks", () => {
   });
 
   describe(useCompiledFragment, () => {
-    beforeEach(async () => {
-      await act(() =>
-        client.mock.resolveMostRecentOperation((operation) =>
-          MockPayloadGenerator.generate(operation, {
-            User: () => ({ id: 42 }),
-          })
-        )
-      );
-    });
-
-    it("only returns the fields selected in the watch query to the component", () => {
-      expect(lastUseFragmentResult).toMatchInlineSnapshot(`
-        Object {
-          "__typename": "User",
-          "id": 42,
-          "petName": "<mock-value-for-field-\\"petName\\">",
-        }
-      `);
-    });
-
-    it("does not re-render when a field that was not selected in the watch query is updated in the store", async () => {
-      const before = lastUseFragmentResult;
-      await act(async () => {
-        client.cache.modify({
-          id: "User:42",
-          fields: {
-            name: () => "Satya",
-          },
-        });
-        return new Promise((resolve) => setTimeout(resolve, 0));
-      });
-      expect(lastUseFragmentResult).toBe(before);
-    });
-
-    it("does re-render when a field that was selected in the watch query is updated in the store", async () => {
-      const before = lastUseFragmentResult;
-      await act(async () => {
-        client.cache.modify({
-          id: "User:42",
-          fields: {
-            petName: () => "Phoenix",
-          },
-        });
-        return new Promise((resolve) => setTimeout(resolve, 0));
-      });
-      expect(lastUseFragmentResult).not.toBe(before);
-      expect(lastUseFragmentResult).toMatchInlineSnapshot(`
-        Object {
-          "__typename": "User",
-          "id": 42,
-          "petName": "Phoenix",
-        }
-      `);
-    });
-
-    it("returns data synchronously", () => {
-      expect(useFragmentRenderCount).toBe(1);
-    });
+    itBehavesLikeFragment(() => lastUseFragmentResult);
   });
 
   describe(useCompiledRefetchableFragment, () => {
-    it("works", () => {});
+    itBehavesLikeFragment(() => lastUseRefetchableFragmentResult);
   });
 });
