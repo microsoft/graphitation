@@ -34,9 +34,6 @@ const schema = buildSchema(
 const Child_fragment = graphql`
   fragment compiledHooks_ChildFragment on User {
     petName
-    # NOTE: These selections get inserted by the compiler
-    __typename
-    id
   }
 `;
 
@@ -45,9 +42,6 @@ const Root_executionQueryDocument = graphql`
     user(id: 42) {
       name
       ...compiledHooks_ChildFragment
-      # NOTE: These selections get inserted by the compiler
-      __typename
-      id
     }
   }
   ${Child_fragment}
@@ -262,5 +256,9 @@ describe("compiledHooks", () => {
     it("returns data synchronously", () => {
       expect(useFragmentRenderCount).toBe(1);
     });
+  });
+
+  describe(useCompiledRefetchableFragment, () => {
+    it("works", () => {});
   });
 });
