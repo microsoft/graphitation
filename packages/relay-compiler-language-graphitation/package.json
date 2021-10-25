@@ -3,6 +3,9 @@
   "description": "A relay-compiler plugin that wraps the TypeScript plugin and augments it slightly for @graphitation/apollo-react-relay-duct-tape's needs.",
   "license": "MIT",
   "version": "0.6.0-store-observation.3",
+  "bin": {
+    "graphitation-compiler": "./lib/cli.js"
+  },
   "main": "./lib/index",
   "scripts": {
     "build": "monorepo-scripts build",

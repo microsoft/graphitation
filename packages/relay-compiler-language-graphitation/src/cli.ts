@@ -2,16 +2,12 @@
 
 /* istanbul ignore file */
 
-const yargs = require("yargs");
-
-// eslint-disable-next-line msteams/no-commonjs-imports-with-exceptions
-const { relayCompiler } = require("relay-compiler");
+import * as yargs from "yargs";
+import { relayCompiler } from "relay-compiler";
 
 // TODO: This needs to be done here to ensure we get to mutate the transforms lists that get used.
-const { IRTransforms } = require("relay-compiler");
-const {
-  enableNodeWatchQueryTransform,
-} = require("relay-compiler-language-graphitation/lib/enableNodeWatchQueryTransform");
+import { IRTransforms } from "relay-compiler";
+import { enableNodeWatchQueryTransform } from "./enableNodeWatchQueryTransform";
 IRTransforms.commonTransforms.unshift(enableNodeWatchQueryTransform);
 
 function main() {
