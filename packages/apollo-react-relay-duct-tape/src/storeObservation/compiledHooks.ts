@@ -117,3 +117,13 @@ export function useCompiledFragment(
   );
   return result.data.node;
 }
+
+export function useCompiledRefetchableFragment(
+  documents: {
+    executionQueryDocument: DocumentNode;
+    watchQueryDocument: DocumentNode;
+  },
+  fragmentReference: { id: unknown }
+) {
+  return useCompiledFragment(documents, fragmentReference);
+}
