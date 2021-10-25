@@ -1,5 +1,10 @@
+interface Node {
+  id: ID!
+}
+
 type Query {
   user(id: ID!): User!
+  node(id: ID!): Node
 }
 
 type Mutation {
@@ -10,7 +15,8 @@ type Subscription {
   userNameChanged(id: ID!): User!
 }
 
-type User {
+type User implements Node {
   id: ID!
   name: String!
+  petName: String!
 }
