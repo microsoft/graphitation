@@ -5,8 +5,6 @@
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type compiledHooks_ChildFragment = {
     readonly petName: string;
-    readonly id: string;
-    readonly __typename: "User";
     readonly " $refType": "compiledHooks_ChildFragment";
 };
 export type compiledHooks_ChildFragment$data = compiledHooks_ChildFragment;
