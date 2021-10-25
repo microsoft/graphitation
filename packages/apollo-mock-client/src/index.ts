@@ -339,9 +339,9 @@ export function createMockClient(
   >(
     new ApolloClient({
       cache: new InMemoryCache({
+        addTypename: true,
         ...options?.cache,
         possibleTypes,
-        addTypename: true,
       }),
       link,
     }),
