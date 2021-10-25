@@ -5,34 +5,34 @@ import {
   create as createTestRenderer,
   ReactTestRenderer,
 } from "react-test-renderer";
-import { buildASTSchema, buildSchema } from "graphql";
+import { buildSchema } from "graphql";
 import { graphql } from "@graphitation/graphql-js-tag";
 import {
   ApolloMockClient,
   createMockClient,
 } from "@graphitation/apollo-mock-client";
 import * as MockPayloadGenerator from "@graphitation/graphql-js-operation-payload-generator";
+import * as fs from "fs";
+import * as path from "path";
 
 import { useCompiledFragment, useCompiledLazyLoadQuery } from "./compiledHooks";
 import { nodeFromCacheFieldPolicy } from "./nodeFromCacheFieldPolicy";
 
-const schema = buildASTSchema(graphql`
-  interface Node {
-    id: ID!
-  }
-  type Query {
-    user: User!
-    node: Node
-  }
-  type User implements Node {
-    id: ID!
-    name: String!
-    petName: String!
-  }
-`);
+/**
+ * NOTE: These compiler artefacts are normally imported using the transform from the createImportDocumentsTransform.ts module
+ */
+import * as compiledHooks_Root_executionQuery_documents from "./__generated__/compiledHooks_Root_executionQuery.graphql";
+import * as compiledHooks_ChildFragment_documents from "./__generated__/compiledHooks_ChildWatchNodeQuery.graphql";
+
+const schema = buildSchema(
+  fs.readFileSync(
+    path.resolve(__dirname, "../__tests__/schema.graphql"),
+    "utf8"
+  )
+);
 
 const Child_fragment = graphql`
-  fragment Child_fragment on User {
+  fragment compiledHooks_ChildFragment on User {
     petName
     # NOTE: These selections get inserted by the compiler
     __typename
@@ -41,33 +41,13 @@ const Child_fragment = graphql`
 `;
 
 const Root_executionQueryDocument = graphql`
-  query Root_executionQueryDocument {
-    user {
+  query compiledHooks_Root_executionQuery {
+    user(id: 42) {
       name
-      ...Child_fragment
+      ...compiledHooks_ChildFragment
       # NOTE: These selections get inserted by the compiler
       __typename
       id
-    }
-  }
-  ${Child_fragment}
-`;
-
-const Root_watchQueryDocument = graphql`
-  query Root_watchQueryDocument {
-    user {
-      name
-      # NOTE: These selections get inserted by the compiler
-      __typename
-      id
-    }
-  }
-`;
-
-const Child_watchQueryDocument = graphql`
-  query Child_watchQueryDocument($id: ID!) {
-    node(id: $id) {
-      ...Child_fragment
     }
   }
   ${Child_fragment}
@@ -84,9 +64,7 @@ describe("compiledHooks", () => {
   const ChildComponent: React.FC<{ user: { id: any } }> = (props) => {
     useFragmentRenderCount!++;
     const result = useCompiledFragment(
-      {
-        watchQueryDocument: Child_watchQueryDocument,
-      },
+      compiledHooks_ChildFragment_documents as any,
       props.user
     );
     lastUseFragmentResult = result;
@@ -95,10 +73,7 @@ describe("compiledHooks", () => {
 
   const RootComponent: React.FC = () => {
     const result = useCompiledLazyLoadQuery(
-      {
-        executionQueryDocument: Root_executionQueryDocument,
-        watchQueryDocument: Root_watchQueryDocument,
-      },
+      compiledHooks_Root_executionQuery_documents as any,
       { variables: {} }
     );
     lastUseLazyLoadQueryResult = result;
@@ -159,13 +134,13 @@ describe("compiledHooks", () => {
 
       it("loads all data of the execution query into the store", () => {
         expect(client.cache.extract()["User:42"]).toMatchInlineSnapshot(`
-                  Object {
-                    "__typename": "User",
-                    "id": 42,
-                    "name": "<mock-value-for-field-\\"name\\">",
-                    "petName": "<mock-value-for-field-\\"petName\\">",
-                  }
-              `);
+          Object {
+            "__typename": "User",
+            "id": 42,
+            "name": "<mock-value-for-field-\\"name\\">",
+            "petName": "<mock-value-for-field-\\"petName\\">",
+          }
+        `);
       });
 
       it("only returns the fields selected in the watch query to the component", () => {
