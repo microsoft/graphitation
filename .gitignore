@@ -2,6 +2,7 @@ node_modules
 lib
 .tsbuildinfo
 dist
+examples/apollo-watch-fragments/public/bundle.js
 
 # This is purely pre-cautionary; when linting becomes slow, delete this eslintcache entry
 .eslintcache
