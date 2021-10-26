@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Tue, 26 Oct 2021 12:46:12 GMT and should not be manually modified.
+This log was last generated on Tue, 26 Oct 2021 21:09:29 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.4.5
+
+Tue, 26 Oct 2021 21:09:29 GMT
+
+### Patches
+
+- Ensure that all packages listing graphql as a peerDependency also has it as a devDependency (modevold@microsoft.com)
 
 ## 0.4.4
 

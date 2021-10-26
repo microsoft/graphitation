@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Ensure that all packages listing graphql as a peerDependency also has it as a devDependency",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape",
-  "email": "modevold@microsoft.com",
-  "dependentChangeType": "patch"
-}

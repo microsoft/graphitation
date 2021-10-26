@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-mock-client",
   "entries": [
     {
+      "date": "Tue, 26 Oct 2021 21:09:29 GMT",
+      "tag": "@graphitation/apollo-mock-client_v0.6.11",
+      "version": "0.6.11",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Bump @graphitation/graphql-js-tag to v0.5.5",
+            "author": "modevold@microsoft.com",
+            "commit": "6fbd717cb21f2e9f49ddca58e0365b5381358b46",
+            "package": "@graphitation/apollo-mock-client"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 26 Oct 2021 12:46:12 GMT",
       "tag": "@graphitation/apollo-mock-client_v0.6.10",
       "version": "0.6.10",

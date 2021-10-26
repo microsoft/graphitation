@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-tag",
   "entries": [
     {
+      "date": "Tue, 26 Oct 2021 21:09:29 GMT",
+      "tag": "@graphitation/graphql-js-tag_v0.5.5",
+      "version": "0.5.5",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Move graphql to peerDependencies",
+            "author": "modevold@microsoft.com",
+            "commit": "6fbd717cb21f2e9f49ddca58e0365b5381358b46",
+            "package": "@graphitation/graphql-js-tag"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 04 Oct 2021 13:48:04 GMT",
       "tag": "@graphitation/graphql-js-tag_v0.5.4",
       "version": "0.5.4",

@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-tag
 
-This log was last generated on Mon, 04 Oct 2021 13:48:04 GMT and should not be manually modified.
+This log was last generated on Tue, 26 Oct 2021 21:09:29 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.5.5
+
+Tue, 26 Oct 2021 21:09:29 GMT
+
+### Patches
+
+- Move graphql to peerDependencies (modevold@microsoft.com)
 
 ## 0.5.4
 
