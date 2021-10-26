@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Tue, 26 Oct 2021 12:46:12 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v0.4.4",
+      "version": "0.4.4",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Align graphql dependency to version ^15.0.0 across packages",
+            "author": "modevold@microsoft.com",
+            "commit": "d8b94fe7725a968abfac81953b97a879b2bdaeb3",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 04 Oct 2021 13:48:04 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v0.4.3",
       "version": "0.4.3",

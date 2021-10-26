@@ -2,6 +2,21 @@
   "name": "relay-compiler-language-graphitation",
   "entries": [
     {
+      "date": "Tue, 26 Oct 2021 12:46:12 GMT",
+      "tag": "relay-compiler-language-graphitation_v0.5.2",
+      "version": "0.5.2",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Align graphql dependency to version ^15.0.0 across packages",
+            "author": "modevold@microsoft.com",
+            "commit": "d8b94fe7725a968abfac81953b97a879b2bdaeb3",
+            "package": "relay-compiler-language-graphitation"
+          }
+        ]
+      }
+    },
+    {
       "date": "Sat, 24 Apr 2021 23:10:54 GMT",
       "tag": "relay-compiler-language-graphitation_v0.5.1",
       "version": "0.5.1",
