@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Align graphql dependency to version ^15.0.0 across packages",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape",
+  "email": "modevold@microsoft.com",
+  "dependentChangeType": "patch"
+}
