@@ -1,11 +1,9 @@
 import { useRef, useState, useEffect, useMemo } from "react";
 import {
-  QueryResult,
   useApolloClient,
   useQuery as useApolloQuery,
   ApolloError,
-  FetchMoreQueryOptions,
-  ObservableQuery,
+  ApolloQueryResult,
 } from "@apollo/client";
 import { DocumentNode } from "graphql";
 import invariant from "invariant";
@@ -24,25 +22,28 @@ export function useCompiledLazyLoadQuery(
     watchQueryDocument: DocumentNode;
   },
   options: { variables: Record<string, any> }
-): QueryResult {
+): { data?: any; error?: Error } {
   const client = useApolloClient();
-  const executionQuery = useRef<ObservableQuery>();
+  const executionQuery = useRef<Promise<ApolloQueryResult<unknown>>>();
   const [[loading, error], setLoadingStatus] = useState<
     [loading: boolean, error: ApolloError | undefined]
   >([true, undefined]);
 
   useEffect(() => {
+    // TODO: This conditional is probably not right when we actually do want a new query to be issued.
     if (loading && executionQuery.current === undefined) {
-      executionQuery.current = client.watchQuery({
+      executionQuery.current = client.query({
         query: documents.executionQueryDocument,
         variables: options.variables,
       });
-      const subscription = executionQuery.current.subscribe((result) => {
-        if (!result.loading) {
-          subscription.unsubscribe();
-          setLoadingStatus([false, result.error]);
-        }
-      });
+      executionQuery.current
+        .then((result) => setLoadingStatus([false, result.error]))
+        .catch((error) => setLoadingStatus([false, error]))
+        .then(() => {
+          // No need to hang onto this any longer than necessary.
+          // TODO: How does Apollo evict from the store?
+          executionQuery.current = undefined;
+        });
     }
     return () => {
       // TODO: [How to] Cancel in-flight request?
@@ -51,30 +52,13 @@ export function useCompiledLazyLoadQuery(
     };
   }, [documents.executionQueryDocument, options.variables]);
 
-  const watchQueryResponse = useApolloQuery(documents.watchQueryDocument, {
+  const { data } = useApolloQuery(documents.watchQueryDocument, {
     variables: options.variables,
     fetchPolicy: "cache-only",
     skip: loading || !!error,
   });
-  return {
-    ...watchQueryResponse,
-    loading,
-    error,
-    fetchMore: (options: FetchMoreQueryOptions<unknown>) => {
-      invariant(
-        executionQuery.current,
-        "Expected query to have started before fetching more list data"
-      );
-      return executionQuery.current.fetchMore(options);
-    },
-    subscribeToMore: (options) => {
-      invariant(
-        executionQuery.current,
-        "Expected query to have started before subscribing to more data"
-      );
-      return executionQuery.current.subscribeToMore(options);
-    },
-  };
+
+  return { data, error };
 }
 
 /**
