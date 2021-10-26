@@ -68,7 +68,7 @@ describe("compiledHooks", () => {
 
   let lastUseFragmentResult: any[];
   let lastUseRefetchableFragmentResult: any[];
-  let lastUseLazyLoadQueryResult: QueryResult | null = null;
+  let lastUseLazyLoadQueryResult: { data?: any; error?: Error } | null = null;
 
   const ChildComponent: React.FC<{ user: { id: any } }> = (props) => {
     const result = useCompiledFragment(
@@ -196,13 +196,19 @@ describe("compiledHooks", () => {
 
   describe(useCompiledLazyLoadQuery, () => {
     it("correctly returns loading state", async () => {
-      expect(lastUseLazyLoadQueryResult).toMatchObject({ loading: true });
+      expect(lastUseLazyLoadQueryResult).toEqual({
+        data: undefined,
+        error: undefined,
+      });
       await act(() =>
         client.mock.resolveMostRecentOperation((operation) =>
           MockPayloadGenerator.generate(operation)
         )
       );
-      expect(lastUseLazyLoadQueryResult).toMatchObject({ loading: false });
+      expect(lastUseLazyLoadQueryResult).toEqual({
+        data: expect.objectContaining({}),
+        error: undefined,
+      });
     });
 
     describe("once loaded", () => {
@@ -274,15 +280,6 @@ describe("compiledHooks", () => {
             },
           }
         `);
-      });
-
-      // FIXME: Is the component unmounted earlier than expected?
-      //        Commenting out the useEffect callback makes this test pass.
-      it.skip("invokes fetchMore using the execution query", () => {
-        lastUseLazyLoadQueryResult!.fetchMore({});
-        expect(client.mock.getMostRecentOperation().request.node).toBe(
-          Root_executionQueryDocument
-        );
       });
     });
   });
