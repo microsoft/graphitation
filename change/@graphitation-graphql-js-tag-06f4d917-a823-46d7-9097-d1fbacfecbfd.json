@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Move graphql to peerDependencies",
+  "packageName": "@graphitation/graphql-js-tag",
+  "email": "modevold@microsoft.com",
+  "dependentChangeType": "patch"
+}
