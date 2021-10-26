@@ -24,5 +24,8 @@
   },
   "dependencies": {
     "typescript": "^4.4.3"
+  },
+  "peerDependencies": {
+    "graphql": "^15.0.0"
   }
 }
