@@ -22,7 +22,9 @@
     "access": "public"
   },
   "dependencies": {
-    "graphql": "^15.0.0",
     "invariant": "^2.0.0"
+  },
+  "peerDependencies": {
+    "graphql": "^15.0.0"
   }
 }

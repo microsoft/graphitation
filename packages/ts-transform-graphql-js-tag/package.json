@@ -13,6 +13,7 @@
   "devDependencies": {
     "@ts-morph/bootstrap": "^0.11.0",
     "@types/jest": "^26.0.22",
+    "graphql": "^15.0.0",
     "monorepo-scripts": "*",
     "ts-transformer-testing-library": "^1.0.0-alpha.7"
   },
@@ -22,7 +23,6 @@
     "access": "public"
   },
   "dependencies": {
-    "graphql": "^15.0.0",
     "typescript": "^4.4.3"
   }
 }
