@@ -51,8 +51,8 @@ const Refetchable_fragment = graphql`
 `;
 
 const Root_executionQueryDocument = graphql`
-  query compiledHooks_Root_executionQuery {
-    user(id: 42) {
+  query compiledHooks_Root_executionQuery($userId: ID!) {
+    user(id: $userId) {
       name
       ...compiledHooks_ChildFragment
       ...compiledHooks_RefetchableFragment
@@ -90,10 +90,10 @@ describe("compiledHooks", () => {
     return null;
   };
 
-  const RootComponent: React.FC = () => {
+  const RootComponent: React.FC<{ variables: {} }> = (props) => {
     const result = useCompiledLazyLoadQuery(
       compiledHooks_Root_executionQuery_documents as any,
-      { variables: {} }
+      { variables: props.variables }
     );
     lastUseLazyLoadQueryResult = result;
     return result.data ? (
@@ -163,6 +163,24 @@ describe("compiledHooks", () => {
     it("returns data synchronously", () => {
       expect(returnedResults().length).toBe(1);
     });
+
+    it("fetches new data when variables change", async () => {
+      act(() => {
+        testRenderer.update(
+          <ApolloProvider client={client}>
+            <RootComponent variables={{ userId: 21 }} />
+          </ApolloProvider>
+        );
+      });
+      await act(() =>
+        client.mock.resolveMostRecentOperation((operation) =>
+          MockPayloadGenerator.generate(operation, {
+            User: () => ({ id: operation.request.variables.userId }),
+          })
+        )
+      );
+      expect(returnedResults()[1].id).toBe(21);
+    });
   }
 
   beforeEach(() => {
@@ -184,7 +202,7 @@ describe("compiledHooks", () => {
     act(() => {
       testRenderer = createTestRenderer(
         <ApolloProvider client={client}>
-          <RootComponent />
+          <RootComponent variables={{ userId: 42 }} />
         </ApolloProvider>
       );
     });
@@ -216,7 +234,7 @@ describe("compiledHooks", () => {
         await act(() =>
           client.mock.resolveMostRecentOperation((operation) =>
             MockPayloadGenerator.generate(operation, {
-              User: () => ({ id: 42 }),
+              User: () => ({ id: operation.request.variables.userId }),
             })
           )
         );
@@ -278,6 +296,31 @@ describe("compiledHooks", () => {
               "id": 42,
               "name": "Satya",
             },
+          }
+        `);
+      });
+
+      it("fetches new data when variables change", async () => {
+        act(() => {
+          testRenderer.update(
+            <ApolloProvider client={client}>
+              <RootComponent variables={{ userId: 21 }} />
+            </ApolloProvider>
+          );
+        });
+        await act(() =>
+          client.mock.resolveMostRecentOperation((operation) =>
+            MockPayloadGenerator.generate(operation, {
+              User: () => ({ id: operation.request.variables.userId }),
+            })
+          )
+        );
+        expect(client.cache.extract()["User:21"]).toMatchInlineSnapshot(`
+          Object {
+            "__typename": "User",
+            "id": 21,
+            "name": "<mock-value-for-field-\\"name\\">",
+            "petName": "<mock-value-for-field-\\"petName\\">",
           }
         `);
       });
