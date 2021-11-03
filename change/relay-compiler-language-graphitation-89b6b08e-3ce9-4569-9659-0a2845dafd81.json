@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "Add our own compiler bin that bootstraps all our hacks",
-  "packageName": "relay-compiler-language-graphitation",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}
