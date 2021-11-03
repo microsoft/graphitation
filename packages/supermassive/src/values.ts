@@ -17,9 +17,9 @@ import {
   TypeNode as GraphQLTypeNode,
   ValueNode as GraphQLValueNode,
   VariableDefinitionNode as GraphQLVariableDefinitionNode,
+  valueFromAST,
+  coerceInputValue,
 } from "graphql";
-import { coerceInputValue } from "graphql/utilities/coerceInputValue";
-import { valueFromAST } from "graphql/utilities/valueFromAST";
 import {
   ArgumentNode,
   DirectiveNode,
@@ -79,7 +79,7 @@ export function getVariableValues(
     errors.push(error);
   }
 
-  return { errors };
+  return { errors: errors as any };
 }
 
 function coerceVariableValues(
@@ -296,6 +296,6 @@ function graphqlTypeFromTypeAst(
   } else {
     const typeName = node.name.value;
     const type = specifiedScalars[typeName] || resolvers[typeName];
-    return type;
+    return (type as any) as GraphQLType;
   }
 }

@@ -9,16 +9,15 @@
     "test": "monorepo-scripts test",
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts",
-    "benchmark": "ts-node -T -O '{\"module\":\"commonjs\"}' ./benchmarks/index.ts"
+    "benchmark": "ts-node -T -O '{\"module\":\"commonjs\"}' ./src/benchmarks/index.ts"
   },
   "devDependencies": {
     "@graphitation/graphql-js-tag": "*",
-    "@graphql-tools/schema": "^7.1.5",
+    "@ts-morph/bootstrap": "^0.11.0",
     "@types/benchmark": "^2.1.0",
     "@types/jest": "^26.0.22",
     "@types/node-json-db": "^0.9.3",
     "benchmark": "^2.1.4",
-    "graphql": "^15.5.0",
     "graphql-jit": "^0.5.1",
     "monorepo-scripts": "*",
     "node-json-db": "^1.3.0",
@@ -28,5 +27,10 @@
     "main": "./lib/index",
     "types": "./lib/index.d.ts",
     "access": "public"
+  },
+  "dependencies": {
+    "typescript": "4.4.3",
+    "graphql": "^15.6.1",
+    "@graphql-tools/schema": "^7.1.5"
   }
 }

@@ -1,11 +1,16 @@
 import {
   GraphQLEnumType,
+  GraphQLError,
+  GraphQLFormattedError,
   GraphQLInputObjectType,
   GraphQLScalarType,
+  GraphQLSchema,
+  DocumentNode as UntypedDocumentNode,
 } from "graphql";
-import { Maybe } from "graphql/jsutils/Maybe";
-import { PromiseOrValue } from "graphql/jsutils/PromiseOrValue";
+import { Maybe } from "./jsutils/Maybe";
+import { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import {
+  DocumentNode,
   FieldNode,
   FragmentDefinitionNode,
   OperationDefinitionNode,
@@ -77,3 +82,46 @@ export interface ResolveInfo {
   operation: OperationDefinitionNode;
   variableValues: { [variable: string]: unknown };
 }
+
+/**
+ * The result of GraphQL execution.
+ *
+ *   - `errors` is included when any errors occurred as a non-empty array.
+ *   - `data` is the result of a successful execution of the query.
+ *   - `extensions` is reserved for adding non-standard properties.
+ */
+export interface ExecutionResult<
+  TData = ObjMap<unknown>,
+  TExtensions = ObjMap<unknown>
+> {
+  errors?: Array<GraphQLError>;
+  data?: TData | null;
+  extensions?: TExtensions;
+}
+
+export interface FormattedExecutionResult<
+  TData = ObjMap<unknown>,
+  TExtensions = ObjMap<unknown>
+> {
+  errors?: Array<GraphQLFormattedError>;
+  data?: TData | null;
+  extensions?: TExtensions;
+}
+
+export interface CommonExecutionArgs {
+  resolvers: Resolvers;
+  rootValue?: unknown;
+  contextValue?: unknown;
+  variableValues?: Maybe<{ [variable: string]: unknown }>;
+  operationName?: Maybe<string>;
+  fieldResolver?: Maybe<FieldResolver<any, any>>;
+  typeResolver?: Maybe<TypeResolver<any, any>>;
+}
+export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
+  document: DocumentNode;
+};
+
+export type ExecutionWithSchemaArgs = CommonExecutionArgs & {
+  document: UntypedDocumentNode;
+  typeDefs: UntypedDocumentNode;
+};

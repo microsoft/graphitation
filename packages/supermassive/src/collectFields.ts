@@ -1,4 +1,4 @@
-import { Kind } from "graphql/language/kinds";
+import { Kind } from "graphql";
 import {
   FieldNode,
   FragmentDefinitionNode,

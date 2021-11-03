@@ -6,9 +6,9 @@ import resolvers from "./swapi-schema/resolvers";
 import models from "./swapi-schema/models";
 import { graphql, execute as graphqlExecute, parse } from "graphql";
 import { compileQuery, isCompiledQuery } from "graphql-jit";
-import { execute as supermassiveExecute } from "../src/execute";
-import { addTypesToRequestDocument } from "../src/ast/addTypesToRequestDocument";
-import { Resolvers } from "../src/types";
+import { executeWithoutSchema as supermassiveExecute } from "../executeWithoutSchema";
+import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
+import { Resolvers } from "../types";
 
 const query = fs.readFileSync(
   path.join(__dirname, "./fixtures/query1.graphql"),

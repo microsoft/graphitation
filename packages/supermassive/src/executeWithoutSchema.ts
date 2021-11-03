@@ -2,20 +2,14 @@ import {
   ASTNode as GraphQLASTNode,
   GraphQLEnumType,
   GraphQLError,
-  GraphQLField,
   GraphQLFormattedError,
   GraphQLInputObjectType,
   GraphQLLeafType,
   GraphQLObjectType,
   GraphQLScalarType,
-  GraphQLSchema,
-  GraphQLString,
   isLeafType,
   Kind,
   locatedError,
-  SchemaMetaFieldDef,
-  TypeMetaFieldDef,
-  TypeNameMetaFieldDef,
 } from "graphql";
 
 import {
@@ -41,6 +35,7 @@ import { promiseForObject } from "./jsutils/promiseForObject";
 import type { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import { promiseReduce } from "./jsutils/promiseReduce";
 import {
+  ExecutionWithoutSchemaArgs,
   FieldResolver,
   InterfaceTypeResolver,
   ObjectTypeResolver,
@@ -49,6 +44,7 @@ import {
   Resolvers,
   TypeResolver,
   UnionTypeResolver,
+  ExecutionResult,
 } from "./types";
 import { typeNameFromAST } from "./utilities/typeNameFromAST";
 import {
@@ -96,42 +92,6 @@ export interface ExecutionContext {
 }
 
 /**
- * The result of GraphQL execution.
- *
- *   - `errors` is included when any errors occurred as a non-empty array.
- *   - `data` is the result of a successful execution of the query.
- *   - `extensions` is reserved for adding non-standard properties.
- */
-export interface ExecutionResult<
-  TData = ObjMap<unknown>,
-  TExtensions = ObjMap<unknown>
-> {
-  errors?: Array<GraphQLError>;
-  data?: TData | null;
-  extensions?: TExtensions;
-}
-
-export interface FormattedExecutionResult<
-  TData = ObjMap<unknown>,
-  TExtensions = ObjMap<unknown>
-> {
-  errors?: Array<GraphQLFormattedError>;
-  data?: TData | null;
-  extensions?: TExtensions;
-}
-
-export interface ExecutionArgs {
-  resolvers: Resolvers;
-  document: DocumentNode;
-  rootValue?: unknown;
-  contextValue?: unknown;
-  variableValues?: Maybe<{ [variable: string]: unknown }>;
-  operationName?: Maybe<string>;
-  fieldResolver?: Maybe<FieldResolver<any, any>>;
-  typeResolver?: Maybe<TypeResolver<any, any>>;
-}
-
-/**
  * Implements the "Executing requests" section of the GraphQL specification.
  *
  * Returns either a synchronous ExecutionResult (if all encountered resolvers
@@ -141,7 +101,9 @@ export interface ExecutionArgs {
  * If the arguments to this function do not result in a legal execution context,
  * a GraphQLError will be thrown immediately explaining the invalid input.
  */
-export function execute(args: ExecutionArgs): PromiseOrValue<ExecutionResult> {
+export function executeWithoutSchema(
+  args: ExecutionWithoutSchemaArgs
+): PromiseOrValue<ExecutionResult> {
   const {
     resolvers,
     document,
@@ -335,7 +297,7 @@ function executeOperation(
     }
     return result;
   } catch (error) {
-    exeContext.errors.push(error);
+    exeContext.errors.push(error as any);
     return null;
   }
 }
@@ -434,18 +396,29 @@ function executeField(
   fieldNodes: Array<FieldNode>,
   path: Path
 ): PromiseOrValue<unknown> {
-  // const fieldDef = getFieldDef(exeContext.schema, parentType, fieldNodes[0]);
-  // if (!fieldDef) {
-  //   return;
-  // }
-
   const fieldName = fieldNodes[0].name.value;
-  const returnTypeNode = fieldNodes[0].__type;
-  const returnTypeName = typeNameFromAST(returnTypeNode);
-  const typeResolvers = exeContext.resolvers[parentTypeName];
-  let resolveFn = (typeResolvers as
-    | ObjectTypeResolver<any, any, any>
-    | undefined)?.[fieldName];
+
+  let resolveFn;
+  let returnTypeName: string;
+  let returnTypeNode: TypeNode;
+  if (fieldName === "__typename" && !resolveFn) {
+    resolveFn = () => parentTypeName;
+    returnTypeName = "String";
+    returnTypeNode = {
+      kind: Kind.NAMED_TYPE,
+      name: {
+        kind: Kind.NAME,
+        value: "String",
+      },
+    };
+  } else {
+    returnTypeNode = fieldNodes[0].__type;
+    returnTypeName = typeNameFromAST(returnTypeNode);
+    const typeResolvers = exeContext.resolvers[parentTypeName];
+    resolveFn = (typeResolvers as
+      | ObjectTypeResolver<any, any, any>
+      | undefined)?.[fieldName];
+  }
 
   if (!resolveFn) {
     resolveFn = exeContext.fieldResolver;
@@ -946,40 +919,6 @@ export const defaultFieldResolver: FieldResolver<unknown, unknown> = function (
     return property;
   }
 };
-
-/**
- * This method looks up the field on the given type definition.
- * It has special casing for the three introspection fields,
- * __schema, __type and __typename. __typename is special because
- * it can always be queried as a field, even in situations where no
- * other fields are allowed, like on a Union. __schema and __type
- * could get automatically added to the query type, but that would
- * require mutating type definitions, which would cause issues.
- *
- * @internal
- */
-export function getFieldDef(
-  schema: GraphQLSchema,
-  parentType: GraphQLObjectType,
-  fieldNode: FieldNode
-): Maybe<GraphQLField<unknown, unknown>> {
-  const fieldName = fieldNode.name.value;
-
-  if (
-    fieldName === SchemaMetaFieldDef.name &&
-    schema.getQueryType() === parentType
-  ) {
-    return SchemaMetaFieldDef;
-  } else if (
-    fieldName === TypeMetaFieldDef.name &&
-    schema.getQueryType() === parentType
-  ) {
-    return TypeMetaFieldDef;
-  } else if (fieldName === TypeNameMetaFieldDef.name) {
-    return TypeNameMetaFieldDef;
-  }
-  return parentType.getFields()[fieldName];
-}
 
 // TODO(freiksenet): Custom root type names maybe?
 function getOperationRootTypeName(
