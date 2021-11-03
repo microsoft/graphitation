@@ -24,31 +24,47 @@ export function useCompiledLazyLoadQuery(
   options: { variables: Record<string, any> }
 ): { data?: any; error?: Error } {
   const client = useApolloClient();
-  const executionQuery = useRef<Promise<ApolloQueryResult<unknown>>>();
-  const [[loading, error], setLoadingStatus] = useState<
-    [loading: boolean, error: ApolloError | undefined]
-  >([true, undefined]);
+  const [_, forceUpdate] = useState({});
+
+  // Not using state for the status object, because we don't want to trigger a
+  // state update when we reset things due to new variables coming in.
+  const execution = useRef<{
+    query?: Promise<ApolloQueryResult<unknown>>;
+    status: { loading: boolean; error?: Error };
+  }>({
+    query: undefined,
+    status: { loading: true, error: undefined },
+  });
+  const { loading, error } = execution.current.status;
 
   useEffect(() => {
-    // TODO: This conditional is probably not right when we actually do want a new query to be issued.
-    if (loading && executionQuery.current === undefined) {
-      executionQuery.current = client.query({
+    if (
+      execution.current.status.loading &&
+      execution.current.query === undefined
+    ) {
+      execution.current.query = client.query({
         query: documents.executionQueryDocument,
         variables: options.variables,
       });
-      executionQuery.current
-        .then((result) => setLoadingStatus([false, result.error]))
-        .catch((error) => setLoadingStatus([false, error]))
+      execution.current.query
+        .then((result) => {
+          execution.current.status = { loading: false, error: result.error };
+          forceUpdate({});
+        })
+        .catch((err) => {
+          execution.current.status = { loading: false, error: err };
+          forceUpdate({});
+        })
         .then(() => {
-          // No need to hang onto this any longer than necessary.
-          // TODO: How does Apollo evict from the store?
-          executionQuery.current = undefined;
+          // No need to hang on to the results here any longer than necessary,
+          // assuming Apollo doesn't trigger a GC round of its store.
+          execution.current.query = undefined;
         });
     }
     return () => {
       // TODO: [How to] Cancel in-flight request?
       // TODO: How does Apollo evict from the store?
-      executionQuery.current = undefined;
+      execution.current.status = { loading: true, error: undefined };
     };
   }, [documents.executionQueryDocument, options.variables]);
 
