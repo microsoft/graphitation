@@ -7,7 +7,11 @@
 
 import invariant from "invariant";
 import * as ts from "typescript";
-import { parse as parseGraphQL } from "graphql";
+import {
+  FragmentDefinitionNode,
+  parse as parseGraphQL,
+  StringValueNode,
+} from "graphql";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -101,8 +105,8 @@ function createGraphQLDocumentNodes(
       ts.factory.createIdentifier(namespaceName),
     ];
   } else if (definitionNode.kind === "FragmentDefinition") {
+    const queryName = getQueryName(definitionNode);
     const fragmentName = definitionNode.name.value;
-    const fragmentBaseName = fragmentName.replace(/Fragment$/, "");
     const namespaceName = `${PREFIX}${QUERIES_NAMESPACE}_${fragmentName}`;
     return [
       ts.factory.createImportDeclaration(
@@ -115,12 +119,25 @@ function createGraphQLDocumentNodes(
             ts.factory.createIdentifier(namespaceName)
           )
         ),
-        ts.factory.createStringLiteral(
-          `./__generated__/${fragmentBaseName}WatchNodeQuery.graphql`
-        )
+        ts.factory.createStringLiteral(`./__generated__/${queryName}.graphql`)
       ),
       ts.factory.createIdentifier(namespaceName),
     ];
   }
   invariant(false, `Unhandled GraphQL definition type: ${definitionNode.kind}`);
+}
+
+function getQueryName(definitionNode: FragmentDefinitionNode) {
+  const refetchableQueryNameNode = definitionNode.directives
+    ?.find((directive) => directive.name.value === "refetchable")
+    ?.arguments?.find((arg) => arg.name.value === "queryName")?.value as
+    | StringValueNode
+    | undefined;
+  if (refetchableQueryNameNode) {
+    return refetchableQueryNameNode.value;
+  } else {
+    const fragmentName = definitionNode.name.value;
+    const fragmentBaseName = fragmentName.replace(/Fragment$/, "");
+    return `${fragmentBaseName}WatchNodeQuery`;
+  }
 }

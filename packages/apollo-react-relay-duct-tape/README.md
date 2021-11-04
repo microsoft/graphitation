@@ -25,19 +25,32 @@ Use this together with [relay-compiler-language-graphitation](../relay-compiler-
 
 ### Configuration
 
-- Add the cache field policy needed for the watch queries to load their data from the store through the `node` root field:
+- Configure Apollo Client's cache to automatically add `__typename` field selections, which concrete types implement the `Node` interface, and the type-policies needed to read the watch query data from the store:
 
   ```ts
   import { InMemoryCache } from "@apollo/client";
-  import { nodeFromCacheFieldPolicy } from "@graphitation/apollo-react-relay-duct-tape";
+  import { typePolicies } from "@graphitation/apollo-react-relay-duct-tape";
 
   const cache = new InMemoryCache({
     addTypename: true,
+    // Be sure to specify types that implement the Node interface
+    // See https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces
+    possibleTypes: {
+      Node: ["Todo"],
+    },
+    // Either use the `typePolicies` object directly or otherwise extend appropriately
     typePolicies: {
       Query: {
         fields: {
           node: {
-            read: nodeFromCacheFieldPolicy,
+            read: typePolicies.Query.fields.node.read,
+          },
+        },
+      },
+      Node: {
+        fields: {
+          __fragments: {
+            read: typePolicies.Node.fields.__fragments.read,
           },
         },
       },

@@ -12,6 +12,7 @@ import { KeyType, KeyTypeData, OperationType } from "./types";
 import {
   useCompiledFragment,
   useCompiledLazyLoadQuery,
+  useCompiledRefetchableFragment,
 } from "./storeObservation/compiledHooks";
 
 export type GraphQLTaggedNode =
@@ -150,6 +151,26 @@ export function useFragment<TKey extends KeyType>(
   } else {
     return fragmentRef as unknown;
   }
+}
+
+export function useRefetachbleFragment<
+  TQuery extends OperationType,
+  TKey extends KeyType
+>(
+  fragmentInput: GraphQLTaggedNode,
+  fragmentRef: TKey
+): [
+  data: KeyTypeData<TKey>,
+  refetch: (variables: TQuery["variables"]) => void
+] {
+  invariant(
+    !!fragmentInput.watchQueryDocument,
+    "useRefetchableFragment is only supported at this time when using compilation"
+  );
+  return useCompiledRefetchableFragment(
+    fragmentInput as any,
+    fragmentRef as any
+  );
 }
 
 // https://github.com/facebook/relay/blob/master/website/docs/api-reference/types/GraphQLSubscriptionConfig.md
