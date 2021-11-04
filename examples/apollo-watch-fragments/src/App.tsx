@@ -10,7 +10,7 @@ import { useAddTodoMutation } from "./useAddTodoMutation";
 import { AppQuery as AppQueryType } from "./__generated__/AppQuery.graphql";
 
 export const AppQuery = graphql`
-  query AppQuery {
+  query AppQuery($includeSomeOtherField: Boolean!) {
     todos {
       id
       totalCount
@@ -25,7 +25,9 @@ export const AppQuery = graphql`
 const App: React.FC = () => {
   const addTodo = useAddTodoMutation();
 
-  const result = useLazyLoadQuery<AppQueryType>(AppQuery, { variables: {} });
+  const result = useLazyLoadQuery<AppQueryType>(AppQuery, {
+    includeSomeOtherField: false,
+  });
   if (result.error) {
     throw result.error;
   } else if (!result.data) {

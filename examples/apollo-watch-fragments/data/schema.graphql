@@ -22,6 +22,7 @@ type Todo implements Node {
   id: ID!
   description: String!
   isCompleted: Boolean!
+  someOtherField: String!
 }
 
 type Mutation {
