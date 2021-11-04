@@ -20,6 +20,10 @@ export class DB {
     return this.todos;
   }
 
+  public getTodo(id: number) {
+    return this.todos.find((todo) => todo.id === id);
+  }
+
   public getTotalTodoCount(): number {
     return this.todos.length;
   }

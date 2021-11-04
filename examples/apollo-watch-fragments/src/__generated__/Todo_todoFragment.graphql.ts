@@ -7,6 +7,7 @@ export type Todo_todoFragment = {
     readonly id: string;
     readonly description: string;
     readonly isCompleted: boolean;
+    readonly someOtherField?: string;
     readonly " $refType": "Todo_todoFragment";
 };
 export type Todo_todoFragment$data = Todo_todoFragment;
