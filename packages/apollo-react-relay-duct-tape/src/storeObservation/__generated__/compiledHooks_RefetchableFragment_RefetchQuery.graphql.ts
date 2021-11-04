@@ -4,6 +4,7 @@
 ;
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type compiledHooks_RefetchableFragment_RefetchQueryVariables = {
+    avatarSize: number;
     id: string;
 };
 export type compiledHooks_RefetchableFragment_RefetchQueryResponse = {
@@ -17,7 +18,7 @@ export type compiledHooks_RefetchableFragment_RefetchQuery = {
 };
 
 /*
-query compiledHooks_RefetchableFragment_RefetchQuery($id: ID!) {
+query compiledHooks_RefetchableFragment_RefetchQuery($avatarSize: Int!, $id: ID!) {
   node(id: $id) {
     __typename
     ...compiledHooks_RefetchableFragment
@@ -26,26 +27,403 @@ query compiledHooks_RefetchableFragment_RefetchQuery($id: ID!) {
 }
 
 fragment compiledHooks_RefetchableFragment on User {
-  petName
+  avatarUrl(size: $avatarSize)
   id
 }
 
 */
-export const executionQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"compiledHooks_RefetchableFragment_RefetchQuery"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}},"directives":[]}],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"},"arguments":[],"directives":[]},{"kind":"FragmentSpread","name":{"kind":"Name","value":"compiledHooks_RefetchableFragment"},"directives":[]},{"kind":"Field","name":{"kind":"Name","value":"id"},"arguments":[],"directives":[]}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"compiledHooks_RefetchableFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"petName"},"arguments":[],"directives":[]},{"kind":"Field","name":{"kind":"Name","value":"id"},"arguments":[],"directives":[]}]}}]};
+export const executionQueryDocument = {
+  "kind": "Document",
+  "definitions": [
+    {
+      "kind": "OperationDefinition",
+      "operation": "query",
+      "name": {
+        "kind": "Name",
+        "value": "compiledHooks_RefetchableFragment_RefetchQuery"
+      },
+      "variableDefinitions": [
+        {
+          "kind": "VariableDefinition",
+          "variable": {
+            "kind": "Variable",
+            "name": {
+              "kind": "Name",
+              "value": "avatarSize"
+            }
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Int"
+              }
+            }
+          },
+          "directives": []
+        },
+        {
+          "kind": "VariableDefinition",
+          "variable": {
+            "kind": "Variable",
+            "name": {
+              "kind": "Name",
+              "value": "id"
+            }
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ID"
+              }
+            }
+          },
+          "directives": []
+        }
+      ],
+      "directives": [],
+      "selectionSet": {
+        "kind": "SelectionSet",
+        "selections": [
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "node"
+            },
+            "arguments": [
+              {
+                "kind": "Argument",
+                "name": {
+                  "kind": "Name",
+                  "value": "id"
+                },
+                "value": {
+                  "kind": "Variable",
+                  "name": {
+                    "kind": "Name",
+                    "value": "id"
+                  }
+                }
+              }
+            ],
+            "directives": [],
+            "selectionSet": {
+              "kind": "SelectionSet",
+              "selections": [
+                {
+                  "kind": "Field",
+                  "name": {
+                    "kind": "Name",
+                    "value": "__typename"
+                  },
+                  "arguments": [],
+                  "directives": []
+                },
+                {
+                  "kind": "FragmentSpread",
+                  "name": {
+                    "kind": "Name",
+                    "value": "compiledHooks_RefetchableFragment"
+                  },
+                  "directives": []
+                },
+                {
+                  "kind": "Field",
+                  "name": {
+                    "kind": "Name",
+                    "value": "id"
+                  },
+                  "arguments": [],
+                  "directives": []
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "FragmentDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "compiledHooks_RefetchableFragment"
+      },
+      "typeCondition": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "User"
+        }
+      },
+      "directives": [],
+      "selectionSet": {
+        "kind": "SelectionSet",
+        "selections": [
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "avatarUrl"
+            },
+            "arguments": [
+              {
+                "kind": "Argument",
+                "name": {
+                  "kind": "Name",
+                  "value": "size"
+                },
+                "value": {
+                  "kind": "Variable",
+                  "name": {
+                    "kind": "Name",
+                    "value": "avatarSize"
+                  }
+                }
+              }
+            ],
+            "directives": []
+          },
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "id"
+            },
+            "arguments": [],
+            "directives": []
+          }
+        ]
+      }
+    }
+  ]
+};
 
 /*
-query compiledHooks_RefetchableFragment_RefetchQuery($id: ID!) {
+query compiledHooks_RefetchableFragment_RefetchQuery($avatarSize: Int!, $id: ID!) {
   node(id: $id) {
     __typename
     ...compiledHooks_RefetchableFragment
     id
+    ... on Node {
+      __fragments @client
+    }
   }
 }
 
 fragment compiledHooks_RefetchableFragment on User {
-  petName
+  avatarUrl(size: $avatarSize)
   id
 }
 
 */
-export const watchQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"compiledHooks_RefetchableFragment_RefetchQuery"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}},"directives":[]}],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"},"arguments":[],"directives":[]},{"kind":"FragmentSpread","name":{"kind":"Name","value":"compiledHooks_RefetchableFragment"},"directives":[]},{"kind":"Field","name":{"kind":"Name","value":"id"},"arguments":[],"directives":[]}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"compiledHooks_RefetchableFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"petName"},"arguments":[],"directives":[]},{"kind":"Field","name":{"kind":"Name","value":"id"},"arguments":[],"directives":[]}]}}]};
+export const watchQueryDocument = {
+  "kind": "Document",
+  "definitions": [
+    {
+      "kind": "OperationDefinition",
+      "operation": "query",
+      "name": {
+        "kind": "Name",
+        "value": "compiledHooks_RefetchableFragment_RefetchQuery"
+      },
+      "variableDefinitions": [
+        {
+          "kind": "VariableDefinition",
+          "variable": {
+            "kind": "Variable",
+            "name": {
+              "kind": "Name",
+              "value": "avatarSize"
+            }
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Int"
+              }
+            }
+          },
+          "directives": []
+        },
+        {
+          "kind": "VariableDefinition",
+          "variable": {
+            "kind": "Variable",
+            "name": {
+              "kind": "Name",
+              "value": "id"
+            }
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ID"
+              }
+            }
+          },
+          "directives": []
+        }
+      ],
+      "directives": [],
+      "selectionSet": {
+        "kind": "SelectionSet",
+        "selections": [
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "node"
+            },
+            "arguments": [
+              {
+                "kind": "Argument",
+                "name": {
+                  "kind": "Name",
+                  "value": "id"
+                },
+                "value": {
+                  "kind": "Variable",
+                  "name": {
+                    "kind": "Name",
+                    "value": "id"
+                  }
+                }
+              }
+            ],
+            "directives": [],
+            "selectionSet": {
+              "kind": "SelectionSet",
+              "selections": [
+                {
+                  "kind": "Field",
+                  "name": {
+                    "kind": "Name",
+                    "value": "__typename"
+                  },
+                  "arguments": [],
+                  "directives": []
+                },
+                {
+                  "kind": "FragmentSpread",
+                  "name": {
+                    "kind": "Name",
+                    "value": "compiledHooks_RefetchableFragment"
+                  },
+                  "directives": []
+                },
+                {
+                  "kind": "Field",
+                  "name": {
+                    "kind": "Name",
+                    "value": "id"
+                  },
+                  "arguments": [],
+                  "directives": []
+                },
+                {
+                  "kind": "InlineFragment",
+                  "typeCondition": {
+                    "kind": "NamedType",
+                    "name": {
+                      "kind": "Name",
+                      "value": "Node"
+                    }
+                  },
+                  "directives": [],
+                  "selectionSet": {
+                    "kind": "SelectionSet",
+                    "selections": [
+                      {
+                        "kind": "Field",
+                        "name": {
+                          "kind": "Name",
+                          "value": "__fragments"
+                        },
+                        "arguments": [],
+                        "directives": [
+                          {
+                            "kind": "Directive",
+                            "name": {
+                              "kind": "Name",
+                              "value": "client"
+                            },
+                            "arguments": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "FragmentDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "compiledHooks_RefetchableFragment"
+      },
+      "typeCondition": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "User"
+        }
+      },
+      "directives": [],
+      "selectionSet": {
+        "kind": "SelectionSet",
+        "selections": [
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "avatarUrl"
+            },
+            "arguments": [
+              {
+                "kind": "Argument",
+                "name": {
+                  "kind": "Name",
+                  "value": "size"
+                },
+                "value": {
+                  "kind": "Variable",
+                  "name": {
+                    "kind": "Name",
+                    "value": "avatarSize"
+                  }
+                }
+              }
+            ],
+            "directives": []
+          },
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "id"
+            },
+            "arguments": [],
+            "directives": []
+          }
+        ]
+      }
+    }
+  ]
+};
