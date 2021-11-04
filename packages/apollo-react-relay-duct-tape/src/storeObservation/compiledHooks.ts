@@ -13,6 +13,7 @@ import {
 } from "@apollo/client";
 import { DocumentNode } from "graphql";
 import invariant from "invariant";
+import { useDeepCompareMemoize } from "./useDeepCompareMemoize";
 
 /**
  * @todo Rewrite this to mimic Relay's preload APIs
@@ -31,6 +32,7 @@ export function useCompiledLazyLoadQuery(
 ): { data?: any; error?: Error } {
   const client = useApolloClient();
   const forceUpdate = useForceUpdate();
+  const variables = useDeepCompareMemoize(options.variables);
 
   // Not using state for the status object, because we don't want to trigger a
   // state update when we reset things due to new variables coming in.
@@ -50,7 +52,7 @@ export function useCompiledLazyLoadQuery(
     ) {
       execution.current.query = client.query({
         query: documents.executionQueryDocument,
-        variables: options.variables,
+        variables,
       });
       execution.current.query
         .then((result) => {
@@ -72,10 +74,10 @@ export function useCompiledLazyLoadQuery(
       // TODO: How does Apollo evict from the store?
       execution.current.status = { loading: true, error: undefined };
     };
-  }, [documents.executionQueryDocument, options.variables]);
+  }, [documents.executionQueryDocument, variables]);
 
   const { data } = useApolloQuery(documents.watchQueryDocument, {
-    variables: options.variables,
+    variables,
     fetchPolicy: "cache-only",
     skip: loading || !!error,
   });
