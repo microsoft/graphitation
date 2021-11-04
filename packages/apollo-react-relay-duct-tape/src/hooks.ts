@@ -149,7 +149,7 @@ export function useFragment<TKey extends KeyType>(
   }
 }
 
-export function useRefetachbleFragment<
+export function useRefetchableFragment<
   TQuery extends OperationType,
   TKey extends KeyType
 >(
