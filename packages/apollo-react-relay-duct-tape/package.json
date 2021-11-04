@@ -34,7 +34,8 @@
   "peerDependencies": {
     "@apollo/client": "^3.3.0",
     "graphql": "^15.0.0",
-    "react": "^17.0.2"
+    "react": "^17.0.2",
+    "relay-compiler-language-graphitation": "^0.7.0"
   },
   "dependencies": {
     "invariant": "^2.2.4"
