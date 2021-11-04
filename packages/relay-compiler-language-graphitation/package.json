@@ -24,7 +24,9 @@
     "@types/jest": "^26.0.22",
     "@types/relay-compiler": "^8.0.0",
     "dedent": "^0.7.0",
-    "monorepo-scripts": "*"
+    "monorepo-scripts": "*",
+    "relay-test-utils": "^11.0.2",
+    "relay-test-utils-internal": "^11.0.2"
   },
   "publishConfig": {
     "access": "public"
