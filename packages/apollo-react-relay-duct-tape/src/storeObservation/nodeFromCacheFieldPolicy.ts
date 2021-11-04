@@ -41,6 +41,7 @@ export const nodeFromCacheFieldPolicy: FieldReadFunction = (
   const id = `${fragment.typeCondition.name.value}:${nodeId}`;
   const data = options.cache.readFragment({
     id,
+    variables: options.variables,
     fragmentName,
     fragment: {
       kind: "Document",
