@@ -236,6 +236,29 @@ body {
   transition: color 0.2s ease-out;
 }
 
+.todo-list li .refresh {
+  display: block; /* FIXME: none */
+  position: absolute;
+  top: 0;
+  right: 50px;
+  bottom: 0;
+  width: 40px;
+  height: 40px;
+  margin: auto 0;
+  font-size: 30px;
+  color: #949494;
+  transition: color 0.2s ease-out;
+}
+
+.todo-list li .refresh:before {
+  display: block;
+  height: 100%;
+  line-height: 1.1;
+  content: "♺";
+}
+
+.todo-list li .refresh:hover,
+.todo-list li .refresh:focus,
 .todo-list li .destroy:hover,
 .todo-list li .destroy:focus {
   color: #c18585;

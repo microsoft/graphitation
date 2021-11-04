@@ -72,6 +72,7 @@ export type Todo = Node & {
   description: Scalars['String'];
   id: Scalars['ID'];
   isCompleted: Scalars['Boolean'];
+  someOtherField: Scalars['String'];
 };
 
 export type TodosConnection = Node & {
@@ -221,6 +222,7 @@ export type TodoResolvers<ContextType = any, ParentType = ResolversParentTypes['
   description?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   isCompleted?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  someOtherField?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
