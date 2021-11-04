@@ -10,7 +10,7 @@
     "test": "monorepo-scripts test",
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts",
-    "relay": "graphitation-compiler --schema ./src/__tests__/schema.graphql --src ./src --exclude src/storeObservation/nodeFromCacheFieldPolicy.test.ts"
+    "relay": "graphitation-compiler --schema ./src/__tests__/schema.graphql --src ./src --exclude src/storeObservation/*FieldPolicy.test.ts"
   },
   "devDependencies": {
     "@apollo/client": "^3.4.13",
