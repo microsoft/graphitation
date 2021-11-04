@@ -236,7 +236,9 @@ describe("compiledHooks", () => {
         act(() => {
           testRenderer.update(
             <ApolloProvider client={client}>
-              <RootComponent variables={{ userId: 21, avatarSize: 21 }} />
+              <ErrorBoundary>
+                <RootComponent variables={{ userId: 21, avatarSize: 21 }} />
+              </ErrorBoundary>
             </ApolloProvider>
           );
         });
@@ -256,6 +258,21 @@ describe("compiledHooks", () => {
             "petName": "<mock-value-for-field-\\"petName\\">",
           }
         `);
+      });
+
+      it("does not try to kick-off a new query when the variables object deep equals the previous one", async () => {
+        const spy = jest.spyOn(client, "query");
+        await act(async () => {
+          testRenderer.update(
+            <ApolloProvider client={client}>
+              <ErrorBoundary>
+                <RootComponent variables={{ userId: 42, avatarSize: 21 }} />
+              </ErrorBoundary>
+            </ApolloProvider>
+          );
+          return new Promise((resolve) => setTimeout(resolve, 100));
+        });
+        expect(spy).not.toHaveBeenCalled();
       });
     });
   });
@@ -329,7 +346,9 @@ describe("compiledHooks", () => {
       act(() => {
         testRenderer.update(
           <ApolloProvider client={client}>
-            <RootComponent variables={{ userId: 21 }} />
+            <ErrorBoundary>
+              <RootComponent variables={{ userId: 21 }} />
+            </ErrorBoundary>
           </ApolloProvider>
         );
       });

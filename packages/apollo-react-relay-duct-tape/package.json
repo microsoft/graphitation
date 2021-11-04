@@ -23,6 +23,7 @@
     "@graphitation/graphql-js-operation-payload-generator": "^0.8.0",
     "@graphitation/graphql-js-tag": "^0.8.0",
     "@types/jest": "^26.0.22",
+    "@types/lodash": "^4.14.176",
     "@types/react": "^17.0.3",
     "graphql": "^15.0.0",
     "monorepo-scripts": "*",
@@ -38,7 +39,8 @@
     "relay-compiler-language-graphitation": "^0.7.0"
   },
   "dependencies": {
-    "invariant": "^2.2.4"
+    "invariant": "^2.2.4",
+    "lodash": "^4.17.15"
   },
   "publishConfig": {
     "main": "./lib/index.js",
