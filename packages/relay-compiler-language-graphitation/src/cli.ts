@@ -7,8 +7,11 @@ import { relayCompiler } from "relay-compiler";
 
 // TODO: This needs to be done here to ensure we get to mutate the transforms lists that get used.
 import { IRTransforms } from "relay-compiler";
-import { enableNodeWatchQueryTransform } from "./enableNodeWatchQueryTransform";
+import { enableNodeWatchQueryTransform } from "./compilerTransforms/enableNodeWatchQueryTransform";
+import { annotateFragmentReferenceTransform } from "./compilerTransforms/annotateFragmentReferenceTransform";
 IRTransforms.commonTransforms.unshift(enableNodeWatchQueryTransform);
+// TODO: Moving this up in the list might potentially optimize the query further
+IRTransforms.printTransforms.push(annotateFragmentReferenceTransform);
 
 function main() {
   const argv = yargs
