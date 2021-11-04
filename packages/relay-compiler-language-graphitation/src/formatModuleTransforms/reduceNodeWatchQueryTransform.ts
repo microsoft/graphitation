@@ -13,7 +13,7 @@ import invariant from "invariant";
 
 const ALLOWED_REFETCH_QUERY_FIELD_SELECTIONS = ["__typename", "id"];
 
-export function reduceNodeWatchQuery(
+export function reduceNodeWatchQueryTransform(
   schema: GraphQLSchema,
   document: DocumentNode
 ): DocumentNode {
@@ -41,7 +41,7 @@ export function reduceNodeWatchQuery(
   };
 
   let retainFragment: string;
-  let needToRetainNextFragmentSpread = false;
+  let currentlyInNodeRootField = false;
 
   return visit(
     document,
@@ -72,14 +72,14 @@ export function reduceNodeWatchQuery(
               0
           ) {
             const fragmentSpreadNode = fragmentSpreadSelections[0];
-            needToRetainNextFragmentSpread = true;
+            currentlyInNodeRootField = true;
             retainFragment = fragmentSpreadNode.name.value;
           }
         }
       },
       FragmentSpread() {
-        if (needToRetainNextFragmentSpread) {
-          needToRetainNextFragmentSpread = false;
+        if (currentlyInNodeRootField) {
+          currentlyInNodeRootField = false;
           return undefined;
         }
         return removeNodeType();
