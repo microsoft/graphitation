@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import {
-  useFragment,
+  useRefetachbleFragment,
   shallowCompareFragmentReferences,
 } from "@graphitation/apollo-react-relay-duct-tape";
 import { graphql } from "@graphitation/graphql-js-tag";
@@ -8,17 +8,20 @@ import { graphql } from "@graphitation/graphql-js-tag";
 import useChangeTodoStatusMutation from "./useChangeTodoStatusMutation";
 
 import { Todo_todoFragment$key } from "./__generated__/Todo_todoFragment.graphql";
+import { TodoRefetchQuery } from "./__generated__/TodoRefetchQuery.graphql";
 
 export const Todo_todoFragment = graphql`
-  fragment Todo_todoFragment on Todo {
+  fragment Todo_todoFragment on Todo
+  @refetchable(queryName: "TodoRefetchQuery") {
     id
     description
     isCompleted
+    someOtherField @include(if: $includeSomeOtherField)
   }
 `;
 
 const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({ todo: todoRef }) => {
-  const todo = useFragment(Todo_todoFragment, todoRef);
+  const [todo, refetch] = useRefetachbleFragment(Todo_todoFragment, todoRef);
   console.log("Todo watch data:", todo);
 
   const [changeTodoStatus] = useChangeTodoStatusMutation();
@@ -30,6 +33,10 @@ const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({ todo: todoRef }) => {
     [changeTodoStatus]
   );
 
+  const refresh = useCallback(() => {
+    refetch({ includeSomeOtherField: !todo.someOtherField });
+  }, [refetch]);
+
   return (
     <>
       <div className="view">
@@ -40,6 +47,7 @@ const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({ todo: todoRef }) => {
           onChange={handleCompleteChange}
         />
         <label>{todo.description}</label>
+        <button className="refresh" onClick={refresh}></button>
         <button className="destroy"></button>
       </div>
       {/* <input className="edit" value="Create a TodoMVC template" /> */}
