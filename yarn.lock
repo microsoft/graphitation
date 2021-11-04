@@ -1144,13 +1144,6 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@graphitation/apollo-react-relay-duct-tape@^0.5.0-store-observation.1":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@graphitation/apollo-react-relay-duct-tape/-/apollo-react-relay-duct-tape-0.5.0.tgz#334bbe78288a1597a10d2fe5e003ec74f446e562"
-  integrity sha512-ML+Ul7RkRjTEHdw94uIhVTRzQAqkiQfwxmLVoStwujpuJaDC4n/K3iDks6dZMDBh9/ZQAMqtarY3QPgaLqYLDg==
-  dependencies:
-    invariant "^2.2.4"
-
 "@graphitation/graphql-js-tag@^0.5.3", "@graphitation/graphql-js-tag@^0.5.4":
   version "0.5.5"
   resolved "https://registry.yarnpkg.com/@graphitation/graphql-js-tag/-/graphql-js-tag-0.5.5.tgz#766d8668d86795c28d3e685d55007280e5b23ba8"
@@ -2723,6 +2716,11 @@
   version "4.14.178"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.178.tgz#341f6d2247db528d4a13ddbb374bcdc80406f4f8"
   integrity sha512-0d5Wd09ItQWH1qFbEyQ7oTQ3GZrMfth5JkbN3EvTKLXcHLRDSXeLnlvlOn0wvxVIwK5o2M8JzP/OWz7T3NRsbw==
+
+"@types/lodash@^4.14.176":
+  version "4.14.176"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.176.tgz#641150fc1cda36fbfa329de603bbb175d7ee20c0"
+  integrity sha512-xZmuPTa3rlZoIbtDUyJKZQimJV3bxCmzMIO2c9Pz9afyDro6kr7R79GwcB6mRhuoPmV2p1Vb66WOJH7F886WKQ==
 
 "@types/md5@^2.3.0":
   version "2.3.1"
@@ -7182,6 +7180,11 @@ ignore@^5.1.4:
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.1.8.tgz#f150a8b50a34289b33e22f5889abd4d8016f0e57"
   integrity sha512-BMpfD7PpiETpBl/A6S498BaIJ6Y/ABT93ETbby2fP00v4EbvPBXWEoaR1UBPKs3iR53pJY7EtZk5KACI57i1Uw==
 
+immutable@^4.0.0-rc.12:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/immutable/-/immutable-4.0.0.tgz#b86f78de6adef3608395efb269a91462797e2c23"
+  integrity sha512-zIE9hX70qew5qTUjSS7wi1iwj/l7+m54KWU247nhM3v806UdGj1yDndXj+IOYxxtW9zyLI+xqFNZjTuDaLUqFw==
+
 immutable@~3.7.6:
   version "3.7.6"
   resolved "https://registry.yarnpkg.com/immutable/-/immutable-3.7.6.tgz#13b4d3cb12befa15482a26fe1b2ebae640071e4b"
@@ -10576,10 +10579,10 @@ relateurl@^0.2.7:
   resolved "https://registry.yarnpkg.com/relateurl/-/relateurl-0.2.7.tgz#54dbf377e51440aca90a4cd274600d3ff2d888a9"
   integrity sha1-VNvzd+UUQKypCkzSdGANP/LYiKk=
 
-relay-compiler-language-graphitation@^0.6.0-store-observation.1:
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/relay-compiler-language-graphitation/-/relay-compiler-language-graphitation-0.6.0.tgz#0062a6ccfec0f60d612d02b83658ebe40540c519"
-  integrity sha512-Cfvns/Ejfhmhtx9bYksRAM8H0fkGpa8nENwZKmSCpgXP++h7hTVti+UM2f22pes6cGunVOUKc/0DgkPDoQVubg==
+relay-compiler-language-graphitation@^0.7.0:
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/relay-compiler-language-graphitation/-/relay-compiler-language-graphitation-0.7.0.tgz#01be30d7eebb37eef61f08ae750c83390d9bed78"
+  integrity sha512-2X5TWXW63+smpCjaOQv9BI8MmD4qSq7edVCbnhVOJOoRR+4hJRUJSxYtvW8Bvc0ICQqVAWVRik0hb6K6kVOopQ==
   dependencies:
     relay-compiler-language-typescript "^14.0.0"
     typescript "^4.2.3"
