@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import {
-  useRefetachbleFragment,
+  useRefetchableFragment,
   shallowCompareFragmentReferences,
 } from "@graphitation/apollo-react-relay-duct-tape";
 import { graphql } from "@graphitation/graphql-js-tag";
@@ -21,7 +21,7 @@ export const Todo_todoFragment = graphql`
 `;
 
 const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({ todo: todoRef }) => {
-  const [todo, refetch] = useRefetachbleFragment(Todo_todoFragment, todoRef);
+  const [todo, refetch] = useRefetchableFragment(Todo_todoFragment, todoRef);
   console.log("Todo watch data:", todo);
 
   const [changeTodoStatus] = useChangeTodoStatusMutation();
