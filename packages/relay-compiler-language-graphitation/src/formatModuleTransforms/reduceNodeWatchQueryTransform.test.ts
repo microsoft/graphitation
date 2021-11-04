@@ -1,4 +1,4 @@
-import { reduceNodeWatchQuery } from "./reduceNodeWatchQuery";
+import { reduceNodeWatchQueryTransform } from "./reduceNodeWatchQueryTransform";
 import { graphql } from "@graphitation/graphql-js-tag";
 import { buildASTSchema, print } from "graphql";
 
@@ -35,9 +35,9 @@ const schema = buildASTSchema(graphql`
   }
 `);
 
-describe(reduceNodeWatchQuery, () => {
+describe(reduceNodeWatchQueryTransform, () => {
   it("removes fragment definitions/spreads on types that implement the Node interface", () => {
-    const result = reduceNodeWatchQuery(
+    const result = reduceNodeWatchQueryTransform(
       schema,
       graphql`
         query {
@@ -92,7 +92,7 @@ describe(reduceNodeWatchQuery, () => {
   });
 
   it("does NOT remove the first fragment spread on the node field of a refetch query", () => {
-    const result = reduceNodeWatchQuery(
+    const result = reduceNodeWatchQueryTransform(
       schema,
       graphql`
         query {
