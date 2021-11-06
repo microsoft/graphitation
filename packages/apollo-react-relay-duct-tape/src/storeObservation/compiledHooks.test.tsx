@@ -19,6 +19,7 @@ import { print } from "graphql";
 import {
   useCompiledFragment,
   useCompiledLazyLoadQuery,
+  useCompiledPaginationFragment,
   useCompiledRefetchableFragment,
 } from "./compiledHooks";
 import { typePolicies } from "./typePolicies";
@@ -30,6 +31,7 @@ import { documents as compiledHooks_Root_executionQuery_documents } from "./__ge
 import { documents as compiledHooks_ChildFragment_documents } from "./__generated__/compiledHooks_ChildWatchNodeQuery.graphql";
 import { documents as compiledHooks_RefetchableFragment_documents } from "./__generated__/compiledHooks_RefetchableFragment_RefetchQuery.graphql";
 import { documents as compiledHooks_QueryTypeFragment_documents } from "./__generated__/compiledHooks_QueryTypeWatchNodeQuery.graphql";
+import { documents as compiledHooks_PaginationFragment_documents } from "./__generated__/compiledHooks_PaginationFragment_PaginationQuery.graphql";
 import { compiledHooks_Root_executionQueryVariables } from "./__generated__/compiledHooks_Root_executionQuery.graphql";
 
 const schema = buildSchema(
@@ -61,12 +63,20 @@ const QueryType_fragment = graphql`
   }
 `;
 
+const Pagination_fragment = graphql`
+  fragment compiledHooks_PaginationFragment on User
+  @refetchable(queryName: "compiledHooks_PaginationFragment_PaginationQuery") {
+    petName
+  }
+`;
+
 const Root_executionQueryDocument = graphql`
   query compiledHooks_Root_executionQuery($userId: ID!, $avatarSize: Int!) {
     user(id: $userId) {
       name
       ...compiledHooks_ChildFragment
       ...compiledHooks_RefetchableFragment
+      ...compiledHooks_PaginationFragment
     }
     ...compiledHooks_QueryTypeFragment
   }
@@ -79,6 +89,9 @@ describe("compiledHooks", () => {
   let lastUseFragmentResult: { id: number }[];
   let lastUseRefetchableFragmentResult: ReturnType<
     typeof useCompiledRefetchableFragment
+  >[];
+  let lastUsePaginationFragmentResult: ReturnType<
+    typeof useCompiledPaginationFragment
   >[];
   let lastUseLazyLoadQueryResult: { data?: any; error?: Error } | null = null;
   let lastComponentOnQueryTypeResult: {}[];
@@ -112,6 +125,15 @@ describe("compiledHooks", () => {
     return null;
   };
 
+  const ChildPaginationComponent: React.FC<{ user: { id: any } }> = (props) => {
+    const result = useCompiledPaginationFragment(
+      compiledHooks_PaginationFragment_documents as any,
+      props.user
+    );
+    lastUsePaginationFragmentResult.push(result);
+    return null;
+  };
+
   const RootComponent: React.FC<{ variables: {} }> = (props) => {
     const result = useCompiledLazyLoadQuery(
       compiledHooks_Root_executionQuery_documents,
@@ -122,6 +144,7 @@ describe("compiledHooks", () => {
       <>
         <ChildComponent user={result.data.user} />
         <ChildRefetchableComponent user={result.data.user} />
+        <ChildPaginationComponent user={result.data.user} />
         <ComponentOnQueryType query={result.data} />
       </>
     ) : null;
@@ -130,6 +153,7 @@ describe("compiledHooks", () => {
   beforeEach(() => {
     lastUseFragmentResult = [];
     lastUseRefetchableFragmentResult = [];
+    lastUsePaginationFragmentResult = [];
     lastComponentOnQueryTypeResult = [];
     client = createMockClient(schema, {
       cache: {
@@ -488,6 +512,16 @@ describe("compiledHooks", () => {
         });
       });
     });
+  });
+
+  describe(useCompiledPaginationFragment, () => {
+    itBehavesLikeFragment(
+      () =>
+        lastUsePaginationFragmentResult.map(
+          ({ data }) => data as { id: number }
+        ),
+      "petName"
+    );
   });
 });
 
