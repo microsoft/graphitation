@@ -227,6 +227,26 @@ export function useCompiledRefetchableFragment(
   return [data, refetch];
 }
 
+export function useCompiledPaginationFragment(
+  documents: {
+    executionQueryDocument: DocumentNode;
+    watchQueryDocument: DocumentNode;
+  },
+  fragmentReference: { id: unknown; __fragments?: Record<string, any> }
+): {
+  data: {};
+  loadNext: () => void;
+  loadPrevious: () => void;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  isLoadingNext: boolean;
+  isLoadingPrevious: boolean;
+  refetch: () => void;
+} {
+  const data = useCompiledFragment(documents, fragmentReference);
+  return { data } as any;
+}
+
 function useForceUpdate() {
   const [_, forceUpdate] = useReducer((x) => x + 1, 0);
   return forceUpdate;
