@@ -66,7 +66,7 @@ const QueryType_fragment = graphql`
 const Pagination_fragment = graphql`
   fragment compiledHooks_PaginationFragment on User
   @refetchable(queryName: "compiledHooks_PaginationFragment_PaginationQuery") {
-    petName
+    avatarUrl(size: $avatarSize)
   }
 `;
 
@@ -433,15 +433,9 @@ describe("compiledHooks", () => {
     });
   });
 
-  describe(useCompiledRefetchableFragment, () => {
-    itBehavesLikeFragment(
-      () =>
-        lastUseRefetchableFragmentResult.map(
-          ([data, _refetch]) => data as { id: number }
-        ),
-      "avatarUrl"
-    );
-
+  function itBehavesLikeRefetchableFragment(
+    returnedResults: () => ReturnType<typeof useCompiledRefetchableFragment>[]
+  ) {
     it.todo(
       "supports variables with default values on either operations or with @argumentDefinitions"
     );
@@ -450,7 +444,7 @@ describe("compiledHooks", () => {
       let onCompleted: jest.Mock;
 
       beforeEach(() => {
-        const [_data, refetch] = lastUseRefetchableFragmentResult[0];
+        const [_data, refetch] = returnedResults()[0];
         onCompleted = jest.fn();
         refetch({ avatarSize: 42 }, { onCompleted });
       });
@@ -471,7 +465,7 @@ describe("compiledHooks", () => {
         });
 
         it("returns a new object from the hook", () => {
-          expect(lastUseRefetchableFragmentResult[1][0]).toMatchObject({
+          expect(returnedResults()[1][0]).toMatchObject({
             __typename: "User",
             avatarUrl: "avatarUrl-with-size-42",
             id: 42,
@@ -479,7 +473,7 @@ describe("compiledHooks", () => {
         });
 
         it("updates the fragment reference request variables for future requests", () => {
-          expect(lastUseRefetchableFragmentResult[1][0]).toMatchObject({
+          expect(returnedResults()[1][0]).toMatchObject({
             __fragments: {
               avatarSize: 42,
               userId: 42,
@@ -504,7 +498,7 @@ describe("compiledHooks", () => {
         });
 
         it("does not update the fragment reference request variables for future requests", async () => {
-          const [_data, refetch] = lastUseRefetchableFragmentResult[0];
+          const [_data, refetch] = returnedResults()[0];
           refetch({});
           expect(
             client.mock.getMostRecentOperation().request.variables.avatarSize
@@ -512,6 +506,22 @@ describe("compiledHooks", () => {
         });
       });
     });
+  }
+
+  describe(useCompiledFragment, () => {
+    itBehavesLikeFragment(() => lastUseFragmentResult, "petName");
+  });
+
+  describe(useCompiledRefetchableFragment, () => {
+    itBehavesLikeFragment(
+      () =>
+        lastUseRefetchableFragmentResult.map(
+          ([data, _refetch]) => data as { id: number }
+        ),
+      "avatarUrl"
+    );
+
+    itBehavesLikeRefetchableFragment(() => lastUseRefetchableFragmentResult);
   });
 
   describe(useCompiledPaginationFragment, () => {
@@ -520,7 +530,7 @@ describe("compiledHooks", () => {
         lastUsePaginationFragmentResult.map(
           ({ data }) => data as { id: number }
         ),
-      "petName"
+      "avatarUrl"
     );
   });
 });
