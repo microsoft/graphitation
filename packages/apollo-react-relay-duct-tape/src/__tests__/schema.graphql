@@ -3,7 +3,7 @@ interface Node {
 }
 
 type Query {
-  user(id: ID!): User!
+  user(id: Int!): User!
   node(id: ID!): Node
   nonNode: NonNode!
 }
@@ -22,6 +22,29 @@ type User implements Node {
   petName: String!
   avatarUrl(size: Int!): String!
   hasFriends: Boolean!
+  conversations(first: Int!, after: String!): ConversationsConnection!
+}
+
+type ConversationsConnection {
+  pageInfo: PageInfo!
+  edges: [ConversationsConnectionEdge!]!
+}
+
+type ConversationsConnectionEdge {
+  cursor: String!
+  node: Conversation!
+}
+
+type Conversation implements Node {
+  id: ID!
+  title: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String!
+  endCursor: String!
 }
 
 type NonNode {
