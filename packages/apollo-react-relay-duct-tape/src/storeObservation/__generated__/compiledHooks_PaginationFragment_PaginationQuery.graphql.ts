@@ -5,6 +5,7 @@
 
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type compiledHooks_PaginationFragment_PaginationQueryVariables = {
+    avatarSize: number;
     id: string;
 };
 export type compiledHooks_PaginationFragment_PaginationQueryResponse = {
@@ -19,7 +20,7 @@ export type compiledHooks_PaginationFragment_PaginationQuery = {
 
 
 /*
-query compiledHooks_PaginationFragment_PaginationQuery($id: ID!) {
+query compiledHooks_PaginationFragment_PaginationQuery($avatarSize: Int!, $id: ID!) {
   node(id: $id) {
     __typename
     ...compiledHooks_PaginationFragment
@@ -28,13 +29,13 @@ query compiledHooks_PaginationFragment_PaginationQuery($id: ID!) {
 }
 
 fragment compiledHooks_PaginationFragment on User {
-  petName
+  avatarUrl(size: $avatarSize)
   id
 }
 */
 
 /*
-query compiledHooks_PaginationFragment_PaginationQuery($id: ID!) {
+query compiledHooks_PaginationFragment_PaginationQuery($avatarSize: Int!, $id: ID!) {
   node(id: $id) {
     __typename
     ...compiledHooks_PaginationFragment
@@ -46,7 +47,7 @@ query compiledHooks_PaginationFragment_PaginationQuery($id: ID!) {
 }
 
 fragment compiledHooks_PaginationFragment on User {
-  petName
+  avatarUrl(size: $avatarSize)
   id
 }
 */
@@ -63,6 +64,27 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
           "value": "compiledHooks_PaginationFragment_PaginationQuery"
         },
         "variableDefinitions": [
+          {
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
+                "value": "avatarSize"
+              }
+            },
+            "type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Int"
+                }
+              }
+            },
+            "directives": []
+          },
           {
             "kind": "VariableDefinition",
             "variable": {
@@ -168,9 +190,24 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               "kind": "Field",
               "name": {
                 "kind": "Name",
-                "value": "petName"
+                "value": "avatarUrl"
               },
-              "arguments": [],
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "size"
+                  },
+                  "value": {
+                    "kind": "Variable",
+                    "name": {
+                      "kind": "Name",
+                      "value": "avatarSize"
+                    }
+                  }
+                }
+              ],
               "directives": []
             },
             {
@@ -198,6 +235,27 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
           "value": "compiledHooks_PaginationFragment_PaginationQuery"
         },
         "variableDefinitions": [
+          {
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
+                "value": "avatarSize"
+              }
+            },
+            "type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Int"
+                }
+              }
+            },
+            "directives": []
+          },
           {
             "kind": "VariableDefinition",
             "variable": {
@@ -337,9 +395,24 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               "kind": "Field",
               "name": {
                 "kind": "Name",
-                "value": "petName"
+                "value": "avatarUrl"
               },
-              "arguments": [],
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "size"
+                  },
+                  "value": {
+                    "kind": "Variable",
+                    "name": {
+                      "kind": "Name",
+                      "value": "avatarSize"
+                    }
+                  }
+                }
+              ],
               "directives": []
             },
             {

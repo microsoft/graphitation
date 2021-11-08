@@ -39,7 +39,7 @@ fragment compiledHooks_ChildFragment on User {
 }
 
 fragment compiledHooks_PaginationFragment on User {
-  petName
+  avatarUrl(size: $avatarSize)
   id
 }
 
@@ -268,9 +268,24 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               "kind": "Field",
               "name": {
                 "kind": "Name",
-                "value": "petName"
+                "value": "avatarUrl"
               },
-              "arguments": [],
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "size"
+                  },
+                  "value": {
+                    "kind": "Variable",
+                    "name": {
+                      "kind": "Name",
+                      "value": "avatarSize"
+                    }
+                  }
+                }
+              ],
               "directives": []
             },
             {
