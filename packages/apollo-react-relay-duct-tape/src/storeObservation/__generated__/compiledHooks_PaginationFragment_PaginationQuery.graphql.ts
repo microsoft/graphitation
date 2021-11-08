@@ -6,6 +6,8 @@
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type compiledHooks_PaginationFragment_PaginationQueryVariables = {
     avatarSize: number;
+    conversationsCount: number;
+    conversationsCursor: string;
     id: string;
 };
 export type compiledHooks_PaginationFragment_PaginationQueryResponse = {
@@ -20,7 +22,7 @@ export type compiledHooks_PaginationFragment_PaginationQuery = {
 
 
 /*
-query compiledHooks_PaginationFragment_PaginationQuery($avatarSize: Int!, $id: ID!) {
+query compiledHooks_PaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsCount: Int!, $conversationsCursor: String!, $id: ID!) {
   node(id: $id) {
     __typename
     ...compiledHooks_PaginationFragment
@@ -29,13 +31,22 @@ query compiledHooks_PaginationFragment_PaginationQuery($avatarSize: Int!, $id: I
 }
 
 fragment compiledHooks_PaginationFragment on User {
+  petName
   avatarUrl(size: $avatarSize)
+  conversations(first: $conversationsCount, after: $conversationsCursor) {
+    edges {
+      node {
+        title
+        id
+      }
+    }
+  }
   id
 }
 */
 
 /*
-query compiledHooks_PaginationFragment_PaginationQuery($avatarSize: Int!, $id: ID!) {
+query compiledHooks_PaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsCount: Int!, $conversationsCursor: String!, $id: ID!) {
   node(id: $id) {
     __typename
     ...compiledHooks_PaginationFragment
@@ -47,7 +58,16 @@ query compiledHooks_PaginationFragment_PaginationQuery($avatarSize: Int!, $id: I
 }
 
 fragment compiledHooks_PaginationFragment on User {
+  petName
   avatarUrl(size: $avatarSize)
+  conversations(first: $conversationsCount, after: $conversationsCursor) {
+    edges {
+      node {
+        title
+        id
+      }
+    }
+  }
   id
 }
 */
@@ -80,6 +100,48 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                 "name": {
                   "kind": "Name",
                   "value": "Int"
+                }
+              }
+            },
+            "directives": []
+          },
+          {
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
+                "value": "conversationsCount"
+              }
+            },
+            "type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Int"
+                }
+              }
+            },
+            "directives": []
+          },
+          {
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
+                "value": "conversationsCursor"
+              }
+            },
+            "type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String"
                 }
               }
             },
@@ -190,6 +252,15 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               "kind": "Field",
               "name": {
                 "kind": "Name",
+                "value": "petName"
+              },
+              "arguments": [],
+              "directives": []
+            },
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
                 "value": "avatarUrl"
               },
               "arguments": [
@@ -209,6 +280,95 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                 }
               ],
               "directives": []
+            },
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "conversations"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "first"
+                  },
+                  "value": {
+                    "kind": "Variable",
+                    "name": {
+                      "kind": "Name",
+                      "value": "conversationsCount"
+                    }
+                  }
+                },
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "after"
+                  },
+                  "value": {
+                    "kind": "Variable",
+                    "name": {
+                      "kind": "Name",
+                      "value": "conversationsCursor"
+                    }
+                  }
+                }
+              ],
+              "directives": [],
+              "selectionSet": {
+                "kind": "SelectionSet",
+                "selections": [
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "edges"
+                    },
+                    "arguments": [],
+                    "directives": [],
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "node"
+                          },
+                          "arguments": [],
+                          "directives": [],
+                          "selectionSet": {
+                            "kind": "SelectionSet",
+                            "selections": [
+                              {
+                                "kind": "Field",
+                                "name": {
+                                  "kind": "Name",
+                                  "value": "title"
+                                },
+                                "arguments": [],
+                                "directives": []
+                              },
+                              {
+                                "kind": "Field",
+                                "name": {
+                                  "kind": "Name",
+                                  "value": "id"
+                                },
+                                "arguments": [],
+                                "directives": []
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
             },
             {
               "kind": "Field",
@@ -251,6 +411,48 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                 "name": {
                   "kind": "Name",
                   "value": "Int"
+                }
+              }
+            },
+            "directives": []
+          },
+          {
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
+                "value": "conversationsCount"
+              }
+            },
+            "type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Int"
+                }
+              }
+            },
+            "directives": []
+          },
+          {
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
+                "value": "conversationsCursor"
+              }
+            },
+            "type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String"
                 }
               }
             },
@@ -395,6 +597,15 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               "kind": "Field",
               "name": {
                 "kind": "Name",
+                "value": "petName"
+              },
+              "arguments": [],
+              "directives": []
+            },
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
                 "value": "avatarUrl"
               },
               "arguments": [
@@ -414,6 +625,95 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                 }
               ],
               "directives": []
+            },
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "conversations"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "first"
+                  },
+                  "value": {
+                    "kind": "Variable",
+                    "name": {
+                      "kind": "Name",
+                      "value": "conversationsCount"
+                    }
+                  }
+                },
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "after"
+                  },
+                  "value": {
+                    "kind": "Variable",
+                    "name": {
+                      "kind": "Name",
+                      "value": "conversationsCursor"
+                    }
+                  }
+                }
+              ],
+              "directives": [],
+              "selectionSet": {
+                "kind": "SelectionSet",
+                "selections": [
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "edges"
+                    },
+                    "arguments": [],
+                    "directives": [],
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "node"
+                          },
+                          "arguments": [],
+                          "directives": [],
+                          "selectionSet": {
+                            "kind": "SelectionSet",
+                            "selections": [
+                              {
+                                "kind": "Field",
+                                "name": {
+                                  "kind": "Name",
+                                  "value": "title"
+                                },
+                                "arguments": [],
+                                "directives": []
+                              },
+                              {
+                                "kind": "Field",
+                                "name": {
+                                  "kind": "Name",
+                                  "value": "id"
+                                },
+                                "arguments": [],
+                                "directives": []
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
             },
             {
               "kind": "Field",

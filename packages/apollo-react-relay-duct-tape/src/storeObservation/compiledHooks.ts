@@ -228,10 +228,7 @@ export function useCompiledRefetchableFragment(
 }
 
 export function useCompiledPaginationFragment(
-  documents: {
-    executionQueryDocument: DocumentNode;
-    watchQueryDocument: DocumentNode;
-  },
+  documents: CompiledArtefactModule,
   fragmentReference: { id: unknown; __fragments?: Record<string, any> }
 ): {
   data: {};
@@ -241,10 +238,22 @@ export function useCompiledPaginationFragment(
   hasPrevious: boolean;
   isLoadingNext: boolean;
   isLoadingPrevious: boolean;
-  refetch: () => void;
+  refetch: RefetchFn;
 } {
-  const data = useCompiledFragment(documents, fragmentReference);
-  return { data } as any;
+  const [data, refetch] = useCompiledRefetchableFragment(
+    documents,
+    fragmentReference
+  );
+  return {
+    data,
+    refetch,
+    loadNext: () => {},
+    loadPrevious: () => {},
+    hasNext: false,
+    hasPrevious: false,
+    isLoadingNext: false,
+    isLoadingPrevious: false,
+  };
 }
 
 function useForceUpdate() {
