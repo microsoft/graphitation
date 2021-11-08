@@ -57,7 +57,7 @@ const FragmentComponent: React.FC<{ user: hooksTestFragment$key }> = (
  */
 
 const query = graphql`
-  query hooksTestQuery($id: ID!) {
+  query hooksTestQuery($id: Int!) {
     user(id: $id) {
       ...hooksTestFragment
     }
