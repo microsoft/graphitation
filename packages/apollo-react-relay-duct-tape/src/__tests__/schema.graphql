@@ -21,6 +21,7 @@ type User implements Node {
   name: String!
   petName: String!
   avatarUrl(size: Int!): String!
+  hasFriends: Boolean!
 }
 
 type NonNode {
