@@ -17,6 +17,7 @@ import * as path from "path";
 import { print } from "graphql";
 
 import {
+  RefetchFn,
   useCompiledFragment,
   useCompiledLazyLoadQuery,
   useCompiledPaginationFragment,
@@ -51,6 +52,7 @@ const Refetchable_fragment = graphql`
   fragment compiledHooks_RefetchableFragment on User
   # @argumentDefinitions(avatarSize: { type: "Int!", defaultValue: 21 })
   @refetchable(queryName: "compiledHooks_RefetchableFragment_RefetchQuery") {
+    petName
     avatarUrl(size: $avatarSize)
   }
 `;
@@ -66,12 +68,25 @@ const QueryType_fragment = graphql`
 const Pagination_fragment = graphql`
   fragment compiledHooks_PaginationFragment on User
   @refetchable(queryName: "compiledHooks_PaginationFragment_PaginationQuery") {
+    petName
     avatarUrl(size: $avatarSize)
+    conversations(first: $conversationsCount, after: $conversationsCursor) {
+      edges {
+        node {
+          title
+        }
+      }
+    }
   }
 `;
 
 const Root_executionQueryDocument = graphql`
-  query compiledHooks_Root_executionQuery($userId: ID!, $avatarSize: Int!) {
+  query compiledHooks_Root_executionQuery(
+    $userId: Int!
+    $avatarSize: Int!
+    $conversationsCount: Int!
+    $conversationsCursor: String!
+  ) {
     user(id: $userId) {
       name
       ...compiledHooks_ChildFragment
@@ -134,7 +149,9 @@ describe("compiledHooks", () => {
     return null;
   };
 
-  const RootComponent: React.FC<{ variables: {} }> = (props) => {
+  const RootComponent: React.FC<{
+    variables: compiledHooks_Root_executionQueryVariables;
+  }> = (props) => {
     const result = useCompiledLazyLoadQuery(
       compiledHooks_Root_executionQuery_documents,
       { variables: props.variables }
@@ -167,7 +184,14 @@ describe("compiledHooks", () => {
       testRenderer = createTestRenderer(
         <ApolloProvider client={client}>
           <ErrorBoundary>
-            <RootComponent variables={{ userId: 42, avatarSize: 21 }} />
+            <RootComponent
+              variables={{
+                userId: 42,
+                avatarSize: 21,
+                conversationsCount: 2,
+                conversationsCursor: "",
+              }}
+            />
           </ErrorBoundary>
         </ApolloProvider>
       );
@@ -200,7 +224,15 @@ describe("compiledHooks", () => {
         await act(() =>
           client.mock.resolveMostRecentOperation((operation) =>
             MockPayloadGenerator.generate(operation, {
-              User: () => ({ id: operation.request.variables.userId }),
+              User: (options, generateId) => {
+                // console.log({ options });
+                return {
+                  id:
+                    options.parentType === "Query"
+                      ? operation.request.variables.userId
+                      : generateId(),
+                };
+              },
             })
           )
         );
@@ -211,6 +243,17 @@ describe("compiledHooks", () => {
           Object {
             "__typename": "User",
             "avatarUrl({\\"size\\":21})": "<mock-value-for-field-\\"avatarUrl\\">",
+            "conversations({\\"after\\":\\"\\",\\"first\\":2})": Object {
+              "__typename": "ConversationsConnection",
+              "edges": Array [
+                Object {
+                  "__typename": "ConversationsConnectionEdge",
+                  "node": Object {
+                    "__ref": "Conversation:<Conversation-mock-id-3>",
+                  },
+                },
+              ],
+            },
             "id": 42,
             "name": "<mock-value-for-field-\\"name\\">",
             "petName": "<mock-value-for-field-\\"petName\\">",
@@ -228,6 +271,8 @@ describe("compiledHooks", () => {
             "user": Object {
               "__fragments": Object {
                 "avatarSize": 21,
+                "conversationsCount": 2,
+                "conversationsCursor": "",
                 "userId": 42,
               },
               "__typename": "User",
@@ -273,6 +318,8 @@ describe("compiledHooks", () => {
             "user": Object {
               "__fragments": Object {
                 "avatarSize": 21,
+                "conversationsCount": 2,
+                "conversationsCursor": "",
                 "userId": 42,
               },
               "__typename": "User",
@@ -288,7 +335,14 @@ describe("compiledHooks", () => {
           testRenderer.update(
             <ApolloProvider client={client}>
               <ErrorBoundary>
-                <RootComponent variables={{ userId: 21, avatarSize: 21 }} />
+                <RootComponent
+                  variables={{
+                    userId: 21,
+                    avatarSize: 21,
+                    conversationsCount: 2,
+                    conversationsCursor: "",
+                  }}
+                />
               </ErrorBoundary>
             </ApolloProvider>
           );
@@ -304,6 +358,17 @@ describe("compiledHooks", () => {
           Object {
             "__typename": "User",
             "avatarUrl({\\"size\\":21})": "<mock-value-for-field-\\"avatarUrl\\">",
+            "conversations({\\"after\\":\\"\\",\\"first\\":2})": Object {
+              "__typename": "ConversationsConnection",
+              "edges": Array [
+                Object {
+                  "__typename": "ConversationsConnectionEdge",
+                  "node": Object {
+                    "__ref": "Conversation:<Conversation-mock-id-3>",
+                  },
+                },
+              ],
+            },
             "id": 21,
             "name": "<mock-value-for-field-\\"name\\">",
             "petName": "<mock-value-for-field-\\"petName\\">",
@@ -317,7 +382,14 @@ describe("compiledHooks", () => {
           testRenderer.update(
             <ApolloProvider client={client}>
               <ErrorBoundary>
-                <RootComponent variables={{ userId: 42, avatarSize: 21 }} />
+                <RootComponent
+                  variables={{
+                    userId: 42,
+                    avatarSize: 21,
+                    conversationsCount: 2,
+                    conversationsCursor: "",
+                  }}
+                />
               </ErrorBoundary>
             </ApolloProvider>
           );
@@ -330,7 +402,7 @@ describe("compiledHooks", () => {
 
   function itBehavesLikeFragment(
     returnedResults: () => { id: number }[],
-    fragmentSpecificFieldSelection: string
+    fragmentSpecificFieldSelections?: {}
   ) {
     beforeEach(async () => {
       await act(() =>
@@ -349,11 +421,14 @@ describe("compiledHooks", () => {
       expect(returnedResults()[0]).toEqual({
         __fragments: {
           avatarSize: 21,
+          conversationsCount: 2,
+          conversationsCursor: "",
           userId: 42,
         },
         __typename: "User",
-        [fragmentSpecificFieldSelection]: `<mock-value-for-field-"${fragmentSpecificFieldSelection}">`,
         id: 42,
+        petName: '<mock-value-for-field-"petName">',
+        ...fragmentSpecificFieldSelections,
       });
     });
 
@@ -368,8 +443,6 @@ describe("compiledHooks", () => {
         });
         return new Promise((resolve) => setTimeout(resolve, 0));
       });
-      // TODO: Check if this makes sense
-      // expect(returnedResults().length).toBe(2);
       expect(returnedResults()[1]).toBe(before);
     });
 
@@ -378,14 +451,14 @@ describe("compiledHooks", () => {
         client.cache.modify({
           id: "User:42",
           fields: {
-            [fragmentSpecificFieldSelection]: () => "some new value",
+            petName: () => "some new value",
           },
         });
         return new Promise((resolve) => setTimeout(resolve, 0));
       });
       expect(returnedResults().length).toBe(2);
       expect(returnedResults()[1]).toMatchObject({
-        [fragmentSpecificFieldSelection]: "some new value",
+        petName: "some new value",
       });
     });
 
@@ -398,7 +471,14 @@ describe("compiledHooks", () => {
         testRenderer.update(
           <ApolloProvider client={client}>
             <ErrorBoundary>
-              <RootComponent variables={{ userId: 21 }} />
+              <RootComponent
+                variables={{
+                  userId: 21,
+                  avatarSize: 21,
+                  conversationsCount: 2,
+                  conversationsCursor: "",
+                }}
+              />
             </ErrorBoundary>
           </ApolloProvider>
         );
@@ -434,7 +514,7 @@ describe("compiledHooks", () => {
   });
 
   function itBehavesLikeRefetchableFragment(
-    returnedResults: () => ReturnType<typeof useCompiledRefetchableFragment>[]
+    returnedResults: () => [data: { id: number }, refetch: RefetchFn][]
   ) {
     it.todo(
       "supports variables with default values on either operations or with @argumentDefinitions"
@@ -465,7 +545,8 @@ describe("compiledHooks", () => {
         });
 
         it("returns a new object from the hook", () => {
-          expect(returnedResults()[1][0]).toMatchObject({
+          const results = returnedResults();
+          expect(results[results.length - 1][0]).toMatchObject({
             __typename: "User",
             avatarUrl: "avatarUrl-with-size-42",
             id: 42,
@@ -473,7 +554,8 @@ describe("compiledHooks", () => {
         });
 
         it("updates the fragment reference request variables for future requests", () => {
-          expect(returnedResults()[1][0]).toMatchObject({
+          const results = returnedResults();
+          expect(results[results.length - 1][0]).toMatchObject({
             __fragments: {
               avatarSize: 42,
               userId: 42,
@@ -509,7 +591,7 @@ describe("compiledHooks", () => {
   }
 
   describe(useCompiledFragment, () => {
-    itBehavesLikeFragment(() => lastUseFragmentResult, "petName");
+    itBehavesLikeFragment(() => lastUseFragmentResult);
   });
 
   describe(useCompiledRefetchableFragment, () => {
@@ -518,10 +600,16 @@ describe("compiledHooks", () => {
         lastUseRefetchableFragmentResult.map(
           ([data, _refetch]) => data as { id: number }
         ),
-      "avatarUrl"
+      { avatarUrl: '<mock-value-for-field-"avatarUrl">' }
     );
 
-    itBehavesLikeRefetchableFragment(() => lastUseRefetchableFragmentResult);
+    itBehavesLikeRefetchableFragment(
+      () =>
+        lastUseRefetchableFragmentResult as [
+          data: { id: number },
+          refetch: RefetchFn
+        ][]
+    );
   });
 
   describe(useCompiledPaginationFragment, () => {
@@ -530,8 +618,49 @@ describe("compiledHooks", () => {
         lastUsePaginationFragmentResult.map(
           ({ data }) => data as { id: number }
         ),
-      "avatarUrl"
+      {
+        avatarUrl: '<mock-value-for-field-"avatarUrl">',
+        conversations: {
+          __typename: "ConversationsConnection",
+          edges: [
+            {
+              __typename: "ConversationsConnectionEdge",
+              node: {
+                __typename: "Conversation",
+                id: "<Conversation-mock-id-3>",
+                title: '<mock-value-for-field-"title">',
+              },
+            },
+          ],
+        },
+      }
     );
+
+    itBehavesLikeRefetchableFragment(() =>
+      lastUsePaginationFragmentResult.map(({ data, refetch }) => [
+        data as { id: number },
+        refetch,
+      ])
+    );
+
+    it.skip("can fetch a next page of list data", async () => {
+      const { loadNext } = lastUsePaginationFragmentResult[0];
+      loadNext();
+
+      const operation = client.mock.getMostRecentOperation();
+      console.log({ operation });
+      // await act(() => {
+      //   client.mock.resolveMostRecentOperation((operation) =>
+      //     MockPayloadGenerator.generate(operation, {
+      //       Node: () => ({
+      //         id: 42,
+      //         avatarUrl: `avatarUrl-with-size-${operation.request.variables.avatarSize}`,
+      //       }),
+      //     })
+      //   );
+      //   return new Promise((resolve) => setTimeout(resolve, 0));
+      // });
+    });
   });
 });
 
