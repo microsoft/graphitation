@@ -10,7 +10,6 @@ import { schema } from "./schema";
 import invariant from "invariant";
 import { stripFragmentReferenceFieldSelectionTransform } from "./formatModuleTransforms/stripFragmentReferenceFieldSelectionTransform";
 import { extractMetadataTransform } from "./formatModuleTransforms/extractMetadataTransform";
-import { extractConnectionMetadataTransform } from "./formatModuleTransforms/extractConnectionMetadataTransform";
 import { CompiledArtefactModule } from "./types";
 
 function printDocumentComment(document: DocumentNode) {
@@ -33,10 +32,6 @@ function generateExports(moduleName: string, docText: string) {
     originalDocument
   );
 
-  // TODO: Merge into metadata
-  (exports as any).connectionMetadata = extractConnectionMetadataTransform(
-    exports.watchQueryDocument
-  );
   exports.metadata = extractMetadataTransform(exports.watchQueryDocument);
 
   return exports;
