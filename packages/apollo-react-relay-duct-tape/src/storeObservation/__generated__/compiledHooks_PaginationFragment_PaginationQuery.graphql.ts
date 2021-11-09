@@ -33,12 +33,18 @@ query compiledHooks_PaginationFragment_PaginationQuery($avatarSize: Int!, $conve
 fragment compiledHooks_PaginationFragment on User {
   petName
   avatarUrl(size: $avatarSize)
-  conversations(first: $conversationsCount, after: $conversationsCursor) {
+  conversations(first: $conversationsCount, after: $conversationsCursor) @connection(key: "compiledHooks_user_conversations") {
     edges {
       node {
         title
         id
+        __typename
       }
+      cursor
+    }
+    pageInfo {
+      endCursor
+      hasNextPage
     }
   }
   id
@@ -60,12 +66,18 @@ query compiledHooks_PaginationFragment_PaginationQuery($avatarSize: Int!, $conve
 fragment compiledHooks_PaginationFragment on User {
   petName
   avatarUrl(size: $avatarSize)
-  conversations(first: $conversationsCount, after: $conversationsCursor) {
+  conversations(first: $conversationsCount, after: $conversationsCursor) @connection(key: "compiledHooks_user_conversations") {
     edges {
       node {
         title
         id
+        __typename
       }
+      cursor
+    }
+    pageInfo {
+      endCursor
+      hasNextPage
     }
   }
   id
@@ -317,7 +329,29 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   }
                 }
               ],
-              "directives": [],
+              "directives": [
+                {
+                  "kind": "Directive",
+                  "name": {
+                    "kind": "Name",
+                    "value": "connection"
+                  },
+                  "arguments": [
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "key"
+                      },
+                      "value": {
+                        "kind": "StringValue",
+                        "value": "compiledHooks_user_conversations",
+                        "block": false
+                      }
+                    }
+                  ]
+                }
+              ],
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
@@ -360,9 +394,59 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                                 },
                                 "arguments": [],
                                 "directives": []
+                              },
+                              {
+                                "kind": "Field",
+                                "name": {
+                                  "kind": "Name",
+                                  "value": "__typename"
+                                },
+                                "arguments": [],
+                                "directives": []
                               }
                             ]
                           }
+                        },
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "cursor"
+                          },
+                          "arguments": [],
+                          "directives": []
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "pageInfo"
+                    },
+                    "arguments": [],
+                    "directives": [],
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "endCursor"
+                          },
+                          "arguments": [],
+                          "directives": []
+                        },
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "hasNextPage"
+                          },
+                          "arguments": [],
+                          "directives": []
                         }
                       ]
                     }
@@ -662,7 +746,29 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   }
                 }
               ],
-              "directives": [],
+              "directives": [
+                {
+                  "kind": "Directive",
+                  "name": {
+                    "kind": "Name",
+                    "value": "connection"
+                  },
+                  "arguments": [
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "key"
+                      },
+                      "value": {
+                        "kind": "StringValue",
+                        "value": "compiledHooks_user_conversations",
+                        "block": false
+                      }
+                    }
+                  ]
+                }
+              ],
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
@@ -705,9 +811,59 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                                 },
                                 "arguments": [],
                                 "directives": []
+                              },
+                              {
+                                "kind": "Field",
+                                "name": {
+                                  "kind": "Name",
+                                  "value": "__typename"
+                                },
+                                "arguments": [],
+                                "directives": []
                               }
                             ]
                           }
+                        },
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "cursor"
+                          },
+                          "arguments": [],
+                          "directives": []
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "pageInfo"
+                    },
+                    "arguments": [],
+                    "directives": [],
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "endCursor"
+                          },
+                          "arguments": [],
+                          "directives": []
+                        },
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "hasNextPage"
+                          },
+                          "arguments": [],
+                          "directives": []
                         }
                       ]
                     }
@@ -729,8 +885,14 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
       }
     ]
   },
-  "connectionMetadata": null,
   "metadata": {
-    "rootSelection": "node"
+    "rootSelection": "node",
+    "connection": {
+      "countVariable": "conversationsCount",
+      "cursorVariable": "conversationsCursor",
+      "selectionPath": [
+        "conversations"
+      ]
+    }
   }
 };

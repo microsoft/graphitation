@@ -67,7 +67,7 @@ const query = graphql`
 
 const QueryComponent: React.FC = () => {
   const { data, error } = useLazyLoadQuery<hooksTestQuery>(query, {
-    id: "some-user-id",
+    id: 42,
   });
   if (error) {
     return <div id="error">{error.message}</div>;

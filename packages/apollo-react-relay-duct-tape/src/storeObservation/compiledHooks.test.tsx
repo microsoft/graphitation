@@ -1,5 +1,5 @@
 import React from "react";
-import { ApolloProvider, QueryResult } from "@apollo/client";
+import { ApolloProvider } from "@apollo/client";
 import {
   act,
   create as createTestRenderer,
@@ -14,7 +14,6 @@ import {
 import * as MockPayloadGenerator from "@graphitation/graphql-js-operation-payload-generator";
 import * as fs from "fs";
 import * as path from "path";
-import { print } from "graphql";
 
 import {
   RefetchFn,
@@ -70,7 +69,8 @@ const Pagination_fragment = graphql`
   @refetchable(queryName: "compiledHooks_PaginationFragment_PaginationQuery") {
     petName
     avatarUrl(size: $avatarSize)
-    conversations(first: $conversationsCount, after: $conversationsCursor) {
+    conversations(first: $conversationsCount, after: $conversationsCursor)
+      @connection(key: "compiledHooks_user_conversations") {
       edges {
         node {
           title
@@ -233,6 +233,9 @@ describe("compiledHooks", () => {
                       : generateId(),
                 };
               },
+              Conversation: () => ({
+                id: "first-paged-conversation",
+              }),
             })
           )
         );
@@ -250,7 +253,7 @@ describe("compiledHooks", () => {
                   "__typename": "ConversationsConnectionEdge",
                   "cursor": "<mock-value-for-field-\\"cursor\\">",
                   "node": Object {
-                    "__ref": "Conversation:<Conversation-mock-id-3>",
+                    "__ref": "Conversation:first-paged-conversation",
                   },
                 },
               ],
@@ -272,6 +275,8 @@ describe("compiledHooks", () => {
           Object {
             "__fragments": Object {
               "avatarSize": 21,
+              "conversationsCount": 1,
+              "conversationsCursor": "",
               "userId": 42,
             },
             "user": Object {
@@ -319,6 +324,8 @@ describe("compiledHooks", () => {
           Object {
             "__fragments": Object {
               "avatarSize": 21,
+              "conversationsCount": 1,
+              "conversationsCursor": "",
               "userId": 42,
             },
             "user": Object {
@@ -416,12 +423,17 @@ describe("compiledHooks", () => {
     returnedResults: () => { id: number }[],
     fragmentSpecificFieldSelections?: {}
   ) {
+    // TODO: This should be scoped so it doesn't leak to other tests in the same parent describe
+    // describe("behaves like useFragment", () => {
     beforeEach(async () => {
       await act(() =>
         client.mock.resolveMostRecentOperation((operation) => {
           const result = MockPayloadGenerator.generate(operation, {
             User: () => ({
               id: 42,
+            }),
+            Conversation: () => ({
+              id: "first-paged-conversation",
             }),
           });
           return result;
@@ -504,16 +516,21 @@ describe("compiledHooks", () => {
       );
       expect(returnedResults()[1].id).toBe(21);
     });
+    // });
   }
 
   describe(useCompiledFragment, () => {
-    itBehavesLikeFragment(() => lastUseFragmentResult, "petName");
+    itBehavesLikeFragment(() => lastUseFragmentResult, {
+      petName: '<mock-value-for-field-"petName">',
+    });
 
     it("also works with fragments on the Query type", () => {
       expect(lastComponentOnQueryTypeResult[0]).toMatchInlineSnapshot(`
         Object {
           "__fragments": Object {
             "avatarSize": 21,
+            "conversationsCount": 1,
+            "conversationsCursor": "",
             "userId": 42,
           },
           "nonNode": Object {
@@ -602,10 +619,6 @@ describe("compiledHooks", () => {
     });
   }
 
-  describe(useCompiledFragment, () => {
-    itBehavesLikeFragment(() => lastUseFragmentResult);
-  });
-
   describe(useCompiledRefetchableFragment, () => {
     itBehavesLikeFragment(
       () =>
@@ -640,7 +653,7 @@ describe("compiledHooks", () => {
               cursor: '<mock-value-for-field-"cursor">',
               node: {
                 __typename: "Conversation",
-                id: "<Conversation-mock-id-3>",
+                id: "first-paged-conversation",
                 title: '<mock-value-for-field-"title">',
               },
             },
@@ -661,27 +674,79 @@ describe("compiledHooks", () => {
       ])
     );
 
-    it.skip("can fetch a next page of list data", async () => {
-      const { loadNext } = lastUsePaginationFragmentResult[0];
-      loadNext();
+    describe("when paginating", () => {
+      it("uses the correct count and cursor values", () => {
+        const { loadNext } = lastUsePaginationFragmentResult[0];
+        loadNext(123);
 
-      const operation = client.mock.getMostRecentOperation();
-      expect(operation.request.variables).toMatchObject({
-        conversationsCount: 2,
-        conversationsCursor: '<mock-value-for-field-"endCursor">',
+        const operation = client.mock.getMostRecentOperation();
+        expect(operation.request.variables).toMatchObject({
+          conversationsCount: 123,
+          conversationsCursor: '<mock-value-for-field-"endCursor">',
+        });
       });
 
-      // await act(() => {
-      //   client.mock.resolveMostRecentOperation((operation) =>
-      //     MockPayloadGenerator.generate(operation, {
-      //       Node: () => ({
-      //         id: 42,
-      //         avatarUrl: `avatarUrl-with-size-${operation.request.variables.avatarSize}`,
-      //       }),
-      //     })
-      //   );
-      //   return new Promise((resolve) => setTimeout(resolve, 0));
-      // });
+      describe("and having received the response", () => {
+        beforeEach(async () => {
+          const { loadNext } = lastUsePaginationFragmentResult[0];
+          loadNext(1);
+
+          await act(() => {
+            client.mock.resolveMostRecentOperation((operation) => {
+              const response = MockPayloadGenerator.generate(operation, {
+                Node: () => ({
+                  id: 42,
+                }),
+                Conversation: () => ({
+                  id: "second-paged-conversation",
+                }),
+                PageInfo: () => ({
+                  endCursor: "second-page-end-cursor",
+                }),
+              });
+              return response;
+            });
+            return new Promise((resolve) => setTimeout(resolve, 0));
+          });
+        });
+
+        it("loads the new data into the store", async () => {
+          expect(client.cache.extract()).toMatchObject({
+            "Conversation:second-paged-conversation": {
+              id: "second-paged-conversation",
+              __typename: "Conversation",
+              title: '<mock-value-for-field-"title">',
+            },
+          });
+        });
+
+        it("returns the complete list data (previous+new) from the hook", () => {
+          const result =
+            lastUsePaginationFragmentResult[
+              lastUsePaginationFragmentResult.length - 1
+            ];
+          expect(
+            (result.data as any).conversations.edges.map(
+              (edge: any) => edge.node.id
+            )
+          ).toMatchInlineSnapshot(`
+            Array [
+              "first-paged-conversation",
+              "second-paged-conversation",
+            ]
+          `);
+        });
+
+        it("uses the new cursor value", () => {
+          const { loadNext } = lastUsePaginationFragmentResult.reverse()[0];
+          loadNext(123);
+
+          const operation = client.mock.getMostRecentOperation();
+          expect(operation.request.variables).toMatchObject({
+            conversationsCursor: "second-page-end-cursor",
+          });
+        });
+      });
     });
   });
 });
