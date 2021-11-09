@@ -11,13 +11,18 @@ import {
   useQuery as useApolloQuery,
   ApolloQueryResult,
 } from "@apollo/client";
-<<<<<<< HEAD
-=======
-import { BREAK, DocumentNode, visit } from "graphql";
->>>>>>> 429ded5 ([compiler] Extract connection metadata)
+import { DataProxy } from "@apollo/client/cache/core/types/DataProxy";
 import invariant from "invariant";
 import { useDeepCompareMemoize } from "./useDeepCompareMemoize";
+
 import type { CompiledArtefactModule } from "relay-compiler-language-graphitation";
+import type {
+  DocumentNode,
+  FieldNode,
+  FragmentDefinitionNode,
+  FragmentSpreadNode,
+  OperationDefinitionNode,
+} from "graphql";
 
 interface FragmentReference {
   /**
@@ -170,9 +175,21 @@ export function useCompiledFragment(
   return data;
 }
 
+interface RefetchOptions {
+  onCompleted?: (error: Error | null) => void;
+  fetchPolicy?: "network-only" | "no-cache";
+  /**
+   * Returns the fetched data. This does not exist in the Relay API.
+   */
+  UNSTABLE_onCompleted?: (
+    error: Error | null,
+    data: Record<string, any> | null
+  ) => void;
+}
+
 export type RefetchFn<Variables extends {} = {}> = (
   variables: Partial<Variables>,
-  options?: { onCompleted?: (arg: Error | null) => void }
+  options?: RefetchOptions
 ) => void;
 
 export function useCompiledRefetchableFragment(
@@ -195,29 +212,36 @@ export function useCompiledRefetchableFragment(
     fragmentReferenceWithOwnVariables
   );
 
-  const refetch = useCallback(
-    async (variables, options) => {
+  const refetch = useCallback<RefetchFn>(
+    async (variablesSubset, options) => {
       let error: Error | null;
+      let data: {} | null;
+      const variables = {
+        ...fragmentReference.__fragments,
+        ...variablesSubset,
+        id: fragmentReference.id,
+      };
       try {
         // TODO: Unsure how to trigger Apollo Client to return an error
         //       rather than throwing it, need to add test coverage for
         //       this.
-        const { error: e = null } = await client.query({
-          fetchPolicy: "network-only",
+        const { error: e = null, data: d = null } = await client.query({
+          fetchPolicy: options?.fetchPolicy ?? "network-only",
           query: executionQueryDocument,
-          variables: {
-            ...fragmentReference.__fragments,
-            ...variables,
-            id: fragmentReference.id,
-          },
+          variables,
         });
         error = e;
+        data = d;
       } catch (e: any) {
         error = e;
       }
       // NOTE: Unsure if the order of callback invocation and updating
       //       state here matters.
-      options?.onCompleted?.(error!);
+      if (options?.UNSTABLE_onCompleted) {
+        options.UNSTABLE_onCompleted(error, data!);
+      } else {
+        options?.onCompleted?.(error!);
+      }
       if (!error) {
         setFragmentReferenceWithOwnVariables({
           id: fragmentReference.id,
@@ -232,15 +256,11 @@ export function useCompiledRefetchableFragment(
 }
 
 export function useCompiledPaginationFragment(
-  documents: CompiledArtefactModule & { connectionMetadata: {
-    countVariable: string;
-    cursorVariable: string;
-    responsePath: string[];
-  }},
-  fragmentReference: { id: unknown; __fragments?: Record<string, any> }
+  documents: CompiledArtefactModule,
+  fragmentReference: FragmentReference
 ): {
   data: {};
-  loadNext: (count: number, options: {}) => void;
+  loadNext: (count: number, options?: RefetchOptions) => void;
   loadPrevious: () => void;
   hasNext: boolean;
   hasPrevious: boolean;
@@ -248,21 +268,83 @@ export function useCompiledPaginationFragment(
   isLoadingPrevious: boolean;
   refetch: RefetchFn;
 } {
+  const { watchQueryDocument, metadata } = documents;
+  invariant(
+    watchQueryDocument && metadata,
+    "Expected compiled artefact to have a watchQueryDocument and metadata"
+  );
+  const connectionMetadata = metadata.connection;
+  invariant(
+    connectionMetadata,
+    "Expected compiled artefact to have connection metadata"
+  );
+
+  const client = useApolloClient();
   const [data, refetch] = useCompiledRefetchableFragment(
     documents,
     fragmentReference
   );
+
   return {
     data,
     refetch,
     loadNext: (count, options) => {
       const endCursor = getEndCursorValue(
         data,
-        documents.connectionMetadata.responsePath
+        connectionMetadata.selectionPath
       );
-      refetch({
-        [documents.connectionMetadata.countVariable]: count,
-        [documents.connectionMetadata.cursorVariable]: endCursor,
+      const previousVariables = {
+        ...fragmentReference.__fragments,
+        id: fragmentReference.id,
+      };
+      const newVariables = {
+        ...previousVariables,
+        [connectionMetadata.countVariable]: count,
+        [connectionMetadata.cursorVariable]: endCursor,
+      };
+      refetch(newVariables, {
+        fetchPolicy: "no-cache",
+        UNSTABLE_onCompleted: (error, data) => {
+          if (error) {
+            console.error("An error occurred during pagination", error);
+            return;
+          }
+
+          invariant(data, "Expected to have response data");
+          const newData = metadata.rootSelection
+            ? data[metadata.rootSelection]
+            : data;
+
+          const {
+            fragmentName,
+            fragmentTypeCondition,
+            fragmentsDocument,
+          } = getMainFragmentMetadata(
+            watchQueryDocument,
+            metadata.rootSelection
+          );
+          const cacheSelector: DataProxy.Fragment<any, any> = {
+            id: fragmentReference.id
+              ? `${fragmentTypeCondition}:${fragmentReference.id}`
+              : "ROOT_QUERY",
+            variables: previousVariables,
+            fragment: fragmentsDocument,
+            fragmentName,
+          };
+
+          // TODO: We already have the latest data from the fragment hook, use that?
+          const existingData = client.readFragment(cacheSelector);
+          const newCacheData = mergeEdges(
+            connectionMetadata.selectionPath,
+            newData,
+            existingData
+          );
+          client.writeFragment({
+            ...cacheSelector,
+            variables: newVariables,
+            data: newCacheData,
+          });
+        },
       });
     },
     loadPrevious: () => {},
@@ -278,13 +360,94 @@ function useForceUpdate() {
   return forceUpdate;
 }
 
-function getEndCursorValue(data: Record<string, any>, responsePath: string[]) {
-  let object: Record<string, any> = data;
-  responsePath.forEach((field) => {
-    object = object[field];
-    invariant(object, "Expected path to connection in response to exist");
-  });
+function getEndCursorValue(data: Record<string, any>, selectionPath: string[]) {
+  const object = getValueAtSelectionPath(data, selectionPath);
   const cursor = object.pageInfo?.endCursor;
   invariant(cursor, "Expected to find the connection's current end cursor");
   return cursor;
+}
+
+function getValueAtSelectionPath(
+  data: Record<string, any>,
+  selectionPath: string[]
+): any {
+  let object: Record<string, any> = data;
+  selectionPath.forEach((field) => {
+    object = object[field];
+    invariant(object, "Expected path to connection in response to exist");
+  });
+  return object;
+}
+
+/**
+ * Mutates the `data` object
+ */
+function setValueAtSelectionPath(
+  data: Record<string, any>,
+  selectionPath: string[],
+  newValue: any
+): void {
+  const pathUpToComponentToUpdate = selectionPath.slice(0, -1);
+  const object = getValueAtSelectionPath(data, pathUpToComponentToUpdate);
+  const componentToUpdate = selectionPath[selectionPath.length - 1];
+  object[componentToUpdate] = newValue;
+}
+
+function mergeEdges(connectionPath: string[], destination: {}, source: {}) {
+  const edgesPath = [...connectionPath, "edges"];
+  const existingEdges = getValueAtSelectionPath(source, edgesPath);
+  invariant(existingEdges, "Expected to find previous edges");
+  const newEdges = getValueAtSelectionPath(destination, edgesPath);
+  const allEdges = [...existingEdges, ...newEdges];
+  setValueAtSelectionPath(destination, edgesPath, allEdges);
+  return destination;
+}
+
+// TODO: Move to metadata compiler transform
+function getMainFragmentMetadata(
+  document: DocumentNode,
+  rootSelection: string | undefined
+): {
+  fragmentName: string;
+  fragmentTypeCondition: string;
+  fragmentsDocument: DocumentNode;
+} {
+  const [
+    operationDefinition,
+    ...fragmentDefinitions
+  ] = document.definitions as [
+    OperationDefinitionNode,
+    ...FragmentDefinitionNode[]
+  ];
+  invariant(
+    operationDefinition.kind === "OperationDefinition" &&
+      fragmentDefinitions.length > 0 &&
+      fragmentDefinitions.every((node) => node.kind === "FragmentDefinition"),
+    "Expected definition nodes in specific order"
+  );
+  let selectionSet = operationDefinition.selectionSet;
+  if (rootSelection) {
+    const field = selectionSet.selections.find(
+      (selection) =>
+        selection.kind === "Field" && selection.name.value === rootSelection
+    ) as FieldNode | undefined;
+    invariant(
+      field?.selectionSet,
+      "Expected root selection to exist in document"
+    );
+    selectionSet = field.selectionSet;
+  }
+  const mainFragmentSpread = selectionSet.selections.find(
+    (selection) => selection.kind === "FragmentSpread"
+  ) as FragmentSpreadNode | undefined;
+  invariant(mainFragmentSpread, "Expected a main fragment spread");
+  const mainFragment = fragmentDefinitions.find(
+    (fragment) => fragment.name.value === mainFragmentSpread.name.value
+  );
+  invariant(mainFragment, "Expected a main fragment");
+  return {
+    fragmentName: mainFragment.name.value,
+    fragmentTypeCondition: mainFragment.typeCondition.name.value,
+    fragmentsDocument: { kind: "Document", definitions: fragmentDefinitions },
+  };
 }
