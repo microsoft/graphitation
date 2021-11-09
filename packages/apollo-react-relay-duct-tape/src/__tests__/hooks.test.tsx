@@ -70,7 +70,7 @@ const QueryComponent: React.FC = () => {
   const { data, error } = useLazyLoadQuery<hooksTestQuery>(
     query,
     {
-      id: "some-user-id",
+      id: 42,
     },
     { context: { callerInfo: "query-component" } },
   );
