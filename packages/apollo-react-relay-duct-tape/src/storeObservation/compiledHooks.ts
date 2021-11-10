@@ -11,6 +11,10 @@ import {
   useQuery as useApolloQuery,
   ApolloQueryResult,
 } from "@apollo/client";
+<<<<<<< HEAD
+=======
+import { BREAK, DocumentNode, visit } from "graphql";
+>>>>>>> 429ded5 ([compiler] Extract connection metadata)
 import invariant from "invariant";
 import { useDeepCompareMemoize } from "./useDeepCompareMemoize";
 import type { CompiledArtefactModule } from "relay-compiler-language-graphitation";
@@ -228,11 +232,15 @@ export function useCompiledRefetchableFragment(
 }
 
 export function useCompiledPaginationFragment(
-  documents: CompiledArtefactModule,
+  documents: CompiledArtefactModule & { connectionMetadata: {
+    countVariable: string;
+    cursorVariable: string;
+    responsePath: string[];
+  }},
   fragmentReference: { id: unknown; __fragments?: Record<string, any> }
 ): {
   data: {};
-  loadNext: () => void;
+  loadNext: (count: number, options: {}) => void;
   loadPrevious: () => void;
   hasNext: boolean;
   hasPrevious: boolean;
@@ -247,7 +255,16 @@ export function useCompiledPaginationFragment(
   return {
     data,
     refetch,
-    loadNext: () => {},
+    loadNext: (count, options) => {
+      const endCursor = getEndCursorValue(
+        data,
+        documents.connectionMetadata.responsePath
+      );
+      refetch({
+        [documents.connectionMetadata.countVariable]: count,
+        [documents.connectionMetadata.cursorVariable]: endCursor,
+      });
+    },
     loadPrevious: () => {},
     hasNext: false,
     hasPrevious: false,
@@ -259,4 +276,15 @@ export function useCompiledPaginationFragment(
 function useForceUpdate() {
   const [_, forceUpdate] = useReducer((x) => x + 1, 0);
   return forceUpdate;
+}
+
+function getEndCursorValue(data: Record<string, any>, responsePath: string[]) {
+  let object: Record<string, any> = data;
+  responsePath.forEach((field) => {
+    object = object[field];
+    invariant(object, "Expected path to connection in response to exist");
+  });
+  const cursor = object.pageInfo?.endCursor;
+  invariant(cursor, "Expected to find the connection's current end cursor");
+  return cursor;
 }
