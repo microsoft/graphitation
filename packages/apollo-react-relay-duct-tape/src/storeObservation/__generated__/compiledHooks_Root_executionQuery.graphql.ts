@@ -762,5 +762,6 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
         }
       }
     ]
-  }
+  },
+  "connectionMetadata": null
 };
