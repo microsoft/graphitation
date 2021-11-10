@@ -188,7 +188,7 @@ describe("compiledHooks", () => {
               variables={{
                 userId: 42,
                 avatarSize: 21,
-                conversationsCount: 2,
+                conversationsCount: 1,
                 conversationsCursor: "",
               }}
             />
@@ -243,16 +243,22 @@ describe("compiledHooks", () => {
           Object {
             "__typename": "User",
             "avatarUrl({\\"size\\":21})": "<mock-value-for-field-\\"avatarUrl\\">",
-            "conversations({\\"after\\":\\"\\",\\"first\\":2})": Object {
+            "conversations:compiledHooks_user_conversations": Object {
               "__typename": "ConversationsConnection",
               "edges": Array [
                 Object {
                   "__typename": "ConversationsConnectionEdge",
+                  "cursor": "<mock-value-for-field-\\"cursor\\">",
                   "node": Object {
                     "__ref": "Conversation:<Conversation-mock-id-3>",
                   },
                 },
               ],
+              "pageInfo": Object {
+                "__typename": "PageInfo",
+                "endCursor": "<mock-value-for-field-\\"endCursor\\">",
+                "hasNextPage": false,
+              },
             },
             "id": 42,
             "name": "<mock-value-for-field-\\"name\\">",
@@ -271,7 +277,7 @@ describe("compiledHooks", () => {
             "user": Object {
               "__fragments": Object {
                 "avatarSize": 21,
-                "conversationsCount": 2,
+                "conversationsCount": 1,
                 "conversationsCursor": "",
                 "userId": 42,
               },
@@ -318,7 +324,7 @@ describe("compiledHooks", () => {
             "user": Object {
               "__fragments": Object {
                 "avatarSize": 21,
-                "conversationsCount": 2,
+                "conversationsCount": 1,
                 "conversationsCursor": "",
                 "userId": 42,
               },
@@ -339,7 +345,7 @@ describe("compiledHooks", () => {
                   variables={{
                     userId: 21,
                     avatarSize: 21,
-                    conversationsCount: 2,
+                    conversationsCount: 1,
                     conversationsCursor: "",
                   }}
                 />
@@ -358,16 +364,22 @@ describe("compiledHooks", () => {
           Object {
             "__typename": "User",
             "avatarUrl({\\"size\\":21})": "<mock-value-for-field-\\"avatarUrl\\">",
-            "conversations({\\"after\\":\\"\\",\\"first\\":2})": Object {
+            "conversations:compiledHooks_user_conversations": Object {
               "__typename": "ConversationsConnection",
               "edges": Array [
                 Object {
                   "__typename": "ConversationsConnectionEdge",
+                  "cursor": "<mock-value-for-field-\\"cursor\\">",
                   "node": Object {
                     "__ref": "Conversation:<Conversation-mock-id-3>",
                   },
                 },
               ],
+              "pageInfo": Object {
+                "__typename": "PageInfo",
+                "endCursor": "<mock-value-for-field-\\"endCursor\\">",
+                "hasNextPage": false,
+              },
             },
             "id": 21,
             "name": "<mock-value-for-field-\\"name\\">",
@@ -386,7 +398,7 @@ describe("compiledHooks", () => {
                   variables={{
                     userId: 42,
                     avatarSize: 21,
-                    conversationsCount: 2,
+                    conversationsCount: 1,
                     conversationsCursor: "",
                   }}
                 />
@@ -421,7 +433,7 @@ describe("compiledHooks", () => {
       expect(returnedResults()[0]).toEqual({
         __fragments: {
           avatarSize: 21,
-          conversationsCount: 2,
+          conversationsCount: 1,
           conversationsCursor: "",
           userId: 42,
         },
@@ -475,7 +487,7 @@ describe("compiledHooks", () => {
                 variables={{
                   userId: 21,
                   avatarSize: 21,
-                  conversationsCount: 2,
+                  conversationsCount: 1,
                   conversationsCursor: "",
                 }}
               />
@@ -625,6 +637,7 @@ describe("compiledHooks", () => {
           edges: [
             {
               __typename: "ConversationsConnectionEdge",
+              cursor: '<mock-value-for-field-"cursor">',
               node: {
                 __typename: "Conversation",
                 id: "<Conversation-mock-id-3>",
@@ -632,6 +645,11 @@ describe("compiledHooks", () => {
               },
             },
           ],
+          pageInfo: {
+            __typename: "PageInfo",
+            endCursor: '<mock-value-for-field-"endCursor">',
+            hasNextPage: false,
+          },
         },
       }
     );
@@ -648,7 +666,11 @@ describe("compiledHooks", () => {
       loadNext();
 
       const operation = client.mock.getMostRecentOperation();
-      console.log({ operation });
+      expect(operation.request.variables).toMatchObject({
+        conversationsCount: 2,
+        conversationsCursor: '<mock-value-for-field-"endCursor">',
+      });
+
       // await act(() => {
       //   client.mock.resolveMostRecentOperation((operation) =>
       //     MockPayloadGenerator.generate(operation, {
