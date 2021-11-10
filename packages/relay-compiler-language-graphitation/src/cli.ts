@@ -7,11 +7,37 @@ import { relayCompiler } from "relay-compiler";
 
 // TODO: This needs to be done here to ensure we get to mutate the transforms lists that get used.
 import { IRTransforms } from "relay-compiler";
+import { IRTransform } from "relay-compiler/lib/core/CompilerContext";
 import { enableNodeWatchQueryTransform } from "./compilerTransforms/enableNodeWatchQueryTransform";
 import { annotateFragmentReferenceTransform } from "./compilerTransforms/annotateFragmentReferenceTransform";
+import { emitApolloClientConnectionTransform } from "./compilerTransforms/emitApolloClientConnectionTransform";
+import { retainConnectionDirectiveTransform } from "./compilerTransforms/retainConnectionDirectiveTransform";
+
+function wrapTransform(
+  transformName: string,
+  transforms: IRTransform[],
+  wrapperTransform: (wrappedTransform: IRTransform) => IRTransform
+) {
+  const transformIndex = transforms.findIndex(
+    (transform) => transform.name === transformName
+  );
+  const wrappedTransform = transforms[transformIndex];
+  transforms[transformIndex] = wrapperTransform(wrappedTransform);
+}
+
+IRTransforms.printTransforms.push(annotateFragmentReferenceTransform); // TODO: Moving this up in the list might potentially optimize the query further
 IRTransforms.commonTransforms.unshift(enableNodeWatchQueryTransform);
-// TODO: Moving this up in the list might potentially optimize the query further
-IRTransforms.printTransforms.push(annotateFragmentReferenceTransform);
+
+wrapTransform(
+  "filterDirectivesTransform",
+  IRTransforms.printTransforms,
+  retainConnectionDirectiveTransform
+);
+wrapTransform(
+  "connectionTransform",
+  IRTransforms.commonTransforms,
+  emitApolloClientConnectionTransform
+);
 
 function main() {
   const argv = yargs
