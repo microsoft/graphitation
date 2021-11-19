@@ -28,6 +28,14 @@ import {
 import { Maybe } from "./jsutils/Maybe";
 import { Resolvers } from "./types";
 
+const SPECIFIED_SCALARS: Record<string, string> = {
+  ID: "GraphQLID",
+  String: "GraphQLString",
+  Int: "GraphQLInt",
+  Float: "GraphQLFloat",
+  Boolean: "GraphQLBoolean",
+};
+
 export function extractImplicitTypesToTypescript(
   document: DocumentNode
 ): ts.SourceFile {
@@ -311,7 +319,11 @@ function createType(astNode: TypeNode): ts.Expression {
       [createType(astNode.type)]
     );
   } else {
-    return factory.createIdentifier(astNode.name.value);
+    if (SPECIFIED_SCALARS[astNode.name.value]) {
+      return factory.createIdentifier(SPECIFIED_SCALARS[astNode.name.value]);
+    } else {
+      return factory.createIdentifier(astNode.name.value);
+    }
   }
 }
 
