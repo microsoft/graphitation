@@ -93,7 +93,7 @@ function valueResolver(
 
   return plural === true
     ? generateMockList(
-        Array.isArray(defaultValue) ? defaultValue : Array(1).fill(null),
+        Array.isArray(defaultValue) ? defaultValue : Array(1).fill(undefined),
         generateValue
       )
     : generateValue(defaultValue);
@@ -110,7 +110,7 @@ function generateMockList<T>(
   placeholderArray: ReadonlyArray<unknown>,
   generateListItem: (defaultValue: unknown) => T
 ): ReadonlyArray<T> {
-  return placeholderArray.map((possibleDefaultValue) =>
-    generateListItem(possibleDefaultValue)
-  );
+  return placeholderArray.map((possibleDefaultValue) => {
+    return generateListItem(possibleDefaultValue);
+  });
 }

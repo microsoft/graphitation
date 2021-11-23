@@ -17,8 +17,12 @@
   "devDependencies": {
     "@graphitation/graphql-js-tag": "^0.5.5",
     "@types/jest": "^26.0.22",
+    "graphql": "^15.0.0",
     "monorepo-scripts": "*",
     "relay-test-utils-internal": "^11.0.2"
+  },
+  "peerDependencies": {
+    "graphql": "^15.0.0"
   },
   "publishConfig": {
     "main": "./lib/index",

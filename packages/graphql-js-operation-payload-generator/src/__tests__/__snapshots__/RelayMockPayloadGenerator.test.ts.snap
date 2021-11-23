@@ -110,13 +110,11 @@ fragment RelayMockPayloadGeneratorTest6Fragment on User {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
       "__typename": "User",
-      "id": "<mock-id-3>",
+      "id": "<User-mock-id-1>",
       "name": "<mock-value-for-field-\\"name\\">",
       "author": {
-        "__typename": "User",
         "id": "<User-mock-id-2>",
         "name": "<mock-value-for-field-\\"name\\">"
       }
@@ -191,13 +189,11 @@ fragment RelayMockPayloadGeneratorTestFragment on User {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
       "__typename": "User",
-      "id": "<mock-id-2>",
+      "id": "<User-mock-id-1>",
       "name": "<mock-value-for-field-\\"name\\">",
       "profile_picture": {
-        "__typename": "Image",
         "uri": "<mock-value-for-field-\\"uri\\">",
         "width": 42,
         "height": 42,
@@ -298,20 +294,20 @@ fragment RelayMockPayloadGeneratorTest20Fragment on User {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<mock-id-1>",
       "body": {
         "text": "<mock-value-for-field-\\"text\\">"
       },
       "actor": {
-        "__typename": "__MockObject",
+        "__typename": "Actor",
         "name": "<mock-value-for-field-\\"name\\">",
-        "id": "<mock-id-2>"
+        "id": "<Actor-mock-id-1>"
       },
       "myActor": {
         "__typename": "Page",
-        "id": "<mock-id-3>",
+        "id": "<Page-mock-id-2>",
         "pageName": "<mock-value-for-field-\\"pageName\\">"
       },
+      "id": "<User-mock-id-3>",
       "name": "<mock-value-for-field-\\"name\\">",
       "username": "<mock-value-for-field-\\"username\\">",
       "profile_picture": {
@@ -343,15 +339,14 @@ fragment RelayMockPayloadGeneratorTest9Fragment on Page {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
       "__typename": "Page",
       "actor": {
         "__typename": "User",
-        "id": "<mock-id-1>",
+        "id": "<Actor-mock-id-1>",
         "name": "Mark"
       },
-      "id": "<mock-id-2>"
+      "id": "<Page-mock-id-2>"
     }
   }
 }
@@ -413,16 +408,14 @@ fragment RelayMockPayloadGeneratorTestFragment on User {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
       "__typename": "User",
-      "id": "<mock-id-2>",
+      "id": "<mock-id-1>",
       "name": "<mock-value-for-field-\\"name\\">",
       "profile_picture": {
-        "__typename": "Image",
         "uri": "<mock-value-for-field-\\"uri\\">",
-        "width": 42,
-        "height": 42
+        "width": "<mock-value-for-field-\\"width\\">",
+        "height": "<mock-value-for-field-\\"height\\">"
       }
     }
   }
@@ -616,13 +609,11 @@ fragment RelayMockPayloadGeneratorTest7Fragment on User {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
       "__typename": "User",
-      "id": "my-id-1002",
+      "id": "my-id-1001",
       "name": "<mock-value-for-field-\\"name\\">",
       "profile_picture": {
-        "__typename": "Image",
         "uri": "http://my-uri"
       }
     }
@@ -664,11 +655,10 @@ fragment RelayMockPayloadGeneratorTest10Fragment on User {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<mock-id-1>",
       "name": "My user name",
       "actor": {
         "__typename": "User",
-        "id": "<mock-id-2>",
+        "id": "<User-mock-id-1>",
         "name": "My user name",
         "profile_picture": {
           "uri": "http://my-image",
@@ -677,7 +667,8 @@ fragment RelayMockPayloadGeneratorTest10Fragment on User {
       },
       "profile_picture": {
         "uri": "http://my-image"
-      }
+      },
+      "id": "<User-mock-id-2>"
     }
   }
 }
@@ -708,20 +699,18 @@ fragment RelayMockPayloadGeneratorTest8Fragment on Page {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
       "__typename": "Page",
       "actor": {
-        "__typename": "__MockObject",
-        "id": "<mock-id-1>",
+        "__typename": "Actor",
+        "id": "<Actor-mock-id-1>",
         "name": "<mock-value-for-field-\\"name\\">"
       },
       "backgroundImage": {
-        "__typename": "Image",
         "width": 200,
         "uri": "http://my-image"
       },
-      "id": "<mock-id-2>"
+      "id": "<Page-mock-id-2>"
     }
   }
 }
@@ -740,8 +729,10 @@ query RelayMockPayloadGeneratorTest2Query {
 }
 
 fragment RelayMockPayloadGeneratorTest1Fragment on Actor {
+  __isActor: __typename
   id
   ... on Named {
+    __isNamed: __typename
     name
   }
   ... on User {
@@ -756,12 +747,12 @@ fragment RelayMockPayloadGeneratorTest1Fragment on Actor {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "viewer": {
-      "__typename": "Viewer",
       "actor": {
         "__typename": "User",
-        "id": "<mock-id-2>",
+        "__isActor": true,
+        "id": "<mock-id-1>",
+        "__isNamed": true,
         "name": "<mock-value-for-field-\\"name\\">",
         "firstName": "<mock-value-for-field-\\"firstName\\">",
         "lastName": "<mock-value-for-field-\\"lastName\\">"
@@ -1028,13 +1019,13 @@ fragment RelayMockPayloadGeneratorTest12Fragment on Page {
   "data": {
     "node": {
       "__typename": "Page",
-      "id": "page-id-2",
+      "id": "page-id-1",
       "name": "My Page",
       "body": {
         "text": "My Text"
       },
       "myTown": {
-        "id": "page-id-3",
+        "id": "page-id-2",
         "name": "My Hometown",
         "url": "http://node-myTown",
         "feedback": {
@@ -1043,7 +1034,7 @@ fragment RelayMockPayloadGeneratorTest12Fragment on Page {
               {
                 "cursor": "<mock-value-for-field-\\"cursor\\">",
                 "comment": {
-                  "id": "<Comment-mock-id-4>",
+                  "id": "<Comment-mock-id-3>",
                   "message": {
                     "text": "Comment text: node>myTown>feedback>comments>edges>comment"
                   },
@@ -1057,7 +1048,7 @@ fragment RelayMockPayloadGeneratorTest12Fragment on Page {
               "startCursor": "<mock-value-for-field-\\"startCursor\\">"
             }
           },
-          "id": "<Feedback-mock-id-5>"
+          "id": "<Feedback-mock-id-4>"
         }
       }
     }
@@ -1128,18 +1119,18 @@ fragment RelayMockPayloadGeneratorTest24Fragment on User {
   name
 }
 
+fragment RelayMockPayloadGeneratorTest26Fragment on Image {
+  uri
+  width
+  height
+}
+
 fragment RelayMockPayloadGeneratorTest25Fragment on User {
   id
   name
   profile_picture {
     ...RelayMockPayloadGeneratorTest26Fragment
   }
-}
-
-fragment RelayMockPayloadGeneratorTest26Fragment on Image {
-  uri
-  width
-  height
 }
 
 fragment RelayMockPayloadGeneratorTest27Fragment on User {
@@ -1164,21 +1155,21 @@ fragment RelayMockPayloadGeneratorTest27Fragment on User {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<mock-id-1>",
       "body": {
         "text": "<mock-value-for-field-\\"text\\">"
       },
       "actor": null,
       "myActor": {
         "__typename": "User",
-        "id": "<mock-id-2>",
+        "id": "<User-mock-id-1>",
         "name": "<mock-value-for-field-\\"name\\">"
       },
+      "id": "<User-mock-id-2>",
       "name": "<mock-value-for-field-\\"name\\">",
       "profile_picture": {
         "uri": "<mock-value-for-field-\\"uri\\">",
-        "width": "<mock-value-for-field-\\"width\\">",
-        "height": "<mock-value-for-field-\\"height\\">"
+        "width": 42,
+        "height": 42
       }
     }
   }
@@ -1273,7 +1264,7 @@ query RelayMockPayloadGeneratorTest40Query {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<Node-mock-id-1>",
+      "id": "<User-mock-id-1>",
       "traits": [
         "CHEERFUL",
         "DERISIVE"
@@ -1301,7 +1292,7 @@ query RelayMockPayloadGeneratorTest39Query {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<Node-mock-id-1>",
+      "id": "<User-mock-id-1>",
       "environment": "WEB"
     }
   }
@@ -1333,7 +1324,7 @@ fragment RelayMockPayloadGeneratorTest28Fragment on User {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<Node-mock-id-1>",
+      "id": "<User-mock-id-1>",
       "name": "<mock-value-for-field-\\"name\\">",
       "profile_picture": {
         "uri": "<mock-value-for-field-\\"uri\\">",
@@ -1433,7 +1424,7 @@ query RelayMockPayloadGeneratorTest23Query {
 
 exports[`with @relay_test_operation generate mock with Mock Resolvers for Interface Type 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest24Query @relay_test_operation {
+query RelayMockPayloadGeneratorTest24Query {
   node(id: "my-id") {
     __typename
     ... on User {
@@ -1447,7 +1438,6 @@ query RelayMockPayloadGeneratorTest24Query @relay_test_operation {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
       "__typename": "User",
       "id": "my-id",
@@ -1486,29 +1476,22 @@ exports[`with @relay_test_operation generate mock with Mock Resolvers for Interf
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
 query RelayMockPayloadGeneratorTest25Query {
   node(id: "my-id") {
-    ...RelayMockPayloadGeneratorTest25Fragment2
-  }
-}
-
-fragment RelayMockPayloadGeneratorTest25Fragment2 on Node {
   __typename
   ... on User {
     id
     name
   }
-  ...RelayMockPayloadGeneratorTest25Fragment1
+    ... on Page {
   id
+      pageName: name
 }
-
-fragment RelayMockPayloadGeneratorTest25Fragment1 on Page {
   id
-  pageName: name
+  }
 }
 
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
       "__typename": "Page",
       "id": "my-page-id",
@@ -1700,7 +1683,7 @@ query RelayMockPayloadGeneratorTest38Query {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<Node-mock-id-1>",
+      "id": "<User-mock-id-1>",
       "emailAddresses": [
         "my@email.com"
       ]
@@ -1727,46 +1710,8 @@ query RelayMockPayloadGeneratorTest30Query {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<Node-mock-id-1>",
-      "emailAddresses": []
-    }
-  }
-}
-`;
-
-exports[`with @relay_test_operation generate mock with invalid value for enum 1`] = `
-~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest41Query @relay_test_operation {
-  node(id: "my-id") {
-    ... on User {
-      id
-      environment
-    }
-  }
-}
-
-~~~~~~~~~~ OUTPUT ~~~~~~~~~~
-{
-  "data": {
-    "__typename": "Query",
-    "node": {
-      "__typename": "User",
       "id": "<User-mock-id-1>",
-      "kind": "Field",
-      "name": {
-        "kind": "Name",
-        "value": "environment",
-        "loc": {
-          "start": 173,
-          "end": 184
-        }
-      },
-      "arguments": [],
-      "directives": [],
-      "loc": {
-        "start": 173,
-        "end": 184
-      }
+      "emailAddresses": []
     }
   }
 }
@@ -2092,7 +2037,7 @@ query RelayMockPayloadGeneratorTest42Query {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<Node-mock-id-1>",
+      "id": "<User-mock-id-1>",
       "environment": null
     }
   }
