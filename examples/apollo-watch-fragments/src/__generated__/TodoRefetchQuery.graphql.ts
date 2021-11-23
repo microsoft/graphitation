@@ -3,39 +3,34 @@
 // @ts-nocheck
 ;
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
-export type compiledHooks_Root_executionQueryVariables = {
-    userId: string;
-    avatarSize: number;
+export type TodoRefetchQueryVariables = {
+    includeSomeOtherField?: boolean | null;
+    id: string;
 };
-export type compiledHooks_Root_executionQueryResponse = {
-    readonly user: {
-        readonly name: string;
-        readonly " $fragmentRefs": FragmentRefs<"compiledHooks_ChildFragment" | "compiledHooks_RefetchableFragment">;
-    };
+export type TodoRefetchQueryResponse = {
+    readonly node: {
+        readonly " $fragmentRefs": FragmentRefs<"Todo_todoFragment">;
+    } | null;
 };
-export type compiledHooks_Root_executionQuery = {
-    readonly response: compiledHooks_Root_executionQueryResponse;
-    readonly variables: compiledHooks_Root_executionQueryVariables;
+export type TodoRefetchQuery = {
+    readonly response: TodoRefetchQueryResponse;
+    readonly variables: TodoRefetchQueryVariables;
 };
 
 /*
-query compiledHooks_Root_executionQuery($userId: ID!, $avatarSize: Int!) {
-  user(id: $userId) {
-    name
-    ...compiledHooks_ChildFragment
-    ...compiledHooks_RefetchableFragment
+query TodoRefetchQuery($includeSomeOtherField: Boolean, $id: ID!) {
+  node(id: $id) {
+    __typename
+    ...Todo_todoFragment
     id
   }
 }
 
-fragment compiledHooks_ChildFragment on User {
-  petName
+fragment Todo_todoFragment on Todo {
   id
-}
-
-fragment compiledHooks_RefetchableFragment on User {
-  avatarUrl(size: $avatarSize)
-  id
+  description
+  isCompleted
+  someOtherField @include(if: $includeSomeOtherField)
 }
 
 */
@@ -47,7 +42,7 @@ export const executionQueryDocument = {
       "operation": "query",
       "name": {
         "kind": "Name",
-        "value": "compiledHooks_Root_executionQuery"
+        "value": "TodoRefetchQuery"
       },
       "variableDefinitions": [
         {
@@ -56,17 +51,14 @@ export const executionQueryDocument = {
             "kind": "Variable",
             "name": {
               "kind": "Name",
-              "value": "userId"
+              "value": "includeSomeOtherField"
             }
           },
           "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "ID"
-              }
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
             }
           },
           "directives": []
@@ -77,7 +69,7 @@ export const executionQueryDocument = {
             "kind": "Variable",
             "name": {
               "kind": "Name",
-              "value": "avatarSize"
+              "value": "id"
             }
           },
           "type": {
@@ -86,7 +78,7 @@ export const executionQueryDocument = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "Int"
+                "value": "ID"
               }
             }
           },
@@ -101,7 +93,7 @@ export const executionQueryDocument = {
             "kind": "Field",
             "name": {
               "kind": "Name",
-              "value": "user"
+              "value": "node"
             },
             "arguments": [
               {
@@ -114,7 +106,7 @@ export const executionQueryDocument = {
                   "kind": "Variable",
                   "name": {
                     "kind": "Name",
-                    "value": "userId"
+                    "value": "id"
                   }
                 }
               }
@@ -127,7 +119,7 @@ export const executionQueryDocument = {
                   "kind": "Field",
                   "name": {
                     "kind": "Name",
-                    "value": "name"
+                    "value": "__typename"
                   },
                   "arguments": [],
                   "directives": []
@@ -136,15 +128,7 @@ export const executionQueryDocument = {
                   "kind": "FragmentSpread",
                   "name": {
                     "kind": "Name",
-                    "value": "compiledHooks_ChildFragment"
-                  },
-                  "directives": []
-                },
-                {
-                  "kind": "FragmentSpread",
-                  "name": {
-                    "kind": "Name",
-                    "value": "compiledHooks_RefetchableFragment"
+                    "value": "Todo_todoFragment"
                   },
                   "directives": []
                 },
@@ -167,28 +151,19 @@ export const executionQueryDocument = {
       "kind": "FragmentDefinition",
       "name": {
         "kind": "Name",
-        "value": "compiledHooks_ChildFragment"
+        "value": "Todo_todoFragment"
       },
       "typeCondition": {
         "kind": "NamedType",
         "name": {
           "kind": "Name",
-          "value": "User"
+          "value": "Todo"
         }
       },
       "directives": [],
       "selectionSet": {
         "kind": "SelectionSet",
         "selections": [
-          {
-            "kind": "Field",
-            "name": {
-              "kind": "Name",
-              "value": "petName"
-            },
-            "arguments": [],
-            "directives": []
-          },
           {
             "kind": "Field",
             "name": {
@@ -197,59 +172,57 @@ export const executionQueryDocument = {
             },
             "arguments": [],
             "directives": []
-          }
-        ]
-      }
-    },
-    {
-      "kind": "FragmentDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "compiledHooks_RefetchableFragment"
-      },
-      "typeCondition": {
-        "kind": "NamedType",
-        "name": {
-          "kind": "Name",
-          "value": "User"
-        }
-      },
-      "directives": [],
-      "selectionSet": {
-        "kind": "SelectionSet",
-        "selections": [
+          },
           {
             "kind": "Field",
             "name": {
               "kind": "Name",
-              "value": "avatarUrl"
+              "value": "description"
             },
-            "arguments": [
+            "arguments": [],
+            "directives": []
+          },
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "isCompleted"
+            },
+            "arguments": [],
+            "directives": []
+          },
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "someOtherField"
+            },
+            "arguments": [],
+            "directives": [
               {
-                "kind": "Argument",
+                "kind": "Directive",
                 "name": {
                   "kind": "Name",
-                  "value": "size"
+                  "value": "include"
                 },
-                "value": {
-                  "kind": "Variable",
-                  "name": {
-                    "kind": "Name",
-                    "value": "avatarSize"
+                "arguments": [
+                  {
+                    "kind": "Argument",
+                    "name": {
+                      "kind": "Name",
+                      "value": "if"
+                    },
+                    "value": {
+                      "kind": "Variable",
+                      "name": {
+                        "kind": "Name",
+                        "value": "includeSomeOtherField"
+                      }
+                    }
                   }
-                }
+                ]
               }
-            ],
-            "directives": []
-          },
-          {
-            "kind": "Field",
-            "name": {
-              "kind": "Name",
-              "value": "id"
-            },
-            "arguments": [],
-            "directives": []
+            ]
           }
         ]
       }
@@ -258,14 +231,22 @@ export const executionQueryDocument = {
 };
 
 /*
-query compiledHooks_Root_executionQuery($userId: ID!, $avatarSize: Int!) {
-  user(id: $userId) {
-    name
+query TodoRefetchQuery($includeSomeOtherField: Boolean, $id: ID!) {
+  node(id: $id) {
+    __typename
+    ...Todo_todoFragment
     id
     ... on Node {
       __fragments @client
     }
   }
+}
+
+fragment Todo_todoFragment on Todo {
+  id
+  description
+  isCompleted
+  someOtherField @include(if: $includeSomeOtherField)
 }
 
 */
@@ -277,7 +258,7 @@ export const watchQueryDocument = {
       "operation": "query",
       "name": {
         "kind": "Name",
-        "value": "compiledHooks_Root_executionQuery"
+        "value": "TodoRefetchQuery"
       },
       "variableDefinitions": [
         {
@@ -286,17 +267,14 @@ export const watchQueryDocument = {
             "kind": "Variable",
             "name": {
               "kind": "Name",
-              "value": "userId"
+              "value": "includeSomeOtherField"
             }
           },
           "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "ID"
-              }
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
             }
           },
           "directives": []
@@ -307,7 +285,7 @@ export const watchQueryDocument = {
             "kind": "Variable",
             "name": {
               "kind": "Name",
-              "value": "avatarSize"
+              "value": "id"
             }
           },
           "type": {
@@ -316,7 +294,7 @@ export const watchQueryDocument = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "Int"
+                "value": "ID"
               }
             }
           },
@@ -331,7 +309,7 @@ export const watchQueryDocument = {
             "kind": "Field",
             "name": {
               "kind": "Name",
-              "value": "user"
+              "value": "node"
             },
             "arguments": [
               {
@@ -344,7 +322,7 @@ export const watchQueryDocument = {
                   "kind": "Variable",
                   "name": {
                     "kind": "Name",
-                    "value": "userId"
+                    "value": "id"
                   }
                 }
               }
@@ -357,9 +335,17 @@ export const watchQueryDocument = {
                   "kind": "Field",
                   "name": {
                     "kind": "Name",
-                    "value": "name"
+                    "value": "__typename"
                   },
                   "arguments": [],
+                  "directives": []
+                },
+                {
+                  "kind": "FragmentSpread",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Todo_todoFragment"
+                  },
                   "directives": []
                 },
                 {
@@ -407,6 +393,86 @@ export const watchQueryDocument = {
                 }
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "FragmentDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Todo_todoFragment"
+      },
+      "typeCondition": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "Todo"
+        }
+      },
+      "directives": [],
+      "selectionSet": {
+        "kind": "SelectionSet",
+        "selections": [
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "id"
+            },
+            "arguments": [],
+            "directives": []
+          },
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "description"
+            },
+            "arguments": [],
+            "directives": []
+          },
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "isCompleted"
+            },
+            "arguments": [],
+            "directives": []
+          },
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "someOtherField"
+            },
+            "arguments": [],
+            "directives": [
+              {
+                "kind": "Directive",
+                "name": {
+                  "kind": "Name",
+                  "value": "include"
+                },
+                "arguments": [
+                  {
+                    "kind": "Argument",
+                    "name": {
+                      "kind": "Name",
+                      "value": "if"
+                    },
+                    "value": {
+                      "kind": "Variable",
+                      "name": {
+                        "kind": "Name",
+                        "value": "includeSomeOtherField"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
           }
         ]
       }

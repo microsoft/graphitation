@@ -4,8 +4,7 @@ import { DB } from "./db";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 
 import { Resolvers } from "./graphql/resolver-typings";
-import invariant from "invariant";
-import { nodeFromCacheFieldPolicy } from "@graphitation/apollo-react-relay-duct-tape";
+import { typePolicies } from "@graphitation/apollo-react-relay-duct-tape";
 const schemaSource: string = require("../data/schema.graphql");
 
 interface Context {
@@ -14,11 +13,14 @@ interface Context {
 
 const resolvers: Resolvers<Context> = {
   Query: {
-    node: (_source, args, context) => {
-      invariant(
-        false,
-        "Did not expect to actually be invoked! This should be intercepted by Apollo Client's type-policy."
-      );
+    node: (_source, { id }, context) => {
+      const [typename, typeId] = id.split(":");
+      switch (typename) {
+        case "Todo": {
+          const todo = context.db.getTodo(parseInt(typeId, 10));
+          return todo ? { __typename: "Todo", ...todo } : null;
+        }
+      }
       return null;
     },
     todos: () => ({}),
@@ -43,6 +45,7 @@ const resolvers: Resolvers<Context> = {
   },
   Todo: {
     id: (todo) => `Todo:${todo.id}`,
+    someOtherField: () => "hello world",
   },
   TodosConnection: {
     id: () => "TodosConnection:singleton",
@@ -69,15 +72,10 @@ export function createClient() {
   return new ApolloClient({
     link: new SchemaLink({ schema, context }),
     cache: new InMemoryCache({
-      typePolicies: {
-        Query: {
-          fields: {
-            node: {
-              read: nodeFromCacheFieldPolicy,
-            },
-          },
-        },
+      possibleTypes: {
+        Node: ["Todo", "TodosConnection"],
       },
+      typePolicies,
     }),
   });
 }

@@ -1,12 +1,19 @@
-import { useRef, useState, useEffect, useMemo } from "react";
+import {
+  useRef,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useReducer,
+} from "react";
 import {
   useApolloClient,
   useQuery as useApolloQuery,
-  ApolloError,
   ApolloQueryResult,
 } from "@apollo/client";
 import { DocumentNode } from "graphql";
 import invariant from "invariant";
+import { useDeepCompareMemoize } from "./useDeepCompareMemoize";
 
 /**
  * @todo Rewrite this to mimic Relay's preload APIs
@@ -24,7 +31,8 @@ export function useCompiledLazyLoadQuery(
   options: { variables: Record<string, any> }
 ): { data?: any; error?: Error } {
   const client = useApolloClient();
-  const [_, forceUpdate] = useState({});
+  const forceUpdate = useForceUpdate();
+  const variables = useDeepCompareMemoize(options.variables);
 
   // Not using state for the status object, because we don't want to trigger a
   // state update when we reset things due to new variables coming in.
@@ -44,16 +52,16 @@ export function useCompiledLazyLoadQuery(
     ) {
       execution.current.query = client.query({
         query: documents.executionQueryDocument,
-        variables: options.variables,
+        variables,
       });
       execution.current.query
         .then((result) => {
           execution.current.status = { loading: false, error: result.error };
-          forceUpdate({});
+          forceUpdate();
         })
         .catch((err) => {
           execution.current.status = { loading: false, error: err };
-          forceUpdate({});
+          forceUpdate();
         })
         .then(() => {
           // No need to hang on to the results here any longer than necessary,
@@ -66,10 +74,10 @@ export function useCompiledLazyLoadQuery(
       // TODO: How does Apollo evict from the store?
       execution.current.status = { loading: true, error: undefined };
     };
-  }, [documents.executionQueryDocument, options.variables]);
+  }, [documents.executionQueryDocument, variables]);
 
   const { data } = useApolloQuery(documents.watchQueryDocument, {
-    variables: options.variables,
+    variables,
     fetchPolicy: "cache-only",
     skip: loading || !!error,
   });
@@ -86,36 +94,52 @@ export function useCompiledFragment(
   documents: {
     watchQueryDocument: DocumentNode;
   },
-  fragmentReference: { id: unknown }
-) {
+  fragmentReference: {
+    id: unknown;
+    __fragments?: Record<string, any>;
+  }
+): {} {
   const client = useApolloClient();
+  const forceUpdate = useForceUpdate();
+
   const observableQuery = useMemo(
     () =>
       client.watchQuery<{ node: null | {} }>({
-        query: documents.watchQueryDocument,
-        variables: { id: fragmentReference.id },
         fetchPolicy: "cache-only",
+        query: documents.watchQueryDocument,
+        returnPartialData: false, // FIXME: In tests this needs to be true, but not in the example app
+        variables: {
+          id: fragmentReference.id,
+          __fragments: fragmentReference.__fragments,
+          ...fragmentReference.__fragments,
+        },
       }),
-    [fragmentReference.id, client]
+    [client, fragmentReference.id, fragmentReference.__fragments]
   );
-  const [forceUpdateCount, forceUpdate] = useState(0);
+
   useEffect(() => {
     let skipFirst = true;
-    const subscription = observableQuery.subscribe(() => {
-      if (skipFirst) {
-        skipFirst = false;
-      } else {
-        forceUpdate(forceUpdateCount + 1);
+    const subscription = observableQuery.subscribe(
+      () => {
+        if (skipFirst) {
+          skipFirst = false;
+        } else {
+          forceUpdate();
+        }
+      },
+      (error) => {
+        console.log(error);
       }
-    });
+    );
     return () => subscription.unsubscribe();
   }, [observableQuery]);
+
   const result = observableQuery.getCurrentResult();
   invariant(
     result.data?.node,
     "Expected Apollo to respond with previously seeded node data"
   );
-  return result.data.node;
+  return result.data?.node;
 }
 
 export function useCompiledRefetchableFragment(
@@ -123,7 +147,61 @@ export function useCompiledRefetchableFragment(
     executionQueryDocument: DocumentNode;
     watchQueryDocument: DocumentNode;
   },
-  fragmentReference: { id: unknown }
-) {
-  return useCompiledFragment(documents, fragmentReference);
+  fragmentReference: { id: unknown; __fragments?: Record<string, any> }
+): [
+  data: {},
+  refetch: (
+    variables: {},
+    options?: { onCompleted?: (arg: Error | null) => void }
+  ) => void
+] {
+  const client = useApolloClient();
+  const [
+    fragmentReferenceWithOwnVariables,
+    setFragmentReferenceWithOwnVariables,
+  ] = useState(fragmentReference);
+  const data = useCompiledFragment(
+    documents,
+    fragmentReferenceWithOwnVariables
+  );
+
+  const refetch = useCallback(
+    async (variables, options) => {
+      let error: Error | null;
+      try {
+        // TODO: Unsure how to trigger Apollo Client to return an error
+        //       rather than throwing it, need to add test coverage for
+        //       this.
+        const { error: e = null } = await client.query({
+          fetchPolicy: "network-only",
+          query: documents.executionQueryDocument,
+          variables: {
+            ...fragmentReference.__fragments,
+            ...variables,
+            id: fragmentReference.id,
+          },
+        });
+        error = e;
+      } catch (e: any) {
+        error = e;
+      }
+      // NOTE: Unsure if the order of callback invocation and updating
+      //       state here matters.
+      options?.onCompleted?.(error!);
+      if (!error) {
+        setFragmentReferenceWithOwnVariables({
+          id: fragmentReference.id,
+          __fragments: { ...fragmentReference.__fragments, ...variables },
+        });
+      }
+    },
+    [client, fragmentReference.id, fragmentReference.__fragments]
+  );
+
+  return [data, refetch];
+}
+
+function useForceUpdate() {
+  const [_, forceUpdate] = useReducer((x) => x + 1, 0);
+  return forceUpdate;
 }

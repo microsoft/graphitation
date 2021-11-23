@@ -5,14 +5,15 @@
 
 import { FormatModule } from "relay-compiler/lib/language/RelayLanguagePluginInterface";
 import { DocumentNode, parse, print } from "graphql";
-import { reduceNodeWatchQuery } from "./reduceNodeWatchQuery";
+import { reduceNodeWatchQueryTransform } from "./formatModuleTransforms/reduceNodeWatchQueryTransform";
 import { schema } from "./schema";
 import invariant from "invariant";
+import { stripFragmentReferenceFieldSelectionTransform } from "./formatModuleTransforms/stripFragmentReferenceFieldSelectionTransform";
 
 function emitDocument(document: DocumentNode, exportName: string) {
   return `
 /*\n${print(document)}\n*/
-export const ${exportName} = ${JSON.stringify(document)};`;
+export const ${exportName} = ${JSON.stringify(document, null, 2)};`;
 }
 
 export const formatModule: FormatModule = ({
@@ -25,12 +26,18 @@ export const formatModule: FormatModule = ({
   if (docText) {
     const originalDocument = parse(docText, { noLocation: true });
     if (!moduleName.endsWith("WatchNodeQuery.graphql")) {
-      append += emitDocument(originalDocument, "executionQueryDocument");
+      const executionQueryDocument = stripFragmentReferenceFieldSelectionTransform(
+        originalDocument
+      );
+      append += emitDocument(executionQueryDocument, "executionQueryDocument");
       append += "\n";
     }
     invariant(schema, "Expected a schema to be passed in or set in the env");
-    const reducedDocument = reduceNodeWatchQuery(schema, originalDocument);
-    append += emitDocument(reducedDocument, "watchQueryDocument");
+    const watchQueryDocument = reduceNodeWatchQueryTransform(
+      schema,
+      originalDocument
+    );
+    append += emitDocument(watchQueryDocument, "watchQueryDocument");
   }
   return `/* tslint:disable */
 /* eslint-disable */

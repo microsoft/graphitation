@@ -1849,6 +1849,11 @@
   dependencies:
     "@types/node" "*"
 
+"@types/lodash@^4.14.176":
+  version "4.14.176"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.176.tgz#641150fc1cda36fbfa329de603bbb175d7ee20c0"
+  integrity sha512-xZmuPTa3rlZoIbtDUyJKZQimJV3bxCmzMIO2c9Pz9afyDro6kr7R79GwcB6mRhuoPmV2p1Vb66WOJH7F886WKQ==
+
 "@types/mime@^1":
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-1.3.2.tgz#93e25bf9ee75fe0fd80b594bc4feb0e862111b5a"
@@ -8494,6 +8499,16 @@ relay-test-utils-internal@^11.0.2:
     "@babel/runtime" "^7.0.0"
     fbjs "^3.0.0"
     relay-compiler "11.0.2"
+    relay-runtime "11.0.2"
+
+relay-test-utils@^11.0.2:
+  version "11.0.2"
+  resolved "https://registry.yarnpkg.com/relay-test-utils/-/relay-test-utils-11.0.2.tgz#95e2bcecc2a11878b5062cf4b27d06395ffc2482"
+  integrity sha512-zyDrKT+1CxzH3U0qHfE6LQlQefd1XCkXPlwH9RALqarthTzE4VpFNFCIz7btDzgRl7WEFTCG84n9lYNp94TXtA==
+  dependencies:
+    "@babel/runtime" "^7.0.0"
+    fbjs "^3.0.0"
+    invariant "^2.2.4"
     relay-runtime "11.0.2"
 
 remedial@^1.0.7:
