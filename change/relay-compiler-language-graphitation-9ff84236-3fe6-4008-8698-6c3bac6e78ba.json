@@ -1,0 +1,7 @@
+{
+  "type": "prerelease",
+  "comment": "Add support for refetching",
+  "packageName": "relay-compiler-language-graphitation",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}
