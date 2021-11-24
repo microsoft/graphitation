@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Graphql eslint rules added",
-  "packageName": "@graphitation/graphql-eslint-rules",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
