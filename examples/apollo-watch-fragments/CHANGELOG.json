@@ -2,6 +2,21 @@
   "name": "apollo-watch-fragments",
   "entries": [
     {
+      "date": "Wed, 24 Nov 2021 13:22:06 GMT",
+      "tag": "apollo-watch-fragments_v0.1.0",
+      "version": "0.1.0",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Bump relay-compiler-language-graphitation to v0.6.0-store-observation.4",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "5f314c5fd026e510d8640396ebcc910019efa3e4",
+            "package": "apollo-watch-fragments"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 11 Oct 2021 20:36:14 GMT",
       "tag": "apollo-watch-fragments_v0.1.0",
       "version": "0.1.0",
