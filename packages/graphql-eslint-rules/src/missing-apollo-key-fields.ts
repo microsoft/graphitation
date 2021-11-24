@@ -9,12 +9,29 @@ import {
   GraphQLOutputType,
   GraphQLNamedType,
   isNonNullType,
+  SelectionSetNode,
   isListType,
+  ASTNode,
 } from "graphql";
-import { CategoryType } from "@graphql-eslint/eslint-plugin";
+import {
+  GraphQLESLintRule,
+  CategoryType,
+  GraphQLESTreeNode,
+  GraphQLESLintRuleContext,
+} from "@graphql-eslint/eslint-plugin";
 
 export const REQUIRE_KEY_FIELDS_WHEN_AVAILABLE = "missing-apollo-key-fields";
 const DEFAULT_KEY_FIELD_NAME = "id";
+
+interface MissingApolloKeyFieldsRuleConfig {
+  typePolicies: TypePolicies;
+}
+
+type TypePolicies = Record<
+  string,
+  { keyFields?: KeySpecifier | false | (() => any) }
+>;
+type KeySpecifier = (string | KeySpecifier)[];
 
 function getBaseType(type: GraphQLOutputType): GraphQLNamedType {
   if (isNonNullType(type) || isListType(type)) {
@@ -24,7 +41,10 @@ function getBaseType(type: GraphQLOutputType): GraphQLNamedType {
   return type;
 }
 
-function checkRequiredParameters(ruleName: string, context: any) {
+function checkRequiredParameters(
+  ruleName: string,
+  context: GraphQLESLintRuleContext
+) {
   if (!context.parserServices) {
     throw new Error(
       `Rule '${ruleName}' requires 'parserOptions.operations' to be set and loaded. See http://bit.ly/graphql-eslint-operations for more info`
@@ -52,13 +72,13 @@ function checkRequiredParameters(ruleName: string, context: any) {
 
 function keyFieldsForType(
   type: GraphQLObjectType | GraphQLInterfaceType,
-  typePolicies: any
+  typePolicies: TypePolicies
 ) {
   const keyFields: string[] = [];
   const typePolicy = typePolicies[type.name];
   if (typePolicy && typePolicy.keyFields) {
     if (Array.isArray(typePolicy.keyFields)) {
-      typePolicy.keyFields.forEach((keyField: any) => {
+      typePolicy.keyFields.forEach((keyField) => {
         if (typeof keyField === "string") {
           keyFields.push(keyField);
         } else {
@@ -91,7 +111,29 @@ function getUnusedKeyFields(keyFieldsObjectForCheck: Record<string, boolean>) {
   }, [] as string[]);
 }
 
-export default {
+function hasIdFieldInInterfaceSelectionSet(node: unknown, keyFields: string[]) {
+  // FIXME: Upstream needs to be fixed to type the parent field on their ASTNode.
+  type ASTNodeWithParent = ASTNode & { parent?: ASTNodeWithParent };
+
+  const { parent } = node as ASTNodeWithParent;
+  if (parent && parent.kind === "InlineFragment") {
+    const parentSelectionSetNode = parent.parent;
+    if (
+      parentSelectionSetNode &&
+      parentSelectionSetNode.kind === "SelectionSet"
+    ) {
+      return keyFields.every((keyField) =>
+        parentSelectionSetNode.selections.some(
+          (s) => s.kind === "Field" && s.name.value === keyField
+        )
+      );
+    }
+  }
+}
+
+const missingApolloKeyFieldsRule: GraphQLESLintRule<
+  [MissingApolloKeyFieldsRuleConfig]
+> = {
   meta: {
     type: "problem",
     docs: {
@@ -134,6 +176,7 @@ export default {
           `,
         },
       ],
+      recommended: true,
     },
     messages: {
       [REQUIRE_KEY_FIELDS_WHEN_AVAILABLE]: `Field(s) "{{ fieldName }}" must be selected (when available on a type). Please make sure to include it in your selection set!\nIf you are using fragments, make sure that all used fragments {{checkedFragments}} specifies the field(s) "{{ fieldName }}".`,
@@ -145,27 +188,27 @@ export default {
       maxItems: 1,
       items: {
         type: "object",
+        additionalProperties: false,
         properties: {
-          fieldName: {
-            type: "string",
-            default: DEFAULT_KEY_FIELD_NAME,
+          typePolicies: {
+            type: "object",
           },
         },
       },
     },
   },
-  create(context: any) {
+  create(context) {
     return {
-      SelectionSet(node: any) {
+      SelectionSet(node: GraphQLESTreeNode<SelectionSetNode, true>) {
         checkRequiredParameters(REQUIRE_KEY_FIELDS_WHEN_AVAILABLE, context);
         const { typePolicies } = context.options[0];
-        const siblings = context.parserServices.siblingOperations;
+        const siblings = context.parserServices!.siblingOperations;
 
         if (!node.selections || node.selections.length === 0) {
           return;
         }
 
-        const typeInfo = node.typeInfo();
+        const typeInfo = node.typeInfo!();
         if (typeInfo && typeInfo.gqlType) {
           const rawType = getBaseType(typeInfo.gqlType);
           if (
@@ -220,22 +263,10 @@ export default {
                 }
               }
 
-              const { parent } = node;
-              const hasIdFieldInInterfaceSelectionSet =
-                parent &&
-                parent.kind === "InlineFragment" &&
-                parent.parent &&
-                parent.parent.kind === "SelectionSet" &&
-                keyFields.every((keyField) =>
-                  parent.parent.selections.some(
-                    (s: any) => s.kind === "Field" && s.name.value === keyField
-                  )
-                );
-
               const unusedKeyFields = getUnusedKeyFields(keyFieldsFound);
               if (
                 unusedKeyFields.length &&
-                !hasIdFieldInInterfaceSelectionSet
+                !hasIdFieldInInterfaceSelectionSet(node, keyFields)
               ) {
                 context.report({
                   loc: {
@@ -265,3 +296,5 @@ export default {
     };
   },
 };
+
+export default missingApolloKeyFieldsRule;

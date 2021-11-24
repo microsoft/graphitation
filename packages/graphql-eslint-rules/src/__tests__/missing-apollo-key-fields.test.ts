@@ -10,7 +10,7 @@ import {
   GraphQLRuleTester,
   ParserOptions,
 } from "@graphql-eslint/eslint-plugin";
-import rule, {
+import missingApolloKeyFieldsRule, {
   REQUIRE_KEY_FIELDS_WHEN_AVAILABLE,
 } from "../missing-apollo-key-fields";
 
@@ -67,61 +67,65 @@ export const typePolicies = {
   },
 };
 
-ruleTester.runGraphQLTests("missing-apollo-key-fields", rule, {
-  valid: [
-    {
-      ...WITH_SCHEMA,
-      code: `query { noId { name } }`,
-      options: [{ typePolicies }],
-    },
-    {
-      ...WITH_SCHEMA,
-      code: `query { hasId { id name } }`,
-      options: [{ typePolicies }],
-    },
-    {
-      ...WITH_SCHEMA,
-      code: `query { keyField { objectId name } }`,
-      options: [{ typePolicies }],
-    },
-    {
-      ...WITH_SCHEMA,
-      code: `query { hasId { ...HasIdFields } }`,
-      options: [{ typePolicies }],
-    },
-    {
-      ...WITH_SCHEMA,
-      code: `query { vehicles { id ...on Car { id mileage } } }`,
-      options: [{ typePolicies }],
-    },
-    {
-      ...WITH_SCHEMA,
-      code: `query { vehicles { ...on Car { id mileage } } }`,
-      options: [{ typePolicies }],
-    },
-    {
-      ...WITH_SCHEMA,
-      code: `query { flying { ...on Bird { id } } }`,
-      options: [{ typePolicies }],
-    },
-    {
-      ...WITH_SCHEMA,
-      code: `query { vehicles { id ...on Car { mileage } } }`,
-      options: [{ typePolicies }],
-    },
-  ],
-  invalid: [
-    {
-      ...WITH_SCHEMA,
-      code: `query { hasId { name } }`,
-      errors: [{ messageId: REQUIRE_KEY_FIELDS_WHEN_AVAILABLE }],
-      options: [{ typePolicies }],
-    },
-    {
-      ...WITH_SCHEMA,
-      code: `query { keyField { id name } }`,
-      errors: [{ messageId: REQUIRE_KEY_FIELDS_WHEN_AVAILABLE }],
-      options: [{ typePolicies }],
-    },
-  ],
-});
+ruleTester.runGraphQLTests(
+  "missing-apollo-key-fields",
+  missingApolloKeyFieldsRule as any, // FIXME: Not casting this as any leads to ts(2590) error
+  {
+    valid: [
+      {
+        ...WITH_SCHEMA,
+        code: `query { noId { name } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { hasId { id name } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { keyField { objectId name } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { hasId { ...HasIdFields } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { vehicles { id ...on Car { id mileage } } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { vehicles { ...on Car { id mileage } } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { flying { ...on Bird { id } } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { vehicles { id ...on Car { mileage } } }`,
+        options: [{ typePolicies }],
+      },
+    ],
+    invalid: [
+      {
+        ...WITH_SCHEMA,
+        code: `query { hasId { name } }`,
+        errors: [{ messageId: REQUIRE_KEY_FIELDS_WHEN_AVAILABLE }],
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { keyField { id name } }`,
+        errors: [{ messageId: REQUIRE_KEY_FIELDS_WHEN_AVAILABLE }],
+        options: [{ typePolicies }],
+      },
+    ],
+  }
+);
