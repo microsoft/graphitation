@@ -1,8 +1,16 @@
 # Change Log - relay-compiler-language-graphitation
 
-This log was last generated on Mon, 11 Oct 2021 20:36:14 GMT and should not be manually modified.
+This log was last generated on Wed, 24 Nov 2021 13:22:06 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.0-store-observation.4
+
+Wed, 24 Nov 2021 13:22:06 GMT
+
+### Changes
+
+- Add support for refetching (eloy.de.enige@gmail.com)
 
 ## 0.6.0-store-observation.3
 

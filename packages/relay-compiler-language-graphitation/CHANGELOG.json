@@ -2,6 +2,21 @@
   "name": "relay-compiler-language-graphitation",
   "entries": [
     {
+      "date": "Wed, 24 Nov 2021 13:22:06 GMT",
+      "tag": "relay-compiler-language-graphitation_v0.6.0-store-observation.4",
+      "version": "0.6.0-store-observation.4",
+      "comments": {
+        "prerelease": [
+          {
+            "comment": "Add support for refetching",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "5f314c5fd026e510d8640396ebcc910019efa3e4",
+            "package": "relay-compiler-language-graphitation"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 11 Oct 2021 20:36:14 GMT",
       "tag": "relay-compiler-language-graphitation_v0.6.0-store-observation.3",
       "version": "0.6.0-store-observation.3",

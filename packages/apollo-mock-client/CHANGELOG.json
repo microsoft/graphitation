@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-mock-client",
   "entries": [
     {
+      "date": "Wed, 24 Nov 2021 13:22:06 GMT",
+      "tag": "@graphitation/apollo-mock-client_v0.7.0",
+      "version": "0.7.0",
+      "comments": {
+        "minor": [
+          {
+            "comment": "Allow cache config of mock client",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "5f314c5fd026e510d8640396ebcc910019efa3e4",
+            "package": "@graphitation/apollo-mock-client"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 05 Oct 2021 08:17:41 GMT",
       "tag": "@graphitation/apollo-mock-client_v0.6.9",
       "version": "0.6.9",

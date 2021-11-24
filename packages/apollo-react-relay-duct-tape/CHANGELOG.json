@@ -2,6 +2,29 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Wed, 24 Nov 2021 13:22:06 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v0.5.0",
+      "version": "0.5.0",
+      "comments": {
+        "prerelease": [
+          {
+            "comment": "Add useRefetchableFragment",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "5f314c5fd026e510d8640396ebcc910019efa3e4",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          }
+        ],
+        "patch": [
+          {
+            "comment": "Bump relay-compiler-language-graphitation to v0.6.0-store-observation.4",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "5f314c5fd026e510d8640396ebcc910019efa3e4",
+            "package": "@graphitation/apollo-react-relay-duct-tape"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 11 Oct 2021 20:36:14 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v0.5.0",
       "version": "0.5.0",
