@@ -268,7 +268,8 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
                 unusedKeyFields.length &&
                 !hasIdFieldInInterfaceSelectionSet(node, keyFields)
               ) {
-                context.report({
+                const newNode = {
+                  ...node,
                   loc: {
                     start: {
                       line: node.loc.start.line,
@@ -279,6 +280,10 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
                       column: node.loc.end.column - 1,
                     },
                   },
+                };
+
+                context.report({
+                  node: newNode,
                   messageId: REQUIRE_KEY_FIELDS_WHEN_AVAILABLE,
                   data: {
                     checkedFragments:
