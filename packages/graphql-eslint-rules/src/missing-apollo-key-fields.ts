@@ -1,0 +1,267 @@
+/*
+ * Taken from https://github.com/dotansimha/graphql-eslint/blob/300f73be802bdd06432a5df34939521d1ce0d93b/packages/plugin/src/rules/require-id-when-available.ts
+ * MIT license https://github.com/dotansimha/graphql-eslint/blob/300f73be802bdd06432a5df34939521d1ce0d93b/LICENSE
+ */
+
+import {
+  GraphQLInterfaceType,
+  GraphQLObjectType,
+  GraphQLOutputType,
+  GraphQLNamedType,
+  isNonNullType,
+  isListType,
+} from "graphql";
+import { CategoryType } from "@graphql-eslint/eslint-plugin";
+
+export const REQUIRE_KEY_FIELDS_WHEN_AVAILABLE = "missing-apollo-key-fields";
+const DEFAULT_KEY_FIELD_NAME = "id";
+
+function getBaseType(type: GraphQLOutputType): GraphQLNamedType {
+  if (isNonNullType(type) || isListType(type)) {
+    return getBaseType(type.ofType);
+  }
+
+  return type;
+}
+
+function checkRequiredParameters(ruleName: string, context: any) {
+  if (!context.parserServices) {
+    throw new Error(
+      `Rule '${ruleName}' requires 'parserOptions.operations' to be set and loaded. See http://bit.ly/graphql-eslint-operations for more info`
+    );
+  }
+
+  if (!context.parserServices.siblingOperations.available) {
+    throw new Error(
+      `Rule '${ruleName}' requires 'parserOptions.operations' to be set and loaded. See http://bit.ly/graphql-eslint-operations for more info`
+    );
+  }
+
+  if (!context.parserServices.hasTypeInfo) {
+    throw new Error(
+      `Rule '${ruleName}' requires 'parserOptions.schema' to be set and schema to be loaded. See http://bit.ly/graphql-eslint-schema for more info`
+    );
+  }
+
+  if (!context.options[0]?.typePolicies) {
+    throw new Error(
+      `Rule '${ruleName}' requires option 'typePolicies' to be set.`
+    );
+  }
+}
+
+function keyFieldsForType(
+  type: GraphQLObjectType | GraphQLInterfaceType,
+  typePolicies: any
+) {
+  const keyFields: string[] = [];
+  const typePolicy = typePolicies[type.name];
+  if (typePolicy && typePolicy.keyFields) {
+    if (Array.isArray(typePolicy.keyFields)) {
+      typePolicy.keyFields.forEach((keyField: any) => {
+        if (typeof keyField === "string") {
+          keyFields.push(keyField);
+        } else {
+          throw new Error("Expected keyFields to be array of strings");
+        }
+      });
+    } else {
+      throw new Error("Expected keyFields to be array of strings");
+    }
+  } else if (type.getFields().id !== undefined) {
+    keyFields.push(DEFAULT_KEY_FIELD_NAME);
+  }
+  return keyFields;
+}
+
+function getKeyFieldsObjectForCheck(keyFields: string[]) {
+  return keyFields.reduce((acc, id) => {
+    acc[id] = false;
+    return acc;
+  }, {} as Record<string, boolean>);
+}
+
+function getUnusedKeyFields(keyFieldsObjectForCheck: Record<string, boolean>) {
+  return Object.entries(keyFieldsObjectForCheck).reduce((acc, [key, value]) => {
+    if (value) {
+      return acc;
+    }
+    acc.push(key);
+    return acc;
+  }, [] as string[]);
+}
+
+export default {
+  meta: {
+    type: "problem",
+    docs: {
+      category: "Operations" as CategoryType,
+      description: `Enforce selecting specific key fields when they are available on the GraphQL type.`,
+      requiresSchema: true,
+      requiresSiblings: true,
+      examples: [
+        {
+          title: "Incorrect",
+          code: /* GraphQL */ `
+            # In your schema
+            type User {
+              id: ID!
+              name: String!
+            }
+            # Query
+            query user {
+              user {
+                name
+              }
+            }
+          `,
+        },
+        {
+          title: "Correct",
+          code: /* GraphQL */ `
+            # In your schema
+            type User {
+              id: ID!
+              name: String!
+            }
+            # Query
+            query user {
+              user {
+                id
+                name
+              }
+            }
+          `,
+        },
+      ],
+    },
+    messages: {
+      [REQUIRE_KEY_FIELDS_WHEN_AVAILABLE]: `Field(s) "{{ fieldName }}" must be selected (when available on a type). Please make sure to include it in your selection set!\nIf you are using fragments, make sure that all used fragments {{checkedFragments}} specifies the field(s) "{{ fieldName }}".`,
+    },
+    schema: {
+      type: "array",
+      additionalItems: false,
+      minItems: 0,
+      maxItems: 1,
+      items: {
+        type: "object",
+        properties: {
+          fieldName: {
+            type: "string",
+            default: DEFAULT_KEY_FIELD_NAME,
+          },
+        },
+      },
+    },
+  },
+  create(context: any) {
+    return {
+      SelectionSet(node: any) {
+        checkRequiredParameters(REQUIRE_KEY_FIELDS_WHEN_AVAILABLE, context);
+        const { typePolicies } = context.options[0];
+        const siblings = context.parserServices.siblingOperations;
+
+        if (!node.selections || node.selections.length === 0) {
+          return;
+        }
+
+        const typeInfo = node.typeInfo();
+        if (typeInfo && typeInfo.gqlType) {
+          const rawType = getBaseType(typeInfo.gqlType);
+          if (
+            rawType instanceof GraphQLObjectType ||
+            rawType instanceof GraphQLInterfaceType
+          ) {
+            const keyFields = keyFieldsForType(rawType, typePolicies);
+            const checkedFragmentSpreads = new Set();
+
+            if (keyFields.length) {
+              const keyFieldsFound = getKeyFieldsObjectForCheck(keyFields);
+
+              for (const selection of node.selections) {
+                if (
+                  selection.kind === "Field" &&
+                  keyFieldsFound[selection.name.value] === false
+                ) {
+                  keyFieldsFound[selection.name.value] = true;
+                } else if (selection.kind === "InlineFragment") {
+                  for (const fragmentSelection of selection.selectionSet
+                    ?.selections || []) {
+                    if (
+                      fragmentSelection.kind === "Field" &&
+                      keyFieldsFound[fragmentSelection.name.value] === false
+                    ) {
+                      keyFieldsFound[fragmentSelection.name.value] = true;
+                    }
+                  }
+                } else if (selection.kind === "FragmentSpread") {
+                  const foundSpread = siblings.getFragment(
+                    selection.name.value
+                  );
+
+                  if (foundSpread[0]) {
+                    checkedFragmentSpreads.add(
+                      foundSpread[0].document.name.value
+                    );
+
+                    for (const fragmentSpreadSelection of foundSpread[0]
+                      .document.selectionSet?.selections || []) {
+                      if (
+                        fragmentSpreadSelection.kind === "Field" &&
+                        keyFieldsFound[fragmentSpreadSelection.name.value] ===
+                          false
+                      ) {
+                        keyFieldsFound[
+                          fragmentSpreadSelection.name.value
+                        ] = true;
+                      }
+                    }
+                  }
+                }
+              }
+
+              const { parent } = node;
+              const hasIdFieldInInterfaceSelectionSet =
+                parent &&
+                parent.kind === "InlineFragment" &&
+                parent.parent &&
+                parent.parent.kind === "SelectionSet" &&
+                keyFields.every((keyField) =>
+                  parent.parent.selections.some(
+                    (s: any) => s.kind === "Field" && s.name.value === keyField
+                  )
+                );
+
+              const unusedKeyFields = getUnusedKeyFields(keyFieldsFound);
+              if (
+                unusedKeyFields.length &&
+                !hasIdFieldInInterfaceSelectionSet
+              ) {
+                context.report({
+                  loc: {
+                    start: {
+                      line: node.loc.start.line,
+                      column: node.loc.start.column - 1,
+                    },
+                    end: {
+                      line: node.loc.end.line,
+                      column: node.loc.end.column - 1,
+                    },
+                  },
+                  messageId: REQUIRE_KEY_FIELDS_WHEN_AVAILABLE,
+                  data: {
+                    checkedFragments:
+                      checkedFragmentSpreads.size === 0
+                        ? ""
+                        : `(${Array.from(checkedFragmentSpreads).join(", ")})`,
+                    fieldName: unusedKeyFields.join(", "),
+                  },
+                });
+              }
+            }
+          }
+        }
+      },
+    };
+  },
+};
