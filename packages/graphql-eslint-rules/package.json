@@ -1,0 +1,27 @@
+{
+  "name": "@graphitation/graphql-eslint-rules",
+  "license": "MIT",
+  "version": "0.1.0",
+  "main": "./src/index.ts",
+  "scripts": {
+    "build": "monorepo-scripts build",
+    "lint": "monorepo-scripts lint",
+    "test": "monorepo-scripts test",
+    "types": "monorepo-scripts types",
+    "just": "monorepo-scripts"
+  },
+  "devDependencies": {
+    "@graphql-eslint/eslint-plugin": "^3.0.0",
+    "@types/jest": "^26.0.22",
+    "graphql": "^15.0.0",
+    "monorepo-scripts": "*"
+  },
+  "peerDependencies": {
+    "graphql": "^15.0.0"
+  },
+  "publishConfig": {
+    "main": "./lib/index",
+    "types": "./lib/index.d.ts",
+    "access": "public"
+  }
+}
