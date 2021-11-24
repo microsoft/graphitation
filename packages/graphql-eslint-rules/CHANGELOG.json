@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Wed, 24 Nov 2021 20:08:41 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.2.1",
+      "version": "0.2.1",
+      "comments": {
+        "patch": [
+          {
+            "comment": "missing-apollo-key-fields rule now return the whole node",
+            "author": "jakubvejr@microsoft.com",
+            "commit": "434968d5775304d73439d0c717a2439b608adc7c",
+            "package": "@graphitation/graphql-eslint-rules"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 24 Nov 2021 12:40:08 GMT",
       "tag": "@graphitation/graphql-eslint-rules_v0.2.0",
       "version": "0.2.0",
