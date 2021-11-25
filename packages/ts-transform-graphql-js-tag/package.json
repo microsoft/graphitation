@@ -1,9 +1,8 @@
 {
   "name": "@graphitation/ts-transform-graphql-js-tag",
   "license": "MIT",
-  "version": "0.2.0",
-  "main": "./lib/index",
-  "types": "./lib/index.d.ts",
+  "version": "0.2.1",
+  "main": "./src/index.ts",
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
@@ -14,6 +13,7 @@
   "devDependencies": {
     "@ts-morph/bootstrap": "^0.11.0",
     "@types/jest": "^26.0.22",
+    "graphql": "^15.0.0",
     "monorepo-scripts": "*",
     "ts-transformer-testing-library": "^1.0.0-alpha.7"
   },
@@ -25,5 +25,8 @@
   "dependencies": {
     "graphql": "^15.6.1",
     "typescript": "^4.4.3"
+  },
+  "peerDependencies": {
+    "graphql": "^15.0.0"
   }
 }

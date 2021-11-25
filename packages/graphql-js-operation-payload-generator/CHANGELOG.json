@@ -2,6 +2,36 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Tue, 26 Oct 2021 21:09:29 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.5.10",
+      "version": "0.5.10",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Bump @graphitation/graphql-js-tag to v0.5.5",
+            "author": "modevold@microsoft.com",
+            "commit": "6fbd717cb21f2e9f49ddca58e0365b5381358b46",
+            "package": "@graphitation/graphql-js-operation-payload-generator"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 04 Oct 2021 13:48:04 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.5.9",
+      "version": "0.5.9",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Bump @graphitation/graphql-js-tag to v0.5.4",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "ceb24aa25210090e38251be53d010d75abdad9ba",
+            "package": "@graphitation/graphql-js-operation-payload-generator"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 30 Jul 2021 23:21:22 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.5.8",
       "version": "0.5.8",

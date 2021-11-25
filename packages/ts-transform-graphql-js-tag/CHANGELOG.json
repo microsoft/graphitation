@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-transform-graphql-js-tag",
   "entries": [
     {
+      "date": "Tue, 26 Oct 2021 21:09:29 GMT",
+      "tag": "@graphitation/ts-transform-graphql-js-tag_v0.2.1",
+      "version": "0.2.1",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Move graphql to peerDependencies",
+            "author": "modevold@microsoft.com",
+            "commit": "6fbd717cb21f2e9f49ddca58e0365b5381358b46",
+            "package": "@graphitation/ts-transform-graphql-js-tag"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 01 Oct 2021 13:17:55 GMT",
       "tag": "@graphitation/ts-transform-graphql-js-tag_v0.2.0",
       "version": "0.2.0",

@@ -1,8 +1,7 @@
 {
-  "name": "@graphitation/graphql-js-operation-payload-generator",
-  "description": "Generates a payload for a given GraphQL operation expressed in graphql-js AST and a GraphQL Schema.",
+  "name": "@graphitation/graphql-eslint-rules",
   "license": "MIT",
-  "version": "0.5.10",
+  "version": "0.2.1",
   "main": "./src/index.ts",
   "scripts": {
     "build": "monorepo-scripts build",
@@ -11,14 +10,14 @@
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts"
   },
-  "dependencies": {
-    "deepmerge": "^4.2.2"
-  },
   "devDependencies": {
-    "@graphitation/graphql-js-tag": "^0.5.5",
+    "@graphql-eslint/eslint-plugin": "^3.0.0",
     "@types/jest": "^26.0.22",
-    "monorepo-scripts": "*",
-    "relay-test-utils-internal": "^11.0.2"
+    "graphql": "^15.0.0",
+    "monorepo-scripts": "*"
+  },
+  "peerDependencies": {
+    "graphql": "^15.0.0"
   },
   "publishConfig": {
     "main": "./lib/index",

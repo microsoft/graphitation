@@ -2,6 +2,36 @@
   "name": "@graphitation/graphql-js-tag",
   "entries": [
     {
+      "date": "Tue, 26 Oct 2021 21:09:29 GMT",
+      "tag": "@graphitation/graphql-js-tag_v0.5.5",
+      "version": "0.5.5",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Move graphql to peerDependencies",
+            "author": "modevold@microsoft.com",
+            "commit": "6fbd717cb21f2e9f49ddca58e0365b5381358b46",
+            "package": "@graphitation/graphql-js-tag"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 04 Oct 2021 13:48:04 GMT",
+      "tag": "@graphitation/graphql-js-tag_v0.5.4",
+      "version": "0.5.4",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Remove need to configure tsc to allow Set spread.",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "ceb24aa25210090e38251be53d010d75abdad9ba",
+            "package": "@graphitation/graphql-js-tag"
+          }
+        ]
+      }
+    },
+    {
       "date": "Sat, 24 Apr 2021 23:10:54 GMT",
       "tag": "@graphitation/graphql-js-tag_v0.5.3",
       "version": "0.5.3",
