@@ -5,10 +5,7 @@ export { Resolvers } from "./types";
 
 export { addTypesToRequestDocument } from "./ast/addTypesToRequestDocument";
 
-export {
-  extractImplicitTypes,
-  extractImplicitTypesToTypescript,
-} from "./extractImplicitTypes";
+export { extractImplicitTypes } from "./extractImplicitTypesRuntime";
 
 export { specifiedScalars } from "./values";
 

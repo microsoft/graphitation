@@ -2,13 +2,16 @@ import path from "path";
 import fs from "fs/promises";
 import ts from "typescript";
 import { Command } from "commander";
-import { extractImplicitTypesToTypescript } from "../extractImplicitTypes";
+import { extractImplicitTypesToTypescript } from "../extractImplicitTypesToTypescript";
 import { parse } from "graphql";
 
-export function typeDefsToImplicitResolvers(): Command {
+export function supermassive(): Command {
   const program = new Command();
   return program
-    .argument("<files...>", "graphql typedef files to convert")
+    .command("extract-schema <files...>")
+    .description(
+      "extract implicit resolvers to a ts file from graphql typedefs"
+    )
     .action(async (files: Array<string>) => {
       await typeDefsToImplicitResolversImpl(files);
     });

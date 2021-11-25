@@ -2,9 +2,16 @@
   "name": "@graphitation/supermassive",
   "license": "MIT",
   "version": "0.1.0",
-  "main": "./src/index.ts",
+  "main": "./src/index.js",
+  "type": "module",
   "bin": {
-    "supermassive": "./bin/typeDefsToImplicitResolvers.js"
+    "supermassive": "./bin/supermassive.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.js"
+    }
   },
   "scripts": {
     "build": "monorepo-scripts build",

@@ -4,7 +4,7 @@ import schema, { typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
 import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
-import { extractImplicitTypes } from "../extractImplicitTypes";
+import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
 import { Resolvers } from "../types";
 import { specifiedScalars } from "../values";
 

@@ -2,12 +2,9 @@ import * as fs from "fs";
 import * as path from "path";
 import ts from "typescript";
 import { isInputType, parse } from "graphql";
-import {
-  extractImplicitTypesToTypescript,
-  extractImplicitTypes,
-} from "../extractImplicitTypes";
+import { extractImplicitTypesToTypescript } from "../extractImplicitTypesToTypescript";
+import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
 import { specifiedScalars } from "../values";
-import { TsConfigResolver } from "@ts-morph/common";
 import { Resolvers } from "..";
 
 describe(extractImplicitTypesToTypescript, () => {

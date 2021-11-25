@@ -1,8 +1,8 @@
 import fs from "fs/promises";
 import path from "path";
-import { typeDefsToImplicitResolvers } from "../typeDefsToImplicitResolvers";
+import { supermassive } from "../supermassive";
 
-describe(typeDefsToImplicitResolvers, () => {
+describe(supermassive, () => {
   beforeAll(async () => {
     await fs.rm(path.join(__dirname, "fixtures", "__generated__"), {
       recursive: true,
@@ -18,7 +18,7 @@ describe(typeDefsToImplicitResolvers, () => {
   });
 
   it("should generate", async () => {
-    const program = typeDefsToImplicitResolvers();
+    const program = supermassive();
     await program.parseAsync(
       [path.join(__dirname, "./fixtures/schema.graphql")],
       { from: "user" }
