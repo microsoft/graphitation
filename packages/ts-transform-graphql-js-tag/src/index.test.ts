@@ -9,14 +9,14 @@ describe("transformer tests", () => {
       .addTransformer((program: ts.Program) => getTransformer({}))
       .addMock({
         name: "@graphitation/graphql-js-tag",
-        content: `export const gql:any = () => {}`,
+        content: `export const graphql:any = () => {}`,
       })
       .setFilePath("/index.tsx");
 
     const actual = transformer.transform(`
-       import { gql } from "@graphitation/graphql-js-tag"
+       import { graphql } from "@graphitation/graphql-js-tag"
 
-       export const query = gql\`
+       export const query = graphql\`
          query Foo {
            foo
          }
@@ -34,20 +34,20 @@ describe("transformer tests", () => {
       .addTransformer((program: ts.Program) => getTransformer({}))
       .addMock({
         name: "@graphitation/graphql-js-tag",
-        content: `export const gql:any = () => {}`,
+        content: `export const graphql:any = () => {}`,
       })
       .setFilePath("/index.tsx");
 
     const actual = transformer.transform(`
-       import { gql } from "@graphitation/graphql-js-tag"
+       import { graphql } from "@graphitation/graphql-js-tag"
 
-       const fragment = gql\`
+       const fragment = graphql\`
          fragment FooFragment on Foo {
            bar
          }
        \`
 
-       export const query = gql\`
+       export const query = graphql\`
          query Foo {
            foo
            ...FooFragment
@@ -73,14 +73,14 @@ describe("transformer tests", () => {
       )
       .addMock({
         name: "@graphitation/graphql-js-tag",
-        content: `export const gql:any = () => {}`,
+        content: `export const graphql:any = () => {}`,
       })
       .setFilePath("/index.tsx");
 
     const actual = transformer.transform(`
-    import { gql } from "@graphitation/graphql-js-tag"
+    import { graphql } from "@graphitation/graphql-js-tag"
 
-    export const query = gql\`
+    export const query = graphql\`
       query Foo {
         foo
       }
@@ -99,6 +99,7 @@ describe("transformer tests", () => {
         .addTransformer((program: ts.Program) =>
           getTransformer({
             graphqlTagModule: "graphql-tag",
+            graphqlTagModuleExport: "gql",
           })
         )
         .addMock({
@@ -131,14 +132,14 @@ describe("transformer tests", () => {
         )
         .addMock({
           name: "@graphitation/graphql-js-tag",
-          content: `export default const gql:any = () => {}`,
+          content: `export default const graphql:any = () => {}`,
         })
         .setFilePath("/index.tsx");
 
       const actual = transformer.transform(`
-      import gql from "@graphitation/graphql-js-tag"
+      import graphql from "@graphitation/graphql-js-tag"
 
-      export const query = gql\`
+      export const query = graphql\`
         query Foo {
           foo
         }
@@ -155,7 +156,7 @@ describe("transformer tests", () => {
         .addTransformer((program: ts.Program) => getTransformer({}))
         .addMock({
           name: "@graphitation/graphql-js-tag",
-          content: `export const gql:any = () => {}, someOtherExport: any = 1;`,
+          content: `export const graphql:any = () => {}, someOtherExport: any = 1;`,
         })
         .setFilePath("/index.tsx");
 
@@ -173,7 +174,7 @@ describe("transformer tests", () => {
         .addTransformer((program: ts.Program) => getTransformer({}))
         .addMock({
           name: "@graphitation/graphql-js-tag",
-          content: `export const gql:any = () => {}; const defaultExport = 1; export default defaultExport ;`,
+          content: `export const graphql:any = () => {}; const defaultExport = 1; export default defaultExport ;`,
         })
         .setFilePath("/index.tsx");
 
@@ -191,14 +192,14 @@ describe("transformer tests", () => {
         .addTransformer((program: ts.Program) => getTransformer({}))
         .addMock({
           name: "@graphitation/graphql-js-tag",
-          content: `export const gql:any = () => {}; const defaultExport = 1; export default defaultExport ;`,
+          content: `export const graphql:any = () => {}; const defaultExport = 1; export default defaultExport ;`,
         })
         .setFilePath("/index.tsx");
 
       const actual = transformer.transform(`
-        import someOtherDefault, { gql } from "@graphitation/graphql-js-tag"
+        import someOtherDefault, { graphql } from "@graphitation/graphql-js-tag"
 
-        export const query = gql\`
+        export const query = graphql\`
           query Foo {
             foo
           }
@@ -220,14 +221,14 @@ describe("transformer tests", () => {
         )
         .addMock({
           name: "@graphitation/graphql-js-tag",
-          content: `export default const gql:any = () => {}; export const someOtherExport: any = 5;`,
+          content: `export default const graphql:any = () => {}; export const someOtherExport: any = 5;`,
         })
         .setFilePath("/index.tsx");
 
       const actual = transformer.transform(`
-      import gql, { someOtherExport } from "@graphitation/graphql-js-tag"
+      import graphql, { someOtherExport } from "@graphitation/graphql-js-tag"
 
-      export const query = gql\`
+      export const query = graphql\`
         query Foo {
           foo
         }

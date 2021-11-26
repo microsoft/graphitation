@@ -1,20 +1,22 @@
 import path from "path";
 import fs from "fs/promises";
 import ts from "typescript";
-import { Command } from "commander";
+import { program, Command } from "commander";
 import { extractImplicitTypesToTypescript } from "../extractImplicitTypesToTypescript";
 import { parse } from "graphql";
 
 export function supermassive(): Command {
-  const program = new Command();
-  return program
-    .command("extract-schema <files...>")
+  const command = new Command();
+  command
+    .name("extract-schema")
+    .argument("<files...>")
     .description(
       "extract implicit resolvers to a ts file from graphql typedefs"
     )
     .action(async (files: Array<string>) => {
       await typeDefsToImplicitResolversImpl(files);
     });
+  return program.name("supermassive").addCommand(command);
 }
 
 async function typeDefsToImplicitResolversImpl(

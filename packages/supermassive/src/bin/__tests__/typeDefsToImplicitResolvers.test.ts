@@ -19,10 +19,12 @@ describe(supermassive, () => {
 
   it("should generate", async () => {
     const program = supermassive();
-    await program.parseAsync(
-      [path.join(__dirname, "./fixtures/schema.graphql")],
-      { from: "user" }
-    );
+    await program.parseAsync([
+      "node",
+      "supermassive",
+      "extract-schema",
+      path.join(__dirname, "./fixtures/schema.graphql"),
+    ]);
     expect(
       await fs.readFile(
         path.join(__dirname, "./fixtures/__generated__/schema.ts"),
