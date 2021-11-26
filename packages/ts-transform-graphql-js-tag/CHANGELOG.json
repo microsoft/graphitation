@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-transform-graphql-js-tag",
   "entries": [
     {
+      "date": "Fri, 26 Nov 2021 15:43:37 GMT",
+      "tag": "@graphitation/ts-transform-graphql-js-tag_v0.2.2",
+      "version": "0.2.2",
+      "comments": {
+        "patch": [
+          {
+            "comment": "Fixed not actually checking for tag specified, changed default.",
+            "author": "mnovikov@microsoft.com",
+            "commit": "640e0b5d7ae7a8338346dd8b88a7dda7b2d9a060",
+            "package": "@graphitation/ts-transform-graphql-js-tag"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 26 Oct 2021 21:09:29 GMT",
       "tag": "@graphitation/ts-transform-graphql-js-tag_v0.2.1",
       "version": "0.2.1",

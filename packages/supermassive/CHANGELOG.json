@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Fri, 26 Nov 2021 15:43:37 GMT",
+      "tag": "@graphitation/supermassive_v0.2.0",
+      "version": "0.2.0",
+      "comments": {
+        "minor": [
+          {
+            "comment": "Updated supermassive to be more suitable for usage",
+            "author": "mnovikov@microsoft.com",
+            "commit": "640e0b5d7ae7a8338346dd8b88a7dda7b2d9a060",
+            "package": "@graphitation/supermassive"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 26 Oct 2021 21:09:29 GMT",
       "tag": "@graphitation/supermassive_v0.1.3",
       "version": "0.1.3",

@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Fixed not actually checking for tag specified, changed default.",
-  "packageName": "@graphitation/ts-transform-graphql-js-tag",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}
