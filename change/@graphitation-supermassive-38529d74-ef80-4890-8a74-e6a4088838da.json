@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Updated supermassive to be more suitable for usage",
+  "packageName": "@graphitation/supermassive",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}

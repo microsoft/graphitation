@@ -6,6 +6,8 @@
  * Our changes MUST be annotated inline for ease of future merging.
  */
 
+import { Maybe } from "../jsutils/Maybe";
+
 /**
  * [SUPERMASSIVE]
  *
@@ -183,6 +185,7 @@ export interface FieldNode {
 
 export interface ArgumentNode {
   readonly __type: TypeNode; // [SUPERMASSIVE] Add the value type
+  readonly __defaultValue: Maybe<ValueNode>; // [SUPERMASSIVE] Add default value
   readonly kind: "Argument";
   readonly loc?: Location;
   readonly name: NameNode;

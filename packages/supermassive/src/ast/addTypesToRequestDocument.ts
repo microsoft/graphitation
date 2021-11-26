@@ -1,12 +1,13 @@
 import {
-  GraphQLInputType,
-  GraphQLOutputType,
+  GraphQLType,
   GraphQLSchema,
   isListType,
   isNamedType,
   isNonNullType,
+  parseValue,
   TypeInfo,
   visit,
+  print,
   visitWithTypeInfo,
 } from "graphql";
 
@@ -20,16 +21,21 @@ export function addTypesToRequestDocument(
 ): TypedAST.DocumentNode {
   const typeInfo = new TypeInfo(schema);
   return visit(
-    document,
+    document as any,
     visitWithTypeInfo(typeInfo, {
       Argument(node) {
         const argument = typeInfo.getArgument()!;
-        const typeNode = generateTypeNode(argument.type);
-        const newNode: TypedAST.ArgumentNode = {
-          ...node,
-          __type: typeNode,
-        };
-        return newNode;
+        if (argument) {
+          const typeNode = generateTypeNode(argument.type);
+          const newNode: TypedAST.ArgumentNode = {
+            ...node,
+            __type: typeNode,
+            __defaultValue: argument.defaultValue
+              ? parseValue(JSON.stringify(argument.defaultValue))
+              : undefined,
+          };
+          return newNode;
+        }
       },
       Field(
         node: Omit<
@@ -52,9 +58,7 @@ export function addTypesToRequestDocument(
   );
 }
 
-function generateTypeNode(
-  type: GraphQLOutputType | GraphQLInputType
-): TypedAST.TypeNode {
+function generateTypeNode(type: GraphQLType): TypedAST.TypeNode {
   if (isNonNullType(type)) {
     const typeNode = generateTypeNode(type.ofType) as
       | TypedAST.NamedTypeNode

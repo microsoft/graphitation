@@ -23,7 +23,7 @@ export interface GraphQLTagTransformOptions {
 
 const DefaultContext: GraphQLTagTransformContext = {
   graphqlTagModuleRegexp: new RegExp(/^['"]@graphitation\/graphql-js-tag['"]$/),
-  graphqlTagModuleExport: "gql",
+  graphqlTagModuleExport: "graphql",
 };
 
 export function getTransformer(
@@ -150,7 +150,7 @@ function getVisitor(
       const isTemplateLiteral = ts.isNoSubstitutionTemplateLiteral(template);
 
       if (
-        tag.getText() === "gql" &&
+        tag.getText() === templateLiteralName &&
         (isTemplateExpression || isTemplateLiteral)
       ) {
         let source = template.getText().slice(1, -1);

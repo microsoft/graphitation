@@ -235,6 +235,46 @@ const resolvers: IExecutableSchemaDefinition["resolvers"] = {
       return result;
     },
 
+    node(parent, args, context, info) {
+      let result;
+      switch (args.nodeType) {
+        case "Person": {
+          result = person(parent, args, context, info);
+          break;
+        }
+        case "Starship": {
+          result = starship(parent, args, context, info);
+          break;
+        }
+        case "Transport": {
+          result = transport(parent, args, context, info);
+          break;
+        }
+        case "Species": {
+          result = species(parent, args, context, info);
+          break;
+        }
+        case "Vehicle": {
+          result = vehicle(parent, args, context, info);
+          break;
+        }
+        case "Planet": {
+          result = planet(parent, args, context, info);
+          break;
+        }
+        case "Film": {
+          result = film(parent, args, context, info);
+          break;
+        }
+        default:
+          throw new Error(`Invalid node type ${args.nodeType}`);
+      }
+      return {
+        ...result,
+        __typename: args.nodeType,
+      };
+    },
+
     person,
     planet,
     film,
