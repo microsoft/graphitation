@@ -1,7 +1,7 @@
 export { executeWithoutSchema } from "./executeWithoutSchema";
 export { executeWithSchema } from "./executeWithSchema";
 
-export { Resolvers } from "./types";
+export type { Resolvers } from "./types";
 
 export { addTypesToRequestDocument } from "./ast/addTypesToRequestDocument";
 
