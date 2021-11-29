@@ -42,6 +42,9 @@ Use this together with [relay-compiler-language-graphitation](../relay-compiler-
     typePolicies: {
       Query: {
         fields: {
+          __fragments: {
+            read: typePolicies.Query.fields.__fragments.read,
+          },
           node: {
             read: typePolicies.Query.fields.node.read,
           },
@@ -117,3 +120,10 @@ TODO:
 - Add query hook
 - Add fragment hook
 - Import and use typings
+
+## Architecture
+
+- Fragment reference variables need to be propagated to child fragment hooks, so refetch hooks can re-use original request variables.
+  - This cannot be done through React Context, because a refetch hook needs to be able to [partially] update original variables, which cannot be done with React Context.
+  - Instead, we pass these as React props, which are populated through GraphQL as we can know exactly where [child] fragments are being referenced and the data needs to be encoded. The actual resolving of the data is done through the (./packages/apollo-react-relay-duct-tape/src/storeObservation/fragmentReferencesFieldPolicy.ts)[fragmentReferencesFieldPolicy] Apollo Cache field policy.
+  - Because we can't just add a Apollo Cache field policy to _any_ type, as we don't even know all types, we add it to the `Node` interface instead. The one other type we can assume to exist is the `Query` type.
