@@ -12,6 +12,9 @@ export const typePolicies: TypePolicies = {
   },
   Query: {
     fields: {
+      __fragments: {
+        read: fragmentReferencesFieldPolicy,
+      },
       node: {
         read: nodeFromCacheFieldPolicy,
       },
