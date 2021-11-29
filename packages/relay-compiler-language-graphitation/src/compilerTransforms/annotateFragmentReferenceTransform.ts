@@ -3,10 +3,40 @@ import {
   Fragment,
   InlineFragment,
   LinkedField,
+  Root,
+  ScalarField,
 } from "relay-compiler";
 import { IRTransform } from "relay-compiler/lib/core/CompilerContext";
 import { visit } from "relay-compiler/lib/core/IRVisitor";
 import { implementsNodeInterface } from "./utils";
+
+const FRAGMENTS_SELECTION: ScalarField = {
+  kind: "ScalarField",
+  name: "__fragments",
+  alias: "__fragments",
+  type: "String!",
+  directives: [
+    {
+      kind: "Directive",
+      name: "client",
+      args: [],
+      loc: { kind: "Generated" },
+      metadata: undefined,
+    },
+  ],
+  args: [],
+  loc: { kind: "Generated" },
+  metadata: undefined,
+};
+
+const FRAGMENTS_ON_NODE_SELECTION: InlineFragment = {
+  kind: "InlineFragment",
+  typeCondition: "Node",
+  selections: [FRAGMENTS_SELECTION],
+  directives: [],
+  loc: { kind: "Generated" },
+  metadata: undefined,
+};
 
 export const annotateFragmentReferenceTransform: IRTransform = (context) => {
   const visitor = visitNodeWithSelections.bind(null, context);
@@ -14,6 +44,7 @@ export const annotateFragmentReferenceTransform: IRTransform = (context) => {
 
   context.forEachDocument((document) => {
     const nextDocument = visit(document, {
+      Root: visitor,
       Fragment: visitor,
       InlineFragment: visitor,
       LinkedField: visitor,
@@ -26,47 +57,22 @@ export const annotateFragmentReferenceTransform: IRTransform = (context) => {
 
 function visitNodeWithSelections(
   context: CompilerContext,
-  node: Fragment | InlineFragment | LinkedField
-): Fragment | InlineFragment | LinkedField | undefined {
-  const hasNodeFragmentSpread = node.selections.some((selection) => {
-    return (
-      selection.kind === "FragmentSpread" &&
-      implementsNodeInterface(context, context.getFragment(selection.name))
-    );
-  });
-  if (hasNodeFragmentSpread) {
-    return {
-      ...node,
-      selections: [
-        ...node.selections,
-        {
-          kind: "InlineFragment",
-          typeCondition: "Node",
-          selections: [
-            {
-              kind: "ScalarField",
-              name: "__fragments",
-              alias: "__fragments",
-              type: "String!",
-              directives: [
-                {
-                  kind: "Directive",
-                  name: "client",
-                  args: [],
-                  loc: { kind: "Generated" },
-                  metadata: undefined,
-                },
-              ],
-              args: [],
-              loc: { kind: "Generated" },
-              metadata: undefined,
-            },
-          ],
-          directives: [],
-          loc: { kind: "Generated" },
-          metadata: undefined,
-        },
-      ],
-    };
+  node: Root | Fragment | InlineFragment | LinkedField
+): Root | Fragment | InlineFragment | LinkedField | undefined {
+  for (const selection of node.selections) {
+    if (selection.kind === "FragmentSpread") {
+      const fragment = context.getFragment(selection.name);
+      if (implementsNodeInterface(context, fragment)) {
+        return {
+          ...node,
+          selections: [...node.selections, FRAGMENTS_ON_NODE_SELECTION],
+        };
+      } else if (fragment.type === context.getSchema().getQueryType()) {
+        return {
+          ...node,
+          selections: [...node.selections, FRAGMENTS_SELECTION],
+        };
+      }
+    }
   }
 }
