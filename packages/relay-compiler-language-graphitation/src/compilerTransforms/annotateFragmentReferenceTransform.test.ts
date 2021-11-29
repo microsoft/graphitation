@@ -17,49 +17,119 @@ function transform(text: string) {
 }
 
 describe(annotateFragmentReferenceTransform, () => {
-  it("annotates a fragment spread such that the hooks know where to inject the fragment reference metadata using an Apollo Client local-only field", () => {
-    const text = `
-      fragment SomeModule_someFragment on User {
-        id
-      }
-      fragment SomeModule_anotherFragment on User {
-        id
-        ... {
-          ...SomeModule_someFragment
-        }
-      }
-      query SomeModuleQuery {
-        me {
+  describe("in order for hooks to know where to inject the fragment reference metadata using an Apollo Client local-only field", () => {
+    it("annotates a Node fragment spread", () => {
+      const text = `
+        fragment SomeModule_someFragment on User {
           id
-          ...SomeModule_someFragment
         }
-      }
-    `;
-    expect(transform(text)).toMatchInlineSnapshot(`
-      "fragment SomeModule_someFragment on User {
-        id
-      }
+        fragment SomeModule_anotherFragment on User {
+          id
+          ... {
+            ...SomeModule_someFragment
+          }
+        }
+        query SomeModuleQuery {
+          me {
+            id
+            ...SomeModule_someFragment
+          }
+        }
+      `;
+      expect(transform(text)).toMatchInlineSnapshot(`
+        "fragment SomeModule_someFragment on User {
+          id
+        }
 
-      fragment SomeModule_anotherFragment on User {
-        id
-        ... on User {
-          ...SomeModule_someFragment
-          ... on Node {
+        fragment SomeModule_anotherFragment on User {
+          id
+          ... on User {
+            ...SomeModule_someFragment
+            ... on Node {
+              __fragments @client
+            }
+          }
+        }
+
+        query SomeModuleQuery {
+          me {
+            id
+            ...SomeModule_someFragment
+            ... on Node {
+              __fragments @client
+            }
+          }
+        }
+        "
+      `);
+    });
+
+    it("annotates a Query fragment spread", () => {
+      const text = `
+        fragment AnotherFragmentOnQuery on Query {
+          __typename
+        }
+        fragment SomeFragmentOnQuery on Query {
+          ... {
+            ...AnotherFragmentOnQuery
+          }
+        }
+        query SomeModuleQuery {
+          ...SomeFragmentOnQuery
+        }
+      `;
+      expect(transform(text)).toMatchInlineSnapshot(`
+        "fragment AnotherFragmentOnQuery on Query {
+          __typename
+        }
+
+        fragment SomeFragmentOnQuery on Query {
+          ... on Query {
+            ...AnotherFragmentOnQuery
             __fragments @client
           }
         }
-      }
 
-      query SomeModuleQuery {
-        me {
+        query SomeModuleQuery {
+          ...SomeFragmentOnQuery
+          __fragments @client
+        }
+        "
+      `);
+    });
+
+    it("does not annotate fragment spreads on other types", () => {
+      const text = `
+        fragment AnotherFragmentOnNonNode on NonNode {
+          __typename
+        }
+        fragment FragmentOnNonNode on NonNode {
           id
-          ...SomeModule_someFragment
-          ... on Node {
-            __fragments @client
+          ...AnotherFragmentOnNonNode
+        }
+        query SomeModuleQuery {
+          neverNode {
+            ...FragmentOnNonNode
           }
         }
-      }
-      "
-    `);
+      `;
+      expect(transform(text)).toMatchInlineSnapshot(`
+        "fragment AnotherFragmentOnNonNode on NonNode {
+          __typename
+        }
+
+        fragment FragmentOnNonNode on NonNode {
+          id
+          ...AnotherFragmentOnNonNode
+        }
+
+        query SomeModuleQuery {
+          neverNode {
+            ...FragmentOnNonNode
+          }
+        }
+        "
+      `);
+    });
   });
 });

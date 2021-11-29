@@ -1,0 +1,13 @@
+diff --git a/node_modules/@types/relay-compiler/lib/core/IR.d.ts b/node_modules/@types/relay-compiler/lib/core/IR.d.ts
+index efb36e3..d82f352 100644
+--- a/node_modules/@types/relay-compiler/lib/core/IR.d.ts
++++ b/node_modules/@types/relay-compiler/lib/core/IR.d.ts
+@@ -268,7 +268,7 @@ export interface Root {
+     metadata: Metadata;
+     name: string;
+     operation: 'query' | 'mutation' | 'subscription';
+-    selections: Readonly<Selection>;
++    selections: ReadonlyArray<Selection>;
+     type: CompositeTypeID;
+ }
+ 
