@@ -287,3 +287,7 @@ export const watchQueryDocument = {
     }
   ]
 };
+
+export const metadata = {
+  "rootSelection": "node"
+};
