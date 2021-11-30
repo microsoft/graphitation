@@ -2,6 +2,7 @@
 /* eslint-disable */
 // @ts-nocheck
 ;
+
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type TodoList_todosFragment = {
     readonly edges: ReadonlyArray<{

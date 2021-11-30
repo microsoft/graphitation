@@ -2,6 +2,7 @@
 /* eslint-disable */
 // @ts-nocheck
 ;
+
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type TodoRefetchQueryVariables = {
     includeSomeOtherField?: boolean | null;
@@ -16,6 +17,7 @@ export type TodoRefetchQuery = {
     readonly response: TodoRefetchQueryResponse;
     readonly variables: TodoRefetchQueryVariables;
 };
+
 
 /*
 query TodoRefetchQuery($includeSomeOtherField: Boolean, $id: ID!) {
@@ -32,203 +34,7 @@ fragment Todo_todoFragment on Todo {
   isCompleted
   someOtherField @include(if: $includeSomeOtherField)
 }
-
 */
-export const executionQueryDocument = {
-  "kind": "Document",
-  "definitions": [
-    {
-      "kind": "OperationDefinition",
-      "operation": "query",
-      "name": {
-        "kind": "Name",
-        "value": "TodoRefetchQuery"
-      },
-      "variableDefinitions": [
-        {
-          "kind": "VariableDefinition",
-          "variable": {
-            "kind": "Variable",
-            "name": {
-              "kind": "Name",
-              "value": "includeSomeOtherField"
-            }
-          },
-          "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "Boolean"
-            }
-          },
-          "directives": []
-        },
-        {
-          "kind": "VariableDefinition",
-          "variable": {
-            "kind": "Variable",
-            "name": {
-              "kind": "Name",
-              "value": "id"
-            }
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "ID"
-              }
-            }
-          },
-          "directives": []
-        }
-      ],
-      "directives": [],
-      "selectionSet": {
-        "kind": "SelectionSet",
-        "selections": [
-          {
-            "kind": "Field",
-            "name": {
-              "kind": "Name",
-              "value": "node"
-            },
-            "arguments": [
-              {
-                "kind": "Argument",
-                "name": {
-                  "kind": "Name",
-                  "value": "id"
-                },
-                "value": {
-                  "kind": "Variable",
-                  "name": {
-                    "kind": "Name",
-                    "value": "id"
-                  }
-                }
-              }
-            ],
-            "directives": [],
-            "selectionSet": {
-              "kind": "SelectionSet",
-              "selections": [
-                {
-                  "kind": "Field",
-                  "name": {
-                    "kind": "Name",
-                    "value": "__typename"
-                  },
-                  "arguments": [],
-                  "directives": []
-                },
-                {
-                  "kind": "FragmentSpread",
-                  "name": {
-                    "kind": "Name",
-                    "value": "Todo_todoFragment"
-                  },
-                  "directives": []
-                },
-                {
-                  "kind": "Field",
-                  "name": {
-                    "kind": "Name",
-                    "value": "id"
-                  },
-                  "arguments": [],
-                  "directives": []
-                }
-              ]
-            }
-          }
-        ]
-      }
-    },
-    {
-      "kind": "FragmentDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "Todo_todoFragment"
-      },
-      "typeCondition": {
-        "kind": "NamedType",
-        "name": {
-          "kind": "Name",
-          "value": "Todo"
-        }
-      },
-      "directives": [],
-      "selectionSet": {
-        "kind": "SelectionSet",
-        "selections": [
-          {
-            "kind": "Field",
-            "name": {
-              "kind": "Name",
-              "value": "id"
-            },
-            "arguments": [],
-            "directives": []
-          },
-          {
-            "kind": "Field",
-            "name": {
-              "kind": "Name",
-              "value": "description"
-            },
-            "arguments": [],
-            "directives": []
-          },
-          {
-            "kind": "Field",
-            "name": {
-              "kind": "Name",
-              "value": "isCompleted"
-            },
-            "arguments": [],
-            "directives": []
-          },
-          {
-            "kind": "Field",
-            "name": {
-              "kind": "Name",
-              "value": "someOtherField"
-            },
-            "arguments": [],
-            "directives": [
-              {
-                "kind": "Directive",
-                "name": {
-                  "kind": "Name",
-                  "value": "include"
-                },
-                "arguments": [
-                  {
-                    "kind": "Argument",
-                    "name": {
-                      "kind": "Name",
-                      "value": "if"
-                    },
-                    "value": {
-                      "kind": "Variable",
-                      "name": {
-                        "kind": "Name",
-                        "value": "includeSomeOtherField"
-                      }
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    }
-  ]
-};
 
 /*
 query TodoRefetchQuery($includeSomeOtherField: Boolean, $id: ID!) {
@@ -248,238 +54,434 @@ fragment Todo_todoFragment on Todo {
   isCompleted
   someOtherField @include(if: $includeSomeOtherField)
 }
-
 */
-export const watchQueryDocument = {
-  "kind": "Document",
-  "definitions": [
-    {
-      "kind": "OperationDefinition",
-      "operation": "query",
-      "name": {
-        "kind": "Name",
-        "value": "TodoRefetchQuery"
-      },
-      "variableDefinitions": [
-        {
-          "kind": "VariableDefinition",
-          "variable": {
-            "kind": "Variable",
-            "name": {
-              "kind": "Name",
-              "value": "includeSomeOtherField"
-            }
-          },
-          "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "Boolean"
-            }
-          },
-          "directives": []
+
+export const documents: import("relay-compiler-language-graphitation").CompiledArtefactModule = {
+  "executionQueryDocument": {
+    "kind": "Document",
+    "definitions": [
+      {
+        "kind": "OperationDefinition",
+        "operation": "query",
+        "name": {
+          "kind": "Name",
+          "value": "TodoRefetchQuery"
         },
-        {
-          "kind": "VariableDefinition",
-          "variable": {
-            "kind": "Variable",
-            "name": {
-              "kind": "Name",
-              "value": "id"
-            }
-          },
-          "type": {
-            "kind": "NonNullType",
+        "variableDefinitions": [
+          {
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
+                "value": "includeSomeOtherField"
+              }
+            },
             "type": {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "ID"
+                "value": "Boolean"
               }
-            }
-          },
-          "directives": []
-        }
-      ],
-      "directives": [],
-      "selectionSet": {
-        "kind": "SelectionSet",
-        "selections": [
-          {
-            "kind": "Field",
-            "name": {
-              "kind": "Name",
-              "value": "node"
             },
-            "arguments": [
-              {
-                "kind": "Argument",
+            "directives": []
+          },
+          {
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
+                "value": "id"
+              }
+            },
+            "type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
                 "name": {
                   "kind": "Name",
-                  "value": "id"
-                },
-                "value": {
-                  "kind": "Variable",
-                  "name": {
-                    "kind": "Name",
-                    "value": "id"
-                  }
+                  "value": "ID"
                 }
               }
-            ],
-            "directives": [],
-            "selectionSet": {
-              "kind": "SelectionSet",
-              "selections": [
+            },
+            "directives": []
+          }
+        ],
+        "directives": [],
+        "selectionSet": {
+          "kind": "SelectionSet",
+          "selections": [
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "node"
+              },
+              "arguments": [
                 {
-                  "kind": "Field",
-                  "name": {
-                    "kind": "Name",
-                    "value": "__typename"
-                  },
-                  "arguments": [],
-                  "directives": []
-                },
-                {
-                  "kind": "FragmentSpread",
-                  "name": {
-                    "kind": "Name",
-                    "value": "Todo_todoFragment"
-                  },
-                  "directives": []
-                },
-                {
-                  "kind": "Field",
+                  "kind": "Argument",
                   "name": {
                     "kind": "Name",
                     "value": "id"
                   },
-                  "arguments": [],
-                  "directives": []
-                },
-                {
-                  "kind": "InlineFragment",
-                  "typeCondition": {
-                    "kind": "NamedType",
+                  "value": {
+                    "kind": "Variable",
                     "name": {
                       "kind": "Name",
-                      "value": "Node"
+                      "value": "id"
                     }
+                  }
+                }
+              ],
+              "directives": [],
+              "selectionSet": {
+                "kind": "SelectionSet",
+                "selections": [
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "__typename"
+                    },
+                    "arguments": [],
+                    "directives": []
                   },
-                  "directives": [],
-                  "selectionSet": {
-                    "kind": "SelectionSet",
-                    "selections": [
-                      {
-                        "kind": "Field",
+                  {
+                    "kind": "FragmentSpread",
+                    "name": {
+                      "kind": "Name",
+                      "value": "Todo_todoFragment"
+                    },
+                    "directives": []
+                  },
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "id"
+                    },
+                    "arguments": [],
+                    "directives": []
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "FragmentDefinition",
+        "name": {
+          "kind": "Name",
+          "value": "Todo_todoFragment"
+        },
+        "typeCondition": {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Todo"
+          }
+        },
+        "directives": [],
+        "selectionSet": {
+          "kind": "SelectionSet",
+          "selections": [
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "id"
+              },
+              "arguments": [],
+              "directives": []
+            },
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "description"
+              },
+              "arguments": [],
+              "directives": []
+            },
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "isCompleted"
+              },
+              "arguments": [],
+              "directives": []
+            },
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "someOtherField"
+              },
+              "arguments": [],
+              "directives": [
+                {
+                  "kind": "Directive",
+                  "name": {
+                    "kind": "Name",
+                    "value": "include"
+                  },
+                  "arguments": [
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "if"
+                      },
+                      "value": {
+                        "kind": "Variable",
                         "name": {
                           "kind": "Name",
-                          "value": "__fragments"
-                        },
-                        "arguments": [],
-                        "directives": [
-                          {
-                            "kind": "Directive",
-                            "name": {
-                              "kind": "Name",
-                              "value": "client"
-                            },
-                            "arguments": []
-                          }
-                        ]
+                          "value": "includeSomeOtherField"
+                        }
                       }
-                    ]
-                  }
+                    }
+                  ]
                 }
               ]
             }
-          }
-        ]
+          ]
+        }
       }
-    },
-    {
-      "kind": "FragmentDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "Todo_todoFragment"
-      },
-      "typeCondition": {
-        "kind": "NamedType",
+    ]
+  },
+  "watchQueryDocument": {
+    "kind": "Document",
+    "definitions": [
+      {
+        "kind": "OperationDefinition",
+        "operation": "query",
         "name": {
           "kind": "Name",
-          "value": "Todo"
-        }
-      },
-      "directives": [],
-      "selectionSet": {
-        "kind": "SelectionSet",
-        "selections": [
+          "value": "TodoRefetchQuery"
+        },
+        "variableDefinitions": [
           {
-            "kind": "Field",
-            "name": {
-              "kind": "Name",
-              "value": "id"
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
+                "value": "includeSomeOtherField"
+              }
             },
-            "arguments": [],
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
+            },
             "directives": []
           },
           {
-            "kind": "Field",
-            "name": {
-              "kind": "Name",
-              "value": "description"
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
+                "value": "id"
+              }
             },
-            "arguments": [],
-            "directives": []
-          },
-          {
-            "kind": "Field",
-            "name": {
-              "kind": "Name",
-              "value": "isCompleted"
-            },
-            "arguments": [],
-            "directives": []
-          },
-          {
-            "kind": "Field",
-            "name": {
-              "kind": "Name",
-              "value": "someOtherField"
-            },
-            "arguments": [],
-            "directives": [
-              {
-                "kind": "Directive",
+            "type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
                 "name": {
                   "kind": "Name",
-                  "value": "include"
-                },
-                "arguments": [
-                  {
-                    "kind": "Argument",
+                  "value": "ID"
+                }
+              }
+            },
+            "directives": []
+          }
+        ],
+        "directives": [],
+        "selectionSet": {
+          "kind": "SelectionSet",
+          "selections": [
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "node"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "id"
+                  },
+                  "value": {
+                    "kind": "Variable",
                     "name": {
                       "kind": "Name",
-                      "value": "if"
+                      "value": "id"
+                    }
+                  }
+                }
+              ],
+              "directives": [],
+              "selectionSet": {
+                "kind": "SelectionSet",
+                "selections": [
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "__typename"
                     },
-                    "value": {
-                      "kind": "Variable",
+                    "arguments": [],
+                    "directives": []
+                  },
+                  {
+                    "kind": "FragmentSpread",
+                    "name": {
+                      "kind": "Name",
+                      "value": "Todo_todoFragment"
+                    },
+                    "directives": []
+                  },
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "id"
+                    },
+                    "arguments": [],
+                    "directives": []
+                  },
+                  {
+                    "kind": "InlineFragment",
+                    "typeCondition": {
+                      "kind": "NamedType",
                       "name": {
                         "kind": "Name",
-                        "value": "includeSomeOtherField"
+                        "value": "Node"
                       }
+                    },
+                    "directives": [],
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "__fragments"
+                          },
+                          "arguments": [],
+                          "directives": [
+                            {
+                              "kind": "Directive",
+                              "name": {
+                                "kind": "Name",
+                                "value": "client"
+                              },
+                              "arguments": []
+                            }
+                          ]
+                        }
+                      ]
                     }
                   }
                 ]
               }
-            ]
+            }
+          ]
+        }
+      },
+      {
+        "kind": "FragmentDefinition",
+        "name": {
+          "kind": "Name",
+          "value": "Todo_todoFragment"
+        },
+        "typeCondition": {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Todo"
           }
-        ]
+        },
+        "directives": [],
+        "selectionSet": {
+          "kind": "SelectionSet",
+          "selections": [
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "id"
+              },
+              "arguments": [],
+              "directives": []
+            },
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "description"
+              },
+              "arguments": [],
+              "directives": []
+            },
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "isCompleted"
+              },
+              "arguments": [],
+              "directives": []
+            },
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "someOtherField"
+              },
+              "arguments": [],
+              "directives": [
+                {
+                  "kind": "Directive",
+                  "name": {
+                    "kind": "Name",
+                    "value": "include"
+                  },
+                  "arguments": [
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "if"
+                      },
+                      "value": {
+                        "kind": "Variable",
+                        "name": {
+                          "kind": "Name",
+                          "value": "includeSomeOtherField"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
       }
-    }
-  ]
-};
-
-export const metadata = {
-  "rootSelection": "node"
+    ]
+  },
+  "metadata": {
+    "rootSelection": "node"
+  }
 };
