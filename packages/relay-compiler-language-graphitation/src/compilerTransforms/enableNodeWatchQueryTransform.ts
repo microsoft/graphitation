@@ -8,7 +8,8 @@ export const enableNodeWatchQueryTransform: IRTransform = (context) => {
   context.forEachDocument((document) => {
     if (
       document.kind === "Fragment" &&
-      implementsNodeInterface(context, document)
+      (document.type === context.getSchema().getQueryType() ||
+        implementsNodeInterface(context, document))
     ) {
       nextContext = nextContext.replace({
         ...document,
