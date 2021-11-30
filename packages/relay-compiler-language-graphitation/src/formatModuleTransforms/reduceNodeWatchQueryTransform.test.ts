@@ -91,6 +91,42 @@ describe(reduceNodeWatchQueryTransform, () => {
     );
   });
 
+  it("removes fragment definitions/spreads referred to from fragments on the Query type", () => {
+    const result = reduceNodeWatchQueryTransform(
+      schema,
+      graphql`
+        query {
+          ...FragmentOnQueryType
+          __fragments @client
+        }
+        fragment FragmentOnQueryType on Query {
+          me {
+            id
+          }
+          ...AnotherFragmentOnQueryType
+          __fragments @client
+        }
+        fragment AnotherFragmentOnQueryType on Query {
+          __typename
+        }
+      `
+    );
+    expect(print(result)).toEqual(
+      print(graphql`
+        query {
+          ...FragmentOnQueryType
+          __fragments @client
+        }
+        fragment FragmentOnQueryType on Query {
+          me {
+            id
+          }
+          __fragments @client
+        }
+      `)
+    );
+  });
+
   it("does NOT remove the first fragment spread on the node field of a refetch query", () => {
     const result = reduceNodeWatchQueryTransform(
       schema,
@@ -101,6 +137,9 @@ describe(reduceNodeWatchQueryTransform, () => {
             id
             # This is on the node root-field and should remain
             ...RootNode_fragment
+            ... on Node {
+              __fragments @client
+            }
           }
         }
         fragment RootNode_fragment on User {
@@ -138,6 +177,9 @@ describe(reduceNodeWatchQueryTransform, () => {
             __typename
             id
             ...RootNode_fragment
+            ... on Node {
+              __fragments @client
+            }
           }
         }
         fragment RootNode_fragment on User {
