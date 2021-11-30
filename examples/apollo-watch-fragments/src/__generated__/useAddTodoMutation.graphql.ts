@@ -2,6 +2,7 @@
 /* eslint-disable */
 // @ts-nocheck
 ;
+
 export type AddTodoInput = {
     description: string;
 };
@@ -30,202 +31,6 @@ export type useAddTodoMutation = {
     readonly variables: useAddTodoMutationVariables;
 };
 
-/*
-mutation useAddTodoMutation($input: AddTodoInput!) {
-  addTodo(input: $input) {
-    todoEdge {
-      __typename
-      node {
-        id
-        isCompleted
-        description
-      }
-    }
-    todos {
-      id
-      totalCount
-      uncompletedCount
-    }
-  }
-}
-
-*/
-export const executionQueryDocument = {
-  "kind": "Document",
-  "definitions": [
-    {
-      "kind": "OperationDefinition",
-      "operation": "mutation",
-      "name": {
-        "kind": "Name",
-        "value": "useAddTodoMutation"
-      },
-      "variableDefinitions": [
-        {
-          "kind": "VariableDefinition",
-          "variable": {
-            "kind": "Variable",
-            "name": {
-              "kind": "Name",
-              "value": "input"
-            }
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "AddTodoInput"
-              }
-            }
-          },
-          "directives": []
-        }
-      ],
-      "directives": [],
-      "selectionSet": {
-        "kind": "SelectionSet",
-        "selections": [
-          {
-            "kind": "Field",
-            "name": {
-              "kind": "Name",
-              "value": "addTodo"
-            },
-            "arguments": [
-              {
-                "kind": "Argument",
-                "name": {
-                  "kind": "Name",
-                  "value": "input"
-                },
-                "value": {
-                  "kind": "Variable",
-                  "name": {
-                    "kind": "Name",
-                    "value": "input"
-                  }
-                }
-              }
-            ],
-            "directives": [],
-            "selectionSet": {
-              "kind": "SelectionSet",
-              "selections": [
-                {
-                  "kind": "Field",
-                  "name": {
-                    "kind": "Name",
-                    "value": "todoEdge"
-                  },
-                  "arguments": [],
-                  "directives": [],
-                  "selectionSet": {
-                    "kind": "SelectionSet",
-                    "selections": [
-                      {
-                        "kind": "Field",
-                        "name": {
-                          "kind": "Name",
-                          "value": "__typename"
-                        },
-                        "arguments": [],
-                        "directives": []
-                      },
-                      {
-                        "kind": "Field",
-                        "name": {
-                          "kind": "Name",
-                          "value": "node"
-                        },
-                        "arguments": [],
-                        "directives": [],
-                        "selectionSet": {
-                          "kind": "SelectionSet",
-                          "selections": [
-                            {
-                              "kind": "Field",
-                              "name": {
-                                "kind": "Name",
-                                "value": "id"
-                              },
-                              "arguments": [],
-                              "directives": []
-                            },
-                            {
-                              "kind": "Field",
-                              "name": {
-                                "kind": "Name",
-                                "value": "isCompleted"
-                              },
-                              "arguments": [],
-                              "directives": []
-                            },
-                            {
-                              "kind": "Field",
-                              "name": {
-                                "kind": "Name",
-                                "value": "description"
-                              },
-                              "arguments": [],
-                              "directives": []
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "kind": "Field",
-                  "name": {
-                    "kind": "Name",
-                    "value": "todos"
-                  },
-                  "arguments": [],
-                  "directives": [],
-                  "selectionSet": {
-                    "kind": "SelectionSet",
-                    "selections": [
-                      {
-                        "kind": "Field",
-                        "name": {
-                          "kind": "Name",
-                          "value": "id"
-                        },
-                        "arguments": [],
-                        "directives": []
-                      },
-                      {
-                        "kind": "Field",
-                        "name": {
-                          "kind": "Name",
-                          "value": "totalCount"
-                        },
-                        "arguments": [],
-                        "directives": []
-                      },
-                      {
-                        "kind": "Field",
-                        "name": {
-                          "kind": "Name",
-                          "value": "uncompletedCount"
-                        },
-                        "arguments": [],
-                        "directives": []
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          }
-        ]
-      }
-    }
-  ]
-};
 
 /*
 mutation useAddTodoMutation($input: AddTodoInput!) {
@@ -245,181 +50,379 @@ mutation useAddTodoMutation($input: AddTodoInput!) {
     }
   }
 }
-
 */
-export const watchQueryDocument = {
-  "kind": "Document",
-  "definitions": [
-    {
-      "kind": "OperationDefinition",
-      "operation": "mutation",
-      "name": {
-        "kind": "Name",
-        "value": "useAddTodoMutation"
-      },
-      "variableDefinitions": [
-        {
-          "kind": "VariableDefinition",
-          "variable": {
-            "kind": "Variable",
-            "name": {
-              "kind": "Name",
-              "value": "input"
-            }
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
+
+/*
+mutation useAddTodoMutation($input: AddTodoInput!) {
+  addTodo(input: $input) {
+    todoEdge {
+      __typename
+      node {
+        id
+        isCompleted
+        description
+      }
+    }
+    todos {
+      id
+      totalCount
+      uncompletedCount
+    }
+  }
+}
+*/
+
+export const documents: import("relay-compiler-language-graphitation").CompiledArtefactModule = {
+  "executionQueryDocument": {
+    "kind": "Document",
+    "definitions": [
+      {
+        "kind": "OperationDefinition",
+        "operation": "mutation",
+        "name": {
+          "kind": "Name",
+          "value": "useAddTodoMutation"
+        },
+        "variableDefinitions": [
+          {
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
               "name": {
                 "kind": "Name",
-                "value": "AddTodoInput"
+                "value": "input"
               }
-            }
-          },
-          "directives": []
-        }
-      ],
-      "directives": [],
-      "selectionSet": {
-        "kind": "SelectionSet",
-        "selections": [
-          {
-            "kind": "Field",
-            "name": {
-              "kind": "Name",
-              "value": "addTodo"
             },
-            "arguments": [
-              {
-                "kind": "Argument",
+            "type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
                 "name": {
                   "kind": "Name",
-                  "value": "input"
-                },
-                "value": {
-                  "kind": "Variable",
+                  "value": "AddTodoInput"
+                }
+              }
+            },
+            "directives": []
+          }
+        ],
+        "directives": [],
+        "selectionSet": {
+          "kind": "SelectionSet",
+          "selections": [
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "addTodo"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
                   "name": {
                     "kind": "Name",
                     "value": "input"
+                  },
+                  "value": {
+                    "kind": "Variable",
+                    "name": {
+                      "kind": "Name",
+                      "value": "input"
+                    }
                   }
+                }
+              ],
+              "directives": [],
+              "selectionSet": {
+                "kind": "SelectionSet",
+                "selections": [
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "todoEdge"
+                    },
+                    "arguments": [],
+                    "directives": [],
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "__typename"
+                          },
+                          "arguments": [],
+                          "directives": []
+                        },
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "node"
+                          },
+                          "arguments": [],
+                          "directives": [],
+                          "selectionSet": {
+                            "kind": "SelectionSet",
+                            "selections": [
+                              {
+                                "kind": "Field",
+                                "name": {
+                                  "kind": "Name",
+                                  "value": "id"
+                                },
+                                "arguments": [],
+                                "directives": []
+                              },
+                              {
+                                "kind": "Field",
+                                "name": {
+                                  "kind": "Name",
+                                  "value": "isCompleted"
+                                },
+                                "arguments": [],
+                                "directives": []
+                              },
+                              {
+                                "kind": "Field",
+                                "name": {
+                                  "kind": "Name",
+                                  "value": "description"
+                                },
+                                "arguments": [],
+                                "directives": []
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "todos"
+                    },
+                    "arguments": [],
+                    "directives": [],
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "id"
+                          },
+                          "arguments": [],
+                          "directives": []
+                        },
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "totalCount"
+                          },
+                          "arguments": [],
+                          "directives": []
+                        },
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "uncompletedCount"
+                          },
+                          "arguments": [],
+                          "directives": []
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "watchQueryDocument": {
+    "kind": "Document",
+    "definitions": [
+      {
+        "kind": "OperationDefinition",
+        "operation": "mutation",
+        "name": {
+          "kind": "Name",
+          "value": "useAddTodoMutation"
+        },
+        "variableDefinitions": [
+          {
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
+                "value": "input"
+              }
+            },
+            "type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "AddTodoInput"
                 }
               }
-            ],
-            "directives": [],
-            "selectionSet": {
-              "kind": "SelectionSet",
-              "selections": [
+            },
+            "directives": []
+          }
+        ],
+        "directives": [],
+        "selectionSet": {
+          "kind": "SelectionSet",
+          "selections": [
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "addTodo"
+              },
+              "arguments": [
                 {
-                  "kind": "Field",
+                  "kind": "Argument",
                   "name": {
                     "kind": "Name",
-                    "value": "todoEdge"
+                    "value": "input"
                   },
-                  "arguments": [],
-                  "directives": [],
-                  "selectionSet": {
-                    "kind": "SelectionSet",
-                    "selections": [
-                      {
-                        "kind": "Field",
-                        "name": {
-                          "kind": "Name",
-                          "value": "__typename"
-                        },
-                        "arguments": [],
-                        "directives": []
-                      },
-                      {
-                        "kind": "Field",
-                        "name": {
-                          "kind": "Name",
-                          "value": "node"
-                        },
-                        "arguments": [],
-                        "directives": [],
-                        "selectionSet": {
-                          "kind": "SelectionSet",
-                          "selections": [
-                            {
-                              "kind": "Field",
-                              "name": {
-                                "kind": "Name",
-                                "value": "id"
-                              },
-                              "arguments": [],
-                              "directives": []
-                            },
-                            {
-                              "kind": "Field",
-                              "name": {
-                                "kind": "Name",
-                                "value": "isCompleted"
-                              },
-                              "arguments": [],
-                              "directives": []
-                            },
-                            {
-                              "kind": "Field",
-                              "name": {
-                                "kind": "Name",
-                                "value": "description"
-                              },
-                              "arguments": [],
-                              "directives": []
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "kind": "Field",
-                  "name": {
-                    "kind": "Name",
-                    "value": "todos"
-                  },
-                  "arguments": [],
-                  "directives": [],
-                  "selectionSet": {
-                    "kind": "SelectionSet",
-                    "selections": [
-                      {
-                        "kind": "Field",
-                        "name": {
-                          "kind": "Name",
-                          "value": "id"
-                        },
-                        "arguments": [],
-                        "directives": []
-                      },
-                      {
-                        "kind": "Field",
-                        "name": {
-                          "kind": "Name",
-                          "value": "totalCount"
-                        },
-                        "arguments": [],
-                        "directives": []
-                      },
-                      {
-                        "kind": "Field",
-                        "name": {
-                          "kind": "Name",
-                          "value": "uncompletedCount"
-                        },
-                        "arguments": [],
-                        "directives": []
-                      }
-                    ]
+                  "value": {
+                    "kind": "Variable",
+                    "name": {
+                      "kind": "Name",
+                      "value": "input"
+                    }
                   }
                 }
-              ]
+              ],
+              "directives": [],
+              "selectionSet": {
+                "kind": "SelectionSet",
+                "selections": [
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "todoEdge"
+                    },
+                    "arguments": [],
+                    "directives": [],
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "__typename"
+                          },
+                          "arguments": [],
+                          "directives": []
+                        },
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "node"
+                          },
+                          "arguments": [],
+                          "directives": [],
+                          "selectionSet": {
+                            "kind": "SelectionSet",
+                            "selections": [
+                              {
+                                "kind": "Field",
+                                "name": {
+                                  "kind": "Name",
+                                  "value": "id"
+                                },
+                                "arguments": [],
+                                "directives": []
+                              },
+                              {
+                                "kind": "Field",
+                                "name": {
+                                  "kind": "Name",
+                                  "value": "isCompleted"
+                                },
+                                "arguments": [],
+                                "directives": []
+                              },
+                              {
+                                "kind": "Field",
+                                "name": {
+                                  "kind": "Name",
+                                  "value": "description"
+                                },
+                                "arguments": [],
+                                "directives": []
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "todos"
+                    },
+                    "arguments": [],
+                    "directives": [],
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "id"
+                          },
+                          "arguments": [],
+                          "directives": []
+                        },
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "totalCount"
+                          },
+                          "arguments": [],
+                          "directives": []
+                        },
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "uncompletedCount"
+                          },
+                          "arguments": [],
+                          "directives": []
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
             }
-          }
-        ]
+          ]
+        }
       }
-    }
-  ]
+    ]
+  }
 };
