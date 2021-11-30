@@ -10,6 +10,7 @@ import {
 
 import { KeyType, KeyTypeData, OperationType } from "./types";
 import {
+  RefetchFn,
   useCompiledFragment,
   useCompiledLazyLoadQuery,
   useCompiledRefetchableFragment,
@@ -159,10 +160,7 @@ export function useRefetchableFragment<
 >(
   fragmentInput: GraphQLTaggedNode,
   fragmentRef: TKey
-): [
-  data: KeyTypeData<TKey>,
-  refetch: (variables: TQuery["variables"]) => void
-] {
+): [data: KeyTypeData<TKey>, refetch: RefetchFn<TQuery["variables"]>] {
   invariant(
     !!fragmentInput.watchQueryDocument,
     "useRefetchableFragment is only supported at this time when using compilation"
