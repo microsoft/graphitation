@@ -32,7 +32,30 @@ describe(enableNodeWatchQueryTransform, () => {
     `);
   });
 
-  it("does not add to fragments on non-Node types", () => {
+  it("adds Relay's @refetchable directive to fragments on the Query type", () => {
+    const text = `
+      fragment SomeModule_onQueryTypeFragment on Query {
+        neverNode {
+          ... on NonNode {
+            id
+          }
+        }
+      }
+    `;
+
+    expect(transform(text)).toMatchInlineSnapshot(`
+      "fragment SomeModule_onQueryTypeFragment on Query @refetchable(queryName: \\"SomeModule_onQueryTypeWatchNodeQuery\\") {
+        neverNode {
+          ... on NonNode {
+            id
+          }
+        }
+      }
+      "
+    `);
+  });
+
+  it("does not add to fragments on other types", () => {
     const text = `
       fragment SomeModule_notOnNodeTypeFragment on FakeNode {
         id
