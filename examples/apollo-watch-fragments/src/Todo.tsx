@@ -8,7 +8,6 @@ import { graphql } from "@graphitation/graphql-js-tag";
 import useChangeTodoStatusMutation from "./useChangeTodoStatusMutation";
 
 import { Todo_todoFragment$key } from "./__generated__/Todo_todoFragment.graphql";
-import { TodoRefetchQuery } from "./__generated__/TodoRefetchQuery.graphql";
 
 export const Todo_todoFragment = graphql`
   fragment Todo_todoFragment on Todo
