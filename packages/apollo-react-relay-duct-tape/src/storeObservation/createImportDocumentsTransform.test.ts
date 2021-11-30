@@ -29,7 +29,7 @@ describe(createImportDocumentsTransform, () => {
       \`
     `;
     expect(transform(source)).toMatchInlineSnapshot(`
-      import * as __graphitation_generatedQueries_SomeComponentFragment from "./__generated__/SomeComponentWatchNodeQuery.graphql";
+      import { documents as __graphitation_generatedQueries_SomeComponentFragment } from "./__generated__/SomeComponentWatchNodeQuery.graphql";
       const doc = __graphitation_generatedQueries_SomeComponentFragment;
     `);
   });
@@ -45,7 +45,7 @@ describe(createImportDocumentsTransform, () => {
       \`
     `;
     expect(transform(source)).toMatchInlineSnapshot(`
-      import * as __graphitation_generatedQueries_SomeComponentQuery from "./__generated__/SomeComponentQuery.graphql";
+      import { documents as __graphitation_generatedQueries_SomeComponentQuery } from "./__generated__/SomeComponentQuery.graphql";
       const doc = __graphitation_generatedQueries_SomeComponentQuery;
     `);
   });
