@@ -1,6 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 // @ts-nocheck
+;
+
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type hooksTestFragment = {
   readonly id: string;
