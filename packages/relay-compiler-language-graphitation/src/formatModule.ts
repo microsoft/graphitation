@@ -10,13 +10,31 @@ import { schema } from "./schema";
 import invariant from "invariant";
 import { stripFragmentReferenceFieldSelectionTransform } from "./formatModuleTransforms/stripFragmentReferenceFieldSelectionTransform";
 import { extractMetadataTransform } from "./formatModuleTransforms/extractMetadataTransform";
+import { CompiledArtefactModule } from "./types";
 
-function emitConst(exportName: string, data: any) {
-  return `\nexport const ${exportName} = ${JSON.stringify(data, null, 2)};`;
+function printDocumentComment(document: DocumentNode) {
+  return `/*\n${print(document).trim()}\n*/`;
 }
 
-function emitDocument(document: DocumentNode, exportName: string) {
-  return `\n/*\n${print(document)}\n*/${emitConst(exportName, document)}`;
+function generateExports(moduleName: string, docText: string) {
+  const exports: CompiledArtefactModule = {};
+  const originalDocument = parse(docText, { noLocation: true });
+
+  if (!moduleName.endsWith("WatchNodeQuery.graphql")) {
+    exports.executionQueryDocument = stripFragmentReferenceFieldSelectionTransform(
+      originalDocument
+    );
+  }
+
+  invariant(schema, "Expected a schema to be passed in or set in the env");
+  exports.watchQueryDocument = reduceNodeWatchQueryTransform(
+    schema,
+    originalDocument
+  );
+
+  exports.metadata = extractMetadataTransform(exports.watchQueryDocument);
+
+  return exports;
 }
 
 export const formatModule: FormatModule = ({
@@ -25,33 +43,28 @@ export const formatModule: FormatModule = ({
   moduleName,
   typeText,
 }) => {
-  let append = "";
-  if (docText) {
-    const originalDocument = parse(docText, { noLocation: true });
-    if (!moduleName.endsWith("WatchNodeQuery.graphql")) {
-      const executionQueryDocument = stripFragmentReferenceFieldSelectionTransform(
-        originalDocument
-      );
-      append += emitDocument(executionQueryDocument, "executionQueryDocument");
-      append += "\n";
-    }
+  const exports = docText && generateExports(moduleName, docText);
+  const components = [
+    typeText,
+    exports &&
+      exports.executionQueryDocument &&
+      printDocumentComment(exports.executionQueryDocument),
+    exports &&
+      process.env.PRINT_WATCH_QUERIES &&
+      exports.watchQueryDocument &&
+      printDocumentComment(exports.watchQueryDocument),
+    exports &&
+      `export const documents: import("relay-compiler-language-graphitation").CompiledArtefactModule = ${JSON.stringify(
+        exports,
+        null,
+        2
+      )};`,
+  ].filter(Boolean) as string[];
 
-    invariant(schema, "Expected a schema to be passed in or set in the env");
-    const watchQueryDocument = reduceNodeWatchQueryTransform(
-      schema,
-      originalDocument
-    );
-    append += emitDocument(watchQueryDocument, "watchQueryDocument");
-
-    const metadata = extractMetadataTransform(watchQueryDocument);
-    if (metadata) {
-      append += "\n";
-      append += emitConst("metadata", metadata);
-    }
-  }
   return `/* tslint:disable */
 /* eslint-disable */
 // @ts-nocheck
 ${hash ? `/* ${hash} */\n` : ""};
-${typeText || ""}${append}`;
+
+${components.join("\n\n")}`;
 };

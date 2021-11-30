@@ -26,10 +26,10 @@ import { typePolicies } from "./typePolicies";
 /**
  * NOTE: These compiler artefacts are normally imported using the transform from the createImportDocumentsTransform.ts module
  */
-import * as compiledHooks_Root_executionQuery_documents from "./__generated__/compiledHooks_Root_executionQuery.graphql";
-import * as compiledHooks_ChildFragment_documents from "./__generated__/compiledHooks_ChildWatchNodeQuery.graphql";
+import { documents as compiledHooks_Root_executionQuery_documents } from "./__generated__/compiledHooks_Root_executionQuery.graphql";
+import { documents as compiledHooks_ChildFragment_documents } from "./__generated__/compiledHooks_ChildWatchNodeQuery.graphql";
 // TODO: Emit this import from transform
-import * as compiledHooks_RefetchableFragment_documents from "./__generated__/compiledHooks_RefetchableFragment_RefetchQuery.graphql";
+import { documents as compiledHooks_RefetchableFragment_documents } from "./__generated__/compiledHooks_RefetchableFragment_RefetchQuery.graphql";
 import { compiledHooks_Root_executionQueryVariables } from "./__generated__/compiledHooks_Root_executionQuery.graphql";
 
 const schema = buildSchema(
