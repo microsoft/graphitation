@@ -77,7 +77,7 @@ describe("compiledHooks", () => {
 
   const ChildComponent: React.FC<{ user: { id: any } }> = (props) => {
     const result = useCompiledFragment(
-      compiledHooks_ChildFragment_documents as any,
+      compiledHooks_ChildFragment_documents,
       props.user
     );
     lastUseFragmentResult.push(result as { id: number });
@@ -88,7 +88,7 @@ describe("compiledHooks", () => {
     props
   ) => {
     const result = useCompiledRefetchableFragment(
-      compiledHooks_RefetchableFragment_documents as any,
+      compiledHooks_RefetchableFragment_documents,
       props.user
     );
     lastUseRefetchableFragmentResult.push(result);
