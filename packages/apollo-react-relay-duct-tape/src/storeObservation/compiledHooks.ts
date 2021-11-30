@@ -14,6 +14,7 @@ import {
 import { DocumentNode } from "graphql";
 import invariant from "invariant";
 import { useDeepCompareMemoize } from "./useDeepCompareMemoize";
+import type { CompiledArtefactModule } from "relay-compiler-language-graphitation";
 
 /**
  * @todo Rewrite this to mimic Relay's preload APIs
@@ -91,22 +92,26 @@ export function useCompiledLazyLoadQuery(
  * @param fragmentReference A Node object that has a globally unique `id` field.
  */
 export function useCompiledFragment(
-  documents: {
-    watchQueryDocument: DocumentNode;
-  },
+  documents: CompiledArtefactModule,
   fragmentReference: {
     id: unknown;
     __fragments?: Record<string, any>;
   }
 ): {} {
+  const { watchQueryDocument, metadata } = documents;
+  invariant(
+    watchQueryDocument,
+    "Expected compiled artefact to have a watchQueryDocument"
+  );
+
   const client = useApolloClient();
   const forceUpdate = useForceUpdate();
 
   const observableQuery = useMemo(
     () =>
-      client.watchQuery<{ node: null | {} }>({
+      client.watchQuery({
         fetchPolicy: "cache-only",
-        query: documents.watchQueryDocument,
+        query: watchQueryDocument,
         returnPartialData: false, // FIXME: In tests this needs to be true, but not in the example app
         variables: {
           id: fragmentReference.id,
@@ -135,11 +140,15 @@ export function useCompiledFragment(
   }, [observableQuery]);
 
   const result = observableQuery.getCurrentResult();
+  let data = result.data;
+  if (metadata?.rootSelection) {
+    data = data[metadata.rootSelection];
+  }
   invariant(
-    result.data?.node,
-    "Expected Apollo to respond with previously seeded node data"
+    data,
+    "Expected Apollo to respond with previously seeded data of the execution query document"
   );
-  return result.data?.node;
+  return data;
 }
 
 export function useCompiledRefetchableFragment(

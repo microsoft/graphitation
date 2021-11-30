@@ -51,11 +51,19 @@ function main() {
         default: false,
         type: "boolean",
       },
+      printWatchQueries: {
+        demandOption: false,
+        default: false,
+        type: "boolean",
+      },
     })
     .help().argv;
   // First ensure the schema env var is set...
   if (process.env.SCHEMA_PATH === undefined) {
     process.env.SCHEMA_PATH = argv.schema;
+  }
+  if (argv.printWatchQueries) {
+    process.env.PRINT_WATCH_QUERIES = "true";
   }
   // ...then load the language plugin, which looks for the schema path on module load (bad)
   const language = require("relay-compiler-language-graphitation");

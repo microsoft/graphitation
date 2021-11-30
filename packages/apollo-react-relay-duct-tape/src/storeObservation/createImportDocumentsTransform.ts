@@ -94,9 +94,12 @@ function createGraphQLDocumentNodes(
         ts.factory.createImportClause(
           false,
           undefined,
-          ts.factory.createNamespaceImport(
-            ts.factory.createIdentifier(namespaceName)
-          )
+          ts.factory.createNamedImports([
+            ts.factory.createImportSpecifier(
+              ts.factory.createIdentifier("documents"),
+              ts.factory.createIdentifier(namespaceName)
+            ),
+          ])
         ),
         ts.factory.createStringLiteral(
           `./__generated__/${operationName}.graphql`
@@ -115,9 +118,12 @@ function createGraphQLDocumentNodes(
         ts.factory.createImportClause(
           false,
           undefined,
-          ts.factory.createNamespaceImport(
-            ts.factory.createIdentifier(namespaceName)
-          )
+          ts.factory.createNamedImports([
+            ts.factory.createImportSpecifier(
+              ts.factory.createIdentifier("documents"),
+              ts.factory.createIdentifier(namespaceName)
+            ),
+          ])
         ),
         ts.factory.createStringLiteral(`./__generated__/${queryName}.graphql`)
       ),
