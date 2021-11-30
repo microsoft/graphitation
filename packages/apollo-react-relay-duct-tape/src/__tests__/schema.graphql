@@ -5,6 +5,7 @@ interface Node {
 type Query {
   user(id: ID!): User!
   node(id: ID!): Node
+  nonNode: NonNode!
 }
 
 type Mutation {
@@ -20,4 +21,8 @@ type User implements Node {
   name: String!
   petName: String!
   avatarUrl(size: Int!): String!
+}
+
+type NonNode {
+  id: String
 }

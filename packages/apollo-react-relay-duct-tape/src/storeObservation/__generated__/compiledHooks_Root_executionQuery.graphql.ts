@@ -13,6 +13,7 @@ export type compiledHooks_Root_executionQueryResponse = {
         readonly name: string;
         readonly " $fragmentRefs": FragmentRefs<"compiledHooks_ChildFragment" | "compiledHooks_RefetchableFragment">;
     };
+    readonly " $fragmentRefs": FragmentRefs<"compiledHooks_QueryTypeFragment">;
 };
 export type compiledHooks_Root_executionQuery = {
     readonly response: compiledHooks_Root_executionQueryResponse;
@@ -28,11 +29,18 @@ query compiledHooks_Root_executionQuery($userId: ID!, $avatarSize: Int!) {
     ...compiledHooks_RefetchableFragment
     id
   }
+  ...compiledHooks_QueryTypeFragment
 }
 
 fragment compiledHooks_ChildFragment on User {
   petName
   id
+}
+
+fragment compiledHooks_QueryTypeFragment on Query {
+  nonNode {
+    id
+  }
 }
 
 fragment compiledHooks_RefetchableFragment on User {
@@ -50,6 +58,7 @@ query compiledHooks_Root_executionQuery($userId: ID!, $avatarSize: Int!) {
       __fragments @client
     }
   }
+  __fragments @client
 }
 */
 
@@ -174,6 +183,14 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   }
                 ]
               }
+            },
+            {
+              "kind": "FragmentSpread",
+              "name": {
+                "kind": "Name",
+                "value": "compiledHooks_QueryTypeFragment"
+              },
+              "directives": []
             }
           ]
         }
@@ -212,6 +229,49 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               },
               "arguments": [],
               "directives": []
+            }
+          ]
+        }
+      },
+      {
+        "kind": "FragmentDefinition",
+        "name": {
+          "kind": "Name",
+          "value": "compiledHooks_QueryTypeFragment"
+        },
+        "typeCondition": {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Query"
+          }
+        },
+        "directives": [],
+        "selectionSet": {
+          "kind": "SelectionSet",
+          "selections": [
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "nonNode"
+              },
+              "arguments": [],
+              "directives": [],
+              "selectionSet": {
+                "kind": "SelectionSet",
+                "selections": [
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "id"
+                    },
+                    "arguments": [],
+                    "directives": []
+                  }
+                ]
+              }
             }
           ]
         }
@@ -409,6 +469,24 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   }
                 ]
               }
+            },
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "__fragments"
+              },
+              "arguments": [],
+              "directives": [
+                {
+                  "kind": "Directive",
+                  "name": {
+                    "kind": "Name",
+                    "value": "client"
+                  },
+                  "arguments": []
+                }
+              ]
             }
           ]
         }
