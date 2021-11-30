@@ -4,6 +4,7 @@
   "license": "MIT",
   "version": "0.8.1",
   "main": "./src/index.ts",
+  "types": "./src/types.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",
@@ -13,6 +14,7 @@
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
+    "types": "monorepo-scripts types",
     "just": "monorepo-scripts"
   },
   "dependencies": {
@@ -35,7 +37,7 @@
   },
   "publishConfig": {
     "main": "./lib/index.js",
-    "types": "./lib/index.d.ts",
+    "types": "./lib/types.d.ts",
     "access": "public",
     "module": "./lib/index.mjs",
     "exports": {
