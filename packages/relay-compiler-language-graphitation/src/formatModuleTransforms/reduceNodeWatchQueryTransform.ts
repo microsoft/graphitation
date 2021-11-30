@@ -8,10 +8,15 @@ import {
   isInterfaceType,
   getNamedType,
   FragmentSpreadNode,
+  FragmentDefinitionNode,
 } from "graphql";
 import invariant from "invariant";
 
-const ALLOWED_REFETCH_QUERY_FIELD_SELECTIONS = ["__typename", "id"];
+const ALLOWED_REFETCH_QUERY_FIELD_SELECTIONS = [
+  "__fragments",
+  "__typename",
+  "id",
+];
 
 export function reduceNodeWatchQueryTransform(
   schema: GraphQLSchema,
@@ -24,14 +29,21 @@ export function reduceNodeWatchQueryTransform(
   );
 
   const typeInfo = new TypeInfo(schema);
+  let retainFragment: string;
 
-  const removeNodeType = () => {
+  const removeNonWatchQueryFragmentNodes = (
+    node: FragmentSpreadNode | FragmentDefinitionNode
+  ) => {
+    if (retainFragment && node.name.value === retainFragment) {
+      return undefined;
+    }
     const unnamedTypeConstraint = typeInfo.getType();
     invariant(unnamedTypeConstraint, "Expected a type constraint");
     const typeConstraint = getNamedType(unnamedTypeConstraint);
     if (
-      isObjectType(typeConstraint) &&
-      typeConstraint.getInterfaces().includes(nodeType)
+      typeConstraint === schema.getQueryType() ||
+      (isObjectType(typeConstraint) &&
+        typeConstraint.getInterfaces().includes(nodeType))
     ) {
       return null;
       // TODO: Handle fragment on Node ?
@@ -40,12 +52,24 @@ export function reduceNodeWatchQueryTransform(
     return undefined;
   };
 
-  let retainFragment: string;
-  let currentlyInNodeRootField = false;
-
   return visit(
     document,
     visitWithTypeInfo(typeInfo, {
+      OperationDefinition(operationDefinitionNode) {
+        const selections = operationDefinitionNode.selectionSet!.selections;
+        const fragmentSpreadNode = selections.find(
+          (sel) => sel.kind === "FragmentSpread"
+        ) as FragmentSpreadNode;
+        if (
+          selections.length === 2 &&
+          fragmentSpreadNode &&
+          selections.find(
+            (sel) => sel.kind === "Field" && sel.name.value === "__fragments"
+          )
+        ) {
+          retainFragment = fragmentSpreadNode.name.value;
+        }
+      },
       Field(fieldNode) {
         const parentType = typeInfo.getParentType();
         if (
@@ -72,27 +96,12 @@ export function reduceNodeWatchQueryTransform(
               0
           ) {
             const fragmentSpreadNode = fragmentSpreadSelections[0];
-            currentlyInNodeRootField = true;
             retainFragment = fragmentSpreadNode.name.value;
           }
         }
       },
-      FragmentSpread() {
-        if (currentlyInNodeRootField) {
-          currentlyInNodeRootField = false;
-          return undefined;
-        }
-        return removeNodeType();
-      },
-      FragmentDefinition(fragmentDefinitionNode) {
-        if (
-          retainFragment &&
-          fragmentDefinitionNode.name.value === retainFragment
-        ) {
-          return undefined;
-        }
-        return removeNodeType();
-      },
+      FragmentSpread: removeNonWatchQueryFragmentNodes,
+      FragmentDefinition: removeNonWatchQueryFragmentNodes,
     })
   );
 }
