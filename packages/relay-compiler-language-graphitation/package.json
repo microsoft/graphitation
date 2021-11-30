@@ -7,10 +7,12 @@
     "graphitation-compiler": "./lib/cli.js"
   },
   "main": "./lib/index",
+  "types": "./lib/types.d.ts",
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
+    "types": "monorepo-scripts types",
     "just": "monorepo-scripts"
   },
   "dependencies": {

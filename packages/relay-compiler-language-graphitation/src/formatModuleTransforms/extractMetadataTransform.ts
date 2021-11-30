@@ -1,7 +1,7 @@
 import { DocumentNode, OperationDefinitionNode } from "graphql";
 import invariant from "invariant";
 
-interface Metadata {
+export interface Metadata {
   rootSelection?: string;
 }
 
