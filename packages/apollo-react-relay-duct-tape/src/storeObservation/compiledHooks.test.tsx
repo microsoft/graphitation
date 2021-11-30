@@ -28,8 +28,8 @@ import { typePolicies } from "./typePolicies";
  */
 import { documents as compiledHooks_Root_executionQuery_documents } from "./__generated__/compiledHooks_Root_executionQuery.graphql";
 import { documents as compiledHooks_ChildFragment_documents } from "./__generated__/compiledHooks_ChildWatchNodeQuery.graphql";
-// TODO: Emit this import from transform
 import { documents as compiledHooks_RefetchableFragment_documents } from "./__generated__/compiledHooks_RefetchableFragment_RefetchQuery.graphql";
+import { documents as compiledHooks_QueryTypeFragment_documents } from "./__generated__/compiledHooks_QueryTypeWatchNodeQuery.graphql";
 import { compiledHooks_Root_executionQueryVariables } from "./__generated__/compiledHooks_Root_executionQuery.graphql";
 
 const schema = buildSchema(
@@ -53,6 +53,14 @@ const Refetchable_fragment = graphql`
   }
 `;
 
+const QueryType_fragment = graphql`
+  fragment compiledHooks_QueryTypeFragment on Query {
+    nonNode {
+      id
+    }
+  }
+`;
+
 const Root_executionQueryDocument = graphql`
   query compiledHooks_Root_executionQuery($userId: ID!, $avatarSize: Int!) {
     user(id: $userId) {
@@ -60,9 +68,8 @@ const Root_executionQueryDocument = graphql`
       ...compiledHooks_ChildFragment
       ...compiledHooks_RefetchableFragment
     }
+    ...compiledHooks_QueryTypeFragment
   }
-  ${Child_fragment}
-  ${Refetchable_fragment}
 `;
 
 describe("compiledHooks", () => {
@@ -74,6 +81,7 @@ describe("compiledHooks", () => {
     typeof useCompiledRefetchableFragment
   >[];
   let lastUseLazyLoadQueryResult: { data?: any; error?: Error } | null = null;
+  let lastComponentOnQueryTypeResult: {}[];
 
   const ChildComponent: React.FC<{ user: { id: any } }> = (props) => {
     const result = useCompiledFragment(
@@ -95,9 +103,18 @@ describe("compiledHooks", () => {
     return null;
   };
 
+  const ComponentOnQueryType: React.FC<{ query: {} }> = (props) => {
+    const result = useCompiledFragment(
+      compiledHooks_QueryTypeFragment_documents,
+      props.query
+    );
+    lastComponentOnQueryTypeResult.push(result);
+    return null;
+  };
+
   const RootComponent: React.FC<{ variables: {} }> = (props) => {
     const result = useCompiledLazyLoadQuery(
-      compiledHooks_Root_executionQuery_documents as any,
+      compiledHooks_Root_executionQuery_documents,
       { variables: props.variables }
     );
     lastUseLazyLoadQueryResult = result;
@@ -105,6 +122,7 @@ describe("compiledHooks", () => {
       <>
         <ChildComponent user={result.data.user} />
         <ChildRefetchableComponent user={result.data.user} />
+        <ComponentOnQueryType query={result.data} />
       </>
     ) : null;
   };
@@ -112,6 +130,7 @@ describe("compiledHooks", () => {
   beforeEach(() => {
     lastUseFragmentResult = [];
     lastUseRefetchableFragmentResult = [];
+    lastComponentOnQueryTypeResult = [];
     client = createMockClient(schema, {
       cache: {
         possibleTypes: {
@@ -178,6 +197,10 @@ describe("compiledHooks", () => {
       it("only returns the fields selected in the watch query to the component", () => {
         expect(lastUseLazyLoadQueryResult!.data).toMatchInlineSnapshot(`
           Object {
+            "__fragments": Object {
+              "avatarSize": 21,
+              "userId": 42,
+            },
             "user": Object {
               "__fragments": Object {
                 "avatarSize": 21,
@@ -219,6 +242,10 @@ describe("compiledHooks", () => {
         expect(lastUseLazyLoadQueryResult!.data).not.toBe(before);
         expect(lastUseLazyLoadQueryResult!.data).toMatchInlineSnapshot(`
           Object {
+            "__fragments": Object {
+              "avatarSize": 21,
+              "userId": 42,
+            },
             "user": Object {
               "__fragments": Object {
                 "avatarSize": 21,
@@ -365,6 +392,21 @@ describe("compiledHooks", () => {
 
   describe(useCompiledFragment, () => {
     itBehavesLikeFragment(() => lastUseFragmentResult, "petName");
+
+    it("also works with fragments on the Query type", () => {
+      expect(lastComponentOnQueryTypeResult[0]).toMatchInlineSnapshot(`
+        Object {
+          "__fragments": Object {
+            "avatarSize": 21,
+            "userId": 42,
+          },
+          "nonNode": Object {
+            "__typename": "NonNode",
+            "id": "<mock-value-for-field-\\"id\\">",
+          },
+        }
+      `);
+    });
   });
 
   describe(useCompiledRefetchableFragment, () => {
