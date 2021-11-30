@@ -11,10 +11,25 @@ import {
   useQuery as useApolloQuery,
   ApolloQueryResult,
 } from "@apollo/client";
-import { DocumentNode } from "graphql";
 import invariant from "invariant";
 import { useDeepCompareMemoize } from "./useDeepCompareMemoize";
 import type { CompiledArtefactModule } from "relay-compiler-language-graphitation";
+
+interface FragmentReference {
+  /**
+   * In case of a watch query on a Node type, the `id` needs to be provided.
+   * In case of a watch query on the Query type, this should be omitted.
+   */
+  id?: unknown;
+
+  /**
+   * These are the request variables, which is named awkwardly `__fragments`
+   * because that's the name of the property Relay uses to pass context data so
+   * not introducing a different property name felt right, from a migration
+   * perspective.
+   */
+  __fragments?: Record<string, any>;
+}
 
 /**
  * @todo Rewrite this to mimic Relay's preload APIs
@@ -25,12 +40,15 @@ import type { CompiledArtefactModule } from "relay-compiler-language-graphitatio
  * @param options An object containing a variables field.
  */
 export function useCompiledLazyLoadQuery(
-  documents: {
-    executionQueryDocument: DocumentNode;
-    watchQueryDocument: DocumentNode;
-  },
+  documents: CompiledArtefactModule,
   options: { variables: Record<string, any> }
 ): { data?: any; error?: Error } {
+  const { watchQueryDocument, executionQueryDocument } = documents;
+  invariant(
+    executionQueryDocument && watchQueryDocument,
+    "Expected compiled artefact to have a executionQueryDocument and watchQueryDocument"
+  );
+
   const client = useApolloClient();
   const forceUpdate = useForceUpdate();
   const variables = useDeepCompareMemoize(options.variables);
@@ -52,7 +70,7 @@ export function useCompiledLazyLoadQuery(
       execution.current.query === undefined
     ) {
       execution.current.query = client.query({
-        query: documents.executionQueryDocument,
+        query: executionQueryDocument,
         variables,
       });
       execution.current.query
@@ -77,7 +95,7 @@ export function useCompiledLazyLoadQuery(
     };
   }, [documents.executionQueryDocument, variables]);
 
-  const { data } = useApolloQuery(documents.watchQueryDocument, {
+  const { data } = useApolloQuery(watchQueryDocument, {
     variables,
     fetchPolicy: "cache-only",
     skip: loading || !!error,
@@ -93,10 +111,7 @@ export function useCompiledLazyLoadQuery(
  */
 export function useCompiledFragment(
   documents: CompiledArtefactModule,
-  fragmentReference: {
-    id: unknown;
-    __fragments?: Record<string, any>;
-  }
+  fragmentReference: FragmentReference
 ): {} {
   const { watchQueryDocument, metadata } = documents;
   invariant(
@@ -157,12 +172,15 @@ export type RefetchFn<Variables extends {} = {}> = (
 ) => void;
 
 export function useCompiledRefetchableFragment(
-  documents: {
-    executionQueryDocument: DocumentNode;
-    watchQueryDocument: DocumentNode;
-  },
-  fragmentReference: { id: unknown; __fragments?: Record<string, any> }
+  documents: CompiledArtefactModule,
+  fragmentReference: FragmentReference
 ): [data: {}, refetch: RefetchFn] {
+  const { executionQueryDocument } = documents;
+  invariant(
+    executionQueryDocument,
+    "Expected compiled artefact to have a executionQueryDocument"
+  );
+
   const client = useApolloClient();
   const [
     fragmentReferenceWithOwnVariables,
@@ -182,7 +200,7 @@ export function useCompiledRefetchableFragment(
         //       this.
         const { error: e = null } = await client.query({
           fetchPolicy: "network-only",
-          query: documents.executionQueryDocument,
+          query: executionQueryDocument,
           variables: {
             ...fragmentReference.__fragments,
             ...variables,
