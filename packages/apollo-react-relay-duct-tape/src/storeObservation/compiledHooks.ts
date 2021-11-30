@@ -151,19 +151,18 @@ export function useCompiledFragment(
   return data;
 }
 
+export type RefetchFn<Variables extends {} = {}> = (
+  variables: Partial<Variables>,
+  options?: { onCompleted?: (arg: Error | null) => void }
+) => void;
+
 export function useCompiledRefetchableFragment(
   documents: {
     executionQueryDocument: DocumentNode;
     watchQueryDocument: DocumentNode;
   },
   fragmentReference: { id: unknown; __fragments?: Record<string, any> }
-): [
-  data: {},
-  refetch: (
-    variables: {},
-    options?: { onCompleted?: (arg: Error | null) => void }
-  ) => void
-] {
+): [data: {}, refetch: RefetchFn] {
   const client = useApolloClient();
   const [
     fragmentReferenceWithOwnVariables,
