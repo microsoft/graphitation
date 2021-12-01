@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Support ESM in distro packages",
+  "packageName": "@graphitation/graphql-js-tag",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
