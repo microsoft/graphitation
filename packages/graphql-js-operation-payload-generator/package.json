@@ -21,8 +21,15 @@
     "relay-test-utils-internal": "^11.0.2"
   },
   "publishConfig": {
-    "main": "./lib/index",
+    "main": "./lib/index.js",
     "types": "./lib/index.d.ts",
-    "access": "public"
+    "access": "public",
+    "module": "./lib/index.mjs",
+    "exports": {
+      ".": {
+        "import": "./lib/index.mjs",
+        "require": "./lib/index.js"
+      }
+    }
   }
 }

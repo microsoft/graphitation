@@ -11,27 +11,13 @@ import {
 import * as path from "path";
 import * as fs from "fs";
 import * as glob from "fast-glob";
-import { setOriginalNode } from "relay-compiler/node_modules/typescript";
 
 export const types = () => {
-  return series(
-    () => fs.mkdirSync("lib/types", { recursive: true }),
-    tscTask({
-      emitDeclarationOnly: true,
-      outDir: "lib/types",
-    })
-  );
+  return tscTask({
+    outDir: "lib",
+    emitDeclarationOnly: true,
+  });
 };
-
-function generatePackageJson(outDir: string, contents: object) {
-  fs.writeFileSync(
-    path.join(outDir, "package.json"),
-    JSON.stringify(contents, null, 2),
-    {
-      encoding: "utf-8",
-    }
-  );
-}
 
 export const build = () => {
   const baseEsbuildOptions: EsbuildBuildOptions = {
@@ -40,44 +26,36 @@ export const build = () => {
     target: "es6",
   };
   return parallel(
-    series(
-      esbuildTask({
-        ...baseEsbuildOptions,
-        format: "esm",
-        outdir: "lib/mjs",
-        bundle: true,
-        plugins: [
-          {
-            name: "add-mjs",
-            setup(build) {
-              build.onResolve({ filter: /.*/ }, (args) => {
-                if (args.importer) {
-                  let extPath = args.path;
-                  if (extPath.startsWith(".")) {
-                    extPath = extPath + ".js";
-                  }
-                  return {
-                    path: extPath,
-                    namespace: "magic",
-                    external: true,
-                  };
+    esbuildTask({
+      ...baseEsbuildOptions,
+      format: "esm",
+      bundle: true,
+      outExtension: { ".js": ".mjs" },
+      plugins: [
+        {
+          name: "add-mjs",
+          setup(build) {
+            build.onResolve({ filter: /.*/ }, (args) => {
+              if (args.importer) {
+                let extPath = args.path;
+                if (extPath.startsWith(".")) {
+                  extPath = extPath + ".mjs";
                 }
-              });
-            },
+                return {
+                  path: extPath,
+                  namespace: "magic",
+                  external: true,
+                };
+              }
+            });
           },
-        ],
-      }),
-      () => generatePackageJson("lib/mjs", { type: "module" })
-    ),
-    series(
-      esbuildTask({
-        ...baseEsbuildOptions,
-        format: "cjs",
-        outdir: "lib/cjs",
-      }),
-      () => generatePackageJson("lib/cjs", { type: "commonjs" })
-    ),
-    types
+        },
+      ],
+    }),
+    esbuildTask({
+      ...baseEsbuildOptions,
+      format: "cjs",
+    })
   );
 };
 

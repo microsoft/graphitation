@@ -9,7 +9,8 @@
   },
   "scripts": {
     "clean": "git clean -fdx -e node_modules",
-    "build": "lage build",
+    "build-only": "lage build",
+    "build": "lage build && lage types",
     "types": "lage types",
     "test": "lage test",
     "lint": "lage lint",

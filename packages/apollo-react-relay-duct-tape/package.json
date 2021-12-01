@@ -34,7 +34,15 @@
     "invariant": "^2.2.4"
   },
   "publishConfig": {
-    "main": "./lib/index",
-    "types": "./lib/index.d.ts"
+    "main": "./lib/index.js",
+    "types": "./lib/index.d.ts",
+    "access": "public",
+    "module": "./lib/index.mjs",
+    "exports": {
+      ".": {
+        "import": "./lib/index.mjs",
+        "require": "./lib/index.js"
+      }
+    }
   }
 }

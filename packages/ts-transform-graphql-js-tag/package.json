@@ -18,9 +18,16 @@
     "ts-transformer-testing-library": "^1.0.0-alpha.7"
   },
   "publishConfig": {
-    "main": "./lib/index",
+    "main": "./lib/index.js",
     "types": "./lib/index.d.ts",
-    "access": "public"
+    "access": "public",
+    "module": "./lib/index.mjs",
+    "exports": {
+      ".": {
+        "import": "./lib/index.mjs",
+        "require": "./lib/index.js"
+      }
+    }
   },
   "dependencies": {
     "graphql": "^15.6.1",

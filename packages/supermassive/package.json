@@ -27,14 +27,14 @@
     "ts-node": "^10.0.0"
   },
   "publishConfig": {
-    "main": "./lib/index",
-    "types": "./lib/types/index.d.ts",
+    "main": "./lib/index.js",
+    "types": "./lib/index.d.ts",
     "access": "public",
-    "module": "./lib/mjs/index.js",
+    "module": "./lib/index.mjs",
     "exports": {
       ".": {
-        "import": "./lib/mjs/index.js",
-        "require": "./lib/cjs/index.js"
+        "import": "./lib/index.mjs",
+        "require": "./lib/index.js"
       }
     }
   },
