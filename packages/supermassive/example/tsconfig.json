@@ -1,0 +1,23 @@
+{
+  "extends": "../../../tsconfig.json",
+  "ts-node": {
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "ESNext",
+      "target": "ES5",
+      "moduleResolution": "Node"
+    },
+    "moduleType": {
+      "webpack.config.ts": "cjs"
+    }
+  },
+  "compilerOptions": {
+    "jsx": "react",
+    "target": "ES2019",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
+  }
+}

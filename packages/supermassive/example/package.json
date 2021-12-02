@@ -1,0 +1,48 @@
+{
+  "name": "supermassive-example",
+  "main": "index.js",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "webpack --mode production --config webpack.config.ts",
+    "start": "webpack serve --progress --color --mode=development  --config webpack.config.ts "
+  },
+  "dependencies": {
+    "@apollo/client": "^3.4.16",
+    "@babel/runtime": "^7.12.0",
+    "@graphitation/apollo-react-relay-duct-tape": "^0.5.0-store-observation.6",
+    "@graphitation/graphql-js-tag": "^0.5.4",
+    "@graphitation/supermassive": "./graphitation-supermassive-0.2.0-test.1222021.tgz",
+    "@graphitation/ts-transform-graphql-js-tag": "^0.2.2",
+    "@types/graphql": "^14.5.0",
+    "@types/lodash": "^4.14.175",
+    "graphql": "^15.6.1",
+    "graphql-tools": "^8.2.0",
+    "html-webpack-plugin": "^5.3.2",
+    "lodash": "^4.17.21",
+    "prettier": "^2.4.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "ts-loader": "^9.0.0",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.4.3",
+    "uuid": "^8.3.2",
+    "webpack": "^5.0.0",
+    "webpack-cli": "^4.6.0",
+    "webpack-dev-server": "^3.1.14",
+    "webpack-graphql-loader": "^1.0.2",
+    "zen-observable": "^0.8.15"
+  },
+  "resolutions": {
+    "graphql": "^15.6.1"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^2.2.2",
+    "@graphql-codegen/import-types-preset": "^2.1.7",
+    "@graphql-codegen/typescript": "^2.3.0",
+    "@statoscope/webpack-plugin": "^5.18.0",
+    "@types/react": "^17.0.30",
+    "@types/react-dom": "^17.0.9",
+    "@types/uuid": "^8.3.1",
+    "graphql-let": "^0.18.5"
+  }
+}
