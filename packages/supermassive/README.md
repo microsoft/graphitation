@@ -29,47 +29,7 @@ Similarly, the GraphQL operations themselves, described using e.g. [GraphQL SDL]
 
 In this initial phase, we will achieve the goal of tree-shaking the schema definitions. We do this by inlining required metadata into the documents that describe the operations, after which they can be executed with the need of the entire schema.
 
-Consider a schema like the following:
-
-```graphql
-type Query {
-  me: User!
-}
-
-type User {
-  name: String!
-  presence: Presence!
-}
-
-type Presence {
-  availability: PresenceAvailability!
-}
-
-enum PresenceAvailability {
-  AVAILABLE
-  BUSY
-  OFFLINE
-}
-```
-
-...and a field-resolver map like the following:
-
-```ts
-import { getUser } from "user-service";
-import { getUserPresence } from "presence-service";
-
-const resolvers = {
-  Query: {
-    me: async (_source, _args, context) => getUser(context.currentUserId),
-  },
-  User: {
-    name: (source) => source.name,
-    presence: async (source) => getUserPresence(source.id),
-  },
-};
-```
-
-When given an operation like the following:
+Consider a GraphQL operation like the following:
 
 ```graphql
 query {
@@ -79,31 +39,44 @@ query {
 }
 ```
 
-...the compiled output will [conceptually] contain only the following schema definitions:
+This would lead to the following [conceptual] tree-shaking after compilation of the schema:
 
-```graphql
-type Query {
-  me: User!
-}
+```diff
+ type Query {
+   me: User!
+ }
 
-type User {
-  name: String!
-}
+ type User {
+   name: String!
+-  presence: Presence!
+ }
+
+-type Presence {
+-  availability: PresenceAvailability!
+-}
+-
+-enum PresenceAvailability {
+-  AVAILABLE
+-  BUSY
+-  OFFLINE
+-}
 ```
 
-...and the following field-resolver code:
+...and the field-resolver map:
 
-```ts
-import { getUser } from "user-service";
+```diff
+ import { getUser } from "user-service";
+-import { getUserPresence } from "presence-service";
 
-const resolvers = {
-  Query: {
-    me: async (_source, _args, context) => getUser(context.currentUserId),
-  },
-  User: {
-    name: (source) => source.name,
-  },
-};
+ const resolvers = {
+   Query: {
+     me: async (_source, _args, context) => getUser(context.currentUserId),
+   },
+   User: {
+     name: (source) => source.name,
+-    presence: async (source) => getUserPresence(source.id),
+   },
+ };
 ```
 
 ### Phase 2
