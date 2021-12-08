@@ -6,7 +6,7 @@ Supermassive is a lightweight schema-less GraphQL executor and query build-time 
 
 ## What
 
-Our goals are to provide a solution with the following optimizations for when all GraphQL operations (queries, mutations, subscriptions) needed by the user-experiences are statically known at build-time:
+Supermassive's goals are to provide a solution with the following optimizations for when all GraphQL operations (queries, mutations, subscriptions) needed by the user-experiences are statically known at build-time:
 
 - Bundle size of production targets needs to be as small as possible.
 - Performance is favored over runtime validation.
@@ -15,7 +15,7 @@ Such is the case in our scenarios, where our schema lives entirely in the client
 
 ## Why
 
-Running a GraphQL executor can be an expensive exercise. The JavaScript community has the good fortune of having the official reference implementation of the GraphQL specification being implemented in JavaScript, namely [graphql-js](http://github.com/graphql/graphql-js). Inevitably this means that most general purpose GraphQL libraries in the JavaScript ecosystem end up wrapping it or otherwise rely on it. However, its goal is specifically to be an _all-encompassing_ implementation used for reference needs, _not_ to be an optimized solution for specific use-cases.
+Running a GraphQL executor can be an expensive exercise. The JavaScript community has the good fortune of having the official reference implementation of the GraphQL specification being implemented in JavaScript, namely [graphql-js](http://github.com/graphql/graphql-js). Inevitably this means that most general purpose GraphQL libraries in the JavaScript ecosystem end up wrapping it or otherwise rely on it. However, graphql-js' goal is specifically to be an _all-encompassing_ implementation used for reference needs, _not_ to be an optimized solution for specific use-cases.
 
 ## How
 
