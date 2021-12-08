@@ -1,6 +1,6 @@
 # @graphitation/supermassive
 
-_Pack more performance into smaller space_
+_[Pack more performance into smaller space](https://en.wikipedia.org/wiki/Supermassive_black_hole)_
 
 Supermassive is a lightweight schema-less GraphQL executor and query build-time compiler.
 
@@ -11,7 +11,7 @@ Our goals are to provide a solution with the following optimizations for when al
 - Bundle size of production targets needs to be as small as possible.
 - Performance is favored over runtime validation.
 
-Such is the case in our scenarios where our schema lives entirely in the client application and some of these applications have very little or no GraphQL needs [yet] other than to suffice the needs of a single or few components.
+Such is the case in our scenarios, where our schema lives entirely in the client application and some of these applications have very little to no GraphQL needs [yet] other than to suffice the needs of a single or few components.
 
 ## Why
 
@@ -22,6 +22,8 @@ Running a GraphQL executor can be an expensive exercise. The JavaScript communit
 Consider a GraphQL schema. It is typically a sizeable chunk of data, both in terms of type/field definition metadata as well as associated field-resolvers and _their_ code dependencies. Statically knowing all GraphQL operations allows us to reduce the bundle size to a minimum by [tree-shaking](https://en.wikipedia.org/wiki/Tree_shaking) all the definition metadata not required by any of the given operations. A JavaScript code bundler can in turn ensure only that code which is needed by the remaining field-resolvers is included in the production bundle. This means that the process is entirely dependency driven by needs expressed by the user-experiences, rather than requiring blunt manual configuration.
 
 Similarly, the GraphQL operations themselves, described using e.g. [GraphQL SDL](https://graphql.org/learn/schema/) or [`graphql-js` AST](https://github.com/graphql/graphql-js/blob/main/src/language/ast.ts), can incur quite some overhead as operations and number of operations grow. Eliminating these from the bundles can save size as well as runtime processing.
+
+## Roadmap
 
 ### Phase 1
 
