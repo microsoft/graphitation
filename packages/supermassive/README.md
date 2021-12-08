@@ -29,6 +29,83 @@ Similarly, the GraphQL operations themselves, described using e.g. [GraphQL SDL]
 
 In this initial phase, we will achieve the goal of tree-shaking the schema definitions. We do this by inlining required metadata into the documents that describe the operations, after which they can be executed with the need of the entire schema.
 
+Consider a schema like the following:
+
+```graphql
+type Query {
+  me: User!
+}
+
+type User {
+  name: String!
+  presence: Presence!
+}
+
+type Presence {
+  availability: PresenceAvailability!
+}
+
+enum PresenceAvailability {
+  AVAILABLE
+  BUSY
+  OFFLINE
+}
+```
+
+...and a field-resolver map like the following:
+
+```ts
+import { getUser } from "user-service";
+import { getUserPresence } from "presence-service";
+
+const resolvers = {
+  Query: {
+    me: async (_source, _args, context) => getUser(context.currentUserId),
+  },
+  User: {
+    name: (source) => source.name,
+    presence: async (source) => getUserPresence(source.id),
+  },
+};
+```
+
+When given an operation like the following:
+
+```graphql
+query {
+  me {
+    name
+  }
+}
+```
+
+...the compiled output will [conceptually] contain only the following schema definitions:
+
+```graphql
+type Query {
+  me: User!
+}
+
+type User {
+  name: String!
+}
+```
+
+...and the following field-resolver code:
+
+```ts
+import { getUser } from "user-service";
+
+const resolvers = {
+  Query: {
+    me: async (_source, _args, context) => getUser(context.currentUserId),
+  },
+  User: {
+    name: (source) => source.name,
+  },
+};
+```
+
 ### Phase 2
 
 In this phase, we will expand on the previous phase by ahead-of-time compiling the resolution of the operations, their field-resolvers, and invocation thereof into JavaScript code. This essentially does away with any need for AST of the operation during execution.
