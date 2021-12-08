@@ -33,13 +33,13 @@ In this initial phase, we will achieve the goal of tree-shaking the schema defin
 
 In this phase, we will expand on the previous phase by ahead-of-time compiling the resolution of the operations, their field-resolvers, and invocation thereof into JavaScript code. This essentially does away with any need for AST of the operation during execution.
 
-### Phase 4
+### Phase 3
 
 In this final phase, we will make it possible to replace the operations at runtime using a simple identifier, thus allowing GraphQL clients to execute their operations using these identifiers that they obtain through a concept known as ["persisted queries"](https://relay.dev/docs/guides/persisted-queries/). GraphQL clients that do _not_ require graphql-js AST themselves to operate, such as Relay, will benefit from this by being able to reduce their bundle size by stripping out the operations.
 
 ## Usage
 
-There are 3 main parts of supermassive - the executor, query annotator and implicit resolver extractor. Executor is the part that actually runs the queries. It takes resolvers object instead of schema and annotated documents instead of normal documents. Query annotator processes query to include type information inside them. It can be ran as part of query extraction stage in Relay Compiler or eg in `@graphitation/graphql-js-tag`. Implicit resolver extractor writes out resolvers for types that are only implicitly defined in GraphQL SDL, like Unions or Input Objects. It generates typescript file with extracted object that can be merged with the rest of the resolvers.
+There are 3 main parts of Supermassive - the executor, query annotator and implicit resolver extractor. Executor is the part that actually runs the queries. It takes resolvers object instead of schema and annotated documents instead of normal documents. Query annotator processes query to include type information inside them. It can be ran as part of query extraction stage in Relay Compiler or eg in `@graphitation/graphql-js-tag`. Implicit resolver extractor writes out resolvers for types that are only implicitly defined in GraphQL SDL, like Unions or Input Objects. It generates typescript file with extracted object that can be merged with the rest of the resolvers.
 
 ### Executor
 
@@ -71,7 +71,7 @@ function executeWithSchema(args: ExecutionWithSchemaArgs): PromiseOrValue<Execut
 
 ### Transform
 
-`addTypesToRequestDocument` converts untyped graphql-js AST node into a supermassive typed one.
+`addTypesToRequestDocument` converts untyped graphql-js AST node into a Supermassive typed one.
 
 ```js
 function addTypesToRequestDocument(
