@@ -105,5 +105,11 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
         }
       }
     ]
+  },
+  "metadata": {
+    "mainFragment": {
+      "name": "compiledHooks_QueryTypeFragment",
+      "typeCondition": "Query"
+    }
   }
 };
