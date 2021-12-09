@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 09 Dec 2021 14:41:56 GMT",
+      "tag": "@graphitation/supermassive_v0.2.0",
+      "version": "0.2.0",
+      "comments": {
+        "none": [
+          {
+            "comment": "Expand on what/why/how",
+            "author": "eloy.de.enige@gmail.com",
+            "commit": "7db88d6e25f7de28b92750c3e1908b5096078e3e",
+            "package": "@graphitation/supermassive"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 26 Nov 2021 15:43:37 GMT",
       "tag": "@graphitation/supermassive_v0.2.0",
       "version": "0.2.0",
