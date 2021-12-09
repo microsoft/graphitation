@@ -129,11 +129,10 @@ Whereas a compiled version of the specific operation would look something like t
 ```ts
 function CurrentUserNameQuery(rootSource = {}) {
   const meSource = QueryType.fieldResolvers["me"](rootSource);
-  const meResult = {
-    name: UserType.fieldResolvers["name"](meSource),
-  };
   const result = {
-    me: meResult,
+    me: {
+      name: UserType.fieldResolvers["name"](meSource),
+    },
   };
   return result;
 }
@@ -162,7 +161,7 @@ function CurrentUser() {
 }
 ```
 
-However, now that we can compile the operation to code ahead-of-time, and no longer need the operation AST during execution, we can eliminate it entirely and compile the component to refer to the compiled version of the document instead:
+However, now that we can compile the operation to code ahead-of-time, and no longer need the operation AST during execution, we can eliminate the document entirely and compile the component to refer to the compiled version of the document instead:
 
 ```tsx
 function CurrentUser() {
