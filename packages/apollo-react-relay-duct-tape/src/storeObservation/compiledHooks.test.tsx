@@ -31,7 +31,8 @@ import { documents as compiledHooks_Root_executionQuery_documents } from "./__ge
 import { documents as compiledHooks_ChildFragment_documents } from "./__generated__/compiledHooks_ChildWatchNodeQuery.graphql";
 import { documents as compiledHooks_RefetchableFragment_documents } from "./__generated__/compiledHooks_RefetchableFragment_RefetchQuery.graphql";
 import { documents as compiledHooks_QueryTypeFragment_documents } from "./__generated__/compiledHooks_QueryTypeWatchNodeQuery.graphql";
-import { documents as compiledHooks_PaginationFragment_documents } from "./__generated__/compiledHooks_PaginationFragment_PaginationQuery.graphql";
+import { documents as compiledHooks_ForwardPaginationFragment_documents } from "./__generated__/compiledHooks_ForwardPaginationFragment_PaginationQuery.graphql";
+import { documents as compiledHooks_BackwardPaginationFragment_documents } from "./__generated__/compiledHooks_BackwardPaginationFragment_PaginationQuery.graphql";
 import { compiledHooks_Root_executionQueryVariables } from "./__generated__/compiledHooks_Root_executionQuery.graphql";
 
 const schema = buildSchema(
@@ -64,16 +65,37 @@ const QueryType_fragment = graphql`
   }
 `;
 
-const Pagination_fragment = graphql`
-  fragment compiledHooks_PaginationFragment on User
-  @refetchable(queryName: "compiledHooks_PaginationFragment_PaginationQuery") {
+const ForwardPagination_fragment = graphql`
+  fragment compiledHooks_ForwardPaginationFragment on User
+  @refetchable(
+    queryName: "compiledHooks_ForwardPaginationFragment_PaginationQuery"
+  ) {
     petName
     avatarUrl(size: $avatarSize)
-    conversations(first: $conversationsCount, after: $conversationsCursor)
-      @connection(key: "compiledHooks_user_conversations") {
+    conversations(
+      first: $conversationsForwardCount
+      after: $conversationsAfterCursor
+    ) @connection(key: "compiledHooks_user_conversations") {
       edges {
         node {
           title
+          ...compiledHooks_BackwardPaginationFragment
+        }
+      }
+    }
+  }
+`;
+
+const BackwardPagination_fragment = graphql`
+  fragment compiledHooks_BackwardPaginationFragment on Conversation
+  @refetchable(
+    queryName: "compiledHooks_BackwardPaginationFragment_PaginationQuery"
+  ) {
+    messages(last: $messagesBackwardCount, before: $messagesBeforeCursor)
+      @connection(key: "compiledHooks_conversation_messages") {
+      edges {
+        node {
+          text
         }
       }
     }
@@ -84,14 +106,16 @@ const Root_executionQueryDocument = graphql`
   query compiledHooks_Root_executionQuery(
     $userId: Int!
     $avatarSize: Int!
-    $conversationsCount: Int!
-    $conversationsCursor: String!
+    $conversationsForwardCount: Int!
+    $conversationsAfterCursor: String!
+    $messagesBackwardCount: Int!
+    $messagesBeforeCursor: String!
   ) {
     user(id: $userId) {
       name
       ...compiledHooks_ChildFragment
       ...compiledHooks_RefetchableFragment
-      ...compiledHooks_PaginationFragment
+      ...compiledHooks_ForwardPaginationFragment
     }
     ...compiledHooks_QueryTypeFragment
   }
@@ -105,7 +129,10 @@ describe("compiledHooks", () => {
   let lastUseRefetchableFragmentResult: ReturnType<
     typeof useCompiledRefetchableFragment
   >[];
-  let lastUsePaginationFragmentResult: ReturnType<
+  let lastForwardUsePaginationFragmentResult: ReturnType<
+    typeof useCompiledPaginationFragment
+  >[];
+  let lastBackwardUsePaginationFragmentResult: ReturnType<
     typeof useCompiledPaginationFragment
   >[];
   let lastUseLazyLoadQueryResult: { data?: any; error?: Error } | null = null;
@@ -140,12 +167,34 @@ describe("compiledHooks", () => {
     return null;
   };
 
-  const ChildPaginationComponent: React.FC<{ user: { id: any } }> = (props) => {
+  const ChildForwardPaginationComponent: React.FC<{ user: { id: any } }> = (
+    props
+  ) => {
     const result = useCompiledPaginationFragment(
-      compiledHooks_PaginationFragment_documents as any,
+      compiledHooks_ForwardPaginationFragment_documents as any,
       props.user
     );
-    lastUsePaginationFragmentResult.push(result);
+    lastForwardUsePaginationFragmentResult.push(result);
+
+    return result.data.conversations.edges.map((edge: any, index: number) => {
+      // console.log(edge.node);
+      return (
+        <ChildBackwardPaginationComponent
+          conversation={edge.node}
+          key={index}
+        />
+      );
+    });
+  };
+
+  const ChildBackwardPaginationComponent: React.FC<{
+    conversation: { id: any };
+  }> = (props) => {
+    const result = useCompiledPaginationFragment(
+      compiledHooks_BackwardPaginationFragment_documents as any,
+      props.conversation
+    );
+    lastBackwardUsePaginationFragmentResult.push(result);
     return null;
   };
 
@@ -161,16 +210,18 @@ describe("compiledHooks", () => {
       <>
         <ChildComponent user={result.data.user} />
         <ChildRefetchableComponent user={result.data.user} />
-        <ChildPaginationComponent user={result.data.user} />
+        <ChildForwardPaginationComponent user={result.data.user} />
         <ComponentOnQueryType query={result.data} />
       </>
     ) : null;
   };
 
   beforeEach(() => {
+    lastUseLazyLoadQueryResult = null;
     lastUseFragmentResult = [];
     lastUseRefetchableFragmentResult = [];
-    lastUsePaginationFragmentResult = [];
+    lastForwardUsePaginationFragmentResult = [];
+    lastBackwardUsePaginationFragmentResult = [];
     lastComponentOnQueryTypeResult = [];
     client = createMockClient(schema, {
       cache: {
@@ -188,18 +239,16 @@ describe("compiledHooks", () => {
               variables={{
                 userId: 42,
                 avatarSize: 21,
-                conversationsCount: 1,
-                conversationsCursor: "",
+                conversationsForwardCount: 1,
+                conversationsAfterCursor: "",
+                messagesBackwardCount: 1,
+                messagesBeforeCursor: "",
               }}
             />
           </ErrorBoundary>
         </ApolloProvider>
       );
     });
-  });
-
-  afterEach(() => {
-    lastUseLazyLoadQueryResult = null;
   });
 
   describe(useCompiledLazyLoadQuery, () => {
@@ -236,36 +285,81 @@ describe("compiledHooks", () => {
               Conversation: () => ({
                 id: "first-paged-conversation",
               }),
+              Message: () => ({
+                id: "first-paged-message",
+              }),
             })
           )
         );
       });
 
       it("loads all data of the execution query into the store", () => {
-        expect(client.cache.extract()["User:42"]).toMatchInlineSnapshot(`
+        expect(client.cache.extract()).toMatchInlineSnapshot(`
           Object {
-            "__typename": "User",
-            "avatarUrl({\\"size\\":21})": "<mock-value-for-field-\\"avatarUrl\\">",
-            "conversations:compiledHooks_user_conversations": Object {
-              "__typename": "ConversationsConnection",
-              "edges": Array [
-                Object {
-                  "__typename": "ConversationsConnectionEdge",
-                  "cursor": "<mock-value-for-field-\\"cursor\\">",
-                  "node": Object {
-                    "__ref": "Conversation:first-paged-conversation",
+            "Conversation:first-paged-conversation": Object {
+              "__typename": "Conversation",
+              "id": "first-paged-conversation",
+              "messages:compiledHooks_conversation_messages": Object {
+                "__typename": "ConversationMessagesConnection",
+                "edges": Array [
+                  Object {
+                    "__typename": "ConversationMessagesConnectionEdge",
+                    "cursor": "<mock-value-for-field-\\"cursor\\">",
+                    "node": Object {
+                      "__ref": "Message:first-paged-message",
+                    },
                   },
+                ],
+                "pageInfo": Object {
+                  "__typename": "PageInfo",
+                  "hasPreviousPage": false,
+                  "startCursor": "<mock-value-for-field-\\"startCursor\\">",
                 },
-              ],
-              "pageInfo": Object {
-                "__typename": "PageInfo",
-                "endCursor": "<mock-value-for-field-\\"endCursor\\">",
-                "hasNextPage": false,
+              },
+              "title": "<mock-value-for-field-\\"title\\">",
+            },
+            "Message:first-paged-message": Object {
+              "__typename": "Message",
+              "id": "first-paged-message",
+              "text": "<mock-value-for-field-\\"text\\">",
+            },
+            "NonNode:<mock-value-for-field-\\"id\\">": Object {
+              "__typename": "NonNode",
+              "id": "<mock-value-for-field-\\"id\\">",
+            },
+            "ROOT_QUERY": Object {
+              "__typename": "Query",
+              "nonNode": Object {
+                "__ref": "NonNode:<mock-value-for-field-\\"id\\">",
+              },
+              "user({\\"id\\":42})": Object {
+                "__ref": "User:42",
               },
             },
-            "id": 42,
-            "name": "<mock-value-for-field-\\"name\\">",
-            "petName": "<mock-value-for-field-\\"petName\\">",
+            "User:42": Object {
+              "__typename": "User",
+              "avatarUrl({\\"size\\":21})": "<mock-value-for-field-\\"avatarUrl\\">",
+              "conversations:compiledHooks_user_conversations": Object {
+                "__typename": "ConversationsConnection",
+                "edges": Array [
+                  Object {
+                    "__typename": "ConversationsConnectionEdge",
+                    "cursor": "<mock-value-for-field-\\"cursor\\">",
+                    "node": Object {
+                      "__ref": "Conversation:first-paged-conversation",
+                    },
+                  },
+                ],
+                "pageInfo": Object {
+                  "__typename": "PageInfo",
+                  "endCursor": "<mock-value-for-field-\\"endCursor\\">",
+                  "hasNextPage": false,
+                },
+              },
+              "id": 42,
+              "name": "<mock-value-for-field-\\"name\\">",
+              "petName": "<mock-value-for-field-\\"petName\\">",
+            },
           }
         `);
       });
@@ -275,15 +369,19 @@ describe("compiledHooks", () => {
           Object {
             "__fragments": Object {
               "avatarSize": 21,
-              "conversationsCount": 1,
-              "conversationsCursor": "",
+              "conversationsAfterCursor": "",
+              "conversationsForwardCount": 1,
+              "messagesBackwardCount": 1,
+              "messagesBeforeCursor": "",
               "userId": 42,
             },
             "user": Object {
               "__fragments": Object {
                 "avatarSize": 21,
-                "conversationsCount": 1,
-                "conversationsCursor": "",
+                "conversationsAfterCursor": "",
+                "conversationsForwardCount": 1,
+                "messagesBackwardCount": 1,
+                "messagesBeforeCursor": "",
                 "userId": 42,
               },
               "__typename": "User",
@@ -324,15 +422,19 @@ describe("compiledHooks", () => {
           Object {
             "__fragments": Object {
               "avatarSize": 21,
-              "conversationsCount": 1,
-              "conversationsCursor": "",
+              "conversationsAfterCursor": "",
+              "conversationsForwardCount": 1,
+              "messagesBackwardCount": 1,
+              "messagesBeforeCursor": "",
               "userId": 42,
             },
             "user": Object {
               "__fragments": Object {
                 "avatarSize": 21,
-                "conversationsCount": 1,
-                "conversationsCursor": "",
+                "conversationsAfterCursor": "",
+                "conversationsForwardCount": 1,
+                "messagesBackwardCount": 1,
+                "messagesBeforeCursor": "",
                 "userId": 42,
               },
               "__typename": "User",
@@ -352,8 +454,10 @@ describe("compiledHooks", () => {
                   variables={{
                     userId: 21,
                     avatarSize: 21,
-                    conversationsCount: 1,
-                    conversationsCursor: "",
+                    conversationsForwardCount: 1,
+                    conversationsAfterCursor: "",
+                    messagesBackwardCount: 1,
+                    messagesBeforeCursor: "",
                   }}
                 />
               </ErrorBoundary>
@@ -378,7 +482,7 @@ describe("compiledHooks", () => {
                   "__typename": "ConversationsConnectionEdge",
                   "cursor": "<mock-value-for-field-\\"cursor\\">",
                   "node": Object {
-                    "__ref": "Conversation:<Conversation-mock-id-3>",
+                    "__ref": "Conversation:<Conversation-mock-id-5>",
                   },
                 },
               ],
@@ -405,8 +509,10 @@ describe("compiledHooks", () => {
                   variables={{
                     userId: 42,
                     avatarSize: 21,
-                    conversationsCount: 1,
-                    conversationsCursor: "",
+                    conversationsForwardCount: 1,
+                    conversationsAfterCursor: "",
+                    messagesBackwardCount: 1,
+                    messagesBeforeCursor: "",
                   }}
                 />
               </ErrorBoundary>
@@ -435,6 +541,13 @@ describe("compiledHooks", () => {
             Conversation: () => ({
               id: "first-paged-conversation",
             }),
+            Message: () => ({
+              id: "first-paged-message",
+            }),
+            PageInfo: () => ({
+              startCursor: "first-page-start-cursor",
+              endCursor: "first-page-end-cursor",
+            }),
           });
           return result;
         })
@@ -445,8 +558,10 @@ describe("compiledHooks", () => {
       expect(returnedResults()[0]).toEqual({
         __fragments: {
           avatarSize: 21,
-          conversationsCount: 1,
-          conversationsCursor: "",
+          conversationsForwardCount: 1,
+          conversationsAfterCursor: "",
+          messagesBackwardCount: 1,
+          messagesBeforeCursor: "",
           userId: 42,
         },
         __typename: "User",
@@ -499,8 +614,10 @@ describe("compiledHooks", () => {
                 variables={{
                   userId: 21,
                   avatarSize: 21,
-                  conversationsCount: 1,
-                  conversationsCursor: "",
+                  conversationsForwardCount: 1,
+                  conversationsAfterCursor: "",
+                  messagesBackwardCount: 1,
+                  messagesBeforeCursor: "",
                 }}
               />
             </ErrorBoundary>
@@ -529,8 +646,10 @@ describe("compiledHooks", () => {
         Object {
           "__fragments": Object {
             "avatarSize": 21,
-            "conversationsCount": 1,
-            "conversationsCursor": "",
+            "conversationsAfterCursor": "",
+            "conversationsForwardCount": 1,
+            "messagesBackwardCount": 1,
+            "messagesBeforeCursor": "",
             "userId": 42,
           },
           "nonNode": Object {
@@ -640,7 +759,7 @@ describe("compiledHooks", () => {
   describe(useCompiledPaginationFragment, () => {
     itBehavesLikeFragment(
       () =>
-        lastUsePaginationFragmentResult.map(
+        lastForwardUsePaginationFragmentResult.map(
           ({ data }) => data as { id: number }
         ),
       {
@@ -652,6 +771,14 @@ describe("compiledHooks", () => {
               __typename: "ConversationsConnectionEdge",
               cursor: '<mock-value-for-field-"cursor">',
               node: {
+                __fragments: {
+                  avatarSize: 21,
+                  conversationsForwardCount: 1,
+                  conversationsAfterCursor: "",
+                  messagesBackwardCount: 1,
+                  messagesBeforeCursor: "",
+                  userId: 42,
+                },
                 __typename: "Conversation",
                 id: "first-paged-conversation",
                 title: '<mock-value-for-field-"title">',
@@ -660,7 +787,7 @@ describe("compiledHooks", () => {
           ],
           pageInfo: {
             __typename: "PageInfo",
-            endCursor: '<mock-value-for-field-"endCursor">',
+            endCursor: "first-page-end-cursor",
             hasNextPage: false,
           },
         },
@@ -668,32 +795,32 @@ describe("compiledHooks", () => {
     );
 
     itBehavesLikeRefetchableFragment(() =>
-      lastUsePaginationFragmentResult.map(({ data, refetch }) => [
+      lastForwardUsePaginationFragmentResult.map(({ data, refetch }) => [
         data as { id: number },
         refetch,
       ])
     );
 
-    describe("when paginating", () => {
+    describe("when paginating forward", () => {
       it("uses the correct count and cursor values", () => {
-        const { loadNext } = lastUsePaginationFragmentResult[0];
+        const { loadNext } = lastForwardUsePaginationFragmentResult[0];
         loadNext(123);
 
         const operation = client.mock.getMostRecentOperation();
         expect(operation.request.variables).toMatchObject({
-          conversationsCount: 123,
-          conversationsCursor: '<mock-value-for-field-"endCursor">',
+          conversationsForwardCount: 123,
+          conversationsAfterCursor: "first-page-end-cursor",
         });
       });
 
       describe("and having received the response", () => {
         beforeEach(async () => {
-          const { loadNext } = lastUsePaginationFragmentResult[0];
+          const { loadNext } = lastForwardUsePaginationFragmentResult[0];
           loadNext(1);
 
-          await act(() => {
-            client.mock.resolveMostRecentOperation((operation) => {
-              const response = MockPayloadGenerator.generate(operation, {
+          await act(() => 
+            client.mock.resolveMostRecentOperation((operation) =>
+              MockPayloadGenerator.generate(operation, {
                 Node: () => ({
                   id: 42,
                 }),
@@ -703,14 +830,13 @@ describe("compiledHooks", () => {
                 PageInfo: () => ({
                   endCursor: "second-page-end-cursor",
                 }),
-              });
-              return response;
-            });
+              })
+            ));
             return new Promise((resolve) => setTimeout(resolve, 0));
           });
         });
 
-        it("loads the new data into the store", async () => {
+        it("loads the new data into the store", () => {
           expect(client.cache.extract()).toMatchObject({
             "Conversation:second-paged-conversation": {
               id: "second-paged-conversation",
@@ -722,8 +848,8 @@ describe("compiledHooks", () => {
 
         it("returns the complete list data (previous+new) from the hook", () => {
           const result =
-            lastUsePaginationFragmentResult[
-              lastUsePaginationFragmentResult.length - 1
+            lastForwardUsePaginationFragmentResult[
+              lastForwardUsePaginationFragmentResult.length - 1
             ];
           expect(
             (result.data as any).conversations.edges.map(
@@ -738,12 +864,88 @@ describe("compiledHooks", () => {
         });
 
         it("uses the new cursor value", () => {
-          const { loadNext } = lastUsePaginationFragmentResult.reverse()[0];
+          const {
+            loadNext,
+          } = lastForwardUsePaginationFragmentResult.reverse()[0];
           loadNext(123);
 
           const operation = client.mock.getMostRecentOperation();
           expect(operation.request.variables).toMatchObject({
-            conversationsCursor: "second-page-end-cursor",
+            conversationsAfterCursor: "second-page-end-cursor",
+          });
+        });
+      });
+    });
+
+    describe("when paginating backward", () => {
+      it("uses the correct count and cursor values", () => {
+        const { loadPrevious } = lastBackwardUsePaginationFragmentResult[0];
+        loadPrevious(123);
+
+        const operation = client.mock.getMostRecentOperation();
+        expect(operation.request.variables).toMatchObject({
+          messagesBackwardCount: 123,
+          messagesBeforeCursor: "first-page-start-cursor",
+        });
+      });
+
+      describe("and having received the response", () => {
+        beforeEach(async () => {
+          const { loadPrevious } = lastBackwardUsePaginationFragmentResult[0];
+          loadPrevious(1);
+
+          await act(() => {
+            client.mock.resolveMostRecentOperation((operation) =>
+              MockPayloadGenerator.generate(operation, {
+                Node: () => ({
+                  id: 42,
+                }),
+                Message: () => ({
+                  id: "second-paged-message",
+                }),
+                PageInfo: () => ({
+                  startCursor: "second-page-start-cursor",
+                }),
+              })
+            );
+            return new Promise((resolve) => setTimeout(resolve, 0));
+          });
+        });
+
+        it("loads the new data into the store", () => {
+          expect(client.cache.extract()).toMatchObject({
+            "Message:second-paged-message": {
+              id: "second-paged-message",
+              __typename: "Message",
+              text: '<mock-value-for-field-"text">',
+            },
+          });
+        });
+
+        it("returns the complete list data (previous+new) from the hook", () => {
+          const result =
+            lastBackwardUsePaginationFragmentResult[
+              lastBackwardUsePaginationFragmentResult.length - 1
+            ];
+          expect(
+            (result.data as any).messages.edges.map((edge: any) => edge.node.id)
+          ).toMatchInlineSnapshot(`
+            Array [
+              "second-paged-message",
+              "first-paged-message",
+            ]
+          `);
+        });
+
+        it("uses the new cursor value", () => {
+          const {
+            loadPrevious,
+          } = lastBackwardUsePaginationFragmentResult.reverse()[0];
+          loadPrevious(123);
+
+          const operation = client.mock.getMostRecentOperation();
+          expect(operation.request.variables).toMatchObject({
+            messagesBeforeCursor: "second-page-start-cursor",
           });
         });
       });

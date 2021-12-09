@@ -25,6 +25,21 @@ type User implements Node {
   avatarUrl(size: Int!): String!
   hasFriends: Boolean!
   conversations(first: Int!, after: String!): ConversationsConnection!
+  contacts(last: Int!, before: String!): ContactsConnection!
+}
+
+type ContactsConnection {
+  pageInfo: PageInfo!
+  edges: [ContactsConnectionEdge!]!
+}
+
+type ContactsConnectionEdge {
+  cursor: String!
+  node: Contact!
+}
+
+type Contact implements Node {
+  id: ID!
 }
 
 type ConversationsConnection {
@@ -40,6 +55,22 @@ type ConversationsConnectionEdge {
 type Conversation implements Node {
   id: ID!
   title: String!
+  messages(last: Int!, before: String!): ConversationMessagesConnection!
+}
+
+type ConversationMessagesConnection {
+  pageInfo: PageInfo!
+  edges: [ConversationMessagesConnectionEdge!]!
+}
+
+type ConversationMessagesConnectionEdge {
+  cursor: String!
+  node: Message!
+}
+
+type Message implements Node {
+  id: ID!
+  text: String!
 }
 
 type PageInfo {
