@@ -27,7 +27,7 @@ Similarly, the GraphQL operations themselves, described using e.g. [GraphQL SDL]
 
 ### Phase 1
 
-In this initial phase, we will achieve the goal of tree-shaking the schema definitions. We do this by inlining required metadata into the documents that describe the operations, after which they can be executed with the need of the entire schema.
+In this initial phase, we will achieve the goal of tree-shaking the schema definitions. We do this by inlining required metadata into the documents that describe the operations, after which they can be executed with the need of the entire schema. This means overall bundle size will be decreased when only a subset of the schema is actually used, which pays off significantly when a host application introduces its first component(s) leveraging GraphQL.
 
 Consider a GraphQL operation like the following:
 
@@ -81,7 +81,7 @@ This would lead to the following [conceptual] tree-shaking after compilation of 
 
 ### Phase 2
 
-In this phase, we will expand on the previous phase by ahead-of-time compiling the resolution of the operations, their field-resolvers, and invocation thereof into JavaScript code. This essentially does away with any need for AST of the operation during execution.
+In this phase, we will expand on the previous phase by ahead-of-time compiling the resolution of the operations, their field-resolvers, and invocation thereof into JavaScript code. This essentially does away with any need for AST of the operation during execution. This means execution will be faster as no more generic lookups and checks need to be performed.
 
 Consider the GraphQL operation shown in the previous phase, typical generic execution (as [described in the specification](https://spec.graphql.org/June2018/#sec-Execution)) would look something like the following recursive pseudo-code:
 
@@ -150,7 +150,7 @@ CurrentUserNameQuery();
 
 ### Phase 3
 
-In this final phase, we will make it possible to replace the operations at runtime using a simple identifier, thus allowing GraphQL clients to execute their operations using these identifiers that they obtain through a concept known as ["persisted queries"](https://relay.dev/docs/guides/persisted-queries/). GraphQL clients that do _not_ require graphql-js AST themselves to operate, such as Relay, will benefit from this by being able to reduce their bundle size by stripping out the operations.
+In this final phase, we will make it possible to replace the operations at runtime using a simple identifier, thus allowing GraphQL clients to execute their operations using these identifiers that they obtain through a concept known as ["persisted queries"](https://relay.dev/docs/guides/persisted-queries/). This means that GraphQL clients that do not require graphql-js AST _themselves_ to operate, such as Relay, will be able to greatly reduce the size of the User-Experience bundles by entirely eliminating the document in favour of a short identifier.
 
 Again, considering the above GraphQL operation, a React component needing that data would include the GraphQL document in its bundle and look something like the following:
 
