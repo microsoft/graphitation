@@ -118,10 +118,17 @@ function visitSelectionSet(parentType, selectionSet, parentSource) {
 }
 
 function execute(query, rootSource = {}) {
-  return visitSelectionSet(getType("Query"), query.selectionSet, rootSource);
+  const ast = parse(query);
+  return visitSelectionSet(getType("Query"), ast.selectionSet, rootSource);
 }
 
-execute(query);
+execute(`
+  query CurrentUserNameQuery {
+    me {
+      name
+    }
+  }
+`);
 ```
 
 Whereas a compiled version of the specific operation would look something like the following:
