@@ -32,7 +32,7 @@ In this initial phase, we will achieve the goal of tree-shaking the schema defin
 Consider a GraphQL operation like the following:
 
 ```graphql
-query {
+query CurrentUserNameQuery {
   me {
     name
   }
@@ -83,9 +83,95 @@ This would lead to the following [conceptual] tree-shaking after compilation of 
 
 In this phase, we will expand on the previous phase by ahead-of-time compiling the resolution of the operations, their field-resolvers, and invocation thereof into JavaScript code. This essentially does away with any need for AST of the operation during execution.
 
+Consider the GraphQL operation shown in the previous phase, typical generic execution (as [described in the specification](https://spec.graphql.org/June2018/#sec-Execution)) would look something like the following recursive pseudo-code:
+
+```ts
+function visitSelectionSet(parentType, selectionSet, parentSource) {
+  const result = {};
+  for (const selection of selectionSet.selections) {
+    switch (selection.kind) {
+      case "Field": {
+        const type = getType(selection.type.name);
+        if (isScalarType(type)) {
+          result[selection.name] = parentType.invokeFieldResolver(
+            selection.name,
+            parentSource
+          );
+        } else if (isObjectType(type)) {
+          const source = parentType.invokeFieldResolver(
+            selection.name,
+            parentSource
+          );
+          result[selection.name] = visitSelectionSet(
+            type,
+            selection.selectionSet,
+            source
+          );
+        } else {
+          // ...
+        }
+      }
+      // ...
+    }
+  }
+  return result;
+}
+
+function execute(query, rootSource = {}) {
+  return visitSelectionSet(getType("Query"), query.selectionSet, rootSource);
+}
+
+execute(query);
+```
+
+Whereas a compiled version of the specific operation would look something like the following:
+
+```ts
+function CurrentUserNameQuery(rootSource = {}) {
+  const meSource = QueryType.fieldResolvers["me"](rootSource);
+  const meResult = {
+    name: UserType.fieldResolvers["name"](meSource),
+  };
+  const result = {
+    me: meResult,
+  };
+  return result;
+}
+
+CurrentUserNameQuery();
+```
+
 ### Phase 3
 
 In this final phase, we will make it possible to replace the operations at runtime using a simple identifier, thus allowing GraphQL clients to execute their operations using these identifiers that they obtain through a concept known as ["persisted queries"](https://relay.dev/docs/guides/persisted-queries/). GraphQL clients that do _not_ require graphql-js AST themselves to operate, such as Relay, will benefit from this by being able to reduce their bundle size by stripping out the operations.
+
+Again, considering the above GraphQL operation, a React component needing that data would include the GraphQL document in its bundle and look something like the following:
+
+```tsx
+function CurrentUser() {
+  const data = useQuery({
+    document: `
+      query CurrentUserNameQuery {
+        me {
+          name
+        }
+      }
+    `,
+  });
+  return <div>User: {data.me.name}</div>;
+}
+```
+
+However, now that we can compile the operation to code ahead-of-time, and no longer need the operation AST during execution, we can eliminate it entirely and compile the component to refer to the compiled version of the document instead:
+
+```tsx
+function CurrentUser() {
+  const data = useQuery({
+    persistedDocumentId: "CurrentUserNameQuery",
+  });
+  return <div>User: {data.me.name}</div>;
+}
+```
 
 ## Usage
 
