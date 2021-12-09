@@ -4,39 +4,63 @@
 ;
 
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
-export type compiledHooks_PaginationFragment_PaginationQueryVariables = {
+export type compiledHooks_ForwardPaginationFragment_PaginationQueryVariables = {
     avatarSize: number;
-    conversationsCount: number;
-    conversationsCursor: string;
+    conversationsAfterCursor: string;
+    conversationsForwardCount: number;
+    messagesBackwardCount: number;
+    messagesBeforeCursor: string;
     id: string;
 };
-export type compiledHooks_PaginationFragment_PaginationQueryResponse = {
+export type compiledHooks_ForwardPaginationFragment_PaginationQueryResponse = {
     readonly node: {
-        readonly " $fragmentRefs": FragmentRefs<"compiledHooks_PaginationFragment">;
+        readonly " $fragmentRefs": FragmentRefs<"compiledHooks_ForwardPaginationFragment">;
     } | null;
 };
-export type compiledHooks_PaginationFragment_PaginationQuery = {
-    readonly response: compiledHooks_PaginationFragment_PaginationQueryResponse;
-    readonly variables: compiledHooks_PaginationFragment_PaginationQueryVariables;
+export type compiledHooks_ForwardPaginationFragment_PaginationQuery = {
+    readonly response: compiledHooks_ForwardPaginationFragment_PaginationQueryResponse;
+    readonly variables: compiledHooks_ForwardPaginationFragment_PaginationQueryVariables;
 };
 
 
 /*
-query compiledHooks_PaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsCount: Int!, $conversationsCursor: String!, $id: ID!) {
+query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String!, $conversationsForwardCount: Int!, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $id: ID!) {
   node(id: $id) {
     __typename
-    ...compiledHooks_PaginationFragment
+    ...compiledHooks_ForwardPaginationFragment
     id
   }
 }
 
-fragment compiledHooks_PaginationFragment on User {
+fragment compiledHooks_BackwardPaginationFragment on Conversation {
+  messages(last: $messagesBackwardCount, before: $messagesBeforeCursor) @connection(key: "compiledHooks_conversation_messages") {
+    edges {
+      node {
+        text
+        id
+        __typename
+      }
+      cursor
+    }
+    pageInfo {
+      hasPreviousPage
+      startCursor
+    }
+  }
+  id
+}
+
+fragment compiledHooks_ForwardPaginationFragment on User {
   petName
   avatarUrl(size: $avatarSize)
-  conversations(first: $conversationsCount, after: $conversationsCursor) @connection(key: "compiledHooks_user_conversations") {
+  conversations(
+    first: $conversationsForwardCount
+    after: $conversationsAfterCursor
+  ) @connection(key: "compiledHooks_user_conversations") {
     edges {
       node {
         title
+        ...compiledHooks_BackwardPaginationFragment
         id
         __typename
       }
@@ -52,10 +76,10 @@ fragment compiledHooks_PaginationFragment on User {
 */
 
 /*
-query compiledHooks_PaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsCount: Int!, $conversationsCursor: String!, $id: ID!) {
+query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String!, $conversationsForwardCount: Int!, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $id: ID!) {
   node(id: $id) {
     __typename
-    ...compiledHooks_PaginationFragment
+    ...compiledHooks_ForwardPaginationFragment
     id
     ... on Node {
       __fragments @client
@@ -63,15 +87,21 @@ query compiledHooks_PaginationFragment_PaginationQuery($avatarSize: Int!, $conve
   }
 }
 
-fragment compiledHooks_PaginationFragment on User {
+fragment compiledHooks_ForwardPaginationFragment on User {
   petName
   avatarUrl(size: $avatarSize)
-  conversations(first: $conversationsCount, after: $conversationsCursor) @connection(key: "compiledHooks_user_conversations") {
+  conversations(
+    first: $conversationsForwardCount
+    after: $conversationsAfterCursor
+  ) @connection(key: "compiledHooks_user_conversations") {
     edges {
       node {
         title
         id
         __typename
+        ... on Node {
+          __fragments @client
+        }
       }
       cursor
     }
@@ -93,7 +123,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
         "operation": "query",
         "name": {
           "kind": "Name",
-          "value": "compiledHooks_PaginationFragment_PaginationQuery"
+          "value": "compiledHooks_ForwardPaginationFragment_PaginationQuery"
         },
         "variableDefinitions": [
           {
@@ -123,7 +153,28 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               "kind": "Variable",
               "name": {
                 "kind": "Name",
-                "value": "conversationsCount"
+                "value": "conversationsAfterCursor"
+              }
+            },
+            "type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String"
+                }
+              }
+            },
+            "directives": []
+          },
+          {
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
+                "value": "conversationsForwardCount"
               }
             },
             "type": {
@@ -144,7 +195,28 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               "kind": "Variable",
               "name": {
                 "kind": "Name",
-                "value": "conversationsCursor"
+                "value": "messagesBackwardCount"
+              }
+            },
+            "type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Int"
+                }
+              }
+            },
+            "directives": []
+          },
+          {
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
+                "value": "messagesBeforeCursor"
               }
             },
             "type": {
@@ -224,7 +296,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "kind": "FragmentSpread",
                     "name": {
                       "kind": "Name",
-                      "value": "compiledHooks_PaginationFragment"
+                      "value": "compiledHooks_ForwardPaginationFragment"
                     },
                     "directives": []
                   },
@@ -247,7 +319,197 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
         "kind": "FragmentDefinition",
         "name": {
           "kind": "Name",
-          "value": "compiledHooks_PaginationFragment"
+          "value": "compiledHooks_BackwardPaginationFragment"
+        },
+        "typeCondition": {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Conversation"
+          }
+        },
+        "directives": [],
+        "selectionSet": {
+          "kind": "SelectionSet",
+          "selections": [
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "messages"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "last"
+                  },
+                  "value": {
+                    "kind": "Variable",
+                    "name": {
+                      "kind": "Name",
+                      "value": "messagesBackwardCount"
+                    }
+                  }
+                },
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "before"
+                  },
+                  "value": {
+                    "kind": "Variable",
+                    "name": {
+                      "kind": "Name",
+                      "value": "messagesBeforeCursor"
+                    }
+                  }
+                }
+              ],
+              "directives": [
+                {
+                  "kind": "Directive",
+                  "name": {
+                    "kind": "Name",
+                    "value": "connection"
+                  },
+                  "arguments": [
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "key"
+                      },
+                      "value": {
+                        "kind": "StringValue",
+                        "value": "compiledHooks_conversation_messages",
+                        "block": false
+                      }
+                    }
+                  ]
+                }
+              ],
+              "selectionSet": {
+                "kind": "SelectionSet",
+                "selections": [
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "edges"
+                    },
+                    "arguments": [],
+                    "directives": [],
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "node"
+                          },
+                          "arguments": [],
+                          "directives": [],
+                          "selectionSet": {
+                            "kind": "SelectionSet",
+                            "selections": [
+                              {
+                                "kind": "Field",
+                                "name": {
+                                  "kind": "Name",
+                                  "value": "text"
+                                },
+                                "arguments": [],
+                                "directives": []
+                              },
+                              {
+                                "kind": "Field",
+                                "name": {
+                                  "kind": "Name",
+                                  "value": "id"
+                                },
+                                "arguments": [],
+                                "directives": []
+                              },
+                              {
+                                "kind": "Field",
+                                "name": {
+                                  "kind": "Name",
+                                  "value": "__typename"
+                                },
+                                "arguments": [],
+                                "directives": []
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "cursor"
+                          },
+                          "arguments": [],
+                          "directives": []
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "pageInfo"
+                    },
+                    "arguments": [],
+                    "directives": [],
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "hasPreviousPage"
+                          },
+                          "arguments": [],
+                          "directives": []
+                        },
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "startCursor"
+                          },
+                          "arguments": [],
+                          "directives": []
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "id"
+              },
+              "arguments": [],
+              "directives": []
+            }
+          ]
+        }
+      },
+      {
+        "kind": "FragmentDefinition",
+        "name": {
+          "kind": "Name",
+          "value": "compiledHooks_ForwardPaginationFragment"
         },
         "typeCondition": {
           "kind": "NamedType",
@@ -310,7 +572,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "kind": "Variable",
                     "name": {
                       "kind": "Name",
-                      "value": "conversationsCount"
+                      "value": "conversationsForwardCount"
                     }
                   }
                 },
@@ -324,7 +586,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "kind": "Variable",
                     "name": {
                       "kind": "Name",
-                      "value": "conversationsCursor"
+                      "value": "conversationsAfterCursor"
                     }
                   }
                 }
@@ -384,6 +646,14 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                                   "value": "title"
                                 },
                                 "arguments": [],
+                                "directives": []
+                              },
+                              {
+                                "kind": "FragmentSpread",
+                                "name": {
+                                  "kind": "Name",
+                                  "value": "compiledHooks_BackwardPaginationFragment"
+                                },
                                 "directives": []
                               },
                               {
@@ -476,7 +746,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
         "operation": "query",
         "name": {
           "kind": "Name",
-          "value": "compiledHooks_PaginationFragment_PaginationQuery"
+          "value": "compiledHooks_ForwardPaginationFragment_PaginationQuery"
         },
         "variableDefinitions": [
           {
@@ -506,7 +776,28 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               "kind": "Variable",
               "name": {
                 "kind": "Name",
-                "value": "conversationsCount"
+                "value": "conversationsAfterCursor"
+              }
+            },
+            "type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String"
+                }
+              }
+            },
+            "directives": []
+          },
+          {
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
+                "value": "conversationsForwardCount"
               }
             },
             "type": {
@@ -527,7 +818,28 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               "kind": "Variable",
               "name": {
                 "kind": "Name",
-                "value": "conversationsCursor"
+                "value": "messagesBackwardCount"
+              }
+            },
+            "type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Int"
+                }
+              }
+            },
+            "directives": []
+          },
+          {
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
+                "value": "messagesBeforeCursor"
               }
             },
             "type": {
@@ -607,7 +919,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "kind": "FragmentSpread",
                     "name": {
                       "kind": "Name",
-                      "value": "compiledHooks_PaginationFragment"
+                      "value": "compiledHooks_ForwardPaginationFragment"
                     },
                     "directives": []
                   },
@@ -664,7 +976,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
         "kind": "FragmentDefinition",
         "name": {
           "kind": "Name",
-          "value": "compiledHooks_PaginationFragment"
+          "value": "compiledHooks_ForwardPaginationFragment"
         },
         "typeCondition": {
           "kind": "NamedType",
@@ -727,7 +1039,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "kind": "Variable",
                     "name": {
                       "kind": "Name",
-                      "value": "conversationsCount"
+                      "value": "conversationsForwardCount"
                     }
                   }
                 },
@@ -741,7 +1053,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "kind": "Variable",
                     "name": {
                       "kind": "Name",
-                      "value": "conversationsCursor"
+                      "value": "conversationsAfterCursor"
                     }
                   }
                 }
@@ -820,6 +1132,40 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                                 },
                                 "arguments": [],
                                 "directives": []
+                              },
+                              {
+                                "kind": "InlineFragment",
+                                "typeCondition": {
+                                  "kind": "NamedType",
+                                  "name": {
+                                    "kind": "Name",
+                                    "value": "Node"
+                                  }
+                                },
+                                "directives": [],
+                                "selectionSet": {
+                                  "kind": "SelectionSet",
+                                  "selections": [
+                                    {
+                                      "kind": "Field",
+                                      "name": {
+                                        "kind": "Name",
+                                        "value": "__fragments"
+                                      },
+                                      "arguments": [],
+                                      "directives": [
+                                        {
+                                          "kind": "Directive",
+                                          "name": {
+                                            "kind": "Name",
+                                            "value": "client"
+                                          },
+                                          "arguments": []
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
                               }
                             ]
                           }
@@ -887,12 +1233,16 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
   },
   "metadata": {
     "rootSelection": "node",
+    "mainFragment": {
+      "name": "compiledHooks_ForwardPaginationFragment",
+      "typeCondition": "User"
+    },
     "connection": {
-      "countVariable": "conversationsCount",
-      "cursorVariable": "conversationsCursor",
       "selectionPath": [
         "conversations"
-      ]
+      ],
+      "forwardCountVariable": "conversationsForwardCount",
+      "forwardCursorVariable": "conversationsAfterCursor"
     }
   }
 };
