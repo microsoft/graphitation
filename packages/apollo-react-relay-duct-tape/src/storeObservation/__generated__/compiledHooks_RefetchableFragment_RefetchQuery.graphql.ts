@@ -450,6 +450,10 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
     ]
   },
   "metadata": {
-    "rootSelection": "node"
+    "rootSelection": "node",
+    "mainFragment": {
+      "name": "compiledHooks_RefetchableFragment",
+      "typeCondition": "User"
+    }
   }
 };
