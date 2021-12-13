@@ -2,15 +2,21 @@ import { IRTransform } from "relay-compiler/lib/core/CompilerContext";
 import { Directive, LinkedField } from "relay-compiler/lib/core/IR";
 import { visit } from "relay-compiler/lib/core/IRVisitor";
 
+type PathWithConnectionDirective = [any[], Directive];
+
 export function retainConnectionDirectiveTransform(
   wrappedFilterDirectivesTransform: IRTransform
 ): IRTransform {
   const filterDirectivesTransformWrapper: IRTransform = (context) => {
     let nextContext = context;
-    const fieldPathsWithConnectionDirectives: [any[], Directive][] = [];
+    const documentsWithConnectionDirectives: Record<
+      string,
+      PathWithConnectionDirective[]
+    > = {};
 
     // Store @connection directives
     nextContext.forEachDocument((document) => {
+      const fieldPathsWithConnectionDirectives: PathWithConnectionDirective[] = [];
       visit(document, {
         Directive(directiveNode, _key, _parent, path) {
           if (directiveNode.name === "connection") {
@@ -21,14 +27,19 @@ export function retainConnectionDirectiveTransform(
           }
         },
       });
+      documentsWithConnectionDirectives[
+        document.name
+      ] = fieldPathsWithConnectionDirectives;
     });
 
     // Apply original upstream transform
     nextContext = wrappedFilterDirectivesTransform(context);
 
     // Re-add @connection directives
-    if (fieldPathsWithConnectionDirectives.length > 0) {
-      nextContext.forEachDocument((document) => {
+    nextContext.forEachDocument((document) => {
+      const fieldPathsWithConnectionDirectives =
+        documentsWithConnectionDirectives[document.name];
+      if (fieldPathsWithConnectionDirectives.length > 0) {
         const nextDocument = visit(document, {
           LinkedField(linkedFieldNode, _key, _parent, path) {
             const match = fieldPathsWithConnectionDirectives.find(
@@ -45,8 +56,8 @@ export function retainConnectionDirectiveTransform(
           },
         });
         nextContext = nextContext.replace(nextDocument);
-      });
-    }
+      }
+    });
 
     return nextContext;
   };
