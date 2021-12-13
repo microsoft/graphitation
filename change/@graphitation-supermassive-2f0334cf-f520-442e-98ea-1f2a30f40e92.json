@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Add graphql-js notice",
+  "packageName": "@graphitation/supermassive",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
