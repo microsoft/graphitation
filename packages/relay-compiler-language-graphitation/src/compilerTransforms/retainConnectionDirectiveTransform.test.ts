@@ -34,6 +34,13 @@ describe(retainConnectionDirectiveTransform, () => {
           }
         }
       }
+      fragment SomeOtherFragment on User {
+        comments {
+          pageInfo {
+            hasNextPage
+          }
+        }
+      }
     `;
 
     expect(transform(text)).toMatchInlineSnapshot(`
@@ -43,6 +50,14 @@ describe(retainConnectionDirectiveTransform, () => {
             node {
               canViewerComment
             }
+          }
+        }
+      }
+      
+      fragment SomeOtherFragment on User {
+        comments {
+          pageInfo {
+            hasNextPage
           }
         }
       }
