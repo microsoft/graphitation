@@ -289,6 +289,14 @@ export function useCompiledPaginationFragment(
     data,
     refetch,
     loadNext: (count, options) => {
+      invariant(
+        connectionMetadata.forwardCountVariable,
+        "Expected a forward count variable to exist"
+      );
+      invariant(
+        connectionMetadata.forwardCursorVariable,
+        "Expected a forward cursor variable to exist"
+      );
       const endCursor = getEndCursorValue(
         data,
         connectionMetadata.selectionPath
@@ -299,8 +307,8 @@ export function useCompiledPaginationFragment(
       };
       const newVariables = {
         ...previousVariables,
-        [connectionMetadata.countVariable]: count,
-        [connectionMetadata.cursorVariable]: endCursor,
+        [connectionMetadata.forwardCountVariable]: count,
+        [connectionMetadata.forwardCursorVariable]: endCursor,
       };
       refetch(newVariables, {
         fetchPolicy: "no-cache",
@@ -315,21 +323,20 @@ export function useCompiledPaginationFragment(
             ? data[metadata.rootSelection]
             : data;
 
-          const {
-            fragmentName,
-            fragmentTypeCondition,
-            fragmentsDocument,
-          } = getMainFragmentMetadata(
-            watchQueryDocument,
-            metadata.rootSelection
-          );
+          const mainFragment = metadata.mainFragment;
+          invariant(mainFragment, "Expected mainFragment metadata");
           const cacheSelector: DataProxy.Fragment<any, any> = {
             id: fragmentReference.id
-              ? `${fragmentTypeCondition}:${fragmentReference.id}`
+              ? `${mainFragment.typeCondition}:${fragmentReference.id}`
               : "ROOT_QUERY",
             variables: previousVariables,
-            fragment: fragmentsDocument,
-            fragmentName,
+            fragment: {
+              kind: "Document",
+              definitions: watchQueryDocument.definitions.filter(
+                (def) => def.kind === "FragmentDefinition"
+              ),
+            },
+            fragmentName: mainFragment.name,
           };
 
           // TODO: We already have the latest data from the fragment hook, use that?
@@ -401,53 +408,4 @@ function mergeEdges(connectionPath: string[], destination: {}, source: {}) {
   const allEdges = [...existingEdges, ...newEdges];
   setValueAtSelectionPath(destination, edgesPath, allEdges);
   return destination;
-}
-
-// TODO: Move to metadata compiler transform
-function getMainFragmentMetadata(
-  document: DocumentNode,
-  rootSelection: string | undefined
-): {
-  fragmentName: string;
-  fragmentTypeCondition: string;
-  fragmentsDocument: DocumentNode;
-} {
-  const [
-    operationDefinition,
-    ...fragmentDefinitions
-  ] = document.definitions as [
-    OperationDefinitionNode,
-    ...FragmentDefinitionNode[]
-  ];
-  invariant(
-    operationDefinition.kind === "OperationDefinition" &&
-      fragmentDefinitions.length > 0 &&
-      fragmentDefinitions.every((node) => node.kind === "FragmentDefinition"),
-    "Expected definition nodes in specific order"
-  );
-  let selectionSet = operationDefinition.selectionSet;
-  if (rootSelection) {
-    const field = selectionSet.selections.find(
-      (selection) =>
-        selection.kind === "Field" && selection.name.value === rootSelection
-    ) as FieldNode | undefined;
-    invariant(
-      field?.selectionSet,
-      "Expected root selection to exist in document"
-    );
-    selectionSet = field.selectionSet;
-  }
-  const mainFragmentSpread = selectionSet.selections.find(
-    (selection) => selection.kind === "FragmentSpread"
-  ) as FragmentSpreadNode | undefined;
-  invariant(mainFragmentSpread, "Expected a main fragment spread");
-  const mainFragment = fragmentDefinitions.find(
-    (fragment) => fragment.name.value === mainFragmentSpread.name.value
-  );
-  invariant(mainFragment, "Expected a main fragment");
-  return {
-    fragmentName: mainFragment.name.value,
-    fragmentTypeCondition: mainFragment.typeCondition.name.value,
-    fragmentsDocument: { kind: "Document", definitions: fragmentDefinitions },
-  };
 }

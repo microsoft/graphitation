@@ -25,19 +25,42 @@ describe(extractMetadataTransform, () => {
     });
   });
 
+  describe("concerning the main fragment", () => {
+    it("works with a node type", () => {
+      const result = extractMetadataTransform(graphql`
+        query WatchQueryOnNodeType {
+          node(id: $id) {
+            ...SomeFragment
+          }
+        }
+        fragment SomeFragment on User {
+          id
+        }
+      `);
+      expect(result?.mainFragment).toEqual({
+        name: "SomeFragment",
+        typeCondition: "User",
+      });
+    });
+  });
+
   describe("concerning connections", () => {
     it("extracts the connection metadata needed at runtime to perform pagination", () => {
       const result = extractMetadataTransform(graphql`
         query UserWithFriendsQuery(
-          $friendsCount: Int!
-          $friendsCursor: String!
+          $friendsForwardCount: Int!
+          $friendsAfterCursor: String!
         ) {
           ...UserFriendsFragment
         }
         fragment UserFriendsFragment on Query {
           me {
-            friends(first: $friendsCount, after: $friendsCursor)
-              @connection(key: "UserFriends") {
+            friends(
+              first: $friendsForwardCount
+              after: $friendsAfterCursor
+              last: $friendsBackwardCount
+              before: $friendsBeforeCursor
+            ) @connection(key: "UserFriends") {
               edges {
                 node {
                   ...FriendFragment
@@ -53,10 +76,12 @@ describe(extractMetadataTransform, () => {
           name
         }
       `);
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         connection: {
-          countVariable: "friendsCount",
-          cursorVariable: "friendsCursor",
+          forwardCountVariable: "friendsForwardCount",
+          forwardCursorVariable: "friendsAfterCursor",
+          backwardCountVariable: "friendsBackwardCount",
+          backwardCursorVariable: "friendsBeforeCursor",
           selectionPath: ["me", "friends"],
         },
       });
@@ -84,13 +109,13 @@ describe(extractMetadataTransform, () => {
         extractMetadataTransform(graphql`
           query {
             me {
-              friends(first: $friendsCount, after: $friendsCursor)
+              friends(first: $friendsForwardCount, after: $friendsAfterCursor)
                 @connection(key: "UserFriends") {
                 edges {
                   node {
                     friends(
-                      first: $friendFriendsCount
-                      after: $friendFriendsCursor
+                      first: $friendfriendsForwardCount
+                      after: $friendfriendsAfterCursor
                     ) @connection(key: "UserFriendFriends") {
                       edges {
                         node {
