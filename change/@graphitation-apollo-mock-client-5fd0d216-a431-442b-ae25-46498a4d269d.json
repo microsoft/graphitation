@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Support ESM in distro packages",
-  "packageName": "@graphitation/apollo-mock-client",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

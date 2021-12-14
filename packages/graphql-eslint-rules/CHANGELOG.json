@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Tue, 14 Dec 2021 10:13:54 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.3.0",
+      "version": "0.3.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "fad5f1bc587470a2c85bf5763bb102a179a592b2",
+            "comment": "Support ESM in distro packages"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 24 Nov 2021 20:08:41 GMT",
       "tag": "@graphitation/graphql-eslint-rules_v0.2.1",
       "version": "0.2.1",

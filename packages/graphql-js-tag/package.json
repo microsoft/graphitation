@@ -2,7 +2,7 @@
   "name": "@graphitation/graphql-js-tag",
   "description": "A simple graphql-js AST based `graphql` tagged template function.",
   "license": "MIT",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "main": "./src/index.ts",
   "scripts": {
     "build": "monorepo-scripts build",

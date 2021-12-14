@@ -2,6 +2,27 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Tue, 14 Dec 2021 10:13:54 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.7.0",
+      "version": "0.7.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "commit": "fad5f1bc587470a2c85bf5763bb102a179a592b2",
+            "comment": "Support ESM in distro packages"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "comment": "Bump @graphitation/graphql-js-tag to v0.7.0",
+            "commit": "fc3bf93bc5d50221d8539fe79704c45bc2612786"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 26 Oct 2021 21:09:29 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.5.10",
       "version": "0.5.10",
