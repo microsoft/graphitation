@@ -14,16 +14,9 @@ import {
 import { DataProxy } from "@apollo/client/cache/core/types/DataProxy";
 import invariant from "invariant";
 import { useDeepCompareMemoize } from "./useDeepCompareMemoize";
-
 import type { CompiledArtefactModule } from "relay-compiler-language-graphitation";
-import {
-  DocumentNode,
-  FieldNode,
-  FragmentDefinitionNode,
-  FragmentSpreadNode,
-  OperationDefinitionNode,
-  visit,
-} from "graphql";
+import { DocumentNode } from "graphql";
+import { Metadata } from "relay-compiler-language-graphitation/lib/formatModuleTransforms/extractMetadataTransform";
 
 interface FragmentReference {
   /**
@@ -260,13 +253,15 @@ export function useCompiledRefetchableFragment(
   return [data, refetch];
 }
 
+type PaginationFn = (count: number, options?: RefetchOptions) => void;
+
 export function useCompiledPaginationFragment(
   documents: CompiledArtefactModule,
   fragmentReference: FragmentReference
 ): {
   data: any;
-  loadNext: (count: number, options?: RefetchOptions) => void;
-  loadPrevious: (count: number, options?: RefetchOptions) => void;
+  loadNext: PaginationFn;
+  loadPrevious: PaginationFn;
   hasNext: boolean;
   hasPrevious: boolean;
   isLoadingNext: boolean;
@@ -283,160 +278,48 @@ export function useCompiledPaginationFragment(
     connectionMetadata,
     "Expected compiled artefact to have connection metadata"
   );
-
-  const client = useApolloClient();
   const [data, refetch] = useCompiledRefetchableFragment(
     documents,
     fragmentReference
   );
-
+  const commonPaginationParams = {
+    fragmentReference,
+    refetch,
+    metadata,
+    executionQueryDocument,
+    cache: useApolloClient().cache,
+    connectionSelectionPath: connectionMetadata.selectionPath,
+  };
   return {
     data,
     refetch,
-    loadNext: (count, options) => {
-      invariant(
-        connectionMetadata.forwardCountVariable,
-        "Expected a forward count variable to exist"
-      );
-      invariant(
-        connectionMetadata.forwardCursorVariable,
-        "Expected a forward cursor variable to exist"
-      );
-      const endCursor = getEndCursorValue(
-        data,
-        connectionMetadata.selectionPath
-      );
-      const previousVariables = {
-        ...fragmentReference.__fragments,
-        id: fragmentReference.id,
-      };
-      const newVariables = {
-        ...previousVariables,
-        [connectionMetadata.forwardCountVariable]: count,
-        [connectionMetadata.forwardCursorVariable]: endCursor,
-      };
-      refetch(newVariables, {
-        fetchPolicy: "no-cache",
-        UNSTABLE_onCompleted: (error, data) => {
-          if (error) {
-            console.error("An error occurred during pagination", error);
-            return;
-          }
-
-          invariant(data, "Expected to have response data");
-          const newData = metadata.rootSelection
-            ? data[metadata.rootSelection]
-            : data;
-
-          const mainFragment = metadata.mainFragment;
-          invariant(mainFragment, "Expected mainFragment metadata");
-          const cacheSelector: DataProxy.Fragment<any, any> = {
-            id: fragmentReference.id
-              ? `${mainFragment.typeCondition}:${fragmentReference.id}`
-              : "ROOT_QUERY",
-            variables: previousVariables,
-            fragment: {
-              kind: "Document",
-              definitions: executionQueryDocument.definitions.filter(
-                (def) => def.kind === "FragmentDefinition"
-              ),
-            },
-            fragmentName: mainFragment.name,
-          };
-
-          /**
-           * Note: Even though we already have the latest data from the
-           * useCompiledFragment hook, we can't really use that as it may
-           * contain __fragments fields and we don't want to write those to the
-           * cache. If we figure out a way from a field-policy's merge function
-           * to not write to the cache, then that would be preferable.
-           */
-          const existingData = client.readFragment(cacheSelector);
-          const newCacheData = mergeEdges(
-            connectionMetadata.selectionPath,
-            newData,
-            existingData,
-            (existing, incoming) => [...existing, ...incoming]
-          );
-          client.writeFragment({
-            ...cacheSelector,
-            variables: newVariables,
-            data: newCacheData,
-          });
-        },
-      });
-    },
-    loadPrevious: (count, options) => {
-      invariant(
-        connectionMetadata.backwardCountVariable,
-        "Expected a backward count variable to exist"
-      );
-      invariant(
-        connectionMetadata.backwardCursorVariable,
-        "Expected a backward cursor variable to exist"
-      );
-      const startCursor = getStartCursorValue(
-        data,
-        connectionMetadata.selectionPath
-      );
-      const previousVariables = {
-        ...fragmentReference.__fragments,
-        id: fragmentReference.id,
-      };
-      const newVariables = {
-        ...previousVariables,
-        [connectionMetadata.backwardCountVariable]: count,
-        [connectionMetadata.backwardCursorVariable]: startCursor,
-      };
-      refetch(newVariables, {
-        fetchPolicy: "no-cache",
-        UNSTABLE_onCompleted: (error, data) => {
-          if (error) {
-            console.error("An error occurred during pagination", error);
-            return;
-          }
-
-          invariant(data, "Expected to have response data");
-          const newData = metadata.rootSelection
-            ? data[metadata.rootSelection]
-            : data;
-
-          const mainFragment = metadata.mainFragment;
-          invariant(mainFragment, "Expected mainFragment metadata");
-          const cacheSelector: DataProxy.Fragment<any, any> = {
-            id: fragmentReference.id
-              ? `${mainFragment.typeCondition}:${fragmentReference.id}`
-              : "ROOT_QUERY",
-            variables: previousVariables,
-            fragment: {
-              kind: "Document",
-              definitions: executionQueryDocument.definitions.filter(
-                (def) => def.kind === "FragmentDefinition"
-              ),
-            },
-            fragmentName: mainFragment.name,
-          };
-
-          // TODO: We already have the latest data from the fragment hook, use that?
-          const existingData = client.readFragment(cacheSelector);
-          const newCacheData = mergeEdges(
-            connectionMetadata.selectionPath,
-            newData,
-            existingData,
-            (existing, incoming) => [...incoming, ...existing]
-          );
-          client.writeFragment({
-            ...cacheSelector,
-            variables: newVariables,
-            data: newCacheData,
-          });
-        },
-      });
-    },
     hasNext: false,
     hasPrevious: false,
     isLoadingNext: false,
     isLoadingPrevious: false,
+    loadNext: (countValue, options) => {
+      loadPage({
+        ...commonPaginationParams,
+        countVariable: connectionMetadata.forwardCountVariable,
+        countValue,
+        cursorVariable: connectionMetadata.forwardCursorVariable,
+        cursorValue: getEndCursorValue(data, connectionMetadata.selectionPath),
+        updater: (existing, incoming) => [...existing, ...incoming],
+      });
+    },
+    loadPrevious: (countValue, options) => {
+      loadPage({
+        ...commonPaginationParams,
+        countVariable: connectionMetadata.backwardCountVariable,
+        countValue,
+        cursorVariable: connectionMetadata.backwardCursorVariable,
+        cursorValue: getStartCursorValue(
+          data,
+          connectionMetadata.selectionPath
+        ),
+        updater: (existing, incoming) => [...incoming, ...existing],
+      });
+    },
   };
 }
 
@@ -445,21 +328,95 @@ function useForceUpdate() {
   return forceUpdate;
 }
 
-function getEndCursorValue(data: Record<string, any>, selectionPath: string[]) {
-  const object = getValueAtSelectionPath(data, selectionPath);
-  const cursor = object.pageInfo?.endCursor;
-  invariant(cursor, "Expected to find the connection's current end cursor");
-  return cursor;
+interface PaginationParams {
+  fragmentReference: FragmentReference;
+  countValue: number;
+  refetch: RefetchFn;
+  metadata: Metadata;
+  executionQueryDocument: DocumentNode;
+  cache: DataProxy;
+  countVariable: string | undefined;
+  cursorVariable: string | undefined;
+  connectionSelectionPath: string[];
+  cursorValue: string;
+  updater: <T>(existing: T[], incoming: T[]) => T[];
 }
 
-function getStartCursorValue(
-  data: Record<string, any>,
-  selectionPath: string[]
-) {
-  const object = getValueAtSelectionPath(data, selectionPath);
-  const cursor = object.pageInfo?.startCursor;
-  invariant(cursor, "Expected to find the connection's current start cursor");
-  return cursor;
+function loadPage({
+  fragmentReference,
+  countValue,
+  refetch,
+  metadata,
+  executionQueryDocument,
+  cache,
+  countVariable,
+  cursorVariable,
+  connectionSelectionPath,
+  cursorValue,
+  updater,
+}: PaginationParams) {
+  invariant(countVariable, "Expected a count variable to exist");
+  invariant(cursorVariable, "Expected a cursor variable to exist");
+  const previousVariables = {
+    ...fragmentReference.__fragments,
+    id: fragmentReference.id,
+  };
+  const newVariables = {
+    ...previousVariables,
+    [countVariable]: countValue,
+    [cursorVariable]: cursorValue,
+  };
+  refetch(newVariables, {
+    fetchPolicy: "no-cache",
+    UNSTABLE_onCompleted: (error, data) => {
+      if (error) {
+        console.error("An error occurred during pagination", error);
+        return;
+      }
+
+      invariant(data, "Expected to have response data");
+      const newData = metadata.rootSelection
+        ? data[metadata.rootSelection]
+        : data;
+
+      const mainFragment = metadata.mainFragment;
+      invariant(mainFragment, "Expected mainFragment metadata");
+      const cacheSelector: DataProxy.Fragment<any, any> = {
+        id: fragmentReference.id
+          ? `${mainFragment.typeCondition}:${fragmentReference.id}`
+          : "ROOT_QUERY",
+        variables: previousVariables,
+        fragmentName: mainFragment.name,
+        // Create new document with operation filtered out.
+        fragment: {
+          kind: "Document",
+          definitions: executionQueryDocument.definitions.filter(
+            (def) => def.kind === "FragmentDefinition"
+          ),
+        },
+      };
+
+      /**
+       * Note: Even though we already have the latest data from the
+       * useCompiledFragment hook, we can't really use that as it may contain
+       * __fragments fields and we don't want to write those to the cache. If
+       * we figure out a way from a field-policy's merge function to not write
+       * to the cache, then that would be preferable.
+       */
+      const existingData = cache.readFragment(cacheSelector);
+      const newCacheData = mergeEdges(
+        connectionSelectionPath,
+        newData,
+        existingData,
+        updater
+      );
+      cache.writeFragment({
+        ...cacheSelector,
+        variables: newVariables,
+        data: newCacheData,
+      });
+    },
+  });
 }
 
 function getValueAtSelectionPath(
@@ -474,18 +431,21 @@ function getValueAtSelectionPath(
   return object;
 }
 
-/**
- * Mutates the `data` object
- */
-function setValueAtSelectionPath(
+function getEndCursorValue(data: Record<string, any>, selectionPath: string[]) {
+  const object = getValueAtSelectionPath(data, selectionPath);
+  const cursor = object.pageInfo?.endCursor;
+  invariant(cursor, "Expected to find the connection's current end cursor");
+  return cursor;
+}
+
+function getStartCursorValue(
   data: Record<string, any>,
-  selectionPath: string[],
-  newValue: any
-): void {
-  const pathUpToComponentToUpdate = selectionPath.slice(0, -1);
-  const object = getValueAtSelectionPath(data, pathUpToComponentToUpdate);
-  const componentToUpdate = selectionPath[selectionPath.length - 1];
-  object[componentToUpdate] = newValue;
+  selectionPath: string[]
+): string {
+  const object = getValueAtSelectionPath(data, selectionPath);
+  const cursor = object.pageInfo?.startCursor;
+  invariant(cursor, "Expected to find the connection's current start cursor");
+  return cursor;
 }
 
 function mergeEdges(
@@ -496,9 +456,11 @@ function mergeEdges(
 ) {
   const edgesPath = [...connectionPath, "edges"];
   const existingEdges = getValueAtSelectionPath(source, edgesPath);
-  invariant(existingEdges, "Expected to find previous edges");
   const newEdges = getValueAtSelectionPath(destination, edgesPath);
   const allEdges = updater(existingEdges, newEdges);
-  setValueAtSelectionPath(destination, edgesPath, allEdges);
+
+  const connection = getValueAtSelectionPath(destination, connectionPath);
+  connection["edges"] = allEdges;
+
   return destination;
 }
