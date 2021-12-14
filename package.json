@@ -22,7 +22,7 @@
     "release": "yarn beachball publish"
   },
   "devDependencies": {
-    "beachball": "2.2.0",
+    "beachball": "^2.20.0",
     "lage": "0.29.1",
     "prettier": "^2.2.1"
   }
