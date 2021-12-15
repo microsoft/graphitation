@@ -119,7 +119,7 @@ ruleTester.runGraphQLTests(
         code: `query { hasId { name } }`,
         errors: [
           {
-            message: `Field(s) \"id\" must be selected (when available on a type). Please make sure to include it in your selection set!\nIf you are using fragments, make sure that all used fragments  specifies the field(s) \"id\".`,
+            message: `The key-field "id" must be selected for proper Apollo Client store denormalisation purposes.`,
           },
         ],
         options: [{ typePolicies }],
@@ -129,7 +129,7 @@ ruleTester.runGraphQLTests(
         code: `query { keyField { id name } }`,
         errors: [
           {
-            message: `Field(s) \"objectId\" must be selected (when available on a type). Please make sure to include it in your selection set!\nIf you are using fragments, make sure that all used fragments  specifies the field(s) \"objectId\".`,
+            message: `The key-field "objectId" must be selected for proper Apollo Client store denormalisation purposes.`,
           },
         ],
         options: [{ typePolicies }],

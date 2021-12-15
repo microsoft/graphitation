@@ -2,12 +2,10 @@
 
 exports[` 1`] = `
 "> 1 | query { hasId { name } }
-    |               ^^^^^^^ Field(s) \\"id\\" must be selected (when available on a type). Please make sure to include it in your selection set!
-If you are using fragments, make sure that all used fragments  specifies the field(s) \\"id\\"."
+    |               ^^^^^^^ The key-field \\"id\\" must be selected for proper Apollo Client store denormalisation purposes."
 `;
 
 exports[` 2`] = `
 "> 1 | query { keyField { id name } }
-    |                  ^^^^^^^^^^ Field(s) \\"objectId\\" must be selected (when available on a type). Please make sure to include it in your selection set!
-If you are using fragments, make sure that all used fragments  specifies the field(s) \\"objectId\\"."
+    |                  ^^^^^^^^^^ The key-field \\"objectId\\" must be selected for proper Apollo Client store denormalisation purposes."
 `;
