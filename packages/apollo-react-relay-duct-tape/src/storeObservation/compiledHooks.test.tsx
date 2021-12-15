@@ -547,6 +547,8 @@ describe("compiledHooks", () => {
             PageInfo: () => ({
               startCursor: "first-page-start-cursor",
               endCursor: "first-page-end-cursor",
+              hasNextPage: true,
+              hasPreviousPage: true,
             }),
           });
           return result;
@@ -788,7 +790,7 @@ describe("compiledHooks", () => {
           pageInfo: {
             __typename: "PageInfo",
             endCursor: "first-page-end-cursor",
-            hasNextPage: false,
+            hasNextPage: true,
           },
         },
       }
@@ -802,6 +804,11 @@ describe("compiledHooks", () => {
     );
 
     describe("when paginating forward", () => {
+      it("returns that next data is available", () => {
+        const { hasNext } = lastForwardUsePaginationFragmentResult[0];
+        expect(hasNext).toBeTruthy();
+      });
+
       it("uses the correct count and cursor values", () => {
         const { loadNext } = lastForwardUsePaginationFragmentResult[0];
         loadNext(123);
@@ -829,6 +836,7 @@ describe("compiledHooks", () => {
                 }),
                 PageInfo: () => ({
                   endCursor: "second-page-end-cursor",
+                  hasNextPage: false,
                 }),
               })
             ));
@@ -874,10 +882,22 @@ describe("compiledHooks", () => {
             conversationsAfterCursor: "second-page-end-cursor",
           });
         });
+
+        it("returns that no next data is available", () => {
+          const {
+            hasNext,
+          } = lastForwardUsePaginationFragmentResult.reverse()[0];
+          expect(hasNext).toBeFalsy();
+        });
       });
     });
 
     describe("when paginating backward", () => {
+      it("returns that previous data is available", () => {
+        const { hasPrevious } = lastBackwardUsePaginationFragmentResult[0];
+        expect(hasPrevious).toBeTruthy();
+      });
+
       it("uses the correct count and cursor values", () => {
         const { loadPrevious } = lastBackwardUsePaginationFragmentResult[0];
         loadPrevious(123);
@@ -905,6 +925,7 @@ describe("compiledHooks", () => {
                 }),
                 PageInfo: () => ({
                   startCursor: "second-page-start-cursor",
+                  hasPreviousPage: false,
                 }),
               })
             );
@@ -947,6 +968,13 @@ describe("compiledHooks", () => {
           expect(operation.request.variables).toMatchObject({
             messagesBeforeCursor: "second-page-start-cursor",
           });
+        });
+
+        it("returns that no previous data is available", () => {
+          const {
+            hasPrevious,
+          } = lastBackwardUsePaginationFragmentResult.reverse()[0];
+          expect(hasPrevious).toBeFalsy();
         });
       });
     });

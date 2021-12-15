@@ -290,12 +290,15 @@ export function useCompiledPaginationFragment(
     cache: useApolloClient().cache,
     connectionSelectionPath: connectionMetadata.selectionPath,
   };
+  const pageInfo = getPageInfo(data, connectionMetadata.selectionPath);
   return {
     data,
     refetch,
-    hasNext: false,
-    hasPrevious: false,
+    hasNext: !!pageInfo?.hasNextPage,
+    hasPrevious: !!pageInfo?.hasPreviousPage,
+    // TODO:
     isLoadingNext: false,
+    // TODO:
     isLoadingPrevious: false,
     loadNext: (countValue, options) => {
       loadPage({
@@ -303,7 +306,7 @@ export function useCompiledPaginationFragment(
         countVariable: connectionMetadata.forwardCountVariable,
         countValue,
         cursorVariable: connectionMetadata.forwardCursorVariable,
-        cursorValue: getEndCursorValue(data, connectionMetadata.selectionPath),
+        cursorValue: pageInfo?.endCursor,
         updater: (existing, incoming) => [...existing, ...incoming],
       });
     },
@@ -313,10 +316,7 @@ export function useCompiledPaginationFragment(
         countVariable: connectionMetadata.backwardCountVariable,
         countValue,
         cursorVariable: connectionMetadata.backwardCursorVariable,
-        cursorValue: getStartCursorValue(
-          data,
-          connectionMetadata.selectionPath
-        ),
+        cursorValue: pageInfo?.startCursor,
         updater: (existing, incoming) => [...incoming, ...existing],
       });
     },
@@ -338,7 +338,7 @@ interface PaginationParams {
   countVariable: string | undefined;
   cursorVariable: string | undefined;
   connectionSelectionPath: string[];
-  cursorValue: string;
+  cursorValue: string | undefined;
   updater: <T>(existing: T[], incoming: T[]) => T[];
 }
 
@@ -357,6 +357,7 @@ function loadPage({
 }: PaginationParams) {
   invariant(countVariable, "Expected a count variable to exist");
   invariant(cursorVariable, "Expected a cursor variable to exist");
+  invariant(cursorValue, "Expected a cursor value to exist");
   const previousVariables = {
     ...fragmentReference.__fragments,
     id: fragmentReference.id,
@@ -431,21 +432,19 @@ function getValueAtSelectionPath(
   return object;
 }
 
-function getEndCursorValue(data: Record<string, any>, selectionPath: string[]) {
-  const object = getValueAtSelectionPath(data, selectionPath);
-  const cursor = object.pageInfo?.endCursor;
-  invariant(cursor, "Expected to find the connection's current end cursor");
-  return cursor;
-}
-
-function getStartCursorValue(
+function getPageInfo(
   data: Record<string, any>,
   selectionPath: string[]
-): string {
+): {
+  startCursor?: string;
+  endCursor?: string;
+  hasPreviousPage?: boolean;
+  hasNextPage?: boolean;
+} {
   const object = getValueAtSelectionPath(data, selectionPath);
-  const cursor = object.pageInfo?.startCursor;
-  invariant(cursor, "Expected to find the connection's current start cursor");
-  return cursor;
+  const pageInfo = object.pageInfo;
+  invariant(pageInfo, "Expected to find the connection's page info object");
+  return pageInfo;
 }
 
 function mergeEdges(
