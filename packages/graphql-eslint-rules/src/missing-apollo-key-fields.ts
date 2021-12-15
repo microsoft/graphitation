@@ -178,9 +178,6 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
       ],
       recommended: true,
     },
-    messages: {
-      [REQUIRE_KEY_FIELDS_WHEN_AVAILABLE]: `Field(s) "{{ fieldName }}" must be selected (when available on a type). Please make sure to include it in your selection set!\nIf you are using fragments, make sure that all used fragments {{checkedFragments}} specifies the field(s) "{{ fieldName }}".`,
-    },
     schema: {
       type: "array",
       additionalItems: false,
@@ -284,14 +281,15 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
 
                 context.report({
                   node: newNode,
-                  messageId: REQUIRE_KEY_FIELDS_WHEN_AVAILABLE,
-                  data: {
-                    checkedFragments:
-                      checkedFragmentSpreads.size === 0
-                        ? ""
-                        : `(${Array.from(checkedFragmentSpreads).join(", ")})`,
-                    fieldName: unusedKeyFields.join(", "),
-                  },
+                  message: `The key-field${
+                    unusedKeyFields.length === 1 ? "" : "s"
+                  } "${
+                    unusedKeyFields.length === 1
+                      ? unusedKeyFields[0]
+                      : unusedKeyFields.slice(0, -1).join(", ") +
+                        " and " +
+                        unusedKeyFields[unusedKeyFields.length - 1]
+                  }" must be selected for proper Apollo Client store denormalisation purposes.`,
                 });
               }
             }

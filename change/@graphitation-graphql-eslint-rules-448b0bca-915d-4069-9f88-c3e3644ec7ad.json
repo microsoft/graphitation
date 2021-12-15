@@ -1,0 +1,10 @@
+{
+  "type": "patch",
+  "comment": {
+    "title": "",
+    "value": ""
+  },
+  "packageName": "@graphitation/graphql-eslint-rules",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
