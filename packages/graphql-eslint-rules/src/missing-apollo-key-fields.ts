@@ -178,9 +178,6 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
       ],
       recommended: true,
     },
-    messages: {
-      [REQUIRE_KEY_FIELDS_WHEN_AVAILABLE]: `Field(s) "{{ fieldName }}" must be selected (when available on a type). Please make sure to include it in your selection set!\nIf you are using fragments, make sure that all used fragments {{checkedFragments}} specifies the field(s) "{{ fieldName }}".`,
-    },
     schema: {
       type: "array",
       additionalItems: false,
@@ -281,17 +278,15 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
                     },
                   },
                 };
+                const checkedFragments =
+                  checkedFragmentSpreads.size === 0
+                    ? ""
+                    : `(${Array.from(checkedFragmentSpreads).join(", ")})`;
+                const fieldName = unusedKeyFields.join(", ");
 
                 context.report({
                   node: newNode,
-                  messageId: REQUIRE_KEY_FIELDS_WHEN_AVAILABLE,
-                  data: {
-                    checkedFragments:
-                      checkedFragmentSpreads.size === 0
-                        ? ""
-                        : `(${Array.from(checkedFragmentSpreads).join(", ")})`,
-                    fieldName: unusedKeyFields.join(", "),
-                  },
+                  message: `Field(s) "${fieldName}" must be selected (when available on a type). Please make sure to include it in your selection set!\nIf you are using fragments, make sure that all used fragments ${checkedFragments} specifies the field(s) "${fieldName}".`,
                 });
               }
             }

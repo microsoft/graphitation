@@ -117,13 +117,21 @@ ruleTester.runGraphQLTests(
       {
         ...WITH_SCHEMA,
         code: `query { hasId { name } }`,
-        errors: [{ messageId: REQUIRE_KEY_FIELDS_WHEN_AVAILABLE }],
+        errors: [
+          {
+            message: `Field(s) \"id\" must be selected (when available on a type). Please make sure to include it in your selection set!\nIf you are using fragments, make sure that all used fragments  specifies the field(s) \"id\".`,
+          },
+        ],
         options: [{ typePolicies }],
       },
       {
         ...WITH_SCHEMA,
         code: `query { keyField { id name } }`,
-        errors: [{ messageId: REQUIRE_KEY_FIELDS_WHEN_AVAILABLE }],
+        errors: [
+          {
+            message: `Field(s) \"objectId\" must be selected (when available on a type). Please make sure to include it in your selection set!\nIf you are using fragments, make sure that all used fragments  specifies the field(s) \"objectId\".`,
+          },
+        ],
         options: [{ typePolicies }],
       },
     ],
