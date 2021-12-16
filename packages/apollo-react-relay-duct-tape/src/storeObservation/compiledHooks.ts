@@ -226,9 +226,14 @@ export function useCompiledRefetchableFragment(
         query: executionQueryDocument,
         variables,
       });
-      const subscription = observable.subscribe(
+      let subscription:
+        | ZenObservable.Subscription
+        | undefined = observable.subscribe(
         ({ data, error }) => {
-          subscription.unsubscribe();
+          // Be sure not to keep a retain cycle
+          subscription!.unsubscribe();
+          subscription = undefined;
+
           unstable_batchedUpdates(() => {
             if (options?.UNSTABLE_onCompleted) {
               options.UNSTABLE_onCompleted(error || null, data);
@@ -248,18 +253,18 @@ export function useCompiledRefetchableFragment(
           });
         },
         (error) => {
-          subscription.unsubscribe();
+          // Be sure not to keep a retain cycle
+          subscription!.unsubscribe();
+          subscription = undefined;
+
           if (options?.UNSTABLE_onCompleted) {
             options.UNSTABLE_onCompleted(error, null);
           } else {
             options?.onCompleted?.(error);
           }
-        },
-        () => {
-          console.log("COMPLETED!");
         }
       );
-      return { dispose: () => subscription.unsubscribe() };
+      return { dispose: () => subscription?.unsubscribe() };
     },
     [
       client,
