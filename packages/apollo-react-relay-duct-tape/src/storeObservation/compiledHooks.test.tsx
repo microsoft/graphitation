@@ -179,7 +179,6 @@ describe("compiledHooks", () => {
     forwardUsePaginationFragmentResult.push(result);
 
     return result.data.conversations.edges.map((edge: any, index: number) => {
-      // console.log(edge.node);
       return (
         <ChildBackwardPaginationComponent
           conversation={edge.node}
@@ -523,6 +522,14 @@ describe("compiledHooks", () => {
           return new Promise((resolve) => setTimeout(resolve, 100));
         });
         expect(spy).not.toHaveBeenCalled();
+      });
+
+      it("removes all watch queries on unmount", async () => {
+        await act(async () => {
+          testRenderer.unmount();
+          return new Promise((resolve) => setTimeout(resolve, 0));
+        });
+        expect(client.getObservableQueries().size).toBe(0);
       });
     });
   });
