@@ -182,10 +182,14 @@ interface RefetchOptions {
   ) => void;
 }
 
+export interface Disposable {
+  dispose(): void;
+}
+
 export type RefetchFn<Variables extends {} = {}> = (
   variables: Partial<Variables>,
   options?: RefetchOptions
-) => void;
+) => Disposable;
 
 export function useCompiledRefetchableFragment(
   documents: CompiledArtefactModule,
@@ -208,7 +212,7 @@ export function useCompiledRefetchableFragment(
   );
 
   const refetch = useCallback<RefetchFn>(
-    async (variablesSubset, options) => {
+    (variablesSubset, options) => {
       let error: Error | null;
       let data: {} | null;
       const variables = {
@@ -216,41 +220,46 @@ export function useCompiledRefetchableFragment(
         ...variablesSubset,
         id: fragmentReference.id,
       };
-      try {
-        // TODO: Unsure how to trigger Apollo Client to return an error
-        //       rather than throwing it, need to add test coverage for
-        //       this.
-        const { error: e = null, data: d = null } = await client.query({
-          fetchPolicy: options?.fetchPolicy ?? "network-only",
-          query: executionQueryDocument,
-          variables,
-        });
-        error = e;
-        data = d;
-      } catch (e: any) {
-        error = e;
-      }
-      // NOTE: In case of pagination we already invoke useState changes twice,
-      //       namely setFragmentReferenceWithOwnVariables and setIsLoadingMore
-      unstable_batchedUpdates(() => {
-        // NOTE: Unsure if the order of callback invocation and updating
-        //       state here matters.
-        if (options?.UNSTABLE_onCompleted) {
-          options.UNSTABLE_onCompleted(error, data!);
-        } else {
-          options?.onCompleted?.(error!);
-        }
-        if (!error) {
-          const { id: _, ...variablesToPropagate } = variables;
-          setFragmentReferenceWithOwnVariables({
-            id: fragmentReference.id,
-            __fragments: {
-              ...fragmentReference.__fragments,
-              ...variablesToPropagate,
-            },
-          });
-        }
+
+      const observable = client.watchQuery({
+        fetchPolicy: options?.fetchPolicy ?? "network-only",
+        query: executionQueryDocument,
+        variables,
       });
+      const subscription = observable.subscribe(
+        ({ data, error }) => {
+          subscription.unsubscribe();
+          unstable_batchedUpdates(() => {
+            if (options?.UNSTABLE_onCompleted) {
+              options.UNSTABLE_onCompleted(error || null, data);
+            } else {
+              options?.onCompleted?.(error || null);
+            }
+            if (!error) {
+              const { id: _, ...variablesToPropagate } = variables;
+              setFragmentReferenceWithOwnVariables({
+                id: fragmentReference.id,
+                __fragments: {
+                  ...fragmentReference.__fragments,
+                  ...variablesToPropagate,
+                },
+              });
+            }
+          });
+        },
+        (error) => {
+          subscription.unsubscribe();
+          if (options?.UNSTABLE_onCompleted) {
+            options.UNSTABLE_onCompleted(error, null);
+          } else {
+            options?.onCompleted?.(error);
+          }
+        },
+        () => {
+          console.log("COMPLETED!");
+        }
+      );
+      return { dispose: () => subscription.unsubscribe() };
     },
     [
       client,
@@ -263,7 +272,7 @@ export function useCompiledRefetchableFragment(
   return [data, refetch];
 }
 
-type PaginationFn = (count: number, options?: RefetchOptions) => void;
+type PaginationFn = (count: number, options?: RefetchOptions) => Disposable;
 
 export function useCompiledPaginationFragment(
   documents: CompiledArtefactModule,
@@ -301,19 +310,6 @@ export function useCompiledPaginationFragment(
     connectionSelectionPath: connectionMetadata.selectionPath,
   };
   const pageInfo = getPageInfo(data, connectionMetadata.selectionPath);
-  return {
-    data,
-    refetch,
-    hasNext: !!pageInfo?.hasNextPage,
-    hasPrevious: !!pageInfo?.hasPreviousPage,
-    // TODO:
-    isLoadingNext: false,
-    // TODO:
-    isLoadingPrevious: false,
-    loadNext: (countValue, options) => {
-      loadPage({
-        ...commonPaginationParams,
-        countVariable: connectionMetadata.forwardCountVariable,
   const [loadNext, isLoadingNext] = useLoadMore({
     ...commonPaginationParams,
     countVariable: connectionMetadata.forwardCountVariable,
@@ -371,6 +367,16 @@ function useLoadMore({
   updater,
 }: PaginationParams): [loadPage: PaginationFn, isLoadingMore: boolean] {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const disposable = useRef<Disposable>();
+  useEffect(
+    () => () => {
+      if (disposable.current) {
+        disposable.current.dispose();
+        disposable.current = undefined;
+      }
+    },
+    [disposable.current]
+  );
   const loadPage = useCallback<PaginationFn>(
     (countValue, options) => {
       invariant(countVariable, "Expected a count variable to exist");
@@ -388,12 +394,13 @@ function useLoadMore({
       // TODO: Measure if invoking `refetch` leads to React updates and if it
       //       makes sense to wrap it and the following setIsLoadingMore(true)
       //       call in a batchedUpdates callback.
-      refetch(newVariables, {
+      disposable.current = refetch(newVariables, {
         fetchPolicy: "no-cache",
         UNSTABLE_onCompleted: (error, data) => {
           // NOTE: We can do this now already, because `refetch` wraps the
           //       onCompleted callback in a batchedUpdates callback.
           setIsLoadingMore(false);
+          disposable.current = undefined;
 
           if (error) {
             console.error("An error occurred during pagination", error);
@@ -444,6 +451,7 @@ function useLoadMore({
         },
       });
       setIsLoadingMore(true);
+      return disposable.current;
     },
     [
       fragmentReference.id,
