@@ -125,25 +125,25 @@ describe("compiledHooks", () => {
   let client: ApolloMockClient;
   let testRenderer: ReactTestRenderer;
 
-  let lastUseFragmentResult: { id: number }[];
-  let lastUseRefetchableFragmentResult: ReturnType<
+  let useFragmentResult: { id: number }[];
+  let useRefetchableFragmentResult: ReturnType<
     typeof useCompiledRefetchableFragment
   >[];
-  let lastForwardUsePaginationFragmentResult: ReturnType<
+  let forwardUsePaginationFragmentResult: ReturnType<
     typeof useCompiledPaginationFragment
   >[];
-  let lastBackwardUsePaginationFragmentResult: ReturnType<
+  let backwardUsePaginationFragmentResult: ReturnType<
     typeof useCompiledPaginationFragment
   >[];
-  let lastUseLazyLoadQueryResult: { data?: any; error?: Error } | null = null;
-  let lastComponentOnQueryTypeResult: {}[];
+  let useLazyLoadQueryResult: { data?: any; error?: Error } | null = null;
+  let componentOnQueryTypeResult: {}[];
 
   const ChildComponent: React.FC<{ user: { id: any } }> = (props) => {
     const result = useCompiledFragment(
       compiledHooks_ChildFragment_documents,
       props.user
     );
-    lastUseFragmentResult.push(result as { id: number });
+    useFragmentResult.push(result as { id: number });
     return null;
   };
 
@@ -154,7 +154,7 @@ describe("compiledHooks", () => {
       compiledHooks_RefetchableFragment_documents,
       props.user
     );
-    lastUseRefetchableFragmentResult.push(result);
+    useRefetchableFragmentResult.push(result);
     return null;
   };
 
@@ -163,7 +163,7 @@ describe("compiledHooks", () => {
       compiledHooks_QueryTypeFragment_documents,
       props.query
     );
-    lastComponentOnQueryTypeResult.push(result);
+    componentOnQueryTypeResult.push(result);
     return null;
   };
 
@@ -174,7 +174,7 @@ describe("compiledHooks", () => {
       compiledHooks_ForwardPaginationFragment_documents as any,
       props.user
     );
-    lastForwardUsePaginationFragmentResult.push(result);
+    forwardUsePaginationFragmentResult.push(result);
 
     return result.data.conversations.edges.map((edge: any, index: number) => {
       // console.log(edge.node);
@@ -194,7 +194,7 @@ describe("compiledHooks", () => {
       compiledHooks_BackwardPaginationFragment_documents as any,
       props.conversation
     );
-    lastBackwardUsePaginationFragmentResult.push(result);
+    backwardUsePaginationFragmentResult.push(result);
     return null;
   };
 
@@ -205,7 +205,7 @@ describe("compiledHooks", () => {
       compiledHooks_Root_executionQuery_documents,
       { variables: props.variables }
     );
-    lastUseLazyLoadQueryResult = result;
+    useLazyLoadQueryResult = result;
     return result.data ? (
       <>
         <ChildComponent user={result.data.user} />
@@ -217,12 +217,12 @@ describe("compiledHooks", () => {
   };
 
   beforeEach(() => {
-    lastUseLazyLoadQueryResult = null;
-    lastUseFragmentResult = [];
-    lastUseRefetchableFragmentResult = [];
-    lastForwardUsePaginationFragmentResult = [];
-    lastBackwardUsePaginationFragmentResult = [];
-    lastComponentOnQueryTypeResult = [];
+    useLazyLoadQueryResult = null;
+    useFragmentResult = [];
+    useRefetchableFragmentResult = [];
+    forwardUsePaginationFragmentResult = [];
+    backwardUsePaginationFragmentResult = [];
+    componentOnQueryTypeResult = [];
     client = createMockClient(schema, {
       cache: {
         possibleTypes: {
@@ -253,7 +253,7 @@ describe("compiledHooks", () => {
 
   describe(useCompiledLazyLoadQuery, () => {
     it("correctly returns loading state", async () => {
-      expect(lastUseLazyLoadQueryResult).toEqual({
+      expect(useLazyLoadQueryResult).toEqual({
         data: undefined,
         error: undefined,
       });
@@ -262,7 +262,7 @@ describe("compiledHooks", () => {
           MockPayloadGenerator.generate(operation)
         )
       );
-      expect(lastUseLazyLoadQueryResult).toEqual({
+      expect(useLazyLoadQueryResult).toEqual({
         data: expect.objectContaining({}),
         error: undefined,
       });
@@ -365,7 +365,7 @@ describe("compiledHooks", () => {
       });
 
       it("only returns the fields selected in the watch query to the component", () => {
-        expect(lastUseLazyLoadQueryResult!.data).toMatchInlineSnapshot(`
+        expect(useLazyLoadQueryResult!.data).toMatchInlineSnapshot(`
           Object {
             "__fragments": Object {
               "avatarSize": 21,
@@ -393,7 +393,7 @@ describe("compiledHooks", () => {
       });
 
       it("does not re-render when a field that was not selected in the watch query is updated in the store", async () => {
-        const before = lastUseLazyLoadQueryResult!.data;
+        const before = useLazyLoadQueryResult!.data;
         await act(async () => {
           client.cache.modify({
             id: "User:42",
@@ -403,11 +403,11 @@ describe("compiledHooks", () => {
           });
           return new Promise((resolve) => setTimeout(resolve, 0));
         });
-        expect(lastUseLazyLoadQueryResult!.data).toBe(before);
+        expect(useLazyLoadQueryResult!.data).toBe(before);
       });
 
       it("does re-render when a field that was selected in the watch query is updated in the store", async () => {
-        const before = lastUseLazyLoadQueryResult!.data;
+        const before = useLazyLoadQueryResult!.data;
         await act(async () => {
           client.cache.modify({
             id: "User:42",
@@ -417,8 +417,8 @@ describe("compiledHooks", () => {
           });
           return new Promise((resolve) => setTimeout(resolve, 0));
         });
-        expect(lastUseLazyLoadQueryResult!.data).not.toBe(before);
-        expect(lastUseLazyLoadQueryResult!.data).toMatchInlineSnapshot(`
+        expect(useLazyLoadQueryResult!.data).not.toBe(before);
+        expect(useLazyLoadQueryResult!.data).toMatchInlineSnapshot(`
           Object {
             "__fragments": Object {
               "avatarSize": 21,
@@ -557,7 +557,7 @@ describe("compiledHooks", () => {
     });
 
     it("only returns the fields selected in the watch query to the component", () => {
-      expect(returnedResults()[0]).toEqual({
+      expect(last(returnedResults())).toEqual({
         __fragments: {
           avatarSize: 21,
           conversationsForwardCount: 1,
@@ -574,7 +574,7 @@ describe("compiledHooks", () => {
     });
 
     it("returns the same object when a field that was not selected in the watch query is updated in the store", async () => {
-      const before = returnedResults()[0];
+      const before = last(returnedResults());
       await act(async () => {
         client.cache.modify({
           id: "User:42",
@@ -584,7 +584,7 @@ describe("compiledHooks", () => {
         });
         return new Promise((resolve) => setTimeout(resolve, 0));
       });
-      expect(returnedResults()[1]).toBe(before);
+      expect(last(returnedResults())).toBe(before);
     });
 
     it("returns a new object when a field that was selected in the watch query is updated in the store", async () => {
@@ -598,7 +598,7 @@ describe("compiledHooks", () => {
         return new Promise((resolve) => setTimeout(resolve, 0));
       });
       expect(returnedResults().length).toBe(2);
-      expect(returnedResults()[1]).toMatchObject({
+      expect(last(returnedResults())).toMatchObject({
         petName: "some new value",
       });
     });
@@ -633,18 +633,18 @@ describe("compiledHooks", () => {
           })
         )
       );
-      expect(returnedResults()[1].id).toBe(21);
+      expect(last(returnedResults()).id).toBe(21);
     });
     // });
   }
 
   describe(useCompiledFragment, () => {
-    itBehavesLikeFragment(() => lastUseFragmentResult, {
+    itBehavesLikeFragment(() => useFragmentResult, {
       petName: '<mock-value-for-field-"petName">',
     });
 
     it("also works with fragments on the Query type", () => {
-      expect(lastComponentOnQueryTypeResult[0]).toMatchInlineSnapshot(`
+      expect(last(componentOnQueryTypeResult)).toMatchInlineSnapshot(`
         Object {
           "__fragments": Object {
             "avatarSize": 21,
@@ -674,7 +674,7 @@ describe("compiledHooks", () => {
       let onCompleted: jest.Mock;
 
       beforeEach(() => {
-        const [_data, refetch] = returnedResults()[0];
+        const [_data, refetch] = last(returnedResults());
         onCompleted = jest.fn();
         refetch({ avatarSize: 42 }, { onCompleted });
       });
@@ -695,8 +695,7 @@ describe("compiledHooks", () => {
         });
 
         it("returns a new object from the hook", () => {
-          const results = returnedResults();
-          expect(results[results.length - 1][0]).toMatchObject({
+          expect(last(returnedResults())[0]).toMatchObject({
             __typename: "User",
             avatarUrl: "avatarUrl-with-size-42",
             id: 42,
@@ -704,8 +703,7 @@ describe("compiledHooks", () => {
         });
 
         it("updates the fragment reference request variables for future requests", () => {
-          const results = returnedResults();
-          expect(results[results.length - 1][0]).toMatchObject({
+          expect(last(returnedResults())[0]).toMatchObject({
             __fragments: {
               avatarSize: 42,
               userId: 42,
@@ -730,7 +728,7 @@ describe("compiledHooks", () => {
         });
 
         it("does not update the fragment reference request variables for future requests", async () => {
-          const [_data, refetch] = returnedResults()[0];
+          const [_data, refetch] = last(returnedResults());
           refetch({});
           expect(
             client.mock.getMostRecentOperation().request.variables.avatarSize
@@ -743,7 +741,7 @@ describe("compiledHooks", () => {
   describe(useCompiledRefetchableFragment, () => {
     itBehavesLikeFragment(
       () =>
-        lastUseRefetchableFragmentResult.map(
+        useRefetchableFragmentResult.map(
           ([data, _refetch]) => data as { id: number }
         ),
       { avatarUrl: '<mock-value-for-field-"avatarUrl">' }
@@ -751,7 +749,7 @@ describe("compiledHooks", () => {
 
     itBehavesLikeRefetchableFragment(
       () =>
-        lastUseRefetchableFragmentResult as [
+        useRefetchableFragmentResult as [
           data: { id: number },
           refetch: RefetchFn
         ][]
@@ -761,7 +759,7 @@ describe("compiledHooks", () => {
   describe(useCompiledPaginationFragment, () => {
     itBehavesLikeFragment(
       () =>
-        lastForwardUsePaginationFragmentResult.map(
+        forwardUsePaginationFragmentResult.map(
           ({ data }) => data as { id: number }
         ),
       {
@@ -797,7 +795,7 @@ describe("compiledHooks", () => {
     );
 
     itBehavesLikeRefetchableFragment(() =>
-      lastForwardUsePaginationFragmentResult.map(({ data, refetch }) => [
+      forwardUsePaginationFragmentResult.map(({ data, refetch }) => [
         data as { id: number },
         refetch,
       ])
@@ -805,13 +803,15 @@ describe("compiledHooks", () => {
 
     describe("when paginating forward", () => {
       it("returns that next data is available", () => {
-        const { hasNext } = lastForwardUsePaginationFragmentResult[0];
+        const { hasNext } = last(forwardUsePaginationFragmentResult);
         expect(hasNext).toBeTruthy();
       });
 
       it("uses the correct count and cursor values", () => {
-        const { loadNext } = lastForwardUsePaginationFragmentResult[0];
-        loadNext(123);
+        act(() => {
+          const { loadNext } = last(forwardUsePaginationFragmentResult);
+          loadNext(123);
+        });
 
         const operation = client.mock.getMostRecentOperation();
         expect(operation.request.variables).toMatchObject({
@@ -820,12 +820,21 @@ describe("compiledHooks", () => {
         });
       });
 
+      it("returns that a pagination operation is in-flight", () => {
+        act(() => {
+          const { loadNext } = last(forwardUsePaginationFragmentResult);
+          loadNext(123);
+        });
+        const { isLoadingNext } = last(forwardUsePaginationFragmentResult);
+        expect(isLoadingNext).toBeTruthy();
+      });
+
       describe("and having received the response", () => {
         beforeEach(async () => {
-          const { loadNext } = lastForwardUsePaginationFragmentResult[0];
-          loadNext(1);
+          await act(() => {
+            const { loadNext } = last(forwardUsePaginationFragmentResult);
+            loadNext(1);
 
-          await act(() => 
             client.mock.resolveMostRecentOperation((operation) =>
               MockPayloadGenerator.generate(operation, {
                 Node: () => ({
@@ -839,9 +848,14 @@ describe("compiledHooks", () => {
                   hasNextPage: false,
                 }),
               })
-            ));
+            );
             return new Promise((resolve) => setTimeout(resolve, 0));
           });
+        });
+
+        it("returns that no pagination operation is in-flight", () => {
+          const { isLoadingNext } = last(forwardUsePaginationFragmentResult);
+          expect(isLoadingNext).toBeFalsy();
         });
 
         it("loads the new data into the store", () => {
@@ -855,10 +869,7 @@ describe("compiledHooks", () => {
         });
 
         it("returns the complete list data (previous+new) from the hook", () => {
-          const result =
-            lastForwardUsePaginationFragmentResult[
-              lastForwardUsePaginationFragmentResult.length - 1
-            ];
+          const result = last(forwardUsePaginationFragmentResult);
           expect(
             (result.data as any).conversations.edges.map(
               (edge: any) => edge.node.id
@@ -872,10 +883,10 @@ describe("compiledHooks", () => {
         });
 
         it("uses the new cursor value", () => {
-          const {
-            loadNext,
-          } = lastForwardUsePaginationFragmentResult.reverse()[0];
-          loadNext(123);
+          act(() => {
+            const { loadNext } = last(forwardUsePaginationFragmentResult);
+            loadNext(123);
+          });
 
           const operation = client.mock.getMostRecentOperation();
           expect(operation.request.variables).toMatchObject({
@@ -884,9 +895,7 @@ describe("compiledHooks", () => {
         });
 
         it("returns that no next data is available", () => {
-          const {
-            hasNext,
-          } = lastForwardUsePaginationFragmentResult.reverse()[0];
+          const { hasNext } = last(forwardUsePaginationFragmentResult);
           expect(hasNext).toBeFalsy();
         });
       });
@@ -894,13 +903,15 @@ describe("compiledHooks", () => {
 
     describe("when paginating backward", () => {
       it("returns that previous data is available", () => {
-        const { hasPrevious } = lastBackwardUsePaginationFragmentResult[0];
+        const { hasPrevious } = last(backwardUsePaginationFragmentResult);
         expect(hasPrevious).toBeTruthy();
       });
 
       it("uses the correct count and cursor values", () => {
-        const { loadPrevious } = lastBackwardUsePaginationFragmentResult[0];
-        loadPrevious(123);
+        act(() => {
+          const { loadPrevious } = last(backwardUsePaginationFragmentResult);
+          loadPrevious(123);
+        });
 
         const operation = client.mock.getMostRecentOperation();
         expect(operation.request.variables).toMatchObject({
@@ -909,12 +920,21 @@ describe("compiledHooks", () => {
         });
       });
 
+      it("returns that a pagination operation is in-flight", () => {
+        act(() => {
+          const { loadPrevious } = last(backwardUsePaginationFragmentResult);
+          loadPrevious(123);
+        });
+        const { isLoadingPrevious } = last(backwardUsePaginationFragmentResult);
+        expect(isLoadingPrevious).toBeTruthy();
+      });
+
       describe("and having received the response", () => {
         beforeEach(async () => {
-          const { loadPrevious } = lastBackwardUsePaginationFragmentResult[0];
-          loadPrevious(1);
-
           await act(() => {
+            const { loadPrevious } = last(backwardUsePaginationFragmentResult);
+            loadPrevious(1);
+
             client.mock.resolveMostRecentOperation((operation) =>
               MockPayloadGenerator.generate(operation, {
                 Node: () => ({
@@ -933,6 +953,13 @@ describe("compiledHooks", () => {
           });
         });
 
+        it("returns that no pagination operation is in-flight", () => {
+          const { isLoadingPrevious } = last(
+            backwardUsePaginationFragmentResult
+          );
+          expect(isLoadingPrevious).toBeFalsy();
+        });
+
         it("loads the new data into the store", () => {
           expect(client.cache.extract()).toMatchObject({
             "Message:second-paged-message": {
@@ -944,10 +971,7 @@ describe("compiledHooks", () => {
         });
 
         it("returns the complete list data (previous+new) from the hook", () => {
-          const result =
-            lastBackwardUsePaginationFragmentResult[
-              lastBackwardUsePaginationFragmentResult.length - 1
-            ];
+          const result = last(backwardUsePaginationFragmentResult);
           expect(
             (result.data as any).messages.edges.map((edge: any) => edge.node.id)
           ).toMatchInlineSnapshot(`
@@ -959,10 +983,10 @@ describe("compiledHooks", () => {
         });
 
         it("uses the new cursor value", () => {
-          const {
-            loadPrevious,
-          } = lastBackwardUsePaginationFragmentResult.reverse()[0];
-          loadPrevious(123);
+          act(() => {
+            const { loadPrevious } = last(backwardUsePaginationFragmentResult);
+            loadPrevious(123);
+          });
 
           const operation = client.mock.getMostRecentOperation();
           expect(operation.request.variables).toMatchObject({
@@ -971,9 +995,7 @@ describe("compiledHooks", () => {
         });
 
         it("returns that no previous data is available", () => {
-          const {
-            hasPrevious,
-          } = lastBackwardUsePaginationFragmentResult.reverse()[0];
+          const { hasPrevious } = last(backwardUsePaginationFragmentResult);
           expect(hasPrevious).toBeFalsy();
         });
       });
@@ -999,4 +1021,8 @@ class ErrorBoundary extends React.Component {
 
     return this.props.children;
   }
+}
+
+function last<T>(list: T[]): T {
+  return list[list.length - 1];
 }

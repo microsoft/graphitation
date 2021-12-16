@@ -6,6 +6,7 @@ import {
   useCallback,
   useReducer,
 } from "react";
+import { unstable_batchedUpdates } from "react-dom";
 import {
   useApolloClient,
   useQuery as useApolloQuery,
@@ -229,25 +230,34 @@ export function useCompiledRefetchableFragment(
       } catch (e: any) {
         error = e;
       }
-      // NOTE: Unsure if the order of callback invocation and updating
-      //       state here matters.
-      if (options?.UNSTABLE_onCompleted) {
-        options.UNSTABLE_onCompleted(error, data!);
-      } else {
-        options?.onCompleted?.(error!);
-      }
-      if (!error) {
-        const { id: _, ...variablesToPropagate } = variables;
-        setFragmentReferenceWithOwnVariables({
-          id: fragmentReference.id,
-          __fragments: {
-            ...fragmentReference.__fragments,
-            ...variablesToPropagate,
-          },
-        });
-      }
+      // NOTE: In case of pagination we already invoke useState changes twice,
+      //       namely setFragmentReferenceWithOwnVariables and setIsLoadingMore
+      unstable_batchedUpdates(() => {
+        // NOTE: Unsure if the order of callback invocation and updating
+        //       state here matters.
+        if (options?.UNSTABLE_onCompleted) {
+          options.UNSTABLE_onCompleted(error, data!);
+        } else {
+          options?.onCompleted?.(error!);
+        }
+        if (!error) {
+          const { id: _, ...variablesToPropagate } = variables;
+          setFragmentReferenceWithOwnVariables({
+            id: fragmentReference.id,
+            __fragments: {
+              ...fragmentReference.__fragments,
+              ...variablesToPropagate,
+            },
+          });
+        }
+      });
     },
-    [client, fragmentReference.id, fragmentReference.__fragments]
+    [
+      client,
+      executionQueryDocument,
+      fragmentReference.id,
+      fragmentReference.__fragments,
+    ]
   );
 
   return [data, refetch];
@@ -304,22 +314,29 @@ export function useCompiledPaginationFragment(
       loadPage({
         ...commonPaginationParams,
         countVariable: connectionMetadata.forwardCountVariable,
-        countValue,
-        cursorVariable: connectionMetadata.forwardCursorVariable,
-        cursorValue: pageInfo?.endCursor,
-        updater: (existing, incoming) => [...existing, ...incoming],
-      });
-    },
-    loadPrevious: (countValue, options) => {
-      loadPage({
-        ...commonPaginationParams,
-        countVariable: connectionMetadata.backwardCountVariable,
-        countValue,
-        cursorVariable: connectionMetadata.backwardCursorVariable,
-        cursorValue: pageInfo?.startCursor,
-        updater: (existing, incoming) => [...incoming, ...existing],
-      });
-    },
+  const [loadNext, isLoadingNext] = useLoadMore({
+    ...commonPaginationParams,
+    countVariable: connectionMetadata.forwardCountVariable,
+    cursorVariable: connectionMetadata.forwardCursorVariable,
+    cursorValue: pageInfo?.endCursor,
+    updater: (existing, incoming) => [...existing, ...incoming],
+  });
+  const [loadPrevious, isLoadingPrevious] = useLoadMore({
+    ...commonPaginationParams,
+    countVariable: connectionMetadata.backwardCountVariable,
+    cursorVariable: connectionMetadata.backwardCursorVariable,
+    cursorValue: pageInfo?.startCursor,
+    updater: (existing, incoming) => [...incoming, ...existing],
+  });
+  return {
+    data,
+    refetch,
+    hasNext: !!pageInfo?.hasNextPage,
+    hasPrevious: !!pageInfo?.hasPreviousPage,
+    isLoadingNext,
+    isLoadingPrevious,
+    loadNext,
+    loadPrevious,
   };
 }
 
@@ -330,7 +347,6 @@ function useForceUpdate() {
 
 interface PaginationParams {
   fragmentReference: FragmentReference;
-  countValue: number;
   refetch: RefetchFn;
   metadata: Metadata;
   executionQueryDocument: DocumentNode;
@@ -342,9 +358,8 @@ interface PaginationParams {
   updater: <T>(existing: T[], incoming: T[]) => T[];
 }
 
-function loadPage({
+function useLoadMore({
   fragmentReference,
-  countValue,
   refetch,
   metadata,
   executionQueryDocument,
@@ -354,70 +369,96 @@ function loadPage({
   connectionSelectionPath,
   cursorValue,
   updater,
-}: PaginationParams) {
-  invariant(countVariable, "Expected a count variable to exist");
-  invariant(cursorVariable, "Expected a cursor variable to exist");
-  invariant(cursorValue, "Expected a cursor value to exist");
-  const previousVariables = {
-    ...fragmentReference.__fragments,
-    id: fragmentReference.id,
-  };
-  const newVariables = {
-    ...previousVariables,
-    [countVariable]: countValue,
-    [cursorVariable]: cursorValue,
-  };
-  refetch(newVariables, {
-    fetchPolicy: "no-cache",
-    UNSTABLE_onCompleted: (error, data) => {
-      if (error) {
-        console.error("An error occurred during pagination", error);
-        return;
-      }
-
-      invariant(data, "Expected to have response data");
-      const newData = metadata.rootSelection
-        ? data[metadata.rootSelection]
-        : data;
-
-      const mainFragment = metadata.mainFragment;
-      invariant(mainFragment, "Expected mainFragment metadata");
-      const cacheSelector: DataProxy.Fragment<any, any> = {
-        id: fragmentReference.id
-          ? `${mainFragment.typeCondition}:${fragmentReference.id}`
-          : "ROOT_QUERY",
-        variables: previousVariables,
-        fragmentName: mainFragment.name,
-        // Create new document with operation filtered out.
-        fragment: {
-          kind: "Document",
-          definitions: executionQueryDocument.definitions.filter(
-            (def) => def.kind === "FragmentDefinition"
-          ),
-        },
+}: PaginationParams): [loadPage: PaginationFn, isLoadingMore: boolean] {
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const loadPage = useCallback<PaginationFn>(
+    (countValue, options) => {
+      invariant(countVariable, "Expected a count variable to exist");
+      invariant(cursorVariable, "Expected a cursor variable to exist");
+      invariant(cursorValue, "Expected a cursor value to exist");
+      const previousVariables = {
+        ...fragmentReference.__fragments,
+        id: fragmentReference.id,
       };
+      const newVariables = {
+        ...previousVariables,
+        [countVariable]: countValue,
+        [cursorVariable]: cursorValue,
+      };
+      // TODO: Measure if invoking `refetch` leads to React updates and if it
+      //       makes sense to wrap it and the following setIsLoadingMore(true)
+      //       call in a batchedUpdates callback.
+      refetch(newVariables, {
+        fetchPolicy: "no-cache",
+        UNSTABLE_onCompleted: (error, data) => {
+          // NOTE: We can do this now already, because `refetch` wraps the
+          //       onCompleted callback in a batchedUpdates callback.
+          setIsLoadingMore(false);
 
-      /**
-       * Note: Even though we already have the latest data from the
-       * useCompiledFragment hook, we can't really use that as it may contain
-       * __fragments fields and we don't want to write those to the cache. If
-       * we figure out a way from a field-policy's merge function to not write
-       * to the cache, then that would be preferable.
-       */
-      const existingData = cache.readFragment(cacheSelector);
-      const newCacheData = mergeEdges(
-        connectionSelectionPath,
-        newData,
-        existingData,
-        updater
-      );
-      cache.writeFragment({
-        ...cacheSelector,
-        variables: newVariables,
-        data: newCacheData,
+          if (error) {
+            console.error("An error occurred during pagination", error);
+            return;
+          }
+
+          invariant(data, "Expected to have response data");
+          const newData = metadata.rootSelection
+            ? data[metadata.rootSelection]
+            : data;
+
+          const mainFragment = metadata.mainFragment;
+          invariant(mainFragment, "Expected mainFragment metadata");
+          const cacheSelector: DataProxy.Fragment<any, any> = {
+            id: fragmentReference.id
+              ? `${mainFragment.typeCondition}:${fragmentReference.id}`
+              : "ROOT_QUERY",
+            variables: previousVariables,
+            fragmentName: mainFragment.name,
+            // Create new document with operation filtered out.
+            fragment: {
+              kind: "Document",
+              definitions: executionQueryDocument.definitions.filter(
+                (def) => def.kind === "FragmentDefinition"
+              ),
+            },
+          };
+
+          /**
+           * Note: Even though we already have the latest data from the
+           * useCompiledFragment hook, we can't really use that as it may contain
+           * __fragments fields and we don't want to write those to the cache. If
+           * we figure out a way from a field-policy's merge function to not write
+           * to the cache, then that would be preferable.
+           */
+          const existingData = cache.readFragment(cacheSelector);
+          const newCacheData = mergeEdges(
+            connectionSelectionPath,
+            newData,
+            existingData,
+            updater
+          );
+          cache.writeFragment({
+            ...cacheSelector,
+            variables: newVariables,
+            data: newCacheData,
+          });
+        },
       });
+      setIsLoadingMore(true);
     },
-  });
+    [
+      fragmentReference.id,
+      fragmentReference.__fragments,
+      refetch,
+      metadata,
+      executionQueryDocument,
+      cache,
+      countVariable,
+      cursorVariable,
+      connectionSelectionPath,
+      cursorValue,
+    ]
+  );
+  return [loadPage, isLoadingMore];
 }
 
 function getValueAtSelectionPath(
