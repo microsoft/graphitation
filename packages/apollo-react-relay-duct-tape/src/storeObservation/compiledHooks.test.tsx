@@ -16,6 +16,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 import {
+  Disposable,
   RefetchFn,
   useCompiledFragment,
   useCompiledLazyLoadQuery,
@@ -34,6 +35,7 @@ import { documents as compiledHooks_QueryTypeFragment_documents } from "./__gene
 import { documents as compiledHooks_ForwardPaginationFragment_documents } from "./__generated__/compiledHooks_ForwardPaginationFragment_PaginationQuery.graphql";
 import { documents as compiledHooks_BackwardPaginationFragment_documents } from "./__generated__/compiledHooks_BackwardPaginationFragment_PaginationQuery.graphql";
 import { compiledHooks_Root_executionQueryVariables } from "./__generated__/compiledHooks_Root_executionQuery.graphql";
+import { QueryInfo } from "@apollo/client/core/QueryInfo";
 
 const schema = buildSchema(
   fs.readFileSync(
@@ -672,11 +674,18 @@ describe("compiledHooks", () => {
 
     describe("when refetching", () => {
       let onCompleted: jest.Mock;
+      let disposable: Disposable;
 
       beforeEach(() => {
         const [_data, refetch] = last(returnedResults());
         onCompleted = jest.fn();
-        refetch({ avatarSize: 42 }, { onCompleted });
+        disposable = refetch({ avatarSize: 42 }, { onCompleted });
+      });
+
+      it("can be cancelled", () => {
+        const query = last(Array.from(client.getObservableQueries().values()));
+        disposable.dispose();
+        expect(client.getObservableQueries().has(query.queryId)).toBeFalsy();
       });
 
       describe("successfully", () => {
@@ -829,6 +838,33 @@ describe("compiledHooks", () => {
         expect(isLoadingNext).toBeTruthy();
       });
 
+      it("can be cancelled", () => {
+        act(() => {
+          const { loadNext } = last(forwardUsePaginationFragmentResult);
+          const disposable = loadNext(123);
+          const query = last(
+            Array.from(client.getObservableQueries().values())
+          );
+          disposable.dispose();
+          expect(client.getObservableQueries().has(query.queryId)).toBeFalsy();
+        });
+      });
+
+      it("cancels when unmounting", async () => {
+        await act(async () => {
+          const { loadNext } = last(forwardUsePaginationFragmentResult);
+          loadNext(123);
+          const query = last(
+            Array.from(client.getObservableQueries().values())
+          );
+
+          testRenderer.unmount();
+          await new Promise((resolve) => setTimeout(resolve, 0));
+
+          expect(client.getObservableQueries().has(query.queryId)).toBeFalsy();
+        });
+      });
+
       describe("and having received the response", () => {
         beforeEach(async () => {
           await act(() => {
@@ -927,6 +963,33 @@ describe("compiledHooks", () => {
         });
         const { isLoadingPrevious } = last(backwardUsePaginationFragmentResult);
         expect(isLoadingPrevious).toBeTruthy();
+      });
+
+      it("can be cancelled", () => {
+        act(() => {
+          const { loadPrevious } = last(backwardUsePaginationFragmentResult);
+          const disposable = loadPrevious(123);
+          const query = last(
+            Array.from(client.getObservableQueries().values())
+          );
+          disposable.dispose();
+          expect(client.getObservableQueries().has(query.queryId)).toBeFalsy();
+        });
+      });
+
+      it("cancels when unmounting", async () => {
+        await act(async () => {
+          const { loadPrevious } = last(backwardUsePaginationFragmentResult);
+          loadPrevious(123);
+          const query = last(
+            Array.from(client.getObservableQueries().values())
+          );
+
+          testRenderer.unmount();
+          await new Promise((resolve) => setTimeout(resolve, 0));
+
+          expect(client.getObservableQueries().has(query.queryId)).toBeFalsy();
+        });
       });
 
       describe("and having received the response", () => {
