@@ -408,51 +408,52 @@ function useLoadMore({
           disposable.current = undefined;
 
           if (error) {
+            // TODO: Is this helpful?
             console.error("An error occurred during pagination", error);
-            return;
+          } else {
+            invariant(data, "Expected to have response data");
+            const newData = metadata.rootSelection
+              ? data[metadata.rootSelection]
+              : data;
+
+            const mainFragment = metadata.mainFragment;
+            invariant(mainFragment, "Expected mainFragment metadata");
+            const cacheSelector: DataProxy.Fragment<any, any> = {
+              id: fragmentReference.id
+                ? `${mainFragment.typeCondition}:${fragmentReference.id}`
+                : "ROOT_QUERY",
+              variables: previousVariables,
+              fragmentName: mainFragment.name,
+              // Create new document with operation filtered out.
+              fragment: {
+                kind: "Document",
+                definitions: executionQueryDocument.definitions.filter(
+                  (def) => def.kind === "FragmentDefinition"
+                ),
+              },
+            };
+
+            /**
+             * Note: Even though we already have the latest data from the
+             * useCompiledFragment hook, we can't really use that as it may contain
+             * __fragments fields and we don't want to write those to the cache. If
+             * we figure out a way from a field-policy's merge function to not write
+             * to the cache, then that would be preferable.
+             */
+            const existingData = cache.readFragment(cacheSelector);
+            const newCacheData = mergeEdges(
+              connectionSelectionPath,
+              newData,
+              existingData,
+              updater
+            );
+            cache.writeFragment({
+              ...cacheSelector,
+              variables: newVariables,
+              data: newCacheData,
+            });
           }
-
-          invariant(data, "Expected to have response data");
-          const newData = metadata.rootSelection
-            ? data[metadata.rootSelection]
-            : data;
-
-          const mainFragment = metadata.mainFragment;
-          invariant(mainFragment, "Expected mainFragment metadata");
-          const cacheSelector: DataProxy.Fragment<any, any> = {
-            id: fragmentReference.id
-              ? `${mainFragment.typeCondition}:${fragmentReference.id}`
-              : "ROOT_QUERY",
-            variables: previousVariables,
-            fragmentName: mainFragment.name,
-            // Create new document with operation filtered out.
-            fragment: {
-              kind: "Document",
-              definitions: executionQueryDocument.definitions.filter(
-                (def) => def.kind === "FragmentDefinition"
-              ),
-            },
-          };
-
-          /**
-           * Note: Even though we already have the latest data from the
-           * useCompiledFragment hook, we can't really use that as it may contain
-           * __fragments fields and we don't want to write those to the cache. If
-           * we figure out a way from a field-policy's merge function to not write
-           * to the cache, then that would be preferable.
-           */
-          const existingData = cache.readFragment(cacheSelector);
-          const newCacheData = mergeEdges(
-            connectionSelectionPath,
-            newData,
-            existingData,
-            updater
-          );
-          cache.writeFragment({
-            ...cacheSelector,
-            variables: newVariables,
-            data: newCacheData,
-          });
+          options?.onCompleted?.(error);
         },
       });
       setIsLoadingMore(true);

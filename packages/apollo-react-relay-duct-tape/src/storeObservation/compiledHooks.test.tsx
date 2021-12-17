@@ -872,11 +872,24 @@ describe("compiledHooks", () => {
         });
       });
 
+      it("invokes the onComplete callback when an error occurs", async () => {
+        const onCompleted = jest.fn();
+        const { loadNext } = last(forwardUsePaginationFragmentResult);
+        loadNext(1, { onCompleted });
+
+        const error = new Error("oh noes");
+        await act(() => client.mock.rejectMostRecentOperation(error));
+        expect(onCompleted).toHaveBeenCalledWith(error);
+      });
+
       describe("and having received the response", () => {
+        let onCompleted: jest.Mock;
+
         beforeEach(async () => {
+          onCompleted = jest.fn();
           await act(() => {
             const { loadNext } = last(forwardUsePaginationFragmentResult);
-            loadNext(1);
+            loadNext(1, { onCompleted });
 
             client.mock.resolveMostRecentOperation((operation) =>
               MockPayloadGenerator.generate(operation, {
@@ -941,6 +954,10 @@ describe("compiledHooks", () => {
           const { hasNext } = last(forwardUsePaginationFragmentResult);
           expect(hasNext).toBeFalsy();
         });
+
+        it("invokes the onComplete callback without error", () => {
+          expect(onCompleted).toHaveBeenCalledWith(null);
+        });
       });
     });
 
@@ -999,11 +1016,24 @@ describe("compiledHooks", () => {
         });
       });
 
+      it("invokes the onComplete callback when an error occurs", async () => {
+        const onCompleted = jest.fn();
+        const { loadPrevious } = last(backwardUsePaginationFragmentResult);
+        loadPrevious(1, { onCompleted });
+
+        const error = new Error("oh noes");
+        await act(() => client.mock.rejectMostRecentOperation(error));
+        expect(onCompleted).toHaveBeenCalledWith(error);
+      });
+
       describe("and having received the response", () => {
+        let onCompleted: jest.Mock;
+
         beforeEach(async () => {
+          onCompleted = jest.fn();
           await act(() => {
             const { loadPrevious } = last(backwardUsePaginationFragmentResult);
-            loadPrevious(1);
+            loadPrevious(1, { onCompleted });
 
             client.mock.resolveMostRecentOperation((operation) =>
               MockPayloadGenerator.generate(operation, {
@@ -1067,6 +1097,10 @@ describe("compiledHooks", () => {
         it("returns that no previous data is available", () => {
           const { hasPrevious } = last(backwardUsePaginationFragmentResult);
           expect(hasPrevious).toBeFalsy();
+        });
+
+        it("invokes the onComplete callback without error", () => {
+          expect(onCompleted).toHaveBeenCalledWith(null);
         });
       });
     });
