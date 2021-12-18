@@ -11,6 +11,7 @@ import {
 import { KeyType, KeyTypeData, OperationType } from "./types";
 import {
   RefetchFn,
+  PaginationFn,
   useCompiledFragment,
   useCompiledLazyLoadQuery,
   useCompiledRefetchableFragment,
@@ -169,6 +170,29 @@ export function useRefetchableFragment<
     fragmentInput as any,
     fragmentRef as any
   );
+}
+
+export function usePaginationFragment<
+  TQuery extends OperationType,
+  TKey extends KeyType
+>(
+  fragmentInput: GraphQLTaggedNode,
+  fragmentRef: TKey
+): {
+  data: KeyTypeData<TKey>;
+  loadNext: PaginationFn;
+  loadPrevious: PaginationFn;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  isLoadingNext: boolean;
+  isLoadingPrevious: boolean;
+  refetch: RefetchFn<TQuery["variables"]>;
+} {
+  invariant(
+    !!fragmentInput.watchQueryDocument,
+    "usePaginationFragment is only supported at this time when using compilation"
+  );
+  return usePaginationFragment(fragmentInput as any, fragmentRef as any);
 }
 
 // https://github.com/facebook/relay/blob/master/website/docs/api-reference/types/GraphQLSubscriptionConfig.md

@@ -277,7 +277,10 @@ export function useCompiledRefetchableFragment(
   return [data, refetch];
 }
 
-type PaginationFn = (count: number, options?: RefetchOptions) => Disposable;
+export type PaginationFn = (
+  count: number,
+  options?: RefetchOptions
+) => Disposable;
 
 export function useCompiledPaginationFragment(
   documents: CompiledArtefactModule,
