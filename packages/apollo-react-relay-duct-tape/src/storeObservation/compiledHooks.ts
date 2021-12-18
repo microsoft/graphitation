@@ -19,6 +19,25 @@ import type { CompiledArtefactModule } from "relay-compiler-language-graphitatio
 import { DocumentNode } from "graphql";
 import { Metadata } from "relay-compiler-language-graphitation/lib/formatModuleTransforms/extractMetadataTransform";
 
+export interface RefetchOptions {
+  onCompleted?: (error: Error | null) => void;
+  fetchPolicy?: "network-only" | "no-cache";
+}
+
+export interface Disposable {
+  dispose(): void;
+}
+
+export type RefetchFn<Variables extends {} = {}> = (
+  variables: Partial<Variables>,
+  options?: RefetchOptions
+) => Disposable;
+
+export type PaginationFn = (
+  count: number,
+  options?: RefetchOptions
+) => Disposable;
+
 interface FragmentReference {
   /**
    * In case of a watch query on a Node type, the `id` needs to be provided.
@@ -33,6 +52,19 @@ interface FragmentReference {
    * perspective.
    */
   __fragments?: Record<string, any>;
+}
+
+/**
+ * These do not exist in the Relay API and should not be exported.
+ */
+interface PrivateRefetchOptions extends RefetchOptions {
+  /**
+   * Returns the fetched data.
+   */
+  UNSTABLE_onCompletedWithData?: (
+    error: Error | null,
+    data: Record<string, any> | null
+  ) => void;
 }
 
 /**
@@ -68,6 +100,7 @@ export function useCompiledLazyLoadQuery(
   });
   const { loading, error } = execution.current.status;
 
+  // TODO: Use watchQuery and cancel when unmounting
   useEffect(() => {
     if (
       execution.current.status.loading &&
@@ -170,27 +203,6 @@ export function useCompiledFragment(
   return data;
 }
 
-interface RefetchOptions {
-  onCompleted?: (error: Error | null) => void;
-  fetchPolicy?: "network-only" | "no-cache";
-  /**
-   * Returns the fetched data. This does not exist in the Relay API.
-   */
-  UNSTABLE_onCompleted?: (
-    error: Error | null,
-    data: Record<string, any> | null
-  ) => void;
-}
-
-export interface Disposable {
-  dispose(): void;
-}
-
-export type RefetchFn<Variables extends {} = {}> = (
-  variables: Partial<Variables>,
-  options?: RefetchOptions
-) => Disposable;
-
 export function useCompiledRefetchableFragment(
   documents: CompiledArtefactModule,
   fragmentReference: FragmentReference
@@ -212,15 +224,12 @@ export function useCompiledRefetchableFragment(
   );
 
   const refetch = useCallback<RefetchFn>(
-    (variablesSubset, options) => {
-      let error: Error | null;
-      let data: {} | null;
+    (variablesSubset, options?: PrivateRefetchOptions) => {
       const variables = {
         ...fragmentReference.__fragments,
         ...variablesSubset,
         id: fragmentReference.id,
       };
-
       const observable = client.watchQuery({
         fetchPolicy: options?.fetchPolicy ?? "network-only",
         query: executionQueryDocument,
@@ -235,8 +244,8 @@ export function useCompiledRefetchableFragment(
           subscription = undefined;
 
           unstable_batchedUpdates(() => {
-            if (options?.UNSTABLE_onCompleted) {
-              options.UNSTABLE_onCompleted(error || null, data);
+            if (options?.UNSTABLE_onCompletedWithData) {
+              options.UNSTABLE_onCompletedWithData(error || null, data);
             } else {
               options?.onCompleted?.(error || null);
             }
@@ -257,8 +266,8 @@ export function useCompiledRefetchableFragment(
           subscription!.unsubscribe();
           subscription = undefined;
 
-          if (options?.UNSTABLE_onCompleted) {
-            options.UNSTABLE_onCompleted(error, null);
+          if (options?.UNSTABLE_onCompletedWithData) {
+            options.UNSTABLE_onCompletedWithData(error, null);
           } else {
             options?.onCompleted?.(error);
           }
@@ -276,11 +285,6 @@ export function useCompiledRefetchableFragment(
 
   return [data, refetch];
 }
-
-export type PaginationFn = (
-  count: number,
-  options?: RefetchOptions
-) => Disposable;
 
 export function useCompiledPaginationFragment(
   documents: CompiledArtefactModule,
@@ -399,12 +403,9 @@ function useLoadMore({
         [countVariable]: countValue,
         [cursorVariable]: cursorValue,
       };
-      // TODO: Measure if invoking `refetch` leads to React updates and if it
-      //       makes sense to wrap it and the following setIsLoadingMore(true)
-      //       call in a batchedUpdates callback.
-      disposable.current = refetch(newVariables, {
+      const refetchOptions: PrivateRefetchOptions = {
         fetchPolicy: "no-cache",
-        UNSTABLE_onCompleted: (error, data) => {
+        UNSTABLE_onCompletedWithData: (error, data) => {
           // NOTE: We can do this now already, because `refetch` wraps the
           //       onCompleted callback in a batchedUpdates callback.
           setIsLoadingMore(false);
@@ -458,7 +459,11 @@ function useLoadMore({
           }
           options?.onCompleted?.(error);
         },
-      });
+      };
+      // TODO: Measure if invoking `refetch` leads to React updates and if it
+      //       makes sense to wrap it and the following setIsLoadingMore(true)
+      //       call in a batchedUpdates callback.
+      disposable.current = refetch(newVariables, refetchOptions);
       setIsLoadingMore(true);
       return disposable.current;
     },
