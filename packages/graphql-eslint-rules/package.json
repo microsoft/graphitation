@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/graphql-eslint-rules",
   "license": "MIT",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "main": "./src/index.ts",
   "scripts": {
     "build": "monorepo-scripts build",
