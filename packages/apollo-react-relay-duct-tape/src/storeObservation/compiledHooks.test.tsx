@@ -1,11 +1,11 @@
 import React from "react";
-import { ApolloProvider } from "@apollo/client";
+import { ApolloClient, ApolloProvider } from "@apollo/client";
 import {
   act,
   create as createTestRenderer,
   ReactTestRenderer,
 } from "react-test-renderer";
-import { buildSchema } from "graphql";
+import { buildSchema, print } from "graphql";
 import { graphql } from "@graphitation/graphql-js-tag";
 import {
   ApolloMockClient,
@@ -269,13 +269,27 @@ describe("compiledHooks", () => {
       });
     });
 
+    it("cancels the execution query while in-flight on unmount", async () => {
+      expect(activeQueries(client).map((query) => query.queryName)).toEqual([
+        "compiledHooks_Root_executionQuery",
+      ]);
+
+      await act(async () => {
+        testRenderer.unmount();
+        return new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      expect(client.getObservableQueries().size).toBe(0);
+    });
+
     describe("once loaded", () => {
+      let executionQueryId: string;
+
       beforeEach(async () => {
+        executionQueryId = last(activeQueries(client)).queryId;
         await act(() =>
           client.mock.resolveMostRecentOperation((operation) =>
             MockPayloadGenerator.generate(operation, {
               User: (options, generateId) => {
-                // console.log({ options });
                 return {
                   id:
                     options.parentType === "Query"
@@ -292,6 +306,12 @@ describe("compiledHooks", () => {
             })
           )
         );
+      });
+
+      it("unsubscribes from the execution query", async () => {
+        expect(
+          activeQueries(client).map((query) => query.queryId)
+        ).not.toContain(executionQueryId);
       });
 
       it("loads all data of the execution query into the store", () => {
@@ -690,7 +710,7 @@ describe("compiledHooks", () => {
       });
 
       it("can be cancelled", () => {
-        const query = last(Array.from(client.getObservableQueries().values()));
+        const query = last(activeQueries(client));
         disposable.dispose();
         expect(client.getObservableQueries().has(query.queryId)).toBeFalsy();
       });
@@ -849,9 +869,7 @@ describe("compiledHooks", () => {
         act(() => {
           const { loadNext } = last(forwardUsePaginationFragmentResult);
           const disposable = loadNext(123);
-          const query = last(
-            Array.from(client.getObservableQueries().values())
-          );
+          const query = last(activeQueries(client));
           disposable.dispose();
           expect(client.getObservableQueries().has(query.queryId)).toBeFalsy();
         });
@@ -861,9 +879,7 @@ describe("compiledHooks", () => {
         await act(async () => {
           const { loadNext } = last(forwardUsePaginationFragmentResult);
           loadNext(123);
-          const query = last(
-            Array.from(client.getObservableQueries().values())
-          );
+          const query = last(activeQueries(client));
 
           testRenderer.unmount();
           await new Promise((resolve) => setTimeout(resolve, 0));
@@ -874,11 +890,14 @@ describe("compiledHooks", () => {
 
       it("invokes the onComplete callback when an error occurs", async () => {
         const onCompleted = jest.fn();
-        const { loadNext } = last(forwardUsePaginationFragmentResult);
-        loadNext(1, { onCompleted });
-
         const error = new Error("oh noes");
-        await act(() => client.mock.rejectMostRecentOperation(error));
+
+        const { loadNext } = last(forwardUsePaginationFragmentResult);
+        await act(async () => {
+          loadNext(1, { onCompleted });
+          await client.mock.rejectMostRecentOperation(error);
+        });
+
         expect(onCompleted).toHaveBeenCalledWith(error);
       });
 
@@ -993,9 +1012,7 @@ describe("compiledHooks", () => {
         act(() => {
           const { loadPrevious } = last(backwardUsePaginationFragmentResult);
           const disposable = loadPrevious(123);
-          const query = last(
-            Array.from(client.getObservableQueries().values())
-          );
+          const query = last(activeQueries(client));
           disposable.dispose();
           expect(client.getObservableQueries().has(query.queryId)).toBeFalsy();
         });
@@ -1005,9 +1022,7 @@ describe("compiledHooks", () => {
         await act(async () => {
           const { loadPrevious } = last(backwardUsePaginationFragmentResult);
           loadPrevious(123);
-          const query = last(
-            Array.from(client.getObservableQueries().values())
-          );
+          const query = last(activeQueries(client));
 
           testRenderer.unmount();
           await new Promise((resolve) => setTimeout(resolve, 0));
@@ -1018,11 +1033,14 @@ describe("compiledHooks", () => {
 
       it("invokes the onComplete callback when an error occurs", async () => {
         const onCompleted = jest.fn();
-        const { loadPrevious } = last(backwardUsePaginationFragmentResult);
-        loadPrevious(1, { onCompleted });
-
         const error = new Error("oh noes");
-        await act(() => client.mock.rejectMostRecentOperation(error));
+
+        const { loadPrevious } = last(backwardUsePaginationFragmentResult);
+        await act(async () => {
+          loadPrevious(1, { onCompleted });
+          await client.mock.rejectMostRecentOperation(error);
+        });
+
         expect(onCompleted).toHaveBeenCalledWith(error);
       });
 
@@ -1129,4 +1147,8 @@ class ErrorBoundary extends React.Component {
 
 function last<T>(list: T[]): T {
   return list[list.length - 1];
+}
+
+function activeQueries(client: ApolloClient<any>) {
+  return Array.from(client.getObservableQueries().values());
 }

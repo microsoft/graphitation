@@ -11,12 +11,13 @@ import {
   useApolloClient,
   useQuery as useApolloQuery,
   ApolloQueryResult,
+  ObservableQuery,
 } from "@apollo/client";
 import { DataProxy } from "@apollo/client/cache/core/types/DataProxy";
 import invariant from "invariant";
 import { useDeepCompareMemoize } from "./useDeepCompareMemoize";
 import type { CompiledArtefactModule } from "relay-compiler-language-graphitation";
-import { DocumentNode } from "graphql";
+import { DocumentNode, print } from "graphql";
 import { Metadata } from "relay-compiler-language-graphitation/lib/formatModuleTransforms/extractMetadataTransform";
 
 export interface RefetchOptions {
@@ -92,42 +93,44 @@ export function useCompiledLazyLoadQuery(
   // Not using state for the status object, because we don't want to trigger a
   // state update when we reset things due to new variables coming in.
   const execution = useRef<{
-    query?: Promise<ApolloQueryResult<unknown>>;
+    querySubscription?: ZenObservable.Subscription;
     status: { loading: boolean; error?: Error };
   }>({
-    query: undefined,
+    querySubscription: undefined,
     status: { loading: true, error: undefined },
   });
   const { loading, error } = execution.current.status;
 
-  // TODO: Use watchQuery and cancel when unmounting
+  const cleanupSubscription = () => {
+    execution.current.querySubscription?.unsubscribe();
+    execution.current.querySubscription = undefined;
+  };
+  const handleResult = (error: Error | undefined) => {
+    execution.current.status = { loading: false, error };
+    cleanupSubscription();
+    forceUpdate();
+  };
+
   useEffect(() => {
     if (
       execution.current.status.loading &&
-      execution.current.query === undefined
+      execution.current.querySubscription === undefined
     ) {
-      execution.current.query = client.query({
+      const observable = client.watchQuery({
         query: executionQueryDocument,
         variables,
       });
-      execution.current.query
-        .then((result) => {
-          execution.current.status = { loading: false, error: result.error };
-          forceUpdate();
-        })
-        .catch((err) => {
-          execution.current.status = { loading: false, error: err };
-          forceUpdate();
-        })
-        .then(() => {
-          // No need to hang on to the results here any longer than necessary,
-          // assuming Apollo doesn't trigger a GC round of its store.
-          execution.current.query = undefined;
-        });
+      execution.current.querySubscription = observable.subscribe(
+        ({ error: err }) => {
+          handleResult(err);
+        },
+        (err) => {
+          handleResult(err);
+        }
+      );
     }
     return () => {
-      // TODO: [How to] Cancel in-flight request?
-      // TODO: How does Apollo evict from the store?
+      cleanupSubscription();
       execution.current.status = { loading: true, error: undefined };
     };
   }, [documents.executionQueryDocument, variables]);
@@ -411,15 +414,11 @@ function useLoadMore({
           setIsLoadingMore(false);
           disposable.current = undefined;
 
-          if (error) {
-            // TODO: Is this helpful?
-            console.error("An error occurred during pagination", error);
-          } else {
+          if (!error) {
             invariant(data, "Expected to have response data");
             const newData = metadata.rootSelection
               ? data[metadata.rootSelection]
               : data;
-
             const mainFragment = metadata.mainFragment;
             invariant(mainFragment, "Expected mainFragment metadata");
             const cacheSelector: DataProxy.Fragment<any, any> = {
@@ -436,7 +435,6 @@ function useLoadMore({
                 ),
               },
             };
-
             /**
              * Note: Even though we already have the latest data from the
              * useCompiledFragment hook, we can't really use that as it may contain
@@ -457,6 +455,7 @@ function useLoadMore({
               data: newCacheData,
             });
           }
+
           options?.onCompleted?.(error);
         },
       };
