@@ -117,6 +117,7 @@ ruleTester.runGraphQLTests(
       {
         ...WITH_SCHEMA,
         code: `query { hasId { name } }`,
+        output: `query { hasId { id name } }`,
         errors: [
           {
             message: `The key-field "id" must be selected for proper Apollo Client store denormalisation purposes.`,
@@ -127,6 +128,7 @@ ruleTester.runGraphQLTests(
       {
         ...WITH_SCHEMA,
         code: `query { keyField { id name } }`,
+        output: `query { keyField { objectId id name } }`,
         errors: [
           {
             message: `The key-field "objectId" must be selected for proper Apollo Client store denormalisation purposes.`,

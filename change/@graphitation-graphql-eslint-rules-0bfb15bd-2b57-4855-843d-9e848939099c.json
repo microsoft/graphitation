@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "[eslint-rules] Added autofix for missing-key-fields",
+  "packageName": "@graphitation/graphql-eslint-rules",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}

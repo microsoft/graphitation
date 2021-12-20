@@ -136,6 +136,7 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
 > = {
   meta: {
     type: "problem",
+    fixable: "code",
     docs: {
       category: "Operations" as CategoryType,
       description: `Enforce selecting specific key fields when they are available on the GraphQL type.`,
@@ -290,6 +291,22 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
                         " and " +
                         unusedKeyFields[unusedKeyFields.length - 1]
                   }" must be selected for proper Apollo Client store denormalisation purposes.`,
+                  fix(fixer: any) {
+                    if (!node.selections.length) {
+                      return;
+                    }
+
+                    const firstSelection = node.selections[0];
+
+                    if (firstSelection.kind !== "Field") {
+                      return;
+                    }
+
+                    return fixer.insertTextBefore(
+                      firstSelection,
+                      `${unusedKeyFields.join(` `)} `
+                    );
+                  },
                 });
               }
             }
