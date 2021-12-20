@@ -305,7 +305,7 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
 
                     return fixer.insertTextBefore(
                       firstSelection as any,
-                      `${unusedKeyFields.join(` `)} `
+                      `${unusedKeyFields.join(`\n`)}\n`
                     );
                   },
                 });
