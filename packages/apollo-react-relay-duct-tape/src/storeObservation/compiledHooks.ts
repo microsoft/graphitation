@@ -80,15 +80,36 @@ export function useCompiledLazyLoadQuery(
   documents: CompiledArtefactModule,
   options: { variables: Record<string, any> }
 ): { data?: any; error?: Error } {
-  const { watchQueryDocument, executionQueryDocument } = documents;
+  const { watchQueryDocument } = documents;
   invariant(
-    executionQueryDocument && watchQueryDocument,
-    "Expected compiled artefact to have a executionQueryDocument and watchQueryDocument"
+    watchQueryDocument,
+    "Expected compiled artefact to have a watchQueryDocument"
+  );
+  const variables = useDeepCompareMemoize(options.variables);
+  // First fetch all data needed for the entire tree...
+  const [loading, error] = useExecutionQuery(documents, variables);
+  // ...then fetch/watch data for only the calling component...
+  const { data } = useApolloQuery(watchQueryDocument, {
+    variables,
+    fetchPolicy: "cache-only",
+    // ...but only once finished loading.
+    skip: loading || !!error,
+  });
+  return { data, error };
+}
+
+function useExecutionQuery(
+  documents: CompiledArtefactModule,
+  variables: Record<string, any>
+): [loading: boolean, error: Error | undefined] {
+  const { executionQueryDocument } = documents;
+  invariant(
+    executionQueryDocument,
+    "Expected compiled artefact to have a executionQueryDocument"
   );
 
   const client = useApolloClient();
   const forceUpdate = useForceUpdate();
-  const variables = useDeepCompareMemoize(options.variables);
 
   // Not using state for the status object, because we don't want to trigger a
   // state update when we reset things due to new variables coming in.
@@ -135,13 +156,7 @@ export function useCompiledLazyLoadQuery(
     };
   }, [documents.executionQueryDocument, variables]);
 
-  const { data } = useApolloQuery(watchQueryDocument, {
-    variables,
-    fetchPolicy: "cache-only",
-    skip: loading || !!error,
-  });
-
-  return { data, error };
+  return [loading, error];
 }
 
 /**
