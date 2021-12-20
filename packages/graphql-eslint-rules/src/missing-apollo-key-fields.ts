@@ -19,6 +19,7 @@ import {
   GraphQLESTreeNode,
   GraphQLESLintRuleContext,
 } from "@graphql-eslint/eslint-plugin";
+import { RuleFixer } from "@typescript-eslint/experimental-utils/dist/ts-eslint";
 
 export const REQUIRE_KEY_FIELDS_WHEN_AVAILABLE = "missing-apollo-key-fields";
 const DEFAULT_KEY_FIELD_NAME = "id";
@@ -291,7 +292,7 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
                         " and " +
                         unusedKeyFields[unusedKeyFields.length - 1]
                   }" must be selected for proper Apollo Client store denormalisation purposes.`,
-                  fix(fixer: any) {
+                  fix(fixer: RuleFixer) {
                     if (!node.selections.length) {
                       return;
                     }
@@ -303,7 +304,7 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
                     }
 
                     return fixer.insertTextBefore(
-                      firstSelection,
+                      firstSelection as any,
                       `${unusedKeyFields.join(` `)} `
                     );
                   },
