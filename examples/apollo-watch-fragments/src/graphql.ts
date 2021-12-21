@@ -7,6 +7,63 @@ import { Resolvers } from "./graphql/resolver-typings";
 import { typePolicies } from "@graphitation/apollo-react-relay-duct-tape";
 const schemaSource: string = require("../data/schema.graphql");
 
+const TODOS_FIXTURE = `
+Clean counter tops
+Clean microwave inside/outside
+Wipe down cabinets/hardware
+Clean outside of appliances
+Polish stainless steel appliances
+Clean refrigerator inside
+Clean range vent/filter
+Clean and sanitize sinks
+Sweep and wash floors
+Clean windows/window treatments
+Clean/polish table and chairs
+Sweep/mop hard floors
+Vacuum carpets/area rugs
+Clean/sanitize sinks
+Clean/sanitize tubs, shower, toilet
+Clean mirrors and glass
+Clean and polish fixtures
+Dust light fixtures and bulbs
+Wash floors
+Change sheets
+Dust furniture/shelves
+Vacuum floor
+Wash windows
+Empty wastebaskets
+Dust light fixtures
+Put away clean laundry
+Dust/mop baseboards
+Dust all hard surfaces/shelves/blinds
+Vacuum carpets/area rugs
+Sweep/mop hard floors
+Vacuum upholstered furniture
+Polish wood
+Clean windows/window treatments
+Dust office surfaces/equipment
+File or toss loose mail/paperwork
+Clean windows/window treatments
+Sweep/mop hard floors
+Vacuum carpets/area rugs
+Vacuum carpets/area rugs
+Sweep/mop hard floors
+Dust cobwebs; ceiling/baseboard
+Clean windows/window treatments
+Clean washer and dryer exteriors
+Clean inside rim of washer
+Change/clean lint traps
+Dust light fixtures and bulbs
+Empty wastebasket
+Sweep and mop floor
+Clean laundry sink and fixtures
+Clean laundry counter/hamper
+Empty wastebaskets
+Organize/dust shelves
+Sweep/mop floor
+Put away tools/supplies
+`;
+
 interface Context {
   db: DB;
 }
@@ -64,10 +121,14 @@ const schema = makeExecutableSchema({
 
 export function createClient() {
   const context: Context = {
-    db: new DB([
-      { description: "Go bananas", isCompleted: false },
-      { description: "Have coffee", isCompleted: true },
-    ]),
+    db: new DB(
+      TODOS_FIXTURE.trim()
+        .split("\n")
+        .map((description) => ({
+          description,
+          isCompleted: Math.random() < 0.5,
+        }))
+    ),
   };
   return new ApolloClient({
     link: new SchemaLink({ schema, context }),
