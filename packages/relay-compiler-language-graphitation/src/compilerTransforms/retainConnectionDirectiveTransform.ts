@@ -4,6 +4,16 @@ import { visit } from "relay-compiler/lib/core/IRVisitor";
 
 type PathWithConnectionDirective = [any[], Directive];
 
+/**
+ * relay-compiler will strip out all of its client-specific directives, which
+ * makes sense as these should normally not be sent to the schema, but in our
+ * case we want to keep this directive as we will need to send it to Apollo
+ * Client. So we collect all the directives, let the relay-compiler filter
+ * transform do its work, and then re-instate the connection directives.
+ *
+ * @param wrappedFilterDirectivesTransform
+ *   relay-compiler's filter directives transform
+ */
 export function retainConnectionDirectiveTransform(
   wrappedFilterDirectivesTransform: IRTransform
 ): IRTransform {
