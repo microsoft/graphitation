@@ -6,6 +6,15 @@ import { visit } from "relay-compiler/lib/core/IRVisitor";
 // TODO: Add typings for this
 const SchemaUtils = require("relay-compiler/lib/core/SchemaUtils");
 
+/**
+ * Finds connection client-handles that relay-compiler emits and replaces
+ * them with a version of the `@connection` directive that Apollo Client uses;
+ * which is identical to relay's version, except the `filters` parameter is
+ * named `filter` (singular).
+ *
+ * @param wrappedConnectionTransform
+ *   relay-compiler's connection client-handle transform
+ */
 export function emitApolloClientConnectionTransform(
   wrappedConnectionTransform: IRTransform
 ): IRTransform {
