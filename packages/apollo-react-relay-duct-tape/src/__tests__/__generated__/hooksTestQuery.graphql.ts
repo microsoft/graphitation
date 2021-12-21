@@ -5,7 +5,7 @@
 
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type hooksTestQueryVariables = {
-    id: string;
+    id: number;
 };
 export type hooksTestQueryResponse = {
     readonly user: {
@@ -19,7 +19,7 @@ export type hooksTestQuery = {
 
 
 /*
-query hooksTestQuery($id: ID!) {
+query hooksTestQuery($id: Int!) {
   user(id: $id) {
     ...hooksTestFragment
     id
@@ -34,7 +34,7 @@ fragment hooksTestFragment on User {
 */
 
 /*
-query hooksTestQuery($id: ID!) {
+query hooksTestQuery($id: Int!) {
   user(id: $id) {
     id
     ... on Node {
@@ -71,7 +71,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                 "kind": "NamedType",
                 "name": {
                   "kind": "Name",
-                  "value": "ID"
+                  "value": "Int"
                 }
               }
             },
@@ -206,7 +206,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                 "kind": "NamedType",
                 "name": {
                   "kind": "Name",
-                  "value": "ID"
+                  "value": "Int"
                 }
               }
             },

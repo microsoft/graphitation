@@ -29,6 +29,7 @@ query compiledHooks_RefetchableFragment_RefetchQuery($avatarSize: Int!, $id: ID!
 }
 
 fragment compiledHooks_RefetchableFragment on User {
+  petName
   avatarUrl(size: $avatarSize)
   id
 }
@@ -47,6 +48,7 @@ query compiledHooks_RefetchableFragment_RefetchQuery($avatarSize: Int!, $id: ID!
 }
 
 fragment compiledHooks_RefetchableFragment on User {
+  petName
   avatarUrl(size: $avatarSize)
   id
 }
@@ -186,6 +188,15 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "petName"
+              },
+              "arguments": [],
+              "directives": []
+            },
             {
               "kind": "Field",
               "name": {
@@ -395,6 +406,15 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               "kind": "Field",
               "name": {
                 "kind": "Name",
+                "value": "petName"
+              },
+              "arguments": [],
+              "directives": []
+            },
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
                 "value": "avatarUrl"
               },
               "arguments": [
@@ -430,6 +450,10 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
     ]
   },
   "metadata": {
-    "rootSelection": "node"
+    "rootSelection": "node",
+    "mainFragment": {
+      "name": "compiledHooks_RefetchableFragment",
+      "typeCondition": "User"
+    }
   }
 };

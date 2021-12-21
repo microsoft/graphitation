@@ -38,6 +38,16 @@ const FRAGMENTS_ON_NODE_SELECTION: InlineFragment = {
   metadata: undefined,
 };
 
+/**
+ * Inserts a `__fragments` selection at the place where a fragment reference
+ * boundary exists. This is either done in a `Node` inline fragment or directly
+ * on the `Query` type.
+ *
+ * This field, which is an Apollo Client client-side field as declared with the
+ * `@client` directive, will be used to pass context between the `use*Fragment`
+ * hooks. (Currently this is limited to request variables.) The data for this
+ * field is resolved by the `fragmentReferencesFieldPolicy` function.
+ */
 export const annotateFragmentReferenceTransform: IRTransform = (context) => {
   const visitor = visitNodeWithSelections.bind(null, context);
   let nextContext = context;

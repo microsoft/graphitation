@@ -202,6 +202,10 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
     ]
   },
   "metadata": {
-    "rootSelection": "node"
+    "rootSelection": "node",
+    "mainFragment": {
+      "name": "hooksTestFragment",
+      "typeCondition": "User"
+    }
   }
 };

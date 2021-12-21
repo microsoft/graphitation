@@ -57,7 +57,7 @@ const FragmentComponent: React.FC<{ user: hooksTestFragment$key }> = (
  */
 
 const query = graphql`
-  query hooksTestQuery($id: ID!) {
+  query hooksTestQuery($id: Int!) {
     user(id: $id) {
       ...hooksTestFragment
     }
@@ -67,7 +67,7 @@ const query = graphql`
 
 const QueryComponent: React.FC = () => {
   const { data, error } = useLazyLoadQuery<hooksTestQuery>(query, {
-    id: "some-user-id",
+    id: 42,
   });
   if (error) {
     return <div id="error">{error.message}</div>;
