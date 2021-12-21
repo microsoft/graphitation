@@ -10,14 +10,13 @@ import { unstable_batchedUpdates } from "react-dom";
 import {
   useApolloClient,
   useQuery as useApolloQuery,
-  ApolloQueryResult,
   ObservableQuery,
 } from "@apollo/client";
 import { DataProxy } from "@apollo/client/cache/core/types/DataProxy";
 import invariant from "invariant";
 import { useDeepCompareMemoize } from "./useDeepCompareMemoize";
 import type { CompiledArtefactModule } from "relay-compiler-language-graphitation";
-import { DocumentNode, print } from "graphql";
+import { DocumentNode } from "graphql";
 import { Metadata } from "relay-compiler-language-graphitation/lib/formatModuleTransforms/extractMetadataTransform";
 
 export interface RefetchOptions {
@@ -203,6 +202,7 @@ export function useCompiledFragment(
     let skipFirst = true;
     const subscription = observableQuery.subscribe(
       () => {
+        // Unclear why, but this yields twice with the same results, so skip one.
         if (skipFirst) {
           skipFirst = false;
         } else {
