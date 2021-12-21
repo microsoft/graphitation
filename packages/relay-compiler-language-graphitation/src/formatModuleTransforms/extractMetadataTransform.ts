@@ -26,8 +26,17 @@ export interface Metadata {
 }
 
 /**
+ * This transform extracts metadata needed at runtime for the `use*Fragment`
+ * hooks to do their work efficiently. This includes:
+ *
+ * - Whether or not the observed data starts at the root of the operation or at
+ *   the `node` root-field.
+ * - The name and type-condition of the fragment.
+ * - Connection metadata such as location of the connection inside the fragment
+ *   and the names of the various connection variables.
+ *
  * @param document The watch query document
- * @returns Metadata needed at runtime
+ * @returns The metadata needed at runtime
  */
 export function extractMetadataTransform(
   document: DocumentNode

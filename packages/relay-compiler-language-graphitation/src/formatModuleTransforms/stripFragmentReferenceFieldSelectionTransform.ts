@@ -1,5 +1,12 @@
 import { DocumentNode, visit } from "graphql";
 
+/**
+ * Given an execution query document, this transform will remove `__fragments`
+ * selections (and container inline fragments on the `Node` interface) from the
+ * operation, as these are only needed in watch queries.
+ *
+ * @param document The watch query document
+ */
 export function stripFragmentReferenceFieldSelectionTransform(
   document: DocumentNode
 ): DocumentNode {
