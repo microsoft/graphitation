@@ -18,6 +18,17 @@ const ALLOWED_REFETCH_QUERY_FIELD_SELECTIONS = [
   "id",
 ];
 
+/**
+ * Given the execution query document, that is the fat query that is used to
+ * actually fetch the data, this transform will reduce the operation to limit
+ * it to just the first fragment (on either a `Node` type of the `Query` type).
+ * This is the operation that the `use*Fragment` hooks will use to observe the
+ * Apollo Client store for data changes.
+ *
+ * @param schema The schema that the operation executes on
+ * @param document The execution query document
+ * @returns The watch query document
+ */
 export function reduceNodeWatchQueryTransform(
   schema: GraphQLSchema,
   document: DocumentNode
