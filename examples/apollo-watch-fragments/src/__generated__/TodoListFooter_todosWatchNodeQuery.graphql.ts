@@ -192,6 +192,10 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
     ]
   },
   "metadata": {
-    "rootSelection": "node"
+    "rootSelection": "node",
+    "mainFragment": {
+      "name": "TodoListFooter_todosFragment",
+      "typeCondition": "TodosConnection"
+    }
   }
 };
