@@ -5,7 +5,7 @@ import {
   create as createTestRenderer,
   ReactTestRenderer,
 } from "react-test-renderer";
-import { buildSchema, print } from "graphql";
+import { buildSchema } from "graphql";
 import { graphql } from "@graphitation/graphql-js-tag";
 import {
   ApolloMockClient,
