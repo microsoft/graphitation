@@ -98,65 +98,72 @@ export function useCompiledLazyLoadQuery(
   return { data, error };
 }
 
+class ExecutionQueryHandler {
+  public status: [loading: boolean, error?: Error];
+  private querySubscription?: ZenObservable.Subscription;
+
+  constructor(private onComplete: () => void) {
+    this.status = [true, undefined];
+  }
+
+  public isIdle() {
+    return this.status[0] && this.querySubscription === undefined;
+  }
+
+  public dispose() {
+    this.querySubscription?.unsubscribe();
+    this.querySubscription = undefined;
+  }
+
+  public reset() {
+    this.dispose();
+    this.status = [true, undefined];
+  }
+
+  private handleResult(error?: Error) {
+    this.status = [false, error];
+    this.dispose();
+    this.onComplete();
+  }
+
+  public subscribe(observable: ObservableQuery) {
+    this.querySubscription = observable.subscribe(
+      ({ error: err }) => {
+        this.handleResult(err);
+      },
+      (err) => {
+        this.handleResult(err);
+      }
+    );
+  }
+}
+
 function useExecutionQuery(
   documents: CompiledArtefactModule,
   variables: Record<string, any>
-): [loading: boolean, error: Error | undefined] {
+): [loading: boolean, error?: Error] {
   const { executionQueryDocument } = documents;
   invariant(
     executionQueryDocument,
     "Expected compiled artefact to have a executionQueryDocument"
   );
-
   const client = useApolloClient();
   const forceUpdate = useForceUpdate();
-
-  // Not using state for the status object, because we don't want to trigger a
-  // state update when we reset things due to new variables coming in.
-  const execution = useRef<{
-    querySubscription?: ZenObservable.Subscription;
-    status: { loading: boolean; error?: Error };
-  }>({
-    querySubscription: undefined,
-    status: { loading: true, error: undefined },
-  });
-  const { loading, error } = execution.current.status;
-
-  const cleanupSubscription = () => {
-    execution.current.querySubscription?.unsubscribe();
-    execution.current.querySubscription = undefined;
-  };
-  const handleResult = (error: Error | undefined) => {
-    execution.current.status = { loading: false, error };
-    cleanupSubscription();
-    forceUpdate();
-  };
-
+  const execution = useRef(new ExecutionQueryHandler(() => forceUpdate()));
   useEffect(() => {
-    if (
-      execution.current.status.loading &&
-      execution.current.querySubscription === undefined
-    ) {
-      const observable = client.watchQuery({
-        query: executionQueryDocument,
-        variables,
-      });
-      execution.current.querySubscription = observable.subscribe(
-        ({ error: err }) => {
-          handleResult(err);
-        },
-        (err) => {
-          handleResult(err);
-        }
+    if (execution.current.isIdle()) {
+      execution.current.subscribe(
+        client.watchQuery({
+          query: executionQueryDocument,
+          variables,
+        })
       );
     }
     return () => {
-      cleanupSubscription();
-      execution.current.status = { loading: true, error: undefined };
+      execution.current.reset();
     };
   }, [documents.executionQueryDocument, variables]);
-
-  return [loading, error];
+  return execution.current.status;
 }
 
 /**
