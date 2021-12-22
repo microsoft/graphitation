@@ -906,9 +906,13 @@ describe("compiledHooks", () => {
 
         beforeEach(async () => {
           onCompleted = jest.fn();
-          await act(() => {
+          await act(async () => {
             const { loadNext } = last(forwardUsePaginationFragmentResult);
             loadNext(1, { onCompleted });
+
+            // Introduce a slight delay before resolving the request as a
+            // regression test with a pagination requst being disposed early.
+            await new Promise((resolve) => setTimeout(resolve, 0));
 
             client.mock.resolveMostRecentOperation((operation) =>
               MockPayloadGenerator.generate(operation, {
