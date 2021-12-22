@@ -17,6 +17,7 @@ export const build = () => {
     entryPoints: glob.sync(["src/**/*.{ts,tsx}", "!src/**/__tests__/**"]),
     outdir: "lib",
     target: "es6",
+    sourcemap: "external",
   };
   return parallel(
     esbuildTask({
