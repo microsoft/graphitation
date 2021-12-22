@@ -2,6 +2,7 @@ import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { SchemaLink } from "@apollo/client/link/schema";
 import { DB } from "./db";
 import { makeExecutableSchema } from "@graphql-tools/schema";
+import { connectionFromArray } from "graphql-relay";
 
 import { Resolvers } from "./graphql/resolver-typings";
 import { typePolicies } from "@graphitation/apollo-react-relay-duct-tape";
@@ -80,7 +81,11 @@ const resolvers: Resolvers<Context> = {
       }
       return null;
     },
-    todos: () => ({}),
+    todos: (_source, args, context) => {
+      const x = connectionFromArray(context.db.getTodos(), args);
+      console.log(x);
+      return x;
+    },
   },
   Mutation: {
     addTodo: (_source, args, context, _info) => {
@@ -109,8 +114,6 @@ const resolvers: Resolvers<Context> = {
     totalCount: (_source, _args, context) => context.db.getTotalTodoCount(),
     uncompletedCount: (_source, _args, context) =>
       context.db.getUncompletedTodoCount(),
-    edges: (_source, _args, context) =>
-      context.db.getTodos().map((todo) => ({ node: todo })),
   },
 };
 
