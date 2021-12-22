@@ -174,6 +174,7 @@ export function useCompiledFragment(
   documents: CompiledArtefactModule,
   fragmentReference: FragmentReference
 ): {} {
+  invariant(fragmentReference, "Expected fragment reference data");
   const { watchQueryDocument, metadata } = documents;
   invariant(
     watchQueryDocument,
