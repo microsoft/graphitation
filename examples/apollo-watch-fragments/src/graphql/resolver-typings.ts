@@ -56,6 +56,14 @@ export type Node = {
   id: Scalars['ID'];
 };
 
+export type PageInfo = {
+  __typename?: 'PageInfo';
+  endCursor?: Maybe<Scalars['String']>;
+  hasNextPage: Scalars['Boolean'];
+  hasPreviousPage: Scalars['Boolean'];
+  startCursor?: Maybe<Scalars['String']>;
+};
+
 export type Query = {
   __typename?: 'Query';
   node?: Maybe<Node>;
@@ -65,6 +73,12 @@ export type Query = {
 
 export type QueryNodeArgs = {
   id: Scalars['ID'];
+};
+
+
+export type QueryTodosArgs = {
+  after?: Maybe<Scalars['String']>;
+  first: Scalars['Int'];
 };
 
 export type Todo = Node & {
@@ -79,12 +93,14 @@ export type TodosConnection = Node & {
   __typename?: 'TodosConnection';
   edges: Array<TodosConnectionEdge>;
   id: Scalars['ID'];
+  pageInfo: PageInfo;
   totalCount: Scalars['Int'];
   uncompletedCount: Scalars['Int'];
 };
 
 export type TodosConnectionEdge = {
   __typename?: 'TodosConnectionEdge';
+  cursor: Scalars['String'];
   node: Todo;
 };
 
@@ -166,6 +182,7 @@ export type ResolversTypes = {
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
   Mutation: ResolverTypeWrapper<{}>;
   Node: ResolversTypes['Todo'] | ResolversTypes['TodosConnection'];
+  PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
   Todo: ResolverTypeWrapper<TodoData>;
@@ -184,6 +201,7 @@ export type ResolversParentTypes = {
   Int: Partial<Scalars['Int']>;
   Mutation: {};
   Node: ResolversParentTypes['Todo'] | ResolversParentTypes['TodosConnection'];
+  PageInfo: Partial<PageInfo>;
   Query: {};
   String: Partial<Scalars['String']>;
   Todo: TodoData;
@@ -213,9 +231,17 @@ export type NodeResolvers<ContextType = any, ParentType = ResolversParentTypes['
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
 };
 
+export type PageInfoResolvers<ContextType = any, ParentType = ResolversParentTypes['PageInfo']> = {
+  endCursor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  hasPreviousPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  startCursor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type QueryResolvers<ContextType = any, ParentType = ResolversParentTypes['Query']> = {
   node?: Resolver<Maybe<ResolversTypes['Node']>, ParentType, ContextType, RequireFields<QueryNodeArgs, 'id'>>;
-  todos?: Resolver<ResolversTypes['TodosConnection'], ParentType, ContextType>;
+  todos?: Resolver<ResolversTypes['TodosConnection'], ParentType, ContextType, RequireFields<QueryTodosArgs, 'first'>>;
 };
 
 export type TodoResolvers<ContextType = any, ParentType = ResolversParentTypes['Todo']> = {
@@ -229,12 +255,14 @@ export type TodoResolvers<ContextType = any, ParentType = ResolversParentTypes['
 export type TodosConnectionResolvers<ContextType = any, ParentType = ResolversParentTypes['TodosConnection']> = {
   edges?: Resolver<Array<ResolversTypes['TodosConnectionEdge']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
   totalCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   uncompletedCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type TodosConnectionEdgeResolvers<ContextType = any, ParentType = ResolversParentTypes['TodosConnectionEdge']> = {
+  cursor?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   node?: Resolver<ResolversTypes['Todo'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -244,6 +272,7 @@ export type Resolvers<ContextType = any> = {
   ChangeTodoStatusPayload?: ChangeTodoStatusPayloadResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Node?: NodeResolvers<ContextType>;
+  PageInfo?: PageInfoResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Todo?: TodoResolvers<ContextType>;
   TodosConnection?: TodosConnectionResolvers<ContextType>;

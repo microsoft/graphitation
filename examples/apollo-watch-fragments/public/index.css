@@ -283,6 +283,12 @@ body {
   margin-bottom: -1px;
 }
 
+.todo-list li.load-more input {
+  display: block;
+  margin: 10px auto;
+  padding: 5px 15px;
+}
+
 .footer {
   padding: 10px 15px;
   height: 20px;
