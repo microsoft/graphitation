@@ -8,11 +8,17 @@ import { graphql } from "@graphitation/graphql-js-tag";
 
 import { TodoList_queryFragment$key } from "./__generated__/TodoList_queryFragment.graphql";
 import { Todo } from "./Todo";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 const TodoList: React.FC<{ query: TodoList_queryFragment$key }> = ({
   query: queryRef,
 }) => {
-  const { data: query, hasNext, loadNext } = usePaginationFragment(
+  const {
+    data: query,
+    hasNext,
+    loadNext,
+    isLoadingNext,
+  } = usePaginationFragment(
     graphql`
       fragment TodoList_queryFragment on Query
       @refetchable(queryName: "TodoListPaginationQuery") {
@@ -42,15 +48,19 @@ const TodoList: React.FC<{ query: TodoList_queryFragment$key }> = ({
           </li>
         );
       })}
-      {hasNext && (
+      {hasNext || isLoadingNext ? (
         <li className="load-more">
-          <input
-            type="submit"
-            value="Load more..."
-            onClick={() => loadNext(5)}
-          />
+          {isLoadingNext ? (
+            <LoadingSpinner />
+          ) : (
+            <input
+              type="submit"
+              value="Load more..."
+              onClick={() => loadNext(5)}
+            />
+          )}
         </li>
-      )}
+      ) : null}
     </ul>
   );
 };

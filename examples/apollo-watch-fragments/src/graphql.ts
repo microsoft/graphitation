@@ -81,10 +81,13 @@ const resolvers: Resolvers<Context> = {
       }
       return null;
     },
-    todos: (_source, args, context) => {
-      const x = connectionFromArray(context.db.getTodos(), args);
-      console.log(x);
-      return x;
+    todos: async (_source, args, context, info) => {
+      if (info.operation.name?.value === "TodoListPaginationQuery") {
+        // Synthetically make pagination take some time, so we can show a
+        // loading indicator.
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+      return connectionFromArray(context.db.getTodos(), args);
     },
   },
   Mutation: {
