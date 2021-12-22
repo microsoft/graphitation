@@ -46,6 +46,7 @@
     "@types/webpack-dev-server": "^4.1.0",
     "@welldone-software/why-did-you-render": "^6.2.1",
     "concurrently": "^6.2.1",
+    "graphql-relay": "^0.10.0",
     "relay-compiler": "^10",
     "relay-compiler-language-graphitation": "^0.7.0",
     "ts-loader": "^9.2.6",
