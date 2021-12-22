@@ -13,6 +13,7 @@ import {
   useCompiledFragment,
   useCompiledLazyLoadQuery,
   useCompiledRefetchableFragment,
+  useCompiledPaginationFragment,
 } from "./storeObservation/compiledHooks";
 
 export type GraphQLTaggedNode =
@@ -188,7 +189,10 @@ export function usePaginationFragment<
     !!fragmentInput.watchQueryDocument,
     "usePaginationFragment is only supported at this time when using compilation"
   );
-  return usePaginationFragment(fragmentInput as any, fragmentRef as any);
+  return useCompiledPaginationFragment(
+    fragmentInput as any,
+    fragmentRef as any
+  );
 }
 
 // https://github.com/facebook/relay/blob/master/website/docs/api-reference/types/GraphQLSubscriptionConfig.md
