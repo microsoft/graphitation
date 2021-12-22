@@ -413,7 +413,7 @@ function useLoadMore({
         disposable.current = undefined;
       }
     },
-    [disposable.current]
+    [] // On unmount
   );
   const loadPage = useCallback<PaginationFn>(
     (countValue, options) => {
