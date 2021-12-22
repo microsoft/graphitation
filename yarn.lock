@@ -6762,6 +6762,11 @@ graphql-let@^0.18.5:
     "@graphql-codegen/typescript-resolvers" "1.19.1"
     babel-jest "27.1.0"
 
+graphql-relay@^0.10.0:
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/graphql-relay/-/graphql-relay-0.10.0.tgz#3b661432edf1cb414cd4a132cf595350e524db2b"
+  integrity sha512-44yBuw2/DLNEiMypbNZBt1yMDbBmyVPVesPywnteGGALiBmdyy1JP8jSg8ClLePg8ZZxk0O4BLhd1a6U/1jDOQ==
+
 graphql-request@^1.4.0:
   version "1.8.2"
   resolved "https://registry.yarnpkg.com/graphql-request/-/graphql-request-1.8.2.tgz#398d10ae15c585676741bde3fc01d5ca948f8fbe"

@@ -3,8 +3,15 @@ interface Node {
 }
 
 type Query {
-  todos: TodosConnection!
+  todos(first: Int!, after: String): TodosConnection!
   node(id: ID!): Node
+}
+
+type PageInfo {
+  hasPreviousPage: Boolean!
+  hasNextPage: Boolean!
+  startCursor: String
+  endCursor: String
 }
 
 type TodosConnection implements Node {
@@ -12,10 +19,12 @@ type TodosConnection implements Node {
   totalCount: Int!
   uncompletedCount: Int!
   edges: [TodosConnectionEdge!]!
+  pageInfo: PageInfo!
 }
 
 type TodosConnectionEdge {
   node: Todo!
+  cursor: String!
 }
 
 type Todo implements Node {
