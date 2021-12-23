@@ -4,9 +4,9 @@
   "license": "MIT",
   "version": "0.7.0",
   "main": "./src/index.ts",
-  "types": "./src/types.d.ts",
+  "types": "./src/types.ts",
   "bin": {
-    "graphitation-compiler": "./lib/cli.js"
+    "graphitation-compiler": "./src/cli-cjs.js"
   },
   "repository": {
     "type": "git",
@@ -29,11 +29,12 @@
     "@types/dedent": "^0.7.0",
     "@types/jest": "^26.0.22",
     "@types/relay-compiler": "^8.0.0",
-    "graphql": "^15.0.0",
     "dedent": "^0.7.0",
+    "graphql": "^15.0.0",
     "monorepo-scripts": "*",
     "relay-test-utils": "^11.0.2",
-    "relay-test-utils-internal": "^11.0.2"
+    "relay-test-utils-internal": "^11.0.2",
+    "ts-node": "^10.4.0"
   },
   "peerDependencies": {
     "graphql": "^15.0.0"
@@ -48,6 +49,9 @@
         "import": "./lib/index.mjs",
         "require": "./lib/index.js"
       }
+    },
+    "bin": {
+      "graphitation-compiler": "./lib/cli.js"
     }
   }
 }
