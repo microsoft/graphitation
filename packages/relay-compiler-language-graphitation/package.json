@@ -2,7 +2,7 @@
   "name": "relay-compiler-language-graphitation",
   "description": "A relay-compiler plugin that wraps the TypeScript plugin and augments it slightly for @graphitation/apollo-react-relay-duct-tape's needs.",
   "license": "MIT",
-  "version": "0.8.2",
+  "version": "1.0.0-alpha.1",
   "main": "./src/index.ts",
   "types": "./src/types.ts",
   "bin": {
@@ -26,6 +26,7 @@
     "typescript": ">=4.2.3"
   },
   "devDependencies": {
+    "@graphitation/graphql-js-tag": "^0.5.4",
     "@types/dedent": "^0.7.0",
     "@types/jest": "^26.0.22",
     "@types/relay-compiler": "^8.0.0",
