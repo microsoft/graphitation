@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "[package] Add repo details to other packages and template",
+  "packageName": "@graphitation/supermassive",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "none"
+}
