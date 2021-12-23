@@ -170,7 +170,7 @@ describe(useLazyLoadQuery, () => {
 
     const operation = client.mock.getMostRecentOperation();
     expect(operation.request.node).toBe(query);
-    expect(operation.request.variables).toEqual({ id: "some-user-id" });
+    expect(operation.request.variables).toEqual({ id: 42 });
 
     await act(() =>
       client.mock.resolve(operation, MockPayloadGenerator.generate(operation))
