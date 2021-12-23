@@ -1,8 +1,24 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Thu, 23 Dec 2021 11:31:14 GMT and should not be manually modified.
+This log was last generated on Thu, 23 Dec 2021 12:10:32 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.4.2
+
+Thu, 23 Dec 2021 12:10:32 GMT
+
+### Patches
+
+- Fix require in supermassive cli (mnovikov@microsoft.com)
+
+## 0.4.1
+
+Thu, 23 Dec 2021 11:32:16 GMT
+
+### Patches
+
+- Add graphql-js notice (mnovikov@microsoft.com)
 
 ## 0.4.0
 
