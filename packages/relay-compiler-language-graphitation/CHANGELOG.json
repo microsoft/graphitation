@@ -2,6 +2,21 @@
   "name": "relay-compiler-language-graphitation",
   "entries": [
     {
+      "date": "Thu, 23 Dec 2021 13:01:22 GMT",
+      "tag": "relay-compiler-language-graphitation_v0.7.0",
+      "version": "0.7.0",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "relay-compiler-language-graphitation",
+            "commit": "bbbe8844858f53ceed2bd1c8790d3aff43b919df",
+            "comment": "[package] Add repo details to other packages and template"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 23 Dec 2021 11:31:14 GMT",
       "tag": "relay-compiler-language-graphitation_v0.7.0",
       "version": "0.7.0",

@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 23 Dec 2021 13:01:22 GMT",
+      "tag": "@graphitation/supermassive_v0.4.2",
+      "version": "0.4.2",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "bbbe8844858f53ceed2bd1c8790d3aff43b919df",
+            "comment": "[package] Add repo details to other packages and template"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 23 Dec 2021 12:10:32 GMT",
       "tag": "@graphitation/supermassive_v0.4.2",
       "version": "0.4.2",
