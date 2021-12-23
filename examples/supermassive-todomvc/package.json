@@ -4,15 +4,16 @@
   "version": "1.0.0",
   "scripts": {
     "build": "webpack --mode production --config webpack.config.ts",
-    "start": "webpack serve --progress --color --mode=development  --config webpack.config.ts "
+    "start": "webpack serve --progress --color --mode=development  --config webpack.config.ts",
+    "extract-schema": "supermassive extract-schema ./src/schema/typeDefs.graphql"
   },
   "dependencies": {
     "@apollo/client": "^3.4.16",
     "@babel/runtime": "^7.12.0",
-    "@graphitation/apollo-react-relay-duct-tape": "^0.5.0-store-observation.6",
-    "@graphitation/graphql-js-tag": "^0.5.4",
-    "@graphitation/supermassive": "../graphitation-supermassive-0.3.0-jakub.1.tgz",
-    "@graphitation/ts-transform-graphql-js-tag": "^0.2.2",
+    "@graphitation/apollo-react-relay-duct-tape": "^0.7.0",
+    "@graphitation/graphql-js-tag": "^0.8.0",
+    "@graphitation/supermassive": "^0.4.2",
+    "@graphitation/ts-transform-graphql-js-tag": "^0.4.0",
     "@types/graphql": "^14.5.0",
     "@types/lodash": "^4.14.175",
     "graphql": "^15.6.1",
