@@ -4,6 +4,11 @@
   "license": "MIT",
   "version": "0.7.0",
   "main": "./src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/graphitation.git",
+    "directory": "packages/relay-compiler-language-graphitation"
+  },
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",

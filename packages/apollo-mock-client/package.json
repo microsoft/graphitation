@@ -3,6 +3,11 @@
   "description": "An Apollo Client that allows mocking of payloads in response to operations, rather than having to provide them all upfront.",
   "license": "MIT",
   "version": "0.10.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/graphitation.git",
+    "directory": "packages/apollo-mock-client"
+  },
   "main": "./src/index.ts",
   "scripts": {
     "build": "monorepo-scripts build",

@@ -3,6 +3,11 @@
   "description": "Generates a payload for a given GraphQL operation expressed in graphql-js AST and a GraphQL Schema.",
   "license": "MIT",
   "version": "0.8.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/graphitation.git",
+    "directory": "packages/graphql-js-operation-payload-generator"
+  },
   "main": "./src/index.ts",
   "scripts": {
     "build": "monorepo-scripts build",

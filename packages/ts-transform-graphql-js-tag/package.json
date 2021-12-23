@@ -3,6 +3,11 @@
   "license": "MIT",
   "version": "0.4.0",
   "main": "./src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/graphitation.git",
+    "directory": "packages/ts-transform-graphql-js-tag"
+  },
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
