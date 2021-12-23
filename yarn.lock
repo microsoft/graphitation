@@ -837,27 +837,6 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@graphitation/apollo-mock-client@^0.6.11":
-  version "0.6.11"
-  resolved "https://registry.yarnpkg.com/@graphitation/apollo-mock-client/-/apollo-mock-client-0.6.11.tgz#d933ad450f558bb246bf50b33088813dc111a8fc"
-  integrity sha512-y/nbepeTDdRuKp3OIeOKmHipPpiDUwDHoGoLHT0pwvUU8Nul8mrSHz34E4FJtMAdKow/nNOofj1xsWF1309Uew==
-  dependencies:
-    invariant "^2.2.4"
-
-"@graphitation/graphql-js-operation-payload-generator@^0.5.10":
-  version "0.5.10"
-  resolved "https://registry.yarnpkg.com/@graphitation/graphql-js-operation-payload-generator/-/graphql-js-operation-payload-generator-0.5.10.tgz#cb5389a6f1be7fc7fc05268de89337345fa66de8"
-  integrity sha512-wDAy9AKq5yYdF7r401m6zsZig5g0henXih7HMAADgTrfKSvynOH9PK8dsdmv0X2jm5Atit9YHQNtlJ9sWKiWWA==
-  dependencies:
-    deepmerge "^4.2.2"
-
-"@graphitation/graphql-js-tag@^0.5.5":
-  version "0.5.5"
-  resolved "https://registry.yarnpkg.com/@graphitation/graphql-js-tag/-/graphql-js-tag-0.5.5.tgz#766d8668d86795c28d3e685d55007280e5b23ba8"
-  integrity sha512-/QYGILQoS0+DTuH/Kn/PQsgcs3xwvfyr1qY0uy3gcdWZzQts6tuY4A0rvWy2AYbw997iCn4YILBjQ6PV6j2HRg==
-  dependencies:
-    invariant "^2.0.0"
-
 "@graphql-eslint/eslint-plugin@^3.0.0":
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/@graphql-eslint/eslint-plugin/-/eslint-plugin-3.0.0.tgz#d0f7d6e4f6f772312500abbf6c94c59d5cb52c12"
