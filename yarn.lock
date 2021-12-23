@@ -1126,6 +1126,13 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
+"@graphitation/apollo-react-relay-duct-tape@^0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@graphitation/apollo-react-relay-duct-tape/-/apollo-react-relay-duct-tape-0.7.0.tgz#9b1e7b50bfcc1cb96f039b3fbe74ea28efd7afe0"
+  integrity sha512-Ea/0Ujl7A71dNNzJHVilChl6Fpgd1dcRJY6hFKgTShv9AgAxxq62BxS6YHptPOwSY8HSpyvf/E7kKcZGN3B4mQ==
+  dependencies:
+    invariant "^2.2.4"
+
 "@graphitation/graphql-js-tag@^0.5.3", "@graphitation/graphql-js-tag@^0.5.4":
   version "0.5.5"
   resolved "https://registry.yarnpkg.com/@graphitation/graphql-js-tag/-/graphql-js-tag-0.5.5.tgz#766d8668d86795c28d3e685d55007280e5b23ba8"
