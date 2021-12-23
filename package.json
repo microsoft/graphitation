@@ -3,6 +3,7 @@
   "private": true,
   "workspaces": {
     "packages": [
+      "examples/*",
       "packages/*",
       "scripts"
     ]
@@ -19,11 +20,18 @@
     "beachball": "beachball -b origin/main",
     "change": "yarn beachball change",
     "checkchange": "yarn beachball check",
-    "release": "yarn beachball publish"
+    "release": "yarn beachball publish",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "beachball": "^2.20.0",
     "lage": "0.29.1",
+    "patch-package": "^6.4.7",
     "prettier": "^2.2.1"
+  },
+  "resolutions": {
+    "@types/webpack": "^5.28.0",
+    "graphql": "^15.6.0",
+    "typescript": "^4.4.3"
   }
 }
