@@ -19,6 +19,7 @@ import {
   GraphQLESTreeNode,
   GraphQLESLintRuleContext,
 } from "@graphql-eslint/eslint-plugin";
+import { RuleFixer } from "@typescript-eslint/experimental-utils/dist/ts-eslint";
 
 export const REQUIRE_KEY_FIELDS_WHEN_AVAILABLE = "missing-apollo-key-fields";
 const DEFAULT_KEY_FIELD_NAME = "id";
@@ -136,6 +137,7 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
 > = {
   meta: {
     type: "problem",
+    fixable: "code",
     docs: {
       category: "Operations" as CategoryType,
       description: `Enforce selecting specific key fields when they are available on the GraphQL type.`,
@@ -177,9 +179,6 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
         },
       ],
       recommended: true,
-    },
-    messages: {
-      [REQUIRE_KEY_FIELDS_WHEN_AVAILABLE]: `Field(s) "{{ fieldName }}" must be selected (when available on a type). Please make sure to include it in your selection set!\nIf you are using fragments, make sure that all used fragments {{checkedFragments}} specifies the field(s) "{{ fieldName }}".`,
     },
     schema: {
       type: "array",
@@ -284,13 +283,30 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
 
                 context.report({
                   node: newNode,
-                  messageId: REQUIRE_KEY_FIELDS_WHEN_AVAILABLE,
-                  data: {
-                    checkedFragments:
-                      checkedFragmentSpreads.size === 0
-                        ? ""
-                        : `(${Array.from(checkedFragmentSpreads).join(", ")})`,
-                    fieldName: unusedKeyFields.join(", "),
+                  message: `The key-field${
+                    unusedKeyFields.length === 1 ? "" : "s"
+                  } "${
+                    unusedKeyFields.length === 1
+                      ? unusedKeyFields[0]
+                      : unusedKeyFields.slice(0, -1).join(", ") +
+                        " and " +
+                        unusedKeyFields[unusedKeyFields.length - 1]
+                  }" must be selected for proper Apollo Client store denormalisation purposes.`,
+                  fix(fixer: RuleFixer) {
+                    if (!node.selections.length) {
+                      return;
+                    }
+
+                    const firstSelection = node.selections[0];
+
+                    if (firstSelection.kind !== "Field") {
+                      return;
+                    }
+
+                    return fixer.insertTextBefore(
+                      firstSelection as any,
+                      `${unusedKeyFields.join(`\n`)}\n`
+                    );
                   },
                 });
               }
