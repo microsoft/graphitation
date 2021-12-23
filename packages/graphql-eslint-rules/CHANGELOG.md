@@ -1,8 +1,25 @@
 # Change Log - @graphitation/graphql-eslint-rules
 
-This log was last generated on Wed, 24 Nov 2021 20:08:41 GMT and should not be manually modified.
+This log was last generated on Mon, 20 Dec 2021 18:28:16 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.4.0
+
+Mon, 20 Dec 2021 18:28:16 GMT
+
+### Minor changes
+
+- [eslint-rules] Added autofix for missing-key-fields (jakubvejr@microsoft.com)
+- @graphitation/graphql-eslint-rules version update (jakubvejr@microsoft.com)
+
+## 0.2.2
+
+Wed, 15 Dec 2021 12:36:10 GMT
+
+### Patches
+
+- [object Object] (jakubvejr@microsoft.com)
 
 ## 0.2.1
 
