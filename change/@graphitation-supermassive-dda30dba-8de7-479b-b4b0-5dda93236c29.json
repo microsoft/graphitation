@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Fix require in supermassive cli",
+  "packageName": "@graphitation/supermassive",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
