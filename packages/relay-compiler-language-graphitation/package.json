@@ -12,16 +12,20 @@
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
+    "test": "monorepo-scripts test",
     "just": "monorepo-scripts"
   },
   "dependencies": {
+    "@graphitation/graphql-js-tag": "^0.5.4",
     "relay-compiler-language-typescript": ">=14.0.0",
     "typescript": ">=4.2.3"
   },
   "devDependencies": {
+    "@types/dedent": "^0.7.0",
     "@types/jest": "^26.0.22",
     "@types/relay-compiler": "^8.0.0",
     "graphql": "^15.0.0",
+    "dedent": "^0.7.0",
     "monorepo-scripts": "*"
   },
   "peerDependencies": {
