@@ -1,8 +1,20 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Tue, 26 Oct 2021 21:09:29 GMT and should not be manually modified.
+This log was last generated on Tue, 14 Dec 2021 10:13:54 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.0
+
+Tue, 14 Dec 2021 10:13:54 GMT
+
+### Minor changes
+
+- Support ESM in distro packages (mnovikov@microsoft.com)
+- Bump @graphitation/apollo-mock-client to v0.9.0
+- Bump @graphitation/graphql-js-operation-payload-generator to v0.7.0
+- Bump @graphitation/graphql-js-tag to v0.7.0
+- Bump relay-compiler-language-graphitation to v0.6.0
 
 ## 0.4.5
 

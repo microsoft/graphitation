@@ -6,11 +6,18 @@ import {
   argv,
   parallel,
   EsbuildBuildOptions,
+  series,
 } from "just-scripts";
 import * as path from "path";
+import * as fs from "fs";
 import * as glob from "fast-glob";
 
-export const types = tscTask({ emitDeclarationOnly: true });
+export const types = () => {
+  return tscTask({
+    outDir: "lib",
+    emitDeclarationOnly: true,
+  });
+};
 
 export const build = () => {
   const baseEsbuildOptions: EsbuildBuildOptions = {
@@ -22,7 +29,28 @@ export const build = () => {
     esbuildTask({
       ...baseEsbuildOptions,
       format: "esm",
+      bundle: true,
       outExtension: { ".js": ".mjs" },
+      plugins: [
+        {
+          name: "add-mjs",
+          setup(build) {
+            build.onResolve({ filter: /.*/ }, (args) => {
+              if (args.importer) {
+                let extPath = args.path;
+                if (extPath.startsWith(".")) {
+                  extPath = extPath + ".mjs";
+                }
+                return {
+                  path: extPath,
+                  namespace: "magic",
+                  external: true,
+                };
+              }
+            });
+          },
+        },
+      ],
     }),
     esbuildTask({
       ...baseEsbuildOptions,

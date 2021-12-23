@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-tag",
   "entries": [
     {
+      "date": "Tue, 14 Dec 2021 10:13:54 GMT",
+      "tag": "@graphitation/graphql-js-tag_v0.7.0",
+      "version": "0.7.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-js-tag",
+            "commit": "fad5f1bc587470a2c85bf5763bb102a179a592b2",
+            "comment": "Support ESM in distro packages"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 26 Oct 2021 21:09:29 GMT",
       "tag": "@graphitation/graphql-js-tag_v0.5.5",
       "version": "0.5.5",
