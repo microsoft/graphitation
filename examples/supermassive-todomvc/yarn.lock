@@ -651,34 +651,34 @@
     ts-node "^9"
     tslib "^2"
 
-"@graphitation/apollo-react-relay-duct-tape@^0.5.0-store-observation.6":
-  version "0.5.0-store-observation.6"
-  resolved "https://registry.yarnpkg.com/@graphitation/apollo-react-relay-duct-tape/-/apollo-react-relay-duct-tape-0.5.0-store-observation.6.tgz#53dbd5362a1d05831760726208f4a9e5a368ef86"
-  integrity sha512-3ugpZ+ZUYKNyXlZfwNS0H4pRl4hrE6ul2GWaGLeBvtn0Hyt9iJW5t+NehXSBXsIlOVpHN8DElxzU6JCVz5V9Ig==
+"@graphitation/apollo-react-relay-duct-tape@^0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@graphitation/apollo-react-relay-duct-tape/-/apollo-react-relay-duct-tape-0.7.0.tgz#9b1e7b50bfcc1cb96f039b3fbe74ea28efd7afe0"
+  integrity sha512-Ea/0Ujl7A71dNNzJHVilChl6Fpgd1dcRJY6hFKgTShv9AgAxxq62BxS6YHptPOwSY8HSpyvf/E7kKcZGN3B4mQ==
   dependencies:
     invariant "^2.2.4"
 
-"@graphitation/graphql-js-tag@^0.5.4":
-  version "0.5.4"
-  resolved "https://registry.yarnpkg.com/@graphitation/graphql-js-tag/-/graphql-js-tag-0.5.4.tgz#68497b09650306a291dd3e6594e3dc70ffb8f33d"
-  integrity sha512-tVtf7GccUgzDL09pe9qGEUVBO3zeirH0MglWcooTPwJE0VBe8EMx4atH7MfAjT5LF2vkpt5aKTUIqCm72Epang==
+"@graphitation/graphql-js-tag@^0.8.0":
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/@graphitation/graphql-js-tag/-/graphql-js-tag-0.8.0.tgz#181face4982d9fa3a8258f143a53907c0725774a"
+  integrity sha512-Dls360bTmu/QCbiG+Bc/b3ybRh98ePzUAIIjS+jajA5P3ncwu0mIFvYyFWSAXgqIeVMYZNg6QktCfoWk+QZxPA==
   dependencies:
-    graphql "^15.0.0"
     invariant "^2.0.0"
 
-"@graphitation/supermassive@../graphitation-supermassive-0.3.0-jakub.1.tgz":
-  version "0.3.0-jakub.1"
-  resolved "../graphitation-supermassive-0.3.0-jakub.1.tgz#9397ba69bd0c350b6c2f2d7a26a019b095fea409"
+"@graphitation/supermassive@^0.4.2":
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/@graphitation/supermassive/-/supermassive-0.4.2.tgz#80957c29e4c3a1a8ca4c468664557de809c87ebf"
+  integrity sha512-HYvf4OgWxfTyescggrqTi6758ETZd2C18lfmwcJAiTQsa3LAXKp4kTiMk+LPDUaqgKmuZeokHKHTkbojIP45zA==
   dependencies:
     "@graphql-tools/schema" "^7.1.5"
     commander "^8.3.0"
     graphql "^15.6.1"
     typescript "4.4.3"
 
-"@graphitation/ts-transform-graphql-js-tag@^0.2.2":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@graphitation/ts-transform-graphql-js-tag/-/ts-transform-graphql-js-tag-0.2.2.tgz#a35a6be4b69e5a9ce9ec7bae7947c37c8083cf02"
-  integrity sha512-eYdyZBiWWipqTLiFMZk4iCCdappTRTk0KKZwDYOb1UMJVOXLu+O/QVZncxHLbemYYNzN55zPYYYm9LfNOOAbIQ==
+"@graphitation/ts-transform-graphql-js-tag@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@graphitation/ts-transform-graphql-js-tag/-/ts-transform-graphql-js-tag-0.4.0.tgz#12d093c8aa428940847776a14c8337c3db679c94"
+  integrity sha512-gp1dk+60jvrU29yfETsiahI+C/s+LYOuu5AKOatMbx4k7e3Hx9t3uZaV8ltoMGOWqCEIK4m/tg8gsRY5aH01Mw==
   dependencies:
     graphql "^15.6.1"
     typescript "^4.4.3"
@@ -4077,7 +4077,7 @@ graphql-ws@^5.4.1:
   resolved "https://registry.yarnpkg.com/graphql-ws/-/graphql-ws-5.5.5.tgz#f375486d3f196e2a2527b503644693ae3a8670a9"
   integrity sha512-hvyIS71vs4Tu/yUYHPvGXsTgo0t3arU820+lT5VjZS2go0ewp2LqyCgxEN56CzOG7Iys52eRhHBiD1gGRdiQtw==
 
-graphql@*, graphql@^0.12.3, graphql@^0.13.1, graphql@^15.0.0, graphql@^15.6.1:
+graphql@*, graphql@^0.12.3, graphql@^0.13.1, graphql@^15.6.1:
   version "15.6.1"
   resolved "https://registry.yarnpkg.com/graphql/-/graphql-15.6.1.tgz#9125bdf057553525da251e19e96dab3d3855ddfc"
   integrity sha512-3i5lu0z6dRvJ48QP9kFxBkJ7h4Kso7PS8eahyTFz5Jm6CvQfLtNIE8LX9N6JLnXTuwR+sIYnXzaWp6anOg0QQw==
