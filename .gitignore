@@ -2,6 +2,7 @@ node_modules
 lib
 dist
 .tsbuildinfo
+dist
 
 # This is purely pre-cautionary; when linting becomes slow, delete this eslintcache entry
 .eslintcache
@@ -9,3 +10,4 @@ dist
 *.tgz
 
 examples/supermassive-todomvc/**/*.d.ts*
+relay-preload-hooks.ts
