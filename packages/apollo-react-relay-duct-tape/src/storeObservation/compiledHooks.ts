@@ -15,9 +15,11 @@ import {
 import { DataProxy } from "@apollo/client/cache/core/types/DataProxy";
 import invariant from "invariant";
 import { useDeepCompareMemoize } from "./useDeepCompareMemoize";
-import type { CompiledArtefactModule } from "relay-compiler-language-graphitation";
-import { DocumentNode } from "graphql";
-import { Metadata } from "relay-compiler-language-graphitation/lib/formatModuleTransforms/extractMetadataTransform";
+import type {
+  CompiledArtefactModule,
+  Metadata,
+} from "relay-compiler-language-graphitation";
+import type { DocumentNode } from "graphql";
 
 export interface RefetchOptions {
   onCompleted?: (error: Error | null) => void;
