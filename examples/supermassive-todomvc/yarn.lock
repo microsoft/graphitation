@@ -666,19 +666,9 @@
     graphql "^15.0.0"
     invariant "^2.0.0"
 
-"@graphitation/supermassive@../graphitation-supermassive-0.2.0-test.1222021.tgz":
-  version "0.2.0-test.1222021"
-  resolved "../graphitation-supermassive-0.2.0-test.1222021.tgz#ab0ee915edd280f4b762255760eb62f5eb23ac80"
-  dependencies:
-    "@graphql-tools/schema" "^7.1.5"
-    commander "^8.3.0"
-    graphql "^15.6.1"
-    typescript "4.4.3"
-
-"@graphitation/supermassive@./graphitation-supermassive-0.2.0-test.1222021.tgz":
-  version "0.2.0-test.1222021"
-  uid ab0ee915edd280f4b762255760eb62f5eb23ac80
-  resolved "./graphitation-supermassive-0.2.0-test.1222021.tgz#ab0ee915edd280f4b762255760eb62f5eb23ac80"
+"@graphitation/supermassive@../graphitation-supermassive-0.3.0-jakub.1.tgz":
+  version "0.3.0-jakub.1"
+  resolved "../graphitation-supermassive-0.3.0-jakub.1.tgz#9397ba69bd0c350b6c2f2d7a26a019b095fea409"
   dependencies:
     "@graphql-tools/schema" "^7.1.5"
     commander "^8.3.0"

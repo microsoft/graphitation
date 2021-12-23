@@ -1,5 +1,5 @@
 {
-  "name": "supermassive-example",
+  "name": "supermassive-todomvc",
   "main": "index.js",
   "version": "1.0.0",
   "scripts": {
@@ -11,7 +11,7 @@
     "@babel/runtime": "^7.12.0",
     "@graphitation/apollo-react-relay-duct-tape": "^0.5.0-store-observation.6",
     "@graphitation/graphql-js-tag": "^0.5.4",
-    "@graphitation/supermassive": "./graphitation-supermassive-0.2.0-test.1222021.tgz",
+    "@graphitation/supermassive": "../graphitation-supermassive-0.3.0-jakub.1.tgz",
     "@graphitation/ts-transform-graphql-js-tag": "^0.2.2",
     "@types/graphql": "^14.5.0",
     "@types/lodash": "^4.14.175",
