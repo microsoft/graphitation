@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 23 Dec 2021 12:10:32 GMT",
+      "tag": "@graphitation/supermassive_v0.4.2",
+      "version": "0.4.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "50a46ca3ff490d63949a5e77949b5269d7c4ab6a",
+            "comment": "Fix require in supermassive cli"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 23 Dec 2021 11:32:16 GMT",
       "tag": "@graphitation/supermassive_v0.4.1",
       "version": "0.4.1",
