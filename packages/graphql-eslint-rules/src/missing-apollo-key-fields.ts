@@ -134,7 +134,7 @@ function hasIdFieldInInterfaceSelectionSet(node: unknown, keyFields: string[]) {
 
 const missingApolloKeyFieldsRule: GraphQLESLintRule<
   [MissingApolloKeyFieldsRuleConfig]
-> = {
+> & { meta: { docs: { description?: string } } } = {
   meta: {
     type: "problem",
     fixable: "code",
@@ -271,12 +271,12 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
                   ...node,
                   loc: {
                     start: {
-                      line: node.loc.start.line,
-                      column: node.loc.start.column - 1,
+                      line: node.loc!.start.line,
+                      column: node.loc!.start.column - 1,
                     },
                     end: {
-                      line: node.loc.end.line,
-                      column: node.loc.end.column - 1,
+                      line: node.loc!.end.line,
+                      column: node.loc!.end.column - 1,
                     },
                   },
                 };
@@ -292,15 +292,15 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
                         " and " +
                         unusedKeyFields[unusedKeyFields.length - 1]
                   }" must be selected for proper Apollo Client store denormalisation purposes.`,
-                  fix(fixer: RuleFixer) {
+                  fix(fixer) {
                     if (!node.selections.length) {
-                      return;
+                      return null;
                     }
 
                     const firstSelection = node.selections[0];
 
                     if (firstSelection.kind !== "Field") {
-                      return;
+                      return null;
                     }
 
                     return fixer.insertTextBefore(
