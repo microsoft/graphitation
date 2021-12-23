@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@apollo/client": "^3.4.13",
+    "@apollo/client": "^3.5.6",
     "@graphitation/apollo-react-relay-duct-tape": "^0.7.0",
     "@graphitation/graphql-js-tag": "^0.5.3",
     "@graphql-tools/schema": "^8.2.0",
