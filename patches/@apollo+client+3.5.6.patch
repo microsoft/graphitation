@@ -1,8 +1,8 @@
-diff --git a/node_modules/@apollo/client/cache/cache.cjs.js b/node_modules/@apollo/client/cache/cache.cjs.js
-index c9ad278..e7501fd 100644
---- a/node_modules/@apollo/client/cache/cache.cjs.js
-+++ b/node_modules/@apollo/client/cache/cache.cjs.js
-@@ -1627,7 +1627,7 @@ var Policies = (function () {
+diff --git a/node_modules/@apollo/client/cache/cache.cjs b/node_modules/@apollo/client/cache/cache.cjs
+index 97caee8..9a41cc5 100644
+--- a/node_modules/@apollo/client/cache/cache.cjs
++++ b/node_modules/@apollo/client/cache/cache.cjs
+@@ -1475,7 +1475,7 @@ var Policies = (function () {
          }
          var storeFieldName = this.getStoreFieldName(options);
          var fieldName = fieldNameFromStoreName(storeFieldName);
@@ -11,7 +11,7 @@ index c9ad278..e7501fd 100644
          var policy = this.getFieldPolicy(options.typename, fieldName, false);
          var read = policy && policy.read;
          if (read) {
-@@ -1670,6 +1670,7 @@ function makeFieldFunctionOptions(policies, objectOrReference, fieldSpec, contex
+@@ -1522,6 +1522,7 @@ function makeFieldFunctionOptions(policies, objectOrReference, fieldSpec, contex
      return {
          args: argsFromFieldSpecifier(fieldSpec),
          field: fieldSpec.field || null,
@@ -20,7 +20,7 @@ index c9ad278..e7501fd 100644
          storeFieldName: storeFieldName,
          variables: variables,
 diff --git a/node_modules/@apollo/client/cache/inmemory/policies.d.ts b/node_modules/@apollo/client/cache/inmemory/policies.d.ts
-index 4ac7a5d..28a8da6 100644
+index 9cdbb95..3f783d0 100644
 --- a/node_modules/@apollo/client/cache/inmemory/policies.d.ts
 +++ b/node_modules/@apollo/client/cache/inmemory/policies.d.ts
 @@ -1,4 +1,4 @@
@@ -29,7 +29,7 @@ index 4ac7a5d..28a8da6 100644
  import { FragmentMap, StoreValue, StoreObject, Reference, isReference } from '../../utilities';
  import { IdGetter, MergeInfo, ReadMergeModifyContext } from "./types";
  import { InMemoryCache } from './inMemoryCache';
-@@ -42,6 +42,7 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVars = Recor
+@@ -44,6 +44,7 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVars = Recor
      fieldName: string;
      storeFieldName: string;
      field: FieldNode | null;
@@ -38,10 +38,19 @@ index 4ac7a5d..28a8da6 100644
      isReference: typeof isReference;
      toReference: ToReferenceFunction;
 diff --git a/node_modules/@apollo/client/cache/inmemory/policies.js b/node_modules/@apollo/client/cache/inmemory/policies.js
-index 04b892a..f73e6fd 100644
+index b9dcc0d..0b2a53b 100644
 --- a/node_modules/@apollo/client/cache/inmemory/policies.js
 +++ b/node_modules/@apollo/client/cache/inmemory/policies.js
-@@ -354,6 +354,7 @@ function makeFieldFunctionOptions(policies, objectOrReference, fieldSpec, contex
+@@ -297,7 +297,7 @@ var Policies = (function () {
+         }
+         var storeFieldName = this.getStoreFieldName(options);
+         var fieldName = fieldNameFromStoreName(storeFieldName);
+-        var existing = context.store.getFieldValue(objectOrReference, storeFieldName);
++        var existing = objectOrReference && objectOrReference[fieldName] !== undefined ? objectOrReference[fieldName] : context.store.getFieldValue(objectOrReference, storeFieldName);
+         var policy = this.getFieldPolicy(options.typename, fieldName, false);
+         var read = policy && policy.read;
+         if (read) {
+@@ -345,6 +345,7 @@ function makeFieldFunctionOptions(policies, objectOrReference, fieldSpec, contex
      return {
          args: argsFromFieldSpecifier(fieldSpec),
          field: fieldSpec.field || null,
