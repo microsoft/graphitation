@@ -3,6 +3,9 @@
   "license": "MIT",
   "version": "0.1.0",
   "main": "./src/index.ts",
+  "bin": {
+    "template": "./src/cli-cjs.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",
@@ -17,7 +20,8 @@
   },
   "devDependencies": {
     "@types/jest": "^26.0.22",
-    "monorepo-scripts": "*"
+    "monorepo-scripts": "*",
+    "ts-node": "^10.4.0"
   },
   "sideEffects": false,
   "access": "public",
@@ -30,6 +34,9 @@
         "import": "./lib/index.mjs",
         "require": "./lib/index.js"
       }
+    },
+    "bin": {
+      "template": "./lib/cli.js"
     }
   }
 }
