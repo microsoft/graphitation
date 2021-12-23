@@ -2,6 +2,27 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Mon, 20 Dec 2021 18:28:16 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.4.0",
+      "version": "0.4.0",
+      "comments": {
+        "minor": [
+          {
+            "comment": "[eslint-rules] Added autofix for missing-key-fields",
+            "author": "jakubvejr@microsoft.com",
+            "commit": "10f9d4af6d52f5a57e5b291238d372eb2757ac63",
+            "package": "@graphitation/graphql-eslint-rules"
+          },
+          {
+            "comment": "@graphitation/graphql-eslint-rules version update",
+            "author": "jakubvejr@microsoft.com",
+            "commit": "10f9d4af6d52f5a57e5b291238d372eb2757ac63",
+            "package": "@graphitation/graphql-eslint-rules"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 14 Dec 2021 10:13:54 GMT",
       "tag": "@graphitation/graphql-eslint-rules_v0.3.0",
       "version": "0.3.0",
@@ -12,6 +33,24 @@
             "package": "@graphitation/graphql-eslint-rules",
             "commit": "fad5f1bc587470a2c85bf5763bb102a179a592b2",
             "comment": "Support ESM in distro packages"
+            }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 15 Dec 2021 12:36:10 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.2.2",
+      "version": "0.2.2",
+      "comments": {
+        "patch": [
+          {
+            "comment": {
+              "title": "",
+              "value": ""
+            },
+            "author": "jakubvejr@microsoft.com",
+            "commit": "06b8cf4f0f6069ca246ebfb2aa33a7a62955a182",
+            "package": "@graphitation/graphql-eslint-rules"
           }
         ]
       }
