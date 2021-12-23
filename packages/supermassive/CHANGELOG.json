@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 23 Dec 2021 11:32:16 GMT",
+      "tag": "@graphitation/supermassive_v0.4.1",
+      "version": "0.4.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "29d360b06e346a1f04fd20826fd2005da9f15a74",
+            "comment": "Add graphql-js notice"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 23 Dec 2021 11:31:14 GMT",
       "tag": "@graphitation/supermassive_v0.4.0",
       "version": "0.4.0",
