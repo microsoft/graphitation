@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Added proper mjs builds (bump for main release)",
-  "packageName": "@graphitation/ts-transform-graphql-js-tag",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

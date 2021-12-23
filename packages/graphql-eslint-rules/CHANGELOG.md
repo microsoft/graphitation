@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-eslint-rules
 
-This log was last generated on Mon, 20 Dec 2021 18:28:16 GMT and should not be manually modified.
+This log was last generated on Thu, 23 Dec 2021 11:31:14 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.5.0
+
+Thu, 23 Dec 2021 11:31:14 GMT
+
+### Minor changes
+
+- Added proper mjs builds (bump for main release) (mnovikov@microsoft.com)
 
 ## 0.4.0
 

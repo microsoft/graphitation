@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-tag
 
-This log was last generated on Tue, 14 Dec 2021 10:13:54 GMT and should not be manually modified.
+This log was last generated on Thu, 23 Dec 2021 11:31:14 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.8.0
+
+Thu, 23 Dec 2021 11:31:14 GMT
+
+### Minor changes
+
+- Added proper mjs builds (bump for main release) (mnovikov@microsoft.com)
 
 ## 0.7.0
 

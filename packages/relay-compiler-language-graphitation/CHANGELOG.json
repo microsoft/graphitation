@@ -2,6 +2,21 @@
   "name": "relay-compiler-language-graphitation",
   "entries": [
     {
+      "date": "Thu, 23 Dec 2021 11:31:14 GMT",
+      "tag": "relay-compiler-language-graphitation_v0.7.0",
+      "version": "0.7.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "relay-compiler-language-graphitation",
+            "commit": "d3baa5116dc93bba4e38e5beb7f23c3edbbb0680",
+            "comment": "Added proper mjs builds (bump for main release)"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 14 Dec 2021 10:13:54 GMT",
       "tag": "relay-compiler-language-graphitation_v0.6.0",
       "version": "0.6.0",

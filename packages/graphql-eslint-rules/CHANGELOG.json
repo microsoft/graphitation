@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Thu, 23 Dec 2021 11:31:14 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.5.0",
+      "version": "0.5.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "d3baa5116dc93bba4e38e5beb7f23c3edbbb0680",
+            "comment": "Added proper mjs builds (bump for main release)"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 20 Dec 2021 18:28:16 GMT",
       "tag": "@graphitation/graphql-eslint-rules_v0.4.0",
       "version": "0.4.0",
@@ -33,7 +48,7 @@
             "package": "@graphitation/graphql-eslint-rules",
             "commit": "fad5f1bc587470a2c85bf5763bb102a179a592b2",
             "comment": "Support ESM in distro packages"
-            }
+          }
         ]
       }
     },
