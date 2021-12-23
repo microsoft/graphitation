@@ -283,6 +283,15 @@ body {
   margin-bottom: -1px;
 }
 
+.todo-list li.load-more input,
+.todo-list li.load-more div.lds-spinner {
+  display: block;
+  height: 40px;
+  margin: 10px auto;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
 .footer {
   padding: 10px 15px;
   height: 20px;

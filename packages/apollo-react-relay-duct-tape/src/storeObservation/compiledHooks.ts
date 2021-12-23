@@ -174,6 +174,7 @@ export function useCompiledFragment(
   documents: CompiledArtefactModule,
   fragmentReference: FragmentReference
 ): {} {
+  invariant(fragmentReference, "Expected fragment reference data");
   const { watchQueryDocument, metadata } = documents;
   invariant(
     watchQueryDocument,
@@ -412,7 +413,7 @@ function useLoadMore({
         disposable.current = undefined;
       }
     },
-    [disposable.current]
+    [] // On unmount
   );
   const loadPage = useCallback<PaginationFn>(
     (countValue, options) => {

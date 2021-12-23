@@ -7,16 +7,17 @@ import { graphql } from "@graphitation/graphql-js-tag";
 
 import { TodoListFooter_todosFragment$key } from "./__generated__/TodoListFooter_todosFragment.graphql";
 
-export const TodoListFooter_todosFragment = graphql`
-  fragment TodoListFooter_todosFragment on TodosConnection {
-    uncompletedCount
-  }
-`;
-
 const TodoListFooter: React.FC<{
   todos: TodoListFooter_todosFragment$key;
 }> = ({ todos: todosRef }) => {
-  const todos = useFragment(TodoListFooter_todosFragment, todosRef);
+  const todos = useFragment(
+    graphql`
+      fragment TodoListFooter_todosFragment on TodosConnection {
+        uncompletedCount
+      }
+    `,
+    todosRef
+  );
   console.log("TodoListFooter watch data:", todos);
 
   return (
