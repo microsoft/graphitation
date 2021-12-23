@@ -1,0 +1,49 @@
+interface Node {
+  id: ID!
+}
+
+type Query {
+  todos: TodosConnection!
+  node(id: ID!): Node
+}
+
+type TodosConnection implements Node {
+  id: ID!
+  totalCount: Int!
+  uncompletedCount: Int!
+  edges: [TodosConnectionEdge!]!
+}
+
+type TodosConnectionEdge {
+  node: Todo!
+}
+
+type Todo implements Node {
+  id: ID!
+  description: String!
+  isCompleted: Boolean!
+}
+
+type Mutation {
+  addTodo(input: AddTodoInput!): AddTodoPayload
+  changeTodoStatus(input: ChangeTodoStatusInput!): ChangeTodoStatusPayload
+}
+
+type AddTodoPayload {
+  todoEdge: TodosConnectionEdge
+  todos: TodosConnection!
+}
+
+input AddTodoInput {
+  description: String!
+}
+
+type ChangeTodoStatusPayload {
+  todo: Todo!
+  todos: TodosConnection!
+}
+
+input ChangeTodoStatusInput {
+  id: ID!
+  isCompleted: Boolean!
+}
