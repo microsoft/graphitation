@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Added proper mjs builds (bump for main release)",
+  "packageName": "relay-compiler-language-graphitation",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}

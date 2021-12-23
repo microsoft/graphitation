@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Added proper mjs builds (bump for main release)",
+  "packageName": "@graphitation/apollo-mock-client",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}

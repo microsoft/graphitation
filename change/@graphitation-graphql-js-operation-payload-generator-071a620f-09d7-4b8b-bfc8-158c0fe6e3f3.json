@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Added proper mjs builds (bump for main release)",
+  "packageName": "@graphitation/graphql-js-operation-payload-generator",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}

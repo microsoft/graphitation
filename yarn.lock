@@ -837,6 +837,27 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
+"@graphitation/apollo-mock-client@^0.6.11":
+  version "0.6.11"
+  resolved "https://registry.yarnpkg.com/@graphitation/apollo-mock-client/-/apollo-mock-client-0.6.11.tgz#d933ad450f558bb246bf50b33088813dc111a8fc"
+  integrity sha512-y/nbepeTDdRuKp3OIeOKmHipPpiDUwDHoGoLHT0pwvUU8Nul8mrSHz34E4FJtMAdKow/nNOofj1xsWF1309Uew==
+  dependencies:
+    invariant "^2.2.4"
+
+"@graphitation/graphql-js-operation-payload-generator@^0.5.10":
+  version "0.5.10"
+  resolved "https://registry.yarnpkg.com/@graphitation/graphql-js-operation-payload-generator/-/graphql-js-operation-payload-generator-0.5.10.tgz#cb5389a6f1be7fc7fc05268de89337345fa66de8"
+  integrity sha512-wDAy9AKq5yYdF7r401m6zsZig5g0henXih7HMAADgTrfKSvynOH9PK8dsdmv0X2jm5Atit9YHQNtlJ9sWKiWWA==
+  dependencies:
+    deepmerge "^4.2.2"
+
+"@graphitation/graphql-js-tag@^0.5.5":
+  version "0.5.5"
+  resolved "https://registry.yarnpkg.com/@graphitation/graphql-js-tag/-/graphql-js-tag-0.5.5.tgz#766d8668d86795c28d3e685d55007280e5b23ba8"
+  integrity sha512-/QYGILQoS0+DTuH/Kn/PQsgcs3xwvfyr1qY0uy3gcdWZzQts6tuY4A0rvWy2AYbw997iCn4YILBjQ6PV6j2HRg==
+  dependencies:
+    invariant "^2.0.0"
+
 "@graphql-eslint/eslint-plugin@^3.0.0":
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/@graphql-eslint/eslint-plugin/-/eslint-plugin-3.0.0.tgz#d0f7d6e4f6f772312500abbf6c94c59d5cb52c12"
@@ -2318,16 +2339,17 @@ bcrypt-pbkdf@^1.0.0:
   dependencies:
     tweetnacl "^0.14.3"
 
-beachball@2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/beachball/-/beachball-2.2.0.tgz#5b74cc1a01097a24a4f683f3608368b26f6a2174"
-  integrity sha512-2cell9HViD9navg+txbnOybmL7hbpdZBRcx930Gv/92ZyqAmIr7gHTsyZv90tzkeYvUh+xDZGbEBGddLF1QOUg==
+beachball@^2.20.0:
+  version "2.20.0"
+  resolved "https://registry.yarnpkg.com/beachball/-/beachball-2.20.0.tgz#7fe55e7d86c9c890de15474c84f6a32653bdb6ca"
+  integrity sha512-vVdF6qDDurO66GZigUtqKuXzQM8ImlG7MgN5iTj9rvZ4RM6vy+nklu0EmqaQtqS5K6hZ4WrHDwgcR/kLa0VHpA==
   dependencies:
     cosmiconfig "^6.0.0"
     execa "^4.0.3"
     fs-extra "^8.0.1"
     git-url-parse "^11.1.2"
     glob "^7.1.4"
+    human-id "^2.0.1"
     lodash "^4.17.15"
     minimatch "^3.0.4"
     p-limit "^3.0.2"
@@ -2335,7 +2357,7 @@ beachball@2.2.0:
     semver "^6.1.1"
     toposort "^2.0.2"
     uuid "^8.3.1"
-    workspace-tools "^0.14.0"
+    workspace-tools "^0.16.2"
     yargs-parser "^20.2.4"
 
 benchmark@^2.1.4:
@@ -4047,6 +4069,11 @@ http-signature@~1.2.0:
     assert-plus "^1.0.0"
     jsprim "^1.2.2"
     sshpk "^1.7.0"
+
+human-id@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/human-id/-/human-id-2.0.1.tgz#71aadd0f46d577fd982358133cfd43f2a46f1477"
+  integrity sha512-XWoYbGsEfBB0mtUHiyihsefgf+s1tNQHj7sX1kgDxUM0IEKk8rcZIPTwUpqDdFIQbkViOLejbc0t8jBzz5jL3w==
 
 human-signals@^1.1.1:
   version "1.1.1"
@@ -7543,10 +7570,10 @@ wordwrap@^1.0.0:
   resolved "https://registry.yarnpkg.com/wordwrap/-/wordwrap-1.0.0.tgz#27584810891456a4171c8d0226441ade90cbcaeb"
   integrity sha1-J1hIEIkUVqQXHI0CJkQa3pDLyus=
 
-workspace-tools@^0.14.0:
-  version "0.14.1"
-  resolved "https://registry.yarnpkg.com/workspace-tools/-/workspace-tools-0.14.1.tgz#db65c5e01d93021520634a0f4501b95457a9a436"
-  integrity sha512-39eUegRij7gXmlxo9S/x8p1Bv5MDjCJmj/1ERwD8epQM5DM3kWZFJhpuq9m5kcL1qT6ny02GgRbIyr4whsX+kQ==
+workspace-tools@^0.15.0:
+  version "0.15.0"
+  resolved "https://registry.yarnpkg.com/workspace-tools/-/workspace-tools-0.15.0.tgz#8710f6151b21ab4382a5230d752e8b822ea24d16"
+  integrity sha512-KYSEKdqRJC3moABdCho03nSK4H9oqb6KtvGusGi5giR5oV1LilCRqem7STLRsZlnTJVTATv4nHnnioB+wSleDA==
   dependencies:
     "@pnpm/lockfile-file" "^3.0.7"
     "@pnpm/logger" "^3.2.2"
@@ -7560,13 +7587,11 @@ workspace-tools@^0.14.0:
     multimatch "^4.0.0"
     read-yaml-file "^2.0.0"
 
-workspace-tools@^0.15.0:
-  version "0.15.0"
-  resolved "https://registry.yarnpkg.com/workspace-tools/-/workspace-tools-0.15.0.tgz#8710f6151b21ab4382a5230d752e8b822ea24d16"
-  integrity sha512-KYSEKdqRJC3moABdCho03nSK4H9oqb6KtvGusGi5giR5oV1LilCRqem7STLRsZlnTJVTATv4nHnnioB+wSleDA==
+workspace-tools@^0.16.2:
+  version "0.16.2"
+  resolved "https://registry.yarnpkg.com/workspace-tools/-/workspace-tools-0.16.2.tgz#b7355c811dcda648d12e92ceb89f8fccacca3901"
+  integrity sha512-Z/NHo4t39DUd50MdWiPfxICyVaCjWZc/xwZxE4a/n2nAQGgeYeg6GWBY1juULPi/BGSrjSVaDQfDCj/Y80033A==
   dependencies:
-    "@pnpm/lockfile-file" "^3.0.7"
-    "@pnpm/logger" "^3.2.2"
     "@yarnpkg/lockfile" "^1.1.0"
     find-up "^4.1.0"
     find-yarn-workspace-root "^1.2.1"

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "composite": false,
+    "composite": true,
     "incremental": true,
     "tsBuildInfoFile": ".tsbuildinfo",
     "target": "es5",
@@ -8,8 +8,6 @@
     "moduleResolution": "Node",
     "rootDir": "src",
     "outDir": "lib",
-    "declaration": false,
-    "declarationMap": false,
     "strict": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true

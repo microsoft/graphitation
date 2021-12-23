@@ -1,8 +1,17 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-This log was last generated on Tue, 26 Oct 2021 21:09:29 GMT and should not be manually modified.
+This log was last generated on Tue, 14 Dec 2021 10:13:54 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.7.0
+
+Tue, 14 Dec 2021 10:13:54 GMT
+
+### Minor changes
+
+- Support ESM in distro packages (mnovikov@microsoft.com)
+- Bump @graphitation/graphql-js-tag to v0.7.0
 
 ## 0.5.10
 

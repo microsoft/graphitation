@@ -13,6 +13,14 @@ Mon, 20 Dec 2021 18:28:16 GMT
 - [eslint-rules] Added autofix for missing-key-fields (jakubvejr@microsoft.com)
 - @graphitation/graphql-eslint-rules version update (jakubvejr@microsoft.com)
 
+## 0.3.0
+
+Tue, 14 Dec 2021 10:13:54 GMT
+
+### Minor changes
+
+- Support ESM in distro packages (mnovikov@microsoft.com)
+
 ## 0.2.2
 
 Wed, 15 Dec 2021 12:36:10 GMT

@@ -5,16 +5,9 @@ import {
   executeWithoutSchema,
   extractImplicitTypes,
   specifiedScalars,
-} from ".";
-import resolvers from "./benchmarks/swapi-schema/resolvers";
+} from "./index";
 import { PromiseOrValue } from "./jsutils/PromiseOrValue";
-import {
-  FieldResolver,
-  TypeResolver,
-  Resolvers,
-  ExecutionResult,
-  ExecutionWithSchemaArgs,
-} from "./types";
+import { Resolvers, ExecutionResult, ExecutionWithSchemaArgs } from "./types";
 
 export function executeWithSchema({
   typeDefs,
