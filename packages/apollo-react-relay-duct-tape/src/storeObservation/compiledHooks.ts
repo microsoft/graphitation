@@ -84,11 +84,18 @@ export function useCompiledLazyLoadQuery(
   const { watchQueryDocument } = documents;
   invariant(
     watchQueryDocument,
-    "Expected compiled artefact to have a watchQueryDocument"
+    "useLazyLoadQuery(): Expected a `watchQueryDocument` to have been " +
+      "extracted. Did you forget to invoke the compiler?"
+  );
+  const { executionQueryDocument } = documents;
+  invariant(
+    executionQueryDocument,
+    "useLazyLoadQuery(): Expected a `executionQueryDocument` to have been " +
+      "extracted. Did you forget to invoke the compiler?"
   );
   const variables = useDeepCompareMemoize(options.variables);
   // First fetch all data needed for the entire tree...
-  const [loading, error] = useExecutionQuery(documents, variables);
+  const [loading, error] = useExecutionQuery(executionQueryDocument, variables);
   // ...then fetch/watch data for only the calling component...
   const { data } = useApolloQuery(watchQueryDocument, {
     variables,
@@ -140,14 +147,9 @@ class ExecutionQueryHandler {
 }
 
 function useExecutionQuery(
-  documents: CompiledArtefactModule,
+  executionQueryDocument: DocumentNode,
   variables: Record<string, any>
 ): [loading: boolean, error?: Error] {
-  const { executionQueryDocument } = documents;
-  invariant(
-    executionQueryDocument,
-    "Expected compiled artefact to have a executionQueryDocument"
-  );
   const client = useApolloClient();
   const forceUpdate = useForceUpdate();
   const execution = useRef(new ExecutionQueryHandler(() => forceUpdate()));
@@ -163,7 +165,7 @@ function useExecutionQuery(
     return () => {
       execution.current.reset();
     };
-  }, [documents.executionQueryDocument, variables]);
+  }, [executionQueryDocument, variables]);
   return execution.current.status;
 }
 
@@ -176,11 +178,16 @@ export function useCompiledFragment(
   documents: CompiledArtefactModule,
   fragmentReference: FragmentReference
 ): {} {
-  invariant(fragmentReference, "Expected fragment reference data");
+  invariant(
+    fragmentReference,
+    "useFragment(): Expected metadata to have been extracted from " +
+      "the fragment. Did you forget to invoke the compiler?"
+  );
   const { watchQueryDocument, metadata } = documents;
   invariant(
     watchQueryDocument,
-    "Expected compiled artefact to have a watchQueryDocument"
+    "useFragment(): Expected a `watchQueryDocument` to have been " +
+      "extracted. Did you forget to invoke the compiler?"
   );
 
   const client = useApolloClient();
@@ -226,7 +233,7 @@ export function useCompiledFragment(
   }
   invariant(
     data,
-    "Expected Apollo to respond with previously seeded data of the execution query document"
+    "useFragment(): Expected Apollo to respond with previously seeded data of the execution query document"
   );
   return data;
 }
@@ -235,10 +242,18 @@ export function useCompiledRefetchableFragment(
   documents: CompiledArtefactModule,
   fragmentReference: FragmentReference
 ): [data: {}, refetch: RefetchFn] {
-  const { executionQueryDocument } = documents;
+  const { executionQueryDocument, metadata } = documents;
+  invariant(
+    metadata && metadata.mainFragment,
+    "useRefetchableFragment(): Expected metadata to have been extracted from " +
+      "the fragment. Did you forget to invoke the compiler?"
+  );
   invariant(
     executionQueryDocument,
-    "Expected compiled artefact to have a executionQueryDocument"
+    "useRefetchableFragment(): Expected fragment `%s` to be refetchable when " +
+      "using `useRefetchableFragment`. Did you forget to add a @refetchable " +
+      "directive to the fragment?",
+    metadata.mainFragment.name
   );
 
   const client = useApolloClient();
@@ -329,13 +344,24 @@ export function useCompiledPaginationFragment(
 } {
   const { executionQueryDocument, metadata } = documents;
   invariant(
-    executionQueryDocument && metadata,
-    "Expected compiled artefact to have a executionQueryDocument and metadata"
+    metadata && metadata.mainFragment,
+    "usePaginationFragment(): Expected metadata to have been extracted from " +
+      "the fragment. Did you forget to invoke the compiler?"
+  );
+  invariant(
+    executionQueryDocument,
+    "usePaginationFragment(): Expected fragment `%s` to be refetchable when " +
+      "using `usePaginationFragment`. Did you forget to add a @refetchable " +
+      "directive to the fragment?",
+    metadata.mainFragment.name
   );
   const connectionMetadata = metadata.connection;
   invariant(
     connectionMetadata,
-    "Expected compiled artefact to have connection metadata"
+    "usePaginationFragment: Expected fragment `%s` to include a " +
+      "connection when using `usePaginationFragment`. Did you forget to add a @connection " +
+      "directive to the connection field in the fragment?",
+    metadata.mainFragment.name
   );
   const [data, refetch] = useCompiledRefetchableFragment(
     documents,
@@ -419,9 +445,18 @@ function useLoadMore({
   );
   const loadPage = useCallback<PaginationFn>(
     (countValue, options) => {
-      invariant(countVariable, "Expected a count variable to exist");
-      invariant(cursorVariable, "Expected a cursor variable to exist");
-      invariant(cursorValue, "Expected a cursor value to exist");
+      invariant(
+        countVariable,
+        "usePaginationFragment(): Expected a count variable to exist"
+      );
+      invariant(
+        cursorVariable,
+        "usePaginationFragment(): Expected a cursor variable to exist"
+      );
+      invariant(
+        cursorValue,
+        "usePaginationFragment(): Expected a cursor value to exist"
+      );
       const previousVariables = {
         ...fragmentReference.__fragments,
         id: fragmentReference.id,
@@ -440,12 +475,18 @@ function useLoadMore({
           disposable.current = undefined;
 
           if (!error) {
-            invariant(data, "Expected to have response data");
+            invariant(
+              data,
+              "usePaginationFragment(): Expected to have response data"
+            );
             const newData = metadata.rootSelection
               ? data[metadata.rootSelection]
               : data;
             const mainFragment = metadata.mainFragment;
-            invariant(mainFragment, "Expected mainFragment metadata");
+            invariant(
+              mainFragment,
+              "usePaginationFragment(): Expected mainFragment metadata"
+            );
             const cacheSelector: DataProxy.Fragment<any, any> = {
               id: fragmentReference.id
                 ? `${mainFragment.typeCondition}:${fragmentReference.id}`
