@@ -7,5 +7,10 @@
     "outDir": "lib"
   },
   "include": ["src"],
-  "references": []
+  "references": [],
+  "ts-node": {
+    "transpileOnly": true,
+    "target": "es5",
+    "module": "commonjs"
+  }
 }
