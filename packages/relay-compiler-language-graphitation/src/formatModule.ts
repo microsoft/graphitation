@@ -5,6 +5,7 @@
 
 import { FormatModule } from "relay-compiler/lib/language/RelayLanguagePluginInterface";
 import { DocumentNode, parse, print } from "graphql";
+import { optimizeDocumentNode } from "@graphql-tools/optimize";
 import { reduceNodeWatchQueryTransform } from "./formatModuleTransforms/reduceNodeWatchQueryTransform";
 import { schema } from "./schema";
 import invariant from "invariant";
@@ -19,17 +20,18 @@ function printDocumentComment(document: DocumentNode) {
 function generateExports(moduleName: string, docText: string) {
   const exports: CompiledArtefactModule = {};
   const originalDocument = parse(docText, { noLocation: true });
+  const optimizedDocument = optimizeDocumentNode(originalDocument);
 
   if (!moduleName.endsWith("WatchNodeQuery.graphql")) {
     exports.executionQueryDocument = stripFragmentReferenceFieldSelectionTransform(
-      originalDocument
+      optimizedDocument
     );
   }
 
   invariant(schema, "Expected a schema to be passed in or set in the env");
   exports.watchQueryDocument = reduceNodeWatchQueryTransform(
     schema,
-    originalDocument
+    optimizedDocument
   );
 
   exports.metadata = extractMetadataTransform(exports.watchQueryDocument);
