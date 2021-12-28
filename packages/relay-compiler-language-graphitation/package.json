@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@graphitation/graphql-js-tag": "^0.5.4",
+    "@graphql-tools/optimize": "^1.1.1",
     "@types/dedent": "^0.7.0",
     "@types/jest": "^26.0.22",
     "@types/relay-compiler": "^8.0.0",
