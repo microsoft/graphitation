@@ -3,9 +3,11 @@
   "main": "index.js",
   "version": "1.0.0",
   "scripts": {
+    "start": "concurrently 'yarn generate-graphql-interfaces --watch' 'yarn serve --progress --color --mode=development'", 
     "build": "webpack --mode production --config webpack.config.ts",
-    "start": "webpack serve --progress --color --mode=development  --config webpack.config.ts",
-    "extract-schema": "supermassive extract-schema ./src/schema/typeDefs.graphql"
+    "serve": "webpack serve --config webpack.config.ts",
+    "extract-schema": "supermassive extract-schema ./src/schema/typeDefs.graphql",
+    "generate-graphql-interfaces": "relay-compiler --language graphitation --schema ./src/schema/typeDefs.graphql --src ./src"
   },
   "dependencies": {
     "@apollo/client": "^3.4.16",
@@ -44,6 +46,9 @@
     "@types/react": "^17.0.30",
     "@types/react-dom": "^17.0.9",
     "@types/uuid": "^8.3.1",
-    "graphql-let": "^0.18.5"
+    "concurrently": "^6.5.1",
+    "graphql-let": "^0.18.5",
+    "relay-compiler": "^12.0.0",
+    "relay-compiler-language-graphitation": "^0.7.0"
   }
 }

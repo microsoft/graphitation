@@ -3,6 +3,7 @@ import React from "react";
 import { useLazyLoadQuery } from "@graphitation/apollo-react-relay-duct-tape";
 import { graphql } from "@graphitation/graphql-js-tag";
 import Todo, { TodoFragment } from "./Todo";
+import { TodoListQuery as TodoListQueryType } from "./__generated__/TodoListQuery.graphql";
 
 const TodoListQuery = graphql`
   query TodoListQuery {
@@ -16,7 +17,7 @@ const TodoListQuery = graphql`
 `;
 
 const TodoList = () => {
-  const { data } = useLazyLoadQuery(TodoListQuery, {});
+  const { data } = useLazyLoadQuery<TodoListQueryType>(TodoListQuery, {});
   return (
     <>
       <h1>Todo List</h1>
