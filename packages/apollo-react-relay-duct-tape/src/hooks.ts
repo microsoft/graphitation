@@ -12,8 +12,8 @@ import { KeyType, KeyTypeData, OperationType } from "./types";
 import {
   RefetchFn,
   PaginationFn,
-  useCompiledFragment,
   useCompiledLazyLoadQuery,
+  useCompiledFragment,
   useCompiledRefetchableFragment,
   useCompiledPaginationFragment,
 } from "./storeObservation/compiledHooks";
