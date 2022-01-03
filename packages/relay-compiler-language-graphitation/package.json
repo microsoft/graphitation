@@ -21,12 +21,12 @@
     "just": "monorepo-scripts"
   },
   "dependencies": {
+    "@graphql-tools/optimize": "^1.1.1",
     "relay-compiler-language-typescript": "^14.0.0",
     "typescript": "^4.2.3"
   },
   "devDependencies": {
     "@graphitation/graphql-js-tag": "^0.5.4",
-    "@graphql-tools/optimize": "^1.1.1",
     "@types/dedent": "^0.7.0",
     "@types/jest": "^26.0.22",
     "@types/relay-compiler": "^8.0.0",
