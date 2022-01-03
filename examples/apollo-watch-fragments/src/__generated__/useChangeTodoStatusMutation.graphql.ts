@@ -91,11 +91,9 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   "value": "ChangeTodoStatusInput"
                 }
               }
-            },
-            "directives": []
+            }
           }
         ],
-        "directives": [],
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
@@ -121,7 +119,6 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   }
                 }
               ],
-              "directives": [],
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
@@ -131,8 +128,6 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                       "kind": "Name",
                       "value": "todo"
                     },
-                    "arguments": [],
-                    "directives": [],
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
@@ -141,18 +136,14 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                           "name": {
                             "kind": "Name",
                             "value": "id"
-                          },
-                          "arguments": [],
-                          "directives": []
+                          }
                         },
                         {
                           "kind": "Field",
                           "name": {
                             "kind": "Name",
                             "value": "isCompleted"
-                          },
-                          "arguments": [],
-                          "directives": []
+                          }
                         }
                       ]
                     }
@@ -163,8 +154,6 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                       "kind": "Name",
                       "value": "todos"
                     },
-                    "arguments": [],
-                    "directives": [],
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
@@ -173,27 +162,21 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                           "name": {
                             "kind": "Name",
                             "value": "id"
-                          },
-                          "arguments": [],
-                          "directives": []
+                          }
                         },
                         {
                           "kind": "Field",
                           "name": {
                             "kind": "Name",
                             "value": "totalCount"
-                          },
-                          "arguments": [],
-                          "directives": []
+                          }
                         },
                         {
                           "kind": "Field",
                           "name": {
                             "kind": "Name",
                             "value": "uncompletedCount"
-                          },
-                          "arguments": [],
-                          "directives": []
+                          }
                         }
                       ]
                     }
@@ -235,11 +218,9 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   "value": "ChangeTodoStatusInput"
                 }
               }
-            },
-            "directives": []
+            }
           }
         ],
-        "directives": [],
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
@@ -265,7 +246,6 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   }
                 }
               ],
-              "directives": [],
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
@@ -275,8 +255,6 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                       "kind": "Name",
                       "value": "todo"
                     },
-                    "arguments": [],
-                    "directives": [],
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
@@ -285,18 +263,14 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                           "name": {
                             "kind": "Name",
                             "value": "id"
-                          },
-                          "arguments": [],
-                          "directives": []
+                          }
                         },
                         {
                           "kind": "Field",
                           "name": {
                             "kind": "Name",
                             "value": "isCompleted"
-                          },
-                          "arguments": [],
-                          "directives": []
+                          }
                         }
                       ]
                     }
@@ -307,8 +281,6 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                       "kind": "Name",
                       "value": "todos"
                     },
-                    "arguments": [],
-                    "directives": [],
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
@@ -317,27 +289,21 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                           "name": {
                             "kind": "Name",
                             "value": "id"
-                          },
-                          "arguments": [],
-                          "directives": []
+                          }
                         },
                         {
                           "kind": "Field",
                           "name": {
                             "kind": "Name",
                             "value": "totalCount"
-                          },
-                          "arguments": [],
-                          "directives": []
+                          }
                         },
                         {
                           "kind": "Field",
                           "name": {
                             "kind": "Name",
                             "value": "uncompletedCount"
-                          },
-                          "arguments": [],
-                          "directives": []
+                          }
                         }
                       ]
                     }
