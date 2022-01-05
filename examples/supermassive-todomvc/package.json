@@ -3,7 +3,7 @@
   "main": "index.js",
   "version": "1.0.0",
   "scripts": {
-    "start": "concurrently 'yarn generate-graphql-interfaces --watch' 'yarn serve --progress --color --mode=development'", 
+    "start": "concurrently 'yarn generate-graphql-interfaces --watch' 'yarn serve --progress --color --mode=development'",
     "build": "webpack --mode production --config webpack.config.ts",
     "serve": "webpack serve --config webpack.config.ts",
     "extract-schema": "supermassive extract-schema ./src/schema/typeDefs.graphql",
@@ -16,13 +16,10 @@
     "@graphitation/graphql-js-tag": "^0.8.0",
     "@graphitation/supermassive": "^0.4.2",
     "@graphitation/ts-transform-graphql-js-tag": "^0.4.0",
-    "@types/graphql": "^14.5.0",
-    "@types/lodash": "^4.14.175",
     "graphql": "^15.6.1",
     "graphql-tools": "^8.2.0",
     "html-webpack-plugin": "^5.3.2",
     "lodash": "^4.17.21",
-    "prettier": "^2.4.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "ts-loader": "^9.0.0",
@@ -43,12 +40,15 @@
     "@graphql-codegen/import-types-preset": "^2.1.7",
     "@graphql-codegen/typescript": "^2.3.0",
     "@statoscope/webpack-plugin": "^5.18.0",
+    "@types/graphql": "^14.5.0",
+    "@types/lodash": "^4.14.175",
     "@types/react": "^17.0.30",
     "@types/react-dom": "^17.0.9",
     "@types/uuid": "^8.3.1",
     "concurrently": "^6.5.1",
     "graphql-let": "^0.18.5",
+    "prettier": "^2.4.1",
     "relay-compiler": "^12.0.0",
-    "relay-compiler-language-graphitation": "^0.7.0"
+    "relay-compiler-language-graphitation": "^0.8.0"
   }
 }

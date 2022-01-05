@@ -24,6 +24,7 @@
   "devDependencies": {
     "beachball": "^2.20.0",
     "lage": "0.29.1",
-    "prettier": "^2.2.1"
+    "prettier": "^2.2.1",
+    "typescript": "^4.5.0"
   }
 }
