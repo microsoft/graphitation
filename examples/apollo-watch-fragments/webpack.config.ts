@@ -6,7 +6,7 @@ import { createImportDocumentsTransform } from "@graphitation/apollo-react-relay
 const config: webpack.Configuration = {
   mode: "development",
   entry: "./src/index.tsx",
-  devtool: "inline-source-map",
+  devtool: false,
   devServer: {
     static: "./public",
     client: {
@@ -46,6 +46,20 @@ const config: webpack.Configuration = {
     filename: "bundle.js",
     path: path.resolve(__dirname, "public"),
   },
+  plugins: [
+    /**
+     * Configure source-maps to use absolute file:// paths, so tooling like React Render Tracker
+     * does not need (user) specific configuration.
+     *
+     * NOTE: You would only want to do this in a dev env -- which this example app always is.
+     */
+    new webpack.SourceMapDevToolPlugin({
+      // Set absolute path to source root of this repo
+      sourceRoot: path.resolve(__dirname, "../.."),
+      // Override template to replace the webpack:// protocol with file:// (and remove namespace)
+      moduleFilenameTemplate: "file://[resource-path]?[loaders]",
+    }),
+  ],
 };
 
 export default config;
