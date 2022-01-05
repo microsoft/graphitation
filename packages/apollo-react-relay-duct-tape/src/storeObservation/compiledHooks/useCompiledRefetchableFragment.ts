@@ -5,6 +5,7 @@ import invariant from "invariant";
 import { CompiledArtefactModule } from "relay-compiler-language-graphitation";
 import { useCompiledFragment } from "./useCompiledFragment";
 import { FragmentReference } from "./types";
+import { isEqual } from "lodash";
 
 export interface Disposable {
   dispose(): void;
@@ -52,10 +53,13 @@ export function useCompiledRefetchableFragment(
   );
 
   const client = useApolloClient();
+
+  // We use state for this, so that...
   const [
     fragmentReferenceWithOwnVariables,
     setFragmentReferenceWithOwnVariables,
   ] = useState(fragmentReference);
+  // ...this gets invoked again with updated variables.
   const data = useCompiledFragment(
     documents,
     fragmentReferenceWithOwnVariables
@@ -89,13 +93,26 @@ export function useCompiledRefetchableFragment(
             }
             if (!error) {
               const { id: _, ...variablesToPropagate } = variables;
-              setFragmentReferenceWithOwnVariables({
-                id: fragmentReference.id,
-                __fragments: {
-                  ...fragmentReference.__fragments,
-                  ...variablesToPropagate,
-                },
-              });
+              const nextVariables = {
+                ...fragmentReference.__fragments,
+                ...variablesToPropagate,
+              };
+              // No need to trigger an update to propagate new variables if they don't actually change.
+              if (
+                !isEqual(
+                  fragmentReferenceWithOwnVariables.__fragments,
+                  nextVariables
+                )
+              ) {
+                const nextFragmentReference: FragmentReference = {
+                  __fragments: nextVariables,
+                };
+                // Don't add an empty key if this is a fragment on the Query type.
+                if (fragmentReference.id !== undefined) {
+                  nextFragmentReference.id = fragmentReference.id;
+                }
+                setFragmentReferenceWithOwnVariables(nextFragmentReference);
+              }
             }
           });
         },
