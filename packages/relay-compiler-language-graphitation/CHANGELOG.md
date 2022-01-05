@@ -1,8 +1,16 @@
 # Change Log - relay-compiler-language-graphitation
 
-This log was last generated on Thu, 23 Dec 2021 11:31:14 GMT and should not be manually modified.
+This log was last generated on Wed, 05 Jan 2022 15:09:43 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.8.0
+
+Wed, 05 Jan 2022 15:09:43 GMT
+
+### Minor changes
+
+- We were facing an error in relay-compiler-language-typescript: 14.0.0. issue described here, which caused a syntax error in generated files. With >=14.0.0 in this update we wanted to not force apps which use the graphitation plugin to have TS version 4.5 or greater. (jakubvejr@microsoft.com)
 
 ## 0.7.0
 

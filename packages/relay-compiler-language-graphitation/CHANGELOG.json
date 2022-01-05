@@ -2,6 +2,21 @@
   "name": "relay-compiler-language-graphitation",
   "entries": [
     {
+      "date": "Wed, 05 Jan 2022 15:09:43 GMT",
+      "tag": "relay-compiler-language-graphitation_v0.8.0",
+      "version": "0.8.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "relay-compiler-language-graphitation",
+            "commit": "298f6ea41347e68022fd99c0898aa59e108d2e5b",
+            "comment": "We were facing an error in relay-compiler-language-typescript: 14.0.0. issue described here, which caused a syntax error in generated files. With >=14.0.0 in this update we wanted to not force apps which use the graphitation plugin to have TS version 4.5 or greater."
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 23 Dec 2021 13:01:22 GMT",
       "tag": "relay-compiler-language-graphitation_v0.7.0",
       "version": "0.7.0",

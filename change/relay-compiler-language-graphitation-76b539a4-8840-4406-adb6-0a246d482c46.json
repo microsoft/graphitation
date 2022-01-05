@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "We were facing an error in relay-compiler-language-typescript: 14.0.0. issue described here, which caused a syntax error in generated files. With >=14.0.0 in this update we wanted to not force apps which use the graphitation plugin to have TS version 4.5 or greater.",
-  "packageName": "relay-compiler-language-graphitation",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
