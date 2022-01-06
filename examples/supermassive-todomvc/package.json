@@ -3,11 +3,11 @@
   "main": "index.js",
   "version": "1.0.0",
   "scripts": {
-    "start": "concurrently 'yarn generate-graphql-interfaces --watch' 'yarn serve --progress --color --mode=development'",
+    "start": "concurrently 'yarn relay --watch' 'yarn serve --progress --color --mode=development'",
     "build": "webpack --mode production --config webpack.config.ts",
     "serve": "webpack serve --config webpack.config.ts",
     "extract-schema": "supermassive extract-schema ./src/schema/typeDefs.graphql",
-    "generate-graphql-interfaces": "relay-compiler --language graphitation --schema ./src/schema/typeDefs.graphql --src ./src"
+    "relay": "relay-compiler --language graphitation --schema ./src/schema/typeDefs.graphql --src ./src"
   },
   "dependencies": {
     "@apollo/client": "^3.4.16",
