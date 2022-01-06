@@ -21,7 +21,11 @@ const TodoList: React.FC<{ query: TodoList_queryFragment$key }> = ({
   } = usePaginationFragment(
     graphql`
       fragment TodoList_queryFragment on Query
-      @refetchable(queryName: "TodoListPaginationQuery") {
+      @refetchable(queryName: "TodoListPaginationQuery")
+      @argumentDefinitions(
+        count: { type: "Int!", defaultValue: 5 }
+        after: { type: "String!", defaultValue: "" }
+      ) {
         todos(first: $count, after: $after)
           @connection(key: "TodosList_todos") {
           edges {
