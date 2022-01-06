@@ -52,11 +52,9 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   "value": "ID"
                 }
               }
-            },
-            "directives": []
+            }
           }
         ],
-        "directives": [],
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
@@ -82,7 +80,6 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   }
                 }
               ],
-              "directives": [],
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
@@ -91,26 +88,21 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "name": {
                       "kind": "Name",
                       "value": "__typename"
-                    },
-                    "arguments": [],
-                    "directives": []
+                    }
                   },
                   {
                     "kind": "FragmentSpread",
                     "name": {
                       "kind": "Name",
                       "value": "hooksTestFragment"
-                    },
-                    "directives": []
+                    }
                   },
                   {
                     "kind": "Field",
                     "name": {
                       "kind": "Name",
                       "value": "id"
-                    },
-                    "arguments": [],
-                    "directives": []
+                    }
                   },
                   {
                     "kind": "InlineFragment",
@@ -121,7 +113,6 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                         "value": "Node"
                       }
                     },
-                    "directives": [],
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
@@ -131,15 +122,13 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                             "kind": "Name",
                             "value": "__fragments"
                           },
-                          "arguments": [],
                           "directives": [
                             {
                               "kind": "Directive",
                               "name": {
                                 "kind": "Name",
                                 "value": "client"
-                              },
-                              "arguments": []
+                              }
                             }
                           ]
                         }
@@ -165,7 +154,6 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
             "value": "User"
           }
         },
-        "directives": [],
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
@@ -174,27 +162,21 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               "name": {
                 "kind": "Name",
                 "value": "__typename"
-              },
-              "arguments": [],
-              "directives": []
+              }
             },
             {
               "kind": "Field",
               "name": {
                 "kind": "Name",
                 "value": "id"
-              },
-              "arguments": [],
-              "directives": []
+              }
             },
             {
               "kind": "Field",
               "name": {
                 "kind": "Name",
                 "value": "name"
-              },
-              "arguments": [],
-              "directives": []
+              }
             }
           ]
         }

@@ -27,8 +27,6 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
           "kind": "Name",
           "value": "compiledHooks_QueryTypeWatchNodeQuery"
         },
-        "variableDefinitions": [],
-        "directives": [],
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
@@ -37,8 +35,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               "name": {
                 "kind": "Name",
                 "value": "compiledHooks_QueryTypeFragment"
-              },
-              "directives": []
+              }
             },
             {
               "kind": "Field",
@@ -46,15 +43,13 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                 "kind": "Name",
                 "value": "__fragments"
               },
-              "arguments": [],
               "directives": [
                 {
                   "kind": "Directive",
                   "name": {
                     "kind": "Name",
                     "value": "client"
-                  },
-                  "arguments": []
+                  }
                 }
               ]
             }
@@ -74,7 +69,6 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
             "value": "Query"
           }
         },
-        "directives": [],
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
@@ -84,8 +78,6 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                 "kind": "Name",
                 "value": "nonNode"
               },
-              "arguments": [],
-              "directives": [],
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
@@ -94,9 +86,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "name": {
                       "kind": "Name",
                       "value": "id"
-                    },
-                    "arguments": [],
-                    "directives": []
+                    }
                   }
                 ]
               }
