@@ -3,20 +3,22 @@ import React from "react";
 import { useLazyLoadQuery } from "@graphitation/apollo-react-relay-duct-tape";
 import { graphql } from "@graphitation/graphql-js-tag";
 import Todo, { TodoFragment } from "./Todo";
-
-const TodoListQuery = graphql`
-  query TodoListQuery {
-    allTodos {
-      id
-      ...TodoFragment
-    }
-  }
-
-  ${TodoFragment}
-`;
+import { TodoListQuery } from "./__generated__/TodoListQuery.graphql";
 
 const TodoList = () => {
-  const { data } = useLazyLoadQuery(TodoListQuery, {});
+  const { data } = useLazyLoadQuery<TodoListQuery>(
+    graphql`
+      query TodoListQuery {
+        allTodos {
+          id
+          ...TodoFragment
+        }
+      }
+
+      ${TodoFragment}
+    `,
+    {}
+  );
   return (
     <>
       <h1>Todo List</h1>
