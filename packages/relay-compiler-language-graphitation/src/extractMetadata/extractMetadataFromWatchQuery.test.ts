@@ -1,10 +1,10 @@
 import { graphql } from "@graphitation/graphql-js-tag";
-import { extractMetadataTransform } from "./extractMetadataTransform";
+import { extractMetadataFromWatchQuery } from "./extractMetadataFromWatchQuery";
 
-describe(extractMetadataTransform, () => {
+describe(extractMetadataFromWatchQuery, () => {
   describe("concerning the root of resolved watch query data", () => {
     it("indicates the watch data starts at the node field", () => {
-      const result = extractMetadataTransform(graphql`
+      const result = extractMetadataFromWatchQuery(graphql`
         query WatchQueryOnNodeType {
           node(id: $id) {
             ...SomeFragment
@@ -15,7 +15,7 @@ describe(extractMetadataTransform, () => {
     });
 
     it("indicates the watch data starting at the root by not emitting a root field selection", () => {
-      const result = extractMetadataTransform(graphql`
+      const result = extractMetadataFromWatchQuery(graphql`
         query WatchQueryOnQueryType {
           ...SomeFragment
           __fragments @client
@@ -27,7 +27,7 @@ describe(extractMetadataTransform, () => {
 
   describe("concerning the main fragment", () => {
     it("works with a node type", () => {
-      const result = extractMetadataTransform(graphql`
+      const result = extractMetadataFromWatchQuery(graphql`
         query WatchQueryOnNodeType {
           node(id: $id) {
             ...SomeFragment
@@ -46,7 +46,7 @@ describe(extractMetadataTransform, () => {
 
   describe("concerning connections", () => {
     it("extracts the connection metadata needed at runtime to perform pagination", () => {
-      const result = extractMetadataTransform(graphql`
+      const result = extractMetadataFromWatchQuery(graphql`
         query UserWithFriendsQuery(
           $friendsForwardCount: Int!
           $friendsAfterCursor: String!
@@ -88,7 +88,7 @@ describe(extractMetadataTransform, () => {
     });
 
     it("returns nothing if no connection is declared", () => {
-      const result = extractMetadataTransform(graphql`
+      const result = extractMetadataFromWatchQuery(graphql`
         query {
           me {
             friends {
@@ -106,7 +106,7 @@ describe(extractMetadataTransform, () => {
 
     it("throws if more than 1 connection is found", () => {
       expect(() => {
-        extractMetadataTransform(graphql`
+        extractMetadataFromWatchQuery(graphql`
           query {
             me {
               friends(first: $friendsForwardCount, after: $friendsAfterCursor)

@@ -8,22 +8,7 @@ import {
   visit,
 } from "graphql";
 import invariant from "invariant";
-
-interface ConnectionMetadata {
-  forwardCountVariable?: string;
-  forwardCursorVariable?: string;
-  backwardCountVariable?: string;
-  backwardCursorVariable?: string;
-  selectionPath: string[];
-}
-export interface Metadata {
-  rootSelection?: string;
-  mainFragment?: {
-    name: string;
-    typeCondition: string;
-  };
-  connection?: ConnectionMetadata;
-}
+import { ConnectionMetadata, Metadata } from "../types";
 
 /**
  * This transform extracts metadata needed at runtime for the `use*Fragment`
@@ -38,7 +23,7 @@ export interface Metadata {
  * @param document The watch query document
  * @returns The metadata needed at runtime
  */
-export function extractMetadataTransform(
+export function extractMetadataFromWatchQuery(
   document: DocumentNode
 ): Metadata | undefined {
   const metadata: Metadata = {};

@@ -10,7 +10,7 @@ import { reduceNodeWatchQueryTransform } from "./formatModuleTransforms/reduceNo
 import { schema } from "./schema";
 import invariant from "invariant";
 import { stripFragmentReferenceFieldSelectionTransform } from "./formatModuleTransforms/stripFragmentReferenceFieldSelectionTransform";
-import { extractMetadataTransform } from "./formatModuleTransforms/extractMetadataTransform";
+import { extractMetadataFromWatchQuery } from "./extractMetadata/extractMetadataFromWatchQuery";
 import { CompiledArtefactModule } from "./types";
 
 function printDocumentComment(document: DocumentNode) {
@@ -34,7 +34,7 @@ function generateExports(moduleName: string, docText: string) {
     optimizedDocument
   );
 
-  exports.metadata = extractMetadataTransform(exports.watchQueryDocument);
+  exports.metadata = extractMetadataFromWatchQuery(exports.watchQueryDocument);
 
   return exports;
 }
@@ -44,7 +44,9 @@ export const formatModule: FormatModule = ({
   hash,
   moduleName,
   typeText,
+  definition,
 }) => {
+  invariant(definition, "whatevs");
   const exports = docText && generateExports(moduleName, docText);
   const components = [
     typeText,
