@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "typecript version changed from ^4.2.3 to >=4.2.3 based on https://github.com/microsoft/graphitation/pull/78",
+  "packageName": "relay-compiler-language-graphitation",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
