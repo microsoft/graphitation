@@ -28,6 +28,7 @@ import { hooksTestQuery } from "./__generated__/hooksTestQuery.graphql";
 import { hooksTestSubscription } from "./__generated__/hooksTestSubscription.graphql";
 import { hooksTestFragment$key } from "./__generated__/hooksTestFragment.graphql";
 import { hooksTestMutation as hooksTestMutation$key } from "./__generated__/hooksTestMutation.graphql";
+import { useLazyLoadQueryType } from "../types/react-relay";
 
 const schema = buildSchema(
   readFileSync(join(__dirname, "schema.graphql"), "utf8")
@@ -146,6 +147,13 @@ const MutationComponent: React.FC<{
     return <div>Not loading</div>;
   }
 };
+
+describe("concerning compatibility with react-relay", () => {
+  it("matches type", () => {
+    expectType<useLazyLoadQueryType>(useLazyLoadQuery);
+    expectType<useFragmentType>(useFragment);
+  });
+});
 
 /**
  * Tests

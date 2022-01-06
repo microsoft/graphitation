@@ -4,9 +4,11 @@ import {
   useSubscription as useApolloSubscription,
   useQuery as useApolloQuery,
   useMutation as useApolloMutation,
+  QueryHookOptions,
+  WatchQueryFetchPolicy as ApolloFetchPolicy,
 } from "@apollo/client";
 
-import { KeyType, KeyTypeData, OperationType } from "./types";
+import { KeyType, KeyTypeData } from "./types";
 import {
   RefetchFn,
   PaginationFn,
@@ -16,9 +18,19 @@ import {
   useCompiledPaginationFragment,
 } from "./storeObservation/compiledHooks";
 
+import type { FetchPolicy, OperationType } from "relay-runtime";
+import type { useLazyLoadQueryType } from "./types/react-relay";
+
 export type GraphQLTaggedNode =
   | (DocumentNode & { watchQueryDocument?: never })
   | { watchQueryDocument: DocumentNode; executeQueryDocument?: DocumentNode };
+
+const FETCH_POLICY_MAPPING: Record<FetchPolicy, ApolloFetchPolicy> = {
+  "store-or-network": "cache-first",
+  "store-and-network": "cache-and-network",
+  "network-only": "network-only",
+  "store-only": "cache-only",
+};
 
 /**
  * Executes a GraphQL query.
@@ -68,12 +80,19 @@ export type GraphQLTaggedNode =
 export function useLazyLoadQuery<TQuery extends OperationType>(
   query: GraphQLTaggedNode,
   variables: TQuery["variables"],
-  options?: { fetchPolicy: "cache-first" }
+  options?: { fetchPolicy?: FetchPolicy }
 ): { error?: Error; data?: TQuery["response"] } {
+  const apolloOptions: QueryHookOptions | undefined = options && {
+    fetchPolicy:
+      options.fetchPolicy && FETCH_POLICY_MAPPING[options.fetchPolicy],
+  };
   if (query.watchQueryDocument) {
-    return useCompiledLazyLoadQuery(query as any, { variables, ...options });
+    return useCompiledLazyLoadQuery(query as any, {
+      variables,
+      ...apolloOptions,
+    });
   } else {
-    return useApolloQuery(query, { variables, ...options });
+    return useApolloQuery(query, { variables, ...apolloOptions });
   }
 }
 
