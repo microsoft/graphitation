@@ -14,11 +14,7 @@ const App: React.FC = () => {
 
   const result = useLazyLoadQuery<AppQueryType>(
     graphql`
-      query AppQuery(
-        $includeSomeOtherField: Boolean!
-        $count: Int!
-        $after: String!
-      ) {
+      query AppQuery($includeSomeOtherField: Boolean!) {
         todoStats: todos(first: 0) {
           id
           totalCount
@@ -27,11 +23,7 @@ const App: React.FC = () => {
         ...TodoList_queryFragment
       }
     `,
-    {
-      includeSomeOtherField: false,
-      count: 5,
-      after: "",
-    }
+    { includeSomeOtherField: false }
   );
   if (result.error) {
     throw result.error;
