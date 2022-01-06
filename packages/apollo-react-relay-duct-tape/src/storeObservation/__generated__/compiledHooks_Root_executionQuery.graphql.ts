@@ -6,9 +6,7 @@
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type compiledHooks_Root_executionQueryVariables = {
     userId: number;
-    avatarSize: number;
-    conversationsForwardCount: number;
-    conversationsAfterCursor: string;
+    avatarSize?: number | null;
     messagesBackwardCount: number;
     messagesBeforeCursor: string;
 };
@@ -26,7 +24,7 @@ export type compiledHooks_Root_executionQuery = {
 
 
 /*
-query compiledHooks_Root_executionQuery($userId: Int!, $avatarSize: Int!, $conversationsForwardCount: Int!, $conversationsAfterCursor: String!, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!) {
+query compiledHooks_Root_executionQuery($userId: Int!, $avatarSize: Int = 21, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!) {
   user(id: $userId) {
     name
     ...compiledHooks_ChildFragment
@@ -63,10 +61,7 @@ fragment compiledHooks_ChildFragment on User {
 fragment compiledHooks_ForwardPaginationFragment on User {
   petName
   avatarUrl(size: $avatarSize)
-  conversations(
-    first: $conversationsForwardCount
-    after: $conversationsAfterCursor
-  ) @connection(key: "compiledHooks_user_conversations") {
+  conversations(first: 1, after: "") @connection(key: "compiledHooks_user_conversations") {
     edges {
       node {
         title
@@ -98,7 +93,7 @@ fragment compiledHooks_RefetchableFragment on User {
 */
 
 /*
-query compiledHooks_Root_executionQuery($userId: Int!, $avatarSize: Int!, $conversationsForwardCount: Int!, $conversationsAfterCursor: String!, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!) {
+query compiledHooks_Root_executionQuery($userId: Int!, $avatarSize: Int = 21, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!) {
   user(id: $userId) {
     name
     id
@@ -152,54 +147,15 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               }
             },
             "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Int"
-                }
-              }
-            }
-          },
-          {
-            "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
+              "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "conversationsForwardCount"
+                "value": "Int"
               }
             },
-            "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Int"
-                }
-              }
-            }
-          },
-          {
-            "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
-              "name": {
-                "kind": "Name",
-                "value": "conversationsAfterCursor"
-              }
-            },
-            "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "String"
-                }
-              }
+            "defaultValue": {
+              "kind": "IntValue",
+              "value": "21"
             }
           },
           {
@@ -581,11 +537,8 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "value": "first"
                   },
                   "value": {
-                    "kind": "Variable",
-                    "name": {
-                      "kind": "Name",
-                      "value": "conversationsForwardCount"
-                    }
+                    "kind": "IntValue",
+                    "value": "1"
                   }
                 },
                 {
@@ -595,11 +548,9 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "value": "after"
                   },
                   "value": {
-                    "kind": "Variable",
-                    "name": {
-                      "kind": "Name",
-                      "value": "conversationsAfterCursor"
-                    }
+                    "kind": "StringValue",
+                    "value": "",
+                    "block": false
                   }
                 }
               ],
@@ -864,54 +815,15 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               }
             },
             "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Int"
-                }
-              }
-            }
-          },
-          {
-            "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
+              "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "conversationsForwardCount"
+                "value": "Int"
               }
             },
-            "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Int"
-                }
-              }
-            }
-          },
-          {
-            "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
-              "name": {
-                "kind": "Name",
-                "value": "conversationsAfterCursor"
-              }
-            },
-            "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "String"
-                }
-              }
+            "defaultValue": {
+              "kind": "IntValue",
+              "value": "21"
             }
           },
           {

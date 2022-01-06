@@ -6,8 +6,6 @@
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type AppQueryVariables = {
     includeSomeOtherField: boolean;
-    count: number;
-    after: string;
 };
 export type AppQueryResponse = {
     readonly todoStats: {
@@ -24,7 +22,7 @@ export type AppQuery = {
 
 
 /*
-query AppQuery($includeSomeOtherField: Boolean!, $count: Int!, $after: String!) {
+query AppQuery($includeSomeOtherField: Boolean!) {
   todoStats: todos(first: 0) {
     id
     totalCount
@@ -39,7 +37,7 @@ fragment TodoListFooter_todosFragment on TodosConnection {
 }
 
 fragment TodoList_queryFragment on Query {
-  todos(first: $count, after: $after) @connection(key: "TodosList_todos") {
+  todos(first: 5, after: "") @connection(key: "TodosList_todos") {
     edges {
       node {
         id
@@ -66,7 +64,7 @@ fragment Todo_todoFragment on Todo {
 */
 
 /*
-query AppQuery($includeSomeOtherField: Boolean!, $count: Int!, $after: String!) {
+query AppQuery($includeSomeOtherField: Boolean!) {
   todoStats: todos(first: 0) {
     id
     totalCount
@@ -106,46 +104,6 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                 "name": {
                   "kind": "Name",
                   "value": "Boolean"
-                }
-              }
-            }
-          },
-          {
-            "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
-              "name": {
-                "kind": "Name",
-                "value": "count"
-              }
-            },
-            "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Int"
-                }
-              }
-            }
-          },
-          {
-            "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
-              "name": {
-                "kind": "Name",
-                "value": "after"
-              }
-            },
-            "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "String"
                 }
               }
             }
@@ -277,11 +235,8 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "value": "first"
                   },
                   "value": {
-                    "kind": "Variable",
-                    "name": {
-                      "kind": "Name",
-                      "value": "count"
-                    }
+                    "kind": "IntValue",
+                    "value": "5"
                   }
                 },
                 {
@@ -291,11 +246,9 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "value": "after"
                   },
                   "value": {
-                    "kind": "Variable",
-                    "name": {
-                      "kind": "Name",
-                      "value": "after"
-                    }
+                    "kind": "StringValue",
+                    "value": "",
+                    "block": false
                   }
                 }
               ],
@@ -524,46 +477,6 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                 "name": {
                   "kind": "Name",
                   "value": "Boolean"
-                }
-              }
-            }
-          },
-          {
-            "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
-              "name": {
-                "kind": "Name",
-                "value": "count"
-              }
-            },
-            "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Int"
-                }
-              }
-            }
-          },
-          {
-            "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
-              "name": {
-                "kind": "Name",
-                "value": "after"
-              }
-            },
-            "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "String"
                 }
               }
             }

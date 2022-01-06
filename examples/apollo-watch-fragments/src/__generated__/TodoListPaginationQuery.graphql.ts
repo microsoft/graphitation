@@ -5,7 +5,7 @@
 
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type TodoListPaginationQueryVariables = {
-    after?: string | null;
+    after: string;
     count: number;
     includeSomeOtherField?: boolean | null;
 };
@@ -19,11 +19,11 @@ export type TodoListPaginationQuery = {
 
 
 /*
-query TodoListPaginationQuery($after: String, $count: Int!, $includeSomeOtherField: Boolean) {
-  ...TodoList_queryFragment
+query TodoListPaginationQuery($after: String! = "", $count: Int! = 5, $includeSomeOtherField: Boolean) {
+  ...TodoList_queryFragment_2QE1um
 }
 
-fragment TodoList_queryFragment on Query {
+fragment TodoList_queryFragment_2QE1um on Query {
   todos(first: $count, after: $after) @connection(key: "TodosList_todos") {
     edges {
       node {
@@ -51,12 +51,12 @@ fragment Todo_todoFragment on Todo {
 */
 
 /*
-query TodoListPaginationQuery($after: String, $count: Int!, $includeSomeOtherField: Boolean) {
-  ...TodoList_queryFragment
+query TodoListPaginationQuery($after: String! = "", $count: Int! = 5, $includeSomeOtherField: Boolean) {
+  ...TodoList_queryFragment_2QE1um
   __fragments @client
 }
 
-fragment TodoList_queryFragment on Query {
+fragment TodoList_queryFragment_2QE1um on Query {
   todos(first: $count, after: $after) @connection(key: "TodosList_todos") {
     edges {
       node {
@@ -100,11 +100,19 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               }
             },
             "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String"
+                }
               }
+            },
+            "defaultValue": {
+              "kind": "StringValue",
+              "value": "",
+              "block": false
             }
           },
           {
@@ -125,6 +133,10 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   "value": "Int"
                 }
               }
+            },
+            "defaultValue": {
+              "kind": "IntValue",
+              "value": "5"
             }
           },
           {
@@ -152,7 +164,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               "kind": "FragmentSpread",
               "name": {
                 "kind": "Name",
-                "value": "TodoList_queryFragment"
+                "value": "TodoList_queryFragment_2QE1um"
               }
             }
           ]
@@ -162,7 +174,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
         "kind": "FragmentDefinition",
         "name": {
           "kind": "Name",
-          "value": "TodoList_queryFragment"
+          "value": "TodoList_queryFragment_2QE1um"
         },
         "typeCondition": {
           "kind": "NamedType",
@@ -429,11 +441,19 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               }
             },
             "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String"
+                }
               }
+            },
+            "defaultValue": {
+              "kind": "StringValue",
+              "value": "",
+              "block": false
             }
           },
           {
@@ -454,6 +474,10 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   "value": "Int"
                 }
               }
+            },
+            "defaultValue": {
+              "kind": "IntValue",
+              "value": "5"
             }
           },
           {
@@ -481,7 +505,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               "kind": "FragmentSpread",
               "name": {
                 "kind": "Name",
-                "value": "TodoList_queryFragment"
+                "value": "TodoList_queryFragment_2QE1um"
               }
             },
             {
@@ -507,7 +531,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
         "kind": "FragmentDefinition",
         "name": {
           "kind": "Name",
-          "value": "TodoList_queryFragment"
+          "value": "TodoList_queryFragment_2QE1um"
         },
         "typeCondition": {
           "kind": "NamedType",
@@ -707,7 +731,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
   },
   "metadata": {
     "mainFragment": {
-      "name": "TodoList_queryFragment",
+      "name": "TodoList_queryFragment_2QE1um",
       "typeCondition": "Query"
     },
     "connection": {
@@ -716,6 +740,10 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
       ],
       "forwardCountVariable": "count",
       "forwardCursorVariable": "after"
+    },
+    "defaultVariableValues": {
+      "after": "",
+      "count": 5
     }
   }
 };
