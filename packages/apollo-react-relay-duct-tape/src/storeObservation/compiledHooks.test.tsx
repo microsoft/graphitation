@@ -35,7 +35,6 @@ import { documents as compiledHooks_QueryTypeFragment_documents } from "./__gene
 import { documents as compiledHooks_ForwardPaginationFragment_documents } from "./__generated__/compiledHooks_ForwardPaginationFragment_PaginationQuery.graphql";
 import { documents as compiledHooks_BackwardPaginationFragment_documents } from "./__generated__/compiledHooks_BackwardPaginationFragment_PaginationQuery.graphql";
 import { compiledHooks_Root_executionQueryVariables } from "./__generated__/compiledHooks_Root_executionQuery.graphql";
-import { QueryInfo } from "@apollo/client/core/QueryInfo";
 
 const schema = buildSchema(
   fs.readFileSync(
@@ -52,7 +51,6 @@ const Child_fragment = graphql`
 
 const Refetchable_fragment = graphql`
   fragment compiledHooks_RefetchableFragment on User
-  # @argumentDefinitions(avatarSize: { type: "Int!", defaultValue: 21 })
   @refetchable(queryName: "compiledHooks_RefetchableFragment_RefetchQuery") {
     petName
     avatarUrl(size: $avatarSize)
@@ -71,6 +69,10 @@ const ForwardPagination_fragment = graphql`
   fragment compiledHooks_ForwardPaginationFragment on User
   @refetchable(
     queryName: "compiledHooks_ForwardPaginationFragment_PaginationQuery"
+  )
+  @argumentDefinitions(
+    conversationsForwardCount: { type: "Int!", defaultValue: 1 }
+    conversationsAfterCursor: { type: "String!", defaultValue: "" }
   ) {
     petName
     avatarUrl(size: $avatarSize)
@@ -107,9 +109,7 @@ const BackwardPagination_fragment = graphql`
 const Root_executionQueryDocument = graphql`
   query compiledHooks_Root_executionQuery(
     $userId: Int!
-    $avatarSize: Int!
-    $conversationsForwardCount: Int!
-    $conversationsAfterCursor: String!
+    $avatarSize: Int = 21
     $messagesBackwardCount: Int!
     $messagesBeforeCursor: String!
   ) {
@@ -239,9 +239,6 @@ describe("compiledHooks", () => {
             <RootComponent
               variables={{
                 userId: 42,
-                avatarSize: 21,
-                conversationsForwardCount: 1,
-                conversationsAfterCursor: "",
                 messagesBackwardCount: 1,
                 messagesBeforeCursor: "",
               }}
@@ -390,8 +387,6 @@ describe("compiledHooks", () => {
           Object {
             "__fragments": Object {
               "avatarSize": 21,
-              "conversationsAfterCursor": "",
-              "conversationsForwardCount": 1,
               "messagesBackwardCount": 1,
               "messagesBeforeCursor": "",
               "userId": 42,
@@ -399,8 +394,6 @@ describe("compiledHooks", () => {
             "user": Object {
               "__fragments": Object {
                 "avatarSize": 21,
-                "conversationsAfterCursor": "",
-                "conversationsForwardCount": 1,
                 "messagesBackwardCount": 1,
                 "messagesBeforeCursor": "",
                 "userId": 42,
@@ -443,8 +436,6 @@ describe("compiledHooks", () => {
           Object {
             "__fragments": Object {
               "avatarSize": 21,
-              "conversationsAfterCursor": "",
-              "conversationsForwardCount": 1,
               "messagesBackwardCount": 1,
               "messagesBeforeCursor": "",
               "userId": 42,
@@ -452,8 +443,6 @@ describe("compiledHooks", () => {
             "user": Object {
               "__fragments": Object {
                 "avatarSize": 21,
-                "conversationsAfterCursor": "",
-                "conversationsForwardCount": 1,
                 "messagesBackwardCount": 1,
                 "messagesBeforeCursor": "",
                 "userId": 42,
@@ -474,9 +463,6 @@ describe("compiledHooks", () => {
                 <RootComponent
                   variables={{
                     userId: 21,
-                    avatarSize: 21,
-                    conversationsForwardCount: 1,
-                    conversationsAfterCursor: "",
                     messagesBackwardCount: 1,
                     messagesBeforeCursor: "",
                   }}
@@ -529,9 +515,6 @@ describe("compiledHooks", () => {
                 <RootComponent
                   variables={{
                     userId: 42,
-                    avatarSize: 21,
-                    conversationsForwardCount: 1,
-                    conversationsAfterCursor: "",
                     messagesBackwardCount: 1,
                     messagesBeforeCursor: "",
                   }}
@@ -589,8 +572,6 @@ describe("compiledHooks", () => {
       expect(last(returnedResults())).toEqual({
         __fragments: {
           avatarSize: 21,
-          conversationsForwardCount: 1,
-          conversationsAfterCursor: "",
           messagesBackwardCount: 1,
           messagesBeforeCursor: "",
           userId: 42,
@@ -644,9 +625,6 @@ describe("compiledHooks", () => {
               <RootComponent
                 variables={{
                   userId: 21,
-                  avatarSize: 21,
-                  conversationsForwardCount: 1,
-                  conversationsAfterCursor: "",
                   messagesBackwardCount: 1,
                   messagesBeforeCursor: "",
                 }}
@@ -677,8 +655,6 @@ describe("compiledHooks", () => {
         Object {
           "__fragments": Object {
             "avatarSize": 21,
-            "conversationsAfterCursor": "",
-            "conversationsForwardCount": 1,
             "messagesBackwardCount": 1,
             "messagesBeforeCursor": "",
             "userId": 42,
@@ -809,8 +785,6 @@ describe("compiledHooks", () => {
               node: {
                 __fragments: {
                   avatarSize: 21,
-                  conversationsForwardCount: 1,
-                  conversationsAfterCursor: "",
                   messagesBackwardCount: 1,
                   messagesBeforeCursor: "",
                   userId: 42,

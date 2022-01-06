@@ -24,10 +24,10 @@ export type compiledHooks_ForwardPaginationFragment_PaginationQuery = {
 
 
 /*
-query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String!, $conversationsForwardCount: Int!, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $id: ID!) {
+query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String! = "", $conversationsForwardCount: Int! = 1, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $id: ID!) {
   node(id: $id) {
     __typename
-    ...compiledHooks_ForwardPaginationFragment
+    ...compiledHooks_ForwardPaginationFragment_4o723C
     id
   }
 }
@@ -50,7 +50,7 @@ fragment compiledHooks_BackwardPaginationFragment on Conversation {
   id
 }
 
-fragment compiledHooks_ForwardPaginationFragment on User {
+fragment compiledHooks_ForwardPaginationFragment_4o723C on User {
   petName
   avatarUrl(size: $avatarSize)
   conversations(
@@ -76,10 +76,10 @@ fragment compiledHooks_ForwardPaginationFragment on User {
 */
 
 /*
-query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String!, $conversationsForwardCount: Int!, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $id: ID!) {
+query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String! = "", $conversationsForwardCount: Int! = 1, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $id: ID!) {
   node(id: $id) {
     __typename
-    ...compiledHooks_ForwardPaginationFragment
+    ...compiledHooks_ForwardPaginationFragment_4o723C
     id
     ... on Node {
       __fragments @client
@@ -87,7 +87,7 @@ query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!,
   }
 }
 
-fragment compiledHooks_ForwardPaginationFragment on User {
+fragment compiledHooks_ForwardPaginationFragment_4o723C on User {
   petName
   avatarUrl(size: $avatarSize)
   conversations(
@@ -164,6 +164,11 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   "value": "String"
                 }
               }
+            },
+            "defaultValue": {
+              "kind": "StringValue",
+              "value": "",
+              "block": false
             }
           },
           {
@@ -184,6 +189,10 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   "value": "Int"
                 }
               }
+            },
+            "defaultValue": {
+              "kind": "IntValue",
+              "value": "1"
             }
           },
           {
@@ -286,7 +295,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "kind": "FragmentSpread",
                     "name": {
                       "kind": "Name",
-                      "value": "compiledHooks_ForwardPaginationFragment"
+                      "value": "compiledHooks_ForwardPaginationFragment_4o723C"
                     }
                   },
                   {
@@ -475,7 +484,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
         "kind": "FragmentDefinition",
         "name": {
           "kind": "Name",
-          "value": "compiledHooks_ForwardPaginationFragment"
+          "value": "compiledHooks_ForwardPaginationFragment_4o723C"
         },
         "typeCondition": {
           "kind": "NamedType",
@@ -728,6 +737,11 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   "value": "String"
                 }
               }
+            },
+            "defaultValue": {
+              "kind": "StringValue",
+              "value": "",
+              "block": false
             }
           },
           {
@@ -748,6 +762,10 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   "value": "Int"
                 }
               }
+            },
+            "defaultValue": {
+              "kind": "IntValue",
+              "value": "1"
             }
           },
           {
@@ -850,7 +868,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "kind": "FragmentSpread",
                     "name": {
                       "kind": "Name",
-                      "value": "compiledHooks_ForwardPaginationFragment"
+                      "value": "compiledHooks_ForwardPaginationFragment_4o723C"
                     }
                   },
                   {
@@ -901,7 +919,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
         "kind": "FragmentDefinition",
         "name": {
           "kind": "Name",
-          "value": "compiledHooks_ForwardPaginationFragment"
+          "value": "compiledHooks_ForwardPaginationFragment_4o723C"
         },
         "typeCondition": {
           "kind": "NamedType",
@@ -1132,7 +1150,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
   "metadata": {
     "rootSelection": "node",
     "mainFragment": {
-      "name": "compiledHooks_ForwardPaginationFragment",
+      "name": "compiledHooks_ForwardPaginationFragment_4o723C",
       "typeCondition": "User"
     },
     "connection": {
