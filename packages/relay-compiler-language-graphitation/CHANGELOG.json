@@ -2,6 +2,21 @@
   "name": "relay-compiler-language-graphitation",
   "entries": [
     {
+      "date": "Thu, 06 Jan 2022 09:53:33 GMT",
+      "tag": "relay-compiler-language-graphitation_v0.8.1",
+      "version": "0.8.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "relay-compiler-language-graphitation",
+            "commit": "0268d6880be756f48acc0dd7c1faffef70f23189",
+            "comment": "typecript version changed from ^4.2.3 to >=4.2.3 based on https://github.com/microsoft/graphitation/pull/78"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 05 Jan 2022 15:09:43 GMT",
       "tag": "relay-compiler-language-graphitation_v0.8.0",
       "version": "0.8.0",

@@ -1,8 +1,16 @@
 # Change Log - relay-compiler-language-graphitation
 
-This log was last generated on Wed, 05 Jan 2022 15:09:43 GMT and should not be manually modified.
+This log was last generated on Thu, 06 Jan 2022 09:53:33 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.8.1
+
+Thu, 06 Jan 2022 09:53:33 GMT
+
+### Patches
+
+- typecript version changed from ^4.2.3 to >=4.2.3 based on https://github.com/microsoft/graphitation/pull/78 (jakubvejr@microsoft.com)
 
 ## 0.8.0
 
