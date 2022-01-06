@@ -30,6 +30,9 @@
     "webpack-cli": "^4.6.0",
     "webpack-dev-server": "^3.1.14",
     "webpack-graphql-loader": "^1.0.2",
+    "relay-compiler": "^12.0.0",
+    "relay-compiler-language-graphitation": "^0.8.1",
+    "concurrently": "^6.5.1",
     "zen-observable": "^0.8.15"
   },
   "resolutions": {
@@ -45,10 +48,7 @@
     "@types/react": "^17.0.30",
     "@types/react-dom": "^17.0.9",
     "@types/uuid": "^8.3.1",
-    "concurrently": "^6.5.1",
     "graphql-let": "^0.18.5",
-    "prettier": "^2.4.1",
-    "relay-compiler": "^12.0.0",
-    "relay-compiler-language-graphitation": "^0.8.0"
+    "prettier": "^2.4.1"
   }
 }
