@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Unpin typescript dependency",
+  "packageName": "@graphitation/supermassive",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}
