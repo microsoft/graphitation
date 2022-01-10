@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Mon, 10 Jan 2022 12:12:59 GMT",
+      "tag": "@graphitation/supermassive_v0.4.3",
+      "version": "0.4.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "d76697496d8501bdbab6e4f4ace0d12910c37647",
+            "comment": "Unpin typescript dependency"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 23 Dec 2021 13:01:22 GMT",
       "tag": "@graphitation/supermassive_v0.4.2",
       "version": "0.4.2",

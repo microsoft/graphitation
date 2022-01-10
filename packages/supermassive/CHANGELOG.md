@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Thu, 23 Dec 2021 12:10:32 GMT and should not be manually modified.
+This log was last generated on Mon, 10 Jan 2022 12:12:59 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.4.3
+
+Mon, 10 Jan 2022 12:12:59 GMT
+
+### Patches
+
+- Unpin typescript dependency (vladimir.razuvaev@gmail.com)
 
 ## 0.4.2
 
