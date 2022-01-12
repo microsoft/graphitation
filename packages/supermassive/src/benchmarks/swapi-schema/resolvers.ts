@@ -190,6 +190,23 @@ const searchVehiclesByName: GraphQLFieldResolver<any, any, any> = (
     .filter((vehicle: any) => new RegExp(search, "i").test(vehicle.name));
 };
 
+const emitPersons: GraphQLFieldResolver<any, any, any> = async function* (
+  parent,
+  { limit, throwError },
+  { models }
+) {
+  if (throwError) {
+    throw new Error("error");
+    return;
+  }
+  const persons = await models.getData("/people");
+  const personsLimit = Math.min(limit, persons.length);
+
+  for (let i = 0; i < personsLimit; i++) {
+    yield { emitPersons: persons[i] };
+  }
+};
+
 const searchTransportsByName: GraphQLFieldResolver<any, any, any> = (
   parent,
   { search },
@@ -204,6 +221,11 @@ const resolvers: IExecutableSchemaDefinition["resolvers"] = {
   SearchResult: {
     __resolveType(parent: any) {
       return parent.__typename;
+    },
+  },
+  Subscription: {
+    emitPersons: {
+      subscribe: emitPersons,
     },
   },
   Query: {

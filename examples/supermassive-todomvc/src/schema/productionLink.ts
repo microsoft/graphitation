@@ -11,8 +11,10 @@ export const supermassiveSchemaLink = new ApolloLink((operation) => {
     (async () => {
       try {
         const result = await supermassiveExecute({
+          operationName: operation?.operationName,
+          variableValues: operation?.variables,
           document: operation?.query as any,
-          resolvers: { ...generatedResolvers, ...resolvers } as any,
+          resolvers: { ...generatedResolvers, ...resolvers } as Resolvers,
           contextValue: {
             todoStorage: new TodoStorage(window.localStorage),
           },

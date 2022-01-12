@@ -27,6 +27,7 @@ describe(extractImplicitTypesToTypescript, () => {
           "import { GraphQLList, GraphQLNonNull, GraphQLID, GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLEnumType } from \\"graphql\\";
           const SearchResult = { __resolveType: undefined };
           const NodeType = new GraphQLEnumType({ name: \\"NodeType\\", description: \\"\\", values: { Person: { description: \\"\\" }, Starship: { description: \\"\\" }, Transport: { description: \\"\\" }, Species: { description: \\"\\" }, Vehicle: { description: \\"\\" }, Planet: { description: \\"\\" }, Film: { description: \\"\\" } } });
+          const Subscription = {};
           const Query = {};
           const Node = { __resolveType: undefined };
           const Film = {};
@@ -36,7 +37,7 @@ describe(extractImplicitTypesToTypescript, () => {
           const Planet = {};
           const Species = {};
           const Transport = {};
-          export const resolvers = { SearchResult, NodeType, Query, Node, Film, Vehicle, Person, Starship, Planet, Species, Transport };
+          export const resolvers = { SearchResult, NodeType, Subscription, Query, Node, Film, Vehicle, Person, Starship, Planet, Species, Transport };
           "
       `);
   });
@@ -76,6 +77,7 @@ describe(extractImplicitTypes, () => {
       },
       "Species": Object {},
       "Starship": Object {},
+      "Subscription": Object {},
       "Transport": Object {},
       "Vehicle": Object {},
     }
