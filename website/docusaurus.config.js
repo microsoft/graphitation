@@ -10,7 +10,7 @@ const config = {
   tagline: "GraphQL tooling & runtime support needed for MS Teams and beyond",
   url: "https://microsoft.github.io",
   baseUrl: "/graphitation/",
-  onBrokenLinks: "throw",
+  onBrokenLinks: "warn", // TODO: Rever to "throw"
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.ico",
   organizationName: "microsoft",
