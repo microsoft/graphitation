@@ -2,7 +2,6 @@
 sidebar_position: 4
 id: use-refetchable-fragment
 title: useRefetchableFragment
-slug: /api-reference/use-refetchable-fragment/
 description: API reference for useRefetchableFragment, a React hook used to refetch fragment data
 keywords:
   - refetch

@@ -2,7 +2,6 @@
 sidebar_position: 7
 id: use-subscription
 title: useSubscription
-slug: /api-reference/use-subscription/
 description: API reference for useSubscription, a React hook used to subscribe and unsubscribe from a subscription
 keywords:
   - subscription
