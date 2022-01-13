@@ -1,4 +1,5 @@
 ---
+sidebar_position: 2
 id: use-lazy-load-query
 title: useLazyLoadQuery
 description: API reference for useLazyLoadQuery, a React hook used to lazily fetch query data when a component renders
@@ -14,13 +15,14 @@ Hook used to fetch a GraphQL query during render. This hook can trigger multiple
 
 ```tsx
 import React from "react";
-import { AppQuery } from "./__generated__/AppQuery.graphql";
 import {
   graphql,
   useLazyLoadQuery,
 } from "@graphitation/apollo-react-relay-duct-tape";
 
-function App() {
+import { AppQuery } from "./__generated__/AppQuery.graphql";
+
+const App: React.FC = {
   const { data, error } = useLazyLoadQuery<AppQuery>(
     graphql`
       query AppQuery($id: ID!) {
