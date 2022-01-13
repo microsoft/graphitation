@@ -1,11 +1,16 @@
 import { DocumentNode } from "graphql";
 
-export interface ConnectionMetadata {
-  forwardCountVariable?: string;
-  forwardCursorVariable?: string;
-  backwardCountVariable?: string;
-  backwardCursorVariable?: string;
-  selectionPath: string[];
+// Relay's ReaderPaginationMetadata type
+export interface ConnectionPaginationMetadata {
+  backward: {
+    count: string;
+    cursor: string;
+  } | null;
+  forward: {
+    count: string;
+    cursor: string;
+  } | null;
+  path: string[];
 }
 
 export interface Metadata {
@@ -14,7 +19,7 @@ export interface Metadata {
     name: string;
     typeCondition: string;
   };
-  connection?: ConnectionMetadata;
+  connection?: ConnectionPaginationMetadata;
   defaultVariableValues?: Record<string, any>;
 }
 

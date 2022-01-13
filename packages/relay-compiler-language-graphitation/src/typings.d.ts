@@ -8,3 +8,9 @@ declare module "relay-compiler/lib/transforms/ConnectionTransform" {
   export const transform: IRTransform;
   export const SCHEMA_EXTENSION: string;
 }
+
+declare module "relay-compiler/lib/transforms/RefetchableFragmentTransform" {
+  import { IRTransform } from "relay-compiler/lib/core/CompilerContext";
+  export const transform: IRTransform;
+  export const SCHEMA_EXTENSION: string;
+}
