@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/supermassive",
   "license": "MIT",
-  "version": "0.4.2",
+  "version": "0.4.4",
   "bin": {
     "supermassive": "./bin/supermassive.js"
   },
@@ -17,7 +17,7 @@
     "test": "monorepo-scripts test",
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts",
-    "benchmark": "ts-node -T -O '{\"module\":\"commonjs\"}' ./src/benchmarks/index.ts"
+    "benchmark": "ts-node -T ./src/benchmarks/index.ts"
   },
   "devDependencies": {
     "@graphitation/graphql-js-tag": "*",
@@ -48,6 +48,6 @@
     "@graphql-tools/schema": "^7.1.5",
     "commander": "^8.3.0",
     "graphql": "^15.6.1",
-    "typescript": "4.4.3"
+    "typescript": "^4.4.3"
   }
 }

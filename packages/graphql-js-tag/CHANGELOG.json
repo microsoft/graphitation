@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-tag",
   "entries": [
     {
+      "date": "Fri, 14 Jan 2022 10:12:20 GMT",
+      "tag": "@graphitation/graphql-js-tag_v0.8.1",
+      "version": "0.8.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-js-tag",
+            "commit": "31a3867a32c3001ded73331c7a546057eb480a62",
+            "comment": "Add side-effects false to all production packages for webpack opt"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 23 Dec 2021 13:01:22 GMT",
       "tag": "@graphitation/graphql-js-tag_v0.8.0",
       "version": "0.8.0",

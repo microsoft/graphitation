@@ -1,8 +1,19 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Thu, 06 Jan 2022 09:53:33 GMT and should not be manually modified.
+This log was last generated on Fri, 14 Jan 2022 10:12:20 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.7.3
+
+Fri, 14 Jan 2022 10:12:20 GMT
+
+### Patches
+
+- Add side-effects false to all production packages for webpack opt (mnovikov@microsoft.com)
+- Bump @graphitation/apollo-mock-client to v0.10.1
+- Bump @graphitation/graphql-js-operation-payload-generator to v0.8.1
+- Bump @graphitation/graphql-js-tag to v0.8.1
 
 ## 0.7.2
 
