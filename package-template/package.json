@@ -19,12 +19,12 @@
     "@types/jest": "^26.0.22",
     "monorepo-scripts": "*"
   },
+  "sideEffects": false,
+  "access": "public",
   "publishConfig": {
     "main": "./lib/index.js",
     "types": "./lib/index.d.ts",
-    "access": "public",
     "module": "./lib/index.mjs",
-    "sideEffects": false,
     "exports": {
       ".": {
         "import": "./lib/index.mjs",
