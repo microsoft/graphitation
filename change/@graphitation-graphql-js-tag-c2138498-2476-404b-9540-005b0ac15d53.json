@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Make sideffects false actually work",
-  "packageName": "@graphitation/graphql-js-tag",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

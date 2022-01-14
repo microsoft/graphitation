@@ -1,8 +1,19 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Fri, 14 Jan 2022 10:12:20 GMT and should not be manually modified.
+This log was last generated on Fri, 14 Jan 2022 11:15:34 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.7.4
+
+Fri, 14 Jan 2022 11:15:34 GMT
+
+### Patches
+
+- Make sideffects false actually work (mnovikov@microsoft.com)
+- Bump @graphitation/apollo-mock-client to v0.10.2
+- Bump @graphitation/graphql-js-operation-payload-generator to v0.8.2
+- Bump @graphitation/graphql-js-tag to v0.8.2
 
 ## 0.7.3
 

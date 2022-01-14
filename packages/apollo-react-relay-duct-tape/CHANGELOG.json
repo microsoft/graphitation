@@ -2,6 +2,39 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Fri, 14 Jan 2022 11:15:34 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v0.7.4",
+      "version": "0.7.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "9882765303f4e5ff5820e243ab498d9627825d8b",
+            "comment": "Make sideffects false actually work"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "comment": "Bump @graphitation/apollo-mock-client to v0.10.2",
+            "commit": "9882765303f4e5ff5820e243ab498d9627825d8b"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "comment": "Bump @graphitation/graphql-js-operation-payload-generator to v0.8.2",
+            "commit": "9882765303f4e5ff5820e243ab498d9627825d8b"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "comment": "Bump @graphitation/graphql-js-tag to v0.8.2",
+            "commit": "9882765303f4e5ff5820e243ab498d9627825d8b"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 14 Jan 2022 10:12:20 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v0.7.3",
       "version": "0.7.3",

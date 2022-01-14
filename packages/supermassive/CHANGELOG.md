@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Fri, 14 Jan 2022 10:12:20 GMT and should not be manually modified.
+This log was last generated on Fri, 14 Jan 2022 11:15:34 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.4.5
+
+Fri, 14 Jan 2022 11:15:34 GMT
+
+### Patches
+
+- Make sideffects false actually work (mnovikov@microsoft.com)
 
 ## 0.4.4
 

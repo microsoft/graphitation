@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Make sideffects false actually work",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Fri, 14 Jan 2022 11:15:34 GMT",
+      "tag": "@graphitation/supermassive_v0.4.5",
+      "version": "0.4.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "9882765303f4e5ff5820e243ab498d9627825d8b",
+            "comment": "Make sideffects false actually work"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 14 Jan 2022 10:12:20 GMT",
       "tag": "@graphitation/supermassive_v0.4.4",
       "version": "0.4.4",
