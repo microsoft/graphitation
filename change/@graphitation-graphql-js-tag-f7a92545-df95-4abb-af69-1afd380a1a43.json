@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Add side-effects false to all production packages for webpack opt",
-  "packageName": "@graphitation/graphql-js-tag",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

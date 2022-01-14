@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-tag
 
-This log was last generated on Thu, 23 Dec 2021 11:31:14 GMT and should not be manually modified.
+This log was last generated on Fri, 14 Jan 2022 10:12:20 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.8.1
+
+Fri, 14 Jan 2022 10:12:20 GMT
+
+### Patches
+
+- Add side-effects false to all production packages for webpack opt (mnovikov@microsoft.com)
 
 ## 0.8.0
 

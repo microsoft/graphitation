@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Fri, 14 Jan 2022 10:12:20 GMT",
+      "tag": "@graphitation/supermassive_v0.4.4",
+      "version": "0.4.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "31a3867a32c3001ded73331c7a546057eb480a62",
+            "comment": "Add side-effects false to all production packages for webpack opt"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 10 Jan 2022 12:12:59 GMT",
       "tag": "@graphitation/supermassive_v0.4.3",
       "version": "0.4.3",

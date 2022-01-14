@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Mon, 10 Jan 2022 12:12:59 GMT and should not be manually modified.
+This log was last generated on Fri, 14 Jan 2022 10:12:20 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.4.4
+
+Fri, 14 Jan 2022 10:12:20 GMT
+
+### Patches
+
+- Add side-effects false to all production packages for webpack opt (mnovikov@microsoft.com)
 
 ## 0.4.3
 
