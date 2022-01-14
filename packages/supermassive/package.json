@@ -31,12 +31,12 @@
     "node-json-db": "^1.3.0",
     "ts-node": "^10.0.0"
   },
+  "sideEffects": false,
+  "access": "public",
   "publishConfig": {
     "main": "./lib/index.js",
     "types": "./lib/index.d.ts",
-    "access": "public",
     "module": "./lib/index.mjs",
-    "sideEffects": false,
     "exports": {
       ".": {
         "import": "./lib/index.mjs",
