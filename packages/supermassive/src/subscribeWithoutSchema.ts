@@ -28,22 +28,11 @@ import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
 import {
   ObjectTypeResolver,
   FunctionFieldResolver,
+  ExecutionWithoutSchemaArgs,
   FieldResolver,
   Resolvers,
   ExecutionResult,
 } from "./types";
-
-export interface SubscriptionArgs {
-  resolvers: Resolvers;
-  document: DocumentNode;
-  rootValue?: unknown;
-  contextValue?: unknown;
-  variableValues?: Maybe<{ readonly [variable: string]: unknown }>;
-  operationName?: Maybe<string>;
-  fieldResolver?: Maybe<FunctionFieldResolver<any, any>>;
-  typeResolver?: Maybe<FieldResolver<any, any>>;
-  subscribeFieldResolver?: Maybe<FunctionFieldResolver<any, any>>;
-}
 
 /**
  * Implements the "Subscribe" algorithm described in the GraphQL specification.
@@ -67,7 +56,7 @@ export interface SubscriptionArgs {
  * Accepts either an object with named arguments, or individual arguments.
  */
 export async function subscribeWithoutSchema(
-  args: SubscriptionArgs
+  args: ExecutionWithoutSchemaArgs
 ): Promise<AsyncGenerator<ExecutionResult, void, void> | ExecutionResult> {
   const {
     resolvers,
