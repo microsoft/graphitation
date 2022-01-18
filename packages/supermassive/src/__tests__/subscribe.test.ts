@@ -7,6 +7,7 @@ import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
 import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
 import { Resolvers } from "../types";
 import { specifiedScalars } from "../values";
+import { forAwaitEach } from "iterall";
 
 interface TestCase {
   name: string;
@@ -50,29 +51,33 @@ const errorTestCases: Array<TestCase> = [
 ];
 
 describe("subscribeWithSchema", () => {
-  testCases.forEach(({ name, document, variables }: TestCase) => {
-    it(name, async () => {
+  test.each(testCases)(
+    ".subscribeWithSchema %s",
+    async ({ name, document, variables }: TestCase) => {
       await compareResultsForSubscribeWithSchema(document, variables);
-    });
-  });
-  errorTestCases.forEach(({ name, document, variables }: TestCase) => {
-    it(name, async () => {
+    }
+  );
+  test.each(errorTestCases)(
+    ".subscribeWithSchema %s",
+    async ({ name, document, variables }: TestCase) => {
       await compareErrorsForSubscribeWithSchema(document, variables);
-    });
-  });
+    }
+  );
 });
 
 describe("subscribeWithoutSchema", () => {
-  testCases.forEach(({ name, document, variables }: TestCase) => {
-    it(name, async () => {
+  test.each(testCases)(
+    ".subscribeWithoutSchema %s",
+    async ({ name, document, variables }: TestCase) => {
       await compareResultsForSubscribeWithoutSchema(document, variables);
-    });
-  });
-  errorTestCases.forEach(({ name, document, variables }: TestCase) => {
-    it(name, async () => {
+    }
+  );
+  test.each(errorTestCases)(
+    ".subscribeWithoutSchema %s",
+    async ({ name, document, variables }: TestCase) => {
       await compareErrorsForSubscribeWithoutSchema(document, variables);
-    });
-  });
+    }
+  );
 });
 
 async function compareResultsForSubscribeWithSchema(
@@ -81,7 +86,6 @@ async function compareResultsForSubscribeWithSchema(
 ) {
   expect.assertions(1);
   const document = parse(query);
-  const results = [];
 
   const subscribeWithSchemaIterator = (await subscribeWithSchema({
     typeDefs,
@@ -92,17 +96,12 @@ async function compareResultsForSubscribeWithSchema(
     },
     variableValues: variables,
   })) as any;
-  let subscribeWithSchemaIteratorError;
-  try {
-    for await (const result of subscribeWithSchemaIterator) {
-      results.push(result);
-    }
-  } catch (err: any) {
-    subscribeWithSchemaIteratorError = err.message;
-  }
+  const subscribeWithSchemaResults: any[] = [];
+  await forAwaitEach(subscribeWithSchemaIterator, (result) => {
+    subscribeWithSchemaResults.push(result);
+  });
 
-  const graphQLSubscribeResults = [];
-  let graphqlSubscribeError;
+  const graphQLSubscribeResults: any[] = [];
   const graphQLSubscribeIterator = (await graphQLSubscribe({
     document,
     contextValue: {
@@ -112,20 +111,11 @@ async function compareResultsForSubscribeWithSchema(
     variableValues: variables,
   })) as any;
 
-  try {
-    for await (const result of graphQLSubscribeIterator) {
-      graphQLSubscribeResults.push(result);
-    }
-  } catch (err: any) {
-    graphqlSubscribeError = err.message;
-  }
+  await forAwaitEach(graphQLSubscribeIterator, (result) => {
+    graphQLSubscribeResults.push(result);
+  });
 
-  if (graphqlSubscribeError || subscribeWithSchemaIteratorError) {
-    expect(graphqlSubscribeError).toEqual(subscribeWithSchemaIteratorError);
-    return;
-  }
-
-  expect(results).toEqual(graphQLSubscribeResults);
+  expect(subscribeWithSchemaResults).toEqual(graphQLSubscribeResults);
 }
 
 async function compareErrorsForSubscribeWithSchema(
@@ -145,8 +135,7 @@ async function compareErrorsForSubscribeWithSchema(
   })) as any;
   let subscribeWithSchemaIteratorError;
   try {
-    for await (const result of subscribeWithSchemaIterator) {
-    }
+    await forAwaitEach(subscribeWithSchemaIterator, (result) => {});
   } catch (err: any) {
     subscribeWithSchemaIteratorError = err.message;
   }
@@ -162,8 +151,7 @@ async function compareErrorsForSubscribeWithSchema(
   })) as any;
 
   try {
-    for await (const result of graphQLSubscribeIterator) {
-    }
+    await forAwaitEach(graphQLSubscribeIterator, (result) => {});
   } catch (err: any) {
     graphqlSubscribeError = err.message;
   }
@@ -194,7 +182,7 @@ async function compareResultsForSubscribeWithoutSchema(
     ...((resolvers as unknown) as Resolvers<any, any>),
   };
   const document = parse(query);
-  const subscribeWithoutSchemaResults = [];
+  const subscribeWithoutSchemaResults: any[] = [];
   const subscribeWithoutSchemaIterator = (await subscribeWithoutSchema({
     document: addTypesToRequestDocument(schema, document),
     contextValue: {
@@ -203,11 +191,11 @@ async function compareResultsForSubscribeWithoutSchema(
     resolvers: fullResolvers,
     variableValues: variables,
   })) as any;
-  for await (const result of subscribeWithoutSchemaIterator) {
+  await forAwaitEach(subscribeWithoutSchemaIterator, (result) => {
     subscribeWithoutSchemaResults.push(result);
-  }
+  });
 
-  let graphQLSubscribeResults = [];
+  const graphQLSubscribeResults: any[] = [];
   const graphQLSubscribeIterator = (await graphQLSubscribe({
     document,
     contextValue: {
@@ -216,9 +204,9 @@ async function compareResultsForSubscribeWithoutSchema(
     schema,
     variableValues: variables,
   })) as any;
-  for await (const result of graphQLSubscribeIterator) {
+  await forAwaitEach(graphQLSubscribeIterator, (result) => {
     graphQLSubscribeResults.push(result);
-  }
+  });
   expect(subscribeWithoutSchemaResults).toEqual(graphQLSubscribeResults);
 }
 
@@ -256,8 +244,7 @@ async function compareErrorsForSubscribeWithoutSchema(
       resolvers: fullResolvers,
       variableValues: variables,
     })) as any;
-    for await (const result of subscribeWithoutSchemaIterator) {
-    }
+    await forAwaitEach(subscribeWithoutSchemaIterator, (result) => {});
   } catch (err: any) {
     subscribeWithoutSchemaError = err.message;
   }
@@ -272,8 +259,7 @@ async function compareErrorsForSubscribeWithoutSchema(
       schema,
       variableValues: variables,
     })) as any;
-    for await (const result of graphQLSubscribeIterator) {
-    }
+    await forAwaitEach(graphQLSubscribeIterator, (result) => {});
   } catch (err: any) {
     graphqlSubscribeError = err.message;
   }

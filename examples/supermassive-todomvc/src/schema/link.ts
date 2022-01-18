@@ -1,19 +1,11 @@
+import { execute as graphQLExecute, DocumentNode } from "graphql";
 import {
-  execute as graphQLExecute,
-  isInputType,
-  parse,
-  DocumentNode,
-} from "graphql";
-import {
-  extractImplicitTypes,
   executeWithSchema as supermassiveExecute,
   Resolvers,
-  specifiedScalars,
 } from "@graphitation/supermassive";
 import { ApolloLink, Observable } from "@apollo/client";
 import { resolvers as generatedResolvers } from "./__generated__/typeDefs";
 import { resolvers, TodoStorage } from "./resolvers";
-import schema from "./schema";
 import typeDefs from "./typeDefs.graphql";
 
 export const executableSchemaLink = new ApolloLink((operation) => {
