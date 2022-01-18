@@ -1,6 +1,6 @@
 {
   "type": "minor",
-  "comment": "[SUPERMASSIVE] added subscribe operation",
+  "comment": "Added support for subscribe operation",
   "packageName": "@graphitation/supermassive",
   "email": "jakubvejr@microsoft.com",
   "dependentChangeType": "patch"
