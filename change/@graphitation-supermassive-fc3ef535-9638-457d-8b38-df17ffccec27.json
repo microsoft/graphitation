@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Reexported type fixed",
-  "packageName": "@graphitation/supermassive",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
