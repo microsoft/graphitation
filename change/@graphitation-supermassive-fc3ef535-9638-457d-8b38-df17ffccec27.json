@@ -1,6 +1,6 @@
 {
   "type": "patch",
-  "comment": "[SUPERMASSIVE] HOTFIX - re-exported type fixed",
+  "comment": "Reexported type fixed",
   "packageName": "@graphitation/supermassive",
   "email": "jakubvejr@microsoft.com",
   "dependentChangeType": "patch"
