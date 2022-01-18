@@ -13,4 +13,4 @@ export { specifiedScalars } from "./values";
 
 export { annotateDocumentGraphQLTransform } from "./transforms/annotateDocumentGraphQLTransform";
 
-export { DocumentNode } from "./ast/TypedAST";
+export type { DocumentNode } from "./ast/TypedAST";
