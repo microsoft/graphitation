@@ -17,6 +17,10 @@ enum NodeType {
   Film
 }
 
+type Subscription {
+  emitPersons(limit: Int!, throwError: Boolean): Person
+}
+
 type Query {
   node(nodeType: NodeType!, id: Int!): Node
   search(search: String): [SearchResult]

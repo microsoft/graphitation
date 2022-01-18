@@ -21,7 +21,7 @@ import { Path } from "./jsutils/Path";
 
 export type ScalarTypeResolver = GraphQLScalarType;
 export type EnumTypeResolver = GraphQLEnumType; // TODO Record<string, any>;
-export type FieldResolver<
+export type FunctionFieldResolver<
   TSource,
   TContext,
   TArgs = Record<string, any>,
@@ -32,6 +32,19 @@ export type FieldResolver<
   context: TContext,
   info: ResolveInfo
 ) => TReturn;
+
+export type FieldResolver<
+  TSource,
+  TContext,
+  TArgs = Record<string, any>,
+  TReturn = any
+> =
+  | FunctionFieldResolver<TSource, TContext, TArgs, TReturn>
+  | {
+      subscribe?: FunctionFieldResolver<TSource, TContext, TArgs, TReturn>;
+      resolve?: FunctionFieldResolver<TSource, TContext, TArgs, TReturn>;
+    };
+
 export type TypeResolver<TSource, TContext> = (
   value: TSource,
   context: TContext,
@@ -114,8 +127,9 @@ export interface CommonExecutionArgs {
   contextValue?: unknown;
   variableValues?: Maybe<{ [variable: string]: unknown }>;
   operationName?: Maybe<string>;
-  fieldResolver?: Maybe<FieldResolver<any, any>>;
+  fieldResolver?: Maybe<FunctionFieldResolver<any, any>>;
   typeResolver?: Maybe<TypeResolver<any, any>>;
+  subscribeFieldResolver?: Maybe<FunctionFieldResolver<any, any>>;
 }
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
   document: DocumentNode;

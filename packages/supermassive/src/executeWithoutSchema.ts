@@ -37,6 +37,7 @@ import { promiseReduce } from "./jsutils/promiseReduce";
 import {
   ExecutionWithoutSchemaArgs,
   FieldResolver,
+  FunctionFieldResolver,
   InterfaceTypeResolver,
   ObjectTypeResolver,
   ResolveInfo,
@@ -86,7 +87,7 @@ export interface ExecutionContext {
   contextValue: unknown;
   operation: OperationDefinitionNode;
   variableValues: { [variable: string]: unknown };
-  fieldResolver: FieldResolver<any, any>;
+  fieldResolver: FunctionFieldResolver<any, any>;
   typeResolver: TypeResolver<any, any>;
   errors: Array<GraphQLError>;
 }
@@ -199,7 +200,7 @@ export function buildExecutionContext(
   contextValue: unknown,
   rawVariableValues: Maybe<{ [variable: string]: unknown }>,
   operationName: Maybe<string>,
-  fieldResolver: Maybe<FieldResolver<unknown, unknown>>,
+  fieldResolver: Maybe<FunctionFieldResolver<unknown, unknown>>,
   typeResolver?: Maybe<TypeResolver<unknown, unknown>>
 ): Array<GraphQLError> | ExecutionContext {
   let operation: OperationDefinitionNode | undefined;
@@ -418,6 +419,10 @@ function executeField(
     resolveFn = (typeResolvers as
       | ObjectTypeResolver<any, any, any>
       | undefined)?.[fieldName];
+
+    if (typeof resolveFn !== "function" && resolveFn != null) {
+      resolveFn = resolveFn.resolve;
+    }
   }
 
   if (!resolveFn) {
@@ -904,12 +909,10 @@ export const defaultTypeResolver: TypeResolver<unknown, unknown> = function (
  * and returns it as the result, or if it's a function, returns the result
  * of calling that function while passing along args and context value.
  */
-export const defaultFieldResolver: FieldResolver<unknown, unknown> = function (
-  source: any,
-  args,
-  contextValue,
-  info
-) {
+export const defaultFieldResolver: FunctionFieldResolver<
+  unknown,
+  unknown
+> = function (source: any, args, contextValue, info) {
   // ensure source is a value for which property access is acceptable.
   if (isObjectLike(source) || typeof source === "function") {
     const property = source[info.fieldName];
@@ -921,7 +924,7 @@ export const defaultFieldResolver: FieldResolver<unknown, unknown> = function (
 };
 
 // TODO(freiksenet): Custom root type names maybe?
-function getOperationRootTypeName(
+export function getOperationRootTypeName(
   operation: OperationDefinitionNode | OperationTypeDefinitionNode
 ): string {
   switch (operation.operation) {

@@ -1,5 +1,6 @@
 import { GraphQLFieldResolver } from "graphql/type/definition";
 import { IExecutableSchemaDefinition } from "@graphql-tools/schema";
+import { createAsyncIterator } from "iterall";
 
 const films: GraphQLFieldResolver<any, any, any> = (
   parent,
@@ -190,6 +191,24 @@ const searchVehiclesByName: GraphQLFieldResolver<any, any, any> = (
     .filter((vehicle: any) => new RegExp(search, "i").test(vehicle.name));
 };
 
+const emitPersons: GraphQLFieldResolver<any, any, any> = async function (
+  parent,
+  { limit, throwError },
+  { models }
+) {
+  if (throwError) {
+    throw new Error("error");
+    return;
+  }
+  const persons = await models.getData("/people");
+  const personsLimit = Math.min(limit, persons.length);
+  const output: any = { length: personsLimit };
+  for (let i = 0; i < personsLimit; i++) {
+    output[i] = { emitPersons: persons[i] };
+  }
+  return createAsyncIterator(output);
+};
+
 const searchTransportsByName: GraphQLFieldResolver<any, any, any> = (
   parent,
   { search },
@@ -204,6 +223,11 @@ const resolvers: IExecutableSchemaDefinition["resolvers"] = {
   SearchResult: {
     __resolveType(parent: any) {
       return parent.__typename;
+    },
+  },
+  Subscription: {
+    emitPersons: {
+      subscribe: emitPersons,
     },
   },
   Query: {
