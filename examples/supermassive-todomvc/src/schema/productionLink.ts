@@ -1,30 +1,13 @@
-import { ApolloLink, Observable, Operation } from "@apollo/client";
-import { Kind } from "graphql";
-
+import { ApolloLink, Observable } from "@apollo/client";
 import {
   executeWithoutSchema as supermassiveExecute,
   subscribeWithoutSchema as supermassiveSubscribe,
   DocumentNode,
-  OperationDefinitionNode,
   Resolvers,
 } from "@graphitation/supermassive";
 import { resolvers, TodoStorage } from "./resolvers";
 import { resolvers as generatedResolvers } from "./__generated__/typeDefs";
-
-function getOperationDefinitionNode(
-  operation: Operation
-): OperationDefinitionNode | null {
-  if (operation?.query?.definitions) {
-    const operationDefinitionNode = operation.query.definitions.find(
-      ({ kind }) => kind === Kind.OPERATION_DEFINITION
-    ) as OperationDefinitionNode | undefined;
-
-    if (operationDefinitionNode?.operation) {
-      return operationDefinitionNode;
-    }
-  }
-  return null;
-}
+import { getOperationDefinitionNode } from "./utils";
 
 export const supermassiveSchemaLink = new ApolloLink((operation) => {
   return new Observable((observer) => {

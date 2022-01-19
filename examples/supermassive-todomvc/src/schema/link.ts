@@ -8,34 +8,37 @@ import { ApolloLink, Observable } from "@apollo/client";
 import { resolvers as generatedResolvers } from "./__generated__/typeDefs";
 import { resolvers, TodoStorage } from "./resolvers";
 import typeDefs from "./typeDefs.graphql";
+import { getOperationDefinitionNode } from "./utils";
 
 export const executableSchemaLink = new ApolloLink((operation) => {
   return new Observable((observer) => {
     (async () => {
       try {
-        if (operation?.query?.definitions) {
-          const operationDefinition: any = operation.query.definitions.find(
-            ({ kind }) => kind === "OperationDefinition"
-          );
-          if (operationDefinition) {
-            let resolveFn;
-            if (operationDefinition.operation === "subscription") {
-              resolveFn = supermassiveSubscribe;
-            } else {
-              resolveFn = supermassiveExecute;
+        const operationDefinitionNode = getOperationDefinitionNode(operation);
+        if (operationDefinitionNode) {
+          let resolveFn;
+          if (operationDefinitionNode.operation === "subscription") {
+            resolveFn = supermassiveSubscribe;
+          } else {
+            resolveFn = supermassiveExecute;
+          }
+
+          const result: any = await resolveFn({
+            operationName: operation?.operationName,
+            variableValues: operation?.variables,
+            resolvers: { ...generatedResolvers, ...resolvers } as Resolvers,
+            document: operation.query as DocumentNode,
+            typeDefs,
+            contextValue: {
+              todoStorage: new TodoStorage(window.localStorage),
+            },
+          });
+
+          if (typeof result?.[Symbol.asyncIterator] === "function") {
+            for await (const item of result) {
+              observer.next(item);
             }
-
-            const result: any = await resolveFn({
-              operationName: operation?.operationName,
-              variableValues: operation?.variables,
-              resolvers: { ...generatedResolvers, ...resolvers } as Resolvers,
-              document: operation.query as DocumentNode,
-              typeDefs,
-              contextValue: {
-                todoStorage: new TodoStorage(window.localStorage),
-              },
-            });
-
+          } else {
             observer.next(result);
           }
         }
