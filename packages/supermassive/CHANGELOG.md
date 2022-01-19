@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Tue, 18 Jan 2022 12:29:14 GMT and should not be manually modified.
+This log was last generated on Wed, 19 Jan 2022 13:39:52 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.5.2
+
+Wed, 19 Jan 2022 13:39:52 GMT
+
+### Patches
+
+- Export AST types (jakubvejr@microsoft.com)
 
 ## 0.5.1
 
