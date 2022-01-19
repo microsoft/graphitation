@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Export AST types",
+  "packageName": "@graphitation/supermassive",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
