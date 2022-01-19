@@ -89,6 +89,23 @@ export const resolvers: any = {
       return context.todoStorage.getAllTodos();
     },
   },
+  Subscription: {
+    emitTodos: {
+      subscribe: async function* (
+        _source: any,
+        { limit }: { limit: number },
+        context: { todoStorage: { getAllTodos: () => any } },
+        _info: any
+      ) {
+        console.log(123123123123123);
+        const allTodos = context.todoStorage.getAllTodos();
+        const todosLimit = Math.min(limit, allTodos.length);
+        for (let i = 0; i < todosLimit; i++) {
+          yield { emitTodos: allTodos[i] };
+        }
+      },
+    },
+  },
   Mutation: {
     createTodo(
       _source: any,

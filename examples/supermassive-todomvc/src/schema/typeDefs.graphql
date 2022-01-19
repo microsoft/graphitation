@@ -8,6 +8,10 @@ type Mutation {
   setTodoCompleted(input: SetTodoCompletedInput!): SetTodoCompletedResult!
 }
 
+type Subscription {
+  emitTodos(limit: Int!): Todo
+}
+
 type Todo {
   id: ID!
   text: String!
