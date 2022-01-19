@@ -1,6 +1,6 @@
 {
   "type": "patch",
-  "comment": "[SUPERMASSIVE] export AST types",
+  "comment": "Export AST types",
   "packageName": "@graphitation/supermassive",
   "email": "jakubvejr@microsoft.com",
   "dependentChangeType": "patch"
