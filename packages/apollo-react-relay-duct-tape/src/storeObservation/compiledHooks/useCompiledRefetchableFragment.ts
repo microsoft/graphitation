@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { unstable_batchedUpdates } from "react-dom";
 import { useApolloClient } from "@apollo/client";
 import invariant from "invariant";
@@ -65,6 +65,17 @@ export function useCompiledRefetchableFragment(
     fragmentReferenceWithOwnVariables
   );
 
+  const disposable = useRef<Disposable>();
+  useEffect(
+    () => () => {
+      if (disposable.current) {
+        disposable.current.dispose();
+        disposable.current = undefined;
+      }
+    },
+    [] // On unmount
+  );
+
   const refetch = useCallback<RefetchFn>(
     (variablesSubset, options?: PrivateRefetchOptions) => {
       const variables = {
@@ -81,9 +92,10 @@ export function useCompiledRefetchableFragment(
         | ZenObservable.Subscription
         | undefined = observable.subscribe(
         ({ data, error }) => {
-          // Be sure not to keep a retain cycle
+          // Be sure not to keep a retain cycle, so cleanup the reference first thing.
           subscription!.unsubscribe();
           subscription = undefined;
+          disposable.current = undefined;
 
           unstable_batchedUpdates(() => {
             if (options?.UNSTABLE_onCompletedWithData) {
@@ -128,7 +140,8 @@ export function useCompiledRefetchableFragment(
           }
         }
       );
-      return { dispose: () => subscription?.unsubscribe() };
+      disposable.current = { dispose: () => subscription?.unsubscribe() };
+      return disposable.current;
     },
     [
       client,
