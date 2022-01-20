@@ -92,3 +92,4 @@ Tuple containing the following values
 ### Behavior
 
 - The component is automatically subscribed to updates to the fragment data: if the data for this particular `Comment` is updated anywhere in the app (e.g. via fetching new data, or mutating existing data), the component will automatically re-render with the latest updated data.
+- An in-flight refetch request will automatically be disposed when the component unmounts.
