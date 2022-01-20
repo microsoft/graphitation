@@ -665,15 +665,15 @@
   dependencies:
     invariant "^2.0.0"
 
-"@graphitation/supermassive@^0.4.2":
-  version "0.4.2"
-  resolved "https://registry.yarnpkg.com/@graphitation/supermassive/-/supermassive-0.4.2.tgz#80957c29e4c3a1a8ca4c468664557de809c87ebf"
-  integrity sha512-HYvf4OgWxfTyescggrqTi6758ETZd2C18lfmwcJAiTQsa3LAXKp4kTiMk+LPDUaqgKmuZeokHKHTkbojIP45zA==
+"@graphitation/supermassive@^0.5.2":
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/@graphitation/supermassive/-/supermassive-0.5.2.tgz#890cb671e88118bc1809622072638f2de976e7b2"
+  integrity sha512-a6nWWoCZaUxLd88nawx3/h1GDyDOIIhVunAIKF8iBi6GRMoPVGh4n4PaZHxPV6OU6AoyJ8rldgw1NgwCF6Vy1Q==
   dependencies:
     "@graphql-tools/schema" "^7.1.5"
     commander "^8.3.0"
     graphql "^15.6.1"
-    typescript "4.4.3"
+    typescript "^4.4.3"
 
 "@graphitation/ts-transform-graphql-js-tag@^0.4.0":
   version "0.4.0"
@@ -7572,15 +7572,15 @@ typedarray-to-buffer@^3.1.5:
   dependencies:
     is-typedarray "^1.0.0"
 
-typescript@4.4.3, typescript@^4.4.3:
-  version "4.4.3"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.3.tgz#bdc5407caa2b109efd4f82fe130656f977a29324"
-  integrity sha512-4xfscpisVgqqDfPaJo5vkd+Qd/ItkoagnHpufr+i2QCHBsNYp+G7UAoyFl8aPtx879u38wPV65rZ8qbGZijalA==
-
 typescript@>=4.2.3:
   version "4.5.4"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.5.4.tgz#a17d3a0263bf5c8723b9c52f43c5084edf13c2e8"
   integrity sha512-VgYs2A2QIRuGphtzFV7aQJduJ2gyfTljngLzjpfW9FoYZF6xuw1W0vW9ghCKLfcWrCFxK81CSGRAvS1pn4fIUg==
+
+typescript@^4.4.3:
+  version "4.4.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.3.tgz#bdc5407caa2b109efd4f82fe130656f977a29324"
+  integrity sha512-4xfscpisVgqqDfPaJo5vkd+Qd/ItkoagnHpufr+i2QCHBsNYp+G7UAoyFl8aPtx879u38wPV65rZ8qbGZijalA==
 
 ua-parser-js@^0.7.30:
   version "0.7.31"

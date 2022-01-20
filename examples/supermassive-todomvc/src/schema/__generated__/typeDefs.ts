@@ -1,6 +1,7 @@
 import { GraphQLList, GraphQLNonNull, GraphQLID, GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLInputObjectType } from "graphql";
 const Query = {};
 const Mutation = {};
+const Subscription = {};
 const Todo = {};
 const Failure = { __resolveType: undefined };
 const CreateTodoResult = { __resolveType: undefined };
@@ -50,4 +51,4 @@ const SetTodoCompletedInput = new GraphQLInputObjectType({
 });
 const SetTodoCompletedSuccess = {};
 const SetTodoCompletedFailure = {};
-export const resolvers = { Query, Mutation, Todo, Failure, CreateTodoResult, CreateTodoInput, CreateTodoSuccess, CreateTodoFailure, UpdateTodoTextResult, UpdateTodoTextInput, UpdateTodoTextSuccess, UpdateTodoTextFailure, SetTodoCompletedResult, SetTodoCompletedInput, SetTodoCompletedSuccess, SetTodoCompletedFailure };
+export const resolvers = { Query, Mutation, Subscription, Todo, Failure, CreateTodoResult, CreateTodoInput, CreateTodoSuccess, CreateTodoFailure, UpdateTodoTextResult, UpdateTodoTextInput, UpdateTodoTextSuccess, UpdateTodoTextFailure, SetTodoCompletedResult, SetTodoCompletedInput, SetTodoCompletedSuccess, SetTodoCompletedFailure };
