@@ -44,16 +44,6 @@ function useLoadMore({
   updater,
 }: PaginationParams): [loadPage: PaginationFn, isLoadingMore: boolean] {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const disposable = useRef<Disposable>();
-  useEffect(
-    () => () => {
-      if (disposable.current) {
-        disposable.current.dispose();
-        disposable.current = undefined;
-      }
-    },
-    [] // On unmount
-  );
   const loadPage = useCallback<PaginationFn>(
     (countValue, options) => {
       invariant(
@@ -83,7 +73,6 @@ function useLoadMore({
           // NOTE: We can do this now already, because `refetch` wraps the
           //       onCompleted callback in a batchedUpdates callback.
           setIsLoadingMore(false);
-          disposable.current = undefined;
 
           if (!error) {
             invariant(
@@ -139,9 +128,9 @@ function useLoadMore({
       // TODO: Measure if invoking `refetch` leads to React updates and if it
       //       makes sense to wrap it and the following setIsLoadingMore(true)
       //       call in a batchedUpdates callback.
-      disposable.current = refetch(newVariables, refetchOptions);
+      const disposable = refetch(newVariables, refetchOptions);
       setIsLoadingMore(true);
-      return disposable.current;
+      return disposable;
     },
     [
       fragmentReference.id,
