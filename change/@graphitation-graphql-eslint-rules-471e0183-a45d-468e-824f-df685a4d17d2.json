@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "Add prettierrc, add it to linter and force it to do it",
+  "packageName": "@graphitation/graphql-eslint-rules",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "none"
+}
