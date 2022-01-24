@@ -2,6 +2,21 @@
   "name": "relay-compiler-language-graphitation",
   "entries": [
     {
+      "date": "Mon, 24 Jan 2022 11:49:08 GMT",
+      "tag": "relay-compiler-language-graphitation_v0.8.2",
+      "version": "0.8.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "relay-compiler-language-graphitation",
+            "commit": "ce2d4f019baf1717202a3c33ec0d75fa3b5a4fb3",
+            "comment": "Fix Webpack 4 compat"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 06 Jan 2022 09:53:33 GMT",
       "tag": "relay-compiler-language-graphitation_v0.8.1",
       "version": "0.8.1",

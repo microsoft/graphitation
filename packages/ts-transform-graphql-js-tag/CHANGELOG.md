@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-transform-graphql-js-tag
 
-This log was last generated on Thu, 23 Dec 2021 11:31:14 GMT and should not be manually modified.
+This log was last generated on Mon, 24 Jan 2022 11:49:08 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.4.1
+
+Mon, 24 Jan 2022 11:49:08 GMT
+
+### Patches
+
+- Fix Webpack 4 compat (mnovikov@microsoft.com)
 
 ## 0.4.0
 

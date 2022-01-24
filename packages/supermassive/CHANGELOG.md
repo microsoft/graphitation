@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Mon, 24 Jan 2022 11:18:59 GMT and should not be manually modified.
+This log was last generated on Mon, 24 Jan 2022 11:49:08 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.1
+
+Mon, 24 Jan 2022 11:49:08 GMT
+
+### Patches
+
+- Fix Webpack 4 compat (mnovikov@microsoft.com)
 
 ## 0.6.0
 
