@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Fix Webpack 4 compat",
-  "packageName": "@graphitation/graphql-js-operation-payload-generator",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

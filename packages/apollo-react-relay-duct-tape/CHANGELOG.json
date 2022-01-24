@@ -2,6 +2,39 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Mon, 24 Jan 2022 13:40:52 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v0.7.5",
+      "version": "0.7.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "ce2d4f019baf1717202a3c33ec0d75fa3b5a4fb3",
+            "comment": "Fix Webpack 4 compat"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "comment": "Bump @graphitation/apollo-mock-client to v0.10.3",
+            "commit": "a222ddaf6f18507f67378f06fde9833bab69d52c"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "comment": "Bump @graphitation/graphql-js-operation-payload-generator to v0.8.3",
+            "commit": "a222ddaf6f18507f67378f06fde9833bab69d52c"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "comment": "Bump relay-compiler-language-graphitation to v0.8.2",
+            "commit": "a222ddaf6f18507f67378f06fde9833bab69d52c"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 14 Jan 2022 11:15:34 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v0.7.4",
       "version": "0.7.4",

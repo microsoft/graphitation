@@ -1,8 +1,16 @@
 # Change Log - relay-compiler-language-graphitation
 
-This log was last generated on Thu, 06 Jan 2022 09:53:33 GMT and should not be manually modified.
+This log was last generated on Mon, 24 Jan 2022 13:40:52 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.8.2
+
+Mon, 24 Jan 2022 13:40:52 GMT
+
+### Patches
+
+- Fix Webpack 4 compat (mnovikov@microsoft.com)
 
 ## 0.8.1
 

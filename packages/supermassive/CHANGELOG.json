@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Mon, 24 Jan 2022 13:40:52 GMT",
+      "tag": "@graphitation/supermassive_v0.6.1",
+      "version": "0.6.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "ce2d4f019baf1717202a3c33ec0d75fa3b5a4fb3",
+            "comment": "Fix Webpack 4 compat"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 24 Jan 2022 11:18:59 GMT",
       "tag": "@graphitation/supermassive_v0.6.0",
       "version": "0.6.0",
