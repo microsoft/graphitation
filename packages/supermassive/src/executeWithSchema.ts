@@ -1,5 +1,4 @@
-import { makeExecutableSchema } from "@graphql-tools/schema";
-import { isInputType, parse } from "graphql";
+import { isInputType, buildASTSchema } from "graphql";
 import {
   addTypesToRequestDocument,
   executeWithoutSchema,
@@ -20,7 +19,7 @@ export function executeWithSchema({
   fieldResolver,
   typeResolver,
 }: ExecutionWithSchemaArgs): PromiseOrValue<ExecutionResult> {
-  const schema = makeExecutableSchema({ typeDefs, resolvers });
+  const schema = buildASTSchema(typeDefs);
   let extractedResolvers: Resolvers = {};
   const getTypeByName = (name: string) => {
     const type = specifiedScalars[name] || extractedResolvers[name];

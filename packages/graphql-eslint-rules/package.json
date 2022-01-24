@@ -25,7 +25,7 @@
     "graphql": "^15.0.0"
   },
   "publishConfig": {
-    "main": "./lib/index.js",
+    "main": "./lib/index",
     "types": "./lib/index.d.ts",
     "access": "public",
     "module": "./lib/index.mjs",

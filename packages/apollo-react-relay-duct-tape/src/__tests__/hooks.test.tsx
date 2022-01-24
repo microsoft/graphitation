@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { buildSchema } from "graphql";
 import { readFileSync } from "fs";
 import { join } from "path";

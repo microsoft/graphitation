@@ -41,7 +41,7 @@
   "sideEffects": false,
   "access": "public",
   "publishConfig": {
-    "main": "./lib/index.js",
+    "main": "./lib/index",
     "types": "./lib/index.d.ts",
     "module": "./lib/index.mjs",
     "exports": {
