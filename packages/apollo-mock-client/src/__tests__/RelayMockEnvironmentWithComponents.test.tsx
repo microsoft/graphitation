@@ -8,7 +8,6 @@
  */
 
 import React from "react";
-import { useState } from "react";
 import { graphql } from "@graphitation/graphql-js-tag";
 import { readFileSync } from "fs";
 import { buildSchema, DocumentNode } from "graphql";
@@ -185,8 +184,10 @@ describe("ReactRelayTestMocker with Containers", () => {
           doesViewerLike: boolean;
         };
       }) {
-        const [busy, setBusy] = useState(false);
-        const [errorMessage, setErrorMessage] = useState<string | null>(null);
+        const [busy, setBusy] = React.useState(false);
+        const [errorMessage, setErrorMessage] = React.useState<string | null>(
+          null
+        );
         const [like] = useMutation(FeedbackLikeMutation, {
           onCompleted: () => {
             setBusy(false);
