@@ -7,6 +7,9 @@ import {
   SelectionSetNode,
 } from "./ast/TypedAST";
 import type { ObjMap } from "./jsutils/ObjMap";
+import { getDirectiveValues } from "./values";
+import { GraphQLSkipDirective, GraphQLIncludeDirective } from "./directives";
+
 import { Resolvers } from "./types";
 
 /**
@@ -31,7 +34,7 @@ export function collectFields(
   for (const selection of selectionSet.selections) {
     switch (selection.kind) {
       case Kind.FIELD: {
-        if (!shouldIncludeNode(variableValues, selection)) {
+        if (!shouldIncludeNode(resolvers, variableValues, selection)) {
           continue;
         }
         const name = getFieldEntryKey(selection);
@@ -45,7 +48,7 @@ export function collectFields(
       }
       case Kind.INLINE_FRAGMENT: {
         if (
-          !shouldIncludeNode(variableValues, selection) ||
+          !shouldIncludeNode(resolvers, variableValues, selection) ||
           !doesFragmentConditionMatch(selection, runtimeTypeName)
         ) {
           continue;
@@ -65,7 +68,7 @@ export function collectFields(
         const fragName = selection.name.value;
         if (
           visitedFragmentNames.has(fragName) ||
-          !shouldIncludeNode(variableValues, selection)
+          !shouldIncludeNode(resolvers, variableValues, selection)
         ) {
           continue;
         }
@@ -98,24 +101,36 @@ export function collectFields(
  * directives, where @skip has higher precedence than @include.
  */
 function shouldIncludeNode(
+  resolvers: Resolvers,
   variableValues: { [variable: string]: unknown },
   node: SelectionNode
 ): boolean {
-  return true; // TODO
-  // const skip = getDirectiveValues(GraphQLSkipDirective, node, variableValues);
-  // if (skip?.if === true) {
-  //   return false;
-  // }
+  if (!node.directives?.length) {
+    return true;
+  }
 
-  // const include = getDirectiveValues(
-  //   GraphQLIncludeDirective,
-  //   node,
-  //   variableValues
-  // );
-  // if (include?.if === false) {
-  //   return false;
-  // }
-  // return true;
+  const skip = getDirectiveValues(
+    GraphQLSkipDirective,
+    node as SelectionNode,
+    resolvers,
+    variableValues
+  );
+  if (skip?.if === true) {
+    return false;
+  }
+
+  const include = getDirectiveValues(
+    GraphQLIncludeDirective,
+    node as SelectionNode,
+    resolvers,
+    variableValues
+  );
+
+  if (include?.if === false) {
+    return false;
+  }
+
+  return true;
 }
 
 /**
