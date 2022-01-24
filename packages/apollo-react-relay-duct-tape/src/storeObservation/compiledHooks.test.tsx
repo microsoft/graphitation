@@ -691,6 +691,15 @@ describe("compiledHooks", () => {
         expect(client.getObservableQueries().has(query.queryId)).toBeFalsy();
       });
 
+      it("cancels when unmounting", async () => {
+        await act(async () => {
+          const query = last(activeQueries(client));
+          testRenderer.unmount();
+          await new Promise((resolve) => setTimeout(resolve, 0));
+          expect(client.getObservableQueries().has(query.queryId)).toBeFalsy();
+        });
+      });
+
       describe("successfully", () => {
         beforeEach(async () => {
           await act(() => {
