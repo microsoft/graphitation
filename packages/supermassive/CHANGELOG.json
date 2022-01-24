@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Mon, 24 Jan 2022 11:18:59 GMT",
+      "tag": "@graphitation/supermassive_v0.6.0",
+      "version": "0.6.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "6f7d0728d4f196601758acde6fb2b02477201df5",
+            "comment": "Directives implemented"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 19 Jan 2022 13:39:52 GMT",
       "tag": "@graphitation/supermassive_v0.5.2",
       "version": "0.5.2",

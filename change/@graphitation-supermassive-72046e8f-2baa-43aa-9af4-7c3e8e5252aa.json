@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Directives implemented",
-  "packageName": "@graphitation/supermassive",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
