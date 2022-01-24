@@ -33,6 +33,7 @@ import type { Maybe } from "./jsutils/Maybe";
 import type { ObjMap } from "./jsutils/ObjMap";
 import { printPathArray } from "./jsutils/printPathArray";
 import { Resolvers } from "./types";
+import { GraphQLDirective } from "./directives";
 
 type CoercedVariableValues =
   | { errors: Array<GraphQLError>; coerced?: never }
@@ -258,19 +259,19 @@ export function getArgumentValues(
  * Object prototype.
  */
 export function getDirectiveValues(
+  directiveDef: GraphQLDirective,
+  node: { directives?: ReadonlyArray<DirectiveNode> },
   resolvers: Resolvers,
-  node: { directives?: Array<DirectiveNode> },
   variableValues?: Maybe<ObjMap<unknown>>
 ): undefined | { [argument: string]: unknown } {
-  throw new Error("Todo");
-  // // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
-  // const directiveNode = node.directives?.find(
-  //   (directive) => directive.name.value === directiveDef.name
-  // );
+  // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
+  const directiveNode = node.directives?.find(
+    (directive) => directive.name.value === directiveDef.name
+  );
 
-  // if (directiveNode) {
-  //   return getArgumentValues(directiveDef, directiveNode, variableValues);
-  // }
+  if (directiveNode) {
+    return getArgumentValues(resolvers, directiveNode, variableValues);
+  }
 }
 
 function hasOwnProperty(obj: unknown, prop: string): boolean {

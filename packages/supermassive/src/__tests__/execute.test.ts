@@ -25,6 +25,67 @@ const testCases: Array<TestCase> = [
     }
   }`,
   },
+
+  {
+    name: "include directive TRUE",
+    document: `
+  query Person($id: Int!, $include: Boolean!) {
+    person(id: $id) {
+      name
+      gender @include(if: $include)
+    }
+  }
+ `,
+    variables: {
+      id: 1,
+      include: true,
+    },
+  },
+  {
+    name: "include directive FALSE",
+    document: `
+  query Person($id: Int!, $include: Boolean!) {
+    person(id: $id) {
+      name
+      gender @include(if: $include)
+    }
+  }
+ `,
+    variables: {
+      id: 1,
+      include: false,
+    },
+  },
+  {
+    name: "skip directive TRUE",
+    document: `
+  query Person($id: Int!, $skip: Boolean!) {
+    person(id: $id) {
+      name
+      gender @skip(if: $skip)
+    }
+  }
+ `,
+    variables: {
+      id: 1,
+      skip: true,
+    },
+  },
+  {
+    name: "skip directive FALSE",
+    document: `
+  query Person($id: Int!, $skip: Boolean!) {
+    person(id: $id) {
+      name
+      gender @skip(if: $skip)
+    }
+  }
+ `,
+    variables: {
+      id: 1,
+      skip: false,
+    },
+  },
   {
     name: "basic query with variables",
     document: `
