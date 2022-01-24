@@ -691,7 +691,7 @@ describe("compiledHooks", () => {
         expect(client.getObservableQueries().has(query.queryId)).toBeFalsy();
       });
 
-      it.only("cancels when unmounting", async () => {
+      it("cancels when unmounting", async () => {
         await act(async () => {
           const query = last(activeQueries(client));
           testRenderer.unmount();
