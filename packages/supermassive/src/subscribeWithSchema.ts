@@ -1,5 +1,4 @@
-import { makeExecutableSchema } from "@graphql-tools/schema";
-import { isInputType, parse } from "graphql";
+import { isInputType, buildASTSchema } from "graphql";
 import {
   addTypesToRequestDocument,
   subscribeWithoutSchema,
@@ -22,7 +21,7 @@ export function subscribeWithSchema({
 }: ExecutionWithSchemaArgs): Promise<
   AsyncGenerator<ExecutionResult, void, void> | ExecutionResult
 > {
-  const schema = makeExecutableSchema({ typeDefs, resolvers });
+  const schema = buildASTSchema(typeDefs);
   let extractedResolvers: Resolvers = {};
   const getTypeByName = (name: string) => {
     const type = specifiedScalars[name] || extractedResolvers[name];

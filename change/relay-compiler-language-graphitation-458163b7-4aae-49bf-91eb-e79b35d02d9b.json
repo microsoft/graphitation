@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Fix Webpack 4 compat",
+  "packageName": "relay-compiler-language-graphitation",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
