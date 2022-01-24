@@ -12,7 +12,7 @@ import { toObjMap } from "./jsutils/toObjMap";
 import { keyValMap } from "./jsutils/keyValMap";
 
 export function defineArguments(
-  config: GraphQLFieldConfigArgumentMap
+  config: GraphQLFieldConfigArgumentMap,
 ): ReadonlyArray<GraphQLArgument> {
   return Object.entries(config).map(([argName, argConfig]) => ({
     name: argName,
@@ -26,7 +26,7 @@ export function defineArguments(
 }
 
 export function argsToArgsConfig(
-  args: ReadonlyArray<GraphQLArgument>
+  args: ReadonlyArray<GraphQLArgument>,
 ): GraphQLFieldConfigArgumentMap {
   return keyValMap(
     args,
@@ -38,6 +38,6 @@ export function argsToArgsConfig(
       deprecationReason: arg.deprecationReason,
       extensions: arg.extensions,
       astNode: arg.astNode,
-    })
+    }),
   );
 }

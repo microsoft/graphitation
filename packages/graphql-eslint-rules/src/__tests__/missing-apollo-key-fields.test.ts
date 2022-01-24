@@ -137,5 +137,5 @@ ruleTester.runGraphQLTests(
         options: [{ typePolicies }],
       },
     ],
-  }
+  },
 );

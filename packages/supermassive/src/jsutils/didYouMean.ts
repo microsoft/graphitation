@@ -16,22 +16,22 @@ export function didYouMean(
     ? [firstArg as string, secondArg]
     : [undefined, firstArg as ReadonlyArray<string>];
 
-  let message = ' Did you mean ';
+  let message = " Did you mean ";
   if (subMessage) {
-    message += subMessage + ' ';
+    message += subMessage + " ";
   }
 
   const suggestions = suggestionsArg.map((x) => `"${x}"`);
   switch (suggestions.length) {
     case 0:
-      return '';
+      return "";
     case 1:
-      return message + suggestions[0] + '?';
+      return message + suggestions[0] + "?";
     case 2:
-      return message + suggestions[0] + ' or ' + suggestions[1] + '?';
+      return message + suggestions[0] + " or " + suggestions[1] + "?";
   }
 
   const selected = suggestions.slice(0, MAX_SUGGESTIONS);
   const lastItem = selected.pop();
-  return message + selected.join(', ') + ', or ' + lastItem + '?';
+  return message + selected.join(", ") + ", or " + lastItem + "?";
 }

@@ -1,4 +1,4 @@
-import { inspect } from './inspect';
+import { inspect } from "./inspect";
 
 /**
  * A replacement for instanceof which includes an error warning when multi-realm
@@ -7,7 +7,7 @@ import { inspect } from './inspect';
  * See: https://webpack.js.org/guides/production/
  */
 export const instanceOf: (value: unknown, constructor: Constructor) => boolean =
-  process.env.NODE_ENV === 'production'
+  process.env.NODE_ENV === "production"
     ? // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2317')
       function instanceOf(value: unknown, constructor: Constructor): boolean {
         return value instanceof constructor;
@@ -16,7 +16,7 @@ export const instanceOf: (value: unknown, constructor: Constructor) => boolean =
         if (value instanceof constructor) {
           return true;
         }
-        if (typeof value === 'object' && value !== null) {
+        if (typeof value === "object" && value !== null) {
           // Prefer Symbol.toStringTag since it is immune to minification.
           const className = constructor.prototype[Symbol.toStringTag];
           const valueClassName =

@@ -9,7 +9,6 @@ import {
   series,
 } from "just-scripts";
 import * as path from "path";
-import * as fs from "fs";
 import * as glob from "fast-glob";
 
 export const types = () => {
@@ -55,7 +54,7 @@ export const build = () => {
     esbuildTask({
       ...baseEsbuildOptions,
       format: "cjs",
-    })
+    }),
   );
 };
 

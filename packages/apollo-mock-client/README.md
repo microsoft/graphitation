@@ -36,7 +36,7 @@ beforeAll(() => {
     testRenderer = createTestRenderer(
       <ApolloProvider client={client}>
         <FeedbackApp />
-      </ApolloProvider>
+      </ApolloProvider>,
     );
   });
 });
@@ -89,8 +89,8 @@ it("resolves a query", async () => {
   // Resolve the query operation and await the promise
   await act(() =>
     client.mock.resolveMostRecentOperation((operation) =>
-      MockPayloadGenerator.generate(operation)
-    )
+      MockPayloadGenerator.generate(operation),
+    ),
   );
 
   expect(() => {
@@ -102,7 +102,7 @@ it("rejects a query", async () => {
   await act(() => client.mock.rejectMostRecentOperation(new Error("Uh-oh")));
 
   const errorMessage = testRenderer.root.find(
-    (node) => node.props.id === "error"
+    (node) => node.props.id === "error",
   );
   expect(errorMessage.props.children).toBe("Uh-oh");
 });
@@ -158,7 +158,7 @@ const FeedbackComponent: React.FC = (props) => {
 ```tsx
 it("resolves a mutation", async () => {
   const likeButton = testRenderer.root.find(
-    (node) => node.props.id === "likeButton"
+    (node) => node.props.id === "likeButton",
   );
   await act(async () => {
     likeButton.props.onClick();
@@ -174,8 +174,8 @@ it("resolves a mutation", async () => {
             doesViewerLike: true,
           };
         },
-      })
-    )
+      }),
+    ),
   );
 
   expect(likeButton.props.children).toEqual("Unlike");
@@ -183,7 +183,7 @@ it("resolves a mutation", async () => {
 
 it("rejects a mutation", async () => {
   const likeButton = testRenderer.root.find(
-    (node) => node.props.id === "likeButton"
+    (node) => node.props.id === "likeButton",
   );
   await act(async () => {
     likeButton.props.onClick();
@@ -228,13 +228,13 @@ const FeedbackComponent: React.FC = (props) => {
 ```tsx
 it("resolves a subscription", async () => {
   const reaction = testRenderer.root.find(
-    (node) => node.props.id === "reaction"
+    (node) => node.props.id === "reaction",
   );
   expect(reaction.props.children).toBe("Viewer does not like it");
 
   const operation = client.mock.getMostRecentOperation();
   expect(getOperationName(operation.request.node)).toBe(
-    "FeedbackLikeSubscription"
+    "FeedbackLikeSubscription",
   );
   expect(operation.request.variables).toEqual({
     input: {
@@ -252,8 +252,8 @@ it("resolves a subscription", async () => {
             doesViewerLike: true,
           };
         },
-      })
-    )
+      }),
+    ),
   );
   expect(reaction.props.children).toBe("Viewer likes it");
 });

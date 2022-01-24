@@ -5,7 +5,7 @@ import { createAsyncIterator } from "iterall";
 const films: GraphQLFieldResolver<any, any, any> = (
   parent,
   args,
-  { models }
+  { models },
 ) => {
   return models
     .getData("/films")
@@ -15,7 +15,7 @@ const films: GraphQLFieldResolver<any, any, any> = (
 const starships: GraphQLFieldResolver<any, any, any> = (
   parent,
   { id },
-  { models }
+  { models },
 ) => {
   return models
     .getData("/starships")
@@ -33,7 +33,7 @@ function people(key: string): GraphQLFieldResolver<any, any, any> {
 const vehicles: GraphQLFieldResolver<any, any, any> = (
   parent,
   args,
-  { models }
+  { models },
 ) => {
   return models
     .getData("/vehicles")
@@ -43,7 +43,7 @@ const vehicles: GraphQLFieldResolver<any, any, any> = (
 const transports: GraphQLFieldResolver<any, any, any> = (
   parent,
   args,
-  { models }
+  { models },
 ) => {
   return models
     .getData("/transport")
@@ -53,7 +53,7 @@ const transports: GraphQLFieldResolver<any, any, any> = (
 const planets: GraphQLFieldResolver<any, any, any> = (
   parent,
   args,
-  { models }
+  { models },
 ) => {
   return models
     .getData("/planets")
@@ -63,7 +63,7 @@ const planets: GraphQLFieldResolver<any, any, any> = (
 const species: GraphQLFieldResolver<any, any, any> = (
   parent,
   args,
-  { models }
+  { models },
 ) => {
   return models
     .getData("/species")
@@ -72,7 +72,7 @@ const species: GraphQLFieldResolver<any, any, any> = (
 const homeworld: GraphQLFieldResolver<any, any, any> = (
   parent,
   args,
-  { models }
+  { models },
 ) => {
   return models
     .getData("/planets")
@@ -82,7 +82,7 @@ const homeworld: GraphQLFieldResolver<any, any, any> = (
 const person: GraphQLFieldResolver<any, any, any> = (
   parent,
   { id },
-  { models }
+  { models },
 ) => {
   return models.getData("/people").find((person: any) => person.id === id);
 };
@@ -90,7 +90,7 @@ const person: GraphQLFieldResolver<any, any, any> = (
 const planet: GraphQLFieldResolver<any, any, any> = (
   parent,
   { id },
-  { models }
+  { models },
 ) => {
   return models.getData("/planets").find((planet: any) => planet.id === id);
 };
@@ -98,7 +98,7 @@ const planet: GraphQLFieldResolver<any, any, any> = (
 const film: GraphQLFieldResolver<any, any, any> = (
   parent,
   { id },
-  { models }
+  { models },
 ) => {
   return models.getData("/films").find((film: any) => film.id === id);
 };
@@ -106,7 +106,7 @@ const film: GraphQLFieldResolver<any, any, any> = (
 const starship: GraphQLFieldResolver<any, any, any> = (
   parent,
   { id },
-  { models }
+  { models },
 ) => {
   return models
     .getData("/starships")
@@ -116,7 +116,7 @@ const starship: GraphQLFieldResolver<any, any, any> = (
 const transport: GraphQLFieldResolver<any, any, any> = (
   parent,
   { id },
-  { models }
+  { models },
 ) => {
   return models
     .getData("/transport")
@@ -126,7 +126,7 @@ const transport: GraphQLFieldResolver<any, any, any> = (
 const vehicle: GraphQLFieldResolver<any, any, any> = (
   parent,
   { id },
-  { models }
+  { models },
 ) => {
   return models.getData("/vehicles").find((vehicle: any) => vehicle.id === id);
 };
@@ -134,7 +134,7 @@ const vehicle: GraphQLFieldResolver<any, any, any> = (
 const searchPeopleByName: GraphQLFieldResolver<any, any, any> = (
   parent,
   { search },
-  { models }
+  { models },
 ) => {
   return models
     .getData("/people")
@@ -144,7 +144,7 @@ const searchPeopleByName: GraphQLFieldResolver<any, any, any> = (
 const searchPlanetsByName: GraphQLFieldResolver<any, any, any> = (
   parent,
   { search },
-  { models }
+  { models },
 ) => {
   return models
     .getData("/planets")
@@ -154,7 +154,7 @@ const searchPlanetsByName: GraphQLFieldResolver<any, any, any> = (
 const searchFilmsByTitle: GraphQLFieldResolver<any, any, any> = (
   parent,
   { search },
-  { models }
+  { models },
 ) => {
   return models
     .getData("/films")
@@ -164,7 +164,7 @@ const searchFilmsByTitle: GraphQLFieldResolver<any, any, any> = (
 const searchSpeciesByName: GraphQLFieldResolver<any, any, any> = (
   parent,
   { search },
-  { models }
+  { models },
 ) => {
   return models
     .getData("/species")
@@ -174,7 +174,7 @@ const searchSpeciesByName: GraphQLFieldResolver<any, any, any> = (
 const searchStarshipsByName: GraphQLFieldResolver<any, any, any> = (
   parent,
   { search },
-  { models }
+  { models },
 ) => {
   return models
     .getData("/starships")
@@ -184,7 +184,7 @@ const searchStarshipsByName: GraphQLFieldResolver<any, any, any> = (
 const searchVehiclesByName: GraphQLFieldResolver<any, any, any> = (
   parent,
   { search },
-  { models }
+  { models },
 ) => {
   return models
     .getData("/vehicles")
@@ -194,7 +194,7 @@ const searchVehiclesByName: GraphQLFieldResolver<any, any, any> = (
 const emitPersons: GraphQLFieldResolver<any, any, any> = async function (
   parent,
   { limit, throwError },
-  { models }
+  { models },
 ) {
   if (throwError) {
     throw new Error("error");
@@ -212,7 +212,7 @@ const emitPersons: GraphQLFieldResolver<any, any, any> = async function (
 const searchTransportsByName: GraphQLFieldResolver<any, any, any> = (
   parent,
   { search },
-  { models }
+  { models },
 ) => {
   return models
     .getData("/transport")
@@ -234,25 +234,25 @@ const resolvers: IExecutableSchemaDefinition["resolvers"] = {
     search(parent, { search }, { models }, info) {
       const result = [
         ...searchFilmsByTitle(parent, { search }, { models }, info).map(
-          (r: any) => (r.__typename = "Film") && r
+          (r: any) => (r.__typename = "Film") && r,
         ),
         ...searchPeopleByName(parent, { search }, { models }, info).map(
-          (r: any) => (r.__typename = "Person") && r
+          (r: any) => (r.__typename = "Person") && r,
         ),
         ...searchPlanetsByName(parent, { search }, { models }, info).map(
-          (r: any) => (r.__typename = "Planet") && r
+          (r: any) => (r.__typename = "Planet") && r,
         ),
         ...searchSpeciesByName(parent, { search }, { models }, info).map(
-          (r: any) => (r.__typename = "Species") && r
+          (r: any) => (r.__typename = "Species") && r,
         ),
         ...searchStarshipsByName(parent, { search }, { models }, info).map(
-          (r: any) => (r.__typename = "Starship") && r
+          (r: any) => (r.__typename = "Starship") && r,
         ),
         ...searchTransportsByName(parent, { search }, { models }, info).map(
-          (r: any) => (r.__typename = "Transport") && r
+          (r: any) => (r.__typename = "Transport") && r,
         ),
         ...searchVehiclesByName(parent, { search }, { models }, info).map(
-          (r: any) => (r.__typename = "Vehicle") && r
+          (r: any) => (r.__typename = "Vehicle") && r,
         ),
       ];
 

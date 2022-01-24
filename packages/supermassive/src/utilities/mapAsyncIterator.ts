@@ -11,12 +11,12 @@ import type { PromiseOrValue } from "../jsutils/PromiseOrValue";
  */
 export function mapAsyncIterator<T, U, R = undefined>(
   iterable: AsyncGenerator<T, R, void> | AsyncIterable<T>,
-  callback: (value: T) => PromiseOrValue<U>
+  callback: (value: T) => PromiseOrValue<U>,
 ): AsyncGenerator<U, R, void> {
   const iterator = iterable[Symbol.asyncIterator]();
 
   async function mapResult(
-    result: IteratorResult<T, R>
+    result: IteratorResult<T, R>,
   ): Promise<IteratorResult<U, R>> {
     if (result.done) {
       return result;

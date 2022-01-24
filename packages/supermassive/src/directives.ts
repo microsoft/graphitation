@@ -28,7 +28,7 @@ export function isDirective(directive: unknown): directive is GraphQLDirective {
 export function assertDirective(directive: unknown): GraphQLDirective {
   if (!isDirective(directive)) {
     throw new Error(
-      `Expected ${inspect(directive)} to be a GraphQL directive.`
+      `Expected ${inspect(directive)} to be a GraphQL directive.`,
     );
   }
   return directive;
@@ -71,13 +71,13 @@ export class GraphQLDirective {
     devAssert(config.name, "Directive must be named.");
     devAssert(
       Array.isArray(config.locations),
-      `@${config.name} locations must be an Array.`
+      `@${config.name} locations must be an Array.`,
     );
 
     const args = config.args ?? {};
     devAssert(
       isObjectLike(args) && !Array.isArray(args),
-      `@${config.name} args must be an object with argument names as keys.`
+      `@${config.name} args must be an object with argument names as keys.`,
     );
 
     this.args = defineArguments(args);
@@ -190,7 +190,7 @@ export const GraphQLDeprecatedDirective: GraphQLDirective = new GraphQLDirective
         defaultValue: DEFAULT_DEPRECATION_REASON,
       },
     },
-  }
+  },
 );
 
 /**
@@ -207,7 +207,7 @@ export const GraphQLSpecifiedByDirective: GraphQLDirective = new GraphQLDirectiv
         description: "The URL that specifies the behaviour of this scalar.",
       },
     },
-  }
+  },
 );
 
 /**
@@ -219,7 +219,7 @@ export const specifiedDirectives: ReadonlyArray<GraphQLDirective> = Object.freez
     GraphQLSkipDirective,
     GraphQLDeprecatedDirective,
     GraphQLSpecifiedByDirective,
-  ]
+  ],
 );
 
 export function isSpecifiedDirective(directive: GraphQLDirective): boolean {

@@ -7,7 +7,7 @@ import resolvers from "./resolvers";
 export const typeDefs = parse(
   readFileSync(join(__dirname, "./schema.graphql"), {
     encoding: "utf-8",
-  })
+  }),
 );
 
 export default makeExecutableSchema({

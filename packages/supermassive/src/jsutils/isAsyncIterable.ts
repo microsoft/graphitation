@@ -5,5 +5,5 @@
 export function isAsyncIterable(
   maybeAsyncIterable: any,
 ): maybeAsyncIterable is AsyncIterable<unknown> {
-  return typeof maybeAsyncIterable?.[Symbol.asyncIterator] === 'function';
+  return typeof maybeAsyncIterable?.[Symbol.asyncIterator] === "function";
 }

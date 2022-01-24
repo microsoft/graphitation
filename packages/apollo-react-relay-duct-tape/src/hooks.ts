@@ -60,7 +60,7 @@ export type GraphQLTaggedNode = DocumentNode;
 export function useLazyLoadQuery<TQuery extends OperationType>(
   query: GraphQLTaggedNode,
   variables: TQuery["variables"],
-  options?: { fetchPolicy: "cache-first" }
+  options?: { fetchPolicy: "cache-first" },
 ): { error?: Error; data?: TQuery["response"] } {
   return useApolloQuery(query as any, { variables, ...options });
 }
@@ -131,7 +131,7 @@ export function useLazyLoadQuery<TQuery extends OperationType>(
  */
 export function useFragment<TKey extends KeyType>(
   _fragmentInput: GraphQLTaggedNode,
-  fragmentRef: TKey
+  fragmentRef: TKey,
 ): KeyTypeData<TKey> {
   return fragmentRef as unknown;
 }
@@ -150,7 +150,7 @@ interface GraphQLSubscriptionConfig<
 }
 
 export function useSubscription<TSubscriptionPayload extends OperationType>(
-  config: GraphQLSubscriptionConfig<TSubscriptionPayload>
+  config: GraphQLSubscriptionConfig<TSubscriptionPayload>,
 ): void {
   const { error } = useApolloSubscription(config.subscription, {
     variables: config.variables,
@@ -159,7 +159,7 @@ export function useSubscription<TSubscriptionPayload extends OperationType>(
       // https://github.com/apollographql/react-apollo/issues/3177#issuecomment-506758144
       invariant(
         !subscriptionData.error,
-        "Did not expect to receive an error here"
+        "Did not expect to receive an error here",
       );
       if (subscriptionData.data && config.onNext) {
         config.onNext(subscriptionData.data);
@@ -171,7 +171,7 @@ export function useSubscription<TSubscriptionPayload extends OperationType>(
       config.onError(error);
     } else {
       console.warn(
-        `An unhandled GraphQL subscription error occurred: ${error.message}`
+        `An unhandled GraphQL subscription error occurred: ${error.message}`,
       );
     }
   }
@@ -183,7 +183,7 @@ interface IMutationCommitterOptions<TMutationPayload extends OperationType> {
 }
 
 type MutationCommiter<TMutationPayload extends OperationType> = (
-  options: IMutationCommitterOptions<TMutationPayload>
+  options: IMutationCommitterOptions<TMutationPayload>,
 ) => Promise<{ errors?: Error[]; data?: TMutationPayload["response"] }>;
 
 /**
@@ -234,10 +234,10 @@ type MutationCommiter<TMutationPayload extends OperationType> = (
  ```
  */
 export function useMutation<TMutationPayload extends OperationType>(
-  mutation: GraphQLTaggedNode
+  mutation: GraphQLTaggedNode,
 ): [MutationCommiter<TMutationPayload>, boolean] {
   const [apolloUpdater, { loading: mutationLoading }] = useApolloMutation(
-    mutation
+    mutation,
   );
 
   return [

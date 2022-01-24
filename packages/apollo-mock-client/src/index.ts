@@ -30,7 +30,7 @@ export interface OperationDescriptor<
 }
 
 type OperationMockResolver<Schema = GraphQLSchema, Node = DocumentNode> = (
-  operation: OperationDescriptor<Schema, Node>
+  operation: OperationDescriptor<Schema, Node>,
 ) => ExecutionResult | Error | undefined | null;
 
 export interface MockFunctions<Schema = GraphQLSchema, Node = DocumentNode> {
@@ -49,7 +49,7 @@ export interface MockFunctions<Schema = GraphQLSchema, Node = DocumentNode> {
    * found.
    */
   findOperation(
-    findFn: (operation: OperationDescriptor<Schema, Node>) => boolean
+    findFn: (operation: OperationDescriptor<Schema, Node>) => boolean,
   ): OperationDescriptor<Schema, Node>;
 
   /**
@@ -63,7 +63,7 @@ export interface MockFunctions<Schema = GraphQLSchema, Node = DocumentNode> {
    */
   nextValue(
     operation: OperationDescriptor<Schema, Node>,
-    data: ExecutionResult
+    data: ExecutionResult,
   ): Promise<void>;
 
   /**
@@ -86,7 +86,7 @@ export interface MockFunctions<Schema = GraphQLSchema, Node = DocumentNode> {
    */
   resolve(
     operation: OperationDescriptor<Schema, Node>,
-    data: ExecutionResult
+    data: ExecutionResult,
   ): Promise<void>;
 
   /**
@@ -99,7 +99,7 @@ export interface MockFunctions<Schema = GraphQLSchema, Node = DocumentNode> {
    */
   reject(
     operation: OperationDescriptor<Schema, Node>,
-    error: Error
+    error: Error,
   ): Promise<void>;
 
   /**
@@ -111,7 +111,7 @@ export interface MockFunctions<Schema = GraphQLSchema, Node = DocumentNode> {
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
   resolveMostRecentOperation(
-    resolver: (operation: OperationDescriptor<Schema, Node>) => ExecutionResult
+    resolver: (operation: OperationDescriptor<Schema, Node>) => ExecutionResult,
   ): Promise<void>;
 
   /**
@@ -122,14 +122,14 @@ export interface MockFunctions<Schema = GraphQLSchema, Node = DocumentNode> {
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
   rejectMostRecentOperation(
-    error: Error | ((operation: OperationDescriptor<Schema, Node>) => Error)
+    error: Error | ((operation: OperationDescriptor<Schema, Node>) => Error),
   ): Promise<void>;
 
   /**
    * Adds a resolver function that will be used to resolve/reject operations as they appear.
    */
   queueOperationResolver: (
-    resolver: OperationMockResolver<Schema, Node>
+    resolver: OperationMockResolver<Schema, Node>,
   ) => Promise<void>;
 }
 
@@ -168,7 +168,7 @@ class MockLink extends ApolloLink {
             variables: operation.variables || {},
           },
         },
-        observer
+        observer,
       );
     });
   }
@@ -177,7 +177,7 @@ class MockLink extends ApolloLink {
 function executeOperationMockResolver(
   resolver: OperationMockResolver,
   operation: OperationDescriptor,
-  observer: ZenObservable.SubscriptionObserver<FetchResult>
+  observer: ZenObservable.SubscriptionObserver<FetchResult>,
 ) {
   const resolved = resolver(operation);
   if (resolved) {
@@ -207,7 +207,7 @@ class Mock implements MockFunctions {
 
   public addOperation(
     operation: OperationDescriptor,
-    observer: ZenObservable.SubscriptionObserver<FetchResult>
+    observer: ZenObservable.SubscriptionObserver<FetchResult>,
   ) {
     for (const resolver of this.resolversQueue) {
       if (executeOperationMockResolver(resolver, operation, observer)) {
@@ -236,13 +236,13 @@ class Mock implements MockFunctions {
     const operations = this.getAllOperations();
     invariant(
       operations.length > 0,
-      "Expected at least one operation to have been started"
+      "Expected at least one operation to have been started",
     );
     return operations[operations.length - 1];
   }
 
   public findOperation(
-    findFn: (operation: OperationDescriptor) => boolean
+    findFn: (operation: OperationDescriptor) => boolean,
   ): OperationDescriptor {
     let result: OperationDescriptor | null = null;
     for (const operation of this.operations.keys()) {
@@ -253,14 +253,14 @@ class Mock implements MockFunctions {
     }
     invariant(
       result,
-      "Operation was not found in the list of pending operations"
+      "Operation was not found in the list of pending operations",
     );
     return result;
   }
 
   public async nextValue(
     operation: OperationDescriptor,
-    data: ExecutionResult
+    data: ExecutionResult,
   ): Promise<void> {
     this.getObserver(operation).next(data);
   }
@@ -273,7 +273,7 @@ class Mock implements MockFunctions {
 
   public async resolve(
     operation: OperationDescriptor,
-    data: ExecutionResult
+    data: ExecutionResult,
   ): Promise<void> {
     this.nextValue(operation, data);
     this.complete(operation);
@@ -281,26 +281,26 @@ class Mock implements MockFunctions {
 
   public async reject(
     operation: OperationDescriptor,
-    error: Error
+    error: Error,
   ): Promise<void> {
     this.getObserver(operation).error(error);
     this.complete(operation);
   }
 
   public async resolveMostRecentOperation(
-    resolver: (operation: OperationDescriptor) => ExecutionResult
+    resolver: (operation: OperationDescriptor) => ExecutionResult,
   ): Promise<void> {
     const operation = this.getMostRecentOperation();
     this.resolve(operation, resolver(operation));
   }
 
   public async rejectMostRecentOperation(
-    error: Error | ((operation: OperationDescriptor) => Error)
+    error: Error | ((operation: OperationDescriptor) => Error),
   ): Promise<void> {
     const operation = this.getMostRecentOperation();
     this.reject(
       operation,
-      typeof error === "function" ? error(operation) : error
+      typeof error === "function" ? error(operation) : error,
     );
   }
 
@@ -348,6 +348,6 @@ export function createMockClient(schema: GraphQLSchema): ApolloMockClient {
       // mockClear() {
       //   link.mockClear();
       // },
-    }
+    },
   );
 }

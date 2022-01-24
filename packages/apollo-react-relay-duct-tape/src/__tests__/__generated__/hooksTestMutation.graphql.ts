@@ -1,18 +1,17 @@
 /* tslint:disable */
 /* eslint-disable */
 // @ts-nocheck
-;
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type hooksTestMutationVariables = {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 };
 export type hooksTestMutationResponse = {
-    readonly updateUserName: {
-        readonly " $fragmentRefs": FragmentRefs<"hooksTestFragment">;
-    };
+  readonly updateUserName: {
+    readonly " $fragmentRefs": FragmentRefs<"hooksTestFragment">;
+  };
 };
 export type hooksTestMutation = {
-    readonly response: hooksTestMutationResponse;
-    readonly variables: hooksTestMutationVariables;
+  readonly response: hooksTestMutationResponse;
+  readonly variables: hooksTestMutationVariables;
 };

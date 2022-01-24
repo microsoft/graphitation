@@ -17,7 +17,7 @@ export type MockResolverContext = Readonly<{
 
 type MockResolver = (
   context: MockResolverContext,
-  generateId: () => number
+  generateId: () => number,
 ) => unknown;
 
 export type MockResolvers = Record<string, MockResolver>;
@@ -31,7 +31,7 @@ export type ValueResolver = (
   typeName: string | null,
   context: MockResolverContext,
   plural: boolean,
-  defaultValue?: unknown
+  defaultValue?: unknown,
 ) => unknown;
 
 export const DEFAULT_MOCK_TYPENAME = "__MockObject";
@@ -68,7 +68,7 @@ function valueResolver(
   typeName: string | null,
   context: MockResolverContext,
   plural: boolean = false,
-  defaultValue?: unknown
+  defaultValue?: unknown,
 ): unknown {
   const generateValue = (possibleDefaultValue: unknown) => {
     let mockValue;
@@ -94,13 +94,13 @@ function valueResolver(
   return plural === true
     ? generateMockList(
         Array.isArray(defaultValue) ? defaultValue : Array(1).fill(null),
-        generateValue
+        generateValue,
       )
     : generateValue(defaultValue);
 }
 
 export function createValueResolver(
-  mockResolvers: MockResolvers | null
+  mockResolvers: MockResolvers | null,
 ): ValueResolver {
   const generateId = createIdGenerator();
   return valueResolver.bind(null, generateId, mockResolvers);
@@ -108,9 +108,9 @@ export function createValueResolver(
 
 function generateMockList<T>(
   placeholderArray: ReadonlyArray<unknown>,
-  generateListItem: (defaultValue: unknown) => T
+  generateListItem: (defaultValue: unknown) => T,
 ): ReadonlyArray<T> {
   return placeholderArray.map((possibleDefaultValue) =>
-    generateListItem(possibleDefaultValue)
+    generateListItem(possibleDefaultValue),
   );
 }

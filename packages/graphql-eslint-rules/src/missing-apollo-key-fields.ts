@@ -44,36 +44,36 @@ function getBaseType(type: GraphQLOutputType): GraphQLNamedType {
 
 function checkRequiredParameters(
   ruleName: string,
-  context: GraphQLESLintRuleContext
+  context: GraphQLESLintRuleContext,
 ) {
   if (!context.parserServices) {
     throw new Error(
-      `Rule '${ruleName}' requires 'parserOptions.operations' to be set and loaded. See http://bit.ly/graphql-eslint-operations for more info`
+      `Rule '${ruleName}' requires 'parserOptions.operations' to be set and loaded. See http://bit.ly/graphql-eslint-operations for more info`,
     );
   }
 
   if (!context.parserServices.siblingOperations.available) {
     throw new Error(
-      `Rule '${ruleName}' requires 'parserOptions.operations' to be set and loaded. See http://bit.ly/graphql-eslint-operations for more info`
+      `Rule '${ruleName}' requires 'parserOptions.operations' to be set and loaded. See http://bit.ly/graphql-eslint-operations for more info`,
     );
   }
 
   if (!context.parserServices.hasTypeInfo) {
     throw new Error(
-      `Rule '${ruleName}' requires 'parserOptions.schema' to be set and schema to be loaded. See http://bit.ly/graphql-eslint-schema for more info`
+      `Rule '${ruleName}' requires 'parserOptions.schema' to be set and schema to be loaded. See http://bit.ly/graphql-eslint-schema for more info`,
     );
   }
 
   if (!context.options[0]?.typePolicies) {
     throw new Error(
-      `Rule '${ruleName}' requires option 'typePolicies' to be set.`
+      `Rule '${ruleName}' requires option 'typePolicies' to be set.`,
     );
   }
 }
 
 function keyFieldsForType(
   type: GraphQLObjectType | GraphQLInterfaceType,
-  typePolicies: TypePolicies
+  typePolicies: TypePolicies,
 ) {
   const keyFields: string[] = [];
   const typePolicy = typePolicies[type.name];
@@ -125,8 +125,8 @@ function hasIdFieldInInterfaceSelectionSet(node: unknown, keyFields: string[]) {
     ) {
       return keyFields.every((keyField) =>
         parentSelectionSetNode.selections.some(
-          (s) => s.kind === "Field" && s.name.value === keyField
-        )
+          (s) => s.kind === "Field" && s.name.value === keyField,
+        ),
       );
     }
   }
@@ -238,12 +238,12 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
                   }
                 } else if (selection.kind === "FragmentSpread") {
                   const foundSpread = siblings.getFragment(
-                    selection.name.value
+                    selection.name.value,
                   );
 
                   if (foundSpread[0]) {
                     checkedFragmentSpreads.add(
-                      foundSpread[0].document.name.value
+                      foundSpread[0].document.name.value,
                     );
 
                     for (const fragmentSpreadSelection of foundSpread[0]
@@ -305,7 +305,7 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
 
                     return fixer.insertTextBefore(
                       firstSelection as any,
-                      `${unusedKeyFields.join(`\n`)}\n`
+                      `${unusedKeyFields.join(`\n`)}\n`,
                     );
                   },
                 });

@@ -13,11 +13,11 @@ function formatValue(
   seenValues: ReadonlyArray<unknown>,
 ): string {
   switch (typeof value) {
-    case 'string':
+    case "string":
       return JSON.stringify(value);
-    case 'function':
-      return value.name ? `[function ${value.name}]` : '[function]';
-    case 'object':
+    case "function":
+      return value.name ? `[function ${value.name}]` : "[function]";
+    case "object":
       return formatObjectValue(value, seenValues);
     default:
       return String(value);
@@ -29,11 +29,11 @@ function formatObjectValue(
   previouslySeenValues: ReadonlyArray<unknown>,
 ): string {
   if (value === null) {
-    return 'null';
+    return "null";
   }
 
   if (previouslySeenValues.includes(value)) {
-    return '[Circular]';
+    return "[Circular]";
   }
 
   const seenValues = [...previouslySeenValues, value];
@@ -43,7 +43,7 @@ function formatObjectValue(
 
     // check for infinite recursion
     if (jsonValue !== value) {
-      return typeof jsonValue === 'string'
+      return typeof jsonValue === "string"
         ? jsonValue
         : formatValue(jsonValue, seenValues);
     }
@@ -55,7 +55,7 @@ function formatObjectValue(
 }
 
 function isJSONable(value: any): value is { toJSON: () => unknown } {
-  return typeof value.toJSON === 'function';
+  return typeof value.toJSON === "function";
 }
 
 function formatObject(
@@ -64,17 +64,17 @@ function formatObject(
 ): string {
   const entries = Object.entries(object);
   if (entries.length === 0) {
-    return '{}';
+    return "{}";
   }
 
   if (seenValues.length > MAX_RECURSIVE_DEPTH) {
-    return '[' + getObjectTag(object) + ']';
+    return "[" + getObjectTag(object) + "]";
   }
 
   const properties = entries.map(
-    ([key, value]) => key + ': ' + formatValue(value, seenValues),
+    ([key, value]) => key + ": " + formatValue(value, seenValues),
   );
-  return '{ ' + properties.join(', ') + ' }';
+  return "{ " + properties.join(", ") + " }";
 }
 
 function formatArray(
@@ -82,11 +82,11 @@ function formatArray(
   seenValues: ReadonlyArray<unknown>,
 ): string {
   if (array.length === 0) {
-    return '[]';
+    return "[]";
   }
 
   if (seenValues.length > MAX_RECURSIVE_DEPTH) {
-    return '[Array]';
+    return "[Array]";
   }
 
   const len = Math.min(MAX_ARRAY_LENGTH, array.length);
@@ -98,23 +98,23 @@ function formatArray(
   }
 
   if (remaining === 1) {
-    items.push('... 1 more item');
+    items.push("... 1 more item");
   } else if (remaining > 1) {
     items.push(`... ${remaining} more items`);
   }
 
-  return '[' + items.join(', ') + ']';
+  return "[" + items.join(", ") + "]";
 }
 
 function getObjectTag(object: object): string {
   const tag = Object.prototype.toString
     .call(object)
-    .replace(/^\[object /, '')
-    .replace(/]$/, '');
+    .replace(/^\[object /, "")
+    .replace(/]$/, "");
 
-  if (tag === 'Object' && typeof object.constructor === 'function') {
+  if (tag === "Object" && typeof object.constructor === "function") {
     const name = object.constructor.name;
-    if (typeof name === 'string' && name !== '') {
+    if (typeof name === "string" && name !== "") {
       return name;
     }
   }

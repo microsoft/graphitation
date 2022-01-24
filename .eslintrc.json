@@ -9,5 +9,10 @@
     "es6": true,
     "node": true
   },
-  "ignorePatterns": ["**/coverage", "**/lib", "**/temp"]
+  "ignorePatterns": ["**/coverage", "**/lib", "**/temp"],
+  "plugins": ["prettier"],
+  "rules": {
+    "prettier/prettier": "error"
+  },
+  "extends": ["plugin:prettier/recommended"]
 }

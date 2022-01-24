@@ -200,7 +200,7 @@ describe("executeWithoutSchema", () => {
 
 async function compareResultsForExecuteWithSchema(
   query: string,
-  variables?: Record<string, unknown>
+  variables?: Record<string, unknown>,
 ) {
   expect.assertions(1);
   const document = parse(query);
@@ -226,7 +226,7 @@ async function compareResultsForExecuteWithSchema(
 
 async function compareResultsForExecuteWithoutSchema(
   query: string,
-  variables: Record<string, unknown> = {}
+  variables: Record<string, unknown> = {},
 ) {
   expect.assertions(1);
   let fullResolvers: Resolvers<any, any> = {};
@@ -240,7 +240,7 @@ async function compareResultsForExecuteWithoutSchema(
   };
   const extractedResolvers: Resolvers<any, any> = extractImplicitTypes(
     typeDefs,
-    getTypeByName
+    getTypeByName,
   );
   fullResolvers = {
     ...extractedResolvers,

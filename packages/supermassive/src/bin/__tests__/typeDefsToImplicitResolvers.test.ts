@@ -28,8 +28,8 @@ describe(supermassive, () => {
     expect(
       await fs.readFile(
         path.join(__dirname, "./fixtures/__generated__/schema.ts"),
-        { encoding: "utf-8" }
-      )
+        { encoding: "utf-8" },
+      ),
     ).toMatchSnapshot();
   });
 });

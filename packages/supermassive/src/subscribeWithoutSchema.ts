@@ -56,7 +56,7 @@ import {
  * Accepts either an object with named arguments, or individual arguments.
  */
 export async function subscribeWithoutSchema(
-  args: ExecutionWithoutSchemaArgs
+  args: ExecutionWithoutSchemaArgs,
 ): Promise<AsyncGenerator<ExecutionResult, void, void> | ExecutionResult> {
   const {
     resolvers,
@@ -76,7 +76,7 @@ export async function subscribeWithoutSchema(
     contextValue,
     variableValues,
     operationName,
-    subscribeFieldResolver
+    subscribeFieldResolver,
   );
 
   if (!isAsyncIterable(resultOrStream)) {
@@ -139,7 +139,7 @@ export async function createSourceEventStream(
   contextValue?: unknown,
   variableValues?: Maybe<{ readonly [variable: string]: unknown }>,
   operationName?: Maybe<string>,
-  fieldResolver?: Maybe<FunctionFieldResolver<any, any>>
+  fieldResolver?: Maybe<FunctionFieldResolver<any, any>>,
 ): Promise<AsyncIterable<unknown> | ExecutionResult> {
   // If arguments are missing or incorrectly typed, this is an internal
   // developer mistake which should throw an early error.
@@ -154,7 +154,7 @@ export async function createSourceEventStream(
       contextValue,
       variableValues,
       operationName,
-      fieldResolver
+      fieldResolver,
     );
 
     // Return early errors if execution context failed.
@@ -168,7 +168,7 @@ export async function createSourceEventStream(
     if (!isAsyncIterable(eventStream)) {
       throw new Error(
         "Subscription field must return Async Iterable. " +
-          `Received: ${inspect(eventStream)}.`
+          `Received: ${inspect(eventStream)}.`,
       );
     }
 
@@ -184,7 +184,7 @@ export async function createSourceEventStream(
 }
 
 async function executeSubscription(
-  exeContext: ExecutionContext
+  exeContext: ExecutionContext,
 ): Promise<unknown> {
   const {
     resolvers,
@@ -201,7 +201,7 @@ async function executeSubscription(
     typeName,
     operation.selectionSet,
     new Map(),
-    new Set()
+    new Set(),
   );
 
   const [responseName, fieldNodes] = [...fields.entries()][0];
@@ -241,7 +241,7 @@ async function executeSubscription(
     typeName,
     returnTypeName,
     returnTypeNode,
-    path
+    path,
   );
 
   try {
@@ -269,7 +269,7 @@ async function executeSubscription(
     throw locatedError(
       error,
       fieldNodes as ReadonlyArray<GraphQLASTNode>,
-      pathToArray(path)
+      pathToArray(path),
     );
   }
 }

@@ -29,17 +29,17 @@ const {
 const schema = buildSchema(
   readFileSync(
     require.resolve("relay-test-utils-internal/lib/testschema.graphql"),
-    "utf8"
-  )
+    "utf8",
+  ),
 );
 
 function testGeneratedData(
   documentNode: DocumentNode,
-  mockResolvers?: MockResolvers | null
+  mockResolvers?: MockResolvers | null,
 ): void {
   const payload = generate(
     { schema, request: { node: documentNode, variables: {} } },
-    mockResolvers
+    mockResolvers,
   );
   expect({
     [FIXTURE_TAG]: true,
@@ -255,7 +255,7 @@ test("generate basic mock data", () => {
       }
       ${fragment}
     `,
-    null // Mock Resolvers
+    null, // Mock Resolvers
   );
 });
 
@@ -286,7 +286,7 @@ xtest("generate mock using custom mock functions", () => {
           return "http://my-uri";
         }
       },
-    }
+    },
   );
 });
 
@@ -323,7 +323,7 @@ test("generate mock using custom mock functions for object type", () => {
           uri: "http://my-image",
         };
       },
-    }
+    },
   );
 });
 
@@ -357,7 +357,7 @@ test("generate mock for objects without concrete type", () => {
           name: "Mark",
         };
       },
-    }
+    },
   );
 });
 
@@ -401,7 +401,7 @@ xtest("generate mock using custom mock functions for object type (multiple objec
           uri: "http://my-image",
         };
       },
-    }
+    },
   );
 });
 
@@ -438,7 +438,7 @@ xtest("check context in the mock resolver", () => {
           uri: "http://my-image",
         };
       },
-    }
+    },
   );
   expect(checkContext).toMatchInlineSnapshot(`
      Object {
@@ -519,7 +519,7 @@ xtest("generate mock with manual mock for objects", () => {
           },
         };
       },
-    }
+    },
   );
 });
 
@@ -591,7 +591,7 @@ xtest("generate mock and verify arguments in the context", () => {
           };
         }
       },
-    }
+    },
   );
 });
 
@@ -623,7 +623,7 @@ xtest("generate mock for fragment with @argumentsDefinition", () => {
           height: 42,
         };
       },
-    }
+    },
   );
 });
 
@@ -831,7 +831,7 @@ xtest("should return `null` for selection if that is specified in default values
           actor: null,
         };
       },
-    }
+    },
   );
 });
 
@@ -907,7 +907,7 @@ describe("with @relay_test_operation", () => {
             name: "my-name",
           };
         },
-      }
+      },
     );
   });
 
@@ -930,7 +930,7 @@ describe("with @relay_test_operation", () => {
             name: "my-name",
           };
         },
-      }
+      },
     );
   });
 
@@ -971,7 +971,7 @@ describe("with @relay_test_operation", () => {
             name: "my-page-name",
           };
         },
-      }
+      },
     );
   });
 
@@ -1006,7 +1006,7 @@ describe("with @relay_test_operation", () => {
             name: "my-page-name",
           };
         },
-      }
+      },
     );
   });
 
@@ -1029,7 +1029,7 @@ describe("with @relay_test_operation", () => {
             name: "my-user-name",
           };
         },
-      }
+      },
     );
   });
 
@@ -1052,7 +1052,7 @@ describe("with @relay_test_operation", () => {
             name: null,
           };
         },
-      }
+      },
     );
   });
 
@@ -1076,7 +1076,7 @@ describe("with @relay_test_operation", () => {
               .map((__, idx) => `mock_email-${idx}-${generateId()}@fb.com`),
           };
         },
-      }
+      },
     );
   });
 
@@ -1098,7 +1098,7 @@ describe("with @relay_test_operation", () => {
             emailAddresses: [],
           };
         },
-      }
+      },
     );
   });
 
@@ -1132,7 +1132,7 @@ describe("with @relay_test_operation", () => {
             edges: Array(5).fill(null),
           };
         },
-      }
+      },
     );
   });
 
@@ -1166,7 +1166,7 @@ describe("with @relay_test_operation", () => {
             edges: [null, undefined],
           };
         },
-      }
+      },
     );
   });
 
@@ -1213,7 +1213,7 @@ describe("with @relay_test_operation", () => {
             ],
           };
         },
-      }
+      },
     );
   });
 
@@ -1259,7 +1259,7 @@ describe("with @relay_test_operation", () => {
             ],
           };
         },
-      }
+      },
     );
   });
 
@@ -1295,7 +1295,7 @@ describe("with @relay_test_operation", () => {
             edges: Array(2).fill(null),
           };
         },
-      }
+      },
     );
   });
 
@@ -1326,7 +1326,7 @@ describe("with @relay_test_operation", () => {
             },
           };
         },
-      }
+      },
     );
   });
 
@@ -1362,7 +1362,7 @@ describe("with @relay_test_operation", () => {
             },
           };
         },
-      }
+      },
     );
   });
 
@@ -1384,7 +1384,7 @@ describe("with @relay_test_operation", () => {
             emailAddresses: "my@email.com",
           };
         },
-      }
+      },
     );
   });
 
@@ -1406,7 +1406,7 @@ describe("with @relay_test_operation", () => {
             environment: "Web",
           };
         },
-      }
+      },
     );
   });
 
@@ -1428,7 +1428,7 @@ describe("with @relay_test_operation", () => {
             traits: ["CHEERFUL", "DERISIVE"],
           };
         },
-      }
+      },
     );
   });
 
@@ -1451,10 +1451,10 @@ describe("with @relay_test_operation", () => {
               environment: "INVALID_VALUE",
             };
           },
-        }
+        },
       );
     }).toThrow(
-      'RelayMockPayloadGenerator: Invalid value "INVALID_VALUE" provided for enum field'
+      'RelayMockPayloadGenerator: Invalid value "INVALID_VALUE" provided for enum field',
     );
   });
 
@@ -1476,7 +1476,7 @@ describe("with @relay_test_operation", () => {
             environment: null,
           };
         },
-      }
+      },
     );
   });
 
@@ -1492,7 +1492,7 @@ describe("with @relay_test_operation", () => {
             }
           }
         }
-      `
+      `,
     );
   });
 
@@ -1529,7 +1529,7 @@ describe("with @relay_test_operation", () => {
             __module_operation: require("./__generated__/RelayMockPayloadGeneratorTestMarkdownUserNameRenderer_name$normalization.graphql"),
           };
         },
-      }
+      },
     );
   });
 
@@ -1576,7 +1576,7 @@ describe("with @relay_test_operation", () => {
             __module_operation: require("./__generated__/RelayMockPayloadGeneratorTest1MarkdownUserNameRenderer_name$normalization.graphql"),
           };
         },
-      }
+      },
     );
   });
 
@@ -1623,7 +1623,7 @@ describe("with @relay_test_operation", () => {
             __module_operation: require("./__generated__/RelayMockPayloadGeneratorTest3PlainUserNameRenderer_name$normalization.graphql"),
           };
         },
-      }
+      },
     );
   });
 
@@ -1663,7 +1663,7 @@ describe("with @relay_test_operation", () => {
               },
             };
           },
-        }
+        },
       );
     }).toThrowErrorMatchingSnapshot();
   });
@@ -1698,7 +1698,7 @@ describe("with @relay_test_operation", () => {
         UserNameRenderer() {
           return null;
         },
-      }
+      },
     );
   });
 });
@@ -1759,6 +1759,6 @@ test("deeply merges fragment data", () => {
       }
       ${RelayMockPayloadGeneratorTestDeepMergeFragment1}
       ${RelayMockPayloadGeneratorTestDeepMergeFragment2}
-    `
+    `,
   );
 });

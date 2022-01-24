@@ -17,7 +17,7 @@ export * from "./TypedAST";
 
 export function addTypesToRequestDocument(
   schema: GraphQLSchema,
-  document: TypelessAST.DocumentNode
+  document: TypelessAST.DocumentNode,
 ): TypedAST.DocumentNode {
   const typeInfo = new TypeInfo(schema);
   return visit(
@@ -41,7 +41,7 @@ export function addTypesToRequestDocument(
         node: Omit<
           TypelessAST.FieldNode,
           "selectionSet" | "arguments" | "directives"
-        >
+        >,
       ) {
         const type = typeInfo.getType();
         if (type) {
@@ -54,7 +54,7 @@ export function addTypesToRequestDocument(
         }
         throw new Error(`Unhandled: ${type}`);
       },
-    })
+    }),
   );
 }
 

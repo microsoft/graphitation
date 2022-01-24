@@ -14,14 +14,14 @@ describe(extractImplicitTypesToTypescript, () => {
       path.join(__dirname, "../benchmarks/swapi-schema/schema.graphql"),
       {
         encoding: "utf-8",
-      }
+      },
     );
     const sourceFile = extractImplicitTypesToTypescript(parse(typeDefs));
     const printer = ts.createPrinter();
     const printedSource = printer.printNode(
       ts.EmitHint.SourceFile,
       sourceFile,
-      sourceFile
+      sourceFile,
     );
     expect(printedSource).toMatchInlineSnapshot(`
           "import { GraphQLList, GraphQLNonNull, GraphQLID, GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLEnumType } from \\"graphql\\";
@@ -50,7 +50,7 @@ describe(extractImplicitTypes, () => {
       path.join(__dirname, "../benchmarks/swapi-schema/schema.graphql"),
       {
         encoding: "utf-8",
-      }
+      },
     );
     let resolvers: Resolvers = {};
     const getTypeByName = (name: string) => {
