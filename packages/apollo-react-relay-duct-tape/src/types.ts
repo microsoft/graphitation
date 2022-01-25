@@ -1,3 +1,5 @@
+import type { DocumentNode } from "graphql";
+
 export interface Variables {
   [name: string]: any;
 }
@@ -12,6 +14,16 @@ export interface OperationType {
   readonly response: unknown;
   readonly rawResponse?: unknown;
 }
+
+export type GraphQLTaggedNode =
+  | (DocumentNode & { watchQueryDocument?: never })
+  | { watchQueryDocument: DocumentNode; executeQueryDocument?: DocumentNode };
+
+export type FetchPolicy =
+  | "store-or-network"
+  | "store-and-network"
+  | "network-only"
+  | "store-only";
 
 /**
  * relay-compiler-language-typescript support for fragment references

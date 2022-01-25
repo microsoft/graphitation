@@ -8,7 +8,13 @@ import {
   ErrorPolicy as ApolloErrorPolicy,
 } from "@apollo/client";
 
-import { KeyType, KeyTypeData, OperationType } from "./types";
+import {
+  FetchPolicy,
+  GraphQLTaggedNode,
+  KeyType,
+  KeyTypeData,
+  OperationType,
+} from "./types";
 import {
   RefetchFn,
   PaginationFn,
@@ -17,10 +23,7 @@ import {
   useCompiledRefetchableFragment,
   useCompiledPaginationFragment,
 } from "./storeObservation/compiledHooks";
-
-export type GraphQLTaggedNode =
-  | (DocumentNode & { watchQueryDocument?: never })
-  | { watchQueryDocument: DocumentNode; executeQueryDocument?: DocumentNode };
+import { convertFetchPolicy } from "./convertFetchPolicy";
 
 /**
  * Executes a GraphQL query.
@@ -72,12 +75,19 @@ export type GraphQLTaggedNode =
 export function useLazyLoadQuery<TQuery extends OperationType>(
   query: GraphQLTaggedNode,
   variables: TQuery["variables"],
-  options?: { fetchPolicy?: "cache-first"; context?: TQuery["context"] },
+  options?: { fetchPolicy?: FetchPolicy; context?: TQuery["context"] },
 ): { error?: Error; data?: TQuery["response"] } {
+  const apolloOptions = options && {
+    ...options,
+    fetchPolicy: convertFetchPolicy(options.fetchPolicy),
+  };
   if (query.watchQueryDocument) {
-    return useCompiledLazyLoadQuery(query as any, { variables, ...options });
+    return useCompiledLazyLoadQuery(query as any, {
+      variables,
+      ...apolloOptions,
+    });
   } else {
-    return useApolloQuery(query, { variables, ...options });
+    return useApolloQuery(query, { variables, ...apolloOptions });
   }
 }
 
@@ -158,27 +168,27 @@ export function useFragment<TKey extends KeyType>(
 
 export function useRefetchableFragment<
   TQuery extends OperationType,
-  TKey extends KeyType
+  TKey extends KeyType,
 >(
   fragmentInput: GraphQLTaggedNode,
-  fragmentRef: TKey
+  fragmentRef: TKey,
 ): [data: KeyTypeData<TKey>, refetch: RefetchFn<TQuery["variables"]>] {
   invariant(
     !!fragmentInput.watchQueryDocument,
-    "useRefetchableFragment is only supported at this time when using compilation"
+    "useRefetchableFragment is only supported at this time when using compilation",
   );
   return useCompiledRefetchableFragment(
     fragmentInput as any,
-    fragmentRef as any
+    fragmentRef as any,
   );
 }
 
 export function usePaginationFragment<
   TQuery extends OperationType,
-  TKey extends KeyType
+  TKey extends KeyType,
 >(
   fragmentInput: GraphQLTaggedNode,
-  fragmentRef: TKey
+  fragmentRef: TKey,
 ): {
   data: KeyTypeData<TKey>;
   loadNext: PaginationFn;
@@ -191,11 +201,11 @@ export function usePaginationFragment<
 } {
   invariant(
     !!fragmentInput.watchQueryDocument,
-    "usePaginationFragment is only supported at this time when using compilation"
+    "usePaginationFragment is only supported at this time when using compilation",
   );
   return useCompiledPaginationFragment(
     fragmentInput as any,
-    fragmentRef as any
+    fragmentRef as any,
   );
 }
 
