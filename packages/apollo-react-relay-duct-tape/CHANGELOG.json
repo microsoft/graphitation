@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Tue, 25 Jan 2022 09:56:59 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v0.7.5",
+      "version": "0.7.5",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "5fddfaa87809a5e094f61cb2bbd3f1b69202e7f1",
+            "comment": "Add prettierrc, add it to linter and force it to do it"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 24 Jan 2022 13:40:52 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v0.7.5",
       "version": "0.7.5",

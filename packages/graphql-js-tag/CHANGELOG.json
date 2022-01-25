@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-tag",
   "entries": [
     {
+      "date": "Tue, 25 Jan 2022 09:56:59 GMT",
+      "tag": "@graphitation/graphql-js-tag_v0.8.2",
+      "version": "0.8.2",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-js-tag",
+            "commit": "5fddfaa87809a5e094f61cb2bbd3f1b69202e7f1",
+            "comment": "Add prettierrc, add it to linter and force it to do it"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 14 Jan 2022 11:15:34 GMT",
       "tag": "@graphitation/graphql-js-tag_v0.8.2",
       "version": "0.8.2",

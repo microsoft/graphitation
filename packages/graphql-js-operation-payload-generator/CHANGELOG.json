@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Tue, 25 Jan 2022 09:56:59 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.8.3",
+      "version": "0.8.3",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "commit": "5fddfaa87809a5e094f61cb2bbd3f1b69202e7f1",
+            "comment": "Add prettierrc, add it to linter and force it to do it"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 24 Jan 2022 13:40:52 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.8.3",
       "version": "0.8.3",
