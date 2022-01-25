@@ -10,9 +10,7 @@ import {
   GraphQLRuleTester,
   ParserOptions,
 } from "@graphql-eslint/eslint-plugin";
-import missingApolloKeyFieldsRule, {
-  REQUIRE_KEY_FIELDS_WHEN_AVAILABLE,
-} from "../missing-apollo-key-fields";
+import missingApolloKeyFieldsRule from "../missing-apollo-key-fields";
 
 const TEST_SCHEMA = /* GraphQL */ `
   type Query {

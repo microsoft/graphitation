@@ -19,7 +19,7 @@ import {
   GraphQLESTreeNode,
   GraphQLESLintRuleContext,
 } from "@graphql-eslint/eslint-plugin";
-import { RuleFixer } from "@typescript-eslint/experimental-utils/dist/ts-eslint";
+import { RuleFixer } from "@typescript-eslint/utils/dist/ts-eslint";
 
 export const REQUIRE_KEY_FIELDS_WHEN_AVAILABLE = "missing-apollo-key-fields";
 const DEFAULT_KEY_FIELD_NAME = "id";
