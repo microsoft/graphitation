@@ -6,7 +6,13 @@ import {
   useMutation as useApolloMutation,
 } from "@apollo/client";
 
-import { KeyType, KeyTypeData, OperationType } from "./types";
+import {
+  FetchPolicy,
+  GraphQLTaggedNode,
+  KeyType,
+  KeyTypeData,
+  OperationType,
+} from "./types";
 import {
   RefetchFn,
   PaginationFn,
@@ -15,10 +21,7 @@ import {
   useCompiledRefetchableFragment,
   useCompiledPaginationFragment,
 } from "./storeObservation/compiledHooks";
-
-export type GraphQLTaggedNode =
-  | (DocumentNode & { watchQueryDocument?: never })
-  | { watchQueryDocument: DocumentNode; executeQueryDocument?: DocumentNode };
+import { convertFetchPolicy } from "./convertFetchPolicy";
 
 /**
  * Executes a GraphQL query.
@@ -68,12 +71,19 @@ export type GraphQLTaggedNode =
 export function useLazyLoadQuery<TQuery extends OperationType>(
   query: GraphQLTaggedNode,
   variables: TQuery["variables"],
-  options?: { fetchPolicy: "cache-first" }
+  options?: { fetchPolicy?: FetchPolicy }
 ): { error?: Error; data?: TQuery["response"] } {
+  const apolloOptions = options && {
+    ...options,
+    fetchPolicy: convertFetchPolicy(options.fetchPolicy),
+  };
   if (query.watchQueryDocument) {
-    return useCompiledLazyLoadQuery(query as any, { variables, ...options });
+    return useCompiledLazyLoadQuery(query as any, {
+      variables,
+      ...apolloOptions,
+    });
   } else {
-    return useApolloQuery(query, { variables, ...options });
+    return useApolloQuery(query, { variables, ...apolloOptions });
   }
 }
 

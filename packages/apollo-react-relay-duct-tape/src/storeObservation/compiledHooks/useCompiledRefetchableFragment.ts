@@ -6,6 +6,8 @@ import { CompiledArtefactModule } from "relay-compiler-language-graphitation";
 import { useCompiledFragment } from "./useCompiledFragment";
 import { FragmentReference } from "./types";
 import { isEqual } from "lodash";
+import { FetchPolicy } from "../../types";
+import { convertFetchPolicy } from "../../convertFetchPolicy";
 
 export interface Disposable {
   dispose(): void;
@@ -18,13 +20,14 @@ export type RefetchFn<Variables extends {} = {}> = (
 
 export interface RefetchOptions {
   onCompleted?: (error: Error | null) => void;
-  fetchPolicy?: "network-only" | "no-cache";
+  fetchPolicy?: FetchPolicy;
 }
 
 /**
  * These do not exist in the Relay API and should not be exported from the package.
  */
-export interface PrivateRefetchOptions extends RefetchOptions {
+export interface PrivateRefetchOptions
+  extends Omit<RefetchOptions, "fetchPolicy"> {
   /**
    * Returns the fetched data.
    */
@@ -32,6 +35,8 @@ export interface PrivateRefetchOptions extends RefetchOptions {
     error: Error | null,
     data: Record<string, any> | null
   ) => void;
+
+  fetchPolicy?: FetchPolicy | "no-cache";
 }
 
 export function useCompiledRefetchableFragment(
@@ -84,7 +89,7 @@ export function useCompiledRefetchableFragment(
         id: fragmentReference.id,
       };
       const observable = client.watchQuery({
-        fetchPolicy: options?.fetchPolicy ?? "network-only",
+        fetchPolicy: convertFetchPolicy(options?.fetchPolicy) ?? "network-only",
         query: executionQueryDocument,
         variables,
       });
