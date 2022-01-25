@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-tag",
   "entries": [
     {
+      "date": "Tue, 25 Jan 2022 10:04:40 GMT",
+      "tag": "@graphitation/graphql-js-tag_v0.8.3",
+      "version": "0.8.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-js-tag",
+            "commit": "76619c9ce06f97d886b80c74f27496baead95982",
+            "comment": "Fix webpack 4 for graphql-js-tag as it was missing the fix"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 25 Jan 2022 09:56:59 GMT",
       "tag": "@graphitation/graphql-js-tag_v0.8.2",
       "version": "0.8.2",

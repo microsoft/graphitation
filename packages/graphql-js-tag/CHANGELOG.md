@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-tag
 
-This log was last generated on Fri, 14 Jan 2022 11:15:34 GMT and should not be manually modified.
+This log was last generated on Tue, 25 Jan 2022 10:04:40 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.8.3
+
+Tue, 25 Jan 2022 10:04:40 GMT
+
+### Patches
+
+- Fix webpack 4 for graphql-js-tag as it was missing the fix (mnovikov@microsoft.com)
 
 ## 0.8.2
 
