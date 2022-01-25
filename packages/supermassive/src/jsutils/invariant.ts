@@ -6,7 +6,7 @@ export function invariant(
   // istanbul ignore else (See transformation done in './resources/inlineInvariant.js')
   if (!booleanCondition) {
     throw new Error(
-      message != null ? message : 'Unexpected invariant triggered.',
+      message != null ? message : "Unexpected invariant triggered.",
     );
   }
 }

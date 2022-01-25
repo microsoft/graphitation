@@ -3,7 +3,7 @@ import * as Path from "path";
 import { createProjectSync, Project } from "@ts-morph/bootstrap";
 
 export type TransformerFn = (
-  program: Ts.Program
+  program: Ts.Program,
 ) => Ts.TransformerFactory<Ts.SourceFile>;
 
 export class Transformer {
@@ -101,7 +101,7 @@ export class Transformer {
 
     if (!file) {
       throw new Error(
-        `transform must be called on Transformer with file or with string input`
+        `transform must be called on Transformer with file or with string input`,
       );
     }
 
@@ -182,7 +182,7 @@ export interface TransformFileOptions {
  */
 export const transformFile = (
   file: File,
-  options: TransformFileOptions
+  options: TransformFileOptions,
 ): string => {
   const project =
     options.project ||
@@ -194,7 +194,7 @@ export const transformFile = (
   project.createSourceFile(file.path, file.contents);
 
   (options.sources || []).forEach((source) =>
-    project.createSourceFile(source.path, source.contents)
+    project.createSourceFile(source.path, source.contents),
   );
 
   (options.mocks || []).forEach((mock) => {
@@ -202,7 +202,7 @@ export const transformFile = (
     project.createSourceFile(`${base}/index.ts`, mock.content);
     project.fileSystem.writeFileSync(
       `${base}/package.json`,
-      JSON.stringify({ name: mock.name, main: "./src/index.ts" })
+      JSON.stringify({ name: mock.name, main: "./src/index.ts" }),
     );
   });
 
@@ -215,7 +215,7 @@ export const transformFile = (
     false,
     {
       before: options.transforms.map((t) => t(program)),
-    }
+    },
   );
 
   if (emitSkipped) {
@@ -242,7 +242,7 @@ export const transformFile = (
 };
 
 export function getCompilerOptions(
-  options?: Partial<Ts.CompilerOptions>
+  options?: Partial<Ts.CompilerOptions>,
 ): Ts.CompilerOptions {
   return {
     outDir: "/dist",
@@ -262,7 +262,7 @@ export function getCompilerOptions(
 
 function getFileArtifactPath(
   file: Ts.SourceFile,
-  program: Ts.Program
+  program: Ts.Program,
 ): string | undefined {
   const options = program.getCompilerOptions();
   const extname = Path.extname(file.fileName);

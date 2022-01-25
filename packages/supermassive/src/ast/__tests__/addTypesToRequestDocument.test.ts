@@ -39,7 +39,7 @@ describe(addTypesToRequestDocument, () => {
               title
             }
           }
-        `
+        `,
       );
 
       const operationNode = document.definitions[0] as OperationDefinitionNode;
@@ -63,7 +63,7 @@ describe(addTypesToRequestDocument, () => {
           fragment FilmFragment on Film {
             title
           }
-        `
+        `,
       );
 
       const fragmentNode = document.definitions[0] as FragmentDefinitionNode;
@@ -94,7 +94,7 @@ describe(addTypesToRequestDocument, () => {
               }
             }
           }
-        `
+        `,
       );
 
       const operationNode = document.definitions[0] as OperationDefinitionNode;
@@ -124,7 +124,7 @@ describe(addTypesToRequestDocument, () => {
           fragment FilmFragment on Film {
             actors
           }
-        `
+        `,
       );
 
       const fragmentNode = document.definitions[0] as FragmentDefinitionNode;
@@ -158,7 +158,7 @@ describe(addTypesToRequestDocument, () => {
               title
             }
           }
-        `
+        `,
       );
 
       const operationNode = document.definitions[0] as OperationDefinitionNode;
@@ -188,7 +188,7 @@ describe(addTypesToRequestDocument, () => {
               title
             }
           }
-        `
+        `,
       );
 
       const operationNode = document.definitions[0] as OperationDefinitionNode;

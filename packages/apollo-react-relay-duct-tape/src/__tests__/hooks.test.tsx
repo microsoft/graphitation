@@ -30,7 +30,7 @@ import { hooksTestFragment$key } from "./__generated__/hooksTestFragment.graphql
 import { hooksTestMutation as hooksTestMutation$key } from "./__generated__/hooksTestMutation.graphql";
 
 const schema = buildSchema(
-  readFileSync(join(__dirname, "schema.graphql"), "utf8")
+  readFileSync(join(__dirname, "schema.graphql"), "utf8"),
 );
 
 /**
@@ -46,7 +46,7 @@ const fragment = graphql`
 `;
 
 const FragmentComponent: React.FC<{ user: hooksTestFragment$key }> = (
-  props
+  props,
 ) => {
   const user = useFragment(fragment, props.user);
   return <div id={user.__typename}>{user.name}</div>;
@@ -164,7 +164,7 @@ describe(useLazyLoadQuery, () => {
       tree = createTestRenderer(
         <ApolloProvider client={client}>
           <QueryComponent />
-        </ApolloProvider>
+        </ApolloProvider>,
       );
     });
 
@@ -173,7 +173,7 @@ describe(useLazyLoadQuery, () => {
     expect(operation.request.variables).toEqual({ id: "some-user-id" });
 
     await act(() =>
-      client.mock.resolve(operation, MockPayloadGenerator.generate(operation))
+      client.mock.resolve(operation, MockPayloadGenerator.generate(operation)),
     );
 
     expect(tree!.root.findByType("div").props).toMatchObject({
@@ -206,7 +206,7 @@ describe(useSubscription, () => {
           <SubscriptionComponent>
             <QueryComponent />
           </SubscriptionComponent>
-        </ApolloProvider>
+        </ApolloProvider>,
       );
     });
 
@@ -231,12 +231,12 @@ describe(useSubscription, () => {
               name: "user-name-from-query",
             };
           },
-        })
-      )
+        }),
+      ),
     );
     // ...and verify
     expect(tree!.root.findByType("div").props.children).toEqual(
-      "user-name-from-query"
+      "user-name-from-query",
     );
 
     // Now update subscription...
@@ -250,12 +250,12 @@ describe(useSubscription, () => {
               name: "user-name-from-subscription",
             };
           },
-        })
-      )
+        }),
+      ),
     );
     // ...and verify
     expect(tree!.root.findByType("div").props.children).toEqual(
-      "user-name-from-subscription"
+      "user-name-from-subscription",
     );
   });
 
@@ -267,14 +267,14 @@ describe(useSubscription, () => {
         createTestRenderer(
           <ApolloProvider client={client}>
             <SubscriptionComponent onNext={onNext} />
-          </ApolloProvider>
+          </ApolloProvider>,
         );
       });
 
       await act(() =>
         client.mock.resolveMostRecentOperation((operation) =>
-          MockPayloadGenerator.generate(operation)
-        )
+          MockPayloadGenerator.generate(operation),
+        ),
       );
 
       expect(onNext).toHaveBeenCalledWith(
@@ -284,7 +284,7 @@ describe(useSubscription, () => {
             id: "<User-mock-id-1>",
             name: '<mock-value-for-field-"name">',
           },
-        })
+        }),
       );
     });
 
@@ -296,12 +296,12 @@ describe(useSubscription, () => {
         createTestRenderer(
           <ApolloProvider client={client}>
             <SubscriptionComponent onError={onError} />
-          </ApolloProvider>
+          </ApolloProvider>,
         );
       });
 
       await act(() =>
-        client.mock.rejectMostRecentOperation(() => expectedError)
+        client.mock.rejectMostRecentOperation(() => expectedError),
       );
 
       expect(onError).toHaveBeenCalledWith(expectedError);
@@ -315,12 +315,12 @@ describe(useSubscription, () => {
         createTestRenderer(
           <ApolloProvider client={client}>
             <SubscriptionComponent onError={null} />
-          </ApolloProvider>
+          </ApolloProvider>,
         );
       });
 
       await act(() =>
-        client.mock.rejectMostRecentOperation(() => new Error("Oh noes"))
+        client.mock.rejectMostRecentOperation(() => new Error("Oh noes")),
       );
 
       expect(spy).toHaveBeenCalledWith(expect.stringContaining("Oh noes"));
@@ -337,7 +337,7 @@ describe("useMutation", () => {
           variables={{ name: "foo", id: "1" }}
           optimisticResponse={null}
         />
-      </ApolloProvider>
+      </ApolloProvider>,
     );
     expect(tree).toMatchInlineSnapshot(`
       <div>
@@ -358,7 +358,7 @@ describe("useMutation", () => {
               },
             }}
           />
-        </ApolloProvider>
+        </ApolloProvider>,
       );
     });
     expect(tree).toMatchInlineSnapshot(`
@@ -368,7 +368,7 @@ describe("useMutation", () => {
     `);
     await act(async () => {
       await client.mock.resolveMostRecentOperation((operation) =>
-        MockPayloadGenerator.generate(operation)
+        MockPayloadGenerator.generate(operation),
       );
     });
     expect(tree).toMatchInlineSnapshot(`

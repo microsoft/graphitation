@@ -26,8 +26,8 @@ import { ApolloMockClient, createMockClient } from "../index";
 const schema = buildSchema(
   readFileSync(
     require.resolve("relay-test-utils-internal/lib/testschema.graphql"),
-    "utf8"
-  )
+    "utf8",
+  ),
 );
 
 describe("ReactRelayTestMocker with Containers", () => {
@@ -66,7 +66,7 @@ describe("ReactRelayTestMocker with Containers", () => {
         testComponentTree = ReactTestRenderer.create(
           <ApolloProvider client={client}>
             <TestComponent />
-          </ApolloProvider>
+          </ApolloProvider>,
         );
       });
     });
@@ -78,7 +78,7 @@ describe("ReactRelayTestMocker with Containers", () => {
     it("should return most recent operation", () => {
       const operation = client.mock.getMostRecentOperation();
       expect(getOperationName(operation.request.node)).toBe(
-        "RelayMockEnvironmentWithComponentsTestFantasticEffortQuery"
+        "RelayMockEnvironmentWithComponentsTestFantasticEffortQuery",
       );
       expect(operation.request.variables).toEqual({
         id: "<default>",
@@ -94,8 +94,8 @@ describe("ReactRelayTestMocker with Containers", () => {
       await ReactTestRenderer.act(() =>
         // Make sure request was issued
         client.mock.resolveMostRecentOperation((operation) =>
-          MockPayloadGenerator.generate(operation)
-        )
+          MockPayloadGenerator.generate(operation),
+        ),
       );
 
       // Should render some data
@@ -104,11 +104,11 @@ describe("ReactRelayTestMocker with Containers", () => {
 
     it("should reject query", async () => {
       await ReactTestRenderer.act(() =>
-        client.mock.rejectMostRecentOperation(new Error("Uh-oh"))
+        client.mock.rejectMostRecentOperation(new Error("Uh-oh")),
       );
 
       const errorMessage = testComponentTree.root.find(
-        (node) => node.props.id === "error"
+        (node) => node.props.id === "error",
       );
       // Should render error
       expect(errorMessage.props.children).toBe("Uh-oh");
@@ -118,16 +118,16 @@ describe("ReactRelayTestMocker with Containers", () => {
       await ReactTestRenderer.act(() =>
         client.mock.rejectMostRecentOperation(
           (operation) =>
-            new Error(`Uh-oh: ${getOperationName(operation.request.node)}`)
-        )
+            new Error(`Uh-oh: ${getOperationName(operation.request.node)}`),
+        ),
       );
 
       const errorMessage = testComponentTree.root.find(
-        (node) => node.props.id === "error"
+        (node) => node.props.id === "error",
       );
       // Should render error
       expect(errorMessage.props.children).toBe(
-        "Uh-oh: RelayMockEnvironmentWithComponentsTestFantasticEffortQuery"
+        "Uh-oh: RelayMockEnvironmentWithComponentsTestFantasticEffortQuery",
       );
     });
 
@@ -186,7 +186,7 @@ describe("ReactRelayTestMocker with Containers", () => {
       }) {
         const [busy, setBusy] = React.useState(false);
         const [errorMessage, setErrorMessage] = React.useState<string | null>(
-          null
+          null,
         );
         const [like] = useMutation(FeedbackLikeMutation, {
           onCompleted: () => {
@@ -252,7 +252,7 @@ describe("ReactRelayTestMocker with Containers", () => {
         testComponentTree = ReactTestRenderer.create(
           <ApolloProvider client={client}>
             <TestComponent />
-          </ApolloProvider>
+          </ApolloProvider>,
         );
       });
       await ReactTestRenderer.act(() =>
@@ -266,19 +266,19 @@ describe("ReactRelayTestMocker with Containers", () => {
                 doesViewerLike: false,
               };
             },
-          })
-        )
+          }),
+        ),
       );
     });
 
     it("should resolve mutation", async () => {
       const likeButton = testComponentTree.root.find(
-        (node) => node.props.id === "likeButton"
+        (node) => node.props.id === "likeButton",
       );
       expect(likeButton.props.disabled).toBe(false);
       expect(likeButton.props.children).toEqual("Like");
       expect(testComponentTree).toMatchSnapshot(
-        'Button should be enabled. Text should be "Like".'
+        'Button should be enabled. Text should be "Like".',
       );
 
       // Should apply optimistic updates
@@ -289,7 +289,7 @@ describe("ReactRelayTestMocker with Containers", () => {
       expect(likeButton.props.disabled).toBe(true);
       expect(likeButton.props.children).toEqual("Unlike");
       expect(testComponentTree).toMatchSnapshot(
-        'Should apply optimistic update. Button should says "Unlike". And it should be disabled'
+        'Should apply optimistic update. Button should says "Unlike". And it should be disabled',
       );
       await ReactTestRenderer.act(async () => {
         client.mock.resolveMostRecentOperation((operation) =>
@@ -300,19 +300,19 @@ describe("ReactRelayTestMocker with Containers", () => {
                 doesViewerLike: true,
               };
             },
-          })
+          }),
         );
       });
       expect(likeButton.props.disabled).toBe(false);
       expect(likeButton.props.children).toEqual("Unlike");
       expect(testComponentTree).toMatchSnapshot(
-        'Should render response from the server. Button should be enabled. And text still "Unlike"'
+        'Should render response from the server. Button should be enabled. And text still "Unlike"',
       );
     });
 
     it("should reject mutation", async () => {
       const likeButton = testComponentTree.root.find(
-        (node) => node.props.id === "likeButton"
+        (node) => node.props.id === "likeButton",
       );
       // Should apply optimistic updates
       ReactTestRenderer.act(() => {
@@ -321,7 +321,7 @@ describe("ReactRelayTestMocker with Containers", () => {
 
       // Trigger error
       await ReactTestRenderer.act(() =>
-        client.mock.rejectMostRecentOperation(new Error("Uh-oh"))
+        client.mock.rejectMostRecentOperation(new Error("Uh-oh")),
       );
       expect(testComponentTree).toMatchSnapshot("Should render error message");
     });
@@ -410,7 +410,7 @@ describe("ReactRelayTestMocker with Containers", () => {
         testComponentTree = ReactTestRenderer.create(
           <ApolloProvider client={client}>
             <TestComponent />
-          </ApolloProvider>
+          </ApolloProvider>,
         );
       });
       await ReactTestRenderer.act(() =>
@@ -424,8 +424,8 @@ describe("ReactRelayTestMocker with Containers", () => {
                 doesViewerLike: false,
               };
             },
-          })
-        )
+          }),
+        ),
       );
     });
 
@@ -435,13 +435,13 @@ describe("ReactRelayTestMocker with Containers", () => {
       });
 
       const reaction = testComponentTree.root.find(
-        (node) => node.props.id === "reaction"
+        (node) => node.props.id === "reaction",
       );
       expect(reaction.props.children).toBe("Viewer does not like it");
 
       const operation = client.mock.getMostRecentOperation();
       expect(getOperationName(operation.request.node)).toBe(
-        "RelayMockEnvironmentWithComponentsTestRemarkableFixSubscription"
+        "RelayMockEnvironmentWithComponentsTestRemarkableFixSubscription",
       );
       expect(operation.request.variables).toEqual({
         input: {
@@ -459,8 +459,8 @@ describe("ReactRelayTestMocker with Containers", () => {
                 doesViewerLike: true,
               };
             },
-          })
-        )
+          }),
+        ),
       );
       expect(reaction.props.children).toBe("Viewer likes it");
     });
@@ -533,12 +533,12 @@ describe("ReactRelayTestMocker with Containers", () => {
       const userQuery = client.mock.findOperation(
         (operation) =>
           getOperationName(operation.request.node) ===
-          "RelayMockEnvironmentWithComponentsTestSwiftPerformanceQuery"
+          "RelayMockEnvironmentWithComponentsTestSwiftPerformanceQuery",
       );
       const pageQuery = client.mock.findOperation(
         (operation) =>
           getOperationName(operation.request.node) ===
-          "RelayMockEnvironmentWithComponentsTestRedefiningSolutionQuery"
+          "RelayMockEnvironmentWithComponentsTestRedefiningSolutionQuery",
       );
       await ReactTestRenderer.act(async () => {
         client.mock.resolve(
@@ -548,7 +548,7 @@ describe("ReactRelayTestMocker with Containers", () => {
               id: userQuery.request.variables.userId,
               name: "Alice",
             }),
-          })
+          }),
         );
         client.mock.resolve(
           pageQuery,
@@ -557,14 +557,16 @@ describe("ReactRelayTestMocker with Containers", () => {
               id: pageQuery.request.variables.pageId,
               name: "My Page",
             }),
-          })
+          }),
         );
       });
       expect(
-        testComponentTree.root.find((node) => node.props.id === "user").children
+        testComponentTree.root.find((node) => node.props.id === "user")
+          .children,
       ).toEqual(["Alice"]);
       expect(
-        testComponentTree.root.find((node) => node.props.id === "page").children
+        testComponentTree.root.find((node) => node.props.id === "page")
+          .children,
       ).toEqual(["My Page"]);
       expect(testComponentTree).toMatchSnapshot();
     });
@@ -600,18 +602,18 @@ describe("ReactRelayTestMocker with Containers", () => {
 
     it("should resolve next operation", async () => {
       client.mock.queueOperationResolver((operation) =>
-        MockPayloadGenerator.generate(operation)
+        MockPayloadGenerator.generate(operation),
       );
       let testComponentTree;
       await ReactTestRenderer.act(async () => {
         testComponentTree = ReactTestRenderer.create(
           <ApolloProvider client={client}>
             <TestComponent />
-          </ApolloProvider>
+          </ApolloProvider>,
         );
       });
       expect(testComponentTree).toMatchSnapshot(
-        "should render component with the data"
+        "should render component with the data",
       );
     });
 
@@ -622,11 +624,11 @@ describe("ReactRelayTestMocker with Containers", () => {
         testComponentTree = ReactTestRenderer.create(
           <ApolloProvider client={client}>
             <TestComponent />
-          </ApolloProvider>
+          </ApolloProvider>,
         );
       });
       expect(testComponentTree).toMatchSnapshot(
-        "should render component with the error"
+        "should render component with the error",
       );
     });
   });

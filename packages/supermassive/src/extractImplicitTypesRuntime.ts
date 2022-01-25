@@ -25,7 +25,7 @@ import { Resolvers } from "./types";
 
 export function extractImplicitTypes<TSource = any, TContext = any>(
   document: DocumentNode,
-  getTypeByName: (name: string) => GraphQLInputType
+  getTypeByName: (name: string) => GraphQLInputType,
 ): Resolvers<TSource, TContext> {
   const result: Resolvers<TSource, TContext> = Object.create(null);
   for (let astNode of document.definitions) {
@@ -70,7 +70,7 @@ function makeEnum(astNode: EnumTypeDefinitionNode) {
 
 function makeInputObject(
   astNode: InputObjectTypeDefinitionNode,
-  getTypeByName: (name: string) => GraphQLInputType
+  getTypeByName: (name: string) => GraphQLInputType,
 ) {
   const name = astNode.name.value;
 
@@ -84,7 +84,7 @@ function makeInputObject(
 
 function buildInputFieldMap(
   fieldNodes: ReadonlyArray<InputValueDefinitionNode>,
-  getTypeByName: (name: string) => GraphQLInputType
+  getTypeByName: (name: string) => GraphQLInputType,
 ): GraphQLInputFieldConfigMap {
   const inputFieldMap = Object.create(null);
   for (const field of fieldNodes) {
@@ -106,7 +106,7 @@ function buildInputFieldMap(
 
 function getWrappedType(
   type: TypeNode,
-  getTypeByName: (name: string) => GraphQLInputType
+  getTypeByName: (name: string) => GraphQLInputType,
 ): GraphQLInputType {
   if (type.kind === Kind.LIST_TYPE) {
     return new GraphQLList(getWrappedType(type.type, getTypeByName));
@@ -118,7 +118,10 @@ function getWrappedType(
 }
 
 function getDeprecationReason(
-  node: EnumValueDefinitionNode | FieldDefinitionNode | InputValueDefinitionNode
+  node:
+    | EnumValueDefinitionNode
+    | FieldDefinitionNode
+    | InputValueDefinitionNode,
 ): Maybe<string> {
   const deprecated = getDirectiveValues(GraphQLDeprecatedDirective, node);
   return deprecated?.reason;

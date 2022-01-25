@@ -29,7 +29,7 @@ export function collectFields(
   runtimeTypeName: string,
   selectionSet: SelectionSetNode,
   fields: Map<string, Array<FieldNode>>,
-  visitedFragmentNames: Set<string>
+  visitedFragmentNames: Set<string>,
 ): Map<string, Array<FieldNode>> {
   for (const selection of selectionSet.selections) {
     switch (selection.kind) {
@@ -60,7 +60,7 @@ export function collectFields(
           runtimeTypeName,
           selection.selectionSet,
           fields,
-          visitedFragmentNames
+          visitedFragmentNames,
         );
         break;
       }
@@ -87,7 +87,7 @@ export function collectFields(
           runtimeTypeName,
           fragment.selectionSet,
           fields,
-          visitedFragmentNames
+          visitedFragmentNames,
         );
         break;
       }
@@ -103,7 +103,7 @@ export function collectFields(
 function shouldIncludeNode(
   resolvers: Resolvers,
   variableValues: { [variable: string]: unknown },
-  node: SelectionNode
+  node: SelectionNode,
 ): boolean {
   if (!node.directives?.length) {
     return true;
@@ -113,7 +113,7 @@ function shouldIncludeNode(
     GraphQLSkipDirective,
     node as SelectionNode,
     resolvers,
-    variableValues
+    variableValues,
   );
   if (skip?.if === true) {
     return false;
@@ -123,7 +123,7 @@ function shouldIncludeNode(
     GraphQLIncludeDirective,
     node as SelectionNode,
     resolvers,
-    variableValues
+    variableValues,
   );
 
   if (include?.if === false) {
@@ -138,7 +138,7 @@ function shouldIncludeNode(
  */
 function doesFragmentConditionMatch(
   fragment: FragmentDefinitionNode | InlineFragmentNode,
-  typeName: string
+  typeName: string,
 ): boolean {
   const typeConditionNode = fragment.typeCondition;
   if (!typeConditionNode) {

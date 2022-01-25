@@ -54,7 +54,7 @@ export function getVariableValues(
   resolvers: Resolvers,
   varDefNodes: ReadonlyArray<VariableDefinitionNode>,
   inputs: { [variable: string]: unknown },
-  options?: { maxErrors?: number }
+  options?: { maxErrors?: number },
 ): CoercedVariableValues {
   const errors = [];
   const maxErrors = options?.maxErrors;
@@ -66,11 +66,11 @@ export function getVariableValues(
       (error) => {
         if (maxErrors != null && errors.length >= maxErrors) {
           throw new GraphQLError(
-            "Too many errors processing variables, error limit reached. Execution aborted."
+            "Too many errors processing variables, error limit reached. Execution aborted.",
           );
         }
         errors.push(error);
-      }
+      },
     );
 
     if (errors.length === 0) {
@@ -87,7 +87,7 @@ function coerceVariableValues(
   resolvers: Resolvers,
   varDefNodes: ReadonlyArray<VariableDefinitionNode>,
   inputs: { [variable: string]: unknown },
-  onError: (error: GraphQLError) => void
+  onError: (error: GraphQLError) => void,
 ): { [variable: string]: unknown } {
   const coercedValues: { [variable: string]: unknown } = {};
   for (const varDefNode of varDefNodes) {
@@ -102,8 +102,8 @@ function coerceVariableValues(
       onError(
         new GraphQLError(
           `Variable "$${varName}" expected value of type "${varTypeStr}" which cannot be used as an input type.`,
-          varDefNode.type as GraphQLTypeNode
-        )
+          varDefNode.type as GraphQLTypeNode,
+        ),
       );
       continue;
     }
@@ -112,15 +112,15 @@ function coerceVariableValues(
       if (varDefNode.defaultValue) {
         coercedValues[varName] = valueFromAST(
           varDefNode.defaultValue as Maybe<GraphQLValueNode>,
-          varType
+          varType,
         );
       } else if (isNonNullType(varType)) {
         const varTypeStr = print(varDefNode.type as GraphQLTypeNode);
         onError(
           new GraphQLError(
             `Variable "$${varName}" of required type "${varTypeStr}" was not provided.`,
-            varDefNode as GraphQLVariableDefinitionNode
-          )
+            varDefNode as GraphQLVariableDefinitionNode,
+          ),
         );
       }
       continue;
@@ -132,8 +132,8 @@ function coerceVariableValues(
       onError(
         new GraphQLError(
           `Variable "$${varName}" of non-null type "${varTypeStr}" must not be null.`,
-          varDefNode as GraphQLVariableDefinitionNode
-        )
+          varDefNode as GraphQLVariableDefinitionNode,
+        ),
       );
       continue;
     }
@@ -154,10 +154,10 @@ function coerceVariableValues(
             undefined,
             undefined,
             undefined,
-            error.originalError
-          )
+            error.originalError,
+          ),
         );
-      }
+      },
     );
   }
 
@@ -177,7 +177,7 @@ function coerceVariableValues(
 export function getArgumentValues(
   resolvers: Resolvers,
   node: FieldNode | DirectiveNode,
-  variableValues?: Maybe<ObjMap<unknown>>
+  variableValues?: Maybe<ObjMap<unknown>>,
 ): { [argument: string]: unknown } {
   const coercedValues: { [argument: string]: unknown } = {};
 
@@ -185,7 +185,7 @@ export function getArgumentValues(
   const argumentNodes = node.arguments ?? [];
   const argNodeMap = keyMap(
     argumentNodes,
-    (arg: ArgumentNode) => arg.name.value
+    (arg: ArgumentNode) => arg.name.value,
   );
 
   for (const argumentNode of argumentNodes) {
@@ -197,9 +197,9 @@ export function getArgumentValues(
       console.log(argType, isInputType(argType));
       throw new GraphQLError(
         `Argument "$${name}" expected value of type "${inspect(
-          argType
+          argType,
         )}" which cannot be used as an input type.`,
-        argumentNode as GraphQLArgumentNode
+        argumentNode as GraphQLArgumentNode,
       );
     }
 
@@ -218,7 +218,7 @@ export function getArgumentValues(
           throw new GraphQLError(
             `Argument "${name}" of required type "${inspect(argType)}" ` +
               `was provided the variable "$${variableName}" which was not provided a runtime value.`,
-            valueNode as GraphQLValueNode
+            valueNode as GraphQLValueNode,
           );
         }
       }
@@ -228,7 +228,7 @@ export function getArgumentValues(
     const coercedValue = valueFromAST(
       valueNode as GraphQLValueNode,
       argType,
-      variableValues
+      variableValues,
     );
     if (coercedValue === undefined) {
       // Note: ValuesOfCorrectTypeRule validation should catch this before
@@ -236,9 +236,9 @@ export function getArgumentValues(
       // continue with an invalid argument value.
       throw new GraphQLError(
         `Argument "${name}" has invalid value ${print(
-          valueNode as GraphQLValueNode
+          valueNode as GraphQLValueNode,
         )}.`,
-        valueNode as GraphQLValueNode
+        valueNode as GraphQLValueNode,
       );
     }
     coercedValues[name] = coercedValue;
@@ -262,11 +262,11 @@ export function getDirectiveValues(
   directiveDef: GraphQLDirective,
   node: { directives?: ReadonlyArray<DirectiveNode> },
   resolvers: Resolvers,
-  variableValues?: Maybe<ObjMap<unknown>>
+  variableValues?: Maybe<ObjMap<unknown>>,
 ): undefined | { [argument: string]: unknown } {
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
   const directiveNode = node.directives?.find(
-    (directive) => directive.name.value === directiveDef.name
+    (directive) => directive.name.value === directiveDef.name,
   );
 
   if (directiveNode) {
@@ -288,7 +288,7 @@ export const specifiedScalars: { [key: string]: GraphQLScalarType } = {
 
 function graphqlTypeFromTypeAst(
   resolvers: Resolvers,
-  node: TypeNode
+  node: TypeNode,
 ): GraphQLType {
   if (node.kind === Kind.NON_NULL_TYPE) {
     return new GraphQLNonNull(graphqlTypeFromTypeAst(resolvers, node.type));

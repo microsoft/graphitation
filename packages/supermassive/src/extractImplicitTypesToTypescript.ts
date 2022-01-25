@@ -23,7 +23,7 @@ const SPECIFIED_SCALARS: Record<string, string> = {
 };
 
 export function extractImplicitTypesToTypescript(
-  document: DocumentNode
+  document: DocumentNode,
 ): ts.SourceFile {
   const definitions: Array<ts.VariableStatement> = [];
   const imports: Array<string> = [
@@ -72,12 +72,12 @@ export function extractImplicitTypesToTypescript(
         imports.map((imp) =>
           factory.createImportSpecifier(
             undefined,
-            factory.createIdentifier(imp)
-          )
-        )
-      )
+            factory.createIdentifier(imp),
+          ),
+        ),
+      ),
     ),
-    factory.createStringLiteral("graphql")
+    factory.createStringLiteral("graphql"),
   );
 
   const exportDefinition: ts.VariableStatement = factory.createVariableStatement(
@@ -92,26 +92,26 @@ export function extractImplicitTypesToTypescript(
             identifiers.map((def: string) =>
               factory.createShorthandPropertyAssignment(
                 factory.createIdentifier(def),
-                undefined
-              )
-            )
-          )
+                undefined,
+              ),
+            ),
+          ),
         ),
       ],
-      ts.NodeFlags.Const
-    )
+      ts.NodeFlags.Const,
+    ),
   );
 
   return factory.createSourceFile(
     [importDefinition, ...definitions, exportDefinition],
     factory.createToken(ts.SyntaxKind.EndOfFileToken),
-    0
+    0,
   );
 }
 
 function createDeclaration(
   name: string,
-  decl: ts.Expression
+  decl: ts.Expression,
 ): ts.VariableStatement {
   return factory.createVariableStatement(
     undefined,
@@ -121,16 +121,16 @@ function createDeclaration(
           factory.createIdentifier(name),
           undefined,
           undefined,
-          decl
+          decl,
         ),
       ],
-      ts.NodeFlags.Const
-    )
+      ts.NodeFlags.Const,
+    ),
   );
 }
 
 function createScalarType(
-  astNode: ScalarTypeDefinitionNode
+  astNode: ScalarTypeDefinitionNode,
 ): ts.VariableStatement {
   return createDeclaration(
     astNode.name.value,
@@ -142,22 +142,22 @@ function createScalarType(
           [
             factory.createPropertyAssignment(
               factory.createIdentifier("name"),
-              factory.createStringLiteral(astNode.name.value)
+              factory.createStringLiteral(astNode.name.value),
             ),
             factory.createPropertyAssignment(
               factory.createIdentifier("description"),
-              factory.createStringLiteral(astNode.description?.value || "")
+              factory.createStringLiteral(astNode.description?.value || ""),
             ),
           ],
-          true
+          true,
         ),
-      ]
-    )
+      ],
+    ),
   );
 }
 
 function createInputObjectType(
-  astNode: InputObjectTypeDefinitionNode
+  astNode: InputObjectTypeDefinitionNode,
 ): ts.VariableStatement {
   return createDeclaration(
     astNode.name.value,
@@ -169,11 +169,11 @@ function createInputObjectType(
           [
             factory.createPropertyAssignment(
               factory.createIdentifier("name"),
-              factory.createStringLiteral(astNode.name.value)
+              factory.createStringLiteral(astNode.name.value),
             ),
             factory.createPropertyAssignment(
               factory.createIdentifier("description"),
-              factory.createStringLiteral(astNode.description?.value || "")
+              factory.createStringLiteral(astNode.description?.value || ""),
             ),
             factory.createPropertyAssignment(
               factory.createIdentifier("fields"),
@@ -186,44 +186,44 @@ function createInputObjectType(
                 factory.createParenthesizedExpression(
                   factory.createObjectLiteralExpression(
                     createInputFields(astNode.fields || []),
-                    true
-                  )
-                )
-              )
+                    true,
+                  ),
+                ),
+              ),
             ),
           ],
-          true
+          true,
         ),
-      ]
-    )
+      ],
+    ),
   );
 }
 
 function createInputFields(
-  astNodes: ReadonlyArray<InputValueDefinitionNode>
+  astNodes: ReadonlyArray<InputValueDefinitionNode>,
 ): Array<ts.PropertyAssignment> {
   return astNodes.map((astNode: InputValueDefinitionNode) => {
     const fields = [
       factory.createPropertyAssignment(
         factory.createIdentifier("type"),
-        createType(astNode.type)
+        createType(astNode.type),
       ),
       factory.createPropertyAssignment(
         factory.createIdentifier("description"),
-        factory.createStringLiteral(astNode.description?.value || "")
+        factory.createStringLiteral(astNode.description?.value || ""),
       ),
     ];
     if (astNode.defaultValue) {
       fields.push(
         factory.createPropertyAssignment(
           factory.createIdentifier("defaultValue"),
-          createValue(astNode.defaultValue)
-        )
+          createValue(astNode.defaultValue),
+        ),
       );
     }
     return factory.createPropertyAssignment(
       factory.createIdentifier(astNode.name.value),
-      factory.createObjectLiteralExpression(fields, true)
+      factory.createObjectLiteralExpression(fields, true),
     );
   });
 }
@@ -238,11 +238,11 @@ function createEnumType(astNode: EnumTypeDefinitionNode): ts.VariableStatement {
         factory.createObjectLiteralExpression([
           factory.createPropertyAssignment(
             factory.createIdentifier("name"),
-            factory.createStringLiteral(astNode.name.value)
+            factory.createStringLiteral(astNode.name.value),
           ),
           factory.createPropertyAssignment(
             factory.createIdentifier("description"),
-            factory.createStringLiteral(astNode.description?.value || "")
+            factory.createStringLiteral(astNode.description?.value || ""),
           ),
           factory.createPropertyAssignment(
             factory.createIdentifier("values"),
@@ -254,40 +254,40 @@ function createEnumType(astNode: EnumTypeDefinitionNode): ts.VariableStatement {
                     factory.createPropertyAssignment(
                       factory.createIdentifier("description"),
                       factory.createStringLiteral(
-                        valueNode.description?.value || ""
-                      )
+                        valueNode.description?.value || "",
+                      ),
                     ),
-                  ])
-                )
-              )
-            )
+                  ]),
+                ),
+              ),
+            ),
           ),
         ]),
-      ]
-    )
+      ],
+    ),
   );
 }
 
 function createAbstractType(
-  astNode: InterfaceTypeDefinitionNode | UnionTypeDefinitionNode
+  astNode: InterfaceTypeDefinitionNode | UnionTypeDefinitionNode,
 ): ts.VariableStatement {
   return createDeclaration(
     astNode.name.value,
     factory.createObjectLiteralExpression([
       factory.createPropertyAssignment(
         factory.createIdentifier("__resolveType"),
-        factory.createIdentifier("undefined")
+        factory.createIdentifier("undefined"),
       ),
-    ])
+    ]),
   );
 }
 
 function createObjectType(
-  astNode: ObjectTypeDefinitionNode
+  astNode: ObjectTypeDefinitionNode,
 ): ts.VariableStatement {
   return createDeclaration(
     astNode.name.value,
-    factory.createObjectLiteralExpression()
+    factory.createObjectLiteralExpression(),
   );
 }
 
@@ -296,13 +296,13 @@ function createType(astNode: TypeNode): ts.Expression {
     return factory.createNewExpression(
       factory.createIdentifier("GraphQLList"),
       undefined,
-      [createType(astNode.type)]
+      [createType(astNode.type)],
     );
   } else if (astNode.kind === Kind.NON_NULL_TYPE) {
     return factory.createNewExpression(
       factory.createIdentifier("GraphQLNonNull"),
       undefined,
-      [createType(astNode.type)]
+      [createType(astNode.type)],
     );
   } else {
     if (SPECIFIED_SCALARS[astNode.name.value]) {
@@ -324,16 +324,16 @@ function createValue(astNode: ValueNode): ts.Expression {
     return factory.createNull();
   } else if (astNode.kind === Kind.LIST) {
     return factory.createArrayLiteralExpression(
-      astNode.values.map((valueNode) => createValue(valueNode))
+      astNode.values.map((valueNode) => createValue(valueNode)),
     );
   } else if (astNode.kind === Kind.OBJECT) {
     return factory.createObjectLiteralExpression(
       astNode.fields.map((fieldNode) =>
         factory.createPropertyAssignment(
           fieldNode.name.value,
-          createValue(fieldNode.value)
-        )
-      )
+          createValue(fieldNode.value),
+        ),
+      ),
     );
   } else {
     throw new Error("Invalid value");

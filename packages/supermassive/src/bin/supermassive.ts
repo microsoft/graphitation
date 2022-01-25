@@ -11,7 +11,7 @@ export function supermassive(): Command {
     .name("extract-schema")
     .argument("<files...>")
     .description(
-      "extract implicit resolvers to a ts file from graphql typedefs"
+      "extract implicit resolvers to a ts file from graphql typedefs",
     )
     .action(async (files: Array<string>) => {
       await typeDefsToImplicitResolversImpl(files);
@@ -20,7 +20,7 @@ export function supermassive(): Command {
 }
 
 async function typeDefsToImplicitResolversImpl(
-  files: Array<string>
+  files: Array<string>,
 ): Promise<void> {
   for (const file of files) {
     let fullPath: string;
@@ -40,13 +40,13 @@ async function typeDefsToImplicitResolversImpl(
     await fs.mkdir(tsDir, { recursive: true });
     const tsFileName = path.join(
       tsDir,
-      path.basename(fullPath, path.extname(fullPath)) + ".ts"
+      path.basename(fullPath, path.extname(fullPath)) + ".ts",
     );
     const printer = ts.createPrinter();
     await fs.writeFile(
       tsFileName,
       printer.printNode(ts.EmitHint.SourceFile, tsContents, tsContents),
-      { encoding: "utf-8" }
+      { encoding: "utf-8" },
     );
   }
 }

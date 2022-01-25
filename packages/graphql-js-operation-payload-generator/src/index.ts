@@ -66,14 +66,14 @@ const TYPENAME_KEY = "__typename";
 
 export function generate(
   operation: OperationDescriptor,
-  mockResolvers: MockResolvers | null = DEFAULT_MOCK_RESOLVERS
+  mockResolvers: MockResolvers | null = DEFAULT_MOCK_RESOLVERS,
 ) {
   mockResolvers = { ...DEFAULT_MOCK_RESOLVERS, ...mockResolvers };
   const resolveValue = createValueResolver(mockResolvers);
   const definitions = operation.request.node.definitions;
 
   const operationDefinitionNode = definitions.find(
-    (def) => def.kind === "OperationDefinition"
+    (def) => def.kind === "OperationDefinition",
   ) as OperationDefinitionNode | undefined;
   invariant(operationDefinitionNode, "Expected an operation definition node");
 
@@ -82,7 +82,7 @@ export function generate(
     operation.schema,
     definitions,
     mockResolvers,
-    resolveValue
+    resolveValue,
   );
 
   return { data: result };
@@ -108,7 +108,7 @@ function visitDocumentDefinitionNode(
   schema: GraphQLSchema,
   allDocumentDefinitionNodes: ReadonlyArray<DefinitionNode>,
   mockResolvers: MockResolvers,
-  resolveValue: ValueResolver
+  resolveValue: ValueResolver,
 ): MockData {
   const typeInfo = new TypeInfo(schema);
   const visitor: VisitorWithMockData = {
@@ -150,14 +150,14 @@ function visitDocumentDefinitionNode(
 
         const fragmentDefinitionNode = findFragmentDefinitionNode(
           allDocumentDefinitionNodes,
-          fragmentSpreadNode.name.value
+          fragmentSpreadNode.name.value,
         );
         return visitDocumentDefinitionNode(
           { ...fragmentDefinitionNode, userMockData },
           schema,
           allDocumentDefinitionNodes,
           mockResolvers,
-          resolveValue
+          resolveValue,
         );
       },
     },
@@ -174,7 +174,7 @@ function visitDocumentDefinitionNode(
               : undefined,
             schema,
             allDocumentDefinitionNodes,
-            typeInfo
+            typeInfo,
           );
         }
       },
@@ -194,7 +194,7 @@ function visitDocumentDefinitionNode(
         let typename = mocksData.find(
           (sel) =>
             typeof sel[TYPENAME_KEY] === "string" &&
-            sel[TYPENAME_KEY] !== DEFAULT_MOCK_TYPENAME
+            sel[TYPENAME_KEY] !== DEFAULT_MOCK_TYPENAME,
         )?.[TYPENAME_KEY];
         // ...otherwise use the current type, if it's an object type...
         if (!typename && isObjectType(type)) {
@@ -228,7 +228,7 @@ function visitDocumentDefinitionNode(
         const type = typeInfo.getType();
         invariant(
           type,
-          `Expected field to have a type: ${JSON.stringify(fieldNode)}`
+          `Expected field to have a type: ${JSON.stringify(fieldNode)}`,
         );
         const namedType = getNamedType(type);
         if (isScalarType(namedType)) {
@@ -238,7 +238,7 @@ function visitDocumentDefinitionNode(
               fieldNode,
               namedType,
               typeInfo.getParentType()!,
-              resolveValue
+              resolveValue,
             ),
           };
           return fieldWithMockData;
@@ -251,7 +251,7 @@ function visitDocumentDefinitionNode(
         } else {
           invariant(
             fieldNode.selectionSet,
-            "Expected field with selection set"
+            "Expected field with selection set",
           );
           const fieldWithMockData: typeof fieldNode = {
             ...fieldNode,
@@ -259,7 +259,7 @@ function visitDocumentDefinitionNode(
               fieldNode,
               assertCompositeType(namedType),
               typeInfo.getParentType()!,
-              resolveValue
+              resolveValue,
             ),
           };
           return fieldWithMockData;
@@ -311,7 +311,7 @@ function reduceToSingleObjectTypeSelection(
   explicitTypename: string | undefined,
   schema: GraphQLSchema,
   allDocumentDefinitionNodes: ReadonlyArray<DefinitionNode>,
-  typeInfo: TypeInfo
+  typeInfo: TypeInfo,
 ): SelectionSetNode {
   let reduceToObjectType: GraphQLObjectType | null = null;
   const reducer = (type: Maybe<GraphQLOutputType>) => {
@@ -344,27 +344,27 @@ function reduceToSingleObjectTypeSelection(
       FragmentSpread(fragmentSpreadNode) {
         const fragmentDefinitionNode = findFragmentDefinitionNode(
           allDocumentDefinitionNodes,
-          fragmentSpreadNode.name.value
+          fragmentSpreadNode.name.value,
         );
         const type = schema.getType(
-          fragmentDefinitionNode.typeCondition.name.value
+          fragmentDefinitionNode.typeCondition.name.value,
         );
         return reducer(type as GraphQLOutputType);
       },
-    })
+    }),
   );
 }
 
 function findFragmentDefinitionNode(
   allDocumentDefinitionNodes: ReadonlyArray<DefinitionNode>,
-  name: string
+  name: string,
 ) {
   const fragmentDefinitionNode = allDocumentDefinitionNodes.find(
-    (def) => def.kind === "FragmentDefinition" && def.name.value === name
+    (def) => def.kind === "FragmentDefinition" && def.name.value === name,
   ) as FragmentDefinitionNode | undefined;
   invariant(
     fragmentDefinitionNode,
-    `Expected a fragment by name '${name}' to exist`
+    `Expected a fragment by name '${name}' to exist`,
   );
   return fragmentDefinitionNode;
 }
@@ -373,7 +373,7 @@ function mockScalar(
   fieldNode: FieldNode,
   type: GraphQLScalarType,
   parentType: GraphQLCompositeType,
-  resolveValue: ValueResolver
+  resolveValue: ValueResolver,
 ) {
   if (fieldNode.name.value === TYPENAME_KEY) {
     return isAbstractType(parentType) ? DEFAULT_MOCK_TYPENAME : parentType.name;
@@ -382,7 +382,7 @@ function mockScalar(
     fieldNode.arguments &&
     fieldNode.arguments.reduce(
       (acc, arg) => ({ ...acc, [arg.name.value]: arg.value }),
-      {}
+      {},
     );
   const context: MockResolverContext = {
     name: fieldNode.name.value,
@@ -399,13 +399,13 @@ function mockCompositeType(
   fieldNode: FieldNode,
   type: GraphQLCompositeType,
   parentType: GraphQLCompositeType,
-  resolveValue: ValueResolver
+  resolveValue: ValueResolver,
 ): MockData | undefined {
   const args =
     fieldNode.arguments &&
     fieldNode.arguments.reduce(
       (acc, arg) => ({ ...acc, [arg.name.value]: arg.value }),
-      {}
+      {},
     );
   const context: MockResolverContext = {
     name: fieldNode.name.value,

@@ -16,8 +16,9 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@graphql-eslint/eslint-plugin": "^3.0.0",
+    "@graphql-eslint/eslint-plugin": "^3.7.0",
     "@types/jest": "^26.0.22",
+    "@typescript-eslint/utils": "^5.10.1",
     "graphql": "^15.0.0",
     "monorepo-scripts": "*"
   },

@@ -30,7 +30,7 @@ export type FunctionFieldResolver<
   source: TSource,
   args: TArgs,
   context: TContext,
-  info: ResolveInfo
+  info: ResolveInfo,
 ) => TReturn;
 
 export type FieldResolver<
@@ -48,7 +48,7 @@ export type FieldResolver<
 export type TypeResolver<TSource, TContext> = (
   value: TSource,
   context: TContext,
-  info: ResolveInfo
+  info: ResolveInfo,
 ) => PromiseOrValue<Maybe<string>>;
 
 export type ObjectTypeResolver<TSource = any, TContext = any, TArgs = any> = {

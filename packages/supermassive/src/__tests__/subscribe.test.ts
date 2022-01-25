@@ -55,13 +55,13 @@ describe("subscribeWithSchema", () => {
     ".subscribeWithSchema %s",
     async ({ name, document, variables }: TestCase) => {
       await compareResultsForSubscribeWithSchema(document, variables);
-    }
+    },
   );
   test.each(errorTestCases)(
     ".subscribeWithSchema %s",
     async ({ name, document, variables }: TestCase) => {
       await compareErrorsForSubscribeWithSchema(document, variables);
-    }
+    },
   );
 });
 
@@ -70,19 +70,19 @@ describe("subscribeWithoutSchema", () => {
     ".subscribeWithoutSchema %s",
     async ({ name, document, variables }: TestCase) => {
       await compareResultsForSubscribeWithoutSchema(document, variables);
-    }
+    },
   );
   test.each(errorTestCases)(
     ".subscribeWithoutSchema %s",
     async ({ name, document, variables }: TestCase) => {
       await compareErrorsForSubscribeWithoutSchema(document, variables);
-    }
+    },
   );
 });
 
 async function compareResultsForSubscribeWithSchema(
   query: string,
-  variables?: Record<string, unknown>
+  variables?: Record<string, unknown>,
 ) {
   expect.assertions(1);
   const document = parse(query);
@@ -120,7 +120,7 @@ async function compareResultsForSubscribeWithSchema(
 
 async function compareErrorsForSubscribeWithSchema(
   query: string,
-  variables?: Record<string, unknown>
+  variables?: Record<string, unknown>,
 ) {
   expect.assertions(1);
   const document = parse(query);
@@ -161,7 +161,7 @@ async function compareErrorsForSubscribeWithSchema(
 
 async function compareResultsForSubscribeWithoutSchema(
   query: string,
-  variables: Record<string, unknown> = {}
+  variables: Record<string, unknown> = {},
 ) {
   expect.assertions(1);
   let fullResolvers: Resolvers<any, any> = {};
@@ -175,7 +175,7 @@ async function compareResultsForSubscribeWithoutSchema(
   };
   const extractedResolvers: Resolvers<any, any> = extractImplicitTypes(
     typeDefs,
-    getTypeByName
+    getTypeByName,
   );
   fullResolvers = {
     ...extractedResolvers,
@@ -212,7 +212,7 @@ async function compareResultsForSubscribeWithoutSchema(
 
 async function compareErrorsForSubscribeWithoutSchema(
   query: string,
-  variables: Record<string, unknown> = {}
+  variables: Record<string, unknown> = {},
 ) {
   expect.assertions(1);
   let fullResolvers: Resolvers<any, any> = {};
@@ -227,7 +227,7 @@ async function compareErrorsForSubscribeWithoutSchema(
 
   const extractedResolvers: Resolvers<any, any> = extractImplicitTypes(
     typeDefs,
-    getTypeByName
+    getTypeByName,
   );
   fullResolvers = {
     ...extractedResolvers,

@@ -1,4 +1,4 @@
-import { naturalCompare } from './naturalCompare';
+import { naturalCompare } from "./naturalCompare";
 
 /**
  * Given an invalid input string and a list of valid options, returns a filtered

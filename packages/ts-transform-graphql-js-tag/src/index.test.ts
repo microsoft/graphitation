@@ -69,7 +69,7 @@ describe("transformer tests", () => {
       .addTransformer((program: ts.Program) =>
         getTransformer({
           transformer: (document) => "haha, imma here, breaking your graphql",
-        })
+        }),
       )
       .addMock({
         name: "@graphitation/graphql-js-tag",
@@ -100,7 +100,7 @@ describe("transformer tests", () => {
           getTransformer({
             graphqlTagModule: "graphql-tag",
             graphqlTagModuleExport: "gql",
-          })
+          }),
         )
         .addMock({
           name: "graphql-tag",
@@ -128,7 +128,7 @@ describe("transformer tests", () => {
         .addTransformer((program: ts.Program) =>
           getTransformer({
             graphqlTagModuleExport: "default",
-          })
+          }),
         )
         .addMock({
           name: "@graphitation/graphql-js-tag",
@@ -217,7 +217,7 @@ describe("transformer tests", () => {
         .addTransformer((program: ts.Program) =>
           getTransformer({
             graphqlTagModuleExport: "default",
-          })
+          }),
         )
         .addMock({
           name: "@graphitation/graphql-js-tag",

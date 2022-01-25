@@ -10,14 +10,14 @@ interface GraphQLTagTransformContext {
   graphqlTagModuleRegexp: RegExp;
   graphqlTagModuleExport: string;
   transformer?: (
-    node: FragmentDefinitionNode | OperationDefinitionNode
+    node: FragmentDefinitionNode | OperationDefinitionNode,
   ) => unknown;
 }
 export interface GraphQLTagTransformOptions {
   graphqlTagModule?: string;
   graphqlTagModuleExport?: "default" | string;
   transformer?: (
-    node: FragmentDefinitionNode | OperationDefinitionNode
+    node: FragmentDefinitionNode | OperationDefinitionNode,
   ) => unknown;
 }
 
@@ -27,20 +27,20 @@ const DefaultContext: GraphQLTagTransformContext = {
 };
 
 export function getTransformer(
-  options: Partial<GraphQLTagTransformOptions>
+  options: Partial<GraphQLTagTransformOptions>,
 ): ts.TransformerFactory<ts.SourceFile> {
   const transformerContext = createTransformerContext(options);
   return (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
     return (sourceFile: ts.SourceFile) =>
       ts.visitNode(
         sourceFile,
-        getVisitor(transformerContext, context, sourceFile)
+        getVisitor(transformerContext, context, sourceFile),
       );
   };
 }
 
 export function createTransformerContext(
-  options: GraphQLTagTransformOptions
+  options: GraphQLTagTransformOptions,
 ): GraphQLTagTransformContext {
   const context: GraphQLTagTransformContext = {
     ...DefaultContext,
@@ -65,14 +65,14 @@ export function createTransformerContext(
 function getVisitor(
   transformerContext: GraphQLTagTransformContext,
   context: ts.TransformationContext,
-  sourceFile: ts.SourceFile
+  sourceFile: ts.SourceFile,
 ): ts.Visitor {
   let templateLiteralName: string | null = null;
   const visitor: ts.Visitor = (node: ts.Node): ts.VisitResult<ts.Node> => {
     // `graphql-tag` import declaration detected
     if (ts.isImportDeclaration(node)) {
       const moduleName = (node as ts.ImportDeclaration).moduleSpecifier.getText(
-        sourceFile
+        sourceFile,
       );
       // here we want to remove export, but only if there are no other exports. if there are other exports
       // we remove only the one we need. Logic is complex cause tag can be default or not-default export
@@ -91,9 +91,9 @@ function getVisitor(
                   node.importClause,
                   node.importClause.isTypeOnly,
                   undefined,
-                  node.importClause.namedBindings
+                  node.importClause.namedBindings,
                 ),
-                node.moduleSpecifier
+                node.moduleSpecifier,
               );
             } else {
               return undefined;
@@ -130,9 +130,9 @@ function getVisitor(
                 node.importClause.name,
                 newImportSpecifiers.length
                   ? ts.factory.createNamedImports(newImportSpecifiers)
-                  : undefined
+                  : undefined,
               ),
-              node.moduleSpecifier
+              node.moduleSpecifier,
             );
             return result;
           } else {
@@ -168,7 +168,7 @@ function getVisitor(
 
         let definitions = getDefinitions(
           source,
-          transformerContext.transformer
+          transformerContext.transformer,
         );
 
         return createDocument(definitions, interpolations);
@@ -183,12 +183,12 @@ function getVisitor(
 
 function collectTemplateInterpolations(
   node: ts.Node,
-  context: ts.TransformationContext
+  context: ts.TransformationContext,
 ): Array<ts.Identifier | ts.PropertyAccessExpression> {
   const interpolations: Array<ts.Identifier | ts.PropertyAccessExpression> = [];
   function collectTemplateInterpolationsImpl(
     node: ts.Node,
-    context: ts.TransformationContext
+    context: ts.TransformationContext,
   ): ts.Node {
     if (ts.isTemplateSpan(node)) {
       const interpolation = node.getChildAt(0);
@@ -198,7 +198,7 @@ function collectTemplateInterpolations(
         !ts.isPropertyAccessExpression(interpolation)
       ) {
         throw new Error(
-          "Only identifiers or property access expressions are allowed by this transformer as an interpolation in a GraphQL template literal."
+          "Only identifiers or property access expressions are allowed by this transformer as an interpolation in a GraphQL template literal.",
         );
       }
 
@@ -208,7 +208,7 @@ function collectTemplateInterpolations(
     return ts.visitEachChild(
       node,
       (childNode) => collectTemplateInterpolationsImpl(childNode, context),
-      context
+      context,
     );
   }
   collectTemplateInterpolationsImpl(node, context);
@@ -217,7 +217,7 @@ function collectTemplateInterpolations(
 
 function getDefinitions(
   source: string,
-  transformer: GraphQLTagTransformContext["transformer"] | undefined
+  transformer: GraphQLTagTransformContext["transformer"] | undefined,
 ): Array<unknown> {
   const queryDocument = parse(source, {
     noLocation: true,
@@ -228,7 +228,7 @@ function getDefinitions(
     if (definition.kind === Kind.OPERATION_DEFINITION) {
       if (queryDocument.definitions.length > 1) {
         throw new Error(
-          `If a GraphQL query document contains multiple operations, each operation must be named.\n${source}`
+          `If a GraphQL query document contains multiple operations, each operation must be named.\n${source}`,
         );
       }
       definitions.push(transformer ? transformer(definition) : definition);
@@ -242,34 +242,34 @@ function getDefinitions(
 
 function createDocument(
   definitions: Array<unknown>,
-  interpolations: Array<ts.Identifier | ts.PropertyAccessExpression>
+  interpolations: Array<ts.Identifier | ts.PropertyAccessExpression>,
 ): ts.ObjectLiteralExpression {
   const baseDefinitions = ts.factory.createArrayLiteralExpression(
-    definitions.map((def) => toAst(def))
+    definitions.map((def) => toAst(def)),
   );
 
   const extraDefinitions = interpolations.map((expr) => {
     return ts.factory.createPropertyAccessExpression(
       expr,
-      ts.factory.createIdentifier("definitions")
+      ts.factory.createIdentifier("definitions"),
     );
   });
 
   const allDefinitions = ts.factory.createCallExpression(
     ts.factory.createPropertyAccessExpression(
       baseDefinitions,
-      ts.factory.createIdentifier("concat")
+      ts.factory.createIdentifier("concat"),
     ),
     undefined,
     extraDefinitions.length
       ? extraDefinitions
-      : [ts.factory.createArrayLiteralExpression()]
+      : [ts.factory.createArrayLiteralExpression()],
   );
 
   return ts.factory.createObjectLiteralExpression([
     ts.factory.createPropertyAssignment(
       "kind",
-      ts.factory.createStringLiteral(Kind.DOCUMENT)
+      ts.factory.createStringLiteral(Kind.DOCUMENT),
     ),
     ts.factory.createPropertyAssignment("definitions", allDefinitions),
   ]);
@@ -294,14 +294,14 @@ function toAst(literal: any): ts.Expression {
     default:
       if (Array.isArray(literal)) {
         return ts.factory.createArrayLiteralExpression(
-          literal.map((item) => toAst(item))
+          literal.map((item) => toAst(item)),
         );
       }
 
       return ts.factory.createObjectLiteralExpression(
         Object.keys(literal).map((k) => {
           return ts.factory.createPropertyAssignment(k, toAst(literal[k]));
-        })
+        }),
       );
   }
 }

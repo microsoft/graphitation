@@ -95,17 +95,17 @@ function visitSelectionSet(parentType, selectionSet, parentSource) {
         if (isScalarType(type)) {
           result[selection.name] = parentType.invokeFieldResolver(
             selection.name,
-            parentSource
+            parentSource,
           );
         } else if (isObjectType(type)) {
           const source = parentType.invokeFieldResolver(
             selection.name,
-            parentSource
+            parentSource,
           );
           result[selection.name] = visitSelectionSet(
             type,
             selection.selectionSet,
-            source
+            source,
           );
         } else {
           // ...
@@ -128,7 +128,7 @@ execute(
         name
       }
     }
-  `)
+  `),
 );
 ```
 

@@ -14,7 +14,7 @@ const query = fs.readFileSync(
   path.join(__dirname, "./fixtures/query1.graphql"),
   {
     encoding: "utf-8",
-  }
+  },
 );
 
 const parsedQuery = parse(query);

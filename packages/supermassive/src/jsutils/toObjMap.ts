@@ -3,7 +3,7 @@ import type {
   ObjMapLike,
   ReadOnlyObjMap,
   ReadOnlyObjMapLike,
-} from './ObjMap';
+} from "./ObjMap";
 
 export function toObjMap<T>(obj: ObjMapLike<T>): ObjMap<T>;
 export function toObjMap<T>(obj: ReadOnlyObjMapLike<T>): ReadOnlyObjMap<T>;
