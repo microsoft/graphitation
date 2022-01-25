@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Fix webpack 4 for graphql-js-tag as it was missing the fix",
+  "packageName": "@graphitation/graphql-js-tag",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
