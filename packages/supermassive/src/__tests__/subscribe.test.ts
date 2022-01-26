@@ -30,6 +30,20 @@ const testCases: Array<TestCase> = [
       limit: 5,
     },
   },
+  {
+    name: "basic subscription with unused non-required variable",
+    document: `
+  subscription emitPersons($limit: Int!, $throwError: Boolean) {
+    emitPersons(limit: $limit, throwError: $throwError) {
+      name
+      gender
+    }
+  }
+ `,
+    variables: {
+      limit: 5,
+    },
+  },
 ];
 
 const errorTestCases: Array<TestCase> = [
