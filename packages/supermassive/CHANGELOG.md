@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Mon, 24 Jan 2022 13:40:52 GMT and should not be manually modified.
+This log was last generated on Wed, 26 Jan 2022 09:11:30 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.3
+
+Wed, 26 Jan 2022 09:11:30 GMT
+
+### Patches
+
+- getArgumentValues fix (jakubvejr@microsoft.com)
 
 ## 0.6.1
 

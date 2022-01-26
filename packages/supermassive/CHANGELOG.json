@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Wed, 26 Jan 2022 09:11:30 GMT",
+      "tag": "@graphitation/supermassive_v0.6.3",
+      "version": "0.6.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "db06c5c33b72f611a7a7aca25a7d2f2b808a6d60",
+            "comment": "getArgumentValues fix"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 25 Jan 2022 09:56:59 GMT",
       "tag": "@graphitation/supermassive_v0.6.1",
       "version": "0.6.1",
