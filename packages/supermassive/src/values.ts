@@ -221,6 +221,8 @@ export function getArgumentValues(
             valueNode as GraphQLValueNode,
           );
         }
+
+        continue;
       }
       isNull = !variableValues || variableValues[variableName] == null;
     }

@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "getArgumentValues fix",
+  "packageName": "@graphitation/supermassive",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
