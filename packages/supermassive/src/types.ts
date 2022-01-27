@@ -54,6 +54,7 @@ export type TypeResolver<TSource, TContext> = (
 export type ObjectTypeResolver<TSource = any, TContext = any, TArgs = any> = {
   [key: string]: FieldResolver<TSource, TContext, TArgs>;
 };
+
 export type InterfaceTypeResolver<
   TSource = any,
   TContext = any,
@@ -62,9 +63,11 @@ export type InterfaceTypeResolver<
   [key: string]: FieldResolver<TSource, TContext, TArgs>;
 } & {
   __resolveType?: TypeResolver<any, any>;
+  __implementedBy?: string[];
 };
 export type UnionTypeResolver = {
   __resolveType?: TypeResolver<any, any>;
+  __types?: string[];
 };
 export type InputObjectTypeResolver = GraphQLInputObjectType;
 
@@ -80,6 +83,7 @@ export type Resolvers<TSource = any, TContext = any> = Record<
   string,
   Resolver<TSource, TContext>
 >;
+
 export interface ResolveInfo {
   fieldName: string;
   fieldNodes: Array<FieldNode>;

@@ -52,6 +52,8 @@ interface Node {
   id: Int
 }
 
+union Alive = Person | Species
+
 type Film implements Node {
   title: String!
   starships: [Starship]

@@ -36,6 +36,7 @@ export function extractImplicitTypesToTypescript(
     "GraphQLBoolean",
   ];
   const identifiers: Array<string> = [];
+  const implementedBy: Record<string, Array<string>> = {};
 
   for (let astNode of document.definitions) {
     if (astNode.kind === Kind.SCALAR_TYPE_DEFINITION) {
@@ -50,13 +51,30 @@ export function extractImplicitTypesToTypescript(
       definitions.push(createEnumType(astNode));
       addToSetArray(imports, "GraphQLEnumType");
       addToSetArray(identifiers, astNode.name.value);
-    } else if (
-      astNode.kind === Kind.UNION_TYPE_DEFINITION ||
-      astNode.kind === Kind.INTERFACE_TYPE_DEFINITION
-    ) {
-      definitions.push(createAbstractType(astNode));
+    } else if (astNode.kind === Kind.INTERFACE_TYPE_DEFINITION) {
+      if (!implementedBy[astNode.name.value]) {
+        implementedBy[astNode.name.value] = [];
+      }
+      definitions.push(
+        createAbstractType(astNode, implementedBy[astNode.name.value]),
+      );
+
+      addToSetArray(identifiers, astNode.name.value);
+    } else if (astNode.kind === Kind.UNION_TYPE_DEFINITION) {
+      const types = astNode.types?.map((typeNode) => {
+        return typeNode.name.value;
+      });
+
+      definitions.push(createAbstractType(astNode, undefined, types));
+
       addToSetArray(identifiers, astNode.name.value);
     } else if (astNode.kind === Kind.OBJECT_TYPE_DEFINITION) {
+      astNode.interfaces?.forEach((node: any) => {
+        if (!implementedBy[node.name.value]) {
+          implementedBy[node.name.value] = [];
+        }
+        implementedBy[node.name.value].push((astNode as any).name.value);
+      });
       definitions.push(createObjectType(astNode));
       addToSetArray(identifiers, astNode.name.value);
     }
@@ -270,10 +288,37 @@ function createEnumType(astNode: EnumTypeDefinitionNode): ts.VariableStatement {
 
 function createAbstractType(
   astNode: InterfaceTypeDefinitionNode | UnionTypeDefinitionNode,
+  implementedBy?: string[],
+  types?: string[],
 ): ts.VariableStatement {
+  const properties = [];
+  if (implementedBy) {
+    properties.push(
+      factory.createPropertyAssignment(
+        factory.createIdentifier("__implementedBy"),
+        factory.createArrayLiteralExpression(
+          implementedBy.map((value: string) =>
+            factory.createStringLiteral(value),
+          ),
+        ),
+      ),
+    );
+  }
+  if (types) {
+    properties.push(
+      factory.createPropertyAssignment(
+        factory.createIdentifier("__types"),
+        factory.createArrayLiteralExpression(
+          types.map((value: string) => factory.createStringLiteral(value)),
+        ),
+      ),
+    );
+  }
+
   return createDeclaration(
     astNode.name.value,
     factory.createObjectLiteralExpression([
+      ...properties,
       factory.createPropertyAssignment(
         factory.createIdentifier("__resolveType"),
         factory.createIdentifier("undefined"),

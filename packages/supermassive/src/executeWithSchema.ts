@@ -7,6 +7,7 @@ import {
 } from "./index";
 import { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import { Resolvers, ExecutionResult, ExecutionWithSchemaArgs } from "./types";
+import { mergeResolvers } from "./utilities/mergeResolvers";
 
 export function executeWithSchema({
   typeDefs,
@@ -30,10 +31,11 @@ export function executeWithSchema({
     }
   };
   extractedResolvers = extractImplicitTypes(typeDefs, getTypeByName);
-  const fullResolvers = {
-    ...extractedResolvers,
-    ...((resolvers as any) as Resolvers<any, any>),
-  };
+  const fullResolvers = mergeResolvers(
+    (resolvers as any) as Resolvers<any, any>,
+    extractedResolvers,
+  );
+
   const document = addTypesToRequestDocument(schema, rawDocument);
   return executeWithoutSchema({
     document,

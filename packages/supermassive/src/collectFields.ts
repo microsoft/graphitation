@@ -9,6 +9,7 @@ import {
 import type { ObjMap } from "./jsutils/ObjMap";
 import { getDirectiveValues } from "./values";
 import { GraphQLSkipDirective, GraphQLIncludeDirective } from "./directives";
+import { typeNameFromAST } from "./utilities/typeNameFromAST";
 
 import { Resolvers } from "./types";
 
@@ -49,7 +50,7 @@ export function collectFields(
       case Kind.INLINE_FRAGMENT: {
         if (
           !shouldIncludeNode(resolvers, variableValues, selection) ||
-          !doesFragmentConditionMatch(selection, runtimeTypeName)
+          !doesFragmentConditionMatch(selection, runtimeTypeName, resolvers)
         ) {
           continue;
         }
@@ -76,7 +77,7 @@ export function collectFields(
         const fragment = fragments[fragName];
         if (
           !fragment ||
-          !doesFragmentConditionMatch(fragment, runtimeTypeName)
+          !doesFragmentConditionMatch(fragment, runtimeTypeName, resolvers)
         ) {
           continue;
         }
@@ -139,19 +140,58 @@ function shouldIncludeNode(
 function doesFragmentConditionMatch(
   fragment: FragmentDefinitionNode | InlineFragmentNode,
   typeName: string,
+  resolvers: Resolvers,
 ): boolean {
   const typeConditionNode = fragment.typeCondition;
   if (!typeConditionNode) {
     return true;
   }
-  if (typeConditionNode.name.value === typeName) {
+
+  const conditionalType = typeNameFromAST(typeConditionNode);
+
+  if (conditionalType === typeName) {
     return true;
   }
-  // TODO(freiksenet): abstract types
-  // if (isAbstractType(conditionalType)) {
-  // return schema.isSubType(conditionalType, type);
-  // }
-  return false;
+
+  const subTypes = getSubTypes(resolvers, new Set(), conditionalType);
+
+  return subTypes.has(typeName);
+}
+
+function getSubTypes(
+  resolvers: Resolvers,
+  abstractTypes: Set<string>,
+  conditionalType: string,
+): Set<string> {
+  if ((resolvers[conditionalType] as any)?.__implementedBy) {
+    const implementedBy = (resolvers[conditionalType] as any).__implementedBy;
+    const result = implementedBy.reduce((acc: string[], item: string) => {
+      if (!abstractTypes.has(item)) {
+        const newTypes = new Set([...abstractTypes, item]);
+
+        acc.push(...abstractTypes, ...getSubTypes(resolvers, newTypes, item));
+        return acc;
+      }
+    }, []);
+
+    return new Set([...result]);
+  }
+
+  if ((resolvers[conditionalType] as any)?.__types) {
+    const types = (resolvers[conditionalType] as any).__types;
+    const result = types.reduce((acc: string[], item: string) => {
+      if (!abstractTypes.has(item)) {
+        const newTypes = new Set([...abstractTypes, item]);
+
+        acc.push(...abstractTypes, ...getSubTypes(resolvers, newTypes, item));
+        return acc;
+      }
+    }, []);
+
+    return new Set([...result]);
+  }
+
+  return abstractTypes;
 }
 
 /**
