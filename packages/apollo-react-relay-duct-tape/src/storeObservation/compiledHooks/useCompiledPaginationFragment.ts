@@ -128,7 +128,10 @@ function useLoadMore({
       // TODO: Measure if invoking `refetch` leads to React updates and if it
       //       makes sense to wrap it and the following setIsLoadingMore(true)
       //       call in a batchedUpdates callback.
-      const disposable = refetch(newVariables, refetchOptions);
+      const disposable = refetch(
+        newVariables,
+        refetchOptions as RefetchOptions
+      );
       setIsLoadingMore(true);
       return disposable;
     },
