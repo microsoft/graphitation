@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "Various changes",
-  "packageName": "relay-compiler-language-graphitation",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}
