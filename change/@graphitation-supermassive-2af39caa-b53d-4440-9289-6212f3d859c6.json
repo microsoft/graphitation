@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "check whether a fragment is applicable to the given type",
+  "packageName": "@graphitation/supermassive",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
