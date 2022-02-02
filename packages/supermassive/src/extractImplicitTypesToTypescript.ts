@@ -5,6 +5,7 @@ import {
   InputValueDefinitionNode,
   Kind,
   EnumTypeDefinitionNode,
+  NamedTypeNode,
   InputObjectTypeDefinitionNode,
   TypeNode,
   ScalarTypeDefinitionNode,
@@ -69,11 +70,13 @@ export function extractImplicitTypesToTypescript(
 
       addToSetArray(identifiers, astNode.name.value);
     } else if (astNode.kind === Kind.OBJECT_TYPE_DEFINITION) {
-      astNode.interfaces?.forEach((node: any) => {
+      astNode.interfaces?.forEach((node: NamedTypeNode) => {
         if (!implementedBy[node.name.value]) {
           implementedBy[node.name.value] = [];
         }
-        implementedBy[node.name.value].push((astNode as any).name.value);
+        implementedBy[node.name.value].push(
+          (astNode as ObjectTypeDefinitionNode).name.value,
+        );
       });
       definitions.push(createObjectType(astNode));
       addToSetArray(identifiers, astNode.name.value);

@@ -10,8 +10,9 @@ import type { ObjMap } from "./jsutils/ObjMap";
 import { getDirectiveValues } from "./values";
 import { GraphQLSkipDirective, GraphQLIncludeDirective } from "./directives";
 import { typeNameFromAST } from "./utilities/typeNameFromAST";
+import { isUnionResolverType, isInterfaceResolverType } from "./definition";
 
-import { Resolvers } from "./types";
+import { Resolvers, UnionTypeResolver, InterfaceTypeResolver } from "./types";
 
 /**
  * Given a selectionSet, adds all of the fields in that selection to
@@ -163,29 +164,31 @@ function getSubTypes(
   abstractTypes: Set<string>,
   conditionalType: string,
 ): Set<string> {
-  if ((resolvers[conditionalType] as any)?.__implementedBy) {
-    const implementedBy = (resolvers[conditionalType] as any).__implementedBy;
-    const result = implementedBy.reduce((acc: string[], item: string) => {
-      if (!abstractTypes.has(item)) {
-        const newTypes = new Set([...abstractTypes, item]);
+  const resolver = resolvers[conditionalType];
+  if (isInterfaceResolverType(resolver)) {
+    const result = resolver.__implementedBy.reduce(
+      (acc: string[], item: string) => {
+        if (!abstractTypes.has(item)) {
+          const newTypes = new Set([...abstractTypes, item]);
 
-        acc.push(...abstractTypes, ...getSubTypes(resolvers, newTypes, item));
+          acc.push(...abstractTypes, ...getSubTypes(resolvers, newTypes, item));
+        }
         return acc;
-      }
-    }, []);
+      },
+      [],
+    );
 
     return new Set([...result]);
   }
 
-  if ((resolvers[conditionalType] as any)?.__types) {
-    const types = (resolvers[conditionalType] as any).__types;
-    const result = types.reduce((acc: string[], item: string) => {
+  if (isUnionResolverType(resolver)) {
+    const result = resolver.__types.reduce((acc: string[], item: string) => {
       if (!abstractTypes.has(item)) {
         const newTypes = new Set([...abstractTypes, item]);
 
         acc.push(...abstractTypes, ...getSubTypes(resolvers, newTypes, item));
-        return acc;
       }
+      return acc;
     }, []);
 
     return new Set([...result]);

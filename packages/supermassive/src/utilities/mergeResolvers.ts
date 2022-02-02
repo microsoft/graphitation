@@ -4,9 +4,9 @@ export function mergeResolvers(
   resolvers: Resolvers<any, any>,
   extractedResolvers: Record<string, Resolver<any, any>>,
 ) {
-  const fullResolvers = ({
+  const fullResolvers = {
     ...extractedResolvers,
-  } as any) as Record<string, Resolver<any, any>>;
+  } as Record<string, Resolver<any, any>>;
 
   Object.keys(resolvers).forEach((resolverKey: string) => {
     if (

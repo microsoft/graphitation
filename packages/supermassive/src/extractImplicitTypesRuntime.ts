@@ -4,7 +4,9 @@ import {
   EnumValueDefinitionNode,
   FieldDefinitionNode,
   getDirectiveValues,
+  ObjectTypeDefinitionNode,
   GraphQLDeprecatedDirective,
+  NamedTypeNode,
   GraphQLEnumType,
   GraphQLEnumValueConfigMap,
   GraphQLScalarType,
@@ -63,11 +65,13 @@ export function extractImplicitTypes<TSource = any, TContext = any>(
         __types: types || [],
       } as UnionTypeResolver;
     } else if (astNode.kind === Kind.OBJECT_TYPE_DEFINITION) {
-      astNode.interfaces?.forEach((node: any) => {
+      astNode.interfaces?.forEach((node: NamedTypeNode) => {
         if (!implementedBy[node.name.value]) {
           implementedBy[node.name.value] = [];
         }
-        implementedBy[node.name.value].push((astNode as any).name.value);
+        implementedBy[node.name.value].push(
+          (astNode as ObjectTypeDefinitionNode).name.value,
+        );
       });
 
       result[astNode.name.value] = {};

@@ -140,7 +140,7 @@ async function compareErrorsForSubscribeWithSchema(
   const document = parse(query);
   const subscribeWithSchemaIterator = (await subscribeWithSchema({
     typeDefs,
-    resolvers: (resolvers as unknown) as Resolvers<any, any>,
+    resolvers: resolvers as Resolvers<any, any>,
     document,
     contextValue: {
       models,
@@ -193,7 +193,7 @@ async function compareResultsForSubscribeWithoutSchema(
   );
   fullResolvers = {
     ...extractedResolvers,
-    ...((resolvers as unknown) as Resolvers<any, any>),
+    ...(resolvers as Resolvers<any, any>),
   };
   const document = parse(query);
   const subscribeWithoutSchemaResults: any[] = [];
@@ -245,7 +245,7 @@ async function compareErrorsForSubscribeWithoutSchema(
   );
   fullResolvers = {
     ...extractedResolvers,
-    ...((resolvers as unknown) as Resolvers<any, any>),
+    ...(resolvers as Resolvers<any, any>),
   };
   const document = parse(query);
   let subscribeWithoutSchemaError;

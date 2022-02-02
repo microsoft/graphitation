@@ -32,7 +32,7 @@ export function executeWithSchema({
   };
   extractedResolvers = extractImplicitTypes(typeDefs, getTypeByName);
   const fullResolvers = mergeResolvers(
-    (resolvers as any) as Resolvers<any, any>,
+    resolvers as Resolvers<any, any>,
     extractedResolvers,
   );
 

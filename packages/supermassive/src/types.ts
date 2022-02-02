@@ -63,11 +63,11 @@ export type InterfaceTypeResolver<
   [key: string]: FieldResolver<TSource, TContext, TArgs>;
 } & {
   __resolveType?: TypeResolver<any, any>;
-  __implementedBy?: string[];
+  __implementedBy: string[];
 };
 export type UnionTypeResolver = {
   __resolveType?: TypeResolver<any, any>;
-  __types?: string[];
+  __types: string[];
 };
 export type InputObjectTypeResolver = GraphQLInputObjectType;
 

@@ -34,6 +34,7 @@ import { addPath, pathToArray } from "./jsutils/Path";
 import { promiseForObject } from "./jsutils/promiseForObject";
 import type { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import { promiseReduce } from "./jsutils/promiseReduce";
+import { isUnionResolverType, isInterfaceResolverType } from "./definition";
 import {
   ExecutionWithoutSchemaArgs,
   FieldResolver,
@@ -636,7 +637,7 @@ function completeValue(
 
   // If field type is an abstract type, Interface or Union, determine the
   // runtime Object type and complete for that type.
-  if ("__resolveType" in returnType) {
+  if (isUnionResolverType(returnType) || isInterfaceResolverType(returnType)) {
     return completeAbstractValue(
       exeContext,
       returnType,

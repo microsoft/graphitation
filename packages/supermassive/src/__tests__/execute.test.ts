@@ -313,7 +313,7 @@ async function compareResultsForExecuteWithoutSchema(
     getTypeByName,
   );
   const fullResolvers = mergeResolvers(
-    (resolvers as any) as Resolvers<any, any>,
+    resolvers as Resolvers<any, any>,
     extractedResolvers,
   );
   const document = parse(query);
