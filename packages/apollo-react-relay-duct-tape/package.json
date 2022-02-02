@@ -52,6 +52,10 @@
       ".": {
         "import": "./lib/index.mjs",
         "require": "./lib/index.js"
+      },
+      "./lib/storeObservation/createImportDocumentsTransform": {
+        "import": "./lib/storeObservation/createImportDocumentsTransform.mjs",
+        "require": "./lib/storeObservation/createImportDocumentsTransform.js"
       }
     }
   }
