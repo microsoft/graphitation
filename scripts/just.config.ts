@@ -38,7 +38,19 @@ export const build = () => {
               if (args.importer) {
                 let extPath = args.path;
                 if (extPath.startsWith(".")) {
-                  extPath = extPath + ".mjs";
+                  const absolutePath = path.resolve(
+                    args.importer,
+                    "..",
+                    extPath
+                  );
+                  if (
+                    fs.existsSync(absolutePath) &&
+                    fs.lstatSync(absolutePath).isDirectory()
+                  ) {
+                    extPath = extPath + "/index.mjs";
+                  } else {
+                    extPath = extPath + ".mjs";
+                  }
                 }
                 return {
                   path: extPath,
