@@ -38,6 +38,7 @@ export function extractImplicitTypesToTypescript(
   ];
   const identifiers: Array<string> = [];
   const implementedBy: Record<string, Array<string>> = {};
+  const interfaceAstNodes = [];
 
   for (let astNode of document.definitions) {
     if (astNode.kind === Kind.SCALAR_TYPE_DEFINITION) {
@@ -53,12 +54,7 @@ export function extractImplicitTypesToTypescript(
       addToSetArray(imports, "GraphQLEnumType");
       addToSetArray(identifiers, astNode.name.value);
     } else if (astNode.kind === Kind.INTERFACE_TYPE_DEFINITION) {
-      if (!implementedBy[astNode.name.value]) {
-        implementedBy[astNode.name.value] = [];
-      }
-      definitions.push(
-        createAbstractType(astNode, implementedBy[astNode.name.value]),
-      );
+      interfaceAstNodes.push(astNode);
 
       addToSetArray(identifiers, astNode.name.value);
     } else if (astNode.kind === Kind.UNION_TYPE_DEFINITION) {
@@ -82,6 +78,15 @@ export function extractImplicitTypesToTypescript(
       addToSetArray(identifiers, astNode.name.value);
     }
   }
+
+  interfaceAstNodes.forEach((astNode) => {
+    if (!implementedBy[astNode.name.value]) {
+      implementedBy[astNode.name.value] = [];
+    }
+    definitions.push(
+      createAbstractType(astNode, implementedBy[astNode.name.value]),
+    );
+  });
 
   const importDefinition: ts.ImportDeclaration = factory.createImportDeclaration(
     undefined,

@@ -29,7 +29,6 @@ describe(extractImplicitTypesToTypescript, () => {
     const NodeType = new GraphQLEnumType({ name: \\"NodeType\\", description: \\"\\", values: { Person: { description: \\"\\" }, Starship: { description: \\"\\" }, Transport: { description: \\"\\" }, Species: { description: \\"\\" }, Vehicle: { description: \\"\\" }, Planet: { description: \\"\\" }, Film: { description: \\"\\" } } });
     const Subscription = {};
     const Query = {};
-    const Node = { __implementedBy: [], __resolveType: undefined };
     const Alive = { __types: [\\"Person\\", \\"Species\\"], __resolveType: undefined };
     const Film = {};
     const Vehicle = {};
@@ -38,6 +37,7 @@ describe(extractImplicitTypesToTypescript, () => {
     const Planet = {};
     const Species = {};
     const Transport = {};
+    const Node = { __implementedBy: [\\"Film\\", \\"Vehicle\\", \\"Person\\", \\"Starship\\", \\"Planet\\", \\"Species\\", \\"Transport\\"], __resolveType: undefined };
     export const resolvers = { SearchResult, NodeType, Subscription, Query, Node, Alive, Film, Vehicle, Person, Starship, Planet, Species, Transport };
     "
 	    `);
