@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Wed, 26 Jan 2022 09:11:30 GMT and should not be manually modified.
+This log was last generated on Thu, 03 Feb 2022 09:30:26 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.7.0
+
+Thu, 03 Feb 2022 09:30:26 GMT
+
+### Minor changes
+
+- check whether a fragment is applicable to the given type (jakubvejr@microsoft.com)
 
 ## 0.6.3
 
