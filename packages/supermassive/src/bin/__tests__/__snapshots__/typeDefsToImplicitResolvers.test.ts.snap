@@ -2,10 +2,9 @@
 
 exports[`supermassive should generate 1`] = `
 "import { GraphQLList, GraphQLNonNull, GraphQLID, GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLEnumType } from \\"graphql\\";
-const SearchResult = { __resolveType: undefined };
+const SearchResult = { __types: [\\"Person\\", \\"Starship\\", \\"Transport\\", \\"Species\\", \\"Vehicle\\", \\"Planet\\", \\"Film\\"], __resolveType: undefined };
 const NodeType = new GraphQLEnumType({ name: \\"NodeType\\", description: \\"\\", values: { Person: { description: \\"\\" }, Starship: { description: \\"\\" }, Transport: { description: \\"\\" }, Species: { description: \\"\\" }, Vehicle: { description: \\"\\" }, Planet: { description: \\"\\" }, Film: { description: \\"\\" } } });
 const Query = {};
-const Node = { __resolveType: undefined };
 const Film = {};
 const Vehicle = {};
 const Person = {};
@@ -13,6 +12,7 @@ const Starship = {};
 const Planet = {};
 const Species = {};
 const Transport = {};
+const Node = { __implementedBy: [\\"Film\\", \\"Vehicle\\", \\"Person\\", \\"Starship\\", \\"Planet\\", \\"Species\\", \\"Transport\\"], __resolveType: undefined };
 export const resolvers = { SearchResult, NodeType, Query, Node, Film, Vehicle, Person, Starship, Planet, Species, Transport };
 "
 `;

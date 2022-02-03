@@ -9,8 +9,10 @@ import {
 import type { ObjMap } from "./jsutils/ObjMap";
 import { getDirectiveValues } from "./values";
 import { GraphQLSkipDirective, GraphQLIncludeDirective } from "./directives";
+import { typeNameFromAST } from "./utilities/typeNameFromAST";
+import { isUnionResolverType, isInterfaceResolverType } from "./definition";
 
-import { Resolvers } from "./types";
+import { Resolvers, UnionTypeResolver, InterfaceTypeResolver } from "./types";
 
 /**
  * Given a selectionSet, adds all of the fields in that selection to
@@ -49,7 +51,7 @@ export function collectFields(
       case Kind.INLINE_FRAGMENT: {
         if (
           !shouldIncludeNode(resolvers, variableValues, selection) ||
-          !doesFragmentConditionMatch(selection, runtimeTypeName)
+          !doesFragmentConditionMatch(selection, runtimeTypeName, resolvers)
         ) {
           continue;
         }
@@ -76,7 +78,7 @@ export function collectFields(
         const fragment = fragments[fragName];
         if (
           !fragment ||
-          !doesFragmentConditionMatch(fragment, runtimeTypeName)
+          !doesFragmentConditionMatch(fragment, runtimeTypeName, resolvers)
         ) {
           continue;
         }
@@ -139,19 +141,60 @@ function shouldIncludeNode(
 function doesFragmentConditionMatch(
   fragment: FragmentDefinitionNode | InlineFragmentNode,
   typeName: string,
+  resolvers: Resolvers,
 ): boolean {
   const typeConditionNode = fragment.typeCondition;
   if (!typeConditionNode) {
     return true;
   }
-  if (typeConditionNode.name.value === typeName) {
+
+  const conditionalType = typeNameFromAST(typeConditionNode);
+
+  if (conditionalType === typeName) {
     return true;
   }
-  // TODO(freiksenet): abstract types
-  // if (isAbstractType(conditionalType)) {
-  // return schema.isSubType(conditionalType, type);
-  // }
-  return false;
+
+  const subTypes = getSubTypes(resolvers, new Set(), conditionalType);
+
+  return subTypes.has(typeName);
+}
+
+function getSubTypes(
+  resolvers: Resolvers,
+  abstractTypes: Set<string>,
+  conditionalType: string,
+): Set<string> {
+  const resolver = resolvers[conditionalType];
+  if (isInterfaceResolverType(resolver)) {
+    const result = resolver.__implementedBy.reduce(
+      (acc: string[], item: string) => {
+        if (!abstractTypes.has(item)) {
+          const newTypes = new Set([...abstractTypes, item]);
+
+          acc.push(...abstractTypes, ...getSubTypes(resolvers, newTypes, item));
+        }
+        return acc;
+      },
+      [],
+    );
+
+    return new Set([...result]);
+  }
+
+  if (isUnionResolverType(resolver)) {
+    const result = resolver.__types.reduce((acc: string[], item: string) => {
+      if (!abstractTypes.has(item)) {
+        const newTypes = new Set([...abstractTypes, item]);
+
+        acc.push(...abstractTypes, ...getSubTypes(resolvers, newTypes, item));
+      }
+      return acc;
+    }, []);
+
+    return new Set([...result]);
+  }
+
+  return abstractTypes;
 }
 
 /**

@@ -4,7 +4,9 @@ import {
   EnumValueDefinitionNode,
   FieldDefinitionNode,
   getDirectiveValues,
+  ObjectTypeDefinitionNode,
   GraphQLDeprecatedDirective,
+  NamedTypeNode,
   GraphQLEnumType,
   GraphQLEnumValueConfigMap,
   GraphQLScalarType,
@@ -21,13 +23,19 @@ import {
   GraphQLList,
 } from "graphql";
 import { Maybe } from "./jsutils/Maybe";
-import { Resolvers } from "./types";
+import {
+  Resolvers,
+  UnionTypeResolver,
+  InterfaceTypeResolver,
+  ObjectTypeResolver,
+} from "./types";
 
 export function extractImplicitTypes<TSource = any, TContext = any>(
   document: DocumentNode,
   getTypeByName: (name: string) => GraphQLInputType,
 ): Resolvers<TSource, TContext> {
   const result: Resolvers<TSource, TContext> = Object.create(null);
+  const implementedBy: Record<string, Array<string>> = {};
   for (let astNode of document.definitions) {
     if (astNode.kind === Kind.SCALAR_TYPE_DEFINITION) {
       const name = astNode.name.value;
@@ -39,12 +47,33 @@ export function extractImplicitTypes<TSource = any, TContext = any>(
       result[astNode.name.value] = makeInputObject(astNode, getTypeByName);
     } else if (astNode.kind === Kind.ENUM_TYPE_DEFINITION) {
       result[astNode.name.value] = makeEnum(astNode);
-    } else if (
-      astNode.kind === Kind.UNION_TYPE_DEFINITION ||
-      astNode.kind === Kind.INTERFACE_TYPE_DEFINITION
-    ) {
-      result[astNode.name.value] = { __resolveType: undefined };
+    } else if (astNode.kind === Kind.INTERFACE_TYPE_DEFINITION) {
+      if (!implementedBy[astNode.name.value]) {
+        implementedBy[astNode.name.value] = [];
+      }
+      result[astNode.name.value] = {
+        __resolveType: undefined,
+        __implementedBy: implementedBy[astNode.name.value],
+      } as InterfaceTypeResolver;
+    } else if (astNode.kind === Kind.UNION_TYPE_DEFINITION) {
+      const types = astNode.types?.map((typeNode) => {
+        return typeNode.name.value;
+      });
+
+      result[astNode.name.value] = {
+        __resolveType: undefined,
+        __types: types || [],
+      } as UnionTypeResolver;
     } else if (astNode.kind === Kind.OBJECT_TYPE_DEFINITION) {
+      astNode.interfaces?.forEach((node: NamedTypeNode) => {
+        if (!implementedBy[node.name.value]) {
+          implementedBy[node.name.value] = [];
+        }
+        implementedBy[node.name.value].push(
+          (astNode as ObjectTypeDefinitionNode).name.value,
+        );
+      });
+
       result[astNode.name.value] = {};
     }
   }

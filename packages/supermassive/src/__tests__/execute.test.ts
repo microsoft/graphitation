@@ -7,6 +7,7 @@ import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
 import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
 import { Resolvers } from "../types";
 import { specifiedScalars } from "../values";
+import { mergeResolvers } from "../utilities/mergeResolvers";
 
 interface TestCase {
   name: string;
@@ -180,22 +181,92 @@ query Person($id: Int!) {
       id: 1,
     },
   },
+  {
+    name: "union in interface fragment spread",
+    document: `
+    {
+      person: node(nodeType: Person, id: 1) {
+        ... on Alive {
+          ... on Person {
+            name
+          }
+        }
+      }
+    }
+    `,
+  },
+  {
+    name: "interface in union fragment spread",
+    document: `
+    {
+      person: node(nodeType: Person, id: 1) {
+        ... on Alive {
+          ... on Node {
+            id
+          }
+        }
+      }
+    }
+    `,
+  },
+  {
+    name: "interface in object fragment spread",
+    document: `
+    {
+      person(id: 1) {
+        ... on Node {
+          id
+        }
+      }
+    }
+    `,
+  },
+  {
+    name: "union in object fragment spread",
+    document: `
+    {
+      person(id: 1) {
+        ... on Alive {
+          ... on Person {
+            name
+          }
+        }
+      }
+    }
+    `,
+  },
+  {
+    name: "union in object fragment spread",
+    document: `
+    {
+      person(id: 1) {
+        ... on Vehicle {
+          ... on Person {
+            name
+          }
+        }
+      }
+    }
+    `,
+  },
 ];
 
 describe("executeWithSchema", () => {
-  testCases.forEach(({ name, document, variables }: TestCase) => {
-    it(name, async () => {
+  test.each(testCases)(
+    "$name",
+    async ({ name, document, variables }: TestCase) => {
       await compareResultsForExecuteWithSchema(document, variables);
-    });
-  });
+    },
+  );
 });
 
 describe("executeWithoutSchema", () => {
-  testCases.forEach(({ name, document, variables }: TestCase) => {
-    it(name, async () => {
+  test.each(testCases)(
+    "$name",
+    async ({ name, document, variables }: TestCase) => {
       await compareResultsForExecuteWithoutSchema(document, variables);
-    });
-  });
+    },
+  );
 });
 
 async function compareResultsForExecuteWithSchema(
@@ -229,7 +300,6 @@ async function compareResultsForExecuteWithoutSchema(
   variables: Record<string, unknown> = {},
 ) {
   expect.assertions(1);
-  let fullResolvers: Resolvers<any, any> = {};
   const getTypeByName = (name: string) => {
     const type = specifiedScalars[name] || extractedResolvers[name];
     if (isInputType(type)) {
@@ -242,10 +312,10 @@ async function compareResultsForExecuteWithoutSchema(
     typeDefs,
     getTypeByName,
   );
-  fullResolvers = {
-    ...extractedResolvers,
-    ...((resolvers as unknown) as Resolvers<any, any>),
-  };
+  const fullResolvers = mergeResolvers(
+    resolvers as Resolvers<any, any>,
+    extractedResolvers,
+  );
   const document = parse(query);
   const result = await executeWithoutSchema({
     document: addTypesToRequestDocument(schema, document),
