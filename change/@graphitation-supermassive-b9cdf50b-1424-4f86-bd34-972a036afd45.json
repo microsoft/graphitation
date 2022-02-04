@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "ensureValidRuntimeType error messages modified",
+  "packageName": "@graphitation/supermassive",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
