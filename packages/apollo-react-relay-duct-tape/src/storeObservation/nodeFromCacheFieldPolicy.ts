@@ -2,6 +2,8 @@ import { FieldReadFunction } from "@apollo/client";
 import { FragmentSpreadNode, FragmentDefinitionNode } from "graphql";
 import invariant from "invariant";
 
+const fragmentDocumentCache = new WeakMap();
+
 /**
  * Use this as the field policy function for the node root field, which is what
  * gets invoked when using relay-compiler's refetch query. Queries that use a
@@ -38,17 +40,24 @@ export const nodeFromCacheFieldPolicy: FieldReadFunction = (
     fragmentName
   );
 
+  let fragmentDocument = fragmentDocumentCache.get(options.query);
+
+  if (!fragmentDocument) {
+    fragmentDocument = {
+      kind: "Document",
+      definitions: options.query.definitions.filter(
+        (def) => def.kind === "FragmentDefinition"
+      ),
+    };
+    fragmentDocumentCache.set(options.query, fragmentDocument);
+  }
+
   const id = `${fragment.typeCondition.name.value}:${nodeId}`;
   const data = options.cache.readFragment({
     id,
     variables: options.variables,
     fragmentName,
-    fragment: {
-      kind: "Document",
-      definitions: options.query.definitions.filter(
-        (def) => def.kind === "FragmentDefinition"
-      ),
-    },
+    fragment: fragmentDocument,
   });
   invariant(data, "Expected to find cached data with id `%s`", id);
 
