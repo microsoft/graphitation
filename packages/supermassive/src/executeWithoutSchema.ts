@@ -805,25 +805,48 @@ function ensureValidRuntimeType(
   runtimeTypeName: unknown,
   exeContext: ExecutionContext,
 ): string {
-  if (typeof runtimeTypeName === "string") {
-    const runtimeType: Resolver<any, any> =
-      exeContext.resolvers[runtimeTypeName];
-
-    if (!runtimeType) {
-      throw new Error("TODO - no such type");
-    } else if (
-      runtimeType instanceof GraphQLScalarType ||
-      runtimeType instanceof GraphQLEnumType ||
-      runtimeType instanceof GraphQLInputObjectType ||
-      runtimeType.__resolveType
-    ) {
-      throw new Error("TODO - invalid runtime type");
-    } else {
-      return runtimeTypeName;
-    }
+  if (typeof runtimeTypeName !== "string") {
+    throw new GraphQLError(
+      `Could not determine runtime type for abstract type ${runtimeTypeName}`,
+    );
   }
 
-  throw new Error("TODO - Could not determine runtime type for abstract type");
+  const runtimeType: Resolver<any, any> = exeContext.resolvers[runtimeTypeName];
+
+  if (!runtimeType) {
+    throw new GraphQLError(
+      `Type "${runtimeTypeName}" does not exist inside the schema.`,
+    );
+  } else if (
+    runtimeType instanceof GraphQLScalarType ||
+    runtimeType instanceof GraphQLEnumType ||
+    runtimeType instanceof GraphQLInputObjectType ||
+    runtimeType.__resolveType
+  ) {
+    throw new GraphQLError(
+      `Given runtime object "${getRuntimeTypeInstanceName(
+        runtimeType,
+      )}" type is not a possible type for "${runtimeTypeName}".`,
+    );
+  } else {
+    return runtimeTypeName;
+  }
+}
+
+function getRuntimeTypeInstanceName(runtimeType: Resolver<any, any>): string {
+  if (runtimeType instanceof GraphQLScalarType) {
+    return "GraphQLScalarType";
+  } else if (runtimeType instanceof GraphQLEnumType) {
+    return "GraphQLEnumType";
+  } else if (runtimeType instanceof GraphQLInputObjectType) {
+    return "GraphQLInputObjectType";
+  } else if ("__types" in runtimeType) {
+    return "GraphQLUnionType";
+  } else if ("__implementedBy" in runtimeType) {
+    return "GraphQLInterfaceType";
+  } else {
+    return "Unknown";
+  }
 }
 
 /**
