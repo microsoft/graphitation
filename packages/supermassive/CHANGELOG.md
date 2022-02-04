@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Thu, 03 Feb 2022 09:30:26 GMT and should not be manually modified.
+This log was last generated on Fri, 04 Feb 2022 11:53:40 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.7.1
+
+Fri, 04 Feb 2022 11:53:40 GMT
+
+### Patches
+
+- ensureValidRuntimeType error messages modified (jakubvejr@microsoft.com)
 
 ## 0.7.0
 

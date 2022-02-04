@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Fri, 04 Feb 2022 11:53:40 GMT",
+      "tag": "@graphitation/supermassive_v0.7.1",
+      "version": "0.7.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "943230ef7535d211f99a7ea8a54cc5e80a50754c",
+            "comment": "ensureValidRuntimeType error messages modified"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 03 Feb 2022 09:30:26 GMT",
       "tag": "@graphitation/supermassive_v0.7.0",
       "version": "0.7.0",
