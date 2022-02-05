@@ -14,7 +14,7 @@
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
-    "test": "monorepo-scripts test",
+    "test": "supermassive extract-schema ./src/benchmarks/swapi-schema/schema.graphql && monorepo-scripts test",
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts",
     "benchmark": "ts-node -T ./src/benchmarks/index.ts"
