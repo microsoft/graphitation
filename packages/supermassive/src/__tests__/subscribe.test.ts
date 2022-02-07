@@ -5,9 +5,11 @@ import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
 import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
 import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
-import { Resolvers } from "../types";
+import { Resolvers, Resolver } from "../types";
 import { specifiedScalars } from "../values";
 import { forAwaitEach } from "iterall";
+import { mergeResolvers } from "../utilities/mergeResolvers";
+import { resolvers as extractedResolvers } from "../benchmarks/swapi-schema/__generated__/schema";
 
 interface TestCase {
   name: string;
@@ -178,23 +180,10 @@ async function compareResultsForSubscribeWithoutSchema(
   variables: Record<string, unknown> = {},
 ) {
   expect.assertions(1);
-  let fullResolvers: Resolvers<any, any> = {};
-  const getTypeByName = (name: string) => {
-    const type = specifiedScalars[name] || extractedResolvers[name];
-    if (isInputType(type)) {
-      return type;
-    } else {
-      throw new Error("Invalid type");
-    }
-  };
-  const extractedResolvers: Resolvers<any, any> = extractImplicitTypes(
-    typeDefs,
-    getTypeByName,
+  const fullResolvers = mergeResolvers(
+    resolvers as Resolvers<any, any>,
+    (extractedResolvers as any) as Record<string, Resolver<any, any>>,
   );
-  fullResolvers = {
-    ...extractedResolvers,
-    ...(resolvers as Resolvers<any, any>),
-  };
   const document = parse(query);
   const subscribeWithoutSchemaResults: any[] = [];
   const subscribeWithoutSchemaIterator = (await subscribeWithoutSchema({
@@ -229,24 +218,10 @@ async function compareErrorsForSubscribeWithoutSchema(
   variables: Record<string, unknown> = {},
 ) {
   expect.assertions(1);
-  let fullResolvers: Resolvers<any, any> = {};
-  const getTypeByName = (name: string) => {
-    const type = specifiedScalars[name] || extractedResolvers[name];
-    if (isInputType(type)) {
-      return type;
-    } else {
-      throw new Error("Invalid type");
-    }
-  };
-
-  const extractedResolvers: Resolvers<any, any> = extractImplicitTypes(
-    typeDefs,
-    getTypeByName,
+  const fullResolvers = mergeResolvers(
+    resolvers as Resolvers<any, any>,
+    (extractedResolvers as any) as Record<string, Resolver<any, any>>,
   );
-  fullResolvers = {
-    ...extractedResolvers,
-    ...(resolvers as Resolvers<any, any>),
-  };
   const document = parse(query);
   let subscribeWithoutSchemaError;
   try {

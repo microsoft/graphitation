@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "tests use extracted resolvers from typescript file",
+  "packageName": "@graphitation/supermassive",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}

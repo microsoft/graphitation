@@ -5,9 +5,10 @@ import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
 import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
 import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
-import { Resolvers } from "../types";
+import { Resolvers, Resolver } from "../types";
 import { specifiedScalars } from "../values";
 import { mergeResolvers } from "../utilities/mergeResolvers";
+import { resolvers as extractedResolvers } from "../benchmarks/swapi-schema/__generated__/schema";
 
 interface TestCase {
   name: string;
@@ -300,21 +301,9 @@ async function compareResultsForExecuteWithoutSchema(
   variables: Record<string, unknown> = {},
 ) {
   expect.assertions(1);
-  const getTypeByName = (name: string) => {
-    const type = specifiedScalars[name] || extractedResolvers[name];
-    if (isInputType(type)) {
-      return type;
-    } else {
-      throw new Error("Invalid type");
-    }
-  };
-  const extractedResolvers: Resolvers<any, any> = extractImplicitTypes(
-    typeDefs,
-    getTypeByName,
-  );
   const fullResolvers = mergeResolvers(
     resolvers as Resolvers<any, any>,
-    extractedResolvers,
+    (extractedResolvers as any) as Record<string, Resolver<any, any>>,
   );
   const document = parse(query);
   const result = await executeWithoutSchema({
