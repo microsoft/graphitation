@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Fri, 04 Feb 2022 11:53:40 GMT and should not be manually modified.
+This log was last generated on Mon, 07 Feb 2022 09:13:38 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.7.2
+
+Mon, 07 Feb 2022 09:13:38 GMT
+
+### Patches
+
+- tests use extracted resolvers from typescript file (jakubvejr@microsoft.com)
 
 ## 0.7.1
 
