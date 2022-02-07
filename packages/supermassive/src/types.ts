@@ -69,7 +69,30 @@ export type UnionTypeResolver = {
   __resolveType?: TypeResolver<any, any>;
   __types: string[];
 };
+
+export type BasicInterfaceTypeResolver<
+  TSource = any,
+  TContext = any,
+  TArgs = any
+> = {
+  [key: string]: FieldResolver<TSource, TContext, TArgs>;
+} & {
+  __resolveType?: TypeResolver<any, any>;
+};
+
+export type BasicUnionTypeResolver = {
+  __resolveType?: TypeResolver<any, any>;
+};
+
 export type InputObjectTypeResolver = GraphQLInputObjectType;
+
+export type BasicResolver<TSource, TContext> =
+  | ObjectTypeResolver<TSource, TContext>
+  | BasicInterfaceTypeResolver<TSource, TContext>
+  | BasicUnionTypeResolver
+  | ScalarTypeResolver
+  | EnumTypeResolver
+  | InputObjectTypeResolver;
 
 export type Resolver<TSource, TContext> =
   | ObjectTypeResolver<TSource, TContext>
@@ -82,6 +105,11 @@ export type Resolver<TSource, TContext> =
 export type Resolvers<TSource = any, TContext = any> = Record<
   string,
   Resolver<TSource, TContext>
+>;
+
+export type BasicResolvers<TSource = any, TContext = any> = Record<
+  string,
+  BasicResolver<TSource, TContext>
 >;
 
 export interface ResolveInfo {
@@ -126,7 +154,7 @@ export interface FormattedExecutionResult<
 }
 
 export interface CommonExecutionArgs {
-  resolvers: Resolvers;
+  resolvers: BasicResolvers;
   rootValue?: unknown;
   contextValue?: unknown;
   variableValues?: Maybe<{ [variable: string]: unknown }>;
@@ -137,6 +165,7 @@ export interface CommonExecutionArgs {
 }
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
   document: DocumentNode;
+  schemaResolvers: Resolvers;
 };
 
 export type ExecutionWithSchemaArgs = CommonExecutionArgs & {

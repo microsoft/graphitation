@@ -1,7 +1,7 @@
-import { Resolvers, Resolver } from "../types";
+import { BasicResolvers, Resolver } from "../types";
 
 export function mergeResolvers(
-  resolvers: Resolvers<any, any>,
+  resolvers: BasicResolvers<any, any>,
   extractedResolvers: Record<string, Resolver<any, any>>,
 ) {
   const fullResolvers = {

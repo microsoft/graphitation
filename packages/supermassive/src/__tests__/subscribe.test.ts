@@ -5,7 +5,7 @@ import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
 import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
 import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
-import { Resolvers, Resolver } from "../types";
+import { BasicResolvers, Resolvers } from "../types";
 import { specifiedScalars } from "../values";
 import { forAwaitEach } from "iterall";
 import { mergeResolvers } from "../utilities/mergeResolvers";
@@ -105,7 +105,7 @@ async function compareResultsForSubscribeWithSchema(
 
   const subscribeWithSchemaIterator = (await subscribeWithSchema({
     typeDefs,
-    resolvers: (resolvers as unknown) as Resolvers<any, any>,
+    resolvers: (resolvers as unknown) as BasicResolvers<any, any>,
     document,
     contextValue: {
       models,
@@ -142,7 +142,7 @@ async function compareErrorsForSubscribeWithSchema(
   const document = parse(query);
   const subscribeWithSchemaIterator = (await subscribeWithSchema({
     typeDefs,
-    resolvers: resolvers as Resolvers<any, any>,
+    resolvers: resolvers as BasicResolvers<any, any>,
     document,
     contextValue: {
       models,
@@ -180,10 +180,6 @@ async function compareResultsForSubscribeWithoutSchema(
   variables: Record<string, unknown> = {},
 ) {
   expect.assertions(1);
-  const fullResolvers = mergeResolvers(
-    resolvers as Resolvers<any, any>,
-    (extractedResolvers as any) as Record<string, Resolver<any, any>>,
-  );
   const document = parse(query);
   const subscribeWithoutSchemaResults: any[] = [];
   const subscribeWithoutSchemaIterator = (await subscribeWithoutSchema({
@@ -191,7 +187,8 @@ async function compareResultsForSubscribeWithoutSchema(
     contextValue: {
       models,
     },
-    resolvers: fullResolvers,
+    resolvers: resolvers as BasicResolvers,
+    schemaResolvers: (extractedResolvers as any) as Resolvers,
     variableValues: variables,
   })) as any;
   await forAwaitEach(subscribeWithoutSchemaIterator, (result) => {
@@ -218,10 +215,6 @@ async function compareErrorsForSubscribeWithoutSchema(
   variables: Record<string, unknown> = {},
 ) {
   expect.assertions(1);
-  const fullResolvers = mergeResolvers(
-    resolvers as Resolvers<any, any>,
-    (extractedResolvers as any) as Record<string, Resolver<any, any>>,
-  );
   const document = parse(query);
   let subscribeWithoutSchemaError;
   try {
@@ -230,7 +223,8 @@ async function compareErrorsForSubscribeWithoutSchema(
       contextValue: {
         models,
       },
-      resolvers: fullResolvers,
+      resolvers: resolvers as BasicResolvers,
+      schemaResolvers: (extractedResolvers as any) as Resolvers,
       variableValues: variables,
     })) as any;
     await forAwaitEach(subscribeWithoutSchemaIterator, (result) => {});

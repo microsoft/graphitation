@@ -6,7 +6,12 @@ import {
   specifiedScalars,
 } from "./index";
 import { PromiseOrValue } from "./jsutils/PromiseOrValue";
-import { Resolvers, ExecutionResult, ExecutionWithSchemaArgs } from "./types";
+import {
+  BasicResolvers,
+  Resolvers,
+  ExecutionResult,
+  ExecutionWithSchemaArgs,
+} from "./types";
 import { mergeResolvers } from "./utilities/mergeResolvers";
 
 export function executeWithSchema({
@@ -31,15 +36,12 @@ export function executeWithSchema({
     }
   };
   extractedResolvers = extractImplicitTypes(typeDefs, getTypeByName);
-  const fullResolvers = mergeResolvers(
-    resolvers as Resolvers<any, any>,
-    extractedResolvers,
-  );
 
   const document = addTypesToRequestDocument(schema, rawDocument);
   return executeWithoutSchema({
     document,
-    resolvers: fullResolvers,
+    resolvers,
+    schemaResolvers: extractedResolvers,
     rootValue,
     contextValue,
     variableValues,

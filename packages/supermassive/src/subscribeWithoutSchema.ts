@@ -22,6 +22,7 @@ import {
 import { collectFields } from "./collectFields";
 import { getArgumentValues } from "./values";
 import { typeNameFromAST } from "./utilities/typeNameFromAST";
+import { mergeResolvers } from "./utilities/mergeResolvers";
 
 import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
 
@@ -60,6 +61,7 @@ export async function subscribeWithoutSchema(
 ): Promise<AsyncGenerator<ExecutionResult, void, void> | ExecutionResult> {
   const {
     resolvers,
+    schemaResolvers,
     document,
     rootValue,
     contextValue,
@@ -69,8 +71,10 @@ export async function subscribeWithoutSchema(
     subscribeFieldResolver,
   } = args;
 
+  const combinedResolvers = mergeResolvers(resolvers, schemaResolvers);
+
   const resultOrStream = await createSourceEventStream(
-    resolvers,
+    combinedResolvers,
     document,
     rootValue,
     contextValue,
@@ -92,6 +96,7 @@ export async function subscribeWithoutSchema(
   const mapSourceToResponse = (payload: unknown) =>
     executeWithoutSchema({
       resolvers,
+      schemaResolvers,
       document,
       rootValue: payload,
       contextValue,

@@ -5,7 +5,7 @@ import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
 import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
 import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
-import { Resolvers, Resolver } from "../types";
+import { Resolvers, Resolver, BasicResolvers } from "../types";
 import { specifiedScalars } from "../values";
 import { mergeResolvers } from "../utilities/mergeResolvers";
 import { resolvers as extractedResolvers } from "../benchmarks/swapi-schema/__generated__/schema";
@@ -301,17 +301,14 @@ async function compareResultsForExecuteWithoutSchema(
   variables: Record<string, unknown> = {},
 ) {
   expect.assertions(1);
-  const fullResolvers = mergeResolvers(
-    resolvers as Resolvers<any, any>,
-    (extractedResolvers as any) as Record<string, Resolver<any, any>>,
-  );
   const document = parse(query);
   const result = await executeWithoutSchema({
     document: addTypesToRequestDocument(schema, document),
     contextValue: {
       models,
     },
-    resolvers: fullResolvers,
+    resolvers: resolvers as BasicResolvers,
+    schemaResolvers: (extractedResolvers as any) as Resolvers,
     variableValues: variables,
   });
   const validResult = await graphQLExecute({
