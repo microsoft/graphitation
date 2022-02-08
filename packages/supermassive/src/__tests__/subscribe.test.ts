@@ -5,7 +5,7 @@ import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
 import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
 import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
-import { BasicResolvers, Resolvers } from "../types";
+import { UserResolvers, Resolvers } from "../types";
 import { specifiedScalars } from "../values";
 import { forAwaitEach } from "iterall";
 import { mergeResolvers } from "../utilities/mergeResolvers";
@@ -105,7 +105,7 @@ async function compareResultsForSubscribeWithSchema(
 
   const subscribeWithSchemaIterator = (await subscribeWithSchema({
     typeDefs,
-    resolvers: (resolvers as unknown) as BasicResolvers<any, any>,
+    resolvers: (resolvers as unknown) as UserResolvers<any, any>,
     document,
     contextValue: {
       models,
@@ -142,7 +142,7 @@ async function compareErrorsForSubscribeWithSchema(
   const document = parse(query);
   const subscribeWithSchemaIterator = (await subscribeWithSchema({
     typeDefs,
-    resolvers: resolvers as BasicResolvers<any, any>,
+    resolvers: resolvers as UserResolvers<any, any>,
     document,
     contextValue: {
       models,
@@ -187,8 +187,8 @@ async function compareResultsForSubscribeWithoutSchema(
     contextValue: {
       models,
     },
-    resolvers: resolvers as BasicResolvers,
-    schemaResolvers: (extractedResolvers as any) as Resolvers,
+    resolvers: resolvers as UserResolvers,
+    schemaResolvers: extractedResolvers,
     variableValues: variables,
   })) as any;
   await forAwaitEach(subscribeWithoutSchemaIterator, (result) => {
@@ -223,8 +223,8 @@ async function compareErrorsForSubscribeWithoutSchema(
       contextValue: {
         models,
       },
-      resolvers: resolvers as BasicResolvers,
-      schemaResolvers: (extractedResolvers as any) as Resolvers,
+      resolvers: resolvers as UserResolvers,
+      schemaResolvers: extractedResolvers,
       variableValues: variables,
     })) as any;
     await forAwaitEach(subscribeWithoutSchemaIterator, (result) => {});

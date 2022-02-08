@@ -6,12 +6,7 @@ import {
   specifiedScalars,
 } from "./index";
 import { PromiseOrValue } from "./jsutils/PromiseOrValue";
-import {
-  BasicResolvers,
-  Resolvers,
-  ExecutionResult,
-  ExecutionWithSchemaArgs,
-} from "./types";
+import { Resolvers, ExecutionResult, ExecutionWithSchemaArgs } from "./types";
 import { mergeResolvers } from "./utilities/mergeResolvers";
 
 export function executeWithSchema({

@@ -23,11 +23,20 @@ const SPECIFIED_SCALARS: Record<string, string> = {
   Boolean: "GraphQLBoolean",
 };
 
+const SUPERMASSIVE_TYPES = {
+  INTERFACE_TYPE_RESOLVER: "InterfaceTypeResolver",
+  UNION_TYPE_RESOLVER: "UnionTypeResolver",
+  OBJECT_TYPE_RESOLVER: "ObjectTypeResolver",
+  ENUM_TYPE_RESOLVER: "EnumTypeResolver",
+  SCALAR_TYPE_RESOLVER: "ScalarTypeResolver",
+  INPUT_OBJECT_TYPE_RESOLVER: "InputObjectTypeResolver",
+};
+
 export function extractImplicitTypesToTypescript(
   document: DocumentNode,
 ): ts.SourceFile {
   const definitions: Array<ts.VariableStatement> = [];
-  const imports: Array<string> = [
+  const graphQLImports: Array<string> = [
     "GraphQLList",
     "GraphQLNonNull",
     "GraphQLID",
@@ -36,6 +45,9 @@ export function extractImplicitTypesToTypescript(
     "GraphQLFloat",
     "GraphQLBoolean",
   ];
+
+  const supermassiveImports: Array<string> = ["Resolvers"];
+
   const identifiers: Array<string> = [];
   const implementedBy: Record<string, Array<string>> = {};
   const interfaceAstNodes = [];
@@ -43,27 +55,44 @@ export function extractImplicitTypesToTypescript(
   for (let astNode of document.definitions) {
     if (astNode.kind === Kind.SCALAR_TYPE_DEFINITION) {
       definitions.push(createScalarType(astNode));
-      addToSetArray(imports, "GraphQLScalarType");
+      addToSetArray(graphQLImports, "GraphQLScalarType");
+      addToSetArray(
+        supermassiveImports,
+        SUPERMASSIVE_TYPES.SCALAR_TYPE_RESOLVER,
+      );
       addToSetArray(identifiers, astNode.name.value);
     } else if (astNode.kind === Kind.INPUT_OBJECT_TYPE_DEFINITION) {
       definitions.push(createInputObjectType(astNode));
-      addToSetArray(imports, "GraphQLInputObjectType");
+      addToSetArray(graphQLImports, "GraphQLInputObjectType");
+      addToSetArray(
+        supermassiveImports,
+        SUPERMASSIVE_TYPES.INPUT_OBJECT_TYPE_RESOLVER,
+      );
       addToSetArray(identifiers, astNode.name.value);
     } else if (astNode.kind === Kind.ENUM_TYPE_DEFINITION) {
       definitions.push(createEnumType(astNode));
-      addToSetArray(imports, "GraphQLEnumType");
+      addToSetArray(graphQLImports, "GraphQLEnumType");
+      addToSetArray(supermassiveImports, SUPERMASSIVE_TYPES.ENUM_TYPE_RESOLVER);
       addToSetArray(identifiers, astNode.name.value);
     } else if (astNode.kind === Kind.INTERFACE_TYPE_DEFINITION) {
       interfaceAstNodes.push(astNode);
 
+      addToSetArray(
+        supermassiveImports,
+        SUPERMASSIVE_TYPES.INTERFACE_TYPE_RESOLVER,
+      );
       addToSetArray(identifiers, astNode.name.value);
     } else if (astNode.kind === Kind.UNION_TYPE_DEFINITION) {
       const types = astNode.types?.map((typeNode) => {
         return typeNode.name.value;
       });
 
-      definitions.push(createAbstractType(astNode, undefined, types));
+      definitions.push(createUnionType(astNode, types || []));
 
+      addToSetArray(
+        supermassiveImports,
+        SUPERMASSIVE_TYPES.UNION_TYPE_RESOLVER,
+      );
       addToSetArray(identifiers, astNode.name.value);
     } else if (astNode.kind === Kind.OBJECT_TYPE_DEFINITION) {
       astNode.interfaces?.forEach((node: NamedTypeNode) => {
@@ -75,6 +104,10 @@ export function extractImplicitTypesToTypescript(
         );
       });
       definitions.push(createObjectType(astNode));
+      addToSetArray(
+        supermassiveImports,
+        SUPERMASSIVE_TYPES.OBJECT_TYPE_RESOLVER,
+      );
       addToSetArray(identifiers, astNode.name.value);
     }
   }
@@ -84,18 +117,18 @@ export function extractImplicitTypesToTypescript(
       implementedBy[astNode.name.value] = [];
     }
     definitions.push(
-      createAbstractType(astNode, implementedBy[astNode.name.value]),
+      createInterfaceType(astNode, implementedBy[astNode.name.value]),
     );
   });
 
-  const importDefinition: ts.ImportDeclaration = factory.createImportDeclaration(
+  const graphQLImportDefinition: ts.ImportDeclaration = factory.createImportDeclaration(
     undefined,
     undefined,
     factory.createImportClause(
       false,
       undefined,
       factory.createNamedImports(
-        imports.map((imp) =>
+        graphQLImports.map((imp) =>
           factory.createImportSpecifier(
             undefined,
             factory.createIdentifier(imp),
@@ -106,6 +139,24 @@ export function extractImplicitTypesToTypescript(
     factory.createStringLiteral("graphql"),
   );
 
+  const supermassiveImportDefinition: ts.ImportDeclaration = factory.createImportDeclaration(
+    undefined,
+    undefined,
+    factory.createImportClause(
+      false,
+      undefined,
+      factory.createNamedImports(
+        supermassiveImports.map((imp) =>
+          factory.createImportSpecifier(
+            undefined,
+            factory.createIdentifier(imp),
+          ),
+        ),
+      ),
+    ),
+    factory.createStringLiteral("@graphitation/supermassive"),
+  );
+
   const exportDefinition: ts.VariableStatement = factory.createVariableStatement(
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     factory.createVariableDeclarationList(
@@ -113,7 +164,10 @@ export function extractImplicitTypesToTypescript(
         factory.createVariableDeclaration(
           factory.createIdentifier("resolvers"),
           undefined,
-          undefined,
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("Resolvers"),
+            undefined,
+          ),
           factory.createObjectLiteralExpression(
             identifiers.map((def: string) =>
               factory.createShorthandPropertyAssignment(
@@ -129,7 +183,12 @@ export function extractImplicitTypesToTypescript(
   );
 
   return factory.createSourceFile(
-    [importDefinition, ...definitions, exportDefinition],
+    [
+      graphQLImportDefinition,
+      supermassiveImportDefinition,
+      ...definitions,
+      exportDefinition,
+    ],
     factory.createToken(ts.SyntaxKind.EndOfFileToken),
     0,
   );
@@ -138,6 +197,7 @@ export function extractImplicitTypesToTypescript(
 function createDeclaration(
   name: string,
   decl: ts.Expression,
+  typeReferenceNode?: ts.TypeReferenceNode,
 ): ts.VariableStatement {
   return factory.createVariableStatement(
     undefined,
@@ -146,7 +206,7 @@ function createDeclaration(
         factory.createVariableDeclaration(
           factory.createIdentifier(name),
           undefined,
-          undefined,
+          typeReferenceNode,
           decl,
         ),
       ],
@@ -178,6 +238,11 @@ function createScalarType(
           true,
         ),
       ],
+    ),
+
+    factory.createTypeReferenceNode(
+      factory.createIdentifier(SUPERMASSIVE_TYPES.SCALAR_TYPE_RESOLVER),
+      undefined,
     ),
   );
 }
@@ -221,6 +286,10 @@ function createInputObjectType(
           true,
         ),
       ],
+    ),
+    factory.createTypeReferenceNode(
+      factory.createIdentifier(SUPERMASSIVE_TYPES.INPUT_OBJECT_TYPE_RESOLVER),
+      undefined,
     ),
   );
 }
@@ -291,17 +360,46 @@ function createEnumType(astNode: EnumTypeDefinitionNode): ts.VariableStatement {
         ]),
       ],
     ),
+    factory.createTypeReferenceNode(
+      factory.createIdentifier(SUPERMASSIVE_TYPES.ENUM_TYPE_RESOLVER),
+      undefined,
+    ),
   );
 }
 
-function createAbstractType(
+function createUnionType(
   astNode: InterfaceTypeDefinitionNode | UnionTypeDefinitionNode,
-  implementedBy?: string[],
-  types?: string[],
+  types: string[],
 ): ts.VariableStatement {
-  const properties = [];
-  if (implementedBy) {
-    properties.push(
+  return createDeclaration(
+    astNode.name.value,
+    factory.createObjectLiteralExpression([
+      factory.createPropertyAssignment(
+        factory.createIdentifier("__types"),
+        factory.createArrayLiteralExpression(
+          types.map((value: string) => factory.createStringLiteral(value)),
+        ),
+      ),
+
+      factory.createPropertyAssignment(
+        factory.createIdentifier("__resolveType"),
+        factory.createIdentifier("undefined"),
+      ),
+    ]),
+    factory.createTypeReferenceNode(
+      factory.createIdentifier(SUPERMASSIVE_TYPES.UNION_TYPE_RESOLVER),
+      undefined,
+    ),
+  );
+}
+
+function createInterfaceType(
+  astNode: InterfaceTypeDefinitionNode | UnionTypeDefinitionNode,
+  implementedBy: string[],
+): ts.VariableStatement {
+  return createDeclaration(
+    astNode.name.value,
+    factory.createObjectLiteralExpression([
       factory.createPropertyAssignment(
         factory.createIdentifier("__implementedBy"),
         factory.createArrayLiteralExpression(
@@ -310,28 +408,16 @@ function createAbstractType(
           ),
         ),
       ),
-    );
-  }
-  if (types) {
-    properties.push(
-      factory.createPropertyAssignment(
-        factory.createIdentifier("__types"),
-        factory.createArrayLiteralExpression(
-          types.map((value: string) => factory.createStringLiteral(value)),
-        ),
-      ),
-    );
-  }
 
-  return createDeclaration(
-    astNode.name.value,
-    factory.createObjectLiteralExpression([
-      ...properties,
       factory.createPropertyAssignment(
         factory.createIdentifier("__resolveType"),
         factory.createIdentifier("undefined"),
       ),
     ]),
+    factory.createTypeReferenceNode(
+      factory.createIdentifier(SUPERMASSIVE_TYPES.INTERFACE_TYPE_RESOLVER),
+      undefined,
+    ),
   );
 }
 
@@ -341,6 +427,10 @@ function createObjectType(
   return createDeclaration(
     astNode.name.value,
     factory.createObjectLiteralExpression(),
+    factory.createTypeReferenceNode(
+      factory.createIdentifier(SUPERMASSIVE_TYPES.OBJECT_TYPE_RESOLVER),
+      undefined,
+    ),
   );
 }
 

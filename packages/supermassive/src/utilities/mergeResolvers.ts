@@ -1,12 +1,12 @@
-import { BasicResolvers, Resolver } from "../types";
+import { UserResolvers, Resolvers, Resolver } from "../types";
 
 export function mergeResolvers(
-  resolvers: BasicResolvers<any, any>,
-  extractedResolvers: Record<string, Resolver<any, any>>,
+  resolvers: UserResolvers<any, any>,
+  extractedResolvers: Resolvers,
 ) {
   const fullResolvers = {
     ...extractedResolvers,
-  } as Record<string, Resolver<any, any>>;
+  } as Resolvers;
 
   Object.keys(resolvers).forEach((resolverKey: string) => {
     if (
