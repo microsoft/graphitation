@@ -4,11 +4,18 @@ import NiceBenchmark from "./nice-benchmark";
 import schema from "./swapi-schema";
 import resolvers from "./swapi-schema/resolvers";
 import models from "./swapi-schema/models";
-import { graphql, execute as graphqlExecute, parse } from "graphql";
+import {
+  graphql,
+  execute as graphqlExecute,
+  parse,
+  isInputType,
+} from "graphql";
 import { compileQuery, isCompiledQuery } from "graphql-jit";
 import { executeWithoutSchema as supermassiveExecute } from "../executeWithoutSchema";
 import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
-import { Resolvers } from "../types";
+import { Resolvers, UserResolvers } from "../types";
+import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
+import { specifiedScalars } from "../values";
 
 const query = fs.readFileSync(
   path.join(__dirname, "./fixtures/query1.graphql"),
@@ -66,8 +73,20 @@ queryRunningSuite.add("graphql-jit - precompiled", async () => {
   }
 });
 queryRunningSuite.add("supermassive - runtime schemaless", async () => {
+  let extractedResolvers: Resolvers = {};
+  const getTypeByName = (name: string) => {
+    const type = specifiedScalars[name] || extractedResolvers[name];
+    if (isInputType(type)) {
+      return type;
+    } else {
+      throw new Error("Invalid type");
+    }
+  };
+  extractedResolvers = extractImplicitTypes(parsedQuery, getTypeByName);
+
   const result = await supermassiveExecute({
-    resolvers: (resolvers as unknown) as Resolvers<any, any>,
+    resolvers: resolvers as UserResolvers,
+    schemaResolvers: extractedResolvers,
     document: typeAnnotatedQuery,
     contextValue: { models },
   });
