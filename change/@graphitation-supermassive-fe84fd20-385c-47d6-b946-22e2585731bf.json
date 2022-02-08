@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Resolvers merge is not required before using executeWithoutSchema",
+  "packageName": "@graphitation/supermassive",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
