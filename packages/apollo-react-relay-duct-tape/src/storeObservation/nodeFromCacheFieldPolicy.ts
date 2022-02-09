@@ -49,7 +49,7 @@ export const nodeFromCacheFieldPolicy: FieldReadFunction = (
         (def) => def.kind === "FragmentDefinition"
       ),
     };
-    fragmentDocumentCache.set(options.query, fragmentDocument);
+    FRAGMENT_DOCUMENT_CACHE.set(options.query, fragmentDocument);
   }
 
   const id = `${fragment.typeCondition.name.value}:${nodeId}`;
