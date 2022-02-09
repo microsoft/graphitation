@@ -40,7 +40,7 @@ export const nodeFromCacheFieldPolicy: FieldReadFunction = (
     fragmentName
   );
 
-  let fragmentDocument = fragmentDocumentCache.get(options.query);
+  let fragmentDocument = FRAGMENT_DOCUMENT_CACHE.get(options.query);
 
   if (!fragmentDocument) {
     fragmentDocument = {
