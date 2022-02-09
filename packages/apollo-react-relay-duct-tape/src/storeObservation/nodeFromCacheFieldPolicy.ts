@@ -2,7 +2,7 @@ import { FieldReadFunction } from "@apollo/client";
 import { FragmentSpreadNode, FragmentDefinitionNode } from "graphql";
 import invariant from "invariant";
 
-const fragmentDocumentCache = new WeakMap();
+const FRAGMENT_DOCUMENT_CACHE = new WeakMap();
 
 /**
  * Use this as the field policy function for the node root field, which is what
