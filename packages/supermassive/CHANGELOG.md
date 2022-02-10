@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Mon, 07 Feb 2022 09:13:38 GMT and should not be manually modified.
+This log was last generated on Thu, 10 Feb 2022 13:09:46 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.8.0
+
+Thu, 10 Feb 2022 13:09:46 GMT
+
+### Minor changes
+
+- Resolvers merge is not required before using executeWithoutSchema (jakubvejr@microsoft.com)
 
 ## 0.7.2
 
