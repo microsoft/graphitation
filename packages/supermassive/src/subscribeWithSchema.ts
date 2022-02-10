@@ -32,16 +32,13 @@ export function subscribeWithSchema({
     }
   };
   extractedResolvers = extractImplicitTypes(typeDefs, getTypeByName);
-  const fullResolvers = {
-    ...extractedResolvers,
-    ...((resolvers as any) as Resolvers<any, any>),
-  };
 
   const document = addTypesToRequestDocument(schema, rawDocument);
 
   return subscribeWithoutSchema({
     document,
-    resolvers: fullResolvers,
+    resolvers,
+    schemaResolvers: extractedResolvers,
     rootValue,
     contextValue,
     variableValues,

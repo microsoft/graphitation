@@ -43,6 +43,7 @@ async function typeDefsToImplicitResolversImpl(
       path.basename(fullPath, path.extname(fullPath)) + ".ts",
     );
     const printer = ts.createPrinter();
+
     await fs.writeFile(
       tsFileName,
       printer.printNode(ts.EmitHint.SourceFile, tsContents, tsContents),

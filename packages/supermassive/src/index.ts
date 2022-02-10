@@ -3,7 +3,15 @@ export { executeWithSchema } from "./executeWithSchema";
 export { subscribeWithSchema } from "./subscribeWithSchema";
 export { subscribeWithoutSchema } from "./subscribeWithoutSchema";
 
-export type { Resolvers } from "./types";
+export type {
+  ObjectTypeResolver,
+  InterfaceTypeResolver,
+  UnionTypeResolver,
+  ScalarTypeResolver,
+  EnumTypeResolver,
+  InputObjectTypeResolver,
+  Resolvers,
+} from "./types";
 
 export { addTypesToRequestDocument } from "./ast/addTypesToRequestDocument";
 

@@ -35,6 +35,7 @@ import { promiseForObject } from "./jsutils/promiseForObject";
 import type { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import { promiseReduce } from "./jsutils/promiseReduce";
 import { isUnionResolverType, isInterfaceResolverType } from "./definition";
+import { mergeResolvers } from "./utilities/mergeResolvers";
 import {
   ExecutionWithoutSchemaArgs,
   FieldResolver,
@@ -108,6 +109,7 @@ export function executeWithoutSchema(
 ): PromiseOrValue<ExecutionResult> {
   const {
     resolvers,
+    schemaResolvers,
     document,
     rootValue,
     contextValue,
@@ -117,13 +119,14 @@ export function executeWithoutSchema(
     typeResolver,
   } = args;
 
+  const combinedResolvers = mergeResolvers(resolvers, schemaResolvers);
   // If arguments are missing or incorrect, throw an error.
   assertValidExecutionArguments(document, variableValues);
 
   // If a valid execution context cannot be created due to incorrect arguments,
   // a "Response" with only errors is returned.
   const exeContext = buildExecutionContext(
-    resolvers,
+    combinedResolvers,
     document,
     rootValue,
     contextValue,
