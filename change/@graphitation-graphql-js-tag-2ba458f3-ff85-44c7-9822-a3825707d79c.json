@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "force parser not to generate locations for AST nodes",
+  "packageName": "@graphitation/graphql-js-tag",
+  "email": "sergeystoyan@microsoft.com",
+  "dependentChangeType": "patch"
+}

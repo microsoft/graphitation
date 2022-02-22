@@ -49,7 +49,7 @@ export function graphql(
     document.map((s) => s.trim()).filter((s) => s.length > 0).length === 1,
     "Interpolations are only allowed at the end of the template.",
   );
-  const documentNode = parse(document[0]);
+  const documentNode = parse(document[0], { noLocation: true });
   const definitions = new Set(documentNode.definitions);
   fragments.forEach((doc) =>
     doc.definitions.forEach((def) => definitions.add(def)),
