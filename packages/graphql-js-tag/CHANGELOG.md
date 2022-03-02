@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-tag
 
-This log was last generated on Tue, 25 Jan 2022 10:04:40 GMT and should not be manually modified.
+This log was last generated on Wed, 02 Mar 2022 13:32:13 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.9.0
+
+Wed, 02 Mar 2022 13:32:13 GMT
+
+### Minor changes
+
+- force parser not to generate locations for AST nodes (sergeystoyan@microsoft.com)
 
 ## 0.8.3
 
