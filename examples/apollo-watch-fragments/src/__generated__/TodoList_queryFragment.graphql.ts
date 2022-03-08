@@ -18,6 +18,6 @@ export type TodoList_queryFragment = {
 };
 export type TodoList_queryFragment$data = TodoList_queryFragment;
 export type TodoList_queryFragment$key = {
-    readonly " $data"?: TodoList_queryFragment$data;
+    readonly " $data"?: TodoList_queryFragment$data | undefined;
     readonly " $fragmentRefs": FragmentRefs<"TodoList_queryFragment">;
 };

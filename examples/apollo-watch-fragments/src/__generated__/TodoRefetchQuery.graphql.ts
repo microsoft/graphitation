@@ -5,7 +5,7 @@
 
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type TodoRefetchQueryVariables = {
-    includeSomeOtherField?: boolean | null;
+    includeSomeOtherField?: boolean | null | undefined;
     id: string;
 };
 export type TodoRefetchQueryResponse = {
