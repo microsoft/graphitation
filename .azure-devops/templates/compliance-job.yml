@@ -14,6 +14,13 @@ jobs:
           version: 3.x
           steps:
 
+      - task: skvso.servicetree-build-tasks.servicetree-link-build-task.servicetree-link-build-task@1
+        displayName: "ServiceTree Integration"
+        inputs:
+          ServiceTreeGateway: "ServiceTree Gateway"
+          Service: 6F8CD842-E117-412F-BAE4-56A3B6166594
+          BuildOutputUsage: production
+
       - task: securedevelopmentteam.vss-secure-development-tools.build-task-credscan.CredScan@3
         condition: succeededOrFailed()
         displayName: "🧭 Run Credential Scanner"
