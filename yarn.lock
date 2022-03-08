@@ -2578,12 +2578,20 @@
     "@n1ru4l/push-pull-async-iterable-iterator" "^3.1.0"
     meros "^1.1.4"
 
-"@graphitation/apollo-react-relay-duct-tape@^0.7.0":
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/@graphitation/apollo-react-relay-duct-tape/-/apollo-react-relay-duct-tape-0.7.0.tgz#9b1e7b50bfcc1cb96f039b3fbe74ea28efd7afe0"
-  integrity sha512-Ea/0Ujl7A71dNNzJHVilChl6Fpgd1dcRJY6hFKgTShv9AgAxxq62BxS6YHptPOwSY8HSpyvf/E7kKcZGN3B4mQ==
+"@graphitation/apollo-react-relay-duct-tape@^0.9.0":
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/@graphitation/apollo-react-relay-duct-tape/-/apollo-react-relay-duct-tape-0.9.0.tgz#15c69c30d4c0de723dcade4aa7c0513a7c5f7812"
+  integrity sha512-050Hdh0U8ow2YUOXgKaET5dqzykZvmNvSdYk33WQ7cgcKB2X5JMdnPN8TCpw1Qk19pAxhstmDnPvZbr9nD8jWQ==
   dependencies:
     invariant "^2.2.4"
+
+"@graphitation/apollo-react-relay-duct-tape@^1.0.0-alpha.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@graphitation/apollo-react-relay-duct-tape/-/apollo-react-relay-duct-tape-1.0.1.tgz#9212f98a932f65990388a239f95558cde2ffd1b7"
+  integrity sha512-HKoLMd66HRKqDyj/QiOKBqitKw2r2f7FWtvw7d3se7L+6hbem0JHGmck+scyVjLmM6x/4eakhLXVh49SjrzDvA==
+  dependencies:
+    invariant "^2.2.4"
+    lodash "^4.17.15"
 
 "@graphitation/graphql-js-tag@^0.5.3", "@graphitation/graphql-js-tag@^0.5.4":
   version "0.5.5"
@@ -3281,11 +3289,11 @@
     tslib "~2.3.0"
 
 "@graphql-tools/optimize@^1.1.1":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@graphql-tools/optimize/-/optimize-1.1.1.tgz#dcd59ba1ee34431e5e9b086b57fe0bdb1a176669"
-  integrity sha512-y0TEfPyGmJaQjnsTRs/UP7/ZHaB3i68VAsXW4H2doUFKY6rIOUz+ruME/uWsfy/VeTWBNqGX8/m/X7YFEi5OJQ==
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/@graphql-tools/optimize/-/optimize-1.4.0.tgz#20d6a9efa185ef8fc4af4fd409963e0907c6e112"
+  integrity sha512-dJs/2XvZp+wgHH8T5J2TqptT9/6uVzIYvA6uFACha+ufvdMBedkfR4b4GbT8jAKLRARiqRTxy3dctnwkTM2tdw==
   dependencies:
-    tslib "~2.3.0"
+    tslib "^2.4.0"
 
 "@graphql-tools/prisma-loader@^7.0.6":
   version "7.1.0"
