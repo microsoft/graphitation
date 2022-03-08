@@ -12,6 +12,6 @@ export type compiledHooks_RefetchableFragment = {
 };
 export type compiledHooks_RefetchableFragment$data = compiledHooks_RefetchableFragment;
 export type compiledHooks_RefetchableFragment$key = {
-    readonly " $data"?: compiledHooks_RefetchableFragment$data;
+    readonly " $data"?: compiledHooks_RefetchableFragment$data | undefined;
     readonly " $fragmentRefs": FragmentRefs<"compiledHooks_RefetchableFragment">;
 };

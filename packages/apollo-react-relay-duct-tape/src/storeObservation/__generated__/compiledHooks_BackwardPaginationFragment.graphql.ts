@@ -17,6 +17,6 @@ export type compiledHooks_BackwardPaginationFragment = {
 };
 export type compiledHooks_BackwardPaginationFragment$data = compiledHooks_BackwardPaginationFragment;
 export type compiledHooks_BackwardPaginationFragment$key = {
-    readonly " $data"?: compiledHooks_BackwardPaginationFragment$data;
+    readonly " $data"?: compiledHooks_BackwardPaginationFragment$data | undefined;
     readonly " $fragmentRefs": FragmentRefs<"compiledHooks_BackwardPaginationFragment">;
 };

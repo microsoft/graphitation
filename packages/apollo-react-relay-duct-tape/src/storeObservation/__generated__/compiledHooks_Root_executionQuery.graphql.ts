@@ -6,7 +6,7 @@
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type compiledHooks_Root_executionQueryVariables = {
     userId: number;
-    avatarSize?: number | null;
+    avatarSize?: number | null | undefined;
     messagesBackwardCount: number;
     messagesBeforeCursor: string;
 };

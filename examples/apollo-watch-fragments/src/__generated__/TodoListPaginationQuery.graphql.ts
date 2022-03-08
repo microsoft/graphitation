@@ -7,7 +7,7 @@ import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type TodoListPaginationQueryVariables = {
     after: string;
     count: number;
-    includeSomeOtherField?: boolean | null;
+    includeSomeOtherField?: boolean | null | undefined;
 };
 export type TodoListPaginationQueryResponse = {
     readonly " $fragmentRefs": FragmentRefs<"TodoList_queryFragment">;
@@ -740,10 +740,6 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
       ],
       "forwardCountVariable": "count",
       "forwardCursorVariable": "after"
-    },
-    "defaultVariableValues": {
-      "after": "",
-      "count": 5
     }
   }
 };

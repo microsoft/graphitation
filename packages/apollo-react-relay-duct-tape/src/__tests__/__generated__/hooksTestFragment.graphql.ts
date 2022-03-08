@@ -12,6 +12,6 @@ export type hooksTestFragment = {
 };
 export type hooksTestFragment$data = hooksTestFragment;
 export type hooksTestFragment$key = {
-    readonly " $data"?: hooksTestFragment$data;
+    readonly " $data"?: hooksTestFragment$data | undefined;
     readonly " $fragmentRefs": FragmentRefs<"hooksTestFragment">;
 };

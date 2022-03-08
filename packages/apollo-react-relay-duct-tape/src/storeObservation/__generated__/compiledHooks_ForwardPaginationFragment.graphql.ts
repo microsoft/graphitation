@@ -20,6 +20,6 @@ export type compiledHooks_ForwardPaginationFragment = {
 };
 export type compiledHooks_ForwardPaginationFragment$data = compiledHooks_ForwardPaginationFragment;
 export type compiledHooks_ForwardPaginationFragment$key = {
-    readonly " $data"?: compiledHooks_ForwardPaginationFragment$data;
+    readonly " $data"?: compiledHooks_ForwardPaginationFragment$data | undefined;
     readonly " $fragmentRefs": FragmentRefs<"compiledHooks_ForwardPaginationFragment">;
 };

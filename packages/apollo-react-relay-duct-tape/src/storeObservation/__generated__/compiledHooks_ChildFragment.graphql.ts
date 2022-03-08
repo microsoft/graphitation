@@ -10,6 +10,6 @@ export type compiledHooks_ChildFragment = {
 };
 export type compiledHooks_ChildFragment$data = compiledHooks_ChildFragment;
 export type compiledHooks_ChildFragment$key = {
-    readonly " $data"?: compiledHooks_ChildFragment$data;
+    readonly " $data"?: compiledHooks_ChildFragment$data | undefined;
     readonly " $fragmentRefs": FragmentRefs<"compiledHooks_ChildFragment">;
 };
