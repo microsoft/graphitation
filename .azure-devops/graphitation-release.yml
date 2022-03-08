@@ -8,7 +8,7 @@ variables:
     value: production,externalfacing
 
 jobs:
-  - template: .devops/templates/compliance-job.yml
+  - template: ./templates/compliance-job.yml
   - job: Release
     dependsOn: Compliance
     pool: "1ES-Host-Ubuntu"
