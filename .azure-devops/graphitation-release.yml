@@ -1,0 +1,27 @@
+pr: none
+trigger: none
+
+variables:
+  - group: "Github and NPM secrets"
+  - group: InfoSec-SecurityResults
+  - name: tags
+    value: production,externalfacing
+
+jobs:
+  - template: .devops/templates/compliance-job.yml
+  - job: Release
+    dependsOn: Compliance
+    pool: "1ES-Host-Ubuntu"
+    steps:
+      - script: yarn
+      - script: |
+          yarn ci
+        displayName: build and test [test]
+      - script: |
+          git config user.email "gql-svc@microsoft.com"
+          git config user.name "Graphitation Service Account"
+        displayName: Configure git for release
+      - script: yarn release -y -n $(npmToken) --access public
+        displayName: Release
+        env:
+          NPM_AUTHTOKEN: $(githubPAT)
