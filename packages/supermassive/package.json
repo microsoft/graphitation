@@ -14,9 +14,10 @@
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
-    "test": "./bin/supermassive.js extract-schema ./src/benchmarks/swapi-schema/schema.graphql && monorepo-scripts test",
-    "types": "monorepo-scripts types",
+    "test": "yarn extract-schema && monorepo-scripts test",
+    "types": "yarn extract-schema && monorepo-scripts types",
     "just": "monorepo-scripts",
+    "extract-schema": "yarn build && node ./bin/supermassive.js extract-schema ./src/benchmarks/swapi-schema/schema.graphql",
     "benchmark": "ts-node -T ./src/benchmarks/index.ts"
   },
   "devDependencies": {
