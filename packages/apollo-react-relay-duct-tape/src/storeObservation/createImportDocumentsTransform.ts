@@ -96,6 +96,7 @@ function createGraphQLDocumentNodes(
           undefined,
           ts.factory.createNamedImports([
             ts.factory.createImportSpecifier(
+              false,
               ts.factory.createIdentifier("documents"),
               ts.factory.createIdentifier(namespaceName)
             ),
@@ -120,6 +121,7 @@ function createGraphQLDocumentNodes(
           undefined,
           ts.factory.createNamedImports([
             ts.factory.createImportSpecifier(
+              false,
               ts.factory.createIdentifier("documents"),
               ts.factory.createIdentifier(namespaceName)
             ),
