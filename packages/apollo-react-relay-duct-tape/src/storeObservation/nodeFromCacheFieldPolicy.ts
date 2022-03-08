@@ -7,6 +7,10 @@ import invariant from "invariant";
  * gets invoked when using relay-compiler's refetch query. Queries that use a
  * cache-only cache-policy will read the data from the store, which is expected
  * to be populated by a different query beforehand.
+ *
+ * This specific version is for when you're using Apollo Client's default
+ * configuration, which prefixes the `id` value with the typename for its store
+ * keys.
  */
 export const nodeFromCacheFieldPolicyWithDefaultApolloClientStoreKeys: FieldReadFunction = (
   _existingCacheData,
@@ -44,6 +48,31 @@ export const nodeFromCacheFieldPolicyWithDefaultApolloClientStoreKeys: FieldRead
   });
 };
 
+/**
+ * Use this as the field policy function for the node root field, which is what
+ * gets invoked when using relay-compiler's refetch query. Queries that use a
+ * cache-only cache-policy will read the data from the store, which is expected
+ * to be populated by a different query beforehand.
+ *
+ * This specific version is for when your Apollo Client instance is configured
+ * to strictly follow the Global Object Identification and there's no need for
+ * Apollo Client to prefix the `id` value with the typename for its store keys.
+ *
+ * @example
+ * 
+  ```ts
+  new InMemoryCache({
+    dataIdFromObject(responseObject) {
+      return (
+        responseObject.id?.toString() ||
+        defaultDataIdFromObject(responseObject)
+      );
+    }
+  })
+  ```
+ * 
+ * @see {https://www.apollographql.com/docs/react/caching/cache-configuration/}
+ */
 export const nodeFromCacheFieldPolicyWithGlobalObjectIdStoreKeys: FieldReadFunction = (
   _existingCacheData,
   options
