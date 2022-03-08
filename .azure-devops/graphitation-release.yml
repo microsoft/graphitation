@@ -11,7 +11,7 @@ jobs:
   - template: ./templates/compliance-job.yml
   - job: Release
     dependsOn: Compliance
-    pool: "1ES-Host-Ubuntu"
+    pool: "1ES-Teams-Ubuntu-TMP"
     steps:
       - script: yarn
       - script: |
