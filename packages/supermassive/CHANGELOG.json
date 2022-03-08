@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Tue, 08 Mar 2022 19:33:51 GMT",
+      "tag": "@graphitation/supermassive_v0.8.1",
+      "version": "0.8.1",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "aed1a9a760d77dba770bde3e5ab8a67b5cce8dde",
+            "comment": "[supermassive] Add deps to types task"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 10 Feb 2022 13:09:46 GMT",
       "tag": "@graphitation/supermassive_v0.8.0",
       "version": "0.8.0",
