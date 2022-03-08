@@ -2,7 +2,6 @@ pr: none
 trigger: none
 
 variables:
-  - group: "Github and NPM secrets"
   - group: InfoSec-SecurityResults
   - name: tags
     value: production,externalfacing
@@ -10,6 +9,8 @@ variables:
 jobs:
   - template: ./templates/compliance-job.yml
   - job: Release
+    variables:
+      - group: "Github and NPM secrets"
     dependsOn: Compliance
     pool: "1ES-Teams-Ubuntu-TMP"
     steps:
