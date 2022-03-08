@@ -12,6 +12,6 @@ export type compiledHooks_QueryTypeFragment = {
 };
 export type compiledHooks_QueryTypeFragment$data = compiledHooks_QueryTypeFragment;
 export type compiledHooks_QueryTypeFragment$key = {
-    readonly " $data"?: compiledHooks_QueryTypeFragment$data;
+    readonly " $data"?: compiledHooks_QueryTypeFragment$data | undefined;
     readonly " $fragmentRefs": FragmentRefs<"compiledHooks_QueryTypeFragment">;
 };

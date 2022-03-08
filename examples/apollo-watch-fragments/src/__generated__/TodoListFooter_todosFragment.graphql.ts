@@ -10,6 +10,6 @@ export type TodoListFooter_todosFragment = {
 };
 export type TodoListFooter_todosFragment$data = TodoListFooter_todosFragment;
 export type TodoListFooter_todosFragment$key = {
-    readonly " $data"?: TodoListFooter_todosFragment$data;
+    readonly " $data"?: TodoListFooter_todosFragment$data | undefined;
     readonly " $fragmentRefs": FragmentRefs<"TodoListFooter_todosFragment">;
 };
