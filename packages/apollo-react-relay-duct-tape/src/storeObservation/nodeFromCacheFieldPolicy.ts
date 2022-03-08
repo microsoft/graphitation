@@ -8,7 +8,7 @@ import invariant from "invariant";
  * cache-only cache-policy will read the data from the store, which is expected
  * to be populated by a different query beforehand.
  */
-export const nodeFromCacheFieldPolicy: FieldReadFunction = (
+export const nodeFromCacheFieldPolicyWithDefaultApolloClientStoreKeys: FieldReadFunction = (
   _existingCacheData,
   options
 ) => {
@@ -42,4 +42,13 @@ export const nodeFromCacheFieldPolicy: FieldReadFunction = (
     __typename: fragment.typeCondition.name.value,
     id: nodeId,
   });
+};
+
+export const nodeFromCacheFieldPolicyWithGlobalObjectIdStoreKeys: FieldReadFunction = (
+  _existingCacheData,
+  options
+) => {
+  const nodeId = options.args!.id?.toString();
+  invariant(nodeId, "Expected an `id` argument");
+  return options.toReference(nodeId);
 };

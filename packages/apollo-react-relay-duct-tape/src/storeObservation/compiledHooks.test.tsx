@@ -23,7 +23,7 @@ import {
   useCompiledPaginationFragment,
   useCompiledRefetchableFragment,
 } from "./compiledHooks";
-import { typePolicies } from "./typePolicies";
+import { typePoliciesWithDefaultApolloClientStoreKeys } from "./typePolicies";
 
 /**
  * NOTE: These compiler artefacts are normally imported using the transform from the createImportDocumentsTransform.ts module
@@ -229,7 +229,7 @@ describe("compiledHooks", () => {
         possibleTypes: {
           Node: ["User"],
         },
-        typePolicies,
+        typePolicies: typePoliciesWithDefaultApolloClientStoreKeys,
       },
     });
     act(() => {
