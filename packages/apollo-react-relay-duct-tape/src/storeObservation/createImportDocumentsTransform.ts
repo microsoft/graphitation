@@ -147,3 +147,55 @@ function getQueryName(definitionNode: FragmentDefinitionNode) {
     return `${fragmentBaseName}WatchNodeQuery`;
   }
 }
+
+import { WebpackPluginInstance, Compiler, javascript } from "webpack";
+export class ImportDocumentsTransformPlugin implements WebpackPluginInstance {
+  apply(compiler: Compiler) {
+    compiler.hooks.compilation.tap(
+      "ImportDocumentsTransformPlugin",
+      (compilation, { normalModuleFactory }) => {
+        const handler = (parser: javascript.JavascriptParser) => {
+          parser.hooks.program.tap("ImportDocumentsTransformPlugin", (ast) => {
+            const firstNode = ast.body[0];
+            if (
+              firstNode &&
+              firstNode.type === "ExpressionStatement" &&
+              firstNode.expression.type === "Literal" &&
+              firstNode.expression.value === "use strict"
+            ) {
+              // Remove "use strict" expression. It will be added later by the renderer again.
+              // This is necessary in order to not break the strict mode when webpack prepends code.
+              // @see https://github.com/webpack/webpack/issues/1970
+              // const dep = new ConstDependency("", firstNode.range);
+              // dep.loc = firstNode.loc;
+              // parser.state.current.addDependency(dep);
+              // parser.state.module.buildInfo.strict = true;
+            }
+          });
+          parser.hooks.statement.tap(
+            "ImportDocumentsTransformPlugin",
+            (ast) => {
+              if (
+                ast.type === "ExpressionStatement" &&
+                (ast.expression.type === "TaggedTemplateExpression" ||
+                  ast.expression.type === "Identifier")
+              ) {
+                console.log(ast.expression);
+              }
+            }
+          );
+        };
+
+        normalModuleFactory.hooks.parser
+          .for("javascript/auto")
+          .tap("UseStrictPlugin", handler);
+        normalModuleFactory.hooks.parser
+          .for("javascript/dynamic")
+          .tap("UseStrictPlugin", handler);
+        normalModuleFactory.hooks.parser
+          .for("javascript/esm")
+          .tap("UseStrictPlugin", handler);
+      }
+    );
+  }
+}

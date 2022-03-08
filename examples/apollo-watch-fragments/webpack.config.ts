@@ -1,7 +1,10 @@
 import * as path from "path";
 import * as webpack from "webpack";
 import "webpack-dev-server";
-import { createImportDocumentsTransform } from "@graphitation/apollo-react-relay-duct-tape/src/storeObservation/createImportDocumentsTransform";
+import {
+  createImportDocumentsTransform,
+  ImportDocumentsTransformPlugin,
+} from "@graphitation/apollo-react-relay-duct-tape/src/storeObservation/createImportDocumentsTransform";
 
 const config: webpack.Configuration = {
   mode: "development",
@@ -47,6 +50,7 @@ const config: webpack.Configuration = {
     path: path.resolve(__dirname, "public"),
   },
   plugins: [
+    new ImportDocumentsTransformPlugin(),
     /**
      * Configure source-maps to use absolute file:// paths, so tooling like React Render Tracker
      * does not need (user) specific configuration.
