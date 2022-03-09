@@ -1,6 +1,7 @@
 pr: none
 trigger:
   - main
+  - chore/add-ado-pipelines # TODO: to be removed
 
 variables:
   - group: InfoSec-SecurityResults
@@ -9,6 +10,8 @@ variables:
 
 jobs:
   - template: ./templates/compliance-job.yml
+    parameters:
+      serviceTreeID: 6F8CD842-E117-412F-BAE4-56A3B6166594
 
   ## TODO: only enable the following when a secure agent pool has been selected
   # - job: Release
