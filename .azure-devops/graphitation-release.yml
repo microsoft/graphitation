@@ -1,5 +1,7 @@
 pr: none
-trigger: none
+trigger:
+  - main
+  - chore/add-ado-pipelines
 
 variables:
   - group: InfoSec-SecurityResults
