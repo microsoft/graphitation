@@ -12,7 +12,7 @@ jobs:
     variables:
       - group: "Github and NPM secrets"
     dependsOn: Compliance
-    pool: "1ES-Teams-Ubuntu-TMP"
+    pool: "1ES-Teams-Ubuntu-Latest-Compliant"
     steps:
       - script: yarn
       - script: |
