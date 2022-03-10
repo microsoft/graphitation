@@ -1,0 +1,33 @@
+pr: none
+trigger:
+  - main
+
+variables:
+  - group: InfoSec-SecurityResults
+  - name: tags
+    value: production,externalfacing
+
+jobs:
+  - template: ./templates/compliance-job.yml
+    parameters:
+      serviceTreeID: 6F8CD842-E117-412F-BAE4-56A3B6166594
+
+  ## TODO: only enable the following when a secure agent pool has been selected
+  # - job: Release
+  #   variables:
+  #     - group: oss-secrets
+  #   dependsOn: Compliance
+  #   pool: "1ES-Hosted-Ubuntu"
+  #   steps:
+  #     - script: yarn
+  #     - script: |
+  #         yarn ci
+  #       displayName: build and test [test]
+  #     - script: |
+  #         git config user.email "gql-svc@microsoft.com"
+  #         git config user.name "Graphitation Service Account"
+  #       displayName: Configure git for release
+  #     - script: yarn release -y -n $(ossNpmToken) --access public
+  #       displayName: Release
+  #       env:
+  #         NPM_AUTHTOKEN: $(ossGithubPAT)
