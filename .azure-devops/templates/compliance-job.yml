@@ -10,7 +10,7 @@ jobs:
   - job: compliance
     displayName: Compliance checks
     pool:
-      name: 1ES-Teams-Win2019-Security
+      name: 1ES-Teams-Window-2019-Compliant
     steps:
       - task: UseDotNet@2
         condition: succeededOrFailed()
