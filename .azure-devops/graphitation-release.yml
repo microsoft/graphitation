@@ -6,11 +6,19 @@ variables:
   - group: InfoSec-SecurityResults
   - name: tags
     value: production,externalfacing
+  - name: serviceTreeID
+    value: 6F8CD842-E117-412F-BAE4-56A3B6166594
 
 jobs:
-  - template: ./templates/compliance-job.yml
-    parameters:
-      serviceTreeID: 6F8CD842-E117-412F-BAE4-56A3B6166594
+  - job: compliance
+    displayName: Compliance checks
+    pool:
+      name: 1ES-Teams-Windows-2019-Compliant
+    steps:
+      - template: ./templates/service-tree.yml
+        parameters:
+          serviceTreeID: $(serviceTreeID)
+      - template: ./templates/compliance-steps.yml
 
   - job: Release
     variables:
@@ -18,6 +26,9 @@ jobs:
     dependsOn: Compliance
     pool: "1ES-Teams-Ubuntu-Latest-Compliant"
     steps:
+      - template: ./templates/service-tree.yml
+        parameters:
+          serviceTreeID: $(serviceTreeID)
       - script: yarn
         displayName: yarn
       - script: |
