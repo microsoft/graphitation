@@ -1,6 +1,6 @@
 pr: none
 trigger:
-  - chore/compliant-release
+  - main
 
 variables:
   - group: InfoSec-SecurityResults
@@ -19,6 +19,7 @@ jobs:
     pool: "1ES-Teams-Ubuntu-Latest-Compliant"
     steps:
       - script: yarn
+        displayName: yarn
       - script: |
           yarn ci
         displayName: build and test [test]
