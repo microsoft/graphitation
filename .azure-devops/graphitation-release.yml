@@ -1,6 +1,6 @@
 pr: none
 trigger:
-  - core/compliant-release
+  - chore/compliant-release
   - main
 
 variables:
