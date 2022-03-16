@@ -16,10 +16,10 @@ jobs:
     pool:
       name: 1ES-Teams-Windows-2019-Compliant
     steps:
-      - template: ./templates/service-tree.yml
+      - template: ./steps/service-tree.yml
         parameters:
           serviceTreeID: $(serviceTreeID)
-      - template: ./templates/compliance-steps.yml
+      - template: ./steps/compliance-steps.yml
 
   - job: Release
     variables:
@@ -27,7 +27,7 @@ jobs:
     dependsOn: Compliance
     pool: "1ES-Teams-Ubuntu-Latest-Compliant"
     steps:
-      - template: ./templates/service-tree.yml
+      - template: ./steps/service-tree.yml
         parameters:
           serviceTreeID: $(serviceTreeID)
       - script: yarn
