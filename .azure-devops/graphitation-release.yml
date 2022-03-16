@@ -1,5 +1,6 @@
 pr: none
 trigger:
+  - core/compliant-release
   - main
 
 variables:
