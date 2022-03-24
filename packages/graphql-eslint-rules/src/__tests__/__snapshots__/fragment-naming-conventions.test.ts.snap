@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[` 1`] = `
+"> 1 | fragment graphql_eslint_rules_user_fragment on User { id name }
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Fragment should follow the naming conventions, the expected name is GraphqlEslintRulesUserFragment OR GraphqlEslintRulesUserFragment_optionalSuffix_anotherOptionalSuffix"
+`;
+
+exports[` 2`] = `
+"> 1 | fragment GraphqlEslintRulesUserFragment_ on User { id name }
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Fragment should follow the naming conventions, the expected name is GraphqlEslintRulesUserFragment OR GraphqlEslintRulesUserFragment_optionalSuffix_anotherOptionalSuffix"
+`;
+
+exports[` 3`] = `
+"> 1 | fragment GraphqlEslintRulesUser on User { id name }
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Fragment should follow the naming conventions, the expected name is GraphqlEslintRulesUserFragment OR GraphqlEslintRulesUserFragment_optionalSuffix_anotherOptionalSuffix"
+`;
+
+exports[` 4`] = `
+"> 1 | fragment UserFragment on User { id name }
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Fragment should follow the naming conventions, the expected name is GraphqlEslintRulesUserFragment OR GraphqlEslintRulesUserFragment_optionalSuffix_anotherOptionalSuffix"
+`;
