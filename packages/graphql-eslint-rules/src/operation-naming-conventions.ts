@@ -64,7 +64,7 @@ const rule: GraphQLESLintRule = {
         {
           title: "Incorrect",
           code: /* GraphQL */ `
-            # packages/eslint-rules-example/foo.query.graphql
+            # packages/eslint-rules-example/user-query.graphql
             query User {
               user {
                 id
@@ -76,7 +76,7 @@ const rule: GraphQLESLintRule = {
         {
           title: "Correct",
           code: /* GraphQL */ `
-            # packages/eslint-rules-example/foo.query.graphql
+            # packages/eslint-rules-example/user-query.graphql
             query MsTeamsUserQuery {
               user {
                 id

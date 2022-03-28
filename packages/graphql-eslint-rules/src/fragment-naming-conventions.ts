@@ -3,12 +3,13 @@ import {
   GraphQLESLintRuleContext,
   GraphQLESTreeNode,
 } from "@graphql-eslint/eslint-plugin";
-import { FragmentDefinitionNode } from "graphql";
+import { FragmentDefinitionNode, ASTNode } from "graphql";
 import { Kind } from "graphql";
 import { relative } from "path";
 import { checkDirForPkg } from "./utils";
 import path from "path";
 import camelCase from "lodash.camelcase";
+import { RuleFixer } from "@typescript-eslint/utils/dist/ts-eslint";
 
 const RULE_NAME = "fragment-naming-convention";
 const OPERATIONS = ["Query", "Mutation", "Subscription"];
@@ -51,13 +52,20 @@ function reportError(
 
   context.report({
     node: newNode,
-    message: `Fragment should follow the naming conventions, the expected name is ${expectedName} OR ${expectedName}_optionalSuffix_anotherOptionalSuffix`,
+    message: `Fragment should follow the naming conventions, the expected name is ${expectedName} OR ${expectedName}_optionalSuffix It's possible to chain suffixes using underscore`,
+    fix(fixer: RuleFixer) {
+      if (!expectedName) {
+        return;
+      }
+      return fixer.replaceText(node.name as any, expectedName);
+    },
   });
 }
 
 const rule: GraphQLESLintRule = {
   meta: {
     type: "problem",
+    fixable: "code",
     docs: {
       category: "Operations",
       description: `Enforce more descriptive fragment names`,
@@ -66,7 +74,7 @@ const rule: GraphQLESLintRule = {
         {
           title: "Incorrect",
           code: /* GraphQL */ `
-            # packages/eslint-rules-example/foo.query.graphql
+            # packages/eslint-rules-example/image-query.graphql
             fragment Image on User {
               id
               url
@@ -76,7 +84,7 @@ const rule: GraphQLESLintRule = {
         {
           title: "Correct",
           code: /* GraphQL */ `
-            # packages/eslint-rules-example/foo.query.graphql
+            # packages/eslint-rules-example/avatar-query.graphql
             fragment MsTeamsAvatarImage on User {
               id
               url

@@ -23,7 +23,7 @@ const WITH_SCHEMA = {
 };
 
 const errorMessage =
-  "Fragment should follow the naming conventions, the expected name is GraphqlEslintRulesUserFragment OR GraphqlEslintRulesUserFragment_optionalSuffix_anotherOptionalSuffix";
+  "Fragment should follow the naming conventions, the expected name is GraphqlEslintRulesUserFragment OR GraphqlEslintRulesUserFragment_optionalSuffix It's possible to chain suffixes using underscore";
 
 ruleTester.runGraphQLTests(
   "fragment-naming-conventions",
@@ -51,6 +51,7 @@ ruleTester.runGraphQLTests(
         ...WITH_SCHEMA,
         filename: "src/user-query.graphql",
         code: `fragment graphql_eslint_rules_user_fragment on User { id name }`,
+        output: "fragment GraphqlEslintRulesUserFragment on User { id name }",
         errors: [
           {
             message: errorMessage,
@@ -61,6 +62,7 @@ ruleTester.runGraphQLTests(
         ...WITH_SCHEMA,
         filename: "src/user-query.graphql",
         code: `fragment GraphqlEslintRulesUserFragment_ on User { id name }`,
+        output: "fragment GraphqlEslintRulesUserFragment on User { id name }",
         errors: [
           {
             message: errorMessage,
@@ -71,6 +73,7 @@ ruleTester.runGraphQLTests(
         ...WITH_SCHEMA,
         filename: "src/user-query.graphql",
         code: `fragment GraphqlEslintRulesUser on User { id name }`,
+        output: "fragment GraphqlEslintRulesUserFragment on User { id name }",
         errors: [
           {
             message: errorMessage,
@@ -81,6 +84,7 @@ ruleTester.runGraphQLTests(
         ...WITH_SCHEMA,
         filename: "src/user-query.graphql",
         code: `fragment UserFragment on User { id name }`,
+        output: "fragment GraphqlEslintRulesUserFragment on User { id name }",
         errors: [
           {
             message: errorMessage,
