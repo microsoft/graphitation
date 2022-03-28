@@ -1,8 +1,3 @@
-/*
- * Taken from https://github.com/dotansimha/graphql-eslint/blob/300f73be802bdd06432a5df34939521d1ce0d93b/packages/plugin/tests/require-id-when-available.spec.ts
- * MIT license https://github.com/dotansimha/graphql-eslint/blob/300f73be802bdd06432a5df34939521d1ce0d93b/LICENSE
- */
-
 import { TextDecoder } from "util";
 global.TextDecoder = TextDecoder as any;
 

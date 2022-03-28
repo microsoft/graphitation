@@ -67,8 +67,9 @@ const rule: GraphQLESLintRule = {
           title: "Incorrect",
           code: /* GraphQL */ `
             # packages/eslint-rules-example/foo.query.graphql
-            fragment ExampleFoo on User {
+            fragment Image on User {
               id
+              url
             }
           `,
         },
@@ -76,8 +77,9 @@ const rule: GraphQLESLintRule = {
           title: "Correct",
           code: /* GraphQL */ `
             # packages/eslint-rules-example/foo.query.graphql
-            fragment EslintRulesExampleFooFragment_optionalSuffix_anotherSuffix on User {
+            fragment MsTeamsAvatarImage on User {
               id
+              url
             }
           `,
         },

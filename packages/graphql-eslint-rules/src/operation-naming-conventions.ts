@@ -4,6 +4,7 @@ import {
   GraphQLESLintRuleContext,
 } from "@graphql-eslint/eslint-plugin";
 import { OperationDefinitionNode } from "graphql";
+import { RuleFixer } from "@typescript-eslint/utils/dist/ts-eslint";
 import { Kind } from "graphql";
 import { relative } from "path";
 import { checkDirForPkg } from "./utils";
@@ -22,6 +23,7 @@ function reportError(
   context: GraphQLESLintRuleContext,
   node: GraphQLESTreeNode<OperationDefinitionNode, true>,
   message: string,
+  expectedName?: string,
 ) {
   const newNode = {
     ...node,
@@ -40,12 +42,19 @@ function reportError(
   context.report({
     node: newNode,
     message,
+    fix(fixer: RuleFixer) {
+      if (!expectedName) {
+        return;
+      }
+      return fixer.replaceText(node.name as any, expectedName);
+    },
   });
 }
 
 const rule: GraphQLESLintRule = {
   meta: {
     type: "problem",
+    fixable: "code",
     docs: {
       category: "Operations",
       description: `Enforce descriptive operation names`,
@@ -56,9 +65,10 @@ const rule: GraphQLESLintRule = {
           title: "Incorrect",
           code: /* GraphQL */ `
             # packages/eslint-rules-example/foo.query.graphql
-            query Foo {
+            query User {
               user {
                 id
+                name
               }
             }
           `,
@@ -67,9 +77,10 @@ const rule: GraphQLESLintRule = {
           title: "Correct",
           code: /* GraphQL */ `
             # packages/eslint-rules-example/foo.query.graphql
-            query EslintRulesExampleFooQuery {
+            query MsTeamsUserQuery {
               user {
                 id
+                name
               }
             }
           `,
@@ -116,6 +127,7 @@ const rule: GraphQLESLintRule = {
             context,
             node,
             `Operation should follow the naming conventions, the expected name is ${expectedName}`,
+            expectedName,
           );
         }
       },
