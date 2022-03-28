@@ -17,7 +17,6 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@babel/plugin-transform-runtime": "^7.17.0",
     "@graphql-eslint/eslint-plugin": "^3.7.0",
     "@types/jest": "^26.0.22",
     "@types/lodash.camelcase": "^4.3.6",
