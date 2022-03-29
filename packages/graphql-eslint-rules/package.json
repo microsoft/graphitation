@@ -3,6 +3,7 @@
   "license": "MIT",
   "version": "0.5.1",
   "main": "./src/index.ts",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",
@@ -18,12 +19,15 @@
   "devDependencies": {
     "@graphql-eslint/eslint-plugin": "^3.7.0",
     "@types/jest": "^26.0.22",
+    "@types/lodash.camelcase": "^4.3.6",
     "@typescript-eslint/utils": "^5.10.1",
     "graphql": "^15.0.0",
+    "lodash.camelcase": "^4.3.0",
     "monorepo-scripts": "*"
   },
   "peerDependencies": {
-    "graphql": "^15.0.0"
+    "graphql": "^15.0.0",
+    "lodash.camelcase": "^4.3.0"
   },
   "publishConfig": {
     "main": "./lib/index",

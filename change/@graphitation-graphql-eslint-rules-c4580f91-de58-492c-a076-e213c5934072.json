@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Added an eslint rule for enforcing naming conventions",
+  "packageName": "@graphitation/graphql-eslint-rules",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
