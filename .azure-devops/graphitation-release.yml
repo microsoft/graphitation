@@ -29,6 +29,8 @@ jobs:
       - template: ./steps/service-tree.yml
         parameters:
           serviceTreeID: $(serviceTreeID)
+      - checkout: self
+        persistCredentials: true
       - script: yarn
         displayName: yarn
       - script: |
