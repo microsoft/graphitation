@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-eslint-rules
 
-This log was last generated on Mon, 24 Jan 2022 13:40:52 GMT and should not be manually modified.
+This log was last generated on Wed, 30 Mar 2022 11:12:20 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.2
+
+Wed, 30 Mar 2022 11:12:20 GMT
+
+### Patches
+
+- HOTFIX: removed type module in package.json (jakubvejr@microsoft.com)
 
 ## 0.5.1
 

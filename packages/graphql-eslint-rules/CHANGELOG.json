@@ -2,6 +2,35 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Wed, 30 Mar 2022 11:12:20 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.6.2",
+      "version": "0.6.2",
+      "comments": {
+        "none": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "f2b366350d5b5d47299515214e9581a25f690470",
+            "comment": "fix graphql eslint rules version"
+          },
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "e9e476d30a2632f57d927568d54afd2200c88098",
+            "comment": "Fixing publishing"
+          }
+        ],
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "647f98ff3d578441c9cb25b8485539c2f93914c9",
+            "comment": "HOTFIX: removed type module in package.json"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 25 Jan 2022 09:56:59 GMT",
       "tag": "@graphitation/graphql-eslint-rules_v0.5.1",
       "version": "0.5.1",
