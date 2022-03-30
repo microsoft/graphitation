@@ -1,8 +1,18 @@
 # Change Log - @graphitation/graphql-eslint-rules
 
-This log was last generated on Mon, 24 Jan 2022 13:40:52 GMT and should not be manually modified.
+This log was last generated on Wed, 30 Mar 2022 17:28:55 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.3
+
+Wed, 30 Mar 2022 17:28:55 GMT
+
+### Patches
+
+- added filename naming conventions check into the operation naming conventions rule (jakubvejr@microsoft.com)
+- HOTFIX: removed type module in package.json (jakubvejr@microsoft.com)
+- Fixing release #2 (eloy.de.enige@gmail.com)
 
 ## 0.5.1
 
