@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "fix graphql eslint rules version",
+  "packageName": "@graphitation/graphql-eslint-rules",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "none"
+}

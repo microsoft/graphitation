@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "HOTFIX: removed type module in package.json",
+  "packageName": "@graphitation/graphql-eslint-rules",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
