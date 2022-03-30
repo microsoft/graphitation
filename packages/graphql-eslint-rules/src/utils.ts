@@ -1,12 +1,12 @@
 import { join, dirname } from "path";
-import fs, { StatOptions } from "fs";
+import fs from "fs";
 
 export function checkDirForPkg(dir: string): string | null {
   const pathname = join(dir, "package.json");
   let stat;
 
   try {
-    stat = fs.statSync(pathname, { throwIfNoEntry: false } as StatOptions);
+    stat = fs.statSync(pathname);
   } catch (err: any) {
     if (err.code !== "ENOENT") {
       throw err;

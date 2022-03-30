@@ -7,7 +7,7 @@ exports[` 1`] = `
 
 exports[` 2`] = `
 "> 1 | query GraphqlEslintRulesUserQuery { user { id name } }
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Filename should start with the component root directory name \\"graphql-eslint-rules\\""
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Filename should start with the package directory name: \\"graphql-eslint-rules\\""
 `;
 
 exports[` 3`] = `

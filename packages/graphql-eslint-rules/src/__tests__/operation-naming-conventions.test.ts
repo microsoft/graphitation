@@ -36,7 +36,7 @@ ruleTester.runGraphQLTests(
         code: `query GraphqlEslintRulesUserQuery { user { id name } }`,
         errors: [
           {
-            message: `Filename should start with the component root directory name "graphql-eslint-rules"`,
+            message: `Filename should start with the package directory name: "graphql-eslint-rules"`,
           },
         ],
       },
