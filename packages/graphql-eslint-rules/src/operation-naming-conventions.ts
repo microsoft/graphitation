@@ -124,7 +124,7 @@ const rule: GraphQLESLintRule = {
           return reportError(
             context,
             node,
-            `Filename should start with the component root directory name "${lastDirectory}"`,
+            `Filename should start with the package directory name: "${lastDirectory}"`,
           );
         }
 
