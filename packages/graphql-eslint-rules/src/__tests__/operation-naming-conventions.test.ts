@@ -15,13 +15,13 @@ ruleTester.runGraphQLTests(
   {
     valid: [
       {
-        filename: "src/user-query.graphql",
+        filename: "src/graphql-eslint-rules-user-query.graphql",
         code: `query GraphqlEslintRulesUserQuery { user { id name } }`,
       },
     ],
     invalid: [
       {
-        filename: "src/user-query.graphql",
+        filename: "src/graphql-eslint-rules-user-query.graphql",
         code: `query wrongName { user { id name } }`,
         output: `query GraphqlEslintRulesUserQuery { user { id name } }`,
         errors: [
@@ -32,13 +32,20 @@ ruleTester.runGraphQLTests(
         ],
       },
       {
-        filename: "src/user.graphql",
-        code: `query wrongNameQuery { user { id name } }`,
-        output: `query wrongNameQuery { user { id name } }`,
+        filename: "src/user-query.graphql",
+        code: `query GraphqlEslintRulesUserQuery { user { id name } }`,
         errors: [
           {
-            message:
-              "Filename should end with the operation name (query/mutation/subscription) e.g. foo-query.graphql",
+            message: `Filename should start with the component root directory name "graphql-eslint-rules"`,
+          },
+        ],
+      },
+      {
+        filename: "src/user.graphql",
+        code: `query GraphqlEslintRulesUserQuery { user { id name } }`,
+        errors: [
+          {
+            message: `Filename should end with the operation name (query/mutation/subscription) e.g. foo-query.graphql`,
           },
         ],
       },

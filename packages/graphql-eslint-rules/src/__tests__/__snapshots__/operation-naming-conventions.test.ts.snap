@@ -6,6 +6,11 @@ exports[` 1`] = `
 `;
 
 exports[` 2`] = `
-"> 1 | query wrongNameQuery { user { id name } }
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Filename should end with the operation name (query/mutation/subscription) e.g. foo-query.graphql"
+"> 1 | query GraphqlEslintRulesUserQuery { user { id name } }
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Filename should start with the component root directory name \\"graphql-eslint-rules\\""
+`;
+
+exports[` 3`] = `
+"> 1 | query GraphqlEslintRulesUserQuery { user { id name } }
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Filename should end with the operation name (query/mutation/subscription) e.g. foo-query.graphql"
 `;

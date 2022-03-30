@@ -10,9 +10,10 @@ import { relative } from "path";
 import { checkDirForPkg } from "./utils";
 import path from "path";
 import camelCase from "lodash.camelcase";
+import kebabCase from "lodash.kebabcase";
 
 const RULE_NAME = "operation-naming-convention";
-const OPERATIONS = ["Query", "Mutation", "Subscription"];
+const OPERATIONS = ["query", "mutation", "subscription"];
 
 function pascalCase(text: string) {
   const camelCaseText = camelCase(text);
@@ -39,15 +40,17 @@ function reportError(
     },
   };
 
+  const fix = (fixer: RuleFixer) => {
+    if (!expectedName) {
+      return;
+    }
+    return fixer.replaceText(node.name as any, expectedName);
+  };
+
   context.report({
     node: newNode,
     message,
-    fix(fixer: RuleFixer) {
-      if (!expectedName) {
-        return;
-      }
-      return fixer.replaceText(node.name as any, expectedName);
-    },
+    fix: expectedName ? fix : undefined,
   });
 }
 
@@ -76,8 +79,8 @@ const rule: GraphQLESLintRule = {
         {
           title: "Correct",
           code: /* GraphQL */ `
-            # packages/eslint-rules-example/user-query.graphql
-            query MsTeamsUserQuery {
+            # packages/chat-item-components/src/queries/chat-item-components-user-query.graphql
+            query ChatItemComponentsUserQuery {
               user {
                 id
                 name
@@ -105,13 +108,10 @@ const rule: GraphQLESLintRule = {
         }
 
         const lastDirectory = path.basename(path.dirname(packageJsonPath));
-        const pascalFilename = pascalCase(
-          path.parse(path.basename(filepath)).name,
-        );
-        const expectedPrefix = pascalCase(lastDirectory);
+        const filename = path.parse(path.basename(filepath)).name;
 
         if (
-          !OPERATIONS.some((operation) => pascalFilename.endsWith(operation))
+          !OPERATIONS.some((operation) => filename.endsWith(`-${operation}`))
         ) {
           return reportError(
             context,
@@ -120,8 +120,15 @@ const rule: GraphQLESLintRule = {
           );
         }
 
-        const expectedName = expectedPrefix + pascalFilename;
+        if (!filename.startsWith(`${lastDirectory}-`)) {
+          return reportError(
+            context,
+            node,
+            `Filename should start with the component root directory name "${lastDirectory}"`,
+          );
+        }
 
+        const expectedName = pascalCase(filename);
         if (expectedName !== documentName) {
           return reportError(
             context,

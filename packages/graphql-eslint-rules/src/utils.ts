@@ -7,10 +7,14 @@ export function checkDirForPkg(dir: string): string | null {
 
   try {
     stat = fs.statSync(pathname, { throwIfNoEntry: false } as StatOptions);
-  } finally {
-    if (stat && stat.isFile()) {
-      return pathname;
+  } catch (err: any) {
+    if (err.code !== "ENOENT") {
+      throw err;
     }
+  }
+
+  if (stat && stat.isFile()) {
+    return pathname;
   }
 
   const parentDir = dirname(dir);
