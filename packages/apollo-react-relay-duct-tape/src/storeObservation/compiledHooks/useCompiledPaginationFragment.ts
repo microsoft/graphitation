@@ -1,5 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { DataProxy, useApolloClient } from "@apollo/client";
+import {
+  ApolloCache,
+  DataProxy,
+  InMemoryCache,
+  StoreValue,
+  useApolloClient,
+} from "@apollo/client";
 import invariant from "invariant";
 import { CompiledArtefactModule } from "relay-compiler-language-graphitation";
 import { useCompiledRefetchableFragment } from "./useCompiledRefetchableFragment";
@@ -23,7 +29,7 @@ interface PaginationParams {
   refetch: RefetchFn;
   metadata: Metadata;
   executionQueryDocument: DocumentNode;
-  cache: DataProxy;
+  cache: ApolloCache<unknown>;
   countVariable: string | undefined;
   cursorVariable: string | undefined;
   connectionSelectionPath: string[];
@@ -43,6 +49,7 @@ function useLoadMore({
   cursorValue,
   updater,
 }: PaginationParams): [loadPage: PaginationFn, isLoadingMore: boolean] {
+  const apolloClient = useApolloClient();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const loadPage = useCallback<PaginationFn>(
     (countValue, options) => {
@@ -88,9 +95,10 @@ function useLoadMore({
               "usePaginationFragment(): Expected mainFragment metadata"
             );
             const cacheSelector: DataProxy.Fragment<any, any> = {
-              id: fragmentReference.id
-                ? `${mainFragment.typeCondition}:${fragmentReference.id}`
-                : "ROOT_QUERY",
+              id: cache.identify({
+                __typename: mainFragment.typeCondition,
+                id: fragmentReference.id as StoreValue,
+              }),
               variables: previousVariables,
               fragmentName: mainFragment.name,
               // Create new document with operation filtered out.
