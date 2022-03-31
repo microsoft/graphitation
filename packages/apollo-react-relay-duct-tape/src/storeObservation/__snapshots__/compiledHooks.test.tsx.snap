@@ -1,0 +1,281 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`compiledHooks with default Apollo Client type-policies useCompiledLazyLoadQuery once loaded does re-render when a field that was selected in the watch query is updated in the store 1`] = `
+Object {
+  "__fragments": Object {
+    "avatarSize": 21,
+    "messagesBackwardCount": 1,
+    "messagesBeforeCursor": "",
+    "userId": 42,
+  },
+  "user": Object {
+    "__fragments": Object {
+      "avatarSize": 21,
+      "messagesBackwardCount": 1,
+      "messagesBeforeCursor": "",
+      "userId": 42,
+    },
+    "__typename": "User",
+    "id": 42,
+    "name": "Satya",
+  },
+}
+`;
+
+exports[`compiledHooks with default Apollo Client type-policies useCompiledLazyLoadQuery once loaded fetches new data when variables change 1`] = `
+Object {
+  "__typename": "User",
+  "avatarUrl({\\"size\\":21})": "<mock-value-for-field-\\"avatarUrl\\">",
+  "conversations:compiledHooks_user_conversations": Object {
+    "__typename": "ConversationsConnection",
+    "edges": Array [
+      Object {
+        "__typename": "ConversationsConnectionEdge",
+        "cursor": "<mock-value-for-field-\\"cursor\\">",
+        "node": Object {
+          "__ref": "Conversation:<Conversation-mock-id-5>",
+        },
+      },
+    ],
+    "pageInfo": Object {
+      "__typename": "PageInfo",
+      "endCursor": "<mock-value-for-field-\\"endCursor\\">",
+      "hasNextPage": false,
+    },
+  },
+  "id": 21,
+  "name": "<mock-value-for-field-\\"name\\">",
+  "petName": "<mock-value-for-field-\\"petName\\">",
+}
+`;
+
+exports[`compiledHooks with default Apollo Client type-policies useCompiledLazyLoadQuery once loaded loads all data of the execution query into the store 1`] = `
+Object {
+  "Conversation:first-paged-conversation": Object {
+    "__typename": "Conversation",
+    "id": "first-paged-conversation",
+    "messages:compiledHooks_conversation_messages": Object {
+      "__typename": "ConversationMessagesConnection",
+      "edges": Array [
+        Object {
+          "__typename": "ConversationMessagesConnectionEdge",
+          "cursor": "<mock-value-for-field-\\"cursor\\">",
+          "node": Object {
+            "__ref": "Message:first-paged-message",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "hasPreviousPage": false,
+        "startCursor": "<mock-value-for-field-\\"startCursor\\">",
+      },
+    },
+    "title": "<mock-value-for-field-\\"title\\">",
+  },
+  "Message:first-paged-message": Object {
+    "__typename": "Message",
+    "id": "first-paged-message",
+    "text": "<mock-value-for-field-\\"text\\">",
+  },
+  "NonNode:<mock-value-for-field-\\"id\\">": Object {
+    "__typename": "NonNode",
+    "id": "<mock-value-for-field-\\"id\\">",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "nonNode": Object {
+      "__ref": "NonNode:<mock-value-for-field-\\"id\\">",
+    },
+    "user({\\"id\\":42})": Object {
+      "__ref": "User:42",
+    },
+  },
+  "User:42": Object {
+    "__typename": "User",
+    "avatarUrl({\\"size\\":21})": "<mock-value-for-field-\\"avatarUrl\\">",
+    "conversations:compiledHooks_user_conversations": Object {
+      "__typename": "ConversationsConnection",
+      "edges": Array [
+        Object {
+          "__typename": "ConversationsConnectionEdge",
+          "cursor": "<mock-value-for-field-\\"cursor\\">",
+          "node": Object {
+            "__ref": "Conversation:first-paged-conversation",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "<mock-value-for-field-\\"endCursor\\">",
+        "hasNextPage": false,
+      },
+    },
+    "id": 42,
+    "name": "<mock-value-for-field-\\"name\\">",
+    "petName": "<mock-value-for-field-\\"petName\\">",
+  },
+}
+`;
+
+exports[`compiledHooks with default Apollo Client type-policies useCompiledLazyLoadQuery once loaded only returns the fields selected in the watch query to the component 1`] = `
+Object {
+  "__fragments": Object {
+    "avatarSize": 21,
+    "messagesBackwardCount": 1,
+    "messagesBeforeCursor": "",
+    "userId": 42,
+  },
+  "user": Object {
+    "__fragments": Object {
+      "avatarSize": 21,
+      "messagesBackwardCount": 1,
+      "messagesBeforeCursor": "",
+      "userId": 42,
+    },
+    "__typename": "User",
+    "id": 42,
+    "name": "<mock-value-for-field-\\"name\\">",
+  },
+}
+`;
+
+exports[`compiledHooks with strict Global Object Id spec type-policies useCompiledLazyLoadQuery once loaded does re-render when a field that was selected in the watch query is updated in the store 1`] = `
+Object {
+  "__fragments": Object {
+    "avatarSize": 21,
+    "messagesBackwardCount": 1,
+    "messagesBeforeCursor": "",
+    "userId": 42,
+  },
+  "user": Object {
+    "__fragments": Object {
+      "avatarSize": 21,
+      "messagesBackwardCount": 1,
+      "messagesBeforeCursor": "",
+      "userId": 42,
+    },
+    "__typename": "User",
+    "id": 42,
+    "name": "Satya",
+  },
+}
+`;
+
+exports[`compiledHooks with strict Global Object Id spec type-policies useCompiledLazyLoadQuery once loaded fetches new data when variables change 1`] = `
+Object {
+  "__typename": "User",
+  "avatarUrl({\\"size\\":21})": "<mock-value-for-field-\\"avatarUrl\\">",
+  "conversations:compiledHooks_user_conversations": Object {
+    "__typename": "ConversationsConnection",
+    "edges": Array [
+      Object {
+        "__typename": "ConversationsConnectionEdge",
+        "cursor": "<mock-value-for-field-\\"cursor\\">",
+        "node": Object {
+          "__ref": "<Conversation-mock-id-5>",
+        },
+      },
+    ],
+    "pageInfo": Object {
+      "__typename": "PageInfo",
+      "endCursor": "<mock-value-for-field-\\"endCursor\\">",
+      "hasNextPage": false,
+    },
+  },
+  "id": 21,
+  "name": "<mock-value-for-field-\\"name\\">",
+  "petName": "<mock-value-for-field-\\"petName\\">",
+}
+`;
+
+exports[`compiledHooks with strict Global Object Id spec type-policies useCompiledLazyLoadQuery once loaded loads all data of the execution query into the store 1`] = `
+Object {
+  "42": Object {
+    "__typename": "User",
+    "avatarUrl({\\"size\\":21})": "<mock-value-for-field-\\"avatarUrl\\">",
+    "conversations:compiledHooks_user_conversations": Object {
+      "__typename": "ConversationsConnection",
+      "edges": Array [
+        Object {
+          "__typename": "ConversationsConnectionEdge",
+          "cursor": "<mock-value-for-field-\\"cursor\\">",
+          "node": Object {
+            "__ref": "first-paged-conversation",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "<mock-value-for-field-\\"endCursor\\">",
+        "hasNextPage": false,
+      },
+    },
+    "id": 42,
+    "name": "<mock-value-for-field-\\"name\\">",
+    "petName": "<mock-value-for-field-\\"petName\\">",
+  },
+  "<mock-value-for-field-\\"id\\">": Object {
+    "__typename": "NonNode",
+    "id": "<mock-value-for-field-\\"id\\">",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "nonNode": Object {
+      "__ref": "<mock-value-for-field-\\"id\\">",
+    },
+    "user({\\"id\\":42})": Object {
+      "__ref": "42",
+    },
+  },
+  "first-paged-conversation": Object {
+    "__typename": "Conversation",
+    "id": "first-paged-conversation",
+    "messages:compiledHooks_conversation_messages": Object {
+      "__typename": "ConversationMessagesConnection",
+      "edges": Array [
+        Object {
+          "__typename": "ConversationMessagesConnectionEdge",
+          "cursor": "<mock-value-for-field-\\"cursor\\">",
+          "node": Object {
+            "__ref": "first-paged-message",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "hasPreviousPage": false,
+        "startCursor": "<mock-value-for-field-\\"startCursor\\">",
+      },
+    },
+    "title": "<mock-value-for-field-\\"title\\">",
+  },
+  "first-paged-message": Object {
+    "__typename": "Message",
+    "id": "first-paged-message",
+    "text": "<mock-value-for-field-\\"text\\">",
+  },
+}
+`;
+
+exports[`compiledHooks with strict Global Object Id spec type-policies useCompiledLazyLoadQuery once loaded only returns the fields selected in the watch query to the component 1`] = `
+Object {
+  "__fragments": Object {
+    "avatarSize": 21,
+    "messagesBackwardCount": 1,
+    "messagesBeforeCursor": "",
+    "userId": 42,
+  },
+  "user": Object {
+    "__fragments": Object {
+      "avatarSize": 21,
+      "messagesBackwardCount": 1,
+      "messagesBeforeCursor": "",
+      "userId": 42,
+    },
+    "__typename": "User",
+    "id": 42,
+    "name": "<mock-value-for-field-\\"name\\">",
+  },
+}
+`;
