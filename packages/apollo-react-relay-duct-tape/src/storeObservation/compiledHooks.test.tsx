@@ -1,5 +1,9 @@
 import React from "react";
-import { ApolloClient, ApolloProvider } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloProvider,
+  defaultDataIdFromObject,
+} from "@apollo/client";
 import {
   act,
   create as createTestRenderer,
@@ -23,7 +27,10 @@ import {
   useCompiledPaginationFragment,
   useCompiledRefetchableFragment,
 } from "./compiledHooks";
-import { typePoliciesWithDefaultApolloClientStoreKeys } from "./typePolicies";
+import {
+  typePoliciesWithDefaultApolloClientStoreKeys,
+  typePoliciesWithGlobalObjectIdStoreKeys,
+} from "./typePolicies";
 
 /**
  * NOTE: These compiler artefacts are normally imported using the transform from the createImportDocumentsTransform.ts module
@@ -123,7 +130,16 @@ const Root_executionQueryDocument = graphql`
   }
 `;
 
-describe("compiledHooks", () => {
+describe.each([
+  [
+    "with default Apollo Client type-policies",
+    typePoliciesWithDefaultApolloClientStoreKeys,
+  ],
+  [
+    "with strict Global Object Id spec type-policies",
+    typePoliciesWithGlobalObjectIdStoreKeys,
+  ],
+])("compiledHooks %s", (_, typePolicies) => {
   let client: ApolloMockClient;
   let testRenderer: ReactTestRenderer;
 
@@ -229,7 +245,17 @@ describe("compiledHooks", () => {
         possibleTypes: {
           Node: ["User"],
         },
-        typePolicies: typePoliciesWithDefaultApolloClientStoreKeys,
+        typePolicies,
+        ...(typePolicies === typePoliciesWithDefaultApolloClientStoreKeys
+          ? {}
+          : {
+              dataIdFromObject(responseObject) {
+                return (
+                  responseObject.id?.toString() ||
+                  defaultDataIdFromObject(responseObject)
+                );
+              },
+            }),
       },
     });
     act(() => {
@@ -312,98 +338,11 @@ describe("compiledHooks", () => {
       });
 
       it("loads all data of the execution query into the store", () => {
-        expect(client.cache.extract()).toMatchInlineSnapshot(`
-          Object {
-            "Conversation:first-paged-conversation": Object {
-              "__typename": "Conversation",
-              "id": "first-paged-conversation",
-              "messages:compiledHooks_conversation_messages": Object {
-                "__typename": "ConversationMessagesConnection",
-                "edges": Array [
-                  Object {
-                    "__typename": "ConversationMessagesConnectionEdge",
-                    "cursor": "<mock-value-for-field-\\"cursor\\">",
-                    "node": Object {
-                      "__ref": "Message:first-paged-message",
-                    },
-                  },
-                ],
-                "pageInfo": Object {
-                  "__typename": "PageInfo",
-                  "hasPreviousPage": false,
-                  "startCursor": "<mock-value-for-field-\\"startCursor\\">",
-                },
-              },
-              "title": "<mock-value-for-field-\\"title\\">",
-            },
-            "Message:first-paged-message": Object {
-              "__typename": "Message",
-              "id": "first-paged-message",
-              "text": "<mock-value-for-field-\\"text\\">",
-            },
-            "NonNode:<mock-value-for-field-\\"id\\">": Object {
-              "__typename": "NonNode",
-              "id": "<mock-value-for-field-\\"id\\">",
-            },
-            "ROOT_QUERY": Object {
-              "__typename": "Query",
-              "nonNode": Object {
-                "__ref": "NonNode:<mock-value-for-field-\\"id\\">",
-              },
-              "user({\\"id\\":42})": Object {
-                "__ref": "User:42",
-              },
-            },
-            "User:42": Object {
-              "__typename": "User",
-              "avatarUrl({\\"size\\":21})": "<mock-value-for-field-\\"avatarUrl\\">",
-              "conversations:compiledHooks_user_conversations": Object {
-                "__typename": "ConversationsConnection",
-                "edges": Array [
-                  Object {
-                    "__typename": "ConversationsConnectionEdge",
-                    "cursor": "<mock-value-for-field-\\"cursor\\">",
-                    "node": Object {
-                      "__ref": "Conversation:first-paged-conversation",
-                    },
-                  },
-                ],
-                "pageInfo": Object {
-                  "__typename": "PageInfo",
-                  "endCursor": "<mock-value-for-field-\\"endCursor\\">",
-                  "hasNextPage": false,
-                },
-              },
-              "id": 42,
-              "name": "<mock-value-for-field-\\"name\\">",
-              "petName": "<mock-value-for-field-\\"petName\\">",
-            },
-          }
-        `);
+        expect(client.cache.extract()).toMatchSnapshot();
       });
 
       it("only returns the fields selected in the watch query to the component", () => {
-        expect(useLazyLoadQueryResult!.data).toMatchInlineSnapshot(`
-          Object {
-            "__fragments": Object {
-              "avatarSize": 21,
-              "messagesBackwardCount": 1,
-              "messagesBeforeCursor": "",
-              "userId": 42,
-            },
-            "user": Object {
-              "__fragments": Object {
-                "avatarSize": 21,
-                "messagesBackwardCount": 1,
-                "messagesBeforeCursor": "",
-                "userId": 42,
-              },
-              "__typename": "User",
-              "id": 42,
-              "name": "<mock-value-for-field-\\"name\\">",
-            },
-          }
-        `);
+        expect(useLazyLoadQueryResult!.data).toMatchSnapshot();
       });
 
       it("does not re-render when a field that was not selected in the watch query is updated in the store", async () => {
@@ -424,7 +363,10 @@ describe("compiledHooks", () => {
         const before = useLazyLoadQueryResult!.data;
         await act(async () => {
           client.cache.modify({
-            id: "User:42",
+            id:
+              typePolicies === typePoliciesWithDefaultApolloClientStoreKeys
+                ? "User:42"
+                : "42",
             fields: {
               name: () => "Satya",
             },
@@ -432,27 +374,7 @@ describe("compiledHooks", () => {
           return new Promise((resolve) => setTimeout(resolve, 0));
         });
         expect(useLazyLoadQueryResult!.data).not.toBe(before);
-        expect(useLazyLoadQueryResult!.data).toMatchInlineSnapshot(`
-          Object {
-            "__fragments": Object {
-              "avatarSize": 21,
-              "messagesBackwardCount": 1,
-              "messagesBeforeCursor": "",
-              "userId": 42,
-            },
-            "user": Object {
-              "__fragments": Object {
-                "avatarSize": 21,
-                "messagesBackwardCount": 1,
-                "messagesBeforeCursor": "",
-                "userId": 42,
-              },
-              "__typename": "User",
-              "id": 42,
-              "name": "Satya",
-            },
-          }
-        `);
+        expect(useLazyLoadQueryResult!.data).toMatchSnapshot();
       });
 
       it("fetches new data when variables change", async () => {
@@ -478,32 +400,13 @@ describe("compiledHooks", () => {
             })
           )
         );
-        expect(client.cache.extract()["User:21"]).toMatchInlineSnapshot(`
-          Object {
-            "__typename": "User",
-            "avatarUrl({\\"size\\":21})": "<mock-value-for-field-\\"avatarUrl\\">",
-            "conversations:compiledHooks_user_conversations": Object {
-              "__typename": "ConversationsConnection",
-              "edges": Array [
-                Object {
-                  "__typename": "ConversationsConnectionEdge",
-                  "cursor": "<mock-value-for-field-\\"cursor\\">",
-                  "node": Object {
-                    "__ref": "Conversation:<Conversation-mock-id-5>",
-                  },
-                },
-              ],
-              "pageInfo": Object {
-                "__typename": "PageInfo",
-                "endCursor": "<mock-value-for-field-\\"endCursor\\">",
-                "hasNextPage": false,
-              },
-            },
-            "id": 21,
-            "name": "<mock-value-for-field-\\"name\\">",
-            "petName": "<mock-value-for-field-\\"petName\\">",
-          }
-        `);
+        expect(
+          client.cache.extract()[
+            typePolicies === typePoliciesWithDefaultApolloClientStoreKeys
+              ? "User:21"
+              : "21"
+          ]
+        ).toMatchSnapshot();
       });
 
       it("does not try to kick-off a new query when the variables object deep equals the previous one", async () => {
@@ -600,7 +503,10 @@ describe("compiledHooks", () => {
     it("returns a new object when a field that was selected in the watch query is updated in the store", async () => {
       await act(async () => {
         client.cache.modify({
-          id: "User:42",
+          id:
+            typePolicies === typePoliciesWithDefaultApolloClientStoreKeys
+              ? "User:42"
+              : "42",
           fields: {
             petName: () => "some new value",
           },
@@ -922,7 +828,9 @@ describe("compiledHooks", () => {
 
         it("loads the new data into the store", () => {
           expect(client.cache.extract()).toMatchObject({
-            "Conversation:second-paged-conversation": {
+            [typePolicies === typePoliciesWithDefaultApolloClientStoreKeys
+              ? "Conversation:second-paged-conversation"
+              : "second-paged-conversation"]: {
               id: "second-paged-conversation",
               __typename: "Conversation",
               title: '<mock-value-for-field-"title">',
@@ -1067,7 +975,9 @@ describe("compiledHooks", () => {
 
         it("loads the new data into the store", () => {
           expect(client.cache.extract()).toMatchObject({
-            "Message:second-paged-message": {
+            [typePolicies === typePoliciesWithDefaultApolloClientStoreKeys
+              ? "Message:second-paged-message"
+              : "second-paged-message"]: {
               id: "second-paged-message",
               __typename: "Message",
               text: '<mock-value-for-field-"text">',
