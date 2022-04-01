@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-transform-graphql-js-tag",
   "entries": [
     {
+      "date": "Fri, 01 Apr 2022 16:00:03 GMT",
+      "tag": "@graphitation/ts-transform-graphql-js-tag_v0.4.1",
+      "version": "0.4.1",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/ts-transform-graphql-js-tag",
+            "commit": "708800f6041d482f8075146dffe82f860c052fd3",
+            "comment": "Fixes test suite"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 25 Jan 2022 09:56:59 GMT",
       "tag": "@graphitation/ts-transform-graphql-js-tag_v0.4.1",
       "version": "0.4.1",

@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Fri, 01 Apr 2022 16:00:03 GMT",
+      "tag": "@graphitation/supermassive_v0.8.2",
+      "version": "0.8.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "708800f6041d482f8075146dffe82f860c052fd3",
+            "comment": "Pin TS dependency"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 08 Mar 2022 19:33:51 GMT",
       "tag": "@graphitation/supermassive_v0.8.1",
       "version": "0.8.1",

@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Thu, 10 Feb 2022 13:09:46 GMT and should not be manually modified.
+This log was last generated on Fri, 01 Apr 2022 16:00:03 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.8.2
+
+Fri, 01 Apr 2022 16:00:03 GMT
+
+### Patches
+
+- Pin TS dependency (eloy.de.enige@gmail.com)
 
 ## 0.8.0
 
