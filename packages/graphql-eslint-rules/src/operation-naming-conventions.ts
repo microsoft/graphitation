@@ -3,7 +3,7 @@ import {
   GraphQLESTreeNode,
   GraphQLESLintRuleContext,
 } from "@graphql-eslint/eslint-plugin";
-import { OperationDefinitionNode } from "graphql";
+import { OperationDefinitionNode, FragmentDefinitionNode } from "graphql";
 import { RuleFixer } from "@typescript-eslint/utils/dist/ts-eslint";
 import { Kind } from "graphql";
 import { relative } from "path";
@@ -15,14 +15,35 @@ import kebabCase from "lodash.kebabcase";
 const RULE_NAME = "operation-naming-convention";
 const OPERATIONS = ["query", "mutation", "subscription"];
 
+export const MISSING_OPERATION_NAME_ERROR_MESSAGE = `Filename should end with the operation name (query/mutation/subscription) e.g. foo-query.graphql`;
+
+export function getMissingLastDirectoryPrefixErrorMessage(
+  lastDirectory: string,
+) {
+  return `Filename should start with the package directory name: "${lastDirectory}"`;
+}
+
+export function isFilenamePrefixValid(filename: string, lastDirectory: string) {
+  return filename.startsWith(`${lastDirectory}-`);
+}
+
+export function isFilenameSuffixValid(filename: string) {
+  return OPERATIONS.some((operation) =>
+    filename.endsWith(`-${operation.toLowerCase()}`),
+  );
+}
+
 function pascalCase(text: string) {
   const camelCaseText = camelCase(text);
   return camelCaseText.charAt(0).toUpperCase() + camelCaseText.slice(1);
 }
 
-function reportError(
+export function reportError(
   context: GraphQLESLintRuleContext,
-  node: GraphQLESTreeNode<OperationDefinitionNode, true>,
+  node: GraphQLESTreeNode<
+    OperationDefinitionNode | FragmentDefinitionNode,
+    true
+  >,
   message: string,
   expectedName?: string,
 ) {
