@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Fixing piercing with the right curl http method",
+  "packageName": "@graphitation/graphql-eslint-rules",
+  "email": "ken@gizzar.com",
+  "dependentChangeType": "patch"
+}
