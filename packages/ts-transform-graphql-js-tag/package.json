@@ -16,7 +16,7 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@ts-morph/bootstrap": "^0.11.0",
+    "@ts-morph/bootstrap": "^0.13.0",
     "@types/jest": "^26.0.22",
     "graphql": "^15.0.0",
     "monorepo-scripts": "*",
