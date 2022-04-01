@@ -2578,21 +2578,6 @@
     "@n1ru4l/push-pull-async-iterable-iterator" "^3.1.0"
     meros "^1.1.4"
 
-"@graphitation/apollo-react-relay-duct-tape@^0.9.0":
-  version "0.9.0"
-  resolved "https://registry.yarnpkg.com/@graphitation/apollo-react-relay-duct-tape/-/apollo-react-relay-duct-tape-0.9.0.tgz#15c69c30d4c0de723dcade4aa7c0513a7c5f7812"
-  integrity sha512-050Hdh0U8ow2YUOXgKaET5dqzykZvmNvSdYk33WQ7cgcKB2X5JMdnPN8TCpw1Qk19pAxhstmDnPvZbr9nD8jWQ==
-  dependencies:
-    invariant "^2.2.4"
-
-"@graphitation/apollo-react-relay-duct-tape@^1.0.0-alpha.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@graphitation/apollo-react-relay-duct-tape/-/apollo-react-relay-duct-tape-1.0.1.tgz#9212f98a932f65990388a239f95558cde2ffd1b7"
-  integrity sha512-HKoLMd66HRKqDyj/QiOKBqitKw2r2f7FWtvw7d3se7L+6hbem0JHGmck+scyVjLmM6x/4eakhLXVh49SjrzDvA==
-  dependencies:
-    invariant "^2.2.4"
-    lodash "^4.17.15"
-
 "@graphitation/graphql-js-tag@^0.5.3", "@graphitation/graphql-js-tag@^0.5.4":
   version "0.5.5"
   resolved "https://registry.yarnpkg.com/@graphitation/graphql-js-tag/-/graphql-js-tag-0.5.5.tgz#766d8668d86795c28d3e685d55007280e5b23ba8"
@@ -12460,14 +12445,6 @@ relateurl@^0.2.7:
   version "0.2.7"
   resolved "https://registry.yarnpkg.com/relateurl/-/relateurl-0.2.7.tgz#54dbf377e51440aca90a4cd274600d3ff2d888a9"
   integrity sha1-VNvzd+UUQKypCkzSdGANP/LYiKk=
-
-relay-compiler-language-graphitation@^0.8.1:
-  version "0.8.1"
-  resolved "https://registry.yarnpkg.com/relay-compiler-language-graphitation/-/relay-compiler-language-graphitation-0.8.1.tgz#3d43d95f4b6449ffd57c84818ecfcf80aad859ef"
-  integrity sha512-YBMFBYfp+apx5ujGLOIAF7Xjx6RUWLmpoDAvFBZXdEBQzsnBSRmcZXv8QEYEbGHhQXgYblXQj8rKHXl/tQTNBQ==
-  dependencies:
-    relay-compiler-language-typescript ">=14.0.0"
-    typescript ">=4.2.3"
 
 relay-compiler-language-typescript@>=14.0.0:
   version "15.0.0"

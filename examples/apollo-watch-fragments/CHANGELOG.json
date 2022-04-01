@@ -2,6 +2,33 @@
   "name": "apollo-watch-fragments",
   "entries": [
     {
+      "date": "Fri, 01 Apr 2022 14:32:44 GMT",
+      "tag": "apollo-watch-fragments_v0.1.0",
+      "version": "0.1.0",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "beachball",
+            "package": "apollo-watch-fragments",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.0.1-alpha.2",
+            "commit": "13278827f9fa5d788f8010756033af627880ec5b"
+          },
+          {
+            "author": "beachball",
+            "package": "apollo-watch-fragments",
+            "comment": "Bump @graphitation/graphql-js-tag to v0.8.2",
+            "commit": "13278827f9fa5d788f8010756033af627880ec5b"
+          },
+          {
+            "author": "beachball",
+            "package": "apollo-watch-fragments",
+            "comment": "Bump relay-compiler-language-graphitation to v1.0.0-alpha.3",
+            "commit": "13278827f9fa5d788f8010756033af627880ec5b"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 24 Nov 2021 13:22:06 GMT",
       "tag": "apollo-watch-fragments_v0.1.0",
       "version": "0.1.0",
