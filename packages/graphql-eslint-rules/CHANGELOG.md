@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-eslint-rules
 
-This log was last generated on Wed, 30 Mar 2022 17:28:55 GMT and should not be manually modified.
+This log was last generated on Fri, 01 Apr 2022 09:36:55 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.4
+
+Fri, 01 Apr 2022 09:36:55 GMT
+
+### Patches
+
+- HOTFIX: fragment-naming-conventions file checks the filename conventions AND uses this filename for checking the fragment name instead of building in from the lastDirectory name (jakubvejr@microsoft.com)
 
 ## 0.6.3
 

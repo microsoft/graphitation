@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Fri, 01 Apr 2022 09:36:55 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.6.4",
+      "version": "0.6.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "cd91a0b738c10549e4d0674ad464f8e0e526cb9a",
+            "comment": "HOTFIX: fragment-naming-conventions file checks the filename conventions AND uses this filename for checking the fragment name instead of building in from the lastDirectory name"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 30 Mar 2022 17:28:55 GMT",
       "tag": "@graphitation/graphql-eslint-rules_v0.6.3",
       "version": "0.6.3",

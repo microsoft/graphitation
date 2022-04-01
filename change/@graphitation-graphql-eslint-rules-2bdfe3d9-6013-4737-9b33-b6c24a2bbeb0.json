@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "HOTFIX: fragment-naming-conventions file checks the filename conventions AND uses this filename for checking the fragment name instead of building in from the lastDirectory name",
-  "packageName": "@graphitation/graphql-eslint-rules",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
