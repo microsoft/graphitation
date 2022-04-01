@@ -2,6 +2,27 @@
   "name": "relay-compiler-language-graphitation",
   "entries": [
     {
+      "date": "Fri, 01 Apr 2022 14:32:44 GMT",
+      "tag": "relay-compiler-language-graphitation_v1.0.0-alpha.3",
+      "version": "1.0.0-alpha.3",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "relay-compiler-language-graphitation",
+            "commit": "8234372fd56d9a3437e646122e3a9e77ef8629f3",
+            "comment": "Skip"
+          },
+          {
+            "author": "beachball",
+            "package": "relay-compiler-language-graphitation",
+            "comment": "Bump @graphitation/graphql-js-tag to v0.8.2",
+            "commit": "13278827f9fa5d788f8010756033af627880ec5b"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 06 Jan 2022 09:53:33 GMT",
       "tag": "relay-compiler-language-graphitation_v0.8.1",
       "version": "0.8.1",

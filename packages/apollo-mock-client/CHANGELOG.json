@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-mock-client",
   "entries": [
     {
+      "date": "Fri, 01 Apr 2022 14:32:44 GMT",
+      "tag": "@graphitation/apollo-mock-client_v0.10.2",
+      "version": "0.10.2",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/apollo-mock-client",
+            "commit": "8234372fd56d9a3437e646122e3a9e77ef8629f3",
+            "comment": "Skip"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 14 Jan 2022 11:15:34 GMT",
       "tag": "@graphitation/apollo-mock-client_v0.10.2",
       "version": "0.10.2",

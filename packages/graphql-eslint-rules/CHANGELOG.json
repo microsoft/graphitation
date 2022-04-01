@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Fri, 01 Apr 2022 14:32:44 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.5.0",
+      "version": "0.5.0",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "8234372fd56d9a3437e646122e3a9e77ef8629f3",
+            "comment": "Skip"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 23 Dec 2021 13:01:22 GMT",
       "tag": "@graphitation/graphql-eslint-rules_v0.5.0",
       "version": "0.5.0",
