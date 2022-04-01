@@ -1,6 +1,7 @@
 {
   "name": "supermassive-todomvc",
   "main": "index.js",
+  "private": true,
   "version": "1.0.0",
   "scripts": {
     "start": "concurrently 'yarn relay --watch' 'yarn serve --progress --color --mode=development'",
