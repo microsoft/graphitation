@@ -8,6 +8,8 @@ variables:
     value: production,externalfacing
   - name: serviceTreeID
     value: 6F8CD842-E117-412F-BAE4-56A3B6166594
+  - name: adoNpmFeedBaseUrl
+    value: https://pkgs.dev.azure.com/domoreexp/_apis/packaging/feeds/npm-mirror
 
 jobs:
   - job: compliance
@@ -29,8 +31,6 @@ jobs:
       - template: ./steps/service-tree.yml
         parameters:
           serviceTreeID: $(serviceTreeID)
-      - checkout: self
-        persistCredentials: true
       - script: yarn
         displayName: yarn
       - script: |
@@ -39,8 +39,11 @@ jobs:
       - script: |
           git config user.email "gql-svc@microsoft.com"
           git config user.name "Graphitation Service Account"
+          git remote set-url origin https://gql-svc:$(ossGithubPAT)@github.com/microsoft/graphitation.git
         displayName: Configure git for release
       - script: yarn release -y -n $(ossNpmToken) --access public
         displayName: Release
-        env:
-          NPM_AUTHTOKEN: $(ossGithubPAT)
+      - template: ./steps/pierce-ado-npm-mirror-cache.yml
+        parameters:
+          adoNpmFeedPat: $(adoNpmFeedPat)
+          adoNpmFeedBaseUrl: $(adoNpmFeedBaseUrl)

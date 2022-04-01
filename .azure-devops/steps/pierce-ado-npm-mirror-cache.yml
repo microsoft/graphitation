@@ -1,0 +1,22 @@
+# Pierces the ADO npm feed cache in order to pull in new versions published to
+# the public npm feed.
+#
+# Expects the last git commit to contain all package.json files for packages
+# that have been published.
+
+parameters:
+  - name: adoNpmFeedPat
+    type: string
+    default: "PROVIDE AN ADO NPM FEED PAT THAT HAS CONTRIBUTOR PERMISSION"
+  # Base URL looks like: https://pkgs.dev.azure.com/[ORG]/_apis/packaging/feeds/[NPM FEED NAME]
+  - name: adoNpmFeedBaseUrl
+    type: string
+    default: "PROVIDE BASE URL TO ADO NPM FEED"
+
+steps:
+  - bash: |
+      git diff --name-only HEAD HEAD~1 | grep package.json | while read line ; do
+        pkgAndVersion = `cat $line | jq '. | "\(.name)/versions/\(.version)"'`
+        curl -Ivu $(adoNpmFeedPat) $(adoNpmFeedBaseUrl)/npm/packages/$(pkgAndVersion);
+      done
+    displayName: "Pierce ADO NPM feed cache"

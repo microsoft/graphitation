@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "added filename naming conventions check into the operation naming conventions rule",
-  "packageName": "@graphitation/graphql-eslint-rules",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
