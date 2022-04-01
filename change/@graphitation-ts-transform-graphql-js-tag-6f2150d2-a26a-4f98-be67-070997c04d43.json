@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "Fixes test suite",
+  "packageName": "@graphitation/ts-transform-graphql-js-tag",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "none"
+}

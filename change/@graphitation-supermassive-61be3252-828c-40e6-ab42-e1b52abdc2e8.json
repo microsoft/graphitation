@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Pin TS dependency",
+  "packageName": "@graphitation/supermassive",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}
