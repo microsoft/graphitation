@@ -32,24 +32,24 @@ ruleTester.runGraphQLTests(
     valid: [
       {
         ...WITH_SCHEMA,
-        filename: "src/user-query.graphql",
+        filename: "src/graphql-eslint-rules-user-query.graphql",
         code: `fragment GraphqlEslintRulesUserFragment on User { id name }`,
       },
       {
         ...WITH_SCHEMA,
-        filename: "src/user-query.graphql",
+        filename: "src/graphql-eslint-rules-user-query.graphql",
         code: `fragment GraphqlEslintRulesUserFragment_optionalSuffix on User { id name }`,
       },
       {
         ...WITH_SCHEMA,
-        filename: "src/user-query.graphql",
+        filename: "src/graphql-eslint-rules-user-query.graphql",
         code: `fragment GraphqlEslintRulesUserFragment_optionalSuffix_anotherOptionalSuffix on User { id name }`,
       },
     ],
     invalid: [
       {
         ...WITH_SCHEMA,
-        filename: "src/user-query.graphql",
+        filename: "src/graphql-eslint-rules-user-query.graphql",
         code: `fragment graphql_eslint_rules_user_fragment on User { id name }`,
         output: "fragment GraphqlEslintRulesUserFragment on User { id name }",
         errors: [
@@ -60,7 +60,7 @@ ruleTester.runGraphQLTests(
       },
       {
         ...WITH_SCHEMA,
-        filename: "src/user-query.graphql",
+        filename: "src/graphql-eslint-rules-user-query.graphql",
         code: `fragment GraphqlEslintRulesUserFragment_ on User { id name }`,
         output: "fragment GraphqlEslintRulesUserFragment on User { id name }",
         errors: [
@@ -71,7 +71,7 @@ ruleTester.runGraphQLTests(
       },
       {
         ...WITH_SCHEMA,
-        filename: "src/user-query.graphql",
+        filename: "src/graphql-eslint-rules-user-query.graphql",
         code: `fragment GraphqlEslintRulesUser on User { id name }`,
         output: "fragment GraphqlEslintRulesUserFragment on User { id name }",
         errors: [
@@ -82,12 +82,30 @@ ruleTester.runGraphQLTests(
       },
       {
         ...WITH_SCHEMA,
-        filename: "src/user-query.graphql",
+        filename: "src/graphql-eslint-rules-user-query.graphql",
         code: `fragment UserFragment on User { id name }`,
         output: "fragment GraphqlEslintRulesUserFragment on User { id name }",
         errors: [
           {
             message: errorMessage,
+          },
+        ],
+      },
+      {
+        filename: "src/user-query.graphql",
+        code: `fragment GraphqlEslintRulesUserFragment on User { id name }`,
+        errors: [
+          {
+            message: `Filename should start with the package directory name: "graphql-eslint-rules"`,
+          },
+        ],
+      },
+      {
+        filename: "src/user.graphql",
+        code: `fragment GraphqlEslintRulesUserFragment on User { id name }`,
+        errors: [
+          {
+            message: `Filename should end with the operation name (query/mutation/subscription) e.g. foo-query.graphql`,
           },
         ],
       },

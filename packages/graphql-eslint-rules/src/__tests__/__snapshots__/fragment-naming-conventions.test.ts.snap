@@ -19,3 +19,13 @@ exports[` 4`] = `
 "> 1 | fragment UserFragment on User { id name }
     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Fragment should follow the naming conventions, the expected name is GraphqlEslintRulesUserFragment OR GraphqlEslintRulesUserFragment_optionalSuffix It's possible to chain suffixes using underscore"
 `;
+
+exports[` 5`] = `
+"> 1 | fragment GraphqlEslintRulesUserFragment on User { id name }
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Filename should start with the package directory name: \\"graphql-eslint-rules\\""
+`;
+
+exports[` 6`] = `
+"> 1 | fragment GraphqlEslintRulesUserFragment on User { id name }
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Filename should end with the operation name (query/mutation/subscription) e.g. foo-query.graphql"
+`;
