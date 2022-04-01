@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-eslint-rules
 
-This log was last generated on Fri, 01 Apr 2022 09:36:55 GMT and should not be manually modified.
+This log was last generated on Fri, 01 Apr 2022 18:00:07 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.5
+
+Fri, 01 Apr 2022 18:00:07 GMT
+
+### Patches
+
+- Fixing piercing with the right curl http method (ken@gizzar.com)
 
 ## 0.6.4
 

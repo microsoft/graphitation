@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Fri, 01 Apr 2022 18:00:07 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.6.5",
+      "version": "0.6.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "ken@gizzar.com",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "374c2dbf5b3ef07ba79cc28a4e351688f6e63c4f",
+            "comment": "Fixing piercing with the right curl http method"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 01 Apr 2022 09:36:55 GMT",
       "tag": "@graphitation/graphql-eslint-rules_v0.6.4",
       "version": "0.6.4",
