@@ -1,0 +1,12 @@
+parameters:
+  - name: serviceTreeID
+    type: string
+    default: "PLEASE USE YOUR SERVICE TREE ID FOR THE REPO"
+
+steps:
+  - task: skvso.servicetree-build-tasks.servicetree-link-build-task.servicetree-link-build-task@1
+    displayName: "ServiceTree Integration"
+    inputs:
+      ServiceTreeGateway: "ServiceTree Gateway"
+      Service: ${{ parameters.serviceTreeID }}
+      BuildOutputUsage: production

@@ -17,10 +17,10 @@
     "lint": "lage lint",
     "lage": "lage",
     "ci": "yarn lage build types test lint && yarn checkchange",
-    "beachball": "beachball -b origin/main",
+    "beachball": "beachball -b origin/apollo-fragment-store-watching",
     "change": "yarn beachball change",
     "checkchange": "yarn beachball check",
-    "release": "yarn beachball publish",
+    "release": "yarn beachball publish -t next",
     "postinstall": "patch-package"
   },
   "devDependencies": {
@@ -31,7 +31,6 @@
   },
   "resolutions": {
     "@types/webpack": "^5.28.0",
-    "graphql": "^15.6.0",
-    "typescript": "^4.6.2"
+    "graphql": "^15.6.0"
   }
 }
