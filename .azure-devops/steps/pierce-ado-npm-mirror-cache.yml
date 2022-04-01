@@ -17,6 +17,6 @@ steps:
   - bash: |
       git diff --name-only HEAD HEAD~1 | grep 'packages/.*/package.json' | while read line ; do
         pkgAndVersion=`cat $line | jq '. | "\(.name)/versions/\(.version)"'`
-        curl -Ivu $(adoNpmFeedPat) $(adoNpmFeedBaseUrl)/npm/packages/$pkgAndVersion
+        curl -Ivu $(adoNpmFeedPat) $(adoNpmFeedBaseUrl)/npm/packages/$pkgAndVersion || true
       done
     displayName: "Pierce ADO NPM feed cache"
