@@ -27,5 +27,8 @@
     "beachball": "^2.20.0",
     "lage": "0.29.1",
     "prettier": "^2.2.1"
+  },
+  "resolutions": {
+    "glob-parent": "^6.0.2"
   }
 }
