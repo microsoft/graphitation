@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Mon, 04 Apr 2022 13:11:16 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.6.7",
+      "version": "0.6.7",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "9386495bc869d600b051a542db6987d08a0aedbc",
+            "comment": "[ci] After pierce, fetch pkg"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 04 Apr 2022 09:54:25 GMT",
       "tag": "@graphitation/graphql-eslint-rules_v0.6.6",
       "version": "0.6.6",
