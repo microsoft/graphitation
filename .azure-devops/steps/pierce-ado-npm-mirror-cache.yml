@@ -21,6 +21,6 @@ steps:
         pkgVersion=`cat $pkgFilename | jq -r '.version'`
         pkgBasename=`echo $pkgName | cut -d "/" -f 2`
         curl -Ivu $(adoNpmFeedPat) $(adoOrgBaseUrl)/_apis/packaging/feeds/$(adoNpmFeedName)/npm/packages/$pkgName/versions/$pkgVersion/content || true
-        curl -Ivu $(adoNpmFeedPat) $(adoOrgBaseUrl)/_packaging/$(adoNpmFeedName)/npm/registry/$pkgName/-/$pkgBasename-$pkgVersion.tgz || true
+        curl -o /dev/null -vu $(adoNpmFeedPat) $(adoOrgBaseUrl)/_packaging/$(adoNpmFeedName)/npm/registry/$pkgName/-/$pkgBasename-$pkgVersion.tgz || true
       done
     displayName: "Pierce ADO NPM feed cache"
