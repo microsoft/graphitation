@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-eslint-rules
 
-This log was last generated on Fri, 01 Apr 2022 18:00:07 GMT and should not be manually modified.
+This log was last generated on Mon, 04 Apr 2022 09:54:25 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.6
+
+Mon, 04 Apr 2022 09:54:25 GMT
+
+### Patches
+
+- [ci] Try to fix cache piercing by cargo culting some more (eloy.de.enige@gmail.com)
 
 ## 0.6.5
 

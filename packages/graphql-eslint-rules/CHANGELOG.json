@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Mon, 04 Apr 2022 09:54:25 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.6.6",
+      "version": "0.6.6",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "d23bef744b7d9f9fbb134c396d2add530ba9ffb9",
+            "comment": "[ci] Try to fix cache piercing by cargo culting some more"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 01 Apr 2022 18:00:07 GMT",
       "tag": "@graphitation/graphql-eslint-rules_v0.6.5",
       "version": "0.6.5",

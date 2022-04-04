@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "[ci] Try to fix cache piercing by cargo culting some more",
-  "packageName": "@graphitation/graphql-eslint-rules",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}
