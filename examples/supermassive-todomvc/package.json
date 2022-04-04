@@ -43,7 +43,6 @@
     "@graphql-codegen/cli": "^2.2.2",
     "@graphql-codegen/import-types-preset": "^2.1.7",
     "@graphql-codegen/typescript": "^2.3.0",
-    "@statoscope/webpack-plugin": "^5.18.0",
     "@types/graphql": "^14.5.0",
     "@types/lodash": "^4.14.175",
     "@types/react": "^17.0.30",
