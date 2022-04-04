@@ -8,15 +8,19 @@ parameters:
   - name: adoNpmFeedPat
     type: string
     default: "PROVIDE AN ADO NPM FEED PAT THAT HAS CONTRIBUTOR PERMISSION"
-  # Base URL looks like: https://pkgs.dev.azure.com/[ORG]/_apis/packaging/feeds/[NPM FEED NAME]
-  - name: adoNpmFeedBaseUrl
+  - name: adoOrgBaseUrl
     type: string
-    default: "PROVIDE BASE URL TO ADO NPM FEED"
+    default: "https://pkgs.dev.azure.com/[ORG]"
+  - name: adoNpmFeedName
+    type: string
 
 steps:
   - bash: |
-      git diff --name-only HEAD HEAD~1 | grep 'packages/.*/package.json' | while read line ; do
-        pkgAndVersion=`cat $line | jq -r '. | "\(.name)/versions/\(.version)"'`
-        curl -Iv -w "%{http_code}" -u $(adoNpmFeedPat) $(adoNpmFeedBaseUrl)/npm/packages/$pkgAndVersion/content || true
+      git diff --name-only HEAD HEAD~1 | grep 'packages/.*/package.json' | while read pkgFilename ; do
+        pkgName = `cat $pkgFilename | jq -r '.name'`
+        pkgVersion = `cat $pkgFilename | jq -r '.version'`
+        pkgBasename=`echo $pkgAndVersion | cut -d "/" -f 2`
+        curl -Ivu $(adoNpmFeedPat) $(adoOrgBaseUrl)/_apis/packaging/feeds/$(adoNpmFeedName)/npm/packages/$pkgName/versions/$pkgVersion/content || true
+        curl -Ivu $(adoNpmFeedPat) $(adoOrgBaseUrl)/_packaging/$(adoNpmFeedName)/npm/registry/$pkgName/-/$pkgBasename-$pkgVersion.tgz || true
       done
     displayName: "Pierce ADO NPM feed cache"
