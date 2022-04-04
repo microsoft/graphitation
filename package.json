@@ -29,6 +29,7 @@
     "prettier": "^2.2.1"
   },
   "resolutions": {
-    "glob-parent": "^6.0.2"
+    "glob-parent": "^6.0.2",
+    "trim": "^1.0.1"
   }
 }
