@@ -9,8 +9,10 @@ variables:
     value: production,externalfacing
   - name: serviceTreeID
     value: 6F8CD842-E117-412F-BAE4-56A3B6166594
-  - name: adoNpmFeedBaseUrl
-    value: https://pkgs.dev.azure.com/domoreexp/_apis/packaging/feeds/npm-mirror
+  - name: adoOrgBaseUrl
+    value: https://pkgs.dev.azure.com/domoreexp
+  - name: adoNpmFeedName
+    value: npm-mirror
 
 jobs:
   - job: compliance
@@ -56,4 +58,5 @@ jobs:
       - template: ./steps/pierce-ado-npm-mirror-cache.yml
         parameters:
           adoNpmFeedPat: $(adoNpmFeedPat)
-          adoNpmFeedBaseUrl: $(adoNpmFeedBaseUrl)
+          adoOrgBaseUrl: $(adoProjectBaseUrl)
+          adoNpmFeedName: $(adoNpmFeedName)
