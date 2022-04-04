@@ -30,6 +30,7 @@
   },
   "resolutions": {
     "glob-parent": "^6.0.2",
+    "minimist": "^1.2.6",
     "trim": "^1.0.1"
   }
 }
