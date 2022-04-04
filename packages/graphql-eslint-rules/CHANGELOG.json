@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Mon, 04 Apr 2022 15:02:15 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.6.8",
+      "version": "0.6.8",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "452bb5f5d4409c66a0fe2e08f970179a7d20c575",
+            "comment": "[ci] Fix var declarations"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 04 Apr 2022 13:11:16 GMT",
       "tag": "@graphitation/graphql-eslint-rules_v0.6.7",
       "version": "0.6.7",
