@@ -1,6 +1,6 @@
 # GraphQL eslint rules
 
-This package contains eslint rules listed below:
+This package contains the following eslint rules:
 
 - missing-apollo-key-fields: Enforce selecting specific key fields when they are available on the GraphQL type
 - operation-naming-conventions: Enforce descriptive operation names based on the package they reside in
