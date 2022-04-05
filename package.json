@@ -3,10 +3,8 @@
   "private": true,
   "workspaces": {
     "packages": [
-      "examples/*",
       "packages/*",
-      "scripts",
-      "website"
+      "scripts"
     ]
   },
   "scripts": {
