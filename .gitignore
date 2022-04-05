@@ -9,4 +9,4 @@ examples/apollo-watch-fragments/public/bundle.js
 
 *.tgz
 
-relay-preload-hooks.ts
+examples/supermassive-todomvc/**/*.d.ts*
