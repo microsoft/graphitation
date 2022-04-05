@@ -6,7 +6,6 @@ const { getTransformer } = require("@graphitation/ts-transform-graphql-js-tag");
 const {
   annotateDocumentGraphQLTransform,
 } = require("@graphitation/supermassive");
-const StatoscopeWebpackPlugin = require("@statoscope/webpack-plugin").default;
 const { buildASTSchema, parse } = require("graphql");
 
 const config: () => Promise<typeof webpack.Configuration> = async () => {
@@ -50,14 +49,7 @@ const config: () => Promise<typeof webpack.Configuration> = async () => {
     resolve: {
       extensions: [".ts", ".tsx", ".js"],
     },
-    plugins: [
-      new HtmlWebpackPlugin(),
-      new StatoscopeWebpackPlugin({
-        saveReportTo: "stats/report-[name]-[hash].html",
-        saveStatsTo: "stats/stats-[name]-[hash].json",
-        open: false,
-      }),
-    ],
+    plugins: [new HtmlWebpackPlugin()],
     optimization: {
       // minimize: false,
       splitChunks: {
