@@ -6,3 +6,5 @@ lib
 .eslintcache
 
 *.tgz
+
+examples/supermassive-todomvc/**/*.d.ts*
