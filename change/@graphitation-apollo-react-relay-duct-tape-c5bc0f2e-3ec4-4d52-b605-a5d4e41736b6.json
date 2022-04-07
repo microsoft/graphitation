@@ -1,0 +1,10 @@
+{
+  "type": "prerelease",
+  "comment": {
+    "title": "",
+    "value": ""
+  },
+  "packageName": "@graphitation/apollo-react-relay-duct-tape",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "prerelease"
+}
