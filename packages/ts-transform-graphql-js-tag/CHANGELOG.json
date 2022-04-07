@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-transform-graphql-js-tag",
   "entries": [
     {
+      "date": "Thu, 07 Apr 2022 17:44:14 GMT",
+      "tag": "@graphitation/ts-transform-graphql-js-tag_v0.4.1",
+      "version": "0.4.1",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/ts-transform-graphql-js-tag",
+            "commit": "d92eb5a8f9673b71e51a3020c0a0eaa347eb2a32",
+            "comment": "[beachball] sync"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 01 Apr 2022 14:32:44 GMT",
       "tag": "@graphitation/ts-transform-graphql-js-tag_v0.4.0",
       "version": "0.4.0",

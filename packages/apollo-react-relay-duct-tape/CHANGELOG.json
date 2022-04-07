@@ -2,6 +2,32 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Thu, 07 Apr 2022 17:44:14 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v1.0.1-alpha.3",
+      "version": "1.0.1-alpha.3",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "d92eb5a8f9673b71e51a3020c0a0eaa347eb2a32",
+            "comment": "[beachball] sync"
+          }
+        ],
+        "prerelease": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "eaa83472f661fe73fe1283ad15765042774fbdf9",
+            "comment": {
+              "title": "",
+              "value": ""
+            }
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 01 Apr 2022 14:32:44 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v1.0.1-alpha.2",
       "version": "1.0.1-alpha.2",

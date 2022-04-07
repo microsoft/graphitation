@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Thu, 07 Apr 2022 17:44:14 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.8.5",
+      "version": "0.8.5",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "commit": "d92eb5a8f9673b71e51a3020c0a0eaa347eb2a32",
+            "comment": "[beachball] sync"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 14 Jan 2022 11:15:34 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.8.2",
       "version": "0.8.2",

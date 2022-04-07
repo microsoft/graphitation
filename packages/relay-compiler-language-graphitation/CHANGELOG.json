@@ -2,6 +2,21 @@
   "name": "relay-compiler-language-graphitation",
   "entries": [
     {
+      "date": "Thu, 07 Apr 2022 17:44:14 GMT",
+      "tag": "relay-compiler-language-graphitation_v1.0.0-alpha.3",
+      "version": "1.0.0-alpha.3",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "relay-compiler-language-graphitation",
+            "commit": "d92eb5a8f9673b71e51a3020c0a0eaa347eb2a32",
+            "comment": "[beachball] sync"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 01 Apr 2022 14:32:44 GMT",
       "tag": "relay-compiler-language-graphitation_v1.0.0-alpha.3",
       "version": "1.0.0-alpha.3",

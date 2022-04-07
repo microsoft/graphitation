@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 07 Apr 2022 17:44:14 GMT",
+      "tag": "@graphitation/supermassive_v0.8.2",
+      "version": "0.8.2",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "d92eb5a8f9673b71e51a3020c0a0eaa347eb2a32",
+            "comment": "[beachball] sync"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 01 Apr 2022 14:32:44 GMT",
       "tag": "@graphitation/supermassive_v0.5.2",
       "version": "0.5.2",
