@@ -19,9 +19,9 @@
   },
   "devDependencies": {
     "@apollo/client": "^3.3.15",
-    "@graphitation/apollo-mock-client": "^0.10.2",
-    "@graphitation/graphql-js-operation-payload-generator": "^0.8.2",
-    "@graphitation/graphql-js-tag": "^0.8.2",
+    "@graphitation/apollo-mock-client": "^0.10.5",
+    "@graphitation/graphql-js-operation-payload-generator": "^0.8.5",
+    "@graphitation/graphql-js-tag": "^0.9.0",
     "@types/jest": "^26.0.22",
     "@types/lodash": "^4.14.176",
     "@types/react": "^17.0.3",
