@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Mon, 11 Apr 2022 11:20:29 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.6.10",
+      "version": "0.6.10",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "953a613fbcb156964073c0642b4fcc4d49c07717",
+            "comment": "HOTFIX: if a file contains only fragments, then the suffix can be 'fragment'"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 04 Apr 2022 15:45:16 GMT",
       "tag": "@graphitation/graphql-eslint-rules_v0.6.9",
       "version": "0.6.9",
