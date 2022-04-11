@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "HOTFIX: if a file contains only fragments, then the suffix can be 'fragment'",
+  "packageName": "@graphitation/graphql-eslint-rules",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
