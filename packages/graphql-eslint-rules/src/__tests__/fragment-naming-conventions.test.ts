@@ -37,12 +37,12 @@ ruleTester.runGraphQLTests(
       },
       {
         ...WITH_SCHEMA,
-        filename: "src/graphql-eslint-rules-user-query.graphql",
+        filename: "src/graphql-eslint-rules-user-fragment.graphql",
         code: `fragment GraphqlEslintRulesUserFragment_optionalSuffix on User { id name }`,
       },
       {
         ...WITH_SCHEMA,
-        filename: "src/graphql-eslint-rules-user-query.graphql",
+        filename: "src/graphql-eslint-rules-user-fragment.graphql",
         code: `fragment GraphqlEslintRulesUserFragment_optionalSuffix_anotherOptionalSuffix on User { id name }`,
       },
     ],
@@ -105,7 +105,7 @@ ruleTester.runGraphQLTests(
         code: `fragment GraphqlEslintRulesUserFragment on User { id name }`,
         errors: [
           {
-            message: `Filename should end with the operation name (query/mutation/subscription) e.g. foo-query.graphql`,
+            message: `Filename should end with the operation name (query/mutation/subscription) e.g. foo-query.graphql OR if the file contains ONLY fragments the suffix can be "fragment" e.g foo-fragment.graphql`,
           },
         ],
       },

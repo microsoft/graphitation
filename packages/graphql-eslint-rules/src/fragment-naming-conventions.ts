@@ -87,11 +87,11 @@ const rule: GraphQLESLintRule = {
         const lastDirectory = path.basename(path.dirname(packageJsonPath));
         const filename = path.parse(path.basename(filepath)).name;
 
-        if (!isFilenameSuffixValid(filename)) {
+        if (!isFilenameSuffixValid(filename, ["fragment"])) {
           return reportError(
             context,
             node,
-            MISSING_OPERATION_NAME_ERROR_MESSAGE,
+            'Filename should end with the operation name (query/mutation/subscription) e.g. foo-query.graphql OR if the file contains ONLY fragments the suffix can be "fragment" e.g foo-fragment.graphql',
           );
         }
 
@@ -107,7 +107,9 @@ const rule: GraphQLESLintRule = {
           pascalCase(path.parse(path.basename(filepath)).name),
         );
 
-        const expectedName = pascalFilenameWithoutOperation + "Fragment";
+        const expectedName = pascalFilenameWithoutOperation.endsWith("Fragment")
+          ? pascalFilenameWithoutOperation
+          : `${pascalFilenameWithoutOperation}Fragment`;
 
         const [name, ...optionalSuffix] = documentName.split("_");
 
