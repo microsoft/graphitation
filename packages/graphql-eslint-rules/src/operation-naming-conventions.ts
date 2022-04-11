@@ -27,8 +27,15 @@ export function isFilenamePrefixValid(filename: string, lastDirectory: string) {
   return filename.startsWith(`${lastDirectory}-`);
 }
 
-export function isFilenameSuffixValid(filename: string) {
-  return OPERATIONS.some((operation) =>
+export function isFilenameSuffixValid(
+  filename: string,
+  additionalSuffixes?: string[],
+) {
+  const operations = additionalSuffixes
+    ? [...additionalSuffixes, ...OPERATIONS]
+    : OPERATIONS;
+
+  return operations.some((operation) =>
     filename.endsWith(`-${operation.toLowerCase()}`),
   );
 }
