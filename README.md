@@ -24,7 +24,7 @@ GraphQL tooling & runtime support needed for MS Teams and beyond
 - [@graphitation/graphql-js-tag](./packages): A simple graphql-js AST based `graphql` tagged template function.
 - [@graphitation/graphql-eslint-rules](./packages/graphql-eslint-rules): Graphql eslint rules 
 - [@graphitation/supermassive](./packages/supermassive): Supermassive is a lightweight schema-less GraphQL executor and query build-time compiler
-- [relay-compiler-language-graphitation](./packages/relay-compiler-language-graphitation): A relay-compiler plugin that wraps [the TypeScript plugin](https://github.com/relay-tools/relay-compiler-language-typescript) and augments it slightly for [@graphitation/apollo-react-relay-duct-tape](../apollo-react-relay-duct-tape)'s needs.
+- [relay-compiler-language-graphitation](./packages/relay-compiler-language-graphitation): A relay-compiler plugin that wraps [the TypeScript plugin](https://github.com/relay-tools/relay-compiler-language-typescript) and augments it slightly for [@graphitation/apollo-react-relay-duct-tape](./packages/apollo-react-relay-duct-tape)'s needs.
 
 ## Contributing
 
