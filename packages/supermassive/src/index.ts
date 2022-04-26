@@ -10,6 +10,7 @@ export type {
   ScalarTypeResolver,
   EnumTypeResolver,
   InputObjectTypeResolver,
+  FunctionFieldResolver,
   Resolvers,
 } from "./types";
 
