@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Expose TypeScript type FunctionFieldResolver",
+  "packageName": "@graphitation/supermassive",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}
