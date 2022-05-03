@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Fri, 01 Apr 2022 16:00:03 GMT and should not be manually modified.
+This log was last generated on Tue, 03 May 2022 17:45:10 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.8.3
+
+Tue, 03 May 2022 17:45:10 GMT
+
+### Patches
+
+- Expose TypeScript type FunctionFieldResolver (vladimir.razuvaev@gmail.com)
 
 ## 0.8.2
 
