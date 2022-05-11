@@ -1126,13 +1126,6 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@graphitation/graphql-js-tag@^0.5.3", "@graphitation/graphql-js-tag@^0.5.4":
-  version "0.5.5"
-  resolved "https://registry.yarnpkg.com/@graphitation/graphql-js-tag/-/graphql-js-tag-0.5.5.tgz#766d8668d86795c28d3e685d55007280e5b23ba8"
-  integrity sha512-/QYGILQoS0+DTuH/Kn/PQsgcs3xwvfyr1qY0uy3gcdWZzQts6tuY4A0rvWy2AYbw997iCn4YILBjQ6PV6j2HRg==
-  dependencies:
-    invariant "^2.0.0"
-
 "@graphql-codegen/add@^3.1.0":
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/add/-/add-3.1.0.tgz#cd02fd6d80a7f62839cb27160b62e48366a237c5"
@@ -10428,6 +10421,14 @@ react-dom@^17.0.2:
     object-assign "^4.1.1"
     scheduler "^0.20.2"
 
+react-dom@^18.0.0:
+  version "18.0.0"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-18.0.0.tgz#26b88534f8f1dbb80853e1eabe752f24100d8023"
+  integrity sha512-XqX7uzmFo0pUceWFCt7Gff6IyIMzFUn7QMZrbrQfGxtaxXZIcGQzoNpRLE3fQLnS4XzLLPMZX2T9TRcSrasicw==
+  dependencies:
+    loose-envify "^1.1.0"
+    scheduler "^0.21.0"
+
 "react-is@^16.12.0 || ^17.0.0", react-is@^17.0.1, react-is@^17.0.2:
   version "17.0.2"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.2.tgz#e691d4a8e9c789365655539ab372762b0efb54f0"
@@ -10463,6 +10464,13 @@ react@^17.0.2:
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
+
+react@^18.0.0:
+  version "18.0.0"
+  resolved "https://registry.yarnpkg.com/react/-/react-18.0.0.tgz#b468736d1f4a5891f38585ba8e8fb29f91c3cb96"
+  integrity sha512-x+VL6wbT4JRVPm7EGxXhZ8w8LTROaxPXOqhlGyVSrv0sB1jkyFGgXxJ8LVoPRLvPR6/CIZGFmfzqUa2NYeMr2A==
+  dependencies:
+    loose-envify "^1.1.0"
 
 read-pkg-up@^7.0.1:
   version "7.0.1"
@@ -11027,6 +11035,13 @@ scheduler@^0.20.2:
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
+
+scheduler@^0.21.0:
+  version "0.21.0"
+  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.21.0.tgz#6fd2532ff5a6d877b6edb12f00d8ab7e8f308820"
+  integrity sha512-1r87x5fz9MXqswA2ERLo0EbOAU74DpIUO090gIasYTqlVoJeMcl+Z1Rg7WHz+qtPujhS/hGIt9kxZOYBV3faRQ==
+  dependencies:
+    loose-envify "^1.1.0"
 
 schema-utils@3.0.0:
   version "3.0.0"

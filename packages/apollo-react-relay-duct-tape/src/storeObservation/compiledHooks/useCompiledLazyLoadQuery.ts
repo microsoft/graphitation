@@ -41,9 +41,11 @@ class ExecutionQueryHandler {
   public subscribe(observable: ObservableQuery) {
     this.querySubscription = observable.subscribe(
       ({ error: err }) => {
+        console.log("DONE");
         this.handleResult(err);
       },
       (err) => {
+        console.log("ERROR");
         this.handleResult(err);
       }
     );
@@ -55,8 +57,14 @@ function useExecutionQuery(
   variables: Record<string, any>
 ): [loading: boolean, error?: Error] {
   const client = useApolloClient();
-  const forceUpdate = useForceUpdate();
-  const execution = useRef(new ExecutionQueryHandler(() => forceUpdate()));
+  // const forceUpdate = useForceUpdate();
+  let resolve: () => void;
+  let reject: (error: Error) => void;
+  const promise = new Promise<void>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  const execution = useRef(new ExecutionQueryHandler(() => resolve()));
   useEffect(() => {
     if (execution.current.isIdle()) {
       execution.current.subscribe(
@@ -70,6 +78,11 @@ function useExecutionQuery(
       execution.current.reset();
     };
   }, [executionQueryDocument, variables]);
+  if (execution.current.status[0]) {
+    console.log("waiting for execution query");
+    throw promise;
+  }
+  console.log("execution query done");
   return execution.current.status;
 }
 

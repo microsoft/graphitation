@@ -2,14 +2,41 @@ import React from "react";
 import { graphql } from "@graphitation/graphql-js-tag";
 import { useLazyLoadQuery } from "@graphitation/apollo-react-relay-duct-tape";
 
+import { LoadingSpinner } from "./LoadingSpinner";
 import { TodoTextInput } from "./TodoTextInput";
 import { TodoList } from "./TodoList";
 import { TodoListFooter } from "./TodoListFooter";
 import { useAddTodoMutation } from "./useAddTodoMutation";
 
 import { AppQuery as AppQueryType } from "./__generated__/AppQuery.graphql";
+import { useRef } from "react";
+import { useState } from "react";
 
-const App: React.FC = () => {
+let done = false;
+
+function useSuspender() {
+  console.log(done);
+  if (done) {
+    return;
+  }
+  console.log("Going to suspend!");
+  const promise = new Promise<void>((resolve) =>
+    setTimeout(() => {
+      console.log("Done suspending");
+      done = true;
+      console.log(done);
+      // setTimeout(() => {
+      // console.log("Resolving");
+      resolve();
+      // }, 1000);
+    }, 5000)
+  );
+  throw promise;
+}
+
+const AppInner: React.FC = () => {
+  useSuspender();
+  console.log("Going to query!");
   const addTodo = useAddTodoMutation();
 
   const result = useLazyLoadQuery<AppQueryType>(
@@ -51,6 +78,14 @@ const App: React.FC = () => {
         <TodoListFooter todos={result.data.todoStats} />
       )}
     </section>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <React.Suspense fallback={<LoadingSpinner />}>
+      <AppInner />
+    </React.Suspense>
   );
 };
 
