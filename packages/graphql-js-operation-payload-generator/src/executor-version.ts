@@ -8,6 +8,7 @@ import {
   DocumentNode,
   GraphQLResolveInfo,
   GraphQLSchema,
+  GraphQLAbstractType,
   GraphQLCompositeType,
   GraphQLNamedType,
   GraphQLScalarType,
@@ -43,6 +44,10 @@ export interface OperationDescriptor<
   readonly request: RequestDescriptor<Node>;
 }
 
+interface InternalMockData extends MockData {
+  __abstractType?: GraphQLAbstractType;
+}
+
 const TYPENAME_KEY = "__typename";
 
 export function generate(
@@ -55,15 +60,15 @@ export function generate(
   const result = executeSync({
     schema: operation.schema,
     document: operation.request.node,
-    variableValues: operation.request.variables,
-    fieldResolver: (source, args, _context, info) => {
+    variableValues: operationVariables,
+    fieldResolver: (source: InternalMockData, args, _context, info) => {
       // FIXME: This should not assume a single selection
       const fieldNode: FieldNode = info.fieldNodes[0];
       const selectionName = fieldNode.alias?.value ?? fieldNode.name.value;
       const namedReturnType = getNamedType(info.returnType);
 
       if (isCompositeType(namedReturnType)) {
-        const result: MockData = {
+        const result: InternalMockData = {
           ...getDefaultValues(
             mockResolvers,
             namedReturnType,
@@ -91,6 +96,7 @@ export function generate(
             namedReturnType.name,
           );
           result.__typename = possibleTypeNames[0];
+          result.__abstractType = namedReturnType;
         }
         return result;
       } else if (isScalarType(namedReturnType)) {
@@ -101,7 +107,7 @@ export function generate(
           fieldNode,
           args,
           namedReturnType,
-          info.parentType,
+          source.__abstractType || info.parentType,
           resolveValue,
         );
         return result;

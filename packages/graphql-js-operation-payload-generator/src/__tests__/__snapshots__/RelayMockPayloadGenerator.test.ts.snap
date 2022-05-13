@@ -415,7 +415,7 @@ fragment RelayMockPayloadGeneratorTestFragment on User {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<User-mock-id-1>",
+      "id": "<mock-id-1>",
       "name": "<mock-value-for-field-\\"name\\">",
       "profile_picture": {
         "uri": "<mock-value-for-field-\\"uri\\">",
@@ -757,7 +757,7 @@ fragment RelayMockPayloadGeneratorTest1Fragment on Actor {
     "viewer": {
       "actor": {
         "__typename": "User",
-        "id": "<User-mock-id-1>",
+        "id": "<mock-id-1>",
         "name": "<mock-value-for-field-\\"name\\">",
         "firstName": "<mock-value-for-field-\\"firstName\\">",
         "lastName": "<mock-value-for-field-\\"lastName\\">"
