@@ -1,6 +1,7 @@
 import {
   executeSync,
   getNamedType,
+  getOperationAST,
   isAbstractType,
   isCompositeType,
   isListType,
@@ -56,6 +57,24 @@ export function generate(
 ): { data: MockData } {
   mockResolvers = { ...DEFAULT_MOCK_RESOLVERS, ...mockResolvers };
   const resolveValue = createValueResolver(mockResolvers);
+
+  // RelayMockPayloadGenerator will execute documents that have optional
+  // boolean variables, but are required inside the document (eg when passed to)
+  // an @include(if: ...) directive, without values being supplied.
+  //
+  // TODO: Is this a bug in RelayMockPayloadGenerator?
+  const operationVariables = { ...operation.request.variables };
+  getOperationAST(operation.request.node)!.variableDefinitions?.forEach(
+    (variableDefinition) => {
+      if (
+        variableDefinition.type.kind === "NamedType" &&
+        variableDefinition.type.name.value === "Boolean" &&
+        operationVariables[variableDefinition.variable.name.value] === undefined
+      ) {
+        operationVariables[variableDefinition.variable.name.value] = false;
+      }
+    },
+  );
 
   const result = executeSync({
     schema: operation.schema,

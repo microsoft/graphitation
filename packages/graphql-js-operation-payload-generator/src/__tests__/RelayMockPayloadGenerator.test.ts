@@ -104,8 +104,8 @@ test("generate mock with abstract inline fragment", () => {
   `);
 });
 
-xtest("generate mock with inline fragment", () => {
-  graphql`
+test("generate mock with inline fragment", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest2Fragment on User {
       id
       name
@@ -136,9 +136,12 @@ xtest("generate mock with inline fragment", () => {
   testGeneratedData(graphql`
     query RelayMockPayloadGeneratorTest3Query($condition: Boolean) {
       node(id: "my-id") {
+        __typename
         ...RelayMockPayloadGeneratorTest2Fragment
+        id
       }
     }
+    ${fragment}
   `);
 });
 

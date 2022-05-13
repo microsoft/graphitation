@@ -926,9 +926,7 @@ fragment RelayMockPayloadGeneratorTest5Fragment on Page {
 
 exports[`generate mock with inline fragment 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest3Query(
-  $condition: Boolean
-) {
+query RelayMockPayloadGeneratorTest3Query($condition: Boolean) {
   node(id: "my-id") {
     __typename
     ...RelayMockPayloadGeneratorTest2Fragment
@@ -942,19 +940,24 @@ fragment RelayMockPayloadGeneratorTest2Fragment on User {
   author {
     id
     name
-    authorID: id
-    username
   }
-  author @include(if: $condition) {
-    myId: id
-    myUsername: username
-    emailAddresses
-    birthdate {
-      day
-      month
-      year
+  ... on User {
+    author {
+      authorID: id
+      username
     }
-    id
+  }
+  ... on User @include(if: $condition) {
+    author {
+      myId: id
+      myUsername: username
+      emailAddresses
+      birthdate {
+        day
+        month
+        year
+      }
+    }
   }
 }
 
