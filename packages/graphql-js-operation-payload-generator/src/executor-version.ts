@@ -6,6 +6,7 @@ import {
   isCompositeType,
   isListType,
   isScalarType,
+  visit,
   DocumentNode,
   GraphQLResolveInfo,
   GraphQLSchema,
@@ -59,27 +60,34 @@ export function generate(
   const resolveValue = createValueResolver(mockResolvers);
 
   // RelayMockPayloadGenerator will execute documents that have optional
-  // boolean variables, but are required inside the document (eg when passed to)
-  // an @include(if: ...) directive, without values being supplied.
+  // boolean variables that are not passed by the user, but are required
+  // inside the document for @include/@skip to work. We rewrite the
+  // document to replace these variable references with hardcoded values.
   //
   // TODO: Is this a bug in RelayMockPayloadGenerator?
-  const operationVariables = { ...operation.request.variables };
+  const undefinedBooleanVariables: string[] = [];
   getOperationAST(operation.request.node)!.variableDefinitions?.forEach(
     (variableDefinition) => {
       if (
         variableDefinition.type.kind === "NamedType" &&
         variableDefinition.type.name.value === "Boolean" &&
-        operationVariables[variableDefinition.variable.name.value] === undefined
+        operation.request.variables[variableDefinition.variable.name.value] ===
+          undefined
       ) {
-        operationVariables[variableDefinition.variable.name.value] = false;
+        undefinedBooleanVariables.push(variableDefinition.variable.name.value);
       }
     },
   );
 
+  const document =
+    undefinedBooleanVariables.length === 0
+      ? operation.request.node
+      : rewriteConditionals(operation.request.node, undefinedBooleanVariables);
+
   const result = executeSync({
     schema: operation.schema,
-    document: operation.request.node,
-    variableValues: operationVariables,
+    document: document,
+    variableValues: operation.request.variables,
     fieldResolver: (source: InternalMockData, args, _context, info) => {
       // FIXME: This should not assume a single selection
       const fieldNode: FieldNode = info.fieldNodes[0];
@@ -234,5 +242,51 @@ function mockScalar(
       ? DEFAULT_MOCK_TYPENAME
       : parentType.name,
   };
-  return resolveValue(type.name, context, false, undefined);
+
+function rewriteConditionals(
+  document: DocumentNode,
+  undefinedBooleanVariables: string[],
+) {
+  return visit(document, {
+    Directive(node) {
+      // Default value for @include is set to false
+      if (
+        node.name.value === "include" &&
+        node.arguments?.[0].value.kind === "Variable" &&
+        undefinedBooleanVariables.includes(node.arguments[0].value.name.value)
+      ) {
+        return {
+          ...node,
+          arguments: [
+            {
+              ...node.arguments[0],
+              value: {
+                kind: "BooleanValue",
+                value: false,
+              },
+            },
+          ],
+        };
+      }
+      // Default value for @skip is set to true
+      if (
+        node.name.value === "skip" &&
+        node.arguments?.[0].value.kind === "Variable" &&
+        undefinedBooleanVariables.includes(node.arguments[0].value.name.value)
+      ) {
+        return {
+          ...node,
+          arguments: [
+            {
+              ...node.arguments[0],
+              value: {
+                kind: "BooleanValue",
+                value: true,
+              },
+            },
+          ],
+        };
+      }
+    },
+  });
 }
