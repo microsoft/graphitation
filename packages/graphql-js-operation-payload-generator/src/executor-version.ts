@@ -95,35 +95,17 @@ export function generate(
       const namedReturnType = getNamedType(info.returnType);
 
       if (isCompositeType(namedReturnType)) {
-        const result: InternalMockData = {
-          ...getDefaultValues(
-            mockResolvers,
-            namedReturnType,
-            resolveValue,
-            fieldNode,
-            info,
-            args,
-          ),
-        };
-        if (isAbstractType(namedReturnType) && !result[TYPENAME_KEY]) {
-          const possibleTypeNames = info.fieldNodes.reduce<string[]>(
-            (acc, fieldNode) => [
-              ...acc,
-              ...getPossibleConcreteTypeNamesFromAbstractTypeSelections(
-                operation.schema,
-                fieldNode.selectionSet!,
-                info.fragments,
-              ),
-            ],
-            [],
-          );
-          invariant(
-            possibleTypeNames?.length,
-            "Expected fragment spreads on abstract type %s",
-            namedReturnType.name,
-          );
-          result.__typename = possibleTypeNames[0];
-          result.__abstractType = namedReturnType;
+        const result = mockCompositeType(
+          mockResolvers,
+          namedReturnType,
+          resolveValue,
+          fieldNode,
+          info,
+          args,
+          operation,
+        );
+        if (isListType(info.returnType)) {
+          return [result];
         }
         return result;
       } else if (isScalarType(namedReturnType)) {
@@ -136,6 +118,7 @@ export function generate(
           namedReturnType,
           source.__abstractType || info.parentType,
           resolveValue,
+          isListType(info.returnType),
         );
         return result;
       } else {
@@ -147,6 +130,48 @@ export function generate(
     throw new Error("Expected to generate a payload");
   }
   return result as { data: MockData };
+}
+
+function mockCompositeType(
+  mockResolvers: MockResolvers | null,
+  namedReturnType: GraphQLNamedType,
+  resolveValue: ValueResolver,
+  fieldNode: FieldNode,
+  info: GraphQLResolveInfo,
+  args: { [argName: string]: any },
+  operation: OperationDescriptor<GraphQLSchema, DocumentNode>,
+) {
+  const result: InternalMockData = {
+    ...getDefaultValues(
+      mockResolvers,
+      namedReturnType,
+      resolveValue,
+      fieldNode,
+      info,
+      args,
+    ),
+  };
+  if (isAbstractType(namedReturnType) && !result[TYPENAME_KEY]) {
+    const possibleTypeNames = info.fieldNodes.reduce<string[]>(
+      (acc, fieldNode) => [
+        ...acc,
+        ...getPossibleConcreteTypeNamesFromAbstractTypeSelections(
+          operation.schema,
+          fieldNode.selectionSet!,
+          info.fragments,
+        ),
+      ],
+      [],
+    );
+    invariant(
+      possibleTypeNames?.length,
+      "Expected fragment spreads on abstract type %s",
+      namedReturnType.name,
+    );
+    result.__typename = possibleTypeNames[0];
+    result.__abstractType = namedReturnType;
+  }
+  return result;
 }
 
 function getDefaultValues(
@@ -230,6 +255,7 @@ function mockScalar(
   type: GraphQLScalarType,
   parentType: GraphQLCompositeType,
   resolveValue: ValueResolver,
+  plural: boolean,
 ) {
   if (fieldNode.name.value === TYPENAME_KEY) {
     return isAbstractType(parentType) ? DEFAULT_MOCK_TYPENAME : parentType.name;
@@ -242,6 +268,8 @@ function mockScalar(
       ? DEFAULT_MOCK_TYPENAME
       : parentType.name,
   };
+  return resolveValue(type.name, context, plural, undefined);
+}
 
 function rewriteConditionals(
   document: DocumentNode,

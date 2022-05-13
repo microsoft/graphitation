@@ -146,7 +146,7 @@ test("generate mock with inline fragment", () => {
 });
 
 xtest("generate mock with condition (and other complications)", () => {
-  graphql`
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest3Fragment on User {
       id
       name
@@ -190,20 +190,24 @@ xtest("generate mock with condition (and other complications)", () => {
         ...RelayMockPayloadGeneratorTest3Fragment
       }
     }
+    ${fragment}
   `);
 });
 
-xtest("generate mock with connection", () => {
-  graphql`
+test("generate mock with connection", () => {
+  const fragment1 = graphql`
     fragment RelayMockPayloadGeneratorTest4Fragment on User {
       name
       username
+      # TODO: RelayMockPayloadGenerator returns incorrect value for this list:
+      # "emailAddresses": "<mock-value-for-field-"emailAddresses">"
       emailAddresses
     }
   `;
-  graphql`
+  const fragment2 = graphql`
     fragment RelayMockPayloadGeneratorTest5Fragment on Page {
       actor {
+        __typename
         ... on User {
           id
           myType: __typename
@@ -216,13 +220,21 @@ xtest("generate mock with connection", () => {
                 id
                 ...RelayMockPayloadGeneratorTest4Fragment
                   @skip(if: $skipUserInConnection)
+                __typename
               }
+            }
+            pageInfo {
+              endCursor
+              # TODO: RelayMockPayloadGenerator returns incorrect value for this boolean scalar:
+              # "hasNextPage": "<mock-value-for-field-"hasNextPage">"
+              hasNextPage
             }
           }
           ...RelayMockPayloadGeneratorTest4Fragment
         }
       }
     }
+    ${fragment1}
   `;
   testGeneratedData(graphql`
     query RelayMockPayloadGeneratorTest5Query(
@@ -230,9 +242,12 @@ xtest("generate mock with connection", () => {
       $skipUserInConnection: Boolean
     ) {
       node(id: "my-id") {
+        __typename
+        id
         ...RelayMockPayloadGeneratorTest5Fragment
       }
     }
+    ${fragment2}
   `);
 });
 
