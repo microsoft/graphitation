@@ -13,6 +13,8 @@ import {
   GraphQLScalarType,
   FieldNode,
   FragmentDefinitionNode,
+  SelectionNode,
+  SelectionSetNode,
 } from "graphql";
 import { pathToArray } from "graphql/jsutils/Path";
 import {
@@ -61,22 +63,27 @@ export function generate(
       const namedReturnType = getNamedType(info.returnType);
 
       if (isCompositeType(namedReturnType)) {
-        let result: MockData = {};
-
-        const defaultValues = getDefaultValues(
-          mockResolvers,
-          namedReturnType,
-          resolveValue,
-          fieldNode,
-          info,
-          args,
-        );
-        result = { ...result, ...defaultValues };
-
-        if (isAbstractType(namedReturnType) && !result[TYPENAME_KEY]) {
-          const possibleTypeNames = getPossibleTypeNamesFromAbstractTypeSelections(
+        const result: MockData = {
+          ...getDefaultValues(
+            mockResolvers,
+            namedReturnType,
+            resolveValue,
             fieldNode,
-            info.fragments,
+            info,
+            args,
+          ),
+        };
+        if (isAbstractType(namedReturnType) && !result[TYPENAME_KEY]) {
+          const possibleTypeNames = info.fieldNodes.reduce<string[]>(
+            (acc, fieldNode) => [
+              ...acc,
+              ...getPossibleConcreteTypeNamesFromAbstractTypeSelections(
+                operation.schema,
+                fieldNode.selectionSet!,
+                info.fragments,
+              ),
+            ],
+            [],
           );
           invariant(
             possibleTypeNames?.length,
@@ -91,7 +98,7 @@ export function generate(
           return source[selectionName];
         }
         const result = mockScalar(
-          info.fieldNodes[0],
+          fieldNode,
           args,
           namedReturnType,
           info.parentType,
@@ -129,37 +136,59 @@ function getDefaultValues(
       },
       isListType(info.returnType),
     ) as MockData | undefined);
-  if (defaultValues && typeof defaultValues !== "object") {
-    throw new Error("Expected object!");
-  }
+  invariant(
+    defaultValues === undefined || typeof defaultValues === "object",
+    "Expected mock resolver to return an object",
+  );
   return defaultValues;
 }
 
-function getPossibleTypeNamesFromAbstractTypeSelections(
-  fieldNode: FieldNode,
+function getPossibleConcreteTypeNamesFromAbstractTypeSelections(
+  schema: GraphQLSchema,
+  selectionSet: SelectionSetNode,
   fragments: { [key: string]: FragmentDefinitionNode },
 ) {
-  const possibleTypeNames = fieldNode.selectionSet?.selections
-    .map((fragment) => {
-      if (fragment.kind === "FragmentSpread") {
-        const fragmentDoc = fragments[fragment.name.value];
-        invariant(
-          fragmentDoc,
-          "Expected a fragment with name %s to exist",
-          fragment.name.value,
+  const result: string[] = [];
+  selectionSet.selections.forEach((selection) => {
+    const fragmentDefinition = getFragmentSelection(selection, fragments);
+    if (fragmentDefinition) {
+      const typeName = fragmentDefinition.typeCondition?.name.value;
+      if (
+        // If undefined, it means the selection is an inline fragment on the
+        // current type; i.e. on an abstract type.
+        typeName === undefined ||
+        isAbstractType(schema.getType(typeName))
+      ) {
+        result.push(
+          ...getPossibleConcreteTypeNamesFromAbstractTypeSelections(
+            schema,
+            fragmentDefinition.selectionSet,
+            fragments,
+          ),
         );
-        return fragmentDoc.typeCondition.name.value;
-      } else if (fragment.kind === "InlineFragment") {
-        return fragment.typeCondition?.name.value;
+      } else {
+        result.push(typeName);
       }
-      return undefined;
-    })
-    .filter(isString);
-  return possibleTypeNames;
+    }
+  });
+  return result;
 }
 
-function isString(x: any): x is string {
-  return typeof x === "string";
+function getFragmentSelection(
+  selection: SelectionNode,
+  fragments: { [key: string]: FragmentDefinitionNode },
+) {
+  if (selection.kind === "FragmentSpread") {
+    const fragmentDoc = fragments[selection.name.value];
+    invariant(
+      fragmentDoc,
+      "Expected a fragment with name %s to exist",
+      selection.name.value,
+    );
+    return fragmentDoc;
+  } else if (selection.kind === "InlineFragment") {
+    return selection;
+  }
 }
 
 function mockScalar(

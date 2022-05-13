@@ -72,7 +72,7 @@ test("generate mock for simple fragment", () => {
   `);
 });
 
-xtest("generate mock with abstract inline fragment", () => {
+test("generate mock with abstract inline fragment", () => {
   const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest1Fragment on Actor {
       id

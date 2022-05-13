@@ -754,12 +754,10 @@ fragment RelayMockPayloadGeneratorTest1Fragment on Actor {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "viewer": {
-      "__typename": "Viewer",
       "actor": {
         "__typename": "User",
-        "id": "<mock-id-2>",
+        "id": "<User-mock-id-1>",
         "name": "<mock-value-for-field-\\"name\\">",
         "firstName": "<mock-value-for-field-\\"firstName\\">",
         "lastName": "<mock-value-for-field-\\"lastName\\">"
