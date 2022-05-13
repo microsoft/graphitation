@@ -413,13 +413,11 @@ fragment RelayMockPayloadGeneratorTestFragment on User {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
       "__typename": "User",
-      "id": "<mock-id-2>",
+      "id": "<User-mock-id-1>",
       "name": "<mock-value-for-field-\\"name\\">",
       "profile_picture": {
-        "__typename": "Image",
         "uri": "<mock-value-for-field-\\"uri\\">",
         "width": 42,
         "height": 42
