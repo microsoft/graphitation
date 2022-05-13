@@ -24,6 +24,7 @@
   "devDependencies": {
     "beachball": "^2.20.0",
     "lage": "0.29.1",
+    "patch-package": "^6.4.7",
     "prettier": "^2.2.1"
   },
   "resolutions": {
