@@ -110,13 +110,11 @@ fragment RelayMockPayloadGeneratorTest6Fragment on User {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
       "__typename": "User",
-      "id": "<mock-id-3>",
+      "id": "<mock-id-1>",
       "name": "<mock-value-for-field-\\"name\\">",
       "author": {
-        "__typename": "User",
         "id": "<User-mock-id-2>",
         "name": "<mock-value-for-field-\\"name\\">"
       }
@@ -769,12 +767,7 @@ fragment RelayMockPayloadGeneratorTest1Fragment on Actor {
 
 exports[`generate mock with condition (and other complications) 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest4Query(
-  $showProfilePicture: Boolean
-  $hideBirthday: Boolean
-  $showBirthdayMonth: Boolean
-  $hideAuthorUsername: Boolean
-) {
+query RelayMockPayloadGeneratorTest4Query($showProfilePicture: Boolean, $hideBirthday: Boolean, $showBirthdayMonth: Boolean, $hideAuthorUsername: Boolean) {
   node(id: "my-id") {
     __typename
     ...RelayMockPayloadGeneratorTest3Fragment
@@ -797,19 +790,20 @@ fragment RelayMockPayloadGeneratorTest3Fragment on User {
     name
     id
   }
-  author @skip(if: $hideAuthorUsername) {
-    authorID: id
-    objectType: __typename
-    username
-    id
+  ... on User @skip(if: $hideAuthorUsername) {
+    author {
+      authorID: id
+      objectType: __typename
+      username
+    }
   }
   allPhones {
     phoneNumber {
       displayNumber
     }
   }
-  emailAddresses
-  backgroundImage {
+  emailAddresses @__clientField(handle: "customName")
+  backgroundImage @__clientField(handle: "customBackground") {
     uri
   }
 }
@@ -821,7 +815,7 @@ fragment RelayMockPayloadGeneratorTest3Fragment on User {
       "__typename": "User",
       "id": "<mock-id-1>",
       "name": "<mock-value-for-field-\\"name\\">",
-      "customId": "<User-mock-id-2>",
+      "customId": "<mock-id-2>",
       "author": {
         "name": "<mock-value-for-field-\\"name\\">",
         "id": "<User-mock-id-3>"
@@ -833,7 +827,9 @@ fragment RelayMockPayloadGeneratorTest3Fragment on User {
           }
         }
       ],
-      "emailAddresses": "<mock-value-for-field-\\"emailAddresses\\">",
+      "emailAddresses": [
+        "<mock-value-for-field-\\"emailAddresses\\">"
+      ],
       "backgroundImage": {
         "uri": "<mock-value-for-field-\\"uri\\">"
       }

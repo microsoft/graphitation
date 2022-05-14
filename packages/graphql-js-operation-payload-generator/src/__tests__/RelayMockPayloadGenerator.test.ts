@@ -145,11 +145,13 @@ test("generate mock with inline fragment", () => {
   `);
 });
 
-xtest("generate mock with condition (and other complications)", () => {
+test("generate mock with condition (and other complications)", () => {
   const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest3Fragment on User {
       id
       name
+      # TODO: RelayMockPayloadGenerator returns a different value for this scalar:
+      # "customId": "<User-mock-id-2>"
       customId: id
       profile_picture @include(if: $showProfilePicture) {
         uri
@@ -160,6 +162,7 @@ xtest("generate mock with condition (and other complications)", () => {
       }
       author {
         name
+        id
       }
       ... on User @skip(if: $hideAuthorUsername) {
         author {
@@ -173,6 +176,8 @@ xtest("generate mock with condition (and other complications)", () => {
           displayNumber
         }
       }
+      # TODO: RelayMockPayloadGenerator returns incorrect value for this list:
+      # "emailAddresses": "<mock-value-for-field-"emailAddresses">"
       emailAddresses @__clientField(handle: "customName")
       backgroundImage @__clientField(handle: "customBackground") {
         uri
@@ -187,7 +192,9 @@ xtest("generate mock with condition (and other complications)", () => {
       $hideAuthorUsername: Boolean
     ) {
       node(id: "my-id") {
+        __typename
         ...RelayMockPayloadGeneratorTest3Fragment
+        id
       }
     }
     ${fragment}
@@ -251,7 +258,7 @@ test("generate mock with connection", () => {
   `);
 });
 
-xtest("generate basic mock data", () => {
+test("generate basic mock data", () => {
   const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest6Fragment on User {
       id
