@@ -612,13 +612,11 @@ fragment RelayMockPayloadGeneratorTest7Fragment on User {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
       "__typename": "User",
-      "id": "my-id-1002",
+      "id": "my-id-1001",
       "name": "<mock-value-for-field-\\"name\\">",
       "profile_picture": {
-        "__typename": "Image",
         "uri": "http://my-uri"
       }
     }
@@ -704,7 +702,6 @@ fragment RelayMockPayloadGeneratorTest8Fragment on Page {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
       "__typename": "Page",
       "actor": {
@@ -713,7 +710,6 @@ fragment RelayMockPayloadGeneratorTest8Fragment on Page {
         "name": "<mock-value-for-field-\\"name\\">"
       },
       "backgroundImage": {
-        "__typename": "Image",
         "width": 200,
         "uri": "http://my-image"
       },

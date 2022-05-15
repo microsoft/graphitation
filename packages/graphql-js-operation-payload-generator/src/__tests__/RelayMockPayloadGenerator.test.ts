@@ -284,8 +284,8 @@ test("generate basic mock data", () => {
   );
 });
 
-xtest("generate mock using custom mock functions", () => {
-  graphql`
+test("generate mock using custom mock functions", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest7Fragment on User {
       id
       name
@@ -298,9 +298,12 @@ xtest("generate mock using custom mock functions", () => {
     graphql`
       query RelayMockPayloadGeneratorTest7Query {
         node(id: "my-id") {
+          __typename
           ...RelayMockPayloadGeneratorTest7Fragment
+          id
         }
       }
+      ${fragment}
     `,
     {
       ID(context, generateId) {
@@ -315,7 +318,7 @@ xtest("generate mock using custom mock functions", () => {
   );
 });
 
-xtest("generate mock using custom mock functions for object type", () => {
+test("generate mock using custom mock functions for object type", () => {
   const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest8Fragment on Page {
       actor {

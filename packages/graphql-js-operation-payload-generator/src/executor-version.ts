@@ -19,7 +19,7 @@ import {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
-import { pathToArray } from "graphql/jsutils/Path";
+import { Path, pathToArray } from "graphql/jsutils/Path";
 import {
   createValueResolver,
   DEFAULT_MOCK_RESOLVERS,
@@ -84,6 +84,8 @@ export function generate(
       ? operation.request.node
       : rewriteConditionals(operation.request.node, undefinedBooleanVariables);
 
+  const abstractTypeSelections: Path[] = [];
+
   const result = executeSync({
     schema: operation.schema,
     document: document,
@@ -103,6 +105,7 @@ export function generate(
           info,
           args,
           operation,
+          abstractTypeSelections,
         );
         if (isListType(info.returnType)) {
           return [result];
@@ -126,9 +129,16 @@ export function generate(
       }
     },
   });
-  if (!result || !result.data) {
-    throw new Error("Expected to generate a payload");
-  }
+  invariant(result?.data, "Expected to generate a payload");
+
+  // Replace typenames of abstract type selections that had no concrete selection
+  // with the default mock typename.
+  abstractTypeSelections.forEach((pathInstance) => {
+    const path = pathToArray(pathInstance);
+    const object = path.reduce((prev, key) => prev[key], result.data!);
+    object.__typename = DEFAULT_MOCK_TYPENAME;
+  });
+
   return result as { data: MockData };
 }
 
@@ -140,6 +150,7 @@ function mockCompositeType(
   info: GraphQLResolveInfo,
   args: { [argName: string]: any },
   operation: OperationDescriptor<GraphQLSchema, DocumentNode>,
+  abstractTypeSelections: Path[],
 ) {
   const result: InternalMockData = {
     ...getDefaultValues(
@@ -163,12 +174,26 @@ function mockCompositeType(
       ],
       [],
     );
-    invariant(
-      possibleTypeNames?.length,
-      "Expected fragment spreads on abstract type %s",
-      namedReturnType.name,
-    );
-    result.__typename = possibleTypeNames[0];
+    if (possibleTypeNames?.length) {
+      result.__typename = possibleTypeNames[0];
+    } else {
+      // When no concrete type selection exists, it means only interface
+      // fields are selected, so we can just use the first possible type.
+      //
+      // We keep a reference to the path so we can rewrite the __typename
+      // field in the output after execution to reflect that this not a
+      // selection on a concrete type.
+      const possibleType = operation.schema.getPossibleTypes(
+        namedReturnType,
+      )[0];
+      invariant(
+        possibleType,
+        "Expected interface %s to be implemented by at least one concrete type",
+        namedReturnType.name,
+      );
+      result.__typename = possibleType.name;
+      abstractTypeSelections.push(info.path);
+    }
     result.__abstractType = namedReturnType;
   }
   return result;
