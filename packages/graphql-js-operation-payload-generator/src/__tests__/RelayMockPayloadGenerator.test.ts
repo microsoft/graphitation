@@ -438,11 +438,12 @@ test("generate mock using custom mock functions for object type (multiple object
   );
 });
 
-xtest("check context in the mock resolver", () => {
+test("check context in the mock resolver", () => {
   let checkContext;
-  graphql`
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest11Fragment on Viewer {
       actor {
+        __typename
         ... on User {
           id
           name
@@ -451,6 +452,7 @@ xtest("check context in the mock resolver", () => {
             height
           }
         }
+        id
       }
     }
   `;
@@ -461,6 +463,7 @@ xtest("check context in the mock resolver", () => {
           ...RelayMockPayloadGeneratorTest11Fragment
         }
       }
+      ${fragment}
     `,
     {
       Image: (context) => {

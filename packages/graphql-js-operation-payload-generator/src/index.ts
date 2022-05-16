@@ -386,7 +386,7 @@ function mockScalar(
     );
   const context: MockResolverContext = {
     name: fieldNode.name.value,
-    alias: fieldNode.alias?.value,
+    alias: fieldNode.alias?.value || null,
     args,
     parentType: isAbstractType(parentType)
       ? DEFAULT_MOCK_TYPENAME
@@ -409,7 +409,7 @@ function mockCompositeType(
     );
   const context: MockResolverContext = {
     name: fieldNode.name.value,
-    alias: fieldNode.alias?.value,
+    alias: fieldNode.alias?.value || null,
     args,
     parentType: isAbstractType(parentType)
       ? DEFAULT_MOCK_TYPENAME

@@ -225,8 +225,9 @@ function getDefaultValues(
     (resolveValue(
       typename,
       {
+        parentType: null,
         name: fieldNode.name.value,
-        alias: fieldNode.alias?.value,
+        alias: fieldNode.alias?.value || null,
         path: pathToArray(info.path).map((x) => x.toString()),
         args: args,
       },
@@ -300,7 +301,7 @@ function mockScalar(
   }
   const context: MockResolverContext = {
     name: fieldNode.name.value,
-    alias: fieldNode.alias?.value,
+    alias: fieldNode.alias?.value || null,
     args,
     parentType: isAbstractType(parentType)
       ? DEFAULT_MOCK_TYPENAME
