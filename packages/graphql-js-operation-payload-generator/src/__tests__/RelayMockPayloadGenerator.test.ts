@@ -357,7 +357,7 @@ test("generate mock using custom mock functions for object type", () => {
 
 // NOTE: The snapshot here is different because we can better
 // resolve the possible concrete type that an interface can implement.
-xtest("generate mock for objects without concrete type", () => {
+test("generate mock for objects without concrete type", () => {
   const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest9Fragment on Page {
       actor {

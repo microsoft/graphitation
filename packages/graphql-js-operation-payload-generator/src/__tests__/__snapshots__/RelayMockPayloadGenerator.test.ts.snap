@@ -341,12 +341,11 @@ fragment RelayMockPayloadGeneratorTest9Fragment on Page {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
       "__typename": "Page",
       "actor": {
         "__typename": "User",
-        "id": "<mock-id-1>",
+        "id": "<User-mock-id-1>",
         "name": "Mark"
       },
       "id": "<mock-id-2>"
