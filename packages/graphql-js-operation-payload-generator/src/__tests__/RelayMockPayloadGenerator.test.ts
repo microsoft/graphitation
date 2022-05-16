@@ -389,11 +389,12 @@ test("generate mock for objects without concrete type", () => {
   );
 });
 
-xtest("generate mock using custom mock functions for object type (multiple object)", () => {
-  graphql`
+test("generate mock using custom mock functions for object type (multiple object)", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest10Fragment on User {
       name
       actor {
+        __typename
         ... on User {
           id
           name
@@ -402,6 +403,7 @@ xtest("generate mock using custom mock functions for object type (multiple objec
             height
           }
         }
+        id
       }
       profile_picture {
         uri
@@ -412,9 +414,12 @@ xtest("generate mock using custom mock functions for object type (multiple objec
     graphql`
       query RelayMockPayloadGeneratorTest10Query {
         node(id: "my-id") {
+          __typename
+          id
           ...RelayMockPayloadGeneratorTest10Fragment
         }
       }
+      ${fragment}
     `,
     {
       User: () => {

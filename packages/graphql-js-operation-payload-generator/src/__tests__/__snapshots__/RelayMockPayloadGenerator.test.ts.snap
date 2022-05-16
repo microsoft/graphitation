@@ -628,8 +628,8 @@ exports[`generate mock using custom mock functions for object type (multiple obj
 query RelayMockPayloadGeneratorTest10Query {
   node(id: "my-id") {
     __typename
-    ...RelayMockPayloadGeneratorTest10Fragment
     id
+    ...RelayMockPayloadGeneratorTest10Fragment
   }
 }
 

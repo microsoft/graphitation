@@ -152,17 +152,11 @@ function mockCompositeType(
   operation: OperationDescriptor<GraphQLSchema, DocumentNode>,
   abstractTypeSelections: Path[],
 ) {
-  const result: InternalMockData = {
-    ...getDefaultValues(
-      mockResolvers,
-      namedReturnType,
-      resolveValue,
-      fieldNode,
-      info,
-      args,
-    ),
-  };
-  if (isAbstractType(namedReturnType) && !result[TYPENAME_KEY]) {
+  // Get the concrete type selection, concrete type on an abstract type
+  // selection, or the abstract type selection.
+  let typename = namedReturnType.name;
+  let abstractTypeSelectionOnly = false;
+  if (isAbstractType(namedReturnType)) {
     const possibleTypeNames = info.fieldNodes.reduce<string[]>(
       (acc, fieldNode) => [
         ...acc,
@@ -175,8 +169,25 @@ function mockCompositeType(
       [],
     );
     if (possibleTypeNames?.length) {
-      result.__typename = possibleTypeNames[0];
+      typename = possibleTypeNames[0];
     } else {
+      abstractTypeSelectionOnly = true;
+    }
+  }
+
+  const result: InternalMockData = {
+    ...getDefaultValues(
+      mockResolvers,
+      typename,
+      resolveValue,
+      fieldNode,
+      info,
+      args,
+    ),
+  };
+
+  if (isAbstractType(namedReturnType) && !result[TYPENAME_KEY]) {
+    if (abstractTypeSelectionOnly) {
       // When no concrete type selection exists, it means only interface
       // fields are selected, so we can just use the first possible type.
       //
@@ -191,26 +202,28 @@ function mockCompositeType(
         "Expected interface %s to be implemented by at least one concrete type",
         namedReturnType.name,
       );
-      result.__typename = possibleType.name;
+      typename = possibleType.name;
       abstractTypeSelections.push(info.path);
     }
+    result.__typename = typename;
     result.__abstractType = namedReturnType;
   }
+
   return result;
 }
 
 function getDefaultValues(
   mockResolvers: MockResolvers | null,
-  namedType: GraphQLNamedType,
+  typename: string,
   resolveValue: ValueResolver,
   fieldNode: FieldNode,
   info: GraphQLResolveInfo,
   args: { [argName: string]: any },
 ) {
   const defaultValues =
-    mockResolvers![namedType.name] &&
+    mockResolvers![typename] &&
     (resolveValue(
-      namedType.name,
+      typename,
       {
         name: fieldNode.name.value,
         alias: fieldNode.alias?.value,
