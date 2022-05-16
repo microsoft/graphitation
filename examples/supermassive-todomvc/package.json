@@ -38,6 +38,7 @@
   },
   "resolutions": {
     "ansi-html": "^0.0.9",
+    "ansi-regex": "^5.0.1",
     "graphql": "^15.6.1",
     "glob-parent": "^6.0.2",
     "minimist": "^1.2.6",
