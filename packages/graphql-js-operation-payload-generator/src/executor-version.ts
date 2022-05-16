@@ -90,6 +90,7 @@ export function generate(
     schema: operation.schema,
     document: document,
     variableValues: operation.request.variables,
+    rootValue: {},
     fieldResolver: (source: InternalMockData, args, _context, info) => {
       // FIXME: This should not assume a single selection
       const fieldNode: FieldNode = info.fieldNodes[0];
@@ -97,16 +98,19 @@ export function generate(
       const namedReturnType = getNamedType(info.returnType);
 
       if (isCompositeType(namedReturnType)) {
-        const result = mockCompositeType(
-          mockResolvers,
-          namedReturnType,
-          resolveValue,
-          fieldNode,
-          info,
-          args,
-          operation,
-          abstractTypeSelections,
-        );
+        const result = {
+          ...(source[selectionName] as {} | undefined),
+          ...mockCompositeType(
+            mockResolvers,
+            namedReturnType,
+            resolveValue,
+            fieldNode,
+            info,
+            args,
+            operation,
+            abstractTypeSelections,
+          ),
+        };
         if (isListType(info.returnType)) {
           return [result];
         }
@@ -119,6 +123,7 @@ export function generate(
           fieldNode,
           args,
           namedReturnType,
+          info,
           source.__abstractType || info.parentType,
           resolveValue,
           isListType(info.returnType),
@@ -228,7 +233,7 @@ function getDefaultValues(
         parentType: null,
         name: fieldNode.name.value,
         alias: fieldNode.alias?.value || null,
-        path: pathToArray(info.path).map((x) => x.toString()),
+        path: pathToArray(info.path).filter(isString),
         args: args,
       },
       isListType(info.returnType),
@@ -238,6 +243,10 @@ function getDefaultValues(
     "Expected mock resolver to return an object",
   );
   return defaultValues;
+}
+
+function isString(value: any): value is string {
+  return typeof value === "string";
 }
 
 function getPossibleConcreteTypeNamesFromAbstractTypeSelections(
@@ -292,6 +301,7 @@ function mockScalar(
   fieldNode: FieldNode,
   args: { [argName: string]: any },
   type: GraphQLScalarType,
+  info: GraphQLResolveInfo,
   parentType: GraphQLCompositeType,
   resolveValue: ValueResolver,
   plural: boolean,
@@ -303,6 +313,7 @@ function mockScalar(
     name: fieldNode.name.value,
     alias: fieldNode.alias?.value || null,
     args,
+    path: pathToArray(info.path).filter(isString),
     parentType: isAbstractType(parentType)
       ? DEFAULT_MOCK_TYPENAME
       : parentType.name,

@@ -1016,13 +1016,13 @@ fragment RelayMockPayloadGeneratorTest12Fragment on Page {
   "data": {
     "node": {
       "__typename": "Page",
-      "id": "page-id-2",
+      "id": "page-id-1",
       "name": "My Page",
       "body": {
         "text": "My Text"
       },
       "myTown": {
-        "id": "page-id-3",
+        "id": "page-id-2",
         "name": "My Hometown",
         "url": "http://node-myTown",
         "feedback": {
@@ -1031,7 +1031,7 @@ fragment RelayMockPayloadGeneratorTest12Fragment on Page {
               {
                 "cursor": "<mock-value-for-field-\\"cursor\\">",
                 "comment": {
-                  "id": "<Comment-mock-id-4>",
+                  "id": "<Comment-mock-id-3>",
                   "message": {
                     "text": "Comment text: node>myTown>feedback>comments>edges>comment"
                   },
@@ -1045,7 +1045,7 @@ fragment RelayMockPayloadGeneratorTest12Fragment on Page {
               "startCursor": "<mock-value-for-field-\\"startCursor\\">"
             }
           },
-          "id": "<Feedback-mock-id-5>"
+          "id": "<Feedback-mock-id-4>"
         }
       }
     }

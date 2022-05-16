@@ -491,8 +491,8 @@ test("check context in the mock resolver", () => {
    `);
 });
 
-xtest("generate mock with manual mock for objects", () => {
-  graphql`
+test("generate mock with manual mock for objects", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest12Fragment on Page {
       id
       name
@@ -521,6 +521,7 @@ xtest("generate mock with manual mock for objects", () => {
               startCursor
             }
           }
+          id
         }
       }
     }
@@ -529,9 +530,12 @@ xtest("generate mock with manual mock for objects", () => {
     graphql`
       query RelayMockPayloadGeneratorTest12Query {
         node(id: "my-id") {
+          __typename
           ...RelayMockPayloadGeneratorTest12Fragment
+          id
         }
       }
+      ${fragment}
     `,
     {
       Page: (context, generateId) => {
