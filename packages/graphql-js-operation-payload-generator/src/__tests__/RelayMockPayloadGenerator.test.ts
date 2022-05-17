@@ -755,6 +755,7 @@ test("generate mock for multiple fragment spreads", () => {
   `);
 });
 
+// TODO: Unsupported by duct-tape
 xtest("generate mock for with directives and handlers", () => {
   graphql`
     fragment RelayMockPayloadGeneratorTest21Fragment on User {
@@ -1573,6 +1574,7 @@ describe("with @relay_test_operation", () => {
     );
   });
 
+  // TODO: Unsupported by duct-tape
   xtest("generate mock for client extensions", () => {
     testGeneratedData(
       graphql`
@@ -1589,6 +1591,7 @@ describe("with @relay_test_operation", () => {
     );
   });
 
+  // TODO: Unsupported by duct-tape
   xtest("should generate data for @module", () => {
     graphql`
       fragment RelayMockPayloadGeneratorTestNameRendererFragment on User {
@@ -1626,6 +1629,7 @@ describe("with @relay_test_operation", () => {
     );
   });
 
+  // TODO: Unsupported by duct-tape
   xtest("should generate data for @match with MarkdownUserNameRenderer_name", () => {
     graphql`
       fragment RelayMockPayloadGeneratorTest31Fragment on User {
@@ -1673,6 +1677,7 @@ describe("with @relay_test_operation", () => {
     );
   });
 
+  // TODO: Unsupported by duct-tape
   xtest("should generate data for @match with PlainUserNameRenderer_name", () => {
     graphql`
       fragment RelayMockPayloadGeneratorTest32Fragment on User {
@@ -1720,6 +1725,7 @@ describe("with @relay_test_operation", () => {
     );
   });
 
+  // TODO: Unsupported by duct-tape
   xtest("should throw if invalid default value provide for __module_operation.", () => {
     graphql`
       fragment RelayMockPayloadGeneratorTest33Fragment on User {
@@ -1761,6 +1767,7 @@ describe("with @relay_test_operation", () => {
     }).toThrowErrorMatchingSnapshot();
   });
 
+  // TODO: Unsupported by duct-tape
   xtest("should generate data for @module with `null` in mock resolvers", () => {
     graphql`
       fragment RelayMockPayloadGeneratorTest34Fragment on User {
