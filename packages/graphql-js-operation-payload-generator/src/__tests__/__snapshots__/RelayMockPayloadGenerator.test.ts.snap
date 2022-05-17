@@ -125,10 +125,7 @@ fragment RelayMockPayloadGeneratorTest6Fragment on User {
 
 exports[`generate mock and verify arguments in the context 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest14Query(
-  $smallScale: Int = 1
-  $bigScale: Int = 100
-) {
+query RelayMockPayloadGeneratorTest14Query($smallScale: Int = 1, $bigScale: Int = 100) {
   node(id: "my-id") {
     __typename
     ...RelayMockPayloadGeneratorTest14Fragment
@@ -250,9 +247,26 @@ exports[`generate mock for multiple fragment spreads 1`] = `
 query RelayMockPayloadGeneratorTest17Query {
   node(id: "my-id") {
     __typename
+    id
     ...RelayMockPayloadGeneratorTest20Fragment
+  }
+}
+
+fragment RelayMockPayloadGeneratorTest20Fragment on User {
+  body {
+    text
+  }
+  actor {
+    __typename
+    name
     id
   }
+  myActor: actor {
+    __typename
+    ...RelayMockPayloadGeneratorTest17Fragment
+  }
+  ...RelayMockPayloadGeneratorTest18Fragment
+  ...RelayMockPayloadGeneratorTest19Fragment
 }
 
 fragment RelayMockPayloadGeneratorTest17Fragment on Page {
@@ -271,24 +285,6 @@ fragment RelayMockPayloadGeneratorTest19Fragment on User {
   profile_picture {
     uri
   }
-}
-
-fragment RelayMockPayloadGeneratorTest20Fragment on User {
-  body {
-    text
-  }
-  actor {
-    __typename
-    name
-    id
-  }
-  myActor: actor {
-    __typename
-    ...RelayMockPayloadGeneratorTest17Fragment
-    id
-  }
-  ...RelayMockPayloadGeneratorTest18Fragment
-  ...RelayMockPayloadGeneratorTest19Fragment
 }
 
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~

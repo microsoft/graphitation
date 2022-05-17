@@ -600,18 +600,16 @@ test("generate mock with multiple spreads", () => {
   `);
 });
 
-xtest("generate mock and verify arguments in the context", () => {
-  graphql`
+test("generate mock and verify arguments in the context", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest14Fragment on User {
-      ... on User {
-        id
-        name
-        smallImage: profile_picture(scale: $smallScale) {
-          uri
-        }
-        bigImage: profile_picture(scale: $bigScale) {
-          uri
-        }
+      id
+      name
+      smallImage: profile_picture(scale: $smallScale) {
+        uri
+      }
+      bigImage: profile_picture(scale: $bigScale) {
+        uri
       }
     }
   `;
@@ -622,9 +620,12 @@ xtest("generate mock and verify arguments in the context", () => {
         $bigScale: Int = 100
       ) {
         node(id: "my-id") {
+          __typename
           ...RelayMockPayloadGeneratorTest14Fragment
+          id
         }
       }
+      ${fragment}
     `,
     {
       Image: (context) => {
@@ -642,8 +643,9 @@ xtest("generate mock and verify arguments in the context", () => {
   );
 });
 
+// TODO: Check this with a real test, as these should be compiled out, I think.
 xtest("generate mock for fragment with @argumentsDefinition", () => {
-  graphql`
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest15Fragment on User
     @argumentDefinitions(withName: { type: "Boolean!" }) {
       id
@@ -662,6 +664,7 @@ xtest("generate mock for fragment with @argumentsDefinition", () => {
           ...RelayMockPayloadGeneratorTest15Fragment @arguments(withName: true)
         }
       }
+      ${fragment}
     `,
     {
       Image() {
@@ -693,50 +696,59 @@ xtest("generate mock for plural fragment", () => {
   `);
 });
 
-xtest("generate mock for multiple fragment spreads", () => {
-  graphql`
+test("generate mock for multiple fragment spreads", () => {
+  const fragment1 = graphql`
     fragment RelayMockPayloadGeneratorTest17Fragment on Page {
       id
       pageName: name
     }
   `;
-  graphql`
+  const fragment2 = graphql`
     fragment RelayMockPayloadGeneratorTest18Fragment on User {
       id
       name
       username
     }
   `;
-  graphql`
+  const fragment3 = graphql`
     fragment RelayMockPayloadGeneratorTest19Fragment on User {
       ...RelayMockPayloadGeneratorTest18Fragment
       profile_picture {
         uri
       }
     }
+    ${fragment2}
   `;
-  graphql`
+  const fragment4 = graphql`
     fragment RelayMockPayloadGeneratorTest20Fragment on User {
       body {
         text
       }
       actor {
+        __typename
         name
         id
       }
       myActor: actor {
+        __typename
         ...RelayMockPayloadGeneratorTest17Fragment
       }
       ...RelayMockPayloadGeneratorTest18Fragment
       ...RelayMockPayloadGeneratorTest19Fragment
     }
+    ${fragment1}
+    ${fragment2}
+    ${fragment3}
   `;
   testGeneratedData(graphql`
     query RelayMockPayloadGeneratorTest17Query {
       node(id: "my-id") {
+        __typename
+        id
         ...RelayMockPayloadGeneratorTest20Fragment
       }
     }
+    ${fragment4}
   `);
 });
 
