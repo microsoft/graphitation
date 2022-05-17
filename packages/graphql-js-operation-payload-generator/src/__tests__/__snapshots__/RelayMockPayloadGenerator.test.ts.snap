@@ -1168,7 +1168,7 @@ fragment RelayMockPayloadGeneratorTest26Fragment on Image {
 
 exports[`with @relay_test_operation generate mock data with mock resolver for ID that may return \`undefined\` 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest35Query {
+query RelayMockPayloadGeneratorTest35Query @relay_test_operation {
   node(id: "my-id") {
     __typename
     ... on User {
@@ -1663,7 +1663,7 @@ query RelayMockPayloadGeneratorTest37Query {
 
 exports[`with @relay_test_operation generate mock with default value for scalar plural field 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest38Query {
+query RelayMockPayloadGeneratorTest38Query @relay_test_operation {
   node(id: "my-id") {
     __typename
     ... on User {
@@ -1679,7 +1679,7 @@ query RelayMockPayloadGeneratorTest38Query {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<Node-mock-id-1>",
+      "id": "<mock-id-1>",
       "emailAddresses": [
         "my@email.com"
       ]
@@ -1753,7 +1753,7 @@ query RelayMockPayloadGeneratorTest41Query @relay_test_operation {
 
 exports[`with @relay_test_operation generate mock with multiple items in arrays for linked field with custom data 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest33Query {
+query RelayMockPayloadGeneratorTest33Query @relay_test_operation {
   node(id: "my-id") {
     __typename
     ... on User {
@@ -1781,7 +1781,7 @@ query RelayMockPayloadGeneratorTest33Query {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<Node-mock-id-1>",
+      "id": "<mock-id-1>",
       "friends": {
         "edges": [
           {
@@ -1815,7 +1815,7 @@ query RelayMockPayloadGeneratorTest33Query {
 
 exports[`with @relay_test_operation generate mock with multiple items in arrays for linked field with custom data and additional mock resolver 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest34Query {
+query RelayMockPayloadGeneratorTest34Query @relay_test_operation {
   node(id: "my-id") {
     __typename
     ... on User {
@@ -1843,7 +1843,7 @@ query RelayMockPayloadGeneratorTest34Query {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<Node-mock-id-1>",
+      "id": "<mock-id-1>",
       "friends": {
         "edges": [
           {
@@ -1877,7 +1877,7 @@ query RelayMockPayloadGeneratorTest34Query {
 
 exports[`with @relay_test_operation generate mock with multiple items in arrays for linked field with default data 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest31Query {
+query RelayMockPayloadGeneratorTest31Query @relay_test_operation {
   node(id: "my-id") {
     __typename
     ... on User {
@@ -1905,7 +1905,7 @@ query RelayMockPayloadGeneratorTest31Query {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<Node-mock-id-1>",
+      "id": "<mock-id-1>",
       "friends": {
         "edges": [
           {

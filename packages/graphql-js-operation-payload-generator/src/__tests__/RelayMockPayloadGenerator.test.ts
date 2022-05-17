@@ -1196,11 +1196,12 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with multiple items in arrays for linked field with default data", () => {
+  test("generate mock with multiple items in arrays for linked field with default data", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest31Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               friends {
@@ -1217,6 +1218,7 @@ describe("with @relay_test_operation", () => {
                 }
               }
             }
+            id
           }
         }
       `,
@@ -1264,11 +1266,12 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with multiple items in arrays for linked field with custom data", () => {
+  test("generate mock with multiple items in arrays for linked field with custom data", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest33Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               friends {
@@ -1285,6 +1288,7 @@ describe("with @relay_test_operation", () => {
                 }
               }
             }
+            id
           }
         }
       `,
@@ -1311,11 +1315,12 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with multiple items in arrays for linked field with custom data and additional mock resolver", () => {
+  test("generate mock with multiple items in arrays for linked field with custom data and additional mock resolver", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest34Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               friends {
@@ -1332,6 +1337,7 @@ describe("with @relay_test_operation", () => {
                 }
               }
             }
+            id
           }
         }
       `,
@@ -1357,11 +1363,12 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock data with mock resolver for ID that may return `undefined`", () => {
+  test("generate mock data with mock resolver for ID that may return `undefined`", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest35Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               friends {
@@ -1373,6 +1380,7 @@ describe("with @relay_test_operation", () => {
                 }
               }
             }
+            id
           }
         }
       `,
@@ -1398,6 +1406,7 @@ describe("with @relay_test_operation", () => {
       graphql`
         query RelayMockPayloadGeneratorTest36Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               friends {
@@ -1409,6 +1418,7 @@ describe("with @relay_test_operation", () => {
                 }
               }
             }
+            id
           }
         }
       `,
@@ -1460,22 +1470,25 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with default value for scalar plural field", () => {
+  test("generate mock with default value for scalar plural field", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest38Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               emailAddresses
             }
+            id
           }
         }
       `,
       {
         User(context) {
           return {
-            emailAddresses: "my@email.com",
+            // TODO: The upstream test here returns a string instead of a list.
+            emailAddresses: ["my@email.com"],
           };
         },
       },

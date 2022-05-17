@@ -104,8 +104,10 @@ export function generate(
 
       const namedReturnType = getNamedType(info.returnType);
       if (isCompositeType(namedReturnType)) {
-        const result = {
-          ...(source[selectionName] as {} | undefined),
+        // TODO: This 'is list' logic is also done by the value resolver,
+        // so probably need to refactor this code to actually leverage that.
+        const generateValue = (userValue?: {}) => ({
+          ...userValue,
           ...mockCompositeType(
             mockResolvers,
             namedReturnType,
@@ -116,11 +118,15 @@ export function generate(
             operation,
             abstractTypeSelections,
           ),
-        };
+        });
         if (isListType(info.returnType)) {
-          return [result];
+          const value = source[selectionName];
+          return Array.isArray(value)
+            ? value.map(generateValue)
+            : [generateValue()];
+        } else {
+          return generateValue(source[selectionName] as {} | undefined);
         }
-        return result;
       } else if (isScalarType(namedReturnType)) {
         if (source[selectionName] !== undefined) {
           return source[selectionName];
