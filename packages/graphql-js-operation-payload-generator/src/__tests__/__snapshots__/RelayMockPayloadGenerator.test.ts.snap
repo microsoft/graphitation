@@ -1107,9 +1107,24 @@ exports[`should return \`null\` for selection if that is specified in default va
 query RelayMockPayloadGeneratorTest19Query {
   node(id: "my-id") {
     __typename
+    id
     ...RelayMockPayloadGeneratorTest27Fragment
+  }
+}
+
+fragment RelayMockPayloadGeneratorTest27Fragment on User {
+  body {
+    text
+  }
+  actor {
+    name
     id
   }
+  myActor: actor {
+    __typename
+    ...RelayMockPayloadGeneratorTest24Fragment
+  }
+  ...RelayMockPayloadGeneratorTest25Fragment
 }
 
 fragment RelayMockPayloadGeneratorTest24Fragment on User {
@@ -1131,23 +1146,6 @@ fragment RelayMockPayloadGeneratorTest26Fragment on Image {
   height
 }
 
-fragment RelayMockPayloadGeneratorTest27Fragment on User {
-  body {
-    text
-  }
-  actor {
-    __typename
-    name
-    id
-  }
-  myActor: actor {
-    __typename
-    ...RelayMockPayloadGeneratorTest24Fragment
-    id
-  }
-  ...RelayMockPayloadGeneratorTest25Fragment
-}
-
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
@@ -1166,8 +1164,8 @@ fragment RelayMockPayloadGeneratorTest27Fragment on User {
       "name": "<mock-value-for-field-\\"name\\">",
       "profile_picture": {
         "uri": "<mock-value-for-field-\\"uri\\">",
-        "width": "<mock-value-for-field-\\"width\\">",
-        "height": "<mock-value-for-field-\\"height\\">"
+        "width": 42,
+        "height": 42
       }
     }
   }

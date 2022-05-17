@@ -838,14 +838,24 @@ xtest("generate mock for with directives and handlers", () => {
   `);
 });
 
-xtest("should return `null` for selection if that is specified in default values", () => {
-  graphql`
+test("should return `null` for selection if that is specified in default values", () => {
+  const fragment1 = graphql`
     fragment RelayMockPayloadGeneratorTest24Fragment on User {
       id
       name
     }
   `;
-  graphql`
+  const fragment3 = graphql`
+    fragment RelayMockPayloadGeneratorTest26Fragment on Image {
+      uri
+      # TODO: RelayMockPayloadGenerator returns a different value for these scalars:
+      # "width": "<mock-value-for-field-"width">"
+      # "height": "<mock-value-for-field-"height">"
+      width
+      height
+    }
+  `;
+  const fragment2 = graphql`
     fragment RelayMockPayloadGeneratorTest25Fragment on User {
       id
       name
@@ -853,15 +863,9 @@ xtest("should return `null` for selection if that is specified in default values
         ...RelayMockPayloadGeneratorTest26Fragment
       }
     }
+    ${fragment3}
   `;
-  graphql`
-    fragment RelayMockPayloadGeneratorTest26Fragment on Image {
-      uri
-      width
-      height
-    }
-  `;
-  graphql`
+  const fragment4 = graphql`
     fragment RelayMockPayloadGeneratorTest27Fragment on User {
       body {
         text
@@ -871,18 +875,24 @@ xtest("should return `null` for selection if that is specified in default values
         id
       }
       myActor: actor {
+        __typename
         ...RelayMockPayloadGeneratorTest24Fragment
       }
       ...RelayMockPayloadGeneratorTest25Fragment
     }
+    ${fragment1}
+    ${fragment2}
   `;
   testGeneratedData(
     graphql`
       query RelayMockPayloadGeneratorTest19Query {
         node(id: "my-id") {
+          __typename
+          id
           ...RelayMockPayloadGeneratorTest27Fragment
         }
       }
+      ${fragment4}
     `,
     {
       User() {
