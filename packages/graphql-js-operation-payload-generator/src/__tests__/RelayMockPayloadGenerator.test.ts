@@ -991,7 +991,7 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with Mock Resolvers for Interface Type", () => {
+  test("generate mock with Mock Resolvers for Interface Type", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest24Query @relay_test_operation {
@@ -1017,7 +1017,7 @@ describe("with @relay_test_operation", () => {
   });
 
   // Added more fragments here to test resolving across fragment definition boundaries.
-  xtest("generate mock with Mock Resolvers for Interface Type with multiple fragment spreads", () => {
+  test("generate mock with Mock Resolvers for Interface Type with multiple fragment spreads", () => {
     const fragment1 = graphql`
       fragment RelayMockPayloadGeneratorTest25Fragment1 on Page {
         id
@@ -1057,15 +1057,15 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with Mock Resolvers for Interface Type with multiple fragments", () => {
-    graphql`
+  test("generate mock with Mock Resolvers for Interface Type with multiple fragments", () => {
+    const fragment1 = graphql`
       fragment RelayMockPayloadGeneratorTest29Fragment on Page {
         id
         pageName: name
       }
     `;
 
-    graphql`
+    const fragment2 = graphql`
       fragment RelayMockPayloadGeneratorTest30Fragment on User {
         id
         userName: name
@@ -1075,10 +1075,14 @@ describe("with @relay_test_operation", () => {
       graphql`
         query RelayMockPayloadGeneratorTest26Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ...RelayMockPayloadGeneratorTest29Fragment
             ...RelayMockPayloadGeneratorTest30Fragment
+            id
           }
         }
+        ${fragment1}
+        ${fragment2}
       `,
       {
         Node() {

@@ -195,7 +195,10 @@ function mockCompositeType(
   const result: InternalMockData = {
     ...getDefaultValues(
       mockResolvers,
-      typename,
+      // If a mock resolver is provided for the abstract type, use it.
+      mockResolvers && mockResolvers[namedReturnType.name]
+        ? namedReturnType.name
+        : typename,
       resolveValue,
       fieldNode,
       info,

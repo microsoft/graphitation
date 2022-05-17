@@ -1428,7 +1428,6 @@ query RelayMockPayloadGeneratorTest24Query @relay_test_operation {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
       "__typename": "User",
       "id": "my-id",
@@ -1489,7 +1488,6 @@ fragment RelayMockPayloadGeneratorTest25Fragment1 on Page {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
       "__typename": "Page",
       "id": "my-page-id",
@@ -1501,7 +1499,7 @@ fragment RelayMockPayloadGeneratorTest25Fragment1 on Page {
 
 exports[`with @relay_test_operation generate mock with Mock Resolvers for Interface Type with multiple fragments 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest26Query {
+query RelayMockPayloadGeneratorTest26Query @relay_test_operation {
   node(id: "my-id") {
     __typename
     ...RelayMockPayloadGeneratorTest29Fragment
