@@ -1090,10 +1090,15 @@ fragment RelayMockPayloadGeneratorTest13Fragment on Viewer {
         "__typename": "User",
         "id": "<mock-id-1>",
         "name": "<mock-value-for-field-\\"name\\">",
-        "traits": "<mock-value-for-field-\\"traits\\">",
+        "traits": [
+          "CHEERFUL",
+          "DERISIVE",
+          "HELPFUL",
+          "SNARKY"
+        ],
         "profile_picture": {
           "uri": "<mock-value-for-field-\\"uri\\">",
-          "height": "<mock-value-for-field-\\"height\\">"
+          "height": 42
         }
       }
     }
@@ -1369,7 +1374,7 @@ query RelayMockPayloadGeneratorTest20Query {
 
 exports[`with @relay_test_operation generate mock with Enums 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest22Query {
+query RelayMockPayloadGeneratorTest22Query @relay_test_operation {
   node(id: "my-id") {
     __typename
     ... on User {
@@ -1386,7 +1391,7 @@ query RelayMockPayloadGeneratorTest22Query {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<Node-mock-id-1>",
+      "id": "<mock-id-1>",
       "name": "<mock-value-for-field-\\"name\\">",
       "environment": "WEB"
     }

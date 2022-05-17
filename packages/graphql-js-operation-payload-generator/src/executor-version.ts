@@ -4,6 +4,7 @@ import {
   getOperationAST,
   isAbstractType,
   isCompositeType,
+  isEnumType,
   isListType,
   isScalarType,
   visit,
@@ -116,7 +117,7 @@ export function generate(
         }
         return result;
       } else if (isScalarType(namedReturnType)) {
-        if (source[selectionName]) {
+        if (source[selectionName] !== undefined) {
           return source[selectionName];
         }
         const result = mockScalar(
@@ -129,6 +130,12 @@ export function generate(
           isListType(info.returnType),
         );
         return result;
+      } else if (isEnumType(namedReturnType)) {
+        if (source[selectionName] !== undefined) {
+          return source[selectionName];
+        }
+        const enumValues = namedReturnType.getValues().map((e) => e.name);
+        return isListType(info.returnType) ? enumValues : enumValues[0];
       } else {
         return null;
       }
@@ -295,6 +302,60 @@ function getFragmentSelection(
   } else if (selection.kind === "InlineFragment") {
     return selection;
   }
+}
+
+function _getCorrectDefaultEnum(
+  enumValues: string[],
+  value: unknown | unknown[],
+  path: string[],
+  applicationName: string,
+) {
+  // if (value === undefined) {
+  //   return value;
+  // }
+
+  if (value === null) {
+    // null is a valid enum value
+    return value;
+  }
+
+  const valueToValidate = Array.isArray(value)
+    ? value.map((v) => String(v).toUpperCase())
+    : [String(value).toUpperCase()];
+  const enumValuesNormalized = enumValues.map((s) => s.toUpperCase());
+
+  // Let's validate the correctness of the provided enum value
+  // We will throw if value provided by mock resolvers is invalid
+  const correctValues = valueToValidate.filter((v) =>
+    enumValuesNormalized.includes(v),
+  );
+
+  if (value !== undefined && correctValues.length !== valueToValidate.length) {
+    invariant(
+      false,
+      'RelayMockPayloadGenerator: Invalid value "%s" provided for enum ' +
+        'field "%s" via MockResolver.' +
+        "Expected one of the following values: %s.",
+      value,
+      `${path.join(".")}.${applicationName}`,
+      enumValues.map((v) => `"${v}"`).join(", "),
+    );
+  }
+
+  // But missing case should be acceptable, we will just use
+  // a correct spelling from enumValues
+  const correctSpellingValues = valueToValidate.map((v) => {
+    const correctSpellingEnumIndex = enumValuesNormalized.indexOf(
+      String(v).toUpperCase(),
+    );
+
+    return enumValues[correctSpellingEnumIndex];
+  });
+  console.log({ correctSpellingValues });
+
+  return Array.isArray(value)
+    ? correctSpellingValues
+    : correctSpellingValues[0];
 }
 
 function mockScalar(

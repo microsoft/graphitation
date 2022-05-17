@@ -563,16 +563,21 @@ test("generate mock with manual mock for objects", () => {
   );
 });
 
-xtest("generate mock with multiple spreads", () => {
-  graphql`
+test("generate mock with multiple spreads", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest13Fragment on Viewer {
       actor {
+        __typename
         ... on User {
           id
           name
+          # TODO: RelayMockPayloadGenerator returns no enum value here because it requires
+          # @relay_test_operation. If we want to match that, we should require the directive too.
           traits
           profile_picture {
             uri
+            # TODO: RelayMockPayloadGenerator returns a different value for this scalar:
+            # "height": "<mock-value-for-field-"height">"
             height
           }
         }
@@ -581,6 +586,7 @@ xtest("generate mock with multiple spreads", () => {
           name
           websites
         }
+        id
       }
     }
   `;
@@ -590,6 +596,7 @@ xtest("generate mock with multiple spreads", () => {
         ...RelayMockPayloadGeneratorTest13Fragment
       }
     }
+    ${fragment}
   `);
 });
 
@@ -914,15 +921,17 @@ describe("with @relay_test_operation", () => {
     `);
   });
 
-  xtest("generate mock with Enums", () => {
+  test("generate mock with Enums", () => {
     testGeneratedData(graphql`
       query RelayMockPayloadGeneratorTest22Query @relay_test_operation {
         node(id: "my-id") {
+          __typename
           ... on User {
             id
             name
             environment
           }
+          id
         }
       }
     `);
