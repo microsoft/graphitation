@@ -1774,7 +1774,7 @@ describe("with @relay_test_operation", () => {
   });
 });
 
-xtest("generate mock for enum", () => {
+test("generate mock for enum", () => {
   const fragment = graphql`
     fragment RelayMockPayloadGeneratorTestFragment on User {
       id
@@ -1799,7 +1799,7 @@ xtest("generate mock for enum", () => {
   `);
 });
 
-xtest("deeply merges fragment data", () => {
+test("deeply merges fragment data", () => {
   const RelayMockPayloadGeneratorTestDeepMergeFragment1 = graphql`
     fragment RelayMockPayloadGeneratorTestDeepMergeFragment1 on Page {
       author {

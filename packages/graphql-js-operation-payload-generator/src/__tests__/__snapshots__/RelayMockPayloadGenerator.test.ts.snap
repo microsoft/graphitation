@@ -71,14 +71,10 @@ fragment RelayMockPayloadGeneratorTestDeepMergeFragment2 on User {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
-      "__typename": "Page",
       "author": {
-        "__typename": "User",
         "environment": "WEB",
         "address": {
-          "__typename": "StreetAddress",
           "city": "<mock-value-for-field-\\"city\\">",
           "country": "<mock-value-for-field-\\"country\\">"
         }
@@ -186,13 +182,11 @@ fragment RelayMockPayloadGeneratorTestFragment on User {
 ~~~~~~~~~~ OUTPUT ~~~~~~~~~~
 {
   "data": {
-    "__typename": "Query",
     "node": {
       "__typename": "User",
-      "id": "<mock-id-2>",
+      "id": "<mock-id-1>",
       "name": "<mock-value-for-field-\\"name\\">",
       "profile_picture": {
-        "__typename": "Image",
         "uri": "<mock-value-for-field-\\"uri\\">",
         "width": 42,
         "height": 42,
