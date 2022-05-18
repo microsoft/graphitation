@@ -107,6 +107,10 @@ export function generate(
         // TODO: This 'is list' logic is also done by the value resolver,
         // so probably need to refactor this code to actually leverage that.
         const generateValue = (userValue?: {}) => {
+          // Explicit null value
+          if (userValue === null) {
+            return null;
+          }
           const result = {
             ...userValue,
             ...mockCompositeType(

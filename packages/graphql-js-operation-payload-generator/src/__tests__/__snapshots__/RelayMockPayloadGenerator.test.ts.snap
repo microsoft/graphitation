@@ -2003,7 +2003,7 @@ query RelayMockPayloadGeneratorTest29Query @relay_test_operation {
 
 exports[`with @relay_test_operation generate mock with multiple items in arrays including null 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest32Query {
+query RelayMockPayloadGeneratorTest32Query @relay_test_operation {
   node(id: "my-id") {
     __typename
     ... on User {
@@ -2031,7 +2031,7 @@ query RelayMockPayloadGeneratorTest32Query {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<Node-mock-id-1>",
+      "id": "<mock-id-1>",
       "friends": {
         "edges": [
           null,
