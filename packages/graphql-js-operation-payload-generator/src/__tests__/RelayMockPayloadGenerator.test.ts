@@ -1547,7 +1547,7 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with invalid value for enum", () => {
+  test("generate mock with invalid value for enum", () => {
     expect(() => {
       testGeneratedData(
         graphql`
@@ -1569,7 +1569,7 @@ describe("with @relay_test_operation", () => {
         },
       );
     }).toThrow(
-      'RelayMockPayloadGenerator: Invalid value "INVALID_VALUE" provided for enum field',
+      'RelayMockPayloadGenerator: Enum "Environment" cannot represent value: "INVALID_VALUE"',
     );
   });
 

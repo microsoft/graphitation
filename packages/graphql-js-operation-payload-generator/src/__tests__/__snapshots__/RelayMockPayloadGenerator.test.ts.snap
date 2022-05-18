@@ -1713,44 +1713,6 @@ query RelayMockPayloadGeneratorTest30Query @relay_test_operation {
 }
 `;
 
-exports[`with @relay_test_operation generate mock with invalid value for enum 1`] = `
-~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest41Query @relay_test_operation {
-  node(id: "my-id") {
-    ... on User {
-      id
-      environment
-    }
-  }
-}
-
-~~~~~~~~~~ OUTPUT ~~~~~~~~~~
-{
-  "data": {
-    "__typename": "Query",
-    "node": {
-      "__typename": "User",
-      "id": "<User-mock-id-1>",
-      "kind": "Field",
-      "name": {
-        "kind": "Name",
-        "value": "environment",
-        "loc": {
-          "start": 173,
-          "end": 184
-        }
-      },
-      "arguments": [],
-      "directives": [],
-      "loc": {
-        "start": 173,
-        "end": 184
-      }
-    }
-  }
-}
-`;
-
 exports[`with @relay_test_operation generate mock with multiple items in arrays for linked field with custom data 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
 query RelayMockPayloadGeneratorTest33Query @relay_test_operation {

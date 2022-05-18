@@ -164,6 +164,9 @@ export function generate(
     },
   });
   invariant(result?.data, "Expected to generate a payload");
+  if (result.errors) {
+    throw new Error(`RelayMockPayloadGenerator: ${result.errors.join(", ")}`);
+  }
 
   // Replace typenames of abstract type selections that had no concrete selection
   // with the default mock typename.
