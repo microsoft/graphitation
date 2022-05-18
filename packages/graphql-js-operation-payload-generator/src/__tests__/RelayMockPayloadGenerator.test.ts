@@ -1401,7 +1401,7 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with default value for object in plural field", () => {
+  test("generate mock with default value for object in plural field", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest36Query @relay_test_operation {
@@ -1434,11 +1434,12 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with default value for plural field and its object", () => {
+  test("generate mock with default value for plural field and its object", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest37Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               friends {
@@ -1450,6 +1451,7 @@ describe("with @relay_test_operation", () => {
                 }
               }
             }
+            id
           }
         }
       `,

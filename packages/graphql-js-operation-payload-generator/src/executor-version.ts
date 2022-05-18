@@ -106,24 +106,28 @@ export function generate(
       if (isCompositeType(namedReturnType)) {
         // TODO: This 'is list' logic is also done by the value resolver,
         // so probably need to refactor this code to actually leverage that.
-        const generateValue = (userValue?: {}) => ({
-          ...userValue,
-          ...mockCompositeType(
-            mockResolvers,
-            namedReturnType,
-            resolveValue,
-            fieldNode,
-            info,
-            args,
-            operation,
-            abstractTypeSelections,
-          ),
-        });
+        const generateValue = (userValue?: {}) => {
+          const result = {
+            ...userValue,
+            ...mockCompositeType(
+              mockResolvers,
+              namedReturnType,
+              resolveValue,
+              fieldNode,
+              info,
+              args,
+              operation,
+              abstractTypeSelections,
+            ),
+          };
+          return result;
+        };
         if (isListType(info.returnType)) {
           const value = source[selectionName];
-          return Array.isArray(value)
+          const result = Array.isArray(value)
             ? value.map(generateValue)
-            : [generateValue()];
+            : [generateValue(value as {})];
+          return result;
         } else {
           return generateValue(source[selectionName] as {} | undefined);
         }
@@ -257,7 +261,10 @@ function getDefaultValues(
         path: pathToArray(info.path).filter(isString),
         args: args,
       },
-      isListType(info.returnType),
+      // FIXME: This is disabled here because we're currently doing this work
+      // in the field resolver's isCompositeType check.
+      // isListType(info.returnType),
+      false,
     ) as MockData | undefined);
   invariant(
     defaultValues === undefined || typeof defaultValues === "object",

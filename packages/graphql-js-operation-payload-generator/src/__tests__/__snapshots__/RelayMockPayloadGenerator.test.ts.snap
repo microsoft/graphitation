@@ -1557,7 +1557,7 @@ query RelayMockPayloadGeneratorTest28Query @relay_test_operation {
 
 exports[`with @relay_test_operation generate mock with default value for object in plural field 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest36Query {
+query RelayMockPayloadGeneratorTest36Query @relay_test_operation {
   node(id: "my-id") {
     __typename
     ... on User {
@@ -1580,7 +1580,7 @@ query RelayMockPayloadGeneratorTest36Query {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<Node-mock-id-1>",
+      "id": "<mock-id-1>",
       "friends": {
         "edges": [
           {
@@ -1598,7 +1598,7 @@ query RelayMockPayloadGeneratorTest36Query {
 
 exports[`with @relay_test_operation generate mock with default value for plural field and its object 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest37Query {
+query RelayMockPayloadGeneratorTest37Query @relay_test_operation {
   node(id: "my-id") {
     __typename
     ... on User {
@@ -1621,7 +1621,7 @@ query RelayMockPayloadGeneratorTest37Query {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<Node-mock-id-1>",
+      "id": "<mock-id-1>",
       "friends": {
         "edges": [
           {
