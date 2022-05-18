@@ -1266,7 +1266,7 @@ query RelayMockPayloadGeneratorTest40Query @relay_test_operation {
 
 exports[`with @relay_test_operation generate mock for enum with different case should be OK 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest39Query {
+query RelayMockPayloadGeneratorTest39Query @relay_test_operation {
   node(id: "my-id") {
     __typename
     ... on User {
@@ -1282,7 +1282,7 @@ query RelayMockPayloadGeneratorTest39Query {
   "data": {
     "node": {
       "__typename": "User",
-      "id": "<Node-mock-id-1>",
+      "id": "<mock-id-1>",
       "environment": "WEB"
     }
   }

@@ -1499,15 +1499,17 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock for enum with different case should be OK", () => {
+  test("generate mock for enum with different case should be OK", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest39Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               environment
             }
+            id
           }
         }
       `,

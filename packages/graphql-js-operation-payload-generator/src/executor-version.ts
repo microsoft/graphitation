@@ -151,7 +151,10 @@ export function generate(
         return result;
       } else if (isEnumType(namedReturnType)) {
         if (source[selectionName] !== undefined) {
-          return source[selectionName];
+          const value = source[selectionName];
+          return Array.isArray(value)
+            ? value.map((e) => String(e).toUpperCase())
+            : String(value).toUpperCase();
         }
         const enumValues = namedReturnType.getValues().map((e) => e.name);
         return isListType(info.returnType) ? enumValues : enumValues[0];
