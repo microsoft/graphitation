@@ -20,7 +20,7 @@ import {
 import { readFileSync } from "fs";
 
 import { graphql } from "@graphitation/graphql-js-tag";
-import { generate, MockResolvers } from "../executor-version";
+import { generate, MockResolvers } from "..";
 
 const {
   FIXTURE_TAG,
