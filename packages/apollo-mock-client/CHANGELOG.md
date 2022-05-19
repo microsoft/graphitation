@@ -1,8 +1,17 @@
 # Change Log - @graphitation/apollo-mock-client
 
-This log was last generated on Wed, 02 Mar 2022 13:32:13 GMT and should not be manually modified.
+This log was last generated on Thu, 19 May 2022 14:31:59 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.10.6
+
+Thu, 19 May 2022 14:31:59 GMT
+
+### Patches
+
+- [mock-client] Let Apollo insert typename selections (eloy.de.enige@gmail.com)
+- Bump @graphitation/graphql-js-operation-payload-generator to v0.9.0
 
 ## 0.10.5
 

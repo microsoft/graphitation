@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-This log was last generated on Wed, 02 Mar 2022 13:32:13 GMT and should not be manually modified.
+This log was last generated on Thu, 19 May 2022 14:31:59 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.9.0
+
+Thu, 19 May 2022 14:31:59 GMT
+
+### Minor changes
+
+- Feature complete graphql-js executor based implementation. (eloy.de.enige@gmail.com)
 
 ## 0.8.5
 
