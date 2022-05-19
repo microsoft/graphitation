@@ -104,8 +104,8 @@ test("generate mock with abstract inline fragment", () => {
   `);
 });
 
-xtest("generate mock with inline fragment", () => {
-  graphql`
+test("generate mock with inline fragment", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest2Fragment on User {
       id
       name
@@ -136,17 +136,22 @@ xtest("generate mock with inline fragment", () => {
   testGeneratedData(graphql`
     query RelayMockPayloadGeneratorTest3Query($condition: Boolean) {
       node(id: "my-id") {
+        __typename
         ...RelayMockPayloadGeneratorTest2Fragment
+        id
       }
     }
+    ${fragment}
   `);
 });
 
-xtest("generate mock with condition (and other complications)", () => {
-  graphql`
+test("generate mock with condition (and other complications)", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest3Fragment on User {
       id
       name
+      # TODO: RelayMockPayloadGenerator returns a different value for this scalar:
+      # "customId": "<User-mock-id-2>"
       customId: id
       profile_picture @include(if: $showProfilePicture) {
         uri
@@ -157,6 +162,7 @@ xtest("generate mock with condition (and other complications)", () => {
       }
       author {
         name
+        id
       }
       ... on User @skip(if: $hideAuthorUsername) {
         author {
@@ -170,6 +176,8 @@ xtest("generate mock with condition (and other complications)", () => {
           displayNumber
         }
       }
+      # TODO: RelayMockPayloadGenerator returns incorrect value for this list:
+      # "emailAddresses": "<mock-value-for-field-"emailAddresses">"
       emailAddresses @__clientField(handle: "customName")
       backgroundImage @__clientField(handle: "customBackground") {
         uri
@@ -184,23 +192,29 @@ xtest("generate mock with condition (and other complications)", () => {
       $hideAuthorUsername: Boolean
     ) {
       node(id: "my-id") {
+        __typename
         ...RelayMockPayloadGeneratorTest3Fragment
+        id
       }
     }
+    ${fragment}
   `);
 });
 
-xtest("generate mock with connection", () => {
-  graphql`
+test("generate mock with connection", () => {
+  const fragment1 = graphql`
     fragment RelayMockPayloadGeneratorTest4Fragment on User {
       name
       username
+      # TODO: RelayMockPayloadGenerator returns incorrect value for this list:
+      # "emailAddresses": "<mock-value-for-field-"emailAddresses">"
       emailAddresses
     }
   `;
-  graphql`
+  const fragment2 = graphql`
     fragment RelayMockPayloadGeneratorTest5Fragment on Page {
       actor {
+        __typename
         ... on User {
           id
           myType: __typename
@@ -213,13 +227,21 @@ xtest("generate mock with connection", () => {
                 id
                 ...RelayMockPayloadGeneratorTest4Fragment
                   @skip(if: $skipUserInConnection)
+                __typename
               }
+            }
+            pageInfo {
+              endCursor
+              # TODO: RelayMockPayloadGenerator returns incorrect value for this boolean scalar:
+              # "hasNextPage": "<mock-value-for-field-"hasNextPage">"
+              hasNextPage
             }
           }
           ...RelayMockPayloadGeneratorTest4Fragment
         }
       }
     }
+    ${fragment1}
   `;
   testGeneratedData(graphql`
     query RelayMockPayloadGeneratorTest5Query(
@@ -227,9 +249,12 @@ xtest("generate mock with connection", () => {
       $skipUserInConnection: Boolean
     ) {
       node(id: "my-id") {
+        __typename
+        id
         ...RelayMockPayloadGeneratorTest5Fragment
       }
     }
+    ${fragment2}
   `);
 });
 
@@ -259,8 +284,8 @@ test("generate basic mock data", () => {
   );
 });
 
-xtest("generate mock using custom mock functions", () => {
-  graphql`
+test("generate mock using custom mock functions", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest7Fragment on User {
       id
       name
@@ -273,9 +298,12 @@ xtest("generate mock using custom mock functions", () => {
     graphql`
       query RelayMockPayloadGeneratorTest7Query {
         node(id: "my-id") {
+          __typename
           ...RelayMockPayloadGeneratorTest7Fragment
+          id
         }
       }
+      ${fragment}
     `,
     {
       ID(context, generateId) {
@@ -361,11 +389,12 @@ test("generate mock for objects without concrete type", () => {
   );
 });
 
-xtest("generate mock using custom mock functions for object type (multiple object)", () => {
-  graphql`
+test("generate mock using custom mock functions for object type (multiple object)", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest10Fragment on User {
       name
       actor {
+        __typename
         ... on User {
           id
           name
@@ -374,6 +403,7 @@ xtest("generate mock using custom mock functions for object type (multiple objec
             height
           }
         }
+        id
       }
       profile_picture {
         uri
@@ -384,9 +414,12 @@ xtest("generate mock using custom mock functions for object type (multiple objec
     graphql`
       query RelayMockPayloadGeneratorTest10Query {
         node(id: "my-id") {
+          __typename
+          id
           ...RelayMockPayloadGeneratorTest10Fragment
         }
       }
+      ${fragment}
     `,
     {
       User: () => {
@@ -405,11 +438,12 @@ xtest("generate mock using custom mock functions for object type (multiple objec
   );
 });
 
-xtest("check context in the mock resolver", () => {
+test("check context in the mock resolver", () => {
   let checkContext;
-  graphql`
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest11Fragment on Viewer {
       actor {
+        __typename
         ... on User {
           id
           name
@@ -418,6 +452,7 @@ xtest("check context in the mock resolver", () => {
             height
           }
         }
+        id
       }
     }
   `;
@@ -428,6 +463,7 @@ xtest("check context in the mock resolver", () => {
           ...RelayMockPayloadGeneratorTest11Fragment
         }
       }
+      ${fragment}
     `,
     {
       Image: (context) => {
@@ -455,8 +491,8 @@ xtest("check context in the mock resolver", () => {
    `);
 });
 
-xtest("generate mock with manual mock for objects", () => {
-  graphql`
+test("generate mock with manual mock for objects", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest12Fragment on Page {
       id
       name
@@ -485,6 +521,7 @@ xtest("generate mock with manual mock for objects", () => {
               startCursor
             }
           }
+          id
         }
       }
     }
@@ -493,9 +530,12 @@ xtest("generate mock with manual mock for objects", () => {
     graphql`
       query RelayMockPayloadGeneratorTest12Query {
         node(id: "my-id") {
+          __typename
           ...RelayMockPayloadGeneratorTest12Fragment
+          id
         }
       }
+      ${fragment}
     `,
     {
       Page: (context, generateId) => {
@@ -523,16 +563,21 @@ xtest("generate mock with manual mock for objects", () => {
   );
 });
 
-xtest("generate mock with multiple spreads", () => {
-  graphql`
+test("generate mock with multiple spreads", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest13Fragment on Viewer {
       actor {
+        __typename
         ... on User {
           id
           name
+          # TODO: RelayMockPayloadGenerator returns no enum value here because it requires
+          # @relay_test_operation. If we want to match that, we should require the directive too.
           traits
           profile_picture {
             uri
+            # TODO: RelayMockPayloadGenerator returns a different value for this scalar:
+            # "height": "<mock-value-for-field-"height">"
             height
           }
         }
@@ -541,6 +586,7 @@ xtest("generate mock with multiple spreads", () => {
           name
           websites
         }
+        id
       }
     }
   `;
@@ -550,21 +596,20 @@ xtest("generate mock with multiple spreads", () => {
         ...RelayMockPayloadGeneratorTest13Fragment
       }
     }
+    ${fragment}
   `);
 });
 
-xtest("generate mock and verify arguments in the context", () => {
-  graphql`
+test("generate mock and verify arguments in the context", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest14Fragment on User {
-      ... on User {
-        id
-        name
-        smallImage: profile_picture(scale: $smallScale) {
-          uri
-        }
-        bigImage: profile_picture(scale: $bigScale) {
-          uri
-        }
+      id
+      name
+      smallImage: profile_picture(scale: $smallScale) {
+        uri
+      }
+      bigImage: profile_picture(scale: $bigScale) {
+        uri
       }
     }
   `;
@@ -575,9 +620,12 @@ xtest("generate mock and verify arguments in the context", () => {
         $bigScale: Int = 100
       ) {
         node(id: "my-id") {
+          __typename
           ...RelayMockPayloadGeneratorTest14Fragment
+          id
         }
       }
+      ${fragment}
     `,
     {
       Image: (context) => {
@@ -595,8 +643,9 @@ xtest("generate mock and verify arguments in the context", () => {
   );
 });
 
+// TODO: Check this with a real test, as these should be compiled out, I think.
 xtest("generate mock for fragment with @argumentsDefinition", () => {
-  graphql`
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest15Fragment on User
     @argumentDefinitions(withName: { type: "Boolean!" }) {
       id
@@ -615,6 +664,7 @@ xtest("generate mock for fragment with @argumentsDefinition", () => {
           ...RelayMockPayloadGeneratorTest15Fragment @arguments(withName: true)
         }
       }
+      ${fragment}
     `,
     {
       Image() {
@@ -627,8 +677,8 @@ xtest("generate mock for fragment with @argumentsDefinition", () => {
   );
 });
 
-xtest("generate mock for plural fragment", () => {
-  graphql`
+test("generate mock for plural fragment", () => {
+  const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest16Fragment on Comment
     @relay(plural: true) {
       id
@@ -640,59 +690,72 @@ xtest("generate mock for plural fragment", () => {
   testGeneratedData(graphql`
     query RelayMockPayloadGeneratorTest16Query {
       nodes {
+        __typename
         ...RelayMockPayloadGeneratorTest16Fragment
+        id
       }
     }
+    ${fragment}
   `);
 });
 
-xtest("generate mock for multiple fragment spreads", () => {
-  graphql`
+test("generate mock for multiple fragment spreads", () => {
+  const fragment1 = graphql`
     fragment RelayMockPayloadGeneratorTest17Fragment on Page {
       id
       pageName: name
     }
   `;
-  graphql`
+  const fragment2 = graphql`
     fragment RelayMockPayloadGeneratorTest18Fragment on User {
       id
       name
       username
     }
   `;
-  graphql`
+  const fragment3 = graphql`
     fragment RelayMockPayloadGeneratorTest19Fragment on User {
       ...RelayMockPayloadGeneratorTest18Fragment
       profile_picture {
         uri
       }
     }
+    ${fragment2}
   `;
-  graphql`
+  const fragment4 = graphql`
     fragment RelayMockPayloadGeneratorTest20Fragment on User {
       body {
         text
       }
       actor {
+        __typename
         name
         id
       }
       myActor: actor {
+        __typename
         ...RelayMockPayloadGeneratorTest17Fragment
       }
       ...RelayMockPayloadGeneratorTest18Fragment
       ...RelayMockPayloadGeneratorTest19Fragment
     }
+    ${fragment1}
+    ${fragment2}
+    ${fragment3}
   `;
   testGeneratedData(graphql`
     query RelayMockPayloadGeneratorTest17Query {
       node(id: "my-id") {
+        __typename
+        id
         ...RelayMockPayloadGeneratorTest20Fragment
       }
     }
+    ${fragment4}
   `);
 });
 
+// TODO: Unsupported by duct-tape
 xtest("generate mock for with directives and handlers", () => {
   graphql`
     fragment RelayMockPayloadGeneratorTest21Fragment on User {
@@ -779,14 +842,24 @@ xtest("generate mock for with directives and handlers", () => {
   `);
 });
 
-xtest("should return `null` for selection if that is specified in default values", () => {
-  graphql`
+test("should return `null` for selection if that is specified in default values", () => {
+  const fragment1 = graphql`
     fragment RelayMockPayloadGeneratorTest24Fragment on User {
       id
       name
     }
   `;
-  graphql`
+  const fragment3 = graphql`
+    fragment RelayMockPayloadGeneratorTest26Fragment on Image {
+      uri
+      # TODO: RelayMockPayloadGenerator returns a different value for these scalars:
+      # "width": "<mock-value-for-field-"width">"
+      # "height": "<mock-value-for-field-"height">"
+      width
+      height
+    }
+  `;
+  const fragment2 = graphql`
     fragment RelayMockPayloadGeneratorTest25Fragment on User {
       id
       name
@@ -794,15 +867,9 @@ xtest("should return `null` for selection if that is specified in default values
         ...RelayMockPayloadGeneratorTest26Fragment
       }
     }
+    ${fragment3}
   `;
-  graphql`
-    fragment RelayMockPayloadGeneratorTest26Fragment on Image {
-      uri
-      width
-      height
-    }
-  `;
-  graphql`
+  const fragment4 = graphql`
     fragment RelayMockPayloadGeneratorTest27Fragment on User {
       body {
         text
@@ -812,18 +879,24 @@ xtest("should return `null` for selection if that is specified in default values
         id
       }
       myActor: actor {
+        __typename
         ...RelayMockPayloadGeneratorTest24Fragment
       }
       ...RelayMockPayloadGeneratorTest25Fragment
     }
+    ${fragment1}
+    ${fragment2}
   `;
   testGeneratedData(
     graphql`
       query RelayMockPayloadGeneratorTest19Query {
         node(id: "my-id") {
+          __typename
+          id
           ...RelayMockPayloadGeneratorTest27Fragment
         }
       }
+      ${fragment4}
     `,
     {
       User() {
@@ -836,7 +909,7 @@ xtest("should return `null` for selection if that is specified in default values
 });
 
 describe("with @relay_test_operation", () => {
-  xtest("generate mock for simple query", () => {
+  test("generate mock for simple query", () => {
     testGeneratedData(graphql`
       query RelayMockPayloadGeneratorTest20Query @relay_test_operation {
         me {
@@ -853,8 +926,8 @@ describe("with @relay_test_operation", () => {
     `);
   });
 
-  xtest("generate mock for simple fragment", () => {
-    graphql`
+  test("generate mock for simple fragment", () => {
+    const fragment = graphql`
       fragment RelayMockPayloadGeneratorTest28Fragment on User {
         id
         name
@@ -868,35 +941,42 @@ describe("with @relay_test_operation", () => {
     testGeneratedData(graphql`
       query RelayMockPayloadGeneratorTest21Query @relay_test_operation {
         node(id: "my-id") {
+          __typename
           ...RelayMockPayloadGeneratorTest28Fragment
+          id
         }
       }
+      ${fragment}
     `);
   });
 
-  xtest("generate mock with Enums", () => {
+  test("generate mock with Enums", () => {
     testGeneratedData(graphql`
       query RelayMockPayloadGeneratorTest22Query @relay_test_operation {
         node(id: "my-id") {
+          __typename
           ... on User {
             id
             name
             environment
           }
+          id
         }
       }
     `);
   });
 
-  xtest("generate mock with Mock Resolvers for Concrete Type", () => {
+  test("generate mock with Mock Resolvers for Concrete Type", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest23Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               name
             }
+            id
           }
         }
       `,
@@ -911,15 +991,17 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with Mock Resolvers for Interface Type", () => {
+  test("generate mock with Mock Resolvers for Interface Type", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest24Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               name
             }
+            id
           }
         }
       `,
@@ -975,15 +1057,15 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with Mock Resolvers for Interface Type with multiple fragments", () => {
-    graphql`
+  test("generate mock with Mock Resolvers for Interface Type with multiple fragments", () => {
+    const fragment1 = graphql`
       fragment RelayMockPayloadGeneratorTest29Fragment on Page {
         id
         pageName: name
       }
     `;
 
-    graphql`
+    const fragment2 = graphql`
       fragment RelayMockPayloadGeneratorTest30Fragment on User {
         id
         userName: name
@@ -993,10 +1075,14 @@ describe("with @relay_test_operation", () => {
       graphql`
         query RelayMockPayloadGeneratorTest26Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ...RelayMockPayloadGeneratorTest29Fragment
             ...RelayMockPayloadGeneratorTest30Fragment
+            id
           }
         }
+        ${fragment1}
+        ${fragment2}
       `,
       {
         Node() {
@@ -1010,15 +1096,17 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with Mock Resolvers for Interface Type with Concrete Type mock resolver", () => {
+  test("generate mock with Mock Resolvers for Interface Type with Concrete Type mock resolver", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest27Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               name
             }
+            id
           }
         }
       `,
@@ -1033,15 +1121,17 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with Mock Resolvers for Scalar field as null", () => {
+  test("generate mock with Mock Resolvers for Scalar field as null", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest28Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               name
             }
+            id
           }
         }
       `,
@@ -1056,15 +1146,17 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with multiple items in arrays for scalar field", () => {
+  test("generate mock with multiple items in arrays for scalar field", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest29Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               emailAddresses
             }
+            id
           }
         }
       `,
@@ -1080,15 +1172,17 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with empty array for scalar field ", () => {
+  test("generate mock with empty array for scalar field ", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest30Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               emailAddresses
             }
+            id
           }
         }
       `,
@@ -1102,11 +1196,12 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with multiple items in arrays for linked field with default data", () => {
+  test("generate mock with multiple items in arrays for linked field with default data", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest31Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               friends {
@@ -1123,24 +1218,26 @@ describe("with @relay_test_operation", () => {
                 }
               }
             }
+            id
           }
         }
       `,
       {
         FriendsConnection(_, generateId) {
           return {
-            edges: Array(5).fill(null),
+            edges: Array(5).fill(undefined),
           };
         },
       },
     );
   });
 
-  xtest("generate mock with multiple items in arrays including null", () => {
+  test("generate mock with multiple items in arrays including null", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest32Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               friends {
@@ -1157,6 +1254,7 @@ describe("with @relay_test_operation", () => {
                 }
               }
             }
+            id
           }
         }
       `,
@@ -1170,11 +1268,12 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with multiple items in arrays for linked field with custom data", () => {
+  test("generate mock with multiple items in arrays for linked field with custom data", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest33Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               friends {
@@ -1191,6 +1290,7 @@ describe("with @relay_test_operation", () => {
                 }
               }
             }
+            id
           }
         }
       `,
@@ -1217,11 +1317,12 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with multiple items in arrays for linked field with custom data and additional mock resolver", () => {
+  test("generate mock with multiple items in arrays for linked field with custom data and additional mock resolver", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest34Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               friends {
@@ -1238,6 +1339,7 @@ describe("with @relay_test_operation", () => {
                 }
               }
             }
+            id
           }
         }
       `,
@@ -1263,11 +1365,12 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock data with mock resolver for ID that may return `undefined`", () => {
+  test("generate mock data with mock resolver for ID that may return `undefined`", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest35Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               friends {
@@ -1279,6 +1382,7 @@ describe("with @relay_test_operation", () => {
                 }
               }
             }
+            id
           }
         }
       `,
@@ -1292,18 +1396,19 @@ describe("with @relay_test_operation", () => {
           return {
             // IDs for those edges should be generated by default mock
             // resolver for ID type
-            edges: Array(2).fill(null),
+            edges: Array(2).fill(undefined),
           };
         },
       },
     );
   });
 
-  xtest("generate mock with default value for object in plural field", () => {
+  test("generate mock with default value for object in plural field", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest36Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               friends {
@@ -1315,6 +1420,7 @@ describe("with @relay_test_operation", () => {
                 }
               }
             }
+            id
           }
         }
       `,
@@ -1330,11 +1436,12 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with default value for plural field and its object", () => {
+  test("generate mock with default value for plural field and its object", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest37Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               friends {
@@ -1346,13 +1453,14 @@ describe("with @relay_test_operation", () => {
                 }
               }
             }
+            id
           }
         }
       `,
       {
         FriendsConnection() {
           return {
-            edges: Array(5).fill(null),
+            edges: Array(5).fill(undefined),
           };
         },
         FriendsEdge() {
@@ -1366,37 +1474,42 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with default value for scalar plural field", () => {
+  test("generate mock with default value for scalar plural field", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest38Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               emailAddresses
             }
+            id
           }
         }
       `,
       {
         User(context) {
           return {
-            emailAddresses: "my@email.com",
+            // TODO: The upstream test here returns a string instead of a list.
+            emailAddresses: ["my@email.com"],
           };
         },
       },
     );
   });
 
-  xtest("generate mock for enum with different case should be OK", () => {
+  test("generate mock for enum with different case should be OK", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest39Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               environment
             }
+            id
           }
         }
       `,
@@ -1410,15 +1523,17 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock for enum in arrays", () => {
+  test("generate mock for enum in arrays", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest40Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               traits
             }
+            id
           }
         }
       `,
@@ -1432,7 +1547,7 @@ describe("with @relay_test_operation", () => {
     );
   });
 
-  xtest("generate mock with invalid value for enum", () => {
+  test("generate mock with invalid value for enum", () => {
     expect(() => {
       testGeneratedData(
         graphql`
@@ -1454,19 +1569,21 @@ describe("with @relay_test_operation", () => {
         },
       );
     }).toThrow(
-      'RelayMockPayloadGenerator: Invalid value "INVALID_VALUE" provided for enum field',
+      'RelayMockPayloadGenerator: Enum "Environment" cannot represent value: "INVALID_VALUE"',
     );
   });
 
-  xtest("generate mock with null for enum", () => {
+  test("generate mock with null for enum", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest42Query @relay_test_operation {
           node(id: "my-id") {
+            __typename
             ... on User {
               id
               environment
             }
+            id
           }
         }
       `,
@@ -1480,6 +1597,7 @@ describe("with @relay_test_operation", () => {
     );
   });
 
+  // TODO: Unsupported by duct-tape
   xtest("generate mock for client extensions", () => {
     testGeneratedData(
       graphql`
@@ -1496,6 +1614,7 @@ describe("with @relay_test_operation", () => {
     );
   });
 
+  // TODO: Unsupported by duct-tape
   xtest("should generate data for @module", () => {
     graphql`
       fragment RelayMockPayloadGeneratorTestNameRendererFragment on User {
@@ -1533,6 +1652,7 @@ describe("with @relay_test_operation", () => {
     );
   });
 
+  // TODO: Unsupported by duct-tape
   xtest("should generate data for @match with MarkdownUserNameRenderer_name", () => {
     graphql`
       fragment RelayMockPayloadGeneratorTest31Fragment on User {
@@ -1580,6 +1700,7 @@ describe("with @relay_test_operation", () => {
     );
   });
 
+  // TODO: Unsupported by duct-tape
   xtest("should generate data for @match with PlainUserNameRenderer_name", () => {
     graphql`
       fragment RelayMockPayloadGeneratorTest32Fragment on User {
@@ -1627,6 +1748,7 @@ describe("with @relay_test_operation", () => {
     );
   });
 
+  // TODO: Unsupported by duct-tape
   xtest("should throw if invalid default value provide for __module_operation.", () => {
     graphql`
       fragment RelayMockPayloadGeneratorTest33Fragment on User {
@@ -1668,6 +1790,7 @@ describe("with @relay_test_operation", () => {
     }).toThrowErrorMatchingSnapshot();
   });
 
+  // TODO: Unsupported by duct-tape
   xtest("should generate data for @module with `null` in mock resolvers", () => {
     graphql`
       fragment RelayMockPayloadGeneratorTest34Fragment on User {

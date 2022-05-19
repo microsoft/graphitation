@@ -8,10 +8,10 @@
  */
 
 export type MockResolverContext = Readonly<{
-  parentType?: string;
-  name?: string;
-  alias?: string;
-  path?: ReadonlyArray<string>;
+  parentType: string | null;
+  name: string;
+  alias: string | null;
+  path: ReadonlyArray<string>;
   args?: Record<string, unknown>;
 }>;
 

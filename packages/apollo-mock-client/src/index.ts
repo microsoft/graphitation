@@ -337,7 +337,7 @@ export function createMockClient(schema: GraphQLSchema): ApolloMockClient {
     new ApolloClient({
       cache: new InMemoryCache({
         possibleTypes,
-        addTypename: false,
+        addTypename: true,
       }),
       link,
     }),

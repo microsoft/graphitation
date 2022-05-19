@@ -240,7 +240,7 @@ describe("ReactRelayTestMocker with Containers", () => {
             message: { text: string };
             doesViewerLike: boolean;
           };
-        }>(FeedbackQuery);
+        }>(FeedbackQuery, { variables: { id: "feedback-id-42" } });
         if (props) {
           return <FeedbackComponent feedback={props.feedback} />;
         } else if (error) {
@@ -590,7 +590,7 @@ describe("ReactRelayTestMocker with Containers", () => {
       TestComponent = () => {
         const { data: props, error } = useQuery<{
           user: { id: string; name: string };
-        }>(UserQuery);
+        }>(UserQuery, { variables: { userId: "my-user-id" } });
         if (props) {
           return <div id="user">{props.user.name}</div>;
         } else if (error) {

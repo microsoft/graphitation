@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Feature complete graphql-js executor based implementation.",
+  "packageName": "@graphitation/graphql-js-operation-payload-generator",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}
