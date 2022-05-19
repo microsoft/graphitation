@@ -28,6 +28,7 @@ import { hooksTestQuery } from "./__generated__/hooksTestQuery.graphql";
 import { hooksTestSubscription } from "./__generated__/hooksTestSubscription.graphql";
 import { hooksTestFragment$key } from "./__generated__/hooksTestFragment.graphql";
 import { hooksTestMutation as hooksTestMutation$key } from "./__generated__/hooksTestMutation.graphql";
+import { getOperationName } from "@apollo/client/utilities";
 
 const schema = buildSchema(
   readFileSync(join(__dirname, "schema.graphql"), "utf8"),
@@ -169,7 +170,7 @@ describe(useLazyLoadQuery, () => {
     });
 
     const operation = client.mock.getMostRecentOperation();
-    expect(operation.request.node).toBe(query);
+    expect(getOperationName(operation.request.node)).toBe("hooksTestQuery");
     expect(operation.request.variables).toEqual({ id: "some-user-id" });
 
     await act(() =>
@@ -215,7 +216,9 @@ describe(useSubscription, () => {
       queryOperation,
     ] = client.mock.getAllOperations();
 
-    expect(subscriptionOperation.request.node).toBe(subscription);
+    expect(getOperationName(subscriptionOperation.request.node)).toBe(
+      "hooksTestSubscription",
+    );
     expect(subscriptionOperation.request.variables).toEqual({
       id: "some-user-id",
     });
@@ -373,13 +376,15 @@ describe("useMutation", () => {
     });
     expect(tree).toMatchInlineSnapshot(`
       <div>
-        {"data":{"__typename":"Mutation","updateUserName":{"__typename":"User","id":"&lt;User-mock-id-1&gt;","name":"&lt;mock-value-for-field-\\"name\\"&gt;"}}}
+        {"data":{"updateUserName":{"__typename":"User","id":"&lt;User-mock-id-1&gt;","name":"&lt;mock-value-for-field-\\"name\\"&gt;"}}}
       </div>
     `);
 
     const [mutationOperation] = client.mock.getAllOperations();
 
-    expect(mutationOperation.request.node).toBe(mutation);
+    expect(getOperationName(mutationOperation.request.node)).toBe(
+      "hooksTestMutation",
+    );
     expect(mutationOperation.request.variables).toEqual({
       name: "foo",
       id: "1",
