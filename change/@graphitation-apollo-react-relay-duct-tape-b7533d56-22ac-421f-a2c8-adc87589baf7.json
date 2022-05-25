@@ -1,0 +1,7 @@
+{
+  "type": "prerelease",
+  "comment": "[duct-tape] Make artefact import transform work for es5 modules",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "none"
+}
