@@ -66,6 +66,9 @@ export function createImportDocumentsTransform(): ts.TransformerFactory<ts.Sourc
   };
 }
 
+// This is for ts-jest
+export { createImportDocumentsTransform as factory };
+
 function createGraphQLDocumentNodes(
   graphqlTagTemplateNode: ts.TaggedTemplateExpression,
   moduleKind: ts.ModuleKind = ts.ModuleKind.ES2015
