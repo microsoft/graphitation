@@ -20,7 +20,7 @@ const QUERIES_NAMESPACE = "generatedQueries";
 
 export function createImportDocumentsTransform(): ts.TransformerFactory<ts.SourceFile> {
   return (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
-    const imports: ts.ImportDeclaration[] = [];
+    const imports: ts.Statement[] = [];
 
     const visitor: ts.Visitor = (node: ts.Node): ts.VisitResult<ts.Node> => {
       if (
@@ -28,9 +28,12 @@ export function createImportDocumentsTransform(): ts.TransformerFactory<ts.Sourc
         ts.isIdentifier(node.tag) &&
         node.tag.escapedText === "graphql"
       ) {
-        const documentNodes = createGraphQLDocumentNodes(node);
+        const documentNodes = createGraphQLDocumentNodes(
+          node,
+          context.getCompilerOptions().module
+        );
         if (documentNodes) {
-          const [importDeclaration, replacementNode] = documentNodes;
+          const [modulePath, importStatement, replacementNode] = documentNodes;
           // Because we currently only emit new watch queries for fragments
           // on Node types, we cannot just assume the artefact exists for
           // every fragment definition. So check if it exists before emitting
@@ -38,20 +41,14 @@ export function createImportDocumentsTransform(): ts.TransformerFactory<ts.Sourc
           //
           // TODO: This file checking should not exist and is probably not
           //       performant.
-          //
-          // NOTE: In our test case node.getSourceFile() returns undefined.
-          let emitImport = true;
-          const sourceFile: ts.SourceFile | undefined = node.getSourceFile();
-          if (sourceFile) {
-            const artefactFile =
-              path.join(
-                path.dirname(sourceFile.fileName),
-                (importDeclaration.moduleSpecifier as ts.StringLiteral).text
-              ) + ".ts";
-            emitImport = fs.existsSync(artefactFile);
-          }
+          const artefactFile =
+            path.join(
+              path.dirname(node.getSourceFile().fileName),
+              modulePath.text
+            ) + ".ts";
+          const emitImport = fs.existsSync(artefactFile);
           if (emitImport) {
-            imports.push(importDeclaration);
+            imports.push(importStatement);
             return replacementNode;
           }
         }
@@ -70,8 +67,15 @@ export function createImportDocumentsTransform(): ts.TransformerFactory<ts.Sourc
 }
 
 function createGraphQLDocumentNodes(
-  graphqlTagTemplateNode: ts.TaggedTemplateExpression
-): [ts.ImportDeclaration, ts.Identifier] | undefined {
+  graphqlTagTemplateNode: ts.TaggedTemplateExpression,
+  moduleKind: ts.ModuleKind = ts.ModuleKind.ES2015
+):
+  | [
+      modulePath: ts.StringLiteral,
+      importStatement: ts.Statement,
+      importReference: ts.Identifier
+    ]
+  | undefined {
   const graphqlDoc = ts.isNoSubstitutionTemplateLiteral(
     graphqlTagTemplateNode.template
   )
@@ -87,52 +91,72 @@ function createGraphQLDocumentNodes(
     const operationName = definitionNode.name?.value;
     invariant(operationName, "Operations are required to have a name");
     const namespaceName = `${PREFIX}${QUERIES_NAMESPACE}_${operationName}`;
+    const modulePath = createModulePathNode(operationName);
     return [
-      ts.factory.createImportDeclaration(
-        undefined,
-        undefined,
-        ts.factory.createImportClause(
-          false,
-          undefined,
-          ts.factory.createNamedImports([
-            ts.factory.createImportSpecifier(
-              false,
-              ts.factory.createIdentifier("documents"),
-              ts.factory.createIdentifier(namespaceName)
-            ),
-          ])
-        ),
-        ts.factory.createStringLiteral(
-          `./__generated__/${operationName}.graphql`
-        )
-      ),
+      modulePath,
+      createImportStatement(moduleKind, namespaceName, modulePath),
       ts.factory.createIdentifier(namespaceName),
     ];
   } else if (definitionNode.kind === "FragmentDefinition") {
     const queryName = getQueryName(definitionNode);
     const fragmentName = definitionNode.name.value;
     const namespaceName = `${PREFIX}${QUERIES_NAMESPACE}_${fragmentName}`;
+    const modulePath = createModulePathNode(queryName);
     return [
-      ts.factory.createImportDeclaration(
-        undefined,
-        undefined,
-        ts.factory.createImportClause(
-          false,
-          undefined,
-          ts.factory.createNamedImports([
-            ts.factory.createImportSpecifier(
-              false,
-              ts.factory.createIdentifier("documents"),
-              ts.factory.createIdentifier(namespaceName)
-            ),
-          ])
-        ),
-        ts.factory.createStringLiteral(`./__generated__/${queryName}.graphql`)
-      ),
+      modulePath,
+      createImportStatement(moduleKind, namespaceName, modulePath),
       ts.factory.createIdentifier(namespaceName),
     ];
   }
   invariant(false, `Unhandled GraphQL definition type: ${definitionNode.kind}`);
+}
+
+function createModulePathNode(baseName: string) {
+  return ts.factory.createStringLiteral(`./__generated__/${baseName}.graphql`);
+}
+
+function createImportStatement(
+  moduleKind: ts.ModuleKind,
+  namespaceName: string,
+  modulePath: ts.StringLiteral
+): ts.Statement {
+  if (moduleKind === ts.ModuleKind.CommonJS) {
+    return ts.factory.createVariableStatement(
+      undefined,
+      ts.factory.createVariableDeclarationList([
+        ts.factory.createVariableDeclaration(
+          namespaceName,
+          undefined,
+          undefined,
+          ts.factory.createPropertyAccessExpression(
+            ts.factory.createCallExpression(
+              ts.factory.createIdentifier("require"),
+              [],
+              [modulePath]
+            ),
+            ts.factory.createIdentifier("documents")
+          )
+        ),
+      ])
+    );
+  } else {
+    return ts.factory.createImportDeclaration(
+      undefined,
+      undefined,
+      ts.factory.createImportClause(
+        false,
+        undefined,
+        ts.factory.createNamedImports([
+          ts.factory.createImportSpecifier(
+            false,
+            ts.factory.createIdentifier("documents"),
+            ts.factory.createIdentifier(namespaceName)
+          ),
+        ])
+      ),
+      modulePath
+    );
+  }
 }
 
 function getQueryName(definitionNode: FragmentDefinitionNode) {

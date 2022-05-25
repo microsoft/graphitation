@@ -2520,20 +2520,6 @@
     "@n1ru4l/push-pull-async-iterable-iterator" "^3.1.0"
     meros "^1.1.4"
 
-"@graphitation/graphql-js-tag@^0.5.3", "@graphitation/graphql-js-tag@^0.5.4":
-  version "0.5.5"
-  resolved "https://registry.yarnpkg.com/@graphitation/graphql-js-tag/-/graphql-js-tag-0.5.5.tgz#766d8668d86795c28d3e685d55007280e5b23ba8"
-  integrity sha512-/QYGILQoS0+DTuH/Kn/PQsgcs3xwvfyr1qY0uy3gcdWZzQts6tuY4A0rvWy2AYbw997iCn4YILBjQ6PV6j2HRg==
-  dependencies:
-    invariant "^2.0.0"
-
-"@graphitation/graphql-js-tag@^0.8.0":
-  version "0.8.3"
-  resolved "https://registry.yarnpkg.com/@graphitation/graphql-js-tag/-/graphql-js-tag-0.8.3.tgz#56750c1966c0fea79955b7730ea36d7bfd25e94d"
-  integrity sha512-G+O0vwuWKhAvuYEcLBAKmuToHjPbzDkoZ2S5ziQOFHLOCMvnCQ1n1bLe6ZWNZWPI5qgi+p5ug54L/PgMPQuoyw==
-  dependencies:
-    invariant "^2.0.0"
-
 "@graphitation/supermassive@^0.8.3":
   version "0.8.5"
   resolved "https://registry.yarnpkg.com/@graphitation/supermassive/-/supermassive-0.8.5.tgz#6c95de637ce2339120b76de105571bfdba5d8897"
@@ -2543,7 +2529,7 @@
     graphql "^15.6.1"
     typescript "^4.4.3 <4.5.0"
 
-"@graphitation/ts-transform-graphql-js-tag@^0.4.0":
+"@graphitation/ts-transform-graphql-js-tag@^0.4.1":
   version "0.4.2"
   resolved "https://registry.yarnpkg.com/@graphitation/ts-transform-graphql-js-tag/-/ts-transform-graphql-js-tag-0.4.2.tgz#2629a5dfcf5b9231f875cbf6baa296966215a0b9"
   integrity sha512-IL6rmZdEOTz3aCokqPVNlO34LpmKkASrLe9SbdoOiqnQstc5QEJUVp7YcH2bPUXTOflyj4n80u30PyA6R9Q0gw==
