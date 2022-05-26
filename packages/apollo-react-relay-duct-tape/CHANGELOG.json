@@ -2,6 +2,27 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Thu, 26 May 2022 00:34:26 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v1.0.1-alpha.4",
+      "version": "1.0.1-alpha.4",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "43b1e0a906d0373b7a35f0c135d71ab39207db37",
+            "comment": "[duct-tape] Export import transform for ts-jest"
+          },
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "61ee7f6658e77120dbecb84643c0c91a61802f24",
+            "comment": "[duct-tape] Make artefact import transform work for es5 modules"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 07 Apr 2022 17:44:14 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v1.0.1-alpha.3",
       "version": "1.0.1-alpha.3",

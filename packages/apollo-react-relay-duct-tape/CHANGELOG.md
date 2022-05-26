@@ -1,8 +1,17 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Thu, 07 Apr 2022 17:44:14 GMT and should not be manually modified.
+This log was last generated on Thu, 26 May 2022 00:34:26 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.1-alpha.4
+
+Thu, 26 May 2022 00:34:26 GMT
+
+### Changes
+
+- [duct-tape] Export import transform for ts-jest (eloy.de.enige@gmail.com)
+- [duct-tape] Make artefact import transform work for es5 modules (eloy.de.enige@gmail.com)
 
 ## 1.0.1-alpha.3
 
