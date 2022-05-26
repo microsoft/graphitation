@@ -1,0 +1,1 @@
+export { GraphiQLRenderer } from "./graphiql";
