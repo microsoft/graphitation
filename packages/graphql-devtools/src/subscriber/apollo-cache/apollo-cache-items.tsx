@@ -11,7 +11,10 @@ interface IApolloCacheItems {
 }
 
 export const ApolloCacheItems = React.memo(
-  ({ cacheObjectsWithSize, removeCacheItem }: IApolloCacheItems) => {
+  ({
+    cacheObjectsWithSize,
+    removeCacheItem,
+  }: IApolloCacheItems) => {
     const [detailsValue, setDetailsValue] = React.useState<
       CacheObjectWithSize | undefined
     >(undefined);
@@ -25,23 +28,20 @@ export const ApolloCacheItems = React.memo(
       setDetailsValue(undefined);
     };
 
-    const buildApolloCacheItems = (
+    const buildApolloCacheItems = 
+    (
       removeCacheItem: (key: string) => void,
-      setDetailsValue: (value: CacheObjectWithSize) => void,
-    ) => (item: CacheObjectWithSize, index: number) => (
+      setDetailsValue: (value: CacheObjectWithSize) => void
+    ) =>
+    (item: CacheObjectWithSize, index: number) => (
       <div className={classes.itemContainer} key={`${item.key}-${index}`}>
         <div className={classes.keyColumn}>{item.key}</div>
         <div>{item.valueSize} B</div>
         <div>
-          <Button
+          <Button 
             title="Show details"
-            className={mergeClasses(
-              classes.actionButton,
-              classes.detailsButton,
-            )}
-            onClick={() => {
-              setDetailsValue(item);
-            }}
+            className={mergeClasses(classes.actionButton, classes.detailsButton)}
+            onClick={() => {setDetailsValue(item)}}
           >
             <Open20Filled />
           </Button>
@@ -51,9 +51,9 @@ export const ApolloCacheItems = React.memo(
             onClick={(e) => {
               removeCacheItem(item.key);
               e.stopPropagation();
-            }}
+            }} 
           >
-            <Delete20Regular />
+            <Delete20Regular/>
           </Button>
         </div>
       </div>
@@ -62,20 +62,12 @@ export const ApolloCacheItems = React.memo(
     return (
       <div className={classes.root}>
         <div className={classes.itemContainer}>
-          <Text size={200} weight="semibold">
-            Key
-          </Text>
-          <Text size={200} weight="semibold">
-            Value size
-          </Text>
+          <Text size={200} weight="semibold">Key</Text>
+          <Text size={200} weight="semibold">Value size</Text>
         </div>
-        {cacheObjectsWithSize.map(
-          buildApolloCacheItems(removeCacheItem, setDetailsValue),
-        )}
-        {detailsValue ? (
-          <Dialog value={detailsValue} onClose={closeDetails} />
-        ) : null}
+        {cacheObjectsWithSize.map(buildApolloCacheItems(removeCacheItem, setDetailsValue))}
+        {detailsValue ? <Dialog value={detailsValue} onClose={closeDetails}/> : null}
       </div>
     );
-  },
+  }
 );

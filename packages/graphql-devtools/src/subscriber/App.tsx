@@ -1,6 +1,6 @@
 import * as React from "react";
 import Router from "./Router";
-import { ApolloClientDataCountWrapper } from "./contexts/apollo-tracker-data-count-context";
+import { ApolloClientMetadataWrapper } from "./contexts/apollo-tracker-metadata-context";
 import { ApolloGlobalOperationsWrapper } from "./contexts/apollo-global-operations-context";
 import { ActiveClientContextWrapper } from "./contexts/active-client-context";
 import { ApolloCacheContextWrapper } from "./contexts/apollo-cache-context";
@@ -14,13 +14,13 @@ const App = () => (
   >
     <ApolloGlobalOperationsWrapper>
       <ActiveClientContextWrapper>
-        <ApolloClientDataCountWrapper>
+        <ApolloClientMetadataWrapper>
           <ApolloCacheContextWrapper>
             <ApolloCacheDuplicatesContextWrapper>
               <Router />
             </ApolloCacheDuplicatesContextWrapper>
           </ApolloCacheContextWrapper>
-        </ApolloClientDataCountWrapper>
+        </ApolloClientMetadataWrapper>
       </ActiveClientContextWrapper>
     </ApolloGlobalOperationsWrapper>
   </FluentProvider>

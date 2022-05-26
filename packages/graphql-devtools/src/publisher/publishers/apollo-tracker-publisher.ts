@@ -18,19 +18,25 @@ export class ApolloTrackerPublisher {
     this.remplWrapper.subscribeToRemplStatus(
       "apollo-tracker",
       this.trackerDataPublishHandler.bind(this),
-      2000,
+      2000
     );
     this.apolloPublisher = remplWrapper.publisher;
+    this.attachMethodsToPublisher();
   }
 
-  // private getCountData() {
-  //   this.apolloPublisher.ns("apollo-tracker-data-count").publish({
-  //     queriesCount: queries ? queries.length : this.lastRawQueries?.size || 0,
-  //     mutationsCount: mutations
-  //       ? mutations.length
-  //       : this.lastRawMutations?.length || 0,
-  //   });
-  // }
+  private attachMethodsToPublisher() {
+    this.apolloPublisher.provide("clearApolloTrackerMetadata", () => {
+      this.lastRawQueries = null;
+      this.lastRawMutations = null;
+
+      this.apolloPublisher.ns("apollo-tracker-metadata").publish({
+        queriesCount: 0,
+        mutationsCount: 0,
+        mutationsHaveError: false,
+        queriesHaveError: false,
+      });
+    });
+  }
 
   private trackerDataPublishHandler({ activeClient }: WrapperCallbackParams) {
     if (!activeClient) {
@@ -40,23 +46,28 @@ export class ApolloTrackerPublisher {
     const mutations = this.serializeTrackerMutations(activeClient.client);
     const queries = this.serializeTrackerQueries(activeClient.client);
 
+    if (!mutations && !queries) {
+      return;
+    }
+
     if (mutations) {
       this.apolloPublisher.ns("apollo-tracker-mutations").publish(mutations);
-      this.apolloPublisher
-        .ns("apollo-tracker-mutations-count")
-        .publish(mutations.length);
     }
 
     if (queries) {
       this.apolloPublisher.ns("apollo-tracker-queries").publish(queries);
-      this.apolloPublisher
-        .ns("apollo-tracker-queries-count")
-        .publish(queries.length);
     }
+
+    this.apolloPublisher.ns("apollo-tracker-metadata").publish({
+      queriesCount: queries?.length,
+      mutationsCount: mutations?.length,
+      mutationsHaveError: mutations?.some((mutation) => mutation.errorMessage),
+      queriesHaveError: queries?.some((query) => query.errorMessage),
+    });
   }
 
   private serializeTrackerMutations = (
-    client: ApolloClient<NormalizedCacheObject>,
+    client: ApolloClient<NormalizedCacheObject>
   ) => {
     const mutations = Object.values(this.getMutations(client));
 
@@ -71,7 +82,7 @@ export class ApolloTrackerPublisher {
   };
 
   private serializeTrackerQueries = (
-    client: ApolloClient<NormalizedCacheObject>,
+    client: ApolloClient<NormalizedCacheObject>
   ) => {
     const queries = this.getQueries(client);
 

@@ -27,12 +27,12 @@ const ApolloCacheContainer = React.memo(() => {
 
   const cacheObjectsWithSize = useMemo(
     () => getCacheObjectWithSizes(cache as Record<string, unknown>),
-    [cache],
+    [cache]
   );
 
   const recentCacheObjectsWithSize = useMemo(
     () => getCacheObjectWithSizes(recentCache as Record<string, unknown>),
-    [recentCache],
+    [recentCache]
   );
 
   return (

@@ -11,16 +11,43 @@ export const useStyles = makeStyles({
   innerContainer: {
     display: "grid",
     gridAutoFlow: "column",
-    gridTemplateRows: "50px auto",
+    gridTemplateRows: "50px 0 auto",
     height: "100%",
     backgroundColor: "#fff",
     ...shorthands.borderRadius("6px"),
     ...shorthands.overflow("hidden"),
   },
+  innerContainerDescription: {
+    gridTemplateRows: "50px 50px auto",
+  },
   header: {
     display: "flex",
-    alignItems: "flex-end",
+    alignItems: "center",
+    justifyContent: "space-between",
     ...shorthands.padding("10px", "15px"),
+  },
+  searchContainer: {
+    display: "flex",
+    justifyContent: "flex-end",
+    minWidth: "200px",
+  },
+  infoButton: {
+    minWidth: "auto",
+    marginRight: "5px",
+    ...shorthands.padding(0, "5px"),
+    "&:hover": {
+      color: "#97CBFF",
+    },
+  },
+  description: {
+    ...shorthands.padding("5px", "15px"),
+    visibility: "hidden",
+    height: 0,
+  },
+  openDescription: {
+    visibility: "visible",
+    height: "auto",
+    ...shorthands.overflow("hidden", "auto"),
   },
   activityContainer: {
     height: "100%",

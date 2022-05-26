@@ -37,7 +37,7 @@ export const GraphiQLRenderer = React.memo(() => {
   return (
     <div className={classes.root}>
       <div className={classes.innerContainer}>
-        <GraphiQL fetcher={createFetcher(activeClientId) as any} />
+        <GraphiQL fetcher={createFetcher(activeClientId)} />
       </div>
     </div>
   );

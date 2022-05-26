@@ -20,7 +20,7 @@ export class RemplWrapper {
   publisher: Publisher;
 
   constructor(enableRemplHotkey: string) {
-    this.publisher = createPublisher("apollo-devtools", () => {
+    this.publisher = createPublisher("graphql-devtools", () => {
       return { type: "script", value: __APOLLO_DEVTOOLS_SUBSCRIBER__ };
     });
 
@@ -34,7 +34,7 @@ export class RemplWrapper {
   public subscribeToRemplStatus(
     id: string,
     callback: ({ clientObjects, activeClient }: WrapperCallbackParams) => void,
-    timeout: number,
+    timeout: number
   ) {
     this.remplStatusHooks.push({ id, callback, timeout });
   }
@@ -63,7 +63,7 @@ export class RemplWrapper {
     }
 
     const activeClient = window.__APOLLO_CLIENTS__.find(
-      (client: ClientObject) => client.clientId === activeClientId,
+      (client: ClientObject) => client.clientId === activeClientId
     );
 
     if (!activeClient) {

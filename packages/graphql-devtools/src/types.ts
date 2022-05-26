@@ -66,9 +66,11 @@ export type ApolloTrackerData = {
   queries: WatchedQuery[];
 };
 
-export type ApolloTrackerDataCount = {
+export type ApolloTrackerMetadata = {
   mutationsCount: number;
   queriesCount: number;
+  queriesHaveError: boolean;
+  mutationsHaveError: boolean;
 };
 
 export type ClientRecentCacheObject = NormalizedCacheObject;

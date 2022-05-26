@@ -25,6 +25,8 @@ export const ActiveClientContextWrapper = ({
     setActiveClientId(value);
 
     window.REMPL_GRAPHQL_DEVTOOLS_RECENT_ACTIVITIES = [];
+
+    remplSubscriber.callRemote("clearApolloTrackerMetadata");
   }, []);
 
   if (!activeClientId && clientIds.length) {

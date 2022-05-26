@@ -32,7 +32,7 @@ export const useStyles = makeStyles({
     top: "32px",
     left: 0,
     right: 0,
-    zIndex: 3,
+    zIndex: 5,
     backgroundColor: "#fff",
     ...shorthands.border("1px", "solid", "#F5F5F5"),
     ...shorthands.borderRadius("6px"),

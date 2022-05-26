@@ -27,62 +27,34 @@ describe(".getClientCacheDuplicates", () => {
             testProperty: { nestedProperty: "test" },
           },
         },
-        { hatak: ["objectId", "secondId"] },
-      ),
-    ).toEqual([
-      {
-        type: "car",
-        duplicates: {
-          "car:123": {
-            id: "1",
-            testProperty: "test",
-          },
-          "car:456": {
-            id: "2",
-            testProperty: "test",
-          },
-          "car:556": {
-            id: "5",
-            testProperty: "test",
-          },
-        },
-      },
-      {
-        type: "ship",
-        duplicates: {
-          "ship:456": {
-            id: "8",
-            testProperty: {
-              nestedProperty: "test",
-            },
-          },
-          "ship:556": {
-            id: "9",
-            testProperty: {
-              nestedProperty: "test",
-            },
-          },
-        },
-      },
-      {
-        type: "hatak",
-        duplicates: {
+        { hatak: ["objectId", "secondId"] }
+      )
+    ).toMatchObject([
+      [
+        { "car:123": { id: "1", testProperty: "test" } },
+        { "car:456": { id: "2", testProperty: "test" } },
+        { "car:556": { id: "5", testProperty: "test" } },
+      ],
+      [
+        { "ship:456": { id: "8", testProperty: { nestedProperty: "test" } } },
+        { "ship:556": { id: "9", testProperty: { nestedProperty: "test" } } },
+      ],
+      [
+        {
           "hatak:456": {
             objectId: "10",
             secondId: "8",
-            testProperty: {
-              nestedProperty: "test",
-            },
+            testProperty: { nestedProperty: "test" },
           },
+        },
+        {
           "hatak:556": {
             objectId: "9",
             secondId: "11",
-            testProperty: {
-              nestedProperty: "test",
-            },
+            testProperty: { nestedProperty: "test" },
           },
         },
-      },
+      ],
     ]);
   });
 });

@@ -1,13 +1,14 @@
 import * as React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
-import { RecentActivities } from "../types";
+import { RecentActivities, ApolloTrackerMetadata } from "../types";
 
 declare let __GRAPHIQL_CSS__: string;
 declare let __GLOBAL_CSS__: string;
 declare global {
   interface Window {
     REMPL_GRAPHQL_DEVTOOLS_RECENT_ACTIVITIES?: RecentActivities[];
+    REMPL_APOLLO_TRACKER_METADATA?: ApolloTrackerMetadata;
   }
 }
 

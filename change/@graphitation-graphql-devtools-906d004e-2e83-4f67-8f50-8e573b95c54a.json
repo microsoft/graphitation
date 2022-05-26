@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Migraiton from original repo",
+  "packageName": "@graphitation/graphql-devtools",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}

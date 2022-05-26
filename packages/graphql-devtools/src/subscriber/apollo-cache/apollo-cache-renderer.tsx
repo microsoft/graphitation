@@ -10,6 +10,7 @@ import {
   RecordStop20Regular,
   DismissCircle20Regular,
   ArrowClockwise20Regular,
+  Info20Regular,
 } from "@fluentui/react-icons";
 import { ApolloCacheDuplicatedItems } from "./apollo-cache-duplicated-items";
 import { CacheDuplicates } from "../../types";
@@ -28,12 +29,12 @@ interface IApolloCacheRenderer {
 
 function filterCacheObjects(
   cacheObjectsWithSize: CacheObjectWithSize[],
-  searchKey: string,
+  searchKey: string
 ) {
   if (!searchKey) return cacheObjectsWithSize;
 
   return cacheObjectsWithSize.filter(({ key }: CacheObjectWithSize) =>
-    key.toLowerCase().includes(searchKey.toLowerCase()),
+    key.toLowerCase().includes(searchKey.toLowerCase())
   );
 }
 
@@ -51,6 +52,7 @@ export const ApolloCacheRenderer = React.memo(
     const [searchKey, setSearchKey] = React.useState("");
     const [currentCache, setCurrentCache] = React.useState("all");
     const [recordRecentCache, setRecordRecentCache] = React.useState(false);
+    const [duplicatedDescriprion, setDuplicatedDescriprion] = React.useState(false);
     const classes = useStyles();
     const buttonsAttrs = useArrowNavigationGroup({
       circular: true,
@@ -71,7 +73,7 @@ export const ApolloCacheRenderer = React.memo(
 
     const debouncedSetSearchKey = useCallback(
       debounce((searchKey: string) => setSearchKey(searchKey), 250),
-      [setSearchKey],
+      [setSearchKey]
     );
 
     return (
@@ -92,7 +94,7 @@ export const ApolloCacheRenderer = React.memo(
                     tabIndex={0}
                     className={mergeClasses(
                       classes.actionButton,
-                      recordRecentCache && classes.activeRecord,
+                      recordRecentCache && classes.activeRecord
                     )}
                     onClick={toggleRecordRecentChanges}
                   >
@@ -115,9 +117,18 @@ export const ApolloCacheRenderer = React.memo(
               )}
 
               {currentCache === "duplicated" && (
-                <div className={classes.topBarActions}>
+                <div className={classes.topBarActions} {...buttonsAttrs}>
+                  <Button
+                    title="Information"
+                    tabIndex={0}
+                    className={classes.actionButton}
+                    onClick={() => setDuplicatedDescriprion(!duplicatedDescriprion)}
+                  >
+                    <Info20Regular />
+                  </Button>
                   <Button
                     title="Refresh"
+                    tabIndex={0}
                     className={classes.actionButton}
                     onClick={getCacheDuplicates}
                   >
@@ -155,6 +166,7 @@ export const ApolloCacheRenderer = React.memo(
           {currentCache === "duplicated" ? (
             <ApolloCacheDuplicatedItems
               duplicatedCacheObjects={duplicatedCacheObjects}
+              showDescription={duplicatedDescriprion}
             />
           ) : null}
         </div>
@@ -163,5 +175,5 @@ export const ApolloCacheRenderer = React.memo(
         </Text>
       </div>
     );
-  },
+  }
 );

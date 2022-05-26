@@ -1,7 +1,10 @@
 import { RemplWrapper } from "../rempl-wrapper";
 import { parse } from "graphql";
 
-import { ApolloClientsObject, WrapperCallbackParams } from "../../types";
+import {
+  ApolloClientsObject,
+  WrapperCallbackParams,
+} from "../../types";
 
 export class GraphiQLPublisher {
   private apolloPublisher;
@@ -13,7 +16,7 @@ export class GraphiQLPublisher {
     this.remplWrapper.subscribeToRemplStatus(
       "graphiql",
       this.cachePublishHandler.bind(this),
-      6000,
+      6000
     );
     this.apolloPublisher = remplWrapper.publisher;
     this.attachMethodsToPublisher();
@@ -28,7 +31,7 @@ export class GraphiQLPublisher {
           query: parse(graphQLParams.query),
           variables: graphQLParams.variables,
         });
-      },
+      }
     );
   }
 

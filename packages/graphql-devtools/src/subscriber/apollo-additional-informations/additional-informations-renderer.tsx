@@ -1,12 +1,7 @@
 import React from "react";
 import { ApolloGlobalOperations } from "../../types";
 import { useStyles } from "./additional-info.styles";
-import {
-  Accordion,
-  AccordionHeader,
-  AccordionItem,
-  AccordionPanel,
-} from "@fluentui/react-components";
+import { Accordion, AccordionHeader, AccordionItem, AccordionPanel } from "@fluentui/react-components";
 
 const panels = (globalOperations: ApolloGlobalOperations) => [
   {
@@ -32,13 +27,19 @@ const AdditionalInformationsRenderer = React.memo(
     return (
       <div className={classes.root}>
         <div className={classes.innerContainer}>
-          <Accordion multiple>
+          <Accordion
+            multiple
+          >
             {panels(globalOperations).map((item, index) => (
               <AccordionItem value={index} key={item.key}>
-                <AccordionHeader>{item.title}</AccordionHeader>
-                {item.items.map((elem) => (
+                <AccordionHeader>
+                 {item.title}
+                </AccordionHeader>
+                {item.items.map(elem => (
                   <AccordionPanel>
-                    <div className={classes.infoItem}>{elem}</div>
+                    <div className={classes.infoItem}>
+                      {elem}
+                    </div>
                   </AccordionPanel>
                 ))}
               </AccordionItem>
@@ -47,7 +48,7 @@ const AdditionalInformationsRenderer = React.memo(
         </div>
       </div>
     );
-  },
+  }
 );
 
 export default AdditionalInformationsRenderer;

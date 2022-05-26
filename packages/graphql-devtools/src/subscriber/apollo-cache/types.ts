@@ -1,5 +1,5 @@
 export type CacheObjectWithSize = {
   key: string;
   value: Record<string, unknown>;
-  valueSize: number;
+  valueSize: number | null;
 };

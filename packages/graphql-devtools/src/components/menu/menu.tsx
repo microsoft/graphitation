@@ -16,9 +16,12 @@ interface MenuProps {
   cacheCount: number;
   mutationsCount: number;
   queriesCount: number;
+  mutationsHaveError: boolean;
+  queriesHaveError: boolean;
+  hideGlobalOperations: boolean;
 }
 
-const menuElements = (props: any) => [
+const menuElements = (props: MenuProps) => [
   {
     url: "/",
     name: `Cache`,
@@ -30,12 +33,14 @@ const menuElements = (props: any) => [
     name: `Watched Queries`,
     icon: <DataFunnel24Regular />,
     badge: props.queriesCount,
+    haveError: props.queriesHaveError,
   },
   {
     url: "apollo-mutations",
     name: `Mutations`,
     icon: <DataWhisker24Regular />,
     badge: props.mutationsCount,
+    haveError: props.mutationsHaveError,
   },
   {
     url: "activity",
@@ -46,6 +51,7 @@ const menuElements = (props: any) => [
     url: "apollo-additional-informations",
     name: "Additional Information",
     icon: <Info24Regular />,
+    hide: props.hideGlobalOperations,
   },
   {
     url: "graphiql",
@@ -62,27 +68,41 @@ export const Menu = React.memo((props: MenuProps) => {
   return (
     <nav className={classes.root} id="menu-container">
       <ul className={classes.menuList} {...menuAttributes}>
-        {menuElements(props).map((item, index) => (
-          <li key={item.name}>
-            <NavLink
-              to={item.url}
-              tabIndex={0}
-              className={mergeClasses(
-                classes.menuItem,
-                activeItem === index && classes.menuItemActive,
-              )}
-              onClick={() => setActiveItem(index)}
-            >
-              <div className={classes.menuItemIcon}>{item.icon}</div>
-              {true && <Text className={classes.menuText}>{item.name}</Text>}
-              {item.badge && (
-                <Badge appearance="tint" className={classes.badge}>
-                  {item.badge}
-                </Badge>
-              )}
-            </NavLink>
-          </li>
-        ))}
+        {menuElements(props)
+          .map((item, index) => {
+            if (item.hide) {
+              return;
+            }
+
+            return (
+              <li key={item.name}>
+                <NavLink
+                  to={item.url}
+                  tabIndex={0}
+                  className={mergeClasses(
+                    classes.menuItem,
+                    activeItem === index && classes.menuItemActive
+                  )}
+                  onClick={() => setActiveItem(index)}
+                >
+                  <div className={classes.menuItemIcon}>{item.icon}</div>
+                  {true && (
+                    <Text className={classes.menuText}>{item.name}</Text>
+                  )}
+                  {item.badge && (
+                    <Badge
+                      appearance="tint"
+                      color={item.haveError ? "danger" : "brand"}
+                      className={classes.badge}
+                    >
+                      {item.badge}
+                    </Badge>
+                  )}
+                </NavLink>
+              </li>
+            );
+          })
+          .filter(Boolean)}
       </ul>
     </nav>
   );

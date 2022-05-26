@@ -1,17 +1,44 @@
 import React, { useState, useEffect } from "react";
 import { RecentActivities } from "../../types";
-import { Button } from "@fluentui/react-components";
+import { Button, mergeClasses } from "@fluentui/react-components";
 import { remplSubscriber } from "../rempl";
 import { useStyles } from "./recent-activity.styles";
 import { RecentActivity } from "./recent-activity";
+import { Search } from "../../components";
+import { Info20Regular } from "@fluentui/react-icons";
+
+function filterActivities(
+  recentActivities: RecentActivities[],
+  searchKey: string
+): RecentActivities[] {
+  if (!searchKey?.trim()) return recentActivities;
+
+  return recentActivities.map(({ queries, mutations, timestamp }) => {
+    const filteredQueries = queries.filter(({ data: { name } }) =>
+      name.toLowerCase().includes(searchKey.toLowerCase())
+    );
+
+    const filteredMutations = mutations.filter(({ data: { name } }) =>
+      name.toLowerCase().includes(searchKey.toLowerCase())
+    );
+
+    return {
+      timestamp,
+      queries: filteredQueries,
+      mutations: filteredMutations,
+    };
+  });
+}
 
 export const RecentActivityContainer = React.memo(() => {
   const [recentActivities, setRecentActivities] = useState<RecentActivities[]>(
-    [],
+    []
   );
-  const [recordRecentActivity, setRecordRecentActivity] = useState<boolean>(
-    false,
-  );
+  const [recordRecentActivity, setRecordRecentActivity] =
+    useState<boolean>(false);
+
+  const [openDescription, setOpenDescription] = useState<boolean>(false);
+  const [searchKey, setSearchKey] = React.useState("");
   const classes = useStyles();
 
   useEffect(() => {
@@ -39,26 +66,59 @@ export const RecentActivityContainer = React.memo(() => {
     (shouldRecord: boolean) => {
       remplSubscriber.callRemote("recordRecentActivity", { shouldRecord });
     },
-    [],
+    []
   );
 
   const toggleRecordRecentChanges = () => {
     recordRecentActivityRempl(!recordRecentActivity);
     setRecordRecentActivity(!recordRecentActivity);
-    console.log("recentActivities", recentActivities);
   };
 
   return (
     <div className={classes.root}>
-      <div className={classes.innerContainer}>
+      <div
+        className={mergeClasses(
+          classes.innerContainer,
+          openDescription && classes.innerContainerDescription
+        )}
+      >
         <div className={classes.header}>
-          <Button onClick={toggleRecordRecentChanges}>
-            {recordRecentActivity
-              ? "Stop recording"
-              : "Recording recent activity"}
-          </Button>
+          <div>
+            <Button
+              title="Information"
+              tabIndex={0}
+              className={classes.infoButton}
+              onClick={() => setOpenDescription(!openDescription)}
+            >
+              <Info20Regular />
+            </Button>
+            <Button onClick={toggleRecordRecentChanges}>
+              {recordRecentActivity
+                ? "Stop recording"
+                : "Recording recent activity"}
+            </Button>
+          </div>
+          <div className={classes.searchContainer}>
+            <Search
+              onSearchChange={(e: React.SyntheticEvent) => {
+                const input = e.target as HTMLInputElement;
+                setSearchKey(input.value);
+              }}
+            />
+          </div>
         </div>
-        <RecentActivity activity={recentActivities} />
+        <div
+          className={mergeClasses(
+            classes.description,
+            openDescription && classes.openDescription
+          )}
+        >
+          Monitor recently fired mutations and recently activated/deactivated
+          queries.
+        </div>
+        <RecentActivity
+          activity={filterActivities(recentActivities, searchKey)}
+        />
       </div>
     </div>
   );
