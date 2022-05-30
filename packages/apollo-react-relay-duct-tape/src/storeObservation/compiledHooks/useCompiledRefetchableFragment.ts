@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { unstable_batchedUpdates } from "react-dom";
-import { useApolloClient } from "@apollo/client";
 import invariant from "invariant";
 import { CompiledArtefactModule } from "relay-compiler-language-graphitation";
 import { useCompiledFragment } from "./useCompiledFragment";
@@ -8,6 +7,7 @@ import { FragmentReference } from "./types";
 import { isEqual } from "lodash";
 import { FetchPolicy } from "../../types";
 import { convertFetchPolicy } from "../../convertFetchPolicy";
+import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultApolloClient";
 
 export interface Disposable {
   dispose(): void;
@@ -57,7 +57,7 @@ export function useCompiledRefetchableFragment(
     metadata.mainFragment.name
   );
 
-  const client = useApolloClient();
+  const client = useOverridenOrDefaultApolloClient();
 
   // We use state for this, so that...
   const [
