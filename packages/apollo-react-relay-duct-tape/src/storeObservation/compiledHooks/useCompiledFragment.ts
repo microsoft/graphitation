@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from "react";
-import { useApolloClient } from "@apollo/client";
 import invariant from "invariant";
 import { CompiledArtefactModule } from "relay-compiler-language-graphitation";
 import { FragmentReference } from "./types";
 import { useForceUpdate } from "./useForceUpdate";
+import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultApolloClient";
 
 /**
  * @param documents Compiled watch query document that is used to setup a narrow
@@ -27,7 +27,7 @@ export function useCompiledFragment(
       "extracted. Did you forget to invoke the compiler?"
   );
 
-  const client = useApolloClient();
+  const client = useOverridenOrDefaultApolloClient();
   const forceUpdate = useForceUpdate();
 
   const observableQuery = useMemo(
