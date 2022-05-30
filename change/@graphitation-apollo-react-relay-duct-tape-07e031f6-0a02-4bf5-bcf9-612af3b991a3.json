@@ -1,0 +1,7 @@
+{
+  "type": "prerelease",
+  "comment": "[duct-tape] Allow overriding of ApolloClient instance to be used",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "prerelease"
+}
