@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Thu, 26 May 2022 00:34:26 GMT and should not be manually modified.
+This log was last generated on Mon, 30 May 2022 21:36:46 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.1-alpha.5
+
+Mon, 30 May 2022 21:36:46 GMT
+
+### Changes
+
+- [duct-tape] Allow overriding of ApolloClient instance to be used (eloy.de.enige@gmail.com)
 
 ## 1.0.1-alpha.4
 

@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Mon, 30 May 2022 21:36:46 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v1.0.1-alpha.5",
+      "version": "1.0.1-alpha.5",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "1f4036c9bc26842847330bd075ad650d92ab3a54",
+            "comment": "[duct-tape] Allow overriding of ApolloClient instance to be used"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 26 May 2022 00:34:26 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v1.0.1-alpha.4",
       "version": "1.0.1-alpha.4",
