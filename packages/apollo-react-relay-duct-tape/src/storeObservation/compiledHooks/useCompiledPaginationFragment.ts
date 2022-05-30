@@ -1,11 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import {
-  ApolloCache,
-  DataProxy,
-  InMemoryCache,
-  StoreValue,
-  useApolloClient,
-} from "@apollo/client";
+import { useState, useCallback } from "react";
+import { ApolloCache, DataProxy, StoreValue } from "@apollo/client";
 import invariant from "invariant";
 import { CompiledArtefactModule } from "relay-compiler-language-graphitation";
 import { useCompiledRefetchableFragment } from "./useCompiledRefetchableFragment";
@@ -18,6 +12,7 @@ import type {
 } from "./useCompiledRefetchableFragment";
 import type { Metadata } from "relay-compiler-language-graphitation";
 import type { DocumentNode } from "graphql";
+import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultApolloClient";
 
 export type PaginationFn = (
   count: number,
@@ -49,7 +44,7 @@ function useLoadMore({
   cursorValue,
   updater,
 }: PaginationParams): [loadPage: PaginationFn, isLoadingMore: boolean] {
-  const apolloClient = useApolloClient();
+  const apolloClient = useOverridenOrDefaultApolloClient();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const loadPage = useCallback<PaginationFn>(
     (countValue, options) => {
@@ -246,7 +241,7 @@ export function useCompiledPaginationFragment(
     refetch,
     metadata,
     executionQueryDocument,
-    cache: useApolloClient().cache,
+    cache: useOverridenOrDefaultApolloClient().cache,
     connectionSelectionPath: connectionMetadata.selectionPath,
   };
   const pageInfo = getPageInfo(data, connectionMetadata.selectionPath);
