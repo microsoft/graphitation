@@ -24,6 +24,7 @@ import {
   useCompiledPaginationFragment,
 } from "./storeObservation/compiledHooks";
 import { convertFetchPolicy } from "./convertFetchPolicy";
+import { useOverridenOrDefaultApolloClient } from "./useOverridenOrDefaultApolloClient";
 
 /**
  * Executes a GraphQL query.
@@ -56,7 +57,8 @@ export function useLazyLoadQuery<TQuery extends OperationType>(
       ...apolloOptions,
     });
   } else {
-    return useApolloQuery(query, { variables, ...apolloOptions });
+    const client = useOverridenOrDefaultApolloClient();
+    return useApolloQuery(query, { client, variables, ...apolloOptions });
   }
 }
 
@@ -179,10 +181,12 @@ interface GraphQLSubscriptionConfig<
 export function useSubscription<TSubscriptionPayload extends OperationType>(
   config: GraphQLSubscriptionConfig<TSubscriptionPayload>,
 ): void {
+  const client = useOverridenOrDefaultApolloClient();
   const { error } = useApolloSubscription(
     // TODO: Right now we don't replace mutation documents with imported artefacts.
     config.subscription as DocumentNode,
     {
+      client,
       variables: config.variables,
       context: config.context,
       onSubscriptionData: ({ subscriptionData }) => {
@@ -234,9 +238,11 @@ type MutationCommiter<TMutationPayload extends OperationType> = (
 export function useMutation<TMutationPayload extends OperationType>(
   mutation: GraphQLTaggedNode,
 ): [MutationCommiter<TMutationPayload>, boolean] {
+  const client = useOverridenOrDefaultApolloClient();
   const [apolloUpdater, { loading: mutationLoading }] = useApolloMutation(
     // TODO: Right now we don't replace mutation documents with imported artefacts.
     mutation as DocumentNode,
+    { client },
   );
 
   return [

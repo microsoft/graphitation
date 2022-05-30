@@ -1,14 +1,11 @@
 import { useRef, useEffect } from "react";
-import {
-  useApolloClient,
-  useQuery as useApolloQuery,
-  ObservableQuery,
-} from "@apollo/client";
+import { useQuery as useApolloQuery, ObservableQuery } from "@apollo/client";
 import invariant from "invariant";
 import { useDeepCompareMemoize } from "./useDeepCompareMemoize";
 import { CompiledArtefactModule } from "relay-compiler-language-graphitation";
 import { DocumentNode } from "graphql";
 import { useForceUpdate } from "./useForceUpdate";
+import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultApolloClient";
 
 class ExecutionQueryHandler {
   public status: [loading: boolean, error?: Error];
@@ -54,7 +51,7 @@ function useExecutionQuery(
   executionQueryDocument: DocumentNode,
   variables: Record<string, any>
 ): [loading: boolean, error?: Error] {
-  const client = useApolloClient();
+  const client = useOverridenOrDefaultApolloClient();
   const forceUpdate = useForceUpdate();
   const execution = useRef(new ExecutionQueryHandler(() => forceUpdate()));
   useEffect(() => {
