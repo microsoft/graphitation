@@ -1,5 +1,9 @@
 import { useRef, useEffect } from "react";
-import { useQuery as useApolloQuery, ObservableQuery } from "@apollo/client";
+import {
+  useQuery as useApolloQuery,
+  ObservableQuery,
+  ApolloClient,
+} from "@apollo/client";
 import invariant from "invariant";
 import { useDeepCompareMemoize } from "./useDeepCompareMemoize";
 import { CompiledArtefactModule } from "relay-compiler-language-graphitation";
@@ -48,10 +52,10 @@ class ExecutionQueryHandler {
 }
 
 function useExecutionQuery(
+  client: ApolloClient<any>,
   executionQueryDocument: DocumentNode,
   variables: Record<string, any>
 ): [loading: boolean, error?: Error] {
-  const client = useOverridenOrDefaultApolloClient();
   const forceUpdate = useForceUpdate();
   const execution = useRef(new ExecutionQueryHandler(() => forceUpdate()));
   useEffect(() => {
@@ -94,11 +98,17 @@ export function useCompiledLazyLoadQuery(
     "useLazyLoadQuery(): Expected a `executionQueryDocument` to have been " +
       "extracted. Did you forget to invoke the compiler?"
   );
+  const client = useOverridenOrDefaultApolloClient();
   const variables = useDeepCompareMemoize(options.variables);
   // First fetch all data needed for the entire tree...
-  const [loading, error] = useExecutionQuery(executionQueryDocument, variables);
+  const [loading, error] = useExecutionQuery(
+    client,
+    executionQueryDocument,
+    variables
+  );
   // ...then fetch/watch data for only the calling component...
   const { data } = useApolloQuery(watchQueryDocument, {
+    client,
     variables,
     fetchPolicy: "cache-only",
     // ...but only once finished loading.
