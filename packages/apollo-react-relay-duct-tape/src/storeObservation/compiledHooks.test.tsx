@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  ApolloClient,
-  ApolloProvider,
-  defaultDataIdFromObject,
-} from "@apollo/client";
+import { ApolloClient, defaultDataIdFromObject } from "@apollo/client";
 import {
   act,
   create as createTestRenderer,
@@ -31,6 +27,7 @@ import {
   typePoliciesWithDefaultApolloClientStoreKeys,
   typePoliciesWithGlobalObjectIdStoreKeys,
 } from "./typePolicies";
+import { ApolloReactRelayDuctTapeProvider } from "../useOverridenOrDefaultApolloClient";
 
 /**
  * NOTE: These compiler artefacts are normally imported using the transform from the createImportDocumentsTransform.ts module
@@ -260,7 +257,7 @@ describe.each([
     });
     act(() => {
       testRenderer = createTestRenderer(
-        <ApolloProvider client={client}>
+        <ApolloReactRelayDuctTapeProvider client={client}>
           <ErrorBoundary>
             <RootComponent
               variables={{
@@ -270,7 +267,7 @@ describe.each([
               }}
             />
           </ErrorBoundary>
-        </ApolloProvider>
+        </ApolloReactRelayDuctTapeProvider>
       );
     });
   });
@@ -380,7 +377,7 @@ describe.each([
       it("fetches new data when variables change", async () => {
         act(() => {
           testRenderer.update(
-            <ApolloProvider client={client}>
+            <ApolloReactRelayDuctTapeProvider client={client}>
               <ErrorBoundary>
                 <RootComponent
                   variables={{
@@ -390,7 +387,7 @@ describe.each([
                   }}
                 />
               </ErrorBoundary>
-            </ApolloProvider>
+            </ApolloReactRelayDuctTapeProvider>
           );
         });
         await act(() =>
@@ -413,7 +410,7 @@ describe.each([
         const spy = jest.spyOn(client, "query");
         await act(async () => {
           testRenderer.update(
-            <ApolloProvider client={client}>
+            <ApolloReactRelayDuctTapeProvider client={client}>
               <ErrorBoundary>
                 <RootComponent
                   variables={{
@@ -423,7 +420,7 @@ describe.each([
                   }}
                 />
               </ErrorBoundary>
-            </ApolloProvider>
+            </ApolloReactRelayDuctTapeProvider>
           );
           return new Promise((resolve) => setTimeout(resolve, 100));
         });
@@ -526,7 +523,7 @@ describe.each([
     it("fetches new data when variables change", async () => {
       act(() => {
         testRenderer.update(
-          <ApolloProvider client={client}>
+          <ApolloReactRelayDuctTapeProvider client={client}>
             <ErrorBoundary>
               <RootComponent
                 variables={{
@@ -536,7 +533,7 @@ describe.each([
                 }}
               />
             </ErrorBoundary>
-          </ApolloProvider>
+          </ApolloReactRelayDuctTapeProvider>
         );
       });
       await act(() =>
