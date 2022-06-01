@@ -2,6 +2,7 @@ import {
   ApolloClient,
   useApolloClient as useDefaultApolloClient,
 } from "@apollo/client";
+import invariant from "invariant";
 import React from "react";
 
 /**
@@ -30,6 +31,10 @@ const ApolloReactRelayDuctTapeContext = React.createContext<
 export const ApolloReactRelayDuctTapeProvider: React.FC<{
   client: ApolloClient<any>;
 }> = (props) => {
+  invariant(
+    props.client,
+    "ApolloReactRelayDuctTapeProvider: client is required"
+  );
   return React.createElement(
     ApolloReactRelayDuctTapeContext.Provider,
     { value: props.client },
