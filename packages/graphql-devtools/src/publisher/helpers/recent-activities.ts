@@ -4,7 +4,7 @@ import { RECENT_DATA_CHANGES_TYPES } from "../../consts";
 
 export function getRecentActivities(
   items: unknown[],
-  lastIterationItems: unknown[]
+  lastIterationItems: unknown[],
 ): RecentActivityRaw[] | null {
   if (!lastIterationItems.length || !items.length) {
     return null;
@@ -27,7 +27,7 @@ export function getRecentActivities(
             id: uid(),
             change: RECENT_DATA_CHANGES_TYPES.REMOVED,
             data,
-          }))
+          })),
         );
       }
 
@@ -39,7 +39,7 @@ export function getRecentActivities(
       id: uid(),
       change: RECENT_DATA_CHANGES_TYPES.REMOVED,
       data,
-    }))
+    })),
   );
 
   return result;

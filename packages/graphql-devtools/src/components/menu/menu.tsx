@@ -81,7 +81,7 @@ export const Menu = React.memo((props: MenuProps) => {
                   tabIndex={0}
                   className={mergeClasses(
                     classes.menuItem,
-                    activeItem === index && classes.menuItemActive
+                    activeItem === index && classes.menuItemActive,
                   )}
                   onClick={() => setActiveItem(index)}
                 >

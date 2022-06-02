@@ -11,14 +11,14 @@ export class ApolloClientsPublisher {
     this.remplWrapper.subscribeToRemplStatus(
       "apollo-clients",
       this.globalOperationsFetcherHandler.bind(this),
-      6000
+      6000,
     );
     this.apolloPublisher = remplWrapper.publisher;
   }
 
   private updateActiveClients(clientObjects: ClientObject[]) {
     this.activeClients = new Set(
-      clientObjects.map((clientObjects) => clientObjects.clientId)
+      clientObjects.map((clientObjects) => clientObjects.clientId),
     );
   }
 
@@ -29,7 +29,7 @@ export class ApolloClientsPublisher {
     }
 
     hasChanged = clientObjects.some(
-      (client: ClientObject) => !this.activeClients.has(client.clientId)
+      (client: ClientObject) => !this.activeClients.has(client.clientId),
     );
 
     if (hasChanged) {
@@ -47,7 +47,7 @@ export class ApolloClientsPublisher {
     }
 
     const apolloClientIds = clientObjects.map(
-      (apolloClient) => apolloClient.clientId
+      (apolloClient) => apolloClient.clientId,
     );
 
     this.apolloPublisher.ns("apollo-client-ids").publish(apolloClientIds);

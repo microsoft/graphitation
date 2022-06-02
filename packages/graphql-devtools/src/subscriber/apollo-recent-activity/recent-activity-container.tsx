@@ -9,17 +9,17 @@ import { Info20Regular } from "@fluentui/react-icons";
 
 function filterActivities(
   recentActivities: RecentActivities[],
-  searchKey: string
+  searchKey: string,
 ): RecentActivities[] {
   if (!searchKey?.trim()) return recentActivities;
 
   return recentActivities.map(({ queries, mutations, timestamp }) => {
     const filteredQueries = queries.filter(({ data: { name } }) =>
-      name.toLowerCase().includes(searchKey.toLowerCase())
+      name.toLowerCase().includes(searchKey.toLowerCase()),
     );
 
     const filteredMutations = mutations.filter(({ data: { name } }) =>
-      name.toLowerCase().includes(searchKey.toLowerCase())
+      name.toLowerCase().includes(searchKey.toLowerCase()),
     );
 
     return {
@@ -32,10 +32,11 @@ function filterActivities(
 
 export const RecentActivityContainer = React.memo(() => {
   const [recentActivities, setRecentActivities] = useState<RecentActivities[]>(
-    []
+    [],
   );
-  const [recordRecentActivity, setRecordRecentActivity] =
-    useState<boolean>(false);
+  const [recordRecentActivity, setRecordRecentActivity] = useState<boolean>(
+    false,
+  );
 
   const [openDescription, setOpenDescription] = useState<boolean>(false);
   const [searchKey, setSearchKey] = React.useState("");
@@ -66,7 +67,7 @@ export const RecentActivityContainer = React.memo(() => {
     (shouldRecord: boolean) => {
       remplSubscriber.callRemote("recordRecentActivity", { shouldRecord });
     },
-    []
+    [],
   );
 
   const toggleRecordRecentChanges = () => {
@@ -79,7 +80,7 @@ export const RecentActivityContainer = React.memo(() => {
       <div
         className={mergeClasses(
           classes.innerContainer,
-          openDescription && classes.innerContainerDescription
+          openDescription && classes.innerContainerDescription,
         )}
       >
         <div className={classes.header}>
@@ -110,7 +111,7 @@ export const RecentActivityContainer = React.memo(() => {
         <div
           className={mergeClasses(
             classes.description,
-            openDescription && classes.openDescription
+            openDescription && classes.openDescription,
           )}
         >
           Monitor recently fired mutations and recently activated/deactivated

@@ -29,12 +29,12 @@ interface IApolloCacheRenderer {
 
 function filterCacheObjects(
   cacheObjectsWithSize: CacheObjectWithSize[],
-  searchKey: string
+  searchKey: string,
 ) {
   if (!searchKey) return cacheObjectsWithSize;
 
   return cacheObjectsWithSize.filter(({ key }: CacheObjectWithSize) =>
-    key.toLowerCase().includes(searchKey.toLowerCase())
+    key.toLowerCase().includes(searchKey.toLowerCase()),
   );
 }
 
@@ -52,7 +52,9 @@ export const ApolloCacheRenderer = React.memo(
     const [searchKey, setSearchKey] = React.useState("");
     const [currentCache, setCurrentCache] = React.useState("all");
     const [recordRecentCache, setRecordRecentCache] = React.useState(false);
-    const [duplicatedDescriprion, setDuplicatedDescriprion] = React.useState(false);
+    const [duplicatedDescriprion, setDuplicatedDescriprion] = React.useState(
+      false,
+    );
     const classes = useStyles();
     const buttonsAttrs = useArrowNavigationGroup({
       circular: true,
@@ -73,7 +75,7 @@ export const ApolloCacheRenderer = React.memo(
 
     const debouncedSetSearchKey = useCallback(
       debounce((searchKey: string) => setSearchKey(searchKey), 250),
-      [setSearchKey]
+      [setSearchKey],
     );
 
     return (
@@ -94,7 +96,7 @@ export const ApolloCacheRenderer = React.memo(
                     tabIndex={0}
                     className={mergeClasses(
                       classes.actionButton,
-                      recordRecentCache && classes.activeRecord
+                      recordRecentCache && classes.activeRecord,
                     )}
                     onClick={toggleRecordRecentChanges}
                   >
@@ -122,7 +124,9 @@ export const ApolloCacheRenderer = React.memo(
                     title="Information"
                     tabIndex={0}
                     className={classes.actionButton}
-                    onClick={() => setDuplicatedDescriprion(!duplicatedDescriprion)}
+                    onClick={() =>
+                      setDuplicatedDescriprion(!duplicatedDescriprion)
+                    }
                   >
                     <Info20Regular />
                   </Button>
@@ -175,5 +179,5 @@ export const ApolloCacheRenderer = React.memo(
         </Text>
       </div>
     );
-  }
+  },
 );

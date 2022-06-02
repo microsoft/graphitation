@@ -7,21 +7,22 @@ import { remplSubscriber } from "../rempl";
 
 (window as any).global = window;
 
-export const createSimpleFetcher =
-  (activeClientId: string) => (graphQLParams: FetcherParams) =>
-    new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        console.error("graiphql request timeout");
-        reject();
-      }, 3000);
+export const createSimpleFetcher = (activeClientId: string) => (
+  graphQLParams: FetcherParams,
+) =>
+  new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      console.error("graiphql request timeout");
+      reject();
+    }, 3000);
 
-      remplSubscriber
-        .callRemote("graphiql", activeClientId, graphQLParams)
-        .then((res: unknown) => {
-          clearTimeout(timeout);
-          resolve(res);
-        });
-    });
+    remplSubscriber
+      .callRemote("graphiql", activeClientId, graphQLParams)
+      .then((res: unknown) => {
+        clearTimeout(timeout);
+        resolve(res);
+      });
+  });
 
 const createFetcher = (activeClientId: string) => {
   const simpleFetcher = createSimpleFetcher(activeClientId);

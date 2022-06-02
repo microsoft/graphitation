@@ -4,7 +4,7 @@ import { CacheDuplicates, ApolloKeyFields } from "../../types";
 
 function getObjectWithoutKeyFields(
   cacheItem: StoreObject,
-  keyFields?: string[]
+  keyFields?: string[],
 ): StoreObject {
   const cacheItemWithoutKeyFields: StoreObject = {};
   for (const [key, value] of Object.entries(cacheItem)) {
@@ -22,7 +22,7 @@ function getObjectWithoutKeyFields(
 
 function getObjectTypeDuplicates(
   objectTypeItems: Record<string, StoreObject>,
-  keyFields?: string[]
+  keyFields?: string[],
 ) {
   const duplicateItems = [];
   const cacheItemKeys = new Set(Object.keys(objectTypeItems));
@@ -35,7 +35,7 @@ function getObjectTypeDuplicates(
         cacheItemKey !== cacheItemKey2 &&
         isEqual(
           getObjectWithoutKeyFields(objectTypeItems[cacheItemKey], keyFields),
-          getObjectWithoutKeyFields(objectTypeItems[cacheItemKey2], keyFields)
+          getObjectWithoutKeyFields(objectTypeItems[cacheItemKey2], keyFields),
         )
       ) {
         keySet.add(cacheItemKey);
@@ -62,7 +62,7 @@ function getObjectTypeDuplicates(
 
 export function getClientCacheDuplicates(
   cache: NormalizedCacheObject,
-  apolloKeyFields?: ApolloKeyFields
+  apolloKeyFields?: ApolloKeyFields,
 ): CacheDuplicates {
   const groupedItems = groupByType(cache);
   const duplicateItems = [];
@@ -73,7 +73,7 @@ export function getClientCacheDuplicates(
 
       const objectTypeDuplicates = getObjectTypeDuplicates(
         groupedItems[objectType],
-        keyFields
+        keyFields,
       );
 
       for (const duplicates of objectTypeDuplicates) {

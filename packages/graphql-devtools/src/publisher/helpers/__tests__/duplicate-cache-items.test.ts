@@ -27,8 +27,8 @@ describe(".getClientCacheDuplicates", () => {
             testProperty: { nestedProperty: "test" },
           },
         },
-        { hatak: ["objectId", "secondId"] }
-      )
+        { hatak: ["objectId", "secondId"] },
+      ),
     ).toMatchObject([
       [
         { "car:123": { id: "1", testProperty: "test" } },

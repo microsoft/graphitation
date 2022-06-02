@@ -21,7 +21,7 @@ export class ApolloRecentActivityPublisher {
     this.remplWrapper.subscribeToRemplStatus(
       "recent-activities",
       this.trackerDataPublishHandler.bind(this),
-      400
+      400,
     );
     this.apolloPublisher = remplWrapper.publisher;
     this.attachMethodsToPublisher();
@@ -43,7 +43,7 @@ export class ApolloRecentActivityPublisher {
     }
 
     const newData = this.serializeRecentActivitiesDataObjects(
-      activeClient.client
+      activeClient.client,
     );
 
     if (!newData.mutations.length && !newData.queries.length) {
@@ -54,7 +54,7 @@ export class ApolloRecentActivityPublisher {
   }
 
   private serializeRecentActivitiesDataObjects = (
-    client: ApolloClient<NormalizedCacheObject>
+    client: ApolloClient<NormalizedCacheObject>,
   ) => {
     const recentQueries = this.getQueriesRecentActivities(client);
     const recentMutations = this.getMutationsRecentActivities(client);
@@ -63,7 +63,7 @@ export class ApolloRecentActivityPublisher {
   };
 
   private getQueriesRecentActivities(
-    client: ApolloClient<NormalizedCacheObject>
+    client: ApolloClient<NormalizedCacheObject>,
   ) {
     const currentQueries = this.getQueries(client);
     if (!this.lastIterationData.queries.size) {
@@ -73,7 +73,7 @@ export class ApolloRecentActivityPublisher {
     }
     const currentQueriesValues = Array.from(currentQueries.values());
     const lastIterationValues = Array.from(
-      this.lastIterationData.queries.values()
+      this.lastIterationData.queries.values(),
     );
     this.lastIterationData.queries = new Map(currentQueries);
 
@@ -81,7 +81,7 @@ export class ApolloRecentActivityPublisher {
   }
 
   private getMutationsRecentActivities(
-    client: ApolloClient<NormalizedCacheObject>
+    client: ApolloClient<NormalizedCacheObject>,
   ) {
     const currentMutations = this.getMutations(client);
     if (!Object.keys(this.lastIterationData.mutations).length) {

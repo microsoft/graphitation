@@ -29,8 +29,12 @@ function hideGlobalOperations(globalOperations: ApolloGlobalOperations) {
 }
 
 const Router = React.memo(() => {
-  const { mutationsCount, queriesCount, mutationsHaveError, queriesHaveError } =
-    useContext(ApolloTrackerMetadataContext);
+  const {
+    mutationsCount,
+    queriesCount,
+    mutationsHaveError,
+    queriesHaveError,
+  } = useContext(ApolloTrackerMetadataContext);
   const cacheData = useContext(ApolloCacheContext);
   const globalOperations = useContext(ApolloGlobalOperationsContext);
 

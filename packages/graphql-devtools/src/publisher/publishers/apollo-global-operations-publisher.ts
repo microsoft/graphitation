@@ -9,7 +9,7 @@ export class ApolloGlobalOperationsPublisher {
     this.remplWrapper.subscribeToRemplStatus(
       "global-operations",
       this.globalOperationsFetcherHandler.bind(this),
-      6000
+      6000,
     );
     this.apolloPublisher = remplWrapper.publisher;
   }

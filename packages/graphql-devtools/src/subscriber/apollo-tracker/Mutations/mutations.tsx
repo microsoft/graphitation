@@ -12,7 +12,7 @@ export const Mutations = ({ mutations }: { mutations: Mutation[] }) => {
   const classes = mutationsStyles();
   const globalMutations = useMemo(
     () => new Set(globalOperations.globalMutations),
-    [globalOperations]
+    [globalOperations],
   );
 
   if (!mutations.length) {
@@ -23,10 +23,12 @@ export const Mutations = ({ mutations }: { mutations: Mutation[] }) => {
 
   return (
     <div className={classes.root}>
-      <div className={mergeClasses(
-        classes.innerContainer,
-        isExpanded && classes.innerContainerFull
-      )}>
+      <div
+        className={mergeClasses(
+          classes.innerContainer,
+          isExpanded && classes.innerContainerFull,
+        )}
+      >
         <List
           isExpanded={isExpanded}
           items={mutations
@@ -36,13 +38,11 @@ export const Mutations = ({ mutations }: { mutations: Mutation[] }) => {
               onClick: () => setSelected(key),
               content: (
                 <>
-                  <Text 
-                    weight={key === selected ? "semibold" : "regular"}>
+                  <Text weight={key === selected ? "semibold" : "regular"}>
                     {name}
                   </Text>
                   {globalMutations.has(name) && (
-                    <Text 
-                      weight="semibold">{" (GO)"}</Text>
+                    <Text weight="semibold">{" (GO)"}</Text>
                   )}
                   {errorMessage && (
                     <Text

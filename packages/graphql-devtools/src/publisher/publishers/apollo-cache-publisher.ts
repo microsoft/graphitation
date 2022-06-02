@@ -21,7 +21,7 @@ export class ApolloCachePublisher {
     this.remplWrapper.subscribeToRemplStatus(
       "apollo-cache",
       this.cachePublishHandler.bind(this),
-      1500
+      1500,
     );
     this.apolloPublisher = remplWrapper.publisher;
     this.attachMethodsToPublisher();
@@ -48,7 +48,7 @@ export class ApolloCachePublisher {
 
   private diffCaches(
     currentCache: NormalizedCacheObject,
-    previousCache: NormalizedCacheObject
+    previousCache: NormalizedCacheObject,
   ) {
     return Object.fromEntries(
       Object.entries(currentCache).filter(([key, value]) => {
@@ -59,7 +59,7 @@ export class ApolloCachePublisher {
           return true;
         }
         return false;
-      })
+      }),
     );
   }
 

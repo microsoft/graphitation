@@ -8,7 +8,7 @@ export const useStyles = makeStyles({
     maxWidth: "220px",
   },
   fill: {
-    maxWidth: "auto"
+    maxWidth: "auto",
   },
   hidden: {
     width: "0",
@@ -25,7 +25,7 @@ export const useStyles = makeStyles({
     ...shorthands.margin(0),
     ...shorthands.padding("5px"),
     height: "calc(100% - 48px)",
-    boxSizing: "border-box"
+    boxSizing: "border-box",
   },
   listItem: {
     position: "relative",
@@ -40,7 +40,7 @@ export const useStyles = makeStyles({
       backgroundColor: "#F5F5F6",
       color: "#000",
     },
-    ...keyboardFocusedStyle('0'),
+    ...keyboardFocusedStyle("0"),
   },
   listItemActive: {
     backgroundColor: "#F5F5F6",

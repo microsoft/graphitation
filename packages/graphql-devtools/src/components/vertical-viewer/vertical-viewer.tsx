@@ -1,7 +1,10 @@
 import React from "react";
-import {Button, Text } from "@fluentui/react-components";
+import { Button, Text } from "@fluentui/react-components";
 import { useStyles } from "./vertical-viewer.styles";
-import {ChevronCircleLeft20Regular, ChevronCircleRight20Regular} from "@fluentui/react-icons";
+import {
+  ChevronCircleLeft20Regular,
+  ChevronCircleRight20Regular,
+} from "@fluentui/react-icons";
 
 interface IDataItem {
   name: string;
@@ -24,24 +27,28 @@ export const VerticalViewer = React.memo(
     const classes = useStyles();
 
     return (
-      <div
-        className={classes.container}
-      >
+      <div className={classes.container}>
         <div className={classes.header}>
-            <Button
-              title={isExpanded ? "Show list" : "Expand"}
-              className={classes.controlButton}
-              onClick={onExpand}
-            >
-              {isExpanded ? <ChevronCircleRight20Regular /> : <ChevronCircleLeft20Regular />}
-            </Button>
+          <Button
+            title={isExpanded ? "Show list" : "Expand"}
+            className={classes.controlButton}
+            onClick={onExpand}
+          >
+            {isExpanded ? (
+              <ChevronCircleRight20Regular />
+            ) : (
+              <ChevronCircleLeft20Regular />
+            )}
+          </Button>
           <Text className={classes.title} weight="semibold">
             {`${data.name} (${isMutation ? "Mutation" : "Watched Query"})`}
           </Text>
         </div>
         <div className={classes.details}>
           <div>
-            <Text weight="semibold">{isMutation ? "Mutation String" : "Query String"}</Text>
+            <Text weight="semibold">
+              {isMutation ? "Mutation String" : "Query String"}
+            </Text>
             <div className={classes.codeBox} style={{ fontSize: "12px" }}>
               <pre>
                 <code>
@@ -87,5 +94,5 @@ export const VerticalViewer = React.memo(
         </div>
       </div>
     );
-  }
+  },
 );

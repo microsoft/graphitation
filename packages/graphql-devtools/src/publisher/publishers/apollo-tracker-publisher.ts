@@ -18,7 +18,7 @@ export class ApolloTrackerPublisher {
     this.remplWrapper.subscribeToRemplStatus(
       "apollo-tracker",
       this.trackerDataPublishHandler.bind(this),
-      2000
+      2000,
     );
     this.apolloPublisher = remplWrapper.publisher;
     this.attachMethodsToPublisher();
@@ -67,7 +67,7 @@ export class ApolloTrackerPublisher {
   }
 
   private serializeTrackerMutations = (
-    client: ApolloClient<NormalizedCacheObject>
+    client: ApolloClient<NormalizedCacheObject>,
   ) => {
     const mutations = Object.values(this.getMutations(client));
 
@@ -82,7 +82,7 @@ export class ApolloTrackerPublisher {
   };
 
   private serializeTrackerQueries = (
-    client: ApolloClient<NormalizedCacheObject>
+    client: ApolloClient<NormalizedCacheObject>,
   ) => {
     const queries = this.getQueries(client);
 

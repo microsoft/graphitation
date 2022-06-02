@@ -81,5 +81,5 @@ export const ApolloCacheDuplicatedItems = React.memo(
         ) : null}
       </div>
     );
-  }
+  },
 );

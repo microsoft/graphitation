@@ -21,7 +21,7 @@ export class ApolloCacheDuplicatesPublisher {
     this.remplWrapper.subscribeToRemplStatus(
       "apollo-cache-duplicates",
       this.cacheDuplicatesHandler.bind(this),
-      1500
+      1500,
     );
     this.apolloPublisher = remplWrapper.publisher;
     this.attachMethodsToPublisher();
@@ -49,7 +49,7 @@ export class ApolloCacheDuplicatesPublisher {
     const cache = this.getCache(client);
     this.duplicatesCacheItems = getClientCacheDuplicates(
       cache,
-      this.apolloKeyFields
+      this.apolloKeyFields,
     );
 
     return this.duplicatesCacheItems;
@@ -60,8 +60,9 @@ export class ApolloCacheDuplicatesPublisher {
       return;
     }
 
-    const serializedCacheDuplicatesObject =
-      this.serializeCacheDuplicatesObjects(this.client);
+    const serializedCacheDuplicatesObject = this.serializeCacheDuplicatesObjects(
+      this.client,
+    );
     this.publishCacheDuplicates(serializedCacheDuplicatesObject);
   }
 

@@ -10,8 +10,9 @@ export type ApolloCacheContextType = {
   cacheObjects: ClientCacheObject;
 } | null;
 
-export const ApolloCacheContext =
-  React.createContext<ApolloCacheContextType>(null);
+export const ApolloCacheContext = React.createContext<ApolloCacheContextType>(
+  null,
+);
 
 export const ApolloCacheContextWrapper = ({
   children,
@@ -43,7 +44,7 @@ export const ApolloCacheContextWrapper = ({
       setCacheObjects(cacheObjectsToModify);
       remplSubscriber.callRemote("removeCacheKey", key);
     },
-    [cacheObjects]
+    [cacheObjects],
   );
 
   const clearRecentCacheChanges = React.useCallback(() => {
@@ -62,7 +63,7 @@ export const ApolloCacheContextWrapper = ({
         shouldRecord,
       });
     },
-    [cacheObjects]
+    [cacheObjects],
   );
 
   return (
@@ -81,7 +82,7 @@ export const ApolloCacheContextWrapper = ({
 
 function removeKeyFromCacheState(
   key: string,
-  cacheState: NormalizedCacheObject
+  cacheState: NormalizedCacheObject,
 ): NormalizedCacheObject {
   return Object.keys(cacheState)
     .filter((cacheKey: string) => cacheKey !== key)

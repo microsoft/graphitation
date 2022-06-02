@@ -9,16 +9,16 @@ export const useStyles = makeStyles({
     ...shorthands.padding("10px"),
   },
   innerContainer: {
-      height: "100%",
-      backgroundColor: "#fff",
-      ...shorthands.borderRadius("6px"),
-      ...shorthands.overflow("auto")
+    height: "100%",
+    backgroundColor: "#fff",
+    ...shorthands.borderRadius("6px"),
+    ...shorthands.overflow("auto"),
   },
   infoItem: {
-		...shorthands.padding("10px"),
-		...shorthands.borderBottom("1px", "solid", "#F5F5F5"),
-		"&:hover": {
-			backgroundColor: "#F5F5F6"
-		}
-	},
+    ...shorthands.padding("10px"),
+    ...shorthands.borderBottom("1px", "solid", "#F5F5F5"),
+    "&:hover": {
+      backgroundColor: "#F5F5F6",
+    },
+  },
 });

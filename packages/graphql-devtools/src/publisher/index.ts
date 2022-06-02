@@ -8,7 +8,7 @@ import { ApolloGlobalOperationsPublisher } from "./publishers/apollo-global-oper
 import { ApolloRecentActivityPublisher } from "./publishers/apollo-recent-activity-publisher";
 
 const remplWrapper = new RemplWrapper(
-  "ctrl+shift+alt+0, command+shift+option+0"
+  "ctrl+shift+alt+0, command+shift+option+0",
 );
 
 new ApolloClientsPublisher(remplWrapper);

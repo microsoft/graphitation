@@ -22,44 +22,48 @@ function filterListItems(items: any[], searchValue: string) {
 }
 
 export const List = React.memo(
-  ({ 
-    isExpanded = false, 
-    items, 
-    selectedIndex, 
-    search = true, 
-    fill = false 
+  ({
+    isExpanded = false,
+    items,
+    selectedIndex,
+    search = true,
+    fill = false,
   }: ListProps) => {
     const [searchValue, setSearchValue] = useState("");
     const classes = useStyles();
-    const listAttributes = useArrowNavigationGroup({circular: true});
+    const listAttributes = useArrowNavigationGroup({ circular: true });
 
     return (
       <div
         className={mergeClasses(
-          classes.root, 
+          classes.root,
           fill && classes.fill,
-          isExpanded && classes.hidden
+          isExpanded && classes.hidden,
         )}
       >
-        {search && <div className={classes.searchContainer}>
-          <Search
-            onSearchChange={(e: React.SyntheticEvent) => {
-              const input = e.target as HTMLInputElement;
-              setSearchValue(input.value);
-            }}
-          />
-        </div>}
+        {search && (
+          <div className={classes.searchContainer}>
+            <Search
+              onSearchChange={(e: React.SyntheticEvent) => {
+                const input = e.target as HTMLInputElement;
+                setSearchValue(input.value);
+              }}
+            />
+          </div>
+        )}
         <ul className={classes.list} {...listAttributes}>
           {filterListItems(items, searchValue).map((item) => (
             <li
               tabIndex={0}
               className={mergeClasses(
                 classes.listItem,
-                selectedIndex === item.index && classes.listItemActive
+                selectedIndex === item.index && classes.listItemActive,
               )}
               key={item.key}
               onClick={() => item.onClick(item.index)}
-              onKeyDown={(e) => {if (e.key === 'Enter') item.onClick(item.index)}}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") item.onClick(item.index);
+              }}
             >
               {item.content}
             </li>
@@ -67,5 +71,5 @@ export const List = React.memo(
         </ul>
       </div>
     );
-  }
+  },
 );

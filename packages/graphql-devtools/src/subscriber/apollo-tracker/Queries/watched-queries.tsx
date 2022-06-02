@@ -9,10 +9,9 @@ export const WatchedQueries = ({ queries }: { queries: WatchedQuery[] }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selected, setSelected] = useState<number>(0);
   const globalOperations = useContext(ApolloGlobalOperationsContext);
-  const globalQueries = useMemo(
-    () => new Set(globalOperations.globalQueries),
-    [globalOperations]
-  );
+  const globalQueries = useMemo(() => new Set(globalOperations.globalQueries), [
+    globalOperations,
+  ]);
   const classes = watchedQueriesStyles();
 
   if (!queries.length) {
@@ -23,10 +22,12 @@ export const WatchedQueries = ({ queries }: { queries: WatchedQuery[] }) => {
 
   return (
     <div className={classes.root}>
-      <div className={mergeClasses(
-        classes.innerContainer, 
-        isExpanded && classes.innerContainerFull
-      )}>
+      <div
+        className={mergeClasses(
+          classes.innerContainer,
+          isExpanded && classes.innerContainerFull,
+        )}
+      >
         <List
           isExpanded={isExpanded}
           items={queries
