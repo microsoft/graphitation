@@ -1,7 +1,7 @@
 import { getRecentActivities } from "../recent-activities";
 import { RECENT_DATA_CHANGES_TYPES } from "../../../consts";
 
-jest.mock("uid", () => ({ uid: () => "test" }));
+jest.mock("uuid", () => ({ v4: () => "test" }));
 
 describe(".getRecentActivities", () => {
   it("get list of recent activities", () => {
