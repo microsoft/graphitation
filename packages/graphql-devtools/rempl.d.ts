@@ -4,6 +4,7 @@ import {
   ClientCacheObject,
   FetcherParams,
   Mutation,
+  ApolloTrackerMetadata,
   RecentActivities,
   WatchedQuery,
 } from "./src/types";
@@ -13,8 +14,8 @@ declare module "rempl" {
     name: string,
     requestUI: (
       settings: any,
-      callback: (error: Error | null, type: string, value: string) => void,
-    ) => void,
+      callback: (error: Error | null, type: string, value: string) => void
+    ) => void
   ): Publisher;
   export function connectPublisherWs(uri?: string): void;
   export function getSubscriber(): Subscriber;
@@ -62,6 +63,7 @@ declare module "rempl" {
 
         removeCacheKey(key: string): void;
         clearRecent(): void;
+        clearApolloTrackerMetadata(): void;
         recordRecent(options?: { shouldRecord?: boolean }): void;
 
         clearRecentActivity(): void;
@@ -98,16 +100,12 @@ declare module "rempl" {
       data: Mutation[];
       methods: never;
     };
-    "apollo-tracker-mutations-count": {
-      data: number;
+    "apollo-tracker-metadata": {
+      data: Partial<ApolloTrackerMetadata>;
       methods: never;
     };
     "apollo-tracker-queries": {
       data: WatchedQuery[];
-      methods: never;
-    };
-    "apollo-tracker-queries-count": {
-      data: number;
       methods: never;
     };
   }>;
@@ -116,7 +114,7 @@ declare module "rempl" {
     publish(data: NS["data"]): void;
     provide<T extends keyof NS["methods"], M extends NS["methods"][T]>(
       method: T,
-      fn: (...args: Parameters<M>) => Promise<ReturnType<M>> | ReturnType<M>,
+      fn: (...args: Parameters<M>) => Promise<ReturnType<M>> | ReturnType<M>
     ): void;
     provide(methods: Partial<NS["methods"]>): void;
   };
@@ -133,24 +131,24 @@ declare module "rempl" {
       ...args: Parameters<M>
     ): Promise<ReturnType<M>>;
     onRemoteMethodsChanged<T extends keyof NS["methods"]>(
-      callback: (methods: T[]) => void,
+      callback: (methods: T[]) => void
     ): () => void;
     getRemoteMethod<T extends keyof NS["methods"], M extends NS["methods"][T]>(
-      method: T,
+      method: T
     ): SubscriberRemoveMethod<M>;
   };
 
   export type Publisher = {
     id: string;
     ns<T extends keyof RemoteProtocol>(
-      channel: T,
+      channel: T
     ): PublisherNS<RemoteProtocol[T]>;
   } & PublisherNS<RemoteProtocol["*"]>;
 
   export type Subscriber = {
     connected: ReactiveValue<boolean>;
     ns<T extends keyof RemoteProtocol>(
-      channel: T,
+      channel: T
     ): SubscriberNS<RemoteProtocol[T]>;
   } & SubscriberNS<RemoteProtocol["*"]>;
 }
