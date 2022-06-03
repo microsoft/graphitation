@@ -1,6 +1,7 @@
 import {
   executeSync,
   getNamedType,
+  getNullableType,
   getOperationAST,
   isAbstractType,
   isCompositeType,
@@ -103,6 +104,7 @@ export function generate(
       }
 
       const namedReturnType = getNamedType(info.returnType);
+      const isList = isListType(getNullableType(info.returnType));
       if (isCompositeType(namedReturnType)) {
         // TODO: This 'is list' logic is also done by the value resolver,
         // so probably need to refactor this code to actually leverage that.
@@ -126,7 +128,7 @@ export function generate(
           };
           return result;
         };
-        if (isListType(info.returnType)) {
+        if (isList) {
           const value = source[selectionName];
           const result = Array.isArray(value)
             ? value.map(generateValue)
@@ -146,7 +148,7 @@ export function generate(
           info,
           source.__abstractType || info.parentType,
           resolveValue,
-          isListType(info.returnType),
+          isList,
         );
         return result;
       } else if (isEnumType(namedReturnType)) {
@@ -157,7 +159,7 @@ export function generate(
             : String(value).toUpperCase();
         }
         const enumValues = namedReturnType.getValues().map((e) => e.name);
-        return isListType(info.returnType) ? enumValues : enumValues[0];
+        return isList ? enumValues : enumValues[0];
       } else {
         return null;
       }
