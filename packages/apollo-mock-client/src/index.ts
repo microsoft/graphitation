@@ -1,20 +1,18 @@
 import {
   ApolloLink,
   Observable,
-  Operation,
-  FetchResult,
   ApolloClient,
   InMemoryCache,
-  NormalizedCacheObject,
 } from "@apollo/client";
+import type {
+  Operation,
+  FetchResult,
+  NormalizedCacheObject,
+  InMemoryCacheConfig,
+} from "@apollo/client";
+import { assertType, isAbstractType } from "graphql";
+import type { DocumentNode, ExecutionResult, GraphQLSchema } from "graphql";
 import invariant from "invariant";
-import {
-  assertType,
-  DocumentNode,
-  ExecutionResult,
-  GraphQLSchema,
-  isAbstractType,
-} from "graphql";
 
 export interface RequestDescriptor<Node = DocumentNode> {
   readonly node: Node;
@@ -314,7 +312,10 @@ class Mock implements MockFunctions {
   }
 }
 
-export function createMockClient(schema: GraphQLSchema): ApolloMockClient {
+export function createMockClient(
+  schema: GraphQLSchema,
+  options?: { cache?: InMemoryCacheConfig },
+): ApolloMockClient {
   // Build a list of abstract types and their possible types.
   // TODO: Cache this on the schema?
   const possibleTypes: Record<string, string[]> = {};
@@ -336,6 +337,7 @@ export function createMockClient(schema: GraphQLSchema): ApolloMockClient {
   >(
     new ApolloClient({
       cache: new InMemoryCache({
+        ...options?.cache,
         possibleTypes,
         addTypename: true,
       }),

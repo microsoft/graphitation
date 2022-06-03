@@ -1,6 +1,7 @@
 import {
   executeSync,
   getNamedType,
+  getNullableType,
   getOperationAST,
   isAbstractType,
   isCompositeType,
@@ -8,6 +9,8 @@ import {
   isListType,
   isScalarType,
   visit,
+} from "graphql";
+import type {
   DocumentNode,
   GraphQLResolveInfo,
   GraphQLSchema,
@@ -20,11 +23,14 @@ import {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
-import { Path, pathToArray } from "graphql/jsutils/Path";
+import { pathToArray } from "graphql/jsutils/Path";
+import type { Path } from "graphql/jsutils/Path";
 import {
   createValueResolver,
   DEFAULT_MOCK_RESOLVERS,
   DEFAULT_MOCK_TYPENAME,
+} from "./vendor/RelayMockPayloadGenerator";
+import type {
   MockData,
   MockResolverContext,
   MockResolvers,
@@ -32,7 +38,7 @@ import {
 } from "./vendor/RelayMockPayloadGenerator";
 import invariant from "invariant";
 
-export { MockResolvers } from "./vendor/RelayMockPayloadGenerator";
+export type { MockResolvers };
 
 export interface RequestDescriptor<Node = DocumentNode> {
   readonly node: Node;
@@ -103,6 +109,7 @@ export function generate(
       }
 
       const namedReturnType = getNamedType(info.returnType);
+      const isList = isListType(getNullableType(info.returnType));
       if (isCompositeType(namedReturnType)) {
         // TODO: This 'is list' logic is also done by the value resolver,
         // so probably need to refactor this code to actually leverage that.
@@ -126,7 +133,7 @@ export function generate(
           };
           return result;
         };
-        if (isListType(info.returnType)) {
+        if (isList) {
           const value = source[selectionName];
           const result = Array.isArray(value)
             ? value.map(generateValue)
@@ -146,7 +153,7 @@ export function generate(
           info,
           source.__abstractType || info.parentType,
           resolveValue,
-          isListType(info.returnType),
+          isList,
         );
         return result;
       } else if (isEnumType(namedReturnType)) {
@@ -157,7 +164,7 @@ export function generate(
             : String(value).toUpperCase();
         }
         const enumValues = namedReturnType.getValues().map((e) => e.name);
-        return isListType(info.returnType) ? enumValues : enumValues[0];
+        return isList ? enumValues : enumValues[0];
       } else {
         return null;
       }
