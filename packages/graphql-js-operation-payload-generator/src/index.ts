@@ -8,7 +8,7 @@ import {
   isEnumType,
   isListType,
   isScalarType,
-  visit
+  visit,
 } from "graphql";
 import type {
   DocumentNode,
@@ -23,7 +23,8 @@ import type {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
-import { type Path, pathToArray } from "graphql/jsutils/Path";
+import { pathToArray } from "graphql/jsutils/Path";
+import type { Path } from "graphql/jsutils/Path";
 import {
   createValueResolver,
   DEFAULT_MOCK_RESOLVERS,

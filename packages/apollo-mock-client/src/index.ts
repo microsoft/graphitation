@@ -1,21 +1,18 @@
 import {
   ApolloLink,
   Observable,
-  Operation,
-  FetchResult,
   ApolloClient,
   InMemoryCache,
+} from "@apollo/client";
+import type {
+  Operation,
+  FetchResult,
   NormalizedCacheObject,
   InMemoryCacheConfig,
 } from "@apollo/client";
+import { assertType, isAbstractType } from "graphql";
+import type { DocumentNode, ExecutionResult, GraphQLSchema } from "graphql";
 import invariant from "invariant";
-import {
-  assertType,
-  DocumentNode,
-  ExecutionResult,
-  GraphQLSchema,
-  isAbstractType,
-} from "graphql";
 
 export interface RequestDescriptor<Node = DocumentNode> {
   readonly node: Node;
