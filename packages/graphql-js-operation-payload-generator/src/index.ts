@@ -8,7 +8,9 @@ import {
   isEnumType,
   isListType,
   isScalarType,
-  visit,
+  visit
+} from "graphql";
+import type {
   DocumentNode,
   GraphQLResolveInfo,
   GraphQLSchema,
@@ -21,11 +23,13 @@ import {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
-import { Path, pathToArray } from "graphql/jsutils/Path";
+import { type Path, pathToArray } from "graphql/jsutils/Path";
 import {
   createValueResolver,
   DEFAULT_MOCK_RESOLVERS,
   DEFAULT_MOCK_TYPENAME,
+} from "./vendor/RelayMockPayloadGenerator";
+import type {
   MockData,
   MockResolverContext,
   MockResolvers,
@@ -33,7 +37,7 @@ import {
 } from "./vendor/RelayMockPayloadGenerator";
 import invariant from "invariant";
 
-export { MockResolvers } from "./vendor/RelayMockPayloadGenerator";
+export type { MockResolvers };
 
 export interface RequestDescriptor<Node = DocumentNode> {
   readonly node: Node;
