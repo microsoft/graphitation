@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Fri, 03 Jun 2022 14:02:33 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.9.1",
+      "version": "0.9.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "commit": "605c74f0e76c62902ef880da3c52acc76ce9a0fb",
+            "comment": "Work with nullable types and remove TS type export from mjs build"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 19 May 2022 14:31:59 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.9.0",
       "version": "0.9.0",

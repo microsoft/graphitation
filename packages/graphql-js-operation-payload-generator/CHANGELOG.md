@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-This log was last generated on Thu, 19 May 2022 14:31:59 GMT and should not be manually modified.
+This log was last generated on Fri, 03 Jun 2022 14:02:33 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.9.1
+
+Fri, 03 Jun 2022 14:02:33 GMT
+
+### Patches
+
+- Work with nullable types and remove TS type export from mjs build (eloy.de.enige@gmail.com)
 
 ## 0.9.0
 
