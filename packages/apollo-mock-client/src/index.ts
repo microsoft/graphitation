@@ -317,7 +317,7 @@ class Mock implements MockFunctions {
 
 export function createMockClient(
   schema: GraphQLSchema,
-  options?: { cache?: InMemoryCacheConfig }
+  options?: { cache?: InMemoryCacheConfig },
 ): ApolloMockClient {
   // Build a list of abstract types and their possible types.
   // TODO: Cache this on the schema?
