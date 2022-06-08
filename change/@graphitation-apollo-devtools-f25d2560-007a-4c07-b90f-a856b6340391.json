@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "devtools migration",
-  "packageName": "@graphitation/apollo-devtools",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}

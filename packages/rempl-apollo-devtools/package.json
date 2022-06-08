@@ -1,5 +1,5 @@
 {
-  "name": "@graphitation/apollo-devtools",
+  "name": "@graphitation/rempl-apollo-devtools",
   "license": "MIT",
   "version": "0.0.1",
   "main": "./dist/apollo-devtools.js",
