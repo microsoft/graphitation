@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "GraphQL codegen plugins - Supermassive typed document node",
+  "packageName": "@graphitation/graphql-codegen-plugins",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
