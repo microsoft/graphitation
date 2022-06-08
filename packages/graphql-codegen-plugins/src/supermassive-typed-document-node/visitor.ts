@@ -1,3 +1,8 @@
+/*
+ * Taken from https://github.com/dotansimha/graphql-code-generator/blob/4fee8c8c523b30163e913438b85a064c58e39087/packages/plugins/typescript/typed-document-node/src/visitor.ts
+ * MIT license https://github.com/dotansimha/graphql-code-generator/blob/4fee8c8c523b30163e913438b85a064c58e39087/LICENSE
+ */
+
 import autoBind from "auto-bind";
 import { Types } from "@graphql-codegen/plugin-helpers";
 import {
