@@ -1,6 +1,5 @@
 {
   "type": "minor",
-  "comment": "Devtools moved into graphitation",
   "packageName": "@graphitation/rempl-apollo-devtools",
   "email": "jakubvejr@microsoft.com",
   "dependentChangeType": "patch"
