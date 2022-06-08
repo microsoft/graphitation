@@ -1,12 +1,12 @@
 {
-  "name": "@graphitation/graphql-devtools",
+  "name": "@graphitation/apollo-devtools",
   "license": "MIT",
   "version": "0.0.1",
-  "main": "./dist/graphql-devtools.js",
+  "main": "./dist/apollo-devtools.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",
-    "directory": "packages/graphql-devtools"
+    "directory": "packages/apollo-devtools"
   },
   "scripts": {
     "build": "node scripts/build",
@@ -43,7 +43,7 @@
     "uuid": "^8.3.2"
   },
   "publishConfig": {
-    "main": "./dist/graphql-devtools",
+    "main": "./dist/apollo-devtools",
     "access": "public"
   }
 }

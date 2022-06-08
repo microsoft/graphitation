@@ -35,7 +35,7 @@ if (require.main === module) {
       bundle: true,
       minify: true,
       sourcemap: false,
-      outfile: "dist/graphql-devtools.js",
+      outfile: "dist/apollo-devtools.js",
       format: "iife",
       define: {
         __APOLLO_DEVTOOLS_SUBSCRIBER__: JSON.stringify(
