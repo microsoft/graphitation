@@ -13,7 +13,7 @@ import * as glob from "fast-glob";
 
 export const types = () => {
   return tscTask({
-    outDir: "lib",
+    outDir: argv().outDir || "lib",
     emitDeclarationOnly: true,
   });
 };
@@ -21,7 +21,7 @@ export const types = () => {
 export const build = () => {
   const baseEsbuildOptions: EsbuildBuildOptions = {
     entryPoints: glob.sync(["src/**/*.{ts,tsx}", "!src/**/__tests__/**"]),
-    outdir: "lib",
+    outdir: argv().outDir || "lib",
     target: "es6",
   };
   return parallel(
