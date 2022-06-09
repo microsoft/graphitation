@@ -1,6 +1,6 @@
 {
   "type": "minor",
-  "comment": "GraphQL codegen plugins - Supermassive typed document node",
+  "comment": "Supermassive typed document node plugin added",
   "packageName": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
   "email": "jakubvejr@microsoft.com",
   "dependentChangeType": "patch"
