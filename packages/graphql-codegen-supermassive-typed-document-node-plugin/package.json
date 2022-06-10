@@ -9,7 +9,7 @@
     "directory": "packages/graphql-codegen-supermassive-typed-document-node-plugin"
   },
   "scripts": {
-    "build": "monorepo-scripts build --outDir='./'",
+    "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts"
@@ -33,13 +33,13 @@
   "sideEffects": false,
   "access": "public",
   "publishConfig": {
-    "main": "./index",
-    "types": "./index.d.ts",
-    "module": "./index.mjs",
+    "main": "./lib/index",
+    "types": "./lib/index.d.ts",
+    "module": "./lib/index.mjs",
     "exports": {
       ".": {
-        "import": "./index.mjs",
-        "require": "./index.js"
+        "import": "./lib/index.mjs",
+        "require": "./lib/index.js"
       }
     }
   }
