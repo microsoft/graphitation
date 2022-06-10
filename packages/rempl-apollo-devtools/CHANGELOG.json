@@ -2,6 +2,21 @@
   "name": "@graphitation/rempl-apollo-devtools",
   "entries": [
     {
+      "date": "Fri, 10 Jun 2022 13:44:24 GMT",
+      "tag": "@graphitation/rempl-apollo-devtools_v0.1.1",
+      "version": "0.1.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/rempl-apollo-devtools",
+            "commit": "ee970910f77706ca4df951904ac170b4a1d11387",
+            "comment": "GraphiQL hotfix - wrong dependencies"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 08 Jun 2022 13:29:45 GMT",
       "tag": "@graphitation/rempl-apollo-devtools_v0.1.0",
       "version": "0.1.0",
