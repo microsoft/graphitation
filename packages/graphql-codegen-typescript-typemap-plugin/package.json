@@ -18,10 +18,11 @@
   "devDependencies": {
     "@graphql-codegen/plugin-helpers": "^1.18.2",
     "@types/jest": "^26.0.22",
-    "graphql": "^15.0.0",
+    "change-case-all": "1.0.14",
     "monorepo-scripts": "*"
   },
   "peerDependencies": {
+    "change-case-all": "1.0.14",
     "graphql": "^15.0.0"
   },
   "sideEffects": false,

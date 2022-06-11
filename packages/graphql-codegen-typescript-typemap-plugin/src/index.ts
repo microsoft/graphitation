@@ -1,8 +1,9 @@
 import type { CodegenPlugin } from "@graphql-codegen/plugin-helpers";
 import { isScalarType } from "graphql";
 import type { GraphQLSchema } from "graphql";
+import { pascalCase } from "change-case-all";
 
-export const typeMapPlugin = (schema: GraphQLSchema): string => {
+const typeMapPlugin = (schema: GraphQLSchema): string => {
   const typesMap = schema.getTypeMap();
   return [
     "export type TypeMap = {",
@@ -14,7 +15,7 @@ export const typeMapPlugin = (schema: GraphQLSchema): string => {
           `  "${typeName}": ${
             isScalarType(typesMap[typeName])
               ? `Scalars["${typeName}"]`
-              : typeName
+              : pascalCase(typeName)
           };`,
       ),
     "};\n",
@@ -25,4 +26,4 @@ const config: CodegenPlugin = {
   plugin: typeMapPlugin,
 };
 
-export default config;
+export = config;
