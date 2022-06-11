@@ -7,5 +7,10 @@
     "outDir": "lib"
   },
   "include": ["src"],
-  "references": [{ "path": "../graphql-js-tag" }]
+  "references": [{ "path": "../graphql-js-tag" }],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  }
 }
