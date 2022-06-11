@@ -1,0 +1,40 @@
+{
+  "name": "@graphitation/graphql-codegen-typescript-typemap-plugin",
+  "license": "MIT",
+  "version": "0.0.1",
+  "main": "./src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/graphitation.git",
+    "directory": "packages/template"
+  },
+  "scripts": {
+    "build": "monorepo-scripts build",
+    "lint": "monorepo-scripts lint",
+    "test": "monorepo-scripts test",
+    "types": "monorepo-scripts types",
+    "just": "monorepo-scripts"
+  },
+  "devDependencies": {
+    "@graphql-codegen/plugin-helpers": "^1.18.2",
+    "@types/jest": "^26.0.22",
+    "graphql": "^15.0.0",
+    "monorepo-scripts": "*"
+  },
+  "peerDependencies": {
+    "graphql": "^15.0.0"
+  },
+  "sideEffects": false,
+  "access": "public",
+  "publishConfig": {
+    "main": "./lib/index",
+    "types": "./lib/index.d.ts",
+    "module": "./lib/index.mjs",
+    "exports": {
+      ".": {
+        "import": "./lib/index.mjs",
+        "require": "./lib/index.js"
+      }
+    }
+  }
+}
