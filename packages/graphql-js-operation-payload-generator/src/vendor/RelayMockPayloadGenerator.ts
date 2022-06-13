@@ -15,12 +15,30 @@ export type MockResolverContext = Readonly<{
   args?: Record<string, unknown>;
 }>;
 
-type MockResolver = (
+type DeepPartial<T> = T extends object
+  ? {
+      [P in keyof T]?: DeepPartial<T[P]>;
+    }
+  : T | undefined;
+
+type MockResolver<T> = (
   context: MockResolverContext,
   generateId: () => number,
-) => unknown;
+) => DeepPartial<T> | undefined;
 
-export type MockResolvers = Record<string, MockResolver>;
+export type BaseMockResolvers = {
+  ID: string;
+  Boolean: boolean;
+  Int: number;
+  Float: number;
+  [key: string]: unknown;
+};
+
+export declare type MockResolvers<
+  TypeMap extends BaseMockResolvers = BaseMockResolvers
+> = {
+  [K in keyof TypeMap]?: MockResolver<TypeMap[K]>;
+};
 
 export interface MockData {
   __typename?: string;
@@ -83,7 +101,7 @@ function valueResolver(
       mockValue =
         possibleDefaultValue ??
         (typeName === "ID"
-          ? DEFAULT_MOCK_RESOLVERS.ID(context, generateId)
+          ? DEFAULT_MOCK_RESOLVERS.ID!(context, generateId)
           : `<mock-value-for-field-"${
               context.alias ?? context.name ?? "undefined"
             }">`);

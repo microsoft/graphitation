@@ -21,6 +21,7 @@ import { readFileSync } from "fs";
 
 import { graphql } from "@graphitation/graphql-js-tag";
 import { generate, MockResolvers } from "..";
+import { TypeMap } from "./__generated__/schema-types";
 
 const {
   FIXTURE_TAG,
@@ -35,9 +36,9 @@ const schema = buildSchema(
 
 function testGeneratedData(
   documentNode: DocumentNode,
-  mockResolvers?: MockResolvers | null,
+  mockResolvers?: MockResolvers<TypeMap>,
 ): void {
-  const payload = generate(
+  const payload = generate<TypeMap>(
     { schema, request: { node: documentNode, variables: {} } },
     mockResolvers,
   );
@@ -280,7 +281,7 @@ test("generate basic mock data", () => {
       }
       ${fragment}
     `,
-    null, // Mock Resolvers
+    undefined, // Mock Resolvers
   );
 });
 
@@ -1499,6 +1500,8 @@ describe("with @relay_test_operation", () => {
     );
   });
 
+  // TODO: Have to disable the type-checking for this. Unsure why this is
+  //       actually good to support, check with Relay team.
   test("generate mock for enum with different case should be OK", () => {
     testGeneratedData(
       graphql`
@@ -1516,7 +1519,7 @@ describe("with @relay_test_operation", () => {
       {
         User(context) {
           return {
-            environment: "Web",
+            environment: "Web" as any,
           };
         },
       },
@@ -1563,7 +1566,7 @@ describe("with @relay_test_operation", () => {
         {
           User(context) {
             return {
-              environment: "INVALID_VALUE",
+              environment: "INVALID_VALUE" as any,
             };
           },
         },
@@ -1817,11 +1820,11 @@ describe("with @relay_test_operation", () => {
           }
         }
       `,
-      {
-        UserNameRenderer() {
-          return null;
-        },
-      },
+      // {
+      //   UserNameRenderer() {
+      //     return null;
+      //   },
+      // },
     );
   });
 });
