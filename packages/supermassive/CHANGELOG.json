@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Mon, 13 Jun 2022 15:37:16 GMT",
+      "tag": "@graphitation/supermassive_v0.8.3",
+      "version": "0.8.3",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "a0a12b2193c85d419cf018560adce1370afa4121",
+            "comment": "Expand supermassive docs"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 03 May 2022 17:45:10 GMT",
       "tag": "@graphitation/supermassive_v0.8.3",
       "version": "0.8.3",
