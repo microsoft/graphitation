@@ -630,7 +630,7 @@ export type IdFieldTests = {
 export type Image = {
   __typename?: 'Image';
   height?: Maybe<Scalars['Int']>;
-  test_enums?: Maybe<TestEnums>;
+  test_enums?: Maybe<TestEnums | `${TestEnums}`>;
   uri?: Maybe<Scalars['String']>;
   width?: Maybe<Scalars['Int']>;
 };
@@ -1575,7 +1575,7 @@ export type StorySearchInput = {
   limit?: InputMaybe<Scalars['Int']>;
   offset?: InputMaybe<Scalars['Int']>;
   text?: InputMaybe<Scalars['String']>;
-  type?: InputMaybe<StoryType>;
+  type?: InputMaybe<StoryType | `${StoryType}`>;
 };
 
 export enum StoryType {
@@ -1705,7 +1705,7 @@ export type User = Actor & AllConcreteTypesImplementNode & Entity & HasJsField &
   count: Scalars['Int'];
   doesViewerLike?: Maybe<Scalars['Boolean']>;
   emailAddresses?: Maybe<Array<Maybe<Scalars['String']>>>;
-  environment?: Maybe<Environment>;
+  environment?: Maybe<Environment | `${Environment}`>;
   feedback?: Maybe<Feedback>;
   firstName?: Maybe<Scalars['String']>;
   friends?: Maybe<FriendsConnection>;
@@ -1737,7 +1737,7 @@ export type User = Actor & AllConcreteTypesImplementNode & Entity & HasJsField &
   subscribers?: Maybe<SubscribersConnection>;
   topLevelComments?: Maybe<TopLevelCommentsConnection>;
   tracking?: Maybe<Scalars['String']>;
-  traits?: Maybe<Array<Maybe<PersonalityTraits>>>;
+  traits?: Maybe<Array<Maybe<PersonalityTraits | `${PersonalityTraits}`>>>;
   url?: Maybe<Scalars['String']>;
   username?: Maybe<Scalars['String']>;
   viewerSavedState?: Maybe<Scalars['String']>;

@@ -9,6 +9,9 @@ generate(
           "typescript",
           "@graphitation/graphql-codegen-typescript-typemap-plugin",
         ],
+        config: {
+          allowEnumStringTypes: true,
+        },
       },
     },
   },
