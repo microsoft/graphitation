@@ -1,0 +1,41 @@
+{
+  "name": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+  "entries": [
+    {
+      "date": "Mon, 13 Jun 2022 15:37:16 GMT",
+      "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v0.1.0",
+      "version": "0.1.0",
+      "comments": {
+        "none": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "comment": "Bump @graphitation/supermassive to v0.8.3",
+            "commit": "a0a12b2193c85d419cf018560adce1370afa4121"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Fri, 10 Jun 2022 14:09:50 GMT",
+      "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v0.1.0",
+      "version": "0.1.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "commit": "9985dd0fb3e8b80807b3118e6b5f2d20df8397b3",
+            "comment": "Supermassive typed document node plugin added"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "comment": "Bump @graphitation/supermassive to v0.8.3",
+            "commit": "2f8bfe127192958c94261fd1e6ba998247204a31"
+          }
+        ]
+      }
+    }
+  ]
+}

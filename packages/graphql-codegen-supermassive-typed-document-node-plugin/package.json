@@ -1,0 +1,46 @@
+{
+  "name": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+  "license": "MIT",
+  "version": "0.1.0",
+  "main": "./src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/graphitation.git",
+    "directory": "packages/graphql-codegen-supermassive-typed-document-node-plugin"
+  },
+  "scripts": {
+    "build": "monorepo-scripts build",
+    "lint": "monorepo-scripts lint",
+    "types": "monorepo-scripts types",
+    "just": "monorepo-scripts"
+  },
+  "devDependencies": {
+    "@graphitation/supermassive": "*",
+    "@graphql-codegen/plugin-helpers": "^1.18.2",
+    "@graphql-codegen/visitor-plugin-common": "^1.17.20",
+    "@types/jest": "^26.0.22",
+    "graphql-tag": "^2.11.0",
+    "@graphql-tools/optimize": "^1.0.1",
+    "monorepo-scripts": "*"
+  },
+  "peerDependencies": {
+    "@graphql-codegen/plugin-helpers": ">= 1.18.0 < 2",
+    "@graphql-codegen/visitor-plugin-common": ">= ^1.17.0 < 2",
+    "graphql-tag": ">= 2.11.0 < 3",
+    "@graphql-tools/optimize": "^1.0.1",
+    "@graphitation/supermassive": ">= 0.8.3"
+  },
+  "sideEffects": false,
+  "access": "public",
+  "publishConfig": {
+    "main": "./lib/index",
+    "types": "./lib/index.d.ts",
+    "module": "./lib/index.mjs",
+    "exports": {
+      ".": {
+        "import": "./lib/index.mjs",
+        "require": "./lib/index.js"
+      }
+    }
+  }
+}
