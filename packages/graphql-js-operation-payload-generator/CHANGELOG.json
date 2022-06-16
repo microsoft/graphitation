@@ -2,6 +2,27 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Thu, 16 Jun 2022 21:57:11 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.10.0",
+      "version": "0.10.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "commit": "3553b843fca2668c8db7de44a7e7ebe3576876eb",
+            "comment": "[payload-generator] Accept type map for mock resolvers"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "comment": "Bump @graphitation/graphql-codegen-typescript-typemap-plugin to v0.1.0",
+            "commit": "967f207d3a5e69bcfb4b2f146cec67179a453e48"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 03 Jun 2022 14:02:33 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.9.1",
       "version": "0.9.1",

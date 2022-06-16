@@ -1,0 +1,20 @@
+{
+  "name": "@graphitation/graphql-codegen-typescript-typemap-plugin",
+  "entries": [
+    {
+      "date": "Thu, 16 Jun 2022 21:57:11 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-typemap-plugin_v0.1.0",
+      "version": "0.1.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-codegen-typescript-typemap-plugin",
+            "commit": "9e67a228b77f6fecf6d5afd79bf0c890d4f8b7a4",
+            "comment": "[codegen-typemap] Initial import"
+          }
+        ]
+      }
+    }
+  ]
+}

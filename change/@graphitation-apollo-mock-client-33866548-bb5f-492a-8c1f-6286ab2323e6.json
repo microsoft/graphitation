@@ -1,7 +1,0 @@
-{
-  "type": "none",
-  "comment": "Revert \"Beachball bump dependents\"",
-  "packageName": "@graphitation/apollo-mock-client",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "none"
-}

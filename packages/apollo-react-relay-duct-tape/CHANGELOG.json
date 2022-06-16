@@ -2,6 +2,27 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Thu, 16 Jun 2022 21:57:11 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v0.7.9",
+      "version": "0.7.9",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "967f207d3a5e69bcfb4b2f146cec67179a453e48",
+            "comment": "Revert \"Beachball bump dependents\""
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "comment": "Bump @graphitation/graphql-js-operation-payload-generator to v0.10.0",
+            "commit": "967f207d3a5e69bcfb4b2f146cec67179a453e48"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 03 Jun 2022 14:02:33 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v0.7.9",
       "version": "0.7.9",

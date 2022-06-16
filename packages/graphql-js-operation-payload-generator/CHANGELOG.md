@@ -1,8 +1,17 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-This log was last generated on Fri, 03 Jun 2022 14:02:33 GMT and should not be manually modified.
+This log was last generated on Thu, 16 Jun 2022 21:57:11 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.10.0
+
+Thu, 16 Jun 2022 21:57:11 GMT
+
+### Minor changes
+
+- [payload-generator] Accept type map for mock resolvers (eloy.de.enige@gmail.com)
+- Bump @graphitation/graphql-codegen-typescript-typemap-plugin to v0.1.0
 
 ## 0.9.1
 
