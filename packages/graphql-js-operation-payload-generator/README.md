@@ -53,3 +53,18 @@ This will output something like the following:
   }
 }
 ```
+
+## Schema type-checking and auto-completion
+
+This version of the payload generator, accepts a type map typing to be used for the mock resolvers. It needs to consist of type-names as keys and the type itself as value. If using `@graphql-code-generator`, this type-map can be emitted by using the `@graphitation/graphql-codegen-typescript-typemap-plugin` plugin:
+
+```yml
+schema: http://localhost:3000/graphql
+generates:
+  ./src/types.ts:
+    plugins:
+      - typescript
+      - @graphitation/graphql-codegen-typescript-typemap-plugin
+    config:
+      allowEnumStringTypes: true
+```

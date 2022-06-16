@@ -14,16 +14,21 @@
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
     "types": "monorepo-scripts types",
-    "just": "monorepo-scripts"
+    "just": "monorepo-scripts",
+    "test:schema-types": "ts-node ./scripts/graphql-codegen.ts"
   },
   "dependencies": {
     "deepmerge": "^4.2.2"
   },
   "devDependencies": {
     "@graphitation/graphql-js-tag": "^0.9.0",
+    "@graphitation/graphql-codegen-typescript-typemap-plugin": "^0.0.1",
+    "@graphql-codegen/cli": "^2.6.2",
+    "@graphql-codegen/typescript": "^2.5.1",
     "@types/jest": "^26.0.22",
     "monorepo-scripts": "*",
-    "relay-test-utils-internal": "^11.0.2"
+    "relay-test-utils-internal": "^11.0.2",
+    "ts-node": "^10.8.1"
   },
   "publishConfig": {
     "main": "./lib/index",
