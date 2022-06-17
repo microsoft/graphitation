@@ -1,7 +1,7 @@
-import pluginConfig from ".";
+import { plugin } from ".";
 import { buildSchema } from "graphql";
 
-describe(pluginConfig.plugin, () => {
+describe(plugin, () => {
   it("only includes public schema types", () => {
     const schema = buildSchema(`
       type Query {
@@ -14,7 +14,7 @@ describe(pluginConfig.plugin, () => {
         text: String
       }
     `);
-    const result = pluginConfig.plugin(schema, [], null);
+    const result = plugin(schema, [], null);
     expect(result).toMatchInlineSnapshot(`
       "export type TypeMap = {
         \\"Boolean\\": Scalars[\\"Boolean\\"];

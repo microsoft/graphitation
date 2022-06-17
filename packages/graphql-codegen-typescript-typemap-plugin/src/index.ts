@@ -1,9 +1,11 @@
-import type { CodegenPlugin } from "@graphql-codegen/plugin-helpers";
+import type { PluginFunction } from "@graphql-codegen/plugin-helpers";
 import { isScalarType } from "graphql";
 import type { GraphQLSchema } from "graphql";
 import { pascalCase } from "change-case-all";
 
-const typeMapPlugin = (schema: GraphQLSchema): string => {
+const graphqlCodegenTypeMapPlugin: PluginFunction = (
+  schema: GraphQLSchema,
+): string => {
   const typesMap = schema.getTypeMap();
   return [
     "export type TypeMap = {",
@@ -22,8 +24,4 @@ const typeMapPlugin = (schema: GraphQLSchema): string => {
   ].join("\n");
 };
 
-const config: CodegenPlugin = {
-  plugin: typeMapPlugin,
-};
-
-export = config;
+export { graphqlCodegenTypeMapPlugin as plugin };
