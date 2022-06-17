@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Fix package metadata",
-  "packageName": "@graphitation/graphql-codegen-typescript-typemap-plugin",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}
