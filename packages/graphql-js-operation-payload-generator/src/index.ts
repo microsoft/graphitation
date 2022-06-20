@@ -26,7 +26,7 @@ import type {
 import { pathToArray } from "graphql/jsutils/Path";
 import type { Path } from "graphql/jsutils/Path";
 import {
-  BaseMockResolvers,
+  DefaultMockResolvers,
   createValueResolver,
   DEFAULT_MOCK_RESOLVERS,
   DEFAULT_MOCK_TYPENAME,
@@ -60,7 +60,7 @@ interface InternalMockData extends MockData {
 
 const TYPENAME_KEY = "__typename";
 
-export function generate<TypeMap extends BaseMockResolvers>(
+export function generate<TypeMap extends DefaultMockResolvers>(
   operation: OperationDescriptor,
   mockResolvers: MockResolvers<TypeMap> = DEFAULT_MOCK_RESOLVERS as any, // FIXME: Why does TS not accept this?
 ): { data: MockData } {

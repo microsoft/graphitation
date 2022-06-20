@@ -19,23 +19,23 @@ type DeepPartial<T> = T extends object
   ? {
       [P in keyof T]?: DeepPartial<T[P]>;
     }
-  : T | undefined;
+  : T;
 
 type MockResolver<T> = (
   context: MockResolverContext,
   generateId: () => number,
 ) => DeepPartial<T> | undefined;
 
-export type BaseMockResolvers = {
+export type DefaultMockResolvers = Partial<{
   ID: string;
   Boolean: boolean;
   Int: number;
   Float: number;
   [key: string]: unknown;
-};
+}>;
 
 export declare type MockResolvers<
-  TypeMap extends BaseMockResolvers = BaseMockResolvers
+  TypeMap extends DefaultMockResolvers = DefaultMockResolvers
 > = {
   [K in keyof TypeMap]?: MockResolver<TypeMap[K]>;
 };
