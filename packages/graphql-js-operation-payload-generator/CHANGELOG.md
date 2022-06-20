@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-This log was last generated on Mon, 20 Jun 2022 10:02:11 GMT and should not be manually modified.
+This log was last generated on Mon, 20 Jun 2022 12:36:41 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.10.4
+
+Mon, 20 Jun 2022 12:36:41 GMT
+
+### Patches
+
+- Bump @graphitation/graphql-codegen-typescript-typemap-plugin to v0.1.4
 
 ## 0.10.3
 
