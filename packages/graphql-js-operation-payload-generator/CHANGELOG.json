@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Mon, 20 Jun 2022 17:49:35 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.10.5",
+      "version": "0.10.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "commit": "9ecf9cd4df9d70df7e024e7ad96a65f36a64a026",
+            "comment": "[codegen-typemap] Don't assume every schema uses all default scalars"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 20 Jun 2022 12:36:41 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.10.4",
       "version": "0.10.4",

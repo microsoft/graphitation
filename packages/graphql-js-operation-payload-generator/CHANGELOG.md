@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-This log was last generated on Mon, 20 Jun 2022 12:36:41 GMT and should not be manually modified.
+This log was last generated on Mon, 20 Jun 2022 17:49:35 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.10.5
+
+Mon, 20 Jun 2022 17:49:35 GMT
+
+### Patches
+
+- [codegen-typemap] Don't assume every schema uses all default scalars (eloy.de.enige@gmail.com)
 
 ## 0.10.4
 
