@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "version bump - npmignore modified",
+  "packageName": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
