@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-typescript-typemap-plugin
 
-This log was last generated on Fri, 17 Jun 2022 09:48:20 GMT and should not be manually modified.
+This log was last generated on Mon, 20 Jun 2022 10:02:11 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.1.3
+
+Mon, 20 Jun 2022 10:02:11 GMT
+
+### Patches
+
+- Try to fix publishing again (eloy.de.enige@gmail.com)
 
 ## 0.1.2
 

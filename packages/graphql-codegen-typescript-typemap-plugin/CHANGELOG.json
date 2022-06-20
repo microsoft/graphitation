@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-typescript-typemap-plugin",
   "entries": [
     {
+      "date": "Mon, 20 Jun 2022 10:02:11 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-typemap-plugin_v0.1.3",
+      "version": "0.1.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-codegen-typescript-typemap-plugin",
+            "commit": "eecbc09bd218a5c310da3a172be6532dc3430549",
+            "comment": "Try to fix publishing again"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 17 Jun 2022 09:48:20 GMT",
       "tag": "@graphitation/graphql-codegen-typescript-typemap-plugin_v0.1.2",
       "version": "0.1.2",
