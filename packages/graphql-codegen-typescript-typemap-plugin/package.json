@@ -15,14 +15,15 @@
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts"
   },
+  "dependencies": {
+    "change-case-all": "1.0.14"
+  },
   "devDependencies": {
     "@graphql-codegen/plugin-helpers": "^1.18.2",
     "@types/jest": "^26.0.22",
-    "change-case-all": "1.0.14",
     "monorepo-scripts": "*"
   },
   "peerDependencies": {
-    "change-case-all": "1.0.14",
     "graphql": "^15.0.0"
   },
   "sideEffects": false,
