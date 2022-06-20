@@ -1,7 +1,8 @@
-/src/
+!lib
+src
+*.test.*
 **/__tests__/
 .eslintrc.json
 tsconfig.json
 .tsbuildinfo
 CHANGELOG.json
-example/
