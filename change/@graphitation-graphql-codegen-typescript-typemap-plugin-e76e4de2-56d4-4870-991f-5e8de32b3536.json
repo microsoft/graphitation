@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "[codegen-typemap] Make runtime dep explicit",
+  "packageName": "@graphitation/graphql-codegen-typescript-typemap-plugin",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}
