@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Tue, 21 Jun 2022 15:24:48 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.6.11",
+      "version": "0.6.11",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "192ea84253c4e0648205a5e0ffc5355ddd25af70",
+            "comment": "Test snapshot updated"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 11 Apr 2022 11:20:29 GMT",
       "tag": "@graphitation/graphql-eslint-rules_v0.6.10",
       "version": "0.6.10",
