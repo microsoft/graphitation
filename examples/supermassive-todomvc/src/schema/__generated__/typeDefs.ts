@@ -1,11 +1,11 @@
 import { GraphQLList, GraphQLNonNull, GraphQLID, GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLInputObjectType } from "graphql";
-const Query = {};
-const Mutation = {};
-const Subscription = {};
-const Todo = {};
-const Failure = { __resolveType: undefined };
-const CreateTodoResult = { __resolveType: undefined };
-const CreateTodoInput = new GraphQLInputObjectType({
+import { Resolvers, ObjectTypeResolver, InterfaceTypeResolver, UnionTypeResolver, InputObjectTypeResolver } from "@graphitation/supermassive";
+const Query: ObjectTypeResolver = {};
+const Mutation: ObjectTypeResolver = {};
+const Subscription: ObjectTypeResolver = {};
+const Todo: ObjectTypeResolver = {};
+const CreateTodoResult: UnionTypeResolver = { __types: ["CreateTodoSuccess", "CreateTodoFailure"], __resolveType: undefined };
+const CreateTodoInput: InputObjectTypeResolver = new GraphQLInputObjectType({
     name: "CreateTodoInput",
     description: "",
     fields: () => ({
@@ -15,10 +15,10 @@ const CreateTodoInput = new GraphQLInputObjectType({
         }
     })
 });
-const CreateTodoSuccess = {};
-const CreateTodoFailure = {};
-const UpdateTodoTextResult = { __resolveType: undefined };
-const UpdateTodoTextInput = new GraphQLInputObjectType({
+const CreateTodoSuccess: ObjectTypeResolver = {};
+const CreateTodoFailure: ObjectTypeResolver = {};
+const UpdateTodoTextResult: UnionTypeResolver = { __types: ["UpdateTodoTextSuccess", "UpdateTodoTextFailure"], __resolveType: undefined };
+const UpdateTodoTextInput: InputObjectTypeResolver = new GraphQLInputObjectType({
     name: "UpdateTodoTextInput",
     description: "",
     fields: () => ({
@@ -32,10 +32,10 @@ const UpdateTodoTextInput = new GraphQLInputObjectType({
         }
     })
 });
-const UpdateTodoTextSuccess = {};
-const UpdateTodoTextFailure = {};
-const SetTodoCompletedResult = { __resolveType: undefined };
-const SetTodoCompletedInput = new GraphQLInputObjectType({
+const UpdateTodoTextSuccess: ObjectTypeResolver = {};
+const UpdateTodoTextFailure: ObjectTypeResolver = {};
+const SetTodoCompletedResult: UnionTypeResolver = { __types: ["SetTodoCompletedSuccess", "SetTodoCompletedFailure"], __resolveType: undefined };
+const SetTodoCompletedInput: InputObjectTypeResolver = new GraphQLInputObjectType({
     name: "SetTodoCompletedInput",
     description: "",
     fields: () => ({
@@ -49,6 +49,7 @@ const SetTodoCompletedInput = new GraphQLInputObjectType({
         }
     })
 });
-const SetTodoCompletedSuccess = {};
-const SetTodoCompletedFailure = {};
-export const resolvers = { Query, Mutation, Subscription, Todo, Failure, CreateTodoResult, CreateTodoInput, CreateTodoSuccess, CreateTodoFailure, UpdateTodoTextResult, UpdateTodoTextInput, UpdateTodoTextSuccess, UpdateTodoTextFailure, SetTodoCompletedResult, SetTodoCompletedInput, SetTodoCompletedSuccess, SetTodoCompletedFailure };
+const SetTodoCompletedSuccess: ObjectTypeResolver = {};
+const SetTodoCompletedFailure: ObjectTypeResolver = {};
+const Failure: InterfaceTypeResolver = { __implementedBy: ["CreateTodoFailure", "UpdateTodoTextFailure", "SetTodoCompletedFailure"], __resolveType: undefined };
+export const resolvers: Resolvers = { Query, Mutation, Subscription, Todo, Failure, CreateTodoResult, CreateTodoInput, CreateTodoSuccess, CreateTodoFailure, UpdateTodoTextResult, UpdateTodoTextInput, UpdateTodoTextSuccess, UpdateTodoTextFailure, SetTodoCompletedResult, SetTodoCompletedInput, SetTodoCompletedSuccess, SetTodoCompletedFailure };

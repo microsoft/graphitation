@@ -25,7 +25,8 @@ export const supermassiveSchemaLink = new ApolloLink((operation) => {
             operationName: operation?.operationName,
             variableValues: operation?.variables,
             document: operation?.query as DocumentNode,
-            resolvers: { ...generatedResolvers, ...resolvers } as Resolvers,
+            resolvers: resolvers,
+            schemaResolvers: generatedResolvers,
             contextValue: {
               todoStorage: new TodoStorage(window.localStorage),
             },
