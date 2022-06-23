@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Tue, 03 May 2022 17:45:10 GMT and should not be manually modified.
+This log was last generated on Thu, 23 Jun 2022 14:40:50 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.8.4
+
+Thu, 23 Jun 2022 14:40:50 GMT
+
+### Patches
+
+- Schem extraction function exported (jakubvejr@microsoft.com)
 
 ## 0.8.3
 

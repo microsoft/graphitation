@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 23 Jun 2022 14:40:50 GMT",
+      "tag": "@graphitation/supermassive_v0.8.4",
+      "version": "0.8.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "9f93a0750a48851cf42e3cbc9fe5d99928e595a1",
+            "comment": "Schem extraction function exported"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 13 Jun 2022 15:37:16 GMT",
       "tag": "@graphitation/supermassive_v0.8.3",
       "version": "0.8.3",
