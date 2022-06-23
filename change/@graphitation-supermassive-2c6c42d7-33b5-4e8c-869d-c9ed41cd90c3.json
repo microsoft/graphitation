@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Schem extraction function exported",
+  "packageName": "@graphitation/supermassive",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
