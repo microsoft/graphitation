@@ -2,6 +2,7 @@ export { executeWithoutSchema } from "./executeWithoutSchema";
 export { executeWithSchema } from "./executeWithSchema";
 export { subscribeWithSchema } from "./subscribeWithSchema";
 export { subscribeWithoutSchema } from "./subscribeWithoutSchema";
+export { typeDefsToImplicitResolversImpl } from "./bin/supermassive";
 
 export type {
   ObjectTypeResolver,

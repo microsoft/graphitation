@@ -19,7 +19,7 @@ export function supermassive(): Command {
   return program.name("supermassive").addCommand(command);
 }
 
-async function typeDefsToImplicitResolversImpl(
+export async function typeDefsToImplicitResolversImpl(
   files: Array<string>,
 ): Promise<void> {
   for (const file of files) {
