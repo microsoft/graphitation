@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "supermassive schema extraction plugin added",
-  "packageName": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
