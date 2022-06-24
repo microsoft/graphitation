@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Fri, 24 Jun 2022 11:59:47 GMT",
+      "tag": "@graphitation/supermassive_v0.8.5",
+      "version": "0.8.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "b5bdd2ea6807e2fdd102eb1027878e2bda345c12",
+            "comment": "Hotfix: re-export extractImplicitTypesToTypescript"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 23 Jun 2022 14:40:50 GMT",
       "tag": "@graphitation/supermassive_v0.8.4",
       "version": "0.8.4",

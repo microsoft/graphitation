@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Hotfix: re-export extractImplicitTypesToTypescript",
-  "packageName": "@graphitation/supermassive",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
