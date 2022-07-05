@@ -1,0 +1,8 @@
+type Query {
+  conversation: Conversation!
+}
+
+type Conversation {
+  id: ID!
+  title: String!
+}

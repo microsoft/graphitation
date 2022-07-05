@@ -3042,6 +3042,11 @@
   resolved "https://registry.yarnpkg.com/@types/relay-runtime/-/relay-runtime-11.0.0.tgz#7ddbe41152d46b614d1f3f7f0672cfb721eb93f1"
   integrity sha512-D5JNxDhkcPSIMZc2j3N/fh61399O309ph9RVmzbF+Fsyvepsqy7FirFKcJ2CMfYxE/kb8ZD/Xdzs3CYZEiQc4w==
 
+"@types/relay-runtime@^13.0.3":
+  version "13.0.3"
+  resolved "https://registry.yarnpkg.com/@types/relay-runtime/-/relay-runtime-13.0.3.tgz#0139a02d24fd527c844af3063e943692fd181854"
+  integrity sha512-LZr9fiWspAtiFIMDcj/6LarYFqxd3jh3ASXULtWL5Tl5CHoDe48Il2nIAF66XKLLCG3QvDgHR8yLX6ZVWKjkkw==
+
 "@types/scheduler@*":
   version "0.16.1"
   resolved "https://registry.yarnpkg.com/@types/scheduler/-/scheduler-0.16.1.tgz#18845205e86ff0038517aab7a18a62a6b9f71275"
@@ -5645,6 +5650,19 @@ fbjs@^3.0.0:
     promise "^7.1.1"
     setimmediate "^1.0.5"
     ua-parser-js "^0.7.18"
+
+fbjs@^3.0.2:
+  version "3.0.4"
+  resolved "https://registry.yarnpkg.com/fbjs/-/fbjs-3.0.4.tgz#e1871c6bd3083bac71ff2da868ad5067d37716c6"
+  integrity sha512-ucV0tDODnGV3JCnnkmoszb5lf4bNpzjv80K41wd4k798Etq+UYD0y0TIfalLjZoKgjive6/adkRnszwapiDgBQ==
+  dependencies:
+    cross-fetch "^3.1.5"
+    fbjs-css-vars "^1.0.0"
+    loose-envify "^1.0.0"
+    object-assign "^4.1.0"
+    promise "^7.1.1"
+    setimmediate "^1.0.5"
+    ua-parser-js "^0.7.30"
 
 figures@^1.7.0:
   version "1.7.0"
@@ -9331,6 +9349,11 @@ relay-compiler@11.0.2, relay-compiler@^11.0.2:
     signedsource "^1.0.0"
     yargs "^15.3.1"
 
+relay-compiler@^14.0.0:
+  version "14.0.0"
+  resolved "https://registry.yarnpkg.com/relay-compiler/-/relay-compiler-14.0.0.tgz#03ab000c246c7c46a26b77584b345621155a770e"
+  integrity sha512-1h4lwvHg5efhivqpMfG6SS4cGoCJH3BsRelihwD+GNiylBnLKArSE6zyW7LfEwSpuDfJ+l6rrRfSL8IVZwOZ0g==
+
 relay-runtime@11.0.2:
   version "11.0.2"
   resolved "https://registry.yarnpkg.com/relay-runtime/-/relay-runtime-11.0.2.tgz#c3650477d45665b9628b852b35f203e361ad55e8"
@@ -9347,6 +9370,15 @@ relay-runtime@12.0.0:
   dependencies:
     "@babel/runtime" "^7.0.0"
     fbjs "^3.0.0"
+    invariant "^2.2.4"
+
+relay-runtime@^14.0.0:
+  version "14.0.0"
+  resolved "https://registry.yarnpkg.com/relay-runtime/-/relay-runtime-14.0.0.tgz#e2fa40d73569d2ba5810c773fb85ac872b08b5d0"
+  integrity sha512-Rnf6EgCl3QY85il/gTEh6GHAR9hoRkjYWgMR2Y3Afugb8qLR0vL6m/GBYqol8W3L8B+XqZ2U04/g624DRpEqAw==
+  dependencies:
+    "@babel/runtime" "^7.0.0"
+    fbjs "^3.0.2"
     invariant "^2.2.4"
 
 relay-test-utils-internal@^11.0.2:
@@ -10583,6 +10615,11 @@ ua-parser-js@^0.7.18:
   version "0.7.28"
   resolved "https://registry.yarnpkg.com/ua-parser-js/-/ua-parser-js-0.7.28.tgz#8ba04e653f35ce210239c64661685bf9121dec31"
   integrity sha512-6Gurc1n//gjp9eQNXjD9O3M/sMwVtN5S8Lv9bvOYBfKfDNiIIhqiyi01vMBO45u4zkDE420w/e0se7Vs+sIg+g==
+
+ua-parser-js@^0.7.30:
+  version "0.7.31"
+  resolved "https://registry.yarnpkg.com/ua-parser-js/-/ua-parser-js-0.7.31.tgz#649a656b191dffab4f21d5e053e27ca17cbff5c6"
+  integrity sha512-qLK/Xe9E2uzmYI3qLeOmI0tEOt+TBBQyUIAh4aAgU05FVYzeZrKUdkAZfBNVGRaHVgV0TDkdEngJSw/SyQchkQ==
 
 uc.micro@^1.0.1, uc.micro@^1.0.5:
   version "1.0.6"
