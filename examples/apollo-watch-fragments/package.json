@@ -48,7 +48,7 @@
     "concurrently": "^6.2.1",
     "graphql-relay": "^0.10.0",
     "relay-compiler": "^10",
-    "relay-compiler-language-graphitation": "^1.0.0-alpha.3",
+    "relay-compiler-language-graphitation": "^1.0.0-alpha.4",
     "ts-loader": "^9.2.6",
     "ts-node": "^10.2.1",
     "typescript": "^4.6.2",

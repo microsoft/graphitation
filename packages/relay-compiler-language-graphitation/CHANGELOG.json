@@ -2,6 +2,21 @@
   "name": "relay-compiler-language-graphitation",
   "entries": [
     {
+      "date": "Fri, 08 Jul 2022 14:17:12 GMT",
+      "tag": "relay-compiler-language-graphitation_v1.0.0-alpha.4",
+      "version": "1.0.0-alpha.4",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "relay-compiler-language-graphitation",
+            "commit": "980a899c7e9d4a9e02db0668609317c4c32e9170",
+            "comment": "[ARRDT] Also reduce fragments on an interface that implements Node"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 07 Apr 2022 17:44:14 GMT",
       "tag": "relay-compiler-language-graphitation_v1.0.0-alpha.3",
       "version": "1.0.0-alpha.3",

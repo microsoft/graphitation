@@ -1,8 +1,16 @@
 # Change Log - relay-compiler-language-graphitation
 
-This log was last generated on Thu, 06 Jan 2022 09:53:33 GMT and should not be manually modified.
+This log was last generated on Fri, 08 Jul 2022 14:17:12 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.0-alpha.4
+
+Fri, 08 Jul 2022 14:17:12 GMT
+
+### Changes
+
+- [ARRDT] Also reduce fragments on an interface that implements Node (eloy.de.enige@gmail.com)
 
 ## 0.8.1
 
