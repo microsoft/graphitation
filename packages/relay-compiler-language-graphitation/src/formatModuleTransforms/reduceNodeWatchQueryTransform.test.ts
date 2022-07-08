@@ -12,7 +12,13 @@ const schema = buildASTSchema(graphql`
     node(id: ID!): Node
   }
 
-  type User implements Node {
+  interface UserLike implements Node {
+    id: ID!
+    name: String!
+    assets: UserAssets!
+  }
+
+  type User implements UserLike & Node {
     id: ID!
     name: String!
     assets: UserAssets!
@@ -127,7 +133,7 @@ describe(reduceNodeWatchQueryTransform, () => {
     );
   });
 
-  it("does NOT remove the first fragment spread on the node field of a refetch query", () => {
+  it("does NOT remove the first fragment spread (with object constraint) on the node field of a refetch query", () => {
     const result = reduceNodeWatchQueryTransform(
       schema,
       graphql`
@@ -152,6 +158,78 @@ describe(reduceNodeWatchQueryTransform, () => {
           }
         }
         fragment User_fragment on User {
+          name
+        }
+        fragment UserAssets_fragment on UserAssets {
+          avatar {
+            size {
+              width
+            }
+            # This is on a Node and should get removed
+            ...Avatar_fragment
+          }
+        }
+        fragment Avatar_fragment on Avatar {
+          size {
+            height
+          }
+        }
+      `
+    );
+    expect(print(result)).toEqual(
+      print(graphql`
+        query {
+          node(id: "some-id") {
+            __typename
+            id
+            ...RootNode_fragment
+            ... on Node {
+              __fragments @client
+            }
+          }
+        }
+        fragment RootNode_fragment on User {
+          name
+          assets {
+            ...UserAssets_fragment
+          }
+        }
+        fragment UserAssets_fragment on UserAssets {
+          avatar {
+            size {
+              width
+            }
+          }
+        }
+      `)
+    );
+  });
+
+  it("does NOT remove the first fragment spread (with interface constraint) on the node field of a refetch query", () => {
+    const result = reduceNodeWatchQueryTransform(
+      schema,
+      graphql`
+        query {
+          node(id: "some-id") {
+            __typename
+            id
+            # This is on the node root-field and should remain
+            ...RootNode_fragment
+            ... on Node {
+              __fragments @client
+            }
+          }
+        }
+        fragment RootNode_fragment on User {
+          name
+          # This is on a Node and should get removed
+          ...User_fragment
+          assets {
+            # This is NOT on a Node and should remain
+            ...UserAssets_fragment
+          }
+        }
+        fragment User_fragment on UserLike {
           name
         }
         fragment UserAssets_fragment on UserAssets {
