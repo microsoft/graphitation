@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "[ARRDT] Also reduce fragments on an interface that implements Node",
-  "packageName": "relay-compiler-language-graphitation",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "none"
-}
