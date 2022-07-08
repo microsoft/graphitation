@@ -53,7 +53,7 @@ export function reduceNodeWatchQueryTransform(
     const typeConstraint = getNamedType(unnamedTypeConstraint);
     if (
       typeConstraint === schema.getQueryType() ||
-      (isObjectType(typeConstraint) &&
+      ((isObjectType(typeConstraint) || isInterfaceType(typeConstraint)) &&
         typeConstraint.getInterfaces().includes(nodeType))
     ) {
       return null;
