@@ -1,8 +1,14 @@
 type Query {
-  conversation: Conversation!
+  conversation(id: String!): Conversation!
+  node(id: ID!): Node
 }
 
-type Conversation {
+interface Node {
+  id: ID!
+}
+
+type Conversation implements Node {
   id: ID!
   title: String!
+  hasUnreadMessages: Boolean!
 }

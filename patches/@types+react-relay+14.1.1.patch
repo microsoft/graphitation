@@ -1,0 +1,16 @@
+diff --git a/node_modules/@types/react-relay/lib/relay-hooks/FragmentResource.d.ts b/node_modules/@types/react-relay/lib/relay-hooks/FragmentResource.d.ts
+new file mode 100644
+index 0000000..3dd50a2
+--- /dev/null
++++ b/node_modules/@types/react-relay/lib/relay-hooks/FragmentResource.d.ts
+@@ -0,0 +1,9 @@
++// import { IEnvironment, ReaderFragment } from "relay-runtime";
++
++declare class FragmentResourceImpl {
++    public read(fragmentNode: any, fragmentRef: unknown, componentDisplayName: string): { data?: unknown; isMissingData: boolean; };
++}
++
++export declare function getFragmentResourceForEnvironment(
++    environment: any,
++  ): FragmentResourceImpl
+\ No newline at end of file
