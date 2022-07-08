@@ -43,6 +43,11 @@ function main() {
   const argv = yargs
     .scriptName("nova-graphql-compiler")
     .options({
+      src: {
+        demandOption: false,
+        default: ".",
+        type: "string",
+      },
       exclude: {
         demandOption: false,
         type: "string",
@@ -96,7 +101,6 @@ function main() {
   return relayCompiler({
     ...argv,
     language,
-    src: ".",
     extensions: ["ts", "tsx"], // FIXME: Why is this not taken from the language plugin?
     include: ["**"],
     exclude: [
