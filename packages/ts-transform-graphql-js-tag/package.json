@@ -16,11 +16,12 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@ts-morph/bootstrap": "^0.13.0",
+    "@ts-morph/bootstrap": "0.10.1",
     "@types/jest": "^26.0.22",
-    "graphql": "^15.0.0",
+    "graphql": "^15.6.1",
     "monorepo-scripts": "*",
-    "ts-transformer-testing-library": "^1.0.0-alpha.7"
+    "ts-transformer-testing-library": "^1.0.0-alpha.7",
+    "typescript": "4.3.5"
   },
   "publishConfig": {
     "main": "./lib/index",
@@ -34,11 +35,8 @@
       }
     }
   },
-  "dependencies": {
-    "graphql": "^15.6.1",
-    "typescript": "^4.4.3"
-  },
   "peerDependencies": {
-    "graphql": "^15.0.0"
+    "graphql": "^15.0.0",
+    "typescript": ">=4.3.5"
   }
 }
