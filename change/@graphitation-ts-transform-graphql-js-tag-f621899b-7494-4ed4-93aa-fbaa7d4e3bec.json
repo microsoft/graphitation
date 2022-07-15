@@ -3,5 +3,5 @@
   "comment": "[ts-transform-graphql-js-tag] Make TS req compatible with TMP",
   "packageName": "@graphitation/ts-transform-graphql-js-tag",
   "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
+  "dependentChangeType": "none"
 }
