@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-transform-graphql-js-tag
 
-This log was last generated on Mon, 24 Jan 2022 13:40:52 GMT and should not be manually modified.
+This log was last generated on Fri, 15 Jul 2022 15:15:30 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.4.2
+
+Fri, 15 Jul 2022 15:15:30 GMT
+
+### Patches
+
+- [ts-transform-graphql-js-tag] Make TS req compatible with TMP (eloy.de.enige@gmail.com)
 
 ## 0.4.1
 
