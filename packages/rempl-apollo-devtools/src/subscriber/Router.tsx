@@ -15,9 +15,9 @@ import { ApolloGlobalOperationsContext } from "./contexts/apollo-global-operatio
 import { ApolloGlobalOperations } from "../types";
 
 function getCacheDataCount(cacheContextData: ApolloCacheContextType) {
-  if (!cacheContextData?.cacheObjects) return 0;
+  if (!cacheContextData?.cache) return 0;
 
-  return Object.keys(cacheContextData.cacheObjects.cache).length;
+  return Object.keys(cacheContextData.cache).length;
 }
 
 function hideGlobalOperations(globalOperations: ApolloGlobalOperations) {

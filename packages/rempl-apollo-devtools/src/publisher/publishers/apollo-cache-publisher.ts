@@ -1,20 +1,12 @@
 import { NormalizedCacheObject, ApolloClient } from "@apollo/client";
 import { RemplWrapper } from "../rempl-wrapper";
-import sizeOf from "object-sizeof";
-import {
-  ClientCacheObject,
-  ClientRecentCacheObject,
-  ClientObject,
-  WrapperCallbackParams,
-} from "../../types";
+import { ClientObject, WrapperCallbackParams } from "../../types";
 
 export class ApolloCachePublisher {
   private apolloPublisher;
   private remplWrapper: RemplWrapper;
-  private recentCacheHistory: ClientRecentCacheObject = {};
-  private lastCacheHistory: ClientCacheObject | null = null;
   private activeClient: ClientObject | null = null;
-  private recordRecentCache = false;
+  private lastCacheHistory: NormalizedCacheObject = {};
 
   constructor(remplWrapper: RemplWrapper) {
     this.remplWrapper = remplWrapper;
@@ -32,13 +24,6 @@ export class ApolloCachePublisher {
       if (this.activeClient) {
         this.activeClient.client.cache.evict({ id: key });
       }
-    });
-    this.apolloPublisher.provide("clearRecent", () => {
-      this.recentCacheHistory = {};
-    });
-
-    this.apolloPublisher.provide("recordRecent", (options) => {
-      this.recordRecentCache = Boolean(options?.shouldRecord);
     });
   }
 
@@ -63,38 +48,12 @@ export class ApolloCachePublisher {
     );
   }
 
-  private getRecentCache(cache: NormalizedCacheObject) {
-    const recentCacheClient = this.recentCacheHistory;
-    if (!this.recordRecentCache) {
-      return recentCacheClient ? recentCacheClient : {};
-    }
-    if (!recentCacheClient) {
-      this.recentCacheHistory = {};
-      return {};
-    }
-    const cacheClientFromLastIteration = this.lastCacheHistory;
-    if (!cacheClientFromLastIteration) {
-      return {};
-    }
-
-    this.recentCacheHistory = {
-      ...recentCacheClient,
-      ...this.diffCaches(cache, cacheClientFromLastIteration.cache),
-    };
-
-    return this.recentCacheHistory;
-  }
-
   private serializeCacheObject = (client?: ClientObject) => {
     if (!client) {
       return;
     }
 
-    const cache = this.getCache(client.client);
-    return {
-      cache,
-      recentCache: this.getRecentCache(cache),
-    };
+    return this.getCache(client.client);
   };
 
   private cachePublishHandler({ activeClient }: WrapperCallbackParams) {
@@ -103,8 +62,7 @@ export class ApolloCachePublisher {
     }
 
     if (this.activeClient?.clientId !== activeClient.clientId) {
-      this.recentCacheHistory = {};
-      this.lastCacheHistory = null;
+      this.lastCacheHistory = {};
     }
     this.activeClient = activeClient;
 
@@ -114,14 +72,32 @@ export class ApolloCachePublisher {
       return;
     }
 
-    if (sizeOf(this.lastCacheHistory) === sizeOf(serializedCacheObject)) {
+    if (!this.hasCacheChanged(this.lastCacheHistory, serializedCacheObject)) {
       return;
     }
+
     this.lastCacheHistory = serializedCacheObject;
     this.publishCache(serializedCacheObject);
   }
 
-  public publishCache(cacheObject: ClientCacheObject) {
+  private hasCacheChanged(
+    lastCacheHistory: NormalizedCacheObject,
+    currentCache: NormalizedCacheObject,
+  ) {
+    const cacheKeys = Object.keys(currentCache);
+    if (Object.keys(lastCacheHistory).length !== cacheKeys.length) {
+      return true;
+    }
+
+    return cacheKeys.some((key) => {
+      if (key === "__META") {
+        return false;
+      }
+      return currentCache[key] !== lastCacheHistory[key];
+    });
+  }
+
+  public publishCache(cacheObject: NormalizedCacheObject) {
     this.apolloPublisher.ns("apollo-cache").publish(cacheObject);
     this.apolloPublisher
       .ns("apollo-cache-count")

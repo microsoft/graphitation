@@ -32,7 +32,7 @@ const AdditionalInformationsRenderer = React.memo(
     return (
       <div className={classes.root}>
         <div className={classes.innerContainer}>
-          <Accordion multiple>
+          <Accordion multiple collapsible>
             {panels(globalOperations).map((item, index) => (
               <AccordionItem value={index} key={item.key}>
                 <AccordionHeader>{item.title}</AccordionHeader>

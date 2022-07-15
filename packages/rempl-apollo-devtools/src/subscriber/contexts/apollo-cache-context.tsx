@@ -1,13 +1,10 @@
 import React from "react";
 import { NormalizedCacheObject } from "@apollo/client/cache";
-import { ClientCacheObject } from "../../types";
 import { remplSubscriber } from "../rempl";
 
 export type ApolloCacheContextType = {
   removeCacheItem: (key: string) => void;
-  recordRecentCacheChanges: (shouldRecord: boolean) => void;
-  clearRecentCacheChanges: () => void;
-  cacheObjects: ClientCacheObject;
+  cache: NormalizedCacheObject;
 } | null;
 
 export const ApolloCacheContext = React.createContext<ApolloCacheContextType>(
@@ -19,60 +16,31 @@ export const ApolloCacheContextWrapper = ({
 }: {
   children: JSX.Element;
 }) => {
-  const [cacheObjects, setCacheObjects] = React.useState<ClientCacheObject>({
-    recentCache: {},
-    cache: {},
-  });
+  const [cache, setCache] = React.useState<NormalizedCacheObject>({});
 
   React.useEffect(() => {
     remplSubscriber
       .ns("apollo-cache")
-      .subscribe(function (data: ClientCacheObject) {
+      .subscribe(function (data: NormalizedCacheObject) {
         if (data) {
-          setCacheObjects(data);
+          setCache(data);
         }
       });
   }, []);
 
   const removeCacheItem = React.useCallback(
     (key: string) => {
-      const cacheObjectsToModify = {
-        ...cacheObjects,
-        cache: removeKeyFromCacheState(key, cacheObjects.cache),
-      };
-
-      setCacheObjects(cacheObjectsToModify);
+      setCache(removeKeyFromCacheState(key, cache));
       remplSubscriber.callRemote("removeCacheKey", key);
     },
-    [cacheObjects],
-  );
-
-  const clearRecentCacheChanges = React.useCallback(() => {
-    const cacheObjectsToModify = {
-      ...cacheObjects,
-      recentCache: {},
-    };
-
-    setCacheObjects(cacheObjectsToModify);
-    remplSubscriber.callRemote("clearRecent");
-  }, [cacheObjects]);
-
-  const recordRecentCacheChanges = React.useCallback(
-    (shouldRecord: boolean) => {
-      remplSubscriber.callRemote("recordRecent", {
-        shouldRecord,
-      });
-    },
-    [cacheObjects],
+    [cache],
   );
 
   return (
     <ApolloCacheContext.Provider
       value={{
-        cacheObjects,
+        cache,
         removeCacheItem,
-        clearRecentCacheChanges,
-        recordRecentCacheChanges,
       }}
     >
       {children}

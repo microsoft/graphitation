@@ -36,24 +36,22 @@ declare global {
 export type RecentActivity<Data> = {
   id: string;
   change: string;
+  type: string;
   data: Data;
 };
-
+export type CacheStoreObject = { __activity_key: string } & StoreObject;
 export type RecentActivities = {
   queries: RecentActivity<WatchedQuery>[];
   mutations: RecentActivity<Mutation>[];
+  cache: RecentActivity<CacheStoreObject>[];
   timestamp: number;
 };
 
 export type RecentActivityRaw = {
   id: string;
   change: string;
-  data: unknown;
-};
-
-export type ClientCacheObject = {
-  cache: NormalizedCacheObject;
-  recentCache: NormalizedCacheObject;
+  type: string;
+  data: WatchedQuery | Mutation | CacheStoreObject;
 };
 
 export type CacheDuplicates = {
