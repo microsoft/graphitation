@@ -74,7 +74,7 @@ export const RecentActivity = ({ activity }: { activity: any[] }) => {
 
     return items;
   };
-  console.log(detailsValue);
+
   return (
     <div className={classes.activityContainer}>
       <List items={buildActivityItems()} search={false} fill />
