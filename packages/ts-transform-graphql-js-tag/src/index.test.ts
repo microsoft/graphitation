@@ -168,6 +168,24 @@ describe("transformer tests", () => {
         "
       `);
     });
+    it("should keep different single import but remove itself", () => {
+      expect.assertions(1);
+      const transformer = new Transformer()
+        .addTransformer((program: ts.Program) => getTransformer({}))
+        .addMock({
+          name: "@graphitation/graphql-js-tag",
+          content: `export const graphql:any = () => {}, someOtherExport: any = 1;`,
+        })
+        .setFilePath("/index.tsx");
+
+      const actual = transformer.transform(`
+      import { someOtherExport, graphql } from "@graphitation/graphql-js-tag"
+      `);
+      expect(actual).toMatchInlineSnapshot(`
+        "import { someOtherExport } from \\"@graphitation/graphql-js-tag\\";
+        "
+      `);
+    });
     it("should keep different default import", () => {
       expect.assertions(1);
       const transformer = new Transformer()
@@ -178,11 +196,15 @@ describe("transformer tests", () => {
         })
         .setFilePath("/index.tsx");
 
+      // Needs usage to not be eliminated for some reason
       const actual = transformer.transform(`
         import someOtherDefault from "@graphitation/graphql-js-tag"
+
+        someOtherDefault;
         `);
       expect(actual).toMatchInlineSnapshot(`
         "import someOtherDefault from \\"@graphitation/graphql-js-tag\\";
+        someOtherDefault;
         "
       `);
     });

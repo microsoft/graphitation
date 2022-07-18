@@ -121,15 +121,19 @@ function getVisitor(
             }
           }
           if (newImportSpecifiers.length || node.importClause.name) {
-            const result = ts.factory.createImportDeclaration(
+            const result = ts.factory.updateImportDeclaration(
+              node,
               node.decorators,
               node.modifiers,
               ts.factory.updateImportClause(
                 node.importClause,
                 node.importClause.isTypeOnly,
                 node.importClause.name,
-                newImportSpecifiers.length
-                  ? ts.factory.createNamedImports(newImportSpecifiers)
+                node.importClause.namedBindings && newImportSpecifiers.length
+                  ? ts.factory.updateNamedImports(
+                      node.importClause.namedBindings,
+                      newImportSpecifiers,
+                    )
                   : undefined,
               ),
               node.moduleSpecifier,
