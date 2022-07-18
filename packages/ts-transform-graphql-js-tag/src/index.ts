@@ -121,7 +121,8 @@ function getVisitor(
             }
           }
           if (newImportSpecifiers.length || node.importClause.name) {
-            const result = ts.factory.createImportDeclaration(
+            const result = ts.factory.updateImportDeclaration(
+              node,
               node.decorators,
               node.modifiers,
               ts.factory.updateImportClause(
@@ -133,6 +134,7 @@ function getVisitor(
                   : undefined,
               ),
               node.moduleSpecifier,
+              node.assertClause,
             );
             return result;
           } else {
