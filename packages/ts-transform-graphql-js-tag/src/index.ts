@@ -129,8 +129,11 @@ function getVisitor(
                 node.importClause,
                 node.importClause.isTypeOnly,
                 node.importClause.name,
-                newImportSpecifiers.length
-                  ? ts.factory.createNamedImports(newImportSpecifiers)
+                node.importClause.namedBindings && newImportSpecifiers.length
+                  ? ts.factory.updateNamedImports(
+                      node.importClause.namedBindings,
+                      newImportSpecifiers,
+                    )
                   : undefined,
               ),
               node.moduleSpecifier,

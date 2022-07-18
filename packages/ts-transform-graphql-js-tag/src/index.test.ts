@@ -196,11 +196,15 @@ describe("transformer tests", () => {
         })
         .setFilePath("/index.tsx");
 
+      // Needs usage to not be eliminated for some reason
       const actual = transformer.transform(`
         import someOtherDefault from "@graphitation/graphql-js-tag"
+
+        someOtherDefault;
         `);
       expect(actual).toMatchInlineSnapshot(`
         "import someOtherDefault from \\"@graphitation/graphql-js-tag\\";
+        someOtherDefault;
         "
       `);
     });
