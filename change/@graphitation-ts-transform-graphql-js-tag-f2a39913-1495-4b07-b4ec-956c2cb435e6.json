@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Identity of import was lost when recreating it, changing to update to fix",
+  "packageName": "@graphitation/ts-transform-graphql-js-tag",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
