@@ -4,6 +4,7 @@ import {
   WatchedQuery,
   Mutation as MutationType,
   RecentActivityRaw,
+  CacheStoreObject,
   RecentActivity,
   RecentActivities,
 } from "../../types";
@@ -35,6 +36,7 @@ function getRecentQueryData({
   id,
   data,
   change,
+  type,
 }: RecentActivityRaw): RecentActivity<WatchedQuery> | undefined {
   const queryData = getQueryData(id, data);
   if (!queryData) {
@@ -45,6 +47,7 @@ function getRecentQueryData({
     id,
     data: queryData,
     change,
+    type,
   };
 }
 
@@ -94,6 +97,7 @@ function getRecentMutationData({
   id,
   data,
   change,
+  type,
 }: RecentActivityRaw): RecentActivity<MutationType> | undefined {
   if (!data) return;
 
@@ -101,12 +105,14 @@ function getRecentMutationData({
     id,
     data: getMutationData(data, id),
     change,
+    type,
   };
 }
 
 export const getRecentData = (
   queries: RecentActivityRaw[],
   mutations: RecentActivityRaw[],
+  cache: RecentActivity<CacheStoreObject>[],
   timestamp: number,
 ): RecentActivities => {
   const filteredQueries: RecentActivity<WatchedQuery>[] = queries
@@ -117,5 +123,10 @@ export const getRecentData = (
     .map(getRecentMutationData)
     .filter(Boolean) as RecentActivity<MutationType>[];
 
-  return { mutations: mappedMutations, queries: filteredQueries, timestamp };
+  return {
+    mutations: mappedMutations,
+    queries: filteredQueries,
+    cache,
+    timestamp,
+  };
 };

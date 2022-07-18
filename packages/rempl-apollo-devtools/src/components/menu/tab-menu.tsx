@@ -14,10 +14,6 @@ const tabMenuItems = [
     title: "All cache",
   },
   {
-    name: "recent",
-    title: "Recent cache",
-  },
-  {
     name: "duplicated",
     title: "Duplicated cache",
   },

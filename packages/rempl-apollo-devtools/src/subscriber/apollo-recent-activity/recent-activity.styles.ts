@@ -79,6 +79,11 @@ export const useStyles = makeStyles({
     color: "#F9B9B3",
     width: "55px",
   },
+  changed: {
+    backgroundColor: "#F4E2A0",
+    color: "#E3BB22",
+    width: "60px",
+  },
   time: {
     color: "#9d9da0",
   },

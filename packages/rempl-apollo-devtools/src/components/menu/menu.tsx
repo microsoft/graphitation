@@ -44,7 +44,7 @@ const menuElements = (props: MenuProps) => [
   },
   {
     url: "activity",
-    name: "Activity",
+    name: "Activity monitor",
     icon: <Alert24Regular />,
   },
   {

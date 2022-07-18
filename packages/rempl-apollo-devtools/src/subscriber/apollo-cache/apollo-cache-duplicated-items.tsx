@@ -43,7 +43,7 @@ export const ApolloCacheDuplicatedItems = React.memo(
             }
           </div>
         )}
-        <Accordion multiple>
+        <Accordion multiple collapsible>
           {duplicatedCacheObjects.map((item, index) => (
             <AccordionItem value={index} key={`duplicates ${index}`}>
               <AccordionHeader className={classes.accordionHeader}>

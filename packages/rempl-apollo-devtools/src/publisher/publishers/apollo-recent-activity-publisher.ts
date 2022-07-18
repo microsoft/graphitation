@@ -1,7 +1,15 @@
 import { RemplWrapper } from "../rempl-wrapper";
 import { NormalizedCacheObject, ApolloClient } from "@apollo/client";
-import { getRecentActivities } from "../helpers/recent-activities";
-import { RecentActivities, WrapperCallbackParams } from "../../types";
+import {
+  getRecentOperationsActivity,
+  getRecentCacheActivity,
+} from "../helpers/recent-activities";
+import {
+  RecentActivities,
+  WatchedQuery,
+  WrapperCallbackParams,
+  Mutation,
+} from "../../types";
 import { getRecentData } from "../helpers/parse-apollo-data";
 
 export class ApolloRecentActivityPublisher {
@@ -9,9 +17,11 @@ export class ApolloRecentActivityPublisher {
   private remplWrapper: RemplWrapper;
   private recordRecentActivity = false;
   private lastIterationData: {
-    mutations: unknown[];
-    queries: Map<number, unknown>;
+    mutations: Mutation[];
+    queries: Map<number, WatchedQuery>;
+    cache: NormalizedCacheObject;
   } = {
+    cache: {},
     mutations: [],
     queries: new Map(),
   };
@@ -19,7 +29,7 @@ export class ApolloRecentActivityPublisher {
   constructor(remplWrapper: RemplWrapper) {
     this.remplWrapper = remplWrapper;
     this.remplWrapper.subscribeToRemplStatus(
-      "recent-activities",
+      "recent-activity",
       this.trackerDataPublishHandler.bind(this),
       400,
     );
@@ -29,7 +39,7 @@ export class ApolloRecentActivityPublisher {
 
   private attachMethodsToPublisher() {
     this.apolloPublisher.provide("clearRecentActivity", () => {
-      this.lastIterationData = { mutations: [], queries: new Map() };
+      this.lastIterationData = { mutations: [], queries: new Map(), cache: {} };
     });
 
     this.apolloPublisher.provide("recordRecentActivity", (options) => {
@@ -42,45 +52,78 @@ export class ApolloRecentActivityPublisher {
       return;
     }
 
-    const newData = this.serializeRecentActivitiesDataObjects(
+    const newData = this.serializeRecentActivityDataObjects(
       activeClient.client,
     );
 
-    if (!newData.mutations.length && !newData.queries.length) {
+    if (
+      !newData.mutations.length &&
+      !newData.queries.length &&
+      !newData.cache.length
+    ) {
       return;
     }
 
-    this.publishRecentActivitiesData(newData);
+    this.publishRecentActivityData(newData);
   }
 
-  private serializeRecentActivitiesDataObjects = (
+  private serializeRecentActivityDataObjects = (
     client: ApolloClient<NormalizedCacheObject>,
   ) => {
-    const recentQueries = this.getQueriesRecentActivities(client);
-    const recentMutations = this.getMutationsRecentActivities(client);
+    const recentQueries = this.getQueriesRecentActivity(client);
+    const recentMutations = this.getMutationsRecentActivity(client);
+    const recentCache = this.getCacheRecentActivity(client);
 
-    return getRecentData(recentQueries, recentMutations, Date.now());
+    return getRecentData(
+      recentQueries,
+      recentMutations,
+      recentCache,
+      Date.now(),
+    );
   };
 
-  private getQueriesRecentActivities(
+  private getQueriesRecentActivity(
     client: ApolloClient<NormalizedCacheObject>,
   ) {
     const currentQueries = this.getQueries(client);
+
     if (!this.lastIterationData.queries.size) {
       this.lastIterationData.queries = new Map(currentQueries);
 
       return [];
     }
-    const currentQueriesValues = Array.from(currentQueries.values());
-    const lastIterationValues = Array.from(
+    const currentQueriesValues: WatchedQuery[] = Array.from(
+      currentQueries.values(),
+    );
+    const lastIterationValues: WatchedQuery[] = Array.from(
       this.lastIterationData.queries.values(),
     );
     this.lastIterationData.queries = new Map(currentQueries);
 
-    return getRecentActivities(currentQueriesValues, lastIterationValues) || [];
+    return (
+      getRecentOperationsActivity(currentQueriesValues, lastIterationValues) ||
+      []
+    );
   }
 
-  private getMutationsRecentActivities(
+  private getCacheRecentActivity(client: ApolloClient<NormalizedCacheObject>) {
+    const currentCache = client.cache.extract();
+    if (!Object.keys(this.lastIterationData.cache).length) {
+      this.lastIterationData.cache = {
+        ...currentCache,
+      };
+      return [];
+    }
+
+    const lastIteration = { ...this.lastIterationData.cache };
+    this.lastIterationData.cache = {
+      ...currentCache,
+    };
+
+    return getRecentCacheActivity(currentCache, lastIteration) || [];
+  }
+
+  private getMutationsRecentActivity(
     client: ApolloClient<NormalizedCacheObject>,
   ) {
     const currentMutations = this.getMutations(client);
@@ -90,7 +133,7 @@ export class ApolloRecentActivityPublisher {
       };
       return [];
     }
-    const currentMutationsValues = Object.values(currentMutations);
+    const currentMutationsValues: Mutation[] = Object.values(currentMutations);
     const lastIterationValues = Object.values(this.lastIterationData.mutations);
 
     this.lastIterationData.mutations = {
@@ -98,7 +141,10 @@ export class ApolloRecentActivityPublisher {
     };
 
     return (
-      getRecentActivities(currentMutationsValues, lastIterationValues) || []
+      getRecentOperationsActivity(
+        currentMutationsValues,
+        lastIterationValues,
+      ) || []
     );
   }
 
@@ -120,9 +166,9 @@ export class ApolloRecentActivityPublisher {
     }
   }
 
-  public publishRecentActivitiesData(recentActivitiesData: RecentActivities) {
+  public publishRecentActivityData(recentActivityData: RecentActivities) {
     this.apolloPublisher
       .ns("apollo-recent-activity")
-      .publish(recentActivitiesData);
+      .publish(recentActivityData);
   }
 }
