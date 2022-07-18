@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Manual sync",
-  "packageName": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Cache recording moved under Activity monitor and improved + performance improvements",
-  "packageName": "@graphitation/rempl-apollo-devtools",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}

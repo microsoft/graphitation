@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/ts-transform-graphql-js-tag",
   "license": "MIT",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
