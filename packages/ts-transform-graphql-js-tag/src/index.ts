@@ -134,7 +134,6 @@ function getVisitor(
                   : undefined,
               ),
               node.moduleSpecifier,
-              node.assertClause,
             );
             return result;
           } else {
