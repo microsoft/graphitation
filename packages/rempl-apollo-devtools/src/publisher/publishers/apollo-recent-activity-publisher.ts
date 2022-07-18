@@ -29,7 +29,7 @@ export class ApolloRecentActivityPublisher {
   constructor(remplWrapper: RemplWrapper) {
     this.remplWrapper = remplWrapper;
     this.remplWrapper.subscribeToRemplStatus(
-      "recent-Activity",
+      "recent-activity",
       this.trackerDataPublishHandler.bind(this),
       400,
     );
