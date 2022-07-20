@@ -9,9 +9,8 @@
     "directory": "packages/apollo-devtools"
   },
   "scripts": {
-    "build": "node scripts/build",
-    "prepublish": "yarn build",
-    "watch": "watch 'node scripts/build'",
+    "build": "node scripts/build.js",
+    "watch": "watch 'node scripts/build.js'",
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
     "types": "echo \"No types to generate\"",
@@ -44,7 +43,7 @@
     "uuid": "^8.3.2"
   },
   "publishConfig": {
-    "main": "./dist/apollo-devtools",
+    "main": "./dist/apollo-devtools.js",
     "access": "public"
   }
 }
