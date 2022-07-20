@@ -10,10 +10,11 @@
   },
   "scripts": {
     "build": "node scripts/build",
+    "prepublish": "yarn build",
     "watch": "watch 'node scripts/build'",
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
-    "types": "monorepo-scripts types",
+    "types": "echo \"No types to generate\"",
     "just": "monorepo-scripts"
   },
   "devDependencies": {
