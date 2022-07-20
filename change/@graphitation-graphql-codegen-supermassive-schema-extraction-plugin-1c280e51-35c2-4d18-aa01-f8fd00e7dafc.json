@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "extractImplicitTypesToTypescript path fixed",
-  "packageName": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
