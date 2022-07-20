@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "importExplicitTypesFromTypescript is imported separately",
+  "packageName": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}

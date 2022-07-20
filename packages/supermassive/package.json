@@ -36,6 +36,12 @@
   },
   "sideEffects": false,
   "access": "public",
+  "exports": {
+    "./extractors": {
+      "import": "./src/extractors/index.ts",
+      "types": "./src/extractors/index.ts"
+    }
+  },
   "publishConfig": {
     "main": "./lib/index",
     "types": "./lib/index.d.ts",
@@ -44,6 +50,11 @@
       ".": {
         "import": "./lib/index.mjs",
         "require": "./lib/index.js"
+      },
+      "./lib/extractors": {
+        "import": "./lib/extractors/index.mjs",
+        "require": "./lib/extractors/index.js",
+        "types": "./lib/extractors/index.d.ts"
       }
     }
   },

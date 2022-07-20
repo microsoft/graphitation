@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "extractImplicitTypesToTypescript exported separately from supermassive",
+  "packageName": "@graphitation/supermassive",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}

@@ -2,7 +2,6 @@ export { executeWithoutSchema } from "./executeWithoutSchema";
 export { executeWithSchema } from "./executeWithSchema";
 export { subscribeWithSchema } from "./subscribeWithSchema";
 export { subscribeWithoutSchema } from "./subscribeWithoutSchema";
-export { extractImplicitTypesToTypescript } from "./extractImplicitTypesToTypescript";
 
 export type {
   ObjectTypeResolver,
