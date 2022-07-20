@@ -2,6 +2,24 @@
   "name": "@graphitation/rempl-apollo-devtools",
   "entries": [
     {
+      "date": "Wed, 20 Jul 2022 15:59:30 GMT",
+      "tag": "@graphitation/rempl-apollo-devtools_v0.2.3",
+      "version": "0.2.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/rempl-apollo-devtools",
+            "commit": "99b9463fe72283a9b35714c38c2b52a34cc1b328",
+            "comment": {
+              "title": "[HOTFIX] fixing missing bundled file",
+              "value": "Right now we build packages globally on Graphitation level. However the devtools uses a different esbuild config, therefore we must run the build script before publishing."
+            }
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 20 Jul 2022 09:48:13 GMT",
       "tag": "@graphitation/rempl-apollo-devtools_v0.2.2",
       "version": "0.2.2",

@@ -1,4 +1,5 @@
 !lib
+rempl-apollo-devtools/lib
 src
 *.test.*
 **/__tests__/

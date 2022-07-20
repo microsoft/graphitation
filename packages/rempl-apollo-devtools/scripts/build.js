@@ -20,10 +20,7 @@ if (require.main === module) {
             ),
           ),
           __GLOBAL_CSS__: JSON.stringify(
-            readFileSync(
-              resolve(process.cwd(), "src/subscriber/styles.css"),
-              "utf8",
-            ),
+            readFileSync(resolve(process.cwd(), "scripts/styles.css"), "utf8"),
           ),
         },
       })
