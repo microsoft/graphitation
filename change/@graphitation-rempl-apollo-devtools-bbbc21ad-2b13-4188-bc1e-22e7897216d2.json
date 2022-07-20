@@ -2,7 +2,7 @@
   "type": "patch",
   "comment": {
     "title": "[HOTFIX] fixing missing bundled file",
-    "value": "Right now we build packages globally on Graphitation level. However the devtools uses a different esconfig, therefore we must run the build script before publishing."
+    "value": "Right now we build packages globally on Graphitation level. However the devtools uses a different esbuild config, therefore we must run the build script before publishing."
   },
   "packageName": "@graphitation/rempl-apollo-devtools",
   "email": "jakubvejr@microsoft.com",
