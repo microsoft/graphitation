@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "[REMPL_APOLLO_DEVTOOLS] Hotfix: dist is not published",
-  "packageName": "@graphitation/rempl-apollo-devtools",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}

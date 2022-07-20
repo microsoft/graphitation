@@ -1,8 +1,16 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-This log was last generated on Wed, 20 Jul 2022 15:59:30 GMT and should not be manually modified.
+This log was last generated on Wed, 20 Jul 2022 18:26:21 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.2.7
+
+Wed, 20 Jul 2022 18:26:21 GMT
+
+### Patches
+
+- [REMPL_APOLLO_DEVTOOLS] Hotfix: dist is not published (jakubvejr@microsoft.com)
 
 ## 0.2.3
 
