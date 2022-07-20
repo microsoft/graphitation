@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Empty commit to trigger re-release test",
-  "packageName": "@graphitation/rempl-apollo-devtools",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
