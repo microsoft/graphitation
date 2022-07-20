@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Wed, 20 Jul 2022 16:31:59 GMT",
+      "tag": "@graphitation/supermassive_v1.0.0",
+      "version": "1.0.0",
+      "comments": {
+        "major": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "eed13c14e47f453f292edcf3d183ad3b1b644128",
+            "comment": "extractImplicitTypesToTypescript exported separately from supermassive"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 24 Jun 2022 11:59:47 GMT",
       "tag": "@graphitation/supermassive_v0.8.5",
       "version": "0.8.5",

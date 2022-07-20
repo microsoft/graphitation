@@ -2,6 +2,27 @@
   "name": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
   "entries": [
     {
+      "date": "Wed, 20 Jul 2022 16:31:59 GMT",
+      "tag": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin_v1.0.0",
+      "version": "1.0.0",
+      "comments": {
+        "major": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
+            "commit": "eed13c14e47f453f292edcf3d183ad3b1b644128",
+            "comment": "importExplicitTypesFromTypescript is imported separately"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
+            "comment": "Bump @graphitation/supermassive to v1.0.0",
+            "commit": "eed13c14e47f453f292edcf3d183ad3b1b644128"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 20 Jul 2022 09:48:13 GMT",
       "tag": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin_v0.2.0",
       "version": "0.2.0",
