@@ -2,7 +2,7 @@ import path from "path";
 import fs from "fs/promises";
 import ts from "typescript";
 import { program, Command } from "commander";
-import { extractImplicitTypesToTypescript } from "../extractImplicitTypesToTypescript";
+import { extractImplicitTypesToTypescript } from "../extractors/extractImplicitTypesToTypescript";
 import { parse } from "graphql";
 
 export function supermassive(): Command {

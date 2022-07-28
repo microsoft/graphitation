@@ -1,1 +1,1 @@
-export { extractImplicitTypesToTypescript } from "../extractImplicitTypesToTypescript";
+export { extractImplicitTypesToTypescript } from "./extractImplicitTypesToTypescript";
