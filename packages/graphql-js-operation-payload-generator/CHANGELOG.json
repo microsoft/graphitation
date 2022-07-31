@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Sun, 31 Jul 2022 07:56:27 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.10.6",
+      "version": "0.10.6",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "commit": "c23f0253f64bbbd2ddfe01f6317f3d6daa97d205",
+            "comment": "[payload-generator] Emit different concrete types on abstract list"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 20 Jun 2022 17:49:35 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.10.5",
       "version": "0.10.5",
