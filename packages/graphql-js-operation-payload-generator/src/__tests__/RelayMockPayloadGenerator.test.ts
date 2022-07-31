@@ -33,6 +33,9 @@ const schema = buildSchema(
     "utf8",
   ),
 );
+console.log(
+  require.resolve("relay-test-utils-internal/lib/testschema.graphql"),
+);
 
 function testGeneratedData(
   documentNode: DocumentNode,
@@ -1886,5 +1889,35 @@ test("deeply merges fragment data", () => {
       ${RelayMockPayloadGeneratorTestDeepMergeFragment1}
       ${RelayMockPayloadGeneratorTestDeepMergeFragment2}
     `,
+  );
+});
+
+test("different concrete types on an abstract list", () => {
+  testGeneratedData(
+    graphql`
+      query RelayMockPayloadGeneratorTestDifferentConcreteTypesQuery {
+        nodes(ids: ["1", "2", "3"]) {
+          __typename
+          ... on User {
+            id
+          }
+          ... on Page {
+            id
+          }
+          ... on Comment {
+            id
+          }
+        }
+      }
+    `,
+    {
+      Query: () => ({
+        nodes: [
+          { __typename: "User", id: "1" },
+          { __typename: "Page", id: "2" },
+          { __typename: "Comment", id: "3" },
+        ],
+      }),
+    },
   );
 });
