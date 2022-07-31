@@ -84,6 +84,44 @@ fragment RelayMockPayloadGeneratorTestDeepMergeFragment2 on User {
 }
 `;
 
+exports[`different concrete types on an abstract list 1`] = `
+~~~~~~~~~~ INPUT ~~~~~~~~~~
+query RelayMockPayloadGeneratorTestDifferentConcreteTypesQuery {
+  nodes(ids: ["1", "2", "3"]) {
+    __typename
+    ... on User {
+      id
+    }
+    ... on Page {
+      id
+    }
+    ... on Comment {
+      id
+    }
+  }
+}
+
+~~~~~~~~~~ OUTPUT ~~~~~~~~~~
+{
+  "data": {
+    "nodes": [
+      {
+        "__typename": "User",
+        "id": "1"
+      },
+      {
+        "__typename": "Page",
+        "id": "2"
+      },
+      {
+        "__typename": "Comment",
+        "id": "3"
+      }
+    ]
+  }
+}
+`;
+
 exports[`generate basic mock data 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
 query RelayMockPayloadGeneratorTest6Query {

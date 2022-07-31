@@ -98,7 +98,17 @@ export function generate<TypeMap extends DefaultMockResolvers>(
     schema: operation.schema,
     document: document,
     variableValues: operation.request.variables,
-    rootValue: {},
+    rootValue: mockCompositeType(
+      mockResolvers,
+      operation.schema.getQueryType()!,
+      null,
+      resolveValue,
+      null,
+      null,
+      {},
+      operation,
+      abstractTypeSelections,
+    ),
     fieldResolver: (source: InternalMockData, args, _context, info) => {
       // FIXME: This should not assume a single selection
       const fieldNode: FieldNode = info.fieldNodes[0];
@@ -114,7 +124,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
       if (isCompositeType(namedReturnType)) {
         // TODO: This 'is list' logic is also done by the value resolver,
         // so probably need to refactor this code to actually leverage that.
-        const generateValue = (userValue?: {}) => {
+        const generateValue = (userValue?: { __typename?: string }) => {
           // Explicit null value
           if (userValue === null) {
             return null;
@@ -124,6 +134,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
             ...mockCompositeType(
               mockResolvers,
               namedReturnType,
+              userValue?.[TYPENAME_KEY] || null,
               resolveValue,
               fieldNode,
               info,
@@ -190,9 +201,10 @@ export function generate<TypeMap extends DefaultMockResolvers>(
 function mockCompositeType(
   mockResolvers: MockResolvers | null,
   namedReturnType: GraphQLNamedType,
+  userSpecifiedTypename: string | null,
   resolveValue: ValueResolver,
-  fieldNode: FieldNode,
-  info: GraphQLResolveInfo,
+  fieldNode: FieldNode | null,
+  info: GraphQLResolveInfo | null,
   args: { [argName: string]: any },
   operation: OperationDescriptor<GraphQLSchema, DocumentNode>,
   abstractTypeSelections: Path[],
@@ -202,6 +214,7 @@ function mockCompositeType(
   let typename = namedReturnType.name;
   let abstractTypeSelectionOnly = false;
   if (isAbstractType(namedReturnType)) {
+    invariant(info, "Expected info to be defined");
     const possibleTypeNames = info.fieldNodes.reduce<string[]>(
       (acc, fieldNode) => [
         ...acc,
@@ -214,7 +227,17 @@ function mockCompositeType(
       [],
     );
     if (possibleTypeNames?.length) {
-      typename = possibleTypeNames[0];
+      if (userSpecifiedTypename) {
+        if (!possibleTypeNames.includes(userSpecifiedTypename)) {
+          throw new Error(
+            "Expected user-specified typename to be one of " +
+              possibleTypeNames.join(", "),
+          );
+        }
+        typename = userSpecifiedTypename;
+      } else {
+        typename = possibleTypeNames[0];
+      }
     } else {
       abstractTypeSelectionOnly = true;
     }
@@ -251,6 +274,7 @@ function mockCompositeType(
         namedReturnType.name,
       );
       typename = possibleType.name;
+      invariant(info, "Expected info to be defined");
       abstractTypeSelections.push(info.path);
     }
     result.__typename = typename;
@@ -264,8 +288,8 @@ function getDefaultValues(
   mockResolvers: MockResolvers | null,
   typename: string,
   resolveValue: ValueResolver,
-  fieldNode: FieldNode,
-  info: GraphQLResolveInfo,
+  fieldNode: FieldNode | null,
+  info: GraphQLResolveInfo | null,
   args: { [argName: string]: any },
 ) {
   const defaultValues =
@@ -274,9 +298,9 @@ function getDefaultValues(
       typename,
       {
         parentType: null,
-        name: fieldNode.name.value,
-        alias: fieldNode.alias?.value || null,
-        path: pathToArray(info.path).filter(isString),
+        name: fieldNode?.name.value || "",
+        alias: fieldNode?.alias?.value || null,
+        path: info ? pathToArray(info.path).filter(isString) : [],
         args: args,
       },
       // FIXME: This is disabled here because we're currently doing this work
