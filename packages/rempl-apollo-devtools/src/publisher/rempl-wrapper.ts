@@ -50,7 +50,7 @@ export class RemplWrapper {
   }
 
   public attachMethodsToPublisher(apolloPublisher: Publisher) {
-    apolloPublisher.provide("setActiveClientId", (clientId) => {
+    apolloPublisher.provide("setActiveClientId", (clientId: string) => {
       this.clearIntervals();
       this.activeClient = this.getClientById(clientId);
       this.runAllHooks();

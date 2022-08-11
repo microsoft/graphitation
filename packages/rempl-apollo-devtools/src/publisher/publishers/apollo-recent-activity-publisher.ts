@@ -42,9 +42,12 @@ export class ApolloRecentActivityPublisher {
       this.lastIterationData = { mutations: [], queries: new Map(), cache: {} };
     });
 
-    this.apolloPublisher.provide("recordRecentActivity", (options) => {
-      this.recordRecentActivity = Boolean(options?.shouldRecord);
-    });
+    this.apolloPublisher.provide(
+      "recordRecentActivity",
+      (options: { shouldRecord?: boolean }) => {
+        this.recordRecentActivity = Boolean(options?.shouldRecord);
+      },
+    );
   }
 
   private trackerDataPublishHandler({ activeClient }: WrapperCallbackParams) {
