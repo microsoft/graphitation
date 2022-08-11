@@ -8,6 +8,6 @@
     "jsx": "react",
     "outDir": "lib"
   },
-  "include": ["src", "./rempl.d.ts"],
+  "include": ["src"],
   "references": []
 }

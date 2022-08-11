@@ -1,5 +1,6 @@
 import { RemplWrapper } from "../rempl-wrapper";
 import { parse } from "graphql";
+import { FetcherParams } from "graphiql";
 
 import { ApolloClientsObject, WrapperCallbackParams } from "../../types";
 
@@ -22,7 +23,7 @@ export class GraphiQLPublisher {
   private attachMethodsToPublisher() {
     this.apolloPublisher.provide(
       "graphiql",
-      (activeClientId, graphQLParams) => {
+      (activeClientId: string, graphQLParams: FetcherParams) => {
         const client = this.apolloClients[activeClientId];
 
         return client.query({
