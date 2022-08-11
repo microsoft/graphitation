@@ -36,8 +36,7 @@ export const plugin: PluginFunction<
 
   const content = Object.entries(visitor.getValidMappers()).reduce(
     (acc, [typeName, model]) => {
-      acc = [
-        ...acc,
+      acc.push(
         ...getModelAST(
           typeName,
           model,
@@ -45,7 +44,7 @@ export const plugin: PluginFunction<
           config.namespacedImportName || "",
           config?.mappersConfig?.[typeName],
         ),
-      ];
+      );
       return acc;
     },
     [] as TypeAliasDeclaration[],
