@@ -35,7 +35,11 @@ describe("TypeScript Resolvers Plugin", () => {
       outputFile: "graphql.ts",
     });
 
-    expect(output.content).toMatchSnapshot();
+    expect(output.content).toMatchInlineSnapshot(`
+      "type ProjectRoleDetailModelOmitFields = \\"name\\" | \\"email\\";
+      type ProjectRole = Omit<ProjectRoleDetail, ProjectRoleDetailModelOmitFields> & ProjectRoleTemplate;
+      "
+    `);
   });
 
   it("generates the models without omitted fields", async () => {
@@ -54,7 +58,10 @@ describe("TypeScript Resolvers Plugin", () => {
       outputFile: "graphql.ts",
     });
 
-    expect(output.content).toMatchSnapshot();
+    expect(output.content).toMatchInlineSnapshot(`
+      "type ProjectRole = ProjectRoleDetail & ProjectRoleTemplate;
+      "
+    `);
   });
 
   it("just assigns alias into the type, which is used in resolverTypes", async () => {
@@ -68,7 +75,10 @@ describe("TypeScript Resolvers Plugin", () => {
       outputFile: "graphql.ts",
     });
 
-    expect(output.content).toMatchSnapshot();
+    expect(output.content).toMatchInlineSnapshot(`
+      "type ProjectRole = ProjectRoleTemplate;
+      "
+    `);
   });
 
   it("doesn't generate anything", async () => {
