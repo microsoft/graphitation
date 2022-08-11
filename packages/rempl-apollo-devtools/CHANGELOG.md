@@ -1,8 +1,16 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-This log was last generated on Fri, 05 Aug 2022 11:10:34 GMT and should not be manually modified.
+This log was last generated on Thu, 11 Aug 2022 18:14:40 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.2.11
+
+Thu, 11 Aug 2022 18:14:40 GMT
+
+### Patches
+
+- HOTFIX: graphiql storage crash fixed (jakubvejr@microsoft.com)
 
 ## 0.2.10
 
