@@ -2,6 +2,21 @@
   "name": "@graphitation/rempl-apollo-devtools",
   "entries": [
     {
+      "date": "Thu, 11 Aug 2022 19:51:19 GMT",
+      "tag": "@graphitation/rempl-apollo-devtools_v0.2.12",
+      "version": "0.2.12",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/rempl-apollo-devtools",
+            "commit": "3dce1cc7d40e9593a7cbf9d01bc44c5702a04c8b",
+            "comment": "GraphiQL storage is stored in the Window"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 11 Aug 2022 18:14:40 GMT",
       "tag": "@graphitation/rempl-apollo-devtools_v0.2.11",
       "version": "0.2.11",
