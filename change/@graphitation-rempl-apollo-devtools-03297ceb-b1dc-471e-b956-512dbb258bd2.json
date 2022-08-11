@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "GraphiQL storage is stored in the Window",
+  "packageName": "@graphitation/rempl-apollo-devtools",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
