@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import GraphiQL from "graphiql";
+import GraphiQL, { Storage } from "graphiql";
 import { ActiveClientContext } from "../contexts/active-client-context";
 import { FetcherParams } from "../../types";
 import { qraphiqlStyles } from "./graphiql.styles";
@@ -38,10 +38,31 @@ export const GraphiQLRenderer = React.memo(() => {
   return (
     <div className={classes.root}>
       <div className={classes.innerContainer}>
-        <GraphiQL fetcher={createFetcher(activeClientId) as any} />
+        <GraphiQL
+          fetcher={createFetcher(activeClientId)}
+          storage={getStorage()}
+        />
       </div>
     </div>
   );
 });
 
+function getStorage(): Storage {
+  const storage: { [key: string]: string | null } = {};
+
+  return {
+    get length() {
+      return Object.keys(storage).length;
+    },
+    setItem: function (key: string, value: string | null) {
+      storage[key] = value || "";
+    },
+    getItem: function (key: string) {
+      return key in storage ? storage[key] : null;
+    },
+    removeItem: function (key: string) {
+      delete storage[key];
+    },
+  };
+}
 export default GraphiQLRenderer;
