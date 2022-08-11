@@ -62,7 +62,7 @@ function getStorage(): Storage {
       storage[key] = value || "";
     },
     getItem: function (key: string) {
-      return key in storage ? storage[key] : null;
+      return storage.hasOwnProperty(key) ? storage[key] : null;
     },
     removeItem: function (key: string) {
       delete storage[key];
