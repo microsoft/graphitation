@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useRef } from "react";
 import GraphiQL, { Storage } from "graphiql";
 import { ActiveClientContext } from "../contexts/active-client-context";
 import { FetcherParams } from "../../types";
@@ -34,13 +34,14 @@ const createFetcher = (activeClientId: string) => {
 export const GraphiQLRenderer = React.memo(() => {
   const activeClientId = useContext(ActiveClientContext);
   const classes = qraphiqlStyles();
+  const storage = useRef(getStorage());
 
   return (
     <div className={classes.root}>
       <div className={classes.innerContainer}>
         <GraphiQL
           fetcher={createFetcher(activeClientId)}
-          storage={getStorage()}
+          storage={storage.current}
         />
       </div>
     </div>
@@ -48,7 +49,10 @@ export const GraphiQLRenderer = React.memo(() => {
 });
 
 function getStorage(): Storage {
-  const storage: { [key: string]: string | null } = {};
+  if (!window.GRAPHIQL_STORAGE) {
+    window.GRAPHIQL_STORAGE = {};
+  }
+  const storage = window.GRAPHIQL_STORAGE;
 
   return {
     get length() {
@@ -58,7 +62,7 @@ function getStorage(): Storage {
       storage[key] = value || "";
     },
     getItem: function (key: string) {
-      return storage.hasOwnProperty(key) ? storage[key] : null;
+      return key in storage ? storage[key] : null;
     },
     removeItem: function (key: string) {
       delete storage[key];
