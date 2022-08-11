@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TypeScript Resolvers Plugin Should generate the models with omit 1`] = `
+"type ProjectRoleDetailModelOmitFields = \\"name\\" | \\"email\\";
+type ProjectRole = Omit<ProjectRoleDetail, ProjectRoleDetailModelOmitFields> & ProjectRoleTemplate;
+"
+`;
+
+exports[`TypeScript Resolvers Plugin Should generate the models without omit 1`] = `
+"type ProjectRole = ProjectRoleDetail & ProjectRoleTemplate;
+"
+`;
+
+exports[`TypeScript Resolvers Plugin Should just assign alias into the type 1`] = `
+"type ProjectRole = ProjectRoleTemplate;
+"
+`;
