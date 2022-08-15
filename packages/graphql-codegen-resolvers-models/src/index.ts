@@ -91,7 +91,7 @@ function getModelAST(
     return [
       factory.createTypeAliasDeclaration(
         undefined,
-        undefined,
+        [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
         factory.createIdentifier(mapper.type),
         undefined,
         factory.createTypeReferenceNode(
@@ -108,7 +108,7 @@ function getModelAST(
     return [
       factory.createTypeAliasDeclaration(
         undefined,
-        undefined,
+        [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
         factory.createIdentifier(mapper.type),
         undefined,
         factory.createIntersectionTypeNode([
@@ -135,7 +135,7 @@ function getModelAST(
     omittedFields,
     factory.createTypeAliasDeclaration(
       undefined,
-      undefined,
+      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
       factory.createIdentifier(mapper.type),
       undefined,
       factory.createIntersectionTypeNode([

@@ -37,7 +37,7 @@ describe("TypeScript Resolvers Plugin", () => {
 
     expect(output.content).toMatchInlineSnapshot(`
       "type ProjectRoleDetailModelOmitFields = \\"name\\" | \\"email\\";
-      type ProjectRole = Omit<ProjectRoleDetail, ProjectRoleDetailModelOmitFields> & ProjectRoleTemplate;
+      export type ProjectRole = Omit<ProjectRoleDetail, ProjectRoleDetailModelOmitFields> & ProjectRoleTemplate;
       "
     `);
   });
@@ -59,7 +59,7 @@ describe("TypeScript Resolvers Plugin", () => {
     });
 
     expect(output.content).toMatchInlineSnapshot(`
-      "type ProjectRole = ProjectRoleDetail & ProjectRoleTemplate;
+      "export type ProjectRole = ProjectRoleDetail & ProjectRoleTemplate;
       "
     `);
   });
@@ -76,7 +76,7 @@ describe("TypeScript Resolvers Plugin", () => {
     });
 
     expect(output.content).toMatchInlineSnapshot(`
-      "type ProjectRole = ProjectRoleTemplate;
+      "export type ProjectRole = ProjectRoleTemplate;
       "
     `);
   });
