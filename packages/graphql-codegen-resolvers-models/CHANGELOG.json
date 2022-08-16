@@ -1,0 +1,20 @@
+{
+  "name": "@graphitation/graphql-codegen-resolvers-models",
+  "entries": [
+    {
+      "date": "Tue, 16 Aug 2022 08:40:04 GMT",
+      "tag": "@graphitation/graphql-codegen-resolvers-models_v1.0.1",
+      "version": "1.0.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-codegen-resolvers-models",
+            "commit": "d8827eb215de2b7a0031d22e5eaae88077b20fa3",
+            "comment": "graphql-codegen-resolvers-models added"
+          }
+        ]
+      }
+    }
+  ]
+}
