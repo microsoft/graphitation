@@ -9,6 +9,7 @@ declare global {
   interface Window {
     REMPL_GRAPHQL_DEVTOOLS_RECENT_ACTIVITIES?: RecentActivities[];
     REMPL_APOLLO_TRACKER_METADATA?: ApolloTrackerMetadata;
+    GRAPHIQL_STORAGE: { [key: string]: string | null };
   }
 }
 
