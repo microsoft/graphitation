@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "graphql-codegen-resolvers-models added",
+  "packageName": "@graphitation/graphql-codegen-resolvers-models",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
