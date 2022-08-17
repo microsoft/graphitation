@@ -5,8 +5,8 @@ import {
   isTypeExtensionNode,
 } from "graphql";
 import { ASTReducer, visit } from "./typedVisitor";
-import { DefinitionImport } from "./types";
-import { TsCodegenContext } from "./directives";
+import { TsCodegenContext } from "./context";
+import { createNullableType, createNonNullableType } from "./utilities";
 
 export function generateResolvers(
   context: TsCodegenContext,
@@ -19,6 +19,7 @@ type ASTReducerMap = {
   Document: ts.SourceFile;
   SchemaExtension: null;
   ObjectTypeDefinition: ts.ModuleDeclaration;
+  ObjectTypeExtension: ts.ModuleDeclaration;
   FieldDefinition: ts.TypeAliasDeclaration;
   NameNode: string;
 
@@ -137,9 +138,7 @@ function createResolversReducer(
             ts.SyntaxKind.UnknownKeyword,
           );
         } else {
-          modelIdentifier = context.getModelTypeReferenceForTypeName(
-            parentName,
-          );
+          modelIdentifier = context.getModelType(parentName).toTypeReference();
         }
         return factory.createTypeAliasDeclaration(
           undefined,
@@ -174,10 +173,7 @@ function createResolversReducer(
                 undefined,
                 factory.createIdentifier("context"),
                 undefined,
-                factory.createTypeReferenceNode(
-                  factory.createIdentifier("Context"),
-                  undefined,
-                ),
+                context.getContextType().toTypeReference(),
                 undefined,
               ),
               factory.createParameterDeclaration(
@@ -186,10 +182,7 @@ function createResolversReducer(
                 undefined,
                 factory.createIdentifier("info"),
                 undefined,
-                factory.createTypeReferenceNode(
-                  factory.createIdentifier("ResolveInfo"),
-                  undefined,
-                ),
+                context.getResolveInfoType().toTypeReference(),
                 undefined,
               ),
             ],
@@ -205,7 +198,7 @@ function createResolversReducer(
     NamedType: {
       leave(node): ts.TypeNode {
         return createNullableType(
-          context.getModelTypeReferenceForTypeName(node.name),
+          context.getModelType(node.name).toTypeReference(),
         );
       },
     },
@@ -281,28 +274,4 @@ function createResolversReducer(
       },
     },
   };
-}
-
-const GraphQLToTSTypeMap: {
-  [record: string]: ts.TypeReferenceNode;
-} = {
-  ID: factory.createTypeReferenceNode("string"),
-  Int: factory.createTypeReferenceNode("number"),
-  String: factory.createTypeReferenceNode("string"),
-  Boolean: factory.createTypeReferenceNode("boolean"),
-};
-
-function createNullableType(node: ts.TypeNode): ts.UnionTypeNode {
-  return factory.createUnionTypeNode([
-    node,
-    factory.createLiteralTypeNode(factory.createNull()),
-  ]);
-}
-
-function createNonNullableType(node: ts.TypeNode): ts.TypeNode {
-  if (ts.isUnionTypeNode(node)) {
-    return node.types[0];
-  } else {
-    throw new Error(`Can't make type non nullable: ${node}.`);
-  }
 }

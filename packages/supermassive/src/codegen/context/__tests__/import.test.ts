@@ -1,5 +1,5 @@
 import { processImportDirective } from "../import";
-import { DirectiveNode, Kind, parse, print } from "graphql";
+import { Kind, parse, print } from "graphql";
 import graphql from "../../../utilities/blankGraphQLTag";
 import { DefinitionImport } from "../../types";
 
@@ -11,8 +11,17 @@ describe(processImportDirective, () => {
 
     const imp = result[0];
     expect(imp.from).toEqual("@scoped/packageImport");
-    expect(imp.defs).toEqual(["ScopedPackageImport", "ScopedPackageImport2"]);
-    expect(imp.importName).toMatchInlineSnapshot(`"atscopedpackageImport"`);
+    expect(imp.defs).toEqual([
+      {
+        typeName: "ScopedPackageImport",
+        modelName: "ScopedPackageImportModel",
+      },
+      {
+        typeName: "ScopedPackageImport2",
+        modelName: "ScopedPackageImport2Model",
+      },
+    ]);
+    expect(imp.importName).toMatchInlineSnapshot(`"NSScopedPackageImport"`);
     expect(print(imp.directive)).toMatchInlineSnapshot(
       `"@import(from: \\"@scoped/packageImport\\", defs: [\\"ScopedPackageImport\\", \\"ScopedPackageImport2\\"])"`,
     );
@@ -27,15 +36,29 @@ describe(processImportDirective, () => {
     expect(result.length).toBe(2);
     const plain = result[0];
     expect(plain.from).toEqual("packageImport");
-    expect(plain.defs).toEqual(["PackageImport", "PackageImport2"]);
-    expect(plain.importName).toMatchInlineSnapshot(`"packageImport"`);
+    expect(plain.defs).toEqual([
+      {
+        typeName: "PackageImport",
+        modelName: "PackageImportModel",
+      },
+      {
+        typeName: "PackageImport2",
+        modelName: "PackageImport2Model",
+      },
+    ]);
+    expect(plain.importName).toMatchInlineSnapshot(`"PackageImport"`);
     expect(print(plain.directive)).toMatchInlineSnapshot(
       `"@import(from: \\"packageImport\\", defs: [\\"PackageImport\\", \\"PackageImport2\\"])"`,
     );
     const dir = result[1];
     expect(dir.from).toEqual("packageImport/subDir");
-    expect(dir.defs).toEqual(["PackageImportSubDir"]);
-    expect(dir.importName).toMatchInlineSnapshot(`"packageImportsubDir"`);
+    expect(dir.defs).toEqual([
+      {
+        typeName: "PackageImportSubDir",
+        modelName: "PackageImportSubDirModel",
+      },
+    ]);
+    expect(dir.importName).toMatchInlineSnapshot(`"PackageImportSubDir"`);
     expect(print(dir.directive)).toMatchInlineSnapshot(
       `"@import(from: \\"packageImport/subDir\\", defs: [\\"PackageImportSubDir\\"])"`,
     );
@@ -51,22 +74,37 @@ describe(processImportDirective, () => {
     expect(result.length).toBe(3);
     const upDir = result[0];
     expect(upDir.from).toEqual("../upDir");
-    expect(upDir.defs).toEqual(["UpDir"]);
-    expect(upDir.importName).toMatchInlineSnapshot(`"dirUpupDir"`);
+    expect(upDir.defs).toEqual([
+      {
+        typeName: "UpDir",
+        modelName: "UpDirModel",
+      },
+    ]);
+    expect(upDir.importName).toMatchInlineSnapshot(`"UpUpDir"`);
     expect(print(upDir.directive)).toMatchInlineSnapshot(
       `"@import(from: \\"../upDir\\", defs: [\\"UpDir\\"])"`,
     );
     const upUpDir = result[1];
     expect(upUpDir.from).toEqual("../../foo/bar/Dir");
-    expect(upUpDir.defs).toEqual(["FooBarDir"]);
-    expect(upUpDir.importName).toMatchInlineSnapshot(`"dirUpdirUpfoobarDir"`);
+    expect(upUpDir.defs).toEqual([
+      {
+        typeName: "FooBarDir",
+        modelName: "FooBarDirModel",
+      },
+    ]);
+    expect(upUpDir.importName).toMatchInlineSnapshot(`"UpUpFooBarDir"`);
     expect(print(upUpDir.directive)).toMatchInlineSnapshot(
       `"@import(from: \\"../../foo/bar/Dir\\", defs: [\\"FooBarDir\\"])"`,
     );
     const loc = result[2];
     expect(loc.from).toEqual("./loc");
-    expect(loc.defs).toEqual(["LocalImport"]);
-    expect(loc.importName).toMatchInlineSnapshot(`".loc"`);
+    expect(loc.defs).toEqual([
+      {
+        typeName: "LocalImport",
+        modelName: "LocalImportModel",
+      },
+    ]);
+    expect(loc.importName).toMatchInlineSnapshot(`"CwdLoc"`);
     expect(print(loc.directive)).toMatchInlineSnapshot(
       `"@import(from: \\"./loc\\", defs: [\\"LocalImport\\"])"`,
     );

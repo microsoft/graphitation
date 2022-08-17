@@ -8,6 +8,7 @@ import {
 } from "graphql";
 import { ValueNode } from "graphql/language/ast";
 import { DefinitionImport } from "../types";
+import { createVariableNameFromImport } from "../utilities";
 
 export const IMPORT_DIRECTIVE_NAME = "import";
 
@@ -41,11 +42,11 @@ export function processImportDirective(node: DirectiveNode): DefinitionImport {
 
   return {
     from: from.value,
-    defs: definitionNames,
-    importName: from.value
-      .replace(/\.\.\//g, "dirUp")
-      .replace(/\@/g, "at")
-      .replace(/\//g, ""),
+    defs: definitionNames.map((typeName) => ({
+      typeName,
+      modelName: `${typeName}Model`,
+    })),
+    importName: createVariableNameFromImport(from.value),
     directive: node,
   };
 }
