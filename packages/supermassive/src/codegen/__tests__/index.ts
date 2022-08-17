@@ -65,22 +65,25 @@ describe(generateTS, () => {
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
       import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-      import type * as models from \\"./models.interface.ts\\";
-      import * as NSMsteamsPackagesTest from \\"@msteams/packages-test\\";
+      import type { NodeModel, UserModel, PresenceModel, PresenceAvailabilityModel } from \\"./models.interface.ts\\";
+      import { AvatarModel } from \\"@msteams/packages-test\\";
       export declare module User {
-          export type id = (model: models.UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<string>;
-          export type name = (model: models.UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<string | null>;
-          export type presence = (model: models.UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<models.PresenceModel | null>;
-          export type avatar = (model: models.UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<NSMsteamsPackagesTest.AvatarModel | null>;
+          export type id = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<string>;
+          export type name = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<string | null>;
+          export type presence = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<PresenceModel | null>;
+          export type avatar = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<AvatarModel | null>;
       }
       export declare module Presence {
-          export type id = (model: models.PresenceModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<string>;
-          export type availability = (model: models.PresenceModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<models.PresenceAvailabilityModel>;
+          export type id = (model: PresenceModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<string>;
+          export type availability = (model: PresenceModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<PresenceAvailabilityModel>;
       }
       export declare module Query {
-          export type userById = (model: unknown, args: {
+        export type userById = (model: unknown, args: {
+          id: string;
+      }, context: Context, info: ResolveInfo) => PromiseOrValue<NodeModel | null>;
+      export type userById = (model: unknown, args: {
               id: string;
-          }, context: Context, info: ResolveInfo) => PromiseOrValue<models.UserModel | null>;
+          }, context: Context, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
       }
       "
     `);
