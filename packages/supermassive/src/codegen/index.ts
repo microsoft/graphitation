@@ -1,24 +1,17 @@
 import ts, { factory } from "typescript";
 import { DocumentNode } from "graphql";
-import { collectModelImports } from "./directives/model";
-import { collectImports } from "./directives/import";
-// import { validateExpectDirective } from "./directives/expect";
+import { extractContext } from "./context";
 import { generateResolvers } from "./resolvers";
-import { TypeNameToTypeReference } from "./types";
-import { createTypeNameToTypeReferenceMap } from "./utilities";
+import { generateModels } from "./models";
 
-export function genResolvers(document: DocumentNode): ts.SourceFile {
+export function generateTS(
+  document: DocumentNode,
+): { models: ts.SourceFile; resolvers: ts.SourceFile } {
   try {
-    const imports = collectImports(document);
-    const models = collectModelImports(document);
-    // validateExpectDirective(doc);
-    const typeNameToTypeReference = createTypeNameToTypeReferenceMap(imports);
-    let resolvers = generateResolvers(
-      document,
-      imports,
-      typeNameToTypeReference,
-    );
-    return resolvers;
+    let context = extractContext({}, document);
+    let models = generateModels(context, document);
+    let resolvers = generateResolvers(context, document);
+    return { models, resolvers };
   } catch (e) {
     console.error(e);
     throw e;
