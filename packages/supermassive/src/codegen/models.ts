@@ -143,14 +143,13 @@ function createModelsReducer(
           [
             factory.createHeritageClause(
               ts.SyntaxKind.ExtendsKeyword,
-              extendTypes
-                .map((type) =>
-                  factory.createExpressionWithTypeArguments(
-                    type.toExpression(),
-                    undefined,
-                  ),
-                )
-                .concat(interfaces),
+              extendTypes.map((type) =>
+                factory.createExpressionWithTypeArguments(
+                  type.toExpression(),
+                  undefined,
+                ),
+              ),
+              // .concat(interfaces),
             ),
           ],
           [
