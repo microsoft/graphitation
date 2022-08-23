@@ -2,10 +2,8 @@ import {
   ArgumentNode,
   ASTNode,
   DirectiveNode,
-  DocumentNode,
   GraphQLError,
   ObjectTypeDefinitionNode,
-  visit,
 } from "graphql";
 import { ValueNode } from "graphql/language/ast";
 import { DefinitionModel } from "../types";
@@ -48,7 +46,7 @@ export function processModelDirective(
 
   return {
     typeName,
-    modelName: `${typeName}Model`,
+    modelName: `_${typeName}Model`,
     tsType: tsType.value,
     importName: createVariableNameFromImport(from.value),
     from: from.value,

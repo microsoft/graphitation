@@ -3,6 +3,7 @@ import {
   DocumentNode,
   isTypeDefinitionNode,
   isTypeExtensionNode,
+  Kind,
 } from "graphql";
 import { ASTReducer, visit } from "./typedVisitor";
 import { TsCodegenContext } from "./context";
@@ -30,9 +31,10 @@ type ASTReducerMap = {
   Directive: null;
 
   InputFieldDefinition: ts.TypeElement;
+  InputValueDefinition: ts.PropertySignature;
+  InputObjectTypeDefinition: ts.TypeAliasDeclaration;
 
   UnionTypeDefinitionNode: null;
-  InputObjectTypeDefinition: null;
   InterfaceTypeDefinitionNode: null;
   EnumTypeDefinitionNode: null;
   ScalarTypeDefinition: null;
@@ -55,6 +57,10 @@ type ASTReducerFieldMap = {
     name: ASTReducerMap["NameNode"];
     type: ts.TypeNode;
     arguments: ASTReducerMap["InputFieldDefinition"];
+  };
+  InputObjectTypeDefinition: {
+    name: ASTReducerMap["NameNode"];
+    fields: ASTReducerMap["FieldDefinition"];
   };
 
   NamedType: {
@@ -138,7 +144,9 @@ function createResolversReducer(
             ts.SyntaxKind.UnknownKeyword,
           );
         } else {
-          modelIdentifier = context.getModelType(parentName).toTypeReference();
+          modelIdentifier = context
+            .getModelType(parentName, true)
+            .toTypeReference();
         }
         return factory.createTypeAliasDeclaration(
           undefined,
@@ -196,9 +204,16 @@ function createResolversReducer(
     },
 
     NamedType: {
-      leave(node): ts.TypeNode {
+      leave(node, _a, _p, _path, ancestors): ts.TypeNode {
+        const parentObject = ancestors[ancestors.length - 1];
+        const isAncestorInput =
+          "kind" in parentObject &&
+          parentObject.kind === Kind.INPUT_VALUE_DEFINITION;
+
         return createNullableType(
-          context.getModelType(node.name).toTypeReference(),
+          context
+            .getModelType(node.name, !isAncestorInput, !isAncestorInput)
+            .toTypeReference(),
         );
       },
     },
@@ -228,12 +243,26 @@ function createResolversReducer(
     },
 
     InputValueDefinition: {
-      leave(node) {
+      leave(node): ts.PropertySignature {
         return factory.createPropertySignature(
           undefined,
           node.name,
           undefined,
-          node.type as ts.TypeNode,
+          node.type,
+        );
+      },
+    },
+
+    InputObjectTypeDefinition: {
+      leave(node): ts.TypeAliasDeclaration {
+        return factory.createTypeAliasDeclaration(
+          undefined,
+          [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+          node.name,
+          undefined,
+          factory.createTypeLiteralNode(
+            ((node.fields as unknown) as ts.TypeElement[]) || [],
+          ),
         );
       },
     },
@@ -251,12 +280,6 @@ function createResolversReducer(
     },
 
     InterfaceTypeDefinition: {
-      leave() {
-        return null;
-      },
-    },
-
-    InputObjectTypeDefinition: {
       leave() {
         return null;
       },

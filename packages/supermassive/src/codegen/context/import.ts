@@ -1,11 +1,4 @@
-import {
-  ArgumentNode,
-  BREAK,
-  DocumentNode,
-  visit,
-  GraphQLError,
-  DirectiveNode,
-} from "graphql";
+import { ArgumentNode, GraphQLError, DirectiveNode } from "graphql";
 import { ValueNode } from "graphql/language/ast";
 import { DefinitionImport } from "../types";
 import { createVariableNameFromImport } from "../utilities";

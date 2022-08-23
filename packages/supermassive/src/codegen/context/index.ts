@@ -1,7 +1,5 @@
-import { TsConfigResolver } from "@ts-morph/common";
 import {
   DocumentNode,
-  DirectiveNode,
   GraphQLError,
   visit,
   ArgumentNode,
@@ -32,6 +30,8 @@ export type TsCodegenContextOptions = {
   graphQLToTsTypeMap: { [record: string]: string };
 };
 
+export const SCALARS_TYPE_NAME = "Scalars";
+const DEFAULT_SCALAR_TYPE = "any";
 const TsCodegenContextDefault: TsCodegenContextOptions = {
   moduleRoot: "",
   moduleModelsPath: "./__generated__/models.interface.ts",
@@ -51,6 +51,7 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
   graphQLToTsTypeMap: {
     ID: "string",
     Int: "number",
+    Float: "number",
     String: "string",
     Boolean: "boolean",
   },
@@ -62,11 +63,17 @@ export class TsCodegenContext {
   private imports: DefinitionImport[];
   private typeNameToImports: Map<string, ModelNameAndImport>;
   private typeNameToModels: Map<string, DefinitionModel>;
+  private allModelNames: Set<string>;
+  private scalars: Map<string, string>;
 
   constructor(private options: TsCodegenContextOptions) {
     this.imports = [];
     this.typeNameToImports = new Map();
     this.typeNameToModels = new Map();
+    this.allModelNames = new Set([SCALARS_TYPE_NAME]);
+    this.scalars = new Map(
+      Object.entries(TsCodegenContextDefault.graphQLToTsTypeMap),
+    );
   }
 
   addImport(imp: DefinitionImport, node: ASTNode): void {
@@ -106,14 +113,21 @@ export class TsCodegenContext {
   }
 
   getAllImportDeclarations(): ts.ImportDeclaration[] {
-    return this.imports.map(({ importName, from }) =>
+    return this.imports.map(({ defs, from }) =>
       factory.createImportDeclaration(
         undefined,
         undefined,
         factory.createImportClause(
           false,
           undefined,
-          factory.createNamespaceImport(factory.createIdentifier(importName)),
+          factory.createNamedImports(
+            defs.map(({ modelName }) =>
+              factory.createImportSpecifier(
+                undefined,
+                factory.createIdentifier(modelName),
+              ),
+            ),
+          ),
         ),
         factory.createStringLiteral(from),
       ),
@@ -129,14 +143,24 @@ export class TsCodegenContext {
         factory.createImportClause(
           false,
           undefined,
-          factory.createNamespaceImport(
-            factory.createIdentifier(model.importName),
-          ),
+          factory.createNamedImports([
+            factory.createImportSpecifier(
+              factory.createIdentifier(model.tsType),
+              factory.createIdentifier(model.modelName),
+            ),
+          ]),
         ),
         factory.createStringLiteral(model.from),
       ),
     );
     return imports.concat(models);
+  }
+
+  addScalar(scalarName: string | null) {
+    if (!scalarName) {
+      return;
+    }
+    this.scalars.set(scalarName, DEFAULT_SCALAR_TYPE);
   }
 
   getAllResolverImportDeclarations(): ts.ImportDeclaration[] {
@@ -196,6 +220,7 @@ export class TsCodegenContext {
         ),
       );
     }
+
     imports.push(
       factory.createImportDeclaration(
         undefined,
@@ -203,7 +228,14 @@ export class TsCodegenContext {
         factory.createImportClause(
           true,
           undefined,
-          factory.createNamespaceImport(factory.createIdentifier("models")),
+          factory.createNamedImports(
+            Array.from(this.allModelNames).map((modelName) =>
+              factory.createImportSpecifier(
+                undefined,
+                factory.createIdentifier(modelName),
+              ),
+            ),
+          ),
         ),
         factory.createStringLiteral("./models.interface.ts"),
       ),
@@ -225,25 +257,78 @@ export class TsCodegenContext {
     return new TypeLocation(null, this.options.resolveInfo.name);
   }
 
-  getModelType(typeName: string): TypeLocation {
-    if (this.options.graphQLToTsTypeMap[typeName]) {
-      return new TypeLocation(null, this.options.graphQLToTsTypeMap[typeName]);
+  getDefaultTypes() {
+    return [
+      factory.createTypeAliasDeclaration(
+        undefined,
+        [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+        factory.createIdentifier("BaseModel"),
+        undefined,
+        factory.createTypeLiteralNode([
+          factory.createPropertySignature(
+            undefined,
+            factory.createIdentifier("__typename"),
+            undefined,
+            factory.createTypeReferenceNode(
+              factory.createQualifiedName(
+                factory.createIdentifier(SCALARS_TYPE_NAME),
+                factory.createIdentifier("String"),
+              ),
+            ),
+          ),
+        ]),
+      ),
+      factory.createTypeAliasDeclaration(
+        undefined,
+        [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+        factory.createIdentifier(SCALARS_TYPE_NAME),
+        undefined,
+        factory.createTypeLiteralNode(
+          Array.from(this.scalars).map(([key, type]) =>
+            factory.createPropertySignature(
+              undefined,
+              factory.createIdentifier(key),
+              undefined,
+              factory.createTypeReferenceNode(
+                factory.createIdentifier(type),
+                undefined,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  getModelType(
+    typeName: string,
+    putModelSuffix: boolean,
+    saveModels = false,
+  ): TypeLocation {
+    if (this.scalars.has(typeName)) {
+      return new TypeLocation(SCALARS_TYPE_NAME, typeName);
     } else if (this.typeNameToImports.has(typeName)) {
-      let { modelName, imp } = this.typeNameToImports.get(
+      let { modelName } = this.typeNameToImports.get(
         typeName,
       ) as ModelNameAndImport;
-      return new TypeLocation(imp.importName, modelName);
+      return new TypeLocation(null, modelName);
     } else {
-      return new TypeLocation("models", `${typeName}Model`);
+      if (saveModels) {
+        this.allModelNames.add(`${typeName}${putModelSuffix ? "Model" : ""}`);
+      }
+      return new TypeLocation(
+        null,
+        `${typeName}${putModelSuffix ? "Model" : ""}`,
+      );
     }
   }
 
   getDefinedModelType(typeName: string): TypeLocation | null {
-    if (this.options.graphQLToTsTypeMap[typeName]) {
-      return new TypeLocation(null, this.options.graphQLToTsTypeMap[typeName]);
+    if (this.scalars.has(typeName)) {
+      return new TypeLocation(SCALARS_TYPE_NAME, typeName);
     } else if (this.typeNameToModels.has(typeName)) {
       let imp = this.typeNameToModels.get(typeName) as DefinitionModel;
-      return new TypeLocation(imp.importName, `${typeName}Model`);
+      return new TypeLocation(null, imp.modelName);
     } else {
       return null;
     }

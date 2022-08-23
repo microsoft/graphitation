@@ -1,8 +1,6 @@
-import { generateResolvers } from "../resolvers";
 import ts from "typescript";
 import { parse } from "graphql";
 import graphql from "../../utilities/blankGraphQLTag";
-import { extractContext } from "../context";
 import { generateTS } from "..";
 
 describe(generateTS, () => {
@@ -10,6 +8,8 @@ describe(generateTS, () => {
     let { models, resolvers } = runGenerateTest(graphql`
       extend schema @import(from: "@msteams/packages-test", defs: ["Avatar"])
 
+      scalar Test
+      
       interface Node {
         id: ID!
       }
@@ -19,6 +19,15 @@ describe(generateTS, () => {
         name: String
         presence: Presence
         avatar: Avatar
+      }
+
+      input UserParamsInput {
+        name: String
+      }
+
+      input PresenceInput {
+        userId: ID!
+        userParams: UserParamsInput!
       }
 
       type Presence implements Node
@@ -36,53 +45,77 @@ describe(generateTS, () => {
       extend type Query {
         node(id: ID!): Node
         userById(id: ID!): User
+        presence(params: PresenceInput!): User
       }
+
+      union FooUnion = Presence | User
     `);
     expect(models).toMatchInlineSnapshot(`
       "import { AvatarModel } from \\"@msteams/packages-test\\";
       import { PresenceModel as _PresenceModel } from \\"./presence-model.interface\\";
-      export interface NodeModel extends {
-        __typeName: string;
+      export type BaseModel = {
+          __typename: Scalars.String;
+      };
+      export type Scalars = {
+          ID: string;
+          Int: number;
+          Float: number;
+          String: string;
+          Boolean: boolean;
+          Test: any;
+      };
+      export interface NodeModel extends BaseModel {
+          __typename: Scalars.String;
       }
       export interface UserModel extends BaseModel, NodeModel {
-          __typeName: \\"User\\";
-          id: string;
-          name: string | null;
+          __typename: \\"User\\";
+          id: Scalars.ID;
+          name: Scalars.String | null;
           presence: PresenceModel | null;
           avatar: AvatarModel | null;
       }
-      export interface PresenceModel extends BaseModel, NodeModel, _PresenceModel {
-          __typeName: \\"Presence\\";
+      export interface PresenceModel extends BaseModel, _PresenceModel, NodeModel {
+          __typename: \\"Presence\\";
       }
       export enum PresenceAvailabilityModel {
           Available = \\"Available\\",
           Away = \\"Away\\",
           Offline = \\"Offline\\"
       }
-      export type FooUnionModel = PresenceModel | UserModel
+      export type FooUnionModel = PresenceModel | UserModel;
       "
     `);
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
       import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-      import type { NodeModel, UserModel, PresenceModel, PresenceAvailabilityModel } from \\"./models.interface.ts\\";
+      import type { Scalars, NodeModel, PresenceModel, PresenceAvailabilityModel, UserModel } from \\"./models.interface.ts\\";
       import { AvatarModel } from \\"@msteams/packages-test\\";
       export declare module User {
-          export type id = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<string>;
-          export type name = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<string | null>;
+          export type id = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<Scalars.ID>;
+          export type name = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<Scalars.String | null>;
           export type presence = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<PresenceModel | null>;
           export type avatar = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<AvatarModel | null>;
       }
+      export type UserParamsInput = {
+          name: Scalars.String | null;
+      };
+      export type PresenceInput = {
+          userId: Scalars.ID;
+          userParams: UserParamsInput;
+      };
       export declare module Presence {
-          export type id = (model: PresenceModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<string>;
+          export type id = (model: PresenceModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<Scalars.ID>;
           export type availability = (model: PresenceModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<PresenceAvailabilityModel>;
       }
       export declare module Query {
-        export type userById = (model: unknown, args: {
-          id: string;
-      }, context: Context, info: ResolveInfo) => PromiseOrValue<NodeModel | null>;
-      export type userById = (model: unknown, args: {
-              id: string;
+          export type node = (model: unknown, args: {
+              id: Scalars.ID;
+          }, context: Context, info: ResolveInfo) => PromiseOrValue<NodeModel | null>;
+          export type userById = (model: unknown, args: {
+              id: Scalars.ID;
+          }, context: Context, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+          export type presence = (model: unknown, args: {
+              params: PresenceInput;
           }, context: Context, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
       }
       "

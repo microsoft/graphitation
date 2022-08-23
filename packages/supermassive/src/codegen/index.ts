@@ -1,4 +1,4 @@
-import ts, { factory } from "typescript";
+import ts from "typescript";
 import { DocumentNode } from "graphql";
 import { extractContext } from "./context";
 import { generateResolvers } from "./resolvers";

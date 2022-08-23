@@ -1,11 +1,7 @@
 import ts, { factory } from "typescript";
-import {
-  DocumentNode,
-  isTypeDefinitionNode,
-  isTypeExtensionNode,
-} from "graphql";
+import { DocumentNode, Kind } from "graphql";
 import { ASTReducer, visit } from "./typedVisitor";
-import { TsCodegenContext } from "./context";
+import { TsCodegenContext, TypeLocation, SCALARS_TYPE_NAME } from "./context";
 import { createNullableType, createNonNullableType } from "./utilities";
 
 export function generateModels(
@@ -22,21 +18,22 @@ type ASTReducerMap = {
 
   NameNode: string;
 
-  NamedType: ts.TypeNode;
+  NamedType: ts.TypeNode | ts.Expression;
   ListType: ts.TypeNode;
   NonNullType: ts.TypeNode;
 
   Directive: null;
 
   FieldDefinition: ts.PropertySignature;
+  InputValueDefinition: null;
 
   ObjectTypeDefinition: ts.InterfaceDeclaration;
-  InputObjectTypeDefinition: ts.InterfaceDeclaration;
+  InputObjectTypeDefinition: null;
   UnionTypeDefinition: ts.TypeAliasDeclaration;
   EnumTypeDefinition: ts.EnumDeclaration;
   EnumValueDefinition: ts.EnumMember;
   InterfaceTypeDefinition: ts.InterfaceDeclaration;
-  // ScalarTypeDefinition: ts.TypeAliasDeclaration;
+  ScalarTypeDefinition: null;
 
   DirectiveDefinition: null;
 };
@@ -66,13 +63,10 @@ type ASTReducerFieldMap = {
     interfaces: ASTReducerMap["NamedType"];
     fields: ASTReducerMap["FieldDefinition"];
   };
-  InputObjectTypeDefinition: {
-    name: ASTReducerMap["NameNode"];
-    fields: ASTReducerMap["FieldDefinition"];
-  };
+
   UnionTypeDefinition: {
     name: ASTReducerMap["NameNode"];
-    types: ts.TypeNode[];
+    types: ts.TypeNode;
   };
   InterfaceTypeDefinition: {
     name: ASTReducerMap["NameNode"];
@@ -84,9 +78,9 @@ type ASTReducerFieldMap = {
   EnumValueDefinition: {
     name: ASTReducerMap["NameNode"];
   };
-  // ScalarTypeDefinition: {
-  //   name: ASTReducerMap["NameNode"];
-  // };
+  ScalarTypeDefinition: {
+    name: null;
+  };
 };
 
 function createModelsReducer(
@@ -97,8 +91,9 @@ function createModelsReducer(
       leave(node) {
         const imports = context.getAllModelImportDeclarations() as ts.Statement[];
         const statements = node.definitions;
+
         return factory.createSourceFile(
-          imports.concat(statements.flat()),
+          imports.concat(context.getDefaultTypes(), statements.flat()),
           factory.createToken(ts.SyntaxKind.EndOfFileToken),
           ts.NodeFlags.None,
         );
@@ -129,44 +124,57 @@ function createModelsReducer(
     ObjectTypeDefinition: {
       leave(node): ts.InterfaceDeclaration {
         const model = context.getDefinedModelType(node.name);
-        const interfaces = node.interfaces || [];
+        const interfaces = (node.interfaces as ts.Expression[]) || [];
         const extendTypes = [context.getBaseModelType()];
         if (model) {
           extendTypes.push(model);
         }
-        console.log(extendTypes);
+
         return factory.createInterfaceDeclaration(
           undefined,
           [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
           factory.createIdentifier(`${node.name}Model`),
           undefined,
           [
-            factory.createHeritageClause(
-              ts.SyntaxKind.ExtendsKeyword,
-              extendTypes.map((type) =>
+            factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+              ...extendTypes.map((type) =>
                 factory.createExpressionWithTypeArguments(
                   type.toExpression(),
                   undefined,
                 ),
               ),
-              // .concat(interfaces),
-            ),
+              ...interfaces.map((interfaceExpression) =>
+                factory.createExpressionWithTypeArguments(
+                  interfaceExpression,
+                  undefined,
+                ),
+              ),
+            ]),
           ],
           [
             factory.createPropertySignature(
               undefined,
-              "__typeName",
+              "__typename",
               undefined,
               factory.createLiteralTypeNode(
                 factory.createStringLiteral(node.name),
               ),
             ),
-            ...(node.fields || []),
+            ...((!model && node.fields) || []),
           ],
         );
       },
     },
-
+    InputObjectTypeDefinition: {
+      leave(node) {
+        return null;
+      },
+    },
+    InputValueDefinition: {
+      leave(node) {
+        return null;
+      },
+    },
     EnumTypeDefinition: {
       leave(node): ts.EnumDeclaration {
         return factory.createEnumDeclaration(
@@ -186,7 +194,6 @@ function createModelsReducer(
         );
       },
     },
-
     InterfaceTypeDefinition: {
       leave(node): ts.InterfaceDeclaration {
         const extendTypes = [context.getBaseModelType()];
@@ -209,19 +216,55 @@ function createModelsReducer(
           [
             factory.createPropertySignature(
               undefined,
-              "__typeName",
+              "__typename",
               undefined,
-              factory.createTypeReferenceNode("string"),
+              factory.createExpressionWithTypeArguments(
+                factory.createPropertyAccessExpression(
+                  factory.createIdentifier(SCALARS_TYPE_NAME),
+                  factory.createIdentifier("String"),
+                ),
+                undefined,
+              ),
             ),
           ],
         );
       },
     },
-
+    UnionTypeDefinition: {
+      leave({ name, types }): ts.TypeAliasDeclaration {
+        return factory.createTypeAliasDeclaration(
+          undefined,
+          [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+          factory.createIdentifier(`${name}Model`),
+          undefined,
+          factory.createUnionTypeNode(
+            types?.map((type) => {
+              return createNonNullableType(type as ts.UnionTypeNode);
+            }) || [],
+          ),
+        );
+      },
+    },
+    ScalarTypeDefinition: {
+      leave(node): null {
+        context.addScalar(node.name);
+        return null;
+      },
+    },
     NamedType: {
-      leave(node): ts.TypeNode {
+      leave(node, _a, _p, path, ancestors): ts.TypeNode | ts.Expression {
+        const parentObject = ancestors[ancestors.length - 1];
+        const isAncestorInput =
+          "kind" in parentObject &&
+          parentObject.kind === Kind.INPUT_VALUE_DEFINITION;
+
+        const isImplementedInterface = path[path.length - 2] === "interfaces";
+        if (isImplementedInterface) {
+          return factory.createIdentifier(`${node.name}Model`);
+        }
+
         return createNullableType(
-          context.getModelType(node.name).toTypeReference(),
+          context.getModelType(node.name, !isAncestorInput).toTypeReference(),
         );
       },
     },
