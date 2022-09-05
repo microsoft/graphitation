@@ -7,6 +7,7 @@ import {
   ASTNode,
 } from "graphql";
 import ts, { factory } from "typescript";
+import { BASE_SCALARS } from "../scalars";
 import { DefinitionImport, DefinitionModel } from "../types";
 import { IMPORT_DIRECTIVE_NAME, processImportDirective } from "./import";
 import { MODEL_DIRECTIVE_NAME, processModelDirective } from "./model";
@@ -20,14 +21,13 @@ export type TsCodegenContextOptions = {
     from: string | null;
   };
   context: {
-    name: string;
+    name?: string;
     from: string | null;
   };
   resolveInfo: {
     name: string;
     from: string | null;
   };
-  graphQLToTsTypeMap: { [record: string]: string };
 };
 
 export const SCALARS_TYPE_NAME = "Scalars";
@@ -41,19 +41,12 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
     from: null,
   },
   context: {
-    name: "Context",
+    name: "unknown",
     from: null,
   },
   resolveInfo: {
     name: "ResolveInfo",
     from: "@graphitation/supermassive",
-  },
-  graphQLToTsTypeMap: {
-    ID: "string",
-    Int: "number",
-    Float: "number",
-    String: "string",
-    Boolean: "boolean",
   },
 };
 
@@ -71,9 +64,7 @@ export class TsCodegenContext {
     this.typeNameToImports = new Map();
     this.typeNameToModels = new Map();
     this.allModelNames = new Set([SCALARS_TYPE_NAME]);
-    this.scalars = new Map(
-      Object.entries(TsCodegenContextDefault.graphQLToTsTypeMap),
-    );
+    this.scalars = new Map(Object.entries(BASE_SCALARS));
   }
 
   addImport(imp: DefinitionImport, node: ASTNode): void {
@@ -153,7 +144,24 @@ export class TsCodegenContext {
         factory.createStringLiteral(model.from),
       ),
     );
-    return imports.concat(models);
+
+    const baseScalarsImport = factory.createImportDeclaration(
+      undefined,
+      undefined,
+      factory.createImportClause(
+        false,
+        undefined,
+        factory.createNamedImports([
+          factory.createImportSpecifier(
+            undefined,
+            factory.createIdentifier("BaseScalars"),
+          ),
+        ]),
+      ),
+      factory.createStringLiteral("@graphitation/supermassive"),
+    );
+
+    return imports.concat(models).concat(baseScalarsImport);
   }
 
   addScalar(scalarName: string | null) {
@@ -201,7 +209,7 @@ export class TsCodegenContext {
         ),
       );
     }
-    if (this.options.context.from) {
+    if (this.options.context.from && this.options.context.name) {
       imports.push(
         factory.createImportDeclaration(
           undefined,
@@ -250,7 +258,11 @@ export class TsCodegenContext {
   }
 
   getContextType(): TypeLocation {
-    return new TypeLocation(null, this.options.context.name);
+    return new TypeLocation(
+      null,
+      this.options.context.name ||
+        (TsCodegenContextDefault.context.name as string),
+    );
   }
 
   getResolveInfoType(): TypeLocation {
@@ -283,19 +295,27 @@ export class TsCodegenContext {
         [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
         factory.createIdentifier(SCALARS_TYPE_NAME),
         undefined,
-        factory.createTypeLiteralNode(
-          Array.from(this.scalars).map(([key, type]) =>
-            factory.createPropertySignature(
-              undefined,
-              factory.createIdentifier(key),
-              undefined,
-              factory.createTypeReferenceNode(
-                factory.createIdentifier(type),
-                undefined,
-              ),
-            ),
+        factory.createIntersectionTypeNode([
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("BaseScalars"),
+            undefined,
           ),
-        ),
+          factory.createTypeLiteralNode(
+            Array.from(this.scalars)
+              .filter(([key]) => !BASE_SCALARS.hasOwnProperty(key))
+              .map(([key, type]) =>
+                factory.createPropertySignature(
+                  undefined,
+                  factory.createIdentifier(key),
+                  undefined,
+                  factory.createTypeReferenceNode(
+                    factory.createIdentifier(type),
+                    undefined,
+                  ),
+                ),
+              ),
+          ),
+        ]),
       ),
     ];
   }

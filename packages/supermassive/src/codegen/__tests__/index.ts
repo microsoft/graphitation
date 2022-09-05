@@ -5,7 +5,8 @@ import { generateTS } from "..";
 
 describe(generateTS, () => {
   it("kitchen sink", () => {
-    let { models, resolvers } = runGenerateTest(graphql`
+    let { models, resolvers } = runGenerateTest(
+      graphql`
       extend schema @import(from: "@msteams/packages-test", defs: ["Avatar"])
 
       scalar Test
@@ -49,19 +50,18 @@ describe(generateTS, () => {
       }
 
       union FooUnion = Presence | User
-    `);
+    `,
+      "@msteams/context",
+      "Context",
+    );
     expect(models).toMatchInlineSnapshot(`
       "import { AvatarModel } from \\"@msteams/packages-test\\";
       import { PresenceModel as _PresenceModel } from \\"./presence-model.interface\\";
+      import { BaseScalars } from \\"@graphitation/supermassive\\";
       export type BaseModel = {
           __typename: Scalars.String;
       };
-      export type Scalars = {
-          ID: string;
-          Int: number;
-          Float: number;
-          String: string;
-          Boolean: boolean;
+      export type Scalars = BaseScalars & {
           Test: any;
       };
       export interface NodeModel extends BaseModel {
@@ -88,6 +88,7 @@ describe(generateTS, () => {
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
       import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+      import type { Context } from \\"@msteams/context\\";
       import type { Scalars, NodeModel, PresenceModel, PresenceAvailabilityModel, UserModel } from \\"./models.interface.ts\\";
       import { AvatarModel } from \\"@msteams/packages-test\\";
       export declare module User {
@@ -121,11 +122,83 @@ describe(generateTS, () => {
       "
     `);
   });
+
+  it("generateTS without ContextName and ContextImport", () => {
+    let { models, resolvers } = runGenerateTest(graphql`
+      interface Node {
+        id: ID!
+      }
+
+      extend type Query {
+        node(id: ID!): Node!
+      }
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import { BaseScalars } from \\"@graphitation/supermassive\\";
+      export type BaseModel = {
+          __typename: Scalars.String;
+      };
+      export type Scalars = BaseScalars & {};
+      export interface NodeModel extends BaseModel {
+          __typename: Scalars.String;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+      import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+      import type { Scalars, NodeModel } from \\"./models.interface.ts\\";
+      export declare module Query {
+          export type node = (model: unknown, args: {
+              id: Scalars.ID;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<NodeModel>;
+      }
+      "
+    `);
+  });
+
+  it("generateTS with optional parameter in the Query", () => {
+    let { models, resolvers } = runGenerateTest(graphql`
+      interface Node {
+        id: ID
+      }
+
+      extend type Query {
+        node(id: ID): Node
+      }
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import { BaseScalars } from \\"@graphitation/supermassive\\";
+      export type BaseModel = {
+          __typename: Scalars.String;
+      };
+      export type Scalars = BaseScalars & {};
+      export interface NodeModel extends BaseModel {
+          __typename: Scalars.String;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+      import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+      import type { Scalars, NodeModel } from \\"./models.interface.ts\\";
+      export declare module Query {
+          export type node = (model: unknown, args: {
+              id: Scalars.ID | null;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<NodeModel | null>;
+      }
+      "
+    `);
+  });
 });
 
-function runGenerateTest(doc: string): { models: string; resolvers: string } {
+function runGenerateTest(
+  doc: string,
+  contextImport?: string,
+  contextName?: string,
+): { models: string; resolvers: string } {
   let document = parse(doc);
-  let result = generateTS(document);
+  let result = generateTS(document, contextImport, contextName);
   let printer = ts.createPrinter();
   return {
     models: printer.printFile(result.models),

@@ -6,9 +6,19 @@ import { generateModels } from "./models";
 
 export function generateTS(
   document: DocumentNode,
+  contextImport?: string,
+  contextName?: string,
 ): { models: ts.SourceFile; resolvers: ts.SourceFile } {
   try {
-    let context = extractContext({}, document);
+    let context = extractContext(
+      {
+        context: {
+          name: contextName,
+          from: contextImport || null,
+        },
+      },
+      document,
+    );
     let models = generateModels(context, document);
     let resolvers = generateResolvers(context, document);
     return { models, resolvers };

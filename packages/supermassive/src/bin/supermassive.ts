@@ -6,6 +6,12 @@ import { extractImplicitTypesToTypescript } from "../extractors/extractImplicitT
 import { parse } from "graphql";
 import { generateTS } from "../codegen";
 
+type GenerateInterfacesOptions = {
+  outputDir?: string;
+  contextImport?: string;
+  contextName?: string;
+};
+
 export function supermassive(): Command {
   const extractSchemaCommand = new Command();
   extractSchemaCommand
@@ -22,10 +28,21 @@ export function supermassive(): Command {
   generateInterfacesCommand
     .name("generate-interfaces")
     .argument("<files...>")
-    .description("generate interfaces and modelss")
-    .action(async (files: Array<string>) => {
-      await generateInterfaces(files);
-    });
+    .option(
+      "-o, --output-dir [outputDir]",
+      "output directory relative to file, default generated",
+    )
+    .option(
+      "-ci, --context-import [contextImport]",
+      "from where to import context",
+    )
+    .option("-cn, --context-name [contextName]", "Context name")
+    .description("generate interfaces and models")
+    .action(
+      async (files: Array<string>, options: GenerateInterfacesOptions) => {
+        await generateInterfaces(files, options);
+      },
+    );
 
   return program
     .name("supermassive")
@@ -33,7 +50,10 @@ export function supermassive(): Command {
     .addCommand(generateInterfacesCommand);
 }
 
-async function generateInterfaces(files: Array<string>): Promise<void> {
+async function generateInterfaces(
+  files: Array<string>,
+  options: GenerateInterfacesOptions,
+): Promise<void> {
   for (const file of files) {
     let fullPath: string;
     if (path.isAbsolute(file)) {
@@ -48,15 +68,18 @@ async function generateInterfaces(files: Array<string>): Promise<void> {
     const content = await fs.readFile(fullPath, { encoding: "utf-8" });
     const document = parse(content);
 
-    let result = generateTS(document);
+    let result = generateTS(
+      document,
+      options.contextImport,
+      options.contextName,
+    );
 
-    const tsDir = path.join(path.dirname(fullPath), "__generated__");
+    const tsDir = path.join(
+      path.dirname(fullPath),
+      options.outputDir ? options.outputDir : "__generated__",
+    );
     await fs.mkdir(tsDir, { recursive: true });
 
-    const tsModels = path.join(
-      tsDir,
-      path.basename(fullPath, path.extname(fullPath)) + ".ts",
-    );
     const printer = ts.createPrinter();
 
     await fs.writeFile(
