@@ -109,6 +109,7 @@ function createResolversReducer(
           ],
           factory.createIdentifier(node.name),
           factory.createModuleBlock(node.fields || []),
+          ts.NodeFlags.Namespace,
         );
       },
     },
@@ -122,6 +123,7 @@ function createResolversReducer(
           ],
           factory.createIdentifier(node.name),
           factory.createModuleBlock(node.fields || []),
+          ts.NodeFlags.Namespace,
         );
       },
     },
@@ -212,7 +214,7 @@ function createResolversReducer(
 
         return createNullableType(
           context
-            .getModelType(node.name, !isAncestorInput, !isAncestorInput)
+            .getModelType(node.name, !isAncestorInput, !isAncestorInput, true)
             .toTypeReference(),
         );
       },

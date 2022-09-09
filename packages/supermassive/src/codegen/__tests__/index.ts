@@ -9,7 +9,7 @@ describe(generateTS, () => {
       graphql`
       extend schema @import(from: "@msteams/packages-test", defs: ["Avatar"])
 
-      scalar Test
+      scalar DateTime @model(tsType: "string")
       
       interface Node {
         id: ID!
@@ -17,7 +17,8 @@ describe(generateTS, () => {
 
       type User implements Node {
         id: ID!
-        name: String
+        name: String!
+        dateTime: DateTime!
         presence: Presence
         avatar: Avatar
       }
@@ -28,6 +29,7 @@ describe(generateTS, () => {
 
       input PresenceInput {
         userId: ID!
+        dateTime: DateTime
         userParams: UserParamsInput!
       }
 
@@ -57,20 +59,24 @@ describe(generateTS, () => {
     expect(models).toMatchInlineSnapshot(`
       "import { AvatarModel } from \\"@msteams/packages-test\\";
       import { PresenceModel as _PresenceModel } from \\"./presence-model.interface\\";
-      import { BaseScalars } from \\"@graphitation/supermassive\\";
       export type BaseModel = {
-          __typename: Scalars.String;
+          __typename: string;
       };
-      export type Scalars = BaseScalars & {
-          Test: any;
-      };
+      export type ID = string;
+      export type Int = number;
+      export type Float = number;
+      export type String = string;
+      export type Boolean = boolean;
+      export type DateTime = DateTimeModel;
+      export type DateTimeModel = string;
       export interface NodeModel extends BaseModel {
-          __typename: Scalars.String;
+          __typename: string;
       }
       export interface UserModel extends BaseModel, NodeModel {
           __typename: \\"User\\";
-          id: Scalars.ID;
-          name: Scalars.String | null;
+          id: string;
+          name: string;
+          dateTime: DateTimeModel;
           presence: PresenceModel | null;
           avatar: AvatarModel | null;
       }
@@ -89,31 +95,33 @@ describe(generateTS, () => {
       "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
       import type { ResolveInfo } from \\"@graphitation/supermassive\\";
       import type { Context } from \\"@msteams/context\\";
-      import type { Scalars, NodeModel, PresenceModel, PresenceAvailabilityModel, UserModel } from \\"./models.interface.ts\\";
+      import type { ID, String, DateTime, NodeModel, PresenceModel, PresenceAvailabilityModel, UserModel } from \\"./models.interface.ts\\";
       import { AvatarModel } from \\"@msteams/packages-test\\";
-      export declare module User {
-          export type id = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<Scalars.ID>;
-          export type name = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<Scalars.String | null>;
+      export declare namespace User {
+          export type id = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<ID>;
+          export type name = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<String>;
+          export type dateTime = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<DateTime>;
           export type presence = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<PresenceModel | null>;
           export type avatar = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<AvatarModel | null>;
       }
       export type UserParamsInput = {
-          name: Scalars.String | null;
+          name: String | null;
       };
       export type PresenceInput = {
-          userId: Scalars.ID;
+          userId: ID;
+          dateTime: DateTime | null;
           userParams: UserParamsInput;
       };
-      export declare module Presence {
-          export type id = (model: PresenceModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<Scalars.ID>;
+      export declare namespace Presence {
+          export type id = (model: PresenceModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<ID>;
           export type availability = (model: PresenceModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<PresenceAvailabilityModel>;
       }
-      export declare module Query {
+      export declare namespace Query {
           export type node = (model: unknown, args: {
-              id: Scalars.ID;
+              id: ID;
           }, context: Context, info: ResolveInfo) => PromiseOrValue<NodeModel | null>;
           export type userById = (model: unknown, args: {
-              id: Scalars.ID;
+              id: ID;
           }, context: Context, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
           export type presence = (model: unknown, args: {
               params: PresenceInput;
@@ -134,23 +142,26 @@ describe(generateTS, () => {
       }
     `);
     expect(models).toMatchInlineSnapshot(`
-      "import { BaseScalars } from \\"@graphitation/supermassive\\";
-      export type BaseModel = {
-          __typename: Scalars.String;
+      "export type BaseModel = {
+          __typename: string;
       };
-      export type Scalars = BaseScalars & {};
+      export type ID = string;
+      export type Int = number;
+      export type Float = number;
+      export type String = string;
+      export type Boolean = boolean;
       export interface NodeModel extends BaseModel {
-          __typename: Scalars.String;
+          __typename: string;
       }
       "
     `);
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
       import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-      import type { Scalars, NodeModel } from \\"./models.interface.ts\\";
-      export declare module Query {
+      import type { ID, NodeModel } from \\"./models.interface.ts\\";
+      export declare namespace Query {
           export type node = (model: unknown, args: {
-              id: Scalars.ID;
+              id: ID;
           }, context: unknown, info: ResolveInfo) => PromiseOrValue<NodeModel>;
       }
       "
@@ -168,23 +179,26 @@ describe(generateTS, () => {
       }
     `);
     expect(models).toMatchInlineSnapshot(`
-      "import { BaseScalars } from \\"@graphitation/supermassive\\";
-      export type BaseModel = {
-          __typename: Scalars.String;
+      "export type BaseModel = {
+          __typename: string;
       };
-      export type Scalars = BaseScalars & {};
+      export type ID = string;
+      export type Int = number;
+      export type Float = number;
+      export type String = string;
+      export type Boolean = boolean;
       export interface NodeModel extends BaseModel {
-          __typename: Scalars.String;
+          __typename: string;
       }
       "
     `);
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
       import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-      import type { Scalars, NodeModel } from \\"./models.interface.ts\\";
-      export declare module Query {
+      import type { ID, NodeModel } from \\"./models.interface.ts\\";
+      export declare namespace Query {
           export type node = (model: unknown, args: {
-              id: Scalars.ID | null;
+              id: ID | null;
           }, context: unknown, info: ResolveInfo) => PromiseOrValue<NodeModel | null>;
       }
       "

@@ -12,7 +12,7 @@ export type DefinitionModel = {
   typeName: string;
   modelName: string;
   tsType: string;
-  from: string;
-  importName: string;
+  from: string | null;
+  importName: string | null;
   directive: DirectiveNode;
 };

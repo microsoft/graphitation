@@ -1,7 +1,7 @@
 import ts, { factory } from "typescript";
 import { DocumentNode, Kind } from "graphql";
 import { ASTReducer, visit } from "./typedVisitor";
-import { TsCodegenContext, TypeLocation, SCALARS_TYPE_NAME } from "./context";
+import { TsCodegenContext, TypeLocation } from "./context";
 import { createNullableType, createNonNullableType } from "./utilities";
 
 export function generateModels(
@@ -218,13 +218,7 @@ function createModelsReducer(
               undefined,
               "__typename",
               undefined,
-              factory.createExpressionWithTypeArguments(
-                factory.createPropertyAccessExpression(
-                  factory.createIdentifier(SCALARS_TYPE_NAME),
-                  factory.createIdentifier("String"),
-                ),
-                undefined,
-              ),
+              factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
             ),
           ],
         );
@@ -284,6 +278,12 @@ function createModelsReducer(
     Name: {
       leave(node) {
         return node.value;
+      },
+    },
+
+    DirectiveDefinition: {
+      leave() {
+        return null;
       },
     },
 

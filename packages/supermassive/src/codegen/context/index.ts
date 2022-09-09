@@ -30,7 +30,6 @@ export type TsCodegenContextOptions = {
   };
 };
 
-export const SCALARS_TYPE_NAME = "Scalars";
 const DEFAULT_SCALAR_TYPE = "any";
 const TsCodegenContextDefault: TsCodegenContextOptions = {
   moduleRoot: "",
@@ -63,7 +62,7 @@ export class TsCodegenContext {
     this.imports = [];
     this.typeNameToImports = new Map();
     this.typeNameToModels = new Map();
-    this.allModelNames = new Set([SCALARS_TYPE_NAME]);
+    this.allModelNames = new Set();
     this.scalars = new Map(Object.entries(BASE_SCALARS));
   }
 
@@ -127,45 +126,43 @@ export class TsCodegenContext {
 
   getAllModelImportDeclarations(): ts.ImportDeclaration[] {
     const imports = this.getAllImportDeclarations();
-    const models = Array.from(this.typeNameToModels.values()).map((model) =>
-      factory.createImportDeclaration(
-        undefined,
-        undefined,
-        factory.createImportClause(
-          false,
+    const models = Array.from(this.typeNameToModels.values())
+      .map((model) => {
+        if (!model.from) {
+          return;
+        }
+
+        return factory.createImportDeclaration(
           undefined,
-          factory.createNamedImports([
-            factory.createImportSpecifier(
-              factory.createIdentifier(model.tsType),
-              factory.createIdentifier(model.modelName),
-            ),
-          ]),
-        ),
-        factory.createStringLiteral(model.from),
-      ),
-    );
-
-    const baseScalarsImport = factory.createImportDeclaration(
-      undefined,
-      undefined,
-      factory.createImportClause(
-        false,
-        undefined,
-        factory.createNamedImports([
-          factory.createImportSpecifier(
+          undefined,
+          factory.createImportClause(
+            false,
             undefined,
-            factory.createIdentifier("BaseScalars"),
+            factory.createNamedImports([
+              factory.createImportSpecifier(
+                factory.createIdentifier(model.tsType),
+                factory.createIdentifier(model.modelName),
+              ),
+            ]),
           ),
-        ]),
-      ),
-      factory.createStringLiteral("@graphitation/supermassive"),
-    );
+          factory.createStringLiteral(model.from),
+        );
+      })
+      .filter(Boolean) as ts.ImportDeclaration[];
 
-    return imports.concat(models).concat(baseScalarsImport);
+    return imports.concat(models);
   }
 
   addScalar(scalarName: string | null) {
     if (!scalarName) {
+      return;
+    }
+
+    if (this.typeNameToModels.has(scalarName)) {
+      this.scalars.set(
+        scalarName,
+        (this.typeNameToModels.get(scalarName) as DefinitionModel).modelName,
+      );
       return;
     }
     this.scalars.set(scalarName, DEFAULT_SCALAR_TYPE);
@@ -281,42 +278,41 @@ export class TsCodegenContext {
             undefined,
             factory.createIdentifier("__typename"),
             undefined,
-            factory.createTypeReferenceNode(
-              factory.createQualifiedName(
-                factory.createIdentifier(SCALARS_TYPE_NAME),
-                factory.createIdentifier("String"),
-              ),
-            ),
+            factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
           ),
         ]),
       ),
-      factory.createTypeAliasDeclaration(
-        undefined,
-        [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-        factory.createIdentifier(SCALARS_TYPE_NAME),
-        undefined,
-        factory.createIntersectionTypeNode([
+
+      ...Array.from(this.scalars).map(([key, value]) =>
+        factory.createTypeAliasDeclaration(
+          undefined,
+          [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+          factory.createIdentifier(key),
+          undefined,
           factory.createTypeReferenceNode(
-            factory.createIdentifier("BaseScalars"),
+            factory.createIdentifier(value),
             undefined,
           ),
-          factory.createTypeLiteralNode(
-            Array.from(this.scalars)
-              .filter(([key]) => !BASE_SCALARS.hasOwnProperty(key))
-              .map(([key, type]) =>
-                factory.createPropertySignature(
-                  undefined,
-                  factory.createIdentifier(key),
-                  undefined,
-                  factory.createTypeReferenceNode(
-                    factory.createIdentifier(type),
-                    undefined,
-                  ),
-                ),
-              ),
-          ),
-        ]),
+        ),
       ),
+      ...Array.from(this.scalars)
+        .filter(([key]) => this.typeNameToModels.has(key))
+        .map(([key]) =>
+          factory.createTypeAliasDeclaration(
+            undefined,
+            [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+            factory.createIdentifier(
+              (this.typeNameToModels.get(key) as DefinitionModel).modelName,
+            ),
+            undefined,
+            factory.createTypeReferenceNode(
+              factory.createIdentifier(
+                (this.typeNameToModels.get(key) as DefinitionModel).tsType,
+              ),
+              undefined,
+            ),
+          ),
+        ),
     ];
   }
 
@@ -324,9 +320,14 @@ export class TsCodegenContext {
     typeName: string,
     putModelSuffix: boolean,
     saveModels = false,
+    enableScalars = false,
   ): TypeLocation {
     if (this.scalars.has(typeName)) {
-      return new TypeLocation(SCALARS_TYPE_NAME, typeName);
+      this.allModelNames.add(typeName);
+      return new TypeLocation(
+        null,
+        enableScalars ? typeName : (this.scalars.get(typeName) as string),
+      );
     } else if (this.typeNameToImports.has(typeName)) {
       let { modelName } = this.typeNameToImports.get(
         typeName,
@@ -345,7 +346,7 @@ export class TsCodegenContext {
 
   getDefinedModelType(typeName: string): TypeLocation | null {
     if (this.scalars.has(typeName)) {
-      return new TypeLocation(SCALARS_TYPE_NAME, typeName);
+      return new TypeLocation(null, typeName);
     } else if (this.typeNameToModels.has(typeName)) {
       let imp = this.typeNameToModels.get(typeName) as DefinitionModel;
       return new TypeLocation(null, imp.modelName);

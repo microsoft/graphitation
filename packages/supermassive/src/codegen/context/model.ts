@@ -18,7 +18,7 @@ export function processModelDirective(
   const from = getArgumentValue(node.arguments, "from");
   const tsType = getArgumentValue(node.arguments, "tsType");
 
-  if (from?.kind !== "StringValue") {
+  if (from && from.kind !== "StringValue") {
     throw new GraphQLError(
       `Directive @module requires "from" argument to exist and be a path to a typescript file.`,
       [from ?? node],
@@ -33,10 +33,12 @@ export function processModelDirective(
   const typeDef: ASTNode | readonly ASTNode[] | undefined =
     ancestors[ancestors.length - 1];
 
+  console.log((typeDef as ASTNode).kind);
   if (
     !typeDef ||
     Array.isArray(typeDef) ||
-    (typeDef as ASTNode).kind !== "ObjectTypeDefinition"
+    ((typeDef as ASTNode).kind !== "ObjectTypeDefinition" &&
+      (typeDef as ASTNode).kind !== "ScalarTypeDefinition")
   ) {
     throw new GraphQLError("Directive @model must be defined on Object type", [
       node,
@@ -46,10 +48,10 @@ export function processModelDirective(
 
   return {
     typeName,
-    modelName: `_${typeName}Model`,
+    modelName: from ? `_${typeName}Model` : `${typeName}Model`,
     tsType: tsType.value,
-    importName: createVariableNameFromImport(from.value),
-    from: from.value,
+    importName: from ? createVariableNameFromImport(from.value) : null,
+    from: from?.value || null,
     directive: node,
   };
 }
