@@ -4,131 +4,599 @@ import graphql from "../../utilities/blankGraphQLTag";
 import { generateTS } from "..";
 
 describe(generateTS, () => {
-  it("kitchen sink", () => {
-    let { models, resolvers } = runGenerateTest(
-      graphql`
-      extend schema @import(from: "@msteams/packages-test", defs: ["Avatar"])
+  describe("Tests basic syntax GraphQL syntax", () => {
+    test("all possible nullable and non-nullable combinations", () => {
+      let { resolvers, models } = runGenerateTest(graphql`
+        extend schema @import(from: "@msteams/packages-test", defs: ["Avatar"]) 
+        type Post @model(from: "./post-model.interface", tsType: "PostModel") {
+          id: ID!
+        }
 
-      scalar DateTime @model(tsType: "string")
-      
-      interface Node {
-        id: ID!
-      }
+        type Message {
+          id: ID!
+        }
 
-      type User implements Node {
-        id: ID!
-        name: String!
-        dateTime: DateTime!
-        presence: Presence
-        avatar: Avatar
-      }
+        type User {
+          id: ID!
+          name: string
+          messagesNonRequired: [Message]
+          messagesWithArrayRequired: [Message]!
+          messagesRequired: [Message!]!
+          messagesOnlyMessageRequired: [Message!]
+          post: Post
+          postRequired: Post!
+          avatar: Avatar
+          avatarRequired: Avatar!
+        }
 
-      input UserParamsInput {
-        name: String
-      }
+        extend type Query {
+          requiredUsers: [User!]!
+          optionalUsers: [User]
+          optionalUser: User
+          requiredUser: User!
+          requiredPost: Post!
+          optionalPost: Post
+        }
+      `);
+      expect(models).toMatchInlineSnapshot(`
+        "import { AvatarModel } from \\"@msteams/packages-test\\";
+        import { PostModel as _PostModel } from \\"./post-model.interface\\";
+        export type BaseModel = {
+            __typename: string;
+        };
+        export interface PostModel extends BaseModel, _PostModel {
+            __typename: \\"Post\\";
+        }
+        export interface MessageModel extends BaseModel {
+            __typename: \\"Message\\";
+            id: string;
+        }
+        export interface UserModel extends BaseModel {
+            __typename: \\"User\\";
+            id: string;
+            name: stringModel | null;
+            messagesNonRequired: (MessageModel | null)[] | null;
+            messagesWithArrayRequired: (MessageModel | null)[];
+            messagesRequired: MessageModel[];
+            messagesOnlyMessageRequired: MessageModel[] | null;
+            post: PostModel | null;
+            postRequired: PostModel;
+            avatar: AvatarModel | null;
+            avatarRequired: AvatarModel;
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+        import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+        import type { stringModel, MessageModel, PostModel, UserModel } from \\"./models.interface.ts\\";
+        import { AvatarModel } from \\"@msteams/packages-test\\";
+        export declare namespace Post {
+            export type id = (model: PostModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        export declare namespace Message {
+            export type id = (model: MessageModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        export declare namespace User {
+            export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type name = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<stringModel | null>;
+            export type messagesNonRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<(MessageModel | null)[] | null>;
+            export type messagesWithArrayRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<(MessageModel | null)[]>;
+            export type messagesRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<MessageModel[]>;
+            export type messagesOnlyMessageRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<MessageModel[] | null>;
+            export type post = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<PostModel | null>;
+            export type postRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<PostModel>;
+            export type avatar = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AvatarModel | null>;
+            export type avatarRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AvatarModel>;
+        }
+        export declare namespace Query {
+            export type requiredUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel[]>;
+            export type optionalUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<(UserModel | null)[] | null>;
+            export type optionalUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+            export type requiredUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel>;
+            export type requiredPost = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<PostModel>;
+            export type optionalPost = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<PostModel | null>;
+        }
+        "
+      `);
+    });
+    test("extends by exteding a type with pre-generated BaseModel type", () => {
+      let { resolvers, models } = runGenerateTest(graphql`
+        type User {
+          id: ID!
+        }
 
-      input PresenceInput {
-        userId: ID!
-        dateTime: DateTime
-        userParams: UserParamsInput!
-      }
+        extend type Query {
+          users: [User!]!
+        }
+      `);
+      expect(models).toMatchInlineSnapshot(`
+        "export type BaseModel = {
+            __typename: string;
+        };
+        export interface UserModel extends BaseModel {
+            __typename: \\"User\\";
+            id: string;
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+        import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+        import type { UserModel } from \\"./models.interface.ts\\";
+        export declare namespace User {
+            export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        export declare namespace Query {
+            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel[]>;
+        }
+        "
+      `);
+    });
+    test("implements", () => {
+      let { resolvers, models } = runGenerateTest(graphql`
+        interface Node {
+          id: ID!
+        }
 
-      type Presence implements Node
-        @model(from: "./presence-model.interface", tsType: "PresenceModel") {
-        id: ID!
-        availability: PresenceAvailability!
-      }
+        type User implements Node {
+          id: ID!
+          name: String!
+        }
 
-      enum PresenceAvailability {
-        Available
-        Away
-        Offline
-      }
+        extend type Query {
+          users: [User]
+        }
+      `);
+      expect(models).toMatchInlineSnapshot(`
+        "export type BaseModel = {
+            __typename: string;
+        };
+        export interface NodeModel extends BaseModel {
+            __typename: string;
+        }
+        export interface UserModel extends BaseModel, NodeModel {
+            __typename: \\"User\\";
+            id: string;
+            name: string;
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+        import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+        import type { NodeModel, UserModel } from \\"./models.interface.ts\\";
+        export declare namespace User {
+            export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type name = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        export declare namespace Query {
+            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<(UserModel | null)[] | null>;
+        }
+        "
+      `);
+    });
 
-      extend type Query {
-        node(id: ID!): Node
-        userById(id: ID!): User
-        presence(params: PresenceInput!): User
-      }
+    test("Input", () => {
+      let { resolvers, models } = runGenerateTest(graphql`
+        type User {
+          id: ID!
+        }
 
-      union FooUnion = Presence | User
-    `,
-      "@msteams/context",
-      "Context",
-    );
-    expect(models).toMatchInlineSnapshot(`
-      "import { AvatarModel } from \\"@msteams/packages-test\\";
-      import { PresenceModel as _PresenceModel } from \\"./presence-model.interface\\";
-      export type BaseModel = {
-          __typename: string;
-      };
-      export type ID = string;
-      export type Int = number;
-      export type Float = number;
-      export type String = string;
-      export type Boolean = boolean;
-      export type DateTime = DateTimeModel;
-      export type DateTimeModel = string;
-      export interface NodeModel extends BaseModel {
-          __typename: string;
-      }
-      export interface UserModel extends BaseModel, NodeModel {
-          __typename: \\"User\\";
-          id: string;
-          name: string;
-          dateTime: DateTimeModel;
-          presence: PresenceModel | null;
-          avatar: AvatarModel | null;
-      }
-      export interface PresenceModel extends BaseModel, _PresenceModel, NodeModel {
-          __typename: \\"Presence\\";
-      }
-      export enum PresenceAvailabilityModel {
-          Available = \\"Available\\",
-          Away = \\"Away\\",
-          Offline = \\"Offline\\"
-      }
-      export type FooUnionModel = PresenceModel | UserModel;
-      "
-    `);
-    expect(resolvers).toMatchInlineSnapshot(`
-      "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
-      import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-      import type { Context } from \\"@msteams/context\\";
-      import type { ID, String, DateTime, NodeModel, PresenceModel, PresenceAvailabilityModel, UserModel } from \\"./models.interface.ts\\";
-      import { AvatarModel } from \\"@msteams/packages-test\\";
-      export declare namespace User {
-          export type id = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<ID>;
-          export type name = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<String>;
-          export type dateTime = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<DateTime>;
-          export type presence = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<PresenceModel | null>;
-          export type avatar = (model: UserModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<AvatarModel | null>;
-      }
-      export type UserParamsInput = {
-          name: String | null;
-      };
-      export type PresenceInput = {
-          userId: ID;
-          dateTime: DateTime | null;
-          userParams: UserParamsInput;
-      };
-      export declare namespace Presence {
-          export type id = (model: PresenceModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<ID>;
-          export type availability = (model: PresenceModel, args: {}, context: Context, info: ResolveInfo) => PromiseOrValue<PresenceAvailabilityModel>;
-      }
-      export declare namespace Query {
-          export type node = (model: unknown, args: {
-              id: ID;
-          }, context: Context, info: ResolveInfo) => PromiseOrValue<NodeModel | null>;
-          export type userById = (model: unknown, args: {
-              id: ID;
-          }, context: Context, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
-          export type presence = (model: unknown, args: {
-              params: PresenceInput;
-          }, context: Context, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
-      }
-      "
-    `);
+        input UserParamsInput {
+          name: String
+        }
+
+        extend type Query {
+          userById(params: UserParamsInput): User
+        }
+      `);
+      expect(models).toMatchInlineSnapshot(`
+        "export type BaseModel = {
+            __typename: string;
+        };
+        export interface UserModel extends BaseModel {
+            __typename: \\"User\\";
+            id: string;
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+        import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+        import type { UserParamsInputModel, UserModel } from \\"./models.interface.ts\\";
+        export declare namespace User {
+            export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        export type UserParamsInput = {
+            name: string | null;
+        };
+        export declare namespace Query {
+            export type userById = (model: unknown, args: {
+                params: UserParamsInputModel | null;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+        }
+        "
+      `);
+    });
+
+    test("Two nested Inputs", () => {
+      let { resolvers, models } = runGenerateTest(graphql`
+        type User {
+          id: ID!
+        }
+
+        input PresenceInput {
+          type: String!
+        }
+
+        input UserParamsInput {
+          name: String!
+          presence: PresenceInput
+        }
+
+        extend type Query {
+          userById(params: UserParamsInput): User
+        }
+      `);
+      expect(models).toMatchInlineSnapshot(`
+        "export type BaseModel = {
+            __typename: string;
+        };
+        export interface UserModel extends BaseModel {
+            __typename: \\"User\\";
+            id: string;
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+        import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+        import type { PresenceInputModel, UserParamsInputModel, UserModel } from \\"./models.interface.ts\\";
+        export declare namespace User {
+            export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        export type PresenceInput = {
+            type: string;
+        };
+        export type UserParamsInput = {
+            name: string;
+            presence: PresenceInputModel | null;
+        };
+        export declare namespace Query {
+            export type userById = (model: unknown, args: {
+                params: UserParamsInputModel | null;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+        }
+        "
+      `);
+    });
+
+    test("Enum", () => {
+      let { resolvers, models } = runGenerateTest(graphql`
+        enum PresenceAvailabilityModel {
+          Available
+          Away
+          Offline
+        }
+        type User {
+          id: ID!
+          availability: PresenceAvailability!
+        }
+
+        extend type Query {
+          userById(id: ID!): User
+        }
+      `);
+      expect(models).toMatchInlineSnapshot(`
+        "export type BaseModel = {
+            __typename: string;
+        };
+        export enum PresenceAvailabilityModelModel {
+            Available = \\"Available\\",
+            Away = \\"Away\\",
+            Offline = \\"Offline\\"
+        }
+        export interface UserModel extends BaseModel {
+            __typename: \\"User\\";
+            id: string;
+            availability: PresenceAvailabilityModel;
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+        import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+        import type { PresenceAvailabilityModel, UserModel } from \\"./models.interface.ts\\";
+        export declare namespace User {
+            export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type availability = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<PresenceAvailabilityModel>;
+        }
+        export declare namespace Query {
+            export type userById = (model: unknown, args: {
+                id: string;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+        }
+        "
+      `);
+    });
+
+    test("Union", () => {
+      let { resolvers, models } = runGenerateTest(graphql`
+        type Customer {
+          id: ID!
+        }
+
+        type Admin {
+          id: ID!
+        }
+
+        union User = Customer | Admin
+
+        extend type Query {
+          userById(id: ID!): User
+        }
+      `);
+      expect(models).toMatchInlineSnapshot(`
+        "export type BaseModel = {
+            __typename: string;
+        };
+        export interface CustomerModel extends BaseModel {
+            __typename: \\"Customer\\";
+            id: string;
+        }
+        export interface AdminModel extends BaseModel {
+            __typename: \\"Admin\\";
+            id: string;
+        }
+        export type UserModel = CustomerModel | AdminModel;
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+        import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+        import type { CustomerModel, AdminModel, UserModel } from \\"./models.interface.ts\\";
+        export declare namespace Customer {
+            export type id = (model: CustomerModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        export declare namespace Admin {
+            export type id = (model: AdminModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        export declare namespace Query {
+            export type userById = (model: unknown, args: {
+                id: string;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+        }
+        "
+      `);
+    });
+  });
+  describe("Models", () => {
+    it('should import the model and use it in User type"', () => {
+      let { resolvers, models } = runGenerateTest(graphql`
+        type User @model(from: "./user-model.interface", tsType: "UserModel") {
+          id: ID!
+        }
+
+        extend type Query {
+          userById(id: ID!): User
+        }
+      `);
+      expect(models).toMatchInlineSnapshot(`
+        "import { UserModel as _UserModel } from \\"./user-model.interface\\";
+        export type BaseModel = {
+            __typename: string;
+        };
+        export interface UserModel extends BaseModel, _UserModel {
+            __typename: \\"User\\";
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+        import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+        import type { UserModel } from \\"./models.interface.ts\\";
+        export declare namespace User {
+            export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        export declare namespace Query {
+            export type userById = (model: unknown, args: {
+                id: string;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+        }
+        "
+      `);
+    });
+  });
+
+  describe("Import", () => {
+    it("should import Avatar type and use it in User type", () => {
+      let { resolvers, models } = runGenerateTest(graphql`
+        extend schema @import(from: "@msteams/packages-test", defs: ["Avatar"])
+        type User {
+          id: ID!
+          avatar: Avatar!
+        }
+
+        extend type Query {
+          userById(id: ID!): User
+        }
+      `);
+      expect(models).toMatchInlineSnapshot(`
+        "import { AvatarModel } from \\"@msteams/packages-test\\";
+        export type BaseModel = {
+            __typename: string;
+        };
+        export interface UserModel extends BaseModel {
+            __typename: \\"User\\";
+            id: string;
+            avatar: AvatarModel;
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+        import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+        import type { UserModel } from \\"./models.interface.ts\\";
+        import { AvatarModel } from \\"@msteams/packages-test\\";
+        export declare namespace User {
+            export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type avatar = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AvatarModel>;
+        }
+        export declare namespace Query {
+            export type userById = (model: unknown, args: {
+                id: string;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+        }
+        "
+      `);
+    });
+  });
+
+  describe("Scalars", () => {
+    it('expects custom scalars "DateTime" to be "string"', () => {
+      let { resolvers, models } = runGenerateTest(graphql`
+        scalar DateTime @model(tsType: "string")
+
+        type User {
+          id: ID!
+          dateTime: DateTime!
+        }
+
+        extend type Query {
+          userById(id: ID!): User
+        }
+      `);
+      expect(models).toMatchInlineSnapshot(`
+        "export type BaseModel = {
+            __typename: string;
+        };
+        export type DateTime = DateTimeModel;
+        export type DateTimeModel = string;
+        export interface UserModel extends BaseModel {
+            __typename: \\"User\\";
+            id: string;
+            dateTime: DateTimeModel;
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+        import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+        import type { DateTime, UserModel } from \\"./models.interface.ts\\";
+        export declare namespace User {
+            export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type dateTime = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<DateTime>;
+        }
+        export declare namespace Query {
+            export type userById = (model: unknown, args: {
+                id: string;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+        }
+        "
+      `);
+    });
+    it('expects custom scalars "DateTime" to be model', () => {
+      let { resolvers, models } = runGenerateTest(graphql`
+        scalar DateTime
+          @model(tsType: "DateTimeModel", from: "@msteams/custom-scalars")
+
+        type User {
+          id: ID!
+          dateTime: DateTime!
+        }
+
+        extend type Query {
+          userById(id: ID!): User
+        }
+      `);
+      expect(models).toMatchInlineSnapshot(`
+        "import { DateTimeModel as _DateTimeModel } from \\"@msteams/custom-scalars\\";
+        export type BaseModel = {
+            __typename: string;
+        };
+        export type DateTime = _DateTimeModel;
+        export type _DateTimeModel = DateTimeModel;
+        export interface UserModel extends BaseModel {
+            __typename: \\"User\\";
+            id: string;
+            dateTime: _DateTimeModel;
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+        import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+        import type { DateTime, UserModel } from \\"./models.interface.ts\\";
+        export declare namespace User {
+            export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type dateTime = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<DateTime>;
+        }
+        export declare namespace Query {
+            export type userById = (model: unknown, args: {
+                id: string;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+        }
+        "
+      `);
+    });
+    it("expects built-in scalars to not be generated in models and typescript types used directly in resolvers", () => {
+      let { resolvers, models } = runGenerateTest(graphql`
+        type User {
+          id: ID!
+          name: String!
+          age: Int
+          rating: Float
+          isAdmin: Boolean!
+        }
+
+        extend type Query {
+          node(
+            id: ID!
+            name: String!
+            age: Int
+            rating: Float
+            isAdmin: Boolean
+          ): User!
+        }
+      `);
+      expect(models).toMatchInlineSnapshot(`
+        "export type BaseModel = {
+            __typename: string;
+        };
+        export interface UserModel extends BaseModel {
+            __typename: \\"User\\";
+            id: string;
+            name: string;
+            age: number | null;
+            rating: number | null;
+            isAdmin: boolean;
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+        import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+        import type { UserModel } from \\"./models.interface.ts\\";
+        export declare namespace User {
+            export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type name = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type age = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number | null>;
+            export type rating = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number | null>;
+            export type isAdmin = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<boolean>;
+        }
+        export declare namespace Query {
+            export type node = (model: unknown, args: {
+                id: string;
+                name: string;
+                age: number | null;
+                rating: number | null;
+                isAdmin: boolean | null;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel>;
+        }
+        "
+      `);
+    });
   });
 
   it("generateTS without ContextName and ContextImport", () => {
@@ -145,11 +613,6 @@ describe(generateTS, () => {
       "export type BaseModel = {
           __typename: string;
       };
-      export type ID = string;
-      export type Int = number;
-      export type Float = number;
-      export type String = string;
-      export type Boolean = boolean;
       export interface NodeModel extends BaseModel {
           __typename: string;
       }
@@ -158,48 +621,11 @@ describe(generateTS, () => {
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
       import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-      import type { ID, NodeModel } from \\"./models.interface.ts\\";
+      import type { NodeModel } from \\"./models.interface.ts\\";
       export declare namespace Query {
           export type node = (model: unknown, args: {
-              id: ID;
+              id: string;
           }, context: unknown, info: ResolveInfo) => PromiseOrValue<NodeModel>;
-      }
-      "
-    `);
-  });
-
-  it("generateTS with optional parameter in the Query", () => {
-    let { models, resolvers } = runGenerateTest(graphql`
-      interface Node {
-        id: ID
-      }
-
-      extend type Query {
-        node(id: ID): Node
-      }
-    `);
-    expect(models).toMatchInlineSnapshot(`
-      "export type BaseModel = {
-          __typename: string;
-      };
-      export type ID = string;
-      export type Int = number;
-      export type Float = number;
-      export type String = string;
-      export type Boolean = boolean;
-      export interface NodeModel extends BaseModel {
-          __typename: string;
-      }
-      "
-    `);
-    expect(resolvers).toMatchInlineSnapshot(`
-      "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
-      import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-      import type { ID, NodeModel } from \\"./models.interface.ts\\";
-      export declare namespace Query {
-          export type node = (model: unknown, args: {
-              id: ID | null;
-          }, context: unknown, info: ResolveInfo) => PromiseOrValue<NodeModel | null>;
       }
       "
     `);

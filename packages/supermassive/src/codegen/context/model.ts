@@ -33,7 +33,6 @@ export function processModelDirective(
   const typeDef: ASTNode | readonly ASTNode[] | undefined =
     ancestors[ancestors.length - 1];
 
-  console.log((typeDef as ASTNode).kind);
   if (
     !typeDef ||
     Array.isArray(typeDef) ||

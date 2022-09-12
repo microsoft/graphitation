@@ -7,7 +7,6 @@ import {
   ASTNode,
 } from "graphql";
 import ts, { factory } from "typescript";
-import { BASE_SCALARS } from "../scalars";
 import { DefinitionImport, DefinitionModel } from "../types";
 import { IMPORT_DIRECTIVE_NAME, processImportDirective } from "./import";
 import { MODEL_DIRECTIVE_NAME, processModelDirective } from "./model";
@@ -30,7 +29,16 @@ export type TsCodegenContextOptions = {
   };
 };
 
-const DEFAULT_SCALAR_TYPE = "any";
+const DEFAULT_SCALAR_TYPE = "unknown";
+
+export const BUILT_IN_SCALARS: Record<string, string> = {
+  ID: "string",
+  Int: "number",
+  Float: "number",
+  String: "string",
+  Boolean: "boolean",
+};
+
 const TsCodegenContextDefault: TsCodegenContextOptions = {
   moduleRoot: "",
   moduleModelsPath: "./__generated__/models.interface.ts",
@@ -63,7 +71,7 @@ export class TsCodegenContext {
     this.typeNameToImports = new Map();
     this.typeNameToModels = new Map();
     this.allModelNames = new Set();
-    this.scalars = new Map(Object.entries(BASE_SCALARS));
+    this.scalars = new Map();
   }
 
   addImport(imp: DefinitionImport, node: ASTNode): void {
@@ -154,7 +162,7 @@ export class TsCodegenContext {
   }
 
   addScalar(scalarName: string | null) {
-    if (!scalarName) {
+    if (!scalarName || BUILT_IN_SCALARS.hasOwnProperty(scalarName)) {
       return;
     }
 
@@ -320,14 +328,16 @@ export class TsCodegenContext {
     typeName: string,
     putModelSuffix: boolean,
     saveModels = false,
-    enableScalars = false,
+    useScalars = false,
   ): TypeLocation {
     if (this.scalars.has(typeName)) {
       this.allModelNames.add(typeName);
       return new TypeLocation(
         null,
-        enableScalars ? typeName : (this.scalars.get(typeName) as string),
+        useScalars ? typeName : (this.scalars.get(typeName) as string),
       );
+    } else if (BUILT_IN_SCALARS.hasOwnProperty(typeName)) {
+      return new TypeLocation(null, BUILT_IN_SCALARS[typeName]);
     } else if (this.typeNameToImports.has(typeName)) {
       let { modelName } = this.typeNameToImports.get(
         typeName,
