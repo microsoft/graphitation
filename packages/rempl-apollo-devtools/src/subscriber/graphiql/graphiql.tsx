@@ -12,9 +12,9 @@ export const createSimpleFetcher = (activeClientId: string) => (
 ) =>
   new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
-      console.error("graiphql request timeout");
+      console.error("GraphiQL request timeout");
       reject();
-    }, 3000);
+    }, 60000);
 
     remplSubscriber
       .callRemote("graphiql", activeClientId, graphQLParams)
