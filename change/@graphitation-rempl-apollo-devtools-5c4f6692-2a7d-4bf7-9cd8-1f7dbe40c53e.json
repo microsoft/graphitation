@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Change timeout",
-  "packageName": "@graphitation/rempl-apollo-devtools",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

@@ -1,8 +1,16 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-This log was last generated on Thu, 11 Aug 2022 19:51:19 GMT and should not be manually modified.
+This log was last generated on Tue, 13 Sep 2022 11:15:14 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.2.13
+
+Tue, 13 Sep 2022 11:15:14 GMT
+
+### Patches
+
+- Change timeout (mnovikov@microsoft.com)
 
 ## 0.2.12
 
