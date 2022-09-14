@@ -12,6 +12,7 @@ export type {
   InputObjectTypeResolver,
   FunctionFieldResolver,
   Resolvers,
+  ResolveInfo,
 } from "./types";
 
 export { addTypesToRequestDocument } from "./ast/addTypesToRequestDocument";
@@ -22,7 +23,7 @@ export { specifiedScalars } from "./values";
 
 export { annotateDocumentGraphQLTransform } from "./transforms/annotateDocumentGraphQLTransform";
 
-export { PromiseOrValue } from "./jsutils/PromiseOrValue";
+export type { PromiseOrValue } from "./jsutils/PromiseOrValue";
 
 export { generateTS } from "./codegen";
 

@@ -1,16 +1,20 @@
 import path from "path";
 import fs from "fs/promises";
+import fsSync from "fs";
 import ts from "typescript";
 import { program, Command } from "commander";
 import { extractImplicitTypesToTypescript } from "../extractors/extractImplicitTypesToTypescript";
 import { parse } from "graphql";
 import { generateTS } from "../codegen";
+import * as glob from "fast-glob";
 
 type GenerateInterfacesOptions = {
   outputDir?: string;
   contextImport?: string;
   contextName?: string;
 };
+
+const PREPEND_TO_INTERFACES = `// @ts-nocheck \r\n/* eslint-disable */ \r\n// This file was automatically generated (by tools/build/cli/generate-graphql-interfaces.js) and should not be edited or checked in to Git.\r\n`;
 
 export function supermassive(): Command {
   const extractSchemaCommand = new Command();
@@ -27,7 +31,7 @@ export function supermassive(): Command {
   const generateInterfacesCommand = new Command();
   generateInterfacesCommand
     .name("generate-interfaces")
-    .argument("<files...>")
+    .argument("<inputs...>")
     .option(
       "-o, --output-dir [outputDir]",
       "output directory relative to file, default generated",
@@ -39,8 +43,8 @@ export function supermassive(): Command {
     .option("-cn, --context-name [contextName]", "Context name")
     .description("generate interfaces and models")
     .action(
-      async (files: Array<string>, options: GenerateInterfacesOptions) => {
-        await generateInterfaces(files, options);
+      async (inputs: Array<string>, options: GenerateInterfacesOptions) => {
+        await generateInterfaces(getFiles(inputs), options);
       },
     );
 
@@ -48,6 +52,19 @@ export function supermassive(): Command {
     .name("supermassive")
     .addCommand(extractSchemaCommand)
     .addCommand(generateInterfacesCommand);
+}
+
+function getFiles(inputs: Array<string>) {
+  return inputs
+    .map((input) => {
+      if (fsSync.existsSync(input)) {
+        return input;
+      } else {
+        return glob.sync([input]);
+      }
+    })
+    .flat()
+    .filter(Boolean);
 }
 
 async function generateInterfaces(
@@ -84,17 +101,19 @@ async function generateInterfaces(
 
     await fs.writeFile(
       path.join(tsDir, "models.interface.ts"),
-      printer.printNode(ts.EmitHint.SourceFile, result.models, result.models),
+      PREPEND_TO_INTERFACES +
+        printer.printNode(ts.EmitHint.SourceFile, result.models, result.models),
       { encoding: "utf-8" },
     );
 
     await fs.writeFile(
       path.join(tsDir, "resolvers.interface.ts"),
-      printer.printNode(
-        ts.EmitHint.SourceFile,
-        result.resolvers,
-        result.resolvers,
-      ),
+      PREPEND_TO_INTERFACES +
+        printer.printNode(
+          ts.EmitHint.SourceFile,
+          result.resolvers,
+          result.resolvers,
+        ),
       { encoding: "utf-8" },
     );
   }

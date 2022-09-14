@@ -145,9 +145,9 @@ function createResolversReducer(
           modelIdentifier = factory.createKeywordTypeNode(
             ts.SyntaxKind.UnknownKeyword,
           );
-        } else {
+        } else if (parentObject.kind !== Kind.INTERFACE_TYPE_DEFINITION) {
           modelIdentifier = context
-            .getModelType(parentName, true)
+            .getModelType(parentName, true, true)
             .toTypeReference();
         }
         return factory.createTypeAliasDeclaration(
