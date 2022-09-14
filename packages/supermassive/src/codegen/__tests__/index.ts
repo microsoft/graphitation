@@ -195,7 +195,7 @@ describe(generateTS, () => {
         export interface NodeModel extends BaseModel {
             __typename: string;
         }
-        export type UserModel extends BaseModel, NodeModel {
+        export interface UserModel extends BaseModel, NodeModel {
             __typename: \\"User\\";
             id: string;
             name: string;
