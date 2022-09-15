@@ -63,6 +63,7 @@ function getQueryData(id: string, query: any): WatchedQuery | undefined {
   );
 
   const networkErrorMessage = (query.networkError as Error)?.stack;
+  const { lastWrite, diff, lastDiff } = query;
 
   return {
     id,
@@ -70,8 +71,8 @@ function getQueryData(id: string, query: any): WatchedQuery | undefined {
     name,
     queryString: print(query.document),
     variables: query.variables,
-    cachedData: query.lastDiff?.diff?.result,
-    networkData: query.lastWrite?.result,
+    cachedData: diff ? diff.result : lastDiff?.diff?.result,
+    networkData: lastWrite?.result,
     errorMessage: graphQLErrorMessage || networkErrorMessage,
   };
 }
