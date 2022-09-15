@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "added results to watched queries",
+  "packageName": "@graphitation/rempl-apollo-devtools",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}

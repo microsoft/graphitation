@@ -13,6 +13,7 @@ interface IDataItem {
   mutationString?: string;
   errorMessage?: string;
   cachedData?: Record<string, unknown>;
+  networkData?: Record<string, unknown>;
 }
 
 interface VerticalViewerProps {
@@ -81,11 +82,19 @@ export const VerticalViewer = React.memo(
           )}
           {!isMutation && (
             <div>
-              <Text weight="semibold">Cache Data</Text>
+              <Text weight="semibold">Latest data from the cache</Text>
               <div className={classes.codeBox}>
                 <pre>
                   <code>
                     <p>{JSON.stringify(data.cachedData, null, 2)}</p>
+                  </code>
+                </pre>
+              </div>
+              <Text weight="semibold">Network Data</Text>
+              <div className={classes.codeBox}>
+                <pre>
+                  <code>
+                    <p>{JSON.stringify(data.networkData, null, 2)}</p>
                   </code>
                 </pre>
               </div>

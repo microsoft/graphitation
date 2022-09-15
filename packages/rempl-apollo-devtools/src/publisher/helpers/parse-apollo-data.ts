@@ -70,7 +70,8 @@ function getQueryData(id: string, query: any): WatchedQuery | undefined {
     name,
     queryString: print(query.document),
     variables: query.variables,
-    cachedData: query.cachedData,
+    cachedData: query.lastDiff?.diff?.result,
+    networkData: query.lastWrite?.result,
     errorMessage: graphQLErrorMessage || networkErrorMessage,
   };
 }

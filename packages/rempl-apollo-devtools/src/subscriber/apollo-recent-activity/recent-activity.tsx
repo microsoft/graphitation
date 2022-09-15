@@ -3,10 +3,15 @@ import { ActivityDialog, List, Dialog } from "../../components";
 import { mergeClasses, Text } from "@fluentui/react-components";
 import { useStyles } from "./recent-activity.styles";
 import { RECENT_DATA_CHANGES_TYPES, ACTIVITY_TYPE } from "../../consts";
+import { RecentActivities } from "../../types";
 import moment from "moment";
 import sizeOf from "object-sizeof";
 
-export const RecentActivity = ({ activity }: { activity: any[] }) => {
+export const RecentActivity = ({
+  activity,
+}: {
+  activity: RecentActivities[];
+}) => {
   const classes = useStyles();
   const [detailsValue, setDetailsValue] = React.useState<any>(null);
 
@@ -32,7 +37,9 @@ export const RecentActivity = ({ activity }: { activity: any[] }) => {
       >
         {elem.change}
       </div>
-      <div className={classes.time}>{moment(timestamp).format("hh:mm:ss")}</div>
+      <div className={classes.time}>
+        {moment(timestamp).format("hh:mm:ss.SSS")}
+      </div>
     </div>
   );
 
