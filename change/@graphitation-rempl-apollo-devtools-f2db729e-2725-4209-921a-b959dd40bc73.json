@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "watched queries backwards compatibility fix",
-  "packageName": "@graphitation/rempl-apollo-devtools",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}

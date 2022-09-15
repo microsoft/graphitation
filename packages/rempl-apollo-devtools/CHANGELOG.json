@@ -2,6 +2,21 @@
   "name": "@graphitation/rempl-apollo-devtools",
   "entries": [
     {
+      "date": "Thu, 15 Sep 2022 13:54:37 GMT",
+      "tag": "@graphitation/rempl-apollo-devtools_v0.3.1",
+      "version": "0.3.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/rempl-apollo-devtools",
+            "commit": "d47fae581a84b795687d71b9fc589a3041660c6b",
+            "comment": "watched queries backwards compatibility fix"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 15 Sep 2022 11:16:24 GMT",
       "tag": "@graphitation/rempl-apollo-devtools_v0.3.0",
       "version": "0.3.0",
