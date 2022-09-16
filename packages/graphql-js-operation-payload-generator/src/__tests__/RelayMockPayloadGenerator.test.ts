@@ -1921,3 +1921,26 @@ test("different concrete types on an abstract list", () => {
     },
   );
 });
+
+test("merges data from concrete type mock with abstract type mock", () => {
+  testGeneratedData(
+    graphql`
+      query RelayMockPayloadGeneratorTestDifferentConcreteTypesQuery {
+        node(id: "page-42") {
+          __typename
+          ... on User {
+            id
+          }
+          ... on Page {
+            id
+          }
+        }
+      }
+    `,
+    {
+      Node: () => ({ __typename: "Page" } as Partial<TypeMap["Node"]>),
+      User: () => ({ id: "user-42" }),
+      Page: () => ({ id: "page-42" }), // This should get merged because we return Page as the Node's __typename
+    },
+  );
+});
