@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "[mock-payload-generator] Merge data from abstract and concrete types",
+  "packageName": "@graphitation/graphql-js-operation-payload-generator",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}
