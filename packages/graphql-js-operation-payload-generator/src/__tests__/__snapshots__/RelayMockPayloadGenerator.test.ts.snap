@@ -1134,6 +1134,31 @@ fragment RelayMockPayloadGeneratorTest13Fragment on Viewer {
 }
 `;
 
+exports[`merges data from concrete type mock with abstract type mock 1`] = `
+~~~~~~~~~~ INPUT ~~~~~~~~~~
+query RelayMockPayloadGeneratorTestDifferentConcreteTypesQuery {
+  node(id: "page-42") {
+    __typename
+    ... on User {
+      id
+    }
+    ... on Page {
+      id
+    }
+  }
+}
+
+~~~~~~~~~~ OUTPUT ~~~~~~~~~~
+{
+  "data": {
+    "node": {
+      "__typename": "Page",
+      "id": "page-42"
+    }
+  }
+}
+`;
+
 exports[`should return \`null\` for selection if that is specified in default values 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
 query RelayMockPayloadGeneratorTest19Query {
