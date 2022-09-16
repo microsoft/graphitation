@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Fri, 16 Sep 2022 15:55:23 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.11.0",
+      "version": "0.11.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "commit": "1bfbc1fe5c70cb3240d3b4828b860caacfaf26ec",
+            "comment": "[mock-payload-generator] Merge data from abstract and concrete types"
+          }
+        ]
+      }
+    },
+    {
       "date": "Sun, 31 Jul 2022 07:56:27 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.10.6",
       "version": "0.10.6",

@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-This log was last generated on Sun, 31 Jul 2022 07:56:27 GMT and should not be manually modified.
+This log was last generated on Fri, 16 Sep 2022 15:55:23 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.11.0
+
+Fri, 16 Sep 2022 15:55:23 GMT
+
+### Minor changes
+
+- [mock-payload-generator] Merge data from abstract and concrete types (eloy.de.enige@gmail.com)
 
 ## 0.10.6
 
