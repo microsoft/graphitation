@@ -11,7 +11,7 @@
     "relay": "relay-compiler --language graphitation --schema ./src/schema/typeDefs.graphql --src ./src"
   },
   "dependencies": {
-    "@apollo/client": "^3.4.16",
+    "@apollo/client": "^3.6.0",
     "@babel/runtime": "^7.12.0",
     "@graphitation/apollo-react-relay-duct-tape": "^0.7.0",
     "@graphitation/graphql-js-tag": "^0.8.0",
@@ -34,7 +34,9 @@
     "webpack-cli": "^4.6.0",
     "webpack-dev-server": "^3.1.14",
     "webpack-graphql-loader": "^1.0.2",
-    "zen-observable": "^0.8.15"
+    "zen-observable": "^0.8.15",
+    "relay-runtime": "^14.0.0",
+    "react-relay": "^14.0.0"
   },
   "resolutions": {
     "ansi-html": "^0.0.9",
@@ -57,6 +59,7 @@
     "@types/lodash": "^4.14.175",
     "@types/react": "^17.0.30",
     "@types/react-dom": "^17.0.9",
+    "@types/react-relay": "14.1.1",
     "@types/uuid": "^8.3.1",
     "graphql-let": "^0.18.5",
     "prettier": "^2.4.1"
