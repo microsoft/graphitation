@@ -38,11 +38,11 @@ export class Cache extends ApolloCache<TSerialized> {
   }
 
   watch<TData = any, TVariables = any>(
-    watch: _Cache.WatchOptions<TData, TVariables>,
+    options: _Cache.WatchOptions<TData, TVariables>,
   ): () => void {
     const operation = createOperationDescriptor(
-      watch.query,
-      watch.variables || {},
+      options.query,
+      options.variables || {},
     );
     const cacheIdentifier = getQueryCacheIdentifier(operation);
     const queryResult = getQueryResult(operation, cacheIdentifier);
@@ -67,7 +67,7 @@ export class Cache extends ApolloCache<TSerialized> {
         fragmentIdentifier,
         "watch()",
       );
-      watch.callback(
+      options.callback(
         { result: fragmentResult.data as TData },
         lastFragmentResult.data === undefined ||
           lastFragmentResult.isMissingData
