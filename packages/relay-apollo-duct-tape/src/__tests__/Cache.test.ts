@@ -113,3 +113,96 @@ describe("writeFragment/writeFragment", () => {
     `);
   });
 });
+
+describe("watch", () => {
+  function apollo() {
+    return new InMemoryCache({ addTypename: false });
+  }
+
+  function relay() {
+    const environment = new Environment({
+      store: new Store(new RecordSource()),
+      network: Network.create(async () => {
+        throw new Error(`end-to-end queries are not supported`);
+      }),
+    });
+    return new Cache(environment);
+  }
+
+  it.each([
+    { client: apollo, query: ApolloQuery as any },
+    { client: relay, query: RelayQuery as any },
+  ])("works with $client.name", ({ client, query }) => {
+    expect.assertions(4);
+    const cache = client();
+    let count = 0;
+    const promise = new Promise<void>((resolve) => {
+      cache.watch({
+        query,
+        variables: { conversationId: "42" },
+        optimistic: false,
+        callback: (diff, lastDiff) => {
+          count++;
+          switch (count) {
+            case 1: {
+              expect(diff.result).toMatchInlineSnapshot(`
+                Object {
+                  "conversation": Object {
+                    "id": "42",
+                    "title": "Hello World 1",
+                  },
+                }
+              `);
+              expect(lastDiff).toBeUndefined();
+              break;
+            }
+            case 2: {
+              expect(diff.result).toMatchInlineSnapshot(`
+                Object {
+                  "conversation": Object {
+                    "id": "42",
+                    "title": "Hello World 2",
+                  },
+                }
+              `);
+              expect(lastDiff!.result).toMatchInlineSnapshot(`
+                Object {
+                  "conversation": Object {
+                    "id": "42",
+                    "title": "Hello World 1",
+                  },
+                }
+              `);
+              resolve();
+            }
+          }
+        },
+      });
+    });
+    setImmediate(() => {
+      cache.writeQuery({
+        query,
+        data: {
+          conversation: {
+            ...RESPONSE.conversation,
+            title: "Hello World 1",
+          },
+        },
+        variables: { conversationId: "42" },
+      });
+      setImmediate(() => {
+        cache.writeQuery({
+          query,
+          data: {
+            conversation: {
+              ...RESPONSE.conversation,
+              title: "Hello World 2",
+            },
+          },
+          variables: { conversationId: "42" },
+        });
+      });
+    });
+    return promise;
+  });
+});
