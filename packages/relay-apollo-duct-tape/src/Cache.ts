@@ -1,6 +1,5 @@
 import type {
   ConcreteRequest,
-  SelectorData,
   PayloadData,
   Variables,
   ReaderFragment,
@@ -9,65 +8,140 @@ import {
   Environment,
   getRequest,
   createOperationDescriptor,
+  ROOT_ID,
 } from "relay-runtime";
 import { NormalizationFragmentSpread } from "relay-runtime/lib/util/NormalizationNode";
 import { getFragmentResourceForEnvironment } from "react-relay/lib/relay-hooks/FragmentResource";
 
 import invariant from "invariant";
 
-// import { ApolloCache } from "@apollo/client";
-// export class Cache extends ApolloCache<unknown> {
+import {
+  ApolloCache,
+  Cache as _Cache,
+  Reference,
+  Transaction,
+} from "@apollo/client";
 
-export class Cache {
-  constructor(private environment: Environment) {}
+type TSerialized = unknown;
 
-  writeQuery(options: {
-    query: ConcreteRequest;
-    data: PayloadData;
-    variables?: Variables;
-  }) {
+export class Cache extends ApolloCache<TSerialized> {
+  constructor(private environment: Environment) {
+    super();
+  }
+
+  // ----
+  // Required and not yet implemented
+
+  read<TData = any, TVariables = any>(
+    query: _Cache.ReadOptions<TVariables, TData>,
+  ): TData | null {
+    throw new Error("Method not implemented.");
+  }
+
+  write<TData = any, TVariables = any>(
+    write: _Cache.WriteOptions<TData, TVariables>,
+  ): Reference | undefined {
+    throw new Error("Method not implemented.");
+  }
+
+  diff<T>(query: _Cache.DiffOptions): _Cache.DiffResult<T> {
+    throw new Error("Method not implemented.");
+  }
+
+  watch<TData = any, TVariables = any>(
+    watch: _Cache.WatchOptions<TData, TVariables>,
+  ): () => void {
+    throw new Error("Method not implemented.");
+  }
+
+  reset(options?: _Cache.ResetOptions): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
+  evict(options: _Cache.EvictOptions): boolean {
+    throw new Error("Method not implemented.");
+  }
+
+  restore(serializedState: TSerialized): ApolloCache<TSerialized> {
+    throw new Error("Method not implemented.");
+  }
+
+  removeOptimistic(id: string): void {
+    throw new Error("Method not implemented.");
+  }
+
+  performTransaction(
+    transaction: Transaction<TSerialized>,
+    optimisticId?: string | null,
+  ): void {
+    throw new Error("Method not implemented.");
+  }
+
+  // ----
+  // Required and implemented
+
+  // TODO: Unsure if we really would want this as the shape is different,
+  //       but for now, for testing purposes, it's here.
+  extract(optimistic?: boolean): TSerialized {
+    return this.environment.getStore().getSource().toJSON();
+  }
+
+  // ----
+
+  // TODO: When is Reference as return type used?
+  writeQuery<TData = PayloadData, TVariables = Variables>(
+    options: _Cache.WriteQueryOptions<TData, TVariables>,
+  ): undefined {
     const request = getRequest(options.query);
     const operation = createOperationDescriptor(
       request,
       options.variables || {},
     );
-    this.environment.commitPayload(operation, options.data);
+    this.environment.commitPayload(operation, options.data as PayloadData);
+    return undefined;
   }
 
-  readQuery(options: { query: ConcreteRequest; variables?: Variables }) {
+  readQuery<QueryType, TVariables = any>(
+    options: _Cache.ReadQueryOptions<QueryType, TVariables>,
+    optimistic?: boolean,
+  ): QueryType | null {
     const request = getRequest(options.query);
     const operation = createOperationDescriptor(
       request,
       options.variables || {},
     );
-    return this.environment.lookup(operation.fragment).data;
+    return (this.environment.lookup(operation.fragment)
+      .data as unknown) as QueryType;
   }
 
-  writeFragment(options: {
-    id: string;
-    fragment: ReaderFragment;
-    data: SelectorData;
-    variables?: Variables;
-  }) {
+  // TODO: When is Reference as return type used?
+  writeFragment<TData = any, TVariables = any>(
+    options: _Cache.WriteFragmentOptions<TData, TVariables>,
+  ): undefined {
     this.writeQuery({
-      query: getNodeQuery(options.fragment, options.id),
+      query: getNodeQuery(options.fragment, options.id || ROOT_ID),
       data: { node: options.data },
       variables: options.variables,
     });
+    return undefined;
   }
 
   /**
    * TODO: This version only supports 1 level of fragment atm. We would have to recurse into the data to fetch data of other fragments. Do we need this for TMP cases?
    */
-  readFragment(options: {
-    id: string;
-    fragment: ReaderFragment;
-    variables?: Variables;
-  }) {
+  readFragment<FragmentType, TVariables = any>(
+    options: _Cache.ReadFragmentOptions<FragmentType, TVariables>,
+    optimistic?: boolean,
+  ): FragmentType | null {
+    // readFragment(options: {
+    //   id: string;
+    //   fragment: ReaderFragment;
+    //   variables?: Variables;
+    // }) {
     const x = this.readQuery({
-      query: getNodeQuery(options.fragment, options.id),
+      query: getNodeQuery(options.fragment, options.id || ROOT_ID),
       variables: options.variables,
-    });
+    }) as any;
     const fragmentRef = x.node;
 
     // https://github.com/facebook/relay/blob/1ca25c1b44ae7b18f9c021a13a64ef50cf5999b9/packages/react-relay/relay-hooks/useFragmentNode.js#L41-L46
@@ -87,13 +161,7 @@ export class Cache {
       "Missing data!",
     );
 
-    return fragmentResult.data;
-  }
-
-  // TODO: Unsure if we really would want this as the shape is different,
-  //       but for now, for testing purposes, it's here.
-  extract() {
-    return this.environment.getStore().getSource().toJSON();
+    return fragmentResult.data as FragmentType;
   }
 }
 
