@@ -142,8 +142,7 @@ describe("watch", () => {
         variables: { conversationId: "42" },
         optimistic: false,
         callback: (diff, lastDiff) => {
-          count++;
-          switch (count) {
+          switch (++count) {
             case 1: {
               expect(diff.result).toMatchInlineSnapshot(`
                 Object {
