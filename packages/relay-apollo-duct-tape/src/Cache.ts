@@ -1,8 +1,9 @@
-import type {
+import {
   ConcreteRequest,
   PayloadData,
-  Variables,
   ReaderFragment,
+  OperationDescriptor,
+  getFragmentIdentifier,
 } from "relay-runtime";
 import {
   Environment,
@@ -37,9 +38,48 @@ export class Cache extends ApolloCache<TSerialized> {
   }
 
   watch<TData = any, TVariables = any>(
-    watch: _Cache.WatchOptions<TData, TVariables>,
+    options: _Cache.WatchOptions<TData, TVariables>,
   ): () => void {
-    throw new Error("Method not implemented.");
+    const operation = createOperationDescriptor(
+      options.query,
+      options.variables || {},
+    );
+    const cacheIdentifier = getQueryCacheIdentifier(operation);
+    const queryResult = getQueryResult(operation, cacheIdentifier);
+    const fragmentIdentifier = getFragmentIdentifier(
+      queryResult.fragmentNode,
+      queryResult.fragmentRef,
+    );
+    const FragmentResource = getFragmentResourceForEnvironment(
+      this.environment,
+    );
+    let lastFragmentResult = FragmentResource.readWithIdentifier(
+      queryResult.fragmentNode,
+      queryResult.fragmentRef,
+      fragmentIdentifier,
+      "watch()",
+    );
+
+    const disposable = FragmentResource.subscribe(lastFragmentResult, () => {
+      const fragmentResult = FragmentResource.readWithIdentifier(
+        queryResult.fragmentNode,
+        queryResult.fragmentRef,
+        fragmentIdentifier,
+        "watch()",
+      );
+      options.callback(
+        { result: fragmentResult.data as TData },
+        lastFragmentResult.data === undefined ||
+          lastFragmentResult.isMissingData
+          ? undefined
+          : { result: lastFragmentResult.data as TData },
+      );
+      lastFragmentResult = fragmentResult;
+    });
+
+    return () => {
+      disposable.dispose();
+    };
   }
 
   reset(options?: _Cache.ResetOptions): Promise<void> {
@@ -150,6 +190,50 @@ export class Cache extends ApolloCache<TSerialized> {
     return fragmentResult.data as FragmentType;
   }
 }
+
+// ----
+
+function getQueryResult(
+  operation: OperationDescriptor,
+  cacheIdentifier: string,
+): {
+  cacheIdentifier: string;
+  fragmentNode: ReaderFragment;
+  fragmentRef: unknown;
+  operation: OperationDescriptor;
+} {
+  const rootFragmentRef = {
+    __id: operation.fragment.dataID,
+    __fragments: {
+      [operation.fragment.node.name]: operation.request.variables,
+    },
+    __fragmentOwner: operation.request,
+  };
+  return {
+    cacheIdentifier,
+    fragmentNode: operation.request.node.fragment,
+    fragmentRef: rootFragmentRef,
+    operation,
+  };
+}
+
+function getQueryCacheIdentifier(
+  // environment: IEnvironment,
+  operation: OperationDescriptor,
+  // maybeFetchPolicy: ?FetchPolicy,
+  // maybeRenderPolicy: ?RenderPolicy,
+  cacheBreaker?: string | number,
+): string {
+  const fetchPolicy = "fetchPolicy"; // maybeFetchPolicy ?? DEFAULT_FETCH_POLICY;
+  const renderPolicy = "full"; // maybeRenderPolicy ?? environment.UNSTABLE_getDefaultRenderPolicy();
+  const cacheIdentifier = `${fetchPolicy}-${renderPolicy}-${operation.request.identifier}`;
+  if (cacheBreaker != null) {
+    return `${cacheIdentifier}-${cacheBreaker}`;
+  }
+  return cacheIdentifier;
+}
+
+// ----
 
 function getNodeQuery(fragment: ReaderFragment, id: string): ConcreteRequest {
   var v0 = [
