@@ -32,18 +32,6 @@ export class Cache extends ApolloCache<TSerialized> {
   // ----
   // Required and not yet implemented
 
-  read<TData = any, TVariables = any>(
-    query: _Cache.ReadOptions<TVariables, TData>,
-  ): TData | null {
-    throw new Error("Method not implemented.");
-  }
-
-  write<TData = any, TVariables = any>(
-    write: _Cache.WriteOptions<TData, TVariables>,
-  ): Reference | undefined {
-    throw new Error("Method not implemented.");
-  }
-
   diff<T>(query: _Cache.DiffOptions): _Cache.DiffResult<T> {
     throw new Error("Method not implemented.");
   }
@@ -80,67 +68,65 @@ export class Cache extends ApolloCache<TSerialized> {
   // ----
   // Required and implemented
 
-  // TODO: Unsure if we really would want this as the shape is different,
-  //       but for now, for testing purposes, it's here.
-  extract(optimistic?: boolean): TSerialized {
-    return this.environment.getStore().getSource().toJSON();
-  }
-
-  // ----
-
-  // TODO: When is Reference as return type used?
-  writeQuery<TData = PayloadData, TVariables = Variables>(
-    options: _Cache.WriteQueryOptions<TData, TVariables>,
-  ): undefined {
-    const request = getRequest(options.query);
-    const operation = createOperationDescriptor(
-      request,
-      options.variables || {},
-    );
-    this.environment.commitPayload(operation, options.data as PayloadData);
-    return undefined;
-  }
-
-  readQuery<QueryType, TVariables = any>(
-    options: _Cache.ReadQueryOptions<QueryType, TVariables>,
-    optimistic?: boolean,
-  ): QueryType | null {
+  // TODO: This is ignoring rootId, is that ok?
+  read<TData = any, TVariables = any>(
+    options: _Cache.ReadOptions<TVariables, TData>,
+  ): TData | null {
     const request = getRequest(options.query);
     const operation = createOperationDescriptor(
       request,
       options.variables || {},
     );
     return (this.environment.lookup(operation.fragment)
-      .data as unknown) as QueryType;
+      .data as unknown) as TData;
   }
+
+  // TODO: When is Reference as return type used?
+  // TODO: This is ignoring dataId, is that ok?
+  write<TData = any, TVariables = any>(
+    options: _Cache.WriteOptions<TData, TVariables>,
+  ): Reference | undefined {
+    const request = getRequest(options.query);
+    const operation = createOperationDescriptor(
+      request,
+      options.variables || {},
+    );
+    this.environment.commitPayload(operation, options.result as PayloadData);
+    return undefined;
+  }
+
+  // TODO: Unsure if we really would want this as the shape is different,
+  //       but for now, for testing purposes, it's here.
+  // TODO: Ignoring optimistic param atm
+  extract(optimistic?: boolean): TSerialized {
+    return this.environment.getStore().getSource().toJSON();
+  }
+
+  // ----
+  // Not required, overrides
 
   // TODO: When is Reference as return type used?
   writeFragment<TData = any, TVariables = any>(
     options: _Cache.WriteFragmentOptions<TData, TVariables>,
   ): undefined {
-    this.writeQuery({
+    this.write({
       query: getNodeQuery(options.fragment, options.id || ROOT_ID),
-      data: { node: options.data },
+      result: { node: options.data },
       variables: options.variables,
     });
     return undefined;
   }
 
-  /**
-   * TODO: This version only supports 1 level of fragment atm. We would have to recurse into the data to fetch data of other fragments. Do we need this for TMP cases?
-   */
+  // TODO: This version only supports 1 level of fragment atm. We would have to recurse into the data to fetch data of other fragments. Do we need this for TMP cases?
+  // TODO: Ignoring optimistic param atm
   readFragment<FragmentType, TVariables = any>(
     options: _Cache.ReadFragmentOptions<FragmentType, TVariables>,
     optimistic?: boolean,
   ): FragmentType | null {
-    // readFragment(options: {
-    //   id: string;
-    //   fragment: ReaderFragment;
-    //   variables?: Variables;
-    // }) {
-    const x = this.readQuery({
+    const x = this.read({
+      ...options,
       query: getNodeQuery(options.fragment, options.id || ROOT_ID),
-      variables: options.variables,
+      optimistic: false,
     }) as any;
     const fragmentRef = x.node;
 
