@@ -8,3 +8,5 @@ lib
 *.tgz
 
 examples/supermassive-todomvc/**/*.d.ts*
+
+/relay-compiler-12.0.0

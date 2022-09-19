@@ -13,25 +13,109 @@ import {
 import { NormalizationFragmentSpread } from "relay-runtime/lib/util/NormalizationNode";
 import { getFragmentResourceForEnvironment } from "react-relay/lib/relay-hooks/FragmentResource";
 
+import type { Schema } from "relay-compiler";
+// import { parse } from "./vendor/relay-compiler-12.0.0/core/RelayParser"";
+const { parse } = require("./vendor/relay-compiler-12.0.0/core/RelayParser");
+
+import {
+  ApolloCache,
+  Cache as _Cache,
+  DocumentNode,
+  Reference,
+  Transaction,
+} from "@apollo/client";
 import invariant from "invariant";
 
-// import { ApolloCache } from "@apollo/client";
-// export class Cache extends ApolloCache<unknown> {
+type TSerialized = unknown;
 
 export class Cache {
-  constructor(private environment: Environment) {}
+  //extends ApolloCache<TSerialized> {
+
+  private cachedDocuments: WeakMap<DocumentNode, ConcreteRequest>;
+
+  constructor(private environment: Environment, private schema: Schema) {
+    // super();
+    this.cachedDocuments = new WeakMap();
+  }
+
+  // ----
+  // Required and not yet implemented
+
+  read<TData = any, TVariables = any>(
+    query: _Cache.ReadOptions<TVariables, TData>,
+  ): TData | null {
+    throw new Error("Method not implemented.");
+  }
+
+  write<TData = any, TVariables = any>(
+    write: _Cache.WriteOptions<TData, TVariables>,
+  ): Reference | undefined {
+    throw new Error("Method not implemented.");
+  }
+
+  diff<T>(query: _Cache.DiffOptions): _Cache.DiffResult<T> {
+    throw new Error("Method not implemented.");
+  }
+
+  watch<TData = any, TVariables = any>(
+    watch: _Cache.WatchOptions<TData, TVariables>,
+  ): () => void {
+    throw new Error("Method not implemented.");
+  }
+
+  reset(options?: _Cache.ResetOptions): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
+  evict(options: _Cache.EvictOptions): boolean {
+    throw new Error("Method not implemented.");
+  }
+
+  restore(serializedState: TSerialized): ApolloCache<TSerialized> {
+    throw new Error("Method not implemented.");
+  }
+
+  removeOptimistic(id: string): void {
+    throw new Error("Method not implemented.");
+  }
+
+  performTransaction(
+    transaction: Transaction<TSerialized>,
+    optimisticId?: string | null,
+  ): void {
+    throw new Error("Method not implemented.");
+  }
+
+  // ----
+  // Required and implemented
+
+  // TODO: Unsure if we really would want this as the shape is different,
+  //       but for now, for testing purposes, it's here.
+  extract(optimistic?: boolean): TSerialized {
+    return this.environment.getStore().getSource().toJSON();
+  }
+
+  // ----
 
   writeQuery(options: {
-    query: ConcreteRequest;
+    query: DocumentNode;
     data: PayloadData;
     variables?: Variables;
   }) {
-    const request = getRequest(options.query);
-    const operation = createOperationDescriptor(
-      request,
-      options.variables || {},
-    );
-    this.environment.commitPayload(operation, options.data);
+    let request = this.cachedDocuments.get(options.query);
+    if (!request) {
+      const ir = parse(this.schema, options.query);
+      console.log(JSON.stringify(ir, null, 2));
+      // request = getRequest(options.query);
+      // this.cachedDocuments.set(options.query, request);
+    }
+
+    // const request = getRequest(options.query);
+    // const operation = createOperationDescriptor(
+    //   request,
+    //   options.variables || {},
+    // );
+    // this.environment.commitPayload(operation, options.data);
   }
 
   readQuery(options: { query: ConcreteRequest; variables?: Variables }) {
@@ -49,11 +133,11 @@ export class Cache {
     data: SelectorData;
     variables?: Variables;
   }) {
-    this.writeQuery({
-      query: getNodeQuery(options.fragment, options.id),
-      data: { node: options.data },
-      variables: options.variables,
-    });
+    // this.writeQuery({
+    //   query: getNodeQuery(options.fragment, options.id),
+    //   data: { node: options.data },
+    //   variables: options.variables,
+    // });
   }
 
   /**
@@ -88,12 +172,6 @@ export class Cache {
     );
 
     return fragmentResult.data;
-  }
-
-  // TODO: Unsure if we really would want this as the shape is different,
-  //       but for now, for testing purposes, it's here.
-  extract() {
-    return this.environment.getStore().getSource().toJSON();
   }
 }
 
