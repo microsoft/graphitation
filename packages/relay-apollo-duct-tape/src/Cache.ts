@@ -50,10 +50,12 @@ const RelayPublishQueue = require("relay-runtime/lib/store/RelayPublishQueue");
 type TSerialized = unknown;
 
 export class Cache extends ApolloCache<TSerialized> {
+  private inTransation: boolean;
   private publishQueue: PublishQueue;
 
   constructor(private store: Store) {
     super();
+    this.inTransation = false;
     this.publishQueue = new RelayPublishQueue(store, null, getDataID);
   }
 
@@ -124,7 +126,14 @@ export class Cache extends ApolloCache<TSerialized> {
     transaction: Transaction<TSerialized>,
     optimisticId?: string | null,
   ): void {
-    throw new Error("Method not implemented.");
+    invariant(this.inTransation === false, "Already in a transaction");
+    try {
+      this.inTransation = true;
+      transaction(this);
+      this.publishQueue.run();
+    } finally {
+      this.inTransation = false;
+    }
   }
 
   // ----
@@ -167,7 +176,10 @@ export class Cache extends ApolloCache<TSerialized> {
       },
     );
     this.publishQueue.commitPayload(operation, relayPayload);
-    this.publishQueue.run();
+
+    if (!this.inTransation) {
+      this.publishQueue.run();
+    }
 
     return undefined;
   }

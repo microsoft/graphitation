@@ -118,8 +118,9 @@ describe("watch", () => {
     expect.assertions(4);
     const cache = client();
     let count = 0;
+    let disposeWatcher: () => void;
     const promise = new Promise<void>((resolve) => {
-      cache.watch({
+      disposeWatcher = cache.watch({
         query,
         variables: { conversationId: "42" },
         optimistic: false,
@@ -184,6 +185,60 @@ describe("watch", () => {
         });
       });
     });
-    return promise;
+    return promise.finally(disposeWatcher!);
+  });
+});
+
+describe("batch", () => {
+  function apollo() {
+    return new InMemoryCache({ addTypename: false });
+  }
+
+  function relay() {
+    return new Cache(new Store(new RecordSource()));
+  }
+
+  it.each([
+    { client: apollo, query: ApolloQuery as any },
+    { client: relay, query: RelayQuery as any },
+  ])("works with $client.name", ({ client, query }) => {
+    expect.assertions(1);
+    const cache = client();
+    let count = 0;
+    const disposeWatcher = cache.watch({
+      query,
+      variables: { conversationId: "42" },
+      optimistic: false,
+      callback: (diff, lastDiff) => {
+        count++;
+      },
+    });
+    cache.batch({
+      update: (c) => {
+        c.writeQuery({
+          query,
+          data: {
+            conversation: {
+              ...RESPONSE.conversation,
+              title: "Hello World 1",
+            },
+          },
+          variables: { conversationId: "42" },
+        });
+        c.writeQuery({
+          query,
+          data: {
+            conversation: {
+              ...RESPONSE.conversation,
+              title: "Hello World 2",
+            },
+          },
+          variables: { conversationId: "42" },
+        });
+      },
+    });
+    return new Promise<void>((resolve) => setImmediate(resolve))
+      .then(() => expect(count).toEqual(1))
+      .finally(disposeWatcher);
   });
 });
