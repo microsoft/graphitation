@@ -59,9 +59,6 @@ export class Cache extends ApolloCache<TSerialized> {
     this.publishQueue = new RelayPublishQueue(store, null, getDataID);
   }
 
-  // ----
-  // Required and not yet implemented
-
   /**
    * NOTE: This version will never return missing field errors.
    */
@@ -150,9 +147,6 @@ export class Cache extends ApolloCache<TSerialized> {
     }
   }
 
-  // ----
-  // Required and implemented
-
   // TODO: This is ignoring rootId, is that ok?
   read<TData = any, TVariables = any>(
     options: _Cache.ReadOptions<TVariables, TData>,
@@ -207,7 +201,7 @@ export class Cache extends ApolloCache<TSerialized> {
   // TODO: Can we avoid the query write? I.e. how do we build the fragment ref?
   writeFragment<TData = any, TVariables = any>(
     options: _Cache.WriteFragmentOptions<TData, TVariables>,
-  ): undefined {
+  ): Reference | undefined {
     this.write({
       query: getNodeQuery(options.fragment, options.id || ROOT_ID),
       result: { node: options.data },
