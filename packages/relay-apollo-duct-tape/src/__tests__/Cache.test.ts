@@ -242,3 +242,62 @@ describe("batch", () => {
       .finally(disposeWatcher);
   });
 });
+
+describe("diff", () => {
+  function apollo() {
+    return new InMemoryCache({ addTypename: false });
+  }
+
+  function relay() {
+    return new Cache(new Store(new RecordSource()));
+  }
+
+  beforeAll(() => {
+    jest.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterAll(() => {
+    jest.resetAllMocks();
+  });
+
+  it.each([
+    { client: apollo, query: ApolloQuery as any },
+    { client: relay, query: RelayQuery as any },
+  ])("works with $client.name", ({ client, query }) => {
+    const cache = client();
+    cache.writeQuery({
+      query,
+      data: {
+        conversation: {
+          ...RESPONSE.conversation,
+          title: undefined,
+        },
+      },
+      variables: { conversationId: "42" },
+    });
+    expect(
+      cache.diff({
+        query,
+        variables: { conversationId: "42" },
+        optimistic: false,
+      }),
+    ).toMatchObject({
+      complete: false,
+    });
+
+    cache.writeQuery({
+      query,
+      data: RESPONSE,
+      variables: { conversationId: "42" },
+    });
+    expect(
+      cache.diff<unknown>({
+        query,
+        variables: { conversationId: "42" },
+        optimistic: false,
+      }),
+    ).toMatchObject({
+      complete: true,
+    });
+  });
+});

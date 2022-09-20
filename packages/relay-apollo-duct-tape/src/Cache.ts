@@ -62,8 +62,22 @@ export class Cache extends ApolloCache<TSerialized> {
   // ----
   // Required and not yet implemented
 
-  diff<T>(query: _Cache.DiffOptions): _Cache.DiffResult<T> {
-    throw new Error("Method not implemented.");
+  /**
+   * NOTE: This version will never return missing field errors.
+   */
+  diff<TData = any, TVariables = any>(
+    options: _Cache.DiffOptions,
+  ): _Cache.DiffResult<TData> {
+    const request = getRequest(options.query);
+    const operation = createOperationDescriptor(
+      request,
+      options.variables || {},
+    );
+    const snapshot = this.store.lookup(operation.fragment);
+    return {
+      result: (snapshot.data as unknown) as TData,
+      complete: !snapshot.isMissingData,
+    };
   }
 
   // TODO: Data selected by any fragment in a query should trigger notifications for the query.
@@ -143,12 +157,7 @@ export class Cache extends ApolloCache<TSerialized> {
   read<TData = any, TVariables = any>(
     options: _Cache.ReadOptions<TVariables, TData>,
   ): TData | null {
-    const request = getRequest(options.query);
-    const operation = createOperationDescriptor(
-      request,
-      options.variables || {},
-    );
-    return (this.store.lookup(operation.fragment).data as unknown) as TData;
+    return this.diff(options).result as TData;
   }
 
   // TODO: When is Reference as return type used?
