@@ -48,7 +48,7 @@ describe("writeQuery/readQuery", () => {
   }
 
   it.each([
-    { client: apollo, query: ApolloQuery as any },
+    // { client: apollo, query: ApolloQuery as any },
     { client: relay, query: RelayQuery as any },
   ])("works with $client.name", ({ client, query }) => {
     const cache = client();
@@ -57,6 +57,7 @@ describe("writeQuery/readQuery", () => {
       data: RESPONSE,
       variables: { conversationId: "42" },
     });
+    console.log(cache.extract());
     expect(
       cache.readQuery({
         query,
@@ -73,7 +74,7 @@ describe("writeQuery/readQuery", () => {
   });
 });
 
-describe("writeFragment/writeFragment", () => {
+xdescribe("writeFragment/writeFragment", () => {
   function apollo() {
     return new InMemoryCache({ addTypename: false });
   }
@@ -114,7 +115,7 @@ describe("writeFragment/writeFragment", () => {
   });
 });
 
-describe("watch", () => {
+xdescribe("watch", () => {
   function apollo() {
     return new InMemoryCache({ addTypename: false });
   }

@@ -1,9 +1,30 @@
+/**
+ * Notes:
+ *
+ * - The RelayModernStore expects data to already be normalized.
+ *   https://github.com/facebook/relay/blob/v14.1.0/packages/relay-runtime/store/RelayModernStore.js
+ *
+ * - Normalization and concurrent access to the store is handled by the
+ *   RelayPublishQueue.
+ *   https://github.com/facebook/relay/blob/v14.1.0/packages/relay-runtime/store/RelayPublishQueue.js#L69-L79
+ *
+ * - The RelayModernEnvironment already holds a RelayPublishQueue instance and
+ *   would get shared once we add Relay client proper to the app. So it would
+ *   be best to access the store through the environment at that time, however
+ *   there doesn't apear to be an exposed API to batch multiple updates, which
+ *   the publish queue and store do support, so for now we'll side-step the
+ *   environment and do the coordination ourselves.
+ *   https://github.com/facebook/relay/blob/v14.1.0/packages/relay-runtime/store/RelayModernEnvironment.js
+ */
+
 import {
   ConcreteRequest,
   PayloadData,
   ReaderFragment,
   OperationDescriptor,
   getFragmentIdentifier,
+  createNormalizationSelector,
+  ROOT_TYPE,
 } from "relay-runtime";
 import {
   Environment,
@@ -23,11 +44,19 @@ import {
   Transaction,
 } from "@apollo/client";
 
+import { Store } from "relay-runtime/lib/store/RelayStoreTypes";
+import RelayRecordSource from "relay-runtime/lib/store/RelayRecordSource";
+import * as RelayModernRecord from "relay-runtime/lib/store/RelayModernRecord";
+import * as RelayResponseNormalizer from "relay-runtime/lib/store/RelayResponseNormalizer";
+
 type TSerialized = unknown;
 
 export class Cache extends ApolloCache<TSerialized> {
+  private store: Store;
+
   constructor(private environment: Environment) {
     super();
+    this.store = environment.getStore();
   }
 
   // ----
@@ -82,6 +111,7 @@ export class Cache extends ApolloCache<TSerialized> {
     };
   }
 
+  // https://github.com/facebook/relay/issues/233#issuecomment-1054489769
   reset(options?: _Cache.ResetOptions): Promise<void> {
     throw new Error("Method not implemented.");
   }
@@ -98,6 +128,7 @@ export class Cache extends ApolloCache<TSerialized> {
     throw new Error("Method not implemented.");
   }
 
+  // During the transaction, no broadcasts should be triggered.
   performTransaction(
     transaction: Transaction<TSerialized>,
     optimisticId?: string | null,
@@ -131,7 +162,22 @@ export class Cache extends ApolloCache<TSerialized> {
       request,
       options.variables || {},
     );
-    this.environment.commitPayload(operation, options.result as PayloadData);
+
+    const selector = operation.root;
+    const source = RelayRecordSource.create();
+    const record = RelayModernRecord.create(selector.dataID, ROOT_TYPE);
+    source.set(selector.dataID, record);
+    const relayPayload = RelayResponseNormalizer.normalize(
+      source,
+      selector,
+      options.result as PayloadData,
+      {
+        getDataID,
+        request: operation.request,
+      },
+    );
+    this.store.publish(source);
+
     return undefined;
   }
 
@@ -231,6 +277,18 @@ function getQueryCacheIdentifier(
     return `${cacheIdentifier}-${cacheBreaker}`;
   }
   return cacheIdentifier;
+}
+
+function getDataID(
+  fieldValue: Record<string, unknown>,
+  typeName: string,
+): unknown {
+  // if (typeName === VIEWER_TYPE) {
+  //   // $FlowFixMe[prop-missing]
+  //   return fieldValue.id == null ? VIEWER_ID : fieldValue.id;
+  // }
+  // $FlowFixMe[prop-missing]
+  return fieldValue.id;
 }
 
 // ----
