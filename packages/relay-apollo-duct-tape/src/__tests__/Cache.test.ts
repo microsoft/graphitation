@@ -38,17 +38,11 @@ describe("writeQuery/readQuery", () => {
   }
 
   function relay() {
-    const environment = new Environment({
-      store: new Store(new RecordSource()),
-      network: Network.create(async () => {
-        throw new Error(`end-to-end queries are not supported`);
-      }),
-    });
-    return new Cache(environment);
+    return new Cache(new Store(new RecordSource()));
   }
 
   it.each([
-    // { client: apollo, query: ApolloQuery as any },
+    { client: apollo, query: ApolloQuery as any },
     { client: relay, query: RelayQuery as any },
   ])("works with $client.name", ({ client, query }) => {
     const cache = client();
@@ -57,7 +51,6 @@ describe("writeQuery/readQuery", () => {
       data: RESPONSE,
       variables: { conversationId: "42" },
     });
-    console.log(cache.extract());
     expect(
       cache.readQuery({
         query,
@@ -74,19 +67,13 @@ describe("writeQuery/readQuery", () => {
   });
 });
 
-xdescribe("writeFragment/writeFragment", () => {
+describe("writeFragment/writeFragment", () => {
   function apollo() {
     return new InMemoryCache({ addTypename: false });
   }
 
   function relay() {
-    const environment = new Environment({
-      store: new Store(new RecordSource()),
-      network: Network.create(async () => {
-        throw new Error(`end-to-end queries are not supported`);
-      }),
-    });
-    return new Cache(environment);
+    return new Cache(new Store(new RecordSource()));
   }
 
   it.each([
@@ -115,19 +102,13 @@ xdescribe("writeFragment/writeFragment", () => {
   });
 });
 
-xdescribe("watch", () => {
+describe("watch", () => {
   function apollo() {
     return new InMemoryCache({ addTypename: false });
   }
 
   function relay() {
-    const environment = new Environment({
-      store: new Store(new RecordSource()),
-      network: Network.create(async () => {
-        throw new Error(`end-to-end queries are not supported`);
-      }),
-    });
-    return new Cache(environment);
+    return new Cache(new Store(new RecordSource()));
   }
 
   it.each([

@@ -22,18 +22,11 @@ import {
   PayloadData,
   ReaderFragment,
   OperationDescriptor,
-  getFragmentIdentifier,
-  createNormalizationSelector,
   ROOT_TYPE,
+  getSelector,
 } from "relay-runtime";
-import {
-  Environment,
-  getRequest,
-  createOperationDescriptor,
-  ROOT_ID,
-} from "relay-runtime";
+import { getRequest, createOperationDescriptor, ROOT_ID } from "relay-runtime";
 import { NormalizationFragmentSpread } from "relay-runtime/lib/util/NormalizationNode";
-import { getFragmentResourceForEnvironment } from "react-relay/lib/relay-hooks/FragmentResource";
 
 import invariant from "invariant";
 
@@ -44,19 +37,24 @@ import {
   Transaction,
 } from "@apollo/client";
 
-import { Store } from "relay-runtime/lib/store/RelayStoreTypes";
 import RelayRecordSource from "relay-runtime/lib/store/RelayRecordSource";
 import * as RelayModernRecord from "relay-runtime/lib/store/RelayModernRecord";
 import * as RelayResponseNormalizer from "relay-runtime/lib/store/RelayResponseNormalizer";
+import {
+  PublishQueue,
+  SingularReaderSelector,
+  Store,
+} from "relay-runtime/lib/store/RelayStoreTypes";
+const RelayPublishQueue = require("relay-runtime/lib/store/RelayPublishQueue");
 
 type TSerialized = unknown;
 
 export class Cache extends ApolloCache<TSerialized> {
-  private store: Store;
+  private publishQueue: PublishQueue;
 
-  constructor(private environment: Environment) {
+  constructor(private store: Store) {
     super();
-    this.store = environment.getStore();
+    this.publishQueue = new RelayPublishQueue(store, null, getDataID);
   }
 
   // ----
@@ -66,6 +64,7 @@ export class Cache extends ApolloCache<TSerialized> {
     throw new Error("Method not implemented.");
   }
 
+  // TODO: Data selected by any fragment in a query should trigger notifications for the query.
   watch<TData = any, TVariables = any>(
     options: _Cache.WatchOptions<TData, TVariables>,
   ): () => void {
@@ -75,35 +74,27 @@ export class Cache extends ApolloCache<TSerialized> {
     );
     const cacheIdentifier = getQueryCacheIdentifier(operation);
     const queryResult = getQueryResult(operation, cacheIdentifier);
-    const fragmentIdentifier = getFragmentIdentifier(
+
+    const fragmentSelector = getSelector(
       queryResult.fragmentNode,
       queryResult.fragmentRef,
     );
-    const FragmentResource = getFragmentResourceForEnvironment(
-      this.environment,
+    invariant(
+      fragmentSelector.kind === "SingularReaderSelector",
+      "Only singular fragments are supported",
     );
-    let lastFragmentResult = FragmentResource.readWithIdentifier(
-      queryResult.fragmentNode,
-      queryResult.fragmentRef,
-      fragmentIdentifier,
-      "watch()",
+    let lastSnapshot = this.store.lookup(
+      fragmentSelector as SingularReaderSelector,
     );
 
-    const disposable = FragmentResource.subscribe(lastFragmentResult, () => {
-      const fragmentResult = FragmentResource.readWithIdentifier(
-        queryResult.fragmentNode,
-        queryResult.fragmentRef,
-        fragmentIdentifier,
-        "watch()",
-      );
+    const disposable = this.store.subscribe(lastSnapshot, (nextSnapshot) => {
       options.callback(
-        { result: fragmentResult.data as TData },
-        lastFragmentResult.data === undefined ||
-          lastFragmentResult.isMissingData
+        { result: (nextSnapshot.data as unknown) as TData },
+        lastSnapshot.data === undefined || lastSnapshot.isMissingData
           ? undefined
-          : { result: lastFragmentResult.data as TData },
+          : { result: (lastSnapshot.data as unknown) as TData },
       );
-      lastFragmentResult = fragmentResult;
+      lastSnapshot = nextSnapshot;
     });
 
     return () => {
@@ -148,8 +139,7 @@ export class Cache extends ApolloCache<TSerialized> {
       request,
       options.variables || {},
     );
-    return (this.environment.lookup(operation.fragment)
-      .data as unknown) as TData;
+    return (this.store.lookup(operation.fragment).data as unknown) as TData;
   }
 
   // TODO: When is Reference as return type used?
@@ -176,7 +166,8 @@ export class Cache extends ApolloCache<TSerialized> {
         request: operation.request,
       },
     );
-    this.store.publish(source);
+    this.publishQueue.commitPayload(operation, relayPayload);
+    this.publishQueue.run();
 
     return undefined;
   }
@@ -185,13 +176,14 @@ export class Cache extends ApolloCache<TSerialized> {
   //       but for now, for testing purposes, it's here.
   // TODO: Ignoring optimistic param atm
   extract(optimistic?: boolean): TSerialized {
-    return this.environment.getStore().getSource().toJSON();
+    return this.store.getSource().toJSON();
   }
 
   // ----
   // Not required, overrides
 
   // TODO: When is Reference as return type used?
+  // TODO: Can we avoid the query write? I.e. how do we build the fragment ref?
   writeFragment<TData = any, TVariables = any>(
     options: _Cache.WriteFragmentOptions<TData, TVariables>,
   ): undefined {
@@ -205,6 +197,7 @@ export class Cache extends ApolloCache<TSerialized> {
 
   // TODO: This version only supports 1 level of fragment atm. We would have to recurse into the data to fetch data of other fragments. Do we need this for TMP cases?
   // TODO: Ignoring optimistic param atm
+  // TODO: Can we avoid the query read? I.e. how do we build the fragment ref?
   readFragment<FragmentType, TVariables = any>(
     options: _Cache.ReadFragmentOptions<FragmentType, TVariables>,
     optimistic?: boolean,
@@ -216,24 +209,20 @@ export class Cache extends ApolloCache<TSerialized> {
     }) as any;
     const fragmentRef = x.node;
 
-    // https://github.com/facebook/relay/blob/1ca25c1b44ae7b18f9c021a13a64ef50cf5999b9/packages/react-relay/relay-hooks/useFragmentNode.js#L41-L46
-    // https://github.com/facebook/relay/blob/1ca25c1b44ae7b18f9c021a13a64ef50cf5999b9/packages/react-relay/relay-hooks/FragmentResource.js#L211-L216
-    const FragmentResource = getFragmentResourceForEnvironment(
-      this.environment,
+    const fragmentSelector = getSelector(options.fragment, fragmentRef);
+    invariant(
+      fragmentSelector.kind === "SingularReaderSelector",
+      "Only singular fragments are supported",
     );
-    const fragmentResult = FragmentResource.read(
-      options.fragment,
-      fragmentRef,
-      "useFragment()",
+    const snapshot = this.store.lookup(
+      fragmentSelector as SingularReaderSelector,
     );
-
     // TODO: Handle missing data
     invariant(
-      fragmentResult.data !== undefined && !fragmentResult.isMissingData,
+      snapshot.data !== undefined && !snapshot.isMissingData,
       "Missing data!",
     );
-
-    return fragmentResult.data as FragmentType;
+    return (snapshot.data as unknown) as FragmentType;
   }
 }
 
