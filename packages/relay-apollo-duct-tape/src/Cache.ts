@@ -65,7 +65,7 @@ export class Cache extends ApolloCache<TSerialized> {
   diff<TData = any, TVariables = any>(
     options: _Cache.DiffOptions,
   ): _Cache.DiffResult<TData> {
-    const request = getRequest(options.query);
+    const request = getRequest(options.query.__relay);
     const operation = createOperationDescriptor(
       request,
       options.variables || {},
@@ -82,7 +82,7 @@ export class Cache extends ApolloCache<TSerialized> {
     options: _Cache.WatchOptions<TData, TVariables>,
   ): () => void {
     const operation = createOperationDescriptor(
-      options.query,
+      options.query.__relay,
       options.variables || {},
     );
     const cacheIdentifier = getQueryCacheIdentifier(operation);
@@ -159,7 +159,7 @@ export class Cache extends ApolloCache<TSerialized> {
   write<TData = any, TVariables = any>(
     options: _Cache.WriteOptions<TData, TVariables>,
   ): Reference | undefined {
-    const request = getRequest(options.query);
+    const request = getRequest(options.query.__relay);
     const operation = createOperationDescriptor(
       request,
       options.variables || {},

@@ -4,16 +4,17 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "start": "concurrently 'yarn relay --watch' 'yarn serve --progress --color --mode=development'",
+    "start": "graphql-codegen && yarn serve --progress --color --mode=development",
     "build": "webpack --mode production --config webpack.config.ts",
     "serve": "webpack serve --config webpack.config.ts",
     "extract-schema": "supermassive extract-schema ./src/schema/typeDefs.graphql",
-    "relay": "relay-compiler --language graphitation --schema ./src/schema/typeDefs.graphql --src ./src"
+    "codegen": "graphql-codegen"
   },
   "dependencies": {
-    "@apollo/client": "^3.4.16",
+    "@apollo/client": "^3.6.0",
     "@babel/runtime": "^7.12.0",
     "@graphitation/apollo-react-relay-duct-tape": "^0.7.0",
+    "@graphitation/graphql-codegen-supermassive-relay-ir-plugin": "^1.0.0",
     "@graphitation/graphql-js-tag": "^0.8.0",
     "@graphitation/supermassive": "^0.8.3",
     "@graphitation/ts-transform-graphql-js-tag": "^0.4.0",
@@ -24,8 +25,10 @@
     "lodash": "^4.17.21",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "react-relay": "^14.0.0",
     "relay-compiler": "^12.0.0",
     "relay-compiler-language-graphitation": "^0.8.1",
+    "relay-runtime": "^14.0.0",
     "ts-loader": "^9.0.0",
     "ts-node": "^10.4.0",
     "typescript": "^4.4.3",
@@ -50,15 +53,22 @@
     "yargs-parser": ">=13.1.2"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "^2.2.2",
+    "@graphql-codegen/cli": "^1.19.4",
     "@graphql-codegen/import-types-preset": "^2.1.7",
-    "@graphql-codegen/typescript": "^2.3.0",
+    "@graphql-codegen/near-operation-file-preset": "^2.4.1",
+    "@graphql-codegen/typed-document-node": "^2.3.3",
+    "@graphql-codegen/typescript": "^2.2.0",
+    "@graphql-codegen/typescript-operations": "^2.2.4",
+    "@graphql-codegen/typescript-react-apollo": "^3.3.3",
     "@types/graphql": "^14.5.0",
     "@types/lodash": "^4.14.175",
     "@types/react": "^17.0.30",
     "@types/react-dom": "^17.0.9",
+    "@types/react-relay": "14.1.1",
     "@types/uuid": "^8.3.1",
+    "add": "^2.0.6",
     "graphql-let": "^0.18.5",
-    "prettier": "^2.4.1"
+    "prettier": "^2.4.1",
+    "yarn": "^1.22.19"
   }
 }

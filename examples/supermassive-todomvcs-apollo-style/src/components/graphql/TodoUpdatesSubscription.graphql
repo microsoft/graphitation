@@ -1,0 +1,12 @@
+subscription TodoUpdatesSubscription($limit: Int!) {
+  emitTodos(limit: $limit) {
+    id
+    ...TodoFragment
+  }
+}
+
+fragment TodoFragment on Todo {
+  id
+  text
+  isCompleted
+}

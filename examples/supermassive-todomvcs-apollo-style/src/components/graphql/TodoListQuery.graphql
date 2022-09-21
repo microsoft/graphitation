@@ -1,0 +1,12 @@
+query TodoListQuery {
+  allTodos {
+    id
+    ...TodoFragment
+  }
+}
+
+fragment TodoFragment on Todo {
+  id
+  text
+  isCompleted
+}
