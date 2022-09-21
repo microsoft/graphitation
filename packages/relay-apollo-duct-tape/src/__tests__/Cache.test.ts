@@ -65,6 +65,42 @@ describe("writeQuery/readQuery", () => {
     `);
   });
 
+  describe("concerning missing data", () => {
+    it.each([
+      { client: apollo, query: ApolloQuery as any },
+      { client: relay, query: RelayQuery as any },
+    ])("works with $client.name", ({ client, query }) => {
+      const cache = client();
+      cache.writeQuery({
+        query,
+        data: {
+          conversation: {
+            ...RESPONSE.conversation,
+            title: undefined,
+          },
+        },
+        variables: { conversationId: "42" },
+      });
+      expect(
+        cache.readQuery({
+          query,
+          variables: { conversationId: "42" },
+        }),
+      ).toBeNull();
+      expect(
+        cache.readQuery({
+          query,
+          variables: { conversationId: "42" },
+          returnPartialData: true,
+        }),
+      ).toMatchObject({
+        conversation: {
+          id: "42",
+        },
+      });
+    });
+  });
+
   describe("concerning optimistic updates", () => {
     it.each([
       { client: apollo, query: ApolloQuery as any },
@@ -201,6 +237,38 @@ describe("writeFragment/readFragment", () => {
         "title": "Hello World",
       }
     `);
+  });
+
+  describe("concerning missing data", () => {
+    it.each([
+      { client: apollo, fragment: ApolloFragment as any },
+      { client: relay, fragment: RelayFragment as any },
+    ])("works with $client.name", ({ client, fragment }) => {
+      const cache = client();
+      cache.writeFragment({
+        fragment,
+        id: "Conversation:42",
+        data: { ...RESPONSE.conversation, title: undefined },
+        variables: { conversationId: "42" },
+      });
+      expect(
+        cache.readFragment({
+          id: "Conversation:42",
+          fragment,
+          variables: { conversationId: "42" },
+        }),
+      ).toBeNull();
+      expect(
+        cache.readFragment({
+          id: "Conversation:42",
+          fragment,
+          variables: { conversationId: "42" },
+          returnPartialData: true,
+        }),
+      ).toMatchObject({
+        id: "42",
+      });
+    });
   });
 });
 

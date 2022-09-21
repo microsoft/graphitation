@@ -74,12 +74,20 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
    ***************************************************************************/
 
   // TODO: This is ignoring rootId, is that ok?
+  // TODO: This version only supports 1 level of fragment atm. We would have to recurse into the data to fetch data of other fragments. Do we need this for TMP cases?
+  /**
+   * In case of partial data, this will still include the missing keys in the
+   * result, but with a value of `undefined`.
+   */
   read<TData = any, TVariables = any>(
     options: ApolloCacheTypes.ReadOptions<TVariables, TData>,
   ): TData | null {
     const snapshot = this.getSnapshot(options);
     // TODO: Is knowning that the store only saw the root record good enough?
     if (!options.optimistic && snapshot.seenRecords.size === 1) {
+      return null;
+    }
+    if (snapshot.isMissingData && !options.returnPartialData) {
       return null;
     }
     return (snapshot.data as unknown) as TData;
@@ -144,6 +152,10 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
 
   // TODO: This version only supports 1 level of fragment atm. We would have to recurse into the data to fetch data of other fragments. Do we need this for TMP cases?
   // TODO: Can we avoid the query read? I.e. how do we build the fragment ref?
+  /**
+   * In case of partial data, this will still include the missing keys in the
+   * result, but with a value of `undefined`.
+   */
   readFragment<FragmentType, TVariables = any>(
     options: ApolloCacheTypes.ReadFragmentOptions<FragmentType, TVariables>,
     optimistic = !!options.optimistic,
@@ -166,11 +178,9 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     const snapshot = this.store.lookup(
       fragmentSelector as SingularReaderSelector,
     );
-    // TODO: Handle missing data
-    invariant(
-      snapshot.data !== undefined && !snapshot.isMissingData,
-      "Missing data!",
-    );
+    if (snapshot.isMissingData && !options.returnPartialData) {
+      return null;
+    }
     return (snapshot.data as unknown) as FragmentType;
   }
 
