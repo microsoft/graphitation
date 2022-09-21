@@ -252,7 +252,6 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     this.publishQueue.run();
   }
 
-  // During the transaction, no broadcasts should be triggered.
   performTransaction(
     callback: Transaction<RecordMap>,
     optimisticId?: string | null,

@@ -142,7 +142,7 @@ describe("writeQuery/readQuery", () => {
   });
 });
 
-describe("writeFragment/writeFragment", () => {
+describe("writeFragment/readFragment", () => {
   it.each([
     { client: apollo, fragment: ApolloFragment as any },
     { client: relay, fragment: RelayFragment as any },
