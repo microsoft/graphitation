@@ -64,93 +64,9 @@ export class Cache extends ApolloCache<RecordMap> {
     this.publishQueue = new RelayPublishQueue(this.store, null, getDataID);
   }
 
-  private getSnapshot(options: _Cache.DiffOptions): Snapshot {
-    const request = getRequest(options.query);
-    const operation = createOperationDescriptor(
-      request,
-      options.variables || {},
-    );
-    return this.store.lookup(operation.fragment, options.optimistic);
-  }
-
-  /**
-   * NOTE: This version will never return missing field errors.
-   */
-  diff<TData = any, TVariables = any>(
-    options: _Cache.DiffOptions,
-  ): _Cache.DiffResult<TData> {
-    const snapshot = this.getSnapshot(options);
-    return {
-      result: (snapshot.data as unknown) as TData,
-      complete: !snapshot.isMissingData,
-    };
-  }
-
-  // TODO: Data selected by any fragment in a query should trigger notifications for the query.
-  watch<TData = any, TVariables = any>(
-    options: _Cache.WatchOptions<TData, TVariables>,
-  ): () => void {
-    const operation = createOperationDescriptor(
-      options.query,
-      options.variables || {},
-    );
-    const cacheIdentifier = getQueryCacheIdentifier(operation);
-    const queryResult = getQueryResult(operation, cacheIdentifier);
-
-    const fragmentSelector = getSelector(
-      queryResult.fragmentNode,
-      queryResult.fragmentRef,
-    );
-    invariant(
-      fragmentSelector.kind === "SingularReaderSelector",
-      "Only singular fragments are supported",
-    );
-    let lastSnapshot = this.store.lookup(
-      fragmentSelector as SingularReaderSelector,
-    );
-
-    const disposable = this.store.subscribe(lastSnapshot, (nextSnapshot) => {
-      options.callback(
-        { result: (nextSnapshot.data as unknown) as TData },
-        lastSnapshot.data === undefined || lastSnapshot.isMissingData
-          ? undefined
-          : { result: (lastSnapshot.data as unknown) as TData },
-      );
-      lastSnapshot = nextSnapshot;
-    });
-
-    return () => {
-      disposable.dispose();
-    };
-  }
-
-  // https://github.com/facebook/relay/issues/233#issuecomment-1054489769
-  reset(options?: _Cache.ResetOptions): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-
-  evict(options: _Cache.EvictOptions): boolean {
-    throw new Error("Method not implemented.");
-  }
-
-  removeOptimistic(id: string): void {
-    // throw new Error("Method not implemented.");
-  }
-
-  // During the transaction, no broadcasts should be triggered.
-  performTransaction(
-    transaction: Transaction<RecordMap>,
-    optimisticId?: string | null,
-  ): void {
-    invariant(!this.inTransation, "Already in a transaction");
-    try {
-      this.inTransation = optimisticId || true;
-      transaction(this);
-      this.publishQueue.run();
-    } finally {
-      this.inTransation = false;
-    }
-  }
+  /****************************************************************************
+   * Read/write
+   ***************************************************************************/
 
   // TODO: This is ignoring rootId, is that ok?
   read<TData = any, TVariables = any>(
@@ -206,9 +122,6 @@ export class Cache extends ApolloCache<RecordMap> {
     return undefined;
   }
 
-  // ----
-  // Not required, overrides
-
   // TODO: When is Reference as return type used?
   // TODO: Can we avoid the query write? I.e. how do we build the fragment ref?
   writeFragment<TData = any, TVariables = any>(
@@ -256,11 +169,89 @@ export class Cache extends ApolloCache<RecordMap> {
   }
 
   /****************************************************************************
+   * Data changes
+   ***************************************************************************/
+
+  /**
+   * NOTE: This version will never return missing field errors.
+   */
+  diff<TData = any, TVariables = any>(
+    options: _Cache.DiffOptions,
+  ): _Cache.DiffResult<TData> {
+    const snapshot = this.getSnapshot(options);
+    return {
+      result: (snapshot.data as unknown) as TData,
+      complete: !snapshot.isMissingData,
+    };
+  }
+
+  // TODO: Data selected by any fragment in a query should trigger notifications for the query.
+  watch<TData = any, TVariables = any>(
+    options: _Cache.WatchOptions<TData, TVariables>,
+  ): () => void {
+    const operation = createOperationDescriptor(
+      options.query,
+      options.variables || {},
+    );
+    const cacheIdentifier = getQueryCacheIdentifier(operation);
+    const queryResult = getQueryResult(operation, cacheIdentifier);
+
+    const fragmentSelector = getSelector(
+      queryResult.fragmentNode,
+      queryResult.fragmentRef,
+    );
+    invariant(
+      fragmentSelector.kind === "SingularReaderSelector",
+      "Only singular fragments are supported",
+    );
+    let lastSnapshot = this.store.lookup(
+      fragmentSelector as SingularReaderSelector,
+    );
+
+    const disposable = this.store.subscribe(lastSnapshot, (nextSnapshot) => {
+      options.callback(
+        { result: (nextSnapshot.data as unknown) as TData },
+        lastSnapshot.data === undefined || lastSnapshot.isMissingData
+          ? undefined
+          : { result: (lastSnapshot.data as unknown) as TData },
+      );
+      lastSnapshot = nextSnapshot;
+    });
+
+    return () => {
+      disposable.dispose();
+    };
+  }
+
+  /****************************************************************************
+   * Optimistic
+   ***************************************************************************/
+
+  removeOptimistic(id: string): void {
+    // throw new Error("Method not implemented.");
+  }
+
+  // During the transaction, no broadcasts should be triggered.
+  performTransaction(
+    transaction: Transaction<RecordMap>,
+    optimisticId?: string | null,
+  ): void {
+    invariant(!this.inTransation, "Already in a transaction");
+    try {
+      this.inTransation = optimisticId || true;
+      transaction(this);
+      this.publishQueue.run();
+    } finally {
+      this.inTransation = false;
+    }
+  }
+
+  /****************************************************************************
    * Serialization
    ***************************************************************************/
 
-  extract(optimistic?: boolean): RecordMap {
-    return this.store.getSource(!!optimistic).toJSON();
+  extract(optimistic: boolean = false): RecordMap {
+    return this.store.getSource(optimistic).toJSON();
   }
 
   // TODO: Do we need to do cleanups first?
@@ -278,6 +269,32 @@ export class Cache extends ApolloCache<RecordMap> {
       RelayRecordSource.create(serializedState),
     );
     return this;
+  }
+
+  /****************************************************************************
+   * TODO: Unimplemented
+   ***************************************************************************/
+
+  // https://github.com/facebook/relay/issues/233#issuecomment-1054489769
+  reset(options?: _Cache.ResetOptions): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
+  evict(options: _Cache.EvictOptions): boolean {
+    throw new Error("Method not implemented.");
+  }
+
+  /****************************************************************************
+   * Private
+   ***************************************************************************/
+
+  private getSnapshot(options: _Cache.DiffOptions): Snapshot {
+    const request = getRequest(options.query);
+    const operation = createOperationDescriptor(
+      request,
+      options.variables || {},
+    );
+    return this.store.lookup(operation.fragment, options.optimistic);
   }
 }
 
