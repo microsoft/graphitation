@@ -1,5 +1,5 @@
 import { graphql } from "@graphitation/graphql-js-tag";
-import { RelayStoreCache } from "../Cache";
+import { RelayApolloCache } from "../Cache";
 import { InMemoryCache } from "@apollo/client";
 
 import RelayQuery from "./__generated__/CacheTestQuery.graphql";
@@ -36,7 +36,7 @@ function apollo() {
 }
 
 function relay() {
-  return new RelayStoreCache();
+  return new RelayApolloCache();
 }
 
 describe("writeQuery/readQuery", () => {

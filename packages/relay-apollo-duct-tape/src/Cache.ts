@@ -53,7 +53,7 @@ import invariant from "invariant";
 
 type OptimisticTransaction = WeakRef<OptimisticUpdate>[];
 
-export class RelayStoreCache extends ApolloCache<RecordMap> {
+export class RelayApolloCache extends ApolloCache<RecordMap> {
   private store: Store;
   private usingExternalStore: boolean;
   private inTransation: boolean | OptimisticTransaction;
