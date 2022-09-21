@@ -1,4 +1,16 @@
 /**
+ * BIG TODOs:
+ *
+ * - Make type-policies key-fields work
+ *
+ * - Make GC work
+ *
+ * - Relay IR will only contain metadata upto a fragment boundary and so either
+ *   we need to recursively get data from the store across these boundaries or
+ *   when the IR is generated we inline all fragments into a query? I'm unsure
+ *   how that would work for write/readFragment, though, so perhaps recursively
+ *   getting the data is the way to go.
+ *
  * Notes:
  *
  * - The RelayModernStore expects data to already be normalized.
