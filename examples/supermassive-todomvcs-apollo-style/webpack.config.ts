@@ -5,7 +5,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { getTransformer } = require("@graphitation/ts-transform-graphql-js-tag");
 const {
   annotateDocumentGraphQLTransform,
-} = require("@graphitation/supermassive");
+} = require("@graphitation/supermassive/lib/transforms/annotateDocumentGraphQLTransform.js");
 const { buildASTSchema, parse } = require("graphql");
 
 const config: () => Promise<typeof webpack.Configuration> = async () => {

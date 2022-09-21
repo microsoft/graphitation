@@ -1,7 +1,6 @@
 import { graphql } from "@graphitation/graphql-js-tag";
-import { Cache } from "../Cache";
+import { RelayApolloCache } from "../Cache";
 import { InMemoryCache } from "@apollo/client";
-import { Environment, Network, Store, RecordSource } from "relay-runtime";
 
 import RelayQuery from "./__generated__/CacheTestQuery.graphql";
 import RelayFragment from "./__generated__/CacheTestFragment.graphql";
@@ -32,15 +31,15 @@ const RESPONSE = {
   },
 };
 
+function apollo() {
+  return new InMemoryCache({ addTypename: false });
+}
+
+function relay() {
+  return new RelayApolloCache();
+}
+
 describe("writeQuery/readQuery", () => {
-  function apollo() {
-    return new InMemoryCache({ addTypename: false });
-  }
-
-  function relay() {
-    return new Cache(new Store(new RecordSource()));
-  }
-
   it.each([
     { client: apollo, query: ApolloQuery as any },
     { client: relay, query: RelayQuery as any },
@@ -65,17 +64,121 @@ describe("writeQuery/readQuery", () => {
       }
     `);
   });
+
+  describe("concerning missing data", () => {
+    it.each([
+      { client: apollo, query: ApolloQuery as any },
+      { client: relay, query: RelayQuery as any },
+    ])("works with $client.name", ({ client, query }) => {
+      const cache = client();
+      cache.writeQuery({
+        query,
+        data: {
+          conversation: {
+            ...RESPONSE.conversation,
+            title: undefined,
+          },
+        },
+        variables: { conversationId: "42" },
+      });
+      expect(
+        cache.readQuery({
+          query,
+          variables: { conversationId: "42" },
+        }),
+      ).toBeNull();
+      expect(
+        cache.readQuery({
+          query,
+          variables: { conversationId: "42" },
+          returnPartialData: true,
+        }),
+      ).toMatchObject({
+        conversation: {
+          id: "42",
+        },
+      });
+    });
+  });
+
+  describe("concerning optimistic updates", () => {
+    it.each([
+      { client: apollo, query: ApolloQuery as any },
+      { client: relay, query: RelayQuery as any },
+    ])("applies update with $client.name", ({ client, query }) => {
+      const cache = client();
+      cache.recordOptimisticTransaction((c) => {
+        c.writeQuery({
+          query,
+          data: RESPONSE,
+          variables: { conversationId: "42" },
+        });
+      }, "some-id");
+      expect(
+        cache.readQuery({
+          query,
+          variables: { conversationId: "42" },
+          // optimistic: false, // This is the default
+        }),
+      ).toBeNull();
+      expect(
+        cache.readQuery({
+          query,
+          variables: { conversationId: "42" },
+          optimistic: true,
+        }),
+      ).toMatchInlineSnapshot(`
+        Object {
+          "conversation": Object {
+            "id": "42",
+            "title": "Hello World",
+          },
+        }
+      `);
+    });
+
+    it.each([
+      { client: apollo, query: ApolloQuery as any },
+      { client: relay, query: RelayQuery as any },
+    ])("applies update with $client.name", ({ client, query }) => {
+      const cache = client();
+      cache.writeQuery({
+        query,
+        data: RESPONSE,
+        variables: { conversationId: "42" },
+      });
+      cache.recordOptimisticTransaction((c) => {
+        c.writeQuery({
+          query,
+          data: {
+            conversation: {
+              ...RESPONSE.conversation,
+              title: "Hello Optimistic World",
+            },
+          },
+          variables: { conversationId: "42" },
+        });
+      }, "some-transaction-id");
+      cache.removeOptimistic("some-transaction-id");
+      expect(
+        cache.readQuery({
+          query,
+          variables: { conversationId: "42" },
+          optimistic: true,
+        }),
+      ).toMatchInlineSnapshot(`
+        Object {
+          "conversation": Object {
+            "id": "42",
+            "title": "Hello World",
+          },
+        }
+      `);
+    });
+  });
 });
 
-describe("writeFragment/writeFragment", () => {
-  function apollo() {
-    return new InMemoryCache({ addTypename: false });
-  }
-
-  function relay() {
-    return new Cache(new Store(new RecordSource()));
-  }
-
+describe("writeFragment/readFragment", () => {
   it.each([
     { client: apollo, fragment: ApolloFragment as any },
     { client: relay, fragment: RelayFragment as any },
@@ -100,17 +203,76 @@ describe("writeFragment/writeFragment", () => {
       }
     `);
   });
+
+  it.each([
+    { client: apollo, fragment: ApolloFragment as any },
+    { client: relay, fragment: RelayFragment as any },
+  ])("works with $client.name and optimistic data", ({ client, fragment }) => {
+    const cache = client();
+    cache.recordOptimisticTransaction((c) => {
+      c.writeFragment({
+        fragment,
+        id: "Conversation:42",
+        data: RESPONSE.conversation,
+        variables: { conversationId: "42" },
+      });
+    }, "some-id");
+    expect(
+      cache.readFragment({
+        id: "Conversation:42",
+        fragment,
+        variables: { conversationId: "42" },
+      }),
+    ).toBeNull();
+    expect(
+      cache.readFragment({
+        id: "Conversation:42",
+        fragment,
+        variables: { conversationId: "42" },
+        optimistic: true,
+      }),
+    ).toMatchInlineSnapshot(`
+      Object {
+        "id": "42",
+        "title": "Hello World",
+      }
+    `);
+  });
+
+  describe("concerning missing data", () => {
+    it.each([
+      { client: apollo, fragment: ApolloFragment as any },
+      { client: relay, fragment: RelayFragment as any },
+    ])("works with $client.name", ({ client, fragment }) => {
+      const cache = client();
+      cache.writeFragment({
+        fragment,
+        id: "Conversation:42",
+        data: { ...RESPONSE.conversation, title: undefined },
+        variables: { conversationId: "42" },
+      });
+      expect(
+        cache.readFragment({
+          id: "Conversation:42",
+          fragment,
+          variables: { conversationId: "42" },
+        }),
+      ).toBeNull();
+      expect(
+        cache.readFragment({
+          id: "Conversation:42",
+          fragment,
+          variables: { conversationId: "42" },
+          returnPartialData: true,
+        }),
+      ).toMatchObject({
+        id: "42",
+      });
+    });
+  });
 });
 
 describe("watch", () => {
-  function apollo() {
-    return new InMemoryCache({ addTypename: false });
-  }
-
-  function relay() {
-    return new Cache(new Store(new RecordSource()));
-  }
-
   it.each([
     { client: apollo, query: ApolloQuery as any },
     { client: relay, query: RelayQuery as any },
@@ -190,14 +352,6 @@ describe("watch", () => {
 });
 
 describe("batch", () => {
-  function apollo() {
-    return new InMemoryCache({ addTypename: false });
-  }
-
-  function relay() {
-    return new Cache(new Store(new RecordSource()));
-  }
-
   it.each([
     { client: apollo, query: ApolloQuery as any },
     { client: relay, query: RelayQuery as any },
@@ -244,14 +398,6 @@ describe("batch", () => {
 });
 
 describe("diff", () => {
-  function apollo() {
-    return new InMemoryCache({ addTypename: false });
-  }
-
-  function relay() {
-    return new Cache(new Store(new RecordSource()));
-  }
-
   beforeAll(() => {
     jest.spyOn(console, "error").mockImplementation(() => {});
   });
@@ -299,5 +445,23 @@ describe("diff", () => {
     ).toMatchObject({
       complete: true,
     });
+  });
+});
+
+describe("extract/restore", () => {
+  it.each([
+    { client: apollo, query: ApolloQuery as any },
+    { client: relay, query: RelayQuery as any },
+  ])("works with $client.name", ({ client, query }) => {
+    const cache = client();
+    cache.writeQuery({
+      query,
+      data: RESPONSE,
+      variables: { conversationId: "42" },
+    });
+    const data = cache.extract();
+    const newCache = client();
+    newCache.restore(data as any);
+    expect(newCache.extract()).toEqual(cache.extract());
   });
 });

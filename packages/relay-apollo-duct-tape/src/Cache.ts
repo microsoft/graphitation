@@ -1,4 +1,16 @@
 /**
+ * BIG TODOs:
+ *
+ * - Make type-policies key-fields work
+ *
+ * - Make GC work
+ *
+ * - Relay IR will only contain metadata upto a fragment boundary and so either
+ *   we need to recursively get data from the store across these boundaries or
+ *   when the IR is generated we inline all fragments into a query? I'm unsure
+ *   how that would work for write/readFragment, though, so perhaps recursively
+ *   getting the data is the way to go.
+ *
  * Notes:
  *
  * - The RelayModernStore expects data to already be normalized.
@@ -28,49 +40,173 @@ import {
 import { getRequest, createOperationDescriptor, ROOT_ID } from "relay-runtime";
 import { NormalizationFragmentSpread } from "relay-runtime/lib/util/NormalizationNode";
 
-import invariant from "invariant";
-
-import {
-  ApolloCache,
-  Cache as _Cache,
-  Reference,
-  Transaction,
-} from "@apollo/client";
-
 import RelayRecordSource from "relay-runtime/lib/store/RelayRecordSource";
 import * as RelayModernRecord from "relay-runtime/lib/store/RelayModernRecord";
 import * as RelayResponseNormalizer from "relay-runtime/lib/store/RelayResponseNormalizer";
 import {
+  OptimisticUpdate,
   PublishQueue,
+  RecordMap,
   SingularReaderSelector,
+  Snapshot,
   Store,
 } from "relay-runtime/lib/store/RelayStoreTypes";
-const RelayPublishQueue = require("relay-runtime/lib/store/RelayPublishQueue");
+import RelayPublishQueue from "relay-runtime/lib/store/RelayPublishQueue";
+import RelayModernStore from "relay-runtime/lib/store/RelayModernStore";
 
-type TSerialized = unknown;
+import {
+  ApolloCache,
+  Cache as ApolloCacheTypes,
+  Reference,
+  Transaction,
+} from "@apollo/client";
 
-export class Cache extends ApolloCache<TSerialized> {
-  private inTransation: boolean;
+import invariant from "invariant";
+
+type OptimisticTransaction = WeakRef<OptimisticUpdate>[];
+
+export class RelayApolloCache extends ApolloCache<RecordMap> {
+  private store: Store;
+  private usingExternalStore: boolean;
+  private inTransation: boolean | OptimisticTransaction;
   private publishQueue: PublishQueue;
+  private optimisticTransactions: Map<string, OptimisticTransaction>;
 
-  constructor(private store: Store) {
+  constructor(store?: Store) {
     super();
+    this.store = store || new RelayModernStore(new RelayRecordSource());
+    this.usingExternalStore = !!store;
     this.inTransation = false;
-    this.publishQueue = new RelayPublishQueue(store, null, getDataID);
+    this.publishQueue = new RelayPublishQueue(this.store, null, getDataID);
+    this.optimisticTransactions = new Map();
   }
 
+  /****************************************************************************
+   * Read/write
+   ***************************************************************************/
+
+  // TODO: This is ignoring rootId, is that ok?
+  // TODO: This version only supports 1 level of fragment atm. We would have to recurse into the data to fetch data of other fragments. Do we need this for TMP cases?
   /**
-   * NOTE: This version will never return missing field errors.
+   * In case of partial data, this will still include the missing keys in the
+   * result, but with a value of `undefined`.
    */
-  diff<TData = any, TVariables = any>(
-    options: _Cache.DiffOptions,
-  ): _Cache.DiffResult<TData> {
+  read<TData = any, TVariables = any>(
+    options: ApolloCacheTypes.ReadOptions<TVariables, TData>,
+  ): TData | null {
+    const snapshot = this.getSnapshot(options);
+    // TODO: Is knowning that the store only saw the root record good enough?
+    if (!options.optimistic && snapshot.seenRecords.size === 1) {
+      return null;
+    }
+    if (snapshot.isMissingData && !options.returnPartialData) {
+      return null;
+    }
+    return (snapshot.data as unknown) as TData;
+  }
+
+  // TODO: When is Reference as return type used?
+  // TODO: This is ignoring dataId, is that ok?
+  write<TData = any, TVariables = any>(
+    options: ApolloCacheTypes.WriteOptions<TData, TVariables>,
+  ): Reference | undefined {
     const request = getRequest(options.query.__relay);
     const operation = createOperationDescriptor(
       request,
       options.variables || {},
     );
-    const snapshot = this.store.lookup(operation.fragment);
+
+    const selector = operation.root;
+    const source = RelayRecordSource.create();
+    const record = RelayModernRecord.create(selector.dataID, ROOT_TYPE);
+    source.set(selector.dataID, record);
+    const relayPayload = RelayResponseNormalizer.normalize(
+      source,
+      selector,
+      options.result as PayloadData,
+      {
+        getDataID,
+        request: operation.request,
+      },
+    );
+
+    if (typeof this.inTransation === "boolean") {
+      this.publishQueue.commitPayload(operation, relayPayload);
+    } else {
+      const updater: OptimisticUpdate = {
+        operation,
+        payload: relayPayload,
+        updater: null,
+      };
+      this.inTransation.push(createWeakRef(updater));
+      this.publishQueue.applyUpdate(updater);
+    }
+
+    if (!this.inTransation) {
+      this.publishQueue.run();
+    }
+
+    return undefined;
+  }
+
+  // TODO: When is Reference as return type used?
+  // TODO: Can we avoid the query write? I.e. how do we build the fragment ref?
+  writeFragment<TData = any, TVariables = any>(
+    options: ApolloCacheTypes.WriteFragmentOptions<TData, TVariables>,
+  ): Reference | undefined {
+    this.write({
+      query: getNodeQuery(options.fragment, options.id || ROOT_ID),
+      result: { node: options.data },
+      variables: options.variables,
+    });
+    return undefined;
+  }
+
+  // TODO: This version only supports 1 level of fragment atm. We would have to recurse into the data to fetch data of other fragments. Do we need this for TMP cases?
+  // TODO: Can we avoid the query read? I.e. how do we build the fragment ref?
+  /**
+   * In case of partial data, this will still include the missing keys in the
+   * result, but with a value of `undefined`.
+   */
+  readFragment<FragmentType, TVariables = any>(
+    options: ApolloCacheTypes.ReadFragmentOptions<FragmentType, TVariables>,
+    optimistic = !!options.optimistic,
+  ): FragmentType | null {
+    const queryResult = this.read({
+      ...options,
+      query: getNodeQuery(options.fragment, options.id || ROOT_ID),
+      optimistic,
+    }) as any;
+    if (!optimistic && queryResult === null) {
+      return null;
+    }
+    const fragmentRef = queryResult.node;
+
+    const fragmentSelector = getSelector(options.fragment, fragmentRef);
+    invariant(
+      fragmentSelector.kind === "SingularReaderSelector",
+      "Only singular fragments are supported",
+    );
+    const snapshot = this.store.lookup(
+      fragmentSelector as SingularReaderSelector,
+    );
+    if (snapshot.isMissingData && !options.returnPartialData) {
+      return null;
+    }
+    return (snapshot.data as unknown) as FragmentType;
+  }
+
+  /****************************************************************************
+   * Data changes
+   ***************************************************************************/
+
+  /**
+   * NOTE: This version will never return missing field errors.
+   */
+  diff<TData = any, TVariables = any>(
+    options: ApolloCacheTypes.DiffOptions,
+  ): ApolloCacheTypes.DiffResult<TData> {
+    const snapshot = this.getSnapshot(options);
     return {
       result: (snapshot.data as unknown) as TData,
       complete: !snapshot.isMissingData,
@@ -79,7 +215,7 @@ export class Cache extends ApolloCache<TSerialized> {
 
   // TODO: Data selected by any fragment in a query should trigger notifications for the query.
   watch<TData = any, TVariables = any>(
-    options: _Cache.WatchOptions<TData, TVariables>,
+    options: ApolloCacheTypes.WatchOptions<TData, TVariables>,
   ): () => void {
     const operation = createOperationDescriptor(
       options.query.__relay,
@@ -115,133 +251,119 @@ export class Cache extends ApolloCache<TSerialized> {
     };
   }
 
-  // https://github.com/facebook/relay/issues/233#issuecomment-1054489769
-  reset(options?: _Cache.ResetOptions): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-
-  evict(options: _Cache.EvictOptions): boolean {
-    throw new Error("Method not implemented.");
-  }
-
-  restore(serializedState: TSerialized): ApolloCache<TSerialized> {
-    throw new Error("Method not implemented.");
-  }
+  /****************************************************************************
+   * Optimistic
+   ***************************************************************************/
 
   removeOptimistic(id: string): void {
-    throw new Error("Method not implemented.");
+    const optimisticTransaction = this.optimisticTransactions.get(id);
+    invariant(
+      optimisticTransaction,
+      "No optimistic transaction exists with id: %s",
+      id,
+    );
+    optimisticTransaction.forEach((updaterRef) => {
+      const optimisticUpdate = updaterRef.deref();
+      invariant(
+        optimisticUpdate,
+        "Optimistic update was already released but not removed in transaction with id: %s",
+        id,
+      );
+      this.publishQueue.revertUpdate(optimisticUpdate);
+    });
+    this.publishQueue.run();
   }
 
-  // During the transaction, no broadcasts should be triggered.
   performTransaction(
-    transaction: Transaction<TSerialized>,
+    callback: Transaction<RecordMap>,
     optimisticId?: string | null,
   ): void {
-    invariant(this.inTransation === false, "Already in a transaction");
+    invariant(!this.inTransation, "Already in a transaction");
     try {
-      this.inTransation = true;
-      transaction(this);
+      if (optimisticId) {
+        invariant(
+          !this.optimisticTransactions.has(optimisticId),
+          "An optimistic transaction already exists with id: %s",
+          optimisticId,
+        );
+        const transaction: OptimisticTransaction = [];
+        this.optimisticTransactions.set(optimisticId, transaction);
+        this.inTransation = transaction;
+      } else {
+        this.inTransation = true;
+      }
+      callback(this);
       this.publishQueue.run();
     } finally {
+      // TODO: Do we need to clean the publishQueue in case of exception?
       this.inTransation = false;
     }
   }
 
-  // TODO: This is ignoring rootId, is that ok?
-  read<TData = any, TVariables = any>(
-    options: _Cache.ReadOptions<TVariables, TData>,
-  ): TData | null {
-    return this.diff(options).result as TData;
+  /****************************************************************************
+   * Serialization
+   ***************************************************************************/
+
+  extract(optimistic: boolean = false): RecordMap {
+    return this.store.getSource(optimistic).toJSON();
   }
 
-  // TODO: When is Reference as return type used?
-  // TODO: This is ignoring dataId, is that ok?
-  write<TData = any, TVariables = any>(
-    options: _Cache.WriteOptions<TData, TVariables>,
-  ): Reference | undefined {
+  // TODO: Check if we need this for react hot-reloads
+  // TODO: Do we need to do cleanups first?
+  /**
+   * This version does not support restoring when an external store was passed
+   * in the constructor, as that might indicate it is owned and used elsewhere
+   * and would lead to an inconsistent state if we were to only change this.
+   */
+  restore(serializedState: RecordMap): ApolloCache<RecordMap> {
+    invariant(
+      !this.usingExternalStore,
+      "Can't restore when using external store, as this could lead to inconsistent state.",
+    );
+    this.store = new RelayModernStore(
+      RelayRecordSource.create(serializedState),
+    );
+    this.publishQueue = new RelayPublishQueue(this.store, null, getDataID);
+    return this;
+  }
+
+  /****************************************************************************
+   * TODO: Unimplemented
+   ***************************************************************************/
+
+  // https://github.com/facebook/relay/issues/233#issuecomment-1054489769
+  reset(options?: ApolloCacheTypes.ResetOptions): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
+  evict(options: ApolloCacheTypes.EvictOptions): boolean {
+    throw new Error("Method not implemented.");
+  }
+
+  /****************************************************************************
+   * Private
+   ***************************************************************************/
+
+  private getSnapshot(options: ApolloCacheTypes.DiffOptions): Snapshot {
     const request = getRequest(options.query.__relay);
     const operation = createOperationDescriptor(
       request,
       options.variables || {},
     );
-
-    const selector = operation.root;
-    const source = RelayRecordSource.create();
-    const record = RelayModernRecord.create(selector.dataID, ROOT_TYPE);
-    source.set(selector.dataID, record);
-    const relayPayload = RelayResponseNormalizer.normalize(
-      source,
-      selector,
-      options.result as PayloadData,
-      {
-        getDataID,
-        request: operation.request,
-      },
-    );
-    this.publishQueue.commitPayload(operation, relayPayload);
-
-    if (!this.inTransation) {
-      this.publishQueue.run();
-    }
-
-    return undefined;
-  }
-
-  // TODO: Unsure if we really would want this as the shape is different,
-  //       but for now, for testing purposes, it's here.
-  // TODO: Ignoring optimistic param atm
-  extract(optimistic?: boolean): TSerialized {
-    return this.store.getSource().toJSON();
-  }
-
-  // ----
-  // Not required, overrides
-
-  // TODO: When is Reference as return type used?
-  // TODO: Can we avoid the query write? I.e. how do we build the fragment ref?
-  writeFragment<TData = any, TVariables = any>(
-    options: _Cache.WriteFragmentOptions<TData, TVariables>,
-  ): Reference | undefined {
-    this.write({
-      query: getNodeQuery(options.fragment, options.id || ROOT_ID),
-      result: { node: options.data },
-      variables: options.variables,
-    });
-    return undefined;
-  }
-
-  // TODO: This version only supports 1 level of fragment atm. We would have to recurse into the data to fetch data of other fragments. Do we need this for TMP cases?
-  // TODO: Ignoring optimistic param atm
-  // TODO: Can we avoid the query read? I.e. how do we build the fragment ref?
-  readFragment<FragmentType, TVariables = any>(
-    options: _Cache.ReadFragmentOptions<FragmentType, TVariables>,
-    optimistic?: boolean,
-  ): FragmentType | null {
-    const x = this.read({
-      ...options,
-      query: getNodeQuery(options.fragment, options.id || ROOT_ID),
-      optimistic: false,
-    }) as any;
-    const fragmentRef = x.node;
-
-    const fragmentSelector = getSelector(options.fragment, fragmentRef);
-    invariant(
-      fragmentSelector.kind === "SingularReaderSelector",
-      "Only singular fragments are supported",
-    );
-    const snapshot = this.store.lookup(
-      fragmentSelector as SingularReaderSelector,
-    );
-    // TODO: Handle missing data
-    invariant(
-      snapshot.data !== undefined && !snapshot.isMissingData,
-      "Missing data!",
-    );
-    return (snapshot.data as unknown) as FragmentType;
+    return this.store.lookup(operation.fragment, options.optimistic);
   }
 }
 
-// ----
+function createWeakRef<T extends object>(value: T): WeakRef<T> {
+  if (typeof WeakRef === "function") {
+    return new WeakRef(value);
+  }
+  return {
+    deref() {
+      return value;
+    },
+  } as WeakRef<T>;
+}
 
 function getQueryResult(
   operation: OperationDescriptor,

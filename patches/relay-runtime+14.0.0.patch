@@ -1,0 +1,28 @@
+diff --git a/node_modules/relay-runtime/lib/store/RelayModernStore.js b/node_modules/relay-runtime/lib/store/RelayModernStore.js
+index 66f8fee..af8cf66 100644
+--- a/node_modules/relay-runtime/lib/store/RelayModernStore.js
++++ b/node_modules/relay-runtime/lib/store/RelayModernStore.js
+@@ -124,10 +124,10 @@ var RelayModernStore = /*#__PURE__*/function () {
+ 
+   var _proto = RelayModernStore.prototype;
+ 
+-  _proto.getSource = function getSource() {
++  _proto.getSource = function getSource(includeOptimisticSource = true) {
+     var _this$_optimisticSour;
+ 
+-    return (_this$_optimisticSour = this._optimisticSource) !== null && _this$_optimisticSour !== void 0 ? _this$_optimisticSour : this._recordSource;
++    return (_this$_optimisticSour = this._optimisticSource) !== null && _this$_optimisticSour !== void 0 && includeOptimisticSource ? _this$_optimisticSour : this._recordSource;
+   };
+ 
+   _proto._getMutableRecordSource = function _getMutableRecordSource() {
+@@ -255,8 +255,8 @@ var RelayModernStore = /*#__PURE__*/function () {
+     };
+   };
+ 
+-  _proto.lookup = function lookup(selector) {
+-    var source = this.getSource();
++  _proto.lookup = function lookup(selector, includeOptimisticSource = true) {
++    var source = this.getSource(includeOptimisticSource);
+     var snapshot = RelayReader.read(source, selector, this._resolverCache);
+ 
+     if (process.env.NODE_ENV !== "production") {
