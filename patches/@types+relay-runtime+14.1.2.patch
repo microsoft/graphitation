@@ -224,7 +224,7 @@ index 514c207..f53508c 100755
  
      static create(records?: RecordMap): MutableRecordSource;
 diff --git a/node_modules/@types/relay-runtime/lib/store/RelayStoreTypes.d.ts b/node_modules/@types/relay-runtime/lib/store/RelayStoreTypes.d.ts
-index 8566ca5..8d733db 100755
+index 8566ca5..b36ed5d 100755
 --- a/node_modules/@types/relay-runtime/lib/store/RelayStoreTypes.d.ts
 +++ b/node_modules/@types/relay-runtime/lib/store/RelayStoreTypes.d.ts
 @@ -90,7 +90,7 @@ export interface NormalizationSelector {
@@ -236,6 +236,15 @@ index 8566ca5..8d733db 100755
      readonly selector: SingularReaderSelector;
  }
  export type Snapshot = TypedSnapshot<SelectorData>;
+@@ -220,7 +220,7 @@ export interface Store {
+     /**
+      * Get a read-only view of the store's internal RecordSource.
+      */
+-    getSource(): RecordSource;
++    getSource(includeOptimisticSource?: boolean): RecordSource;
+ 
+     /**
+      * Determine if the operation can be resolved with data in the store (i.e. no
 @@ -233,7 +233,7 @@ export interface Store {
       * Optionally takes an owner, corresponding to the operation that
       * owns this selector (fragment).

@@ -1,7 +1,7 @@
 import { graphql } from "@graphitation/graphql-js-tag";
 import { Cache } from "../Cache";
 import { InMemoryCache } from "@apollo/client";
-import { Environment, Network, Store, RecordSource } from "relay-runtime";
+import { Store, RecordSource } from "relay-runtime";
 
 import RelayQuery from "./__generated__/CacheTestQuery.graphql";
 import RelayFragment from "./__generated__/CacheTestFragment.graphql";
@@ -38,7 +38,7 @@ describe("writeQuery/readQuery", () => {
   }
 
   function relay() {
-    return new Cache(new Store(new RecordSource()));
+    return new Cache();
   }
 
   it.each([
@@ -108,7 +108,7 @@ describe("writeFragment/writeFragment", () => {
   }
 
   function relay() {
-    return new Cache(new Store(new RecordSource()));
+    return new Cache();
   }
 
   it.each([
@@ -178,7 +178,7 @@ describe("watch", () => {
   }
 
   function relay() {
-    return new Cache(new Store(new RecordSource()));
+    return new Cache();
   }
 
   it.each([
@@ -265,7 +265,7 @@ describe("batch", () => {
   }
 
   function relay() {
-    return new Cache(new Store(new RecordSource()));
+    return new Cache();
   }
 
   it.each([
@@ -319,7 +319,7 @@ describe("diff", () => {
   }
 
   function relay() {
-    return new Cache(new Store(new RecordSource()));
+    return new Cache();
   }
 
   beforeAll(() => {
@@ -369,5 +369,31 @@ describe("diff", () => {
     ).toMatchObject({
       complete: true,
     });
+  });
+});
+
+describe("extract/restore", () => {
+  function apollo() {
+    return new InMemoryCache({ addTypename: false });
+  }
+
+  function relay() {
+    return new Cache();
+  }
+
+  it.each([
+    { client: apollo, query: ApolloQuery as any },
+    { client: relay, query: RelayQuery as any },
+  ])("works with $client.name", ({ client, query }) => {
+    const cache = client();
+    cache.writeQuery({
+      query,
+      data: RESPONSE,
+      variables: { conversationId: "42" },
+    });
+    const data = cache.extract();
+    const newCache = client();
+    newCache.restore(data as any);
+    expect(newCache.extract()).toEqual(cache.extract());
   });
 });

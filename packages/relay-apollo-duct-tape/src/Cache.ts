@@ -42,22 +42,26 @@ import * as RelayModernRecord from "relay-runtime/lib/store/RelayModernRecord";
 import * as RelayResponseNormalizer from "relay-runtime/lib/store/RelayResponseNormalizer";
 import {
   PublishQueue,
+  RecordMap,
   SingularReaderSelector,
   Snapshot,
   Store,
 } from "relay-runtime/lib/store/RelayStoreTypes";
 import RelayPublishQueue from "relay-runtime/lib/store/RelayPublishQueue";
+import RelayModernStore from "relay-runtime/lib/store/RelayModernStore";
 
-type TSerialized = unknown;
-
-export class Cache extends ApolloCache<TSerialized> {
+export class Cache extends ApolloCache<RecordMap> {
+  private store: Store;
+  private usingExternalStore: boolean;
   private inTransation: boolean | string;
   private publishQueue: PublishQueue;
 
-  constructor(private store: Store) {
+  constructor(store?: Store) {
     super();
+    this.store = store || new RelayModernStore(new RelayRecordSource());
+    this.usingExternalStore = !!store;
     this.inTransation = false;
-    this.publishQueue = new RelayPublishQueue(store, null, getDataID);
+    this.publishQueue = new RelayPublishQueue(this.store, null, getDataID);
   }
 
   private getSnapshot(options: _Cache.DiffOptions): Snapshot {
@@ -129,17 +133,13 @@ export class Cache extends ApolloCache<TSerialized> {
     throw new Error("Method not implemented.");
   }
 
-  restore(serializedState: TSerialized): ApolloCache<TSerialized> {
-    throw new Error("Method not implemented.");
-  }
-
   removeOptimistic(id: string): void {
-    throw new Error("Method not implemented.");
+    // throw new Error("Method not implemented.");
   }
 
   // During the transaction, no broadcasts should be triggered.
   performTransaction(
-    transaction: Transaction<TSerialized>,
+    transaction: Transaction<RecordMap>,
     optimisticId?: string | null,
   ): void {
     invariant(!this.inTransation, "Already in a transaction");
@@ -206,13 +206,6 @@ export class Cache extends ApolloCache<TSerialized> {
     return undefined;
   }
 
-  // TODO: Unsure if we really would want this as the shape is different,
-  //       but for now, for testing purposes, it's here.
-  // TODO: Ignoring optimistic param atm
-  extract(optimistic?: boolean): TSerialized {
-    return this.store.getSource().toJSON();
-  }
-
   // ----
   // Not required, overrides
 
@@ -260,6 +253,31 @@ export class Cache extends ApolloCache<TSerialized> {
       "Missing data!",
     );
     return (snapshot.data as unknown) as FragmentType;
+  }
+
+  /****************************************************************************
+   * Serialization
+   ***************************************************************************/
+
+  extract(optimistic?: boolean): RecordMap {
+    return this.store.getSource(!!optimistic).toJSON();
+  }
+
+  // TODO: Do we need to do cleanups first?
+  /**
+   * This version does not support restoring when an external store was passed
+   * in the constructor, as that might indicate it is owned and used elsewhere
+   * and would lead to an inconsistent state if we were to only change this.
+   */
+  restore(serializedState: RecordMap): ApolloCache<RecordMap> {
+    invariant(
+      !this.usingExternalStore,
+      "Can't restore when using external store, as this could lead to inconsistent state.",
+    );
+    this.store = new RelayModernStore(
+      RelayRecordSource.create(serializedState),
+    );
+    return this;
   }
 }
 
