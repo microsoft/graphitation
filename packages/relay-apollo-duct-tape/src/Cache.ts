@@ -28,15 +28,6 @@ import {
 import { getRequest, createOperationDescriptor, ROOT_ID } from "relay-runtime";
 import { NormalizationFragmentSpread } from "relay-runtime/lib/util/NormalizationNode";
 
-import invariant from "invariant";
-
-import {
-  ApolloCache,
-  Cache as _Cache,
-  Reference,
-  Transaction,
-} from "@apollo/client";
-
 import RelayRecordSource from "relay-runtime/lib/store/RelayRecordSource";
 import * as RelayModernRecord from "relay-runtime/lib/store/RelayModernRecord";
 import * as RelayResponseNormalizer from "relay-runtime/lib/store/RelayResponseNormalizer";
@@ -50,7 +41,16 @@ import {
 import RelayPublishQueue from "relay-runtime/lib/store/RelayPublishQueue";
 import RelayModernStore from "relay-runtime/lib/store/RelayModernStore";
 
-export class Cache extends ApolloCache<RecordMap> {
+import {
+  ApolloCache,
+  Cache as ApolloCacheTypes,
+  Reference,
+  Transaction,
+} from "@apollo/client";
+
+import invariant from "invariant";
+
+export class RelayStoreCache extends ApolloCache<RecordMap> {
   private store: Store;
   private usingExternalStore: boolean;
   private inTransation: boolean | string;
@@ -70,7 +70,7 @@ export class Cache extends ApolloCache<RecordMap> {
 
   // TODO: This is ignoring rootId, is that ok?
   read<TData = any, TVariables = any>(
-    options: _Cache.ReadOptions<TVariables, TData>,
+    options: ApolloCacheTypes.ReadOptions<TVariables, TData>,
   ): TData | null {
     const snapshot = this.getSnapshot(options);
     // TODO: Is knowning that the store only saw the root record good enough?
@@ -83,7 +83,7 @@ export class Cache extends ApolloCache<RecordMap> {
   // TODO: When is Reference as return type used?
   // TODO: This is ignoring dataId, is that ok?
   write<TData = any, TVariables = any>(
-    options: _Cache.WriteOptions<TData, TVariables>,
+    options: ApolloCacheTypes.WriteOptions<TData, TVariables>,
   ): Reference | undefined {
     const request = getRequest(options.query);
     const operation = createOperationDescriptor(
@@ -125,7 +125,7 @@ export class Cache extends ApolloCache<RecordMap> {
   // TODO: When is Reference as return type used?
   // TODO: Can we avoid the query write? I.e. how do we build the fragment ref?
   writeFragment<TData = any, TVariables = any>(
-    options: _Cache.WriteFragmentOptions<TData, TVariables>,
+    options: ApolloCacheTypes.WriteFragmentOptions<TData, TVariables>,
   ): Reference | undefined {
     this.write({
       query: getNodeQuery(options.fragment, options.id || ROOT_ID),
@@ -138,7 +138,7 @@ export class Cache extends ApolloCache<RecordMap> {
   // TODO: This version only supports 1 level of fragment atm. We would have to recurse into the data to fetch data of other fragments. Do we need this for TMP cases?
   // TODO: Can we avoid the query read? I.e. how do we build the fragment ref?
   readFragment<FragmentType, TVariables = any>(
-    options: _Cache.ReadFragmentOptions<FragmentType, TVariables>,
+    options: ApolloCacheTypes.ReadFragmentOptions<FragmentType, TVariables>,
     optimistic = !!options.optimistic,
   ): FragmentType | null {
     const x = this.read({
@@ -176,8 +176,8 @@ export class Cache extends ApolloCache<RecordMap> {
    * NOTE: This version will never return missing field errors.
    */
   diff<TData = any, TVariables = any>(
-    options: _Cache.DiffOptions,
-  ): _Cache.DiffResult<TData> {
+    options: ApolloCacheTypes.DiffOptions,
+  ): ApolloCacheTypes.DiffResult<TData> {
     const snapshot = this.getSnapshot(options);
     return {
       result: (snapshot.data as unknown) as TData,
@@ -187,7 +187,7 @@ export class Cache extends ApolloCache<RecordMap> {
 
   // TODO: Data selected by any fragment in a query should trigger notifications for the query.
   watch<TData = any, TVariables = any>(
-    options: _Cache.WatchOptions<TData, TVariables>,
+    options: ApolloCacheTypes.WatchOptions<TData, TVariables>,
   ): () => void {
     const operation = createOperationDescriptor(
       options.query,
@@ -232,6 +232,7 @@ export class Cache extends ApolloCache<RecordMap> {
   }
 
   // During the transaction, no broadcasts should be triggered.
+  // TODO: We are ignoring optimistic id atm.
   performTransaction(
     transaction: Transaction<RecordMap>,
     optimisticId?: string | null,
@@ -276,11 +277,11 @@ export class Cache extends ApolloCache<RecordMap> {
    ***************************************************************************/
 
   // https://github.com/facebook/relay/issues/233#issuecomment-1054489769
-  reset(options?: _Cache.ResetOptions): Promise<void> {
+  reset(options?: ApolloCacheTypes.ResetOptions): Promise<void> {
     throw new Error("Method not implemented.");
   }
 
-  evict(options: _Cache.EvictOptions): boolean {
+  evict(options: ApolloCacheTypes.EvictOptions): boolean {
     throw new Error("Method not implemented.");
   }
 
@@ -288,7 +289,7 @@ export class Cache extends ApolloCache<RecordMap> {
    * Private
    ***************************************************************************/
 
-  private getSnapshot(options: _Cache.DiffOptions): Snapshot {
+  private getSnapshot(options: ApolloCacheTypes.DiffOptions): Snapshot {
     const request = getRequest(options.query);
     const operation = createOperationDescriptor(
       request,

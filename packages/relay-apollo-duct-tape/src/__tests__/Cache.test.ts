@@ -1,7 +1,6 @@
 import { graphql } from "@graphitation/graphql-js-tag";
-import { Cache } from "../Cache";
+import { RelayStoreCache } from "../Cache";
 import { InMemoryCache } from "@apollo/client";
-import { Store, RecordSource } from "relay-runtime";
 
 import RelayQuery from "./__generated__/CacheTestQuery.graphql";
 import RelayFragment from "./__generated__/CacheTestFragment.graphql";
@@ -32,15 +31,15 @@ const RESPONSE = {
   },
 };
 
+function apollo() {
+  return new InMemoryCache({ addTypename: false });
+}
+
+function relay() {
+  return new RelayStoreCache();
+}
+
 describe("writeQuery/readQuery", () => {
-  function apollo() {
-    return new InMemoryCache({ addTypename: false });
-  }
-
-  function relay() {
-    return new Cache();
-  }
-
   it.each([
     { client: apollo, query: ApolloQuery as any },
     { client: relay, query: RelayQuery as any },
@@ -82,7 +81,7 @@ describe("writeQuery/readQuery", () => {
       cache.readQuery({
         query,
         variables: { conversationId: "42" },
-        // optimistic: false,
+        // optimistic: false, // This is the default
       }),
     ).toBeNull();
     expect(
@@ -103,14 +102,6 @@ describe("writeQuery/readQuery", () => {
 });
 
 describe("writeFragment/writeFragment", () => {
-  function apollo() {
-    return new InMemoryCache({ addTypename: false });
-  }
-
-  function relay() {
-    return new Cache();
-  }
-
   it.each([
     { client: apollo, fragment: ApolloFragment as any },
     { client: relay, fragment: RelayFragment as any },
@@ -173,14 +164,6 @@ describe("writeFragment/writeFragment", () => {
 });
 
 describe("watch", () => {
-  function apollo() {
-    return new InMemoryCache({ addTypename: false });
-  }
-
-  function relay() {
-    return new Cache();
-  }
-
   it.each([
     { client: apollo, query: ApolloQuery as any },
     { client: relay, query: RelayQuery as any },
@@ -260,14 +243,6 @@ describe("watch", () => {
 });
 
 describe("batch", () => {
-  function apollo() {
-    return new InMemoryCache({ addTypename: false });
-  }
-
-  function relay() {
-    return new Cache();
-  }
-
   it.each([
     { client: apollo, query: ApolloQuery as any },
     { client: relay, query: RelayQuery as any },
@@ -314,14 +289,6 @@ describe("batch", () => {
 });
 
 describe("diff", () => {
-  function apollo() {
-    return new InMemoryCache({ addTypename: false });
-  }
-
-  function relay() {
-    return new Cache();
-  }
-
   beforeAll(() => {
     jest.spyOn(console, "error").mockImplementation(() => {});
   });
@@ -373,14 +340,6 @@ describe("diff", () => {
 });
 
 describe("extract/restore", () => {
-  function apollo() {
-    return new InMemoryCache({ addTypename: false });
-  }
-
-  function relay() {
-    return new Cache();
-  }
-
   it.each([
     { client: apollo, query: ApolloQuery as any },
     { client: relay, query: RelayQuery as any },
