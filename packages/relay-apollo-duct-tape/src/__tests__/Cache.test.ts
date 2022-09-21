@@ -43,7 +43,7 @@ describe("writeQuery/readQuery", () => {
   it.each([
     { client: apollo, query: ApolloQuery as any },
     { client: relay, query: RelayQuery as any },
-  ])("commits with $client.name", ({ client, query }) => {
+  ])("works with $client.name", ({ client, query }) => {
     const cache = client();
     cache.writeQuery({
       query,
@@ -65,39 +65,80 @@ describe("writeQuery/readQuery", () => {
     `);
   });
 
-  it.each([
-    { client: apollo, query: ApolloQuery as any },
-    { client: relay, query: RelayQuery as any },
-  ])("applies optimistically with $client.name", ({ client, query }) => {
-    const cache = client();
-    cache.recordOptimisticTransaction((c) => {
-      c.writeQuery({
+  describe("concerning optimistic updates", () => {
+    it.each([
+      { client: apollo, query: ApolloQuery as any },
+      { client: relay, query: RelayQuery as any },
+    ])("applies update with $client.name", ({ client, query }) => {
+      const cache = client();
+      cache.recordOptimisticTransaction((c) => {
+        c.writeQuery({
+          query,
+          data: RESPONSE,
+          variables: { conversationId: "42" },
+        });
+      }, "some-id");
+      expect(
+        cache.readQuery({
+          query,
+          variables: { conversationId: "42" },
+          // optimistic: false, // This is the default
+        }),
+      ).toBeNull();
+      expect(
+        cache.readQuery({
+          query,
+          variables: { conversationId: "42" },
+          optimistic: true,
+        }),
+      ).toMatchInlineSnapshot(`
+        Object {
+          "conversation": Object {
+            "id": "42",
+            "title": "Hello World",
+          },
+        }
+      `);
+    });
+
+    it.each([
+      { client: apollo, query: ApolloQuery as any },
+      { client: relay, query: RelayQuery as any },
+    ])("applies update with $client.name", ({ client, query }) => {
+      const cache = client();
+      cache.writeQuery({
         query,
         data: RESPONSE,
         variables: { conversationId: "42" },
       });
-    }, "some-id");
-    expect(
-      cache.readQuery({
-        query,
-        variables: { conversationId: "42" },
-        // optimistic: false, // This is the default
-      }),
-    ).toBeNull();
-    expect(
-      cache.readQuery({
-        query,
-        variables: { conversationId: "42" },
-        optimistic: true,
-      }),
-    ).toMatchInlineSnapshot(`
-      Object {
-        "conversation": Object {
-          "id": "42",
-          "title": "Hello World",
-        },
-      }
-    `);
+      cache.recordOptimisticTransaction((c) => {
+        c.writeQuery({
+          query,
+          data: {
+            conversation: {
+              ...RESPONSE.conversation,
+              title: "Hello Optimistic World",
+            },
+          },
+          variables: { conversationId: "42" },
+        });
+      }, "some-transaction-id");
+      cache.removeOptimistic("some-transaction-id");
+      expect(
+        cache.readQuery({
+          query,
+          variables: { conversationId: "42" },
+          optimistic: true,
+        }),
+      ).toMatchInlineSnapshot(`
+        Object {
+          "conversation": Object {
+            "id": "42",
+            "title": "Hello World",
+          },
+        }
+      `);
+    });
   });
 });
 

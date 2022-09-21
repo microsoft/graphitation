@@ -32,6 +32,7 @@ import RelayRecordSource from "relay-runtime/lib/store/RelayRecordSource";
 import * as RelayModernRecord from "relay-runtime/lib/store/RelayModernRecord";
 import * as RelayResponseNormalizer from "relay-runtime/lib/store/RelayResponseNormalizer";
 import {
+  OptimisticUpdate,
   PublishQueue,
   RecordMap,
   SingularReaderSelector,
@@ -50,11 +51,14 @@ import {
 
 import invariant from "invariant";
 
+type OptimisticTransaction = WeakRef<OptimisticUpdate>[];
+
 export class RelayStoreCache extends ApolloCache<RecordMap> {
   private store: Store;
   private usingExternalStore: boolean;
-  private inTransation: boolean | string;
+  private inTransation: boolean | OptimisticTransaction;
   private publishQueue: PublishQueue;
+  private optimisticTransactions: Map<string, OptimisticTransaction>;
 
   constructor(store?: Store) {
     super();
@@ -62,6 +66,7 @@ export class RelayStoreCache extends ApolloCache<RecordMap> {
     this.usingExternalStore = !!store;
     this.inTransation = false;
     this.publishQueue = new RelayPublishQueue(this.store, null, getDataID);
+    this.optimisticTransactions = new Map();
   }
 
   /****************************************************************************
@@ -105,14 +110,16 @@ export class RelayStoreCache extends ApolloCache<RecordMap> {
       },
     );
 
-    if (typeof this.inTransation === "string") {
-      this.publishQueue.applyUpdate({
+    if (typeof this.inTransation === "boolean") {
+      this.publishQueue.commitPayload(operation, relayPayload);
+    } else {
+      const updater: OptimisticUpdate = {
         operation,
         payload: relayPayload,
         updater: null,
-      });
-    } else {
-      this.publishQueue.commitPayload(operation, relayPayload);
+      };
+      this.inTransation.push(createWeakRef(updater));
+      this.publishQueue.applyUpdate(updater);
     }
 
     if (!this.inTransation) {
@@ -141,16 +148,15 @@ export class RelayStoreCache extends ApolloCache<RecordMap> {
     options: ApolloCacheTypes.ReadFragmentOptions<FragmentType, TVariables>,
     optimistic = !!options.optimistic,
   ): FragmentType | null {
-    const x = this.read({
+    const queryResult = this.read({
       ...options,
       query: getNodeQuery(options.fragment, options.id || ROOT_ID),
       optimistic,
     }) as any;
-    if (!optimistic && x === null) {
+    if (!optimistic && queryResult === null) {
       return null;
     }
-
-    const fragmentRef = x.node;
+    const fragmentRef = queryResult.node;
 
     const fragmentSelector = getSelector(options.fragment, fragmentRef);
     invariant(
@@ -228,21 +234,47 @@ export class RelayStoreCache extends ApolloCache<RecordMap> {
    ***************************************************************************/
 
   removeOptimistic(id: string): void {
-    // throw new Error("Method not implemented.");
+    const optimisticTransaction = this.optimisticTransactions.get(id);
+    invariant(
+      optimisticTransaction,
+      "No optimistic transaction exists with id: %s",
+      id,
+    );
+    optimisticTransaction.forEach((updaterRef) => {
+      const optimisticUpdate = updaterRef.deref();
+      invariant(
+        optimisticUpdate,
+        "Optimistic update was already released but not removed in transaction with id: %s",
+        id,
+      );
+      this.publishQueue.revertUpdate(optimisticUpdate);
+    });
+    this.publishQueue.run();
   }
 
   // During the transaction, no broadcasts should be triggered.
-  // TODO: We are ignoring optimistic id atm.
   performTransaction(
-    transaction: Transaction<RecordMap>,
+    callback: Transaction<RecordMap>,
     optimisticId?: string | null,
   ): void {
     invariant(!this.inTransation, "Already in a transaction");
     try {
-      this.inTransation = optimisticId || true;
-      transaction(this);
+      if (optimisticId) {
+        invariant(
+          !this.optimisticTransactions.has(optimisticId),
+          "An optimistic transaction already exists with id: %s",
+          optimisticId,
+        );
+        const transaction: OptimisticTransaction = [];
+        this.optimisticTransactions.set(optimisticId, transaction);
+        this.inTransation = transaction;
+      } else {
+        this.inTransation = true;
+      }
+      callback(this);
       this.publishQueue.run();
     } finally {
+      // TODO: Do we need to clean the publishQueue in case of exception?
       this.inTransation = false;
     }
   }
@@ -255,6 +287,7 @@ export class RelayStoreCache extends ApolloCache<RecordMap> {
     return this.store.getSource(optimistic).toJSON();
   }
 
+  // TODO: Check if we need this for react hot-reloads
   // TODO: Do we need to do cleanups first?
   /**
    * This version does not support restoring when an external store was passed
@@ -269,6 +302,7 @@ export class RelayStoreCache extends ApolloCache<RecordMap> {
     this.store = new RelayModernStore(
       RelayRecordSource.create(serializedState),
     );
+    this.publishQueue = new RelayPublishQueue(this.store, null, getDataID);
     return this;
   }
 
@@ -299,7 +333,16 @@ export class RelayStoreCache extends ApolloCache<RecordMap> {
   }
 }
 
-// ----
+function createWeakRef<T extends object>(value: T): WeakRef<T> {
+  if (typeof WeakRef === "function") {
+    return new WeakRef(value);
+  }
+  return {
+    deref() {
+      return value;
+    },
+  } as WeakRef<T>;
+}
 
 function getQueryResult(
   operation: OperationDescriptor,
