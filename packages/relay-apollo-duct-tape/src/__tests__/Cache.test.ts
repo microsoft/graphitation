@@ -44,7 +44,7 @@ describe("writeQuery/readQuery", () => {
   it.each([
     { client: apollo, query: ApolloQuery as any },
     { client: relay, query: RelayQuery as any },
-  ])("works with $client.name", ({ client, query }) => {
+  ])("commits with $client.name", ({ client, query }) => {
     const cache = client();
     cache.writeQuery({
       query,
@@ -55,6 +55,41 @@ describe("writeQuery/readQuery", () => {
       cache.readQuery({
         query,
         variables: { conversationId: "42" },
+      }),
+    ).toMatchInlineSnapshot(`
+      Object {
+        "conversation": Object {
+          "id": "42",
+          "title": "Hello World",
+        },
+      }
+    `);
+  });
+
+  it.each([
+    { client: apollo, query: ApolloQuery as any },
+    { client: relay, query: RelayQuery as any },
+  ])("applies optimistically with $client.name", ({ client, query }) => {
+    const cache = client();
+    cache.recordOptimisticTransaction((c) => {
+      c.writeQuery({
+        query,
+        data: RESPONSE,
+        variables: { conversationId: "42" },
+      });
+    }, "some-id");
+    expect(
+      cache.readQuery({
+        query,
+        variables: { conversationId: "42" },
+        // optimistic: false,
+      }),
+    ).toBeNull();
+    expect(
+      cache.readQuery({
+        query,
+        variables: { conversationId: "42" },
+        optimistic: true,
       }),
     ).toMatchInlineSnapshot(`
       Object {
@@ -92,6 +127,41 @@ describe("writeFragment/writeFragment", () => {
         id: "Conversation:42",
         fragment,
         variables: { conversationId: "42" },
+      }),
+    ).toMatchInlineSnapshot(`
+      Object {
+        "id": "42",
+        "title": "Hello World",
+      }
+    `);
+  });
+
+  it.each([
+    { client: apollo, fragment: ApolloFragment as any },
+    { client: relay, fragment: RelayFragment as any },
+  ])("works with $client.name and optimistic data", ({ client, fragment }) => {
+    const cache = client();
+    cache.recordOptimisticTransaction((c) => {
+      c.writeFragment({
+        fragment,
+        id: "Conversation:42",
+        data: RESPONSE.conversation,
+        variables: { conversationId: "42" },
+      });
+    }, "some-id");
+    expect(
+      cache.readFragment({
+        id: "Conversation:42",
+        fragment,
+        variables: { conversationId: "42" },
+      }),
+    ).toBeNull();
+    expect(
+      cache.readFragment({
+        id: "Conversation:42",
+        fragment,
+        variables: { conversationId: "42" },
+        optimistic: true,
       }),
     ).toMatchInlineSnapshot(`
       Object {

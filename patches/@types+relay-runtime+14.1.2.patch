@@ -155,6 +155,61 @@ index 4781023..0e416b4 100755
 +//  * Set the value of a field to a list of references other records.
 +//  */
 +// setLinkedRecordIDs(record: Record, storageKey: string, linkedIDs: DataID[] | null): void;
+diff --git a/node_modules/@types/relay-runtime/lib/store/RelayPublishQueue.d.ts b/node_modules/@types/relay-runtime/lib/store/RelayPublishQueue.d.ts
+new file mode 100644
+index 0000000..e4b515d
+--- /dev/null
++++ b/node_modules/@types/relay-runtime/lib/store/RelayPublishQueue.d.ts
+@@ -0,0 +1,48 @@
++import { Store, PublishQueue, OptimisticUpdate, StoreUpdater, RecordSource, OperationDescriptor, RelayResponsePayload, SelectorStoreUpdater, RequestDescriptor } from "./RelayStoreTypes";
++import { HandlerProvider } from "../handlers/RelayDefaultHandlerProvider";
++
++export default class RelayPublishQueue implements PublishQueue {
++    constructor(store: Store, handlerProvider: HandlerProvider | null | undefined, getDataId: (fieldValue: Record<string, unknown>, typeName: string) => unknown);
++
++    /**
++     * Schedule applying an optimistic updates on the next `run()`.
++     */
++     applyUpdate(updater: OptimisticUpdate): void;
++
++     /**
++      * Schedule reverting an optimistic updates on the next `run()`.
++      */
++     revertUpdate(updater: OptimisticUpdate): void;
++ 
++     /**
++      * Schedule a revert of all optimistic updates on the next `run()`.
++      */
++     revertAll(): void;
++ 
++     /**
++      * Schedule applying a payload to the store on the next `run()`.
++      */
++     commitPayload(
++         operation: OperationDescriptor,
++         payload: RelayResponsePayload,
++         updater?: SelectorStoreUpdater | null,
++     ): void;
++ 
++     /**
++      * Schedule an updater to mutate the store on the next `run()` typically to
++      * update client schema fields.
++      */
++     commitUpdate(updater: StoreUpdater): void;
++ 
++     /**
++      * Schedule a publish to the store from the provided source on the next
++      * `run()`. As an example, to update the store with substituted fields that
++      * are missing in the store.
++      */
++     commitSource(source: RecordSource): void;
++ 
++     /**
++      * Execute all queued up operations from the other public methods.
++      */
++     run(): ReadonlyArray<RequestDescriptor>;
++}
+\ No newline at end of file
 diff --git a/node_modules/@types/relay-runtime/lib/store/RelayRecordSource.d.ts b/node_modules/@types/relay-runtime/lib/store/RelayRecordSource.d.ts
 index 514c207..f53508c 100755
 --- a/node_modules/@types/relay-runtime/lib/store/RelayRecordSource.d.ts
@@ -168,3 +223,38 @@ index 514c207..f53508c 100755
      constructor(records?: RecordMap);
  
      static create(records?: RecordMap): MutableRecordSource;
+diff --git a/node_modules/@types/relay-runtime/lib/store/RelayStoreTypes.d.ts b/node_modules/@types/relay-runtime/lib/store/RelayStoreTypes.d.ts
+index 8566ca5..8d733db 100755
+--- a/node_modules/@types/relay-runtime/lib/store/RelayStoreTypes.d.ts
++++ b/node_modules/@types/relay-runtime/lib/store/RelayStoreTypes.d.ts
+@@ -90,7 +90,7 @@ export interface NormalizationSelector {
+ export interface TypedSnapshot<TData> {
+     readonly data: TData;
+     readonly isMissingData: boolean;
+-    readonly seenRecords: RecordMap;
++    readonly seenRecords: Set<Record>;
+     readonly selector: SingularReaderSelector;
+ }
+ export type Snapshot = TypedSnapshot<SelectorData>;
+@@ -233,7 +233,7 @@ export interface Store {
+      * Optionally takes an owner, corresponding to the operation that
+      * owns this selector (fragment).
+      */
+-    lookup(selector: SingularReaderSelector): Snapshot;
++    lookup(selector: SingularReaderSelector, includeOptimisticSource?: boolean): Snapshot;
+ 
+     /**
+      * Notify subscribers (see `subscribe`) of any data that was published
+@@ -411,12 +411,6 @@ export interface RecordSourceSelectorProxy<T = {}> extends RecordSourceProxy {
+     invalidateStore(): void;
+ }
+ 
+-interface OperationDescriptor {
+-    readonly fragment: SingularReaderSelector;
+-    readonly request: RequestDescriptor;
+-    readonly root: NormalizationSelector;
+-}
+-
+ export type LogEvent =
+     | Readonly<{
+           name: 'suspense.fragment';

@@ -43,14 +43,15 @@ import * as RelayResponseNormalizer from "relay-runtime/lib/store/RelayResponseN
 import {
   PublishQueue,
   SingularReaderSelector,
+  Snapshot,
   Store,
 } from "relay-runtime/lib/store/RelayStoreTypes";
-const RelayPublishQueue = require("relay-runtime/lib/store/RelayPublishQueue");
+import RelayPublishQueue from "relay-runtime/lib/store/RelayPublishQueue";
 
 type TSerialized = unknown;
 
 export class Cache extends ApolloCache<TSerialized> {
-  private inTransation: boolean;
+  private inTransation: boolean | string;
   private publishQueue: PublishQueue;
 
   constructor(private store: Store) {
@@ -59,18 +60,22 @@ export class Cache extends ApolloCache<TSerialized> {
     this.publishQueue = new RelayPublishQueue(store, null, getDataID);
   }
 
+  private getSnapshot(options: _Cache.DiffOptions): Snapshot {
+    const request = getRequest(options.query);
+    const operation = createOperationDescriptor(
+      request,
+      options.variables || {},
+    );
+    return this.store.lookup(operation.fragment, options.optimistic);
+  }
+
   /**
    * NOTE: This version will never return missing field errors.
    */
   diff<TData = any, TVariables = any>(
     options: _Cache.DiffOptions,
   ): _Cache.DiffResult<TData> {
-    const request = getRequest(options.query);
-    const operation = createOperationDescriptor(
-      request,
-      options.variables || {},
-    );
-    const snapshot = this.store.lookup(operation.fragment);
+    const snapshot = this.getSnapshot(options);
     return {
       result: (snapshot.data as unknown) as TData,
       complete: !snapshot.isMissingData,
@@ -137,9 +142,9 @@ export class Cache extends ApolloCache<TSerialized> {
     transaction: Transaction<TSerialized>,
     optimisticId?: string | null,
   ): void {
-    invariant(this.inTransation === false, "Already in a transaction");
+    invariant(!this.inTransation, "Already in a transaction");
     try {
-      this.inTransation = true;
+      this.inTransation = optimisticId || true;
       transaction(this);
       this.publishQueue.run();
     } finally {
@@ -151,7 +156,12 @@ export class Cache extends ApolloCache<TSerialized> {
   read<TData = any, TVariables = any>(
     options: _Cache.ReadOptions<TVariables, TData>,
   ): TData | null {
-    return this.diff(options).result as TData;
+    const snapshot = this.getSnapshot(options);
+    // TODO: Is knowning that the store only saw the root record good enough?
+    if (!options.optimistic && snapshot.seenRecords.size === 1) {
+      return null;
+    }
+    return (snapshot.data as unknown) as TData;
   }
 
   // TODO: When is Reference as return type used?
@@ -178,7 +188,16 @@ export class Cache extends ApolloCache<TSerialized> {
         request: operation.request,
       },
     );
-    this.publishQueue.commitPayload(operation, relayPayload);
+
+    if (typeof this.inTransation === "string") {
+      this.publishQueue.applyUpdate({
+        operation,
+        payload: relayPayload,
+        updater: null,
+      });
+    } else {
+      this.publishQueue.commitPayload(operation, relayPayload);
+    }
 
     if (!this.inTransation) {
       this.publishQueue.run();
@@ -211,17 +230,20 @@ export class Cache extends ApolloCache<TSerialized> {
   }
 
   // TODO: This version only supports 1 level of fragment atm. We would have to recurse into the data to fetch data of other fragments. Do we need this for TMP cases?
-  // TODO: Ignoring optimistic param atm
   // TODO: Can we avoid the query read? I.e. how do we build the fragment ref?
   readFragment<FragmentType, TVariables = any>(
     options: _Cache.ReadFragmentOptions<FragmentType, TVariables>,
-    optimistic?: boolean,
+    optimistic = !!options.optimistic,
   ): FragmentType | null {
     const x = this.read({
       ...options,
       query: getNodeQuery(options.fragment, options.id || ROOT_ID),
-      optimistic: false,
+      optimistic,
     }) as any;
+    if (!optimistic && x === null) {
+      return null;
+    }
+
     const fragmentRef = x.node;
 
     const fragmentSelector = getSelector(options.fragment, fragmentRef);
