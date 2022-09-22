@@ -10,6 +10,7 @@ import {
   DocumentNode,
   visit,
   Kind,
+  parse,
 } from "graphql";
 import { extname } from "path";
 import {
@@ -29,8 +30,10 @@ import {
 import dedupeJSONStringify from "relay-compiler/lib/util/dedupeJSONStringify";
 import { Request } from "relay-compiler/lib/core/IR";
 import { addTypesToRequestDocument } from "@graphitation/supermassive/lib/index.js";
+import { print } from "relay-compiler/lib/core/IRPrinter";
 import type { DocumentNode as SupermassiveDocumentNode } from "@graphitation/supermassive";
-import { DefinitionNode } from "@graphitation/supermassive/src/ast/TypedAST";
+import { OperationDefinitionNode } from "@graphitation/supermassive/src/ast/TypedAST";
+import inlineFragmentsTransform from "./InlineFragmentsWithoutRemovingFragmentsTransform";
 
 export const plugin: PluginFunction<RawClientSideBasePluginConfig> = (
   schema: GraphQLSchema,
@@ -39,7 +42,7 @@ export const plugin: PluginFunction<RawClientSideBasePluginConfig> = (
 ) => {
   const relaySchema = createRelaySchema(new Source(printSchema(schema)));
   let compilerContext = new CompilerContext(relaySchema);
-  const definitionsByName: { [key: string]: DefinitionNode } = {};
+  const documentsByName: { [key: string]: SupermassiveDocumentNode } = {};
   documents.forEach(({ document, rawSDL }) => {
     if (document && rawSDL) {
       const supermassiveDocument: SupermassiveDocumentNode = addTypesToRequestDocument(
@@ -57,16 +60,13 @@ export const plugin: PluginFunction<RawClientSideBasePluginConfig> = (
           },
         }),
       );
-      for (const definition of supermassiveDocument.definitions) {
-        if (
-          definition &&
-          (definition.kind === "OperationDefinition" ||
-            definition.kind === "FragmentDefinition") &&
-          definition.name?.value
-        ) {
-          definitionsByName[definition.name.value] = definition;
-        }
+      const operation = supermassiveDocument.definitions.find(
+        ({ kind }) => kind === "OperationDefinition",
+      ) as OperationDefinitionNode | undefined;
+      if (operation && operation.name?.value) {
+        documentsByName[operation.name.value] = supermassiveDocument;
       }
+
       const parsed = parseRelay(relaySchema, rawSDL);
       for (const node of parsed) {
         compilerContext = compilerContext.add(node);
@@ -78,12 +78,13 @@ export const plugin: PluginFunction<RawClientSideBasePluginConfig> = (
     ...(codegenTransforms as IRTransform[]),
   ]);
   const fragmentCompilerContext = compilerContext.applyTransforms([
+    inlineFragmentsTransform,
     ...(fragmentTransforms as IRTransform[]),
   ]);
   const results: Array<{ name: string; node: string }> = [];
   queryCompilerContext.forEachDocument((node) => {
     if (node.kind === "Root") {
-      const fragment = compilerContext.getRoot(node.name);
+      const fragment = queryCompilerContext.getRoot(node.name);
       const name = fragment.name;
       const request: Request = {
         kind: "Request",
@@ -104,11 +105,10 @@ export const plugin: PluginFunction<RawClientSideBasePluginConfig> = (
         root: node,
         text: "",
       };
-      const definition = definitionsByName[name] || {};
-      const document = {
-        kind: Kind.DOCUMENT,
-        definitions: [definition],
-      };
+      const document = documentsByName[name];
+      if (!document) {
+        throw new Error("Some weird document we can't find: " + name);
+      }
       let generatedNode = generateRelay(relaySchema, request);
       results.push({
         name,
@@ -124,11 +124,9 @@ export const plugin: PluginFunction<RawClientSideBasePluginConfig> = (
     if (node.kind === "Fragment") {
       const generatedNode = generateRelay(relaySchema, node);
       const name = generatedNode.name;
-      const definition = definitionsByName[name] || {};
-      const document = {
-        kind: Kind.DOCUMENT,
-        definitions: [definition],
-      };
+      const document = parse(print(relaySchema, node), {
+        noLocation: true,
+      });
 
       results.push({
         name,

@@ -178,6 +178,13 @@ declare module "relay-compiler/lib/core/RelayParser" {
   ): ReadonlyArray<Root | Fragment>;
 }
 
+declare module "relay-compiler/lib/core/IRPrinter" {
+  import { CompilerContextDocument } from "relay-compiler/lib/core/CompilerContext";
+  import { Schema } from "relay-compiler/lib/core/Schema";
+
+  export function print(schema: Schema, node: CompilerContextDocument): string;
+}
+
 declare module "relay-compiler/lib/core/CompilerContext" {
   import {
     Field as IRField,
@@ -239,8 +246,6 @@ declare module "relay-compiler/lib/codegen/RelayCodeGenerator" {
   ): NormalizationSplitOperation;
 }
 
-declare module "relay-compiler/lib/util";
-
-declare module "relay-compiler/lib/util/dedupeJSONSringify" {
+declare module "relay-compiler/lib/util/dedupeJSONStringify" {
   export default function dedupeJSONStringify(jsonValue: any): string;
 }

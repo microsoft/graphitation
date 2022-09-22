@@ -6,7 +6,7 @@
 
 import * as Types from '../src/__generated__/types.js';
 
-import { DocumentNode } from "graphql"
+import { DocumentNode } from "graphql";
 export type TodoUpdatesSubscriptionSubscriptionVariables = Types.Exact<{
   limit: Types.Scalars['Int'];
 }>;
@@ -14,7 +14,7 @@ export type TodoUpdatesSubscriptionSubscriptionVariables = Types.Exact<{
 
 export type TodoUpdatesSubscriptionSubscription = { __typename?: 'Subscription', emitTodos?: { __typename?: 'Todo', id: string, text: string, isCompleted: boolean } | null };
 
-export type TodoFragmentFragment = { __typename?: 'Todo', id: string, text: string, isCompleted: boolean };
+export type TodoSubscriptionFragmentFragment = { __typename?: 'Todo', id: string, text: string, isCompleted: boolean };
 
 export const TodoUpdatesSubscriptionDocument: DocumentNode = (function(){
 var v0 = {
@@ -35,27 +35,83 @@ v2 = {
     }
   }
 },
-v3 = [
+v3 = {
+  "kind": "Field",
+  "name": {
+    "kind": "Name",
+    "value": "id"
+  },
+  "arguments": ([]/*: any*/),
+  "directives": ([]/*: any*/),
+  "__type": {
+    "kind": "NonNullType",
+    "type": {
+      "kind": "NamedType",
+      "name": {
+        "kind": "Name",
+        "value": "ID"
+      }
+    }
+  }
+},
+v4 = {
+  "kind": "Name",
+  "value": "TodoSubscriptionFragment"
+},
+v5 = {
+  "kind": "NamedType",
+  "name": {
+    "kind": "Name",
+    "value": "Todo"
+  }
+},
+v6 = [
   {
     "defaultValue": null,
     "kind": "LocalArgument",
     "name": "limit"
   }
 ],
-v4 = [
+v7 = [
   {
-    "kind": "Variable",
-    "name": "limit",
-    "variableName": "limit"
+    "alias": null,
+    "args": [
+      {
+        "kind": "Variable",
+        "name": "limit",
+        "variableName": "limit"
+      }
+    ],
+    "concreteType": "Todo",
+    "kind": "LinkedField",
+    "name": "emitTodos",
+    "plural": false,
+    "selections": [
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "id",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "text",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "isCompleted",
+        "storageKey": null
+      }
+    ],
+    "storageKey": null
   }
-],
-v5 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "id",
-  "storageKey": null
-};
+];
 return {
   "kind": "Document",
   "definitions": [
@@ -96,158 +152,28 @@ return {
             "selectionSet": {
               "kind": "SelectionSet",
               "selections": [
-                {
-                  "kind": "Field",
-                  "name": {
-                    "kind": "Name",
-                    "value": "id"
-                  },
-                  "arguments": [],
-                  "directives": [],
-                  "__type": {
-                    "kind": "NonNullType",
-                    "type": {
-                      "kind": "NamedType",
-                      "name": {
-                        "kind": "Name",
-                        "value": "ID"
-                      }
-                    }
-                  }
-                },
+                (v3/*: any*/),
                 {
                   "kind": "FragmentSpread",
-                  "name": {
-                    "kind": "Name",
-                    "value": "TodoFragment"
-                  },
+                  "name": (v4/*: any*/),
                   "directives": []
                 }
               ]
             },
-            "__type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "Todo"
-              }
-            }
+            "__type": (v5/*: any*/)
           }
         ]
       }
-    }
-  ],
-  "__relay": {
-    "fragment": {
-      "argumentDefinitions": (v3/*: any*/),
-      "kind": "Fragment",
-      "metadata": null,
-      "name": "TodoUpdatesSubscription",
-      "selections": [
-        {
-          "alias": null,
-          "args": (v4/*: any*/),
-          "concreteType": "Todo",
-          "kind": "LinkedField",
-          "name": "emitTodos",
-          "plural": false,
-          "selections": [
-            (v5/*: any*/),
-            {
-              "args": null,
-              "kind": "FragmentSpread",
-              "name": "TodoFragment"
-            }
-          ],
-          "storageKey": null
-        }
-      ],
-      "type": "Subscription",
-      "abstractKey": null
     },
-    "kind": "Request",
-    "operation": {
-      "argumentDefinitions": (v3/*: any*/),
-      "kind": "Operation",
-      "name": "TodoUpdatesSubscription",
-      "selections": [
-        {
-          "alias": null,
-          "args": (v4/*: any*/),
-          "concreteType": "Todo",
-          "kind": "LinkedField",
-          "name": "emitTodos",
-          "plural": false,
-          "selections": [
-            (v5/*: any*/),
-            {
-              "alias": null,
-              "args": null,
-              "kind": "ScalarField",
-              "name": "text",
-              "storageKey": null
-            },
-            {
-              "alias": null,
-              "args": null,
-              "kind": "ScalarField",
-              "name": "isCompleted",
-              "storageKey": null
-            }
-          ],
-          "storageKey": null
-        }
-      ]
-    },
-    "params": {
-      "cacheID": "d41d8cd98f00b204e9800998ecf8427e",
-      "metadata": {},
-      "name": "TodoUpdatesSubscription",
-      "operationKind": "subscription",
-      "text": ""
-    }
-  }
-};
-})();
-export const TodoFragmentDocument: DocumentNode = {
-  "kind": "Document",
-  "definitions": [
     {
       "kind": "FragmentDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "TodoFragment"
-      },
-      "typeCondition": {
-        "kind": "NamedType",
-        "name": {
-          "kind": "Name",
-          "value": "Todo"
-        }
-      },
+      "name": (v4/*: any*/),
+      "typeCondition": (v5/*: any*/),
       "directives": [],
       "selectionSet": {
         "kind": "SelectionSet",
         "selections": [
-          {
-            "kind": "Field",
-            "name": {
-              "kind": "Name",
-              "value": "id"
-            },
-            "arguments": [],
-            "directives": [],
-            "__type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "ID"
-                }
-              }
-            }
-          },
+          (v3/*: any*/),
           {
             "kind": "Field",
             "name": {
@@ -291,10 +217,88 @@ export const TodoFragmentDocument: DocumentNode = {
     }
   ],
   "__relay": {
+    "fragment": {
+      "argumentDefinitions": (v6/*: any*/),
+      "kind": "Fragment",
+      "metadata": null,
+      "name": "TodoUpdatesSubscription",
+      "selections": (v7/*: any*/),
+      "type": "Subscription",
+      "abstractKey": null
+    },
+    "kind": "Request",
+    "operation": {
+      "argumentDefinitions": (v6/*: any*/),
+      "kind": "Operation",
+      "name": "TodoUpdatesSubscription",
+      "selections": (v7/*: any*/)
+    },
+    "params": {
+      "cacheID": "d41d8cd98f00b204e9800998ecf8427e",
+      "metadata": {},
+      "name": "TodoUpdatesSubscription",
+      "operationKind": "subscription",
+      "text": ""
+    }
+  }
+};
+})();
+export const TodoSubscriptionFragmentDocument: DocumentNode = {
+  "kind": "Document",
+  "definitions": [
+    {
+      "kind": "FragmentDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "TodoSubscriptionFragment"
+      },
+      "typeCondition": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "Todo"
+        }
+      },
+      "directives": [],
+      "selectionSet": {
+        "kind": "SelectionSet",
+        "selections": [
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "id"
+            },
+            "arguments": [],
+            "directives": []
+          },
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "text"
+            },
+            "arguments": [],
+            "directives": []
+          },
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "isCompleted"
+            },
+            "arguments": [],
+            "directives": []
+          }
+        ]
+      }
+    }
+  ],
+  "__relay": {
     "argumentDefinitions": [],
     "kind": "Fragment",
     "metadata": null,
-    "name": "TodoFragment",
+    "name": "TodoSubscriptionFragment",
     "selections": [
       {
         "alias": null,

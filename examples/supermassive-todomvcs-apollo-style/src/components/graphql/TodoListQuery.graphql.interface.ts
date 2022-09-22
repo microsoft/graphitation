@@ -6,7 +6,7 @@
 
 import * as Types from '../src/__generated__/types.js';
 
-import { DocumentNode } from "graphql"
+import { DocumentNode } from "graphql";
 export type TodoListQueryQueryVariables = Types.Exact<{ [key: string]: never; }>;
 
 
@@ -14,14 +14,77 @@ export type TodoListQueryQuery = { __typename?: 'Query', allTodos: Array<{ __typ
 
 export type TodoFragmentFragment = { __typename?: 'Todo', id: string, text: string, isCompleted: boolean };
 
+export type TodoCompletedFragmentFragment = { __typename?: 'Todo', isCompleted: boolean };
+
 export const TodoListQueryDocument: DocumentNode = (function(){
 var v0 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "id",
-  "storageKey": null
-};
+  "kind": "Field",
+  "name": {
+    "kind": "Name",
+    "value": "id"
+  },
+  "arguments": ([]/*: any*/),
+  "directives": ([]/*: any*/),
+  "__type": {
+    "kind": "NonNullType",
+    "type": {
+      "kind": "NamedType",
+      "name": {
+        "kind": "Name",
+        "value": "ID"
+      }
+    }
+  }
+},
+v1 = {
+  "kind": "Name",
+  "value": "TodoFragment"
+},
+v2 = {
+  "kind": "NamedType",
+  "name": {
+    "kind": "Name",
+    "value": "Todo"
+  }
+},
+v3 = {
+  "kind": "Name",
+  "value": "TodoCompletedFragment"
+},
+v4 = [
+  {
+    "alias": null,
+    "args": null,
+    "concreteType": "Todo",
+    "kind": "LinkedField",
+    "name": "allTodos",
+    "plural": true,
+    "selections": [
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "id",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "text",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "isCompleted",
+        "storageKey": null
+      }
+    ],
+    "storageKey": null
+  }
+];
 return {
   "kind": "Document",
   "definitions": [
@@ -48,31 +111,10 @@ return {
             "selectionSet": {
               "kind": "SelectionSet",
               "selections": [
-                {
-                  "kind": "Field",
-                  "name": {
-                    "kind": "Name",
-                    "value": "id"
-                  },
-                  "arguments": [],
-                  "directives": [],
-                  "__type": {
-                    "kind": "NonNullType",
-                    "type": {
-                      "kind": "NamedType",
-                      "name": {
-                        "kind": "Name",
-                        "value": "ID"
-                      }
-                    }
-                  }
-                },
+                (v0/*: any*/),
                 {
                   "kind": "FragmentSpread",
-                  "name": {
-                    "kind": "Name",
-                    "value": "TodoFragment"
-                  },
+                  "name": (v1/*: any*/),
                   "directives": []
                 }
               ]
@@ -83,13 +125,73 @@ return {
                 "kind": "ListType",
                 "type": {
                   "kind": "NonNullType",
-                  "type": {
-                    "kind": "NamedType",
-                    "name": {
-                      "kind": "Name",
-                      "value": "Todo"
-                    }
-                  }
+                  "type": (v2/*: any*/)
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "FragmentDefinition",
+      "name": (v1/*: any*/),
+      "typeCondition": (v2/*: any*/),
+      "directives": [],
+      "selectionSet": {
+        "kind": "SelectionSet",
+        "selections": [
+          (v0/*: any*/),
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "text"
+            },
+            "arguments": [],
+            "directives": [],
+            "__type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String"
+                }
+              }
+            }
+          },
+          {
+            "kind": "FragmentSpread",
+            "name": (v3/*: any*/),
+            "directives": []
+          }
+        ]
+      }
+    },
+    {
+      "kind": "FragmentDefinition",
+      "name": (v3/*: any*/),
+      "typeCondition": (v2/*: any*/),
+      "directives": [],
+      "selectionSet": {
+        "kind": "SelectionSet",
+        "selections": [
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "isCompleted"
+            },
+            "arguments": [],
+            "directives": [],
+            "__type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Boolean"
                 }
               }
             }
@@ -104,25 +206,7 @@ return {
       "kind": "Fragment",
       "metadata": null,
       "name": "TodoListQuery",
-      "selections": [
-        {
-          "alias": null,
-          "args": null,
-          "concreteType": "Todo",
-          "kind": "LinkedField",
-          "name": "allTodos",
-          "plural": true,
-          "selections": [
-            (v0/*: any*/),
-            {
-              "args": null,
-              "kind": "FragmentSpread",
-              "name": "TodoFragment"
-            }
-          ],
-          "storageKey": null
-        }
-      ],
+      "selections": (v4/*: any*/),
       "type": "Query",
       "abstractKey": null
     },
@@ -131,34 +215,7 @@ return {
       "argumentDefinitions": [],
       "kind": "Operation",
       "name": "TodoListQuery",
-      "selections": [
-        {
-          "alias": null,
-          "args": null,
-          "concreteType": "Todo",
-          "kind": "LinkedField",
-          "name": "allTodos",
-          "plural": true,
-          "selections": [
-            (v0/*: any*/),
-            {
-              "alias": null,
-              "args": null,
-              "kind": "ScalarField",
-              "name": "text",
-              "storageKey": null
-            },
-            {
-              "alias": null,
-              "args": null,
-              "kind": "ScalarField",
-              "name": "isCompleted",
-              "storageKey": null
-            }
-          ],
-          "storageKey": null
-        }
-      ]
+      "selections": (v4/*: any*/)
     },
     "params": {
       "cacheID": "d41d8cd98f00b204e9800998ecf8427e",
@@ -197,17 +254,7 @@ export const TodoFragmentDocument: DocumentNode = {
               "value": "id"
             },
             "arguments": [],
-            "directives": [],
-            "__type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "ID"
-                }
-              }
-            }
+            "directives": []
           },
           {
             "kind": "Field",
@@ -216,17 +263,7 @@ export const TodoFragmentDocument: DocumentNode = {
               "value": "text"
             },
             "arguments": [],
-            "directives": [],
-            "__type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "String"
-                }
-              }
-            }
+            "directives": []
           },
           {
             "kind": "Field",
@@ -235,17 +272,7 @@ export const TodoFragmentDocument: DocumentNode = {
               "value": "isCompleted"
             },
             "arguments": [],
-            "directives": [],
-            "__type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Boolean"
-                }
-              }
-            }
+            "directives": []
           }
         ]
       }
@@ -271,6 +298,57 @@ export const TodoFragmentDocument: DocumentNode = {
         "name": "text",
         "storageKey": null
       },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "isCompleted",
+        "storageKey": null
+      }
+    ],
+    "type": "Todo",
+    "abstractKey": null
+  }
+};
+export const TodoCompletedFragmentDocument: DocumentNode = {
+  "kind": "Document",
+  "definitions": [
+    {
+      "kind": "FragmentDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "TodoCompletedFragment"
+      },
+      "typeCondition": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "Todo"
+        }
+      },
+      "directives": [],
+      "selectionSet": {
+        "kind": "SelectionSet",
+        "selections": [
+          {
+            "kind": "Field",
+            "name": {
+              "kind": "Name",
+              "value": "isCompleted"
+            },
+            "arguments": [],
+            "directives": []
+          }
+        ]
+      }
+    }
+  ],
+  "__relay": {
+    "argumentDefinitions": [],
+    "kind": "Fragment",
+    "metadata": null,
+    "name": "TodoCompletedFragment",
+    "selections": [
       {
         "alias": null,
         "args": null,

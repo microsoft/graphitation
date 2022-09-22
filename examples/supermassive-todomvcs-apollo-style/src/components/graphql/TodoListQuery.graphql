@@ -8,5 +8,9 @@ query TodoListQuery {
 fragment TodoFragment on Todo {
   id
   text
+  ...TodoCompletedFragment
+}
+
+fragment TodoCompletedFragment on Todo {
   isCompleted
 }

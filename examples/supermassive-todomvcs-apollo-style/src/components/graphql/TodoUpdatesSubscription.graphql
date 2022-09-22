@@ -1,11 +1,11 @@
 subscription TodoUpdatesSubscription($limit: Int!) {
   emitTodos(limit: $limit) {
     id
-    ...TodoFragment
+    ...TodoSubscriptionFragment
   }
 }
 
-fragment TodoFragment on Todo {
+fragment TodoSubscriptionFragment on Todo {
   id
   text
   isCompleted
