@@ -783,6 +783,10 @@
   dependencies:
     invariant "^2.2.4"
 
+"@graphitation/graphql-codegen-supermassive-relay-ir-plugin@link:../packages/graphql-codegen-supermassive-relay-ir-plugin":
+  version "0.0.0"
+  uid ""
+
 "@graphitation/graphql-js-tag@^0.8.0":
   version "0.8.0"
   resolved "https://registry.yarnpkg.com/@graphitation/graphql-js-tag/-/graphql-js-tag-0.8.0.tgz#181face4982d9fa3a8258f143a53907c0725774a"

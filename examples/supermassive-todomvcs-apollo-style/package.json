@@ -14,7 +14,7 @@
     "@apollo/client": "^3.6.0",
     "@babel/runtime": "^7.12.0",
     "@graphitation/apollo-react-relay-duct-tape": "^0.7.0",
-    "@graphitation/graphql-codegen-supermassive-relay-ir-plugin": "^1.0.0",
+    "@graphitation/graphql-codegen-supermassive-relay-ir-plugin": "link:../packages/graphql-codegen-supermassive-relay-ir-plugin",
     "@graphitation/graphql-js-tag": "^0.8.0",
     "@graphitation/supermassive": "^0.8.3",
     "@graphitation/ts-transform-graphql-js-tag": "^0.4.0",
