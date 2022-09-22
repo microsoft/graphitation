@@ -1,3 +1,19 @@
+diff --git a/node_modules/@types/relay-runtime/index.d.ts b/node_modules/@types/relay-runtime/index.d.ts
+index e246a59..7a9a8e6 100755
+--- a/node_modules/@types/relay-runtime/index.d.ts
++++ b/node_modules/@types/relay-runtime/index.d.ts
+@@ -147,8 +147,9 @@ export { RelayNetwork as Network } from './lib/network/RelayNetwork';
+ export { RelayObservable as Observable } from './lib/network/RelayObservable';
+ import QueryResponseCache from './lib/network/RelayQueryResponseCache';
+ export { QueryResponseCache };
+-export { RelayRecordSource as RecordSource } from './lib/store/RelayRecordSource';
+-export { RelayModernRecord as Record } from './lib/store/RelayModernRecord';
++import * as RecordSource from './lib/store/RelayRecordSource';
++import * as Record from './lib/store/RelayModernRecord';
++export { Record, RecordSource };
+ export { default as Store } from './lib/store/RelayModernStore';
+ 
+ export {
 diff --git a/node_modules/@types/relay-runtime/lib/store/RelayModernRecord.d.ts b/node_modules/@types/relay-runtime/lib/store/RelayModernRecord.d.ts
 index 4781023..0e416b4 100755
 --- a/node_modules/@types/relay-runtime/lib/store/RelayModernRecord.d.ts
