@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<d8c1871f44889bc79aa736aa9bfbf907>>
+ * @generated SignedSource<<f898bd813747a32018ef9955a8ef2c5a>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -11,10 +11,17 @@
 import { ConcreteRequest, Query } from 'relay-runtime';
 export type CacheTestQuery$variables = {
   conversationId: string;
+  includeNestedData?: boolean | null;
 };
 export type CacheTestQuery$data = {
   readonly conversation: {
     readonly id: string;
+    readonly messages?: ReadonlyArray<{
+      readonly authorId: string;
+      readonly createdAt: string;
+      readonly id: string;
+      readonly text: string;
+    }>;
     readonly title: string;
   };
 };
@@ -29,9 +36,21 @@ var v0 = [
     "defaultValue": null,
     "kind": "LocalArgument",
     "name": "conversationId"
+  },
+  {
+    "defaultValue": false,
+    "kind": "LocalArgument",
+    "name": "includeNestedData"
   }
 ],
-v1 = [
+v1 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "id",
+  "storageKey": null
+},
+v2 = [
   {
     "alias": null,
     "args": [
@@ -46,19 +65,53 @@ v1 = [
     "name": "conversation",
     "plural": false,
     "selections": [
-      {
-        "alias": null,
-        "args": null,
-        "kind": "ScalarField",
-        "name": "id",
-        "storageKey": null
-      },
+      (v1/*: any*/),
       {
         "alias": null,
         "args": null,
         "kind": "ScalarField",
         "name": "title",
         "storageKey": null
+      },
+      {
+        "condition": "includeNestedData",
+        "kind": "Condition",
+        "passingValue": true,
+        "selections": [
+          {
+            "alias": null,
+            "args": null,
+            "concreteType": "Message",
+            "kind": "LinkedField",
+            "name": "messages",
+            "plural": true,
+            "selections": [
+              (v1/*: any*/),
+              {
+                "alias": null,
+                "args": null,
+                "kind": "ScalarField",
+                "name": "authorId",
+                "storageKey": null
+              },
+              {
+                "alias": null,
+                "args": null,
+                "kind": "ScalarField",
+                "name": "text",
+                "storageKey": null
+              },
+              {
+                "alias": null,
+                "args": null,
+                "kind": "ScalarField",
+                "name": "createdAt",
+                "storageKey": null
+              }
+            ],
+            "storageKey": null
+          }
+        ]
       }
     ],
     "storageKey": null
@@ -70,7 +123,7 @@ return {
     "kind": "Fragment",
     "metadata": null,
     "name": "CacheTestQuery",
-    "selections": (v1/*: any*/),
+    "selections": (v2/*: any*/),
     "type": "Query",
     "abstractKey": null
   },
@@ -79,19 +132,19 @@ return {
     "argumentDefinitions": (v0/*: any*/),
     "kind": "Operation",
     "name": "CacheTestQuery",
-    "selections": (v1/*: any*/)
+    "selections": (v2/*: any*/)
   },
   "params": {
-    "cacheID": "fcf2b6d1cc7f31b0422ac0b9c4ee9a53",
+    "cacheID": "ebb5290e19380dd9a1e6a625112bd0c0",
     "id": null,
     "metadata": {},
     "name": "CacheTestQuery",
     "operationKind": "query",
-    "text": "query CacheTestQuery(\n  $conversationId: String!\n) {\n  conversation(id: $conversationId) {\n    id\n    title\n  }\n}\n"
+    "text": "query CacheTestQuery(\n  $conversationId: String!\n  $includeNestedData: Boolean = false\n) {\n  conversation(id: $conversationId) {\n    id\n    title\n    messages @include(if: $includeNestedData) {\n      id\n      authorId\n      text\n      createdAt\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "93325d481f0ab6e2f454646f0039910d";
+(node as any).hash = "bd7fd22ef0c182b6d60f06dde1d7aa1b";
 
 export default node;

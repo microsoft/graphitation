@@ -1,17 +1,28 @@
 import { graphql } from "@graphitation/graphql-js-tag";
-import { RelayApolloCache } from "../Cache";
+import { RelayApolloCache, TypePolicies } from "../Cache";
 import { InMemoryCache } from "@apollo/client";
 
 import RelayQuery from "./__generated__/CacheTestQuery.graphql";
 import RelayFragment from "./__generated__/CacheTestFragment.graphql";
 
 const ApolloQuery = graphql`
-  query CacheTestQuery($conversationId: String!) {
+  query CacheTestQuery(
+    $conversationId: String!
+    $includeNestedData: Boolean = false
+  ) {
     conversation(id: $conversationId) {
       # FIXME: This field does not show up in the relay result
       # __typename
       id
       title
+      ... @include(if: $includeNestedData) {
+        messages {
+          id
+          authorId
+          text
+          createdAt
+        }
+      }
     }
   }
 `;
@@ -31,12 +42,12 @@ const RESPONSE = {
   },
 };
 
-function apollo() {
-  return new InMemoryCache({ addTypename: false });
+function apollo(typePolicies?: TypePolicies) {
+  return new InMemoryCache({ typePolicies, addTypename: false });
 }
 
-function relay() {
-  return new RelayApolloCache();
+function relay(typePolicies?: TypePolicies) {
+  return new RelayApolloCache({ typePolicies });
 }
 
 describe("writeQuery/readQuery", () => {
@@ -66,6 +77,14 @@ describe("writeQuery/readQuery", () => {
   });
 
   describe("concerning missing data", () => {
+    beforeAll(() => {
+      jest.spyOn(console, "error").mockImplementation(() => {});
+    });
+
+    afterAll(() => {
+      jest.resetAllMocks();
+    });
+
     it.each([
       { client: apollo, query: ApolloQuery as any },
       { client: relay, query: RelayQuery as any },
@@ -98,6 +117,9 @@ describe("writeQuery/readQuery", () => {
           id: "42",
         },
       });
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining("title"),
+      );
     });
   });
 
@@ -240,6 +262,14 @@ describe("writeFragment/readFragment", () => {
   });
 
   describe("concerning missing data", () => {
+    beforeAll(() => {
+      jest.spyOn(console, "error").mockImplementation(() => {});
+    });
+
+    afterAll(() => {
+      jest.resetAllMocks();
+    });
+
     it.each([
       { client: apollo, fragment: ApolloFragment as any },
       { client: relay, fragment: RelayFragment as any },
@@ -268,6 +298,9 @@ describe("writeFragment/readFragment", () => {
       ).toMatchObject({
         id: "42",
       });
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining("title"),
+      );
     });
   });
 });
@@ -445,6 +478,9 @@ describe("diff", () => {
     ).toMatchObject({
       complete: true,
     });
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining("title"),
+    );
   });
 });
 
@@ -463,5 +499,111 @@ describe("extract/restore", () => {
     const newCache = client();
     newCache.restore(data as any);
     expect(newCache.extract()).toEqual(cache.extract());
+  });
+});
+
+describe("key-fields", () => {
+  describe("concerning identification", () => {
+    it.each([{ client: apollo }, { client: relay }])(
+      "by default uses typename+id with $client.name",
+      ({ client }) => {
+        const cache = client();
+        expect(cache.identify({ id: "42" })).toBeUndefined();
+        expect(cache.identify({ __typename: "Conversation" })).toBeUndefined();
+        expect(
+          cache.identify({ __typename: "Conversation", id: "42" }),
+        ).toEqual("Conversation:42");
+      },
+    );
+
+    it.todo(
+      "uses only the id if the type implements the Node interface with relay",
+    );
+  });
+
+  describe("concerning normalization", () => {
+    describe.each([
+      {
+        scenario: "with default key-fields",
+        typePolicies: {
+          Conversation: {
+            keyFields: undefined,
+          },
+          Message: {
+            keyFields: undefined,
+          },
+        } as TypePolicies,
+      },
+      {
+        scenario: "without key-fields",
+        typePolicies: {
+          Conversation: {
+            keyFields: false,
+          },
+          Message: {
+            keyFields: false,
+          },
+        } as TypePolicies,
+      },
+      {
+        scenario: "with custom key-fields",
+        typePolicies: {
+          Conversation: {
+            keyFields: ["id", "title"],
+          },
+          Message: {
+            keyFields: ["authorId", "createdAt", "id"],
+          },
+        } as TypePolicies,
+      },
+    ])("$scenario", ({ typePolicies }) => {
+      it.each([
+        { client: apollo, query: ApolloQuery as any },
+        { client: relay, query: RelayQuery as any },
+      ])("works with $client.name", ({ client, query }) => {
+        const cache = client(typePolicies);
+        const response = {
+          conversation: {
+            ...RESPONSE.conversation,
+            messages: [
+              {
+                __typename: "Message",
+                id: "message-42",
+                authorId: "author-42",
+                text: "Hello World",
+                createdAt: "2020-01-01T00:00:00.000Z",
+              },
+            ],
+          },
+        };
+        cache.writeQuery({
+          query,
+          data: response,
+          variables: { conversationId: "42", includeNestedData: true },
+        });
+        expect(
+          cache.readQuery({
+            query,
+            variables: { conversationId: "42", includeNestedData: true },
+          }),
+        ).toMatchInlineSnapshot(`
+            Object {
+              "conversation": Object {
+                "id": "42",
+                "messages": Array [
+                  Object {
+                    "authorId": "author-42",
+                    "createdAt": "2020-01-01T00:00:00.000Z",
+                    "id": "message-42",
+                    "text": "Hello World",
+                  },
+                ],
+                "title": "Hello World",
+              },
+            }
+          `);
+        expect(cache.extract()).toMatchSnapshot();
+      });
+    });
   });
 });

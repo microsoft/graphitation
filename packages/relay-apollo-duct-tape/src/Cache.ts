@@ -1,7 +1,7 @@
 /**
  * BIG TODOs:
  *
- * - Make type-policies key-fields work
+ * - Do we need, and can we have, any merge logic from type-policies ported over?
  *
  * - Make GC work
  *
@@ -57,6 +57,7 @@ import RelayModernStore from "relay-runtime/lib/store/RelayModernStore";
 import {
   ApolloCache,
   Cache as ApolloCacheTypes,
+  isReference,
   Reference,
   Transaction,
 } from "@apollo/client";
@@ -65,20 +66,44 @@ import invariant from "invariant";
 
 type OptimisticTransaction = WeakRef<OptimisticUpdate>[];
 
+type RecordLike = {
+  __typename?: string;
+  [key: string]: unknown;
+};
+
+interface TypePolicy {
+  keyFields?: string[] | false;
+}
+export interface TypePolicies {
+  [typename: string]: TypePolicy;
+}
+
 export class RelayApolloCache extends ApolloCache<RecordMap> {
   private store: Store;
   private usingExternalStore: boolean;
   private inTransation: boolean | OptimisticTransaction;
   private publishQueue: PublishQueue;
   private optimisticTransactions: Map<string, OptimisticTransaction>;
+  private typePolicies: TypePolicies;
 
-  constructor(store?: Store) {
+  constructor(options: { store?: Store; typePolicies?: TypePolicies } = {}) {
     super();
-    this.store = store || new RelayModernStore(new RelayRecordSource());
-    this.usingExternalStore = !!store;
+    this.store = options.store || new RelayModernStore(new RelayRecordSource());
+    this.usingExternalStore = !!options.store;
     this.inTransation = false;
-    this.publishQueue = new RelayPublishQueue(this.store, null, getDataID);
+    this.typePolicies = options.typePolicies || {};
+    this.publishQueue = new RelayPublishQueue(this.store, null, this.getDataID);
     this.optimisticTransactions = new Map();
+
+    this.getDataID = this.getDataID.bind(this);
+  }
+
+  // TODO: This does not handle a Relay plural refs object, which looks like: { __refs: string[] }
+  identify(object: RecordLike | Reference): string | undefined {
+    if (isReference(object)) {
+      return object.__ref;
+    }
+    return this.getDataID(object as RecordLike, object.__typename);
   }
 
   /****************************************************************************
@@ -106,7 +131,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   }
 
   // TODO: When is Reference as return type used?
-  // TODO: This is ignoring dataId, is that ok?
+  // TODO: This is ignoring dataId atm
   write<TData = any, TVariables = any>(
     options: ApolloCacheTypes.WriteOptions<TData, TVariables>,
   ): Reference | undefined {
@@ -114,6 +139,8 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     const operation = createOperationDescriptor(
       request,
       options.variables || {},
+      // undefined,
+      // options.dataId,
     );
 
     const selector = operation.root;
@@ -125,7 +152,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
       selector,
       options.result as PayloadData,
       {
-        getDataID,
+        getDataID: this.getDataID,
         request: operation.request,
       },
     );
@@ -323,7 +350,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     this.store = new RelayModernStore(
       RelayRecordSource.create(serializedState),
     );
-    this.publishQueue = new RelayPublishQueue(this.store, null, getDataID);
+    this.publishQueue = new RelayPublishQueue(this.store, null, this.getDataID);
     return this;
   }
 
@@ -351,6 +378,45 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
       options.variables || {},
     );
     return this.store.lookup(operation.fragment, options.optimistic);
+  }
+
+  // TODO: In the future, we want to support returning just the id value,
+  //       which we'll do only for types that implement the Node interface.
+  //       This to ensure that the same store can be used for client code
+  //       that uses react-relay and its `node` based features.
+  private getDataID(
+    fieldValue: Record<string, unknown>,
+    typeName?: string,
+  ): string | undefined {
+    if (!typeName) {
+      return undefined;
+    }
+    const keyFields = this.typePolicies[typeName]?.keyFields;
+    if (keyFields === undefined) {
+      if (fieldValue.id) {
+        return `${typeName}:${fieldValue.id}`;
+      } else {
+        return undefined;
+      }
+    } else if (keyFields === false) {
+      return undefined;
+    }
+    return (
+      typeName +
+      ":" +
+      JSON.stringify(
+        keyFields.reduce<Record<string, unknown>>((acc, keyField) => {
+          const value = fieldValue[keyField];
+          invariant(
+            value,
+            "Missing field '%s' while computing key fields",
+            keyField,
+          );
+          acc[keyField] = value;
+          return acc;
+        }, {}),
+      )
+    );
   }
 }
 
@@ -403,18 +469,6 @@ function getQueryCacheIdentifier(
     return `${cacheIdentifier}-${cacheBreaker}`;
   }
   return cacheIdentifier;
-}
-
-function getDataID(
-  fieldValue: Record<string, unknown>,
-  typeName: string,
-): unknown {
-  // if (typeName === VIEWER_TYPE) {
-  //   // $FlowFixMe[prop-missing]
-  //   return fieldValue.id == null ? VIEWER_ID : fieldValue.id;
-  // }
-  // $FlowFixMe[prop-missing]
-  return fieldValue.id;
 }
 
 // ----

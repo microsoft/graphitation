@@ -11,4 +11,12 @@ type Conversation implements Node {
   id: ID!
   title: String!
   hasUnreadMessages: Boolean!
+  messages: [Message!]!
+}
+
+type Message {
+  id: ID!
+  authorId: String!
+  text: String!
+  createdAt: String!
 }
