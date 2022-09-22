@@ -16,7 +16,7 @@
     "lint": "lage lint",
     "lage": "lage",
     "ci": "yarn lage build types test lint && yarn checkchange",
-    "beachball": "beachball -b origin/main",
+    "beachball": "beachball -b origin/alloy/relay-apollo-duct-tape",
     "change": "yarn beachball change",
     "checkchange": "yarn beachball check",
     "release": "yarn beachball publish",
