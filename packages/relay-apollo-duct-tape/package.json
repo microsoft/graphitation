@@ -17,8 +17,11 @@
     "just": "monorepo-scripts"
   },
   "dependencies": {
-    "relay-runtime": "^14.0.0",
-    "react-relay": "^14.0.0"
+    "invariant": "^2.2.4",
+    "relay-runtime": "^14.0.0"
+  },
+  "peerDependencies": {
+    "@apollo/client": "^3.6.9"
   },
   "devDependencies": {
     "@apollo/client": "^3.6.9",

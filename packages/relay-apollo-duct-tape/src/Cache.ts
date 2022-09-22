@@ -37,10 +37,11 @@ import {
   ROOT_TYPE,
   getSelector,
   getFragment,
+  getRequest,
+  createOperationDescriptor,
+  ROOT_ID,
 } from "relay-runtime";
-import { getRequest, createOperationDescriptor, ROOT_ID } from "relay-runtime";
 import { NormalizationFragmentSpread } from "relay-runtime/lib/util/NormalizationNode";
-
 import RelayRecordSource from "relay-runtime/lib/store/RelayRecordSource";
 import * as RelayModernRecord from "relay-runtime/lib/store/RelayModernRecord";
 import * as RelayResponseNormalizer from "relay-runtime/lib/store/RelayResponseNormalizer";
