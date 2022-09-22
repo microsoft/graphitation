@@ -225,6 +225,20 @@ declare module "relay-compiler/lib/core/CompilerContext" {
   }
 }
 
+declare module "relay-compiler/lib/core/IRTransformer" {
+  import CompilerContext, {
+    CompilerContextDocument,
+  } from "relay-compiler/lib/core/CompilerContext";
+
+  export function transform<S>(
+    context: CompilerContext,
+    NodeVisitor: S,
+    stateInitializer:
+      | void
+      | ((doc: CompilerContextDocument) => S | null | undefined),
+  ): CompilerContext;
+}
+
 declare module "relay-compiler/lib/codegen/RelayCodeGenerator" {
   import { Schema } from "relay-compiler/lib/core/Schema";
   import {

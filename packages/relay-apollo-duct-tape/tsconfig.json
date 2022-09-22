@@ -5,7 +5,7 @@
     "tsBuildInfoFile": ".tsbuildinfo",
     "rootDir": "src",
     "outDir": "lib",
-    "lib": ["esnext"]
+    "lib": ["esnext", "dom"]
   },
   "include": ["src"],
   "references": []
