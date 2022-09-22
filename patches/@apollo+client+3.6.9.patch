@@ -1,36 +1,23 @@
-diff --git a/node_modules/@apollo/client/cache/core/cache.d.ts b/node_modules/@apollo/client/cache/core/cache.d.ts
-index 4c1bc86..2f3bddc 100644
---- a/node_modules/@apollo/client/cache/core/cache.d.ts
-+++ b/node_modules/@apollo/client/cache/core/cache.d.ts
-@@ -1,4 +1,5 @@
--import { DocumentNode } from 'graphql';
-+// import { DocumentNode } from 'graphql';
-+type DocumentNode = unknown;
- import { StoreObject, Reference } from '../../utilities';
- import { DataProxy } from './types/DataProxy';
- import { Cache } from './types/Cache';
 diff --git a/node_modules/@apollo/client/cache/core/types/DataProxy.d.ts b/node_modules/@apollo/client/cache/core/types/DataProxy.d.ts
-index ce97ef7..c26786a 100644
+index ce97ef7..fab7252 100644
 --- a/node_modules/@apollo/client/cache/core/types/DataProxy.d.ts
 +++ b/node_modules/@apollo/client/cache/core/types/DataProxy.d.ts
 @@ -1,15 +1,16 @@
--import { DocumentNode } from 'graphql';
--import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-+// import { DocumentNode } from 'graphql';
-+// import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-+import { ConcreteRequest, ReaderFragment } from "relay-runtime";
+ import { DocumentNode } from 'graphql';
+ import { TypedDocumentNode } from '@graphql-typed-document-node/core';
++import { GraphQLTaggedNode } from "relay-runtime";
  import { MissingFieldError } from './common';
  export declare namespace DataProxy {
      interface Query<TVariables, TData> {
 -        query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-+        query: ConcreteRequest;
++        query: (DocumentNode | TypedDocumentNode<TData, TVariables>) & { __relay?: GraphQLTaggedNode };
          variables?: TVariables;
          id?: string;
      }
      interface Fragment<TVariables, TData> {
          id?: string;
 -        fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
-+        fragment: ReaderFragment;
++        fragment: (DocumentNode | TypedDocumentNode<TData, TVariables>) & { __relay?: GraphQLTaggedNode };
          fragmentName?: string;
          variables?: TVariables;
      }

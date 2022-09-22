@@ -2,10 +2,10 @@ import { graphql } from "@graphitation/graphql-js-tag";
 import { RelayApolloCache, TypePolicies } from "../Cache";
 import { InMemoryCache } from "@apollo/client";
 
-import RelayQuery from "./__generated__/CacheTestQuery.graphql";
-import RelayFragment from "./__generated__/CacheTestFragment.graphql";
+import QueryRelayIR from "./__generated__/CacheTestQuery.graphql";
+import FragmentRelayIR from "./__generated__/CacheTestFragment.graphql";
 
-const ApolloQuery = graphql`
+const QueryDocument = graphql`
   query CacheTestQuery(
     $conversationId: String!
     $includeNestedData: Boolean = false
@@ -26,13 +26,15 @@ const ApolloQuery = graphql`
     }
   }
 `;
+(QueryDocument as any).__relay = QueryRelayIR;
 
-const ApolloFragment = graphql`
+const FragmentDocument = graphql`
   fragment CacheTestFragment on Conversation {
     id
     title
   }
 `;
+(FragmentDocument as any).__relay = FragmentRelayIR;
 
 const RESPONSE = {
   conversation: {
@@ -51,22 +53,21 @@ function relay(typePolicies?: TypePolicies) {
 }
 
 describe("writeQuery/readQuery", () => {
-  it.each([
-    { client: apollo, query: ApolloQuery as any },
-    { client: relay, query: RelayQuery as any },
-  ])("works with $client.name", ({ client, query }) => {
-    const cache = client();
-    cache.writeQuery({
-      query,
-      data: RESPONSE,
-      variables: { conversationId: "42" },
-    });
-    expect(
-      cache.readQuery({
-        query,
+  it.each([{ client: apollo }, { client: relay }])(
+    "works with $client.name",
+    ({ client }) => {
+      const cache = client();
+      cache.writeQuery({
+        query: QueryDocument,
+        data: RESPONSE,
         variables: { conversationId: "42" },
-      }),
-    ).toMatchInlineSnapshot(`
+      });
+      expect(
+        cache.readQuery({
+          query: QueryDocument,
+          variables: { conversationId: "42" },
+        }),
+      ).toMatchInlineSnapshot(`
       Object {
         "conversation": Object {
           "id": "42",
@@ -74,7 +75,8 @@ describe("writeQuery/readQuery", () => {
         },
       }
     `);
-  });
+    },
+  );
 
   describe("concerning missing data", () => {
     beforeAll(() => {
@@ -85,110 +87,70 @@ describe("writeQuery/readQuery", () => {
       jest.resetAllMocks();
     });
 
-    it.each([
-      { client: apollo, query: ApolloQuery as any },
-      { client: relay, query: RelayQuery as any },
-    ])("works with $client.name", ({ client, query }) => {
-      const cache = client();
-      cache.writeQuery({
-        query,
-        data: {
-          conversation: {
-            ...RESPONSE.conversation,
-            title: undefined,
-          },
-        },
-        variables: { conversationId: "42" },
-      });
-      expect(
-        cache.readQuery({
-          query,
-          variables: { conversationId: "42" },
-        }),
-      ).toBeNull();
-      expect(
-        cache.readQuery({
-          query,
-          variables: { conversationId: "42" },
-          returnPartialData: true,
-        }),
-      ).toMatchObject({
-        conversation: {
-          id: "42",
-        },
-      });
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining("title"),
-      );
-    });
-  });
-
-  describe("concerning optimistic updates", () => {
-    it.each([
-      { client: apollo, query: ApolloQuery as any },
-      { client: relay, query: RelayQuery as any },
-    ])("applies update with $client.name", ({ client, query }) => {
-      const cache = client();
-      cache.recordOptimisticTransaction((c) => {
-        c.writeQuery({
-          query,
-          data: RESPONSE,
-          variables: { conversationId: "42" },
-        });
-      }, "some-id");
-      expect(
-        cache.readQuery({
-          query,
-          variables: { conversationId: "42" },
-          // optimistic: false, // This is the default
-        }),
-      ).toBeNull();
-      expect(
-        cache.readQuery({
-          query,
-          variables: { conversationId: "42" },
-          optimistic: true,
-        }),
-      ).toMatchInlineSnapshot(`
-        Object {
-          "conversation": Object {
-            "id": "42",
-            "title": "Hello World",
-          },
-        }
-      `);
-    });
-
-    it.each([
-      { client: apollo, query: ApolloQuery as any },
-      { client: relay, query: RelayQuery as any },
-    ])("applies update with $client.name", ({ client, query }) => {
-      const cache = client();
-      cache.writeQuery({
-        query,
-        data: RESPONSE,
-        variables: { conversationId: "42" },
-      });
-      cache.recordOptimisticTransaction((c) => {
-        c.writeQuery({
-          query,
+    it.each([{ client: apollo }, { client: relay }])(
+      "works with $client.name",
+      ({ client }) => {
+        const cache = client();
+        cache.writeQuery({
+          query: QueryDocument,
           data: {
             conversation: {
               ...RESPONSE.conversation,
-              title: "Hello Optimistic World",
+              title: undefined,
             },
           },
           variables: { conversationId: "42" },
         });
-      }, "some-transaction-id");
-      cache.removeOptimistic("some-transaction-id");
-      expect(
-        cache.readQuery({
-          query,
-          variables: { conversationId: "42" },
-          optimistic: true,
-        }),
-      ).toMatchInlineSnapshot(`
+        expect(
+          cache.readQuery({
+            query: QueryDocument,
+            variables: { conversationId: "42" },
+          }),
+        ).toBeNull();
+        expect(
+          cache.readQuery({
+            query: QueryDocument,
+            variables: { conversationId: "42" },
+            returnPartialData: true,
+          }),
+        ).toMatchObject({
+          conversation: {
+            id: "42",
+          },
+        });
+        expect(console.error).toHaveBeenCalledWith(
+          expect.stringContaining("title"),
+        );
+      },
+    );
+  });
+
+  describe("concerning optimistic updates", () => {
+    it.each([{ client: apollo }, { client: relay }])(
+      "applies update with $client.name",
+      ({ client }) => {
+        const cache = client();
+        cache.recordOptimisticTransaction((c) => {
+          c.writeQuery({
+            query: QueryDocument,
+            data: RESPONSE,
+            variables: { conversationId: "42" },
+          });
+        }, "some-id");
+        expect(
+          cache.readQuery({
+            query: QueryDocument,
+            variables: { conversationId: "42" },
+            // optimistic: false, // This is the default
+          }),
+        ).toBeNull();
+        expect(
+          cache.readQuery({
+            query: QueryDocument,
+            variables: { conversationId: "42" },
+            optimistic: true,
+          }),
+        ).toMatchInlineSnapshot(`
         Object {
           "conversation": Object {
             "id": "42",
@@ -196,70 +158,110 @@ describe("writeQuery/readQuery", () => {
           },
         }
       `);
-    });
+      },
+    );
+
+    it.each([{ client: apollo }, { client: relay }])(
+      "applies update with $client.name",
+      ({ client }) => {
+        const cache = client();
+        cache.writeQuery({
+          query: QueryDocument,
+          data: RESPONSE,
+          variables: { conversationId: "42" },
+        });
+        cache.recordOptimisticTransaction((c) => {
+          c.writeQuery({
+            query: QueryDocument,
+            data: {
+              conversation: {
+                ...RESPONSE.conversation,
+                title: "Hello Optimistic World",
+              },
+            },
+            variables: { conversationId: "42" },
+          });
+        }, "some-transaction-id");
+        cache.removeOptimistic("some-transaction-id");
+        expect(
+          cache.readQuery({
+            query: QueryDocument,
+            variables: { conversationId: "42" },
+            optimistic: true,
+          }),
+        ).toMatchInlineSnapshot(`
+        Object {
+          "conversation": Object {
+            "id": "42",
+            "title": "Hello World",
+          },
+        }
+      `);
+      },
+    );
   });
 });
 
 describe("writeFragment/readFragment", () => {
-  it.each([
-    { client: apollo, fragment: ApolloFragment as any },
-    { client: relay, fragment: RelayFragment as any },
-  ])("works with $client.name", ({ client, fragment }) => {
-    const cache = client();
-    cache.writeFragment({
-      fragment,
-      id: "Conversation:42",
-      data: RESPONSE.conversation,
-      variables: { conversationId: "42" },
-    });
-    expect(
-      cache.readFragment({
-        id: "Conversation:42",
-        fragment,
-        variables: { conversationId: "42" },
-      }),
-    ).toMatchInlineSnapshot(`
-      Object {
-        "id": "42",
-        "title": "Hello World",
-      }
-    `);
-  });
-
-  it.each([
-    { client: apollo, fragment: ApolloFragment as any },
-    { client: relay, fragment: RelayFragment as any },
-  ])("works with $client.name and optimistic data", ({ client, fragment }) => {
-    const cache = client();
-    cache.recordOptimisticTransaction((c) => {
-      c.writeFragment({
-        fragment,
+  it.each([{ client: apollo }, { client: relay }])(
+    "works with $client.name",
+    ({ client }) => {
+      const cache = client();
+      cache.writeFragment({
+        fragment: FragmentDocument,
         id: "Conversation:42",
         data: RESPONSE.conversation,
         variables: { conversationId: "42" },
       });
-    }, "some-id");
-    expect(
-      cache.readFragment({
-        id: "Conversation:42",
-        fragment,
-        variables: { conversationId: "42" },
-      }),
-    ).toBeNull();
-    expect(
-      cache.readFragment({
-        id: "Conversation:42",
-        fragment,
-        variables: { conversationId: "42" },
-        optimistic: true,
-      }),
-    ).toMatchInlineSnapshot(`
+      expect(
+        cache.readFragment({
+          id: "Conversation:42",
+          fragment: FragmentDocument,
+          variables: { conversationId: "42" },
+        }),
+      ).toMatchInlineSnapshot(`
       Object {
         "id": "42",
         "title": "Hello World",
       }
     `);
-  });
+    },
+  );
+
+  it.each([{ client: apollo }, { client: relay }])(
+    "works with $client.name and optimistic data",
+    ({ client }) => {
+      const cache = client();
+      cache.recordOptimisticTransaction((c) => {
+        c.writeFragment({
+          fragment: FragmentDocument,
+          id: "Conversation:42",
+          data: RESPONSE.conversation,
+          variables: { conversationId: "42" },
+        });
+      }, "some-id");
+      expect(
+        cache.readFragment({
+          id: "Conversation:42",
+          fragment: FragmentDocument,
+          variables: { conversationId: "42" },
+        }),
+      ).toBeNull();
+      expect(
+        cache.readFragment({
+          id: "Conversation:42",
+          fragment: FragmentDocument,
+          variables: { conversationId: "42" },
+          optimistic: true,
+        }),
+      ).toMatchInlineSnapshot(`
+      Object {
+        "id": "42",
+        "title": "Hello World",
+      }
+    `);
+    },
+  );
 
   describe("concerning missing data", () => {
     beforeAll(() => {
@@ -270,59 +272,58 @@ describe("writeFragment/readFragment", () => {
       jest.resetAllMocks();
     });
 
-    it.each([
-      { client: apollo, fragment: ApolloFragment as any },
-      { client: relay, fragment: RelayFragment as any },
-    ])("works with $client.name", ({ client, fragment }) => {
-      const cache = client();
-      cache.writeFragment({
-        fragment,
-        id: "Conversation:42",
-        data: { ...RESPONSE.conversation, title: undefined },
-        variables: { conversationId: "42" },
-      });
-      expect(
-        cache.readFragment({
+    it.each([{ client: apollo }, { client: relay }])(
+      "works with $client.name",
+      ({ client }) => {
+        const cache = client();
+        cache.writeFragment({
+          fragment: FragmentDocument,
           id: "Conversation:42",
-          fragment,
+          data: { ...RESPONSE.conversation, title: undefined },
           variables: { conversationId: "42" },
-        }),
-      ).toBeNull();
-      expect(
-        cache.readFragment({
-          id: "Conversation:42",
-          fragment,
-          variables: { conversationId: "42" },
-          returnPartialData: true,
-        }),
-      ).toMatchObject({
-        id: "42",
-      });
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining("title"),
-      );
-    });
+        });
+        expect(
+          cache.readFragment({
+            id: "Conversation:42",
+            fragment: FragmentDocument,
+            variables: { conversationId: "42" },
+          }),
+        ).toBeNull();
+        expect(
+          cache.readFragment({
+            id: "Conversation:42",
+            fragment: FragmentDocument,
+            variables: { conversationId: "42" },
+            returnPartialData: true,
+          }),
+        ).toMatchObject({
+          id: "42",
+        });
+        expect(console.error).toHaveBeenCalledWith(
+          expect.stringContaining("title"),
+        );
+      },
+    );
   });
 });
 
 describe("watch", () => {
-  it.each([
-    { client: apollo, query: ApolloQuery as any },
-    { client: relay, query: RelayQuery as any },
-  ])("works with $client.name", ({ client, query }) => {
-    expect.assertions(4);
-    const cache = client();
-    let count = 0;
-    let disposeWatcher: () => void;
-    const promise = new Promise<void>((resolve) => {
-      disposeWatcher = cache.watch({
-        query,
-        variables: { conversationId: "42" },
-        optimistic: false,
-        callback: (diff, lastDiff) => {
-          switch (++count) {
-            case 1: {
-              expect(diff.result).toMatchInlineSnapshot(`
+  it.each([{ client: apollo }, { client: relay }])(
+    "works with $client.name",
+    ({ client }) => {
+      expect.assertions(4);
+      const cache = client();
+      let count = 0;
+      let disposeWatcher: () => void;
+      const promise = new Promise<void>((resolve) => {
+        disposeWatcher = cache.watch({
+          query: QueryDocument,
+          variables: { conversationId: "42" },
+          optimistic: false,
+          callback: (diff, lastDiff) => {
+            switch (++count) {
+              case 1: {
+                expect(diff.result).toMatchInlineSnapshot(`
                 Object {
                   "conversation": Object {
                     "id": "42",
@@ -330,11 +331,11 @@ describe("watch", () => {
                   },
                 }
               `);
-              expect(lastDiff).toBeUndefined();
-              break;
-            }
-            case 2: {
-              expect(diff.result).toMatchInlineSnapshot(`
+                expect(lastDiff).toBeUndefined();
+                break;
+              }
+              case 2: {
+                expect(diff.result).toMatchInlineSnapshot(`
                 Object {
                   "conversation": Object {
                     "id": "42",
@@ -342,7 +343,7 @@ describe("watch", () => {
                   },
                 }
               `);
-              expect(lastDiff!.result).toMatchInlineSnapshot(`
+                expect(lastDiff!.result).toMatchInlineSnapshot(`
                 Object {
                   "conversation": Object {
                     "id": "42",
@@ -350,60 +351,15 @@ describe("watch", () => {
                   },
                 }
               `);
-              resolve();
+                resolve();
+              }
             }
-          }
-        },
-      });
-    });
-    setImmediate(() => {
-      cache.writeQuery({
-        query,
-        data: {
-          conversation: {
-            ...RESPONSE.conversation,
-            title: "Hello World 1",
           },
-        },
-        variables: { conversationId: "42" },
+        });
       });
       setImmediate(() => {
         cache.writeQuery({
-          query,
-          data: {
-            conversation: {
-              ...RESPONSE.conversation,
-              title: "Hello World 2",
-            },
-          },
-          variables: { conversationId: "42" },
-        });
-      });
-    });
-    return promise.finally(disposeWatcher!);
-  });
-});
-
-describe("batch", () => {
-  it.each([
-    { client: apollo, query: ApolloQuery as any },
-    { client: relay, query: RelayQuery as any },
-  ])("works with $client.name", ({ client, query }) => {
-    expect.assertions(1);
-    const cache = client();
-    let count = 0;
-    const disposeWatcher = cache.watch({
-      query,
-      variables: { conversationId: "42" },
-      optimistic: false,
-      callback: (diff, lastDiff) => {
-        count++;
-      },
-    });
-    cache.batch({
-      update: (c) => {
-        c.writeQuery({
-          query,
+          query: QueryDocument,
           data: {
             conversation: {
               ...RESPONSE.conversation,
@@ -412,22 +368,68 @@ describe("batch", () => {
           },
           variables: { conversationId: "42" },
         });
-        c.writeQuery({
-          query,
-          data: {
-            conversation: {
-              ...RESPONSE.conversation,
-              title: "Hello World 2",
+        setImmediate(() => {
+          cache.writeQuery({
+            query: QueryDocument,
+            data: {
+              conversation: {
+                ...RESPONSE.conversation,
+                title: "Hello World 2",
+              },
             },
-          },
-          variables: { conversationId: "42" },
+            variables: { conversationId: "42" },
+          });
         });
-      },
-    });
-    return new Promise<void>((resolve) => setImmediate(resolve))
-      .then(() => expect(count).toEqual(1))
-      .finally(disposeWatcher);
-  });
+      });
+      return promise.finally(disposeWatcher!);
+    },
+  );
+});
+
+describe("batch", () => {
+  it.each([{ client: apollo }, { client: relay }])(
+    "works with $client.name",
+    ({ client }) => {
+      expect.assertions(1);
+      const cache = client();
+      let count = 0;
+      const disposeWatcher = cache.watch({
+        query: QueryDocument,
+        variables: { conversationId: "42" },
+        optimistic: false,
+        callback: (diff, lastDiff) => {
+          count++;
+        },
+      });
+      cache.batch({
+        update: (c) => {
+          c.writeQuery({
+            query: QueryDocument,
+            data: {
+              conversation: {
+                ...RESPONSE.conversation,
+                title: "Hello World 1",
+              },
+            },
+            variables: { conversationId: "42" },
+          });
+          c.writeQuery({
+            query: QueryDocument,
+            data: {
+              conversation: {
+                ...RESPONSE.conversation,
+                title: "Hello World 2",
+              },
+            },
+            variables: { conversationId: "42" },
+          });
+        },
+      });
+      return new Promise<void>((resolve) => setImmediate(resolve))
+        .then(() => expect(count).toEqual(1))
+        .finally(disposeWatcher);
+    },
+  );
 });
 
 describe("diff", () => {
@@ -439,67 +441,67 @@ describe("diff", () => {
     jest.resetAllMocks();
   });
 
-  it.each([
-    { client: apollo, query: ApolloQuery as any },
-    { client: relay, query: RelayQuery as any },
-  ])("works with $client.name", ({ client, query }) => {
-    const cache = client();
-    cache.writeQuery({
-      query,
-      data: {
-        conversation: {
-          ...RESPONSE.conversation,
-          title: undefined,
+  it.each([{ client: apollo }, { client: relay }])(
+    "works with $client.name",
+    ({ client }) => {
+      const cache = client();
+      cache.writeQuery({
+        query: QueryDocument,
+        data: {
+          conversation: {
+            ...RESPONSE.conversation,
+            title: undefined,
+          },
         },
-      },
-      variables: { conversationId: "42" },
-    });
-    expect(
-      cache.diff({
-        query,
         variables: { conversationId: "42" },
-        optimistic: false,
-      }),
-    ).toMatchObject({
-      complete: false,
-    });
+      });
+      expect(
+        cache.diff({
+          query: QueryDocument,
+          variables: { conversationId: "42" },
+          optimistic: false,
+        }),
+      ).toMatchObject({
+        complete: false,
+      });
 
-    cache.writeQuery({
-      query,
-      data: RESPONSE,
-      variables: { conversationId: "42" },
-    });
-    expect(
-      cache.diff<unknown>({
-        query,
+      cache.writeQuery({
+        query: QueryDocument,
+        data: RESPONSE,
         variables: { conversationId: "42" },
-        optimistic: false,
-      }),
-    ).toMatchObject({
-      complete: true,
-    });
-    expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining("title"),
-    );
-  });
+      });
+      expect(
+        cache.diff<unknown>({
+          query: QueryDocument,
+          variables: { conversationId: "42" },
+          optimistic: false,
+        }),
+      ).toMatchObject({
+        complete: true,
+      });
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining("title"),
+      );
+    },
+  );
 });
 
 describe("extract/restore", () => {
-  it.each([
-    { client: apollo, query: ApolloQuery as any },
-    { client: relay, query: RelayQuery as any },
-  ])("works with $client.name", ({ client, query }) => {
-    const cache = client();
-    cache.writeQuery({
-      query,
-      data: RESPONSE,
-      variables: { conversationId: "42" },
-    });
-    const data = cache.extract();
-    const newCache = client();
-    newCache.restore(data as any);
-    expect(newCache.extract()).toEqual(cache.extract());
-  });
+  it.each([{ client: apollo }, { client: relay }])(
+    "works with $client.name",
+    ({ client }) => {
+      const cache = client();
+      cache.writeQuery({
+        query: QueryDocument,
+        data: RESPONSE,
+        variables: { conversationId: "42" },
+      });
+      const data = cache.extract();
+      const newCache = client();
+      newCache.restore(data as any);
+      expect(newCache.extract()).toEqual(cache.extract());
+    },
+  );
 });
 
 describe("key-fields", () => {
@@ -557,36 +559,35 @@ describe("key-fields", () => {
         } as TypePolicies,
       },
     ])("$scenario", ({ typePolicies }) => {
-      it.each([
-        { client: apollo, query: ApolloQuery as any },
-        { client: relay, query: RelayQuery as any },
-      ])("works with $client.name", ({ client, query }) => {
-        const cache = client(typePolicies);
-        const response = {
-          conversation: {
-            ...RESPONSE.conversation,
-            messages: [
-              {
-                __typename: "Message",
-                id: "message-42",
-                authorId: "author-42",
-                text: "Hello World",
-                createdAt: "2020-01-01T00:00:00.000Z",
-              },
-            ],
-          },
-        };
-        cache.writeQuery({
-          query,
-          data: response,
-          variables: { conversationId: "42", includeNestedData: true },
-        });
-        expect(
-          cache.readQuery({
-            query,
+      it.each([{ client: apollo }, { client: relay }])(
+        "works with $client.name",
+        ({ client }) => {
+          const cache = client(typePolicies);
+          const response = {
+            conversation: {
+              ...RESPONSE.conversation,
+              messages: [
+                {
+                  __typename: "Message",
+                  id: "message-42",
+                  authorId: "author-42",
+                  text: "Hello World",
+                  createdAt: "2020-01-01T00:00:00.000Z",
+                },
+              ],
+            },
+          };
+          cache.writeQuery({
+            query: QueryDocument,
+            data: response,
             variables: { conversationId: "42", includeNestedData: true },
-          }),
-        ).toMatchInlineSnapshot(`
+          });
+          expect(
+            cache.readQuery({
+              query: QueryDocument,
+              variables: { conversationId: "42", includeNestedData: true },
+            }),
+          ).toMatchInlineSnapshot(`
             Object {
               "conversation": Object {
                 "id": "42",
@@ -602,8 +603,9 @@ describe("key-fields", () => {
               },
             }
           `);
-        expect(cache.extract()).toMatchSnapshot();
-      });
+          expect(cache.extract()).toMatchSnapshot();
+        },
+      );
     });
   });
 });

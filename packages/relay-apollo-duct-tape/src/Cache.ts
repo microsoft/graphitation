@@ -36,6 +36,7 @@ import {
   OperationDescriptor,
   ROOT_TYPE,
   getSelector,
+  getFragment,
 } from "relay-runtime";
 import { getRequest, createOperationDescriptor, ROOT_ID } from "relay-runtime";
 import { NormalizationFragmentSpread } from "relay-runtime/lib/util/NormalizationNode";
@@ -110,16 +111,29 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
    * Read/write
    ***************************************************************************/
 
+  read<TData = any, TVariables = any>(
+    options: ApolloCacheTypes.ReadOptions<TVariables, TData>,
+  ): TData | null {
+    const taggedNode = options.query.__relay;
+    invariant(
+      taggedNode,
+      "RelayApolloCache: Expected document to contain Relay IR.",
+    );
+    const request = getRequest(taggedNode);
+    return this.readWithRelayIR(request, options);
+  }
+
   // TODO: This is ignoring rootId, is that ok?
   // TODO: This version only supports 1 level of fragment atm. We would have to recurse into the data to fetch data of other fragments. Do we need this for TMP cases?
   /**
    * In case of partial data, this will still include the missing keys in the
    * result, but with a value of `undefined`.
    */
-  read<TData = any, TVariables = any>(
-    options: ApolloCacheTypes.ReadOptions<TVariables, TData>,
+  private readWithRelayIR<TData = any, TVariables = any>(
+    request: ConcreteRequest,
+    options: Omit<ApolloCacheTypes.ReadOptions<TVariables, TData>, "query">,
   ): TData | null {
-    const snapshot = this.getSnapshot(options);
+    const snapshot = this.getSnapshot(request, options);
     // TODO: Is knowning that the store only saw the root record good enough?
     if (!options.optimistic && snapshot.seenRecords.size === 1) {
       return null;
@@ -130,12 +144,24 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     return (snapshot.data as unknown) as TData;
   }
 
-  // TODO: When is Reference as return type used?
-  // TODO: This is ignoring dataId atm
   write<TData = any, TVariables = any>(
     options: ApolloCacheTypes.WriteOptions<TData, TVariables>,
   ): Reference | undefined {
-    const request = getRequest(options.query.__relay);
+    const taggedNode = options.query.__relay;
+    invariant(
+      taggedNode,
+      "RelayApolloCache: Expected document to contain Relay IR.",
+    );
+    const request = getRequest(taggedNode);
+    return this.writeWithRelayIR(request, options);
+  }
+
+  // TODO: When is Reference as return type used?
+  // TODO: This is ignoring dataId atm
+  private writeWithRelayIR<TData = any, TVariables = any>(
+    request: ConcreteRequest,
+    options: Omit<ApolloCacheTypes.WriteOptions<TData, TVariables>, "query">,
+  ): Reference | undefined {
     const operation = createOperationDescriptor(
       request,
       options.variables || {},
@@ -181,8 +207,13 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   writeFragment<TData = any, TVariables = any>(
     options: ApolloCacheTypes.WriteFragmentOptions<TData, TVariables>,
   ): Reference | undefined {
-    this.write({
-      query: getNodeQuery(options.fragment, options.id || ROOT_ID),
+    const taggedNode = options.fragment.__relay;
+    invariant(
+      taggedNode,
+      "RelayApolloCache: Expected document to contain Relay IR.",
+    );
+    const fragment = getFragment(taggedNode);
+    this.writeWithRelayIR(getNodeQuery(fragment, options.id || ROOT_ID), {
       result: { node: options.data },
       variables: options.variables,
     });
@@ -199,17 +230,25 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     options: ApolloCacheTypes.ReadFragmentOptions<FragmentType, TVariables>,
     optimistic = !!options.optimistic,
   ): FragmentType | null {
-    const queryResult = this.read({
-      ...options,
-      query: getNodeQuery(options.fragment, options.id || ROOT_ID),
-      optimistic,
-    }) as any;
+    const taggedNode = options.fragment.__relay;
+    invariant(
+      taggedNode,
+      "RelayApolloCache: Expected document to contain Relay IR.",
+    );
+    const fragment = getFragment(taggedNode);
+    const queryResult = this.readWithRelayIR(
+      getNodeQuery(fragment, options.id || ROOT_ID),
+      {
+        ...options,
+        optimistic,
+      },
+    ) as any;
     if (!optimistic && queryResult === null) {
       return null;
     }
     const fragmentRef = queryResult.node;
 
-    const fragmentSelector = getSelector(options.fragment, fragmentRef);
+    const fragmentSelector = getSelector(fragment, fragmentRef);
     invariant(
       fragmentSelector.kind === "SingularReaderSelector",
       "Only singular fragments are supported",
@@ -233,7 +272,13 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   diff<TData = any, TVariables = any>(
     options: ApolloCacheTypes.DiffOptions,
   ): ApolloCacheTypes.DiffResult<TData> {
-    const snapshot = this.getSnapshot(options);
+    const taggedNode = options.query.__relay;
+    invariant(
+      taggedNode,
+      "RelayApolloCache: Expected document to contain Relay IR.",
+    );
+    const request = getRequest(taggedNode);
+    const snapshot = this.getSnapshot(request, options);
     return {
       result: (snapshot.data as unknown) as TData,
       complete: !snapshot.isMissingData,
@@ -244,8 +289,14 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   watch<TData = any, TVariables = any>(
     options: ApolloCacheTypes.WatchOptions<TData, TVariables>,
   ): () => void {
+    const taggedNode = options.query.__relay;
+    invariant(
+      taggedNode,
+      "RelayApolloCache: Expected document to contain Relay IR.",
+    );
+    const request = getRequest(taggedNode);
     const operation = createOperationDescriptor(
-      options.query.__relay,
+      request,
       options.variables || {},
     );
     const cacheIdentifier = getQueryCacheIdentifier(operation);
@@ -371,8 +422,10 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
    * Private
    ***************************************************************************/
 
-  private getSnapshot(options: ApolloCacheTypes.DiffOptions): Snapshot {
-    const request = getRequest(options.query.__relay);
+  private getSnapshot(
+    request: ConcreteRequest,
+    options: Omit<ApolloCacheTypes.DiffOptions, "query">,
+  ): Snapshot {
     const operation = createOperationDescriptor(
       request,
       options.variables || {},
