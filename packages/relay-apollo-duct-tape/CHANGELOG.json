@@ -1,0 +1,20 @@
+{
+  "name": "@graphitation/relay-apollo-duct-tape",
+  "entries": [
+    {
+      "date": "Thu, 22 Sep 2022 23:01:42 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.1.0",
+      "version": "0.1.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "ddd4f926849f00a7979d87e90cb088fe4b5bf2d7",
+            "comment": "Initial release"
+          }
+        ]
+      }
+    }
+  ]
+}
