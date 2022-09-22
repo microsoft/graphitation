@@ -10,6 +10,7 @@ import type {
   NormalizedCacheObject,
   InMemoryCacheConfig,
 } from "@apollo/client";
+import type { SubscriptionObserver } from "zen-observable-ts";
 import { assertType, isAbstractType } from "graphql";
 import type { DocumentNode, ExecutionResult, GraphQLSchema } from "graphql";
 import invariant from "invariant";
@@ -175,7 +176,7 @@ class MockLink extends ApolloLink {
 function executeOperationMockResolver(
   resolver: OperationMockResolver,
   operation: OperationDescriptor,
-  observer: ZenObservable.SubscriptionObserver<FetchResult>,
+  observer: SubscriptionObserver<FetchResult>,
 ) {
   const resolved = resolver(operation);
   if (resolved) {
@@ -193,7 +194,7 @@ function executeOperationMockResolver(
 class Mock implements MockFunctions {
   private operations: Map<
     OperationDescriptor,
-    ZenObservable.SubscriptionObserver<FetchResult>
+    SubscriptionObserver<FetchResult>
   >;
 
   private resolversQueue: OperationMockResolver[];
@@ -205,7 +206,7 @@ class Mock implements MockFunctions {
 
   public addOperation(
     operation: OperationDescriptor,
-    observer: ZenObservable.SubscriptionObserver<FetchResult>,
+    observer: SubscriptionObserver<FetchResult>,
   ) {
     for (const resolver of this.resolversQueue) {
       if (executeOperationMockResolver(resolver, operation, observer)) {
