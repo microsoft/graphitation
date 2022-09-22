@@ -19,9 +19,20 @@ export class TodoStorage {
   getAllTodos(): Array<Todo> {
     const existingTodos = this.localStorage.getItem(ALL_TODOS_KEY);
     if (existingTodos) {
-      return JSON.parse(existingTodos) as any as Array<Todo>;
+      return JSON.parse(existingTodos) as Array<Todo>;
     } else {
-      return [];
+      return [
+        {
+          id: "1",
+          text: "Learn GraphQL",
+          isCompleted: true,
+        },
+        {
+          id: "2",
+          text: "Learn Supermassive",
+          isCompleted: false,
+        },
+      ];
     }
   }
 

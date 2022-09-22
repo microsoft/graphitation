@@ -6,12 +6,9 @@ import {
 } from "@apollo/client";
 import { RelayApolloCache } from "../../../packages/relay-apollo-duct-tape/src/Cache";
 import React from "react";
-import { RecordSource, Store } from "relay-runtime";
 import { onError } from "@apollo/client/link/error";
 import TodoList from "./components/TodoList";
 import { asyncSplit } from "./schema/asyncSplit";
-
-const store = new Store(new RecordSource());
 
 // Log any GraphQL errors or network error that occurred
 const errorLink = onError(({ graphQLErrors, networkError }) => {
@@ -30,7 +27,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 });
 
 const client = new ApolloClient({
-  cache: new RelayApolloCache({ store }),
+  cache: new RelayApolloCache(),
   link: from([
     errorLink,
     asyncSplit(
