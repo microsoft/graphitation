@@ -783,6 +783,11 @@
   dependencies:
     invariant "^2.2.4"
 
+"@graphitation/graphql-codegen-relay-ir-plugin@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@graphitation/graphql-codegen-relay-ir-plugin/-/graphql-codegen-relay-ir-plugin-1.1.0.tgz#de9a473c3b132ee7477dac0f194f0b52b704ed6a"
+  integrity sha512-ff2P4EAxeckj5upu275l0Zro4aF7O1D/Fqj9Zlkd/4EMNWZTC329FCD3jTeaUnqXbHZX0F9Ub8aDi1f7PWQu1Q==
+
 "@graphitation/graphql-codegen-supermassive-relay-ir-plugin@link:../packages/graphql-codegen-supermassive-relay-ir-plugin":
   version "0.0.0"
   uid ""

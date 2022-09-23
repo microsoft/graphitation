@@ -7,14 +7,14 @@
 import * as Types from '../src/__generated__/types.js';
 
 import { DocumentNode } from "graphql";
-export type TodoUpdatesSubscriptionSubscriptionVariables = Types.Exact<{
+export type TodoUpdatesSubscriptionVariables = Types.Exact<{
   limit: Types.Scalars['Int'];
 }>;
 
 
-export type TodoUpdatesSubscriptionSubscription = { __typename?: 'Subscription', emitTodos?: { __typename?: 'Todo', id: string, text: string, isCompleted: boolean } | null };
+export type TodoUpdatesSubscription = { readonly emitTodos: { readonly __typename: 'Todo', readonly id: string, readonly text: string, readonly isCompleted: boolean } | null };
 
-export type TodoSubscriptionFragmentFragment = { __typename?: 'Todo', id: string, text: string, isCompleted: boolean };
+export type TodoSubscriptionFragment = { readonly __typename: 'Todo', readonly id: string, readonly text: string, readonly isCompleted: boolean };
 
 export const TodoUpdatesSubscriptionDocument: DocumentNode = (function(){
 var v0 = {
@@ -26,53 +26,26 @@ v1 = {
   "name": (v0/*: any*/)
 },
 v2 = {
-  "kind": "NonNullType",
-  "type": {
-    "kind": "NamedType",
-    "name": {
-      "kind": "Name",
-      "value": "Int"
-    }
-  }
-},
-v3 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
     "value": "id"
   },
   "arguments": ([]/*: any*/),
-  "directives": ([]/*: any*/),
-  "__type": {
-    "kind": "NonNullType",
-    "type": {
-      "kind": "NamedType",
-      "name": {
-        "kind": "Name",
-        "value": "ID"
-      }
-    }
-  }
+  "directives": ([]/*: any*/)
 },
-v4 = {
+v3 = {
   "kind": "Name",
   "value": "TodoSubscriptionFragment"
 },
-v5 = {
-  "kind": "NamedType",
-  "name": {
-    "kind": "Name",
-    "value": "Todo"
-  }
-},
-v6 = [
+v4 = [
   {
     "defaultValue": null,
     "kind": "LocalArgument",
     "name": "limit"
   }
 ],
-v7 = [
+v5 = [
   {
     "alias": null,
     "args": [
@@ -126,7 +99,16 @@ return {
         {
           "kind": "VariableDefinition",
           "variable": (v1/*: any*/),
-          "type": (v2/*: any*/),
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Int"
+              }
+            }
+          },
           "directives": []
         }
       ],
@@ -144,36 +126,40 @@ return {
               {
                 "kind": "Argument",
                 "name": (v0/*: any*/),
-                "value": (v1/*: any*/),
-                "__type": (v2/*: any*/)
+                "value": (v1/*: any*/)
               }
             ],
             "directives": [],
             "selectionSet": {
               "kind": "SelectionSet",
               "selections": [
-                (v3/*: any*/),
+                (v2/*: any*/),
                 {
                   "kind": "FragmentSpread",
-                  "name": (v4/*: any*/),
+                  "name": (v3/*: any*/),
                   "directives": []
                 }
               ]
-            },
-            "__type": (v5/*: any*/)
+            }
           }
         ]
       }
     },
     {
       "kind": "FragmentDefinition",
-      "name": (v4/*: any*/),
-      "typeCondition": (v5/*: any*/),
+      "name": (v3/*: any*/),
+      "typeCondition": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "Todo"
+        }
+      },
       "directives": [],
       "selectionSet": {
         "kind": "SelectionSet",
         "selections": [
-          (v3/*: any*/),
+          (v2/*: any*/),
           {
             "kind": "Field",
             "name": {
@@ -181,17 +167,7 @@ return {
               "value": "text"
             },
             "arguments": [],
-            "directives": [],
-            "__type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "String"
-                }
-              }
-            }
+            "directives": []
           },
           {
             "kind": "Field",
@@ -200,17 +176,7 @@ return {
               "value": "isCompleted"
             },
             "arguments": [],
-            "directives": [],
-            "__type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Boolean"
-                }
-              }
-            }
+            "directives": []
           }
         ]
       }
@@ -218,20 +184,20 @@ return {
   ],
   "__relay": {
     "fragment": {
-      "argumentDefinitions": (v6/*: any*/),
+      "argumentDefinitions": (v4/*: any*/),
       "kind": "Fragment",
       "metadata": null,
       "name": "TodoUpdatesSubscription",
-      "selections": (v7/*: any*/),
+      "selections": (v5/*: any*/),
       "type": "Subscription",
       "abstractKey": null
     },
     "kind": "Request",
     "operation": {
-      "argumentDefinitions": (v6/*: any*/),
+      "argumentDefinitions": (v4/*: any*/),
       "kind": "Operation",
       "name": "TodoUpdatesSubscription",
-      "selections": (v7/*: any*/)
+      "selections": (v5/*: any*/)
     },
     "params": {
       "cacheID": "d41d8cd98f00b204e9800998ecf8427e",

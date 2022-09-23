@@ -53,6 +53,7 @@
     "yargs-parser": ">=13.1.2"
   },
   "devDependencies": {
+    "@graphitation/graphql-codegen-relay-ir-plugin": "^1.1.0",
     "@graphql-codegen/cli": "^1.19.4",
     "@graphql-codegen/import-types-preset": "^2.1.7",
     "@graphql-codegen/near-operation-file-preset": "^2.4.1",

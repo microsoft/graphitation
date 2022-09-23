@@ -36,12 +36,17 @@ import { print } from "relay-compiler/lib/core/IRPrinter";
 // import { OperationDefinitionNode } from "@graphitation/supermassive/src/ast/TypedAST";
 import inlineFragmentsTransform from "./InlineFragmentsWithoutRemovingFragmentsTransform";
 
+const SchemaCache = new WeakMap();
+
 export const plugin: PluginFunction<RawClientSideBasePluginConfig> = (
   schema: GraphQLSchema,
   documents: Types.DocumentFile[],
   config: RawClientSideBasePluginConfig,
 ) => {
-  const relaySchema = createRelaySchema(new Source(printSchema(schema)));
+  if (!SchemaCache.has(schema)) {
+    SchemaCache.set(schema, createRelaySchema(new Source(printSchema(schema))));
+  }
+  const relaySchema = SchemaCache.get(schema);
   let compilerContext = new CompilerContext(relaySchema);
   const documentsByName: { [key: string]: DocumentNode } = {};
   documents.forEach(({ document, rawSDL }) => {
@@ -87,10 +92,10 @@ export const plugin: PluginFunction<RawClientSideBasePluginConfig> = (
     }
   });
 
-  const queryCompilerContext = compilerContext.applyTransforms([
+  let queryCompilerContext = compilerContext.applyTransforms([
     ...(codegenTransforms as IRTransform[]),
   ]);
-  const fragmentCompilerContext = compilerContext.applyTransforms([
+  let fragmentCompilerContext = compilerContext.applyTransforms([
     inlineFragmentsTransform,
     ...(fragmentTransforms as IRTransform[]),
   ]);
@@ -150,6 +155,11 @@ export const plugin: PluginFunction<RawClientSideBasePluginConfig> = (
       });
     }
   });
+
+  compilerContext = null as any;
+  queryCompilerContext = null as any;
+  fragmentCompilerContext = null as any;
+
   return {
     prepend: [`import { DocumentNode } from "graphql";`],
     content: results

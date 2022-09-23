@@ -8,3 +8,13 @@ TODO: THIS IS YARN LINK FRIENDLY RN.
 Remove graphql from app node_module before using
 Update this package to be release friendly
 Add transform possibility
+
+graphql imports should be resolved (see config obj of near operations)
+
+use ast instead of parsing when possible
+
+or add fragments directly to compiler context
+
+? have compiler context that's reused / cached?
+
+see why it's so f slow

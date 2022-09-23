@@ -7,14 +7,14 @@
 import * as Types from '../src/__generated__/types.js';
 
 import { DocumentNode } from "graphql";
-export type TodoListQueryQueryVariables = Types.Exact<{ [key: string]: never; }>;
+export type TodoListQueryVariables = Types.Exact<{ [key: string]: never; }>;
 
 
-export type TodoListQueryQuery = { __typename?: 'Query', allTodos: Array<{ __typename?: 'Todo', id: string, text: string, isCompleted: boolean }> };
+export type TodoListQuery = { readonly allTodos: ReadonlyArray<{ readonly __typename: 'Todo', readonly id: string, readonly text: string, readonly isCompleted: boolean }> };
 
-export type TodoFragmentFragment = { __typename?: 'Todo', id: string, text: string, isCompleted: boolean };
+export type TodoFragment = { readonly __typename: 'Todo', readonly id: string, readonly text: string, readonly isCompleted: boolean };
 
-export type TodoCompletedFragmentFragment = { __typename?: 'Todo', isCompleted: boolean };
+export type TodoCompletedFragment = { readonly __typename: 'Todo', readonly isCompleted: boolean };
 
 export const TodoListQueryDocument: DocumentNode = (function(){
 var v0 = {
@@ -24,17 +24,7 @@ var v0 = {
     "value": "id"
   },
   "arguments": ([]/*: any*/),
-  "directives": ([]/*: any*/),
-  "__type": {
-    "kind": "NonNullType",
-    "type": {
-      "kind": "NamedType",
-      "name": {
-        "kind": "Name",
-        "value": "ID"
-      }
-    }
-  }
+  "directives": ([]/*: any*/)
 },
 v1 = {
   "kind": "Name",
@@ -118,16 +108,6 @@ return {
                   "directives": []
                 }
               ]
-            },
-            "__type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "ListType",
-                "type": {
-                  "kind": "NonNullType",
-                  "type": (v2/*: any*/)
-                }
-              }
             }
           }
         ]
@@ -149,17 +129,7 @@ return {
               "value": "text"
             },
             "arguments": [],
-            "directives": [],
-            "__type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "String"
-                }
-              }
-            }
+            "directives": []
           },
           {
             "kind": "FragmentSpread",
@@ -184,17 +154,7 @@ return {
               "value": "isCompleted"
             },
             "arguments": [],
-            "directives": [],
-            "__type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Boolean"
-                }
-              }
-            }
+            "directives": []
           }
         ]
       }
