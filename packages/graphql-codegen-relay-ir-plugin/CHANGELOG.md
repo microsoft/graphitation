@@ -1,8 +1,16 @@
-# Change Log - @graphitation/graphql-codegen-supermassive-typed-document-node-plugin
+# Change Log - @graphitation/graphql-codegen-relay-ir-plugin
 
-This log was last generated on Fri, 24 Jun 2022 11:59:47 GMT and should not be manually modified.
+This log was last generated on Fri, 23 Sep 2022 10:39:36 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.1.0
+
+Fri, 23 Sep 2022 10:39:36 GMT
+
+### Minor changes
+
+- Codegen Relay IR (mnovikov@microsoft.com)
 
 ## 0.1.4
 

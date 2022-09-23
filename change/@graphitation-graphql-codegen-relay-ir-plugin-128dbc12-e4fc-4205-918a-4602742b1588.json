@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Codegen Relay IR",
-  "packageName": "@graphitation/graphql-codegen-relay-ir-plugin",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

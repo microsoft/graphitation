@@ -1,6 +1,21 @@
 {
-  "name": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+  "name": "@graphitation/graphql-codegen-relay-ir-plugin",
   "entries": [
+    {
+      "date": "Fri, 23 Sep 2022 10:39:36 GMT",
+      "tag": "@graphitation/graphql-codegen-relay-ir-plugin_v1.1.0",
+      "version": "1.1.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-codegen-relay-ir-plugin",
+            "commit": "bc7de70d50ffabdfe8e576950eeae74612d3bc5a",
+            "comment": "Codegen Relay IR"
+          }
+        ]
+      }
+    },
     {
       "date": "Fri, 24 Jun 2022 11:59:47 GMT",
       "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v0.1.4",
