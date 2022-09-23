@@ -1,14 +1,12 @@
 {
-  "name": "@graphitation/graphql-codegen-supermassive-relay-ir-plugin",
+  "name": "@graphitation/graphql-codegen-relay-ir-plugin",
   "license": "MIT",
   "version": "1.0.0",
-  "main": "./lib/index",
-  "types": "./lib/index.d.ts",
-  "module": "./lib/index.mjs",
+  "main": "./src/index.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",
-    "directory": "packages/graphql-codegen-supermassive-relay-ir-plugin"
+    "directory": "packages/graphql-codegen-relay-ir-plugin"
   },
   "scripts": {
     "build": "monorepo-scripts build",
@@ -32,7 +30,6 @@
     "@graphql-codegen/visitor-plugin-common": ">= ^1.17.0 < 2",
     "graphql-tag": ">= 2.11.0 < 3",
     "@graphql-tools/optimize": "^1.0.1",
-    "@graphitation/supermassive": "^1.0.0",
     "relay-compiler": "^12.0.0"
   },
   "sideEffects": false,

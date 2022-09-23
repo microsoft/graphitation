@@ -11,6 +11,7 @@ import {
   visit,
   Kind,
   parse,
+  OperationDefinitionNode,
 } from "graphql";
 import { extname } from "path";
 import {
@@ -29,10 +30,10 @@ import {
 } from "relay-compiler/lib/core/RelayIRTransforms";
 import dedupeJSONStringify from "relay-compiler/lib/util/dedupeJSONStringify";
 import { Request } from "relay-compiler/lib/core/IR";
-import { addTypesToRequestDocument } from "@graphitation/supermassive/lib/index.js";
+// import { addTypesToRequestDocument } from "@graphitation/supermassive/lib/index.js";
 import { print } from "relay-compiler/lib/core/IRPrinter";
-import type { DocumentNode as SupermassiveDocumentNode } from "@graphitation/supermassive";
-import { OperationDefinitionNode } from "@graphitation/supermassive/src/ast/TypedAST";
+// import type { DocumentNode as SupermassiveDocumentNode } from "@graphitation/supermassive";
+// import { OperationDefinitionNode } from "@graphitation/supermassive/src/ast/TypedAST";
 import inlineFragmentsTransform from "./InlineFragmentsWithoutRemovingFragmentsTransform";
 
 export const plugin: PluginFunction<RawClientSideBasePluginConfig> = (
@@ -42,29 +43,41 @@ export const plugin: PluginFunction<RawClientSideBasePluginConfig> = (
 ) => {
   const relaySchema = createRelaySchema(new Source(printSchema(schema)));
   let compilerContext = new CompilerContext(relaySchema);
-  const documentsByName: { [key: string]: SupermassiveDocumentNode } = {};
+  const documentsByName: { [key: string]: DocumentNode } = {};
   documents.forEach(({ document, rawSDL }) => {
     if (document && rawSDL) {
-      const supermassiveDocument: SupermassiveDocumentNode = addTypesToRequestDocument(
-        schema,
-        visit(document, {
-          leave(node) {
-            if (node.loc) {
-              return {
-                ...node,
-                loc: undefined,
-              };
-            } else {
-              return node;
-            }
-          },
-        }),
-      );
-      const operation = supermassiveDocument.definitions.find(
+      const locationLessDocument: DocumentNode = visit(document, {
+        leave(node) {
+          if (node.loc) {
+            return {
+              ...node,
+              loc: undefined,
+            };
+          } else {
+            return node;
+          }
+        },
+      });
+      // const supermassiveDocument: DocumentNode = addTypesToRequestDocument(
+      //   schema,
+      //   visit(document, {
+      //     leave(node) {
+      //       if (node.loc) {
+      //         return {
+      //           ...node,
+      //           loc: undefined,
+      //         };
+      //       } else {
+      //         return node;
+      //       }
+      //     },
+      //   }),
+      // );
+      const operation = locationLessDocument.definitions.find(
         ({ kind }) => kind === "OperationDefinition",
       ) as OperationDefinitionNode | undefined;
       if (operation && operation.name?.value) {
-        documentsByName[operation.name.value] = supermassiveDocument;
+        documentsByName[operation.name.value] = locationLessDocument;
       }
 
       const parsed = parseRelay(relaySchema, rawSDL);
