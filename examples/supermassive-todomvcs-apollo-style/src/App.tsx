@@ -10,6 +10,8 @@ import { onError } from "@apollo/client/link/error";
 import TodoList from "./components/TodoList";
 import { asyncSplit } from "./schema/asyncSplit";
 
+const isProduction = false;
+
 // Log any GraphQL errors or network error that occurred
 const errorLink = onError(({ graphQLErrors, networkError }) => {
   if (graphQLErrors)
@@ -31,7 +33,7 @@ const client = new ApolloClient({
   link: from([
     errorLink,
     asyncSplit(
-      () => true,
+      () => isProduction,
       async () => {
         const { supermassiveSchemaLink } = await import(
           /* webpackChunkName: "supermassiveLink" */

@@ -41,9 +41,13 @@ const config: () => Promise<typeof webpack.Configuration> = async () => {
             }),
           },
         },
+        // This generates AST for the typeDefs.graphql file
         {
           test: /\.graphql$/,
           loader: "webpack-graphql-loader",
+          options: {
+            output: "document",
+          },
         },
       ],
     },

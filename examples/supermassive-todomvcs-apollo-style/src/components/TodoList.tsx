@@ -4,13 +4,13 @@ import { useQuery } from "@apollo/client";
 import Todo from "./Todo";
 import TodoUpdates from "./TodoUpdates";
 import {
-  TodoListQueryQuery,
+  TodoListQuery,
   TodoListQueryDocument,
 } from "./graphql/TodoListQuery.graphql.interface";
 
 const TodoList = () => {
   console.log(TodoListQueryDocument);
-  const { data } = useQuery(TodoListQueryDocument);
+  const { data } = useQuery<TodoListQuery>(TodoListQueryDocument);
   return (
     <>
       <TodoUpdates onNext={console.log} onError={console.log}>

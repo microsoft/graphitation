@@ -2,7 +2,7 @@ import React from "react";
 
 import { useSubscription } from "@apollo/client";
 import {
-  TodoUpdatesSubscriptionSubscription,
+  TodoUpdatesSubscription,
   TodoUpdatesSubscriptionDocument,
 } from "./graphql/TodoUpdatesSubscription.graphql.interface";
 
@@ -12,14 +12,11 @@ interface TodoSubscriptionProps {
 }
 
 const TodoUpdates: React.FC<TodoSubscriptionProps> = ({ onNext, children }) => {
-  useSubscription<TodoUpdatesSubscriptionSubscription>(
-    TodoUpdatesSubscriptionDocument,
-    {
-      variables: { limit: 5 },
-      onSubscriptionData: onNext,
-      // onError: onError || undefined,
-    }
-  );
+  useSubscription<TodoUpdatesSubscription>(TodoUpdatesSubscriptionDocument, {
+    variables: { limit: 5 },
+    onSubscriptionData: onNext,
+    // onError: onError || undefined,
+  });
 
   return <>{children}</>;
 };

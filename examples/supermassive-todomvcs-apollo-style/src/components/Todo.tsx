@@ -1,8 +1,8 @@
 import React from "react";
 
-import { TodoFragmentFragment } from "./graphql/TodoListQuery.graphql.interface";
+import { TodoFragment } from "./graphql/TodoListQuery.graphql.interface";
 
-const Todo = ({ todo }: { todo: TodoFragmentFragment }) => {
+const Todo = ({ todo }: { todo: TodoFragment }) => {
   return (
     <>
       <span>{todo.text}</span>
