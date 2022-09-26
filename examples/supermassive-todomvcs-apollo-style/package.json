@@ -19,6 +19,7 @@
     "@graphitation/supermassive": "^0.8.3",
     "@graphitation/ts-transform-graphql-js-tag": "^0.4.0",
     "concurrently": "^6.5.1",
+    "event-iterator": "^2.0.0",
     "graphql": "^15.6.1",
     "graphql-tools": "^8.2.0",
     "html-webpack-plugin": "^5.3.2",

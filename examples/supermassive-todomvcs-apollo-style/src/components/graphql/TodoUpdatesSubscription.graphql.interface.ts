@@ -64,6 +64,13 @@ v5 = [
         "alias": null,
         "args": null,
         "kind": "ScalarField",
+        "name": "__typename",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
         "name": "id",
         "storageKey": null
       },
@@ -133,6 +140,15 @@ return {
             "selectionSet": {
               "kind": "SelectionSet",
               "selections": [
+                {
+                  "kind": "Field",
+                  "name": {
+                    "kind": "Name",
+                    "value": "__typename"
+                  },
+                  "arguments": [],
+                  "directives": []
+                },
                 (v2/*: any*/),
                 {
                   "kind": "FragmentSpread",

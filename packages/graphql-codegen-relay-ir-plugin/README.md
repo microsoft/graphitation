@@ -18,3 +18,5 @@ or add fragments directly to compiler context
 ? have compiler context that's reused / cached?
 
 see why it's so f slow
+
+add addTypename option to RelayApolloCache to add the field selection to outgoing documents and ensure the Relay IR also includes it if it needs it

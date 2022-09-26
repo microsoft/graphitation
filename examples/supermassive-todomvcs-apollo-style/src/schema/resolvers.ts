@@ -1,4 +1,5 @@
 import { v4 } from "uuid";
+import { subscribe as subscribeToEvents } from "event-iterator/lib/dom";
 // import { Resolvers } from "@graphitation/supermassive";
 
 interface Todo {
@@ -17,22 +18,18 @@ export class TodoStorage {
   }
 
   getAllTodos(): Array<Todo> {
+    if (this.localStorage.length === 0) {
+      this.updateTodo({
+        ...this.createTodo("Learn GraphQL"),
+        isCompleted: true,
+      });
+      this.createTodo("Learn Supermassive");
+    }
     const existingTodos = this.localStorage.getItem(ALL_TODOS_KEY);
     if (existingTodos) {
       return JSON.parse(existingTodos) as Array<Todo>;
     } else {
-      return [
-        {
-          id: "1",
-          text: "Learn GraphQL",
-          isCompleted: true,
-        },
-        {
-          id: "2",
-          text: "Learn Supermassive",
-          isCompleted: false,
-        },
-      ];
+      throw new Error("Invariant violation");
     }
   }
 
@@ -64,10 +61,10 @@ export class TodoStorage {
     const todos = this.getAllTodos();
     const todoIndex = findIndex(todos, (otherTodo) => otherTodo.id === id);
     if (todoIndex !== -1) {
-      if (text) {
+      if (text !== undefined) {
         todos[todoIndex].text = text;
       }
-      if (isCompleted) {
+      if (isCompleted !== undefined) {
         todos[todoIndex].isCompleted = isCompleted;
       }
       this.saveTodos(todos);
@@ -108,10 +105,15 @@ export const resolvers: any = {
         context: { todoStorage: { getAllTodos: () => any } },
         _info: any
       ) {
-        const allTodos = context.todoStorage.getAllTodos();
-        const todosLimit = Math.min(limit, allTodos.length);
-        for (let i = 0; i < todosLimit; i++) {
-          yield { emitTodos: allTodos[i] };
+        for await (const e of subscribeToEvents.call(window, "storage")) {
+          const event = e as StorageEvent;
+          if (event.storageArea === window.localStorage) {
+            const allTodos = context.todoStorage.getAllTodos();
+            const todosLimit = Math.min(limit, allTodos.length);
+            for (let i = 0; i < todosLimit; i++) {
+              yield { emitTodos: allTodos[i] };
+            }
+          }
         }
       },
     },
