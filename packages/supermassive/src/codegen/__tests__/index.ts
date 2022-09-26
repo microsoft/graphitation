@@ -241,7 +241,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { UserModel, UserParamsInputModel } from \\"./models.interface.ts\\";
+        import type { UserModel } from \\"./models.interface.ts\\";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
@@ -250,7 +250,7 @@ describe(generateTS, () => {
         };
         export declare namespace Query {
             export type userById = (model: unknown, args: {
-                params: UserParamsInputModel | null;
+                params: UserParamsInput | null;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
         }
         "
@@ -289,7 +289,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { UserModel, PresenceInputModel, UserParamsInputModel } from \\"./models.interface.ts\\";
+        import type { UserModel } from \\"./models.interface.ts\\";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
@@ -298,11 +298,11 @@ describe(generateTS, () => {
         };
         export type UserParamsInput = {
             name: string;
-            presence: PresenceInputModel | null;
+            presence: PresenceInput | null;
         };
         export declare namespace Query {
             export type userById = (model: unknown, args: {
-                params: UserParamsInputModel | null;
+                params: UserParamsInput | null;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
         }
         "

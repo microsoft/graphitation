@@ -1,8 +1,12 @@
 import ts, { factory } from "typescript";
-import { DocumentNode, Kind } from "graphql";
+import { DocumentNode } from "graphql";
 import { ASTReducer, visit } from "./typedVisitor";
-import { TsCodegenContext, TypeLocation } from "./context";
-import { createNullableType, createNonNullableType } from "./utilities";
+import { TsCodegenContext } from "./context";
+import {
+  createNullableType,
+  createNonNullableType,
+  isDirectAncestorInput,
+} from "./utilities";
 
 export function generateModels(
   context: TsCodegenContext,
@@ -247,10 +251,7 @@ function createModelsReducer(
     },
     NamedType: {
       leave(node, _a, _p, path, ancestors): ts.TypeNode | ts.Expression {
-        const parentObject = ancestors[ancestors.length - 1];
-        const isAncestorInput =
-          "kind" in parentObject &&
-          parentObject.kind === Kind.INPUT_VALUE_DEFINITION;
+        const isAncestorInput = isDirectAncestorInput(ancestors);
 
         const isImplementedInterface = path[path.length - 2] === "interfaces";
         if (isImplementedInterface) {

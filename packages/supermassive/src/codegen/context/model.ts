@@ -39,9 +39,10 @@ export function processModelDirective(
     ((typeDef as ASTNode).kind !== "ObjectTypeDefinition" &&
       (typeDef as ASTNode).kind !== "ScalarTypeDefinition")
   ) {
-    throw new GraphQLError("Directive @model must be defined on Object type", [
-      node,
-    ]);
+    throw new GraphQLError(
+      "Directive @model must be defined on Object or Scalar type",
+      [node],
+    );
   }
   const typeName = (typeDef as ObjectTypeDefinitionNode).name.value;
 

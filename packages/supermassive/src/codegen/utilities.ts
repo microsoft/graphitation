@@ -1,4 +1,5 @@
 import ts, { factory } from "typescript";
+import { ASTNode, Kind } from "graphql";
 
 export function createNullableType(node: ts.TypeNode): ts.UnionTypeNode {
   return factory.createUnionTypeNode([
@@ -13,6 +14,25 @@ export function createNonNullableType(node: ts.TypeNode): ts.TypeNode {
   } else {
     throw new Error(`Can't make type non nullable: ${node}.`);
   }
+}
+
+export function isDirectAncestorInput(
+  ancestors: readonly (ASTNode | readonly ASTNode[])[],
+): boolean {
+  const directAncestors = ancestors[ancestors.length - 1];
+  if (Array.isArray(directAncestors)) {
+    return directAncestors.some((directAncestor) => {
+      return (
+        "kind" in directAncestor &&
+        directAncestor.kind === Kind.INPUT_VALUE_DEFINITION
+      );
+    });
+  }
+
+  return (
+    "kind" in directAncestors &&
+    directAncestors.kind === Kind.INPUT_VALUE_DEFINITION
+  );
 }
 
 export function createVariableNameFromImport(path: string): string {

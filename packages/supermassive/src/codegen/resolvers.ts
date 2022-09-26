@@ -7,7 +7,11 @@ import {
 } from "graphql";
 import { ASTReducer, visit } from "./typedVisitor";
 import { TsCodegenContext } from "./context";
-import { createNullableType, createNonNullableType } from "./utilities";
+import {
+  createNullableType,
+  createNonNullableType,
+  isDirectAncestorInput,
+} from "./utilities";
 
 export function generateResolvers(
   context: TsCodegenContext,
@@ -207,10 +211,7 @@ function createResolversReducer(
 
     NamedType: {
       leave(node, _a, _p, _path, ancestors): ts.TypeNode {
-        const parentObject = ancestors[ancestors.length - 1];
-        const isAncestorInput =
-          "kind" in parentObject &&
-          parentObject.kind === Kind.INPUT_VALUE_DEFINITION;
+        const isAncestorInput = isDirectAncestorInput(ancestors);
 
         return createNullableType(
           context
