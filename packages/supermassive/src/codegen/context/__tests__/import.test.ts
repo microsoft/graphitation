@@ -1,5 +1,5 @@
 import { processImportDirective } from "../import";
-import { Kind, parse, print } from "graphql";
+import { Kind, parse, print, GraphQLError } from "graphql";
 import graphql from "../../../utilities/blankGraphQLTag";
 import { DefinitionImport } from "../../types";
 
@@ -63,6 +63,40 @@ describe(processImportDirective, () => {
       `"@import(from: \\"packageImport/subDir\\", defs: [\\"PackageImportSubDir\\"])"`,
     );
   });
+  it('throws an error when the "from" field is not String', () => {
+    expect.assertions(1);
+    try {
+      processDirectives(
+        graphql`
+        @import(from: ["../upDir"], defs: ["UpDir"])
+      `,
+      );
+    } catch (err) {
+      expect(err).toBeInstanceOf(GraphQLError);
+    }
+  });
+  it('throws an error when the "defs" field is not Array of Strings', () => {
+    expect.assertions(2);
+    try {
+      processDirectives(
+        graphql`
+        @import(from: "../upDir", defs: [1])
+      `,
+      );
+    } catch (err) {
+      expect(err).toBeInstanceOf(GraphQLError);
+    }
+
+    try {
+      processDirectives(
+        graphql`
+        @import(from: "../upDir", defs: "UpDir")
+      `,
+      );
+    } catch (err) {
+      expect(err).toBeInstanceOf(GraphQLError);
+    }
+  });
   it("extracts locally scoped imports", () => {
     const result = processDirectives(
       graphql`
@@ -109,7 +143,6 @@ describe(processImportDirective, () => {
       `"@import(from: \\"./loc\\", defs: [\\"LocalImport\\"])"`,
     );
   });
-  // TODO: Error cases
 });
 
 function processDirectives(str: string): DefinitionImport[] {
