@@ -7,10 +7,32 @@ import {
   TodoListQuery,
   TodoListQueryDocument,
 } from "./graphql/TodoListQuery.graphql.interface";
+import CreateTodo from "./CreateTodo";
+import {
+  TodoCreatedSubscription,
+  TodoCreatedSubscriptionDocument,
+} from "./graphql/TodoCreatedSubscription.graphql.interface";
 
 const TodoList = () => {
-  console.log(TodoListQueryDocument);
-  const { data } = useQuery<TodoListQuery>(TodoListQueryDocument);
+  const { data, subscribeToMore } = useQuery<TodoListQuery>(
+    TodoListQueryDocument
+  );
+  subscribeToMore<TodoCreatedSubscription>({
+    document: TodoCreatedSubscriptionDocument,
+    updateQuery: (prev, { subscriptionData }) => {
+      const { todoCreated } = subscriptionData.data;
+      // Unsure why this event comes twice.
+      if (prev.allTodos.find((todo) => todo.id === todoCreated!.id)) {
+        return prev;
+      }
+      return {
+        ...prev,
+        allTodos: [...prev.allTodos, todoCreated!].sort((a, b) =>
+          a.text.localeCompare(b.text)
+        ),
+      };
+    },
+  });
   return (
     <>
       <TodoUpdates onNext={console.log} onError={console.log}>
@@ -23,6 +45,7 @@ const TodoList = () => {
           ))}
         </ul>
       </TodoUpdates>
+      <CreateTodo />
     </>
   );
 };

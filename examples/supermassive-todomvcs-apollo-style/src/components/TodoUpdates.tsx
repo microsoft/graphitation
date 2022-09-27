@@ -13,7 +13,6 @@ interface TodoSubscriptionProps {
 
 const TodoUpdates: React.FC<TodoSubscriptionProps> = ({ onNext, children }) => {
   useSubscription<TodoUpdatesSubscription>(TodoUpdatesSubscriptionDocument, {
-    variables: { limit: 5 },
     onSubscriptionData: onNext,
     // onError: onError || undefined,
   });

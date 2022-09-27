@@ -1,5 +1,5 @@
-subscription TodoUpdatesSubscription($limit: Int!) {
-  emitTodos(limit: $limit) {
+subscription TodoUpdatesSubscription {
+  todoUpdated {
     __typename
     id
     ...TodoSubscriptionFragment

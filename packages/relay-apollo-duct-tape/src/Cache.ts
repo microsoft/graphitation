@@ -263,6 +263,13 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     return (snapshot.data as unknown) as FragmentType;
   }
 
+  // NOTE: Apollo Client's QueryManager uses this internally to keep track of
+  //       ROOT_MUTATIONs, so can't throw here.
+  //
+  // modify(options: ApolloCacheTypes.ModifyOptions): boolean {
+  //   throw new Error("Method not implemented.");
+  // }
+
   /****************************************************************************
    * Data changes
    ***************************************************************************/

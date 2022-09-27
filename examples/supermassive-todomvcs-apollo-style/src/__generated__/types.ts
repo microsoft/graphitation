@@ -84,12 +84,8 @@ export type SetTodoCompletedSuccess = {
 
 export type Subscription = {
   __typename?: 'Subscription';
-  emitTodos?: Maybe<Todo>;
-};
-
-
-export type SubscriptionEmitTodosArgs = {
-  limit: Scalars['Int'];
+  todoCreated?: Maybe<Todo>;
+  todoUpdated?: Maybe<Todo>;
 };
 
 export type Todo = {

@@ -7,25 +7,15 @@
 import * as Types from '../src/__generated__/types.js';
 
 import { DocumentNode } from "graphql";
-export type TodoUpdatesSubscriptionVariables = Types.Exact<{
-  limit: Types.Scalars['Int'];
-}>;
+export type TodoUpdatesSubscriptionVariables = Types.Exact<{ [key: string]: never; }>;
 
 
-export type TodoUpdatesSubscription = { readonly emitTodos: { readonly __typename: 'Todo', readonly id: string, readonly text: string, readonly isCompleted: boolean } | null };
+export type TodoUpdatesSubscription = { readonly todoUpdated: { readonly __typename: 'Todo', readonly id: string, readonly text: string, readonly isCompleted: boolean } | null };
 
 export type TodoSubscriptionFragment = { readonly __typename: 'Todo', readonly id: string, readonly text: string, readonly isCompleted: boolean };
 
 export const TodoUpdatesSubscriptionDocument: DocumentNode = (function(){
 var v0 = {
-  "kind": "Name",
-  "value": "limit"
-},
-v1 = {
-  "kind": "Variable",
-  "name": (v0/*: any*/)
-},
-v2 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
@@ -34,30 +24,17 @@ v2 = {
   "arguments": ([]/*: any*/),
   "directives": ([]/*: any*/)
 },
-v3 = {
+v1 = {
   "kind": "Name",
   "value": "TodoSubscriptionFragment"
 },
-v4 = [
-  {
-    "defaultValue": null,
-    "kind": "LocalArgument",
-    "name": "limit"
-  }
-],
-v5 = [
+v2 = [
   {
     "alias": null,
-    "args": [
-      {
-        "kind": "Variable",
-        "name": "limit",
-        "variableName": "limit"
-      }
-    ],
+    "args": null,
     "concreteType": "Todo",
     "kind": "LinkedField",
-    "name": "emitTodos",
+    "name": "todoUpdated",
     "plural": false,
     "selections": [
       {
@@ -102,23 +79,7 @@ return {
         "kind": "Name",
         "value": "TodoUpdatesSubscription"
       },
-      "variableDefinitions": [
-        {
-          "kind": "VariableDefinition",
-          "variable": (v1/*: any*/),
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "Int"
-              }
-            }
-          },
-          "directives": []
-        }
-      ],
+      "variableDefinitions": [],
       "directives": [],
       "selectionSet": {
         "kind": "SelectionSet",
@@ -127,15 +88,9 @@ return {
             "kind": "Field",
             "name": {
               "kind": "Name",
-              "value": "emitTodos"
+              "value": "todoUpdated"
             },
-            "arguments": [
-              {
-                "kind": "Argument",
-                "name": (v0/*: any*/),
-                "value": (v1/*: any*/)
-              }
-            ],
+            "arguments": [],
             "directives": [],
             "selectionSet": {
               "kind": "SelectionSet",
@@ -149,10 +104,10 @@ return {
                   "arguments": [],
                   "directives": []
                 },
-                (v2/*: any*/),
+                (v0/*: any*/),
                 {
                   "kind": "FragmentSpread",
-                  "name": (v3/*: any*/),
+                  "name": (v1/*: any*/),
                   "directives": []
                 }
               ]
@@ -163,7 +118,7 @@ return {
     },
     {
       "kind": "FragmentDefinition",
-      "name": (v3/*: any*/),
+      "name": (v1/*: any*/),
       "typeCondition": {
         "kind": "NamedType",
         "name": {
@@ -175,7 +130,7 @@ return {
       "selectionSet": {
         "kind": "SelectionSet",
         "selections": [
-          (v2/*: any*/),
+          (v0/*: any*/),
           {
             "kind": "Field",
             "name": {
@@ -200,20 +155,20 @@ return {
   ],
   "__relay": {
     "fragment": {
-      "argumentDefinitions": (v4/*: any*/),
+      "argumentDefinitions": [],
       "kind": "Fragment",
       "metadata": null,
       "name": "TodoUpdatesSubscription",
-      "selections": (v5/*: any*/),
+      "selections": (v2/*: any*/),
       "type": "Subscription",
       "abstractKey": null
     },
     "kind": "Request",
     "operation": {
-      "argumentDefinitions": (v4/*: any*/),
+      "argumentDefinitions": [],
       "kind": "Operation",
       "name": "TodoUpdatesSubscription",
-      "selections": (v5/*: any*/)
+      "selections": (v2/*: any*/)
     },
     "params": {
       "cacheID": "d41d8cd98f00b204e9800998ecf8427e",

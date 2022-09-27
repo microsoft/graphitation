@@ -9,7 +9,8 @@ type Mutation {
 }
 
 type Subscription {
-  emitTodos(limit: Int!): Todo
+  todoCreated: Todo
+  todoUpdated: Todo
 }
 
 type Todo {

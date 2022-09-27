@@ -1,0 +1,8 @@
+subscription TodoCreatedSubscription {
+  todoCreated {
+    __typename
+    id
+    text
+    isCompleted
+  }
+}

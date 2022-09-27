@@ -8,6 +8,12 @@ interface Todo {
   isCompleted: boolean;
 }
 
+type StorageMutationEvent = {
+  id: string;
+  type: "create" | "update" | "delete";
+};
+type SerializedStorage = { todos: Array<Todo>; event: StorageMutationEvent };
+
 const ALL_TODOS_KEY = "SUPERMASSIVE_ALL_TODOS";
 
 export class TodoStorage {
@@ -18,23 +24,32 @@ export class TodoStorage {
   }
 
   getAllTodos(): Array<Todo> {
-    if (this.localStorage.length === 0) {
-      this.updateTodo({
-        ...this.createTodo("Learn GraphQL"),
-        isCompleted: true,
-      });
-      this.createTodo("Learn Supermassive");
-    }
     const existingTodos = this.localStorage.getItem(ALL_TODOS_KEY);
     if (existingTodos) {
-      return JSON.parse(existingTodos) as Array<Todo>;
+      return (JSON.parse(existingTodos) as SerializedStorage).todos.sort(
+        (a, b) => a.text.localeCompare(b.text)
+      );
     } else {
-      throw new Error("Invariant violation");
+      return [];
     }
   }
 
-  saveTodos(todos: Array<Todo>): void {
-    this.localStorage.setItem(ALL_TODOS_KEY, JSON.stringify(todos));
+  getTodoById(id: string): Todo | null {
+    return this.getAllTodos().find((todo) => todo.id === id) || null;
+  }
+
+  getLastEvent(): StorageMutationEvent | null {
+    const existingTodos = this.localStorage.getItem(ALL_TODOS_KEY);
+    if (existingTodos) {
+      return (JSON.parse(existingTodos) as SerializedStorage).event;
+    } else {
+      return null;
+    }
+  }
+
+  saveTodos(todos: Array<Todo>, event: StorageMutationEvent): void {
+    const data: SerializedStorage = { todos, event };
+    this.localStorage.setItem(ALL_TODOS_KEY, JSON.stringify(data));
   }
 
   createTodo(text: string): Todo {
@@ -45,7 +60,7 @@ export class TodoStorage {
       isCompleted: false,
     };
     todos.push(todo);
-    this.saveTodos(todos);
+    this.saveTodos(todos, { id: todo.id, type: "create" });
     return todo;
   }
 
@@ -67,7 +82,7 @@ export class TodoStorage {
       if (isCompleted !== undefined) {
         todos[todoIndex].isCompleted = isCompleted;
       }
-      this.saveTodos(todos);
+      this.saveTodos(todos, { id, type: "update" });
     }
     return todos[todoIndex];
   }
@@ -77,7 +92,7 @@ export class TodoStorage {
     const todoIndex = findIndex(todos, (otherTodo) => otherTodo.id === id);
     if (todoIndex !== -1) {
       todos.splice(todoIndex, 1);
-      this.saveTodos(todos);
+      this.saveTodos(todos, { id, type: "delete" });
     }
   }
 }
@@ -98,20 +113,43 @@ export const resolvers: any = {
     },
   },
   Subscription: {
-    emitTodos: {
+    todoUpdated: {
       subscribe: async function* (
-        _source: any,
-        { limit }: { limit: number },
-        context: { todoStorage: { getAllTodos: () => any } },
-        _info: any
+        _source: unknown,
+        _args: unknown,
+        context: {
+          todoStorage: TodoStorage;
+        },
+        _info: unknown
       ) {
         for await (const e of subscribeToEvents.call(window, "storage")) {
           const event = e as StorageEvent;
           if (event.storageArea === window.localStorage) {
-            const allTodos = context.todoStorage.getAllTodos();
-            const todosLimit = Math.min(limit, allTodos.length);
-            for (let i = 0; i < todosLimit; i++) {
-              yield { emitTodos: allTodos[i] };
+            const lastEvent = context.todoStorage.getLastEvent();
+            if (lastEvent && lastEvent.type === "update") {
+              const todo = context.todoStorage.getTodoById(lastEvent.id);
+              yield { todoUpdated: todo };
+            }
+          }
+        }
+      },
+    },
+    todoCreated: {
+      subscribe: async function* (
+        _source: unknown,
+        _args: unknown,
+        context: {
+          todoStorage: TodoStorage;
+        },
+        _info: unknown
+      ) {
+        for await (const e of subscribeToEvents.call(window, "storage")) {
+          const event = e as StorageEvent;
+          if (event.storageArea === window.localStorage) {
+            const lastEvent = context.todoStorage.getLastEvent();
+            if (lastEvent && lastEvent.type === "create") {
+              const todo = context.todoStorage.getTodoById(lastEvent.id);
+              yield { todoCreated: todo };
             }
           }
         }
