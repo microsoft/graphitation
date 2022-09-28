@@ -19,6 +19,9 @@ describe(generateTS, () => {
         type User {
           id: ID!
           name: String
+          messagesWithAnswersNonRequired: [[Message]]
+          messagesWithAnswersRequired: [[Message]]!
+          messagesWithAnswersAllRequired: [[Message!]!]!
           messagesNonRequired: [Message]
           messagesWithArrayRequired: [Message]!
           messagesRequired: [Message!]!
@@ -39,11 +42,12 @@ describe(generateTS, () => {
         }
       `);
       expect(models).toMatchInlineSnapshot(`
-        "import { AvatarModel } from \\"@msteams/packages-test\\";
-        import { PostModel as _PostModel } from \\"./post-model.interface\\";
-        export type BaseModel = {
+        "import type { AvatarModel } from \\"@msteams/packages-test\\";
+        import type { PostModel as _PostModel } from \\"./post-model.interface\\";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
             __typename: string;
-        };
+        }
         export interface PostModel extends BaseModel, _PostModel {
             __typename: \\"Post\\";
         }
@@ -55,6 +59,9 @@ describe(generateTS, () => {
             __typename: \\"User\\";
             id: string;
             name: string | null;
+            messagesWithAnswersNonRequired: ((MessageModel | null)[] | null)[] | null;
+            messagesWithAnswersRequired: ((MessageModel | null)[] | null)[];
+            messagesWithAnswersAllRequired: MessageModel[][];
             messagesNonRequired: (MessageModel | null)[] | null;
             messagesWithArrayRequired: (MessageModel | null)[];
             messagesRequired: MessageModel[];
@@ -70,7 +77,7 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
         import type { PostModel, MessageModel, UserModel } from \\"./models.interface.ts\\";
-        import { AvatarModel } from \\"@msteams/packages-test\\";
+        import type { AvatarModel } from \\"@msteams/packages-test\\";
         export declare namespace Post {
             export type id = (model: PostModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
@@ -80,6 +87,9 @@ describe(generateTS, () => {
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
             export type name = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
+            export type messagesWithAnswersNonRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<((MessageModel | null)[] | null)[] | null>;
+            export type messagesWithAnswersRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<((MessageModel | null)[] | null)[]>;
+            export type messagesWithAnswersAllRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<MessageModel[][]>;
             export type messagesNonRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<(MessageModel | null)[] | null>;
             export type messagesWithArrayRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<(MessageModel | null)[]>;
             export type messagesRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<MessageModel[]>;
@@ -111,9 +121,10 @@ describe(generateTS, () => {
         }
       `);
       expect(models).toMatchInlineSnapshot(`
-        "export type BaseModel = {
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
             __typename: string;
-        };
+        }
         export interface UserModel extends BaseModel {
             __typename: \\"User\\";
             id: string;
@@ -149,9 +160,10 @@ describe(generateTS, () => {
         }
       `);
       expect(models).toMatchInlineSnapshot(`
-        "export type BaseModel = {
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
             __typename: string;
-        };
+        }
         export interface NodeModel extends BaseModel {
             __typename: string;
         }
@@ -189,9 +201,10 @@ describe(generateTS, () => {
         }
       `);
       expect(models).toMatchInlineSnapshot(`
-        "export type BaseModel = {
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
             __typename: string;
-        };
+        }
         export interface NodeModel extends BaseModel {
             __typename: string;
         }
@@ -229,9 +242,10 @@ describe(generateTS, () => {
         }
       `);
       expect(models).toMatchInlineSnapshot(`
-        "export type BaseModel = {
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
             __typename: string;
-        };
+        }
         export interface UserModel extends BaseModel {
             __typename: \\"User\\";
             id: string;
@@ -277,9 +291,10 @@ describe(generateTS, () => {
         }
       `);
       expect(models).toMatchInlineSnapshot(`
-        "export type BaseModel = {
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
             __typename: string;
-        };
+        }
         export interface UserModel extends BaseModel {
             __typename: \\"User\\";
             id: string;
@@ -326,10 +341,11 @@ describe(generateTS, () => {
         }
       `);
       expect(models).toMatchInlineSnapshot(`
-        "export type BaseModel = {
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
             __typename: string;
-        };
-        export enum PresenceAvailabilityModelModel {
+        }
+        export enum PresenceAvailabilityModel {
             Available = \\"Available\\",
             Away = \\"Away\\",
             Offline = \\"Offline\\"
@@ -375,9 +391,10 @@ describe(generateTS, () => {
         }
       `);
       expect(models).toMatchInlineSnapshot(`
-        "export type BaseModel = {
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
             __typename: string;
-        };
+        }
         export interface CustomerModel extends BaseModel {
             __typename: \\"Customer\\";
             id: string;
@@ -420,10 +437,11 @@ describe(generateTS, () => {
         }
       `);
       expect(models).toMatchInlineSnapshot(`
-        "import { UserModel as _UserModel } from \\"./user-model.interface\\";
-        export type BaseModel = {
+        "import type { UserModel as _UserModel } from \\"./user-model.interface\\";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
             __typename: string;
-        };
+        }
         export interface UserModel extends BaseModel, _UserModel {
             __typename: \\"User\\";
         }
@@ -460,10 +478,11 @@ describe(generateTS, () => {
         }
       `);
       expect(models).toMatchInlineSnapshot(`
-        "import { AvatarModel } from \\"@msteams/packages-test\\";
-        export type BaseModel = {
+        "import type { AvatarModel } from \\"@msteams/packages-test\\";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
             __typename: string;
-        };
+        }
         export interface UserModel extends BaseModel {
             __typename: \\"User\\";
             id: string;
@@ -475,7 +494,7 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
         import type { UserModel } from \\"./models.interface.ts\\";
-        import { AvatarModel } from \\"@msteams/packages-test\\";
+        import type { AvatarModel } from \\"@msteams/packages-test\\";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
             export type avatar = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AvatarModel>;
@@ -505,9 +524,10 @@ describe(generateTS, () => {
         }
       `);
       expect(models).toMatchInlineSnapshot(`
-        "export type BaseModel = {
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
             __typename: string;
-        };
+        }
         export type DateTime = DateTimeModel;
         export type DateTimeModel = string;
         export interface UserModel extends BaseModel {
@@ -548,16 +568,16 @@ describe(generateTS, () => {
         }
       `);
       expect(models).toMatchInlineSnapshot(`
-        "import { DateTimeModel as _DateTimeModel } from \\"@msteams/custom-scalars\\";
-        export type BaseModel = {
+        "import type { DateTimeModel } from \\"@msteams/custom-scalars\\";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
             __typename: string;
-        };
-        export type DateTime = _DateTimeModel;
-        export type _DateTimeModel = DateTimeModel;
+        }
+        export type DateTime = DateTimeModel;
         export interface UserModel extends BaseModel {
             __typename: \\"User\\";
             id: string;
-            dateTime: _DateTimeModel;
+            dateTime: DateTimeModel;
         }
         "
       `);
@@ -598,9 +618,10 @@ describe(generateTS, () => {
         }
       `);
       expect(models).toMatchInlineSnapshot(`
-        "export type BaseModel = {
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
             __typename: string;
-        };
+        }
         export interface UserModel extends BaseModel {
             __typename: \\"User\\";
             id: string;
@@ -647,9 +668,10 @@ describe(generateTS, () => {
       }
     `);
     expect(models).toMatchInlineSnapshot(`
-      "export type BaseModel = {
+      "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
           __typename: string;
-      };
+      }
       export interface NodeModel extends BaseModel {
           __typename: string;
       }

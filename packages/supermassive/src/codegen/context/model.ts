@@ -7,7 +7,7 @@ import {
 } from "graphql";
 import { ValueNode } from "graphql/language/ast";
 import { DefinitionModel } from "../types";
-import { createVariableNameFromImport } from "../utilities";
+import { createVariableNameFromImport, addModelSuffix } from "../utilities";
 
 export const MODEL_DIRECTIVE_NAME = "model";
 
@@ -48,7 +48,10 @@ export function processModelDirective(
 
   return {
     typeName,
-    modelName: from ? `_${typeName}Model` : `${typeName}Model`,
+    modelName:
+      (typeDef as ASTNode).kind === "ScalarTypeDefinition"
+        ? addModelSuffix(typeName)
+        : `_${addModelSuffix(typeName)}`,
     tsType: tsType.value,
     importName: from ? createVariableNameFromImport(from.value) : null,
     from: from?.value || null,

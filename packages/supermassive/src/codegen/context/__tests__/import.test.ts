@@ -14,11 +14,9 @@ describe(processImportDirective, () => {
     expect(imp.defs).toEqual([
       {
         typeName: "ScopedPackageImport",
-        modelName: "ScopedPackageImportModel",
       },
       {
         typeName: "ScopedPackageImport2",
-        modelName: "ScopedPackageImport2Model",
       },
     ]);
     expect(imp.importName).toMatchInlineSnapshot(`"NSScopedPackageImport"`);
@@ -39,11 +37,9 @@ describe(processImportDirective, () => {
     expect(plain.defs).toEqual([
       {
         typeName: "PackageImport",
-        modelName: "PackageImportModel",
       },
       {
         typeName: "PackageImport2",
-        modelName: "PackageImport2Model",
       },
     ]);
     expect(plain.importName).toMatchInlineSnapshot(`"PackageImport"`);
@@ -55,7 +51,6 @@ describe(processImportDirective, () => {
     expect(dir.defs).toEqual([
       {
         typeName: "PackageImportSubDir",
-        modelName: "PackageImportSubDirModel",
       },
     ]);
     expect(dir.importName).toMatchInlineSnapshot(`"PackageImportSubDir"`);
@@ -111,7 +106,6 @@ describe(processImportDirective, () => {
     expect(upDir.defs).toEqual([
       {
         typeName: "UpDir",
-        modelName: "UpDirModel",
       },
     ]);
     expect(upDir.importName).toMatchInlineSnapshot(`"UpUpDir"`);
@@ -123,7 +117,6 @@ describe(processImportDirective, () => {
     expect(upUpDir.defs).toEqual([
       {
         typeName: "FooBarDir",
-        modelName: "FooBarDirModel",
       },
     ]);
     expect(upUpDir.importName).toMatchInlineSnapshot(`"UpUpFooBarDir"`);
@@ -135,7 +128,6 @@ describe(processImportDirective, () => {
     expect(loc.defs).toEqual([
       {
         typeName: "LocalImport",
-        modelName: "LocalImportModel",
       },
     ]);
     expect(loc.importName).toMatchInlineSnapshot(`"CwdLoc"`);

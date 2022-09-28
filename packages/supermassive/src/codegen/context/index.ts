@@ -6,8 +6,14 @@ import {
   ValueNode,
   ASTNode,
 } from "graphql";
-import ts, { factory } from "typescript";
+import ts, {
+  factory,
+  addSyntheticLeadingComment,
+  SyntaxKind,
+} from "typescript";
 import { DefinitionImport, DefinitionModel } from "../types";
+import { createImportDeclaration } from "./utilities";
+import { addModelSuffix } from "../utilities";
 import { IMPORT_DIRECTIVE_NAME, processImportDirective } from "./import";
 import { MODEL_DIRECTIVE_NAME, processModelDirective } from "./model";
 
@@ -61,7 +67,10 @@ type ModelNameAndImport = { modelName: string; imp: DefinitionImport };
 
 export class TsCodegenContext {
   private imports: DefinitionImport[];
-  private typeNameToImports: Map<string, ModelNameAndImport>;
+  private typeNameToImports: Map<
+    string,
+    { modelName: string } & ModelNameAndImport
+  >;
   private typeNameToModels: Map<string, DefinitionModel>;
   private allModelNames: Set<string>;
   private scalars: Map<string, string>;
@@ -75,7 +84,7 @@ export class TsCodegenContext {
   }
 
   addImport(imp: DefinitionImport, node: ASTNode): void {
-    for (const { typeName, modelName } of imp.defs) {
+    for (const { typeName } of imp.defs) {
       const { imp: existingImport } =
         this.typeNameToImports.get(typeName) || {};
 
@@ -91,7 +100,10 @@ export class TsCodegenContext {
         );
       }
       // TODO: from.value needs to lead to another "module" index
-      this.typeNameToImports.set(typeName, { modelName, imp });
+      this.typeNameToImports.set(typeName, {
+        modelName: addModelSuffix(typeName),
+        imp,
+      });
     }
     this.imports.push(imp);
   }
@@ -107,27 +119,17 @@ export class TsCodegenContext {
       );
     }
 
+    if (this.scalars.has(model.typeName) && model.importName) {
+      return;
+    }
     this.typeNameToModels.set(model.typeName, model);
   }
 
   getAllImportDeclarations(): ts.ImportDeclaration[] {
     return this.imports.map(({ defs, from }) =>
-      factory.createImportDeclaration(
-        undefined,
-        undefined,
-        factory.createImportClause(
-          false,
-          undefined,
-          factory.createNamedImports(
-            defs.map(({ modelName }) =>
-              factory.createImportSpecifier(
-                undefined,
-                factory.createIdentifier(modelName),
-              ),
-            ),
-          ),
-        ),
-        factory.createStringLiteral(from),
+      createImportDeclaration(
+        defs.map(({ typeName }) => addModelSuffix(typeName)),
+        from,
       ),
     );
   }
@@ -140,20 +142,10 @@ export class TsCodegenContext {
           return;
         }
 
-        return factory.createImportDeclaration(
-          undefined,
-          undefined,
-          factory.createImportClause(
-            false,
-            undefined,
-            factory.createNamedImports([
-              factory.createImportSpecifier(
-                factory.createIdentifier(model.tsType),
-                factory.createIdentifier(model.modelName),
-              ),
-            ]),
-          ),
-          factory.createStringLiteral(model.from),
+        return createImportDeclaration(
+          [model.modelName],
+          model.from,
+          model.tsType !== model.modelName ? model.tsType : undefined,
         );
       })
       .filter(Boolean) as ts.ImportDeclaration[];
@@ -179,80 +171,33 @@ export class TsCodegenContext {
   getAllResolverImportDeclarations(): ts.ImportDeclaration[] {
     const imports = [];
     imports.push(
-      factory.createImportDeclaration(
-        undefined,
-        undefined,
-        factory.createImportClause(
-          true,
-          undefined,
-          factory.createNamedImports([
-            factory.createImportSpecifier(
-              undefined,
-              factory.createIdentifier("PromiseOrValue"),
-            ),
-          ]),
-        ),
-        factory.createStringLiteral("@graphitation/supermassive"),
-      ),
+      createImportDeclaration(["PromiseOrValue"], "@graphitation/supermassive"),
     );
+
     if (this.options.resolveInfo.from) {
       imports.push(
-        factory.createImportDeclaration(
-          undefined,
-          undefined,
-          factory.createImportClause(
-            true,
-            undefined,
-            factory.createNamedImports([
-              factory.createImportSpecifier(
-                undefined,
-                factory.createIdentifier(this.options.resolveInfo.name),
-              ),
-            ]),
-          ),
-          factory.createStringLiteral(this.options.resolveInfo.from),
+        createImportDeclaration(
+          [this.options.resolveInfo.name],
+          this.options.resolveInfo.from,
         ),
       );
     }
     if (this.options.context.from && this.options.context.name) {
       imports.push(
-        factory.createImportDeclaration(
-          undefined,
-          undefined,
-          factory.createImportClause(
-            true,
-            undefined,
-            factory.createNamedImports([
-              factory.createImportSpecifier(
-                undefined,
-                factory.createIdentifier(this.options.context.name),
-              ),
-            ]),
-          ),
-          factory.createStringLiteral(this.options.context.from),
+        createImportDeclaration(
+          [this.options.context.name],
+          this.options.context.from,
         ),
       );
     }
 
     imports.push(
-      factory.createImportDeclaration(
-        undefined,
-        undefined,
-        factory.createImportClause(
-          true,
-          undefined,
-          factory.createNamedImports(
-            Array.from(this.allModelNames).map((modelName) =>
-              factory.createImportSpecifier(
-                undefined,
-                factory.createIdentifier(modelName),
-              ),
-            ),
-          ),
-        ),
-        factory.createStringLiteral("./models.interface.ts"),
+      createImportDeclaration(
+        Array.from(this.allModelNames),
+        "./models.interface.ts",
       ),
     );
+
     imports.push(...this.getAllImportDeclarations());
 
     return imports;
@@ -276,19 +221,25 @@ export class TsCodegenContext {
 
   getDefaultTypes() {
     return [
-      factory.createTypeAliasDeclaration(
-        undefined,
-        [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-        factory.createIdentifier("BaseModel"),
-        undefined,
-        factory.createTypeLiteralNode([
-          factory.createPropertySignature(
-            undefined,
-            factory.createIdentifier("__typename"),
-            undefined,
-            factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
-          ),
-        ]),
+      addSyntheticLeadingComment(
+        factory.createInterfaceDeclaration(
+          undefined,
+          [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+          factory.createIdentifier("BaseModel"),
+          undefined,
+          undefined,
+          [
+            factory.createPropertySignature(
+              undefined,
+              factory.createIdentifier("__typename"),
+              undefined,
+              factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
+            ),
+          ],
+        ),
+        SyntaxKind.SingleLineCommentTrivia,
+        " Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)",
+        true,
       ),
 
       ...Array.from(this.scalars).map(([key, value]) =>
@@ -304,7 +255,12 @@ export class TsCodegenContext {
         ),
       ),
       ...Array.from(this.scalars)
-        .filter(([key]) => this.typeNameToModels.has(key))
+        .filter(([key]) => {
+          return (
+            this.typeNameToModels.has(key) &&
+            !(this.typeNameToModels.get(key) as DefinitionModel).importName
+          );
+        })
         .map(([key]) =>
           factory.createTypeAliasDeclaration(
             undefined,
@@ -344,13 +300,12 @@ export class TsCodegenContext {
       ) as ModelNameAndImport;
       return new TypeLocation(null, modelName);
     } else {
+      const modelName = putModelSuffix ? addModelSuffix(typeName) : typeName;
+
       if (saveModels) {
-        this.allModelNames.add(`${typeName}${putModelSuffix ? "Model" : ""}`);
+        this.allModelNames.add(modelName);
       }
-      return new TypeLocation(
-        null,
-        `${typeName}${putModelSuffix ? "Model" : ""}`,
-      );
+      return new TypeLocation(null, modelName);
     }
   }
 

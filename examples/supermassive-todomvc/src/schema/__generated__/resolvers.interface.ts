@@ -1,6 +1,6 @@
 // @ts-nocheck 
 /* eslint-disable */ 
-// This file was automatically generated (by @graphitaiton/supermassive) and should not be edited or checked in to Git.
+// This file was automatically generated (by @graphitaiton/supermassive) and should not be edited.
 import type { PromiseOrValue } from "@graphitation/supermassive";
 import type { ResolveInfo } from "@graphitation/supermassive";
 import type { TodoModel, CreateTodoResultModel, UpdateTodoTextResultModel, SetTodoCompletedResultModel, CreateTodoSuccessModel, CreateTodoFailureModel, FailureModel, UpdateTodoTextSuccessModel, UpdateTodoTextFailureModel, SetTodoCompletedSuccessModel, SetTodoCompletedFailureModel } from "./models.interface.ts";

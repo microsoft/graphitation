@@ -1,9 +1,10 @@
 // @ts-nocheck 
 /* eslint-disable */ 
-// This file was automatically generated (by @graphitaiton/supermassive) and should not be edited or checked in to Git.
-export type BaseModel = {
+// This file was automatically generated (by @graphitaiton/supermassive) and should not be edited.
+// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+export interface BaseModel {
     __typename: string;
-};
+}
 export interface QueryModel extends BaseModel {
     __typename: "Query";
     allTodos: TodoModel[];

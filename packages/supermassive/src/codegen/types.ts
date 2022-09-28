@@ -3,7 +3,7 @@ import ts from "typescript";
 
 export type DefinitionImport = {
   from: string;
-  defs: { typeName: string; modelName: string }[];
+  defs: { typeName: string }[];
   importName: string;
   directive: DirectiveNode;
 };

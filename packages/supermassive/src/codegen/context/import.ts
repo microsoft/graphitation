@@ -37,7 +37,6 @@ export function processImportDirective(node: DirectiveNode): DefinitionImport {
     from: from.value,
     defs: definitionNames.map((typeName) => ({
       typeName,
-      modelName: `${typeName}Model`,
     })),
     importName: createVariableNameFromImport(from.value),
     directive: node,

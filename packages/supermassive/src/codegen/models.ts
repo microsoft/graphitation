@@ -6,6 +6,7 @@ import {
   createNullableType,
   createNonNullableType,
   isDirectAncestorInput,
+  addModelSuffix,
 } from "./utilities";
 
 export function generateModels(
@@ -137,7 +138,7 @@ function createModelsReducer(
         return factory.createInterfaceDeclaration(
           undefined,
           [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-          factory.createIdentifier(`${node.name}Model`),
+          factory.createIdentifier(addModelSuffix(node.name)),
           undefined,
           [
             factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
@@ -184,7 +185,7 @@ function createModelsReducer(
         return factory.createEnumDeclaration(
           undefined,
           [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-          `${node.name}Model`,
+          addModelSuffix(node.name),
           node.values || [],
         );
       },
@@ -204,7 +205,7 @@ function createModelsReducer(
         return factory.createInterfaceDeclaration(
           undefined,
           [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-          factory.createIdentifier(`${node.name}Model`),
+          factory.createIdentifier(addModelSuffix(node.name)),
           undefined,
           [
             factory.createHeritageClause(
@@ -233,7 +234,7 @@ function createModelsReducer(
         return factory.createTypeAliasDeclaration(
           undefined,
           [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-          factory.createIdentifier(`${name}Model`),
+          factory.createIdentifier(addModelSuffix(name)),
           undefined,
           factory.createUnionTypeNode(
             types?.map((type) => {
@@ -255,7 +256,7 @@ function createModelsReducer(
 
         const isImplementedInterface = path[path.length - 2] === "interfaces";
         if (isImplementedInterface) {
-          return factory.createIdentifier(`${node.name}Model`);
+          return factory.createIdentifier(addModelSuffix(node.name));
         }
 
         return createNullableType(

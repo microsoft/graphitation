@@ -1,6 +1,8 @@
 import ts, { factory } from "typescript";
 import { ASTNode, Kind } from "graphql";
 
+const MODEL_SUFFIX = "Model";
+
 export function createNullableType(node: ts.TypeNode): ts.UnionTypeNode {
   return factory.createUnionTypeNode([
     node,
@@ -14,6 +16,14 @@ export function createNonNullableType(node: ts.TypeNode): ts.TypeNode {
   } else {
     throw new Error(`Can't make type non nullable: ${node}.`);
   }
+}
+
+export function addModelSuffix(typeName: string) {
+  if (typeName.endsWith(MODEL_SUFFIX)) {
+    return typeName;
+  }
+
+  return `${typeName}${MODEL_SUFFIX}`;
 }
 
 export function isDirectAncestorInput(
@@ -50,7 +60,7 @@ export function createVariableNameFromImport(path: string): string {
 }
 
 /**
- * Vendored due to jest being shit and unable to cleanly use ESM modules.
+ * Vendored due to jest being unable to cleanly use ESM modules.
  */
 
 /**
