@@ -3,7 +3,6 @@ import { useMutation } from "@apollo/client";
 import {
   CreateTodoMutation,
   CreateTodoMutationDocument,
-  CreateTodoMutationFragmentDocument,
 } from "./graphql/CreateTodoMutation.graphql.interface";
 import {
   TodoListQuery,

@@ -3,6 +3,11 @@ type Query {
   node(id: ID!): Node
 }
 
+type Mutation {
+  updateConversation(id: String!, title: String!): Conversation!
+  createMessage(conversationId: String!): Message!
+}
+
 interface Node {
   id: ID!
 }

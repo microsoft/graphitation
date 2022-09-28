@@ -5,6 +5,7 @@ import {
   InMemoryCache,
 } from "@apollo/client";
 import type {
+  ApolloCache,
   Operation,
   FetchResult,
   NormalizedCacheObject,
@@ -315,20 +316,31 @@ class Mock implements MockFunctions {
 
 export function createMockClient(
   schema: GraphQLSchema,
-  options?: { cache?: InMemoryCacheConfig },
+  options?: {
+    cache?: ApolloCache<any>;
+    inMemoryCacheConfig?: InMemoryCacheConfig;
+  },
 ): ApolloMockClient {
-  // Build a list of abstract types and their possible types.
-  // TODO: Cache this on the schema?
-  const possibleTypes: Record<string, string[]> = {};
-  Object.keys(schema.getTypeMap()).forEach((typeName) => {
-    const type = schema.getType(typeName);
-    assertType(type);
-    if (isAbstractType(type)) {
-      possibleTypes[typeName] = schema
-        .getPossibleTypes(type)
-        .map((possibleType) => possibleType.name);
-    }
-  });
+  let cache = options?.cache;
+  if (!cache) {
+    // Build a list of abstract types and their possible types.
+    // TODO: Cache this on the schema?
+    const possibleTypes: Record<string, string[]> = {};
+    Object.keys(schema.getTypeMap()).forEach((typeName) => {
+      const type = schema.getType(typeName);
+      assertType(type);
+      if (isAbstractType(type)) {
+        possibleTypes[typeName] = schema
+          .getPossibleTypes(type)
+          .map((possibleType) => possibleType.name);
+      }
+    });
+    cache = new InMemoryCache({
+      ...options?.inMemoryCacheConfig,
+      possibleTypes,
+      addTypename: true,
+    });
+  }
 
   const link = new MockLink(schema);
 
@@ -337,11 +349,7 @@ export function createMockClient(
     ApolloClientExtension
   >(
     new ApolloClient({
-      cache: new InMemoryCache({
-        ...options?.cache,
-        possibleTypes,
-        addTypename: true,
-      }),
+      cache,
       link,
     }),
     {

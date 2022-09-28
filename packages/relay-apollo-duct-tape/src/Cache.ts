@@ -324,10 +324,16 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
 
     const disposable = this.store.subscribe(lastSnapshot, (nextSnapshot) => {
       options.callback(
-        { result: (nextSnapshot.data as unknown) as TData },
+        {
+          result: (nextSnapshot.data as unknown) as TData,
+          complete: !nextSnapshot.isMissingData,
+        },
         lastSnapshot.data === undefined || lastSnapshot.isMissingData
           ? undefined
-          : { result: (lastSnapshot.data as unknown) as TData },
+          : {
+              result: (lastSnapshot.data as unknown) as TData,
+              complete: !lastSnapshot.isMissingData,
+            },
       );
       lastSnapshot = nextSnapshot;
     });
