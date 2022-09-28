@@ -5,20 +5,6 @@
 export interface BaseModel {
     __typename: string;
 }
-export interface QueryModel extends BaseModel {
-    __typename: "Query";
-    allTodos: TodoModel[];
-}
-export interface MutationModel extends BaseModel {
-    __typename: "Mutation";
-    createTodo: CreateTodoResultModel;
-    updateTodoText: UpdateTodoTextResultModel;
-    setTodoCompleted: SetTodoCompletedResultModel;
-}
-export interface SubscriptionModel extends BaseModel {
-    __typename: "Subscription";
-    emitTodos: TodoModel | null;
-}
 export interface TodoModel extends BaseModel {
     __typename: "Todo";
     id: string;

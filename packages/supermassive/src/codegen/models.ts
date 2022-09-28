@@ -32,7 +32,7 @@ type ASTReducerMap = {
   FieldDefinition: ts.PropertySignature;
   InputValueDefinition: null;
 
-  ObjectTypeDefinition: ts.InterfaceDeclaration;
+  ObjectTypeDefinition: ts.InterfaceDeclaration | null;
   InputObjectTypeDefinition: null;
   UnionTypeDefinition: ts.TypeAliasDeclaration;
   EnumTypeDefinition: ts.EnumDeclaration;
@@ -127,12 +127,16 @@ function createModelsReducer(
     },
 
     ObjectTypeDefinition: {
-      leave(node): ts.InterfaceDeclaration {
+      leave(node): ts.InterfaceDeclaration | null {
         const model = context.getDefinedModelType(node.name);
         const interfaces = (node.interfaces as ts.Expression[]) || [];
         const extendTypes = [context.getBaseModelType()];
         if (model) {
           extendTypes.push(model);
+        }
+
+        if (["Query", "Mutation", "Subscription"].includes(node.name)) {
+          return null;
         }
 
         return factory.createInterfaceDeclaration(

@@ -465,6 +465,58 @@ describe(generateTS, () => {
   });
 
   describe("Import", () => {
+    it("shouldn't include Query, Mutation and Subscription in the models", () => {
+      let { resolvers, models } = runGenerateTest(graphql`
+        type Query {
+          allTodos: [Todo!]!
+        }
+
+        type Mutation {
+          createTodo: Todo!
+        }
+
+        type Subscription {
+          emitTodos: Todo
+        }
+
+        type Todo {
+          id: ID!
+          name: String!
+        }
+      `);
+      expect(models).toMatchInlineSnapshot(`
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
+            __typename: string;
+        }
+        export interface TodoModel extends BaseModel {
+            __typename: \\"Todo\\";
+            id: string;
+            name: string;
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+        import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+        import type { TodoModel } from \\"./models.interface.ts\\";
+        export declare namespace Query {
+            export type allTodos = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<TodoModel[]>;
+        }
+        export declare namespace Mutation {
+            export type createTodo = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<TodoModel>;
+        }
+        export declare namespace Subscription {
+            export type emitTodos = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<TodoModel | null>;
+        }
+        export declare namespace Todo {
+            export type id = (model: TodoModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type name = (model: TodoModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        "
+      `);
+    });
+
     it("should import Avatar type and use it in User type", () => {
       let { resolvers, models } = runGenerateTest(graphql`
         extend schema @import(from: "@msteams/packages-test", defs: ["Avatar"])
