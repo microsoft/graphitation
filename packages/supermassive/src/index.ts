@@ -12,6 +12,7 @@ export type {
   InputObjectTypeResolver,
   FunctionFieldResolver,
   Resolvers,
+  ResolveInfo,
 } from "./types";
 
 export { addTypesToRequestDocument } from "./ast/addTypesToRequestDocument";
@@ -21,6 +22,10 @@ export { extractImplicitTypes } from "./extractImplicitTypesRuntime";
 export { specifiedScalars } from "./values";
 
 export { annotateDocumentGraphQLTransform } from "./transforms/annotateDocumentGraphQLTransform";
+
+export type { PromiseOrValue } from "./jsutils/PromiseOrValue";
+
+export { generateTS } from "./codegen";
 
 export type {
   NameNode,
