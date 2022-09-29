@@ -8,6 +8,11 @@ type Mutation {
   createMessage(conversationId: String!): Message!
 }
 
+type Subscription {
+  messageCreated(conversationId: String!): Message!
+  conversationUpdated: Conversation!
+}
+
 interface Node {
   id: ID!
 }

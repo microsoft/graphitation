@@ -3,34 +3,40 @@ import { RelayApolloCache } from "../Cache";
 import {
   ApolloCache,
   ApolloProvider,
-  useApolloClient,
   useMutation,
   useQuery,
+  useSubscription,
 } from "@apollo/client";
+import { getOperationName } from "@apollo/client/utilities";
 import * as ReactTestRenderer from "react-test-renderer";
 import { graphql } from "@graphitation/graphql-js-tag";
 import {
   ApolloMockClient,
   createMockClient,
+  OperationDescriptor,
 } from "@graphitation/apollo-mock-client";
-import React from "react";
+import * as React from "react";
 import { readFileSync } from "fs";
 import { buildSchema } from "graphql";
 import * as MockPayloadGenerator from "@graphitation/graphql-js-operation-payload-generator";
 
-import QueryRelayIR, {
+import ApolloClientIntegrationTestQueryRelayIR, {
   ApolloClientIntegrationTestQuery,
 } from "./__generated__/ApolloClientIntegrationTestQuery.graphql";
-import MutationRelayIR from "./__generated__/ApolloClientIntegrationTestMutation.graphql";
+import ApolloClientIntegrationTestMutationRelayIR from "./__generated__/ApolloClientIntegrationTestMutation.graphql";
 import TestCreateMessageMutationRelayIR, {
   ApolloClientIntegrationTestCreateMessageMutation,
 } from "./__generated__/ApolloClientIntegrationTestCreateMessageMutation.graphql";
+import TestConversationUpdatedSubscriptionRelayIR from "./__generated__/ApolloClientIntegrationTestConversationUpdatedSubscription.graphql";
+import TestMessageCreatedSubscriptionRelayIR, {
+  ApolloClientIntegrationTestMessageCreatedSubscription,
+} from "./__generated__/ApolloClientIntegrationTestMessageCreatedSubscription.graphql";
 
 const schema = buildSchema(
   readFileSync(require.resolve("./schema.graphql"), "utf8"),
 );
 
-const TestQuery = graphql`
+const ApolloClientIntegrationTestQuery = graphql`
   query ApolloClientIntegrationTestQuery($id: String!) {
     conversation(id: $id) {
       __typename
@@ -44,9 +50,9 @@ const TestQuery = graphql`
     }
   }
 `;
-(TestQuery as any).__relay = QueryRelayIR;
+(ApolloClientIntegrationTestQuery as any).__relay = ApolloClientIntegrationTestQueryRelayIR;
 
-const TestMutation = graphql`
+const ApolloClientIntegrationTestMutation = graphql`
   mutation ApolloClientIntegrationTestMutation($id: String!, $title: String!) {
     updateConversation(id: $id, title: $title) {
       __typename
@@ -55,7 +61,7 @@ const TestMutation = graphql`
     }
   }
 `;
-(TestMutation as any).__relay = MutationRelayIR;
+(ApolloClientIntegrationTestMutation as any).__relay = ApolloClientIntegrationTestMutationRelayIR;
 
 const TestCreateMessageMutation = graphql`
   mutation ApolloClientIntegrationTestCreateMessageMutation(
@@ -70,14 +76,58 @@ const TestCreateMessageMutation = graphql`
 `;
 (TestCreateMessageMutation as any).__relay = TestCreateMessageMutationRelayIR;
 
+const TestConversationUpdatedSubscription = graphql`
+  subscription ApolloClientIntegrationTestConversationUpdatedSubscription {
+    conversationUpdated {
+      __typename
+      id
+      title
+    }
+  }
+`;
+(TestConversationUpdatedSubscription as any).__relay = TestConversationUpdatedSubscriptionRelayIR;
+
+const TestMessageCreatedSubscription = graphql`
+  subscription ApolloClientIntegrationTestMessageCreatedSubscription(
+    $conversationId: String!
+  ) {
+    messageCreated(conversationId: $conversationId) {
+      __typename
+      id
+      text
+    }
+  }
+`;
+(TestMessageCreatedSubscription as any).__relay = TestMessageCreatedSubscriptionRelayIR;
+
 const TestComponent: React.FC = () => {
-  const { data: props, error } = useQuery<
+  useSubscription(TestConversationUpdatedSubscription);
+  const { data: props, error, subscribeToMore } = useQuery<
     ApolloClientIntegrationTestQuery["response"],
     ApolloClientIntegrationTestQuery["variables"]
-  >(TestQuery, {
+  >(ApolloClientIntegrationTestQuery, {
     variables: { id: "42" },
   });
   if (props) {
+    subscribeToMore<
+      ApolloClientIntegrationTestMessageCreatedSubscription["response"],
+      ApolloClientIntegrationTestMessageCreatedSubscription["variables"]
+    >({
+      document: TestMessageCreatedSubscription,
+      variables: { conversationId: "42" },
+      updateQuery: (prev, { subscriptionData }) => {
+        return {
+          ...prev,
+          conversation: {
+            ...prev.conversation,
+            messages: [
+              subscriptionData.data.messageCreated,
+              ...prev.conversation.messages,
+            ],
+          },
+        };
+      },
+    });
     return (
       <>
         <div>{props.conversation.title}</div>
@@ -104,7 +154,7 @@ const TestComponentWrapper: React.FC = () => {
 };
 
 const TestMutationComponent: React.FC = () => {
-  const [updateConversation] = useMutation(TestMutation);
+  const [updateConversation] = useMutation(ApolloClientIntegrationTestMutation);
   const [createMessage] = useMutation<
     ApolloClientIntegrationTestCreateMessageMutation["response"]
   >(TestCreateMessageMutation, {
@@ -113,18 +163,18 @@ const TestMutationComponent: React.FC = () => {
         const existingData = cache.readQuery<
           ApolloClientIntegrationTestQuery["response"]
         >({
-          query: TestQuery,
+          query: ApolloClientIntegrationTestQuery,
           variables: { id: "42" },
         });
         cache.writeQuery({
-          query: TestQuery,
+          query: ApolloClientIntegrationTestQuery,
           variables: { id: "42" },
           data: {
             conversation: {
               ...existingData!.conversation,
               messages: [
-                ...existingData!.conversation.messages!,
                 data.createMessage,
+                ...existingData!.conversation.messages!,
               ],
             },
           },
@@ -188,14 +238,14 @@ describe.each([
       );
     });
 
-    describe("concerning mutations", () => {
+    function itUpdatesTheCacheAutomatically(
+      getOperationDescriptor: () => OperationDescriptor,
+    ) {
       it("updates the cache automatically and re-renders", async () => {
         await ReactTestRenderer.act(() => {
-          testComponentTree.root
-            .findAllByType("button")
-            .find((button) => button.props.children === "Mutate title")!
-            .props.onClick();
-          return client.mock.resolveMostRecentOperation((operation) =>
+          const operation = getOperationDescriptor();
+          return client.mock.resolve(
+            operation,
             MockPayloadGenerator.generate(operation, {
               Conversation: () => ({
                 id: "42",
@@ -207,14 +257,16 @@ describe.each([
         const div = testComponentTree.root.findByType("div");
         expect(div.children[0]).toEqual("Mutated title");
       });
+    }
 
+    function itUpdatesTheCacheWithUpdater(
+      getOperationDescriptor: () => OperationDescriptor,
+    ) {
       it("updates the cache using an updater and re-renders", async () => {
         await ReactTestRenderer.act(() => {
-          testComponentTree.root
-            .findAllByType("button")
-            .find((button) => button.props.children === "Create message")!
-            .props.onClick();
-          return client.mock.resolveMostRecentOperation((operation) =>
+          const operation = getOperationDescriptor();
+          return client.mock.resolve(
+            operation,
             MockPayloadGenerator.generate(operation, {
               Message: () => ({
                 id: "message-42",
@@ -226,14 +278,53 @@ describe.each([
         const ul = testComponentTree.root.findByType("ul");
         expect(ul.children.length).toBe(2);
         expect(
-          (ul.children[1] as ReactTestRenderer.ReactTestInstance).children[0],
+          (ul.children[0] as ReactTestRenderer.ReactTestInstance).children[0],
         ).toEqual("New message");
+      });
+    }
+
+    describe("concerning mutations", () => {
+      itUpdatesTheCacheAutomatically(() => {
+        testComponentTree.root
+          .findAllByType("button")
+          .find((button) => button.props.children === "Mutate title")!
+          .props.onClick();
+        const operation = client.mock.getMostRecentOperation();
+        expect(getOperationName(operation.request.node)).toEqual(
+          "ApolloClientIntegrationTestMutation",
+        );
+        return operation;
+      });
+
+      itUpdatesTheCacheWithUpdater(() => {
+        testComponentTree.root
+          .findAllByType("button")
+          .find((button) => button.props.children === "Create message")!
+          .props.onClick();
+        const operation = client.mock.getMostRecentOperation();
+        expect(getOperationName(operation.request.node)).toEqual(
+          "ApolloClientIntegrationTestCreateMessageMutation",
+        );
+        return operation;
       });
     });
 
     describe("concerning subscriptions", () => {
-      it.todo("updates the cache automatically and re-renders");
-      it.todo("updates the cache using an updater and re-renders");
+      itUpdatesTheCacheAutomatically(() => {
+        const [operation] = client.mock.getAllOperations();
+        expect(getOperationName(operation.request.node)).toEqual(
+          "ApolloClientIntegrationTestConversationUpdatedSubscription",
+        );
+        return operation;
+      });
+
+      itUpdatesTheCacheWithUpdater(() => {
+        const [_, operation] = client.mock.getAllOperations();
+        expect(getOperationName(operation.request.node)).toEqual(
+          "ApolloClientIntegrationTestMessageCreatedSubscription",
+        );
+        return operation;
+      });
     });
   },
 );
