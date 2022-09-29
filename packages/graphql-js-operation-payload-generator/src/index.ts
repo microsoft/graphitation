@@ -38,6 +38,7 @@ import type {
   ValueResolver,
 } from "./vendor/RelayMockPayloadGenerator";
 import invariant from "invariant";
+import deepmerge from "deepmerge";
 
 export type { MockResolvers };
 
@@ -213,7 +214,9 @@ function mockCompositeType(
   // selection, or the abstract type selection.
   let typename = namedReturnType.name;
   let abstractTypeSelectionOnly = false;
-  if (isAbstractType(namedReturnType)) {
+  const abstractType = isAbstractType(namedReturnType);
+
+  if (abstractType) {
     invariant(info, "Expected info to be defined");
     const possibleTypeNames = info.fieldNodes.reduce<string[]>(
       (acc, fieldNode) => [
@@ -243,7 +246,7 @@ function mockCompositeType(
     }
   }
 
-  const result: InternalMockData = {
+  let result: InternalMockData = {
     ...getDefaultValues(
       mockResolvers,
       // If a mock resolver is provided for the abstract type, use it.
@@ -256,8 +259,30 @@ function mockCompositeType(
       args,
     ),
   };
+  if (
+    abstractType &&
+    result.__typename &&
+    mockResolvers &&
+    mockResolvers[namedReturnType.name] &&
+    mockResolvers[result.__typename]
+  ) {
+    // If a mock resolver is provided for both an abstract and a concrete type
+    // (for the typename possibly returned by the abstract type mock), merge
+    // the results.
+    result = deepmerge(
+      result,
+      getDefaultValues(
+        mockResolvers,
+        result.__typename,
+        resolveValue,
+        fieldNode,
+        info,
+        args,
+      ) as InternalMockData,
+    );
+  }
 
-  if (isAbstractType(namedReturnType) && !result[TYPENAME_KEY]) {
+  if (abstractType && !result[TYPENAME_KEY]) {
     if (abstractTypeSelectionOnly) {
       // When no concrete type selection exists, it means only interface
       // fields are selected, so we can just use the first possible type.

@@ -118,12 +118,15 @@ export class ApolloRecentActivityPublisher {
       return [];
     }
 
-    const lastIteration = { ...this.lastIterationData.cache };
+    const result = getRecentCacheActivity(
+      currentCache,
+      this.lastIterationData.cache,
+    );
     this.lastIterationData.cache = {
       ...currentCache,
     };
 
-    return getRecentCacheActivity(currentCache, lastIteration) || [];
+    return result || [];
   }
 
   private getMutationsRecentActivity(

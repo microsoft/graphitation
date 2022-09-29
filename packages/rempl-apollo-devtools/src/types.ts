@@ -94,7 +94,8 @@ interface Query {
 export type WatchedQuery = Query & {
   typename: "WatchedQuery";
   queryString: string;
-  cachedData: Record<string, unknown>;
+  cachedData?: Record<string, unknown>;
+  networkData?: Record<string, unknown>;
 };
 
 export type Mutation = Query & {
