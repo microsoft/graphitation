@@ -1,7 +1,0 @@
-{
-  "type": "none",
-  "comment": "Added typescript types generator",
-  "packageName": "@graphitation/supermassive",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "none"
-}

@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 29 Sep 2022 13:31:16 GMT",
+      "tag": "@graphitation/supermassive_v1.0.0",
+      "version": "1.0.0",
+      "comments": {
+        "none": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "15d4be02c530610689d1dd750097c6c4180a35cc",
+            "comment": "Added typescript types generator"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 20 Jul 2022 16:31:59 GMT",
       "tag": "@graphitation/supermassive_v1.0.0",
       "version": "1.0.0",
