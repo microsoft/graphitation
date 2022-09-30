@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Version bump",
-  "packageName": "@graphitation/supermassive",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}

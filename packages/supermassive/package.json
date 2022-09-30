@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/supermassive",
   "license": "MIT",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "bin": {
     "supermassive": "./bin/supermassive.js"
   },
