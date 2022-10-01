@@ -75,6 +75,7 @@ type ASTReducerFieldMap = {
   };
   InterfaceTypeDefinition: {
     name: ASTReducerMap["NameNode"];
+    interfaces: ASTReducerMap["NamedType"];
   };
   EnumTypeDefinition: {
     name: ASTReducerMap["NameNode"];
@@ -206,21 +207,28 @@ function createModelsReducer(
     InterfaceTypeDefinition: {
       leave(node): ts.InterfaceDeclaration {
         const extendTypes = [context.getBaseModelType()];
+        const interfaces = (node.interfaces as ts.Expression[]) || [];
+
         return factory.createInterfaceDeclaration(
           undefined,
           [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
           factory.createIdentifier(addModelSuffix(node.name)),
           undefined,
           [
-            factory.createHeritageClause(
-              ts.SyntaxKind.ExtendsKeyword,
-              extendTypes.map((type) =>
+            factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+              ...extendTypes.map((type) =>
                 factory.createExpressionWithTypeArguments(
                   type.toExpression(),
                   undefined,
                 ),
               ),
-            ),
+              ...interfaces.map((interfaceExpression) =>
+                factory.createExpressionWithTypeArguments(
+                  interfaceExpression,
+                  undefined,
+                ),
+              ),
+            ]),
           ],
           [
             factory.createPropertySignature(

@@ -76,7 +76,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { PostModel, MessageModel, UserModel } from \\"./models.interface.ts\\";
+        import type { PostModel, MessageModel, UserModel } from \\"./models.interface\\";
         import type { AvatarModel } from \\"@msteams/packages-test\\";
         export declare namespace Post {
             export type id = (model: PostModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
@@ -134,12 +134,73 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { UserModel } from \\"./models.interface.ts\\";
+        import type { UserModel } from \\"./models.interface\\";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Query {
             export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel[]>;
+        }
+        "
+      `);
+    });
+    test("case when interface implements multiple interfaces", () => {
+      let { resolvers, models } = runGenerateTest(graphql`
+        interface Node {
+          id: ID!
+        }
+
+        interface Persona {
+          phone: String!
+        }
+
+        interface User implements Node & Persona {
+          id: ID!
+          name: String!
+        }
+
+        type Admin implements Node & Persona {
+          id: ID!
+          rank: Int!
+        }
+
+        extend type Query {
+          users: [User]
+          admins: [Admin]
+        }
+      `);
+      expect(models).toMatchInlineSnapshot(`
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
+            __typename: string;
+        }
+        export interface NodeModel extends BaseModel {
+            __typename: string;
+        }
+        export interface PersonaModel extends BaseModel {
+            __typename: string;
+        }
+        export interface UserModel extends BaseModel, NodeModel, PersonaModel {
+            __typename: string;
+        }
+        export interface AdminModel extends BaseModel, NodeModel, PersonaModel {
+            __typename: \\"Admin\\";
+            id: string;
+            rank: number;
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+        import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+        import type { NodeModel, PersonaModel, AdminModel, UserModel } from \\"./models.interface\\";
+        export declare namespace Admin {
+            export type id = (model: AdminModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type rank = (model: AdminModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number>;
+        }
+        export declare namespace Query {
+            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<(UserModel | null)[] | null>;
+            export type admins = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<(AdminModel | null)[] | null>;
         }
         "
       `);
@@ -177,7 +238,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { NodeModel, UserModel } from \\"./models.interface.ts\\";
+        import type { NodeModel, UserModel } from \\"./models.interface\\";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
             export type name = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
@@ -218,7 +279,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { NodeModel, UserModel } from \\"./models.interface.ts\\";
+        import type { NodeModel, UserModel } from \\"./models.interface\\";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
             export type name = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
@@ -255,7 +316,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { UserModel } from \\"./models.interface.ts\\";
+        import type { UserModel } from \\"./models.interface\\";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
@@ -304,7 +365,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { UserModel } from \\"./models.interface.ts\\";
+        import type { UserModel } from \\"./models.interface\\";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
@@ -360,7 +421,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { UserModel, PresenceAvailabilityModel } from \\"./models.interface.ts\\";
+        import type { UserModel, PresenceAvailabilityModel } from \\"./models.interface\\";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
             export type availability = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<PresenceAvailabilityModel>;
@@ -409,7 +470,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { CustomerModel, AdminModel, UserModel } from \\"./models.interface.ts\\";
+        import type { CustomerModel, AdminModel, UserModel } from \\"./models.interface\\";
         export declare namespace Customer {
             export type id = (model: CustomerModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
@@ -450,7 +511,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { UserModel } from \\"./models.interface.ts\\";
+        import type { UserModel } from \\"./models.interface\\";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
@@ -499,7 +560,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { TodoModel } from \\"./models.interface.ts\\";
+        import type { TodoModel } from \\"./models.interface\\";
         export declare namespace Query {
             export type allTodos = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<TodoModel[]>;
         }
@@ -545,7 +606,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { UserModel } from \\"./models.interface.ts\\";
+        import type { UserModel } from \\"./models.interface\\";
         import type { AvatarModel } from \\"@msteams/packages-test\\";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
@@ -592,7 +653,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { DateTime, UserModel } from \\"./models.interface.ts\\";
+        import type { DateTime, UserModel } from \\"./models.interface\\";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
             export type dateTime = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<DateTime>;
@@ -636,7 +697,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { DateTime, UserModel } from \\"./models.interface.ts\\";
+        import type { DateTime, UserModel } from \\"./models.interface\\";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
             export type dateTime = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<DateTime>;
@@ -687,7 +748,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { UserModel } from \\"./models.interface.ts\\";
+        import type { UserModel } from \\"./models.interface\\";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
             export type name = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
@@ -732,7 +793,7 @@ describe(generateTS, () => {
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
       import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-      import type { NodeModel } from \\"./models.interface.ts\\";
+      import type { NodeModel } from \\"./models.interface\\";
       export declare namespace Query {
           export type node = (model: unknown, args: {
               id: string;

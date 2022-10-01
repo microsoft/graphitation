@@ -194,7 +194,7 @@ export class TsCodegenContext {
     imports.push(
       createImportDeclaration(
         Array.from(this.allModelNames),
-        "./models.interface.ts",
+        "./models.interface",
       ),
     );
 
