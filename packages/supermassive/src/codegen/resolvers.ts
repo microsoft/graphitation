@@ -151,7 +151,7 @@ function createResolversReducer(
           );
         } else if (parentObject.kind !== Kind.INTERFACE_TYPE_DEFINITION) {
           modelIdentifier = context
-            .getModelType(parentName, true, true)
+            .getModelType(parentName, true)
             .toTypeReference();
         }
         return factory.createTypeAliasDeclaration(
@@ -215,7 +215,7 @@ function createResolversReducer(
 
         return createNullableType(
           context
-            .getModelType(node.name, !isAncestorInput, !isAncestorInput, true)
+            .getModelType(node.name, !isAncestorInput, true)
             .toTypeReference(),
         );
       },

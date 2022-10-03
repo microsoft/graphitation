@@ -387,7 +387,7 @@ describe(generateTS, () => {
 
     test("Enum", () => {
       let { resolvers, models } = runGenerateTest(graphql`
-        enum PresenceAvailabilityModel {
+        enum PresenceAvailability {
           Available
           Away
           Offline

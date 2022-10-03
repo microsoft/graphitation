@@ -73,6 +73,7 @@ export class TsCodegenContext {
   >;
   private typeNameToModels: Map<string, DefinitionModel>;
   private allModelNames: Set<string>;
+  private allPossibleModels: Set<string>;
   private scalars: Map<string, string>;
 
   constructor(private options: TsCodegenContextOptions) {
@@ -80,6 +81,7 @@ export class TsCodegenContext {
     this.typeNameToImports = new Map();
     this.typeNameToModels = new Map();
     this.allModelNames = new Set();
+    this.allPossibleModels = new Set();
     this.scalars = new Map();
   }
 
@@ -106,6 +108,10 @@ export class TsCodegenContext {
       });
     }
     this.imports.push(imp);
+  }
+
+  addPossibleModel(possibleModel: string): void {
+    this.allPossibleModels.add(possibleModel);
   }
 
   addModel(model: DefinitionModel, node: ASTNode): void {
@@ -282,7 +288,6 @@ export class TsCodegenContext {
 
   getModelType(
     typeName: string,
-    putModelSuffix: boolean,
     saveModels = false,
     useScalars = false,
   ): TypeLocation {
@@ -300,7 +305,10 @@ export class TsCodegenContext {
       ) as ModelNameAndImport;
       return new TypeLocation(null, modelName);
     } else {
-      const modelName = putModelSuffix ? addModelSuffix(typeName) : typeName;
+      console.log(this.allPossibleModels);
+      const modelName = this.allPossibleModels.has(typeName)
+        ? addModelSuffix(typeName)
+        : typeName;
 
       if (saveModels) {
         this.allModelNames.add(modelName);
@@ -339,6 +347,26 @@ export function extractContext(
         } else if (node.name.value === MODEL_DIRECTIVE_NAME) {
           context.addModel(processModelDirective(node, ancestors), node);
         }
+      },
+    },
+    EnumTypeDefinition: {
+      enter(node) {
+        context.addPossibleModel(node.name.value);
+      },
+    },
+    ObjectTypeDefinition: {
+      enter(node) {
+        context.addPossibleModel(node.name.value);
+      },
+    },
+    UnionTypeDefinition: {
+      enter(node) {
+        context.addPossibleModel(node.name.value);
+      },
+    },
+    InterfaceTypeDefinition: {
+      enter(node) {
+        context.addPossibleModel(node.name.value);
       },
     },
   });

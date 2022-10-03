@@ -264,15 +264,13 @@ function createModelsReducer(
     },
     NamedType: {
       leave(node, _a, _p, path, ancestors): ts.TypeNode | ts.Expression {
-        const isAncestorInput = isDirectAncestorInput(ancestors);
-
         const isImplementedInterface = path[path.length - 2] === "interfaces";
         if (isImplementedInterface) {
           return factory.createIdentifier(addModelSuffix(node.name));
         }
 
         return createNullableType(
-          context.getModelType(node.name, !isAncestorInput).toTypeReference(),
+          context.getModelType(node.name).toTypeReference(),
         );
       },
     },
