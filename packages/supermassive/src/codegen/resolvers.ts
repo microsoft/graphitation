@@ -7,11 +7,7 @@ import {
 } from "graphql";
 import { ASTReducer, visit } from "./typedVisitor";
 import { TsCodegenContext } from "./context";
-import {
-  createNullableType,
-  createNonNullableType,
-  isDirectAncestorInput,
-} from "./utilities";
+import { createNullableType, createNonNullableType } from "./utilities";
 
 export function generateResolvers(
   context: TsCodegenContext,
@@ -150,9 +146,7 @@ function createResolversReducer(
             ts.SyntaxKind.UnknownKeyword,
           );
         } else if (parentObject.kind !== Kind.INTERFACE_TYPE_DEFINITION) {
-          modelIdentifier = context
-            .getModelType(parentName, true)
-            .toTypeReference();
+          modelIdentifier = context.getModelType(parentName).toTypeReference();
         }
         return factory.createTypeAliasDeclaration(
           undefined,
@@ -210,13 +204,9 @@ function createResolversReducer(
     },
 
     NamedType: {
-      leave(node, _a, _p, _path, ancestors): ts.TypeNode {
-        const isAncestorInput = isDirectAncestorInput(ancestors);
-
+      leave(node, _a, _p, _path): ts.TypeNode {
         return createNullableType(
-          context
-            .getModelType(node.name, !isAncestorInput, true)
-            .toTypeReference(),
+          context.getModelType(node.name, true).toTypeReference(),
         );
       },
     },

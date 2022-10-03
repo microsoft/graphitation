@@ -26,25 +26,6 @@ export function addModelSuffix(typeName: string) {
   return `${typeName}${MODEL_SUFFIX}`;
 }
 
-export function isDirectAncestorInput(
-  ancestors: readonly (ASTNode | readonly ASTNode[])[],
-): boolean {
-  const directAncestors = ancestors[ancestors.length - 1];
-  if (Array.isArray(directAncestors)) {
-    return directAncestors.some((directAncestor) => {
-      return (
-        "kind" in directAncestor &&
-        directAncestor.kind === Kind.INPUT_VALUE_DEFINITION
-      );
-    });
-  }
-
-  return (
-    "kind" in directAncestors &&
-    directAncestors.kind === Kind.INPUT_VALUE_DEFINITION
-  );
-}
-
 export function createVariableNameFromImport(path: string): string {
   return camelCase(
     path

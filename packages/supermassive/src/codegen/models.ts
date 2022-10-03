@@ -5,7 +5,6 @@ import { TsCodegenContext } from "./context";
 import {
   createNullableType,
   createNonNullableType,
-  isDirectAncestorInput,
   addModelSuffix,
 } from "./utilities";
 
@@ -263,7 +262,7 @@ function createModelsReducer(
       },
     },
     NamedType: {
-      leave(node, _a, _p, path, ancestors): ts.TypeNode | ts.Expression {
+      leave(node, _a, _p, path): ts.TypeNode | ts.Expression {
         const isImplementedInterface = path[path.length - 2] === "interfaces";
         if (isImplementedInterface) {
           return factory.createIdentifier(addModelSuffix(node.name));

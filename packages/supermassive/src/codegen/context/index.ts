@@ -286,11 +286,7 @@ export class TsCodegenContext {
     ];
   }
 
-  getModelType(
-    typeName: string,
-    saveModels = false,
-    useScalars = false,
-  ): TypeLocation {
+  getModelType(typeName: string, useScalars = false): TypeLocation {
     if (this.scalars.has(typeName)) {
       this.allModelNames.add(typeName);
       return new TypeLocation(
@@ -305,12 +301,11 @@ export class TsCodegenContext {
       ) as ModelNameAndImport;
       return new TypeLocation(null, modelName);
     } else {
-      console.log(this.allPossibleModels);
       const modelName = this.allPossibleModels.has(typeName)
         ? addModelSuffix(typeName)
         : typeName;
 
-      if (saveModels) {
+      if (this.allPossibleModels.has(typeName)) {
         this.allModelNames.add(modelName);
       }
       return new TypeLocation(null, modelName);
