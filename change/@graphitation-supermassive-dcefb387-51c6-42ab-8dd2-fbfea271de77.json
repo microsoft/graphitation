@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Hotfix: typescript codegen fixes (models and models file path)",
-  "packageName": "@graphitation/supermassive",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}

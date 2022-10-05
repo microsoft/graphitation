@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Fri, 30 Sep 2022 08:56:18 GMT and should not be manually modified.
+This log was last generated on Wed, 05 Oct 2022 16:48:48 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.1.1
+
+Wed, 05 Oct 2022 16:48:48 GMT
+
+### Patches
+
+- Hotfix: typescript codegen fixes (models and models file path) (jakubvejr@microsoft.com)
 
 ## 1.1.0
 
