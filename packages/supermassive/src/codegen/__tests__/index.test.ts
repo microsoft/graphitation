@@ -110,6 +110,69 @@ describe(generateTS, () => {
         "
       `);
     });
+    test("Subscription", () => {
+      let { resolvers, models } = runGenerateTest(graphql`
+        type User {
+          id: ID!
+        }
+
+        extend type Subscription {
+          userUpdated: User!
+        }
+      `);
+      expect(models).toMatchInlineSnapshot(`
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
+            __typename: string;
+        }
+        export interface UserModel extends BaseModel {
+            __typename: \\"User\\";
+            id: string;
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+        import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+        import type { UserModel } from \\"./models.interface\\";
+        export declare namespace User {
+            export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        export declare namespace Subscription {
+            export type userUpdated = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<UserModel> | (<A>() => {
+                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<A>;
+                resolve: (parent: A, args: {}, context: unknown, info: ResolveInfo) => UserModel;
+            });
+        }
+        "
+      `);
+    });
+    test("Subscription with model", () => {
+      let { resolvers, models } = runGenerateTest(graphql`
+        type User @model(from: "./user-model.interface", tsType: "UserModel") {
+          id: ID!
+        }
+
+        extend type Subscription {
+          userUpdated: User!
+        }
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
+        import type { ResolveInfo } from \\"@graphitation/supermassive\\";
+        import type { UserModel } from \\"./models.interface\\";
+        export declare namespace User {
+            export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        export declare namespace Subscription {
+            export type userUpdated = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<UserModel> | (<A>() => {
+                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<A>;
+                resolve: (parent: A, args: {}, context: unknown, info: ResolveInfo) => UserModel;
+            });
+        }
+        "
+      `);
+    });
     test("extends by exteding a type with pre-generated BaseModel type", () => {
       let { resolvers, models } = runGenerateTest(graphql`
         type User {
@@ -623,7 +686,10 @@ describe(generateTS, () => {
             export type createTodo = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<TodoModel>;
         }
         export declare namespace Subscription {
-            export type emitTodos = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<TodoModel | null>;
+            export type emitTodos = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<TodoModel | null> | (<A>() => {
+                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<A>;
+                resolve: (parent: A, args: {}, context: unknown, info: ResolveInfo) => TodoModel | null;
+            });
         }
         export declare namespace Todo {
             export type id = (model: TodoModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
