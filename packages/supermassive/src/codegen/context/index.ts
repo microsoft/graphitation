@@ -165,13 +165,14 @@ export class TsCodegenContext {
     }
 
     if (this.typeNameToModels.has(scalarName)) {
+      const model = this.typeNameToModels.get(scalarName) as DefinitionModel;
       this.scalars.set(
-        scalarName,
-        (this.typeNameToModels.get(scalarName) as DefinitionModel).modelName,
+        addModelSuffix(scalarName),
+        model.from ? model.modelName : model.tsType,
       );
       return;
     }
-    this.scalars.set(scalarName, DEFAULT_SCALAR_TYPE);
+    this.scalars.set(addModelSuffix(scalarName), DEFAULT_SCALAR_TYPE);
   }
 
   getAllResolverImportDeclarations(): ts.ImportDeclaration[] {
@@ -287,13 +288,7 @@ export class TsCodegenContext {
   }
 
   getModelType(typeName: string, useScalars = false): TypeLocation {
-    if (this.scalars.has(typeName)) {
-      this.allModelNames.add(typeName);
-      return new TypeLocation(
-        null,
-        useScalars ? typeName : (this.scalars.get(typeName) as string),
-      );
-    } else if (BUILT_IN_SCALARS.hasOwnProperty(typeName)) {
+    if (BUILT_IN_SCALARS.hasOwnProperty(typeName)) {
       return new TypeLocation(null, BUILT_IN_SCALARS[typeName]);
     } else if (this.typeNameToImports.has(typeName)) {
       let { modelName } = this.typeNameToImports.get(
@@ -355,6 +350,11 @@ export function extractContext(
       },
     },
     UnionTypeDefinition: {
+      enter(node) {
+        context.addPossibleModel(node.name.value);
+      },
+    },
+    ScalarTypeDefinition: {
       enter(node) {
         context.addPossibleModel(node.name.value);
       },

@@ -762,7 +762,6 @@ describe(generateTS, () => {
         export interface BaseModel {
             __typename: string;
         }
-        export type DateTime = DateTimeModel;
         export type DateTimeModel = string;
         export interface UserModel extends BaseModel {
             __typename: \\"User\\";
@@ -774,10 +773,10 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { DateTime, UserModel } from \\"./models.interface\\";
+        import type { DateTimeModel, UserModel } from \\"./models.interface\\";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-            export type dateTime = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<DateTime>;
+            export type dateTime = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<DateTimeModel>;
         }
         export declare namespace Query {
             export type userById = (model: unknown, args: {
@@ -802,12 +801,12 @@ describe(generateTS, () => {
         }
       `);
       expect(models).toMatchInlineSnapshot(`
-        "import type { DateTimeModel } from \\"@msteams/custom-scalars\\";
+        "import type { DateTimeModel as _DateTimeModel } from \\"@msteams/custom-scalars\\";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             __typename: string;
         }
-        export type DateTime = DateTimeModel;
+        export type DateTimeModel = _DateTimeModel;
         export interface UserModel extends BaseModel {
             __typename: \\"User\\";
             id: string;
@@ -818,10 +817,10 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from \\"@graphitation/supermassive\\";
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
-        import type { DateTime, UserModel } from \\"./models.interface\\";
+        import type { DateTimeModel, UserModel } from \\"./models.interface\\";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-            export type dateTime = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<DateTime>;
+            export type dateTime = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<DateTimeModel>;
         }
         export declare namespace Query {
             export type userById = (model: unknown, args: {

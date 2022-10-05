@@ -48,10 +48,7 @@ export function processModelDirective(
 
   return {
     typeName,
-    modelName:
-      (typeDef as ASTNode).kind === "ScalarTypeDefinition"
-        ? addModelSuffix(typeName)
-        : `_${addModelSuffix(typeName)}`,
+    modelName: `_${addModelSuffix(typeName)}`,
     tsType: tsType.value,
     importName: from ? createVariableNameFromImport(from.value) : null,
     from: from?.value || null,
