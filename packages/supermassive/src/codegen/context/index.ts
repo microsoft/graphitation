@@ -159,20 +159,32 @@ export class TsCodegenContext {
     return imports.concat(models);
   }
 
-  addScalar(scalarName: string | null) {
+  getScalarDeclaration(scalarName: string | null) {
     if (!scalarName || BUILT_IN_SCALARS.hasOwnProperty(scalarName)) {
       return;
     }
 
+    let model;
     if (this.typeNameToModels.has(scalarName)) {
-      const model = this.typeNameToModels.get(scalarName) as DefinitionModel;
-      this.scalars.set(
-        addModelSuffix(scalarName),
-        model.from ? model.modelName : model.tsType,
-      );
-      return;
+      const { from, modelName, tsType } = this.typeNameToModels.get(
+        scalarName,
+      ) as DefinitionModel;
+      model = from ? modelName : tsType;
+    } else {
+      model = DEFAULT_SCALAR_TYPE;
     }
     this.scalars.set(addModelSuffix(scalarName), DEFAULT_SCALAR_TYPE);
+
+    return factory.createTypeAliasDeclaration(
+      undefined,
+      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+      factory.createIdentifier(addModelSuffix(scalarName)),
+      undefined,
+      factory.createTypeReferenceNode(
+        factory.createIdentifier(model),
+        undefined,
+      ),
+    );
   }
 
   getAllResolverImportDeclarations(): ts.ImportDeclaration[] {
@@ -248,42 +260,6 @@ export class TsCodegenContext {
         " Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)",
         true,
       ),
-
-      ...Array.from(this.scalars).map(([key, value]) =>
-        factory.createTypeAliasDeclaration(
-          undefined,
-          [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-          factory.createIdentifier(key),
-          undefined,
-          factory.createTypeReferenceNode(
-            factory.createIdentifier(value),
-            undefined,
-          ),
-        ),
-      ),
-      ...Array.from(this.scalars)
-        .filter(([key]) => {
-          return (
-            this.typeNameToModels.has(key) &&
-            !(this.typeNameToModels.get(key) as DefinitionModel).importName
-          );
-        })
-        .map(([key]) =>
-          factory.createTypeAliasDeclaration(
-            undefined,
-            [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-            factory.createIdentifier(
-              (this.typeNameToModels.get(key) as DefinitionModel).modelName,
-            ),
-            undefined,
-            factory.createTypeReferenceNode(
-              factory.createIdentifier(
-                (this.typeNameToModels.get(key) as DefinitionModel).tsType,
-              ),
-              undefined,
-            ),
-          ),
-        ),
     ];
   }
 

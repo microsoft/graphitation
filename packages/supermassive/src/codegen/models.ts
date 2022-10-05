@@ -37,7 +37,7 @@ type ASTReducerMap = {
   EnumTypeDefinition: ts.EnumDeclaration;
   EnumValueDefinition: ts.EnumMember;
   InterfaceTypeDefinition: ts.InterfaceDeclaration;
-  ScalarTypeDefinition: null;
+  ScalarTypeDefinition: ts.TypeAliasDeclaration | null;
 
   DirectiveDefinition: null;
 };
@@ -256,9 +256,8 @@ function createModelsReducer(
       },
     },
     ScalarTypeDefinition: {
-      leave(node): null {
-        context.addScalar(node.name);
-        return null;
+      leave(node): ts.TypeAliasDeclaration | null {
+        return context.getScalarDeclaration(node.name) || null;
       },
     },
     NamedType: {
