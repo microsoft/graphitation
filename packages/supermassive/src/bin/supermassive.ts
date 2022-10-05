@@ -14,7 +14,7 @@ type GenerateInterfacesOptions = {
   contextName?: string;
 };
 
-const PREPEND_TO_INTERFACES = `// @ts-nocheck \r\n/* eslint-disable */ \r\n// This file was automatically generated (by @graphitaiton/supermassive) and should not be edited.\r\n`;
+const PREPEND_TO_INTERFACES = `/* eslint-disable */ \r\n// @ts-nocheck \r\n// This file was automatically generated (by @graphitaiton/supermassive) and should not be edited.\r\n`;
 
 export function supermassive(): Command {
   const extractSchemaCommand = new Command();

@@ -5,7 +5,6 @@ import { TsCodegenContext } from "./context";
 import {
   createNullableType,
   createNonNullableType,
-  isDirectAncestorInput,
   addModelSuffix,
 } from "./utilities";
 
@@ -38,7 +37,7 @@ type ASTReducerMap = {
   EnumTypeDefinition: ts.EnumDeclaration;
   EnumValueDefinition: ts.EnumMember;
   InterfaceTypeDefinition: ts.InterfaceDeclaration;
-  ScalarTypeDefinition: null;
+  ScalarTypeDefinition: ts.TypeAliasDeclaration | null;
 
   DirectiveDefinition: null;
 };
@@ -75,6 +74,7 @@ type ASTReducerFieldMap = {
   };
   InterfaceTypeDefinition: {
     name: ASTReducerMap["NameNode"];
+    interfaces: ASTReducerMap["NamedType"];
   };
   EnumTypeDefinition: {
     name: ASTReducerMap["NameNode"];
@@ -206,21 +206,28 @@ function createModelsReducer(
     InterfaceTypeDefinition: {
       leave(node): ts.InterfaceDeclaration {
         const extendTypes = [context.getBaseModelType()];
+        const interfaces = (node.interfaces as ts.Expression[]) || [];
+
         return factory.createInterfaceDeclaration(
           undefined,
           [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
           factory.createIdentifier(addModelSuffix(node.name)),
           undefined,
           [
-            factory.createHeritageClause(
-              ts.SyntaxKind.ExtendsKeyword,
-              extendTypes.map((type) =>
+            factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+              ...extendTypes.map((type) =>
                 factory.createExpressionWithTypeArguments(
                   type.toExpression(),
                   undefined,
                 ),
               ),
-            ),
+              ...interfaces.map((interfaceExpression) =>
+                factory.createExpressionWithTypeArguments(
+                  interfaceExpression,
+                  undefined,
+                ),
+              ),
+            ]),
           ],
           [
             factory.createPropertySignature(
@@ -249,22 +256,19 @@ function createModelsReducer(
       },
     },
     ScalarTypeDefinition: {
-      leave(node): null {
-        context.addScalar(node.name);
-        return null;
+      leave(node): ts.TypeAliasDeclaration | null {
+        return context.getScalarDeclaration(node.name) || null;
       },
     },
     NamedType: {
-      leave(node, _a, _p, path, ancestors): ts.TypeNode | ts.Expression {
-        const isAncestorInput = isDirectAncestorInput(ancestors);
-
+      leave(node, _a, _p, path): ts.TypeNode | ts.Expression {
         const isImplementedInterface = path[path.length - 2] === "interfaces";
         if (isImplementedInterface) {
           return factory.createIdentifier(addModelSuffix(node.name));
         }
 
         return createNullableType(
-          context.getModelType(node.name, !isAncestorInput).toTypeReference(),
+          context.getModelType(node.name).toTypeReference(),
         );
       },
     },

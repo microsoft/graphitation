@@ -73,14 +73,14 @@ export class TsCodegenContext {
   >;
   private typeNameToModels: Map<string, DefinitionModel>;
   private allModelNames: Set<string>;
-  private scalars: Map<string, string>;
+  private allPossibleModels: Set<string>;
 
   constructor(private options: TsCodegenContextOptions) {
     this.imports = [];
     this.typeNameToImports = new Map();
     this.typeNameToModels = new Map();
     this.allModelNames = new Set();
-    this.scalars = new Map();
+    this.allPossibleModels = new Set();
   }
 
   addImport(imp: DefinitionImport, node: ASTNode): void {
@@ -108,6 +108,10 @@ export class TsCodegenContext {
     this.imports.push(imp);
   }
 
+  addPossibleModel(possibleModel: string): void {
+    this.allPossibleModels.add(possibleModel);
+  }
+
   addModel(model: DefinitionModel, node: ASTNode): void {
     const existingModel = this.typeNameToModels.get(model.typeName);
 
@@ -119,9 +123,6 @@ export class TsCodegenContext {
       );
     }
 
-    if (this.scalars.has(model.typeName) && model.importName) {
-      return;
-    }
     this.typeNameToModels.set(model.typeName, model);
   }
 
@@ -153,19 +154,31 @@ export class TsCodegenContext {
     return imports.concat(models);
   }
 
-  addScalar(scalarName: string | null) {
+  getScalarDeclaration(scalarName: string | null) {
     if (!scalarName || BUILT_IN_SCALARS.hasOwnProperty(scalarName)) {
       return;
     }
 
+    let model;
     if (this.typeNameToModels.has(scalarName)) {
-      this.scalars.set(
+      const { from, modelName, tsType } = this.typeNameToModels.get(
         scalarName,
-        (this.typeNameToModels.get(scalarName) as DefinitionModel).modelName,
-      );
-      return;
+      ) as DefinitionModel;
+      model = from ? modelName : tsType;
+    } else {
+      model = DEFAULT_SCALAR_TYPE;
     }
-    this.scalars.set(scalarName, DEFAULT_SCALAR_TYPE);
+
+    return factory.createTypeAliasDeclaration(
+      undefined,
+      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+      factory.createIdentifier(addModelSuffix(scalarName)),
+      undefined,
+      factory.createTypeReferenceNode(
+        factory.createIdentifier(model),
+        undefined,
+      ),
+    );
   }
 
   getAllResolverImportDeclarations(): ts.ImportDeclaration[] {
@@ -194,7 +207,7 @@ export class TsCodegenContext {
     imports.push(
       createImportDeclaration(
         Array.from(this.allModelNames),
-        "./models.interface.ts",
+        "./models.interface",
       ),
     );
 
@@ -241,58 +254,11 @@ export class TsCodegenContext {
         " Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)",
         true,
       ),
-
-      ...Array.from(this.scalars).map(([key, value]) =>
-        factory.createTypeAliasDeclaration(
-          undefined,
-          [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-          factory.createIdentifier(key),
-          undefined,
-          factory.createTypeReferenceNode(
-            factory.createIdentifier(value),
-            undefined,
-          ),
-        ),
-      ),
-      ...Array.from(this.scalars)
-        .filter(([key]) => {
-          return (
-            this.typeNameToModels.has(key) &&
-            !(this.typeNameToModels.get(key) as DefinitionModel).importName
-          );
-        })
-        .map(([key]) =>
-          factory.createTypeAliasDeclaration(
-            undefined,
-            [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-            factory.createIdentifier(
-              (this.typeNameToModels.get(key) as DefinitionModel).modelName,
-            ),
-            undefined,
-            factory.createTypeReferenceNode(
-              factory.createIdentifier(
-                (this.typeNameToModels.get(key) as DefinitionModel).tsType,
-              ),
-              undefined,
-            ),
-          ),
-        ),
     ];
   }
 
-  getModelType(
-    typeName: string,
-    putModelSuffix: boolean,
-    saveModels = false,
-    useScalars = false,
-  ): TypeLocation {
-    if (this.scalars.has(typeName)) {
-      this.allModelNames.add(typeName);
-      return new TypeLocation(
-        null,
-        useScalars ? typeName : (this.scalars.get(typeName) as string),
-      );
-    } else if (BUILT_IN_SCALARS.hasOwnProperty(typeName)) {
+  getModelType(typeName: string, useScalars = false): TypeLocation {
+    if (BUILT_IN_SCALARS.hasOwnProperty(typeName)) {
       return new TypeLocation(null, BUILT_IN_SCALARS[typeName]);
     } else if (this.typeNameToImports.has(typeName)) {
       let { modelName } = this.typeNameToImports.get(
@@ -300,9 +266,11 @@ export class TsCodegenContext {
       ) as ModelNameAndImport;
       return new TypeLocation(null, modelName);
     } else {
-      const modelName = putModelSuffix ? addModelSuffix(typeName) : typeName;
+      const modelName = this.allPossibleModels.has(typeName)
+        ? addModelSuffix(typeName)
+        : typeName;
 
-      if (saveModels) {
+      if (this.allPossibleModels.has(typeName)) {
         this.allModelNames.add(modelName);
       }
       return new TypeLocation(null, modelName);
@@ -310,9 +278,7 @@ export class TsCodegenContext {
   }
 
   getDefinedModelType(typeName: string): TypeLocation | null {
-    if (this.scalars.has(typeName)) {
-      return new TypeLocation(null, typeName);
-    } else if (this.typeNameToModels.has(typeName)) {
+    if (this.typeNameToModels.has(typeName)) {
       let imp = this.typeNameToModels.get(typeName) as DefinitionModel;
       return new TypeLocation(null, imp.modelName);
     } else {
@@ -339,6 +305,31 @@ export function extractContext(
         } else if (node.name.value === MODEL_DIRECTIVE_NAME) {
           context.addModel(processModelDirective(node, ancestors), node);
         }
+      },
+    },
+    EnumTypeDefinition: {
+      enter(node) {
+        context.addPossibleModel(node.name.value);
+      },
+    },
+    ObjectTypeDefinition: {
+      enter(node) {
+        context.addPossibleModel(node.name.value);
+      },
+    },
+    UnionTypeDefinition: {
+      enter(node) {
+        context.addPossibleModel(node.name.value);
+      },
+    },
+    ScalarTypeDefinition: {
+      enter(node) {
+        context.addPossibleModel(node.name.value);
+      },
+    },
+    InterfaceTypeDefinition: {
+      enter(node) {
+        context.addPossibleModel(node.name.value);
       },
     },
   });

@@ -1,5 +1,4 @@
 import ts, { factory } from "typescript";
-import { ASTNode, Kind } from "graphql";
 
 const MODEL_SUFFIX = "Model";
 
@@ -7,6 +6,111 @@ export function createNullableType(node: ts.TypeNode): ts.UnionTypeNode {
   return factory.createUnionTypeNode([
     node,
     factory.createLiteralTypeNode(factory.createNull()),
+  ]);
+}
+
+type ResolverParameterDefinition<T> = { name: string; type: T };
+type ResolverParametersDefinitions = {
+  parent: ResolverParameterDefinition<ts.TypeReferenceNode>;
+  args: ResolverParameterDefinition<readonly ts.TypeElement[]>;
+  context: ResolverParameterDefinition<ts.TypeReferenceNode>;
+  resolveInfo: ResolverParameterDefinition<ts.TypeReferenceNode>;
+};
+
+export function getResolverParameters({
+  parent,
+  args,
+  context,
+  resolveInfo,
+}: ResolverParametersDefinitions) {
+  return [
+    factory.createParameterDeclaration(
+      undefined,
+      undefined,
+      undefined,
+      factory.createIdentifier(parent.name),
+      undefined,
+      parent.type,
+    ),
+    factory.createParameterDeclaration(
+      undefined,
+      undefined,
+      undefined,
+      factory.createIdentifier(args.name),
+      undefined,
+      factory.createTypeLiteralNode(args.type),
+    ),
+    factory.createParameterDeclaration(
+      undefined,
+      undefined,
+      undefined,
+      factory.createIdentifier(context.name),
+      undefined,
+      context.type,
+    ),
+    factory.createParameterDeclaration(
+      undefined,
+      undefined,
+      undefined,
+      factory.createIdentifier(resolveInfo.name),
+      undefined,
+      resolveInfo.type,
+    ),
+  ];
+}
+export function getResolverReturnType(
+  typeNode: ts.TypeNode,
+  parentName: string,
+  resolverParametersDefinitions: ResolverParametersDefinitions,
+) {
+  if (parentName !== "Subscription") {
+    return factory.createTypeReferenceNode(
+      factory.createIdentifier("PromiseOrValue"),
+      [typeNode],
+    );
+  }
+
+  return factory.createUnionTypeNode([
+    factory.createTypeReferenceNode(factory.createIdentifier("AsyncIterator"), [
+      typeNode,
+    ]),
+    factory.createFunctionTypeNode(
+      [factory.createTypeParameterDeclaration(factory.createIdentifier("A"))],
+      [],
+      factory.createTypeLiteralNode([
+        factory.createPropertySignature(
+          undefined,
+          factory.createIdentifier("subscribe"),
+          undefined,
+          factory.createFunctionTypeNode(
+            undefined,
+            getResolverParameters(resolverParametersDefinitions),
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("AsyncIterator"),
+              [factory.createTypeReferenceNode(factory.createIdentifier("A"))],
+            ),
+          ),
+        ),
+        factory.createPropertySignature(
+          undefined,
+          factory.createIdentifier("resolve"),
+          undefined,
+          factory.createFunctionTypeNode(
+            undefined,
+            getResolverParameters({
+              ...resolverParametersDefinitions,
+              parent: {
+                name: "parent",
+                type: factory.createTypeReferenceNode(
+                  factory.createIdentifier("A"),
+                ),
+              },
+            }),
+            typeNode,
+          ),
+        ),
+      ]),
+    ),
   ]);
 }
 
@@ -24,25 +128,6 @@ export function addModelSuffix(typeName: string) {
   }
 
   return `${typeName}${MODEL_SUFFIX}`;
-}
-
-export function isDirectAncestorInput(
-  ancestors: readonly (ASTNode | readonly ASTNode[])[],
-): boolean {
-  const directAncestors = ancestors[ancestors.length - 1];
-  if (Array.isArray(directAncestors)) {
-    return directAncestors.some((directAncestor) => {
-      return (
-        "kind" in directAncestor &&
-        directAncestor.kind === Kind.INPUT_VALUE_DEFINITION
-      );
-    });
-  }
-
-  return (
-    "kind" in directAncestors &&
-    directAncestors.kind === Kind.INPUT_VALUE_DEFINITION
-  );
 }
 
 export function createVariableNameFromImport(path: string): string {

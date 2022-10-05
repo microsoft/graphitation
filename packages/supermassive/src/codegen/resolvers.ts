@@ -10,8 +10,10 @@ import { TsCodegenContext } from "./context";
 import {
   createNullableType,
   createNonNullableType,
-  isDirectAncestorInput,
+  getResolverReturnType,
+  getResolverParameters,
 } from "./utilities";
+import { buildResolveInfo } from "../executeWithoutSchema";
 
 export function generateResolvers(
   context: TsCodegenContext,
@@ -150,10 +152,24 @@ function createResolversReducer(
             ts.SyntaxKind.UnknownKeyword,
           );
         } else if (parentObject.kind !== Kind.INTERFACE_TYPE_DEFINITION) {
-          modelIdentifier = context
-            .getModelType(parentName, true, true)
-            .toTypeReference();
+          modelIdentifier = context.getModelType(parentName).toTypeReference();
         }
+
+        const resolverParametersDefinitions = {
+          parent: {
+            name: "model",
+            type: modelIdentifier as ts.TypeReferenceNode,
+          },
+          args: { name: "args", type: node.arguments || [] },
+          context: {
+            name: "context",
+            type: context.getContextType().toTypeReference(),
+          },
+          resolveInfo: {
+            name: "info",
+            type: context.getResolveInfoType().toTypeReference(),
+          },
+        };
         return factory.createTypeAliasDeclaration(
           undefined,
           [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
@@ -161,48 +177,11 @@ function createResolversReducer(
           undefined,
           factory.createFunctionTypeNode(
             undefined,
-            [
-              factory.createParameterDeclaration(
-                undefined,
-                undefined,
-                undefined,
-                factory.createIdentifier("model"),
-                undefined,
-                modelIdentifier,
-                // factory.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword),
-                undefined,
-              ),
-              factory.createParameterDeclaration(
-                undefined,
-                undefined,
-                undefined,
-                factory.createIdentifier("args"),
-                undefined,
-                factory.createTypeLiteralNode(node.arguments || []),
-                undefined,
-              ),
-              factory.createParameterDeclaration(
-                undefined,
-                undefined,
-                undefined,
-                factory.createIdentifier("context"),
-                undefined,
-                context.getContextType().toTypeReference(),
-                undefined,
-              ),
-              factory.createParameterDeclaration(
-                undefined,
-                undefined,
-                undefined,
-                factory.createIdentifier("info"),
-                undefined,
-                context.getResolveInfoType().toTypeReference(),
-                undefined,
-              ),
-            ],
-            factory.createTypeReferenceNode(
-              factory.createIdentifier("PromiseOrValue"),
-              [node.type],
+            getResolverParameters(resolverParametersDefinitions),
+            getResolverReturnType(
+              node.type,
+              parentName,
+              resolverParametersDefinitions,
             ),
           ),
         );
@@ -210,13 +189,9 @@ function createResolversReducer(
     },
 
     NamedType: {
-      leave(node, _a, _p, _path, ancestors): ts.TypeNode {
-        const isAncestorInput = isDirectAncestorInput(ancestors);
-
+      leave(node, _a, _p, _path): ts.TypeNode {
         return createNullableType(
-          context
-            .getModelType(node.name, !isAncestorInput, !isAncestorInput, true)
-            .toTypeReference(),
+          context.getModelType(node.name, true).toTypeReference(),
         );
       },
     },
