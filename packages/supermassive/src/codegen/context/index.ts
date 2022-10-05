@@ -74,7 +74,6 @@ export class TsCodegenContext {
   private typeNameToModels: Map<string, DefinitionModel>;
   private allModelNames: Set<string>;
   private allPossibleModels: Set<string>;
-  private scalars: Map<string, string>;
 
   constructor(private options: TsCodegenContextOptions) {
     this.imports = [];
@@ -82,7 +81,6 @@ export class TsCodegenContext {
     this.typeNameToModels = new Map();
     this.allModelNames = new Set();
     this.allPossibleModels = new Set();
-    this.scalars = new Map();
   }
 
   addImport(imp: DefinitionImport, node: ASTNode): void {
@@ -125,9 +123,6 @@ export class TsCodegenContext {
       );
     }
 
-    if (this.scalars.has(model.typeName) && model.importName) {
-      return;
-    }
     this.typeNameToModels.set(model.typeName, model);
   }
 
@@ -173,7 +168,6 @@ export class TsCodegenContext {
     } else {
       model = DEFAULT_SCALAR_TYPE;
     }
-    this.scalars.set(addModelSuffix(scalarName), DEFAULT_SCALAR_TYPE);
 
     return factory.createTypeAliasDeclaration(
       undefined,
@@ -284,9 +278,7 @@ export class TsCodegenContext {
   }
 
   getDefinedModelType(typeName: string): TypeLocation | null {
-    if (this.scalars.has(typeName)) {
-      return new TypeLocation(null, typeName);
-    } else if (this.typeNameToModels.has(typeName)) {
+    if (this.typeNameToModels.has(typeName)) {
       let imp = this.typeNameToModels.get(typeName) as DefinitionModel;
       return new TypeLocation(null, imp.modelName);
     } else {
