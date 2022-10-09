@@ -30,6 +30,7 @@ declare global {
     __APOLLO_CLIENTS__: ClientObject[];
     __APOLLO_GLOBAL_OPERATIONS__: ApolloGlobalOperations;
     __APOLLO_KEY_FIELDS__: ApolloKeyFields;
+    __REMPL_APOLLO_DEVTOOLS_URL__?: string;
   }
 }
 
@@ -39,7 +40,7 @@ export type RecentActivity<Data> = {
   type: string;
   data: Data;
 };
-export type CacheStoreObject = { __activity_key: string } & StoreObject;
+export type CacheStoreObject = {__activity_key: string} & StoreObject
 export type RecentActivities = {
   queries: RecentActivity<WatchedQuery>[];
   mutations: RecentActivity<Mutation>[];
