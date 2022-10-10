@@ -17,7 +17,7 @@ if (require.main === module) {
       esbuild.buildSync({
         entryPoints: ["src/subscriber/index.tsx"],
         write: true,
-        minify: false,
+        minify: true,
         bundle: true,
         outfile: "dist/apollo-devtools-subscriber.js",
         format: "esm",
