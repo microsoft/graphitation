@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Dependencies update",
-  "packageName": "@graphitation/apollo-mock-client",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}

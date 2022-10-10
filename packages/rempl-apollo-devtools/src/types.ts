@@ -40,7 +40,7 @@ export type RecentActivity<Data> = {
   type: string;
   data: Data;
 };
-export type CacheStoreObject = {__activity_key: string} & StoreObject
+export type CacheStoreObject = { __activity_key: string } & StoreObject;
 export type RecentActivities = {
   queries: RecentActivity<WatchedQuery>[];
   mutations: RecentActivity<Mutation>[];
