@@ -11,9 +11,7 @@ import {
   createNullableType,
   createNonNullableType,
   getResolverReturnType,
-  getResolverParameters,
 } from "./utilities";
-import { buildResolveInfo } from "../executeWithoutSchema";
 
 export function generateResolvers(
   context: TsCodegenContext,
@@ -170,19 +168,24 @@ function createResolversReducer(
             type: context.getResolveInfoType().toTypeReference(),
           },
         };
+
         return factory.createTypeAliasDeclaration(
           undefined,
           [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
           factory.createIdentifier(node.name),
-          undefined,
-          factory.createFunctionTypeNode(
-            undefined,
-            getResolverParameters(resolverParametersDefinitions),
-            getResolverReturnType(
-              node.type,
-              parentName,
-              resolverParametersDefinitions,
-            ),
+          parentName === "Subscription"
+            ? [
+                factory.createTypeParameterDeclaration(
+                  factory.createIdentifier("A"),
+                  undefined,
+                  factory.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword),
+                ),
+              ]
+            : undefined,
+          getResolverReturnType(
+            node.type,
+            parentName,
+            resolverParametersDefinitions,
           ),
         );
       },
