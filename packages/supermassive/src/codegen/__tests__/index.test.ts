@@ -58,17 +58,17 @@ describe(generateTS, () => {
         export interface UserModel extends BaseModel {
             __typename: \\"User\\";
             id: string;
-            name: string | null;
-            messagesWithAnswersNonRequired: ((MessageModel | null)[] | null)[] | null;
+            name?: string | null;
+            messagesWithAnswersNonRequired?: ((MessageModel | null)[] | null)[] | null;
             messagesWithAnswersRequired: ((MessageModel | null)[] | null)[];
             messagesWithAnswersAllRequired: MessageModel[][];
-            messagesNonRequired: (MessageModel | null)[] | null;
+            messagesNonRequired?: (MessageModel | null)[] | null;
             messagesWithArrayRequired: (MessageModel | null)[];
             messagesRequired: MessageModel[];
-            messagesOnlyMessageRequired: MessageModel[] | null;
-            post: PostModel | null;
+            messagesOnlyMessageRequired?: MessageModel[] | null;
+            post?: PostModel | null;
             postRequired: PostModel;
-            avatar: AvatarModel | null;
+            avatar?: AvatarModel | null;
             avatarRequired: AvatarModel;
         }
         "
@@ -139,10 +139,10 @@ describe(generateTS, () => {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Subscription {
-            export type userUpdated = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<UserModel> | (<A>() => {
-                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<A>;
+            export type userUpdated<A = unknown> = ((model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<UserModel>) | {
+                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<A>>;
                 resolve: (parent: A, args: {}, context: unknown, info: ResolveInfo) => UserModel;
-            });
+            };
         }
         "
       `);
@@ -165,10 +165,10 @@ describe(generateTS, () => {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Subscription {
-            export type userUpdated = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<UserModel> | (<A>() => {
-                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<A>;
+            export type userUpdated<A = unknown> = ((model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<UserModel>) | {
+                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<A>>;
                 resolve: (parent: A, args: {}, context: unknown, info: ResolveInfo) => UserModel;
-            });
+            };
         }
         "
       `);
@@ -384,11 +384,11 @@ describe(generateTS, () => {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export type UserParamsInput = {
-            name: string | null;
+            name?: string | null;
         };
         export declare namespace Query {
             export type userById = (model: unknown, args: {
-                params: UserParamsInput | null;
+                params?: UserParamsInput | null;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
         }
         "
@@ -438,12 +438,12 @@ describe(generateTS, () => {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export type UserParamsInput = {
-            name: string | null;
-            rank: RankModel | null;
+            name?: string | null;
+            rank?: RankModel | null;
         };
         export declare namespace Query {
             export type userById = (model: unknown, args: {
-                params: UserParamsInput | null;
+                params?: UserParamsInput | null;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
         }
         "
@@ -492,11 +492,11 @@ describe(generateTS, () => {
         };
         export type UserParamsInput = {
             name: string;
-            presence: PresenceInput | null;
+            presence?: PresenceInput | null;
         };
         export declare namespace Query {
             export type userById = (model: unknown, args: {
-                params: UserParamsInput | null;
+                params?: UserParamsInput | null;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
         }
         "
@@ -686,10 +686,10 @@ describe(generateTS, () => {
             export type createTodo = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<TodoModel>;
         }
         export declare namespace Subscription {
-            export type emitTodos = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<TodoModel | null> | (<A>() => {
-                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<A>;
+            export type emitTodos<A = unknown> = ((model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<TodoModel | null>) | {
+                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<A>>;
                 resolve: (parent: A, args: {}, context: unknown, info: ResolveInfo) => TodoModel | null;
-            });
+            };
         }
         export declare namespace Todo {
             export type id = (model: TodoModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
@@ -859,8 +859,8 @@ describe(generateTS, () => {
             __typename: \\"User\\";
             id: string;
             name: string;
-            age: number | null;
-            rating: number | null;
+            age?: number | null;
+            rating?: number | null;
             isAdmin: boolean;
         }
         "
@@ -880,9 +880,9 @@ describe(generateTS, () => {
             export type node = (model: unknown, args: {
                 id: string;
                 name: string;
-                age: number | null;
-                rating: number | null;
-                isAdmin: boolean | null;
+                age?: number | null;
+                rating?: number | null;
+                isAdmin?: boolean | null;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel>;
         }
         "
