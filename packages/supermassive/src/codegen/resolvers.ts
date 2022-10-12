@@ -3,7 +3,6 @@ import {
   DocumentNode,
   isTypeDefinitionNode,
   isTypeExtensionNode,
-  InputValueDefinitionNode,
   Kind,
 } from "graphql";
 import { ASTReducer, visit } from "./typedVisitor";
@@ -12,8 +11,9 @@ import {
   createNullableType,
   createNonNullableType,
   getResolverReturnType,
-  isFieldOptional,
+  getResolverParameters,
 } from "./utilities";
+import { buildResolveInfo } from "../executeWithoutSchema";
 
 export function generateResolvers(
   context: TsCodegenContext,
@@ -170,24 +170,19 @@ function createResolversReducer(
             type: context.getResolveInfoType().toTypeReference(),
           },
         };
-
         return factory.createTypeAliasDeclaration(
           undefined,
           [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
           factory.createIdentifier(node.name),
-          parentName === "Subscription"
-            ? [
-                factory.createTypeParameterDeclaration(
-                  factory.createIdentifier("A"),
-                  undefined,
-                  factory.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword),
-                ),
-              ]
-            : undefined,
-          getResolverReturnType(
-            node.type,
-            parentName,
-            resolverParametersDefinitions,
+          undefined,
+          factory.createFunctionTypeNode(
+            undefined,
+            getResolverParameters(resolverParametersDefinitions),
+            getResolverReturnType(
+              node.type,
+              parentName,
+              resolverParametersDefinitions,
+            ),
           ),
         );
       },
@@ -226,18 +221,11 @@ function createResolversReducer(
     },
 
     InputValueDefinition: {
-      leave(node, key, parent): ts.PropertySignature {
-        const isOptional = isFieldOptional(
-          key,
-          parent as InputValueDefinitionNode | InputValueDefinitionNode[],
-        );
-
+      leave(node): ts.PropertySignature {
         return factory.createPropertySignature(
           undefined,
           node.name,
-          isOptional
-            ? factory.createToken(ts.SyntaxKind.QuestionToken)
-            : undefined,
+          undefined,
           node.type,
         );
       },

@@ -1,5 +1,4 @@
 import ts, { factory } from "typescript";
-import { FieldDefinitionNode, InputValueDefinitionNode } from "graphql";
 
 const MODEL_SUFFIX = "Model";
 
@@ -59,104 +58,59 @@ export function getResolverParameters({
     ),
   ];
 }
-function isNodeArray<T>(
-  parent: T | ReadonlyArray<T>,
-): parent is ReadonlyArray<T> {
-  return Array.isArray(parent);
-}
-
-export function isFieldOptional(
-  key: string | number | undefined,
-  parent:
-    | InputValueDefinitionNode
-    | InputValueDefinitionNode[]
-    | FieldDefinitionNode
-    | FieldDefinitionNode[]
-    | undefined,
-) {
-  if (key === undefined || !parent) {
-    return false;
-  }
-
-  if (isNodeArray<FieldDefinitionNode | InputValueDefinitionNode>(parent)) {
-    const node = parent[(key as unknown) as number];
-
-    return node?.type ? node.type.kind !== "NonNullType" : false;
-  }
-
-  return false;
-}
-
 export function getResolverReturnType(
   typeNode: ts.TypeNode,
   parentName: string,
   resolverParametersDefinitions: ResolverParametersDefinitions,
 ) {
   if (parentName !== "Subscription") {
-    return factory.createFunctionTypeNode(
-      undefined,
-      getResolverParameters(resolverParametersDefinitions),
-      factory.createTypeReferenceNode(
-        factory.createIdentifier("PromiseOrValue"),
-        [typeNode],
-      ),
+    return factory.createTypeReferenceNode(
+      factory.createIdentifier("PromiseOrValue"),
+      [typeNode],
     );
   }
 
   return factory.createUnionTypeNode([
-    factory.createParenthesizedType(
-      factory.createFunctionTypeNode(
-        undefined,
-        getResolverParameters(resolverParametersDefinitions),
-
-        factory.createTypeReferenceNode(
-          factory.createIdentifier("AsyncIterator"),
-          [typeNode],
-        ),
-      ),
-    ),
-    factory.createTypeLiteralNode([
-      factory.createPropertySignature(
-        undefined,
-        factory.createIdentifier("subscribe"),
-        undefined,
-        factory.createFunctionTypeNode(
+    factory.createTypeReferenceNode(factory.createIdentifier("AsyncIterator"), [
+      typeNode,
+    ]),
+    factory.createFunctionTypeNode(
+      [factory.createTypeParameterDeclaration(factory.createIdentifier("A"))],
+      [],
+      factory.createTypeLiteralNode([
+        factory.createPropertySignature(
           undefined,
-          getResolverParameters(resolverParametersDefinitions),
-          factory.createTypeReferenceNode(
-            factory.createIdentifier("PromiseOrValue"),
-            [
-              factory.createTypeReferenceNode(
-                factory.createIdentifier("AsyncIterator"),
-                [
-                  factory.createTypeReferenceNode(
-                    factory.createIdentifier("A"),
-                  ),
-                ],
-              ),
-            ],
+          factory.createIdentifier("subscribe"),
+          undefined,
+          factory.createFunctionTypeNode(
+            undefined,
+            getResolverParameters(resolverParametersDefinitions),
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("AsyncIterator"),
+              [factory.createTypeReferenceNode(factory.createIdentifier("A"))],
+            ),
           ),
         ),
-      ),
-      factory.createPropertySignature(
-        undefined,
-        factory.createIdentifier("resolve"),
-        undefined,
-        factory.createFunctionTypeNode(
+        factory.createPropertySignature(
           undefined,
-          getResolverParameters({
-            ...resolverParametersDefinitions,
-            parent: {
-              name: "parent",
-              type: factory.createTypeReferenceNode(
-                factory.createIdentifier("A"),
-              ),
-            },
-          }),
-          typeNode,
+          factory.createIdentifier("resolve"),
+          undefined,
+          factory.createFunctionTypeNode(
+            undefined,
+            getResolverParameters({
+              ...resolverParametersDefinitions,
+              parent: {
+                name: "parent",
+                type: factory.createTypeReferenceNode(
+                  factory.createIdentifier("A"),
+                ),
+              },
+            }),
+            typeNode,
+          ),
         ),
-      ),
-    ]),
+      ]),
+    ),
   ]);
 }
 

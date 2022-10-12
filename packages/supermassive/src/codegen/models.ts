@@ -1,12 +1,11 @@
 import ts, { factory } from "typescript";
-import { DocumentNode, FieldDefinitionNode } from "graphql";
+import { DocumentNode } from "graphql";
 import { ASTReducer, visit } from "./typedVisitor";
 import { TsCodegenContext } from "./context";
 import {
   createNullableType,
   createNonNullableType,
   addModelSuffix,
-  isFieldOptional,
 } from "./utilities";
 
 export function generateModels(
@@ -117,17 +116,11 @@ function createModelsReducer(
     },
 
     FieldDefinition: {
-      leave(node, key, parent): ts.PropertySignature {
-        const isOptional = isFieldOptional(
-          key,
-          parent as FieldDefinitionNode | FieldDefinitionNode[],
-        );
+      leave(node): ts.PropertySignature {
         return factory.createPropertySignature(
           undefined,
           factory.createIdentifier(node.name),
-          isOptional
-            ? factory.createToken(ts.SyntaxKind.QuestionToken)
-            : undefined,
+          undefined,
           node.type,
         );
       },
