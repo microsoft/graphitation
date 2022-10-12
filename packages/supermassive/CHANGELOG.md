@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Wed, 05 Oct 2022 16:48:48 GMT and should not be manually modified.
+This log was last generated on Wed, 12 Oct 2022 13:52:36 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.1.2
+
+Wed, 12 Oct 2022 13:52:36 GMT
+
+### Patches
+
+- Hotfix: codegen subscription fixed (jakubvejr@microsoft.com)
 
 ## 1.1.1
 
