@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Hotfix: codegen subscription and optional fields fixed",
+  "packageName": "@graphitation/supermassive",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
