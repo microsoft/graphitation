@@ -25,7 +25,7 @@ export { annotateDocumentGraphQLTransform } from "./transforms/annotateDocumentG
 
 export type { PromiseOrValue } from "./jsutils/PromiseOrValue";
 
-export { generateTS } from "./codegen";
+export { generateTS } from "./codegen/index";
 
 export type {
   NameNode,

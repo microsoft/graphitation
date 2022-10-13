@@ -5,7 +5,7 @@ import ts from "typescript";
 import { program, Command } from "commander";
 import { extractImplicitTypesToTypescript } from "../extractors/extractImplicitTypesToTypescript";
 import { parse } from "graphql";
-import { generateTS } from "../codegen";
+import { generateTS } from "../index";
 import * as glob from "fast-glob";
 
 type GenerateInterfacesOptions = {
