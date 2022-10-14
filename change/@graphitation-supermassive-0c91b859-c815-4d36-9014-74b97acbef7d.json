@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Hotfix: codegen imports fixed",
+  "packageName": "@graphitation/supermassive",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
