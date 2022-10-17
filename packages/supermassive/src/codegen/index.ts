@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { DocumentNode } from "graphql";
-import { extractContext } from "./context";
+import { extractContext } from "./context/index";
 import { generateResolvers } from "./resolvers";
 import { generateModels } from "./models";
 
