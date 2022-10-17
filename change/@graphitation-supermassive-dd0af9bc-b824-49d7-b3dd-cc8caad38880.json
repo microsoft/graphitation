@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "codegen: HOTFIX context folder mjs",
-  "packageName": "@graphitation/supermassive",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}

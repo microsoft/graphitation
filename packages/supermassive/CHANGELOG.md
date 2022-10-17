@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Fri, 14 Oct 2022 15:01:42 GMT and should not be manually modified.
+This log was last generated on Mon, 17 Oct 2022 11:49:33 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.1.4
+
+Mon, 17 Oct 2022 11:49:33 GMT
+
+### Patches
+
+- codegen: HOTFIX context folder mjs (jakubvejr@microsoft.com)
 
 ## 1.1.3
 
