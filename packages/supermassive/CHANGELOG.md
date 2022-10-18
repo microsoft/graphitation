@@ -1,8 +1,48 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Wed, 20 Jul 2022 16:31:59 GMT and should not be manually modified.
+This log was last generated on Mon, 17 Oct 2022 11:49:33 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.1.4
+
+Mon, 17 Oct 2022 11:49:33 GMT
+
+### Patches
+
+- codegen: HOTFIX context folder mjs (jakubvejr@microsoft.com)
+
+## 1.1.3
+
+Fri, 14 Oct 2022 15:01:42 GMT
+
+### Patches
+
+- Hotfix: codegen imports fixed (jakubvejr@microsoft.com)
+
+## 1.1.2
+
+Wed, 12 Oct 2022 13:52:36 GMT
+
+### Patches
+
+- Hotfix: codegen subscription fixed (jakubvejr@microsoft.com)
+
+## 1.1.1
+
+Wed, 05 Oct 2022 16:48:48 GMT
+
+### Patches
+
+- Hotfix: typescript codegen fixes (models and models file path) (jakubvejr@microsoft.com)
+
+## 1.1.0
+
+Fri, 30 Sep 2022 08:56:18 GMT
+
+### Minor changes
+
+- Version bump (jakubvejr@microsoft.com)
 
 ## 1.0.0
 

@@ -1,8 +1,24 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-This log was last generated on Thu, 15 Sep 2022 13:54:37 GMT and should not be manually modified.
+This log was last generated on Mon, 10 Oct 2022 18:23:34 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.3.3
+
+Mon, 10 Oct 2022 18:23:34 GMT
+
+### Patches
+
+- minify subscribe bundle (jakubvejr@microsoft.com)
+
+## 0.3.2
+
+Mon, 10 Oct 2022 17:18:23 GMT
+
+### Patches
+
+- Graphitation update (jakubvejr@microsoft.com)
 
 ## 0.3.1
 

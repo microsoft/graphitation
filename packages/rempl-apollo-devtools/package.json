@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/rempl-apollo-devtools",
   "license": "MIT",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "main": "./dist/apollo-devtools.js",
   "repository": {
     "type": "git",
@@ -9,7 +9,7 @@
     "directory": "packages/apollo-devtools"
   },
   "scripts": {
-    "build": "node scripts/build.js",
+    "build": "node scripts/build-single-bundle && node scripts/build-separated-bundles",
     "watch": "watch 'node scripts/build.js'",
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
@@ -29,7 +29,7 @@
     "@types/react-router-dom": "^5.3.3",
     "@types/uuid": "^8.3.4",
     "eslint-plugin-react": "^7.25.2",
-    "graphiql": "1.8.7",
+    "graphiql": "^2.0.9",
     "hotkeys-js": "^3.8.7",
     "lodash.debounce": "^4.0.8",
     "lodash.isequal": "^4.5.0",
