@@ -5,6 +5,8 @@ import {
   useSubscription as useApolloSubscription,
   useQuery as useApolloQuery,
   useMutation as useApolloMutation,
+  SubscriptionHookOptions as ApolloSubscriptionHookOptions,
+  ErrorPolicy as ApolloErrorPolicy,
 } from "@apollo/client";
 
 // import { GraphQLTaggedNode } from "./taggedNode";
@@ -165,6 +167,9 @@ export function useSubscription<TSubscriptionPayload extends OperationType>(
         config.onNext(subscriptionData.data);
       }
     },
+    errorPolicy: "ignore",
+  } as ApolloSubscriptionHookOptions & {
+    errorPolicy: ApolloErrorPolicy;
   });
   if (error) {
     if (config.onError) {

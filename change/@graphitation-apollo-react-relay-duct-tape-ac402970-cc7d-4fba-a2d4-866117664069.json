@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Add errorPolicy ignore to useSubscription",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
