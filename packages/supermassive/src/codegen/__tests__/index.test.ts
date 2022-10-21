@@ -49,27 +49,27 @@ describe(generateTS, () => {
             __typename: string;
         }
         export interface PostModel extends BaseModel, _PostModel {
-            __typename: \\"Post\\";
+            readonly __typename: \\"Post\\";
         }
         export interface MessageModel extends BaseModel {
-            __typename: \\"Message\\";
-            id: string;
+            readonly __typename: \\"Message\\";
+            readonly id: string;
         }
         export interface UserModel extends BaseModel {
-            __typename: \\"User\\";
-            id: string;
-            name: string | null;
-            messagesWithAnswersNonRequired: ((MessageModel | null)[] | null)[] | null;
-            messagesWithAnswersRequired: ((MessageModel | null)[] | null)[];
-            messagesWithAnswersAllRequired: MessageModel[][];
-            messagesNonRequired: (MessageModel | null)[] | null;
-            messagesWithArrayRequired: (MessageModel | null)[];
-            messagesRequired: MessageModel[];
-            messagesOnlyMessageRequired: MessageModel[] | null;
-            post: PostModel | null;
-            postRequired: PostModel;
-            avatar: AvatarModel | null;
-            avatarRequired: AvatarModel;
+            readonly __typename: \\"User\\";
+            readonly id: string;
+            readonly name: string | null;
+            readonly messagesWithAnswersNonRequired: ((MessageModel | null)[] | null)[] | null;
+            readonly messagesWithAnswersRequired: ((MessageModel | null)[] | null)[];
+            readonly messagesWithAnswersAllRequired: MessageModel[][];
+            readonly messagesNonRequired: (MessageModel | null)[] | null;
+            readonly messagesWithArrayRequired: (MessageModel | null)[];
+            readonly messagesRequired: MessageModel[];
+            readonly messagesOnlyMessageRequired: MessageModel[] | null;
+            readonly post: PostModel | null;
+            readonly postRequired: PostModel;
+            readonly avatar: AvatarModel | null;
+            readonly avatarRequired: AvatarModel;
         }
         "
       `);
@@ -126,8 +126,8 @@ describe(generateTS, () => {
             __typename: string;
         }
         export interface UserModel extends BaseModel {
-            __typename: \\"User\\";
-            id: string;
+            readonly __typename: \\"User\\";
+            readonly id: string;
         }
         "
       `);
@@ -189,8 +189,8 @@ describe(generateTS, () => {
             __typename: string;
         }
         export interface UserModel extends BaseModel {
-            __typename: \\"User\\";
-            id: string;
+            readonly __typename: \\"User\\";
+            readonly id: string;
         }
         "
       `);
@@ -247,9 +247,9 @@ describe(generateTS, () => {
             __typename: string;
         }
         export interface AdminModel extends BaseModel, NodeModel, PersonaModel {
-            __typename: \\"Admin\\";
-            id: string;
-            rank: number;
+            readonly __typename: \\"Admin\\";
+            readonly id: string;
+            readonly rank: number;
         }
         "
       `);
@@ -292,9 +292,9 @@ describe(generateTS, () => {
             __typename: string;
         }
         export interface UserModel extends BaseModel, NodeModel {
-            __typename: \\"User\\";
-            id: string;
-            name: string;
+            readonly __typename: \\"User\\";
+            readonly id: string;
+            readonly name: string;
         }
         "
       `);
@@ -333,9 +333,9 @@ describe(generateTS, () => {
             __typename: string;
         }
         export interface UserModel extends BaseModel, NodeModel {
-            __typename: \\"User\\";
-            id: string;
-            name: string;
+            readonly __typename: \\"User\\";
+            readonly id: string;
+            readonly name: string;
         }
         "
       `);
@@ -371,8 +371,8 @@ describe(generateTS, () => {
             __typename: string;
         }
         export interface UserModel extends BaseModel {
-            __typename: \\"User\\";
-            id: string;
+            readonly __typename: \\"User\\";
+            readonly id: string;
         }
         "
       `);
@@ -421,8 +421,8 @@ describe(generateTS, () => {
             __typename: string;
         }
         export interface UserModel extends BaseModel {
-            __typename: \\"User\\";
-            id: string;
+            readonly __typename: \\"User\\";
+            readonly id: string;
         }
         export enum RankModel {
             User = \\"User\\",
@@ -475,8 +475,8 @@ describe(generateTS, () => {
             __typename: string;
         }
         export interface UserModel extends BaseModel {
-            __typename: \\"User\\";
-            id: string;
+            readonly __typename: \\"User\\";
+            readonly id: string;
         }
         "
       `);
@@ -530,9 +530,9 @@ describe(generateTS, () => {
             Offline = \\"Offline\\"
         }
         export interface UserModel extends BaseModel {
-            __typename: \\"User\\";
-            id: string;
-            availability: PresenceAvailabilityModel;
+            readonly __typename: \\"User\\";
+            readonly id: string;
+            readonly availability: PresenceAvailabilityModel;
         }
         "
       `);
@@ -575,12 +575,12 @@ describe(generateTS, () => {
             __typename: string;
         }
         export interface CustomerModel extends BaseModel {
-            __typename: \\"Customer\\";
-            id: string;
+            readonly __typename: \\"Customer\\";
+            readonly id: string;
         }
         export interface AdminModel extends BaseModel {
-            __typename: \\"Admin\\";
-            id: string;
+            readonly __typename: \\"Admin\\";
+            readonly id: string;
         }
         export type UserModel = CustomerModel | AdminModel;
         "
@@ -622,7 +622,7 @@ describe(generateTS, () => {
             __typename: string;
         }
         export interface UserModel extends BaseModel, _UserModel {
-            __typename: \\"User\\";
+            readonly __typename: \\"User\\";
         }
         "
       `);
@@ -669,9 +669,9 @@ describe(generateTS, () => {
             __typename: string;
         }
         export interface TodoModel extends BaseModel {
-            __typename: \\"Todo\\";
-            id: string;
-            name: string;
+            readonly __typename: \\"Todo\\";
+            readonly id: string;
+            readonly name: string;
         }
         "
       `);
@@ -718,9 +718,9 @@ describe(generateTS, () => {
             __typename: string;
         }
         export interface UserModel extends BaseModel {
-            __typename: \\"User\\";
-            id: string;
-            avatar: AvatarModel;
+            readonly __typename: \\"User\\";
+            readonly id: string;
+            readonly avatar: AvatarModel;
         }
         "
       `);
@@ -764,9 +764,9 @@ describe(generateTS, () => {
         }
         export type DateTimeModel = string;
         export interface UserModel extends BaseModel {
-            __typename: \\"User\\";
-            id: string;
-            dateTime: DateTimeModel;
+            readonly __typename: \\"User\\";
+            readonly id: string;
+            readonly dateTime: DateTimeModel;
         }
         "
       `);
@@ -808,9 +808,9 @@ describe(generateTS, () => {
         }
         export type DateTimeModel = _DateTimeModel;
         export interface UserModel extends BaseModel {
-            __typename: \\"User\\";
-            id: string;
-            dateTime: DateTimeModel;
+            readonly __typename: \\"User\\";
+            readonly id: string;
+            readonly dateTime: DateTimeModel;
         }
         "
       `);
@@ -856,12 +856,12 @@ describe(generateTS, () => {
             __typename: string;
         }
         export interface UserModel extends BaseModel {
-            __typename: \\"User\\";
-            id: string;
-            name: string;
-            age: number | null;
-            rating: number | null;
-            isAdmin: boolean;
+            readonly __typename: \\"User\\";
+            readonly id: string;
+            readonly name: string;
+            readonly age: number | null;
+            readonly rating: number | null;
+            readonly isAdmin: boolean;
         }
         "
       `);
