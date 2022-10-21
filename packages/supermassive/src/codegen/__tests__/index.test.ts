@@ -139,9 +139,9 @@ describe(generateTS, () => {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Subscription {
-            export type userUpdated<A = unknown> = ((model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<UserModel>) | {
+            export type userUpdated<A = unknown> = {
                 subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<A>>;
-                resolve: (parent: A, args: {}, context: unknown, info: ResolveInfo) => UserModel;
+                resolve: (parent: A, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel>;
             };
         }
         "
@@ -165,9 +165,9 @@ describe(generateTS, () => {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Subscription {
-            export type userUpdated<A = unknown> = ((model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<UserModel>) | {
+            export type userUpdated<A = unknown> = {
                 subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<A>>;
-                resolve: (parent: A, args: {}, context: unknown, info: ResolveInfo) => UserModel;
+                resolve: (parent: A, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel>;
             };
         }
         "
@@ -686,9 +686,9 @@ describe(generateTS, () => {
             export type createTodo = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<TodoModel>;
         }
         export declare namespace Subscription {
-            export type emitTodos<A = unknown> = ((model: unknown, args: {}, context: unknown, info: ResolveInfo) => AsyncIterator<TodoModel | null>) | {
+            export type emitTodos<A = unknown> = {
                 subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<A>>;
-                resolve: (parent: A, args: {}, context: unknown, info: ResolveInfo) => TodoModel | null;
+                resolve: (parent: A, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<TodoModel | null>;
             };
         }
         export declare namespace Todo {

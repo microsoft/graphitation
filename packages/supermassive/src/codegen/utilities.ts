@@ -76,17 +76,6 @@ export function getResolverReturnType(
   }
 
   return factory.createUnionTypeNode([
-    factory.createParenthesizedType(
-      factory.createFunctionTypeNode(
-        undefined,
-        getResolverParameters(resolverParametersDefinitions),
-
-        factory.createTypeReferenceNode(
-          factory.createIdentifier("AsyncIterator"),
-          [typeNode],
-        ),
-      ),
-    ),
     factory.createTypeLiteralNode([
       factory.createPropertySignature(
         undefined,
@@ -125,7 +114,10 @@ export function getResolverReturnType(
               ),
             },
           }),
-          typeNode,
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("PromiseOrValue"),
+            [typeNode],
+          ),
         ),
       ),
     ]),
