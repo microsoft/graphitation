@@ -66,6 +66,17 @@ function getFiles(inputs: Array<string>) {
     .flat()
     .filter(Boolean);
 }
+function getContextPath(
+  outputDir: string,
+  inputPath: string,
+  contextImport: string | undefined,
+) {
+  if (!contextImport) {
+    return;
+  }
+  const contextDir = path.join(path.dirname(inputPath), contextImport);
+  return path.relative(outputDir, contextDir);
+}
 
 async function generateInterfaces(
   files: Array<string>,
@@ -85,29 +96,30 @@ async function generateInterfaces(
     const content = await fs.readFile(fullPath, { encoding: "utf-8" });
     const document = parse(content);
 
-    let result = generateTS(
-      document,
-      options.contextImport,
-      options.contextName,
-    );
-
-    const tsDir = path.join(
+    const outputDir = path.join(
       path.dirname(fullPath),
       options.outputDir ? options.outputDir : "__generated__",
     );
-    await fs.mkdir(tsDir, { recursive: true });
+
+    let result = generateTS(
+      document,
+      getContextPath(outputDir, fullPath, options.contextImport),
+      options.contextName,
+    );
+
+    await fs.mkdir(outputDir, { recursive: true });
 
     const printer = ts.createPrinter();
 
     await fs.writeFile(
-      path.join(tsDir, "models.interface.ts"),
+      path.join(outputDir, "models.interface.ts"),
       PREPEND_TO_INTERFACES +
         printer.printNode(ts.EmitHint.SourceFile, result.models, result.models),
       { encoding: "utf-8" },
     );
 
     await fs.writeFile(
-      path.join(tsDir, "resolvers.interface.ts"),
+      path.join(outputDir, "resolvers.interface.ts"),
       PREPEND_TO_INTERFACES +
         printer.printNode(
           ts.EmitHint.SourceFile,

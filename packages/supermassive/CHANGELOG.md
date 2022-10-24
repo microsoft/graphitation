@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Mon, 17 Oct 2022 11:49:33 GMT and should not be manually modified.
+This log was last generated on Mon, 24 Oct 2022 14:54:38 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.1.5
+
+Mon, 24 Oct 2022 14:54:38 GMT
+
+### Patches
+
+- Codegen - subscription type fix, type fields are readonly and contextPath is relative to inputFile (jakubvejr@microsoft.com)
 
 ## 1.1.4
 
