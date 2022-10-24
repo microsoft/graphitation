@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Codegen - subscription type fix, type fields are readonly and contextPath is relative to inputFile",
+  "packageName": "@graphitation/supermassive",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}

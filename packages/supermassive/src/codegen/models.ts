@@ -118,7 +118,7 @@ function createModelsReducer(
     FieldDefinition: {
       leave(node): ts.PropertySignature {
         return factory.createPropertySignature(
-          undefined,
+          [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
           factory.createIdentifier(node.name),
           undefined,
           node.type,
@@ -162,7 +162,7 @@ function createModelsReducer(
           ],
           [
             factory.createPropertySignature(
-              undefined,
+              [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
               "__typename",
               undefined,
               factory.createLiteralTypeNode(
@@ -275,7 +275,10 @@ function createModelsReducer(
     ListType: {
       leave({ type }): ts.TypeNode {
         return createNullableType(
-          factory.createArrayTypeNode(type as ts.TypeNode),
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("ReadonlyArray"),
+            [type as ts.TypeNode],
+          ),
         );
       },
     },
