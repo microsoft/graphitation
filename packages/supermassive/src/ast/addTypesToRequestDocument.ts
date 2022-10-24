@@ -53,7 +53,7 @@ export function addTypesToRequestDocument(
           return newNode;
         }
         // This happens whenever a new field is requested that hasn't been defined in schema
-        throw new Error(`Unhandled node: ${node.name.value}, type: ${type}`);
+        throw new Error(`Unhandled node: ${node.name.value}`);
       },
     }),
   );
