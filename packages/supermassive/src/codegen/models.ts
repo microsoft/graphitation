@@ -275,7 +275,10 @@ function createModelsReducer(
     ListType: {
       leave({ type }): ts.TypeNode {
         return createNullableType(
-          factory.createArrayTypeNode(type as ts.TypeNode),
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("ReadonlyArray"),
+            [type as ts.TypeNode],
+          ),
         );
       },
     },
