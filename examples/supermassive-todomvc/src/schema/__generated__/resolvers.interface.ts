@@ -1,9 +1,9 @@
-// @ts-nocheck 
 /* eslint-disable */ 
+// @ts-nocheck 
 // This file was automatically generated (by @graphitaiton/supermassive) and should not be edited.
 import type { PromiseOrValue } from "@graphitation/supermassive";
 import type { ResolveInfo } from "@graphitation/supermassive";
-import type { TodoModel, CreateTodoResultModel, UpdateTodoTextResultModel, SetTodoCompletedResultModel, CreateTodoSuccessModel, CreateTodoFailureModel, FailureModel, UpdateTodoTextSuccessModel, UpdateTodoTextFailureModel, SetTodoCompletedSuccessModel, SetTodoCompletedFailureModel } from "./models.interface.ts";
+import type { TodoModel, CreateTodoResultModel, UpdateTodoTextResultModel, SetTodoCompletedResultModel, CreateTodoSuccessModel, CreateTodoFailureModel, UpdateTodoTextSuccessModel, UpdateTodoTextFailureModel, SetTodoCompletedSuccessModel, SetTodoCompletedFailureModel, FailureModel } from "./models.interface";
 export declare namespace Query {
     export type allTodos = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<TodoModel[]>;
 }
@@ -19,9 +19,14 @@ export declare namespace Mutation {
     }, context: unknown, info: ResolveInfo) => PromiseOrValue<SetTodoCompletedResultModel>;
 }
 export declare namespace Subscription {
-    export type emitTodos = (model: unknown, args: {
-        limit: number;
-    }, context: unknown, info: ResolveInfo) => PromiseOrValue<TodoModel | null>;
+    export type emitTodos<A = unknown> = {
+        subscribe: (model: unknown, args: {
+            limit: number;
+        }, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<A>>;
+        resolve: (parent: A, args: {
+            limit: number;
+        }, context: unknown, info: ResolveInfo) => PromiseOrValue<TodoModel | null>;
+    };
 }
 export declare namespace Todo {
     export type id = (model: TodoModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
