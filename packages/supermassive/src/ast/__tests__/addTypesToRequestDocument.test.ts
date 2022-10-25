@@ -208,5 +208,37 @@ describe(addTypesToRequestDocument, () => {
         }
       `);
     });
+
+    it("errors nicely for unknown fields", () => {
+      expect(() => {
+        addTypesToRequestDocument(
+          schema,
+          graphql`
+            query filmQuery {
+              film(id: 42) {
+                title
+                format
+              }
+            }
+          `,
+        );
+      }).toThrowError(
+        "Cannot find type for field: query filmQuery.film.format",
+      );
+
+      expect(() => {
+        addTypesToRequestDocument(
+          schema,
+          graphql`
+            query {
+              film(id: 42) {
+                title
+                format
+              }
+            }
+          `,
+        );
+      }).toThrowError("Cannot find type for field: query.film.format");
+    });
   });
 });

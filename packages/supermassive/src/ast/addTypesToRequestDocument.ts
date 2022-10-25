@@ -9,6 +9,7 @@ import {
   visit,
   print,
   visitWithTypeInfo,
+  Kind,
 } from "graphql";
 
 import * as TypelessAST from "graphql/language/ast";
@@ -23,36 +24,68 @@ export function addTypesToRequestDocument(
   return visit(
     document as any,
     visitWithTypeInfo(typeInfo, {
-      Argument(node) {
-        const argument = typeInfo.getArgument()!;
-        if (argument) {
-          const typeNode = generateTypeNode(argument.type);
-          const newNode: TypedAST.ArgumentNode = {
-            ...node,
-            __type: typeNode,
-            __defaultValue: argument.defaultValue
-              ? parseValue(JSON.stringify(argument.defaultValue))
-              : undefined,
-          };
-          return newNode;
-        }
+      Argument: {
+        leave(node) {
+          const argument = typeInfo.getArgument()!;
+          if (argument) {
+            const typeNode = generateTypeNode(argument.type);
+            const newNode: TypedAST.ArgumentNode = {
+              ...node,
+              __type: typeNode,
+              __defaultValue: argument.defaultValue
+                ? parseValue(JSON.stringify(argument.defaultValue))
+                : undefined,
+            };
+            return newNode;
+          }
+        },
       },
-      Field(
-        node: Omit<
-          TypelessAST.FieldNode,
-          "selectionSet" | "arguments" | "directives"
-        >,
-      ) {
-        const type = typeInfo.getType();
-        if (type) {
-          const typeNode = generateTypeNode(type);
-          const newNode: TypedAST.FieldNode = {
-            ...node,
-            __type: typeNode,
-          };
-          return newNode;
-        }
-        throw new Error(`Unhandled: ${type}`);
+      Field: {
+        leave(
+          node: Omit<
+            TypelessAST.FieldNode,
+            "selectionSet" | "arguments" | "directives"
+          >,
+          _key,
+          _parent,
+          _path,
+          ancestors,
+        ) {
+          const type = typeInfo.getType();
+          if (type) {
+            const typeNode = generateTypeNode(type);
+            const newNode: TypedAST.FieldNode = {
+              ...node,
+              __type: typeNode,
+            };
+            return newNode;
+          }
+          const path: string[] = [];
+          ancestors.forEach((ancestorOrArray) => {
+            let ancestor: TypelessAST.ASTNode;
+            if (!Array.isArray(ancestorOrArray)) {
+              ancestor = ancestorOrArray as TypelessAST.ASTNode;
+              if (ancestor && ancestor.kind === Kind.FIELD) {
+                path.push(ancestor.name.value);
+              } else if (
+                ancestor &&
+                ancestor.kind === Kind.OPERATION_DEFINITION
+              ) {
+                let name;
+                if (ancestor.name) {
+                  name = `${ancestor.operation} ${ancestor.name.value}`;
+                } else {
+                  name = ancestor.operation;
+                }
+                path.push(name);
+              }
+            }
+          });
+          // This happens whenever a new field is requested that hasn't been defined in schema
+          throw new Error(
+            `Cannot find type for field: ${path.join(".")}.${node.name.value}`,
+          );
+        },
       },
     }),
   );
