@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Better error message",
-  "packageName": "@graphitation/supermassive",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}
