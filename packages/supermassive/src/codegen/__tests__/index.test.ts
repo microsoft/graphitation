@@ -87,21 +87,21 @@ describe(generateTS, () => {
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
             export type name = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
-            export type messagesWithAnswersNonRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<((MessageModel | null)[] | null)[] | null>;
-            export type messagesWithAnswersRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<((MessageModel | null)[] | null)[]>;
-            export type messagesWithAnswersAllRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<MessageModel[][]>;
-            export type messagesNonRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<(MessageModel | null)[] | null>;
-            export type messagesWithArrayRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<(MessageModel | null)[]>;
-            export type messagesRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<MessageModel[]>;
-            export type messagesOnlyMessageRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<MessageModel[] | null>;
+            export type messagesWithAnswersNonRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<MessageModel | null> | null> | null>;
+            export type messagesWithAnswersRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<MessageModel | null> | null>>;
+            export type messagesWithAnswersAllRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<MessageModel>>>;
+            export type messagesNonRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<MessageModel | null> | null>;
+            export type messagesWithArrayRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<MessageModel | null>>;
+            export type messagesRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<MessageModel>>;
+            export type messagesOnlyMessageRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<MessageModel> | null>;
             export type post = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<PostModel | null>;
             export type postRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<PostModel>;
             export type avatar = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AvatarModel | null>;
             export type avatarRequired = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AvatarModel>;
         }
         export declare namespace Query {
-            export type requiredUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel[]>;
-            export type optionalUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<(UserModel | null)[] | null>;
+            export type requiredUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<UserModel>>;
+            export type optionalUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<UserModel | null> | null>;
             export type optionalUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
             export type requiredUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel>;
             export type requiredPost = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<PostModel>;
@@ -202,7 +202,7 @@ describe(generateTS, () => {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Query {
-            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel[]>;
+            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<UserModel>>;
         }
         "
       `);
@@ -262,8 +262,8 @@ describe(generateTS, () => {
             export type rank = (model: AdminModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number>;
         }
         export declare namespace Query {
-            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<(UserModel | null)[] | null>;
-            export type admins = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<(AdminModel | null)[] | null>;
+            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<UserModel | null> | null>;
+            export type admins = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<AdminModel | null> | null>;
         }
         "
       `);
@@ -307,7 +307,7 @@ describe(generateTS, () => {
             export type name = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Query {
-            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<(UserModel | null)[] | null>;
+            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<UserModel | null> | null>;
         }
         "
       `);
@@ -680,7 +680,7 @@ describe(generateTS, () => {
         import type { ResolveInfo } from \\"@graphitation/supermassive\\";
         import type { TodoModel } from \\"./models.interface\\";
         export declare namespace Query {
-            export type allTodos = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<TodoModel[]>;
+            export type allTodos = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<TodoModel>>;
         }
         export declare namespace Mutation {
             export type createTodo = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<TodoModel>;

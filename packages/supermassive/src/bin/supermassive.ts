@@ -14,7 +14,7 @@ type GenerateInterfacesOptions = {
   contextName?: string;
 };
 
-const PREPEND_TO_INTERFACES = `/* eslint-disable */ \r\n// @ts-nocheck \r\n// This file was automatically generated (by @graphitaiton/supermassive) and should not be edited.\r\n`;
+const PREPEND_TO_INTERFACES = `/* eslint-disable */ \n// @ts-nocheck \n// This file was automatically generated (by @graphitaiton/supermassive) and should not be edited.\n`;
 
 export function supermassive(): Command {
   const extractSchemaCommand = new Command();
@@ -66,15 +66,11 @@ function getFiles(inputs: Array<string>) {
     .flat()
     .filter(Boolean);
 }
-function getContextPath(
-  outputDir: string,
-  inputPath: string,
-  contextImport: string | undefined,
-) {
+function getContextPath(outputDir: string, contextImport: string | undefined) {
   if (!contextImport) {
     return;
   }
-  const contextDir = path.join(path.dirname(inputPath), contextImport);
+  const contextDir = path.join(process.cwd(), contextImport);
   return path.relative(outputDir, contextDir);
 }
 
@@ -103,7 +99,7 @@ async function generateInterfaces(
 
     let result = generateTS(
       document,
-      getContextPath(outputDir, fullPath, options.contextImport),
+      getContextPath(outputDir, options.contextImport),
       options.contextName,
     );
 
