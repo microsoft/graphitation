@@ -201,10 +201,7 @@ function createResolversReducer(
     ListType: {
       leave({ type }): ts.TypeNode {
         return createNullableType(
-          factory.createTypeReferenceNode(
-            factory.createIdentifier("ReadonlyArray"),
-            [type as ts.TypeNode],
-          ),
+          factory.createArrayTypeNode(type as ts.TypeNode),
         );
       },
     },

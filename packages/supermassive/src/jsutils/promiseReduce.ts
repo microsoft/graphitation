@@ -11,7 +11,10 @@ import { isPromise } from "./isPromise";
  */
 export function promiseReduce<T, U>(
   values: Iterable<T>,
-  callbackFn: (accumulator: U, currentValue: T) => PromiseOrValue<U>,
+  callbackFn: (
+    accumulator: PromiseOrValue<U>,
+    currentValue: T,
+  ) => PromiseOrValue<U>,
   initialValue: PromiseOrValue<U>,
 ): PromiseOrValue<U> {
   let accumulator = initialValue;
