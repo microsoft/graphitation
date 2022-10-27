@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Tue, 25 Oct 2022 10:26:19 GMT and should not be manually modified.
+This log was last generated on Thu, 27 Oct 2022 12:54:10 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.1.7
+
+Thu, 27 Oct 2022 12:54:10 GMT
+
+### Patches
+
+- contextPath relative to CWD and resolvers return readonly array (jakubvejr@microsoft.com)
 
 ## 1.1.6
 

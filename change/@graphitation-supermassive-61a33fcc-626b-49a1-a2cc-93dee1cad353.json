@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "contextPath relative to CWD and resolvers return readonly array",
-  "packageName": "@graphitation/supermassive",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
