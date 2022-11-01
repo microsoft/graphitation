@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "wrapper fallback fix",
+  "packageName": "@graphitation/rempl-apollo-devtools",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
