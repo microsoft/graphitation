@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": " Hotfix: set subscriber format to iife in build-separated-bundles.js",
+  "packageName": "@graphitation/rempl-apollo-devtools",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
