@@ -20,7 +20,7 @@ if (require.main === module) {
         minify: true,
         bundle: true,
         outfile: "dist/apollo-devtools-subscriber.js",
-        format: "esm",
+        format: "iife",
         sourcemap: false,
         define: {
           __GRAPHIQL_CSS__: JSON.stringify(
