@@ -1,6 +1,6 @@
 import { processImportDirective } from "../import";
 import { Kind, parse, print, GraphQLError } from "graphql";
-import graphql from "../../../utilities/blankGraphQLTag";
+import { blankGraphQLTag as graphql } from "../../utilities";
 import { DefinitionImport } from "../../types";
 
 describe(processImportDirective, () => {

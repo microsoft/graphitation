@@ -20,11 +20,15 @@ GraphQL tooling & runtime support needed for MS Teams and beyond
 
 - [@graphitation/apollo-mock-client](./packages/apollo-mock-client): An Apollo Client that allows mocking of payloads in response to operations, rather than having to provide them all upfront.
 - [@graphitation/apollo-react-relay-duct-tape](./packages/apollo-react-relay-duct-tape): A compatibility wrapper that provides the react-relay API on top of Apollo Client.
+- [@graphitation/graphitation-cli](./packages/graphitation-cli): Graphitation CLI.
+- [@graphitation/graphql-codegen](./packages/graphql-codegen): GraphQL codegen.
+- [@graphitation/graphql-codegen-supermassive-typed-document-node-plugin](./packages/graphql-codegen-supermassive-typed-document-node-plugin): GraphQL codegen.
 - [@graphitation/graphql-js-operation-payload-generator](./packages/graphql-js-operation-payload-generator): Generates a payload for a given GraphQL operation expressed in graphql-js AST and a GraphQL Schema.
 - [@graphitation/graphql-js-tag](./packages): A simple graphql-js AST based `graphql` tagged template function.
-- [@graphitation/graphql-eslint-rules](./packages/graphql-eslint-rules): Graphql eslint rules 
-- [@graphitation/rempl-apollo-devtools](./packages/apollo-devtools): Rempl apollo devtools 
+- [@graphitation/graphql-eslint-rules](./packages/graphql-eslint-rules): Graphql eslint rules
+- [@graphitation/rempl-apollo-devtools](./packages/apollo-devtools): Rempl apollo devtools
 - [@graphitation/supermassive](./packages/supermassive): Supermassive is a lightweight schema-less GraphQL executor and query build-time compiler
+- [@graphitation/supermassive-extractors](./packages/supermassive-extractors): Supermassive-extractors extract implicit resolvers.
 - [relay-compiler-language-graphitation](./packages/relay-compiler-language-graphitation): A relay-compiler plugin that wraps [the TypeScript plugin](https://github.com/relay-tools/relay-compiler-language-typescript) and augments it slightly for [@graphitation/apollo-react-relay-duct-tape](./packages/apollo-react-relay-duct-tape)'s needs.
 
 ## Contributing
