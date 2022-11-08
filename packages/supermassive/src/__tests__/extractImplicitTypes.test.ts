@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import ts from "typescript";
 import { isInputType, parse } from "graphql";
-import { extractImplicitTypesToTypescript } from "../extractors/extractImplicitTypesToTypescript";
+import { extractImplicitTypesToTypescript } from "@graphitation/supermassive-extractors";
 import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
 import { specifiedScalars } from "../values";
 import { Resolvers } from "..";

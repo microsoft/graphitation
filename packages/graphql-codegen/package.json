@@ -1,30 +1,23 @@
 {
-  "name": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
+  "name": "@graphitation/graphql-codegen",
   "license": "MIT",
-  "version": "1.0.8",
+  "version": "1.0.0",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",
-    "directory": "packages/graphql-codegen-supermassive-schema-extraction-plugin"
+    "directory": "packages/graphql-codegen"
   },
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
+    "test": "monorepo-scripts test",
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@graphitation/supermassive-extractors": "*",
-    "@graphql-codegen/plugin-helpers": "^1.18.2",
     "@types/jest": "^26.0.22",
     "monorepo-scripts": "*"
-  },
-  "peerDependencies": {
-    "@graphql-codegen/plugin-helpers": ">= 1.18.0 < 2"
-  },
-  "dependencies": {
-    "typescript": "^4.4.3 <4.5.0"
   },
   "sideEffects": false,
   "access": "public",
@@ -38,5 +31,9 @@
         "require": "./lib/index.js"
       }
     }
+  },
+  "dependencies": {
+    "graphql": "^15.6.1",
+    "typescript": "^4.4.3 <4.5.0"
   }
 }

@@ -2,9 +2,6 @@
   "name": "@graphitation/supermassive",
   "license": "MIT",
   "version": "1.1.7",
-  "bin": {
-    "supermassive": "./bin/supermassive.js"
-  },
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
@@ -17,11 +14,13 @@
     "test": "yarn extract-schema && monorepo-scripts test",
     "types": "yarn extract-schema && monorepo-scripts types",
     "just": "monorepo-scripts",
-    "extract-schema": "yarn build && node ./bin/supermassive.js extract-schema ./src/benchmarks/swapi-schema/schema.graphql",
-    "benchmark": "ts-node -T ./src/benchmarks/index.ts"
+    "extract-schema": "yarn build && ts-node ./node_modules/.bin/supermassive extract-schema ./src/benchmarks/swapi-schema/schema.graphql",
+    "benchmark": "ts-node ./src/benchmarks/index.ts"
   },
   "devDependencies": {
     "@graphitation/graphql-js-tag": "*",
+    "@graphitation/supermassive-extractors": "*",
+    "@graphitation/graphitation-cli": "*",
     "@graphql-tools/schema": "^7.1.5",
     "@ts-morph/bootstrap": "^0.11.0",
     "@types/benchmark": "^2.1.0",
@@ -30,18 +29,13 @@
     "benchmark": "^2.1.4",
     "graphql-jit": "^0.5.1",
     "iterall": "^1.3.0",
+    "typescript": "^4.4.3 <4.5.0",
     "monorepo-scripts": "*",
     "node-json-db": "^1.3.0",
     "ts-node": "^10.0.0"
   },
   "sideEffects": false,
   "access": "public",
-  "exports": {
-    "./extractors": {
-      "import": "./src/extractors/index.ts",
-      "types": "./src/extractors/index.ts"
-    }
-  },
   "publishConfig": {
     "main": "./lib/index",
     "types": "./lib/index.d.ts",
@@ -50,17 +44,10 @@
       ".": {
         "import": "./lib/index.mjs",
         "require": "./lib/index.js"
-      },
-      "./lib/extractors": {
-        "import": "./lib/extractors/index.mjs",
-        "require": "./lib/extractors/index.js",
-        "types": "./lib/extractors/index.d.ts"
       }
     }
   },
   "dependencies": {
-    "commander": "^8.3.0",
-    "graphql": "^15.6.1",
-    "typescript": "^4.4.3 <4.5.0"
+    "graphql": "^15.6.1"
   }
 }
