@@ -14,7 +14,7 @@
     "test": "yarn extract-schema && monorepo-scripts test",
     "types": "yarn extract-schema && monorepo-scripts types",
     "just": "monorepo-scripts",
-    "extract-schema": "yarn build && ts-node ./node_modules/.bin/supermassive extract-schema ./src/benchmarks/swapi-schema/schema.graphql",
+    "extract-schema": "yarn build && ts-node --project tsconfig.json ./node_modules/.bin/supermassive extract-schema ./src/benchmarks/swapi-schema/schema.graphql",
     "benchmark": "ts-node ./src/benchmarks/index.ts"
   },
   "devDependencies": {
