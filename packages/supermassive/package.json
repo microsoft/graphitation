@@ -15,7 +15,7 @@
     "types": "yarn extract-schema && monorepo-scripts types",
     "just": "monorepo-scripts",
     "extract-schema": "yarn build && ts-node --project tsconfig.json ./node_modules/.bin/supermassive extract-schema ./src/benchmarks/swapi-schema/schema.graphql",
-    "benchmark": "ts-node ./src/benchmarks/index.ts"
+    "benchmark": "ts-node -T ./src/benchmarks/index.ts"
   },
   "devDependencies": {
     "@graphitation/graphql-js-tag": "*",
