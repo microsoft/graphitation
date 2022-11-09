@@ -22,7 +22,6 @@ GraphQL tooling & runtime support needed for MS Teams and beyond
 - [@graphitation/apollo-react-relay-duct-tape](./packages/apollo-react-relay-duct-tape): A compatibility wrapper that provides the react-relay API on top of Apollo Client.
 - [@graphitation/graphitation-cli](./packages/graphitation-cli): Graphitation CLI TODO.
 - [@graphitation/graphql-codegen](./packages/graphql-codegen): GraphQL codegen TODO.
-- [@graphitation/graphql-codegen](./packages/graphql-codegen): GraphQL codegen TODO.
 - [@graphitation/graphql-codegen-supermassive-schema-extraction-plugin](./packages/graphql-codegen-supermassive-schema-extraction-plugin): Schema extraction TODO.
 - [@graphitation/graphql-js-operation-payload-generator](./packages/graphql-js-operation-payload-generator): Generates a payload for a given GraphQL operation expressed in graphql-js AST and a GraphQL Schema.
 - [@graphitation/graphql-js-tag](./packages): A simple graphql-js AST based `graphql` tagged template function.
