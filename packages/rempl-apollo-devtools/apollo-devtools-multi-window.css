@@ -1,0 +1,7 @@
+body > div[side]:not([side="bottom"]) {
+  top: 110px;
+}
+
+body > div[side]:not([side="right"]) {
+  left: 430px;
+}

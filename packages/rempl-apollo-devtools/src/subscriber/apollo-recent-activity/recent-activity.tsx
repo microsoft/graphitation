@@ -4,8 +4,22 @@ import { mergeClasses, Text } from "@fluentui/react-components";
 import { useStyles } from "./recent-activity.styles";
 import { RECENT_DATA_CHANGES_TYPES, ACTIVITY_TYPE } from "../../consts";
 import { RecentActivities } from "../../types";
-import moment from "moment";
 import sizeOf from "object-sizeof";
+
+function getDateValue(value: number): string {
+  if (value < 10) {
+    return `0${value}`;
+  }
+
+  return value.toString();
+}
+
+function getTime(timestamp: number) {
+  const date = new Date(timestamp);
+  return `${getDateValue(date.getHours())}:${getDateValue(
+    date.getMinutes(),
+  )}:${getDateValue(date.getSeconds())}.${date.getMilliseconds()}`;
+}
 
 export const RecentActivity = ({
   activity,
@@ -37,9 +51,7 @@ export const RecentActivity = ({
       >
         {elem.change}
       </div>
-      <div className={classes.time}>
-        {moment(timestamp).format("hh:mm:ss.SSS")}
-      </div>
+      <div className={classes.time}>{getTime(timestamp)}</div>
     </div>
   );
 

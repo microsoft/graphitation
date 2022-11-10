@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Hotfix: warnings caused by momentjs and added styles for multi-window",
+  "packageName": "@graphitation/rempl-apollo-devtools",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
