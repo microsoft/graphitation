@@ -1,5 +1,5 @@
 import React, { useContext, useRef } from "react";
-import GraphiQL, { Storage } from "graphiql";
+import GraphiQL from "graphiql";
 import { ActiveClientContext } from "../contexts/active-client-context";
 import { FetcherParams } from "../../types";
 import { qraphiqlStyles } from "./graphiql.styles";
@@ -7,22 +7,21 @@ import { remplSubscriber } from "../rempl";
 
 (window as any).global = window;
 
-export const createSimpleFetcher = (activeClientId: string) => (
-  graphQLParams: FetcherParams,
-) =>
-  new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      console.error("GraphiQL request timeout");
-      reject();
-    }, 60000);
+export const createSimpleFetcher =
+  (activeClientId: string) => (graphQLParams: FetcherParams) =>
+    new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        console.error("GraphiQL request timeout");
+        reject();
+      }, 60000);
 
-    remplSubscriber
-      .callRemote("graphiql", activeClientId, graphQLParams)
-      .then((res: unknown) => {
-        clearTimeout(timeout);
-        resolve(res);
-      });
-  });
+      remplSubscriber
+        .callRemote("graphiql", activeClientId, graphQLParams)
+        .then((res: unknown) => {
+          clearTimeout(timeout);
+          resolve(res);
+        });
+    });
 
 const createFetcher = (activeClientId: string) => {
   const simpleFetcher = createSimpleFetcher(activeClientId);
@@ -40,7 +39,7 @@ export const GraphiQLRenderer = React.memo(() => {
     <div className={classes.root}>
       <div className={classes.innerContainer}>
         <GraphiQL
-          fetcher={createFetcher(activeClientId)}
+          fetcher={createFetcher(activeClientId) as any}
           storage={storage.current}
         />
       </div>
@@ -48,7 +47,7 @@ export const GraphiQLRenderer = React.memo(() => {
   );
 });
 
-function getStorage(): Storage {
+function getStorage(): any {
   if (!window.GRAPHIQL_STORAGE) {
     window.GRAPHIQL_STORAGE = {};
   }
