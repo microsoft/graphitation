@@ -1,12 +1,14 @@
 {
-  "name": "@graphitation/graphql-codegen",
+  "name": "@graphitation/cli",
   "license": "MIT",
   "version": "1.0.0",
-  "main": "./src/index.ts",
+  "bin": {
+    "supermassive": "./bin/supermassive.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",
-    "directory": "packages/graphql-codegen"
+    "directory": "packages/graphitation-cli"
   },
   "scripts": {
     "build": "monorepo-scripts build",
@@ -16,24 +18,15 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
+    "@graphitation/supermassive-extractors": "*",
+    "@graphitation/ts-codegen": "*",
     "@types/jest": "^26.0.22",
     "monorepo-scripts": "*"
   },
-  "sideEffects": false,
-  "access": "public",
-  "publishConfig": {
-    "main": "./lib/index",
-    "types": "./lib/index.d.ts",
-    "module": "./lib/index.mjs",
-    "exports": {
-      ".": {
-        "import": "./lib/index.mjs",
-        "require": "./lib/index.js"
-      }
-    }
-  },
   "dependencies": {
-    "graphql": "^15.6.1",
+    "commander": "^8.3.0",
     "typescript": "^4.4.3 <4.5.0"
-  }
+  },
+  "sideEffects": false,
+  "access": "public"
 }
