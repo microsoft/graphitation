@@ -20,7 +20,7 @@
   "devDependencies": {
     "@graphitation/graphql-js-tag": "*",
     "@graphitation/supermassive-extractors": "*",
-    "@graphitation/graphitation-cli": "*",
+    "@graphitation/cli": "*",
     "@graphql-tools/schema": "^7.1.5",
     "@ts-morph/bootstrap": "^0.11.0",
     "@types/benchmark": "^2.1.0",
