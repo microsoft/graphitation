@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "codegen and cli renamed",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
