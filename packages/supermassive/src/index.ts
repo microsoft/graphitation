@@ -12,6 +12,7 @@ export type {
   InputObjectTypeResolver,
   FunctionFieldResolver,
   Resolvers,
+  UserResolvers,
   ResolveInfo,
 } from "./types";
 
