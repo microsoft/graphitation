@@ -11,7 +11,7 @@
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
-    "test": "echo \"no tests\"",
+    "test": "monorepo-scripts test",
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts"
   },

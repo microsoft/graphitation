@@ -8,3 +8,4 @@ src
 tsconfig.json
 .tsbuildinfo
 CHANGELOG.json
+supermassive/lib/benchmarks
