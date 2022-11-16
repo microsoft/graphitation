@@ -1,6 +1,6 @@
 {
-  "type": "patch",
-  "comment": "codegen and cli renamed",
+  "type": "major",
+  "comment": "Supermassive split",
   "packageName": "@graphitation/ts-codegen",
   "email": "jakubvejr@microsoft.com",
   "dependentChangeType": "patch"

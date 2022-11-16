@@ -1,6 +1,6 @@
 {
-  "type": "patch",
-  "comment": "Split into separate packages ",
+  "type": "minor",
+  "comment": "Supermassive split",
   "packageName": "@graphitation/supermassive",
   "email": "jakubvejr@microsoft.com",
   "dependentChangeType": "patch"
