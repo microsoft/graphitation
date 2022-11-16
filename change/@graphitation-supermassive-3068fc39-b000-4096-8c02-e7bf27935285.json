@@ -1,5 +1,5 @@
 {
-  "type": "minor",
+  "type": "major",
   "comment": "Supermassive split",
   "packageName": "@graphitation/supermassive",
   "email": "jakubvejr@microsoft.com",
