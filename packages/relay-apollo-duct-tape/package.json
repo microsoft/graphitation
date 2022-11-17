@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "invariant": "^2.2.4",
+    "lru-cache": "^7.14.1",
     "relay-runtime": "^14.0.0"
   },
   "peerDependencies": {

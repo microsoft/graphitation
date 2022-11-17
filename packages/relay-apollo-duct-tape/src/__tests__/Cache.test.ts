@@ -4,6 +4,8 @@ import { InMemoryCache } from "@apollo/client";
 
 import QueryRelayIR from "./__generated__/CacheTestQuery.graphql";
 import FragmentRelayIR from "./__generated__/CacheTestFragment.graphql";
+import RelayModernStore from "relay-runtime/lib/store/RelayModernStore";
+import RelayRecordSource from "relay-runtime/lib/store/RelayRecordSource";
 
 const QueryDocument = graphql`
   query CacheTestQuery(
@@ -607,5 +609,63 @@ describe("key-fields", () => {
         },
       );
     });
+  });
+});
+
+describe("read memoization", () => {
+  it("does not actually hit the store again for the same query/variables", () => {
+    const store = new RelayModernStore(new RelayRecordSource());
+    const cache = new RelayApolloCache({ store });
+    cache.writeQuery({
+      query: QueryDocument,
+      data: RESPONSE,
+      variables: { conversationId: "42" },
+    });
+    const read = () => {
+      return cache.readQuery({
+        query: QueryDocument,
+        variables: { conversationId: "42" },
+      });
+    };
+    const spy = jest.spyOn(store, "lookup");
+    const response1 = read();
+    const response2 = read();
+    expect(response1).toBe(response2);
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it.todo(
+    "removes the entry from the memoization cache when the store evicts the snapshot",
+  );
+
+  it.only("disposes the store subscription when the memoization cache evicts the entry", () => {
+    const store = new RelayModernStore(new RelayRecordSource());
+    const cache = new RelayApolloCache({ store, resultCacheMaxSize: 1 });
+    const subscribe = jest.spyOn(store, "subscribe");
+
+    cache.writeQuery({
+      query: QueryDocument,
+      data: RESPONSE,
+      variables: { conversationId: "42" },
+    });
+    cache.readQuery({
+      query: QueryDocument,
+      variables: { conversationId: "42" },
+    });
+
+    const disposable = subscribe.mock.results[0].value;
+    const dispose = jest.spyOn(disposable, "dispose");
+
+    cache.writeQuery({
+      query: QueryDocument,
+      data: RESPONSE,
+      variables: { conversationId: "43" },
+    });
+    cache.readQuery({
+      query: QueryDocument,
+      variables: { conversationId: "43" },
+    });
+
+    expect(dispose).toHaveBeenCalled();
   });
 });

@@ -30,6 +30,7 @@
  */
 
 import {
+  Disposable,
   ConcreteRequest,
   PayloadData,
   ReaderFragment,
@@ -66,6 +67,13 @@ import {
 
 import invariant from "invariant";
 
+// TODO: In TMP we've added quick-lru, but it's an ESM JS module
+//       and annoyingly that's hard to configure with ts-jest. Figure
+//       out why we're using quick-lru there.
+import LRUCache from "lru-cache";
+
+type ReadOptions = Omit<ApolloCacheTypes.DiffOptions, "query">;
+
 type OptimisticTransaction = WeakRef<OptimisticUpdate>[];
 
 type RecordLike = {
@@ -87,8 +95,16 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   private publishQueue: PublishQueue;
   private optimisticTransactions: Map<string, OptimisticTransaction>;
   private typePolicies: TypePolicies;
+  private pessimism?: Map<string, [Snapshot, Disposable]>;
 
-  constructor(options: { store?: Store; typePolicies?: TypePolicies } = {}) {
+  constructor(
+    options: {
+      store?: Store;
+      typePolicies?: TypePolicies;
+      resultCaching?: boolean;
+      resultCacheMaxSize?: number;
+    } = {},
+  ) {
     super();
     this.store = options.store || new RelayModernStore(new RelayRecordSource());
     this.usingExternalStore = !!options.store;
@@ -96,6 +112,15 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     this.typePolicies = options.typePolicies || {};
     this.publishQueue = new RelayPublishQueue(this.store, null, this.getDataID);
     this.optimisticTransactions = new Map();
+    this.pessimism =
+      options.resultCaching ?? true
+        ? options.resultCacheMaxSize === undefined
+          ? new Map()
+          : ((new LRUCache<string, [Snapshot, Disposable]>({
+              max: options.resultCacheMaxSize,
+              dispose: this.disposeMemoizedSnapshot.bind(this),
+            }) as unknown) as Map<string, [Snapshot, Disposable]>) // TODO: Define actual default
+        : undefined;
 
     this.getDataID = this.getDataID.bind(this);
   }
@@ -436,15 +461,60 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
    * Private
    ***************************************************************************/
 
-  private getSnapshot(
+  private _getSnapshot(
     request: ConcreteRequest,
-    options: Omit<ApolloCacheTypes.DiffOptions, "query">,
+    options: ReadOptions,
   ): Snapshot {
     const operation = createOperationDescriptor(
       request,
       options.variables || {},
     );
     return this.store.lookup(operation.fragment, options.optimistic);
+  }
+
+  /**
+   * Memoized version
+   */
+  private getSnapshot(
+    request: ConcreteRequest,
+    options: ReadOptions,
+  ): Snapshot {
+    if (this.pessimism === undefined) {
+      return this._getSnapshot(request, options);
+    }
+
+    const hash = (request as any).hash;
+    invariant(hash !== undefined, "Expected request to have a hash property.");
+    const cacheKey = JSON.stringify(
+      [
+        hash,
+        options.variables,
+        options.optimistic,
+        options.id,
+        options.rootId,
+      ].filter((x) => x !== undefined),
+    );
+
+    const memoizedSnapshot = this.pessimism.get(cacheKey);
+    if (memoizedSnapshot) {
+      return memoizedSnapshot[0];
+    }
+
+    const snapshot = this._getSnapshot(request, options);
+
+    const disposable = this.store.subscribe(snapshot, (nextSnapshot) => {
+      this.pessimism!.set(cacheKey, [nextSnapshot, disposable]);
+    });
+    this.pessimism.set(cacheKey, [snapshot, disposable]);
+
+    return snapshot;
+  }
+
+  private disposeMemoizedSnapshot([_, disposable]: [
+    Snapshot,
+    Disposable,
+  ]): void {
+    disposable.dispose();
   }
 
   // TODO: In the future, we want to support returning just the id value,
@@ -540,7 +610,10 @@ function getQueryCacheIdentifier(
 
 // ----
 
-function getNodeQuery(fragment: ReaderFragment, id: string): ConcreteRequest {
+function getNodeQuery(
+  fragment: ReaderFragment,
+  id: string,
+): ConcreteRequest & { hash: string } {
   var v0 = [
       {
         defaultValue: null,
@@ -556,6 +629,7 @@ function getNodeQuery(fragment: ReaderFragment, id: string): ConcreteRequest {
       },
     ];
   return {
+    hash: (fragment as any).hash,
     fragment: {
       argumentDefinitions: v0 /*: any*/,
       kind: "Fragment",
