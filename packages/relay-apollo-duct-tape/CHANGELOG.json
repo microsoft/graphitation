@@ -2,6 +2,21 @@
   "name": "@graphitation/relay-apollo-duct-tape",
   "entries": [
     {
+      "date": "Fri, 18 Nov 2022 00:17:49 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.2.0",
+      "version": "0.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "f248258932b4f7c85e91af1bfc9f1f918a89b200",
+            "comment": "[relay-duct-tape] Add read memoization"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 22 Sep 2022 23:01:42 GMT",
       "tag": "@graphitation/relay-apollo-duct-tape_v0.1.0",
       "version": "0.1.0",
