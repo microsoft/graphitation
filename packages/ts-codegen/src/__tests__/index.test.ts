@@ -1,5 +1,6 @@
 import ts from "typescript";
 import { parse } from "graphql";
+import path from "path";
 import { blankGraphQLTag as graphql } from "../utilities";
 import { generateTS } from "..";
 
@@ -926,11 +927,19 @@ describe(generateTS, () => {
 
 function runGenerateTest(
   doc: string,
+  outputDir = "__generated__",
+  inputPath = "./typedef.graphql",
   contextImport?: string,
   contextName?: string,
 ): { models: string; resolvers: string } {
   let document = parse(doc);
-  let result = generateTS(document, contextImport, contextName);
+  let result = generateTS(
+    document,
+    path.resolve(process.cwd(), outputDir),
+    path.resolve(process.cwd(), inputPath),
+    contextImport,
+    contextName,
+  );
   let printer = ts.createPrinter();
   return {
     models: printer.printFile(result.models),

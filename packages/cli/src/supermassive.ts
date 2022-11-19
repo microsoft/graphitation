@@ -71,7 +71,10 @@ function getContextPath(outputDir: string, contextImport: string | undefined) {
     return;
   }
   const contextDir = path.join(process.cwd(), contextImport);
-  return path.relative(outputDir, contextDir);
+  return path
+    .relative(outputDir, contextDir)
+    .split(path.sep)
+    .join(path.posix.sep);
 }
 
 async function generateInterfaces(
@@ -99,6 +102,8 @@ async function generateInterfaces(
 
     let result = generateTS(
       document,
+      outputDir,
+      fullPath,
       getContextPath(outputDir, options.contextImport),
       options.contextName,
     );

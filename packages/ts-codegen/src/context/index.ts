@@ -290,6 +290,8 @@ export class TsCodegenContext {
 export function extractContext(
   options: Partial<TsCodegenContextOptions>,
   document: DocumentNode,
+  outputPath: string,
+  documentPath: string,
 ): TsCodegenContext {
   const fullOptions: TsCodegenContextOptions = {
     ...TsCodegenContextDefault,
@@ -303,7 +305,10 @@ export function extractContext(
         if (node.name.value === IMPORT_DIRECTIVE_NAME) {
           context.addImport(processImportDirective(node), node);
         } else if (node.name.value === MODEL_DIRECTIVE_NAME) {
-          context.addModel(processModelDirective(node, ancestors), node);
+          context.addModel(
+            processModelDirective(node, ancestors, outputPath, documentPath),
+            node,
+          );
         }
       },
     },

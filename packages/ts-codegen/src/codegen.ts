@@ -6,6 +6,8 @@ import { generateModels } from "./models";
 
 export function generateTS(
   document: DocumentNode,
+  outputPath: string,
+  documentPath: string,
   contextImport?: string,
   contextName?: string,
 ): { models: ts.SourceFile; resolvers: ts.SourceFile } {
@@ -18,6 +20,8 @@ export function generateTS(
         },
       },
       document,
+      outputPath,
+      documentPath,
     );
     let models = generateModels(context, document);
     let resolvers = generateResolvers(context, document);

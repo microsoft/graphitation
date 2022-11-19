@@ -8,7 +8,7 @@
     "build": "webpack --mode production --config webpack.config.ts",
     "serve": "webpack serve --config webpack.config.ts",
     "extract-schema": "supermassive extract-schema ./src/schema/typeDefs.graphql",
-    "generate:interfaces": "../../packages/supermassive/bin/supermassive.js generate-interfaces ./src/schema/typeDefs.graphql",
+    "generate:interfaces": "ts-node --project ../../packages/supermassive/tsconfig.json ../../packages/cli/bin/supermassive.js generate-interfaces ./src/schema/typeDefs.graphql",
     "relay": "relay-compiler --language graphitation --schema ./src/schema/typeDefs.graphql --src ./src"
   },
   "dependencies": {
