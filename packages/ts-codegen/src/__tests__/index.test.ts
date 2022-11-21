@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { parse } from "graphql";
-import graphql from "../../utilities/blankGraphQLTag";
+import { blankGraphQLTag as graphql } from "../utilities";
 import { generateTS } from "..";
 
 describe(generateTS, () => {

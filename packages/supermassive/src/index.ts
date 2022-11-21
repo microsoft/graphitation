@@ -12,6 +12,7 @@ export type {
   InputObjectTypeResolver,
   FunctionFieldResolver,
   Resolvers,
+  UserResolvers,
   ResolveInfo,
 } from "./types";
 
@@ -24,8 +25,6 @@ export { specifiedScalars } from "./values";
 export { annotateDocumentGraphQLTransform } from "./transforms/annotateDocumentGraphQLTransform";
 
 export type { PromiseOrValue } from "./jsutils/PromiseOrValue";
-
-export { generateTS } from "./codegen/index";
 
 export type {
   NameNode,
