@@ -1,7 +1,0 @@
-{
-  "type": "major",
-  "comment": "Supermassive split into multiple packages",
-  "packageName": "@graphitation/cli",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}

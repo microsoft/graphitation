@@ -1,0 +1,20 @@
+{
+  "name": "@graphitation/ts-codegen",
+  "entries": [
+    {
+      "date": "Mon, 21 Nov 2022 14:12:11 GMT",
+      "tag": "@graphitation/ts-codegen_v1.0.0",
+      "version": "1.0.0",
+      "comments": {
+        "major": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "672f8625e339e48b07e5b1f4c846287894f1bc3e",
+            "comment": "Supermassive split into multiple packages"
+          }
+        ]
+      }
+    }
+  ]
+}
