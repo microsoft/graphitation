@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Supermassive split into multiple packages",
-  "packageName": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
