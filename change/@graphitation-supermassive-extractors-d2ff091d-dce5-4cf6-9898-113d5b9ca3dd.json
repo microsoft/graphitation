@@ -1,5 +1,5 @@
 {
-  "type": "minor",
+  "type": "major",
   "comment": "Supermassive split into multiple packages",
   "packageName": "@graphitation/supermassive-extractors",
   "email": "jakubvejr@microsoft.com",
