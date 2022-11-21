@@ -1,0 +1,3 @@
+# @graphitation/graphql-codegen
+
+TODO

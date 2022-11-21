@@ -2,6 +2,10 @@ import ts, { factory } from "typescript";
 
 const MODEL_SUFFIX = "Model";
 
+export function blankGraphQLTag(strings: TemplateStringsArray): string {
+  return strings[0];
+}
+
 export function createNullableType(node: ts.TypeNode): ts.UnionTypeNode {
   return factory.createUnionTypeNode([
     node,

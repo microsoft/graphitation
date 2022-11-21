@@ -10,7 +10,6 @@
   "include": ["src"],
   "references": [],
   "ts-node": {
-    "transpileOnly": true,
     "compilerOptions": {
       "module": "CommonJS"
     }

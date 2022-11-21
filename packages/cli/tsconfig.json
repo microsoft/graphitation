@@ -4,15 +4,8 @@
     "composite": true,
     "tsBuildInfoFile": ".tsbuildinfo",
     "rootDir": "src",
-    "outDir": "lib",
-    "jsx": "react"
+    "outDir": "lib"
   },
   "include": ["src"],
-  "references": [],
-  "ts-node": {
-    "transpileOnly": true,
-    "compilerOptions": {
-      "module": "CommonJS"
-    }
-  }
+  "references": []
 }
