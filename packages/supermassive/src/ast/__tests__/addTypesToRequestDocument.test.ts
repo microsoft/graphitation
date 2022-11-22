@@ -46,9 +46,9 @@ describe(addTypesToRequestDocument, () => {
       const fieldNode = operationNode.selectionSet.selections[0] as FieldNode;
 
       expect(fieldNode.__type).toMatchInlineSnapshot(`
-        Object {
+        {
           "kind": "NamedType",
-          "name": Object {
+          "name": {
             "kind": "Name",
             "value": "Film",
           },
@@ -70,11 +70,11 @@ describe(addTypesToRequestDocument, () => {
       const fieldNode = fragmentNode.selectionSet.selections[0] as FieldNode;
 
       expect(fieldNode.__type).toMatchInlineSnapshot(`
-        Object {
+        {
           "kind": "NonNullType",
-          "type": Object {
+          "type": {
             "kind": "NamedType",
-            "name": Object {
+            "name": {
               "kind": "Name",
               "value": "String",
             },
@@ -104,11 +104,11 @@ describe(addTypesToRequestDocument, () => {
         .selections[0] as FieldNode;
 
       expect(fieldNode.__type).toMatchInlineSnapshot(`
-        Object {
+        {
           "kind": "ListType",
-          "type": Object {
+          "type": {
             "kind": "NamedType",
-            "name": Object {
+            "name": {
               "kind": "Name",
               "value": "Film",
             },
@@ -131,13 +131,13 @@ describe(addTypesToRequestDocument, () => {
       const fieldNode = fragmentNode.selectionSet.selections[0] as FieldNode;
 
       expect(fieldNode.__type).toMatchInlineSnapshot(`
-        Object {
+        {
           "kind": "ListType",
-          "type": Object {
+          "type": {
             "kind": "NonNullType",
-            "type": Object {
+            "type": {
               "kind": "NamedType",
-              "name": Object {
+              "name": {
                 "kind": "Name",
                 "value": "String",
               },
@@ -166,11 +166,11 @@ describe(addTypesToRequestDocument, () => {
       const argumentNode = fieldNode.arguments![0];
 
       expect(argumentNode.__type).toMatchInlineSnapshot(`
-        Object {
+        {
           "kind": "NonNullType",
-          "type": Object {
+          "type": {
             "kind": "NamedType",
-            "name": Object {
+            "name": {
               "kind": "Name",
               "value": "ID",
             },
@@ -196,11 +196,11 @@ describe(addTypesToRequestDocument, () => {
       const argumentNode = fieldNode.arguments![0];
 
       expect(argumentNode.__type).toMatchInlineSnapshot(`
-        Object {
+        {
           "kind": "NonNullType",
-          "type": Object {
+          "type": {
             "kind": "NamedType",
-            "name": Object {
+            "name": {
               "kind": "Name",
               "value": "CreateFilmInput",
             },
