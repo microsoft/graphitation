@@ -22,10 +22,10 @@ exports[` 4`] = `
 
 exports[` 5`] = `
 "> 1 | fragment GraphqlEslintRulesUserFragment on User { id name }
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Filename should start with the package directory name: \\"graphql-eslint-rules\\""
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Filename should start with the package directory name: "graphql-eslint-rules""
 `;
 
 exports[` 6`] = `
 "> 1 | fragment GraphqlEslintRulesUserFragment on User { id name }
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Filename should end with the operation name (query/mutation/subscription) e.g. foo-query.graphql OR if the file contains ONLY fragments the suffix can be \\"fragment\\" e.g foo-fragment.graphql"
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Filename should end with the operation name (query/mutation/subscription) e.g. foo-query.graphql OR if the file contains ONLY fragments the suffix can be "fragment" e.g foo-fragment.graphql"
 `;

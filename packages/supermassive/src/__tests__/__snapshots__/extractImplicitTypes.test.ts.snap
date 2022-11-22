@@ -1,17 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`extractImplicitTypes benchmark schema extract 1`] = `
-Object {
-  "Alive": Object {
+{
+  "Alive": {
     "__resolveType": undefined,
-    "__types": Array [
+    "__types": [
       "Person",
       "Species",
     ],
   },
-  "Film": Object {},
-  "Node": Object {
-    "__implementedBy": Array [
+  "Film": {},
+  "Node": {
+    "__implementedBy": [
       "Film",
       "Vehicle",
       "Person",
@@ -23,12 +23,12 @@ Object {
     "__resolveType": undefined,
   },
   "NodeType": "NodeType",
-  "Person": Object {},
-  "Planet": Object {},
-  "Query": Object {},
-  "SearchResult": Object {
+  "Person": {},
+  "Planet": {},
+  "Query": {},
+  "SearchResult": {
     "__resolveType": undefined,
-    "__types": Array [
+    "__types": [
       "Person",
       "Starship",
       "Transport",
@@ -38,10 +38,10 @@ Object {
       "Film",
     ],
   },
-  "Species": Object {},
-  "Starship": Object {},
-  "Subscription": Object {},
-  "Transport": Object {},
-  "Vehicle": Object {},
+  "Species": {},
+  "Starship": {},
+  "Subscription": {},
+  "Transport": {},
+  "Vehicle": {},
 }
 `;

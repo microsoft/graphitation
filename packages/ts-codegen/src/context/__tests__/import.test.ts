@@ -21,7 +21,7 @@ describe(processImportDirective, () => {
     ]);
     expect(imp.importName).toMatchInlineSnapshot(`"NSScopedPackageImport"`);
     expect(print(imp.directive)).toMatchInlineSnapshot(
-      `"@import(from: \\"@scoped/packageImport\\", defs: [\\"ScopedPackageImport\\", \\"ScopedPackageImport2\\"])"`,
+      `"@import(from: "@scoped/packageImport", defs: ["ScopedPackageImport", "ScopedPackageImport2"])"`,
     );
   });
   it("extracts package imports", () => {
@@ -44,7 +44,7 @@ describe(processImportDirective, () => {
     ]);
     expect(plain.importName).toMatchInlineSnapshot(`"PackageImport"`);
     expect(print(plain.directive)).toMatchInlineSnapshot(
-      `"@import(from: \\"packageImport\\", defs: [\\"PackageImport\\", \\"PackageImport2\\"])"`,
+      `"@import(from: "packageImport", defs: ["PackageImport", "PackageImport2"])"`,
     );
     const dir = result[1];
     expect(dir.from).toEqual("packageImport/subDir");
@@ -55,7 +55,7 @@ describe(processImportDirective, () => {
     ]);
     expect(dir.importName).toMatchInlineSnapshot(`"PackageImportSubDir"`);
     expect(print(dir.directive)).toMatchInlineSnapshot(
-      `"@import(from: \\"packageImport/subDir\\", defs: [\\"PackageImportSubDir\\"])"`,
+      `"@import(from: "packageImport/subDir", defs: ["PackageImportSubDir"])"`,
     );
   });
   it('throws an error when the "from" field is not String', () => {
@@ -110,7 +110,7 @@ describe(processImportDirective, () => {
     ]);
     expect(upDir.importName).toMatchInlineSnapshot(`"UpUpDir"`);
     expect(print(upDir.directive)).toMatchInlineSnapshot(
-      `"@import(from: \\"../upDir\\", defs: [\\"UpDir\\"])"`,
+      `"@import(from: "../upDir", defs: ["UpDir"])"`,
     );
     const upUpDir = result[1];
     expect(upUpDir.from).toEqual("../../foo/bar/Dir");
@@ -121,7 +121,7 @@ describe(processImportDirective, () => {
     ]);
     expect(upUpDir.importName).toMatchInlineSnapshot(`"UpUpFooBarDir"`);
     expect(print(upUpDir.directive)).toMatchInlineSnapshot(
-      `"@import(from: \\"../../foo/bar/Dir\\", defs: [\\"FooBarDir\\"])"`,
+      `"@import(from: "../../foo/bar/Dir", defs: ["FooBarDir"])"`,
     );
     const loc = result[2];
     expect(loc.from).toEqual("./loc");
@@ -132,7 +132,7 @@ describe(processImportDirective, () => {
     ]);
     expect(loc.importName).toMatchInlineSnapshot(`"CwdLoc"`);
     expect(print(loc.directive)).toMatchInlineSnapshot(
-      `"@import(from: \\"./loc\\", defs: [\\"LocalImport\\"])"`,
+      `"@import(from: "./loc", defs: ["LocalImport"])"`,
     );
   });
 });

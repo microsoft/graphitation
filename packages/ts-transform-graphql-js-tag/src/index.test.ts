@@ -23,7 +23,7 @@ describe("transformer tests", () => {
         \`
     `);
     expect(actual).toMatchInlineSnapshot(`
-      "export const query = { kind: \\"Document\\", definitions: [{ kind: \\"OperationDefinition\\", operation: \\"query\\", name: { kind: \\"Name\\", value: \\"Foo\\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \\"SelectionSet\\", selections: [{ kind: \\"Field\\", alias: undefined, name: { kind: \\"Name\\", value: \\"foo\\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
+      "export const query = { kind: \"Document\", definitions: [{ kind: \"OperationDefinition\", operation: \"query\", name: { kind: \"Name\", value: \"Foo\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \"SelectionSet\", selections: [{ kind: \"Field\", alias: undefined, name: { kind: \"Name\", value: \"foo\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
       "
     `);
   });
@@ -57,8 +57,8 @@ describe("transformer tests", () => {
         \`
     `);
     expect(actual).toMatchInlineSnapshot(`
-      "const fragment = { kind: \\"Document\\", definitions: [{ kind: \\"FragmentDefinition\\", name: { kind: \\"Name\\", value: \\"FooFragment\\", loc: undefined }, typeCondition: { kind: \\"NamedType\\", name: { kind: \\"Name\\", value: \\"Foo\\", loc: undefined }, loc: undefined }, directives: [], selectionSet: { kind: \\"SelectionSet\\", selections: [{ kind: \\"Field\\", alias: undefined, name: { kind: \\"Name\\", value: \\"bar\\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
-      export const query = { kind: \\"Document\\", definitions: [{ kind: \\"OperationDefinition\\", operation: \\"query\\", name: { kind: \\"Name\\", value: \\"Foo\\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \\"SelectionSet\\", selections: [{ kind: \\"Field\\", alias: undefined, name: { kind: \\"Name\\", value: \\"foo\\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }, { kind: \\"FragmentSpread\\", name: { kind: \\"Name\\", value: \\"FooFragment\\", loc: undefined }, directives: [], loc: undefined }], loc: undefined }, loc: undefined }].concat(fragment.definitions) };
+      "const fragment = { kind: \"Document\", definitions: [{ kind: \"FragmentDefinition\", name: { kind: \"Name\", value: \"FooFragment\", loc: undefined }, typeCondition: { kind: \"NamedType\", name: { kind: \"Name\", value: \"Foo\", loc: undefined }, loc: undefined }, directives: [], selectionSet: { kind: \"SelectionSet\", selections: [{ kind: \"Field\", alias: undefined, name: { kind: \"Name\", value: \"bar\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
+      export const query = { kind: \"Document\", definitions: [{ kind: \"OperationDefinition\", operation: \"query\", name: { kind: \"Name\", value: \"Foo\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \"SelectionSet\", selections: [{ kind: \"Field\", alias: undefined, name: { kind: \"Name\", value: \"foo\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }, { kind: \"FragmentSpread\", name: { kind: \"Name\", value: \"FooFragment\", loc: undefined }, directives: [], loc: undefined }], loc: undefined }, loc: undefined }].concat(fragment.definitions) };
       "
     `);
   });
@@ -87,7 +87,7 @@ describe("transformer tests", () => {
      \`
    `);
     expect(actual).toMatchInlineSnapshot(`
-      "export const query = { kind: \\"Document\\", definitions: [\\"haha, imma here, breaking your graphql\\"].concat([]) };
+      "export const query = { kind: \"Document\", definitions: [\"haha, imma here, breaking your graphql\"].concat([]) };
       "
     `);
   });
@@ -118,7 +118,7 @@ describe("transformer tests", () => {
       \`
       `);
       expect(actual).toMatchInlineSnapshot(`
-        "export const query = { kind: \\"Document\\", definitions: [{ kind: \\"OperationDefinition\\", operation: \\"query\\", name: { kind: \\"Name\\", value: \\"Foo\\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \\"SelectionSet\\", selections: [{ kind: \\"Field\\", alias: undefined, name: { kind: \\"Name\\", value: \\"foo\\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
+        "export const query = { kind: \"Document\", definitions: [{ kind: \"OperationDefinition\", operation: \"query\", name: { kind: \"Name\", value: \"Foo\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \"SelectionSet\", selections: [{ kind: \"Field\", alias: undefined, name: { kind: \"Name\", value: \"foo\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
         "
       `);
     });
@@ -146,7 +146,7 @@ describe("transformer tests", () => {
       \`
       `);
       expect(actual).toMatchInlineSnapshot(`
-        "export const query = { kind: \\"Document\\", definitions: [{ kind: \\"OperationDefinition\\", operation: \\"query\\", name: { kind: \\"Name\\", value: \\"Foo\\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \\"SelectionSet\\", selections: [{ kind: \\"Field\\", alias: undefined, name: { kind: \\"Name\\", value: \\"foo\\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
+        "export const query = { kind: \"Document\", definitions: [{ kind: \"OperationDefinition\", operation: \"query\", name: { kind: \"Name\", value: \"Foo\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \"SelectionSet\", selections: [{ kind: \"Field\", alias: undefined, name: { kind: \"Name\", value: \"foo\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
         "
       `);
     });
@@ -164,7 +164,7 @@ describe("transformer tests", () => {
       import { someOtherExport } from "@graphitation/graphql-js-tag"
       `);
       expect(actual).toMatchInlineSnapshot(`
-        "import { someOtherExport } from \\"@graphitation/graphql-js-tag\\";
+        "import { someOtherExport } from \"@graphitation/graphql-js-tag\";
         "
       `);
     });
@@ -182,7 +182,7 @@ describe("transformer tests", () => {
       import { someOtherExport, graphql } from "@graphitation/graphql-js-tag"
       `);
       expect(actual).toMatchInlineSnapshot(`
-        "import { someOtherExport } from \\"@graphitation/graphql-js-tag\\";
+        "import { someOtherExport } from \"@graphitation/graphql-js-tag\";
         "
       `);
     });
@@ -203,7 +203,7 @@ describe("transformer tests", () => {
         someOtherDefault;
         `);
       expect(actual).toMatchInlineSnapshot(`
-        "import someOtherDefault from \\"@graphitation/graphql-js-tag\\";
+        "import someOtherDefault from \"@graphitation/graphql-js-tag\";
         someOtherDefault;
         "
       `);
@@ -228,8 +228,8 @@ describe("transformer tests", () => {
         \`
         `);
       expect(actual).toMatchInlineSnapshot(`
-        "import someOtherDefault from \\"@graphitation/graphql-js-tag\\";
-        export const query = { kind: \\"Document\\", definitions: [{ kind: \\"OperationDefinition\\", operation: \\"query\\", name: { kind: \\"Name\\", value: \\"Foo\\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \\"SelectionSet\\", selections: [{ kind: \\"Field\\", alias: undefined, name: { kind: \\"Name\\", value: \\"foo\\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
+        "import someOtherDefault from \"@graphitation/graphql-js-tag\";
+        export const query = { kind: \"Document\", definitions: [{ kind: \"OperationDefinition\", operation: \"query\", name: { kind: \"Name\", value: \"Foo\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \"SelectionSet\", selections: [{ kind: \"Field\", alias: undefined, name: { kind: \"Name\", value: \"foo\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
         "
       `);
     });
@@ -257,8 +257,8 @@ describe("transformer tests", () => {
       \`
       `);
       expect(actual).toMatchInlineSnapshot(`
-        "import { someOtherExport } from \\"@graphitation/graphql-js-tag\\";
-        export const query = { kind: \\"Document\\", definitions: [{ kind: \\"OperationDefinition\\", operation: \\"query\\", name: { kind: \\"Name\\", value: \\"Foo\\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \\"SelectionSet\\", selections: [{ kind: \\"Field\\", alias: undefined, name: { kind: \\"Name\\", value: \\"foo\\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
+        "import { someOtherExport } from \"@graphitation/graphql-js-tag\";
+        export const query = { kind: \"Document\", definitions: [{ kind: \"OperationDefinition\", operation: \"query\", name: { kind: \"Name\", value: \"Foo\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \"SelectionSet\", selections: [{ kind: \"Field\", alias: undefined, name: { kind: \"Name\", value: \"foo\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
         "
       `);
     });

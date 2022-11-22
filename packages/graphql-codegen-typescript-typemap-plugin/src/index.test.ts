@@ -17,12 +17,12 @@ describe(plugin, () => {
     const result = plugin(schema, [], null);
     expect(result).toMatchInlineSnapshot(`
       "export type TypeMap = {
-        \\"Boolean\\": Scalars[\\"Boolean\\"];
-        \\"HTML\\": Html;
-        \\"ID\\": Scalars[\\"ID\\"];
-        \\"Query\\": Query;
-        \\"String\\": Scalars[\\"String\\"];
-        \\"lowerCaseTypeName\\": LowerCaseTypeName;
+        \"Boolean\": Scalars[\"Boolean\"];
+        \"HTML\": Html;
+        \"ID\": Scalars[\"ID\"];
+        \"Query\": Query;
+        \"String\": Scalars[\"String\"];
+        \"lowerCaseTypeName\": LowerCaseTypeName;
       };
       "
     `);
