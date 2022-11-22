@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive-extractors",
   "entries": [
     {
+      "date": "Tue, 22 Nov 2022 18:01:10 GMT",
+      "tag": "@graphitation/supermassive-extractors_v2.0.0",
+      "version": "2.0.0",
+      "comments": {
+        "none": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/supermassive-extractors",
+            "commit": "1629c04c11908d1c35366d4d3da530e6b8919f69",
+            "comment": "jest update"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 21 Nov 2022 14:12:11 GMT",
       "tag": "@graphitation/supermassive-extractors_v2.0.0",
       "version": "2.0.0",
