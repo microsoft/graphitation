@@ -1,5 +1,6 @@
 import ts from "typescript";
 import { parse } from "graphql";
+import path from "path";
 import { blankGraphQLTag as graphql } from "../utilities";
 import { generateTS } from "..";
 
@@ -43,7 +44,7 @@ describe(generateTS, () => {
       `);
       expect(models).toMatchInlineSnapshot(`
         "import type { AvatarModel } from "@msteams/packages-test";
-        import type { PostModel as _PostModel } from "./post-model.interface";
+        import type { PostModel as _PostModel } from "../post-model.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             __typename: string;
@@ -616,7 +617,7 @@ describe(generateTS, () => {
         }
       `);
       expect(models).toMatchInlineSnapshot(`
-        "import type { UserModel as _UserModel } from "./user-model.interface";
+        "import type { UserModel as _UserModel } from "../user-model.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             __typename: string;
@@ -926,11 +927,19 @@ describe(generateTS, () => {
 
 function runGenerateTest(
   doc: string,
+  outputDir = "__generated__",
+  inputPath = "./typedef.graphql",
   contextImport?: string,
   contextName?: string,
 ): { models: string; resolvers: string } {
   let document = parse(doc);
-  let result = generateTS(document, contextImport, contextName);
+  let result = generateTS(
+    document,
+    path.resolve(process.cwd(), outputDir),
+    path.resolve(process.cwd(), inputPath),
+    contextImport || null,
+    contextName,
+  );
   let printer = ts.createPrinter();
   return {
     models: printer.printFile(result.models),

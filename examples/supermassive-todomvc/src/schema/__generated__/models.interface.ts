@@ -1,7 +1,7 @@
 /* eslint-disable */ 
 // @ts-nocheck 
 // This file was automatically generated (by @graphitaiton/supermassive) and should not be edited.
-import type { TodoModel as _TodoModel } from "../models";
+import type { TodoModel as _TodoModel } from "../../models";
 // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
 export interface BaseModel {
     __typename: string;

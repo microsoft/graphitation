@@ -6,7 +6,9 @@ import { generateModels } from "./models";
 
 export function generateTS(
   document: DocumentNode,
-  contextImport?: string,
+  outputPath: string,
+  documentPath: string,
+  contextImport: string | null,
   contextName?: string,
 ): { models: ts.SourceFile; resolvers: ts.SourceFile } {
   try {
@@ -14,10 +16,12 @@ export function generateTS(
       {
         context: {
           name: contextName,
-          from: contextImport || null,
+          from: contextImport,
         },
       },
       document,
+      outputPath,
+      documentPath,
     );
     let models = generateModels(context, document);
     let resolvers = generateResolvers(context, document);

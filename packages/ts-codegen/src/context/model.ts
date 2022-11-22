@@ -8,12 +8,15 @@ import {
 import { ValueNode } from "graphql/language/ast";
 import { DefinitionModel } from "../types";
 import { createVariableNameFromImport, addModelSuffix } from "../utilities";
+import { getRelativePath } from "./utilities";
 
 export const MODEL_DIRECTIVE_NAME = "model";
 
 export function processModelDirective(
   node: DirectiveNode,
   ancestors: ReadonlyArray<ASTNode | ReadonlyArray<ASTNode>>,
+  outputPath: string,
+  documentPath: string,
 ): DefinitionModel {
   const from = getArgumentValue(node.arguments, "from");
   const tsType = getArgumentValue(node.arguments, "tsType");
@@ -51,7 +54,7 @@ export function processModelDirective(
     modelName: `_${addModelSuffix(typeName)}`,
     tsType: tsType.value,
     importName: from ? createVariableNameFromImport(from.value) : null,
-    from: from?.value || null,
+    from: getRelativePath(from?.value, outputPath, documentPath),
     directive: node,
   };
 }
