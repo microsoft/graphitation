@@ -171,10 +171,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
         return result;
       } else if (isEnumType(namedReturnType)) {
         if (source[selectionName] !== undefined) {
-          const value = source[selectionName];
-          return Array.isArray(value)
-            ? value.map((e) => String(e).toUpperCase())
-            : String(value).toUpperCase();
+          return source[selectionName];
         }
         const enumValues = namedReturnType.getValues().map((e) => e.name);
         return isList ? enumValues : enumValues[0];
