@@ -5,7 +5,7 @@ import type { PromiseOrValue } from "@graphitation/supermassive";
 import type { ResolveInfo } from "@graphitation/supermassive";
 import type { TodoModel, CreateTodoResultModel, UpdateTodoTextResultModel, SetTodoCompletedResultModel, CreateTodoSuccessModel, CreateTodoFailureModel, UpdateTodoTextSuccessModel, UpdateTodoTextFailureModel, SetTodoCompletedSuccessModel, SetTodoCompletedFailureModel, FailureModel } from "./models.interface";
 export declare namespace Query {
-    export type allTodos = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<TodoModel[]>;
+    export type allTodos = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<TodoModel>>;
 }
 export declare namespace Mutation {
     export type createTodo = (model: unknown, args: {
