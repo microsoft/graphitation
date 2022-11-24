@@ -40,10 +40,13 @@ console.log(
 function testGeneratedData(
   documentNode: DocumentNode,
   mockResolvers?: MockResolvers<TypeMap>,
+  generateId?: () => number,
 ): void {
   const payload = generate<TypeMap>(
     { schema, request: { node: documentNode, variables: {} } },
     mockResolvers,
+    false,
+    generateId,
   );
   expect({
     [FIXTURE_TAG]: true,
@@ -322,6 +325,7 @@ test("generate mock using custom mock functions", () => {
   );
 });
 
+// NOTE: We do not return __MockObject here, unsure what the need is.
 test("generate mock using custom mock functions for object type", () => {
   const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest8Fragment on Page {
@@ -703,6 +707,7 @@ test("generate mock for plural fragment", () => {
   `);
 });
 
+// NOTE: We do not return __MockObject here, unsure what the need is.
 test("generate mock for multiple fragment spreads", () => {
   const fragment1 = graphql`
     fragment RelayMockPayloadGeneratorTest17Fragment on Page {
@@ -1505,7 +1510,8 @@ describe("with @relay_test_operation", () => {
 
   // TODO: Have to disable the type-checking for this. Unsure why this is
   //       actually good to support, check with Relay team.
-  test("generate mock for enum with different case should be OK", () => {
+  // UPDATE: Disabling this in our fork. It doesn't work for some cases in TMP.
+  xtest("generate mock for enum with different case should be OK", () => {
     testGeneratedData(
       graphql`
         query RelayMockPayloadGeneratorTest39Query @relay_test_operation {
@@ -1574,9 +1580,7 @@ describe("with @relay_test_operation", () => {
           },
         },
       );
-    }).toThrow(
-      'RelayMockPayloadGenerator: Enum "Environment" cannot represent value: "INVALID_VALUE"',
-    );
+    }).toThrow('Enum "Environment" cannot represent value: "INVALID_VALUE"');
   });
 
   test("generate mock with null for enum", () => {
@@ -1941,6 +1945,110 @@ test("merges data from concrete type mock with abstract type mock", () => {
       Node: () => ({ __typename: "Page" } as Partial<TypeMap["Node"]>),
       User: () => ({ id: "user-42" }),
       Page: () => ({ id: "page-42" }), // This should get merged because we return Page as the Node's __typename
+    },
+  );
+});
+
+describe("works with root types", () => {
+  it("works with Query type", () => {
+    testGeneratedData(
+      graphql`
+        query RelayMockPayloadGeneratorTestQueryTypeQuery {
+          me {
+            name
+          }
+        }
+      `,
+      { Query: () => ({ me: { name: "Alice" } }) },
+    );
+  });
+
+  it("works with Subscription type", () => {
+    testGeneratedData(
+      graphql`
+        subscription RelayMockPayloadGeneratorTestQueryTypeSubscription {
+          configCreateSubscribe {
+            config {
+              name
+              isEnabled
+            }
+          }
+        }
+      `,
+      {
+        Subscription: () => ({
+          configCreateSubscribe: { config: { name: "SomeSetting" } },
+        }),
+      },
+    );
+  });
+
+  it("works with Mutation type", () => {
+    testGeneratedData(
+      graphql`
+        mutation RelayMockPayloadGeneratorTestQueryTypeMutation {
+          unfriend(input: { clientMutationId: "1", friendId: "2" }) {
+            formerFriend {
+              id
+            }
+          }
+        }
+      `,
+      {
+        Mutation: () => ({
+          unfriend: { formerFriend: { id: "2" } },
+        }),
+      },
+    );
+  });
+});
+
+test("stays synchronous when @defer is disabled", () => {
+  const fragment = graphql`
+    fragment RelayMockPayloadGeneratorTestDisabledDeferFragment on User {
+      name
+    }
+  `;
+  testGeneratedData(
+    graphql`
+      query RelayMockPayloadGeneratorTestDisabledDeferQuery {
+        me {
+          ...RelayMockPayloadGeneratorTestDisabledDeferFragment @defer
+        }
+      }
+      ${fragment}
+    `,
+  );
+});
+
+test("allow passing in custom generateId function", () => {
+  testGeneratedData(
+    graphql`
+      query RelayMockPayloadGeneratorTestCustomGenerateIdQuery {
+        me {
+          id
+        }
+      }
+    `,
+    undefined,
+    () => 42,
+  );
+});
+
+test("uses explicit mock data over type based mock data", () => {
+  testGeneratedData(
+    graphql`
+      query RelayMockPayloadGeneratorTestDeeplyNestedMockDataQuery {
+        me {
+          backgroundImage {
+            width
+          }
+        }
+      }
+    `,
+    {
+      Query: () => ({ me: { backgroundImage: { width: 100 } } }),
+      Image: () => ({ width: 200 }),
     },
   );
 });

@@ -119,8 +119,8 @@ function valueResolver(
 
 export function createValueResolver(
   mockResolvers: MockResolvers | null,
+  generateId: () => number = createIdGenerator(),
 ): ValueResolver {
-  const generateId = createIdGenerator();
   return valueResolver.bind(null, generateId, mockResolvers);
 }
 

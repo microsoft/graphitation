@@ -64,9 +64,11 @@ const TYPENAME_KEY = "__typename";
 export function generate<TypeMap extends DefaultMockResolvers>(
   operation: OperationDescriptor,
   mockResolvers: MockResolvers<TypeMap> = DEFAULT_MOCK_RESOLVERS as any, // FIXME: Why does TS not accept this?
+  enableDefer: undefined | false = false,
+  generateId?: () => number,
 ): { data: MockData } {
   mockResolvers = { ...DEFAULT_MOCK_RESOLVERS, ...mockResolvers };
-  const resolveValue = createValueResolver(mockResolvers);
+  const resolveValue = createValueResolver(mockResolvers, generateId);
 
   // RelayMockPayloadGenerator will execute documents that have optional
   // boolean variables that are not passed by the user, but are required
@@ -88,12 +90,17 @@ export function generate<TypeMap extends DefaultMockResolvers>(
     },
   );
 
-  const document =
-    undefinedBooleanVariables.length === 0
-      ? operation.request.node
-      : rewriteConditionals(operation.request.node, undefinedBooleanVariables);
-
-  const abstractTypeSelections: Path[] = [];
+  let document = operation.request.node;
+  if (undefinedBooleanVariables.length > 0) {
+    document = rewriteConditionals(document, undefinedBooleanVariables);
+  }
+  if (enableDefer) {
+    throw new Error(
+      "Enabling @defer in payload generation is not supported at this time.",
+    );
+  } else {
+    document = removeDeferAndStream(document);
+  }
 
   const result = executeSync({
     schema: operation.schema,
@@ -101,14 +108,13 @@ export function generate<TypeMap extends DefaultMockResolvers>(
     variableValues: operation.request.variables,
     rootValue: mockCompositeType(
       mockResolvers,
-      operation.schema.getQueryType()!,
+      getRootType(operation),
       null,
       resolveValue,
       null,
       null,
       {},
       operation,
-      abstractTypeSelections,
     ),
     fieldResolver: (source: InternalMockData, args, _context, info) => {
       // FIXME: This should not assume a single selection
@@ -131,7 +137,6 @@ export function generate<TypeMap extends DefaultMockResolvers>(
             return null;
           }
           const result = {
-            ...userValue,
             ...mockCompositeType(
               mockResolvers,
               namedReturnType,
@@ -141,8 +146,8 @@ export function generate<TypeMap extends DefaultMockResolvers>(
               info,
               args,
               operation,
-              abstractTypeSelections,
             ),
+            ...userValue,
           };
           return result;
         };
@@ -171,10 +176,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
         return result;
       } else if (isEnumType(namedReturnType)) {
         if (source[selectionName] !== undefined) {
-          const value = source[selectionName];
-          return Array.isArray(value)
-            ? value.map((e) => String(e).toUpperCase())
-            : String(value).toUpperCase();
+          return source[selectionName];
         }
         const enumValues = namedReturnType.getValues().map((e) => e.name);
         return isList ? enumValues : enumValues[0];
@@ -184,18 +186,12 @@ export function generate<TypeMap extends DefaultMockResolvers>(
     },
   });
   if (result.errors) {
+    if (result.errors.length === 1) {
+      throw result.errors[0].originalError;
+    }
     throw new Error(`RelayMockPayloadGenerator: ${result.errors.join(", ")}`);
   }
   invariant(result?.data, "Expected to generate a payload");
-
-  // Replace typenames of abstract type selections that had no concrete selection
-  // with the default mock typename.
-  abstractTypeSelections.forEach((pathInstance) => {
-    const path = pathToArray(pathInstance);
-    const object = path.reduce((prev, key) => prev[key], result.data!);
-    object.__typename = DEFAULT_MOCK_TYPENAME;
-  });
-
   return result as { data: MockData };
 }
 
@@ -208,7 +204,6 @@ function mockCompositeType(
   info: GraphQLResolveInfo | null,
   args: { [argName: string]: any },
   operation: OperationDescriptor<GraphQLSchema, DocumentNode>,
-  abstractTypeSelections: Path[],
 ) {
   // Get the concrete type selection, concrete type on an abstract type
   // selection, or the abstract type selection.
@@ -300,7 +295,6 @@ function mockCompositeType(
       );
       typename = possibleType.name;
       invariant(info, "Expected info to be defined");
-      abstractTypeSelections.push(info.path);
     }
     result.__typename = typename;
     result.__abstractType = namedReturnType;
@@ -462,4 +456,28 @@ function rewriteConditionals(
       }
     },
   });
+}
+
+function removeDeferAndStream(doc: DocumentNode): DocumentNode {
+  return visit(doc, {
+    Directive: (node) => {
+      if (node.name.value === "defer" || node.name.value === "stream") {
+        return null;
+      }
+      return;
+    },
+  });
+}
+
+function getRootType(operation: OperationDescriptor): GraphQLNamedType {
+  const rootType = getOperationAST(operation.request.node);
+  invariant(rootType, "Expected operation to have a root type");
+  switch (rootType.operation) {
+    case "query":
+      return operation.schema.getQueryType()!;
+    case "mutation":
+      return operation.schema.getMutationType()!;
+    case "subscription":
+      return operation.schema.getSubscriptionType()!;
+  }
 }
