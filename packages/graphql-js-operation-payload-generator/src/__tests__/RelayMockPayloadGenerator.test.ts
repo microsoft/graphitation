@@ -325,6 +325,7 @@ test("generate mock using custom mock functions", () => {
   );
 });
 
+// NOTE: We do not return __MockObject here, unsure what the need is.
 test("generate mock using custom mock functions for object type", () => {
   const fragment = graphql`
     fragment RelayMockPayloadGeneratorTest8Fragment on Page {
@@ -706,6 +707,7 @@ test("generate mock for plural fragment", () => {
   `);
 });
 
+// NOTE: We do not return __MockObject here, unsure what the need is.
 test("generate mock for multiple fragment spreads", () => {
   const fragment1 = graphql`
     fragment RelayMockPayloadGeneratorTest17Fragment on Page {

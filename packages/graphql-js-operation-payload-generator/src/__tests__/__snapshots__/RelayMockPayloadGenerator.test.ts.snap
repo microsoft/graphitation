@@ -308,7 +308,7 @@ fragment RelayMockPayloadGeneratorTest19Fragment on User {
         "text": "<mock-value-for-field-\\"text\\">"
       },
       "actor": {
-        "__typename": "__MockObject",
+        "__typename": "Page",
         "name": "<mock-value-for-field-\\"name\\">",
         "id": "<mock-id-2>"
       },
@@ -545,7 +545,7 @@ fragment RelayMockPayloadGeneratorTest8Fragment on Page {
     "node": {
       "__typename": "Page",
       "actor": {
-        "__typename": "__MockObject",
+        "__typename": "Page",
         "id": "<mock-id-1>",
         "name": "<mock-value-for-field-\\"name\\">"
       },

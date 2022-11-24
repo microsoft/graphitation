@@ -102,8 +102,6 @@ export function generate<TypeMap extends DefaultMockResolvers>(
     document = removeDeferAndStream(document);
   }
 
-  const abstractTypeSelections: Path[] = [];
-
   const result = executeSync({
     schema: operation.schema,
     document: document,
@@ -117,7 +115,6 @@ export function generate<TypeMap extends DefaultMockResolvers>(
       null,
       {},
       operation,
-      abstractTypeSelections,
     ),
     fieldResolver: (source: InternalMockData, args, _context, info) => {
       // FIXME: This should not assume a single selection
@@ -149,7 +146,6 @@ export function generate<TypeMap extends DefaultMockResolvers>(
               info,
               args,
               operation,
-              abstractTypeSelections,
             ),
             ...userValue,
           };
@@ -196,15 +192,6 @@ export function generate<TypeMap extends DefaultMockResolvers>(
     throw new Error(`RelayMockPayloadGenerator: ${result.errors.join(", ")}`);
   }
   invariant(result?.data, "Expected to generate a payload");
-
-  // Replace typenames of abstract type selections that had no concrete selection
-  // with the default mock typename.
-  abstractTypeSelections.forEach((pathInstance) => {
-    const path = pathToArray(pathInstance);
-    const object = path.reduce((prev, key) => prev[key], result.data!);
-    object.__typename = DEFAULT_MOCK_TYPENAME;
-  });
-
   return result as { data: MockData };
 }
 
@@ -217,7 +204,6 @@ function mockCompositeType(
   info: GraphQLResolveInfo | null,
   args: { [argName: string]: any },
   operation: OperationDescriptor<GraphQLSchema, DocumentNode>,
-  abstractTypeSelections: Path[],
 ) {
   // Get the concrete type selection, concrete type on an abstract type
   // selection, or the abstract type selection.
@@ -309,7 +295,6 @@ function mockCompositeType(
       );
       typename = possibleType.name;
       invariant(info, "Expected info to be defined");
-      abstractTypeSelections.push(info.path);
     }
     result.__typename = typename;
     result.__abstractType = namedReturnType;
