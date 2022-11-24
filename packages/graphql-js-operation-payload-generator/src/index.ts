@@ -184,6 +184,9 @@ export function generate<TypeMap extends DefaultMockResolvers>(
     },
   });
   if (result.errors) {
+    if (result.errors.length === 1) {
+      throw result.errors[0].originalError;
+    }
     throw new Error(`RelayMockPayloadGenerator: ${result.errors.join(", ")}`);
   }
   invariant(result?.data, "Expected to generate a payload");

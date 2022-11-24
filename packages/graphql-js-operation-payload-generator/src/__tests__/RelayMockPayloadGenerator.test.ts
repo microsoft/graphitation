@@ -1574,9 +1574,7 @@ describe("with @relay_test_operation", () => {
           },
         },
       );
-    }).toThrow(
-      'RelayMockPayloadGenerator: Enum "Environment" cannot represent value: "INVALID_VALUE"',
-    );
+    }).toThrow('Enum "Environment" cannot represent value: "INVALID_VALUE"');
   });
 
   test("generate mock with null for enum", () => {
