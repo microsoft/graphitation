@@ -1,0 +1,4 @@
+body > div[side="top"],
+body > div[side="right"] {
+  top: 40px;
+}
