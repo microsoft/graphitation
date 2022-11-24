@@ -31,23 +31,6 @@ export class ApolloCachePublisher {
     return client.cache.extract(true);
   }
 
-  private diffCaches(
-    currentCache: NormalizedCacheObject,
-    previousCache: NormalizedCacheObject,
-  ) {
-    return Object.fromEntries(
-      Object.entries(currentCache).filter(([key, value]) => {
-        if (
-          !previousCache[key] ||
-          JSON.stringify(previousCache[key]) !== JSON.stringify(value)
-        ) {
-          return true;
-        }
-        return false;
-      }),
-    );
-  }
-
   private serializeCacheObject = (client?: ClientObject) => {
     if (!client) {
       return;
@@ -61,18 +44,17 @@ export class ApolloCachePublisher {
       return;
     }
 
-    if (this.activeClient?.clientId !== activeClient.clientId) {
-      this.lastCacheHistory = {};
-    }
-    this.activeClient = activeClient;
-
     const serializedCacheObject = this.serializeCacheObject(activeClient);
 
     if (!serializedCacheObject) {
       return;
     }
 
-    if (!this.hasCacheChanged(this.lastCacheHistory, serializedCacheObject)) {
+    if (this.activeClient?.clientId !== activeClient.clientId) {
+      this.activeClient = activeClient;
+    } else if (
+      !this.hasCacheChanged(this.lastCacheHistory, serializedCacheObject)
+    ) {
       return;
     }
 

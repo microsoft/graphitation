@@ -9,6 +9,8 @@ type RemplStatusHook = {
   callback: (wrapperCallbackParams: WrapperCallbackParams) => void;
 };
 
+export const browserWindow =
+  !window.__APOLLO_CLIENTS__ && window.opener ? window.opener : window;
 export class RemplWrapper {
   private isRemplActive = false;
   private remplStatusHooks: RemplStatusHook[] = [];
@@ -23,7 +25,7 @@ export class RemplWrapper {
     this.publisher = createPublisher("apollo-devtools", () => {
       return {
         type: "url",
-        value: window.__REMPL_APOLLO_DEVTOOLS_URL__ || "",
+        value: browserWindow.__REMPL_APOLLO_DEVTOOLS_URL__ || "",
       };
     });
 
@@ -61,11 +63,11 @@ export class RemplWrapper {
   }
 
   private getClientById(activeClientId: string) {
-    if (!window.__APOLLO_CLIENTS__?.length) {
+    if (!browserWindow.__APOLLO_CLIENTS__?.length) {
       return null;
     }
 
-    const activeClient = window.__APOLLO_CLIENTS__.find(
+    const activeClient = browserWindow.__APOLLO_CLIENTS__.find(
       (client: ClientObject) => client.clientId === activeClientId,
     );
 
@@ -81,7 +83,7 @@ export class RemplWrapper {
   }
 
   public runAllHooks() {
-    if (!window.__APOLLO_CLIENTS__?.length) {
+    if (!browserWindow.__APOLLO_CLIENTS__?.length) {
       return;
     }
 
@@ -91,7 +93,7 @@ export class RemplWrapper {
       }
 
       callback({
-        clientObjects: window.__APOLLO_CLIENTS__,
+        clientObjects: browserWindow.__APOLLO_CLIENTS__,
         activeClient: this.activeClient,
       });
 
@@ -99,7 +101,7 @@ export class RemplWrapper {
         id: id,
         interval: setInterval(() => {
           callback({
-            clientObjects: window.__APOLLO_CLIENTS__,
+            clientObjects: browserWindow.__APOLLO_CLIENTS__,
             activeClient: this.activeClient,
           });
         }, timeout),
