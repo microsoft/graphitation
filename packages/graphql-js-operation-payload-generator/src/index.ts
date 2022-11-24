@@ -101,7 +101,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
     variableValues: operation.request.variables,
     rootValue: mockCompositeType(
       mockResolvers,
-      operation.schema.getQueryType()!,
+      getRootType(operation),
       null,
       resolveValue,
       null,
@@ -462,4 +462,17 @@ function rewriteConditionals(
       }
     },
   });
+}
+
+function getRootType(operation: OperationDescriptor): GraphQLNamedType {
+  const rootType = getOperationAST(operation.request.node);
+  invariant(rootType, "Expected operation to have a root type");
+  switch (rootType.operation) {
+    case "query":
+      return operation.schema.getQueryType()!;
+    case "mutation":
+      return operation.schema.getMutationType()!;
+    case "subscription":
+      return operation.schema.getSubscriptionType()!;
+  }
 }

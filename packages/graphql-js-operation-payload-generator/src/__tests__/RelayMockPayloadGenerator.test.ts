@@ -1944,3 +1944,57 @@ test("merges data from concrete type mock with abstract type mock", () => {
     },
   );
 });
+
+describe("works with root types", () => {
+  it("works with Query type", () => {
+    testGeneratedData(
+      graphql`
+        query RelayMockPayloadGeneratorTestQueryTypeQuery {
+          me {
+            name
+          }
+        }
+      `,
+      { Query: () => ({ me: { name: "Alice" } }) },
+    );
+  });
+
+  it("works with Subscription type", () => {
+    testGeneratedData(
+      graphql`
+        subscription RelayMockPayloadGeneratorTestQueryTypeSubscription {
+          configCreateSubscribe {
+            config {
+              name
+              isEnabled
+            }
+          }
+        }
+      `,
+      {
+        Subscription: () => ({
+          configCreateSubscribe: { config: { name: "SomeSetting" } },
+        }),
+      },
+    );
+  });
+
+  it("works with Mutation type", () => {
+    testGeneratedData(
+      graphql`
+        mutation RelayMockPayloadGeneratorTestQueryTypeMutation {
+          unfriend(input: { clientMutationId: "1", friendId: "2" }) {
+            formerFriend {
+              id
+            }
+          }
+        }
+      `,
+      {
+        Mutation: () => ({
+          unfriend: { formerFriend: { id: "2" } },
+        }),
+      },
+    );
+  });
+});

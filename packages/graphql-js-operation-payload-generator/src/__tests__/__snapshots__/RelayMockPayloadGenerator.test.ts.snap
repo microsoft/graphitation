@@ -1874,3 +1874,67 @@ query RelayMockPayloadGeneratorTest42Query @relay_test_operation {
   }
 }
 `;
+
+exports[`works with root types works with Mutation type 1`] = `
+~~~~~~~~~~ INPUT ~~~~~~~~~~
+mutation RelayMockPayloadGeneratorTestQueryTypeMutation {
+  unfriend(input: {clientMutationId: "1", friendId: "2"}) {
+    formerFriend {
+      id
+    }
+  }
+}
+
+~~~~~~~~~~ OUTPUT ~~~~~~~~~~
+{
+  "data": {
+    "unfriend": {
+      "formerFriend": {
+        "id": "2"
+      }
+    }
+  }
+}
+`;
+
+exports[`works with root types works with Query type 1`] = `
+~~~~~~~~~~ INPUT ~~~~~~~~~~
+query RelayMockPayloadGeneratorTestQueryTypeQuery {
+  me {
+    name
+  }
+}
+
+~~~~~~~~~~ OUTPUT ~~~~~~~~~~
+{
+  "data": {
+    "me": {
+      "name": "Alice"
+    }
+  }
+}
+`;
+
+exports[`works with root types works with Subscription type 1`] = `
+~~~~~~~~~~ INPUT ~~~~~~~~~~
+subscription RelayMockPayloadGeneratorTestQueryTypeSubscription {
+  configCreateSubscribe {
+    config {
+      name
+      isEnabled
+    }
+  }
+}
+
+~~~~~~~~~~ OUTPUT ~~~~~~~~~~
+{
+  "data": {
+    "configCreateSubscribe": {
+      "config": {
+        "name": "SomeSetting",
+        "isEnabled": false
+      }
+    }
+  }
+}
+`;
