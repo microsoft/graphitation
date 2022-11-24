@@ -40,10 +40,13 @@ console.log(
 function testGeneratedData(
   documentNode: DocumentNode,
   mockResolvers?: MockResolvers<TypeMap>,
+  generateId?: () => number,
 ): void {
   const payload = generate<TypeMap>(
     { schema, request: { node: documentNode, variables: {} } },
     mockResolvers,
+    false,
+    generateId,
   );
   expect({
     [FIXTURE_TAG]: true,
@@ -2013,5 +2016,19 @@ test("stays synchronous when @defer is disabled", () => {
       }
       ${fragment}
     `,
+  );
+});
+
+test("allow passing in custom generateId function", () => {
+  testGeneratedData(
+    graphql`
+      query RelayMockPayloadGeneratorTestCustomGenerateIdQuery {
+        me {
+          id
+        }
+      }
+    `,
+    undefined,
+    () => 42,
   );
 });

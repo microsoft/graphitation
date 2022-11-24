@@ -64,10 +64,11 @@ const TYPENAME_KEY = "__typename";
 export function generate<TypeMap extends DefaultMockResolvers>(
   operation: OperationDescriptor,
   mockResolvers: MockResolvers<TypeMap> = DEFAULT_MOCK_RESOLVERS as any, // FIXME: Why does TS not accept this?
-  enableDefer = false,
+  enableDefer: undefined | false = false,
+  generateId?: () => number,
 ): { data: MockData } {
   mockResolvers = { ...DEFAULT_MOCK_RESOLVERS, ...mockResolvers };
-  const resolveValue = createValueResolver(mockResolvers);
+  const resolveValue = createValueResolver(mockResolvers, generateId);
 
   // RelayMockPayloadGenerator will execute documents that have optional
   // boolean variables that are not passed by the user, but are required
