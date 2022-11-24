@@ -64,6 +64,7 @@ const TYPENAME_KEY = "__typename";
 export function generate<TypeMap extends DefaultMockResolvers>(
   operation: OperationDescriptor,
   mockResolvers: MockResolvers<TypeMap> = DEFAULT_MOCK_RESOLVERS as any, // FIXME: Why does TS not accept this?
+  enableDefer = false,
 ): { data: MockData } {
   mockResolvers = { ...DEFAULT_MOCK_RESOLVERS, ...mockResolvers };
   const resolveValue = createValueResolver(mockResolvers);
@@ -88,10 +89,17 @@ export function generate<TypeMap extends DefaultMockResolvers>(
     },
   );
 
-  const document =
-    undefinedBooleanVariables.length === 0
-      ? operation.request.node
-      : rewriteConditionals(operation.request.node, undefinedBooleanVariables);
+  let document = operation.request.node;
+  if (undefinedBooleanVariables.length > 0) {
+    document = rewriteConditionals(document, undefinedBooleanVariables);
+  }
+  if (enableDefer) {
+    throw new Error(
+      "Enabling @defer in payload generation is not supported at this time.",
+    );
+  } else {
+    document = removeDeferAndStream(document);
+  }
 
   const abstractTypeSelections: Path[] = [];
 
@@ -460,6 +468,17 @@ function rewriteConditionals(
           ],
         };
       }
+    },
+  });
+}
+
+function removeDeferAndStream(doc: DocumentNode): DocumentNode {
+  return visit(doc, {
+    Directive: (node) => {
+      if (node.name.value === "defer" || node.name.value === "stream") {
+        return null;
+      }
+      return;
     },
   });
 }

@@ -1024,6 +1024,28 @@ fragment RelayMockPayloadGeneratorTest26Fragment on Image {
 }
 `;
 
+exports[`stays synchronous when @defer is disabled 1`] = `
+~~~~~~~~~~ INPUT ~~~~~~~~~~
+query RelayMockPayloadGeneratorTestDisabledDeferQuery {
+  me {
+    ...RelayMockPayloadGeneratorTestDisabledDeferFragment @defer
+  }
+}
+
+fragment RelayMockPayloadGeneratorTestDisabledDeferFragment on User {
+  name
+}
+
+~~~~~~~~~~ OUTPUT ~~~~~~~~~~
+{
+  "data": {
+    "me": {
+      "name": "<mock-value-for-field-\\"name\\">"
+    }
+  }
+}
+`;
+
 exports[`with @relay_test_operation generate mock data with mock resolver for ID that may return \`undefined\` 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
 query RelayMockPayloadGeneratorTest35Query @relay_test_operation {

@@ -1997,3 +1997,21 @@ describe("works with root types", () => {
     );
   });
 });
+
+test("stays synchronous when @defer is disabled", () => {
+  const fragment = graphql`
+    fragment RelayMockPayloadGeneratorTestDisabledDeferFragment on User {
+      name
+    }
+  `;
+  testGeneratedData(
+    graphql`
+      query RelayMockPayloadGeneratorTestDisabledDeferQuery {
+        me {
+          ...RelayMockPayloadGeneratorTestDisabledDeferFragment @defer
+        }
+      }
+      ${fragment}
+    `,
+  );
+});
