@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "[REMPL_APOLLO_DEVTOOLS] empty cache fixed during client change",
-  "packageName": "@graphitation/rempl-apollo-devtools",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
