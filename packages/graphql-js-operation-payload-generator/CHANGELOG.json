@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Thu, 24 Nov 2022 15:24:56 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.12.0",
+      "version": "0.12.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "commit": "48c9f475ab651b789c5400be12b1d06bc51b35fa",
+            "comment": "Incorporate TMP patches"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 22 Nov 2022 18:01:10 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.11.0",
       "version": "0.11.0",
