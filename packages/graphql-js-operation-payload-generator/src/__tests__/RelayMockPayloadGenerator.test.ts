@@ -2032,3 +2032,21 @@ test("allow passing in custom generateId function", () => {
     () => 42,
   );
 });
+
+test("uses explicit mock data over type based mock data", () => {
+  testGeneratedData(
+    graphql`
+      query RelayMockPayloadGeneratorTestDeeplyNestedMockDataQuery {
+        me {
+          backgroundImage {
+            width
+          }
+        }
+      }
+    `,
+    {
+      Query: () => ({ me: { backgroundImage: { width: 100 } } }),
+      Image: () => ({ width: 200 }),
+    },
+  );
+});

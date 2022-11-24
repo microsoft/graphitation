@@ -1064,6 +1064,28 @@ fragment RelayMockPayloadGeneratorTestDisabledDeferFragment on User {
 }
 `;
 
+exports[`uses explicit mock data over type based mock data 1`] = `
+~~~~~~~~~~ INPUT ~~~~~~~~~~
+query RelayMockPayloadGeneratorTestDeeplyNestedMockDataQuery {
+  me {
+    backgroundImage {
+      width
+    }
+  }
+}
+
+~~~~~~~~~~ OUTPUT ~~~~~~~~~~
+{
+  "data": {
+    "me": {
+      "backgroundImage": {
+        "width": 100
+      }
+    }
+  }
+}
+`;
+
 exports[`with @relay_test_operation generate mock data with mock resolver for ID that may return \`undefined\` 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
 query RelayMockPayloadGeneratorTest35Query @relay_test_operation {

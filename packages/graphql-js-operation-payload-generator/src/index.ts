@@ -140,7 +140,6 @@ export function generate<TypeMap extends DefaultMockResolvers>(
             return null;
           }
           const result = {
-            ...userValue,
             ...mockCompositeType(
               mockResolvers,
               namedReturnType,
@@ -152,6 +151,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
               operation,
               abstractTypeSelections,
             ),
+            ...userValue,
           };
           return result;
         };
