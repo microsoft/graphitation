@@ -7,8 +7,8 @@
     "start": "concurrently 'yarn relay --watch' 'yarn serve --progress --color --mode=development'",
     "build": "webpack --mode production --config webpack.config.ts",
     "serve": "webpack serve --config webpack.config.ts",
-    "extract-schema": "supermassive extract-schema ./src/schema/typeDefs.graphql",
-    "generate:interfaces": "../../packages/supermassive/bin/supermassive.js generate-interfaces ./src/schema/typeDefs.graphql",
+    "extract-schema": "ts-node --project ./tsconfig-cli.json ../../packages/cli/bin/supermassive.js extract-schema ./src/schema/typeDefs.graphql",
+    "generate:interfaces": "ts-node --project ./tsconfig-cli.json ../../packages/cli/bin/supermassive.js generate-interfaces ./src/schema/typeDefs.graphql",
     "relay": "relay-compiler --language graphitation --schema ./src/schema/typeDefs.graphql --src ./src"
   },
   "dependencies": {
@@ -16,7 +16,7 @@
     "@babel/runtime": "^7.12.0",
     "@graphitation/apollo-react-relay-duct-tape": "^0.7.0",
     "@graphitation/graphql-js-tag": "^0.8.0",
-    "@graphitation/supermassive": "^0.8.3",
+    "@graphitation/supermassive": "^2.0.0",
     "@graphitation/ts-transform-graphql-js-tag": "^0.4.0",
     "concurrently": "^6.5.1",
     "graphql": "^15.6.1",

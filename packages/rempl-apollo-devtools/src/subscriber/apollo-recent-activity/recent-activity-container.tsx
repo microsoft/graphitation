@@ -79,7 +79,7 @@ export const RecentActivityContainer = React.memo(() => {
 
     return () => {
       remplSubscriber.callRemote("recordRecentActivity", {
-        shouldRecord: true,
+        shouldRecord: false,
       });
       unsubscribe();
     };

@@ -12,7 +12,7 @@ type Subscription {
   emitTodos(limit: Int!): Todo
 }
 
-type Todo {
+type Todo @model(from: "../models", tsType: "TodoModel") {
   id: ID!
   text: String!
   isCompleted: Boolean!

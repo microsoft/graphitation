@@ -1,4 +1,4 @@
-import { RemplWrapper } from "../rempl-wrapper";
+import { RemplWrapper, browserWindow } from "../rempl-wrapper";
 
 export class ApolloGlobalOperationsPublisher {
   private apolloPublisher;
@@ -15,13 +15,13 @@ export class ApolloGlobalOperationsPublisher {
   }
 
   private globalOperationsFetcherHandler() {
-    if (!window.__APOLLO_GLOBAL_OPERATIONS__) {
+    if (!browserWindow.__APOLLO_GLOBAL_OPERATIONS__) {
       return;
     }
 
     this.apolloPublisher
       .ns("apollo-global-operations")
-      .publish(window.__APOLLO_GLOBAL_OPERATIONS__);
+      .publish(browserWindow.__APOLLO_GLOBAL_OPERATIONS__);
 
     this.remplWrapper.unSubscribeToRemplStatus("global-operations");
   }

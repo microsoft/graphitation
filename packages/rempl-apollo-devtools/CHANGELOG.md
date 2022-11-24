@@ -1,8 +1,16 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-This log was last generated on Thu, 10 Nov 2022 14:57:34 GMT and should not be manually modified.
+This log was last generated on Thu, 24 Nov 2022 14:59:06 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.3.7
+
+Thu, 24 Nov 2022 14:59:06 GMT
+
+### Patches
+
+- [REMPL_APOLLO_DEVTOOLS] empty cache fixed during client change (jakubvejr@microsoft.com)
 
 ## 0.3.6
 
