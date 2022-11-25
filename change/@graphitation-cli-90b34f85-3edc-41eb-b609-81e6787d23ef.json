@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Hotfix: dependencies fixed after the supermassive split",
+  "packageName": "@graphitation/cli",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
