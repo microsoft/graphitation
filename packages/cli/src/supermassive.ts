@@ -5,7 +5,7 @@ import ts from "typescript";
 import { program, Command } from "commander";
 import { extractImplicitTypesToTypescript } from "@graphitation/supermassive-extractors";
 import { parse } from "graphql";
-import { generateTS, getRelativePath } from "@graphitation/ts-codegen";
+import { generateTS } from "@graphitation/ts-codegen";
 import * as glob from "fast-glob";
 
 type GenerateInterfacesOptions = {
@@ -104,7 +104,7 @@ async function generateInterfaces(
       document,
       outputDir,
       fullPath,
-      getRelativePath(options.contextImport, outputDir, process.cwd()),
+      getContextPath(outputDir, options.contextImport) || null,
       options.contextName,
     );
 
