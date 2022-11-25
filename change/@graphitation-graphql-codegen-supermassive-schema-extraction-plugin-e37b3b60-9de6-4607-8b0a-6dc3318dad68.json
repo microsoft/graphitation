@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Hotfix: dependencies fixed after the supermassive split",
-  "packageName": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}

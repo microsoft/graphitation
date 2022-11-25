@@ -2,6 +2,21 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Fri, 25 Nov 2022 15:30:59 GMT",
+      "tag": "@graphitation/cli_v1.0.1",
+      "version": "1.0.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "0f6fd3af559d8da51843c89c89373e9c6ddea4e9",
+            "comment": "Hotfix: dependencies fixed after the supermassive split"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 22 Nov 2022 18:01:10 GMT",
       "tag": "@graphitation/cli_v1.0.0",
       "version": "1.0.0",
