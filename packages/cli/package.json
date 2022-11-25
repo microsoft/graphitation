@@ -18,12 +18,12 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@graphitation/supermassive-extractors": "*",
-    "@graphitation/ts-codegen": "*",
     "@types/jest": "^26.0.22",
     "monorepo-scripts": "*"
   },
   "dependencies": {
+    "@graphitation/supermassive-extractors": "^2.0.0",
+    "@graphitation/ts-codegen": "^1.0.0",
     "commander": "^8.3.0",
     "typescript": "^4.4.3 <4.5.0"
   },
