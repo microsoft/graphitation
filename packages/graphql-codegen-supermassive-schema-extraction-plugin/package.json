@@ -15,7 +15,6 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@graphitation/supermassive-extractors": "*",
     "@graphql-codegen/plugin-helpers": "^1.18.2",
     "@types/jest": "^26.0.22",
     "monorepo-scripts": "*"
@@ -24,6 +23,7 @@
     "@graphql-codegen/plugin-helpers": ">= 1.18.0 < 2"
   },
   "dependencies": {
+    "@graphitation/supermassive-extractors": "^2.0.0",
     "typescript": "^4.4.3 <4.5.0"
   },
   "sideEffects": false,
