@@ -303,7 +303,10 @@ export function extractContext(
     Directive: {
       enter(node, _key, _parent, _path, ancestors) {
         if (node.name.value === IMPORT_DIRECTIVE_NAME) {
-          context.addImport(processImportDirective(node), node);
+          context.addImport(
+            processImportDirective(node, outputPath, documentPath),
+            node,
+          );
         } else if (node.name.value === MODEL_DIRECTIVE_NAME) {
           context.addModel(
             processModelDirective(node, ancestors, outputPath, documentPath),

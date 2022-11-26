@@ -25,8 +25,15 @@ export function createImportDeclaration(
   );
 }
 
-function sliceJSExtensions(filePath: string) {
-  return filePath.replace(/\.(js|ts|tsx)$/, "");
+function cleanRelativePath(relativePath: string) {
+  const cleanedRelativePath = relativePath.startsWith(".")
+    ? relativePath
+    : `./${relativePath}`;
+
+  return cleanedRelativePath
+    .replace(/\.(js|ts|tsx)$/, "")
+    .split(path.sep)
+    .join(path.posix.sep);
 }
 
 export function getRelativePath(
@@ -43,10 +50,6 @@ export function getRelativePath(
   }
 
   const modelFullPath = path.resolve(path.dirname(documentPath), from);
-  return sliceJSExtensions(
-    path
-      .relative(outputPath, modelFullPath)
-      .split(path.sep)
-      .join(path.posix.sep),
-  );
+
+  return cleanRelativePath(path.relative(outputPath, modelFullPath));
 }

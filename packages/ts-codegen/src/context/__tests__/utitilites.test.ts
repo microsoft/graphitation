@@ -28,5 +28,29 @@ describe("getRelativePath", () => {
         path.resolve(process.cwd(), "./schema.graphql"),
       ),
     ).toEqual("../test/models");
+
+    expect(
+      getRelativePath(
+        "./test/models.ts",
+        process.cwd(),
+        path.resolve(process.cwd(), "./schema.graphql"),
+      ),
+    ).toEqual("./test/models");
+
+    expect(
+      getRelativePath(
+        "./test",
+        path.resolve(process.cwd()),
+        path.resolve(process.cwd(), "./schema.graphql"),
+      ),
+    ).toEqual("./test");
+
+    expect(
+      getRelativePath(
+        "../test",
+        process.cwd(),
+        path.resolve(process.cwd(), "./schema.graphql"),
+      ),
+    ).toEqual("../test");
   });
 });

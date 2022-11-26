@@ -1,11 +1,16 @@
 import { ArgumentNode, GraphQLError, DirectiveNode } from "graphql";
 import { ValueNode } from "graphql/language/ast";
 import { DefinitionImport } from "../types";
+import { getRelativePath } from "./utilities";
 import { createVariableNameFromImport } from "../utilities";
 
 export const IMPORT_DIRECTIVE_NAME = "import";
 
-export function processImportDirective(node: DirectiveNode): DefinitionImport {
+export function processImportDirective(
+  node: DirectiveNode,
+  outputPath: string,
+  documentPath: string,
+): DefinitionImport {
   const from = getArgumentValue(node.arguments, "from");
   const defs = getArgumentValue(node.arguments, "defs");
 
@@ -34,7 +39,7 @@ export function processImportDirective(node: DirectiveNode): DefinitionImport {
   });
 
   return {
-    from: from.value,
+    from: getRelativePath(from.value, outputPath, documentPath) as string,
     defs: definitionNames.map((typeName) => ({
       typeName,
     })),

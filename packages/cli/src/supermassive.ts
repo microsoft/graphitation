@@ -70,7 +70,13 @@ function getContextPath(outputDir: string, contextImport: string | undefined) {
   if (!contextImport) {
     return;
   }
+
+  if (!contextImport.startsWith(".")) {
+    return contextImport;
+  }
+
   const contextDir = path.join(process.cwd(), contextImport);
+
   return path
     .relative(outputDir, contextDir)
     .split(path.sep)
