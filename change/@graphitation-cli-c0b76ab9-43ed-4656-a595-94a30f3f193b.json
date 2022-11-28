@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Import na Model path fixed",
-  "packageName": "@graphitation/cli",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
