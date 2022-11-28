@@ -10,6 +10,14 @@ describe("getRelativePath", () => {
         "/home/test/codegen/schema.graphql",
       ),
     ).toEqual("@msteams/test");
+
+    expect(
+      getRelativePath(
+        "foobar",
+        "./generated",
+        "/home/test/codegen/schema.graphql",
+      ),
+    ).toEqual("foobar");
   });
   test('"from" is undefined', () => {
     expect(
