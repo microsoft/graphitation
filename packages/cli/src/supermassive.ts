@@ -70,8 +70,17 @@ function getContextPath(outputDir: string, contextImport: string | undefined) {
   if (!contextImport) {
     return;
   }
+
+  if (!contextImport.startsWith(".")) {
+    return contextImport;
+  }
+
   const contextDir = path.join(process.cwd(), contextImport);
-  return path.relative(outputDir, contextDir);
+
+  return path
+    .relative(outputDir, contextDir)
+    .split(path.sep)
+    .join(path.posix.sep);
 }
 
 async function generateInterfaces(
@@ -99,7 +108,9 @@ async function generateInterfaces(
 
     let result = generateTS(
       document,
-      getContextPath(outputDir, options.contextImport),
+      outputDir,
+      fullPath,
+      getContextPath(outputDir, options.contextImport) || null,
       options.contextName,
     );
 

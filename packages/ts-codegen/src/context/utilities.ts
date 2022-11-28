@@ -1,4 +1,5 @@
-import { factory, isImportSpecifier } from "typescript";
+import { factory } from "typescript";
+import path from "path";
 
 export function createImportDeclaration(
   importNames: string[],
@@ -22,4 +23,33 @@ export function createImportDeclaration(
     ),
     factory.createStringLiteral(from),
   );
+}
+
+function cleanRelativePath(relativePath: string) {
+  const cleanedRelativePath = relativePath.startsWith(".")
+    ? relativePath
+    : `./${relativePath}`;
+
+  return cleanedRelativePath
+    .replace(/\.(js|ts|tsx)$/, "")
+    .split(path.sep)
+    .join(path.posix.sep);
+}
+
+export function getRelativePath(
+  from: string | undefined,
+  outputPath: string,
+  documentPath: string,
+) {
+  if (!from) {
+    return null;
+  }
+
+  if (!from.startsWith(".")) {
+    return from;
+  }
+
+  const modelFullPath = path.resolve(path.dirname(documentPath), from);
+
+  return cleanRelativePath(path.relative(outputPath, modelFullPath));
 }

@@ -1,3 +1,4 @@
+import path from "path";
 import { processImportDirective } from "../import";
 import { Kind, parse, print, GraphQLError } from "graphql";
 import { blankGraphQLTag as graphql } from "../../utilities";
@@ -143,7 +144,13 @@ function processDirectives(str: string): DefinitionImport[] {
   `);
   if (documentNode.definitions[0]?.kind === Kind.SCHEMA_EXTENSION) {
     let directiveNodes = documentNode.definitions[0].directives || [];
-    return directiveNodes.map(processImportDirective);
+    return directiveNodes.map((node) =>
+      processImportDirective(
+        node,
+        path.resolve(process.cwd(), "./"),
+        path.resolve(process.cwd(), "./schema.graphql"),
+      ),
+    );
   } else {
     throw new Error("Invalid directive");
   }
