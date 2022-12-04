@@ -5,6 +5,7 @@ import ts from "typescript";
 import { program, Command } from "commander";
 import { extractImplicitTypesToTypescript } from "@graphitation/supermassive-extractors";
 import { parse } from "graphql";
+import { Project, ScriptKind } from "ts-morph";
 import { generateTS } from "@graphitation/ts-codegen";
 import * as glob from "fast-glob";
 
@@ -14,7 +15,7 @@ type GenerateInterfacesOptions = {
   contextName?: string;
 };
 
-const PREPEND_TO_INTERFACES = `/* eslint-disable */ \n// @ts-nocheck \n// This file was automatically generated (by @graphitaiton/supermassive) and should not be edited.\n`;
+const PREPEND_TO_INTERFACES = `/* eslint-disable */ \n// This file was automatically generated (by @graphitaiton/supermassive) and should not be edited.\n`;
 
 export function supermassive(): Command {
   const extractSchemaCommand = new Command();
@@ -87,6 +88,13 @@ async function generateInterfaces(
   files: Array<string>,
   options: GenerateInterfacesOptions,
 ): Promise<void> {
+  const printer = ts.createPrinter();
+  const project = new Project({
+    skipAddingFilesFromTsConfig: true,
+    skipFileDependencyResolution: true,
+    skipLoadingLibFiles: true,
+  });
+
   for (const file of files) {
     let fullPath: string;
     if (path.isAbsolute(file)) {
@@ -116,25 +124,37 @@ async function generateInterfaces(
 
     await fs.mkdir(outputDir, { recursive: true });
 
-    const printer = ts.createPrinter();
+    await project
+      .createSourceFile(
+        path.join(outputDir, "models.interface.ts"),
+        PREPEND_TO_INTERFACES +
+          printer.printNode(
+            ts.EmitHint.SourceFile,
+            result.models,
+            result.models,
+          ),
+        { overwrite: true, scriptKind: ScriptKind.TS },
+      )
+      .fixUnusedIdentifiers()
+      .save();
 
-    await fs.writeFile(
-      path.join(outputDir, "models.interface.ts"),
-      PREPEND_TO_INTERFACES +
-        printer.printNode(ts.EmitHint.SourceFile, result.models, result.models),
-      { encoding: "utf-8" },
-    );
+    console.log("Generated:", path.join(outputDir, "models.interface.ts"));
 
-    await fs.writeFile(
-      path.join(outputDir, "resolvers.interface.ts"),
-      PREPEND_TO_INTERFACES +
-        printer.printNode(
-          ts.EmitHint.SourceFile,
-          result.resolvers,
-          result.resolvers,
-        ),
-      { encoding: "utf-8" },
-    );
+    await project
+      .createSourceFile(
+        path.join(outputDir, "resolvers.interface.ts"),
+        PREPEND_TO_INTERFACES +
+          printer.printNode(
+            ts.EmitHint.SourceFile,
+            result.resolvers,
+            result.resolvers,
+          ),
+        { overwrite: true, scriptKind: ScriptKind.TS },
+      )
+      .fixUnusedIdentifiers()
+      .save();
+
+    console.log("Generated:", path.join(outputDir, "resolvers.interface.ts"));
   }
 }
 
