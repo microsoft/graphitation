@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "removed unused identifiers in models and removed ts-ignore",
-  "packageName": "@graphitation/cli",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}

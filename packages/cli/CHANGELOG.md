@@ -1,8 +1,16 @@
 # Change Log - @graphitation/cli
 
-This log was last generated on Mon, 28 Nov 2022 10:02:53 GMT and should not be manually modified.
+This log was last generated on Tue, 06 Dec 2022 07:52:21 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.3
+
+Tue, 06 Dec 2022 07:52:21 GMT
+
+### Patches
+
+- removed unused identifiers in models and removed ts-ignore (jakubvejr@microsoft.com)
 
 ## 1.0.2
 
