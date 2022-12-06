@@ -25,6 +25,7 @@
     "@graphitation/supermassive-extractors": "^2.0.0",
     "@graphitation/ts-codegen": "^1.0.1",
     "commander": "^8.3.0",
+    "ts-morph": "^17.0.1",
     "typescript": "^4.4.3 <4.5.0"
   },
   "sideEffects": false,
