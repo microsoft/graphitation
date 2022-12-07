@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Trusted types fix and rempl updated",
+  "packageName": "@graphitation/rempl-apollo-devtools",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
