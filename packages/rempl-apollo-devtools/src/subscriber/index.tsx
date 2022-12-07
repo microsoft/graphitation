@@ -15,7 +15,7 @@ declare global {
 
 const style = document.createElement("style");
 document.body.appendChild(style);
-style.innerHTML = __GLOBAL_CSS__ + __GRAPHIQL_CSS__;
+style.innerText = __GLOBAL_CSS__ + __GRAPHIQL_CSS__;
 
 const rootEl = document.createElement("div");
 rootEl.style.height = "100%";
