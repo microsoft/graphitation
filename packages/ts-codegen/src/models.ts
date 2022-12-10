@@ -1,11 +1,12 @@
 import ts, { factory } from "typescript";
-import { DocumentNode } from "graphql";
+import { DocumentNode, Kind } from "graphql";
 import { ASTReducer, visit } from "./typedVisitor";
 import { TsCodegenContext } from "./context";
 import {
   createNullableType,
   createNonNullableType,
   addModelSuffix,
+  getAncestorEntity,
 } from "./utilities";
 
 export function generateModels(
@@ -91,6 +92,7 @@ type ASTReducerFieldMap = {
 function createModelsReducer(
   context: TsCodegenContext,
 ): ASTReducer<ts.Node | string, ASTReducerMap, ASTReducerFieldMap> {
+  context.clearEntitiesToImport();
   return {
     Document: {
       leave(node) {
@@ -261,11 +263,40 @@ function createModelsReducer(
       },
     },
     NamedType: {
-      leave(node, _a, _p, path): ts.TypeNode | ts.Expression {
+      leave(node, _a, _p, path, ancestors): ts.TypeNode | ts.Expression {
         const isImplementedInterface = path[path.length - 2] === "interfaces";
+        const isImportedEntity = context.importedEntity.has(node.name);
+        const entryEntity = getAncestorEntity(
+          ancestors,
+          parseInt(path[1] as string, 10) as number,
+        );
+
+        const isEntryEntityReplacedByModel =
+          entryEntity &&
+          "directives" in entryEntity &&
+          entryEntity?.directives?.some(
+            (directive) => directive.name.value === "model",
+          );
+
         if (isImplementedInterface) {
+          if (isImportedEntity) {
+            context.addEntityToImport(node.name);
+          }
           return factory.createIdentifier(addModelSuffix(node.name));
         }
+
+        if (
+          !isImportedEntity ||
+          entryEntity?.kind === Kind.INTERFACE_TYPE_DEFINITION ||
+          (isEntryEntityReplacedByModel &&
+            entryEntity?.kind === Kind.OBJECT_TYPE_DEFINITION)
+        ) {
+          return createNullableType(
+            context.getModelType(node.name).toTypeReference(),
+          );
+        }
+
+        context.addEntityToImport(node.name);
 
         return createNullableType(
           context.getModelType(node.name).toTypeReference(),

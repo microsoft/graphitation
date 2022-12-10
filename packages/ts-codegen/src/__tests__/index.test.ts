@@ -257,7 +257,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { UserModel, AdminModel, NodeModel, PersonaModel } from "./models.interface";
+        import type { AdminModel, UserModel } from "./models.interface";
         export declare namespace Admin {
             export type id = (model: AdminModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
             export type rank = (model: AdminModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number>;
@@ -302,7 +302,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { UserModel, NodeModel } from "./models.interface";
+        import type { UserModel } from "./models.interface";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
             export type name = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
@@ -343,7 +343,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { NodeModel, UserModel } from "./models.interface";
+        import type { UserModel } from "./models.interface";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
             export type name = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
@@ -742,6 +742,256 @@ describe(generateTS, () => {
         "
       `);
     });
+  });
+
+  it("import an entity, which is used to implement interface and returned by resolver", () => {
+    let { resolvers, models } = runGenerateTest(graphql`
+      extend schema @import(from: "@msteams/packages-test", defs: ["Entity"])
+      
+      interface Person implements Entity {
+          id: ID!
+      }
+
+      type User implements Person {
+        id: ID!
+      }
+
+      extend type Query {
+        userById(id: ID!): Person
+      }
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import type { EntityModel } from "@msteams/packages-test";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          __typename: string;
+      }
+      export interface PersonModel extends BaseModel, EntityModel {
+          __typename: string;
+      }
+      export interface UserModel extends BaseModel, PersonModel {
+          readonly __typename: "User";
+          readonly id: string;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import type { UserModel, PersonModel } from "./models.interface";
+      export declare namespace User {
+          export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+      }
+      export declare namespace Query {
+          export type userById = (model: unknown, args: {
+              id: string;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<PersonModel | null>;
+      }
+      "
+    `);
+  });
+
+  it("import an entity, which is used in a type", () => {
+    let { resolvers, models } = runGenerateTest(graphql`
+      extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
+                    @import(from: "@msteams/packages-rank", defs: ["Rank"])
+
+      type User {
+        id: ID!
+        rank: Rank!
+      }
+
+      extend type Query {
+        userById(id: ID!): User
+      }
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import type { RankModel } from "@msteams/packages-rank";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          __typename: string;
+      }
+      export interface UserModel extends BaseModel {
+          readonly __typename: "User";
+          readonly id: string;
+          readonly rank: RankModel;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import type { UserModel } from "./models.interface";
+      import type { RankModel } from "@msteams/packages-rank";
+      export declare namespace User {
+          export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type rank = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<RankModel>;
+      }
+      export declare namespace Query {
+          export type userById = (model: unknown, args: {
+              id: string;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+      }
+      "
+    `);
+  });
+
+  it("import an entity, which is used in an input", () => {
+    let { resolvers, models } = runGenerateTest(graphql`
+      extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
+                    @import(from: "@msteams/packages-rank", defs: ["Rank"])
+
+      type User {
+        id: ID!
+        rank: Rank!
+      }
+
+      input UserInput {
+        id: ID!
+        rank: Rank!
+      }
+
+      extend type Query {
+        userById(params: UserInput): User
+      }
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import type { RankModel } from "@msteams/packages-rank";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          __typename: string;
+      }
+      export interface UserModel extends BaseModel {
+          readonly __typename: "User";
+          readonly id: string;
+          readonly rank: RankModel;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import type { UserModel } from "./models.interface";
+      import type { RankModel } from "@msteams/packages-rank";
+      export declare namespace User {
+          export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type rank = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<RankModel>;
+      }
+      export type UserInput = {
+          id: string;
+          rank: RankModel;
+      };
+      export declare namespace Query {
+          export type userById = (model: unknown, args: {
+              params: UserInput | null;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+      }
+      "
+    `);
+  });
+
+  it("imported Rank shouldn't be imported in the model, because it's used in a type, which has the model directive", () => {
+    let { resolvers, models } = runGenerateTest(graphql`
+      extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
+                    @import(from: "@msteams/packages-rank", defs: ["Rank"])
+
+      type User @model(tsType: "User", from: "@msteams/custom-user") {
+        id: ID!
+        rank: Rank!
+      }
+
+      extend type Query {
+        userById(id: ID!): User
+      }
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import type { User as _UserModel } from "@msteams/custom-user";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          __typename: string;
+      }
+      export interface UserModel extends BaseModel, _UserModel {
+          readonly __typename: "User";
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import type { UserModel } from "./models.interface";
+      import type { RankModel } from "@msteams/packages-rank";
+      export declare namespace User {
+          export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type rank = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<RankModel>;
+      }
+      export declare namespace Query {
+          export type userById = (model: unknown, args: {
+              id: string;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+      }
+      "
+    `);
+  });
+
+  it("import an entity, which is used in a nested input", () => {
+    let { resolvers, models } = runGenerateTest(graphql`
+      extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
+                    @import(from: "@msteams/packages-rank", defs: ["Rank"])
+
+      type User {
+        id: ID!
+        rank: Rank!
+      }
+
+      input RankParams {
+        rank: Rank!
+      }
+
+      input UserParams {
+        id: ID!
+        rank: RankParams!
+      }
+
+      extend type Query {
+        userById(params: UserParams): User
+      }
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import type { RankModel } from "@msteams/packages-rank";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          __typename: string;
+      }
+      export interface UserModel extends BaseModel {
+          readonly __typename: "User";
+          readonly id: string;
+          readonly rank: RankModel;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import type { UserModel } from "./models.interface";
+      import type { RankModel } from "@msteams/packages-rank";
+      export declare namespace User {
+          export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type rank = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<RankModel>;
+      }
+      export type RankParams = {
+          rank: RankModel;
+      };
+      export type UserParams = {
+          id: string;
+          rank: RankParams;
+      };
+      export declare namespace Query {
+          export type userById = (model: unknown, args: {
+              params: UserParams | null;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+      }
+      "
+    `);
   });
 
   describe("Scalars", () => {
