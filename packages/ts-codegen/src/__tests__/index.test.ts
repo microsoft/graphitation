@@ -836,6 +836,60 @@ describe(generateTS, () => {
     `);
   });
 
+  it("works when an operation has scalar, input and Enum as parameters", () => {
+    let { resolvers, models } = runGenerateTest(graphql`
+      extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
+                    @import(from: "@msteams/packages-rank", defs: ["Rank"])
+
+      scalar DateTime
+
+      input UserParam {
+        id: ID!
+        rank: Rank!
+      }
+
+      enum UserType {
+        Admin
+        User
+      }
+
+      extend type Query {
+        isUser(userParam: UserParam!, userType: UserType!, dateTime: DateTime!): Boolean
+      }
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import type { RankModel } from "@msteams/packages-rank";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          __typename: string;
+      }
+      export type DateTimeModel = unknown;
+      export enum UserTypeModel {
+          Admin = "Admin",
+          User = "User"
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import type { UserTypeModel, DateTimeModel } from "./models.interface";
+      import type { RankModel } from "@msteams/packages-rank";
+      export type UserParam = {
+          id: string;
+          rank: RankModel;
+      };
+      export declare namespace Query {
+          export type isUser = (model: unknown, args: {
+              userParam: UserParam;
+              userType: UserTypeModel;
+              dateTime: DateTimeModel;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<boolean | null>;
+      }
+      "
+    `);
+  });
+
   it("import an entity, which is used in an input", () => {
     let { resolvers, models } = runGenerateTest(graphql`
       extend schema @import(from: "@msteams/packages-node", defs: ["Node"])

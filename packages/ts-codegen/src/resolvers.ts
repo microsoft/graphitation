@@ -211,18 +211,24 @@ function createResolversReducer(
         );
         const isArgumentOfFuction = path[4] === "arguments";
 
-        const isInput = Array.isArray(ancestors[1])
+        const nodeDefinition: ASTNode | null = Array.isArray(ancestors[1])
           ? ancestors[1].find((ancestor: ASTNode) => {
               if ("name" in ancestor) {
-                return (
-                  ancestor.name?.value === node.name &&
-                  ancestor.kind === Kind.INPUT_OBJECT_TYPE_DEFINITION
-                );
+                return ancestor.name?.value === node.name;
               }
 
               return false;
             })
-          : false;
+          : null;
+
+        const isNodeDefinitionInput =
+          nodeDefinition?.kind === Kind.INPUT_OBJECT_TYPE_DEFINITION;
+
+        const isNodeDefinitionEnum =
+          nodeDefinition?.kind === Kind.ENUM_TYPE_DEFINITION;
+
+        const isNodeDefinitionScalar =
+          nodeDefinition?.kind === Kind.SCALAR_TYPE_DEFINITION;
 
         if (
           isImplementedInterface ||
@@ -236,7 +242,10 @@ function createResolversReducer(
         const isEntryEntityInput =
           entryEntity?.kind === Kind.INPUT_OBJECT_TYPE_DEFINITION;
 
-        if ((isEntryEntityInput && isArgumentOfFuction) || isInput) {
+        if (
+          (isEntryEntityInput && isArgumentOfFuction) ||
+          isNodeDefinitionInput
+        ) {
           return createNullableType(
             context.getModelType(node.name, true, false).toTypeReference(),
           );
@@ -255,6 +264,15 @@ function createResolversReducer(
           !isArgumentOfFuction
         ) {
           context.addEntityToImport(node.name);
+        }
+
+        if (
+          isArgumentOfFuction &&
+          (isNodeDefinitionEnum || isNodeDefinitionScalar)
+        ) {
+          return createNullableType(
+            context.getModelType(node.name, true, true).toTypeReference(),
+          );
         }
 
         return createNullableType(
