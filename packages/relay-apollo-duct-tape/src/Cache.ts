@@ -71,6 +71,9 @@ import invariant from "invariant";
 //       and annoyingly that's hard to configure with ts-jest. Figure
 //       out why we're using quick-lru there.
 import LRUCache from "lru-cache";
+import { parseDocumentAsRelayIR, transformSchema } from "./relayDocumentUtils";
+import type { Schema } from "relay-compiler";
+import type { DocumentNode } from "graphql";
 
 type ReadOptions = Omit<ApolloCacheTypes.DiffOptions, "query">;
 
@@ -96,6 +99,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   private optimisticTransactions: Map<string, OptimisticTransaction>;
   private typePolicies: TypePolicies;
   private pessimism?: Map<string, [Snapshot, Disposable]>;
+  private schema?: Schema;
 
   constructor(
     options: {
@@ -103,6 +107,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
       typePolicies?: TypePolicies;
       resultCaching?: boolean;
       resultCacheMaxSize?: number;
+      schema?: DocumentNode;
     } = {},
   ) {
     super();
@@ -123,6 +128,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
         : undefined;
 
     this.getDataID = this.getDataID.bind(this);
+    this.schema = options.schema && transformSchema(options.schema);
   }
 
   // TODO: This does not handle a Relay plural refs object, which looks like: { __refs: string[] }
@@ -173,7 +179,10 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   write<TData = any, TVariables = any>(
     options: ApolloCacheTypes.WriteOptions<TData, TVariables>,
   ): Reference | undefined {
-    const taggedNode = options.query.__relay;
+    let taggedNode = options.query.__relay;
+    if (!taggedNode && this.schema) {
+      taggedNode = parseDocumentAsRelayIR(this.schema, options.query);
+    }
     invariant(
       taggedNode,
       "RelayApolloCache: Expected document to contain Relay IR.",

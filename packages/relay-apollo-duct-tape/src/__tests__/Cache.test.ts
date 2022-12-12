@@ -7,6 +7,15 @@ import FragmentRelayIR from "./__generated__/CacheTestFragment.graphql";
 import RelayModernStore from "relay-runtime/lib/store/RelayModernStore";
 import RelayRecordSource from "relay-runtime/lib/store/RelayRecordSource";
 
+import fs from "fs";
+import path from "path";
+import { parse } from "graphql";
+
+const schema = parse(
+  fs.readFileSync(path.resolve(__dirname, "schema.graphql"), "utf8"),
+);
+console.log(schema);
+
 const QueryDocument = graphql`
   query CacheTestQuery(
     $conversationId: String!
@@ -17,7 +26,7 @@ const QueryDocument = graphql`
       # __typename
       id
       title
-      ... @include(if: $includeNestedData) {
+      ... on Conversation @include(if: $includeNestedData) {
         messages {
           id
           authorId
@@ -28,7 +37,7 @@ const QueryDocument = graphql`
     }
   }
 `;
-(QueryDocument as any).__relay = QueryRelayIR;
+// (QueryDocument as any).__relay = QueryRelayIR;
 
 const FragmentDocument = graphql`
   fragment CacheTestFragment on Conversation {
@@ -51,25 +60,24 @@ function apollo(typePolicies?: TypePolicies) {
 }
 
 function relay(typePolicies?: TypePolicies) {
-  return new RelayApolloCache({ typePolicies });
+  return new RelayApolloCache({ typePolicies, schema });
 }
 
-describe("writeQuery/readQuery", () => {
-  it.each([{ client: apollo }, { client: relay }])(
-    "works with $client.name",
-    ({ client }) => {
-      const cache = client();
-      cache.writeQuery({
+describe.only("writeQuery/readQuery", () => {
+  // it.each([{ client: apollo }, { client: relay }])(
+  it.each([{ client: relay }])("works with $client.name", ({ client }) => {
+    const cache = client();
+    cache.writeQuery({
+      query: QueryDocument,
+      data: RESPONSE,
+      variables: { conversationId: "42" },
+    });
+    expect(
+      cache.readQuery({
         query: QueryDocument,
-        data: RESPONSE,
         variables: { conversationId: "42" },
-      });
-      expect(
-        cache.readQuery({
-          query: QueryDocument,
-          variables: { conversationId: "42" },
-        }),
-      ).toMatchInlineSnapshot(`
+      }),
+    ).toMatchInlineSnapshot(`
       Object {
         "conversation": Object {
           "id": "42",
@@ -77,10 +85,9 @@ describe("writeQuery/readQuery", () => {
         },
       }
     `);
-    },
-  );
+  });
 
-  describe("concerning missing data", () => {
+  xdescribe("concerning missing data", () => {
     beforeAll(() => {
       jest.spyOn(console, "error").mockImplementation(() => {});
     });
@@ -127,7 +134,7 @@ describe("writeQuery/readQuery", () => {
     );
   });
 
-  describe("concerning optimistic updates", () => {
+  xdescribe("concerning optimistic updates", () => {
     it.each([{ client: apollo }, { client: relay }])(
       "applies update with $client.name",
       ({ client }) => {
@@ -638,7 +645,7 @@ describe("read memoization", () => {
     "removes the entry from the memoization cache when the store evicts the snapshot",
   );
 
-  it.only("disposes the store subscription when the memoization cache evicts the entry", () => {
+  it("disposes the store subscription when the memoization cache evicts the entry", () => {
     const store = new RelayModernStore(new RelayRecordSource());
     const cache = new RelayApolloCache({ store, resultCacheMaxSize: 1 });
     const subscribe = jest.spyOn(store, "subscribe");
