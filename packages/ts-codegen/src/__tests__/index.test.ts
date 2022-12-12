@@ -239,13 +239,13 @@ describe(generateTS, () => {
             readonly __typename: string;
         }
         export interface NodeModel extends BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface PersonaModel extends BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel, NodeModel, PersonaModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface AdminModel extends BaseModel, NodeModel, PersonaModel {
             readonly __typename: "Admin";
@@ -290,7 +290,7 @@ describe(generateTS, () => {
             readonly __typename: string;
         }
         export interface NodeModel extends BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel, NodeModel {
             readonly __typename: "User";
@@ -331,7 +331,7 @@ describe(generateTS, () => {
             readonly __typename: string;
         }
         export interface NodeModel extends BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel, NodeModel {
             readonly __typename: "User";
@@ -767,7 +767,7 @@ describe(generateTS, () => {
           readonly __typename: string;
       }
       export interface PersonModel extends BaseModel, EntityModel {
-          __typename: string;
+          readonly __typename: string;
       }
       export interface UserModel extends BaseModel, PersonModel {
           readonly __typename: "User";
@@ -1211,7 +1211,7 @@ describe(generateTS, () => {
           readonly __typename: string;
       }
       export interface NodeModel extends BaseModel {
-          __typename: string;
+          readonly __typename: string;
       }
       "
     `);

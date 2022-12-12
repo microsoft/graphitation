@@ -233,7 +233,7 @@ function createModelsReducer(
           ],
           [
             factory.createPropertySignature(
-              undefined,
+              [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
               "__typename",
               undefined,
               factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
