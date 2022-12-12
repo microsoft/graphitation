@@ -216,7 +216,7 @@ describe.each([
     let testComponentTree: ReactTestRenderer.ReactTestRenderer;
 
     beforeEach(async () => {
-      client = createMockClient(schema, {
+      client = createMockClient(schema as any, {
         cache: cache?.(),
       });
       ReactTestRenderer.act(() => {

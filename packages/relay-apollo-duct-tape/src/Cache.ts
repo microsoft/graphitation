@@ -41,6 +41,7 @@ import {
   getRequest,
   createOperationDescriptor,
   ROOT_ID,
+  GraphQLTaggedNode,
 } from "relay-runtime";
 import { NormalizationFragmentSpread } from "relay-runtime/lib/util/NormalizationNode";
 import RelayRecordSource from "relay-runtime/lib/store/RelayRecordSource";
@@ -71,7 +72,7 @@ import invariant from "invariant";
 //       and annoyingly that's hard to configure with ts-jest. Figure
 //       out why we're using quick-lru there.
 import LRUCache from "lru-cache";
-import { parseDocumentAsRelayIR, transformSchema } from "./relayDocumentUtils";
+import { transformDocument, transformSchema } from "./relayDocumentUtils";
 import type { Schema } from "relay-compiler";
 import type { DocumentNode } from "graphql";
 
@@ -146,13 +147,10 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   read<TData = any, TVariables = any>(
     options: ApolloCacheTypes.ReadOptions<TVariables, TData>,
   ): TData | null {
-    const taggedNode = options.query.__relay;
-    invariant(
-      taggedNode,
-      "RelayApolloCache: Expected document to contain Relay IR.",
+    return this.readWithRelayIR(
+      getRequest(this.getTaggedNode(options.query)),
+      options,
     );
-    const request = getRequest(taggedNode);
-    return this.readWithRelayIR(request, options);
   }
 
   // TODO: This is ignoring rootId, is that ok?
@@ -179,16 +177,10 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   write<TData = any, TVariables = any>(
     options: ApolloCacheTypes.WriteOptions<TData, TVariables>,
   ): Reference | undefined {
-    let taggedNode = options.query.__relay;
-    if (!taggedNode && this.schema) {
-      taggedNode = parseDocumentAsRelayIR(this.schema, options.query);
-    }
-    invariant(
-      taggedNode,
-      "RelayApolloCache: Expected document to contain Relay IR.",
+    return this.writeWithRelayIR(
+      getRequest(this.getTaggedNode(options.query)),
+      options,
     );
-    const request = getRequest(taggedNode);
-    return this.writeWithRelayIR(request, options);
   }
 
   // TODO: When is Reference as return type used?
@@ -242,12 +234,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   writeFragment<TData = any, TVariables = any>(
     options: ApolloCacheTypes.WriteFragmentOptions<TData, TVariables>,
   ): Reference | undefined {
-    const taggedNode = options.fragment.__relay;
-    invariant(
-      taggedNode,
-      "RelayApolloCache: Expected document to contain Relay IR.",
-    );
-    const fragment = getFragment(taggedNode);
+    const fragment = getFragment(this.getTaggedNode(options.fragment));
     this.writeWithRelayIR(getNodeQuery(fragment, options.id || ROOT_ID), {
       result: { node: options.data },
       variables: options.variables,
@@ -265,12 +252,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     options: ApolloCacheTypes.ReadFragmentOptions<FragmentType, TVariables>,
     optimistic = !!options.optimistic,
   ): FragmentType | null {
-    const taggedNode = options.fragment.__relay;
-    invariant(
-      taggedNode,
-      "RelayApolloCache: Expected document to contain Relay IR.",
-    );
-    const fragment = getFragment(taggedNode);
+    const fragment = getFragment(this.getTaggedNode(options.fragment));
     const queryResult = this.readWithRelayIR(
       getNodeQuery(fragment, options.id || ROOT_ID),
       {
@@ -314,13 +296,10 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   diff<TData = any, TVariables = any>(
     options: ApolloCacheTypes.DiffOptions,
   ): ApolloCacheTypes.DiffResult<TData> {
-    const taggedNode = options.query.__relay;
-    invariant(
-      taggedNode,
-      "RelayApolloCache: Expected document to contain Relay IR.",
+    const snapshot = this.getSnapshot(
+      getRequest(this.getTaggedNode(options.query)),
+      options,
     );
-    const request = getRequest(taggedNode);
-    const snapshot = this.getSnapshot(request, options);
     return {
       result: (snapshot.data as unknown) as TData,
       complete: !snapshot.isMissingData,
@@ -331,12 +310,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   watch<TData = any, TVariables = any>(
     options: ApolloCacheTypes.WatchOptions<TData, TVariables>,
   ): () => void {
-    const taggedNode = options.query.__relay;
-    invariant(
-      taggedNode,
-      "RelayApolloCache: Expected document to contain Relay IR.",
-    );
-    const request = getRequest(taggedNode);
+    const request = getRequest(this.getTaggedNode(options.query));
     const operation = createOperationDescriptor(
       request,
       options.variables || {},
@@ -469,6 +443,18 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   /****************************************************************************
    * Private
    ***************************************************************************/
+
+  private getTaggedNode(document: DocumentNode & { __relay?: any }) {
+    let taggedNode = document.__relay;
+    if (!taggedNode && this.schema) {
+      taggedNode = transformDocument(this.schema, document);
+    }
+    invariant(
+      taggedNode,
+      "RelayApolloCache: Expected document to contain Relay IR.",
+    );
+    return taggedNode;
+  }
 
   private _getSnapshot(
     request: ConcreteRequest,

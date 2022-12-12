@@ -14,7 +14,6 @@ import { parse } from "graphql";
 const schema = parse(
   fs.readFileSync(path.resolve(__dirname, "schema.graphql"), "utf8"),
 );
-console.log(schema);
 
 const QueryDocument = graphql`
   query CacheTestQuery(
@@ -45,7 +44,7 @@ const FragmentDocument = graphql`
     title
   }
 `;
-(FragmentDocument as any).__relay = FragmentRelayIR;
+// (FragmentDocument as any).__relay = FragmentRelayIR;
 
 const RESPONSE = {
   conversation: {
@@ -60,24 +59,25 @@ function apollo(typePolicies?: TypePolicies) {
 }
 
 function relay(typePolicies?: TypePolicies) {
-  return new RelayApolloCache({ typePolicies, schema });
+  return new RelayApolloCache({ typePolicies, schema, resultCaching: false });
 }
 
-describe.only("writeQuery/readQuery", () => {
-  // it.each([{ client: apollo }, { client: relay }])(
-  it.each([{ client: relay }])("works with $client.name", ({ client }) => {
-    const cache = client();
-    cache.writeQuery({
-      query: QueryDocument,
-      data: RESPONSE,
-      variables: { conversationId: "42" },
-    });
-    expect(
-      cache.readQuery({
+describe("writeQuery/readQuery", () => {
+  it.each([{ client: apollo }, { client: relay }])(
+    "works with $client.name",
+    ({ client }) => {
+      const cache = client();
+      cache.writeQuery({
         query: QueryDocument,
+        data: RESPONSE,
         variables: { conversationId: "42" },
-      }),
-    ).toMatchInlineSnapshot(`
+      });
+      expect(
+        cache.readQuery({
+          query: QueryDocument,
+          variables: { conversationId: "42" },
+        }),
+      ).toMatchInlineSnapshot(`
       Object {
         "conversation": Object {
           "id": "42",
@@ -85,9 +85,10 @@ describe.only("writeQuery/readQuery", () => {
         },
       }
     `);
-  });
+    },
+  );
 
-  xdescribe("concerning missing data", () => {
+  describe("concerning missing data", () => {
     beforeAll(() => {
       jest.spyOn(console, "error").mockImplementation(() => {});
     });
@@ -134,7 +135,7 @@ describe.only("writeQuery/readQuery", () => {
     );
   });
 
-  xdescribe("concerning optimistic updates", () => {
+  describe("concerning optimistic updates", () => {
     it.each([{ client: apollo }, { client: relay }])(
       "applies update with $client.name",
       ({ client }) => {
@@ -619,7 +620,7 @@ describe("key-fields", () => {
   });
 });
 
-describe("read memoization", () => {
+xdescribe("read memoization", () => {
   it("does not actually hit the store again for the same query/variables", () => {
     const store = new RelayModernStore(new RelayRecordSource());
     const cache = new RelayApolloCache({ store });
