@@ -7,7 +7,7 @@ import { generateTS } from "..";
 describe(generateTS, () => {
   describe("Tests basic syntax GraphQL syntax", () => {
     test("all possible nullable and non-nullable combinations", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         extend schema @import(from: "@msteams/packages-test", defs: ["Avatar"]) 
         type Post @model(from: "./post-model.interface", tsType: "PostModel") {
           id: ID!
@@ -47,7 +47,7 @@ describe(generateTS, () => {
         import type { PostModel as _PostModel } from "../post-model.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface PostModel extends BaseModel, _PostModel {
             readonly __typename: "Post";
@@ -112,7 +112,7 @@ describe(generateTS, () => {
       `);
     });
     test("Subscription", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type User {
           id: ID!
         }
@@ -124,7 +124,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel {
             readonly __typename: "User";
@@ -149,7 +149,7 @@ describe(generateTS, () => {
       `);
     });
     test("Subscription with model", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type User @model(from: "./user-model.interface", tsType: "UserModel") {
           id: ID!
         }
@@ -175,7 +175,7 @@ describe(generateTS, () => {
       `);
     });
     test("extends by exteding a type with pre-generated BaseModel type", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type User {
           id: ID!
         }
@@ -187,7 +187,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel {
             readonly __typename: "User";
@@ -209,7 +209,7 @@ describe(generateTS, () => {
       `);
     });
     test("case when interface implements multiple interfaces", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         interface Node {
           id: ID!
         }
@@ -236,16 +236,16 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface NodeModel extends BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface PersonaModel extends BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel, NodeModel, PersonaModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface AdminModel extends BaseModel, NodeModel, PersonaModel {
             readonly __typename: "Admin";
@@ -257,7 +257,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { UserModel, AdminModel, NodeModel, PersonaModel } from "./models.interface";
+        import type { AdminModel, UserModel } from "./models.interface";
         export declare namespace Admin {
             export type id = (model: AdminModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
             export type rank = (model: AdminModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number>;
@@ -270,7 +270,7 @@ describe(generateTS, () => {
       `);
     });
     test("implements", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         interface Node {
           id: ID!
         }
@@ -287,10 +287,10 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface NodeModel extends BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel, NodeModel {
             readonly __typename: "User";
@@ -302,7 +302,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { UserModel, NodeModel } from "./models.interface";
+        import type { UserModel } from "./models.interface";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
             export type name = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
@@ -315,7 +315,7 @@ describe(generateTS, () => {
     });
 
     test("if a type is not used it still need to be imported in resolvers", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         interface Node {
           id: ID!
         }
@@ -328,10 +328,10 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface NodeModel extends BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel, NodeModel {
             readonly __typename: "User";
@@ -343,7 +343,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { NodeModel, UserModel } from "./models.interface";
+        import type { UserModel } from "./models.interface";
         export declare namespace User {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
             export type name = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
@@ -353,7 +353,7 @@ describe(generateTS, () => {
     });
 
     test("Input", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type User {
           id: ID!
         }
@@ -369,7 +369,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel {
             readonly __typename: "User";
@@ -397,7 +397,7 @@ describe(generateTS, () => {
     });
 
     test("Input containing Enum", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type User {
           id: ID!
         }
@@ -419,7 +419,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel {
             readonly __typename: "User";
@@ -452,7 +452,7 @@ describe(generateTS, () => {
     });
 
     test("Two nested Inputs", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type User {
           id: ID!
         }
@@ -473,7 +473,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel {
             readonly __typename: "User";
@@ -505,7 +505,7 @@ describe(generateTS, () => {
     });
 
     test("Enum", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         enum PresenceAvailability {
           Available
           Away
@@ -523,7 +523,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export enum PresenceAvailabilityModel {
             Available = "Available",
@@ -555,7 +555,7 @@ describe(generateTS, () => {
     });
 
     test("Union", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type Customer {
           id: ID!
         }
@@ -573,7 +573,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface CustomerModel extends BaseModel {
             readonly __typename: "Customer";
@@ -607,7 +607,7 @@ describe(generateTS, () => {
   });
   describe("Models", () => {
     it('should import the model and use it in User type"', () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type User @model(from: "./user-model.interface", tsType: "UserModel") {
           id: ID!
         }
@@ -620,7 +620,7 @@ describe(generateTS, () => {
         "import type { UserModel as _UserModel } from "../user-model.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel, _UserModel {
             readonly __typename: "User";
@@ -646,7 +646,7 @@ describe(generateTS, () => {
 
   describe("Import", () => {
     it("shouldn't include Query, Mutation and Subscription in the models", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type Query {
           allTodos: [Todo!]!
         }
@@ -667,7 +667,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface TodoModel extends BaseModel {
             readonly __typename: "Todo";
@@ -701,7 +701,7 @@ describe(generateTS, () => {
     });
 
     it("should import Avatar type and use it in User type", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         extend schema @import(from: "@msteams/packages-test", defs: ["Avatar"])
         type User {
           id: ID!
@@ -716,7 +716,7 @@ describe(generateTS, () => {
         "import type { AvatarModel } from "@msteams/packages-test";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel {
             readonly __typename: "User";
@@ -744,9 +744,313 @@ describe(generateTS, () => {
     });
   });
 
+  it("imports an entity, which is used to implement interface and returned by resolver", () => {
+    const { resolvers, models } = runGenerateTest(graphql`
+      extend schema @import(from: "@msteams/packages-test", defs: ["Entity"])
+      
+      interface Person implements Entity {
+          id: ID!
+      }
+
+      type User implements Person {
+        id: ID!
+      }
+
+      extend type Query {
+        userById(id: ID!): Person
+      }
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import type { EntityModel } from "@msteams/packages-test";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          readonly __typename: string;
+      }
+      export interface PersonModel extends BaseModel, EntityModel {
+          readonly __typename: string;
+      }
+      export interface UserModel extends BaseModel, PersonModel {
+          readonly __typename: "User";
+          readonly id: string;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import type { UserModel, PersonModel } from "./models.interface";
+      export declare namespace User {
+          export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+      }
+      export declare namespace Query {
+          export type userById = (model: unknown, args: {
+              id: string;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<PersonModel | null>;
+      }
+      "
+    `);
+  });
+
+  it("imports an entity, which is used in a type", () => {
+    const { resolvers, models } = runGenerateTest(graphql`
+      extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
+                    @import(from: "@msteams/packages-rank", defs: ["Rank"])
+
+      type User {
+        id: ID!
+        rank: Rank!
+      }
+
+      extend type Query {
+        userById(id: ID!): User
+      }
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import type { RankModel } from "@msteams/packages-rank";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          readonly __typename: string;
+      }
+      export interface UserModel extends BaseModel {
+          readonly __typename: "User";
+          readonly id: string;
+          readonly rank: RankModel;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import type { UserModel } from "./models.interface";
+      import type { RankModel } from "@msteams/packages-rank";
+      export declare namespace User {
+          export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type rank = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<RankModel>;
+      }
+      export declare namespace Query {
+          export type userById = (model: unknown, args: {
+              id: string;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+      }
+      "
+    `);
+  });
+
+  it("works when an operation has scalar, input and Enum as parameters", () => {
+    const { resolvers, models } = runGenerateTest(graphql`
+      extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
+                    @import(from: "@msteams/packages-rank", defs: ["Rank"])
+
+      scalar DateTime
+
+      input UserParam {
+        id: ID!
+        rank: Rank!
+      }
+
+      enum UserType {
+        Admin
+        User
+      }
+
+      extend type Query {
+        isUser(userParam: UserParam!, userType: UserType!, dateTime: DateTime!): Boolean
+      }
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import type { RankModel } from "@msteams/packages-rank";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          readonly __typename: string;
+      }
+      export type DateTimeModel = unknown;
+      export enum UserTypeModel {
+          Admin = "Admin",
+          User = "User"
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import type { UserTypeModel, DateTimeModel } from "./models.interface";
+      import type { RankModel } from "@msteams/packages-rank";
+      export type UserParam = {
+          id: string;
+          rank: RankModel;
+      };
+      export declare namespace Query {
+          export type isUser = (model: unknown, args: {
+              userParam: UserParam;
+              userType: UserTypeModel;
+              dateTime: DateTimeModel;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<boolean | null>;
+      }
+      "
+    `);
+  });
+
+  it("imports an entity, which is used in an input", () => {
+    const { resolvers, models } = runGenerateTest(graphql`
+      extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
+                    @import(from: "@msteams/packages-rank", defs: ["Rank"])
+
+      type User {
+        id: ID!
+        rank: Rank!
+      }
+
+      input UserInput {
+        id: ID!
+        rank: Rank!
+      }
+
+      extend type Query {
+        userById(params: UserInput): User
+      }
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import type { RankModel } from "@msteams/packages-rank";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          readonly __typename: string;
+      }
+      export interface UserModel extends BaseModel {
+          readonly __typename: "User";
+          readonly id: string;
+          readonly rank: RankModel;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import type { UserModel } from "./models.interface";
+      import type { RankModel } from "@msteams/packages-rank";
+      export declare namespace User {
+          export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type rank = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<RankModel>;
+      }
+      export type UserInput = {
+          id: string;
+          rank: RankModel;
+      };
+      export declare namespace Query {
+          export type userById = (model: unknown, args: {
+              params: UserInput | null;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+      }
+      "
+    `);
+  });
+
+  it("imported Rank shouldn't be imported in the model, because it's used in a type, which has the model directive", () => {
+    const { resolvers, models } = runGenerateTest(graphql`
+      extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
+                    @import(from: "@msteams/packages-rank", defs: ["Rank"])
+
+      type User @model(tsType: "User", from: "@msteams/custom-user") {
+        id: ID!
+        rank: Rank!
+      }
+
+      extend type Query {
+        userById(id: ID!): User
+      }
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import type { User as _UserModel } from "@msteams/custom-user";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          readonly __typename: string;
+      }
+      export interface UserModel extends BaseModel, _UserModel {
+          readonly __typename: "User";
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import type { UserModel } from "./models.interface";
+      import type { RankModel } from "@msteams/packages-rank";
+      export declare namespace User {
+          export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type rank = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<RankModel>;
+      }
+      export declare namespace Query {
+          export type userById = (model: unknown, args: {
+              id: string;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+      }
+      "
+    `);
+  });
+
+  it("imports an entity, which is used in a nested input", () => {
+    const { resolvers, models } = runGenerateTest(graphql`
+      extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
+                    @import(from: "@msteams/packages-rank", defs: ["Rank"])
+
+      type User {
+        id: ID!
+        rank: Rank!
+      }
+
+      input RankParams {
+        rank: Rank!
+      }
+
+      input UserParams {
+        id: ID!
+        rank: RankParams!
+      }
+
+      extend type Query {
+        userById(params: UserParams): User
+      }
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import type { RankModel } from "@msteams/packages-rank";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          readonly __typename: string;
+      }
+      export interface UserModel extends BaseModel {
+          readonly __typename: "User";
+          readonly id: string;
+          readonly rank: RankModel;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import type { UserModel } from "./models.interface";
+      import type { RankModel } from "@msteams/packages-rank";
+      export declare namespace User {
+          export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type rank = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<RankModel>;
+      }
+      export type RankParams = {
+          rank: RankModel;
+      };
+      export type UserParams = {
+          id: string;
+          rank: RankParams;
+      };
+      export declare namespace Query {
+          export type userById = (model: unknown, args: {
+              params: UserParams | null;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
+      }
+      "
+    `);
+  });
+
   describe("Scalars", () => {
     it('expects custom scalars "DateTime" to be "string"', () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         scalar DateTime @model(tsType: "string")
 
         type User {
@@ -761,7 +1065,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export type DateTimeModel = string;
         export interface UserModel extends BaseModel {
@@ -788,7 +1092,7 @@ describe(generateTS, () => {
       `);
     });
     it('expects custom scalars "DateTime" to be model', () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         scalar DateTime
           @model(tsType: "DateTimeModel", from: "@msteams/custom-scalars")
 
@@ -805,7 +1109,7 @@ describe(generateTS, () => {
         "import type { DateTimeModel as _DateTimeModel } from "@msteams/custom-scalars";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export type DateTimeModel = _DateTimeModel;
         export interface UserModel extends BaseModel {
@@ -832,7 +1136,7 @@ describe(generateTS, () => {
       `);
     });
     it("expects built-in scalars to not be generated in models and typescript types used directly in resolvers", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type User {
           id: ID!
           name: String!
@@ -854,7 +1158,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel {
             readonly __typename: "User";
@@ -892,7 +1196,7 @@ describe(generateTS, () => {
   });
 
   it("generateTS without ContextName and ContextImport", () => {
-    let { models, resolvers } = runGenerateTest(graphql`
+    const { models, resolvers } = runGenerateTest(graphql`
       interface Node {
         id: ID!
       }
@@ -904,10 +1208,10 @@ describe(generateTS, () => {
     expect(models).toMatchInlineSnapshot(`
       "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
-          __typename: string;
+          readonly __typename: string;
       }
       export interface NodeModel extends BaseModel {
-          __typename: string;
+          readonly __typename: string;
       }
       "
     `);
@@ -932,15 +1236,15 @@ function runGenerateTest(
   contextImport?: string,
   contextName?: string,
 ): { models: string; resolvers: string } {
-  let document = parse(doc);
-  let result = generateTS(
+  const document = parse(doc);
+  const result = generateTS(
     document,
     path.resolve(process.cwd(), outputDir),
     path.resolve(process.cwd(), inputPath),
     contextImport || null,
     contextName,
   );
-  let printer = ts.createPrinter();
+  const printer = ts.createPrinter();
   return {
     models: printer.printFile(result.models),
     resolvers: printer.printFile(result.resolvers),

@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "remove unsused imports to be able to remove ts-morph",
+  "packageName": "@graphitation/cli",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}

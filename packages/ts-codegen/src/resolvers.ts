@@ -1,5 +1,6 @@
 import ts, { factory } from "typescript";
 import {
+  ASTNode,
   DocumentNode,
   isTypeDefinitionNode,
   isTypeExtensionNode,
@@ -11,6 +12,7 @@ import {
   createNullableType,
   createNonNullableType,
   getResolverReturnType,
+  getAncestorEntity,
 } from "./utilities";
 
 export function generateResolvers(
@@ -86,6 +88,7 @@ type ASTReducerFieldMap = {
 function createResolversReducer(
   context: TsCodegenContext,
 ): ASTReducer<ts.Node | string, ASTReducerMap, ASTReducerFieldMap> {
+  context.clearEntitiesToImport();
   return {
     Document: {
       leave(node) {
@@ -136,6 +139,7 @@ function createResolversReducer(
         const parentObject = ancestors[ancestors.length - 1];
         if (
           !(
+            parentObject &&
             "kind" in parentObject &&
             (isTypeDefinitionNode(parentObject) ||
               isTypeExtensionNode(parentObject))
@@ -149,10 +153,17 @@ function createResolversReducer(
           modelIdentifier = factory.createKeywordTypeNode(
             ts.SyntaxKind.UnknownKeyword,
           );
-        } else if (parentObject.kind !== Kind.INTERFACE_TYPE_DEFINITION) {
+        } else if (parentObject?.kind !== Kind.INTERFACE_TYPE_DEFINITION) {
+          context.addEntityToImport(parentName);
           modelIdentifier = context.getModelType(parentName).toTypeReference();
+        } else {
+          if (
+            getAncestorEntity(ancestors, parseInt(_path[3] as string, 10))
+              ?.kind === "ObjectTypeDefinition"
+          ) {
+            context.addEntityToImport(parentName);
+          }
         }
-
         const resolverParametersDefinitions = {
           parent: {
             name: "model",
@@ -192,9 +203,86 @@ function createResolversReducer(
     },
 
     NamedType: {
-      leave(node, _a, _p, _path): ts.TypeNode {
+      leave(node, _a, _p, path, ancestors): ts.TypeNode {
+        const isImplementedInterface = path[2] === "interfaces";
+        const entryEntity = getAncestorEntity(
+          ancestors,
+          parseInt(path[1] as string, 10) as number,
+        );
+        const isArgumentOfFuction = path[4] === "arguments";
+
+        const nodeDefinition: ASTNode | null = Array.isArray(ancestors[1])
+          ? ancestors[1].find((ancestor: ASTNode) => {
+              if ("name" in ancestor) {
+                return ancestor.name?.value === node.name;
+              }
+
+              return false;
+            })
+          : null;
+
+        const isNodeDefinitionInput =
+          nodeDefinition?.kind === Kind.INPUT_OBJECT_TYPE_DEFINITION;
+
+        const isNodeDefinitionEnum =
+          nodeDefinition?.kind === Kind.ENUM_TYPE_DEFINITION;
+
+        const isNodeDefinitionScalar =
+          nodeDefinition?.kind === Kind.SCALAR_TYPE_DEFINITION;
+
+        if (
+          isImplementedInterface ||
+          entryEntity?.kind === Kind.INTERFACE_TYPE_DEFINITION
+        ) {
+          return createNullableType(
+            context.getModelType(node.name, false, false).toTypeReference(),
+          );
+        }
+
+        const isEntryEntityInput =
+          entryEntity?.kind === Kind.INPUT_OBJECT_TYPE_DEFINITION;
+
+        if (
+          (isEntryEntityInput && isArgumentOfFuction) ||
+          isNodeDefinitionInput
+        ) {
+          return createNullableType(
+            context.getModelType(node.name, true, false).toTypeReference(),
+          );
+        }
+
+        if (!isArgumentOfFuction) {
+          context.addEntityToImport(node.name);
+
+          return createNullableType(
+            context.getModelType(node.name, true, true).toTypeReference(),
+          );
+        }
+
+        if (
+          entryEntity?.kind === Kind.OBJECT_TYPE_DEFINITION &&
+          !isArgumentOfFuction
+        ) {
+          context.addEntityToImport(node.name);
+        }
+
+        if (
+          isArgumentOfFuction &&
+          (isNodeDefinitionEnum || isNodeDefinitionScalar)
+        ) {
+          return createNullableType(
+            context.getModelType(node.name, true, true).toTypeReference(),
+          );
+        }
+
         return createNullableType(
-          context.getModelType(node.name, true).toTypeReference(),
+          context
+            .getModelType(
+              node.name,
+              true,
+              !isArgumentOfFuction && !isEntryEntityInput,
+            )
+            .toTypeReference(),
         );
       },
     },

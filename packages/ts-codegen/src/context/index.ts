@@ -73,14 +73,18 @@ export class TsCodegenContext {
   >;
   private typeNameToModels: Map<string, DefinitionModel>;
   private allModelNames: Set<string>;
-  private allPossibleModels: Set<string>;
+  private entitiesToImport: Set<string>;
+  private defaultModels: Set<string>;
+  public importedEntity: Set<string>;
 
   constructor(private options: TsCodegenContextOptions) {
     this.imports = [];
     this.typeNameToImports = new Map();
     this.typeNameToModels = new Map();
     this.allModelNames = new Set();
-    this.allPossibleModels = new Set();
+    this.entitiesToImport = new Set();
+    this.defaultModels = new Set();
+    this.importedEntity = new Set();
   }
 
   addImport(imp: DefinitionImport, node: ASTNode): void {
@@ -99,6 +103,7 @@ export class TsCodegenContext {
           ],
         );
       }
+      this.importedEntity.add(typeName);
       // TODO: from.value needs to lead to another "module" index
       this.typeNameToImports.set(typeName, {
         modelName: addModelSuffix(typeName),
@@ -108,8 +113,16 @@ export class TsCodegenContext {
     this.imports.push(imp);
   }
 
-  addPossibleModel(possibleModel: string): void {
-    this.allPossibleModels.add(possibleModel);
+  addDefaultModel(model: string): void {
+    this.defaultModels.add(model);
+  }
+
+  addEntityToImport(model: string): void {
+    this.entitiesToImport.add(model);
+  }
+
+  clearEntitiesToImport(): void {
+    this.entitiesToImport = new Set(Array.from(this.defaultModels));
   }
 
   addModel(model: DefinitionModel, node: ASTNode): void {
@@ -127,11 +140,23 @@ export class TsCodegenContext {
   }
 
   getAllImportDeclarations(): ts.ImportDeclaration[] {
-    return this.imports.map(({ defs, from }) =>
-      createImportDeclaration(
-        defs.map(({ typeName }) => addModelSuffix(typeName)),
-        from,
-      ),
+    return this.imports.reduce<ts.ImportDeclaration[]>(
+      (acc, { defs, from }) => {
+        const filteredDefs = defs.filter(({ typeName }) =>
+          this.entitiesToImport.has(typeName),
+        );
+
+        if (filteredDefs.length) {
+          acc.push(
+            createImportDeclaration(
+              filteredDefs.map(({ typeName }) => addModelSuffix(typeName)),
+              from,
+            ),
+          );
+        }
+        return acc;
+      },
+      [],
     );
   }
 
@@ -243,7 +268,7 @@ export class TsCodegenContext {
           undefined,
           [
             factory.createPropertySignature(
-              undefined,
+              [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
               factory.createIdentifier("__typename"),
               undefined,
               factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
@@ -257,7 +282,11 @@ export class TsCodegenContext {
     ];
   }
 
-  getModelType(typeName: string, useScalars = false): TypeLocation {
+  getModelType(
+    typeName: string,
+    addPossibleModel = true,
+    shouldAddModelSuffix = true,
+  ): TypeLocation {
     if (BUILT_IN_SCALARS.hasOwnProperty(typeName)) {
       return new TypeLocation(null, BUILT_IN_SCALARS[typeName]);
     } else if (this.typeNameToImports.has(typeName)) {
@@ -266,11 +295,11 @@ export class TsCodegenContext {
       ) as ModelNameAndImport;
       return new TypeLocation(null, modelName);
     } else {
-      const modelName = this.allPossibleModels.has(typeName)
+      const modelName = shouldAddModelSuffix
         ? addModelSuffix(typeName)
         : typeName;
 
-      if (this.allPossibleModels.has(typeName)) {
+      if (this.entitiesToImport.has(typeName) && addPossibleModel) {
         this.allModelNames.add(modelName);
       }
       return new TypeLocation(null, modelName);
@@ -317,27 +346,22 @@ export function extractContext(
     },
     EnumTypeDefinition: {
       enter(node) {
-        context.addPossibleModel(node.name.value);
+        context.addDefaultModel(node.name.value);
       },
     },
     ObjectTypeDefinition: {
       enter(node) {
-        context.addPossibleModel(node.name.value);
+        context.addDefaultModel(node.name.value);
       },
     },
     UnionTypeDefinition: {
       enter(node) {
-        context.addPossibleModel(node.name.value);
+        context.addDefaultModel(node.name.value);
       },
     },
     ScalarTypeDefinition: {
       enter(node) {
-        context.addPossibleModel(node.name.value);
-      },
-    },
-    InterfaceTypeDefinition: {
-      enter(node) {
-        context.addPossibleModel(node.name.value);
+        context.addDefaultModel(node.name.value);
       },
     },
   });

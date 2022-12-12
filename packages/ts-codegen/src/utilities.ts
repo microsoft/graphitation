@@ -1,9 +1,21 @@
 import ts, { factory } from "typescript";
+import { ASTNode } from "graphql";
 
 const MODEL_SUFFIX = "Model";
 
 export function blankGraphQLTag(strings: TemplateStringsArray): string {
   return strings[0];
+}
+
+export function getAncestorEntity(
+  ancestors: readonly (ASTNode | readonly ASTNode[])[],
+  index: number,
+): ASTNode | null {
+  if (!Array.isArray(ancestors[1])) {
+    return null;
+  }
+
+  return ancestors[1][index];
 }
 
 export function createNullableType(node: ts.TypeNode): ts.UnionTypeNode {
