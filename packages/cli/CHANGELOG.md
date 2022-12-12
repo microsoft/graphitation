@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-This log was last generated on Tue, 06 Dec 2022 07:52:21 GMT and should not be manually modified.
+This log was last generated on Mon, 12 Dec 2022 15:37:15 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.4
+
+Mon, 12 Dec 2022 15:37:15 GMT
+
+### Patches
+
+- remove unsused imports to be able to remove ts-morph (jakubvejr@microsoft.com)
+- Bump @graphitation/ts-codegen to v1.0.2
 
 ## 1.0.3
 

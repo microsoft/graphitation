@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-This log was last generated on Mon, 28 Nov 2022 10:02:53 GMT and should not be manually modified.
+This log was last generated on Mon, 12 Dec 2022 15:37:15 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.2
+
+Mon, 12 Dec 2022 15:37:15 GMT
+
+### Patches
+
+- remove unsused imports to be able to remove ts-morph (jakubvejr@microsoft.com)
 
 ## 1.0.1
 

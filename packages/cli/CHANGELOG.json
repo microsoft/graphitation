@@ -2,6 +2,27 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Mon, 12 Dec 2022 15:37:15 GMT",
+      "tag": "@graphitation/cli_v1.0.4",
+      "version": "1.0.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "2b2f674d41b67842f9db6c55d7e210a93c73f47a",
+            "comment": "remove unsused imports to be able to remove ts-morph"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v1.0.2",
+            "commit": "2b2f674d41b67842f9db6c55d7e210a93c73f47a"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 06 Dec 2022 07:52:21 GMT",
       "tag": "@graphitation/cli_v1.0.3",
       "version": "1.0.3",

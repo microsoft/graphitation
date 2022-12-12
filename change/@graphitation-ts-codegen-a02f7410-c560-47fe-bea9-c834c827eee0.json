@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "remove unsused imports to be able to remove ts-morph",
-  "packageName": "@graphitation/ts-codegen",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
