@@ -268,7 +268,7 @@ export class TsCodegenContext {
           undefined,
           [
             factory.createPropertySignature(
-              undefined,
+              [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
               factory.createIdentifier("__typename"),
               undefined,
               factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),

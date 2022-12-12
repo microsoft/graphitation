@@ -47,7 +47,7 @@ describe(generateTS, () => {
         import type { PostModel as _PostModel } from "../post-model.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface PostModel extends BaseModel, _PostModel {
             readonly __typename: "Post";
@@ -124,7 +124,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel {
             readonly __typename: "User";
@@ -187,7 +187,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel {
             readonly __typename: "User";
@@ -236,7 +236,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface NodeModel extends BaseModel {
             __typename: string;
@@ -287,7 +287,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface NodeModel extends BaseModel {
             __typename: string;
@@ -328,7 +328,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface NodeModel extends BaseModel {
             __typename: string;
@@ -369,7 +369,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel {
             readonly __typename: "User";
@@ -419,7 +419,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel {
             readonly __typename: "User";
@@ -473,7 +473,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel {
             readonly __typename: "User";
@@ -523,7 +523,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export enum PresenceAvailabilityModel {
             Available = "Available",
@@ -573,7 +573,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface CustomerModel extends BaseModel {
             readonly __typename: "Customer";
@@ -620,7 +620,7 @@ describe(generateTS, () => {
         "import type { UserModel as _UserModel } from "../user-model.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel, _UserModel {
             readonly __typename: "User";
@@ -667,7 +667,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface TodoModel extends BaseModel {
             readonly __typename: "Todo";
@@ -716,7 +716,7 @@ describe(generateTS, () => {
         "import type { AvatarModel } from "@msteams/packages-test";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel {
             readonly __typename: "User";
@@ -764,7 +764,7 @@ describe(generateTS, () => {
       "import type { EntityModel } from "@msteams/packages-test";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
-          __typename: string;
+          readonly __typename: string;
       }
       export interface PersonModel extends BaseModel, EntityModel {
           __typename: string;
@@ -809,7 +809,7 @@ describe(generateTS, () => {
       "import type { RankModel } from "@msteams/packages-rank";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
-          __typename: string;
+          readonly __typename: string;
       }
       export interface UserModel extends BaseModel {
           readonly __typename: "User";
@@ -861,7 +861,7 @@ describe(generateTS, () => {
       "import type { RankModel } from "@msteams/packages-rank";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
-          __typename: string;
+          readonly __typename: string;
       }
       export type DateTimeModel = unknown;
       export enum UserTypeModel {
@@ -913,7 +913,7 @@ describe(generateTS, () => {
       "import type { RankModel } from "@msteams/packages-rank";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
-          __typename: string;
+          readonly __typename: string;
       }
       export interface UserModel extends BaseModel {
           readonly __typename: "User";
@@ -962,7 +962,7 @@ describe(generateTS, () => {
       "import type { User as _UserModel } from "@msteams/custom-user";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
-          __typename: string;
+          readonly __typename: string;
       }
       export interface UserModel extends BaseModel, _UserModel {
           readonly __typename: "User";
@@ -1014,7 +1014,7 @@ describe(generateTS, () => {
       "import type { RankModel } from "@msteams/packages-rank";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
-          __typename: string;
+          readonly __typename: string;
       }
       export interface UserModel extends BaseModel {
           readonly __typename: "User";
@@ -1065,7 +1065,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export type DateTimeModel = string;
         export interface UserModel extends BaseModel {
@@ -1109,7 +1109,7 @@ describe(generateTS, () => {
         "import type { DateTimeModel as _DateTimeModel } from "@msteams/custom-scalars";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export type DateTimeModel = _DateTimeModel;
         export interface UserModel extends BaseModel {
@@ -1158,7 +1158,7 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            __typename: string;
+            readonly __typename: string;
         }
         export interface UserModel extends BaseModel {
             readonly __typename: "User";
@@ -1208,7 +1208,7 @@ describe(generateTS, () => {
     expect(models).toMatchInlineSnapshot(`
       "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
-          __typename: string;
+          readonly __typename: string;
       }
       export interface NodeModel extends BaseModel {
           __typename: string;
