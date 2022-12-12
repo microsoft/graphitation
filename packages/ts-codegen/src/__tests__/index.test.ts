@@ -7,7 +7,7 @@ import { generateTS } from "..";
 describe(generateTS, () => {
   describe("Tests basic syntax GraphQL syntax", () => {
     test("all possible nullable and non-nullable combinations", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         extend schema @import(from: "@msteams/packages-test", defs: ["Avatar"]) 
         type Post @model(from: "./post-model.interface", tsType: "PostModel") {
           id: ID!
@@ -112,7 +112,7 @@ describe(generateTS, () => {
       `);
     });
     test("Subscription", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type User {
           id: ID!
         }
@@ -149,7 +149,7 @@ describe(generateTS, () => {
       `);
     });
     test("Subscription with model", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type User @model(from: "./user-model.interface", tsType: "UserModel") {
           id: ID!
         }
@@ -175,7 +175,7 @@ describe(generateTS, () => {
       `);
     });
     test("extends by exteding a type with pre-generated BaseModel type", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type User {
           id: ID!
         }
@@ -209,7 +209,7 @@ describe(generateTS, () => {
       `);
     });
     test("case when interface implements multiple interfaces", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         interface Node {
           id: ID!
         }
@@ -270,7 +270,7 @@ describe(generateTS, () => {
       `);
     });
     test("implements", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         interface Node {
           id: ID!
         }
@@ -315,7 +315,7 @@ describe(generateTS, () => {
     });
 
     test("if a type is not used it still need to be imported in resolvers", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         interface Node {
           id: ID!
         }
@@ -353,7 +353,7 @@ describe(generateTS, () => {
     });
 
     test("Input", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type User {
           id: ID!
         }
@@ -397,7 +397,7 @@ describe(generateTS, () => {
     });
 
     test("Input containing Enum", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type User {
           id: ID!
         }
@@ -452,7 +452,7 @@ describe(generateTS, () => {
     });
 
     test("Two nested Inputs", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type User {
           id: ID!
         }
@@ -505,7 +505,7 @@ describe(generateTS, () => {
     });
 
     test("Enum", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         enum PresenceAvailability {
           Available
           Away
@@ -555,7 +555,7 @@ describe(generateTS, () => {
     });
 
     test("Union", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type Customer {
           id: ID!
         }
@@ -607,7 +607,7 @@ describe(generateTS, () => {
   });
   describe("Models", () => {
     it('should import the model and use it in User type"', () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type User @model(from: "./user-model.interface", tsType: "UserModel") {
           id: ID!
         }
@@ -646,7 +646,7 @@ describe(generateTS, () => {
 
   describe("Import", () => {
     it("shouldn't include Query, Mutation and Subscription in the models", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type Query {
           allTodos: [Todo!]!
         }
@@ -701,7 +701,7 @@ describe(generateTS, () => {
     });
 
     it("should import Avatar type and use it in User type", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         extend schema @import(from: "@msteams/packages-test", defs: ["Avatar"])
         type User {
           id: ID!
@@ -744,8 +744,8 @@ describe(generateTS, () => {
     });
   });
 
-  it("import an entity, which is used to implement interface and returned by resolver", () => {
-    let { resolvers, models } = runGenerateTest(graphql`
+  it("imports an entity, which is used to implement interface and returned by resolver", () => {
+    const { resolvers, models } = runGenerateTest(graphql`
       extend schema @import(from: "@msteams/packages-test", defs: ["Entity"])
       
       interface Person implements Entity {
@@ -791,8 +791,8 @@ describe(generateTS, () => {
     `);
   });
 
-  it("import an entity, which is used in a type", () => {
-    let { resolvers, models } = runGenerateTest(graphql`
+  it("imports an entity, which is used in a type", () => {
+    const { resolvers, models } = runGenerateTest(graphql`
       extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
                     @import(from: "@msteams/packages-rank", defs: ["Rank"])
 
@@ -837,7 +837,7 @@ describe(generateTS, () => {
   });
 
   it("works when an operation has scalar, input and Enum as parameters", () => {
-    let { resolvers, models } = runGenerateTest(graphql`
+    const { resolvers, models } = runGenerateTest(graphql`
       extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
                     @import(from: "@msteams/packages-rank", defs: ["Rank"])
 
@@ -890,8 +890,8 @@ describe(generateTS, () => {
     `);
   });
 
-  it("import an entity, which is used in an input", () => {
-    let { resolvers, models } = runGenerateTest(graphql`
+  it("imports an entity, which is used in an input", () => {
+    const { resolvers, models } = runGenerateTest(graphql`
       extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
                     @import(from: "@msteams/packages-rank", defs: ["Rank"])
 
@@ -945,7 +945,7 @@ describe(generateTS, () => {
   });
 
   it("imported Rank shouldn't be imported in the model, because it's used in a type, which has the model directive", () => {
-    let { resolvers, models } = runGenerateTest(graphql`
+    const { resolvers, models } = runGenerateTest(graphql`
       extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
                     @import(from: "@msteams/packages-rank", defs: ["Rank"])
 
@@ -987,8 +987,8 @@ describe(generateTS, () => {
     `);
   });
 
-  it("import an entity, which is used in a nested input", () => {
-    let { resolvers, models } = runGenerateTest(graphql`
+  it("imports an entity, which is used in a nested input", () => {
+    const { resolvers, models } = runGenerateTest(graphql`
       extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
                     @import(from: "@msteams/packages-rank", defs: ["Rank"])
 
@@ -1050,7 +1050,7 @@ describe(generateTS, () => {
 
   describe("Scalars", () => {
     it('expects custom scalars "DateTime" to be "string"', () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         scalar DateTime @model(tsType: "string")
 
         type User {
@@ -1092,7 +1092,7 @@ describe(generateTS, () => {
       `);
     });
     it('expects custom scalars "DateTime" to be model', () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         scalar DateTime
           @model(tsType: "DateTimeModel", from: "@msteams/custom-scalars")
 
@@ -1136,7 +1136,7 @@ describe(generateTS, () => {
       `);
     });
     it("expects built-in scalars to not be generated in models and typescript types used directly in resolvers", () => {
-      let { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models } = runGenerateTest(graphql`
         type User {
           id: ID!
           name: String!
@@ -1196,7 +1196,7 @@ describe(generateTS, () => {
   });
 
   it("generateTS without ContextName and ContextImport", () => {
-    let { models, resolvers } = runGenerateTest(graphql`
+    const { models, resolvers } = runGenerateTest(graphql`
       interface Node {
         id: ID!
       }
@@ -1236,15 +1236,15 @@ function runGenerateTest(
   contextImport?: string,
   contextName?: string,
 ): { models: string; resolvers: string } {
-  let document = parse(doc);
-  let result = generateTS(
+  const document = parse(doc);
+  const result = generateTS(
     document,
     path.resolve(process.cwd(), outputDir),
     path.resolve(process.cwd(), inputPath),
     contextImport || null,
     contextName,
   );
-  let printer = ts.createPrinter();
+  const printer = ts.createPrinter();
   return {
     models: printer.printFile(result.models),
     resolvers: printer.printFile(result.resolvers),

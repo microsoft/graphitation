@@ -118,26 +118,28 @@ async function generateInterfaces(
 
     const printer = ts.createPrinter();
 
-    await fs.writeFile(
-      path.join(outputDir, "models.interface.ts"),
-      PREPEND_TO_INTERFACES +
-        printer.printNode(ts.EmitHint.SourceFile, result.models, result.models),
-      { encoding: "utf-8" },
-    );
-
-    console.log(path.join(outputDir, "models.interface.ts"));
-
-    await fs.writeFile(
-      path.join(outputDir, "resolvers.interface.ts"),
-      PREPEND_TO_INTERFACES +
-        printer.printNode(
-          ts.EmitHint.SourceFile,
-          result.resolvers,
-          result.resolvers,
-        ),
-      { encoding: "utf-8" },
-    );
-    console.log(path.join(outputDir, "resolvers.interface.ts"));
+    await Promise.all([
+      fs.writeFile(
+        path.join(outputDir, "models.interface.ts"),
+        PREPEND_TO_INTERFACES +
+          printer.printNode(
+            ts.EmitHint.SourceFile,
+            result.models,
+            result.models,
+          ),
+        { encoding: "utf-8" },
+      ),
+      fs.writeFile(
+        path.join(outputDir, "resolvers.interface.ts"),
+        PREPEND_TO_INTERFACES +
+          printer.printNode(
+            ts.EmitHint.SourceFile,
+            result.resolvers,
+            result.resolvers,
+          ),
+        { encoding: "utf-8" },
+      ),
+    ]);
   }
 }
 

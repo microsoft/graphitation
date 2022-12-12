@@ -139,11 +139,11 @@ describe(processImportDirective, () => {
 });
 
 function processDirectives(str: string): DefinitionImport[] {
-  let documentNode = parse(`
+  const documentNode = parse(`
      extend schema ${str}
   `);
   if (documentNode.definitions[0]?.kind === Kind.SCHEMA_EXTENSION) {
-    let directiveNodes = documentNode.definitions[0].directives || [];
+    const directiveNodes = documentNode.definitions[0].directives || [];
     return directiveNodes.map((node) =>
       processImportDirective(
         node,

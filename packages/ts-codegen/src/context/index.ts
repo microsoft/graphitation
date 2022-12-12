@@ -140,20 +140,24 @@ export class TsCodegenContext {
   }
 
   getAllImportDeclarations(): ts.ImportDeclaration[] {
-    return this.imports
-      .map(({ defs, from }) => {
+    return this.imports.reduce<ts.ImportDeclaration[]>(
+      (acc, { defs, from }) => {
         const filteredDefs = defs.filter(({ typeName }) =>
           this.entitiesToImport.has(typeName),
         );
-        if (!filteredDefs.length) {
-          return;
+
+        if (filteredDefs.length) {
+          acc.push(
+            createImportDeclaration(
+              filteredDefs.map(({ typeName }) => addModelSuffix(typeName)),
+              from,
+            ),
+          );
         }
-        return createImportDeclaration(
-          filteredDefs.map(({ typeName }) => addModelSuffix(typeName)),
-          from,
-        );
-      })
-      .filter(Boolean) as ts.ImportDeclaration[];
+        return acc;
+      },
+      [],
+    );
   }
 
   getAllModelImportDeclarations(): ts.ImportDeclaration[] {
