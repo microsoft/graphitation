@@ -445,10 +445,9 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
    ***************************************************************************/
 
   private getTaggedNode(document: DocumentNode & { __relay?: any }) {
-    let taggedNode = document.__relay;
-    if (!taggedNode && this.schema) {
-      taggedNode = transformDocument(this.schema, document);
-    }
+    const taggedNode = this.schema
+      ? transformDocument(this.schema, document, !!this.pessimism)
+      : document.__relay;
     invariant(
       taggedNode,
       "RelayApolloCache: Expected document to contain Relay IR.",

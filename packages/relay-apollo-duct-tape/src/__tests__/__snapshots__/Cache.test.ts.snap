@@ -28,7 +28,38 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization with custom key-fields works with relay 2`] = `
+exports[`key-fields concerning normalization with custom key-fields works with relayWithBuildtimeGeneratedIR 2`] = `
+Object {
+  "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}": Object {
+    "__id": "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}",
+    "__typename": "Conversation",
+    "id": "42",
+    "messages": Object {
+      "__refs": Array [
+        "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}",
+      ],
+    },
+    "title": "Hello World",
+  },
+  "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}": Object {
+    "__id": "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}",
+    "__typename": "Message",
+    "authorId": "author-42",
+    "createdAt": "2020-01-01T00:00:00.000Z",
+    "id": "message-42",
+    "text": "Hello World",
+  },
+  "client:root": Object {
+    "__id": "client:root",
+    "__typename": "__Root",
+    "conversation(id:\\"42\\")": Object {
+      "__ref": "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}",
+    },
+  },
+}
+`;
+
+exports[`key-fields concerning normalization with custom key-fields works with relayWithRuntimeGeneratedIR 2`] = `
 Object {
   "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}": Object {
     "__id": "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}",
@@ -87,7 +118,38 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization with default key-fields works with relay 2`] = `
+exports[`key-fields concerning normalization with default key-fields works with relayWithBuildtimeGeneratedIR 2`] = `
+Object {
+  "Conversation:42": Object {
+    "__id": "Conversation:42",
+    "__typename": "Conversation",
+    "id": "42",
+    "messages": Object {
+      "__refs": Array [
+        "Message:message-42",
+      ],
+    },
+    "title": "Hello World",
+  },
+  "Message:message-42": Object {
+    "__id": "Message:message-42",
+    "__typename": "Message",
+    "authorId": "author-42",
+    "createdAt": "2020-01-01T00:00:00.000Z",
+    "id": "message-42",
+    "text": "Hello World",
+  },
+  "client:root": Object {
+    "__id": "client:root",
+    "__typename": "__Root",
+    "conversation(id:\\"42\\")": Object {
+      "__ref": "Conversation:42",
+    },
+  },
+}
+`;
+
+exports[`key-fields concerning normalization with default key-fields works with relayWithRuntimeGeneratedIR 2`] = `
 Object {
   "Conversation:42": Object {
     "__id": "Conversation:42",
@@ -140,7 +202,38 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization without key-fields works with relay 2`] = `
+exports[`key-fields concerning normalization without key-fields works with relayWithBuildtimeGeneratedIR 2`] = `
+Object {
+  "client:root": Object {
+    "__id": "client:root",
+    "__typename": "__Root",
+    "conversation(id:\\"42\\")": Object {
+      "__ref": "client:root:conversation(id:\\"42\\")",
+    },
+  },
+  "client:root:conversation(id:\\"42\\")": Object {
+    "__id": "client:root:conversation(id:\\"42\\")",
+    "__typename": "Conversation",
+    "id": "42",
+    "messages": Object {
+      "__refs": Array [
+        "client:root:conversation(id:\\"42\\"):messages:0",
+      ],
+    },
+    "title": "Hello World",
+  },
+  "client:root:conversation(id:\\"42\\"):messages:0": Object {
+    "__id": "client:root:conversation(id:\\"42\\"):messages:0",
+    "__typename": "Message",
+    "authorId": "author-42",
+    "createdAt": "2020-01-01T00:00:00.000Z",
+    "id": "message-42",
+    "text": "Hello World",
+  },
+}
+`;
+
+exports[`key-fields concerning normalization without key-fields works with relayWithRuntimeGeneratedIR 2`] = `
 Object {
   "client:root": Object {
     "__id": "client:root",

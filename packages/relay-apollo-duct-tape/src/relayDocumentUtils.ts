@@ -10,6 +10,7 @@ import * as IRTransforms from "relay-compiler/lib/core/RelayIRTransforms";
 import { IRTransform } from "relay-compiler/lib/core/CompilerContext";
 import { inlineFragmentsTransform } from "./inlineFragmentsTransform";
 import invariant from "invariant";
+import hash from "@emotion/hash";
 
 const {
   generate: generateIRDocument,
@@ -20,7 +21,13 @@ const fragmentTransforms = [
   ...IRTransforms.fragmentTransforms,
 ];
 
-export function transformDocument(schema: Schema, document: DocumentNode) {
+// TODO: Hash input document instead, which means memoization can skip
+//       actually applying this transform.
+export function transformDocument(
+  schema: Schema,
+  document: DocumentNode,
+  addHash: boolean,
+) {
   const nodes = Parser.transform(
     schema,
     document.definitions as DefinitionNode[],
@@ -73,7 +80,11 @@ export function transformDocument(schema: Schema, document: DocumentNode) {
     res.length === 1,
     "TODO: Handle multiple documents in a single request",
   );
-  return res[0];
+  const x = res[0];
+  if (addHash) {
+    x.hash = hash(JSON.stringify(x));
+  }
+  return x;
 }
 
 export function transformSchema(schema: DocumentNode): Schema {
