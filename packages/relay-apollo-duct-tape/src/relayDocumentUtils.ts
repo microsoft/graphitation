@@ -7,10 +7,17 @@ import {
 import { CompilerContext, Parser, Schema } from "relay-compiler";
 import { create as createSchema } from "relay-compiler/lib/core/Schema";
 import * as IRTransforms from "relay-compiler/lib/core/RelayIRTransforms";
-import { IRTransform } from "relay-compiler/lib/core/CompilerContext";
 import { inlineFragmentsTransform } from "./inlineFragmentsTransform";
 import invariant from "invariant";
 import hash from "@emotion/hash";
+
+declare module "relay-compiler/lib/core/Schema" {
+  export function create(
+    baseSchema: Source,
+    schemaExtensionDocuments?: ReadonlyArray<DocumentNode>,
+    schemaExtensions?: ReadonlyArray<string>,
+  ): Schema;
+}
 
 const {
   generate: generateIRDocument,
