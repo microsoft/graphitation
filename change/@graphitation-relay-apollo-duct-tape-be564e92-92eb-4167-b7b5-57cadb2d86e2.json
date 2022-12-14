@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Add runtime generated IR",
-  "packageName": "@graphitation/relay-apollo-duct-tape",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}

@@ -2,6 +2,21 @@
   "name": "@graphitation/relay-apollo-duct-tape",
   "entries": [
     {
+      "date": "Wed, 14 Dec 2022 15:18:15 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.3.0",
+      "version": "0.3.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "f6a8ac0e6a94a64ff68cb4b3bb4890d607931212",
+            "comment": "Add runtime generated IR"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 18 Nov 2022 00:17:49 GMT",
       "tag": "@graphitation/relay-apollo-duct-tape_v0.2.0",
       "version": "0.2.0",
