@@ -3039,14 +3039,6 @@
     graphql "^14.5.3"
     typescript "^3.0.0"
 
-"@types/relay-compiler@^8.0.2":
-  version "8.0.4"
-  resolved "https://registry.yarnpkg.com/@types/relay-compiler/-/relay-compiler-8.0.4.tgz#8f55655cccf6646e43ae80837dab278b5e6dc9ed"
-  integrity sha512-XXjrtzn3swJhOCVkqc5zKXj+w2VkGjXIcOsUUiWX07LBp4XuC//NxZAiCYCZKNwfIpHTtJKiuPyBkytEhRHhZA==
-  dependencies:
-    "@types/relay-runtime" "*"
-    graphql "^14.5.3"
-
 "@types/relay-runtime@*", "@types/relay-runtime@^14.1.2":
   version "14.1.2"
   resolved "https://registry.yarnpkg.com/@types/relay-runtime/-/relay-runtime-14.1.2.tgz#252313e977f5b4d5a71d623fb8147c7815efbc9d"
