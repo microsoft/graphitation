@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Vendor relay-compiler sources",
+  "packageName": "@graphitation/relay-apollo-duct-tape",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}
