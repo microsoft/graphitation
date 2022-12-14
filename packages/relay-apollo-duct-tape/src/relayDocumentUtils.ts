@@ -1,32 +1,22 @@
-import {
-  DefinitionNode,
-  DocumentNode,
-  Source,
-  print as printGraphQLJS,
-} from "graphql";
-import { CompilerContext, Parser, Schema } from "relay-compiler";
-import { create as createSchema } from "relay-compiler/lib/core/Schema";
-import * as IRTransforms from "relay-compiler/lib/core/RelayIRTransforms";
+import Parser from "./vendor/relay-compiler/lib/core/RelayParser";
+import CompilerContext from "./vendor/relay-compiler/lib/core/CompilerContext";
+import { create as createSchema } from "./vendor/relay-compiler/lib/core/Schema";
+import * as FlattenTransform from "./vendor/relay-compiler/lib/transforms/FlattenTransform";
+import { generate as generateIRDocument } from "./vendor/relay-compiler/lib/codegen/RelayCodeGenerator";
+
+import { Source, print as printGraphQLJS } from "graphql";
 import { inlineFragmentsTransform } from "./inlineFragmentsTransform";
 import invariant from "invariant";
 import hash from "@emotion/hash";
 
-declare module "relay-compiler/lib/core/Schema" {
-  export function create(
-    baseSchema: Source,
-    schemaExtensionDocuments?: ReadonlyArray<DocumentNode>,
-    schemaExtensions?: ReadonlyArray<string>,
-  ): Schema;
-}
+import type { DefinitionNode, DocumentNode } from "graphql";
+import type { Schema } from "relay-compiler";
+import type { Request } from "relay-compiler/lib/core/IR";
 
-const {
-  generate: generateIRDocument,
-} = require("relay-compiler/lib/codegen/RelayCodeGenerator");
-
-const fragmentTransforms = [
-  inlineFragmentsTransform,
-  ...IRTransforms.fragmentTransforms,
-];
+const flattenTransform = FlattenTransform.transformWithOptions({
+  isForCodegen: true,
+} as any);
+const fragmentTransforms = [inlineFragmentsTransform, flattenTransform];
 
 // TODO: Hash input document instead, which means memoization can skip
 //       actually applying this transform.
@@ -43,8 +33,8 @@ export function transformDocument(
   for (const node of nodes) {
     compilerContext = compilerContext.add(node);
   }
-  let operationCompilerContext = compilerContext.applyTransforms(
-    IRTransforms.codegenTransforms,
+  let operationCompilerContext = compilerContext.applyTransform(
+    flattenTransform,
   );
   let fragmentCompilerContext = compilerContext.applyTransforms(
     fragmentTransforms,
@@ -54,8 +44,7 @@ export function transformDocument(
     if (node.kind === "Root") {
       const fragment = operationCompilerContext.getRoot(node.name);
       const name = fragment.name;
-      // const request: ConcreteRequest = {
-      const request = {
+      const request: Request = {
         kind: "Request",
         fragment: {
           kind: "Fragment",

@@ -6233,22 +6233,10 @@ graphql-ws@^5.4.1:
   resolved "https://registry.yarnpkg.com/graphql-ws/-/graphql-ws-5.5.5.tgz#f375486d3f196e2a2527b503644693ae3a8670a9"
   integrity sha512-hvyIS71vs4Tu/yUYHPvGXsTgo0t3arU820+lT5VjZS2go0ewp2LqyCgxEN56CzOG7Iys52eRhHBiD1gGRdiQtw==
 
-graphql@^14.5.3:
-  version "14.7.0"
-  resolved "https://registry.yarnpkg.com/graphql/-/graphql-14.7.0.tgz#7fa79a80a69be4a31c27dda824dc04dac2035a72"
-  integrity sha512-l0xWZpoPKpppFzMfvVyFmp9vLN7w/ZZJPefUicMCepfJeQ8sMcztloGYY9DfjVPo6tIUDzU5Hw3MUbIjj9AVVA==
-  dependencies:
-    iterall "^1.2.2"
-
-graphql@^15.0.0:
-  version "15.5.0"
-  resolved "https://registry.yarnpkg.com/graphql/-/graphql-15.5.0.tgz#39d19494dbe69d1ea719915b578bf920344a69d5"
-  integrity sha512-OmaM7y0kaK31NKG31q4YbD2beNYa6jBBKtMFT6gLYJljHLJr42IqJ8KX08u3Li/0ifzTU5HjmoOOrwa5BRLeDA==
-
-graphql@^15.6.1:
-  version "15.6.1"
-  resolved "https://registry.yarnpkg.com/graphql/-/graphql-15.6.1.tgz#9125bdf057553525da251e19e96dab3d3855ddfc"
-  integrity sha512-3i5lu0z6dRvJ48QP9kFxBkJ7h4Kso7PS8eahyTFz5Jm6CvQfLtNIE8LX9N6JLnXTuwR+sIYnXzaWp6anOg0QQw==
+graphql@^14.5.3, graphql@^15.0.0, graphql@^15.5.0, graphql@^15.6.1:
+  version "15.8.0"
+  resolved "https://registry.yarnpkg.com/graphql/-/graphql-15.8.0.tgz#33410e96b012fa3bdb1091cc99a94769db212b38"
+  integrity sha512-5gghUc24tP9HRznNpV2+FIoq3xKkj5dTQqf4v0CpdPbFVwFkWoxOM+o+2OC9ZSvjEMTjfmG9QT+gcvggTwW1zw==
 
 handlebars@^4.7.6:
   version "4.7.7"
@@ -7038,7 +7026,7 @@ istanbul-reports@^3.1.3:
     html-escaper "^2.0.0"
     istanbul-lib-report "^3.0.0"
 
-iterall@^1.2.1, iterall@^1.2.2, iterall@^1.3.0:
+iterall@^1.2.1, iterall@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/iterall/-/iterall-1.3.0.tgz#afcb08492e2915cbd8a0884eb93a8c94d0d72fea"
   integrity sha512-QZ9qOMdF+QLHxy1QIpUHUU1D5pS2CG2P69LF6L6CPjPYA/XMOmKV3PZpawHoAjHNyB0swdVTRxdYT4tbBbxqwg==
@@ -9332,7 +9320,7 @@ relay-compiler@11.0.2, relay-compiler@^11.0.2:
     signedsource "^1.0.0"
     yargs "^15.3.1"
 
-relay-compiler@12.0.0, relay-compiler@^12.0.0:
+relay-compiler@^12.0.0:
   version "12.0.0"
   resolved "https://registry.yarnpkg.com/relay-compiler/-/relay-compiler-12.0.0.tgz#9f292d483fb871976018704138423a96c8a45439"
   integrity sha512-SWqeSQZ+AMU/Cr7iZsHi1e78Z7oh00I5SvR092iCJq79aupqJ6Ds+I1Pz/Vzo5uY5PY0jvC4rBJXzlIN5g9boQ==
@@ -9354,6 +9342,11 @@ relay-compiler@12.0.0, relay-compiler@^12.0.0:
     relay-runtime "12.0.0"
     signedsource "^1.0.0"
     yargs "^15.3.1"
+
+relay-compiler@^14.0.0:
+  version "14.1.0"
+  resolved "https://registry.yarnpkg.com/relay-compiler/-/relay-compiler-14.1.0.tgz#88e9c531eb14a6a31e6f14663982124d780bd1b6"
+  integrity sha512-P8+CXm+Hq96z5NNwYl7hyGo5GgvMZDs9mXBRv7txUbJO4Ql9mXio3+D9EX3VfevRWTuE4ahM37i3Ssx1H604vA==
 
 relay-runtime@11.0.2, relay-runtime@12.0.0, relay-runtime@^14.0.0:
   version "14.0.0"
