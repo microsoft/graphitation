@@ -21,10 +21,9 @@ const QueryDocument = graphql`
     $includeNestedData: Boolean = false
   ) {
     conversation(id: $conversationId) {
-      # FIXME: This field does not show up in the relay result
-      # __typename
-      id
-      title
+      # NOTE: These /should/ be included in the build-time generated IR.
+      # id
+      # title
       ... on Conversation @include(if: $includeNestedData) {
         messages {
           id
@@ -33,7 +32,15 @@ const QueryDocument = graphql`
           createdAt
         }
       }
+      # NOTE: This should not be included in the build-time generated IR.
+      ...CacheTestFragment
     }
+  }
+
+  # NOTE: This should not be included in the build-time generated IR.
+  fragment CacheTestFragment on Conversation {
+    id
+    title
   }
 `;
 (QueryDocument as any).__relay = QueryRelayIR;

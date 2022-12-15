@@ -2,21 +2,15 @@ import Parser from "./vendor/relay-compiler/lib/core/RelayParser";
 import CompilerContext from "./vendor/relay-compiler/lib/core/CompilerContext";
 import { create as createSchema } from "./vendor/relay-compiler/lib/core/Schema";
 import * as FlattenTransform from "./vendor/relay-compiler/lib/transforms/FlattenTransform";
+import * as InlineFragmentsTransform from "./vendor/relay-compiler/lib/transforms/InlineFragmentsTransform";
 import { generate as generateIRDocument } from "./vendor/relay-compiler/lib/codegen/RelayCodeGenerator";
 
 import { Source, print as printGraphQLJS } from "graphql";
-import { inlineFragmentsTransform } from "./inlineFragmentsTransform";
-import invariant from "invariant";
 import hash from "@emotion/hash";
 
 import type { DefinitionNode, DocumentNode } from "graphql";
 import type { Schema } from "relay-compiler";
 import type { Request } from "relay-compiler/lib/core/IR";
-
-const flattenTransform = FlattenTransform.transformWithOptions({
-  isForCodegen: true,
-} as any);
-const fragmentTransforms = [inlineFragmentsTransform, flattenTransform];
 
 // TODO: Hash input document instead, which means memoization can skip
 //       actually applying this transform.
@@ -34,10 +28,12 @@ export function transformDocument(
     compilerContext = compilerContext.add(node);
   }
   let operationCompilerContext = compilerContext.applyTransform(
-    flattenTransform,
+    InlineFragmentsTransform.transform,
   );
-  let fragmentCompilerContext = compilerContext.applyTransforms(
-    fragmentTransforms,
+  let fragmentCompilerContext = compilerContext.applyTransform(
+    FlattenTransform.transformWithOptions({
+      isForCodegen: true,
+    } as any),
   );
   const res: any[] = [];
   operationCompilerContext.forEachDocument((node) => {
@@ -72,10 +68,6 @@ export function transformDocument(
       res.push(generateIRDocument(schema, node));
     }
   });
-  invariant(
-    res.length === 1,
-    "TODO: Handle multiple documents in a single request",
-  );
   const x = res[0];
   if (addHash) {
     x.hash = hash(JSON.stringify(x));
