@@ -20,7 +20,9 @@
     "@emotion/hash": "^0.8.0",
     "invariant": "^2.2.4",
     "lru-cache": "^7.14.1",
-    "relay-runtime": "^14.0.0"
+    "relay-runtime": "^14.0.0",
+    "immutable": "~3.7.6",
+    "nullthrows": "^1.1.1"
   },
   "peerDependencies": {
     "@apollo/client": "^3.6.9"

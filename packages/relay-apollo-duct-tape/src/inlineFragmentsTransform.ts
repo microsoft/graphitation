@@ -1,5 +1,4 @@
-// import IRTransformer from "relay-compiler/lib/core/IRTransformer";
-const IRTransformer = require("relay-compiler/lib/core/IRTransformer");
+import IRTransformer from "./vendor/relay-compiler/lib/core/IRTransformer";
 
 import type { CompilerContext } from "relay-compiler";
 import type {
