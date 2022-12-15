@@ -6,7 +6,8 @@
     "rootDir": "src",
     "outDir": "lib",
     "lib": ["esnext", "dom"],
-    "jsx": "react"
+    "jsx": "react",
+    "allowJs": true
   },
   "include": ["src"],
   "references": []
