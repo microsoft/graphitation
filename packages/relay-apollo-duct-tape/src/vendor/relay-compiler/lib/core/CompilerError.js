@@ -4,18 +4,13 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  * @format
  */
 // flowlint ambiguous-object-type:error
-'use strict';
+"use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-
-var _createForOfIteratorHelper2 = _interopRequireDefault(require("@babel/runtime/helpers/createForOfIteratorHelper"));
-
-var _require = require('graphql'),
-    GraphQLError = _require.GraphQLError;
+const { GraphQLError } = require("graphql");
 
 /**
  * Creates an error describing invalid application code (GraphQL/Schema)
@@ -23,14 +18,17 @@ var _require = require('graphql'),
  * for local errors that don't affect processing of other user code.
  */
 function createUserError(message, locations, nodes) {
-  var messageWithLocations = message;
+  let messageWithLocations = message;
 
   if (locations != null) {
-    var printedLocations = printLocations(locations);
-    messageWithLocations = printedLocations.length === 0 ? message : [message].concat(printedLocations).join('\n\n') + '\n';
+    const printedLocations = printLocations(locations);
+    messageWithLocations =
+      printedLocations.length === 0
+        ? message
+        : [message, ...printedLocations].join("\n\n") + "\n";
   }
 
-  return new GraphQLError(messageWithLocations, nodes !== null && nodes !== void 0 ? nodes : []);
+  return new GraphQLError(messageWithLocations, nodes ?? []);
 }
 /**
  * Similar to createUserError but for errors that are *not* recoverable:
@@ -38,16 +36,18 @@ function createUserError(message, locations, nodes) {
  * validity can't be determined.
  */
 
-
 function createNonRecoverableUserError(message, locations, nodes) {
-  var messageWithLocations = message;
+  let messageWithLocations = message;
 
   if (locations != null) {
-    var printedLocations = printLocations(locations);
-    messageWithLocations = printedLocations.length === 0 ? message : [message].concat(printedLocations).join('\n\n') + '\n';
+    const printedLocations = printLocations(locations);
+    messageWithLocations =
+      printedLocations.length === 0
+        ? message
+        : [message, ...printedLocations].join("\n\n") + "\n";
   }
 
-  var error = new GraphQLError(messageWithLocations, nodes !== null && nodes !== void 0 ? nodes : []);
+  const error = new GraphQLError(messageWithLocations, nodes ?? []);
   return new Error(error.message);
 }
 /**
@@ -55,16 +55,21 @@ function createNonRecoverableUserError(message, locations, nodes) {
  * as a broken invariant - that must be fixed within the compiler.
  */
 
-
 function createCompilerError(message, locations, nodes) {
-  var messageWithLocations = message;
+  let messageWithLocations = message;
 
   if (locations != null) {
-    var printedLocations = printLocations(locations);
-    messageWithLocations = printedLocations.length === 0 ? message : [message].concat(printedLocations).join('\n\n') + '\n';
+    const printedLocations = printLocations(locations);
+    messageWithLocations =
+      printedLocations.length === 0
+        ? message
+        : [message, ...printedLocations].join("\n\n") + "\n";
   }
 
-  var error = new GraphQLError("Internal Error: ".concat(messageWithLocations), nodes !== null && nodes !== void 0 ? nodes : []);
+  const error = new GraphQLError(
+    `Internal Error: ${messageWithLocations}`,
+    nodes ?? [],
+  );
   return new Error(error.message);
 }
 /**
@@ -76,95 +81,87 @@ function createCompilerError(message, locations, nodes) {
  * occur, a combined error is thrown.
  */
 
-
 function eachWithCombinedError(iterable, fn) {
-  var errors = [];
+  const errors = [];
 
-  var _iterator = (0, _createForOfIteratorHelper2["default"])(iterable),
-      _step;
-
-  try {
-    for (_iterator.s(); !(_step = _iterator.n()).done;) {
-      var item = _step.value;
-
-      try {
-        fn(item);
-      } catch (error) {
-        if (error instanceof GraphQLError) {
-          errors.push(error);
-        } else {
-          throw error;
-        }
+  for (const item of iterable) {
+    try {
+      fn(item);
+    } catch (error) {
+      if (error instanceof GraphQLError) {
+        errors.push(error);
+      } else {
+        throw error;
       }
     }
-  } catch (err) {
-    _iterator.e(err);
-  } finally {
-    _iterator.f();
   }
 
   if (errors.length > 0) {
     if (errors.length === 1) {
-      throw createUserError(String(errors[0]).split('\n').map(function (line, index) {
-        return index === 0 ? "- ".concat(line) : "  ".concat(line);
-      }).join('\n'));
+      throw createUserError(
+        String(errors[0])
+          .split("\n")
+          .map((line, index) => (index === 0 ? `- ${line}` : `  ${line}`))
+          .join("\n"),
+      );
     }
 
-    throw createUserError("Encountered ".concat(errors.length, " errors:\n") + errors.map(function (error) {
-      return String(error).split('\n').map(function (line, index) {
-        return index === 0 ? "- ".concat(line) : "  ".concat(line);
-      }).join('\n');
-    }).join('\n'));
+    throw createUserError(
+      `Encountered ${errors.length} errors:\n` +
+        errors
+          .map((error) =>
+            String(error)
+              .split("\n")
+              .map((line, index) => (index === 0 ? `- ${line}` : `  ${line}`))
+              .join("\n"),
+          )
+          .join("\n"),
+    );
   }
 }
 
 function printLocations(locations) {
-  var printedLocations = [];
+  const printedLocations = [];
 
-  var _iterator2 = (0, _createForOfIteratorHelper2["default"])(locations),
-      _step2;
+  for (const location of locations) {
+    let sourceLocation = location;
 
-  try {
-    for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-      var location = _step2.value;
-      var sourceLocation = location;
+    while (sourceLocation.kind === "Derived") {
+      sourceLocation = sourceLocation.source;
+    }
 
-      while (sourceLocation.kind === 'Derived') {
-        sourceLocation = sourceLocation.source;
+    switch (sourceLocation.kind) {
+      case "Source": {
+        // source location
+        const prefix =
+          sourceLocation === location ? "Source: " : "Source (derived): ";
+        printedLocations.push(
+          prefix +
+            highlightSourceAtLocation(
+              sourceLocation.source,
+              getLocation(sourceLocation.source, sourceLocation.start),
+            ),
+        );
+        break;
       }
 
-      switch (sourceLocation.kind) {
-        case 'Source':
-          {
-            // source location
-            var prefix = sourceLocation === location ? 'Source: ' : 'Source (derived): ';
-            printedLocations.push(prefix + highlightSourceAtLocation(sourceLocation.source, getLocation(sourceLocation.source, sourceLocation.start)));
-            break;
-          }
+      case "Generated": {
+        printedLocations.push("Source: (generated)");
+        break;
+      }
 
-        case 'Generated':
-          {
-            printedLocations.push('Source: (generated)');
-            break;
-          }
+      case "Unknown": {
+        printedLocations.push("Source: (unknown)");
+        break;
+      }
 
-        case 'Unknown':
-          {
-            printedLocations.push('Source: (unknown)');
-            break;
-          }
-
-        default:
-          {
-            sourceLocation;
-            throw createCompilerError("CompilerError: cannot print location '".concat(String(sourceLocation), "'."));
-          }
+      default: {
+        sourceLocation;
+        throw createCompilerError(
+          `CompilerError: cannot print location '${String(sourceLocation)}'.`,
+        );
       }
     }
-  } catch (err) {
-    _iterator2.e(err);
-  } finally {
-    _iterator2.f();
   }
 
   return printedLocations;
@@ -174,52 +171,42 @@ function printLocations(locations) {
  * Source document.
  */
 
-
 function highlightSourceAtLocation(source, location) {
-  var firstLineColumnOffset = source.locationOffset.column - 1;
-  var body = whitespace(firstLineColumnOffset) + source.body;
-  var lineIndex = location.line - 1;
-  var lineOffset = source.locationOffset.line - 1;
-  var lineNum = location.line + lineOffset;
-  var columnOffset = location.line === 1 ? firstLineColumnOffset : 0;
-  var columnNum = location.column + columnOffset;
-  var lines = body.split(/\r\n|[\n\r]/g);
-  return "".concat(source.name, " (").concat(lineNum, ":").concat(columnNum, ")\n") + printPrefixedLines([// Lines specified like this: ["prefix", "string"],
-  ["".concat(lineNum - 1, ": "), lines[lineIndex - 1]], ["".concat(lineNum, ": "), lines[lineIndex]], ['', whitespace(columnNum - 1) + '^'], ["".concat(lineNum + 1, ": "), lines[lineIndex + 1]]]);
+  const firstLineColumnOffset = source.locationOffset.column - 1;
+  const body = whitespace(firstLineColumnOffset) + source.body;
+  const lineIndex = location.line - 1;
+  const lineOffset = source.locationOffset.line - 1;
+  const lineNum = location.line + lineOffset;
+  const columnOffset = location.line === 1 ? firstLineColumnOffset : 0;
+  const columnNum = location.column + columnOffset;
+  const lines = body.split(/\r\n|[\n\r]/g);
+  return (
+    `${source.name} (${lineNum}:${columnNum})\n` +
+    printPrefixedLines([
+      // Lines specified like this: ["prefix", "string"],
+      [`${lineNum - 1}: `, lines[lineIndex - 1]],
+      [`${lineNum}: `, lines[lineIndex]],
+      ["", whitespace(columnNum - 1) + "^"],
+      [`${lineNum + 1}: `, lines[lineIndex + 1]],
+    ])
+  );
 }
 
 function printPrefixedLines(lines) {
-  var existingLines = lines.filter(function (_ref) {
-    var _ = _ref[0],
-        line = _ref[1];
-    return line !== undefined;
-  });
-  var padLen = 0;
+  const existingLines = lines.filter(([_, line]) => line !== undefined);
+  let padLen = 0;
 
-  var _iterator3 = (0, _createForOfIteratorHelper2["default"])(existingLines),
-      _step3;
-
-  try {
-    for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-      var _step3$value = _step3.value,
-          prefix = _step3$value[0];
-      padLen = Math.max(padLen, prefix.length);
-    }
-  } catch (err) {
-    _iterator3.e(err);
-  } finally {
-    _iterator3.f();
+  for (const [prefix] of existingLines) {
+    padLen = Math.max(padLen, prefix.length);
   }
 
-  return existingLines.map(function (_ref2) {
-    var prefix = _ref2[0],
-        line = _ref2[1];
-    return lpad(padLen, prefix) + line;
-  }).join('\n');
+  return existingLines
+    .map(([prefix, line]) => lpad(padLen, prefix) + line)
+    .join("\n");
 }
 
 function whitespace(len) {
-  return Array(len + 1).join(' ');
+  return Array(len + 1).join(" ");
 }
 
 function lpad(len, str) {
@@ -227,10 +214,10 @@ function lpad(len, str) {
 }
 
 function getLocation(source, position) {
-  var lineRegexp = /\r\n|[\n\r]/g;
-  var line = 1;
-  var column = position + 1;
-  var match;
+  const lineRegexp = /\r\n|[\n\r]/g;
+  let line = 1;
+  let column = position + 1;
+  let match;
 
   while ((match = lineRegexp.exec(source.body)) && match.index < position) {
     line += 1;
@@ -238,14 +225,14 @@ function getLocation(source, position) {
   }
 
   return {
-    line: line,
-    column: column
+    line,
+    column,
   };
 }
 
 module.exports = {
-  createCompilerError: createCompilerError,
-  createNonRecoverableUserError: createNonRecoverableUserError,
-  createUserError: createUserError,
-  eachWithCombinedError: eachWithCombinedError
+  createCompilerError,
+  createNonRecoverableUserError,
+  createUserError,
+  eachWithCombinedError,
 };

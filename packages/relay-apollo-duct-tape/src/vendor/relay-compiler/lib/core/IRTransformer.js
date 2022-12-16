@@ -4,20 +4,15 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  * @format
  */
 // flowlint ambiguous-object-type:error
-'use strict';
+"use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+const invariant = require("invariant");
 
-var _objectSpread2 = _interopRequireDefault(require("@babel/runtime/helpers/objectSpread2"));
-
-var invariant = require('invariant');
-
-var _require = require('./CompilerError'),
-    eachWithCombinedError = _require.eachWithCombinedError;
+const { eachWithCombinedError } = require("./CompilerError");
 
 /**
  * @public
@@ -61,19 +56,19 @@ var _require = require('./CompilerError'),
  * ```
  */
 function transform(context, visitor, stateInitializer) {
-  var transformer = new Transformer(context, visitor);
-  return context.withMutations(function (ctx) {
-    var nextContext = ctx;
-    eachWithCombinedError(context.documents(), function (prevNode) {
-      var nextNode;
+  const transformer = new Transformer(context, visitor);
+  return context.withMutations((ctx) => {
+    let nextContext = ctx;
+    eachWithCombinedError(context.documents(), (prevNode) => {
+      let nextNode;
 
       if (stateInitializer === undefined) {
         nextNode = transformer.visit(prevNode, undefined);
       } else {
-        var _state = stateInitializer(prevNode);
+        const state = stateInitializer(prevNode);
 
-        if (_state != null) {
-          nextNode = transformer.visit(prevNode, _state);
+        if (state != null) {
+          nextNode = transformer.visit(prevNode, state);
         }
       }
 
@@ -90,9 +85,8 @@ function transform(context, visitor, stateInitializer) {
  * @internal
  */
 
-
-var Transformer = /*#__PURE__*/function () {
-  function Transformer(context, visitor) {
+class Transformer {
+  constructor(context, visitor) {
     this._context = context;
     this._states = [];
     this._visitor = visitor;
@@ -104,10 +98,7 @@ var Transformer = /*#__PURE__*/function () {
    * be used to look up fragments by name, for example.
    */
 
-
-  var _proto = Transformer.prototype;
-
-  _proto.getContext = function getContext() {
+  getContext() {
     return this._context;
   }
   /**
@@ -119,12 +110,11 @@ var Transformer = /*#__PURE__*/function () {
    * Note: This differs from `traverse` in that it calls a visitor function for
    * the node itself.
    */
-  ;
 
-  _proto.visit = function visit(node, state) {
+  visit(node, state) {
     this._states.push(state);
 
-    var nextNode = this._visit(node);
+    const nextNode = this._visit(node);
 
     this._states.pop();
 
@@ -140,67 +130,69 @@ var Transformer = /*#__PURE__*/function () {
    * Note: This differs from `visit` in that it does not call a visitor function
    * for the node itself.
    */
-  ;
 
-  _proto.traverse = function traverse(node, state) {
+  traverse(node, state) {
     this._states.push(state);
 
-    var nextNode = this._traverse(node);
+    const nextNode = this._traverse(node);
 
     this._states.pop();
 
     return nextNode;
-  };
+  }
 
-  _proto._visit = function _visit(node) {
-    var nodeVisitor = this._visitor[node.kind];
+  _visit(node) {
+    const nodeVisitor = this._visitor[node.kind];
 
     if (nodeVisitor) {
       // If a handler for the kind is defined, it is responsible for calling
       // `traverse` to transform children as necessary.
-      var _state2 = this._getState();
+      const state = this._getState();
 
-      var nextNode = nodeVisitor.call(this, node, _state2);
+      const nextNode = nodeVisitor.call(this, node, state);
       return nextNode;
     } // Otherwise traverse is called automatically.
 
-
     return this._traverse(node);
-  };
+  }
 
-  _proto._traverse = function _traverse(prevNode) {
-    var nextNode;
+  _traverse(prevNode) {
+    let nextNode;
 
     switch (prevNode.kind) {
-      case 'Argument':
-        nextNode = this._traverseChildren(prevNode, null, ['value']);
+      case "Argument":
+        nextNode = this._traverseChildren(prevNode, null, ["value"]);
         break;
 
-      case 'Literal':
-      case 'LocalArgumentDefinition':
-      case 'RootArgumentDefinition':
-      case 'Variable':
+      case "Literal":
+      case "LocalArgumentDefinition":
+      case "RootArgumentDefinition":
+      case "Variable":
         nextNode = prevNode;
         break;
 
-      case 'Defer':
-        nextNode = this._traverseChildren(prevNode, ['selections'], ['if']);
+      case "Defer":
+        nextNode = this._traverseChildren(prevNode, ["selections"], ["if"]);
         break;
 
-      case 'Stream':
-        nextNode = this._traverseChildren(prevNode, ['selections'], ['if', 'initialCount']);
+      case "Stream":
+        nextNode = this._traverseChildren(
+          prevNode,
+          ["selections"],
+          ["if", "initialCount"],
+        );
         break;
 
-      case 'ClientExtension':
-        nextNode = this._traverseChildren(prevNode, ['selections']);
+      case "ClientExtension":
+        nextNode = this._traverseChildren(prevNode, ["selections"]);
         break;
 
-      case 'Directive':
-        nextNode = this._traverseChildren(prevNode, ['args']);
+      case "Directive":
+        nextNode = this._traverseChildren(prevNode, ["args"]);
         break;
 
-      case 'ModuleImport':
-        nextNode = this._traverseChildren(prevNode, ['selections']);
+      case "ModuleImport":
+        nextNode = this._traverseChildren(prevNode, ["selections"]);
 
         if (!nextNode.selections.length) {
           nextNode = null;
@@ -208,17 +200,21 @@ var Transformer = /*#__PURE__*/function () {
 
         break;
 
-      case 'FragmentSpread':
-      case 'ScalarField':
-        nextNode = this._traverseChildren(prevNode, ['args', 'directives']);
+      case "FragmentSpread":
+      case "ScalarField":
+        nextNode = this._traverseChildren(prevNode, ["args", "directives"]);
         break;
 
-      case 'InlineDataFragmentSpread':
-        nextNode = this._traverseChildren(prevNode, ['selections']);
+      case "InlineDataFragmentSpread":
+        nextNode = this._traverseChildren(prevNode, ["selections"]);
         break;
 
-      case 'LinkedField':
-        nextNode = this._traverseChildren(prevNode, ['args', 'directives', 'selections']);
+      case "LinkedField":
+        nextNode = this._traverseChildren(prevNode, [
+          "args",
+          "directives",
+          "selections",
+        ]);
 
         if (!nextNode.selections.length) {
           nextNode = null;
@@ -226,20 +222,24 @@ var Transformer = /*#__PURE__*/function () {
 
         break;
 
-      case 'ListValue':
-        nextNode = this._traverseChildren(prevNode, ['items']);
+      case "ListValue":
+        nextNode = this._traverseChildren(prevNode, ["items"]);
         break;
 
-      case 'ObjectFieldValue':
-        nextNode = this._traverseChildren(prevNode, null, ['value']);
+      case "ObjectFieldValue":
+        nextNode = this._traverseChildren(prevNode, null, ["value"]);
         break;
 
-      case 'ObjectValue':
-        nextNode = this._traverseChildren(prevNode, ['fields']);
+      case "ObjectValue":
+        nextNode = this._traverseChildren(prevNode, ["fields"]);
         break;
 
-      case 'Condition':
-        nextNode = this._traverseChildren(prevNode, ['directives', 'selections'], ['condition']);
+      case "Condition":
+        nextNode = this._traverseChildren(
+          prevNode,
+          ["directives", "selections"],
+          ["condition"],
+        );
 
         if (!nextNode.selections.length) {
           nextNode = null;
@@ -247,8 +247,11 @@ var Transformer = /*#__PURE__*/function () {
 
         break;
 
-      case 'InlineFragment':
-        nextNode = this._traverseChildren(prevNode, ['directives', 'selections']);
+      case "InlineFragment":
+        nextNode = this._traverseChildren(prevNode, [
+          "directives",
+          "selections",
+        ]);
 
         if (!nextNode.selections.length) {
           nextNode = null;
@@ -256,70 +259,77 @@ var Transformer = /*#__PURE__*/function () {
 
         break;
 
-      case 'Fragment':
-      case 'Root':
-        nextNode = this._traverseChildren(prevNode, ['argumentDefinitions', 'directives', 'selections']);
+      case "Fragment":
+      case "Root":
+        nextNode = this._traverseChildren(prevNode, [
+          "argumentDefinitions",
+          "directives",
+          "selections",
+        ]);
         break;
 
-      case 'Request':
-        nextNode = this._traverseChildren(prevNode, null, ['fragment', 'root']);
+      case "Request":
+        nextNode = this._traverseChildren(prevNode, null, ["fragment", "root"]);
         break;
 
-      case 'SplitOperation':
-        nextNode = this._traverseChildren(prevNode, ['selections']);
+      case "SplitOperation":
+        nextNode = this._traverseChildren(prevNode, ["selections"]);
         break;
 
       default:
         prevNode;
-        !false ? process.env.NODE_ENV !== "production" ? invariant(false, 'IRTransformer: Unknown kind `%s`.', prevNode.kind) : invariant(false) : void 0;
+        invariant(false, "IRTransformer: Unknown kind `%s`.", prevNode.kind);
     }
 
     return nextNode;
-  };
+  }
 
-  _proto._traverseChildren = function _traverseChildren(prevNode, pluralKeys, singularKeys) {
-    var _this = this;
+  _traverseChildren(prevNode, pluralKeys, singularKeys) {
+    let nextNode;
+    pluralKeys &&
+      pluralKeys.forEach((key) => {
+        const prevItems = prevNode[key];
 
-    var nextNode;
-    pluralKeys && pluralKeys.forEach(function (key) {
-      var prevItems = prevNode[key];
+        if (!prevItems) {
+          return;
+        }
 
-      if (!prevItems) {
-        return;
-      }
+        invariant(
+          Array.isArray(prevItems),
+          "IRTransformer: Expected data for `%s` to be an array, got `%s`.",
+          key,
+          prevItems,
+        );
 
-      !Array.isArray(prevItems) ? process.env.NODE_ENV !== "production" ? invariant(false, 'IRTransformer: Expected data for `%s` to be an array, got `%s`.', key, prevItems) : invariant(false) : void 0;
+        const nextItems = this._map(prevItems);
 
-      var nextItems = _this._map(prevItems);
+        if (nextNode || nextItems !== prevItems) {
+          nextNode = nextNode || { ...prevNode };
+          nextNode[key] = nextItems;
+        }
+      });
+    singularKeys &&
+      singularKeys.forEach((key) => {
+        const prevItem = prevNode[key];
 
-      if (nextNode || nextItems !== prevItems) {
-        nextNode = nextNode || (0, _objectSpread2["default"])({}, prevNode);
-        nextNode[key] = nextItems;
-      }
-    });
-    singularKeys && singularKeys.forEach(function (key) {
-      var prevItem = prevNode[key];
+        if (!prevItem) {
+          return;
+        }
 
-      if (!prevItem) {
-        return;
-      }
+        const nextItem = this._visit(prevItem);
 
-      var nextItem = _this._visit(prevItem);
-
-      if (nextNode || nextItem !== prevItem) {
-        nextNode = nextNode || (0, _objectSpread2["default"])({}, prevNode);
-        nextNode[key] = nextItem;
-      }
-    });
+        if (nextNode || nextItem !== prevItem) {
+          nextNode = nextNode || { ...prevNode };
+          nextNode[key] = nextItem;
+        }
+      });
     return nextNode || prevNode;
-  };
+  }
 
-  _proto._map = function _map(prevItems) {
-    var _this2 = this;
-
-    var nextItems;
-    prevItems.forEach(function (prevItem, index) {
-      var nextItem = _this2._visit(prevItem);
+  _map(prevItems) {
+    let nextItems;
+    prevItems.forEach((prevItem, index) => {
+      const nextItem = this._visit(prevItem);
 
       if (nextItems || nextItem !== prevItem) {
         nextItems = nextItems || prevItems.slice(0, index);
@@ -330,16 +340,19 @@ var Transformer = /*#__PURE__*/function () {
       }
     });
     return nextItems || prevItems;
-  };
+  }
 
-  _proto._getState = function _getState() {
-    !this._states.length ? process.env.NODE_ENV !== "production" ? invariant(false, 'IRTransformer: Expected a current state to be set but found none. ' + 'This is usually the result of mismatched number of pushState()/popState() ' + 'calls.') : invariant(false) : void 0;
+  _getState() {
+    invariant(
+      this._states.length,
+      "IRTransformer: Expected a current state to be set but found none. " +
+        "This is usually the result of mismatched number of pushState()/popState() " +
+        "calls.",
+    );
     return this._states[this._states.length - 1];
-  };
-
-  return Transformer;
-}();
+  }
+}
 
 module.exports = {
-  transform: transform
+  transform,
 };

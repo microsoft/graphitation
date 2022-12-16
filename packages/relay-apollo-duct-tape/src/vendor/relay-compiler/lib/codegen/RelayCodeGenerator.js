@@ -10,29 +10,22 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-var NormalizationCodeGenerator = require("./NormalizationCodeGenerator");
+const NormalizationCodeGenerator = require("./NormalizationCodeGenerator");
 
-var ReaderCodeGenerator = require("./ReaderCodeGenerator");
+const ReaderCodeGenerator = require("./ReaderCodeGenerator");
 
-var sortObjectByKey = require("./sortObjectByKey");
+const sortObjectByKey = require("./sortObjectByKey");
 
-var md5 = require("../util/md5");
+const md5 = require("../util/md5");
 
-var nullthrows = require("nullthrows");
+const nullthrows = require("nullthrows");
 
-var _require = require("../core/CompilerError"),
-  createCompilerError = _require.createCompilerError;
+const { createCompilerError } = require("../core/CompilerError");
 
 function generate(schema, node) {
-  var _node$metadata;
-
   switch (node.kind) {
     case "Fragment":
-      if (
-        ((_node$metadata = node.metadata) === null || _node$metadata === void 0
-          ? void 0
-          : _node$metadata.inlineData) === true
-      ) {
+      if (node.metadata?.inlineData === true) {
         return {
           kind: "InlineDataFragment",
           name: node.name,
@@ -68,11 +61,11 @@ function generate(schema, node) {
   }
 
   throw createCompilerError(
-    "RelayCodeGenerator: Unknown AST kind '".concat(node.kind, "'."),
+    `RelayCodeGenerator: Unknown AST kind '${node.kind}'.`,
     [node.loc],
   );
 }
 
 module.exports = {
-  generate: generate,
+  generate,
 };

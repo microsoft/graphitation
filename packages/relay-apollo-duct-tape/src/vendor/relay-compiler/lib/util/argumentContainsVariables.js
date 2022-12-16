@@ -4,11 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  * @format
  */
 // flowlint ambiguous-object-type:error
-'use strict';
+"use strict";
 
 function argumentContainsVariables(arg) {
   if (arg == null) {
@@ -16,16 +16,16 @@ function argumentContainsVariables(arg) {
   }
 
   switch (arg.kind) {
-    case 'Variable':
+    case "Variable":
       return true;
 
-    case 'Literal':
+    case "Literal":
       return false;
 
-    case 'ListValue':
+    case "ListValue":
       return arg.items.some(argumentContainsVariables);
 
-    case 'ObjectValue':
+    case "ObjectValue":
       return arg.fields.some(argumentContainsVariables);
 
     default:

@@ -4,20 +4,19 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  * @format
  */
 // flowlint ambiguous-object-type:error
-'use strict';
+"use strict";
 
-var OR_LIST_MAX_LENGTH = 5;
+const OR_LIST_MAX_LENGTH = 5;
 
-var _require = require('../core/CompilerError'),
-    createCompilerError = _require.createCompilerError;
+const { createCompilerError } = require("../core/CompilerError");
 
 function orList(items) {
   if (items.length === 0) {
-    throw createCompilerError('Expected an array of strings. Got empty array');
+    throw createCompilerError("Expected an array of strings. Got empty array");
   }
 
   if (items.length === 1) {
@@ -25,12 +24,12 @@ function orList(items) {
   }
 
   if (items.length > OR_LIST_MAX_LENGTH) {
-    return items.slice(0, OR_LIST_MAX_LENGTH).join(', ') + ', ...';
+    return items.slice(0, OR_LIST_MAX_LENGTH).join(", ") + ", ...";
   }
 
-  var selected = items.slice();
-  var lastItem = selected.pop();
-  return selected.join(', ') + ' or ' + lastItem;
+  const selected = items.slice();
+  const lastItem = selected.pop();
+  return selected.join(", ") + " or " + lastItem;
 }
 
 module.exports = orList;

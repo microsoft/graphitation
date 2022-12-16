@@ -4,15 +4,15 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  * @format
  */
 // TODO: This is only used with `ArgumentValue` types, so it could be simpler.
 // flowlint ambiguous-object-type:error
-'use strict';
+"use strict";
 
-var aStackPool = [];
-var bStackPool = [];
+const aStackPool = [];
+const bStackPool = [];
 /**
  * Checks if two values are equal. Values may be primitives, arrays, or objects.
  * Returns true if both arguments have the same keys and values.
@@ -23,9 +23,9 @@ var bStackPool = [];
  */
 
 function areEqualArgValues(a, b) {
-  var aStack = aStackPool.length ? aStackPool.pop() : [];
-  var bStack = bStackPool.length ? bStackPool.pop() : [];
-  var result = eq(a, b, aStack, bStack);
+  const aStack = aStackPool.length ? aStackPool.pop() : [];
+  const bStack = bStackPool.length ? bStackPool.pop() : [];
+  const result = eq(a, b, aStack, bStack);
   aStack.length = 0;
   bStack.length = 0;
   aStackPool.push(aStack);
@@ -44,35 +44,38 @@ function eq(a, b, aStack, bStack) {
     return false;
   }
 
-  if (typeof a !== 'object' || typeof b !== 'object') {
+  if (typeof a !== "object" || typeof b !== "object") {
     return false;
   } // $FlowFixMe[method-unbinding] added when improving typing for this parameters
 
-
-  var objToStr = Object.prototype.toString;
-  var className = objToStr.call(a);
+  const objToStr = Object.prototype.toString;
+  const className = objToStr.call(a);
 
   if (className !== objToStr.call(b)) {
     return false;
   }
 
   switch (className) {
-    case '[object String]':
+    case "[object String]":
       return a === String(b);
 
-    case '[object Number]':
+    case "[object Number]":
       return isNaN(a) || isNaN(b) ? false : a === Number(b);
 
-    case '[object Date]':
-    case '[object Boolean]':
+    case "[object Date]":
+    case "[object Boolean]":
       return +a === +b;
 
-    case '[object RegExp]':
-      return a.source === b.source && a.global === b.global && a.multiline === b.multiline && a.ignoreCase === b.ignoreCase;
+    case "[object RegExp]":
+      return (
+        a.source === b.source &&
+        a.global === b.global &&
+        a.multiline === b.multiline &&
+        a.ignoreCase === b.ignoreCase
+      );
   } // Assume equality for cyclic structures.
 
-
-  var length = aStack.length;
+  let length = aStack.length;
 
   while (length--) {
     if (aStack[length] === a) {
@@ -82,15 +85,14 @@ function eq(a, b, aStack, bStack) {
 
   aStack.push(a);
   bStack.push(b);
-  var size = 0; // Recursively compare objects and arrays.
+  let size = 0; // Recursively compare objects and arrays.
 
-  if (className === '[object Array]') {
+  if (className === "[object Array]") {
     size = a.length;
 
     if (size !== b.length) {
       return false;
     } // Deep compare the contents, ignoring non-numeric properties.
-
 
     while (size--) {
       if (!eq(a[size], b[size], aStack, bStack)) {
@@ -102,18 +104,18 @@ function eq(a, b, aStack, bStack) {
       return false;
     }
 
-    if (a.hasOwnProperty('valueOf') && b.hasOwnProperty('valueOf')) {
+    if (a.hasOwnProperty("valueOf") && b.hasOwnProperty("valueOf")) {
       return a.valueOf() === b.valueOf();
     }
 
-    var keys = Object.keys(a);
+    const keys = Object.keys(a);
 
     if (keys.length !== Object.keys(b).length) {
       return false;
     }
 
-    for (var i = 0; i < keys.length; i++) {
-      if (keys[i] === '_owner') {
+    for (let i = 0; i < keys.length; i++) {
+      if (keys[i] === "_owner") {
         // HACK: Comparing deeply nested React trees is slow since you end up
         // comparing the entire tree (all ancestors and all children) and
         // likely not what you want if you're comparing two elements with
@@ -121,7 +123,10 @@ function eq(a, b, aStack, bStack) {
         continue;
       }
 
-      if (!b.hasOwnProperty(keys[i]) || !eq(a[keys[i]], b[keys[i]], aStack, bStack)) {
+      if (
+        !b.hasOwnProperty(keys[i]) ||
+        !eq(a[keys[i]], b[keys[i]], aStack, bStack)
+      ) {
         return false;
       }
     }
