@@ -1,8 +1,16 @@
 # Change Log - @graphitation/relay-apollo-duct-tape
 
-This log was last generated on Fri, 16 Dec 2022 14:41:48 GMT and should not be manually modified.
+This log was last generated on Fri, 16 Dec 2022 17:00:28 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.4.3
+
+Fri, 16 Dec 2022 17:00:28 GMT
+
+### Patches
+
+- Try to not compile the vendored js (eloy.de.enige@gmail.com)
 
 ## 0.4.2
 
