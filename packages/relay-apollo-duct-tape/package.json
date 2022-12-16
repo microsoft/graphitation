@@ -17,6 +17,7 @@
     "just": "monorepo-scripts"
   },
   "dependencies": {
+    "@babel/runtime": "^7.0.0",
     "@emotion/hash": "^0.8.0",
     "invariant": "^2.2.4",
     "lru-cache": "^7.14.1",
