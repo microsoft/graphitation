@@ -21,24 +21,28 @@ var _require = require('./CompilerError'),
 var _require2 = require('immutable'),
     ImmutableOrderedMap = _require2.OrderedMap;
 
+class _CompilerContext {
+  constructor(schema) {
+    this._isMutable = false;
+    this._documents = new ImmutableOrderedMap();
+    this._withTransform = new WeakMap();
+    this._schema = schema;
+  }
+}
+
 /**
  * An immutable representation of a corpus of documents being compiled together.
  * For each document, the context stores the IR and any validation errors.
  */
 var CompilerContext = /*#__PURE__*/function () {
   // $FlowFixMe[value-as-type]
-  function CompilerContext(schema) {
-    this._isMutable = false;
-    this._documents = new ImmutableOrderedMap();
-    this._withTransform = new WeakMap();
-    this._schema = schema;
-  }
+
   /**
    * Returns the documents for the context in the order they were added.
    */
 
 
-  var _proto = CompilerContext.prototype;
+  var _proto = _CompilerContext.prototype;
 
   _proto.documents = function documents() {
     return this._documents.toArray();
@@ -151,7 +155,7 @@ var CompilerContext = /*#__PURE__*/function () {
   };
 
   _proto._update = function _update(documents) {
-    var context = this._isMutable ? this : new CompilerContext(this.getSchema());
+    var context = this._isMutable ? this : new _CompilerContext(this.getSchema());
     context._documents = documents;
     return context;
   };
@@ -160,7 +164,7 @@ var CompilerContext = /*#__PURE__*/function () {
     return this._schema;
   };
 
-  return CompilerContext;
+  return _CompilerContext;
 }();
 
 module.exports = CompilerContext;

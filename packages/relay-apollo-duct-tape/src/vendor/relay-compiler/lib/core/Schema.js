@@ -289,11 +289,8 @@ function _isInputType(type) {
   return type instanceof InputObjectType || type instanceof ScalarType || type instanceof EnumType;
 }
 
-var Schema = /*#__PURE__*/function () {
-  /**
-   * @private
-   */
-  function Schema(typeMap) {
+class _Schema {
+  constructor(typeMap) {
     var _this2 = this;
 
     this._typeMap = typeMap;
@@ -310,8 +307,15 @@ var Schema = /*#__PURE__*/function () {
       }];
     }));
   }
+}
 
-  var _proto4 = Schema.prototype;
+var Schema = /*#__PURE__*/function () {
+  /**
+   * @private
+   */
+
+
+  var _proto4 = _Schema.prototype;
 
   _proto4.getTypes = function getTypes() {
     return this._typeMap.getTypes();
@@ -1258,13 +1262,13 @@ var Schema = /*#__PURE__*/function () {
     });
 
     if (schemaExtensions.length > 0) {
-      return new Schema(this._typeMap.extend(schemaExtensions));
+      return new _Schema(this._typeMap.extend(schemaExtensions));
     }
 
     return this;
   };
 
-  return Schema;
+  return _Schema;
 }();
 
 var TypeMap = /*#__PURE__*/function () {
