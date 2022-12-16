@@ -2,6 +2,51 @@
   "name": "@graphitation/relay-apollo-duct-tape",
   "entries": [
     {
+      "date": "Fri, 16 Dec 2022 11:02:42 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.1",
+      "version": "0.4.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "5a87732aeac41f804d966bdc6b96c8a86579f134",
+            "comment": "Actually import vebdored files"
+          },
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "0330dda32e75740a2d8755e6d61dfba67c138a95",
+            "comment": "More dep fixes"
+          },
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "c894678e9bc0824ec7f81f0bff6c0ad334e04dd4",
+            "comment": "Deal with situation where document contains multiple definitions"
+          },
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "cba5a0fee39834d9d82653b7345179d28af81133",
+            "comment": "Fix type errors"
+          },
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "b14675e9d4656743ceb4e8cf4980171f3075c537",
+            "comment": "Fix type errors definitively"
+          },
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "77398e05150c11e4b77aecb9da250110408f3082",
+            "comment": "[build] Include js files"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 14 Dec 2022 23:47:05 GMT",
       "tag": "@graphitation/relay-apollo-duct-tape_v0.4.0",
       "version": "0.4.0",

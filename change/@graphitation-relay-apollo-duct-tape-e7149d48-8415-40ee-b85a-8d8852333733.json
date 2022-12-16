@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Fix type errors definitively",
-  "packageName": "@graphitation/relay-apollo-duct-tape",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}

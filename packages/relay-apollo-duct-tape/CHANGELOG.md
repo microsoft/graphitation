@@ -1,8 +1,21 @@
 # Change Log - @graphitation/relay-apollo-duct-tape
 
-This log was last generated on Wed, 14 Dec 2022 23:47:05 GMT and should not be manually modified.
+This log was last generated on Fri, 16 Dec 2022 11:02:42 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.4.1
+
+Fri, 16 Dec 2022 11:02:42 GMT
+
+### Patches
+
+- Actually import vebdored files (eloy.de.enige@gmail.com)
+- More dep fixes (eloy.de.enige@gmail.com)
+- Deal with situation where document contains multiple definitions (eloy.de.enige@gmail.com)
+- Fix type errors (eloy.de.enige@gmail.com)
+- Fix type errors definitively (eloy.de.enige@gmail.com)
+- [build] Include js files (eloy.de.enige@gmail.com)
 
 ## 0.4.0
 
