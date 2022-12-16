@@ -7,7 +7,7 @@
     "outDir": "lib",
     "lib": ["esnext", "dom"],
     "jsx": "react",
-    "allowJs": true
+    "allowJs": false
   },
   "include": ["src"],
   "references": []
