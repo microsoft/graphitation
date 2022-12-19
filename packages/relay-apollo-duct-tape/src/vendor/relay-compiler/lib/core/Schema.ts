@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -234,7 +236,7 @@ function isInputType(type) {
   );
 }
 
-class Schema {
+export class Schema {
   /**
    * @private
    */
@@ -1905,7 +1907,11 @@ class TypeMap {
   }
 }
 
-function create(baseSchema, schemaExtensionDocuments, schemaExtensions) {
+function create(
+  baseSchema,
+  schemaExtensionDocuments?,
+  schemaExtensions?,
+): Schema {
   const extensions = [];
   schemaExtensions &&
     schemaExtensions.forEach((source) => {

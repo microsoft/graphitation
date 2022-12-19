@@ -9,7 +9,7 @@ import { Source, print as printGraphQLJS } from "graphql";
 import hash from "@emotion/hash";
 
 import type { DefinitionNode, DocumentNode } from "graphql";
-import type { Schema } from "relay-compiler";
+import type { Schema } from "./vendor/relay-compiler/lib/core/Schema";
 import type { Request } from "relay-compiler/lib/core/IR";
 
 // TODO: Hash input document instead, which means memoization can skip
@@ -80,6 +80,6 @@ function uniqueFilter<T>(value: T, index: number, array: T[]) {
   return array.indexOf(value) === index;
 }
 
-export function transformSchema(schema: DocumentNode): Schema {
+export function transformSchema(schema: DocumentNode) {
   return createSchema(new Source(printGraphQLJS(schema)));
 }

@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -10,9 +12,9 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-import NormalizationCodeGenerator from "./NormalizationCodeGenerator";
+import * as NormalizationCodeGenerator from "./NormalizationCodeGenerator";
 
-import ReaderCodeGenerator from "./ReaderCodeGenerator";
+import * as ReaderCodeGenerator from "./ReaderCodeGenerator";
 
 import sortObjectByKey from "./sortObjectByKey";
 

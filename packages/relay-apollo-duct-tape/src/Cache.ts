@@ -41,7 +41,6 @@ import {
   getRequest,
   createOperationDescriptor,
   ROOT_ID,
-  GraphQLTaggedNode,
 } from "relay-runtime";
 import { NormalizationFragmentSpread } from "relay-runtime/lib/util/NormalizationNode";
 import RelayRecordSource from "relay-runtime/lib/store/RelayRecordSource";
@@ -73,7 +72,7 @@ import invariant from "invariant";
 //       out why we're using quick-lru there.
 import LRUCache from "lru-cache";
 import { transformDocument, transformSchema } from "./relayDocumentUtils";
-import type { Schema } from "relay-compiler";
+import type { Schema } from "./vendor/relay-compiler/lib/core/Schema";
 import type { DocumentNode } from "graphql";
 
 type ReadOptions = Omit<ApolloCacheTypes.DiffOptions, "query">;

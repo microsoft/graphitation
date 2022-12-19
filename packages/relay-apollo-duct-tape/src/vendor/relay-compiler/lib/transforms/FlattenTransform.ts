@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -10,7 +12,7 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-import IRTransformer from "../core/IRTransformer";
+import * as IRTransformer from "../core/IRTransformer";
 
 import areEqualArgValues from "../util/areEqualArgValues";
 

@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -17,6 +19,9 @@ import invariant from "invariant";
 import { createUserError } from "./CompilerError"; // $FlowFixMe[untyped-import] - immutable.js is not flow-typed
 
 import { OrderedMap as ImmutableOrderedMap } from "immutable";
+
+import { Root, Fragment, SplitOperation } from "./IR";
+export type CompilerContextDocument = Fragment | Root | SplitOperation;
 
 /**
  * An immutable representation of a corpus of documents being compiled together.
@@ -38,7 +43,7 @@ class CompilerContext {
     return this._documents.toArray();
   }
 
-  forEachDocument(fn) {
+  forEachDocument(fn: (doc: CompilerContextDocument) => void) {
     this._documents.forEach(fn);
   }
 
@@ -94,16 +99,17 @@ class CompilerContext {
    * not result in duplicated work.
    */
 
-  applyTransform(transform, reporter) {
+  // applyTransform(transform, reporter) {
+  applyTransform(transform): CompilerContext {
     let transformed = this._withTransform.get(transform);
 
     if (!transformed) {
-      const start = process.hrtime();
+      // const start = process.hrtime();
       // transformed = Profiler.instrument(transform)(this);
       transformed = transform(this);
-      const delta = process.hrtime(start);
-      const deltaMs = Math.round((delta[0] * 1e9 + delta[1]) / 1e6);
-      reporter && reporter.reportTime(transform.name, deltaMs);
+      // const delta = process.hrtime(start);
+      // const deltaMs = Math.round((delta[0] * 1e9 + delta[1]) / 1e6);
+      // reporter && reporter.reportTime(transform.name, deltaMs);
 
       this._withTransform.set(transform, transformed);
     }
