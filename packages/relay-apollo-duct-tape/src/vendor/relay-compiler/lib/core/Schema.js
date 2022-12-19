@@ -1988,6 +1988,4 @@ function isDefaultScalar(name) {
   return new Set(["ID", "String", "Boolean", "Int", "Float"]).has(name);
 }
 
-module.exports = {
-  create,
-};
+export { create };

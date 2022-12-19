@@ -137,4 +137,4 @@ function eq(a, b, aStack, bStack) {
   return true;
 }
 
-module.exports = areEqualArgValues;
+export default areEqualArgValues;

@@ -177,4 +177,4 @@ class CompilerContext {
   }
 }
 
-module.exports = CompilerContext;
+export default CompilerContext;

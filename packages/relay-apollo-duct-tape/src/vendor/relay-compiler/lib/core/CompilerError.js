@@ -230,7 +230,7 @@ function getLocation(source, position) {
   };
 }
 
-module.exports = {
+export {
   createCompilerError,
   createNonRecoverableUserError,
   createUserError,

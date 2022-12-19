@@ -105,7 +105,7 @@ function getNonNullIdInput(schema) {
   return schema.assertInputType(schema.getNonNullType(schema.expectIdType()));
 }
 
-module.exports = {
+export {
   generateIDField,
   isExecutableDefinitionAST,
   isSchemaDefinitionAST,

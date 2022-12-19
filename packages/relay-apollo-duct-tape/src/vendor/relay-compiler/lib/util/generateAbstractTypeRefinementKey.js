@@ -20,4 +20,4 @@ function generateAbstractTypeRefinementKey(schema, type) {
   return `__is${schema.getTypeString(type)}`;
 }
 
-module.exports = generateAbstractTypeRefinementKey;
+export default generateAbstractTypeRefinementKey;

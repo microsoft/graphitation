@@ -12,6 +12,4 @@
 
 "use strict";
 
-module.exports = {
-  DEFAULT_HANDLE_KEY: "",
-};
+export const DEFAULT_HANDLE_KEY = "";

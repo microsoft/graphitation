@@ -66,6 +66,4 @@ function fragmentSpreadVisitor(cache) {
   };
 }
 
-module.exports = {
-  transform: inlineFragmentsTransform,
-};
+export { inlineFragmentsTransform as transform };

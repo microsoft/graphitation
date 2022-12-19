@@ -353,6 +353,4 @@ class Transformer {
   }
 }
 
-module.exports = {
-  transform,
-};
+export { transform };

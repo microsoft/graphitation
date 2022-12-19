@@ -1718,7 +1718,4 @@ function checkFragmentSpreadTypeCompatibility(
   }
 }
 
-module.exports = {
-  parse,
-  transform,
-};
+export { parse, transform };

@@ -1,4 +1,4 @@
-import Parser from "./vendor/relay-compiler/lib/core/RelayParser";
+import { transform as transformToIR } from "./vendor/relay-compiler/lib/core/RelayParser";
 import CompilerContext from "./vendor/relay-compiler/lib/core/CompilerContext";
 import { create as createSchema } from "./vendor/relay-compiler/lib/core/Schema";
 import * as FlattenTransform from "./vendor/relay-compiler/lib/transforms/FlattenTransform";
@@ -19,7 +19,7 @@ export function transformDocument(
   document: DocumentNode,
   addHash: boolean,
 ) {
-  const nodes = Parser.transform(
+  const nodes = transformToIR(
     schema,
     document.definitions as DefinitionNode[],
   );

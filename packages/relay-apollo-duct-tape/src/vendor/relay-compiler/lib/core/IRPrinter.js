@@ -449,9 +449,4 @@ function printLiteral(schema, value, type) {
   }
 }
 
-module.exports = {
-  print,
-  printField,
-  printArguments,
-  printDirectives,
-};
+export { print, printField, printArguments, printDirectives };

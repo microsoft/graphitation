@@ -61,4 +61,4 @@ function getIdentifierForSelection(schema, node) {
   }
 }
 
-module.exports = getIdentifierForSelection;
+export default getIdentifierForSelection;

@@ -66,6 +66,4 @@ function generate(schema, node) {
   );
 }
 
-module.exports = {
-  generate,
-};
+export { generate };

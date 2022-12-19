@@ -73,8 +73,4 @@ function transform(node, moduleMap) {
   }
 }
 
-module.exports = {
-  moduleDependency,
-  postProcess,
-  transform,
-};
+export { moduleDependency, postProcess, transform };

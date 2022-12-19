@@ -528,6 +528,4 @@ function isPlural(schema, type) {
   return schema.isList(schema.getNullableType(type));
 }
 
-module.exports = {
-  generate,
-};
+export { generate };

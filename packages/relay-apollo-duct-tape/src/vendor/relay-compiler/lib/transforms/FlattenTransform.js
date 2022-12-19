@@ -418,6 +418,4 @@ function transformWithOptions(options) {
   };
 }
 
-module.exports = {
-  transformWithOptions,
-};
+export { transformWithOptions };

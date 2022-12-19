@@ -32,4 +32,4 @@ function orList(items) {
   return selected.join(", ") + " or " + lastItem;
 }
 
-module.exports = orList;
+export default orList;

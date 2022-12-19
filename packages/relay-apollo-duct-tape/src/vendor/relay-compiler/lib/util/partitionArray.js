@@ -32,4 +32,4 @@ function partitionArray(array, predicate) {
   return [first, second];
 }
 
-module.exports = partitionArray;
+export default partitionArray;

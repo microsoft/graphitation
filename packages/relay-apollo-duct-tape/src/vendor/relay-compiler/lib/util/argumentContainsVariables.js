@@ -34,4 +34,4 @@ function argumentContainsVariables(arg) {
   }
 }
 
-module.exports = argumentContainsVariables;
+export default argumentContainsVariables;

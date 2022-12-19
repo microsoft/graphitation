@@ -136,7 +136,4 @@ function getName(ast) {
   return name;
 }
 
-module.exports = {
-  getFieldDefinitionLegacy,
-  getFieldDefinitionStrict,
-};
+export { getFieldDefinitionLegacy, getFieldDefinitionStrict };
