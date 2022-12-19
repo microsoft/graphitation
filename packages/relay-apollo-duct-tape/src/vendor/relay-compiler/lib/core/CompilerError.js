@@ -10,7 +10,7 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-const { GraphQLError } = require("graphql");
+import { GraphQLError } from "graphql";
 
 /**
  * Creates an error describing invalid application code (GraphQL/Schema)

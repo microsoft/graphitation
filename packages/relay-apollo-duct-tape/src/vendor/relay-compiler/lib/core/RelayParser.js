@@ -10,25 +10,25 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-// const Profiler = require("./GraphQLCompilerProfiler");
+// import Profiler  from "./GraphQLCompilerProfiler";
 
-const orList = require("../util/orList");
+import orList from "../util/orList";
 
-const partitionArray = require("../util/partitionArray");
+import partitionArray from "../util/partitionArray";
 
-const { DEFAULT_HANDLE_KEY } = require("../util/DefaultHandleKey");
+import { DEFAULT_HANDLE_KEY } from "../util/DefaultHandleKey";
 
-const {
+import {
   createCompilerError,
   createUserError,
   eachWithCombinedError,
-} = require("./CompilerError");
+} from "./CompilerError";
 
-const { isExecutableDefinitionAST } = require("./SchemaUtils");
+import { isExecutableDefinitionAST } from "./SchemaUtils";
 
-const { getFieldDefinitionLegacy } = require("./getFieldDefinition");
+import { getFieldDefinitionLegacy } from "./getFieldDefinition";
 
-const { parse: parseGraphQL, parseType, print, Source } = require("graphql");
+import { parse as parseGraphQL, parseType, print, Source } from "graphql";
 
 const ARGUMENT_DEFINITIONS = "argumentDefinitions";
 const ARGUMENTS = "arguments";

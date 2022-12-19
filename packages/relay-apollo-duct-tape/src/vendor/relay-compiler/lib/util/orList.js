@@ -12,7 +12,7 @@
 
 const OR_LIST_MAX_LENGTH = 5;
 
-const { createCompilerError } = require("../core/CompilerError");
+import { createCompilerError } from "../core/CompilerError";
 
 function orList(items) {
   if (items.length === 0) {

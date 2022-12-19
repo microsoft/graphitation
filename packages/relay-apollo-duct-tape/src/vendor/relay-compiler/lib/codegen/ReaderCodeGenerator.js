@@ -10,18 +10,15 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-const CodeMarker = require("../util/CodeMarker");
+import CodeMarker from "../util/CodeMarker";
 
-const argumentContainsVariables = require("../util/argumentContainsVariables");
+import argumentContainsVariables from "../util/argumentContainsVariables";
 
-const generateAbstractTypeRefinementKey = require("../util/generateAbstractTypeRefinementKey");
+import generateAbstractTypeRefinementKey from "../util/generateAbstractTypeRefinementKey";
 
-const {
-  createCompilerError,
-  createUserError,
-} = require("../core/CompilerError");
+import { createCompilerError, createUserError } from "../core/CompilerError";
 
-const { getStorageKey, stableCopy } = require("relay-runtime");
+import { getStorageKey, stableCopy } from "relay-runtime";
 
 /**
  * @public

@@ -10,9 +10,9 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-const invariant = require("invariant");
+import invariant from "invariant";
 
-const { DEFAULT_HANDLE_KEY } = require("../util/DefaultHandleKey");
+import { DEFAULT_HANDLE_KEY } from "../util/DefaultHandleKey";
 
 const INDENT = "  ";
 /**

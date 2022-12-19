@@ -10,17 +10,17 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-const NormalizationCodeGenerator = require("./NormalizationCodeGenerator");
+import NormalizationCodeGenerator from "./NormalizationCodeGenerator";
 
-const ReaderCodeGenerator = require("./ReaderCodeGenerator");
+import ReaderCodeGenerator from "./ReaderCodeGenerator";
 
-const sortObjectByKey = require("./sortObjectByKey");
+import sortObjectByKey from "./sortObjectByKey";
 
-const md5 = require("../util/md5");
+import md5 from "../util/md5";
 
-const nullthrows = require("nullthrows");
+import nullthrows from "nullthrows";
 
-const { createCompilerError } = require("../core/CompilerError");
+import { createCompilerError } from "../core/CompilerError";
 
 function generate(schema, node) {
   switch (node.kind) {

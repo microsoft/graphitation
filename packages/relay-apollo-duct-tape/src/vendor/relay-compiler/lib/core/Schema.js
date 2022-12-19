@@ -11,11 +11,11 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-const { createCompilerError } = require("./CompilerError");
+import { createCompilerError } from "./CompilerError";
 
-const { isSchemaDefinitionAST } = require("./SchemaUtils");
+import { isSchemaDefinitionAST } from "./SchemaUtils";
 
-const {
+import {
   GraphQLFloat,
   GraphQLInt,
   GraphQLBoolean,
@@ -25,7 +25,7 @@ const {
   parseType,
   print,
   valueFromASTUntyped,
-} = require("graphql");
+} from "graphql";
 
 /**
  * @private

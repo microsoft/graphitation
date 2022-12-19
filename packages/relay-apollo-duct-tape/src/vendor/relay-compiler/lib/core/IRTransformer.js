@@ -10,9 +10,9 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-const invariant = require("invariant");
+import invariant from "invariant";
 
-const { eachWithCombinedError } = require("./CompilerError");
+import { eachWithCombinedError } from "./CompilerError";
 
 /**
  * @public

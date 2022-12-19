@@ -10,13 +10,13 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-// const Profiler = require("./GraphQLCompilerProfiler");
+// import Profiler  from "./GraphQLCompilerProfiler";
 
-const invariant = require("invariant");
+import invariant from "invariant";
 
-const { createUserError } = require("./CompilerError"); // $FlowFixMe[untyped-import] - immutable.js is not flow-typed
+import { createUserError } from "./CompilerError"; // $FlowFixMe[untyped-import] - immutable.js is not flow-typed
 
-const { OrderedMap: ImmutableOrderedMap } = require("immutable");
+import { OrderedMap as ImmutableOrderedMap } from "immutable";
 
 /**
  * An immutable representation of a corpus of documents being compiled together.

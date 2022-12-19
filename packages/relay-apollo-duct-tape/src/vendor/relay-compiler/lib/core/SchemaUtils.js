@@ -10,7 +10,7 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-const { createCompilerError } = require("./CompilerError");
+import { createCompilerError } from "./CompilerError";
 
 const ID = "id";
 /**

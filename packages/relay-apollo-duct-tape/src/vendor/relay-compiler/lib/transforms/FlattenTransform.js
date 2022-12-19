@@ -10,16 +10,13 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-const IRTransformer = require("../core/IRTransformer");
+import IRTransformer from "../core/IRTransformer";
 
-const areEqualArgValues = require("../util/areEqualArgValues");
+import areEqualArgValues from "../util/areEqualArgValues";
 
-const getIdentifierForSelection = require("../core/getIdentifierForSelection");
+import getIdentifierForSelection from "../core/getIdentifierForSelection";
 
-const {
-  createCompilerError,
-  createUserError,
-} = require("../core/CompilerError");
+import { createCompilerError, createUserError } from "../core/CompilerError";
 
 /**
  * Transform that flattens inline fragments, fragment spreads, and conditionals.

@@ -10,7 +10,7 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-const { createCompilerError } = require("../core/CompilerError");
+import { createCompilerError } from "../core/CompilerError";
 
 function generateAbstractTypeRefinementKey(schema, type) {
   if (!schema.isAbstractType(type)) {

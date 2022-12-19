@@ -10,20 +10,17 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-const argumentContainsVariables = require("../util/argumentContainsVariables");
+import argumentContainsVariables from "../util/argumentContainsVariables";
 
-const generateAbstractTypeRefinementKey = require("../util/generateAbstractTypeRefinementKey");
+import generateAbstractTypeRefinementKey from "../util/generateAbstractTypeRefinementKey";
 
-const partitionArray = require("../util/partitionArray");
+import partitionArray from "../util/partitionArray";
 
-const sortObjectByKey = require("./sortObjectByKey");
+import sortObjectByKey from "./sortObjectByKey";
 
-const {
-  createCompilerError,
-  createUserError,
-} = require("../core/CompilerError");
+import { createCompilerError, createUserError } from "../core/CompilerError";
 
-const { getStorageKey, stableCopy } = require("relay-runtime");
+import { getStorageKey, stableCopy } from "relay-runtime";
 /**
  * @public
  *

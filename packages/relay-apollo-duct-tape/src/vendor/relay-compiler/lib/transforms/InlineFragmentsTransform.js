@@ -10,9 +10,9 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-const IRTransformer = require("../core/IRTransformer");
+import IRTransformer from "../core/IRTransformer";
 
-const invariant = require("invariant");
+import invariant from "invariant";
 
 /**
  * A transform that inlines all fragments and removes them.

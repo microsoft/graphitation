@@ -10,9 +10,9 @@
 // flowlint ambiguous-object-type:error
 "use strict";
 
-const { createCompilerError } = require("./CompilerError");
+import { createCompilerError } from "./CompilerError";
 
-const { SchemaMetaFieldDef, TypeMetaFieldDef } = require("graphql");
+import { SchemaMetaFieldDef, TypeMetaFieldDef } from "graphql";
 
 /**
  * Find the definition of a field of the specified type using strict
