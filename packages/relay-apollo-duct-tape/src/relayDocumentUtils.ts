@@ -21,7 +21,8 @@ export function transformDocument(
 ) {
   const nodes = transformToIR(
     schema,
-    document.definitions as DefinitionNode[],
+    // TODO: Add test with multiple references to the same fragment
+    (document.definitions as DefinitionNode[]).filter(uniqueFilter),
   );
   let compilerContext = new CompilerContext(schema);
   for (const node of nodes) {
@@ -73,6 +74,10 @@ export function transformDocument(
     x.hash = hash(JSON.stringify(x));
   }
   return x;
+}
+
+function uniqueFilter<T>(value: T, index: number, array: T[]) {
+  return array.indexOf(value) === index;
 }
 
 export function transformSchema(schema: DocumentNode): Schema {
