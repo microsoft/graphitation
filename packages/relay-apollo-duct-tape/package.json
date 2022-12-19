@@ -19,11 +19,11 @@
   "dependencies": {
     "@babel/runtime": "^7.0.0",
     "@emotion/hash": "^0.8.0",
+    "immutable": "~3.7.6",
     "invariant": "^2.2.4",
     "lru-cache": "^7.14.1",
-    "relay-runtime": "^14.0.0",
-    "immutable": "~3.7.6",
-    "nullthrows": "^1.1.1"
+    "nullthrows": "^1.1.1",
+    "relay-runtime": "^14.0.0"
   },
   "peerDependencies": {
     "@apollo/client": "^3.6.9"
@@ -32,8 +32,8 @@
     "@apollo/client": "^3.6.9",
     "@graphitation/graphql-js-tag": "^0.9.0",
     "@types/jest": "^26.0.22",
-    "@types/relay-runtime": "^14.1.2",
     "@types/react-relay": "^14.1.1",
+    "@types/relay-runtime": "^14.1.2",
     "monorepo-scripts": "*",
     "relay-compiler": "^14.0.0"
   },
