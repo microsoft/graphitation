@@ -2,6 +2,21 @@
   "name": "@graphitation/relay-apollo-duct-tape",
   "entries": [
     {
+      "date": "Mon, 19 Dec 2022 22:50:16 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.5",
+      "version": "0.4.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "0b523f555cb17fed26193a63d1b4c18c7c59026c",
+            "comment": "Fix ESM support and filter dupes"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 16 Dec 2022 23:52:30 GMT",
       "tag": "@graphitation/relay-apollo-duct-tape_v0.4.4",
       "version": "0.4.4",

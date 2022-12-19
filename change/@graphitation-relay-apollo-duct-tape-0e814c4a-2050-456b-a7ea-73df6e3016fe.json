@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Fix ESM support and filter dupes",
-  "packageName": "@graphitation/relay-apollo-duct-tape",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}
