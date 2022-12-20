@@ -109,6 +109,9 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
       typePolicies?: TypePolicies;
       resultCaching?: boolean;
       resultCacheMaxSize?: number;
+      /**
+       * Specify this if Relay IR needs to be generated at runtime.
+       */
       schema?: DocumentNode;
     } = {},
   ) {
@@ -141,21 +144,10 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     return this.getDataID(object as RecordLike, object.__typename);
   }
 
+  // TODO: Apollo Client InMemoryCache keeps a cache of transformed documents. Check if this is necessary for us.
+  // https://github.com/apollographql/apollo-client/blob/b86c3635b8a9086a5659a44f5e68dda9b28d77ee/src/cache/inmemory/inMemoryCache.ts#L501-L515
   transformDocument(document: DocumentNode): DocumentNode {
-    return addTypenameToDocument(document);
-    // if (this.addTypename) {
-    //   let result = this.typenameDocumentCache.get(document);
-    //   if (!result) {
-    //     result = addTypenameToDocument(document);
-    //     this.typenameDocumentCache.set(document, result);
-    //     // If someone calls transformDocument and then mistakenly passes the
-    //     // result back into an API that also calls transformDocument, make sure
-    //     // we don't keep creating new query documents.
-    //     this.typenameDocumentCache.set(result, result);
-    //   }
-    //   return result;
-    // }
-    // return document;
+    return this.schema ? addTypenameToDocument(document) : document;
   }
 
   /****************************************************************************

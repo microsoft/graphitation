@@ -80,7 +80,7 @@ const TEST_VARIANTS = [
 ];
 
 describe("transformDocument", () => {
-  it.each(TEST_VARIANTS)(
+  it.each([{ client: apollo }, { client: relayWithRuntimeGeneratedIR }])(
     "adds __typename to documents with $client.name",
     ({ client }) => {
       const cache = client(undefined, true);
@@ -112,6 +112,12 @@ describe("transformDocument", () => {
         `);
     },
   );
+
+  it("does not add __typename at runtime when build-time IR is present", () => {
+    const cache = relayWithBuildtimeGeneratedIR();
+    const transformed = cache.transformDocument(QueryDocument);
+    expect(printGraphQL(transformed)).not.toMatch("__typename");
+  });
 });
 
 describe("writeQuery/readQuery", () => {
