@@ -22,6 +22,7 @@ export function transformDocument(
   const nodes = transformToIR(
     schema,
     // TODO: Add test with multiple references to the same fragment
+    // And is this still necessary if we already do it in Cache.transformDocument
     (document.definitions as DefinitionNode[]).filter(uniqueFilter),
   );
   let compilerContext = new CompilerContext(schema);

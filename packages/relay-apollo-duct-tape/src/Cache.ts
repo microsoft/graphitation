@@ -75,7 +75,7 @@ import LRUCache from "lru-cache";
 import { transformDocument, transformSchema } from "./relayDocumentUtils";
 
 import type { Schema } from "./vendor/relay-compiler/lib/core/Schema";
-import type { DocumentNode } from "graphql";
+import type { DocumentNode, DefinitionNode } from "graphql";
 
 type ReadOptions = Omit<ApolloCacheTypes.DiffOptions, "query">;
 
@@ -102,6 +102,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   private typePolicies: TypePolicies;
   private pessimism?: Map<string, [Snapshot, Disposable]>;
   private schema?: Schema;
+  private typenameDocumentCache?: WeakMap<DocumentNode, DocumentNode>;
 
   constructor(
     options: {
@@ -134,6 +135,9 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
 
     this.getDataID = this.getDataID.bind(this);
     this.schema = options.schema && transformSchema(options.schema);
+    if (options.schema) {
+      this.typenameDocumentCache = new WeakMap();
+    }
   }
 
   // TODO: This does not handle a Relay plural refs object, which looks like: { __refs: string[] }
@@ -144,10 +148,33 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     return this.getDataID(object as RecordLike, object.__typename);
   }
 
-  // TODO: Apollo Client InMemoryCache keeps a cache of transformed documents. Check if this is necessary for us.
-  // https://github.com/apollographql/apollo-client/blob/b86c3635b8a9086a5659a44f5e68dda9b28d77ee/src/cache/inmemory/inMemoryCache.ts#L501-L515
+  // We need to filter duplicate entries out in relayTransformDocuments, so ensure results here
+  // always return the same object.
   transformDocument(document: DocumentNode): DocumentNode {
-    return this.schema ? addTypenameToDocument(document) : document;
+    if (this.schema) {
+      let result = this.typenameDocumentCache!.get(document);
+      if (!result) {
+        // TODO: Add test with multiple references to the same fragment
+        //
+        // addTypenameToDocument will create new objects for each definition in the list,
+        // this means that even identical dupes will be replaced with new objects and we
+        // won't be able to easily dedupe afterwards. RelayParser needs this deduped, so
+        // we do this now.
+        result = addTypenameToDocument({
+          ...document,
+          definitions: (document.definitions as DefinitionNode[]).filter(
+            uniqueFilter,
+          ),
+        });
+        this.typenameDocumentCache!.set(document, result);
+        // If someone calls transformDocument and then mistakenly passes the
+        // result back into an API that also calls transformDocument, make sure
+        // we don't keep creating new query documents.
+        this.typenameDocumentCache!.set(result, result);
+      }
+      return result;
+    }
+    return document;
   }
 
   /****************************************************************************
@@ -710,4 +737,8 @@ function getNodeQuery(
       // "query CacheTestNodeQuery(\n  $id: ID!\n) {\n  node(id: $id) {\n    __typename\n    ...CacheTestFragment\n    id\n  }\n}\n\nfragment CacheTestFragment on Conversation {\n  id\n  title\n}\n",
     },
   };
+}
+
+function uniqueFilter<T>(value: T, index: number, array: T[]) {
+  return array.indexOf(value) === index;
 }
