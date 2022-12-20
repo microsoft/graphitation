@@ -9,7 +9,7 @@ import RelayRecordSource from "relay-runtime/lib/store/RelayRecordSource";
 
 import fs from "fs";
 import path from "path";
-import { parse } from "graphql";
+import { parse, print as printGraphQL } from "graphql";
 
 const schema = parse(
   fs.readFileSync(path.resolve(__dirname, "schema.graphql"), "utf8"),
@@ -61,8 +61,8 @@ const RESPONSE = {
   },
 };
 
-function apollo(typePolicies?: TypePolicies) {
-  return new InMemoryCache({ typePolicies, addTypename: false });
+function apollo(typePolicies?: TypePolicies, addTypename = false) {
+  return new InMemoryCache({ typePolicies, addTypename });
 }
 
 function relayWithBuildtimeGeneratedIR(typePolicies?: TypePolicies) {
@@ -78,6 +78,41 @@ const TEST_VARIANTS = [
   { client: relayWithBuildtimeGeneratedIR },
   { client: relayWithRuntimeGeneratedIR },
 ];
+
+describe("transformDocument", () => {
+  it.each(TEST_VARIANTS)(
+    "adds __typename to documents with $client.name",
+    ({ client }) => {
+      const cache = client(undefined, true);
+      const transformed = cache.transformDocument(QueryDocument);
+      expect(printGraphQL(transformed)).toMatchInlineSnapshot(`
+        "query CacheTestQuery($conversationId: String!, $includeNestedData: Boolean = false) {
+          conversation(id: $conversationId) {
+            ... on Conversation @include(if: $includeNestedData) {
+              messages {
+                id
+                authorId
+                text
+                createdAt
+                __typename
+              }
+              __typename
+            }
+            ...CacheTestFragment
+            __typename
+          }
+        }
+
+        fragment CacheTestFragment on Conversation {
+          id
+          title
+          __typename
+        }
+        "
+        `);
+    },
+  );
+});
 
 describe("writeQuery/readQuery", () => {
   it.each(TEST_VARIANTS)("works with $client.name", ({ client }) => {

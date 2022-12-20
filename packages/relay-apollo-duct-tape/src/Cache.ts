@@ -64,6 +64,7 @@ import {
   Reference,
   Transaction,
 } from "@apollo/client";
+import { addTypenameToDocument } from "@apollo/client/utilities";
 
 import invariant from "invariant";
 
@@ -72,6 +73,7 @@ import invariant from "invariant";
 //       out why we're using quick-lru there.
 import LRUCache from "lru-cache";
 import { transformDocument, transformSchema } from "./relayDocumentUtils";
+
 import type { Schema } from "./vendor/relay-compiler/lib/core/Schema";
 import type { DocumentNode } from "graphql";
 
@@ -137,6 +139,23 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
       return object.__ref;
     }
     return this.getDataID(object as RecordLike, object.__typename);
+  }
+
+  transformDocument(document: DocumentNode): DocumentNode {
+    return addTypenameToDocument(document);
+    // if (this.addTypename) {
+    //   let result = this.typenameDocumentCache.get(document);
+    //   if (!result) {
+    //     result = addTypenameToDocument(document);
+    //     this.typenameDocumentCache.set(document, result);
+    //     // If someone calls transformDocument and then mistakenly passes the
+    //     // result back into an API that also calls transformDocument, make sure
+    //     // we don't keep creating new query documents.
+    //     this.typenameDocumentCache.set(result, result);
+    //   }
+    //   return result;
+    // }
+    // return document;
   }
 
   /****************************************************************************
