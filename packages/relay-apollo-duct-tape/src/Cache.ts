@@ -483,7 +483,11 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
 
   private getTaggedNode(document: DocumentNode & { __relay?: any }) {
     const taggedNode = this.schema
-      ? transformDocument(this.schema, document, !!this.pessimism)
+      ? transformDocument(
+          this.schema,
+          this.transformDocument(document),
+          !!this.pessimism,
+        )
       : document.__relay;
     invariant(
       taggedNode,
