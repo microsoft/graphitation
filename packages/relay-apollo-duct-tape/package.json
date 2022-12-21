@@ -10,7 +10,7 @@
   },
   "scripts": {
     "relay": "relay-compiler",
-    "build": "monorepo-scripts build && cp -R ./src/vendor ./lib/",
+    "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
     "types": "monorepo-scripts types",
