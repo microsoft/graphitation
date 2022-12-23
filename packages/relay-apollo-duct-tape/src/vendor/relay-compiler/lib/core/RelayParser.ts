@@ -88,7 +88,16 @@ class RelayParser {
     const duplicated = new Set();
     definitions.forEach((def) => {
       if (isExecutableDefinitionAST(def)) {
-        const name = getName(def);
+        let name = getName(def);
+        // FIXME: TMP has duplicate definition names, but that is really only a
+        //        problem when they are fragments. Right here the name in the
+        //        map does not matter outside of the implementation of
+        //        transforming to IR, so we can just make operations named
+        //        uniquely.
+        //        Bug #2809718
+        if (def.kind === "OperationDefinition") {
+          name = `${name}$${def.operation}`;
+        }
 
         if (this._definitions.has(name)) {
           duplicated.add(name);

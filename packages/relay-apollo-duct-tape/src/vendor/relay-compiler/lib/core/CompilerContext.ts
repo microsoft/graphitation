@@ -48,13 +48,20 @@ class CompilerContext {
   }
 
   replace(node) {
+    // FIXME: TMP has duplicate definition names, but that is really only a
+    //        problem when they are fragments. Right here the name in the
+    //        map does not matter outside of the implementation of
+    //        transforming to IR, so we can just make operations named
+    //        uniquely.
+    //        Bug #2809718
+    const nodeName = node.kind === "Root" ? node.name + "$root" : node.name;
     return this._update(
-      this._documents.update(node.name, (existing) => {
+      this._documents.update(nodeName, (existing) => {
         invariant(
           existing,
           "CompilerContext: Expected to replace existing node %s, but " +
             "one was not found in the context.",
-          node.name,
+          nodeName,
         );
         return node;
       }),
@@ -62,13 +69,20 @@ class CompilerContext {
   }
 
   add(node) {
+    // FIXME: TMP has duplicate definition names, but that is really only a
+    //        problem when they are fragments. Right here the name in the
+    //        map does not matter outside of the implementation of
+    //        transforming to IR, so we can just make operations named
+    //        uniquely.
+    //        Bug #2809718
+    const nodeName = node.kind === "Root" ? node.name + "$root" : node.name;
     return this._update(
-      this._documents.update(node.name, (existing) => {
+      this._documents.update(nodeName, (existing) => {
         invariant(
           !existing,
           "CompilerContext: Duplicate document named `%s`. GraphQL " +
             "fragments and roots must have unique names.",
-          node.name,
+          nodeName,
         );
         return node;
       }),
@@ -141,7 +155,13 @@ class CompilerContext {
   }
 
   getRoot(name) {
-    const node = this._documents.get(name);
+    // FIXME: TMP has duplicate definition names, but that is really only a
+    //        problem when they are fragments. Right here the name in the
+    //        map does not matter outside of the implementation of
+    //        transforming to IR, so we can just make operations named
+    //        uniquely.
+    //        Bug #2809718
+    const node = this._documents.get(name + "$root");
 
     if (node == null) {
       throw createUserError(`Cannot find root '${name}'.`);

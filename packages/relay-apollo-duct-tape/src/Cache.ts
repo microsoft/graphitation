@@ -552,10 +552,13 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     disposable.dispose();
   }
 
-  // TODO: In the future, we want to support returning just the id value,
-  //       which we'll do only for types that implement the Node interface.
-  //       This to ensure that the same store can be used for client code
-  //       that uses react-relay and its `node` based features.
+  // TODO:
+  //
+  //  - Support keyArgs.
+  //  - In the future, we want to support returning just the id value,
+  //    which we'll do only for types that implement the Node interface.
+  //    This to ensure that the same store can be used for client code
+  //    that uses react-relay and its `node` based features.
   private getDataID(
     fieldValue: Record<string, unknown>,
     typeName?: string,
