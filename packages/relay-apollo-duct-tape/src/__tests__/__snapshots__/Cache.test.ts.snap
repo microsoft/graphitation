@@ -575,14 +575,14 @@ Object {
 
 exports[`writeFragment/readFragment works with relayWithBuildtimeGeneratedIR 1`] = `
 Object {
-  "id": "42",
+  "id": "Conversation:42",
   "title": "Hello World",
 }
 `;
 
 exports[`writeFragment/readFragment works with relayWithBuildtimeGeneratedIR and optimistic data 1`] = `
 Object {
-  "id": "42",
+  "id": "Conversation:42",
   "title": "Hello World",
 }
 `;
@@ -590,7 +590,7 @@ Object {
 exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "__typename": "Conversation",
-  "id": "42",
+  "id": "Conversation:42",
   "title": "Hello World",
 }
 `;
@@ -598,7 +598,7 @@ Object {
 exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR and optimistic data 1`] = `
 Object {
   "__typename": "Conversation",
-  "id": "42",
+  "id": "Conversation:42",
   "title": "Hello World",
 }
 `;

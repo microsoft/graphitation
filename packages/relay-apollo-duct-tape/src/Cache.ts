@@ -292,12 +292,14 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
 
   // TODO: When is Reference as return type used?
   // TODO: Can we avoid the query write? I.e. how do we build the fragment ref?
+  // TODO: Add test for adding `id` value to data to write
   writeFragment<TData = any, TVariables = any>(
     options: ApolloCacheTypes.WriteFragmentOptions<TData, TVariables>,
   ): Reference | undefined {
     const fragment = getFragment(this.getTaggedNode(options.fragment));
-    this.writeWithRelayIR(getNodeQuery(fragment, options.id || ROOT_ID), {
-      result: { node: options.data },
+    const id = options.id || ROOT_ID;
+    this.writeWithRelayIR(getNodeQuery(fragment, id), {
+      result: { node: { ...options.data, id } },
       variables: options.variables,
     });
     return undefined;

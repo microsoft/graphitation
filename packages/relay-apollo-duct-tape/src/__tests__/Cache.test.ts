@@ -293,7 +293,7 @@ describe("writeFragment/readFragment", () => {
           returnPartialData: true,
         }),
       ).toMatchObject({
-        id: "42",
+        id: expect.stringMatching(/42/),
       });
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining("title"),
