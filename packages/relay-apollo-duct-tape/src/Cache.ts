@@ -41,6 +41,7 @@ import {
   getRequest,
   createOperationDescriptor,
   ROOT_ID,
+  Environment,
 } from "relay-runtime";
 import { NormalizationFragmentSpread } from "relay-runtime/lib/util/NormalizationNode";
 import RelayRecordSource from "relay-runtime/lib/store/RelayRecordSource";
@@ -77,6 +78,14 @@ import { transformDocument, transformSchema } from "./relayDocumentUtils";
 import type { Schema } from "./vendor/relay-compiler/lib/core/Schema";
 import type { DocumentNode, DefinitionNode } from "graphql";
 
+declare global {
+  var __RELAY_DEVTOOLS_HOOK__:
+    | undefined
+    | {
+        registerEnvironment: (environment: Environment) => void;
+      };
+}
+
 type ReadOptions = Omit<ApolloCacheTypes.DiffOptions, "query">;
 
 type OptimisticTransaction = WeakRef<OptimisticUpdate>[];
@@ -96,13 +105,14 @@ export interface TypePolicies {
 export class RelayApolloCache extends ApolloCache<RecordMap> {
   private store: Store;
   private usingExternalStore: boolean;
-  private inTransation: boolean | OptimisticTransaction;
+  private transactionStack: (boolean | OptimisticTransaction)[];
   private publishQueue: PublishQueue;
   private optimisticTransactions: Map<string, OptimisticTransaction>;
   private typePolicies: TypePolicies;
   private pessimism?: Map<string, [Snapshot, Disposable]>;
   private schema?: Schema;
   private typenameDocumentCache?: WeakMap<DocumentNode, DocumentNode>;
+  private debugEnvironment?: Environment;
 
   constructor(
     options: {
@@ -119,7 +129,8 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     super();
     this.store = options.store || new RelayModernStore(new RelayRecordSource());
     this.usingExternalStore = !!options.store;
-    this.inTransation = false;
+    // this.inTransation = false;
+    this.transactionStack = [];
     this.typePolicies = options.typePolicies || {};
     this.publishQueue = new RelayPublishQueue(this.store, null, this.getDataID);
     this.optimisticTransactions = new Map();
@@ -137,6 +148,19 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     this.schema = options.schema && transformSchema(options.schema);
     if (options.schema) {
       this.typenameDocumentCache = new WeakMap();
+    }
+
+    const devToolsHook = globalThis.__RELAY_DEVTOOLS_HOOK__;
+    if (devToolsHook) {
+      this.debugEnvironment = new Environment({
+        store: this.store,
+        network: {
+          execute: () => {
+            throw new Error("Not implemented");
+          },
+        },
+      });
+      devToolsHook.registerEnvironment(this.debugEnvironment);
     }
   }
 
@@ -415,7 +439,6 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     callback: Transaction<RecordMap>,
     optimisticId?: string | null,
   ): void {
-    invariant(!this.inTransation, "Already in a transaction");
     try {
       if (optimisticId) {
         invariant(
@@ -425,16 +448,24 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
         );
         const transaction: OptimisticTransaction = [];
         this.optimisticTransactions.set(optimisticId, transaction);
-        this.inTransation = transaction;
+        this.transactionStack.push(transaction);
       } else {
-        this.inTransation = true;
+        this.transactionStack.push(true);
       }
       callback(this);
-      this.publishQueue.run();
-    } finally {
+      this.transactionStack.pop();
+      if (this.transactionStack.length === 0) {
+        this.publishQueue.run();
+      }
+    } catch (e) {
       // TODO: Do we need to clean the publishQueue in case of exception?
-      this.inTransation = false;
+      this.transactionStack = [];
     }
+  }
+
+  // TODO: Test nested transactions
+  private get inTransation(): boolean | OptimisticTransaction {
+    return this.transactionStack[this.transactionStack.length - 1] ?? false;
   }
 
   /****************************************************************************
