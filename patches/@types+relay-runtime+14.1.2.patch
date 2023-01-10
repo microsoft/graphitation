@@ -239,6 +239,18 @@ index 514c207..f53508c 100755
      constructor(records?: RecordMap);
  
      static create(records?: RecordMap): MutableRecordSource;
+diff --git a/node_modules/@types/relay-runtime/lib/store/RelayResponseNormalizer.d.ts b/node_modules/@types/relay-runtime/lib/store/RelayResponseNormalizer.d.ts
+index 8a05a11..997a272 100755
+--- a/node_modules/@types/relay-runtime/lib/store/RelayResponseNormalizer.d.ts
++++ b/node_modules/@types/relay-runtime/lib/store/RelayResponseNormalizer.d.ts
+@@ -7,6 +7,7 @@ export interface NormalizationOptions {
+     getDataID: GetDataID;
+     path?: ReadonlyArray<string> | undefined;
+     request: RequestDescriptor;
++    treatMissingFieldsAsNull?: boolean;
+ }
+ 
+ /**
 diff --git a/node_modules/@types/relay-runtime/lib/store/RelayStoreTypes.d.ts b/node_modules/@types/relay-runtime/lib/store/RelayStoreTypes.d.ts
 index 8566ca5..b36ed5d 100755
 --- a/node_modules/@types/relay-runtime/lib/store/RelayStoreTypes.d.ts

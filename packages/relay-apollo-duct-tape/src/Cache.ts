@@ -268,6 +268,16 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
       {
         getDataID: this.getDataID,
         request: operation.request,
+        // FIXME: Enabling this would actually break the possibility to check
+        //        if the store is missing any data for a query when using diff.
+        //        Seeing as it's only a warning, we can probably live with it
+        //        or disable it in the code and patch it.
+        //
+        // This is to handle @client fields being present in the document, but
+        // not in the data. Ideally we figure out a way to only apply this for
+        // those @client fields, leaving the check/warning for other fields.
+        //
+        // treatMissingFieldsAsNull: true,
       },
     );
 

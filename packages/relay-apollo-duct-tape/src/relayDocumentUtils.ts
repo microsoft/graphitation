@@ -65,6 +65,7 @@ export function transformDocument(
       res.push(generatedNode);
     }
   });
+  // This is for read/writing with just fragments
   fragmentCompilerContext.forEachDocument((node) => {
     if (node.kind === "Fragment") {
       res.push(generateIRDocument(schema, node));
