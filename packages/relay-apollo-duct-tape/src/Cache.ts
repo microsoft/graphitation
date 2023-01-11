@@ -1,6 +1,8 @@
 /**
  * BIG TODOs:
  *
+ * - Look at using https://github.com/facebook/relay/blob/603bb4bc2927bda8b7f0dac1d86cbc5ecbf50202/packages/relay-runtime/store/RelayReader.js#L100
+ *
  * - Do we need, and can we have, any merge logic from type-policies ported over?
  *
  * - Make GC work
@@ -57,6 +59,10 @@ import {
 } from "relay-runtime/lib/store/RelayStoreTypes";
 import RelayPublishQueue from "relay-runtime/lib/store/RelayPublishQueue";
 import RelayModernStore from "relay-runtime/lib/store/RelayModernStore";
+
+// This is needed for field read functions
+const RelayFeatureFlags = require("relay-runtime/lib/util/RelayFeatureFlags");
+RelayFeatureFlags.ENABLE_RELAY_RESOLVERS = true;
 
 import {
   ApolloCache,
@@ -530,6 +536,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
           this.schema,
           this.transformDocument(document),
           !!this.pessimism,
+          this.typePolicies,
         )
       : document.__relay;
     invariant(

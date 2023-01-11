@@ -611,3 +611,115 @@ describe("read memoization", () => {
     expect(dispose).toHaveBeenCalled();
   });
 });
+
+describe("field read functions", () => {
+  it.only("apollo", () => {
+    const client = apollo({
+      Conversation: {
+        fields: {
+          title: {
+            read: (...args: any[]) => {
+              // console.log(args);
+              return "Hello resolver!";
+            },
+          },
+        },
+      } as any,
+    });
+    client.writeQuery({ query: QueryDocument, data: RESPONSE });
+    expect(client.readQuery({ query: QueryDocument })).toMatchInlineSnapshot(`
+      Object {
+        "conversation": Object {
+          "id": "42",
+          "title": "Hello resolver!",
+        },
+      }
+    `);
+  });
+
+  // NOTE: A value for the resolver backed field may not exist in the cache, or this fails!
+  // TODO: Figure out if we can still make that work, because InMemoryCache can, afaik.
+  it.only("relay with build time IR", () => {
+    const fieldReadFunction = (...args: any[]) => {
+      console.log(args);
+      return "Hello resolver!";
+    };
+    const client = relayWithBuildtimeGeneratedIR({
+      Conversation: {
+        fields: {
+          title: {
+            read: fieldReadFunction,
+          },
+        },
+      } as any,
+    });
+    client.writeQuery({
+      query: QueryDocument,
+      data: {
+        conversation: {
+          __typename: "Conversation",
+          id: "42",
+          // NOTE: Uncommenting this would break
+          // title: "Hello World",
+        },
+      },
+    });
+    // Duplicate the doc and add the resolver field IR
+    const docWithResolver = JSON.parse(JSON.stringify(QueryDocument));
+    docWithResolver.__relay.fragment.selections[0].selections[1] = {
+      kind: "RelayResolver",
+      name: "title",
+      resolverModule: fieldReadFunction,
+    };
+    expect(client.readQuery({ query: docWithResolver })).toMatchInlineSnapshot(`
+      Object {
+        "conversation": Object {
+          "id": "42",
+          "title": "Hello resolver!",
+        },
+      }
+    `);
+  });
+
+  it.only("relay with runtime IR", () => {
+    const fieldReadFunction = (...args: any[]) => {
+      console.log(args);
+      return "Hello resolver!";
+    };
+    const client = relayWithRuntimeGeneratedIR({
+      Conversation: {
+        fields: {
+          title: {
+            read: fieldReadFunction,
+          },
+        },
+      } as any,
+    });
+    client.writeQuery({
+      query: QueryDocument,
+      data: {
+        conversation: {
+          __typename: "Conversation",
+          id: "42",
+          // NOTE: Uncommenting this would break
+          // title: "Hello World",
+        },
+      },
+    });
+    // Duplicate the doc and add the resolver field IR
+    // const docWithResolver = JSON.parse(JSON.stringify(QueryDocument));
+    // docWithResolver.__relay.fragment.selections[0].selections[1] = {
+    //   kind: "RelayResolver",
+    //   name: "title",
+    //   resolverModule: fieldReadFunction,
+    // };
+    expect(client.readQuery({ query: QueryDocument })).toMatchInlineSnapshot(`
+      Object {
+        "conversation": Object {
+          "id": "42",
+          "title": "Hello resolver!",
+        },
+      }
+    `);
+  });
+});

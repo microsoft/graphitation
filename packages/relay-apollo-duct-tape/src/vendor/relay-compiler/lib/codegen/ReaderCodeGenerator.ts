@@ -133,6 +133,10 @@ function generateSelections(schema, selections) {
         case "Stream":
           return generateStream(schema, selection);
 
+        case "RelayResolver":
+          console.log(selection);
+          return selection;
+
         default:
           selection;
           throw new Error();

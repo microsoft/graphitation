@@ -1,16 +1,26 @@
 import { transform as transformToIR } from "./vendor/relay-compiler/lib/core/RelayParser";
 import CompilerContext from "./vendor/relay-compiler/lib/core/CompilerContext";
 import { create as createSchema } from "./vendor/relay-compiler/lib/core/Schema";
+import { transform } from "./vendor/relay-compiler/lib/core/IRTransformer";
 import * as FlattenTransform from "./vendor/relay-compiler/lib/transforms/FlattenTransform";
 import * as InlineFragmentsTransform from "./vendor/relay-compiler/lib/transforms/InlineFragmentsTransform";
 import { generate as generateIRDocument } from "./vendor/relay-compiler/lib/codegen/RelayCodeGenerator";
 
-import { Source, print as printGraphQLJS } from "graphql";
+import {
+  Source,
+  print as printGraphQLJS,
+  getNamedType,
+  getNullableType,
+} from "graphql";
 import hash from "@emotion/hash";
 
 import type { DefinitionNode, DocumentNode } from "graphql";
 import type { Schema } from "./vendor/relay-compiler/lib/core/Schema";
-import type { Request } from "relay-compiler/lib/core/IR";
+import type {
+  ScalarField,
+  Request,
+  LinkedField,
+} from "relay-compiler/lib/core/IR";
 
 // TODO: Hash input document instead, which means memoization can skip
 //       actually applying this transform.
@@ -18,6 +28,7 @@ export function transformDocument(
   schema: Schema,
   document: DocumentNode,
   addHash: boolean,
+  typePolicies: any | undefined,
 ) {
   const nodes = transformToIR(
     schema,
@@ -37,6 +48,69 @@ export function transformDocument(
       isForCodegen: true,
     } as any),
   );
+
+  // const s = { parentType: undefined };
+  // operationCompilerContext = transform(
+  //   fragmentCompilerContext,
+  //   {
+  //     ScalarField: (
+  //       fieldNode: ScalarField,
+  //       state: { parentType: undefined | string },
+  //     ) => {
+  //       const typePolicy =
+  //         typePolicies && state.parentType && typePolicies[state.parentType];
+  //       const readerFn = typePolicy?.fields?.[fieldNode.name]?.read;
+  //       if (readerFn) {
+  //         return {
+  //           kind: "RelayResolver",
+  //           name: fieldNode.name,
+  //           resolverModule: readerFn,
+  //         };
+  //       }
+  //       return fieldNode;
+  //     },
+  //     LinkedField: (
+  //       node: LinkedField,
+  //       state: { parentType: undefined | string },
+  //     ) => {
+  //       state.parentType = schema.getNullableType(node.type).name;
+  //       return node;
+  //     },
+  //   },
+  //   () => s,
+  // );
+
+  const s1 = { parentType: undefined };
+  fragmentCompilerContext = transform(
+    fragmentCompilerContext,
+    {
+      ScalarField: (
+        fieldNode: ScalarField,
+        state: { parentType: undefined | string },
+      ) => {
+        const typePolicy =
+          typePolicies && state.parentType && typePolicies[state.parentType];
+        const readerFn = typePolicy?.fields?.[fieldNode.name]?.read;
+        if (readerFn) {
+          return {
+            kind: "RelayResolver",
+            name: fieldNode.name,
+            resolverModule: readerFn,
+          };
+        }
+        return fieldNode;
+      },
+      LinkedField: (
+        node: LinkedField,
+        state: { parentType: undefined | string },
+      ) => {
+        state.parentType = schema.getNullableType(node.type).name;
+        return node;
+      },
+    },
+    () => s1,
+  );
+
   const res: any[] = [];
   operationCompilerContext.forEachDocument((node) => {
     if (node.kind === "Root") {
@@ -72,6 +146,7 @@ export function transformDocument(
     }
   });
   const x = res[0];
+  console.log(JSON.stringify(x, null, 2));
   if (addHash) {
     x.hash = hash(JSON.stringify(x));
   }
