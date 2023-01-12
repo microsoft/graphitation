@@ -85,31 +85,7 @@ describe("transformDocument", () => {
     ({ client }) => {
       const cache = client(undefined, true);
       const transformed = cache.transformDocument(QueryDocument);
-      expect(printGraphQL(transformed)).toMatchInlineSnapshot(`
-        "query CacheTestQuery($conversationId: String!, $includeNestedData: Boolean = false) {
-          conversation(id: $conversationId) {
-            ... on Conversation @include(if: $includeNestedData) {
-              messages {
-                id
-                authorId
-                text
-                createdAt
-                __typename
-              }
-              __typename
-            }
-            ...CacheTestFragment
-            __typename
-          }
-        }
-
-        fragment CacheTestFragment on Conversation {
-          id
-          title
-          __typename
-        }
-        "
-        `);
+      expect(printGraphQL(transformed)).toMatchSnapshot();
     },
   );
 
@@ -133,14 +109,7 @@ describe("writeQuery/readQuery", () => {
         query: QueryDocument,
         variables: { conversationId: "42" },
       }),
-    ).toMatchInlineSnapshot(`
-      Object {
-        "conversation": Object {
-          "id": "42",
-          "title": "Hello World",
-        },
-      }
-    `);
+    ).toMatchSnapshot();
   });
 
   describe("concerning missing data", () => {
@@ -210,14 +179,7 @@ describe("writeQuery/readQuery", () => {
           variables: { conversationId: "42" },
           optimistic: true,
         }),
-      ).toMatchInlineSnapshot(`
-        Object {
-          "conversation": Object {
-            "id": "42",
-            "title": "Hello World",
-          },
-        }
-      `);
+      ).toMatchSnapshot();
     });
 
     it.each(TEST_VARIANTS)("applies update with $client.name", ({ client }) => {
@@ -246,14 +208,7 @@ describe("writeQuery/readQuery", () => {
           variables: { conversationId: "42" },
           optimistic: true,
         }),
-      ).toMatchInlineSnapshot(`
-        Object {
-          "conversation": Object {
-            "id": "42",
-            "title": "Hello World",
-          },
-        }
-      `);
+      ).toMatchSnapshot();
     });
   });
 });
@@ -273,12 +228,7 @@ describe("writeFragment/readFragment", () => {
         fragment: FragmentDocument,
         variables: { conversationId: "42" },
       }),
-    ).toMatchInlineSnapshot(`
-      Object {
-        "id": "42",
-        "title": "Hello World",
-      }
-    `);
+    ).toMatchSnapshot();
   });
 
   it.each(TEST_VARIANTS)(
@@ -307,12 +257,7 @@ describe("writeFragment/readFragment", () => {
           variables: { conversationId: "42" },
           optimistic: true,
         }),
-      ).toMatchInlineSnapshot(`
-      Object {
-        "id": "42",
-        "title": "Hello World",
-      }
-    `);
+      ).toMatchSnapshot();
     },
   );
 
@@ -371,34 +316,13 @@ describe("watch", () => {
         callback: (diff, lastDiff) => {
           switch (++count) {
             case 1: {
-              expect(diff.result).toMatchInlineSnapshot(`
-                Object {
-                  "conversation": Object {
-                    "id": "42",
-                    "title": "Hello World 1",
-                  },
-                }
-              `);
+              expect(diff.result).toMatchSnapshot();
               expect(lastDiff).toBeUndefined();
               break;
             }
             case 2: {
-              expect(diff.result).toMatchInlineSnapshot(`
-                Object {
-                  "conversation": Object {
-                    "id": "42",
-                    "title": "Hello World 2",
-                  },
-                }
-              `);
-              expect(lastDiff!.result).toMatchInlineSnapshot(`
-                Object {
-                  "conversation": Object {
-                    "id": "42",
-                    "title": "Hello World 1",
-                  },
-                }
-              `);
+              expect(diff.result).toMatchSnapshot();
+              expect(lastDiff!.result).toMatchSnapshot();
               resolve();
             }
           }
@@ -623,22 +547,7 @@ describe("key-fields", () => {
             query: QueryDocument,
             variables: { conversationId: "42", includeNestedData: true },
           }),
-        ).toMatchInlineSnapshot(`
-            Object {
-              "conversation": Object {
-                "id": "42",
-                "messages": Array [
-                  Object {
-                    "authorId": "author-42",
-                    "createdAt": "2020-01-01T00:00:00.000Z",
-                    "id": "message-42",
-                    "text": "Hello World",
-                  },
-                ],
-                "title": "Hello World",
-              },
-            }
-          `);
+        ).toMatchSnapshot();
         expect(cache.extract()).toMatchSnapshot();
       });
     });

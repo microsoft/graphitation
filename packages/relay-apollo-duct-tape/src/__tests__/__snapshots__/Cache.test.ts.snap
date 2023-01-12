@@ -1,5 +1,22 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`key-fields concerning normalization with custom key-fields works with apollo 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "messages": Array [
+      Object {
+        "authorId": "author-42",
+        "createdAt": "2020-01-01T00:00:00.000Z",
+        "id": "message-42",
+        "text": "Hello World",
+      },
+    ],
+    "title": "Hello World",
+  },
+}
+`;
+
 exports[`key-fields concerning normalization with custom key-fields works with apollo 2`] = `
 Object {
   "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}": Object {
@@ -24,6 +41,23 @@ Object {
     "conversation({\\"id\\":\\"42\\"})": Object {
       "__ref": "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}",
     },
+  },
+}
+`;
+
+exports[`key-fields concerning normalization with custom key-fields works with relayWithBuildtimeGeneratedIR 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "messages": Array [
+      Object {
+        "authorId": "author-42",
+        "createdAt": "2020-01-01T00:00:00.000Z",
+        "id": "message-42",
+        "text": "Hello World",
+      },
+    ],
+    "title": "Hello World",
   },
 }
 `;
@@ -59,6 +93,23 @@ Object {
 }
 `;
 
+exports[`key-fields concerning normalization with custom key-fields works with relayWithRuntimeGeneratedIR 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "messages": Array [
+      Object {
+        "authorId": "author-42",
+        "createdAt": "2020-01-01T00:00:00.000Z",
+        "id": "message-42",
+        "text": "Hello World",
+      },
+    ],
+    "title": "Hello World",
+  },
+}
+`;
+
 exports[`key-fields concerning normalization with custom key-fields works with relayWithRuntimeGeneratedIR 2`] = `
 Object {
   "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}": Object {
@@ -90,6 +141,23 @@ Object {
 }
 `;
 
+exports[`key-fields concerning normalization with default key-fields works with apollo 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "messages": Array [
+      Object {
+        "authorId": "author-42",
+        "createdAt": "2020-01-01T00:00:00.000Z",
+        "id": "message-42",
+        "text": "Hello World",
+      },
+    ],
+    "title": "Hello World",
+  },
+}
+`;
+
 exports[`key-fields concerning normalization with default key-fields works with apollo 2`] = `
 Object {
   "Conversation:42": Object {
@@ -114,6 +182,23 @@ Object {
     "conversation({\\"id\\":\\"42\\"})": Object {
       "__ref": "Conversation:42",
     },
+  },
+}
+`;
+
+exports[`key-fields concerning normalization with default key-fields works with relayWithBuildtimeGeneratedIR 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "messages": Array [
+      Object {
+        "authorId": "author-42",
+        "createdAt": "2020-01-01T00:00:00.000Z",
+        "id": "message-42",
+        "text": "Hello World",
+      },
+    ],
+    "title": "Hello World",
   },
 }
 `;
@@ -149,6 +234,23 @@ Object {
 }
 `;
 
+exports[`key-fields concerning normalization with default key-fields works with relayWithRuntimeGeneratedIR 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "messages": Array [
+      Object {
+        "authorId": "author-42",
+        "createdAt": "2020-01-01T00:00:00.000Z",
+        "id": "message-42",
+        "text": "Hello World",
+      },
+    ],
+    "title": "Hello World",
+  },
+}
+`;
+
 exports[`key-fields concerning normalization with default key-fields works with relayWithRuntimeGeneratedIR 2`] = `
 Object {
   "Conversation:42": Object {
@@ -180,6 +282,23 @@ Object {
 }
 `;
 
+exports[`key-fields concerning normalization without key-fields works with apollo 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "messages": Array [
+      Object {
+        "authorId": "author-42",
+        "createdAt": "2020-01-01T00:00:00.000Z",
+        "id": "message-42",
+        "text": "Hello World",
+      },
+    ],
+    "title": "Hello World",
+  },
+}
+`;
+
 exports[`key-fields concerning normalization without key-fields works with apollo 2`] = `
 Object {
   "ROOT_QUERY": Object {
@@ -198,6 +317,23 @@ Object {
       ],
       "title": "Hello World",
     },
+  },
+}
+`;
+
+exports[`key-fields concerning normalization without key-fields works with relayWithBuildtimeGeneratedIR 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "messages": Array [
+      Object {
+        "authorId": "author-42",
+        "createdAt": "2020-01-01T00:00:00.000Z",
+        "id": "message-42",
+        "text": "Hello World",
+      },
+    ],
+    "title": "Hello World",
   },
 }
 `;
@@ -233,6 +369,23 @@ Object {
 }
 `;
 
+exports[`key-fields concerning normalization without key-fields works with relayWithRuntimeGeneratedIR 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "messages": Array [
+      Object {
+        "authorId": "author-42",
+        "createdAt": "2020-01-01T00:00:00.000Z",
+        "id": "message-42",
+        "text": "Hello World",
+      },
+    ],
+    "title": "Hello World",
+  },
+}
+`;
+
 exports[`key-fields concerning normalization without key-fields works with relayWithRuntimeGeneratedIR 2`] = `
 Object {
   "client:root": Object {
@@ -260,6 +413,262 @@ Object {
     "createdAt": "2020-01-01T00:00:00.000Z",
     "id": "message-42",
     "text": "Hello World",
+  },
+}
+`;
+
+exports[`transformDocument adds __typename to documents with apollo 1`] = `
+"query CacheTestQuery($conversationId: String!, $includeNestedData: Boolean = false) {
+  conversation(id: $conversationId) {
+    ... on Conversation @include(if: $includeNestedData) {
+      messages {
+        id
+        authorId
+        text
+        createdAt
+        __typename
+      }
+      __typename
+    }
+    ...CacheTestFragment
+    __typename
+  }
+}
+
+fragment CacheTestFragment on Conversation {
+  id
+  title
+  __typename
+}
+"
+`;
+
+exports[`transformDocument adds __typename to documents with relayWithRuntimeGeneratedIR 1`] = `
+"query CacheTestQuery($conversationId: String!, $includeNestedData: Boolean = false) {
+  conversation(id: $conversationId) {
+    ... on Conversation @include(if: $includeNestedData) {
+      messages {
+        id
+        authorId
+        text
+        createdAt
+        __typename
+      }
+      __typename
+    }
+    ...CacheTestFragment
+    __typename
+  }
+}
+
+fragment CacheTestFragment on Conversation {
+  id
+  title
+  __typename
+}
+"
+`;
+
+exports[`watch works with apollo 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World 1",
+  },
+}
+`;
+
+exports[`watch works with apollo 2`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World 2",
+  },
+}
+`;
+
+exports[`watch works with apollo 3`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World 1",
+  },
+}
+`;
+
+exports[`watch works with relayWithBuildtimeGeneratedIR 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World 1",
+  },
+}
+`;
+
+exports[`watch works with relayWithBuildtimeGeneratedIR 2`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World 2",
+  },
+}
+`;
+
+exports[`watch works with relayWithBuildtimeGeneratedIR 3`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World 1",
+  },
+}
+`;
+
+exports[`watch works with relayWithRuntimeGeneratedIR 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World 1",
+  },
+}
+`;
+
+exports[`watch works with relayWithRuntimeGeneratedIR 2`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World 2",
+  },
+}
+`;
+
+exports[`watch works with relayWithRuntimeGeneratedIR 3`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World 1",
+  },
+}
+`;
+
+exports[`writeFragment/readFragment works with apollo 1`] = `
+Object {
+  "id": "42",
+  "title": "Hello World",
+}
+`;
+
+exports[`writeFragment/readFragment works with apollo and optimistic data 1`] = `
+Object {
+  "id": "42",
+  "title": "Hello World",
+}
+`;
+
+exports[`writeFragment/readFragment works with relayWithBuildtimeGeneratedIR 1`] = `
+Object {
+  "id": "42",
+  "title": "Hello World",
+}
+`;
+
+exports[`writeFragment/readFragment works with relayWithBuildtimeGeneratedIR and optimistic data 1`] = `
+Object {
+  "id": "42",
+  "title": "Hello World",
+}
+`;
+
+exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR 1`] = `
+Object {
+  "id": "42",
+  "title": "Hello World",
+}
+`;
+
+exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR and optimistic data 1`] = `
+Object {
+  "id": "42",
+  "title": "Hello World",
+}
+`;
+
+exports[`writeQuery/readQuery concerning optimistic updates applies update with apollo 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World",
+  },
+}
+`;
+
+exports[`writeQuery/readQuery concerning optimistic updates applies update with apollo 2`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World",
+  },
+}
+`;
+
+exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithBuildtimeGeneratedIR 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World",
+  },
+}
+`;
+
+exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithBuildtimeGeneratedIR 2`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World",
+  },
+}
+`;
+
+exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithRuntimeGeneratedIR 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World",
+  },
+}
+`;
+
+exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithRuntimeGeneratedIR 2`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World",
+  },
+}
+`;
+
+exports[`writeQuery/readQuery works with apollo 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World",
+  },
+}
+`;
+
+exports[`writeQuery/readQuery works with relayWithBuildtimeGeneratedIR 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World",
+  },
+}
+`;
+
+exports[`writeQuery/readQuery works with relayWithRuntimeGeneratedIR 1`] = `
+Object {
+  "conversation": Object {
+    "id": "42",
+    "title": "Hello World",
   },
 }
 `;
