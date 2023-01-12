@@ -2,6 +2,21 @@
   "name": "@graphitation/relay-apollo-duct-tape",
   "entries": [
     {
+      "date": "Thu, 12 Jan 2023 17:17:13 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.6",
+      "version": "0.4.6",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "e4cd0b3db7dea0665cb60ee1a89eac87ef4182ec",
+            "comment": "Bunch of fixes"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 19 Dec 2022 22:50:16 GMT",
       "tag": "@graphitation/relay-apollo-duct-tape_v0.4.5",
       "version": "0.4.5",
