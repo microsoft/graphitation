@@ -64,8 +64,12 @@ import {
   isReference,
   Reference,
   Transaction,
+  TypePolicies,
+  TypePolicy,
 } from "@apollo/client";
 import { addTypenameToDocument } from "@apollo/client/utilities";
+import { KeySpecifier } from "@apollo/client/cache/inmemory/policies";
+export { TypePolicies };
 
 import invariant from "invariant";
 
@@ -94,13 +98,6 @@ type RecordLike = {
   __typename?: string;
   [key: string]: unknown;
 };
-
-interface TypePolicy {
-  keyFields?: string[] | false;
-}
-export interface TypePolicies {
-  [typename: string]: TypePolicy;
-}
 
 export class RelayApolloCache extends ApolloCache<RecordMap> {
   private store: Store;
@@ -609,21 +606,49 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     if (!typeName) {
       return undefined;
     }
-    const keyFields = this.typePolicies[typeName]?.keyFields;
-    if (keyFields === undefined) {
-      if (fieldValue.id) {
-        return `${typeName}:${fieldValue.id}`;
-      } else {
-        return undefined;
-      }
-    } else if (keyFields === false) {
+    return getDataIDFromKeyFields(
+      this.typePolicies[typeName]?.keyFields,
+      fieldValue,
+      typeName,
+    );
+  }
+}
+
+function getDataIDFromKeyFields(
+  keyFields: TypePolicy["keyFields"],
+  fieldValue: Record<string, unknown>,
+  typeName: string,
+): string | undefined {
+  if (keyFields === undefined) {
+    if (fieldValue.id) {
+      return `${typeName}:${fieldValue.id}`;
+    } else {
       return undefined;
     }
-    return (
-      typeName +
-      ":" +
-      JSON.stringify(
-        keyFields.reduce<Record<string, unknown>>((acc, keyField) => {
+  } else if (keyFields === false) {
+    return undefined;
+  } else if (typeof keyFields === "function") {
+    const keyFieldsFnResult = keyFields(fieldValue as any, {
+      typename: typeName,
+      readField: () => {
+        throw new Error("Not implemented");
+      },
+      storeObject: fieldValue as any,
+    });
+    return getDataIDFromKeyFields(
+      typeof keyFieldsFnResult === "string"
+        ? [keyFieldsFnResult]
+        : keyFieldsFnResult,
+      fieldValue,
+      typeName,
+    );
+  }
+  return (
+    typeName +
+    ":" +
+    JSON.stringify(
+      flattenKeySpecifier(keyFields).reduce<Record<string, unknown>>(
+        (acc, keyField) => {
           const value = fieldValue[keyField];
           invariant(
             value,
@@ -632,10 +657,17 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
           );
           acc[keyField] = value;
           return acc;
-        }, {}),
-      )
-    );
-  }
+        },
+        {},
+      ),
+    )
+  );
+}
+
+function flattenKeySpecifier(keySpecifier: KeySpecifier): string[] {
+  return keySpecifier.flatMap((key) =>
+    typeof key === "string" ? key : flattenKeySpecifier(key),
+  );
 }
 
 function createWeakRef<T extends object>(value: T): WeakRef<T> {
