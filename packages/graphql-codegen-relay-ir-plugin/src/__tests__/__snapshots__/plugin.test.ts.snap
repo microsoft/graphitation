@@ -1,0 +1,139 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`plugin generates a ConcreteRequest for an operation 1`] = `
+"(SomeQueryDocument as any).__relay = (function(){
+var v0 = [
+  {
+    \\"alias\\": null,
+    \\"args\\": [
+      {
+        \\"kind\\": \\"Literal\\",
+        \\"name\\": \\"id\\",
+        \\"value\\": \\"42\\"
+      }
+    ],
+    \\"concreteType\\": \\"Conversation\\",
+    \\"kind\\": \\"LinkedField\\",
+    \\"name\\": \\"conversation\\",
+    \\"plural\\": false,
+    \\"selections\\": [
+      {
+        \\"kind\\": \\"InlineFragment\\",
+        \\"selections\\": [
+          {
+            \\"alias\\": null,
+            \\"args\\": null,
+            \\"kind\\": \\"ScalarField\\",
+            \\"name\\": \\"id\\",
+            \\"storageKey\\": null
+          },
+          {
+            \\"alias\\": null,
+            \\"args\\": [
+              {
+                \\"kind\\": \\"Literal\\",
+                \\"name\\": \\"first\\",
+                \\"value\\": 10
+              }
+            ],
+            \\"concreteType\\": \\"Message\\",
+            \\"kind\\": \\"LinkedField\\",
+            \\"name\\": \\"messages\\",
+            \\"plural\\": true,
+            \\"selections\\": [
+              {
+                \\"kind\\": \\"InlineFragment\\",
+                \\"selections\\": [
+                  {
+                    \\"alias\\": null,
+                    \\"args\\": null,
+                    \\"kind\\": \\"ScalarField\\",
+                    \\"name\\": \\"text\\",
+                    \\"storageKey\\": null
+                  }
+                ],
+                \\"type\\": \\"Message\\",
+                \\"abstractKey\\": null
+              }
+            ],
+            \\"storageKey\\": \\"messages(first:10)\\"
+          }
+        ],
+        \\"type\\": \\"Conversation\\",
+        \\"abstractKey\\": null
+      }
+    ],
+    \\"storageKey\\": \\"conversation(id:\\\\\\"42\\\\\\")\\"
+  }
+];
+return {
+  \\"fragment\\": {
+    \\"argumentDefinitions\\": [],
+    \\"kind\\": \\"Fragment\\",
+    \\"metadata\\": null,
+    \\"name\\": \\"SomeQuery\\",
+    \\"selections\\": (v0/*: any*/),
+    \\"type\\": \\"Query\\",
+    \\"abstractKey\\": null
+  },
+  \\"kind\\": \\"Request\\",
+  \\"operation\\": {
+    \\"argumentDefinitions\\": [],
+    \\"kind\\": \\"Operation\\",
+    \\"name\\": \\"SomeQuery\\",
+    \\"selections\\": (v0/*: any*/)
+  },
+  \\"params\\": {
+    \\"cacheID\\": \\"d41d8cd98f00b204e9800998ecf8427e\\",
+    \\"metadata\\": {},
+    \\"name\\": \\"SomeQuery\\",
+    \\"operationKind\\": \\"query\\",
+    \\"text\\": \\"\\"
+  }
+};
+})();
+(SomeQueryDocument as any).__relay.hash = \\"a6d1968620adf16586a6dfc34c426e83\\";"
+`;
+
+exports[`plugin generates a ReaderFragment for a fragment 1`] = `
+"(ConversationFragmentFragmentDoc as any).__relay = {
+  \\"argumentDefinitions\\": [],
+  \\"kind\\": \\"Fragment\\",
+  \\"metadata\\": null,
+  \\"name\\": \\"ConversationFragment\\",
+  \\"selections\\": [
+    {
+      \\"alias\\": null,
+      \\"args\\": null,
+      \\"kind\\": \\"ScalarField\\",
+      \\"name\\": \\"id\\",
+      \\"storageKey\\": null
+    },
+    {
+      \\"alias\\": null,
+      \\"args\\": [
+        {
+          \\"kind\\": \\"Literal\\",
+          \\"name\\": \\"first\\",
+          \\"value\\": 10
+        }
+      ],
+      \\"concreteType\\": \\"Message\\",
+      \\"kind\\": \\"LinkedField\\",
+      \\"name\\": \\"messages\\",
+      \\"plural\\": true,
+      \\"selections\\": [
+        {
+          \\"args\\": null,
+          \\"kind\\": \\"FragmentSpread\\",
+          \\"name\\": \\"MessageFragment\\"
+        }
+      ],
+      \\"storageKey\\": \\"messages(first:10)\\"
+    }
+  ],
+  \\"type\\": \\"Conversation\\",
+  \\"abstractKey\\": null
+};
+(ConversationFragmentFragmentDoc as any).__relay.hash = \\"795512b1f4ffab5f7b39e6f5d99127ea\\";"
+`;

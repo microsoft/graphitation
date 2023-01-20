@@ -11,6 +11,7 @@
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
+    "test": "monorepo-scripts test",
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts"
   },
@@ -21,7 +22,6 @@
     "@types/jest": "^26.0.22",
     "graphql-tag": "^2.11.0",
     "@graphql-tools/optimize": "^1.0.1",
-    "relay-compiler": "^12.0.0",
     "monorepo-scripts": "*",
     "@types/relay-compiler": "^8.0.0"
   },
@@ -29,7 +29,9 @@
     "@graphql-codegen/plugin-helpers": ">= 1.18.0 < 2",
     "@graphql-codegen/visitor-plugin-common": ">= ^1.17.0 < 2",
     "graphql-tag": ">= 2.11.0 < 3",
-    "@graphql-tools/optimize": "^1.0.1",
+    "@graphql-tools/optimize": "^1.0.1"
+  },
+  "dependencies": {
     "relay-compiler": "^12.0.0"
   },
   "sideEffects": false,

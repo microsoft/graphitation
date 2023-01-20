@@ -1,0 +1,51 @@
+diff --git a/node_modules/@types/relay-compiler/lib/codegen/RelayCodeGenerator.d.ts b/node_modules/@types/relay-compiler/lib/codegen/RelayCodeGenerator.d.ts
+new file mode 100644
+index 0000000..1be6330
+--- /dev/null
++++ b/node_modules/@types/relay-compiler/lib/codegen/RelayCodeGenerator.d.ts
+@@ -0,0 +1,12 @@
++import { Schema } from "../core/Schema";
++import { Fragment, Request, SplitOperation } from "../core/IR";
++import { ReaderFragment, ConcreteRequest, NormalizationSplitOperation} from "relay-runtime";
++
++declare function generate(schema: Schema, node: Fragment): ReaderFragment;
++declare function generate(schema: Schema, node: Request): ConcreteRequest;
++declare function generate(
++  schema: Schema,
++  node: SplitOperation,
++): NormalizationSplitOperation;
++
++export { generate }
+\ No newline at end of file
+diff --git a/node_modules/@types/relay-compiler/lib/core/CompilerContext.d.ts b/node_modules/@types/relay-compiler/lib/core/CompilerContext.d.ts
+index f9753c2..474a6a9 100644
+--- a/node_modules/@types/relay-compiler/lib/core/CompilerContext.d.ts
++++ b/node_modules/@types/relay-compiler/lib/core/CompilerContext.d.ts
+@@ -8,7 +8,7 @@ export type IRTransform = (
+ 
+ export type CompilerContextDocument = Fragment | Root | SplitOperation;
+ 
+-export class CompilerContext {
++export default class CompilerContext {
+   constructor(schema: Schema);
+   documents(): CompilerContextDocument[];
+   forEachDocument(fn: (doc: CompilerContextDocument) => void): void;
+diff --git a/node_modules/@types/relay-compiler/lib/core/Schema.d.ts b/node_modules/@types/relay-compiler/lib/core/Schema.d.ts
+index c79aea0..c122c3e 100644
+--- a/node_modules/@types/relay-compiler/lib/core/Schema.d.ts
++++ b/node_modules/@types/relay-compiler/lib/core/Schema.d.ts
+@@ -3,6 +3,7 @@ import {
+     DocumentNode,
+     DirectiveLocationEnum,
+     ValueNode,
++    Source
+ } from 'graphql';
+ import { Field as IRField } from './IR';
+ 
+@@ -127,3 +128,5 @@ export interface Schema {
+     parseValue: (type: ScalarTypeID | EnumTypeID, value: any) => any;
+     serialize: (type: ScalarTypeID | EnumTypeID, value: any) => any;
+ }
++
++export function create(source: Source): Schema;
+\ No newline at end of file

@@ -23,6 +23,7 @@ export function transformDocument(
     schema,
     // TODO: Add test with multiple references to the same fragment
     // And is this still necessary if we already do it in Cache.transformDocument
+    // NOTE: graphql-codegen operations plugin has a dedupeFragments option for this, is it helpful?
     (document.definitions as DefinitionNode[]).filter(uniqueFilter),
   );
   let compilerContext = new CompilerContext(schema);
