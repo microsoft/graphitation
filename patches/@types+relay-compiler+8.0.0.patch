@@ -1,3 +1,16 @@
+diff --git a/node_modules/@types/relay-compiler/index.d.ts b/node_modules/@types/relay-compiler/index.d.ts
+index 91ffc0a..2fa95be 100644
+--- a/node_modules/@types/relay-compiler/index.d.ts
++++ b/node_modules/@types/relay-compiler/index.d.ts
+@@ -6,7 +6,7 @@
+ // TypeScript Version: 3.4
+ 
+ import * as ASTConvert from './lib/core/ASTConvert';
+-import { CompilerContext } from './lib/core/CompilerContext';
++import CompilerContext from './lib/core/CompilerContext';
+ import * as Parser from './lib/core/RelayParser';
+ import * as Printer from './lib/core/IRPrinter';
+ import * as IRTransforms from './lib/core/RelayIRTransforms';
 diff --git a/node_modules/@types/relay-compiler/lib/codegen/RelayCodeGenerator.d.ts b/node_modules/@types/relay-compiler/lib/codegen/RelayCodeGenerator.d.ts
 new file mode 100644
 index 0000000..1be6330
@@ -48,4 +61,32 @@ index c79aea0..c122c3e 100644
  }
 +
 +export function create(source: Source): Schema;
+\ No newline at end of file
+diff --git a/node_modules/@types/relay-compiler/lib/transforms/FlattenTransform.d.ts b/node_modules/@types/relay-compiler/lib/transforms/FlattenTransform.d.ts
+index a81eb0b..80c05fa 100644
+--- a/node_modules/@types/relay-compiler/lib/transforms/FlattenTransform.d.ts
++++ b/node_modules/@types/relay-compiler/lib/transforms/FlattenTransform.d.ts
+@@ -1,4 +1,4 @@
+-import { CompilerContext } from '../core/CompilerContext';
++import CompilerContext from '../core/CompilerContext';
+ 
+ export interface FlattenOptions {
+     flattenAbstractTypes?: boolean;
+diff --git a/node_modules/@types/relay-compiler/lib/transforms/InlineFragmentsTransform.d.ts b/node_modules/@types/relay-compiler/lib/transforms/InlineFragmentsTransform.d.ts
+index 11e6b33..7712bff 100644
+--- a/node_modules/@types/relay-compiler/lib/transforms/InlineFragmentsTransform.d.ts
++++ b/node_modules/@types/relay-compiler/lib/transforms/InlineFragmentsTransform.d.ts
+@@ -1,4 +1,4 @@
+-import { CompilerContext } from '../core/CompilerContext';
++import CompilerContext from '../core/CompilerContext';
+ 
+ export function transform(
+   context: CompilerContext,
+diff --git a/node_modules/@types/relay-compiler/lib/util/dedupeJSONStringify.d.ts b/node_modules/@types/relay-compiler/lib/util/dedupeJSONStringify.d.ts
+new file mode 100644
+index 0000000..41557c4
+--- /dev/null
++++ b/node_modules/@types/relay-compiler/lib/util/dedupeJSONStringify.d.ts
+@@ -0,0 +1 @@
++export default function dedupeJSONStringify(value: any): string;
 \ No newline at end of file
