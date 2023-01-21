@@ -92,7 +92,61 @@ return {
   }
 };
 })();
-(SomeQueryDocument as any).__relay.hash = \\"a6d1968620adf16586a6dfc34c426e83\\";"
+(SomeQueryDocument as any).__relay.hash = \\"a6d1968620adf16586a6dfc34c426e83\\";
+(AnAdditionalOperationInTheSameFileDocument as any).__relay = (function(){
+var v0 = [
+  {
+    \\"alias\\": null,
+    \\"args\\": [
+      {
+        \\"kind\\": \\"Literal\\",
+        \\"name\\": \\"id\\",
+        \\"value\\": \\"42\\"
+      }
+    ],
+    \\"concreteType\\": \\"Conversation\\",
+    \\"kind\\": \\"LinkedField\\",
+    \\"name\\": \\"conversation\\",
+    \\"plural\\": false,
+    \\"selections\\": [
+      {
+        \\"alias\\": null,
+        \\"args\\": null,
+        \\"kind\\": \\"ScalarField\\",
+        \\"name\\": \\"id\\",
+        \\"storageKey\\": null
+      }
+    ],
+    \\"storageKey\\": \\"conversation(id:\\\\\\"42\\\\\\")\\"
+  }
+];
+return {
+  \\"fragment\\": {
+    \\"argumentDefinitions\\": [],
+    \\"kind\\": \\"Fragment\\",
+    \\"metadata\\": null,
+    \\"name\\": \\"AnAdditionalOperationInTheSameFile\\",
+    \\"selections\\": (v0/*: any*/),
+    \\"type\\": \\"Query\\",
+    \\"abstractKey\\": null
+  },
+  \\"kind\\": \\"Request\\",
+  \\"operation\\": {
+    \\"argumentDefinitions\\": [],
+    \\"kind\\": \\"Operation\\",
+    \\"name\\": \\"AnAdditionalOperationInTheSameFile\\",
+    \\"selections\\": (v0/*: any*/)
+  },
+  \\"params\\": {
+    \\"cacheID\\": \\"d41d8cd98f00b204e9800998ecf8427e\\",
+    \\"metadata\\": {},
+    \\"name\\": \\"AnAdditionalOperationInTheSameFile\\",
+    \\"operationKind\\": \\"query\\",
+    \\"text\\": \\"\\"
+  }
+};
+})();
+(AnAdditionalOperationInTheSameFileDocument as any).__relay.hash = \\"457df8ff477cf791a2cfea384b9f3ecf\\";"
 `;
 
 exports[`plugin generates a ReaderFragment for a fragment 1`] = `

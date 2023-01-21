@@ -13,6 +13,7 @@ import type { RawClientSideBasePluginConfig } from "@graphql-codegen/visitor-plu
 import type { FragmentDefinitionNode, OperationDefinitionNode } from "graphql";
 import type { Schema } from "relay-compiler/lib/core/Schema";
 import type { Request } from "relay-compiler/lib/core/IR";
+import type { ConcreteRequest, ReaderFragment } from "relay-runtime";
 import invariant from "invariant";
 
 const SchemaCache = new WeakMap();
@@ -25,9 +26,17 @@ export const plugin: PluginFunction<
     SchemaCache.set(schema, createRelaySchema(new Source(printSchema(schema))));
   }
 
-  const mainNode = documents[0].document!.definitions[0] as
-    | OperationDefinitionNode
-    | FragmentDefinitionNode;
+  invariant(
+    documents.length === 1,
+    "Expected only a single document at a time",
+  );
+
+  const operationsInDocument = documents[0]
+    .document!.definitions.filter((def) => def.kind === "OperationDefinition")
+    .map((def) => (def as OperationDefinitionNode).name!.value);
+  const fragmentsInDocument = documents[0]
+    .document!.definitions.filter((def) => def.kind === "FragmentDefinition")
+    .map((def) => (def as FragmentDefinitionNode).name!.value);
 
   const relaySchema = SchemaCache.get(schema);
   const nodes = collectIRNodes(relaySchema, documents, config);
@@ -36,13 +45,19 @@ export const plugin: PluginFunction<
   for (const node of nodes) {
     compilerContext = compilerContext.add(node);
   }
+  const operationCompilerContext = compilerContext.applyTransform(
+    InlineFragmentsTransform.transform,
+  );
+  const fragmentCompilerContext = compilerContext.applyTransform(
+    FlattenTransform.transformWithOptions({
+      isForCodegen: true,
+    } as any),
+  );
 
-  const generate = () => {
-    if (mainNode.kind === "OperationDefinition") {
-      const operationCompilerContext = compilerContext.applyTransform(
-        InlineFragmentsTransform.transform,
-      );
-      const fragment = operationCompilerContext.getRoot(mainNode.name!.value);
+  const generatedIRDocuments: Array<ConcreteRequest | ReaderFragment> = [];
+  operationCompilerContext.forEachDocument((node) => {
+    if (node.kind === "Root" && operationsInDocument.includes(node.name)) {
+      const fragment = operationCompilerContext.getRoot(node.name);
       const name = fragment.name;
       const request: Request = {
         kind: "Request",
@@ -51,47 +66,48 @@ export const plugin: PluginFunction<
           name,
           argumentDefinitions: fragment.argumentDefinitions,
           directives: fragment.directives,
-          loc: { kind: "Derived", source: fragment.loc },
+          loc: { kind: "Derived", source: node.loc },
           metadata: undefined,
           selections: fragment.selections as any,
           type: fragment.type,
         },
         id: undefined,
-        loc: fragment.loc,
-        metadata: fragment.metadata || {},
+        loc: node.loc,
+        metadata: node.metadata || {},
         name: fragment.name,
-        root: fragment,
+        root: node,
         text: "",
       };
-      return request;
-    } else {
-      const fragmentCompilerContext = compilerContext.applyTransform(
-        FlattenTransform.transformWithOptions({
-          isForCodegen: true,
-        } as any),
-      );
-      const fragment = fragmentCompilerContext.getFragment(mainNode.name.value);
-      return fragment;
+      generatedIRDocuments.push(generateIRDocument(relaySchema, request));
     }
-  };
+  });
+  fragmentCompilerContext.forEachDocument((node) => {
+    if (node.kind === "Fragment" && fragmentsInDocument.includes(node.name)) {
+      generatedIRDocuments.push(generateIRDocument(relaySchema, node));
+    }
+  });
 
-  const content = generateIRDocument(relaySchema, generate() as any);
-
-  const mainVariable =
-    mainNode.name!.value +
-    (mainNode.kind === "OperationDefinition"
-      ? config.documentVariableSuffix || "Document"
-      : config.fragmentVariableSuffix || "FragmentDoc");
-
-  const json = dedupeJSONStringify(content);
   return {
-    content: [
-      `(${mainVariable} as any).__relay = ${json};`,
-      `(${mainVariable} as any).__relay.hash = "${crypto
-        .createHash("md5")
-        .update(json, "utf8")
-        .digest("hex")}";`,
-    ].join("\n"),
+    content: generatedIRDocuments
+      .flatMap((doc) => {
+        const variable =
+          doc.kind === "Request"
+            ? `${(doc as ConcreteRequest).operation.name}${
+                config.documentVariableSuffix || "Document"
+              }`
+            : `${(doc as ReaderFragment).name}${
+                config.fragmentVariableSuffix || "FragmentDoc"
+              }`;
+        const json = dedupeJSONStringify(doc);
+        return [
+          `(${variable} as any).__relay = ${json};`,
+          `(${variable} as any).__relay.hash = "${crypto
+            .createHash("md5")
+            .update(json, "utf8")
+            .digest("hex")}";`,
+        ];
+      })
+      .join("\n"),
   };
 };
 
@@ -100,24 +116,8 @@ function collectIRNodes(
   documents: Types.DocumentFile[],
   config: RawClientSideBasePluginConfig,
 ) {
-  let operationNode: OperationDefinitionNode | null = null;
+  const operationNodes = new Map<string, OperationDefinitionNode>();
   const fragmentNodes = new Map<string, FragmentDefinitionNode>();
-
-  const addFragmentNode = (
-    definition: FragmentDefinitionNode,
-    location: string | undefined | null,
-  ) => {
-    const name = definition.name!.value;
-    invariant(
-      fragmentNodes.get(name) === undefined ||
-        fragmentNodes.get(name)?.loc?.source?.name === location,
-      "graphql-codegen-relay-ir-plugin: Duplicate fragment definition %s in document %s and %s",
-      name,
-      location || "unknown",
-      fragmentNodes.get(name)?.loc?.source?.name || "unknown",
-    );
-    fragmentNodes.set(name, definition);
-  };
 
   documents.forEach((doc) => {
     invariant(doc.document, "Expected document to be parsed");
@@ -125,26 +125,36 @@ function collectIRNodes(
       OperationDefinitionNode | FragmentDefinitionNode
     >).forEach((definition) => {
       if (definition.kind === "OperationDefinition") {
-        invariant(
-          operationNode === null,
-          "graphql-codegen-relay-ir-plugin: Expected only one operation definition in document %s",
-          doc.location || "unknown",
-        );
-        operationNode = definition;
+        addNode(operationNodes, definition, doc.location);
       } else {
-        addFragmentNode(definition, doc.location);
+        addNode(fragmentNodes, definition, doc.location);
       }
     });
   });
 
   config.externalFragments!.forEach((fragment) => {
-    addFragmentNode(fragment.node, fragment.importFrom);
+    addNode(fragmentNodes, fragment.node, fragment.importFrom);
   });
 
-  return transformToIR(
-    schema,
-    operationNode
-      ? [operationNode, ...fragmentNodes.values()]
-      : Array.from(fragmentNodes.values()),
+  return transformToIR(schema, [
+    ...operationNodes.values(),
+    ...fragmentNodes.values(),
+  ]);
+}
+
+function addNode(
+  nodes: Map<string, OperationDefinitionNode | FragmentDefinitionNode>,
+  definition: OperationDefinitionNode | FragmentDefinitionNode,
+  location: string | undefined | null,
+) {
+  const name = definition.name!.value;
+  invariant(
+    nodes.get(name) === undefined ||
+      nodes.get(name)?.loc?.source?.name === location,
+    "graphql-codegen-relay-ir-plugin: Duplicate definition %s in document %s and %s",
+    name,
+    location || "unknown",
+    nodes.get(name)?.loc?.source?.name || "unknown",
   );
+  nodes.set(name, definition);
 }

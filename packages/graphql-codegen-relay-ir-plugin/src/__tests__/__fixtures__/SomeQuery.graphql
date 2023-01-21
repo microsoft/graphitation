@@ -3,3 +3,9 @@ query SomeQuery {
     ...ConversationFragment
   }
 }
+
+query AnAdditionalOperationInTheSameFile {
+  conversation(id: "42") {
+    id
+  }
+}
