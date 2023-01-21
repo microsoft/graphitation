@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-relay-ir-plugin",
   "entries": [
     {
+      "date": "Sat, 21 Jan 2023 13:26:03 GMT",
+      "tag": "@graphitation/graphql-codegen-relay-ir-plugin_v1.2.1",
+      "version": "1.2.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-codegen-relay-ir-plugin",
+            "commit": "0707f94f9be3f875a5f97a8887ccbdfe285e14e3",
+            "comment": "Fix fragment name deduping"
+          }
+        ]
+      }
+    },
+    {
       "date": "Sat, 21 Jan 2023 12:52:10 GMT",
       "tag": "@graphitation/graphql-codegen-relay-ir-plugin_v1.2.0",
       "version": "1.2.0",
