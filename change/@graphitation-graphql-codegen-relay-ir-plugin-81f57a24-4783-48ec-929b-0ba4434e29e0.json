@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Rewrite IR plugin",
-  "packageName": "@graphitation/graphql-codegen-relay-ir-plugin",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}

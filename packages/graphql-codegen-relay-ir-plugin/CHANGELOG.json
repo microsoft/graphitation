@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-relay-ir-plugin",
   "entries": [
     {
+      "date": "Sat, 21 Jan 2023 12:52:10 GMT",
+      "tag": "@graphitation/graphql-codegen-relay-ir-plugin_v1.2.0",
+      "version": "1.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-codegen-relay-ir-plugin",
+            "commit": "0f9655645f91f873ce3d93db521c92effb16fc98",
+            "comment": "Rewrite IR plugin"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 23 Sep 2022 10:39:36 GMT",
       "tag": "@graphitation/graphql-codegen-relay-ir-plugin_v1.1.0",
       "version": "1.1.0",
