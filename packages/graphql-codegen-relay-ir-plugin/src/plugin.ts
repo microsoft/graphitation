@@ -90,14 +90,7 @@ export const plugin: PluginFunction<
   return {
     content: generatedIRDocuments
       .flatMap((doc) => {
-        const variable =
-          doc.kind === "Request"
-            ? `${(doc as ConcreteRequest).operation.name}${
-                config.documentVariableSuffix || "Document"
-              }`
-            : `${(doc as ReaderFragment).name}${
-                config.fragmentVariableSuffix || "FragmentDoc"
-              }`;
+        const variable = getVariableName(doc, config);
         const json = dedupeJSONStringify(doc);
         return [
           `(${variable} as any).__relay = ${json};`,
@@ -110,6 +103,24 @@ export const plugin: PluginFunction<
       .join("\n"),
   };
 };
+
+// TODO: This name faffing in graphql-codegen isn't really clear to me. It
+//       would be great if we could just re-use their logic in BaseVisitor, but
+//       we don't have graphql-js AST nodes here.
+function getVariableName(
+  doc: ConcreteRequest | ReaderFragment,
+  config: RawClientSideBasePluginConfig,
+) {
+  if (doc.kind === "Request") {
+    const name = (doc as ConcreteRequest).operation.name;
+    return `${name}${config.documentVariableSuffix || "Document"}`;
+  } else {
+    const name = (doc as ReaderFragment).name;
+    return `${
+      config.dedupeOperationSuffix ? name.replace(/Fragment$/, "") : name
+    }${config.fragmentVariableSuffix || "FragmentDoc"}`;
+  }
+}
 
 function collectIRNodes(
   schema: Schema,

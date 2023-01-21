@@ -55,4 +55,13 @@ describe(plugin, () => {
 
     expect(content).toMatchSnapshot();
   });
+
+  it("dedupes operation suffixes", async () => {
+    const mainFragment = await loadFixture("MessageFragment.graphql");
+    const { content } = await plugin(schema, mainFragment, {
+      externalFragments: [],
+      dedupeOperationSuffix: true,
+    });
+    expect(content).toMatch(/MessageFragmentDoc/);
+  });
 });
