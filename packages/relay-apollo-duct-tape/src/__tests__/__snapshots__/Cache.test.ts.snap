@@ -96,11 +96,9 @@ Object {
 exports[`key-fields concerning normalization with custom key-fields works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
-    "__typename": "Conversation",
     "id": "42",
     "messages": Array [
       Object {
-        "__typename": "Message",
         "authorId": "author-42",
         "createdAt": "2020-01-01T00:00:00.000Z",
         "id": "message-42",
@@ -239,11 +237,9 @@ Object {
 exports[`key-fields concerning normalization with default key-fields works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
-    "__typename": "Conversation",
     "id": "42",
     "messages": Array [
       Object {
-        "__typename": "Message",
         "authorId": "author-42",
         "createdAt": "2020-01-01T00:00:00.000Z",
         "id": "message-42",
@@ -376,11 +372,9 @@ Object {
 exports[`key-fields concerning normalization without key-fields works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
-    "__typename": "Conversation",
     "id": "42",
     "messages": Array [
       Object {
-        "__typename": "Message",
         "authorId": "author-42",
         "createdAt": "2020-01-01T00:00:00.000Z",
         "id": "message-42",
@@ -426,6 +420,8 @@ Object {
 exports[`transformDocument adds __typename to documents with apollo 1`] = `
 "query CacheTestQuery($conversationId: String!, $includeNestedData: Boolean = false) {
   conversation(id: $conversationId) {
+    id
+    title
     ... on Conversation @include(if: $includeNestedData) {
       messages {
         id
@@ -452,6 +448,8 @@ fragment CacheTestFragment on Conversation {
 exports[`transformDocument adds __typename to documents with relayWithRuntimeGeneratedIR 1`] = `
 "query CacheTestQuery($conversationId: String!, $includeNestedData: Boolean = false) {
   conversation(id: $conversationId) {
+    id
+    title
     ... on Conversation @include(if: $includeNestedData) {
       messages {
         id
@@ -532,7 +530,6 @@ Object {
 exports[`watch works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
-    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
   },
@@ -542,7 +539,6 @@ Object {
 exports[`watch works with relayWithRuntimeGeneratedIR 2`] = `
 Object {
   "conversation": Object {
-    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 2",
   },
@@ -552,7 +548,6 @@ Object {
 exports[`watch works with relayWithRuntimeGeneratedIR 3`] = `
 Object {
   "conversation": Object {
-    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
   },
@@ -589,7 +584,6 @@ Object {
 
 exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
-  "__typename": "Conversation",
   "id": "Conversation:42",
   "title": "Hello World",
 }
@@ -597,7 +591,6 @@ Object {
 
 exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR and optimistic data 1`] = `
 Object {
-  "__typename": "Conversation",
   "id": "Conversation:42",
   "title": "Hello World",
 }
@@ -642,7 +635,6 @@ Object {
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
-    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },
@@ -652,7 +644,6 @@ Object {
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithRuntimeGeneratedIR 2`] = `
 Object {
   "conversation": Object {
-    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },
@@ -680,7 +671,6 @@ Object {
 exports[`writeQuery/readQuery works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
-    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },

@@ -33,7 +33,7 @@ import TestMessageCreatedSubscriptionRelayIR, {
 } from "./__generated__/ApolloClientIntegrationTestMessageCreatedSubscription.graphql";
 
 const schema = buildSchema(
-  readFileSync(require.resolve("./schema.graphql"), "utf8"),
+  readFileSync(require.resolve("./__fixtures__/schema.graphql"), "utf8"),
 );
 
 const ApolloClientIntegrationTestQuery = graphql`

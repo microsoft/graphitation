@@ -9,5 +9,5 @@
     "jsx": "react"
   },
   "include": ["src"],
-  "references": []
+  "references": [{ "path": "../graphql-codegen-relay-ir-plugin" }]
 }

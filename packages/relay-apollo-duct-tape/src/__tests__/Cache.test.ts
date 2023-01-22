@@ -2,8 +2,10 @@ import { graphql } from "@graphitation/graphql-js-tag";
 import { RelayApolloCache, TypePolicies } from "../Cache";
 import { InMemoryCache } from "@apollo/client";
 
-import QueryRelayIR from "./__generated__/CacheTestQuery.graphql";
-import FragmentRelayIR from "./__generated__/CacheTestFragment.graphql";
+import {
+  CacheTestQueryDocument as QueryDocument,
+  CacheTestFragment as FragmentDocument,
+} from "../__generated__/operations";
 import RelayModernStore from "relay-runtime/lib/store/RelayModernStore";
 import RelayRecordSource from "relay-runtime/lib/store/RelayRecordSource";
 
@@ -12,52 +14,18 @@ import path from "path";
 import { parse, print as printGraphQL } from "graphql";
 
 const schema = parse(
-  fs.readFileSync(path.resolve(__dirname, "schema.graphql"), "utf8"),
+  fs.readFileSync(
+    path.resolve(__dirname, "__fixtures__/schema.graphql"),
+    "utf8",
+  ),
 );
-
-const QueryDocument = graphql`
-  query CacheTestQuery(
-    $conversationId: String!
-    $includeNestedData: Boolean = false
-  ) {
-    conversation(id: $conversationId) {
-      # NOTE: These /should/ be included in the build-time generated IR.
-      # id
-      # title
-      ... on Conversation @include(if: $includeNestedData) {
-        messages {
-          id
-          authorId
-          text
-          createdAt
-        }
-      }
-      # NOTE: This should not be included in the build-time generated IR.
-      ...CacheTestFragment
-    }
-  }
-
-  # NOTE: This should not be included in the build-time generated IR.
-  fragment CacheTestFragment on Conversation {
-    id
-    title
-  }
-`;
-(QueryDocument as any).__relay = QueryRelayIR;
-
-const FragmentDocument = graphql`
-  fragment CacheTestFragment on Conversation {
-    id
-    title
-  }
-`;
-(FragmentDocument as any).__relay = FragmentRelayIR;
 
 const RESPONSE = {
   conversation: {
-    __typename: "Conversation",
+    __typename: "Conversation" as const,
     id: "42",
     title: "Hello World",
+    messages: [],
   },
 };
 
@@ -128,7 +96,7 @@ describe("writeQuery/readQuery", () => {
         data: {
           conversation: {
             ...RESPONSE.conversation,
-            title: undefined,
+            title: undefined as any,
           },
         },
         variables: { conversationId: "42" },
@@ -275,7 +243,7 @@ describe("writeFragment/readFragment", () => {
       cache.writeFragment({
         fragment: FragmentDocument,
         id: "Conversation:42",
-        data: { ...RESPONSE.conversation, title: undefined },
+        data: { ...RESPONSE.conversation, title: undefined as any },
         variables: { conversationId: "42" },
       });
       expect(
@@ -416,7 +384,7 @@ describe("diff", () => {
       data: {
         conversation: {
           ...RESPONSE.conversation,
-          title: undefined,
+          title: undefined as any,
         },
       },
       variables: { conversationId: "42" },
@@ -539,7 +507,7 @@ describe("key-fields", () => {
         };
         cache.writeQuery({
           query: QueryDocument,
-          data: response,
+          data: response as any,
           variables: { conversationId: "42", includeNestedData: true },
         });
         expect(

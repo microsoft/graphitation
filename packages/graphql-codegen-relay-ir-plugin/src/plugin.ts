@@ -26,17 +26,16 @@ export const plugin: PluginFunction<
     SchemaCache.set(schema, createRelaySchema(new Source(printSchema(schema))));
   }
 
-  invariant(
-    documents.length === 1,
-    "Expected only a single document at a time",
+  const operationsInDocument = documents.flatMap((source) =>
+    source
+      .document!.definitions.filter((def) => def.kind === "OperationDefinition")
+      .map((def) => (def as OperationDefinitionNode).name!.value),
   );
-
-  const operationsInDocument = documents[0]
-    .document!.definitions.filter((def) => def.kind === "OperationDefinition")
-    .map((def) => (def as OperationDefinitionNode).name!.value);
-  const fragmentsInDocument = documents[0]
-    .document!.definitions.filter((def) => def.kind === "FragmentDefinition")
-    .map((def) => (def as FragmentDefinitionNode).name!.value);
+  const fragmentsInDocument = documents.flatMap((source) =>
+    source
+      .document!.definitions.filter((def) => def.kind === "FragmentDefinition")
+      .map((def) => (def as FragmentDefinitionNode).name!.value),
+  );
 
   const relaySchema = SchemaCache.get(schema);
   const nodes = collectIRNodes(relaySchema, documents, config);
@@ -143,7 +142,7 @@ function collectIRNodes(
     });
   });
 
-  config.externalFragments!.forEach((fragment) => {
+  config.externalFragments?.forEach((fragment) => {
     addNode(fragmentNodes, fragment.node, fragment.importFrom);
   });
 

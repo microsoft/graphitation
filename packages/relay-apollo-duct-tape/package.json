@@ -9,7 +9,7 @@
     "directory": "packages/relay-apollo-duct-tape"
   },
   "scripts": {
-    "relay": "relay-compiler",
+    "codegen": "graphql-codegen",
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
@@ -26,16 +26,20 @@
     "relay-runtime": "^14.0.0"
   },
   "peerDependencies": {
-    "@apollo/client": "^3.6.9"
+    "@apollo/client": "^3.6.9",
+    "@graphitation/graphql-codegen-relay-ir-plugin": "^1.2.1"
   },
   "devDependencies": {
     "@apollo/client": "^3.6.9",
+    "@graphitation/graphql-codegen-relay-ir-plugin": "^1.2.1",
+    "@graphql-codegen/typescript-operations": "^1.17.12",
+    "@graphql-codegen/typed-document-node": "^1.18.1",
     "@graphitation/graphql-js-tag": "^0.9.0",
+    "@graphql-codegen/cli": "1.19.4",
     "@types/jest": "^26.0.22",
     "@types/react-relay": "^14.1.1",
     "@types/relay-runtime": "^14.1.2",
-    "monorepo-scripts": "*",
-    "relay-compiler": "^14.0.0"
+    "monorepo-scripts": "*"
   },
   "sideEffects": false,
   "access": "public",

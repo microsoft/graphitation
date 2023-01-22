@@ -1,0 +1,17 @@
+hooks:
+  afterAllFileWrite:
+    - prettier --write
+schema: ./src/__tests__/__fixtures__/schema.graphql
+documents: ./src/__tests__/__fixtures__/*.graphql
+generates:
+  ./src/__generated__/operations.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typed-document-node
+      - "@graphitation/graphql-codegen-relay-ir-plugin"
+    config:
+      omitOperationSuffix: true
+      dedupeOperationSuffix: true
+      documentVariableSuffix: Document
+      fragmentVariableSuffix: Fragment
