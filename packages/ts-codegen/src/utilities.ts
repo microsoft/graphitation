@@ -1,5 +1,6 @@
 import ts, { factory } from "typescript";
-import { ASTNode } from "graphql";
+import { ASTNode, Kind, TypeNode } from "graphql";
+import { TsCodegenContext } from "./context";
 
 const MODEL_SUFFIX = "Model";
 
@@ -16,13 +17,6 @@ export function getAncestorEntity(
   }
 
   return ancestors[1][index];
-}
-
-export function createNullableType(node: ts.TypeNode): ts.UnionTypeNode {
-  return factory.createUnionTypeNode([
-    node,
-    factory.createLiteralTypeNode(factory.createNull()),
-  ]);
 }
 
 type ResolverParameterDefinition<T> = { name: string; type: T };
@@ -137,6 +131,37 @@ export function getResolverReturnType(
         ),
       ),
     ]),
+  ]);
+}
+
+export function createTypeFromNode(
+  context: TsCodegenContext,
+  node: TypeNode,
+): ts.TypeNode {
+  if (node.kind === Kind.NON_NULL_TYPE) {
+    return createNonNullableType(createTypeFromNode(context, node.type));
+  } else if (node.kind === Kind.LIST_TYPE) {
+    return createListType(createTypeFromNode(context, node.type));
+  } else {
+    context.addEntityToImport(node.name.value);
+    return createNullableType(
+      context.getModelType(node.name.value).toTypeReference(),
+    );
+  }
+}
+
+export function createListType(node: ts.TypeNode): ts.TypeNode {
+  return createNullableType(
+    factory.createTypeReferenceNode(factory.createIdentifier("ReadonlyArray"), [
+      node,
+    ]),
+  );
+}
+
+export function createNullableType(node: ts.TypeNode): ts.UnionTypeNode {
+  return factory.createUnionTypeNode([
+    node,
+    factory.createLiteralTypeNode(factory.createNull()),
   ]);
 }
 

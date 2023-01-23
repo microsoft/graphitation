@@ -5,11 +5,26 @@ import {
   ArgumentNode,
   ValueNode,
   ASTNode,
+  NamedTypeNode,
+  isScalarType,
+  FieldNode,
+  FieldDefinitionNode,
+  ObjectTypeDefinitionNode,
+  EnumTypeDefinitionNode,
+  UnionTypeDefinitionNode,
+  InterfaceTypeDefinitionNode,
+  InputObjectTypeDefinitionNode,
+  ScalarTypeDefinitionNode,
+  ObjectTypeExtensionNode,
+  InputValueDefinitionNode,
+  Kind,
+  TypeNode,
 } from "graphql";
 import ts, {
   factory,
   addSyntheticLeadingComment,
   SyntaxKind,
+  collapseTextChangeRangesAcrossMultipleVersions,
 } from "typescript";
 import { DefinitionImport, DefinitionModel } from "../types";
 import { createImportDeclaration } from "./utilities";
@@ -77,6 +92,8 @@ export class TsCodegenContext {
   private defaultModels: Set<string>;
   public importedEntity: Set<string>;
 
+  private allTypes: Array<Type>;
+
   constructor(private options: TsCodegenContextOptions) {
     this.imports = [];
     this.typeNameToImports = new Map();
@@ -85,6 +102,16 @@ export class TsCodegenContext {
     this.entitiesToImport = new Set();
     this.defaultModels = new Set();
     this.importedEntity = new Set();
+
+    this.allTypes = [];
+  }
+
+  addType(type: Type): void {
+    this.allTypes.push(type);
+  }
+
+  getAllTypes(): Array<Type> {
+    return this.allTypes;
   }
 
   addImport(imp: DefinitionImport, node: ASTNode): void {
@@ -137,6 +164,10 @@ export class TsCodegenContext {
     }
 
     this.typeNameToModels.set(model.typeName, model);
+  }
+
+  getModel(typeName: string): DefinitionModel | null {
+    return this.typeNameToModels.get(typeName) || null;
   }
 
   getAllImportDeclarations(): ts.ImportDeclaration[] {
@@ -345,23 +376,81 @@ export function extractContext(
       },
     },
     EnumTypeDefinition: {
-      enter(node) {
-        context.addDefaultModel(node.name.value);
+      leave(node) {
+        context.addType({
+          kind: "ENUM",
+          name: node.name.value,
+          values: node.values?.map(({ name: { value } }) => value) || [],
+          node,
+        });
       },
     },
     ObjectTypeDefinition: {
-      enter(node) {
-        context.addDefaultModel(node.name.value);
+      leave(node) {
+        context.addType({
+          kind: "OBJECT",
+          name: node.name.value,
+          model: context.getModel(node.name.value),
+          isExtension: false,
+          interfaces:
+            node.interfaces?.map(({ name: { value } }) => value) || [],
+          fields: node.fields?.map((field) => processField(field)) || [],
+          node,
+        });
+      },
+    },
+    InterfaceTypeDefinition: {
+      leave(node) {
+        context.addType({
+          kind: "INTERFACE",
+          name: node.name.value,
+          interfaces:
+            node.interfaces?.map(({ name: { value } }) => value) || [],
+          node,
+        });
+      },
+    },
+    InputObjectTypeDefinition: {
+      leave(node) {
+        context.addType({
+          kind: "INPUT_OBJECT",
+          name: node.name.value,
+          fields: node.fields?.map((field) => processField(field)) || [],
+          node,
+        });
+      },
+    },
+    ObjectTypeExtension: {
+      leave(node) {
+        context.addType({
+          kind: "OBJECT",
+          name: node.name.value,
+          model: null,
+          isExtension: true,
+          interfaces: [],
+          fields: node.fields?.map((field) => processField(field)) || [],
+          node,
+        });
       },
     },
     UnionTypeDefinition: {
-      enter(node) {
-        context.addDefaultModel(node.name.value);
+      leave(node) {
+        context.addType({
+          kind: "UNION",
+          name: node.name.value,
+          types: node.types?.map(({ name: { value } }) => value) || [],
+          node,
+        });
       },
     },
     ScalarTypeDefinition: {
-      enter(node) {
-        context.addDefaultModel(node.name.value);
+      leave(node) {
+        context.addType({
+          kind: "SCALAR",
+          name: node.name.value,
+          model: context.getModel(node.name.value),
+          node,
+        });
       },
     },
   });
@@ -401,3 +490,98 @@ const getArgumentValue = (
   args: readonly ArgumentNode[] = [],
   name: string,
 ): ValueNode | undefined => args.find((arg) => arg.name.value === name)?.value;
+
+const processField = (
+  field: FieldDefinitionNode | InputValueDefinitionNode,
+): Field => ({
+  name: field.name.value,
+  arguments:
+    field.kind === "FieldDefinition" && field.arguments
+      ? field.arguments.map((argument) => processArgument(argument))
+      : [],
+  type: field.type,
+  node: field,
+});
+
+const processArgument = (argument: InputValueDefinitionNode): Argument => ({
+  name: argument.name.value,
+  type: argument.type,
+  node: argument,
+});
+
+export interface FieldDefinition {
+  typeName: string;
+}
+
+export type Argument = {
+  name: string;
+  type: TypeNode;
+  node: InputValueDefinitionNode;
+};
+
+export interface Field {
+  name: string;
+  type: TypeNode;
+  arguments: Array<Argument>;
+  node: FieldDefinitionNode | InputValueDefinitionNode;
+}
+
+export type Type =
+  | EnumType
+  | ObjectType
+  | InterfaceType
+  | UnionType
+  | InputObjectType
+  | ScalarType;
+
+export interface EnumType {
+  kind: "ENUM";
+
+  name: string;
+  values: string[];
+
+  node: EnumTypeDefinitionNode;
+}
+
+export interface ObjectType {
+  kind: "OBJECT";
+  name: string;
+  isExtension: boolean;
+  model: DefinitionModel | null;
+  interfaces: string[];
+  fields: Array<Field>;
+
+  node: ObjectTypeDefinitionNode | ObjectTypeExtensionNode;
+}
+
+export interface UnionType {
+  kind: "UNION";
+  name: string;
+  types: Array<string>;
+
+  node: UnionTypeDefinitionNode;
+}
+
+export interface InterfaceType {
+  kind: "INTERFACE";
+  name: string;
+  interfaces: string[];
+
+  node: InterfaceTypeDefinitionNode;
+}
+
+export interface InputObjectType {
+  kind: "INPUT_OBJECT";
+  name: string;
+  fields: Array<Field>;
+
+  node: InputObjectTypeDefinitionNode;
+}
+
+export interface ScalarType {
+  kind: "SCALAR";
+  name: string;
+  model: DefinitionModel | null;
+
+  node: ScalarTypeDefinitionNode;
+}
