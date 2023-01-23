@@ -1,6 +1,10 @@
 fragment ConversationFragment on Conversation {
   id
   messages(first: 10) {
-    ...MessageFragment
+    edges {
+      node {
+        ...MessageFragment
+      }
+    }
   }
 }

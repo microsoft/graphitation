@@ -1,0 +1,12 @@
+query ConnectionQuery {
+  conversation(id: "42") {
+    messages(first: 10, sort: DESC)
+      @connection(key: "Connection_messages", filter: ["sort"]) {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }
+}

@@ -84,4 +84,14 @@ describe(plugin, () => {
 
     expect(content).toMatchSnapshot();
   });
+
+  it("emits connection metadata", async () => {
+    const operation = await loadFixture("Connection.graphql");
+
+    const { content } = await plugin(schema, operation, {
+      externalFragments: [],
+    });
+
+    expect(content).toMatchSnapshot();
+  });
 });
