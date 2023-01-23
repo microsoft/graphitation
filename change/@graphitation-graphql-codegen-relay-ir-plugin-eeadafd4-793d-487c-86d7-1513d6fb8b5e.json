@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Handle config where all docs are in single file",
+  "packageName": "@graphitation/graphql-codegen-relay-ir-plugin",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}
