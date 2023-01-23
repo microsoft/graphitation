@@ -2,6 +2,21 @@
   "name": "@graphitation/relay-apollo-duct-tape",
   "entries": [
     {
+      "date": "Mon, 23 Jan 2023 12:48:15 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.8",
+      "version": "0.4.8",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "comment": "Bump @graphitation/graphql-codegen-relay-ir-plugin to v1.2.2",
+            "commit": "c6476ca1546acc94452106530f5b2efbb6d951e0"
+          }
+        ]
+      }
+    },
+    {
       "date": "Sun, 22 Jan 2023 08:27:54 GMT",
       "tag": "@graphitation/relay-apollo-duct-tape_v0.4.7",
       "version": "0.4.7",

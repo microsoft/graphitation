@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-relay-ir-plugin
 
-This log was last generated on Sat, 21 Jan 2023 13:26:03 GMT and should not be manually modified.
+This log was last generated on Mon, 23 Jan 2023 12:48:15 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.2.2
+
+Mon, 23 Jan 2023 12:48:15 GMT
+
+### Patches
+
+- Handle config where all docs are in single file (eloy.de.enige@gmail.com)
 
 ## 1.2.1
 

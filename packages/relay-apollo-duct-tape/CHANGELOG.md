@@ -1,8 +1,16 @@
 # Change Log - @graphitation/relay-apollo-duct-tape
 
-This log was last generated on Sun, 22 Jan 2023 08:27:54 GMT and should not be manually modified.
+This log was last generated on Mon, 23 Jan 2023 12:48:15 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.4.8
+
+Mon, 23 Jan 2023 12:48:15 GMT
+
+### Patches
+
+- Bump @graphitation/graphql-codegen-relay-ir-plugin to v1.2.2
 
 ## 0.4.7
 
