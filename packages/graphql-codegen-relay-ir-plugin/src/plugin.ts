@@ -4,6 +4,7 @@ import { transform as transformToIR } from "relay-compiler/lib/core/RelayParser"
 import CompilerContext from "relay-compiler/lib/core/CompilerContext";
 import * as FlattenTransform from "relay-compiler/lib/transforms/FlattenTransform";
 import * as InlineFragmentsTransform from "relay-compiler/lib/transforms/InlineFragmentsTransform";
+import * as GenerateTypeNameTransform from "relay-compiler/lib/transforms/GenerateTypeNameTransform";
 import { generate as generateIRDocument } from "relay-compiler/lib/codegen/RelayCodeGenerator";
 import dedupeJSONStringify from "relay-compiler/lib/util/dedupeJSONStringify";
 import crypto from "crypto";
@@ -44,9 +45,10 @@ export const plugin: PluginFunction<
   for (const node of nodes) {
     compilerContext = compilerContext.add(node);
   }
-  const operationCompilerContext = compilerContext.applyTransform(
+  const operationCompilerContext = compilerContext.applyTransforms([
     InlineFragmentsTransform.transform,
-  );
+    GenerateTypeNameTransform.transform,
+  ]);
   const fragmentCompilerContext = compilerContext.applyTransform(
     FlattenTransform.transformWithOptions({
       isForCodegen: true,

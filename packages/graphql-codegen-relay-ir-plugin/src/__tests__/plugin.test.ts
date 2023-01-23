@@ -64,4 +64,24 @@ describe(plugin, () => {
     });
     expect(content).toMatch(/MessageFragmentDoc/);
   });
+
+  it("handles multiple operations in a single document", async () => {
+    const operation = await loadFixture("MultipleOperations.graphql");
+
+    const { content } = await plugin(schema, operation, {
+      externalFragments: [],
+    });
+
+    expect(content).toMatchSnapshot();
+  });
+
+  it("adds __typename selections for abstract types", async () => {
+    const operation = await loadFixture("AbstractType.graphql");
+
+    const { content } = await plugin(schema, operation, {
+      externalFragments: [],
+    });
+
+    expect(content).toMatchSnapshot();
+  });
 });

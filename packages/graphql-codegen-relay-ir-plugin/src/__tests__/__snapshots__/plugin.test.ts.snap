@@ -1,5 +1,69 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`plugin adds __typename selections for abstract types 1`] = `
+"(AbstractTypeDocument as any).__relay = (function(){
+var v0 = [
+  {
+    \\"alias\\": null,
+    \\"args\\": [
+      {
+        \\"kind\\": \\"Literal\\",
+        \\"name\\": \\"id\\",
+        \\"value\\": \\"42\\"
+      }
+    ],
+    \\"concreteType\\": null,
+    \\"kind\\": \\"LinkedField\\",
+    \\"name\\": \\"node\\",
+    \\"plural\\": false,
+    \\"selections\\": [
+      {
+        \\"alias\\": null,
+        \\"args\\": null,
+        \\"kind\\": \\"ScalarField\\",
+        \\"name\\": \\"__typename\\",
+        \\"storageKey\\": null
+      },
+      {
+        \\"alias\\": null,
+        \\"args\\": null,
+        \\"kind\\": \\"ScalarField\\",
+        \\"name\\": \\"id\\",
+        \\"storageKey\\": null
+      }
+    ],
+    \\"storageKey\\": \\"node(id:\\\\\\"42\\\\\\")\\"
+  }
+];
+return {
+  \\"fragment\\": {
+    \\"argumentDefinitions\\": [],
+    \\"kind\\": \\"Fragment\\",
+    \\"metadata\\": null,
+    \\"name\\": \\"AbstractType\\",
+    \\"selections\\": (v0/*: any*/),
+    \\"type\\": \\"Query\\",
+    \\"abstractKey\\": null
+  },
+  \\"kind\\": \\"Request\\",
+  \\"operation\\": {
+    \\"argumentDefinitions\\": [],
+    \\"kind\\": \\"Operation\\",
+    \\"name\\": \\"AbstractType\\",
+    \\"selections\\": (v0/*: any*/)
+  },
+  \\"params\\": {
+    \\"cacheID\\": \\"d41d8cd98f00b204e9800998ecf8427e\\",
+    \\"metadata\\": {},
+    \\"name\\": \\"AbstractType\\",
+    \\"operationKind\\": \\"query\\",
+    \\"text\\": \\"\\"
+  }
+};
+})();
+(AbstractTypeDocument as any).__relay.hash = \\"d7d42d5624b74de8fd74c02a324ca10b\\";"
+`;
+
 exports[`plugin generates a ConcreteRequest for an operation 1`] = `
 "(SomeQueryDocument as any).__relay = (function(){
 var v0 = [
@@ -92,61 +156,7 @@ return {
   }
 };
 })();
-(SomeQueryDocument as any).__relay.hash = \\"a6d1968620adf16586a6dfc34c426e83\\";
-(AnAdditionalOperationInTheSameFileDocument as any).__relay = (function(){
-var v0 = [
-  {
-    \\"alias\\": null,
-    \\"args\\": [
-      {
-        \\"kind\\": \\"Literal\\",
-        \\"name\\": \\"id\\",
-        \\"value\\": \\"42\\"
-      }
-    ],
-    \\"concreteType\\": \\"Conversation\\",
-    \\"kind\\": \\"LinkedField\\",
-    \\"name\\": \\"conversation\\",
-    \\"plural\\": false,
-    \\"selections\\": [
-      {
-        \\"alias\\": null,
-        \\"args\\": null,
-        \\"kind\\": \\"ScalarField\\",
-        \\"name\\": \\"id\\",
-        \\"storageKey\\": null
-      }
-    ],
-    \\"storageKey\\": \\"conversation(id:\\\\\\"42\\\\\\")\\"
-  }
-];
-return {
-  \\"fragment\\": {
-    \\"argumentDefinitions\\": [],
-    \\"kind\\": \\"Fragment\\",
-    \\"metadata\\": null,
-    \\"name\\": \\"AnAdditionalOperationInTheSameFile\\",
-    \\"selections\\": (v0/*: any*/),
-    \\"type\\": \\"Query\\",
-    \\"abstractKey\\": null
-  },
-  \\"kind\\": \\"Request\\",
-  \\"operation\\": {
-    \\"argumentDefinitions\\": [],
-    \\"kind\\": \\"Operation\\",
-    \\"name\\": \\"AnAdditionalOperationInTheSameFile\\",
-    \\"selections\\": (v0/*: any*/)
-  },
-  \\"params\\": {
-    \\"cacheID\\": \\"d41d8cd98f00b204e9800998ecf8427e\\",
-    \\"metadata\\": {},
-    \\"name\\": \\"AnAdditionalOperationInTheSameFile\\",
-    \\"operationKind\\": \\"query\\",
-    \\"text\\": \\"\\"
-  }
-};
-})();
-(AnAdditionalOperationInTheSameFileDocument as any).__relay.hash = \\"457df8ff477cf791a2cfea384b9f3ecf\\";"
+(SomeQueryDocument as any).__relay.hash = \\"a6d1968620adf16586a6dfc34c426e83\\";"
 `;
 
 exports[`plugin generates a ReaderFragment for a fragment 1`] = `
@@ -190,4 +200,115 @@ exports[`plugin generates a ReaderFragment for a fragment 1`] = `
   \\"abstractKey\\": null
 };
 (ConversationFragmentFragmentDoc as any).__relay.hash = \\"795512b1f4ffab5f7b39e6f5d99127ea\\";"
+`;
+
+exports[`plugin handles multiple operations in a single document 1`] = `
+"(QueryOneDocument as any).__relay = (function(){
+var v0 = [
+  {
+    \\"alias\\": null,
+    \\"args\\": [
+      {
+        \\"kind\\": \\"Literal\\",
+        \\"name\\": \\"id\\",
+        \\"value\\": \\"42\\"
+      }
+    ],
+    \\"concreteType\\": \\"Conversation\\",
+    \\"kind\\": \\"LinkedField\\",
+    \\"name\\": \\"conversation\\",
+    \\"plural\\": false,
+    \\"selections\\": [
+      {
+        \\"alias\\": null,
+        \\"args\\": null,
+        \\"kind\\": \\"ScalarField\\",
+        \\"name\\": \\"__typename\\",
+        \\"storageKey\\": null
+      }
+    ],
+    \\"storageKey\\": \\"conversation(id:\\\\\\"42\\\\\\")\\"
+  }
+];
+return {
+  \\"fragment\\": {
+    \\"argumentDefinitions\\": [],
+    \\"kind\\": \\"Fragment\\",
+    \\"metadata\\": null,
+    \\"name\\": \\"QueryOne\\",
+    \\"selections\\": (v0/*: any*/),
+    \\"type\\": \\"Query\\",
+    \\"abstractKey\\": null
+  },
+  \\"kind\\": \\"Request\\",
+  \\"operation\\": {
+    \\"argumentDefinitions\\": [],
+    \\"kind\\": \\"Operation\\",
+    \\"name\\": \\"QueryOne\\",
+    \\"selections\\": (v0/*: any*/)
+  },
+  \\"params\\": {
+    \\"cacheID\\": \\"d41d8cd98f00b204e9800998ecf8427e\\",
+    \\"metadata\\": {},
+    \\"name\\": \\"QueryOne\\",
+    \\"operationKind\\": \\"query\\",
+    \\"text\\": \\"\\"
+  }
+};
+})();
+(QueryOneDocument as any).__relay.hash = \\"eeeaf14928261dc2990440f192360f22\\";
+(QueryTwoDocument as any).__relay = (function(){
+var v0 = [
+  {
+    \\"alias\\": null,
+    \\"args\\": [
+      {
+        \\"kind\\": \\"Literal\\",
+        \\"name\\": \\"id\\",
+        \\"value\\": \\"42\\"
+      }
+    ],
+    \\"concreteType\\": \\"Conversation\\",
+    \\"kind\\": \\"LinkedField\\",
+    \\"name\\": \\"conversation\\",
+    \\"plural\\": false,
+    \\"selections\\": [
+      {
+        \\"alias\\": null,
+        \\"args\\": null,
+        \\"kind\\": \\"ScalarField\\",
+        \\"name\\": \\"id\\",
+        \\"storageKey\\": null
+      }
+    ],
+    \\"storageKey\\": \\"conversation(id:\\\\\\"42\\\\\\")\\"
+  }
+];
+return {
+  \\"fragment\\": {
+    \\"argumentDefinitions\\": [],
+    \\"kind\\": \\"Fragment\\",
+    \\"metadata\\": null,
+    \\"name\\": \\"QueryTwo\\",
+    \\"selections\\": (v0/*: any*/),
+    \\"type\\": \\"Query\\",
+    \\"abstractKey\\": null
+  },
+  \\"kind\\": \\"Request\\",
+  \\"operation\\": {
+    \\"argumentDefinitions\\": [],
+    \\"kind\\": \\"Operation\\",
+    \\"name\\": \\"QueryTwo\\",
+    \\"selections\\": (v0/*: any*/)
+  },
+  \\"params\\": {
+    \\"cacheID\\": \\"d41d8cd98f00b204e9800998ecf8427e\\",
+    \\"metadata\\": {},
+    \\"name\\": \\"QueryTwo\\",
+    \\"operationKind\\": \\"query\\",
+    \\"text\\": \\"\\"
+  }
+};
+})();
+(QueryTwoDocument as any).__relay.hash = \\"ee9db67d7165550f73e296ac54ed6a05\\";"
 `;
