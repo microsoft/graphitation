@@ -10,11 +10,7 @@ import {
   ObjectType,
   UnionType,
 } from "./context";
-import {
-  createNonNullableType,
-  addModelSuffix,
-  createTypeFromNode,
-} from "./utilities";
+import { createNonNullableType, addModelSuffix } from "./utilities";
 
 export function generateModels(
   context: TsCodegenContext,
@@ -69,22 +65,22 @@ function createObjectTypeModel(
 
   const model = context.getDefinedModelType(type.name);
   const interfaces = type.interfaces.map((name) => {
-    if (context.importedEntity.has(name)) {
-      context.addEntityToImport(name);
-    }
-    return factory.createIdentifier(addModelSuffix(name));
+    return context.getModelType(name, "MODELS").toExpression();
   });
   const extendTypes = [context.getBaseModelType()];
   if (model) {
     extendTypes.push(model);
   }
 
-  const fields = type.fields.map(({ name, type }) =>
+  const fields = type.fields.map(({ name, type: fieldType }) =>
     factory.createPropertySignature(
       [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
       factory.createIdentifier(name),
       undefined,
-      createTypeFromNode(context, type),
+      context.getTypeReferenceFromTypeNode(
+        fieldType,
+        type.model ? undefined : "MODELS",
+      ),
     ),
   );
 
@@ -149,9 +145,7 @@ function createUnionTypeModel(
     undefined,
     factory.createUnionTypeNode(
       type.types?.map((type) => {
-        return createNonNullableType(
-          context.getModelType(type).toTypeReference(),
-        );
+        return context.getModelType(type, "MODELS").toTypeReference();
       }) || [],
     ),
   );
@@ -163,10 +157,7 @@ function createInterfaceTypeModel(
 ): ts.InterfaceDeclaration | null {
   const extendTypes = [context.getBaseModelType()];
   const interfaces = type.interfaces.map((name) => {
-    if (context.importedEntity.has(name)) {
-      context.addEntityToImport(name);
-    }
-    return factory.createIdentifier(addModelSuffix(name));
+    return context.getModelType(name, "MODELS").toExpression();
   });
 
   return factory.createInterfaceDeclaration(
@@ -205,5 +196,5 @@ function createScalarModel(
   context: TsCodegenContext,
   type: ScalarType,
 ): ts.TypeAliasDeclaration | null {
-  return context.getScalarDeclaration(type.name) || null;
+  return context.getScalarDefinition(type.name) || null;
 }
