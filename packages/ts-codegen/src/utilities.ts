@@ -134,22 +134,6 @@ export function getResolverReturnType(
   ]);
 }
 
-export function createTypeFromNode(
-  context: TsCodegenContext,
-  node: TypeNode,
-): ts.TypeNode {
-  if (node.kind === Kind.NON_NULL_TYPE) {
-    return createNonNullableType(createTypeFromNode(context, node.type));
-  } else if (node.kind === Kind.LIST_TYPE) {
-    return createListType(createTypeFromNode(context, node.type));
-  } else {
-    context.addEntityToImport(node.name.value);
-    return createNullableType(
-      context.getModelType(node.name.value).toTypeReference(),
-    );
-  }
-}
-
 export function createListType(node: ts.TypeNode): ts.TypeNode {
   return createNullableType(
     factory.createTypeReferenceNode(factory.createIdentifier("ReadonlyArray"), [

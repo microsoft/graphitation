@@ -19,7 +19,6 @@ import {
   createNonNullableType,
   getResolverReturnType,
   getAncestorEntity,
-  createTypeFromNode,
 } from "./utilities";
 
 export function generateResolvers(
@@ -85,8 +84,9 @@ function createResolverField(
       ts.SyntaxKind.UnknownKeyword,
     );
   } else {
-    context.addEntityToImport(type.name);
-    modelIdentifier = context.getModelType(type.name).toTypeReference();
+    modelIdentifier = context
+      .getModelType(type.name, "RESOLVERS")
+      .toTypeReference();
   }
 
   const resolverParametersDefinitions = {
@@ -101,7 +101,7 @@ function createResolverField(
           [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
           factory.createIdentifier(name),
           undefined,
-          createTypeFromNode(context, type),
+          context.getTypeReferenceForInputTypeFromTypeNode(type, "RESOLVERS"),
         ),
       ),
     },
@@ -129,7 +129,7 @@ function createResolverField(
         ]
       : undefined,
     getResolverReturnType(
-      createTypeFromNode(context, field.type),
+      context.getTypeReferenceFromTypeNode(field.type, "RESOLVERS"),
       type.name,
       resolverParametersDefinitions,
     ),
@@ -151,7 +151,7 @@ function createInputObjectType(
           [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
           factory.createIdentifier(name),
           undefined,
-          createTypeFromNode(context, type),
+          context.getTypeReferenceForInputTypeFromTypeNode(type, "RESOLVERS"),
         ),
       ),
     ),
