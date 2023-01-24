@@ -47,17 +47,17 @@ describe(generateTS, () => {
         import type { PostModel as _PostModel } from "../post-model.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface PostModel extends BaseModel, _PostModel {
-            readonly __typename: "Post";
+            readonly __typename?: "Post";
         }
         export interface MessageModel extends BaseModel {
-            readonly __typename: "Message";
+            readonly __typename?: "Message";
             readonly id: string;
         }
         export interface UserModel extends BaseModel {
-            readonly __typename: "User";
+            readonly __typename?: "User";
             readonly id: string;
             readonly name: string | null;
             readonly messagesWithAnswersNonRequired: ReadonlyArray<ReadonlyArray<MessageModel | null> | null> | null;
@@ -124,10 +124,10 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface UserModel extends BaseModel {
-            readonly __typename: "User";
+            readonly __typename?: "User";
             readonly id: string;
         }
         "
@@ -187,10 +187,10 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface UserModel extends BaseModel {
-            readonly __typename: "User";
+            readonly __typename?: "User";
             readonly id: string;
         }
         "
@@ -236,19 +236,19 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface NodeModel extends BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface PersonaModel extends BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface UserModel extends BaseModel, NodeModel, PersonaModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface AdminModel extends BaseModel, NodeModel, PersonaModel {
-            readonly __typename: "Admin";
+            readonly __typename?: "Admin";
             readonly id: string;
             readonly rank: number;
         }
@@ -287,13 +287,13 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface NodeModel extends BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface UserModel extends BaseModel, NodeModel {
-            readonly __typename: "User";
+            readonly __typename?: "User";
             readonly id: string;
             readonly name: string;
         }
@@ -328,13 +328,13 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface NodeModel extends BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface UserModel extends BaseModel, NodeModel {
-            readonly __typename: "User";
+            readonly __typename?: "User";
             readonly id: string;
             readonly name: string;
         }
@@ -369,10 +369,10 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface UserModel extends BaseModel {
-            readonly __typename: "User";
+            readonly __typename?: "User";
             readonly id: string;
         }
         "
@@ -385,11 +385,11 @@ describe(generateTS, () => {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export type UserParamsInput = {
-            name: string | null;
+            readonly name: string | null;
         };
         export declare namespace Query {
             export type userById = (model: unknown, args: {
-                params: UserParamsInput | null;
+                readonly params: UserParamsInput | null;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
         }
         "
@@ -419,13 +419,13 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface UserModel extends BaseModel {
-            readonly __typename: "User";
+            readonly __typename?: "User";
             readonly id: string;
         }
-        export enum RankModel {
+        export const enum RankModel {
             User = "User",
             Admin = "Admin"
         }
@@ -439,12 +439,12 @@ describe(generateTS, () => {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export type UserParamsInput = {
-            name: string | null;
-            rank: RankModel | null;
+            readonly name: string | null;
+            readonly rank: RankModel | null;
         };
         export declare namespace Query {
             export type userById = (model: unknown, args: {
-                params: UserParamsInput | null;
+                readonly params: UserParamsInput | null;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
         }
         "
@@ -473,10 +473,10 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface UserModel extends BaseModel {
-            readonly __typename: "User";
+            readonly __typename?: "User";
             readonly id: string;
         }
         "
@@ -489,15 +489,15 @@ describe(generateTS, () => {
             export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export type PresenceInput = {
-            type: string;
+            readonly type: string;
         };
         export type UserParamsInput = {
-            name: string;
-            presence: PresenceInput | null;
+            readonly name: string;
+            readonly presence: PresenceInput | null;
         };
         export declare namespace Query {
             export type userById = (model: unknown, args: {
-                params: UserParamsInput | null;
+                readonly params: UserParamsInput | null;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
         }
         "
@@ -523,15 +523,15 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
-        export enum PresenceAvailabilityModel {
+        export const enum PresenceAvailabilityModel {
             Available = "Available",
             Away = "Away",
             Offline = "Offline"
         }
         export interface UserModel extends BaseModel {
-            readonly __typename: "User";
+            readonly __typename?: "User";
             readonly id: string;
             readonly availability: PresenceAvailabilityModel;
         }
@@ -547,7 +547,7 @@ describe(generateTS, () => {
         }
         export declare namespace Query {
             export type userById = (model: unknown, args: {
-                id: string;
+                readonly id: string;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
         }
         "
@@ -573,14 +573,14 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface CustomerModel extends BaseModel {
-            readonly __typename: "Customer";
+            readonly __typename?: "Customer";
             readonly id: string;
         }
         export interface AdminModel extends BaseModel {
-            readonly __typename: "Admin";
+            readonly __typename?: "Admin";
             readonly id: string;
         }
         export type UserModel = CustomerModel | AdminModel;
@@ -589,7 +589,7 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { CustomerModel, AdminModel, UserModel } from "./models.interface";
+        import type { AdminModel, CustomerModel, UserModel } from "./models.interface";
         export declare namespace Customer {
             export type id = (model: CustomerModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
@@ -598,7 +598,7 @@ describe(generateTS, () => {
         }
         export declare namespace Query {
             export type userById = (model: unknown, args: {
-                id: string;
+                readonly id: string;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
         }
         "
@@ -620,10 +620,10 @@ describe(generateTS, () => {
         "import type { UserModel as _UserModel } from "../user-model.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface UserModel extends BaseModel, _UserModel {
-            readonly __typename: "User";
+            readonly __typename?: "User";
         }
         "
       `);
@@ -636,7 +636,7 @@ describe(generateTS, () => {
         }
         export declare namespace Query {
             export type userById = (model: unknown, args: {
-                id: string;
+                readonly id: string;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
         }
         "
@@ -667,10 +667,10 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface TodoModel extends BaseModel {
-            readonly __typename: "Todo";
+            readonly __typename?: "Todo";
             readonly id: string;
             readonly name: string;
         }
@@ -716,10 +716,10 @@ describe(generateTS, () => {
         "import type { AvatarModel } from "@msteams/packages-test";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface UserModel extends BaseModel {
-            readonly __typename: "User";
+            readonly __typename?: "User";
             readonly id: string;
             readonly avatar: AvatarModel;
         }
@@ -736,7 +736,7 @@ describe(generateTS, () => {
         }
         export declare namespace Query {
             export type userById = (model: unknown, args: {
-                id: string;
+                readonly id: string;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
         }
         "
@@ -764,13 +764,13 @@ describe(generateTS, () => {
       "import type { EntityModel } from "@msteams/packages-test";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
-          readonly __typename: string;
+          readonly __typename?: string;
       }
       export interface PersonModel extends BaseModel, EntityModel {
-          readonly __typename: string;
+          readonly __typename?: string;
       }
       export interface UserModel extends BaseModel, PersonModel {
-          readonly __typename: "User";
+          readonly __typename?: "User";
           readonly id: string;
       }
       "
@@ -778,13 +778,13 @@ describe(generateTS, () => {
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
-      import type { UserModel, PersonModel } from "./models.interface";
+      import type { PersonModel, UserModel } from "./models.interface";
       export declare namespace User {
           export type id = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
       }
       export declare namespace Query {
           export type userById = (model: unknown, args: {
-              id: string;
+              readonly id: string;
           }, context: unknown, info: ResolveInfo) => PromiseOrValue<PersonModel | null>;
       }
       "
@@ -809,10 +809,10 @@ describe(generateTS, () => {
       "import type { RankModel } from "@msteams/packages-rank";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
-          readonly __typename: string;
+          readonly __typename?: string;
       }
       export interface UserModel extends BaseModel {
-          readonly __typename: "User";
+          readonly __typename?: "User";
           readonly id: string;
           readonly rank: RankModel;
       }
@@ -829,7 +829,7 @@ describe(generateTS, () => {
       }
       export declare namespace Query {
           export type userById = (model: unknown, args: {
-              id: string;
+              readonly id: string;
           }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
       }
       "
@@ -858,13 +858,12 @@ describe(generateTS, () => {
       }
     `);
     expect(models).toMatchInlineSnapshot(`
-      "import type { RankModel } from "@msteams/packages-rank";
-      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
-          readonly __typename: string;
+          readonly __typename?: string;
       }
       export type DateTimeModel = unknown;
-      export enum UserTypeModel {
+      export const enum UserTypeModel {
           Admin = "Admin",
           User = "User"
       }
@@ -873,17 +872,17 @@ describe(generateTS, () => {
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
-      import type { UserTypeModel, DateTimeModel } from "./models.interface";
+      import type { DateTimeModel, UserTypeModel } from "./models.interface";
       import type { RankModel } from "@msteams/packages-rank";
       export type UserParam = {
-          id: string;
-          rank: RankModel;
+          readonly id: string;
+          readonly rank: RankModel;
       };
       export declare namespace Query {
           export type isUser = (model: unknown, args: {
-              userParam: UserParam;
-              userType: UserTypeModel;
-              dateTime: DateTimeModel;
+              readonly userParam: UserParam;
+              readonly userType: UserTypeModel;
+              readonly dateTime: DateTimeModel;
           }, context: unknown, info: ResolveInfo) => PromiseOrValue<boolean | null>;
       }
       "
@@ -913,10 +912,10 @@ describe(generateTS, () => {
       "import type { RankModel } from "@msteams/packages-rank";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
-          readonly __typename: string;
+          readonly __typename?: string;
       }
       export interface UserModel extends BaseModel {
-          readonly __typename: "User";
+          readonly __typename?: "User";
           readonly id: string;
           readonly rank: RankModel;
       }
@@ -932,12 +931,12 @@ describe(generateTS, () => {
           export type rank = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<RankModel>;
       }
       export type UserInput = {
-          id: string;
-          rank: RankModel;
+          readonly id: string;
+          readonly rank: RankModel;
       };
       export declare namespace Query {
           export type userById = (model: unknown, args: {
-              params: UserInput | null;
+              readonly params: UserInput | null;
           }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
       }
       "
@@ -962,10 +961,10 @@ describe(generateTS, () => {
       "import type { User as _UserModel } from "@msteams/custom-user";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
-          readonly __typename: string;
+          readonly __typename?: string;
       }
       export interface UserModel extends BaseModel, _UserModel {
-          readonly __typename: "User";
+          readonly __typename?: "User";
       }
       "
     `);
@@ -980,7 +979,7 @@ describe(generateTS, () => {
       }
       export declare namespace Query {
           export type userById = (model: unknown, args: {
-              id: string;
+              readonly id: string;
           }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
       }
       "
@@ -1014,10 +1013,10 @@ describe(generateTS, () => {
       "import type { RankModel } from "@msteams/packages-rank";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
-          readonly __typename: string;
+          readonly __typename?: string;
       }
       export interface UserModel extends BaseModel {
-          readonly __typename: "User";
+          readonly __typename?: "User";
           readonly id: string;
           readonly rank: RankModel;
       }
@@ -1033,15 +1032,15 @@ describe(generateTS, () => {
           export type rank = (model: UserModel, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<RankModel>;
       }
       export type RankParams = {
-          rank: RankModel;
+          readonly rank: RankModel;
       };
       export type UserParams = {
-          id: string;
-          rank: RankParams;
+          readonly id: string;
+          readonly rank: RankParams;
       };
       export declare namespace Query {
           export type userById = (model: unknown, args: {
-              params: UserParams | null;
+              readonly params: UserParams | null;
           }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
       }
       "
@@ -1065,11 +1064,11 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export type DateTimeModel = string;
         export interface UserModel extends BaseModel {
-            readonly __typename: "User";
+            readonly __typename?: "User";
             readonly id: string;
             readonly dateTime: DateTimeModel;
         }
@@ -1085,7 +1084,7 @@ describe(generateTS, () => {
         }
         export declare namespace Query {
             export type userById = (model: unknown, args: {
-                id: string;
+                readonly id: string;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
         }
         "
@@ -1109,11 +1108,11 @@ describe(generateTS, () => {
         "import type { DateTimeModel as _DateTimeModel } from "@msteams/custom-scalars";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export type DateTimeModel = _DateTimeModel;
         export interface UserModel extends BaseModel {
-            readonly __typename: "User";
+            readonly __typename?: "User";
             readonly id: string;
             readonly dateTime: DateTimeModel;
         }
@@ -1129,7 +1128,7 @@ describe(generateTS, () => {
         }
         export declare namespace Query {
             export type userById = (model: unknown, args: {
-                id: string;
+                readonly id: string;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel | null>;
         }
         "
@@ -1158,10 +1157,10 @@ describe(generateTS, () => {
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
-            readonly __typename: string;
+            readonly __typename?: string;
         }
         export interface UserModel extends BaseModel {
-            readonly __typename: "User";
+            readonly __typename?: "User";
             readonly id: string;
             readonly name: string;
             readonly age: number | null;
@@ -1183,11 +1182,11 @@ describe(generateTS, () => {
         }
         export declare namespace Query {
             export type node = (model: unknown, args: {
-                id: string;
-                name: string;
-                age: number | null;
-                rating: number | null;
-                isAdmin: boolean | null;
+                readonly id: string;
+                readonly name: string;
+                readonly age: number | null;
+                readonly rating: number | null;
+                readonly isAdmin: boolean | null;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<UserModel>;
         }
         "
@@ -1208,10 +1207,10 @@ describe(generateTS, () => {
     expect(models).toMatchInlineSnapshot(`
       "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
-          readonly __typename: string;
+          readonly __typename?: string;
       }
       export interface NodeModel extends BaseModel {
-          readonly __typename: string;
+          readonly __typename?: string;
       }
       "
     `);
@@ -1221,7 +1220,7 @@ describe(generateTS, () => {
       import type { NodeModel } from "./models.interface";
       export declare namespace Query {
           export type node = (model: unknown, args: {
-              id: string;
+              readonly id: string;
           }, context: unknown, info: ResolveInfo) => PromiseOrValue<NodeModel>;
       }
       "

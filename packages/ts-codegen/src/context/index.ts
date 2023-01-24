@@ -28,7 +28,12 @@ import ts, {
 } from "typescript";
 import { DefinitionImport, DefinitionModel } from "../types";
 import { createImportDeclaration } from "./utilities";
-import { addModelSuffix } from "../utilities";
+import {
+  addModelSuffix,
+  createListType,
+  createNonNullableType,
+  createNullableType,
+} from "../utilities";
 import { IMPORT_DIRECTIVE_NAME, processImportDirective } from "./import";
 import { MODEL_DIRECTIVE_NAME, processModelDirective } from "./model";
 
@@ -81,37 +86,73 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
 type ModelNameAndImport = { modelName: string; imp: DefinitionImport };
 
 export class TsCodegenContext {
+  private allTypes: Array<Type>;
+  private typeNameToType: Map<string, Type>;
+  private usedEntitiesInModels: Set<string>;
+  private usedEntitiesInResolvers: Set<string>;
   private imports: DefinitionImport[];
   private typeNameToImports: Map<
     string,
     { modelName: string } & ModelNameAndImport
   >;
   private typeNameToModels: Map<string, DefinitionModel>;
-  private allModelNames: Set<string>;
-  private entitiesToImport: Set<string>;
-  private defaultModels: Set<string>;
-  public importedEntity: Set<string>;
-
-  private allTypes: Array<Type>;
 
   constructor(private options: TsCodegenContextOptions) {
+    this.allTypes = [];
+    this.typeNameToType = new Map();
+    this.usedEntitiesInModels = new Set();
+    this.usedEntitiesInResolvers = new Set();
+
     this.imports = [];
     this.typeNameToImports = new Map();
     this.typeNameToModels = new Map();
-    this.allModelNames = new Set();
-    this.entitiesToImport = new Set();
-    this.defaultModels = new Set();
-    this.importedEntity = new Set();
-
-    this.allTypes = [];
   }
 
   addType(type: Type): void {
     this.allTypes.push(type);
+    this.typeNameToType.set(type.name, type);
   }
 
   getAllTypes(): Array<Type> {
     return this.allTypes;
+  }
+
+  getTypeReferenceFromTypeNode(
+    node: TypeNode,
+    markUsage?: "MODELS" | "RESOLVERS",
+  ): ts.TypeNode {
+    if (node.kind === Kind.NON_NULL_TYPE) {
+      return createNonNullableType(
+        this.getTypeReferenceFromTypeNode(node.type, markUsage),
+      );
+    } else if (node.kind === Kind.LIST_TYPE) {
+      return createListType(
+        this.getTypeReferenceFromTypeNode(node.type, markUsage),
+      );
+    } else {
+      return createNullableType(
+        this.getModelType(node.name.value, markUsage).toTypeReference(),
+      );
+    }
+  }
+
+  getTypeReferenceForInputTypeFromTypeNode(
+    node: TypeNode,
+    markUsage?: "MODELS" | "RESOLVERS",
+  ): ts.TypeNode {
+    if (node.kind === Kind.NON_NULL_TYPE) {
+      return createNonNullableType(
+        this.getTypeReferenceForInputTypeFromTypeNode(node.type, markUsage),
+      );
+    } else if (node.kind === Kind.LIST_TYPE) {
+      return createListType(
+        this.getTypeReferenceForInputTypeFromTypeNode(node.type, markUsage),
+      );
+    } else {
+      return createNullableType(
+        this.getInputType(node.name.value, markUsage).toTypeReference(),
+      );
+    }
   }
 
   addImport(imp: DefinitionImport, node: ASTNode): void {
@@ -130,7 +171,6 @@ export class TsCodegenContext {
           ],
         );
       }
-      this.importedEntity.add(typeName);
       // TODO: from.value needs to lead to another "module" index
       this.typeNameToImports.set(typeName, {
         modelName: addModelSuffix(typeName),
@@ -138,18 +178,6 @@ export class TsCodegenContext {
       });
     }
     this.imports.push(imp);
-  }
-
-  addDefaultModel(model: string): void {
-    this.defaultModels.add(model);
-  }
-
-  addEntityToImport(model: string): void {
-    this.entitiesToImport.add(model);
-  }
-
-  clearEntitiesToImport(): void {
-    this.entitiesToImport = new Set(Array.from(this.defaultModels));
   }
 
   addModel(model: DefinitionModel, node: ASTNode): void {
@@ -170,12 +198,19 @@ export class TsCodegenContext {
     return this.typeNameToModels.get(typeName) || null;
   }
 
-  getAllImportDeclarations(): ts.ImportDeclaration[] {
-    return this.imports.reduce<ts.ImportDeclaration[]>(
-      (acc, { defs, from }) => {
-        const filteredDefs = defs.filter(({ typeName }) =>
-          this.entitiesToImport.has(typeName),
-        );
+  getAllImportDeclarations(
+    filterFor: "MODELS" | "RESOLVERS",
+  ): ts.ImportDeclaration[] {
+    let filter: (typeName: string) => boolean;
+    if (filterFor === "MODELS") {
+      filter = (typeName: string) => this.usedEntitiesInModels.has(typeName);
+    } else {
+      filter = (typeName: string) => this.usedEntitiesInResolvers.has(typeName);
+    }
+    return Array.from(this.imports)
+      .sort()
+      .reduce<ts.ImportDeclaration[]>((acc, { defs, from }) => {
+        const filteredDefs = defs.filter(({ typeName }) => filter(typeName));
 
         if (filteredDefs.length) {
           acc.push(
@@ -186,14 +221,14 @@ export class TsCodegenContext {
           );
         }
         return acc;
-      },
-      [],
-    );
+      }, [])
+      .sort();
   }
 
   getAllModelImportDeclarations(): ts.ImportDeclaration[] {
-    const imports = this.getAllImportDeclarations();
+    const imports = this.getAllImportDeclarations("MODELS");
     const models = Array.from(this.typeNameToModels.values())
+      .sort()
       .map((model) => {
         if (!model.from) {
           return;
@@ -208,33 +243,6 @@ export class TsCodegenContext {
       .filter(Boolean) as ts.ImportDeclaration[];
 
     return imports.concat(models);
-  }
-
-  getScalarDeclaration(scalarName: string | null) {
-    if (!scalarName || BUILT_IN_SCALARS.hasOwnProperty(scalarName)) {
-      return;
-    }
-
-    let model;
-    if (this.typeNameToModels.has(scalarName)) {
-      const { from, modelName, tsType } = this.typeNameToModels.get(
-        scalarName,
-      ) as DefinitionModel;
-      model = from ? modelName : tsType;
-    } else {
-      model = DEFAULT_SCALAR_TYPE;
-    }
-
-    return factory.createTypeAliasDeclaration(
-      undefined,
-      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-      factory.createIdentifier(addModelSuffix(scalarName)),
-      undefined,
-      factory.createTypeReferenceNode(
-        factory.createIdentifier(model),
-        undefined,
-      ),
-    );
   }
 
   getAllResolverImportDeclarations(): ts.ImportDeclaration[] {
@@ -262,14 +270,44 @@ export class TsCodegenContext {
 
     imports.push(
       createImportDeclaration(
-        Array.from(this.allModelNames),
+        Array.from(this.usedEntitiesInResolvers)
+          .sort()
+          .filter((typeName) => !this.typeNameToImports.has(typeName))
+          .map((typeName) => addModelSuffix(typeName)),
         "./models.interface",
       ),
     );
 
-    imports.push(...this.getAllImportDeclarations());
+    imports.push(...this.getAllImportDeclarations("RESOLVERS"));
 
     return imports;
+  }
+
+  getScalarDefinition(scalarName: string | null) {
+    if (!scalarName || BUILT_IN_SCALARS.hasOwnProperty(scalarName)) {
+      return;
+    }
+
+    let model;
+    if (this.typeNameToModels.has(scalarName)) {
+      const { from, modelName, tsType } = this.typeNameToModels.get(
+        scalarName,
+      ) as DefinitionModel;
+      model = from ? modelName : tsType;
+    } else {
+      model = DEFAULT_SCALAR_TYPE;
+    }
+
+    return factory.createTypeAliasDeclaration(
+      undefined,
+      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+      factory.createIdentifier(addModelSuffix(scalarName)),
+      undefined,
+      factory.createTypeReferenceNode(
+        factory.createIdentifier(model),
+        undefined,
+      ),
+    );
   }
 
   getBaseModelType(): TypeLocation {
@@ -301,7 +339,7 @@ export class TsCodegenContext {
             factory.createPropertySignature(
               [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
               factory.createIdentifier("__typename"),
-              undefined,
+              factory.createToken(ts.SyntaxKind.QuestionToken),
               factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
             ),
           ],
@@ -315,25 +353,55 @@ export class TsCodegenContext {
 
   getModelType(
     typeName: string,
-    addPossibleModel = true,
-    shouldAddModelSuffix = true,
+    markUsage?: "MODELS" | "RESOLVERS",
+  ): TypeLocation {
+    if (BUILT_IN_SCALARS.hasOwnProperty(typeName)) {
+      return new TypeLocation(null, BUILT_IN_SCALARS[typeName]);
+    } else {
+      if (markUsage === "MODELS") {
+        this.usedEntitiesInModels.add(typeName);
+      } else if (markUsage === "RESOLVERS") {
+        this.usedEntitiesInResolvers.add(typeName);
+      }
+      if (this.typeNameToImports.has(typeName)) {
+        let { modelName } = this.typeNameToImports.get(
+          typeName,
+        ) as ModelNameAndImport;
+        return new TypeLocation(null, modelName);
+      } else {
+        return new TypeLocation(null, addModelSuffix(typeName));
+      }
+    }
+  }
+
+  getInputType(
+    typeName: string,
+    markUsage?: "MODELS" | "RESOLVERS",
   ): TypeLocation {
     if (BUILT_IN_SCALARS.hasOwnProperty(typeName)) {
       return new TypeLocation(null, BUILT_IN_SCALARS[typeName]);
     } else if (this.typeNameToImports.has(typeName)) {
+      if (markUsage === "MODELS") {
+        this.usedEntitiesInModels.add(typeName);
+      } else if (markUsage === "RESOLVERS") {
+        this.usedEntitiesInResolvers.add(typeName);
+      }
       let { modelName } = this.typeNameToImports.get(
         typeName,
       ) as ModelNameAndImport;
       return new TypeLocation(null, modelName);
     } else {
-      const modelName = shouldAddModelSuffix
-        ? addModelSuffix(typeName)
-        : typeName;
-
-      if (this.entitiesToImport.has(typeName) && addPossibleModel) {
-        this.allModelNames.add(modelName);
+      const type = this.typeNameToType.get(typeName);
+      if (type && type.kind !== "INPUT_OBJECT") {
+        if (markUsage === "MODELS") {
+          this.usedEntitiesInModels.add(typeName);
+        } else if (markUsage === "RESOLVERS") {
+          this.usedEntitiesInResolvers.add(typeName);
+        }
+        return new TypeLocation(null, addModelSuffix(typeName));
+      } else {
+        return new TypeLocation(null, typeName);
       }
-      return new TypeLocation(null, modelName);
     }
   }
 
