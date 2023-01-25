@@ -9,7 +9,6 @@ import {
 } from "@apollo/client";
 import { getOperationName } from "@apollo/client/utilities";
 import * as ReactTestRenderer from "react-test-renderer";
-import { graphql } from "@graphitation/graphql-js-tag";
 import {
   ApolloMockClient,
   createMockClient,
@@ -49,10 +48,12 @@ const TestComponent: React.FC = () => {
           ...prev,
           conversation: {
             ...prev.conversation,
-            messages: [
-              subscriptionData.data.messageCreated,
-              ...prev.conversation.messages,
-            ],
+            messages: {
+              edges: [
+                { node: subscriptionData.data.messageCreated },
+                ...prev.conversation.messages.edges,
+              ],
+            },
           },
         };
       },
@@ -61,8 +62,8 @@ const TestComponent: React.FC = () => {
       <>
         <div>{props.conversation.title}</div>
         <ul>
-          {props.conversation.messages.map((message, i) => (
-            <li key={i}>{message.text}</li>
+          {props.conversation.messages.edges.map(({ node }, i) => (
+            <li key={i}>{node.text}</li>
           ))}
         </ul>
       </>
@@ -97,10 +98,12 @@ const TestMutationComponent: React.FC = () => {
           data: {
             conversation: {
               ...existingData!.conversation,
-              messages: [
-                data.createMessage,
-                ...existingData!.conversation.messages!,
-              ],
+              messages: {
+                edges: [
+                  { node: data.createMessage },
+                  ...existingData!.conversation.messages!.edges,
+                ],
+              },
             },
           },
         });
@@ -251,5 +254,7 @@ describe.each([
         return operation;
       });
     });
+
+    describe("concerning connections", () => {});
   },
 );

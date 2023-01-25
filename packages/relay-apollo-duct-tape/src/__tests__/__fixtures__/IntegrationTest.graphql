@@ -3,10 +3,14 @@ query ApolloClientIntegrationTestQuery($id: String!) {
     __typename
     id
     title
-    messages {
-      __typename
-      id
-      text
+    messages(first: 10) {
+      edges {
+        node {
+          __typename
+          id
+          text
+        }
+      }
     }
   }
 }

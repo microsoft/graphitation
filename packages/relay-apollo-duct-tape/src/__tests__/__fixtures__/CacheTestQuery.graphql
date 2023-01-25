@@ -7,11 +7,15 @@ query CacheTestQuery(
     id
     title
     ... on Conversation @include(if: $includeNestedData) {
-      messages {
-        id
-        authorId
-        text
-        createdAt
+      messages(first: 10) {
+        edges {
+          node {
+            id
+            authorId
+            text
+            createdAt
+          }
+        }
       }
     }
     # NOTE: This should not be included in the build-time generated IR.

@@ -21,7 +21,29 @@ type Conversation implements Node {
   id: ID!
   title: String!
   hasUnreadMessages: Boolean!
-  messages: [Message!]!
+  messages(first: Int!, after: String, sort: Sort): MessagesConnection!
+}
+
+enum Sort {
+  ASC
+  DESC
+}
+
+type MessagesConnection {
+  edges: [MessagesConnectionEdge!]!
+  pageInfo: PageInfo
+}
+
+type PageInfo {
+  startCursor: String
+  endCursor: String
+  hasNextPage: Boolean
+  hasPreviousPage: Boolean
+}
+
+type MessagesConnectionEdge {
+  cursor: String
+  node: Message!
 }
 
 type Message {

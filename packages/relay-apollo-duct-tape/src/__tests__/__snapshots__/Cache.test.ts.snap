@@ -4,14 +4,18 @@ exports[`key-fields concerning normalization with custom key-fields works with a
 Object {
   "conversation": Object {
     "id": "42",
-    "messages": Array [
-      Object {
-        "authorId": "author-42",
-        "createdAt": "2020-01-01T00:00:00.000Z",
-        "id": "message-42",
-        "text": "Hello World",
-      },
-    ],
+    "messages": Object {
+      "edges": Array [
+        Object {
+          "node": Object {
+            "authorId": "author-42",
+            "createdAt": "2020-01-01T00:00:00.000Z",
+            "id": "message-42",
+            "text": "Hello World",
+          },
+        },
+      ],
+    },
     "title": "Hello World",
   },
 }
@@ -22,11 +26,15 @@ Object {
   "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}": Object {
     "__typename": "Conversation",
     "id": "42",
-    "messages": Array [
-      Object {
-        "__ref": "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}",
-      },
-    ],
+    "messages({\\"first\\":10})": Object {
+      "edges": Array [
+        Object {
+          "node": Object {
+            "__ref": "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}",
+          },
+        },
+      ],
+    },
     "title": "Hello World",
   },
   "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}": Object {
@@ -49,14 +57,18 @@ exports[`key-fields concerning normalization with custom key-fields works with r
 Object {
   "conversation": Object {
     "id": "42",
-    "messages": Array [
-      Object {
-        "authorId": "author-42",
-        "createdAt": "2020-01-01T00:00:00.000Z",
-        "id": "message-42",
-        "text": "Hello World",
-      },
-    ],
+    "messages": Object {
+      "edges": Array [
+        Object {
+          "node": Object {
+            "authorId": "author-42",
+            "createdAt": "2020-01-01T00:00:00.000Z",
+            "id": "message-42",
+            "text": "Hello World",
+          },
+        },
+      ],
+    },
     "title": "Hello World",
   },
 }
@@ -68,10 +80,8 @@ Object {
     "__id": "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}",
     "__typename": "Conversation",
     "id": "42",
-    "messages": Object {
-      "__refs": Array [
-        "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}",
-      ],
+    "messages(first:10)": Object {
+      "__ref": "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10)",
     },
     "title": "Hello World",
   },
@@ -82,6 +92,22 @@ Object {
     "createdAt": "2020-01-01T00:00:00.000Z",
     "id": "message-42",
     "text": "Hello World",
+  },
+  "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10)": Object {
+    "__id": "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10)",
+    "__typename": "MessagesConnection",
+    "edges": Object {
+      "__refs": Array [
+        "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10):edges:0",
+      ],
+    },
+  },
+  "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10):edges:0": Object {
+    "__id": "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10):edges:0",
+    "__typename": "MessagesConnectionEdge",
+    "node": Object {
+      "__ref": "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}",
+    },
   },
   "client:root": Object {
     "__id": "client:root",
@@ -97,14 +123,18 @@ exports[`key-fields concerning normalization with custom key-fields works with r
 Object {
   "conversation": Object {
     "id": "42",
-    "messages": Array [
-      Object {
-        "authorId": "author-42",
-        "createdAt": "2020-01-01T00:00:00.000Z",
-        "id": "message-42",
-        "text": "Hello World",
-      },
-    ],
+    "messages": Object {
+      "edges": Array [
+        Object {
+          "node": Object {
+            "authorId": "author-42",
+            "createdAt": "2020-01-01T00:00:00.000Z",
+            "id": "message-42",
+            "text": "Hello World",
+          },
+        },
+      ],
+    },
     "title": "Hello World",
   },
 }
@@ -116,10 +146,8 @@ Object {
     "__id": "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}",
     "__typename": "Conversation",
     "id": "42",
-    "messages": Object {
-      "__refs": Array [
-        "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}",
-      ],
+    "messages(first:10)": Object {
+      "__ref": "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10)",
     },
     "title": "Hello World",
   },
@@ -130,6 +158,22 @@ Object {
     "createdAt": "2020-01-01T00:00:00.000Z",
     "id": "message-42",
     "text": "Hello World",
+  },
+  "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10)": Object {
+    "__id": "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10)",
+    "__typename": "MessagesConnection",
+    "edges": Object {
+      "__refs": Array [
+        "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10):edges:0",
+      ],
+    },
+  },
+  "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10):edges:0": Object {
+    "__id": "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10):edges:0",
+    "__typename": "MessagesConnectionEdge",
+    "node": Object {
+      "__ref": "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}",
+    },
   },
   "client:root": Object {
     "__id": "client:root",
@@ -145,14 +189,18 @@ exports[`key-fields concerning normalization with default key-fields works with 
 Object {
   "conversation": Object {
     "id": "42",
-    "messages": Array [
-      Object {
-        "authorId": "author-42",
-        "createdAt": "2020-01-01T00:00:00.000Z",
-        "id": "message-42",
-        "text": "Hello World",
-      },
-    ],
+    "messages": Object {
+      "edges": Array [
+        Object {
+          "node": Object {
+            "authorId": "author-42",
+            "createdAt": "2020-01-01T00:00:00.000Z",
+            "id": "message-42",
+            "text": "Hello World",
+          },
+        },
+      ],
+    },
     "title": "Hello World",
   },
 }
@@ -163,11 +211,15 @@ Object {
   "Conversation:42": Object {
     "__typename": "Conversation",
     "id": "42",
-    "messages": Array [
-      Object {
-        "__ref": "Message:message-42",
-      },
-    ],
+    "messages({\\"first\\":10})": Object {
+      "edges": Array [
+        Object {
+          "node": Object {
+            "__ref": "Message:message-42",
+          },
+        },
+      ],
+    },
     "title": "Hello World",
   },
   "Message:message-42": Object {
@@ -190,14 +242,18 @@ exports[`key-fields concerning normalization with default key-fields works with 
 Object {
   "conversation": Object {
     "id": "42",
-    "messages": Array [
-      Object {
-        "authorId": "author-42",
-        "createdAt": "2020-01-01T00:00:00.000Z",
-        "id": "message-42",
-        "text": "Hello World",
-      },
-    ],
+    "messages": Object {
+      "edges": Array [
+        Object {
+          "node": Object {
+            "authorId": "author-42",
+            "createdAt": "2020-01-01T00:00:00.000Z",
+            "id": "message-42",
+            "text": "Hello World",
+          },
+        },
+      ],
+    },
     "title": "Hello World",
   },
 }
@@ -209,10 +265,8 @@ Object {
     "__id": "Conversation:42",
     "__typename": "Conversation",
     "id": "42",
-    "messages": Object {
-      "__refs": Array [
-        "Message:message-42",
-      ],
+    "messages(first:10)": Object {
+      "__ref": "client:Conversation:42:messages(first:10)",
     },
     "title": "Hello World",
   },
@@ -223,6 +277,22 @@ Object {
     "createdAt": "2020-01-01T00:00:00.000Z",
     "id": "message-42",
     "text": "Hello World",
+  },
+  "client:Conversation:42:messages(first:10)": Object {
+    "__id": "client:Conversation:42:messages(first:10)",
+    "__typename": "MessagesConnection",
+    "edges": Object {
+      "__refs": Array [
+        "client:Conversation:42:messages(first:10):edges:0",
+      ],
+    },
+  },
+  "client:Conversation:42:messages(first:10):edges:0": Object {
+    "__id": "client:Conversation:42:messages(first:10):edges:0",
+    "__typename": "MessagesConnectionEdge",
+    "node": Object {
+      "__ref": "Message:message-42",
+    },
   },
   "client:root": Object {
     "__id": "client:root",
@@ -238,14 +308,18 @@ exports[`key-fields concerning normalization with default key-fields works with 
 Object {
   "conversation": Object {
     "id": "42",
-    "messages": Array [
-      Object {
-        "authorId": "author-42",
-        "createdAt": "2020-01-01T00:00:00.000Z",
-        "id": "message-42",
-        "text": "Hello World",
-      },
-    ],
+    "messages": Object {
+      "edges": Array [
+        Object {
+          "node": Object {
+            "authorId": "author-42",
+            "createdAt": "2020-01-01T00:00:00.000Z",
+            "id": "message-42",
+            "text": "Hello World",
+          },
+        },
+      ],
+    },
     "title": "Hello World",
   },
 }
@@ -257,10 +331,8 @@ Object {
     "__id": "Conversation:42",
     "__typename": "Conversation",
     "id": "42",
-    "messages": Object {
-      "__refs": Array [
-        "Message:message-42",
-      ],
+    "messages(first:10)": Object {
+      "__ref": "client:Conversation:42:messages(first:10)",
     },
     "title": "Hello World",
   },
@@ -271,6 +343,22 @@ Object {
     "createdAt": "2020-01-01T00:00:00.000Z",
     "id": "message-42",
     "text": "Hello World",
+  },
+  "client:Conversation:42:messages(first:10)": Object {
+    "__id": "client:Conversation:42:messages(first:10)",
+    "__typename": "MessagesConnection",
+    "edges": Object {
+      "__refs": Array [
+        "client:Conversation:42:messages(first:10):edges:0",
+      ],
+    },
+  },
+  "client:Conversation:42:messages(first:10):edges:0": Object {
+    "__id": "client:Conversation:42:messages(first:10):edges:0",
+    "__typename": "MessagesConnectionEdge",
+    "node": Object {
+      "__ref": "Message:message-42",
+    },
   },
   "client:root": Object {
     "__id": "client:root",
@@ -286,14 +374,18 @@ exports[`key-fields concerning normalization without key-fields works with apoll
 Object {
   "conversation": Object {
     "id": "42",
-    "messages": Array [
-      Object {
-        "authorId": "author-42",
-        "createdAt": "2020-01-01T00:00:00.000Z",
-        "id": "message-42",
-        "text": "Hello World",
-      },
-    ],
+    "messages": Object {
+      "edges": Array [
+        Object {
+          "node": Object {
+            "authorId": "author-42",
+            "createdAt": "2020-01-01T00:00:00.000Z",
+            "id": "message-42",
+            "text": "Hello World",
+          },
+        },
+      ],
+    },
     "title": "Hello World",
   },
 }
@@ -306,15 +398,19 @@ Object {
     "conversation({\\"id\\":\\"42\\"})": Object {
       "__typename": "Conversation",
       "id": "42",
-      "messages": Array [
-        Object {
-          "__typename": "Message",
-          "authorId": "author-42",
-          "createdAt": "2020-01-01T00:00:00.000Z",
-          "id": "message-42",
-          "text": "Hello World",
-        },
-      ],
+      "messages({\\"first\\":10})": Object {
+        "edges": Array [
+          Object {
+            "node": Object {
+              "__typename": "Message",
+              "authorId": "author-42",
+              "createdAt": "2020-01-01T00:00:00.000Z",
+              "id": "message-42",
+              "text": "Hello World",
+            },
+          },
+        ],
+      },
       "title": "Hello World",
     },
   },
@@ -325,14 +421,18 @@ exports[`key-fields concerning normalization without key-fields works with relay
 Object {
   "conversation": Object {
     "id": "42",
-    "messages": Array [
-      Object {
-        "authorId": "author-42",
-        "createdAt": "2020-01-01T00:00:00.000Z",
-        "id": "message-42",
-        "text": "Hello World",
-      },
-    ],
+    "messages": Object {
+      "edges": Array [
+        Object {
+          "node": Object {
+            "authorId": "author-42",
+            "createdAt": "2020-01-01T00:00:00.000Z",
+            "id": "message-42",
+            "text": "Hello World",
+          },
+        },
+      ],
+    },
     "title": "Hello World",
   },
 }
@@ -351,15 +451,29 @@ Object {
     "__id": "client:root:conversation(id:\\"42\\")",
     "__typename": "Conversation",
     "id": "42",
-    "messages": Object {
-      "__refs": Array [
-        "client:root:conversation(id:\\"42\\"):messages:0",
-      ],
+    "messages(first:10)": Object {
+      "__ref": "client:root:conversation(id:\\"42\\"):messages(first:10)",
     },
     "title": "Hello World",
   },
-  "client:root:conversation(id:\\"42\\"):messages:0": Object {
-    "__id": "client:root:conversation(id:\\"42\\"):messages:0",
+  "client:root:conversation(id:\\"42\\"):messages(first:10)": Object {
+    "__id": "client:root:conversation(id:\\"42\\"):messages(first:10)",
+    "__typename": "MessagesConnection",
+    "edges": Object {
+      "__refs": Array [
+        "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0",
+      ],
+    },
+  },
+  "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0": Object {
+    "__id": "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0",
+    "__typename": "MessagesConnectionEdge",
+    "node": Object {
+      "__ref": "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0:node",
+    },
+  },
+  "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0:node": Object {
+    "__id": "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0:node",
     "__typename": "Message",
     "authorId": "author-42",
     "createdAt": "2020-01-01T00:00:00.000Z",
@@ -373,14 +487,18 @@ exports[`key-fields concerning normalization without key-fields works with relay
 Object {
   "conversation": Object {
     "id": "42",
-    "messages": Array [
-      Object {
-        "authorId": "author-42",
-        "createdAt": "2020-01-01T00:00:00.000Z",
-        "id": "message-42",
-        "text": "Hello World",
-      },
-    ],
+    "messages": Object {
+      "edges": Array [
+        Object {
+          "node": Object {
+            "authorId": "author-42",
+            "createdAt": "2020-01-01T00:00:00.000Z",
+            "id": "message-42",
+            "text": "Hello World",
+          },
+        },
+      ],
+    },
     "title": "Hello World",
   },
 }
@@ -399,15 +517,29 @@ Object {
     "__id": "client:root:conversation(id:\\"42\\")",
     "__typename": "Conversation",
     "id": "42",
-    "messages": Object {
-      "__refs": Array [
-        "client:root:conversation(id:\\"42\\"):messages:0",
-      ],
+    "messages(first:10)": Object {
+      "__ref": "client:root:conversation(id:\\"42\\"):messages(first:10)",
     },
     "title": "Hello World",
   },
-  "client:root:conversation(id:\\"42\\"):messages:0": Object {
-    "__id": "client:root:conversation(id:\\"42\\"):messages:0",
+  "client:root:conversation(id:\\"42\\"):messages(first:10)": Object {
+    "__id": "client:root:conversation(id:\\"42\\"):messages(first:10)",
+    "__typename": "MessagesConnection",
+    "edges": Object {
+      "__refs": Array [
+        "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0",
+      ],
+    },
+  },
+  "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0": Object {
+    "__id": "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0",
+    "__typename": "MessagesConnectionEdge",
+    "node": Object {
+      "__ref": "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0:node",
+    },
+  },
+  "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0:node": Object {
+    "__id": "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0:node",
     "__typename": "Message",
     "authorId": "author-42",
     "createdAt": "2020-01-01T00:00:00.000Z",
@@ -423,11 +555,17 @@ exports[`transformDocument adds __typename to documents with apollo 1`] = `
     id
     title
     ... on Conversation @include(if: $includeNestedData) {
-      messages {
-        id
-        authorId
-        text
-        createdAt
+      messages(first: 10) {
+        edges {
+          node {
+            id
+            authorId
+            text
+            createdAt
+            __typename
+          }
+          __typename
+        }
         __typename
       }
       __typename
@@ -451,11 +589,17 @@ exports[`transformDocument adds __typename to documents with relayWithRuntimeGen
     id
     title
     ... on Conversation @include(if: $includeNestedData) {
-      messages {
-        id
-        authorId
-        text
-        createdAt
+      messages(first: 10) {
+        edges {
+          node {
+            id
+            authorId
+            text
+            createdAt
+            __typename
+          }
+          __typename
+        }
         __typename
       }
       __typename

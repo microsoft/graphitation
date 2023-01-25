@@ -1,8 +1,8 @@
-import { graphql } from "@graphitation/graphql-js-tag";
 import { RelayApolloCache, TypePolicies } from "../Cache";
 import { InMemoryCache } from "@apollo/client";
 
 import {
+  CacheTestQuery as CacheTestQueryType,
   CacheTestQueryDocument as QueryDocument,
   CacheTestFragment as FragmentDocument,
 } from "../__generated__/operations";
@@ -20,12 +20,14 @@ const schema = parse(
   ),
 );
 
-const RESPONSE = {
+const RESPONSE: CacheTestQueryType = {
   conversation: {
     __typename: "Conversation" as const,
     id: "42",
     title: "Hello World",
-    messages: [],
+    messages: {
+      edges: [],
+    },
   },
 };
 
@@ -491,18 +493,22 @@ describe("key-fields", () => {
     ])("$scenario", ({ typePolicies }) => {
       it.each(TEST_VARIANTS)("works with $client.name", ({ client }) => {
         const cache = client(typePolicies);
-        const response = {
+        const response: CacheTestQueryType = {
           conversation: {
             ...RESPONSE.conversation,
-            messages: [
-              {
-                __typename: "Message",
-                id: "message-42",
-                authorId: "author-42",
-                text: "Hello World",
-                createdAt: "2020-01-01T00:00:00.000Z",
-              },
-            ],
+            messages: {
+              edges: [
+                {
+                  node: {
+                    __typename: "Message",
+                    id: "message-42",
+                    authorId: "author-42",
+                    text: "Hello World",
+                    createdAt: "2020-01-01T00:00:00.000Z",
+                  },
+                },
+              ],
+            },
           },
         };
         cache.writeQuery({

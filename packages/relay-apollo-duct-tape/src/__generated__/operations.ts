@@ -22,7 +22,13 @@ export type Conversation = Node & {
   id: Scalars["ID"];
   title: Scalars["String"];
   hasUnreadMessages: Scalars["Boolean"];
-  messages: Array<Message>;
+  messages: MessagesConnection;
+};
+
+export type ConversationMessagesArgs = {
+  first: Scalars["Int"];
+  after?: InputMaybe<Scalars["String"]>;
+  sort?: InputMaybe<Sort>;
 };
 
 export type Message = {
@@ -31,6 +37,18 @@ export type Message = {
   authorId: Scalars["String"];
   text: Scalars["String"];
   createdAt: Scalars["String"];
+};
+
+export type MessagesConnection = {
+  __typename?: "MessagesConnection";
+  edges: Array<MessagesConnectionEdge>;
+  pageInfo?: Maybe<PageInfo>;
+};
+
+export type MessagesConnectionEdge = {
+  __typename?: "MessagesConnectionEdge";
+  cursor?: Maybe<Scalars["String"]>;
+  node: Message;
 };
 
 export type Mutation = {
@@ -52,6 +70,14 @@ export type Node = {
   id: Scalars["ID"];
 };
 
+export type PageInfo = {
+  __typename?: "PageInfo";
+  startCursor?: Maybe<Scalars["String"]>;
+  endCursor?: Maybe<Scalars["String"]>;
+  hasNextPage?: Maybe<Scalars["Boolean"]>;
+  hasPreviousPage?: Maybe<Scalars["Boolean"]>;
+};
+
 export type Query = {
   __typename?: "Query";
   conversation: Conversation;
@@ -65,6 +91,11 @@ export type QueryConversationArgs = {
 export type QueryNodeArgs = {
   id: Scalars["ID"];
 };
+
+export enum Sort {
+  Asc = "ASC",
+  Desc = "DESC",
+}
 
 export type Subscription = {
   __typename?: "Subscription";
@@ -91,12 +122,16 @@ export type CacheTestQuery = { __typename?: "Query" } & {
     Conversation,
     "id" | "title"
   > & {
-      messages: Array<
-        { __typename?: "Message" } & Pick<
-          Message,
-          "id" | "authorId" | "text" | "createdAt"
-        >
-      >;
+      messages: { __typename?: "MessagesConnection" } & {
+        edges: Array<
+          { __typename?: "MessagesConnectionEdge" } & {
+            node: { __typename?: "Message" } & Pick<
+              Message,
+              "id" | "authorId" | "text" | "createdAt"
+            >;
+          }
+        >;
+      };
     } & CacheTestFragment;
 };
 
@@ -109,7 +144,13 @@ export type ApolloClientIntegrationTestQuery = { __typename?: "Query" } & {
     Conversation,
     "id" | "title"
   > & {
-      messages: Array<{ __typename: "Message" } & Pick<Message, "id" | "text">>;
+      messages: { __typename?: "MessagesConnection" } & {
+        edges: Array<
+          { __typename?: "MessagesConnectionEdge" } & {
+            node: { __typename: "Message" } & Pick<Message, "id" | "text">;
+          }
+        >;
+      };
     };
 };
 
@@ -259,24 +300,55 @@ export const CacheTestQueryDocument = ({
                       {
                         kind: "Field",
                         name: { kind: "Name", value: "messages" },
+                        arguments: [
+                          {
+                            kind: "Argument",
+                            name: { kind: "Name", value: "first" },
+                            value: { kind: "IntValue", value: "10" },
+                          },
+                        ],
                         selectionSet: {
                           kind: "SelectionSet",
                           selections: [
                             {
                               kind: "Field",
-                              name: { kind: "Name", value: "id" },
-                            },
-                            {
-                              kind: "Field",
-                              name: { kind: "Name", value: "authorId" },
-                            },
-                            {
-                              kind: "Field",
-                              name: { kind: "Name", value: "text" },
-                            },
-                            {
-                              kind: "Field",
-                              name: { kind: "Name", value: "createdAt" },
+                              name: { kind: "Name", value: "edges" },
+                              selectionSet: {
+                                kind: "SelectionSet",
+                                selections: [
+                                  {
+                                    kind: "Field",
+                                    name: { kind: "Name", value: "node" },
+                                    selectionSet: {
+                                      kind: "SelectionSet",
+                                      selections: [
+                                        {
+                                          kind: "Field",
+                                          name: { kind: "Name", value: "id" },
+                                        },
+                                        {
+                                          kind: "Field",
+                                          name: {
+                                            kind: "Name",
+                                            value: "authorId",
+                                          },
+                                        },
+                                        {
+                                          kind: "Field",
+                                          name: { kind: "Name", value: "text" },
+                                        },
+                                        {
+                                          kind: "Field",
+                                          name: {
+                                            kind: "Name",
+                                            value: "createdAt",
+                                          },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
@@ -342,15 +414,46 @@ export const ApolloClientIntegrationTestQueryDocument = ({
                 {
                   kind: "Field",
                   name: { kind: "Name", value: "messages" },
+                  arguments: [
+                    {
+                      kind: "Argument",
+                      name: { kind: "Name", value: "first" },
+                      value: { kind: "IntValue", value: "10" },
+                    },
+                  ],
                   selectionSet: {
                     kind: "SelectionSet",
                     selections: [
                       {
                         kind: "Field",
-                        name: { kind: "Name", value: "__typename" },
+                        name: { kind: "Name", value: "edges" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            {
+                              kind: "Field",
+                              name: { kind: "Name", value: "node" },
+                              selectionSet: {
+                                kind: "SelectionSet",
+                                selections: [
+                                  {
+                                    kind: "Field",
+                                    name: { kind: "Name", value: "__typename" },
+                                  },
+                                  {
+                                    kind: "Field",
+                                    name: { kind: "Name", value: "id" },
+                                  },
+                                  {
+                                    kind: "Field",
+                                    name: { kind: "Name", value: "text" },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
                       },
-                      { kind: "Field", name: { kind: "Name", value: "id" } },
-                      { kind: "Field", name: { kind: "Name", value: "text" } },
                     ],
                   },
                 },
@@ -645,36 +748,64 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
                 selections: [
                   {
                     alias: null,
-                    args: null,
-                    concreteType: "Message",
+                    args: [
+                      {
+                        kind: "Literal",
+                        name: "first",
+                        value: 10,
+                      },
+                    ],
+                    concreteType: "MessagesConnection",
                     kind: "LinkedField",
                     name: "messages",
-                    plural: true,
+                    plural: false,
                     selections: [
-                      v1 /*: any*/,
                       {
                         alias: null,
                         args: null,
-                        kind: "ScalarField",
-                        name: "authorId",
-                        storageKey: null,
-                      },
-                      {
-                        alias: null,
-                        args: null,
-                        kind: "ScalarField",
-                        name: "text",
-                        storageKey: null,
-                      },
-                      {
-                        alias: null,
-                        args: null,
-                        kind: "ScalarField",
-                        name: "createdAt",
+                        concreteType: "MessagesConnectionEdge",
+                        kind: "LinkedField",
+                        name: "edges",
+                        plural: true,
+                        selections: [
+                          {
+                            alias: null,
+                            args: null,
+                            concreteType: "Message",
+                            kind: "LinkedField",
+                            name: "node",
+                            plural: false,
+                            selections: [
+                              v1 /*: any*/,
+                              {
+                                alias: null,
+                                args: null,
+                                kind: "ScalarField",
+                                name: "authorId",
+                                storageKey: null,
+                              },
+                              {
+                                alias: null,
+                                args: null,
+                                kind: "ScalarField",
+                                name: "text",
+                                storageKey: null,
+                              },
+                              {
+                                alias: null,
+                                args: null,
+                                kind: "ScalarField",
+                                name: "createdAt",
+                                storageKey: null,
+                              },
+                            ],
+                            storageKey: null,
+                          },
+                        ],
                         storageKey: null,
                       },
                     ],
-                    storageKey: null,
+                    storageKey: "messages(first:10)",
                   },
                 ],
                 type: "Conversation",
@@ -719,7 +850,7 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
   };
 })();
 (CacheTestQueryDocument as any).__relay.hash =
-  "4a7a083097c0b293e42190f91388148e";
+  "810e4a4a96c59a52b8fa84fea9704ed8";
 (ApolloClientIntegrationTestQueryDocument as any).__relay = (function () {
   var v0 = [
       {
@@ -768,23 +899,51 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
           },
           {
             alias: null,
-            args: null,
-            concreteType: "Message",
+            args: [
+              {
+                kind: "Literal",
+                name: "first",
+                value: 10,
+              },
+            ],
+            concreteType: "MessagesConnection",
             kind: "LinkedField",
             name: "messages",
-            plural: true,
+            plural: false,
             selections: [
-              v1 /*: any*/,
-              v2 /*: any*/,
               {
                 alias: null,
                 args: null,
-                kind: "ScalarField",
-                name: "text",
+                concreteType: "MessagesConnectionEdge",
+                kind: "LinkedField",
+                name: "edges",
+                plural: true,
+                selections: [
+                  {
+                    alias: null,
+                    args: null,
+                    concreteType: "Message",
+                    kind: "LinkedField",
+                    name: "node",
+                    plural: false,
+                    selections: [
+                      v1 /*: any*/,
+                      v2 /*: any*/,
+                      {
+                        alias: null,
+                        args: null,
+                        kind: "ScalarField",
+                        name: "text",
+                        storageKey: null,
+                      },
+                    ],
+                    storageKey: null,
+                  },
+                ],
                 storageKey: null,
               },
             ],
-            storageKey: null,
+            storageKey: "messages(first:10)",
           },
         ],
         storageKey: null,
@@ -817,7 +976,7 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
   };
 })();
 (ApolloClientIntegrationTestQueryDocument as any).__relay.hash =
-  "6c12bb2380c03e336aa7900d3ce3532f";
+  "4e849e28e98c020d1ec9e2c875a1dd89";
 (ApolloClientIntegrationTestMutationDocument as any).__relay = (function () {
   var v0 = [
       {
