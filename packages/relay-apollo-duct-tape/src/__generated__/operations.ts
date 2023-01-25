@@ -100,6 +100,64 @@ export type CacheTestQuery = { __typename?: "Query" } & {
     } & CacheTestFragment;
 };
 
+export type ApolloClientIntegrationTestQueryVariables = Exact<{
+  id: Scalars["String"];
+}>;
+
+export type ApolloClientIntegrationTestQuery = { __typename?: "Query" } & {
+  conversation: { __typename: "Conversation" } & Pick<
+    Conversation,
+    "id" | "title"
+  > & {
+      messages: Array<{ __typename: "Message" } & Pick<Message, "id" | "text">>;
+    };
+};
+
+export type ApolloClientIntegrationTestMutationVariables = Exact<{
+  id: Scalars["String"];
+  title: Scalars["String"];
+}>;
+
+export type ApolloClientIntegrationTestMutation = {
+  __typename?: "Mutation";
+} & {
+  updateConversation: { __typename: "Conversation" } & Pick<
+    Conversation,
+    "id" | "title"
+  >;
+};
+
+export type ApolloClientIntegrationTestCreateMessageMutationVariables = Exact<{
+  conversationId: Scalars["String"];
+}>;
+
+export type ApolloClientIntegrationTestCreateMessageMutation = {
+  __typename?: "Mutation";
+} & { createMessage: { __typename: "Message" } & Pick<Message, "id" | "text"> };
+
+export type ApolloClientIntegrationTestConversationUpdatedSubscriptionVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type ApolloClientIntegrationTestConversationUpdatedSubscription = {
+  __typename?: "Subscription";
+} & {
+  conversationUpdated: { __typename: "Conversation" } & Pick<
+    Conversation,
+    "id" | "title"
+  >;
+};
+
+export type ApolloClientIntegrationTestMessageCreatedSubscriptionVariables = Exact<{
+  conversationId: Scalars["String"];
+}>;
+
+export type ApolloClientIntegrationTestMessageCreatedSubscription = {
+  __typename?: "Subscription";
+} & {
+  messageCreated: { __typename: "Message" } & Pick<Message, "id" | "text">;
+};
+
 export const CacheTestFragment = ({
   kind: "Document",
   definitions: [
@@ -239,6 +297,300 @@ export const CacheTestQueryDocument = ({
     ...CacheTestFragment.definitions,
   ],
 } as unknown) as DocumentNode<CacheTestQuery, CacheTestQueryVariables>;
+export const ApolloClientIntegrationTestQueryDocument = ({
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "ApolloClientIntegrationTestQuery" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "id" } },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: { kind: "Name", value: "String" },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "conversation" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "id" },
+                value: {
+                  kind: "Variable",
+                  name: { kind: "Name", value: "id" },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "__typename" } },
+                { kind: "Field", name: { kind: "Name", value: "id" } },
+                { kind: "Field", name: { kind: "Name", value: "title" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "messages" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "__typename" },
+                      },
+                      { kind: "Field", name: { kind: "Name", value: "id" } },
+                      { kind: "Field", name: { kind: "Name", value: "text" } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown) as DocumentNode<
+  ApolloClientIntegrationTestQuery,
+  ApolloClientIntegrationTestQueryVariables
+>;
+export const ApolloClientIntegrationTestMutationDocument = ({
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "ApolloClientIntegrationTestMutation" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "id" } },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: { kind: "Name", value: "String" },
+            },
+          },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "title" },
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: { kind: "Name", value: "String" },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "updateConversation" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "id" },
+                value: {
+                  kind: "Variable",
+                  name: { kind: "Name", value: "id" },
+                },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "title" },
+                value: {
+                  kind: "Variable",
+                  name: { kind: "Name", value: "title" },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "__typename" } },
+                { kind: "Field", name: { kind: "Name", value: "id" } },
+                { kind: "Field", name: { kind: "Name", value: "title" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown) as DocumentNode<
+  ApolloClientIntegrationTestMutation,
+  ApolloClientIntegrationTestMutationVariables
+>;
+export const ApolloClientIntegrationTestCreateMessageMutationDocument = ({
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: {
+        kind: "Name",
+        value: "ApolloClientIntegrationTestCreateMessageMutation",
+      },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "conversationId" },
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: { kind: "Name", value: "String" },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "createMessage" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "conversationId" },
+                value: {
+                  kind: "Variable",
+                  name: { kind: "Name", value: "conversationId" },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "__typename" } },
+                { kind: "Field", name: { kind: "Name", value: "id" } },
+                { kind: "Field", name: { kind: "Name", value: "text" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown) as DocumentNode<
+  ApolloClientIntegrationTestCreateMessageMutation,
+  ApolloClientIntegrationTestCreateMessageMutationVariables
+>;
+export const ApolloClientIntegrationTestConversationUpdatedSubscriptionDocument = ({
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "subscription",
+      name: {
+        kind: "Name",
+        value: "ApolloClientIntegrationTestConversationUpdatedSubscription",
+      },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "conversationUpdated" },
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "__typename" } },
+                { kind: "Field", name: { kind: "Name", value: "id" } },
+                { kind: "Field", name: { kind: "Name", value: "title" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown) as DocumentNode<
+  ApolloClientIntegrationTestConversationUpdatedSubscription,
+  ApolloClientIntegrationTestConversationUpdatedSubscriptionVariables
+>;
+export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "subscription",
+      name: {
+        kind: "Name",
+        value: "ApolloClientIntegrationTestMessageCreatedSubscription",
+      },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "conversationId" },
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: { kind: "Name", value: "String" },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "messageCreated" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "conversationId" },
+                value: {
+                  kind: "Variable",
+                  name: { kind: "Name", value: "conversationId" },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "__typename" } },
+                { kind: "Field", name: { kind: "Name", value: "id" } },
+                { kind: "Field", name: { kind: "Name", value: "text" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown) as DocumentNode<
+  ApolloClientIntegrationTestMessageCreatedSubscription,
+  ApolloClientIntegrationTestMessageCreatedSubscriptionVariables
+>;
 (CacheTestQueryDocument as any).__relay = (function () {
   var v0 = [
       {
@@ -368,6 +720,405 @@ export const CacheTestQueryDocument = ({
 })();
 (CacheTestQueryDocument as any).__relay.hash =
   "4a7a083097c0b293e42190f91388148e";
+(ApolloClientIntegrationTestQueryDocument as any).__relay = (function () {
+  var v0 = [
+      {
+        defaultValue: null,
+        kind: "LocalArgument",
+        name: "id",
+      },
+    ],
+    v1 = {
+      alias: null,
+      args: null,
+      kind: "ScalarField",
+      name: "__typename",
+      storageKey: null,
+    },
+    v2 = {
+      alias: null,
+      args: null,
+      kind: "ScalarField",
+      name: "id",
+      storageKey: null,
+    },
+    v3 = [
+      {
+        alias: null,
+        args: [
+          {
+            kind: "Variable",
+            name: "id",
+            variableName: "id",
+          },
+        ],
+        concreteType: "Conversation",
+        kind: "LinkedField",
+        name: "conversation",
+        plural: false,
+        selections: [
+          v1 /*: any*/,
+          v2 /*: any*/,
+          {
+            alias: null,
+            args: null,
+            kind: "ScalarField",
+            name: "title",
+            storageKey: null,
+          },
+          {
+            alias: null,
+            args: null,
+            concreteType: "Message",
+            kind: "LinkedField",
+            name: "messages",
+            plural: true,
+            selections: [
+              v1 /*: any*/,
+              v2 /*: any*/,
+              {
+                alias: null,
+                args: null,
+                kind: "ScalarField",
+                name: "text",
+                storageKey: null,
+              },
+            ],
+            storageKey: null,
+          },
+        ],
+        storageKey: null,
+      },
+    ];
+  return {
+    fragment: {
+      argumentDefinitions: v0 /*: any*/,
+      kind: "Fragment",
+      metadata: null,
+      name: "ApolloClientIntegrationTestQuery",
+      selections: v3 /*: any*/,
+      type: "Query",
+      abstractKey: null,
+    },
+    kind: "Request",
+    operation: {
+      argumentDefinitions: v0 /*: any*/,
+      kind: "Operation",
+      name: "ApolloClientIntegrationTestQuery",
+      selections: v3 /*: any*/,
+    },
+    params: {
+      cacheID: "d41d8cd98f00b204e9800998ecf8427e",
+      metadata: {},
+      name: "ApolloClientIntegrationTestQuery",
+      operationKind: "query",
+      text: "",
+    },
+  };
+})();
+(ApolloClientIntegrationTestQueryDocument as any).__relay.hash =
+  "6c12bb2380c03e336aa7900d3ce3532f";
+(ApolloClientIntegrationTestMutationDocument as any).__relay = (function () {
+  var v0 = [
+      {
+        defaultValue: null,
+        kind: "LocalArgument",
+        name: "id",
+      },
+      {
+        defaultValue: null,
+        kind: "LocalArgument",
+        name: "title",
+      },
+    ],
+    v1 = [
+      {
+        alias: null,
+        args: [
+          {
+            kind: "Variable",
+            name: "id",
+            variableName: "id",
+          },
+          {
+            kind: "Variable",
+            name: "title",
+            variableName: "title",
+          },
+        ],
+        concreteType: "Conversation",
+        kind: "LinkedField",
+        name: "updateConversation",
+        plural: false,
+        selections: [
+          {
+            alias: null,
+            args: null,
+            kind: "ScalarField",
+            name: "__typename",
+            storageKey: null,
+          },
+          {
+            alias: null,
+            args: null,
+            kind: "ScalarField",
+            name: "id",
+            storageKey: null,
+          },
+          {
+            alias: null,
+            args: null,
+            kind: "ScalarField",
+            name: "title",
+            storageKey: null,
+          },
+        ],
+        storageKey: null,
+      },
+    ];
+  return {
+    fragment: {
+      argumentDefinitions: v0 /*: any*/,
+      kind: "Fragment",
+      metadata: null,
+      name: "ApolloClientIntegrationTestMutation",
+      selections: v1 /*: any*/,
+      type: "Mutation",
+      abstractKey: null,
+    },
+    kind: "Request",
+    operation: {
+      argumentDefinitions: v0 /*: any*/,
+      kind: "Operation",
+      name: "ApolloClientIntegrationTestMutation",
+      selections: v1 /*: any*/,
+    },
+    params: {
+      cacheID: "d41d8cd98f00b204e9800998ecf8427e",
+      metadata: {},
+      name: "ApolloClientIntegrationTestMutation",
+      operationKind: "mutation",
+      text: "",
+    },
+  };
+})();
+(ApolloClientIntegrationTestMutationDocument as any).__relay.hash =
+  "7ce79cf6ef5fc281941a614b5dfef97f";
+(ApolloClientIntegrationTestCreateMessageMutationDocument as any).__relay = (function () {
+  var v0 = [
+      {
+        defaultValue: null,
+        kind: "LocalArgument",
+        name: "conversationId",
+      },
+    ],
+    v1 = [
+      {
+        alias: null,
+        args: [
+          {
+            kind: "Variable",
+            name: "conversationId",
+            variableName: "conversationId",
+          },
+        ],
+        concreteType: "Message",
+        kind: "LinkedField",
+        name: "createMessage",
+        plural: false,
+        selections: [
+          {
+            alias: null,
+            args: null,
+            kind: "ScalarField",
+            name: "__typename",
+            storageKey: null,
+          },
+          {
+            alias: null,
+            args: null,
+            kind: "ScalarField",
+            name: "id",
+            storageKey: null,
+          },
+          {
+            alias: null,
+            args: null,
+            kind: "ScalarField",
+            name: "text",
+            storageKey: null,
+          },
+        ],
+        storageKey: null,
+      },
+    ];
+  return {
+    fragment: {
+      argumentDefinitions: v0 /*: any*/,
+      kind: "Fragment",
+      metadata: null,
+      name: "ApolloClientIntegrationTestCreateMessageMutation",
+      selections: v1 /*: any*/,
+      type: "Mutation",
+      abstractKey: null,
+    },
+    kind: "Request",
+    operation: {
+      argumentDefinitions: v0 /*: any*/,
+      kind: "Operation",
+      name: "ApolloClientIntegrationTestCreateMessageMutation",
+      selections: v1 /*: any*/,
+    },
+    params: {
+      cacheID: "d41d8cd98f00b204e9800998ecf8427e",
+      metadata: {},
+      name: "ApolloClientIntegrationTestCreateMessageMutation",
+      operationKind: "mutation",
+      text: "",
+    },
+  };
+})();
+(ApolloClientIntegrationTestCreateMessageMutationDocument as any).__relay.hash =
+  "7101b56a6c2cca01c39c8ee0781e4e04";
+(ApolloClientIntegrationTestConversationUpdatedSubscriptionDocument as any).__relay = (function () {
+  var v0 = [
+    {
+      alias: null,
+      args: null,
+      concreteType: "Conversation",
+      kind: "LinkedField",
+      name: "conversationUpdated",
+      plural: false,
+      selections: [
+        {
+          alias: null,
+          args: null,
+          kind: "ScalarField",
+          name: "__typename",
+          storageKey: null,
+        },
+        {
+          alias: null,
+          args: null,
+          kind: "ScalarField",
+          name: "id",
+          storageKey: null,
+        },
+        {
+          alias: null,
+          args: null,
+          kind: "ScalarField",
+          name: "title",
+          storageKey: null,
+        },
+      ],
+      storageKey: null,
+    },
+  ];
+  return {
+    fragment: {
+      argumentDefinitions: [],
+      kind: "Fragment",
+      metadata: null,
+      name: "ApolloClientIntegrationTestConversationUpdatedSubscription",
+      selections: v0 /*: any*/,
+      type: "Subscription",
+      abstractKey: null,
+    },
+    kind: "Request",
+    operation: {
+      argumentDefinitions: [],
+      kind: "Operation",
+      name: "ApolloClientIntegrationTestConversationUpdatedSubscription",
+      selections: v0 /*: any*/,
+    },
+    params: {
+      cacheID: "d41d8cd98f00b204e9800998ecf8427e",
+      metadata: {},
+      name: "ApolloClientIntegrationTestConversationUpdatedSubscription",
+      operationKind: "subscription",
+      text: "",
+    },
+  };
+})();
+(ApolloClientIntegrationTestConversationUpdatedSubscriptionDocument as any).__relay.hash =
+  "26a449e1501df5ec8cf8b1a9c1d8200c";
+(ApolloClientIntegrationTestMessageCreatedSubscriptionDocument as any).__relay = (function () {
+  var v0 = [
+      {
+        defaultValue: null,
+        kind: "LocalArgument",
+        name: "conversationId",
+      },
+    ],
+    v1 = [
+      {
+        alias: null,
+        args: [
+          {
+            kind: "Variable",
+            name: "conversationId",
+            variableName: "conversationId",
+          },
+        ],
+        concreteType: "Message",
+        kind: "LinkedField",
+        name: "messageCreated",
+        plural: false,
+        selections: [
+          {
+            alias: null,
+            args: null,
+            kind: "ScalarField",
+            name: "__typename",
+            storageKey: null,
+          },
+          {
+            alias: null,
+            args: null,
+            kind: "ScalarField",
+            name: "id",
+            storageKey: null,
+          },
+          {
+            alias: null,
+            args: null,
+            kind: "ScalarField",
+            name: "text",
+            storageKey: null,
+          },
+        ],
+        storageKey: null,
+      },
+    ];
+  return {
+    fragment: {
+      argumentDefinitions: v0 /*: any*/,
+      kind: "Fragment",
+      metadata: null,
+      name: "ApolloClientIntegrationTestMessageCreatedSubscription",
+      selections: v1 /*: any*/,
+      type: "Subscription",
+      abstractKey: null,
+    },
+    kind: "Request",
+    operation: {
+      argumentDefinitions: v0 /*: any*/,
+      kind: "Operation",
+      name: "ApolloClientIntegrationTestMessageCreatedSubscription",
+      selections: v1 /*: any*/,
+    },
+    params: {
+      cacheID: "d41d8cd98f00b204e9800998ecf8427e",
+      metadata: {},
+      name: "ApolloClientIntegrationTestMessageCreatedSubscription",
+      operationKind: "subscription",
+      text: "",
+    },
+  };
+})();
+(ApolloClientIntegrationTestMessageCreatedSubscriptionDocument as any).__relay.hash =
+  "ec565d5106f4c7fd302013f1d5b33fa0";
 (CacheTestFragment as any).__relay = {
   argumentDefinitions: [],
   kind: "Fragment",

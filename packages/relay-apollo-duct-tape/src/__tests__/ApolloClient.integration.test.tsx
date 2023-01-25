@@ -20,99 +20,28 @@ import { readFileSync } from "fs";
 import { buildSchema } from "graphql";
 import * as MockPayloadGenerator from "@graphitation/graphql-js-operation-payload-generator";
 
-import ApolloClientIntegrationTestQueryRelayIR, {
-  ApolloClientIntegrationTestQuery,
-} from "./__generated__/ApolloClientIntegrationTestQuery.graphql";
-import ApolloClientIntegrationTestMutationRelayIR from "./__generated__/ApolloClientIntegrationTestMutation.graphql";
-import TestCreateMessageMutationRelayIR, {
-  ApolloClientIntegrationTestCreateMessageMutation,
-} from "./__generated__/ApolloClientIntegrationTestCreateMessageMutation.graphql";
-import TestConversationUpdatedSubscriptionRelayIR from "./__generated__/ApolloClientIntegrationTestConversationUpdatedSubscription.graphql";
-import TestMessageCreatedSubscriptionRelayIR, {
-  ApolloClientIntegrationTestMessageCreatedSubscription,
-} from "./__generated__/ApolloClientIntegrationTestMessageCreatedSubscription.graphql";
+import {
+  ApolloClientIntegrationTestQueryDocument as ApolloClientIntegrationTestQuery,
+  ApolloClientIntegrationTestMutationDocument as ApolloClientIntegrationTestMutation,
+  ApolloClientIntegrationTestCreateMessageMutationDocument as TestCreateMessageMutation,
+  ApolloClientIntegrationTestConversationUpdatedSubscriptionDocument as TestConversationUpdatedSubscription,
+  ApolloClientIntegrationTestMessageCreatedSubscriptionDocument as TestMessageCreatedSubscription,
+} from "../__generated__/operations";
 
 const schema = buildSchema(
   readFileSync(require.resolve("./__fixtures__/schema.graphql"), "utf8"),
 );
 
-const ApolloClientIntegrationTestQuery = graphql`
-  query ApolloClientIntegrationTestQuery($id: String!) {
-    conversation(id: $id) {
-      __typename
-      id
-      title
-      messages {
-        __typename
-        id
-        text
-      }
-    }
-  }
-`;
-(ApolloClientIntegrationTestQuery as any).__relay = ApolloClientIntegrationTestQueryRelayIR;
-
-const ApolloClientIntegrationTestMutation = graphql`
-  mutation ApolloClientIntegrationTestMutation($id: String!, $title: String!) {
-    updateConversation(id: $id, title: $title) {
-      __typename
-      id
-      title
-    }
-  }
-`;
-(ApolloClientIntegrationTestMutation as any).__relay = ApolloClientIntegrationTestMutationRelayIR;
-
-const TestCreateMessageMutation = graphql`
-  mutation ApolloClientIntegrationTestCreateMessageMutation(
-    $conversationId: String!
-  ) {
-    createMessage(conversationId: $conversationId) {
-      __typename
-      id
-      text
-    }
-  }
-`;
-(TestCreateMessageMutation as any).__relay = TestCreateMessageMutationRelayIR;
-
-const TestConversationUpdatedSubscription = graphql`
-  subscription ApolloClientIntegrationTestConversationUpdatedSubscription {
-    conversationUpdated {
-      __typename
-      id
-      title
-    }
-  }
-`;
-(TestConversationUpdatedSubscription as any).__relay = TestConversationUpdatedSubscriptionRelayIR;
-
-const TestMessageCreatedSubscription = graphql`
-  subscription ApolloClientIntegrationTestMessageCreatedSubscription(
-    $conversationId: String!
-  ) {
-    messageCreated(conversationId: $conversationId) {
-      __typename
-      id
-      text
-    }
-  }
-`;
-(TestMessageCreatedSubscription as any).__relay = TestMessageCreatedSubscriptionRelayIR;
-
 const TestComponent: React.FC = () => {
   useSubscription(TestConversationUpdatedSubscription);
-  const { data: props, error, subscribeToMore } = useQuery<
-    ApolloClientIntegrationTestQuery["response"],
-    ApolloClientIntegrationTestQuery["variables"]
-  >(ApolloClientIntegrationTestQuery, {
-    variables: { id: "42" },
-  });
+  const { data: props, error, subscribeToMore } = useQuery(
+    ApolloClientIntegrationTestQuery,
+    {
+      variables: { id: "42" },
+    },
+  );
   if (props) {
-    subscribeToMore<
-      ApolloClientIntegrationTestMessageCreatedSubscription["response"],
-      ApolloClientIntegrationTestMessageCreatedSubscription["variables"]
-    >({
+    subscribeToMore({
       document: TestMessageCreatedSubscription,
       variables: { conversationId: "42" },
       updateQuery: (prev, { subscriptionData }) => {
@@ -155,14 +84,10 @@ const TestComponentWrapper: React.FC = () => {
 
 const TestMutationComponent: React.FC = () => {
   const [updateConversation] = useMutation(ApolloClientIntegrationTestMutation);
-  const [createMessage] = useMutation<
-    ApolloClientIntegrationTestCreateMessageMutation["response"]
-  >(TestCreateMessageMutation, {
+  const [createMessage] = useMutation(TestCreateMessageMutation, {
     update(cache, { data }) {
       if (data?.createMessage) {
-        const existingData = cache.readQuery<
-          ApolloClientIntegrationTestQuery["response"]
-        >({
+        const existingData = cache.readQuery({
           query: ApolloClientIntegrationTestQuery,
           variables: { id: "42" },
         });

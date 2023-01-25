@@ -1,0 +1,48 @@
+query ApolloClientIntegrationTestQuery($id: String!) {
+  conversation(id: $id) {
+    __typename
+    id
+    title
+    messages {
+      __typename
+      id
+      text
+    }
+  }
+}
+
+mutation ApolloClientIntegrationTestMutation($id: String!, $title: String!) {
+  updateConversation(id: $id, title: $title) {
+    __typename
+    id
+    title
+  }
+}
+
+mutation ApolloClientIntegrationTestCreateMessageMutation(
+  $conversationId: String!
+) {
+  createMessage(conversationId: $conversationId) {
+    __typename
+    id
+    text
+  }
+}
+
+subscription ApolloClientIntegrationTestConversationUpdatedSubscription {
+  conversationUpdated {
+    __typename
+    id
+    title
+  }
+}
+
+subscription ApolloClientIntegrationTestMessageCreatedSubscription(
+  $conversationId: String!
+) {
+  messageCreated(conversationId: $conversationId) {
+    __typename
+    id
+    text
+  }
+}
