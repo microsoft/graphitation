@@ -3,8 +3,13 @@ query ApolloClientIntegrationTestQuery($id: String!) {
     __typename
     id
     title
-    messages(first: 10) {
+    messages(first: 10) @connection(key: "IntegrationTest_messages") {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
       edges {
+        cursor # TODO: Check if in TMP these are already being specified
         node {
           __typename
           id

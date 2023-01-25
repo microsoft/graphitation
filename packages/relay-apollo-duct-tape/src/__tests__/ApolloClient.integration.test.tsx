@@ -49,8 +49,12 @@ const TestComponent: React.FC = () => {
           conversation: {
             ...prev.conversation,
             messages: {
+              ...prev.conversation.messages,
               edges: [
-                { node: subscriptionData.data.messageCreated },
+                {
+                  node: subscriptionData.data.messageCreated,
+                  cursor: `${subscriptionData.data.messageCreated.id}-cursor`,
+                },
                 ...prev.conversation.messages.edges,
               ],
             },
@@ -99,8 +103,12 @@ const TestMutationComponent: React.FC = () => {
             conversation: {
               ...existingData!.conversation,
               messages: {
+                ...existingData!.conversation.messages,
                 edges: [
-                  { node: data.createMessage },
+                  {
+                    node: data.createMessage,
+                    cursor: `${data.createMessage.id}-cursor`,
+                  },
                   ...existingData!.conversation.messages!.edges,
                 ],
               },
@@ -254,7 +262,5 @@ describe.each([
         return operation;
       });
     });
-
-    describe("concerning connections", () => {});
   },
 );

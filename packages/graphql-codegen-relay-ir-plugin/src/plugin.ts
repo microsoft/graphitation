@@ -20,12 +20,21 @@ import invariant from "invariant";
 
 const SchemaCache = new WeakMap();
 
+const SCHEMA_EXTENSIONS = `
+  directive @connection(key: String!, filter: [String]) on FIELD
+`;
+
 export const plugin: PluginFunction<
   RawClientSideBasePluginConfig,
   Types.ComplexPluginOutput
 > = async (schema, documents, config, info) => {
   if (!SchemaCache.has(schema)) {
-    SchemaCache.set(schema, createRelaySchema(new Source(printSchema(schema))));
+    SchemaCache.set(
+      schema,
+      createRelaySchema(
+        new Source(SCHEMA_EXTENSIONS + "\n\n" + printSchema(schema)),
+      ),
+    );
   }
 
   const operationsInDocument = documents.flatMap((source) =>

@@ -42,6 +42,7 @@ import {
   createOperationDescriptor,
   ROOT_ID,
   Environment,
+  ConnectionHandler,
 } from "relay-runtime";
 import { NormalizationFragmentSpread } from "relay-runtime/lib/util/NormalizationNode";
 import RelayRecordSource from "relay-runtime/lib/store/RelayRecordSource";
@@ -81,6 +82,7 @@ import { transformDocument, transformSchema } from "./relayDocumentUtils";
 
 import type { Schema } from "./vendor/relay-compiler/lib/core/Schema";
 import type { DocumentNode, DefinitionNode } from "graphql";
+import { HandlerProvider } from "relay-runtime/lib/handlers/RelayDefaultHandlerProvider";
 
 declare global {
   var __RELAY_DEVTOOLS_HOOK__:
@@ -97,6 +99,14 @@ type OptimisticTransaction = WeakRef<OptimisticUpdate>[];
 type RecordLike = {
   __typename?: string;
   [key: string]: unknown;
+};
+
+const handlerProvider: HandlerProvider = (handle) => {
+  switch (handle) {
+    case "connection":
+      return ConnectionHandler;
+  }
+  invariant(false, "No handler provided for `%s`.", handle);
 };
 
 export class RelayApolloCache extends ApolloCache<RecordMap> {
@@ -129,7 +139,11 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     // this.inTransation = false;
     this.transactionStack = [];
     this.typePolicies = options.typePolicies || {};
-    this.publishQueue = new RelayPublishQueue(this.store, null, this.getDataID);
+    this.publishQueue = new RelayPublishQueue(
+      this.store,
+      handlerProvider,
+      this.getDataID,
+    );
     this.optimisticTransactions = new Map();
     this.pessimism =
       options.resultCaching ?? true
