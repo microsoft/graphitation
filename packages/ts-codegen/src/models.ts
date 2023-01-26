@@ -1,4 +1,7 @@
-import ts, { factory } from "typescript";
+import ts, {
+  collapseTextChangeRangesAcrossMultipleVersions,
+  factory,
+} from "typescript";
 import { DocumentNode, Kind } from "graphql";
 import { ASTReducer, visit } from "./typedVisitor";
 import {
@@ -10,7 +13,7 @@ import {
   ObjectType,
   UnionType,
 } from "./context";
-import { createNonNullableType, addModelSuffix } from "./utilities";
+import { addModelSuffix } from "./utilities";
 
 export function generateModels(
   context: TsCodegenContext,
@@ -21,9 +24,14 @@ export function generateModels(
     .map((type) => createModelForType(context, type))
     .filter((t) => t != null) as ts.Statement[];
   const imports = context.getAllModelImportDeclarations() as ts.Statement[];
+  const extra = [];
+
+  if (context.isLegacyCompatMode()) {
+    extra.push(createLegacyCompatNamespace(context, context.getAllTypes()));
+  }
 
   return factory.createSourceFile(
-    imports.concat(context.getDefaultTypes(), statements),
+    imports.concat(context.getDefaultTypes(), statements, extra),
     factory.createToken(ts.SyntaxKind.EndOfFileToken),
     ts.NodeFlags.None,
   );
@@ -197,4 +205,37 @@ function createScalarModel(
   type: ScalarType,
 ): ts.TypeAliasDeclaration | null {
   return context.getScalarDefinition(type.name) || null;
+}
+
+function createLegacyCompatNamespace(context: TsCodegenContext, types: Type[]) {
+  return factory.createModuleDeclaration(
+    undefined,
+    [
+      factory.createModifier(ts.SyntaxKind.ExportKeyword),
+      factory.createModifier(ts.SyntaxKind.DeclareKeyword),
+    ],
+    factory.createIdentifier("_LegacyTypes"),
+    factory.createModuleBlock(
+      types
+        .map((type) => createLegacyCompatField(type))
+        .filter((t) => t != null) as ts.Statement[],
+    ),
+    ts.NodeFlags.Namespace,
+  );
+}
+
+function createLegacyCompatField(type: Type): ts.TypeAliasDeclaration | null {
+  if (type.kind === "INPUT_OBJECT") {
+    return null;
+  } else {
+    return factory.createTypeAliasDeclaration(
+      undefined,
+      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+      factory.createIdentifier(type.name),
+      undefined,
+      factory.createTypeReferenceNode(
+        factory.createIdentifier(addModelSuffix(type.name)),
+      ),
+    );
+  }
 }

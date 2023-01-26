@@ -53,6 +53,7 @@ export type TsCodegenContextOptions = {
     name: string;
     from: string | null;
   };
+  legacyCompat: boolean;
 };
 
 const DEFAULT_SCALAR_TYPE = "unknown";
@@ -81,6 +82,7 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
     name: "ResolveInfo",
     from: "@graphitation/supermassive",
   },
+  legacyCompat: false,
 };
 
 type ModelNameAndImport = { modelName: string; imp: DefinitionImport };
@@ -106,6 +108,10 @@ export class TsCodegenContext {
     this.imports = [];
     this.typeNameToImports = new Map();
     this.typeNameToModels = new Map();
+  }
+
+  isLegacyCompatMode(): boolean {
+    return this.options.legacyCompat;
   }
 
   addType(type: Type): void {
