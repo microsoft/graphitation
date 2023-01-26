@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Add compat modbe",
+  "packageName": "@graphitation/cli",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
