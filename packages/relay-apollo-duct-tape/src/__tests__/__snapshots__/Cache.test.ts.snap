@@ -56,6 +56,284 @@ Object {
 exports[`key-fields concerning normalization with custom key-fields works with relayWithBuildtimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":true}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": true,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "messages": Object {
       "edges": Array [
@@ -122,6 +400,284 @@ Object {
 exports[`key-fields concerning normalization with custom key-fields works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":true}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": true,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "messages": Object {
       "edges": Array [
@@ -241,6 +797,284 @@ Object {
 exports[`key-fields concerning normalization with default key-fields works with relayWithBuildtimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":true}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": true,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "Conversation:42",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "messages": Object {
       "edges": Array [
@@ -307,6 +1141,284 @@ Object {
 exports[`key-fields concerning normalization with default key-fields works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":true}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": true,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "Conversation:42",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "messages": Object {
       "edges": Array [
@@ -420,6 +1532,284 @@ Object {
 exports[`key-fields concerning normalization without key-fields works with relayWithBuildtimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":true}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": true,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "client:root:conversation(id:\\"42\\")",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "messages": Object {
       "edges": Array [
@@ -486,6 +1876,284 @@ Object {
 exports[`key-fields concerning normalization without key-fields works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":true}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": true,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "client:root:conversation(id:\\"42\\")",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "messages": Object {
       "edges": Array [
@@ -647,6 +2315,284 @@ Object {
 exports[`watch works with relayWithBuildtimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":false}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": false,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "Conversation:42",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "title": "Hello World 1",
   },
@@ -656,6 +2602,284 @@ Object {
 exports[`watch works with relayWithBuildtimeGeneratedIR 2`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":false}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": false,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "Conversation:42",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "title": "Hello World 2",
   },
@@ -665,6 +2889,284 @@ Object {
 exports[`watch works with relayWithBuildtimeGeneratedIR 3`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":false}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": false,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "Conversation:42",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "title": "Hello World 1",
   },
@@ -674,6 +3176,284 @@ Object {
 exports[`watch works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":false}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": false,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "Conversation:42",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "title": "Hello World 1",
   },
@@ -683,6 +3463,284 @@ Object {
 exports[`watch works with relayWithRuntimeGeneratedIR 2`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":false}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": false,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "Conversation:42",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "title": "Hello World 2",
   },
@@ -692,6 +3750,284 @@ Object {
 exports[`watch works with relayWithRuntimeGeneratedIR 3`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":false}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": false,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "Conversation:42",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "title": "Hello World 1",
   },
@@ -761,6 +4097,284 @@ Object {
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithBuildtimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":false}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": false,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "Conversation:42",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "title": "Hello World",
   },
@@ -770,6 +4384,284 @@ Object {
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithBuildtimeGeneratedIR 2`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":false}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": false,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "Conversation:42",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "title": "Hello World",
   },
@@ -779,6 +4671,284 @@ Object {
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":false}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": false,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "Conversation:42",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "title": "Hello World",
   },
@@ -788,6 +4958,284 @@ Object {
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithRuntimeGeneratedIR 2`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":false}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": false,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "Conversation:42",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "title": "Hello World",
   },
@@ -806,6 +5254,284 @@ Object {
 exports[`writeQuery/readQuery works with relayWithBuildtimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":false}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": false,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "Conversation:42",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "title": "Hello World",
   },
@@ -815,6 +5541,284 @@ Object {
 exports[`writeQuery/readQuery works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__fragmentOwner": Object {
+      "cacheConfig": undefined,
+      "identifier": "c705617444e60065fecf7ecda0ffd951{\\"conversationId\\":\\"42\\",\\"includeNestedData\\":false}",
+      "node": Object {
+        "fragment": Object {
+          "abstractKey": null,
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Fragment",
+          "metadata": null,
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+                Object {
+                  "args": null,
+                  "kind": "FragmentSpread",
+                  "name": "CacheTestFragment",
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+          "type": "Query",
+        },
+        "hash": "c3185cedf1ceb043114847bc95b61cc7",
+        "kind": "Request",
+        "operation": Object {
+          "argumentDefinitions": Array [
+            Object {
+              "defaultValue": null,
+              "kind": "LocalArgument",
+              "name": "conversationId",
+            },
+            Object {
+              "defaultValue": false,
+              "kind": "LocalArgument",
+              "name": "includeNestedData",
+            },
+          ],
+          "kind": "Operation",
+          "name": "CacheTestQuery",
+          "selections": Array [
+            Object {
+              "alias": null,
+              "args": Array [
+                Object {
+                  "kind": "Variable",
+                  "name": "id",
+                  "variableName": "conversationId",
+                },
+              ],
+              "concreteType": "Conversation",
+              "kind": "LinkedField",
+              "name": "conversation",
+              "plural": false,
+              "selections": Array [
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null,
+                },
+                Object {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "title",
+                  "storageKey": null,
+                },
+                Object {
+                  "condition": "includeNestedData",
+                  "kind": "Condition",
+                  "passingValue": true,
+                  "selections": Array [
+                    Object {
+                      "alias": null,
+                      "args": Array [
+                        Object {
+                          "kind": "Literal",
+                          "name": "first",
+                          "value": 10,
+                        },
+                      ],
+                      "concreteType": "MessagesConnection",
+                      "kind": "LinkedField",
+                      "name": "messages",
+                      "plural": false,
+                      "selections": Array [
+                        Object {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "MessagesConnectionEdge",
+                          "kind": "LinkedField",
+                          "name": "edges",
+                          "plural": true,
+                          "selections": Array [
+                            Object {
+                              "alias": null,
+                              "args": null,
+                              "concreteType": "Message",
+                              "kind": "LinkedField",
+                              "name": "node",
+                              "plural": false,
+                              "selections": Array [
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "id",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "authorId",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "text",
+                                  "storageKey": null,
+                                },
+                                Object {
+                                  "alias": null,
+                                  "args": null,
+                                  "kind": "ScalarField",
+                                  "name": "createdAt",
+                                  "storageKey": null,
+                                },
+                              ],
+                              "storageKey": null,
+                            },
+                          ],
+                          "storageKey": null,
+                        },
+                      ],
+                      "storageKey": "messages(first:10)",
+                    },
+                  ],
+                },
+              ],
+              "storageKey": null,
+            },
+          ],
+        },
+        "params": Object {
+          "cacheID": "c705617444e60065fecf7ecda0ffd951",
+          "metadata": Object {},
+          "name": "CacheTestQuery",
+          "operationKind": "query",
+          "text": null,
+        },
+      },
+      "variables": Object {
+        "conversationId": "42",
+        "includeNestedData": false,
+      },
+    },
+    "__fragments": Object {
+      "CacheTestFragment": Object {},
+    },
+    "__id": "Conversation:42",
+    "__isWithinUnmatchedTypeRefinement": false,
     "id": "42",
     "title": "Hello World",
   },

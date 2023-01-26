@@ -6,16 +6,24 @@ import * as FlattenTransform from "relay-compiler/lib/transforms/FlattenTransfor
 import * as InlineFragmentsTransform from "relay-compiler/lib/transforms/InlineFragmentsTransform";
 import * as GenerateTypeNameTransform from "relay-compiler/lib/transforms/GenerateTypeNameTransform";
 import * as ConnectionTransform from "relay-compiler/lib/transforms/ConnectionTransform";
+import * as FieldHandleTransform from "relay-compiler/lib/transforms/FieldHandleTransform";
 import { generate as generateIRDocument } from "relay-compiler/lib/codegen/RelayCodeGenerator";
 import dedupeJSONStringify from "relay-compiler/lib/util/dedupeJSONStringify";
 import crypto from "crypto";
+
+import compileRelayArtifacts from "relay-compiler/lib/codegen/compileRelayArtifacts";
+import * as RelayIRTransforms from "relay-compiler/lib/core/RelayIRTransforms";
 
 import { PluginFunction, Types } from "@graphql-codegen/plugin-helpers";
 import type { RawClientSideBasePluginConfig } from "@graphql-codegen/visitor-plugin-common";
 import type { FragmentDefinitionNode, OperationDefinitionNode } from "graphql";
 import type { Schema } from "relay-compiler/lib/core/Schema";
 import type { Request } from "relay-compiler/lib/core/IR";
-import type { ConcreteRequest, ReaderFragment } from "relay-runtime";
+import type {
+  GeneratedNode,
+  ConcreteRequest,
+  ReaderFragment,
+} from "relay-runtime";
 import invariant from "invariant";
 
 const SchemaCache = new WeakMap();
@@ -55,55 +63,32 @@ export const plugin: PluginFunction<
   for (const node of nodes) {
     compilerContext = compilerContext.add(node);
   }
-  const operationCompilerContext = compilerContext.applyTransforms([
-    InlineFragmentsTransform.transform,
-    GenerateTypeNameTransform.transform,
-    ConnectionTransform.transform,
-  ]);
-  const fragmentCompilerContext = compilerContext.applyTransform(
-    FlattenTransform.transformWithOptions({
-      isForCodegen: true,
-    } as any),
+
+  // NOTE: This also prints the operation text, which is unnecessary for our
+  //       purposes. But unsure how much overhead it truly adds, so for now
+  //       I'm optimizing for having Relay parity without having to maintain
+  //       our own copy.
+  const generatedNodes = compileRelayArtifacts(
+    compilerContext,
+    RelayIRTransforms,
+  ).map<GeneratedNode>(([_, node]) =>
+    isConcreteRequest(node)
+      ? { ...node, params: { ...node.params, text: null } }
+      : node,
   );
 
-  const generatedIRDocuments: Array<ConcreteRequest | ReaderFragment> = [];
-  operationCompilerContext.forEachDocument((node) => {
-    if (node.kind === "Root" && operationsInDocument.includes(node.name)) {
-      const fragment = operationCompilerContext.getRoot(node.name);
-      const name = fragment.name;
-      const request: Request = {
-        kind: "Request",
-        fragment: {
-          kind: "Fragment",
-          name,
-          argumentDefinitions: fragment.argumentDefinitions,
-          directives: fragment.directives,
-          loc: { kind: "Derived", source: node.loc },
-          metadata: undefined,
-          selections: fragment.selections as any,
-          type: fragment.type,
-        },
-        id: undefined,
-        loc: node.loc,
-        metadata: node.metadata || {},
-        name: fragment.name,
-        root: node,
-        text: "",
-      };
-      generatedIRDocuments.push(generateIRDocument(relaySchema, request));
-    }
-  });
-  fragmentCompilerContext.forEachDocument((node) => {
-    if (node.kind === "Fragment" && fragmentsInDocument.includes(node.name)) {
-      generatedIRDocuments.push(generateIRDocument(relaySchema, node));
-    }
-  });
-
   return {
-    content: generatedIRDocuments
-      .flatMap((doc) => {
-        const variable = getVariableName(doc, config);
-        const json = dedupeJSONStringify(doc);
+    content: generatedNodes
+      .filter((node) =>
+        isConcreteRequest(node)
+          ? operationsInDocument.includes(node.operation.name)
+          : isReaderFragment(node)
+          ? fragmentsInDocument.includes(node.name)
+          : false,
+      )
+      .flatMap((node) => {
+        const variable = getVariableName(node, config);
+        const json = dedupeJSONStringify(node);
         return [
           `(${variable} as any).__relay = ${json};`,
           `(${variable} as any).__relay.hash = "${crypto
@@ -116,21 +101,31 @@ export const plugin: PluginFunction<
   };
 };
 
+function isConcreteRequest(node: GeneratedNode): node is ConcreteRequest {
+  return node.kind === "Request";
+}
+
+function isReaderFragment(node: GeneratedNode): node is ReaderFragment {
+  return node.kind === "Fragment";
+}
+
 // TODO: This name faffing in graphql-codegen isn't really clear to me. It
 //       would be great if we could just re-use their logic in BaseVisitor, but
 //       we don't have graphql-js AST nodes here.
 function getVariableName(
-  doc: ConcreteRequest | ReaderFragment,
+  node: GeneratedNode,
   config: RawClientSideBasePluginConfig,
 ) {
-  if (doc.kind === "Request") {
-    const name = (doc as ConcreteRequest).operation.name;
+  if (isConcreteRequest(node)) {
+    const name = node.operation.name;
     return `${name}${config.documentVariableSuffix || "Document"}`;
-  } else {
-    const name = (doc as ReaderFragment).name;
+  } else if (isReaderFragment(node)) {
+    const name = node.name;
     return `${
       config.dedupeOperationSuffix ? name.replace(/Fragment$/, "") : name
     }${config.fragmentVariableSuffix || "FragmentDoc"}`;
+  } else {
+    throw new Error("Unexpected node type");
   }
 }
 

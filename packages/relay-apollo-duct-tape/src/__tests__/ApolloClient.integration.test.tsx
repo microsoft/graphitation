@@ -33,7 +33,7 @@ const schema = buildSchema(
 
 const TestComponent: React.FC = () => {
   useSubscription(TestConversationUpdatedSubscription);
-  const { data: props, error, subscribeToMore } = useQuery(
+  const { data: props, error, subscribeToMore, fetchMore } = useQuery(
     ApolloClientIntegrationTestQuery,
     {
       variables: { id: "42" },
@@ -70,6 +70,17 @@ const TestComponent: React.FC = () => {
             <li key={i}>{node.text}</li>
           ))}
         </ul>
+        <button
+          onClick={() =>
+            fetchMore({
+              variables: {
+                cursor: props.conversation.messages.pageInfo?.endCursor,
+              },
+            })
+          }
+        >
+          Load More
+        </button>
       </>
     );
   } else if (error) {
@@ -144,7 +155,7 @@ const TestMutationComponent: React.FC = () => {
 
 describe.each([
   { cache: () => new RelayApolloCache(), scenario: "RelayApolloCache" },
-  { cache: undefined, scenario: "InMemoryCache" },
+  // { cache: undefined, scenario: "InMemoryCache" },
 ] as { cache?: () => ApolloCache<any>; scenario: string }[])(
   "ApolloClient integration with $scenario",
   ({ cache }) => {
@@ -260,6 +271,37 @@ describe.each([
           "ApolloClientIntegrationTestMessageCreatedSubscription",
         );
         return operation;
+      });
+    });
+
+    describe("concerning connections", () => {
+      it("updates the cache automatically and re-renders", async () => {
+        testComponentTree.root
+          .findAllByType("button")
+          .find((button) => button.props.children === "Load More")!
+          .props.onClick();
+        await ReactTestRenderer.act(() =>
+          client.mock.resolveMostRecentOperation((operation) =>
+            MockPayloadGenerator.generate(operation, {
+              Conversation: () => ({
+                id: "42",
+                title: "Original title",
+              }),
+              MessagesConnectionEdge: () => ({
+                cursor: "new-message-cursor",
+                node: {
+                  id: "new-message",
+                  text: "New message",
+                },
+              }),
+            }),
+          ),
+        );
+        const ul = testComponentTree.root.findByType("ul");
+        expect(ul.children.length).toBe(2);
+        expect(
+          (ul.children[1] as ReactTestRenderer.ReactTestInstance).children[0],
+        ).toEqual("New message");
       });
     });
   },

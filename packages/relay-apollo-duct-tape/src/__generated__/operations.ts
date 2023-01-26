@@ -137,6 +137,7 @@ export type CacheTestQuery = { __typename?: "Query" } & {
 
 export type ApolloClientIntegrationTestQueryVariables = Exact<{
   id: Scalars["String"];
+  cursor?: Maybe<Scalars["String"]>;
 }>;
 
 export type ApolloClientIntegrationTestQuery = { __typename?: "Query" } & {
@@ -395,6 +396,14 @@ export const ApolloClientIntegrationTestQueryDocument = ({
             },
           },
         },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "cursor" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
       ],
       selectionSet: {
         kind: "SelectionSet",
@@ -426,6 +435,14 @@ export const ApolloClientIntegrationTestQueryDocument = ({
                       kind: "Argument",
                       name: { kind: "Name", value: "first" },
                       value: { kind: "IntValue", value: "10" },
+                    },
+                    {
+                      kind: "Argument",
+                      name: { kind: "Name", value: "after" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "cursor" },
+                      },
                     },
                   ],
                   directives: [
@@ -752,274 +769,54 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
         name: "includeNestedData",
       },
     ],
-    v1 = {
-      alias: null,
-      args: null,
-      kind: "ScalarField",
-      name: "id",
-      storageKey: null,
-    },
-    v2 = {
-      alias: null,
-      args: null,
-      kind: "ScalarField",
-      name: "title",
-      storageKey: null,
-    },
-    v3 = [
-      {
-        alias: null,
-        args: [
-          {
-            kind: "Variable",
-            name: "id",
-            variableName: "conversationId",
-          },
-        ],
-        concreteType: "Conversation",
-        kind: "LinkedField",
-        name: "conversation",
-        plural: false,
-        selections: [
-          v1 /*: any*/,
-          v2 /*: any*/,
-          {
-            condition: "includeNestedData",
-            kind: "Condition",
-            passingValue: true,
-            selections: [
-              {
-                kind: "InlineFragment",
-                selections: [
-                  {
-                    alias: null,
-                    args: [
-                      {
-                        kind: "Literal",
-                        name: "first",
-                        value: 10,
-                      },
-                    ],
-                    concreteType: "MessagesConnection",
-                    kind: "LinkedField",
-                    name: "messages",
-                    plural: false,
-                    selections: [
-                      {
-                        alias: null,
-                        args: null,
-                        concreteType: "MessagesConnectionEdge",
-                        kind: "LinkedField",
-                        name: "edges",
-                        plural: true,
-                        selections: [
-                          {
-                            alias: null,
-                            args: null,
-                            concreteType: "Message",
-                            kind: "LinkedField",
-                            name: "node",
-                            plural: false,
-                            selections: [
-                              v1 /*: any*/,
-                              {
-                                alias: null,
-                                args: null,
-                                kind: "ScalarField",
-                                name: "authorId",
-                                storageKey: null,
-                              },
-                              {
-                                alias: null,
-                                args: null,
-                                kind: "ScalarField",
-                                name: "text",
-                                storageKey: null,
-                              },
-                              {
-                                alias: null,
-                                args: null,
-                                kind: "ScalarField",
-                                name: "createdAt",
-                                storageKey: null,
-                              },
-                            ],
-                            storageKey: null,
-                          },
-                        ],
-                        storageKey: null,
-                      },
-                    ],
-                    storageKey: "messages(first:10)",
-                  },
-                ],
-                type: "Conversation",
-                abstractKey: null,
-              },
-            ],
-          },
-          {
-            kind: "InlineFragment",
-            selections: [v1 /*: any*/, v2 /*: any*/],
-            type: "Conversation",
-            abstractKey: null,
-          },
-        ],
-        storageKey: null,
-      },
-    ];
-  return {
-    fragment: {
-      argumentDefinitions: v0 /*: any*/,
-      kind: "Fragment",
-      metadata: null,
-      name: "CacheTestQuery",
-      selections: v3 /*: any*/,
-      type: "Query",
-      abstractKey: null,
-    },
-    kind: "Request",
-    operation: {
-      argumentDefinitions: v0 /*: any*/,
-      kind: "Operation",
-      name: "CacheTestQuery",
-      selections: v3 /*: any*/,
-    },
-    params: {
-      cacheID: "d41d8cd98f00b204e9800998ecf8427e",
-      metadata: {},
-      name: "CacheTestQuery",
-      operationKind: "query",
-      text: "",
-    },
-  };
-})();
-(CacheTestQueryDocument as any).__relay.hash =
-  "810e4a4a96c59a52b8fa84fea9704ed8";
-(ApolloClientIntegrationTestQueryDocument as any).__relay = (function () {
-  var v0 = [
-      {
-        defaultValue: null,
-        kind: "LocalArgument",
-        name: "id",
-      },
-    ],
     v1 = [
       {
         kind: "Variable",
         name: "id",
-        variableName: "id",
+        variableName: "conversationId",
       },
     ],
     v2 = {
       alias: null,
       args: null,
       kind: "ScalarField",
-      name: "__typename",
+      name: "id",
       storageKey: null,
     },
     v3 = {
       alias: null,
       args: null,
       kind: "ScalarField",
-      name: "id",
-      storageKey: null,
-    },
-    v4 = {
-      alias: null,
-      args: null,
-      kind: "ScalarField",
       name: "title",
       storageKey: null,
     },
-    v5 = [
-      {
-        kind: "Literal",
-        name: "first",
-        value: 10,
-      },
-    ],
-    v6 = {
-      alias: null,
-      args: null,
-      kind: "ScalarField",
-      name: "hasNextPage",
-      storageKey: null,
-    },
-    v7 = {
-      alias: null,
-      args: null,
-      kind: "ScalarField",
-      name: "endCursor",
-      storageKey: null,
-    },
-    v8 = {
-      alias: null,
-      args: null,
-      kind: "ScalarField",
-      name: "cursor",
-      storageKey: null,
-    },
-    v9 = {
-      alias: null,
-      args: v5 /*: any*/,
-      concreteType: "MessagesConnection",
-      kind: "LinkedField",
-      name: "messages",
-      plural: false,
+    v4 = {
+      condition: "includeNestedData",
+      kind: "Condition",
+      passingValue: true,
       selections: [
         {
           alias: null,
-          args: null,
-          concreteType: "PageInfo",
-          kind: "LinkedField",
-          name: "pageInfo",
-          plural: false,
-          selections: [
-            v6 /*: any*/,
-            v7 /*: any*/,
+          args: [
             {
-              kind: "InlineFragment",
-              selections: [v7 /*: any*/, v6 /*: any*/],
-              type: "PageInfo",
-              abstractKey: null,
+              kind: "Literal",
+              name: "first",
+              value: 10,
             },
           ],
-          storageKey: null,
-        },
-        {
-          alias: null,
-          args: null,
-          concreteType: "MessagesConnectionEdge",
+          concreteType: "MessagesConnection",
           kind: "LinkedField",
-          name: "edges",
-          plural: true,
+          name: "messages",
+          plural: false,
           selections: [
-            v8 /*: any*/,
             {
               alias: null,
               args: null,
-              concreteType: "Message",
+              concreteType: "MessagesConnectionEdge",
               kind: "LinkedField",
-              name: "node",
-              plural: false,
+              name: "edges",
+              plural: true,
               selections: [
-                v2 /*: any*/,
-                v3 /*: any*/,
-                {
-                  alias: null,
-                  args: null,
-                  kind: "ScalarField",
-                  name: "text",
-                  storageKey: null,
-                },
-              ],
-              storageKey: null,
-            },
-            {
-              kind: "InlineFragment",
-              selections: [
-                v8 /*: any*/,
                 {
                   alias: null,
                   args: null,
@@ -1027,45 +824,46 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
                   kind: "LinkedField",
                   name: "node",
                   plural: false,
-                  selections: [v2 /*: any*/],
+                  selections: [
+                    v2 /*: any*/,
+                    {
+                      alias: null,
+                      args: null,
+                      kind: "ScalarField",
+                      name: "authorId",
+                      storageKey: null,
+                    },
+                    {
+                      alias: null,
+                      args: null,
+                      kind: "ScalarField",
+                      name: "text",
+                      storageKey: null,
+                    },
+                    {
+                      alias: null,
+                      args: null,
+                      kind: "ScalarField",
+                      name: "createdAt",
+                      storageKey: null,
+                    },
+                  ],
                   storageKey: null,
                 },
               ],
-              type: "MessagesConnectionEdge",
-              abstractKey: null,
+              storageKey: null,
             },
           ],
-          storageKey: null,
+          storageKey: "messages(first:10)",
         },
       ],
-      storageKey: "messages(first:10)",
     };
   return {
     fragment: {
       argumentDefinitions: v0 /*: any*/,
       kind: "Fragment",
       metadata: null,
-      name: "ApolloClientIntegrationTestQuery",
-      selections: [
-        {
-          alias: null,
-          args: v1 /*: any*/,
-          concreteType: "Conversation",
-          kind: "LinkedField",
-          name: "conversation",
-          plural: false,
-          selections: [v2 /*: any*/, v3 /*: any*/, v4 /*: any*/, v9 /*: any*/],
-          storageKey: null,
-        },
-      ],
-      type: "Query",
-      abstractKey: null,
-    },
-    kind: "Request",
-    operation: {
-      argumentDefinitions: v0 /*: any*/,
-      kind: "Operation",
-      name: "ApolloClientIntegrationTestQuery",
+      name: "CacheTestQuery",
       selections: [
         {
           alias: null,
@@ -1078,10 +876,228 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
             v2 /*: any*/,
             v3 /*: any*/,
             v4 /*: any*/,
-            v9 /*: any*/,
+            {
+              args: null,
+              kind: "FragmentSpread",
+              name: "CacheTestFragment",
+            },
+          ],
+          storageKey: null,
+        },
+      ],
+      type: "Query",
+      abstractKey: null,
+    },
+    kind: "Request",
+    operation: {
+      argumentDefinitions: v0 /*: any*/,
+      kind: "Operation",
+      name: "CacheTestQuery",
+      selections: [
+        {
+          alias: null,
+          args: v1 /*: any*/,
+          concreteType: "Conversation",
+          kind: "LinkedField",
+          name: "conversation",
+          plural: false,
+          selections: [v2 /*: any*/, v3 /*: any*/, v4 /*: any*/],
+          storageKey: null,
+        },
+      ],
+    },
+    params: {
+      cacheID: "c705617444e60065fecf7ecda0ffd951",
+      metadata: {},
+      name: "CacheTestQuery",
+      operationKind: "query",
+      text: null,
+    },
+  };
+})();
+(CacheTestQueryDocument as any).__relay.hash =
+  "c3185cedf1ceb043114847bc95b61cc7";
+(ApolloClientIntegrationTestQueryDocument as any).__relay = (function () {
+  var v0 = {
+      defaultValue: null,
+      kind: "LocalArgument",
+      name: "cursor",
+    },
+    v1 = {
+      defaultValue: null,
+      kind: "LocalArgument",
+      name: "id",
+    },
+    v2 = [
+      {
+        kind: "Variable",
+        name: "id",
+        variableName: "id",
+      },
+    ],
+    v3 = {
+      alias: null,
+      args: null,
+      kind: "ScalarField",
+      name: "__typename",
+      storageKey: null,
+    },
+    v4 = {
+      alias: null,
+      args: null,
+      kind: "ScalarField",
+      name: "id",
+      storageKey: null,
+    },
+    v5 = {
+      alias: null,
+      args: null,
+      kind: "ScalarField",
+      name: "title",
+      storageKey: null,
+    },
+    v6 = [
+      {
+        alias: null,
+        args: null,
+        concreteType: "PageInfo",
+        kind: "LinkedField",
+        name: "pageInfo",
+        plural: false,
+        selections: [
+          {
+            alias: null,
+            args: null,
+            kind: "ScalarField",
+            name: "hasNextPage",
+            storageKey: null,
+          },
+          {
+            alias: null,
+            args: null,
+            kind: "ScalarField",
+            name: "endCursor",
+            storageKey: null,
+          },
+        ],
+        storageKey: null,
+      },
+      {
+        alias: null,
+        args: null,
+        concreteType: "MessagesConnectionEdge",
+        kind: "LinkedField",
+        name: "edges",
+        plural: true,
+        selections: [
+          {
+            alias: null,
+            args: null,
+            kind: "ScalarField",
+            name: "cursor",
+            storageKey: null,
+          },
+          {
+            alias: null,
+            args: null,
+            concreteType: "Message",
+            kind: "LinkedField",
+            name: "node",
+            plural: false,
+            selections: [
+              v3 /*: any*/,
+              v4 /*: any*/,
+              {
+                alias: null,
+                args: null,
+                kind: "ScalarField",
+                name: "text",
+                storageKey: null,
+              },
+            ],
+            storageKey: null,
+          },
+        ],
+        storageKey: null,
+      },
+    ],
+    v7 = [
+      {
+        kind: "Variable",
+        name: "after",
+        variableName: "cursor",
+      },
+      {
+        kind: "Literal",
+        name: "first",
+        value: 10,
+      },
+    ];
+  return {
+    fragment: {
+      argumentDefinitions: [v0 /*: any*/, v1 /*: any*/],
+      kind: "Fragment",
+      metadata: null,
+      name: "ApolloClientIntegrationTestQuery",
+      selections: [
+        {
+          alias: null,
+          args: v2 /*: any*/,
+          concreteType: "Conversation",
+          kind: "LinkedField",
+          name: "conversation",
+          plural: false,
+          selections: [
+            v3 /*: any*/,
+            v4 /*: any*/,
+            v5 /*: any*/,
+            {
+              alias: "messages",
+              args: null,
+              concreteType: "MessagesConnection",
+              kind: "LinkedField",
+              name: "__IntegrationTest_messages_connection",
+              plural: false,
+              selections: v6 /*: any*/,
+              storageKey: null,
+            },
+          ],
+          storageKey: null,
+        },
+      ],
+      type: "Query",
+      abstractKey: null,
+    },
+    kind: "Request",
+    operation: {
+      argumentDefinitions: [v1 /*: any*/, v0 /*: any*/],
+      kind: "Operation",
+      name: "ApolloClientIntegrationTestQuery",
+      selections: [
+        {
+          alias: null,
+          args: v2 /*: any*/,
+          concreteType: "Conversation",
+          kind: "LinkedField",
+          name: "conversation",
+          plural: false,
+          selections: [
+            v3 /*: any*/,
+            v4 /*: any*/,
+            v5 /*: any*/,
             {
               alias: null,
-              args: v5 /*: any*/,
+              args: v7 /*: any*/,
+              concreteType: "MessagesConnection",
+              kind: "LinkedField",
+              name: "messages",
+              plural: false,
+              selections: v6 /*: any*/,
+              storageKey: null,
+            },
+            {
+              alias: null,
+              args: v7 /*: any*/,
               filters: null,
               handle: "connection",
               key: "IntegrationTest_messages",
@@ -1094,12 +1110,12 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
       ],
     },
     params: {
-      cacheID: "d41d8cd98f00b204e9800998ecf8427e",
+      cacheID: "b6a618a549bc22357ceca576b2c0e3ee",
       metadata: {
         connection: [
           {
             count: null,
-            cursor: null,
+            cursor: "cursor",
             direction: "forward",
             path: ["conversation", "messages"],
           },
@@ -1107,12 +1123,12 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
       },
       name: "ApolloClientIntegrationTestQuery",
       operationKind: "query",
-      text: "",
+      text: null,
     },
   };
 })();
 (ApolloClientIntegrationTestQueryDocument as any).__relay.hash =
-  "5bda5a0f915825ceba575ba2908c887e";
+  "0472351d40d3ef4aedae3ca0a4ad327c";
 (ApolloClientIntegrationTestMutationDocument as any).__relay = (function () {
   var v0 = [
       {
@@ -1189,16 +1205,16 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
       selections: v1 /*: any*/,
     },
     params: {
-      cacheID: "d41d8cd98f00b204e9800998ecf8427e",
+      cacheID: "5acee6fe38dfd1e26c5664267a7bbc0e",
       metadata: {},
       name: "ApolloClientIntegrationTestMutation",
       operationKind: "mutation",
-      text: "",
+      text: null,
     },
   };
 })();
 (ApolloClientIntegrationTestMutationDocument as any).__relay.hash =
-  "7ce79cf6ef5fc281941a614b5dfef97f";
+  "ca4837d079003e33d1a0ee50db934a89";
 (ApolloClientIntegrationTestCreateMessageMutationDocument as any).__relay = (function () {
   var v0 = [
       {
@@ -1265,16 +1281,16 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
       selections: v1 /*: any*/,
     },
     params: {
-      cacheID: "d41d8cd98f00b204e9800998ecf8427e",
+      cacheID: "eb72077c8db0425239fbab1f2ba870b6",
       metadata: {},
       name: "ApolloClientIntegrationTestCreateMessageMutation",
       operationKind: "mutation",
-      text: "",
+      text: null,
     },
   };
 })();
 (ApolloClientIntegrationTestCreateMessageMutationDocument as any).__relay.hash =
-  "7101b56a6c2cca01c39c8ee0781e4e04";
+  "926973556b9d94c9b4283bb715df6177";
 (ApolloClientIntegrationTestConversationUpdatedSubscriptionDocument as any).__relay = (function () {
   var v0 = [
     {
@@ -1328,16 +1344,16 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
       selections: v0 /*: any*/,
     },
     params: {
-      cacheID: "d41d8cd98f00b204e9800998ecf8427e",
+      cacheID: "0391827416e2014e9019f1df748963bf",
       metadata: {},
       name: "ApolloClientIntegrationTestConversationUpdatedSubscription",
       operationKind: "subscription",
-      text: "",
+      text: null,
     },
   };
 })();
 (ApolloClientIntegrationTestConversationUpdatedSubscriptionDocument as any).__relay.hash =
-  "26a449e1501df5ec8cf8b1a9c1d8200c";
+  "b33aa39746922c98886ade0e7685770d";
 (ApolloClientIntegrationTestMessageCreatedSubscriptionDocument as any).__relay = (function () {
   var v0 = [
       {
@@ -1404,16 +1420,16 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
       selections: v1 /*: any*/,
     },
     params: {
-      cacheID: "d41d8cd98f00b204e9800998ecf8427e",
+      cacheID: "c8266ff3a7444766771efa2046974854",
       metadata: {},
       name: "ApolloClientIntegrationTestMessageCreatedSubscription",
       operationKind: "subscription",
-      text: "",
+      text: null,
     },
   };
 })();
 (ApolloClientIntegrationTestMessageCreatedSubscriptionDocument as any).__relay.hash =
-  "ec565d5106f4c7fd302013f1d5b33fa0";
+  "588961ccfb24d8a6197b022d1f942d08";
 (CacheTestFragment as any).__relay = {
   argumentDefinitions: [],
   kind: "Fragment",

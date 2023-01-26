@@ -1,9 +1,10 @@
-query ApolloClientIntegrationTestQuery($id: String!) {
+query ApolloClientIntegrationTestQuery($id: String!, $cursor: String) {
   conversation(id: $id) {
     __typename
     id
     title
-    messages(first: 10) @connection(key: "IntegrationTest_messages") {
+    messages(first: 10, after: $cursor)
+      @connection(key: "IntegrationTest_messages") {
       pageInfo {
         hasNextPage
         endCursor
