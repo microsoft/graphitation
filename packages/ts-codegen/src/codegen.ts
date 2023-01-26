@@ -6,18 +6,28 @@ import { generateModels } from "./models";
 
 export function generateTS(
   document: DocumentNode,
-  outputPath: string,
-  documentPath: string,
-  contextImport: string | null,
-  contextName?: string,
+  {
+    outputPath,
+    documentPath,
+    contextImport,
+    contextName,
+    legacyCompat,
+  }: {
+    outputPath: string;
+    documentPath: string;
+    contextImport?: string | null;
+    contextName?: string;
+    legacyCompat?: boolean;
+  },
 ): { models: ts.SourceFile; resolvers: ts.SourceFile } {
   try {
     let context = extractContext(
       {
         context: {
           name: contextName,
-          from: contextImport,
+          from: contextImport || null,
         },
+        legacyCompat,
       },
       document,
       outputPath,

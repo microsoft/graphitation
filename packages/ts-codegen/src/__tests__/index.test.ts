@@ -1226,23 +1226,76 @@ describe(generateTS, () => {
       "
     `);
   });
+
+  it("generateTS with legacy compat mode", () => {
+    const { models, resolvers } = runGenerateTest(
+      graphql`
+        interface Node {
+          id: ID!
+        }
+
+        extend type Query {
+          node(id: ID!): Node!
+        }
+      `,
+      { legacyCompat: true },
+    );
+    expect(models).toMatchInlineSnapshot(`
+      "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          readonly __typename?: string;
+      }
+      export interface NodeModel extends BaseModel {
+          readonly __typename?: string;
+      }
+      export declare namespace _LegacyTypes {
+          export type Node = NodeModel;
+          export type Query = QueryModel;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import type { NodeModel } from "./models.interface";
+      export declare namespace Query {
+          export type node = (model: unknown, args: {
+              readonly id: string;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<NodeModel>;
+      }
+      export declare namespace _LegacyResolvers {
+          export interface Query {
+              node?: Query.node;
+          }
+      }
+      "
+    `);
+  });
 });
 
 function runGenerateTest(
   doc: string,
-  outputDir = "__generated__",
-  inputPath = "./typedef.graphql",
-  contextImport?: string,
-  contextName?: string,
+  options: {
+    outputPath?: string;
+    documentPath?: string;
+    contextImport?: string;
+    contextName?: string;
+    legacyCompat?: boolean;
+  } = {},
 ): { models: string; resolvers: string } {
+  const fullOptions: {
+    outputPath: string;
+    documentPath: string;
+    contextImport?: string | null;
+    contextName?: string;
+    legacyCompat?: boolean;
+  } = {
+    outputPath: "__generated__",
+    documentPath: "./typedef.graphql",
+    ...options,
+  };
   const document = parse(doc);
-  const result = generateTS(
-    document,
-    path.resolve(process.cwd(), outputDir),
-    path.resolve(process.cwd(), inputPath),
-    contextImport || null,
-    contextName,
-  );
+  const result = generateTS(document, fullOptions);
   const printer = ts.createPrinter();
   return {
     models: printer.printFile(result.models),

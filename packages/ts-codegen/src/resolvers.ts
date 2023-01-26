@@ -30,8 +30,12 @@ export function generateResolvers(
     .map((type) => createResolversForType(context, type))
     .filter((t) => t != null) as ts.Statement[];
   const imports = context.getAllResolverImportDeclarations() as ts.Statement[];
+  const extra = [];
+  if (context.isLegacyCompatMode()) {
+    extra.push(createLegacyResolverNamespace(context, context.getAllTypes()));
+  }
   return factory.createSourceFile(
-    imports.concat(statements),
+    imports.concat(statements, extra),
     factory.createToken(ts.SyntaxKind.EndOfFileToken),
     ts.NodeFlags.None,
   );
@@ -155,5 +159,48 @@ function createInputObjectType(
         ),
       ),
     ),
+  );
+}
+
+function createLegacyResolverNamespace(
+  context: TsCodegenContext,
+  types: Type[],
+): ts.ModuleDeclaration {
+  const typeObjects: ts.Statement[] = [];
+  types.forEach((type) => {
+    if (type.kind === "OBJECT") {
+      typeObjects.push(
+        factory.createInterfaceDeclaration(
+          undefined,
+          [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+          type.name,
+          undefined,
+          undefined,
+          type.fields.map((field) =>
+            factory.createPropertySignature(
+              undefined,
+              factory.createIdentifier(field.name),
+              factory.createToken(ts.SyntaxKind.QuestionToken),
+              factory.createTypeReferenceNode(
+                factory.createQualifiedName(
+                  factory.createIdentifier(type.name),
+                  field.name,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+  });
+  return factory.createModuleDeclaration(
+    undefined,
+    [
+      factory.createModifier(ts.SyntaxKind.ExportKeyword),
+      factory.createModifier(ts.SyntaxKind.DeclareKeyword),
+    ],
+    factory.createIdentifier("_LegacyResolvers"),
+    factory.createModuleBlock(typeObjects),
+    ts.NodeFlags.Namespace,
   );
 }
