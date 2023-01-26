@@ -78,13 +78,33 @@ index c79aea0..c122c3e 100644
 +
 +export function create(source: Source): Schema;
 \ No newline at end of file
+diff --git a/node_modules/@types/relay-compiler/lib/transforms/ApplyFragmentArgumentTransform.d.ts b/node_modules/@types/relay-compiler/lib/transforms/ApplyFragmentArgumentTransform.d.ts
+index 9edd75a..30f3fc0 100644
+--- a/node_modules/@types/relay-compiler/lib/transforms/ApplyFragmentArgumentTransform.d.ts
++++ b/node_modules/@types/relay-compiler/lib/transforms/ApplyFragmentArgumentTransform.d.ts
+@@ -1,4 +1,4 @@
+-import { CompilerContext } from '../core/CompilerContext';
++import CompilerContext from '../core/CompilerContext';
+ 
+ declare function applyFragmentArgumentTransform(
+     context: CompilerContext,
+diff --git a/node_modules/@types/relay-compiler/lib/transforms/ConnectionTransform.d.ts b/node_modules/@types/relay-compiler/lib/transforms/ConnectionTransform.d.ts
+index f6066db..b598493 100644
+--- a/node_modules/@types/relay-compiler/lib/transforms/ConnectionTransform.d.ts
++++ b/node_modules/@types/relay-compiler/lib/transforms/ConnectionTransform.d.ts
+@@ -1,4 +1,4 @@
+-import { CompilerContext } from '../core/CompilerContext';
++import CompilerContext from '../core/CompilerContext';
+ 
+ /**
+  * This transform rewrites LinkedField nodes with @connection_resolver and rewrites them
 diff --git a/node_modules/@types/relay-compiler/lib/transforms/FieldHandleTransform.d.ts b/node_modules/@types/relay-compiler/lib/transforms/FieldHandleTransform.d.ts
 new file mode 100644
-index 0000000..f6066db
+index 0000000..b598493
 --- /dev/null
 +++ b/node_modules/@types/relay-compiler/lib/transforms/FieldHandleTransform.d.ts
 @@ -0,0 +1,9 @@
-+import { CompilerContext } from '../core/CompilerContext';
++import CompilerContext from '../core/CompilerContext';
 +
 +/**
 + * This transform rewrites LinkedField nodes with @connection_resolver and rewrites them
@@ -123,6 +143,56 @@ index 11e6b33..7712bff 100644
 +import CompilerContext from '../core/CompilerContext';
  
  export function transform(
+   context: CompilerContext,
+diff --git a/node_modules/@types/relay-compiler/lib/transforms/MaskTransform.d.ts b/node_modules/@types/relay-compiler/lib/transforms/MaskTransform.d.ts
+index 24638ee..566ac4c 100644
+--- a/node_modules/@types/relay-compiler/lib/transforms/MaskTransform.d.ts
++++ b/node_modules/@types/relay-compiler/lib/transforms/MaskTransform.d.ts
+@@ -1,4 +1,4 @@
+-import { CompilerContext } from '../core/CompilerContext';
++import CompilerContext from '../core/CompilerContext';
+ 
+ /**
+  * A transform that inlines fragment spreads with the @relay(mask: false)
+diff --git a/node_modules/@types/relay-compiler/lib/transforms/MatchTransform.d.ts b/node_modules/@types/relay-compiler/lib/transforms/MatchTransform.d.ts
+index bc5f414..2f35bb5 100644
+--- a/node_modules/@types/relay-compiler/lib/transforms/MatchTransform.d.ts
++++ b/node_modules/@types/relay-compiler/lib/transforms/MatchTransform.d.ts
+@@ -1,4 +1,4 @@
+-import { CompilerContext } from '../core/CompilerContext';
++import CompilerContext from '../core/CompilerContext';
+ 
+ /**
+  * This transform rewrites LinkedField nodes with @match and rewrites them
+diff --git a/node_modules/@types/relay-compiler/lib/transforms/RefetchableFragmentTransform.d.ts b/node_modules/@types/relay-compiler/lib/transforms/RefetchableFragmentTransform.d.ts
+index 24fddfc..581ca6a 100644
+--- a/node_modules/@types/relay-compiler/lib/transforms/RefetchableFragmentTransform.d.ts
++++ b/node_modules/@types/relay-compiler/lib/transforms/RefetchableFragmentTransform.d.ts
+@@ -1,4 +1,4 @@
+-import { CompilerContext } from '../core/CompilerContext';
++import CompilerContext from '../core/CompilerContext';
+ 
+ /**
+  * This transform synthesizes "refetch" queries for fragments that
+diff --git a/node_modules/@types/relay-compiler/lib/transforms/RelayDirectiveTransform.d.ts b/node_modules/@types/relay-compiler/lib/transforms/RelayDirectiveTransform.d.ts
+index 445dd3b..2006d8e 100644
+--- a/node_modules/@types/relay-compiler/lib/transforms/RelayDirectiveTransform.d.ts
++++ b/node_modules/@types/relay-compiler/lib/transforms/RelayDirectiveTransform.d.ts
+@@ -1,4 +1,4 @@
+-import { CompilerContext } from '../core/CompilerContext';
++import CompilerContext from '../core/CompilerContext';
+ 
+ /**
+  * A transform that extracts `@relay(plural: Boolean)` directives and converts
+diff --git a/node_modules/@types/relay-compiler/lib/transforms/SkipRedundantNodesTransform.d.ts b/node_modules/@types/relay-compiler/lib/transforms/SkipRedundantNodesTransform.d.ts
+index 03ac747..9c33aad 100644
+--- a/node_modules/@types/relay-compiler/lib/transforms/SkipRedundantNodesTransform.d.ts
++++ b/node_modules/@types/relay-compiler/lib/transforms/SkipRedundantNodesTransform.d.ts
+@@ -1,4 +1,4 @@
+-import { CompilerContext } from '../core/CompilerContext';
++import CompilerContext from '../core/CompilerContext';
+ 
+ declare function skipRedundantNodesTransform(
    context: CompilerContext,
 diff --git a/node_modules/@types/relay-compiler/lib/util/dedupeJSONStringify.d.ts b/node_modules/@types/relay-compiler/lib/util/dedupeJSONStringify.d.ts
 new file mode 100644
