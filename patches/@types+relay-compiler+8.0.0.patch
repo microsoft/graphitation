@@ -96,6 +96,72 @@ index efb36e3..050f7eb 100644
      type: CompositeTypeID;
  }
  
+diff --git a/node_modules/@types/relay-compiler/lib/core/IRTransformer.d.ts b/node_modules/@types/relay-compiler/lib/core/IRTransformer.d.ts
+new file mode 100644
+index 0000000..d40f8c9
+--- /dev/null
++++ b/node_modules/@types/relay-compiler/lib/core/IRTransformer.d.ts
+@@ -0,0 +1,59 @@
++import CompilerContext, { CompilerContextDocument } from "./CompilerContext";
++import {
++  Argument,
++  ClientExtension,
++  Condition,
++  Defer,
++  Directive,
++  Fragment,
++  FragmentSpread,
++  InlineDataFragmentSpread,
++  InlineFragment,
++  LinkedField,
++  ListValue,
++  Literal,
++  LocalArgumentDefinition,
++  ModuleImport,
++  ObjectFieldValue,
++  ObjectValue,
++  Request,
++  Root,
++  RootArgumentDefinition,
++  ScalarField,
++  SplitOperation,
++  Stream,
++  Variable,
++} from './IR';
++
++export type NodeVisitor<S> = {
++    Argument?: NodeVisitorFunction<Argument, S>,
++    ClientExtension?: NodeVisitorFunction<ClientExtension, S>,
++    Condition?: NodeVisitorFunction<Condition, S>,
++    Defer?: NodeVisitorFunction<Defer, S>,
++    Directive?: NodeVisitorFunction<Directive, S>,
++    Fragment?: NodeVisitorFunction<Fragment, S>,
++    FragmentSpread?: NodeVisitorFunction<FragmentSpread, S>,
++    InlineFragment?: NodeVisitorFunction<InlineFragment, S>,
++    LinkedField?: NodeVisitorFunction<LinkedField, S>,
++    ListValue?: NodeVisitorFunction<ListValue, S>,
++    Literal?: NodeVisitorFunction<Literal, S>,
++    LocalArgumentDefinition?: NodeVisitorFunction<LocalArgumentDefinition, S>,
++    ModuleImport?: NodeVisitorFunction<ModuleImport, S>,
++    ObjectFieldValue?: NodeVisitorFunction<ObjectFieldValue, S>,
++    ObjectValue?: NodeVisitorFunction<ObjectValue, S>,
++    Request?: NodeVisitorFunction<Request, S>,
++    Root?: NodeVisitorFunction<Root, S>,
++    InlineDataFragmentSpread?: NodeVisitorFunction<InlineDataFragmentSpread, S>,
++    RootArgumentDefinition?: NodeVisitorFunction<RootArgumentDefinition, S>,
++    ScalarField?: NodeVisitorFunction<ScalarField, S>,
++    SplitOperation?: NodeVisitorFunction<SplitOperation, S>,
++    Stream?: NodeVisitorFunction<Stream, S>,
++    Variable?: NodeVisitorFunction<Variable, S>,
++}
++type NodeVisitorFunction<N, S> = (node: N, state: S) => N | undefined | void;
++
++export function transform<S>(
++    context: CompilerContext,
++    visitor: NodeVisitor<S>,
++    stateInitializer?: ((context: CompilerContextDocument) => S),
++): CompilerContext;
+\ No newline at end of file
 diff --git a/node_modules/@types/relay-compiler/lib/core/Schema.d.ts b/node_modules/@types/relay-compiler/lib/core/Schema.d.ts
 index c79aea0..c122c3e 100644
 --- a/node_modules/@types/relay-compiler/lib/core/Schema.d.ts

@@ -166,6 +166,11 @@ v3 = [
 v4 = [
   {
     \\"kind\\": \\"Literal\\",
+    \\"name\\": \\"deferPresence\\",
+    \\"value\\": true
+  },
+  {
+    \\"kind\\": \\"Literal\\",
     \\"name\\": \\"first\\",
     \\"value\\": 10
   },
@@ -234,7 +239,7 @@ return {
             \\"name\\": \\"messages\\",
             \\"plural\\": false,
             \\"selections\\": (v3/*: any*/),
-            \\"storageKey\\": \\"messages(first:10,sort:\\\\\\"DESC\\\\\\")\\"
+            \\"storageKey\\": \\"messages(deferPresence:true,first:10,sort:\\\\\\"DESC\\\\\\")\\"
           },
           {
             \\"alias\\": null,
@@ -254,7 +259,7 @@ return {
     ]
   },
   \\"params\\": {
-    \\"cacheID\\": \\"76fc632059b7592c72fda1fc7bc3a8ad\\",
+    \\"cacheID\\": \\"2db2e3051e8c35e5449d290d3f4af8da\\",
     \\"metadata\\": {},
     \\"name\\": \\"ConnectionQuery\\",
     \\"operationKind\\": \\"query\\",
@@ -262,7 +267,7 @@ return {
   }
 };
 })();
-(ConnectionQueryDocument as any).__relay.hash = \\"76fc632059b7592c72fda1fc7bc3a8ad\\";
+(ConnectionQueryDocument as any).__relay.hash = \\"2db2e3051e8c35e5449d290d3f4af8da\\";
 (Messages_conversationFragmentDoc as any).__relay = {
   \\"argumentDefinitions\\": [],
   \\"kind\\": \\"Fragment\\",

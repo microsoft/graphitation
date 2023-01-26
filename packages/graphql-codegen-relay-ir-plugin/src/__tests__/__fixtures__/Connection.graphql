@@ -5,7 +5,7 @@ query ConnectionQuery {
 }
 
 fragment Messages_conversation on Conversation {
-  messages(first: 10, sort: DESC)
+  messages(first: 10, sort: DESC, deferPresence: true)
     @connection(key: "Connection_messages", filter: ["sort"]) {
     edges {
       node {

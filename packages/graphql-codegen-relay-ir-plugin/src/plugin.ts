@@ -1,7 +1,10 @@
 import { printSchema, Source } from "graphql";
 import { create as createRelaySchema } from "relay-compiler/lib/core/Schema";
 import { transform as transformToIR } from "relay-compiler/lib/core/RelayParser";
-import CompilerContext from "relay-compiler/lib/core/CompilerContext";
+import * as IRTransformer from "relay-compiler/lib/core/IRTransformer";
+import CompilerContext, {
+  IRTransform,
+} from "relay-compiler/lib/core/CompilerContext";
 import dedupeJSONStringify from "relay-compiler/lib/util/dedupeJSONStringify";
 import crypto from "crypto";
 
@@ -24,6 +27,24 @@ const SchemaCache = new WeakMap();
 const SCHEMA_EXTENSIONS = `
   directive @connection(key: String!, filter: [String]) on FIELD
 `;
+
+/**
+ * Changes the name of the "filter" argument to "filters" to match what
+ * relay-compiler expects.
+ */
+const ConnectionFilterPluralizationTransform: IRTransform = (context) =>
+  IRTransformer.transform(context, {
+    Directive: (node) =>
+      node.name === "connection" &&
+      node.args.find((arg) => arg.name === "filter")
+        ? {
+            ...node,
+            args: node.args.map((arg) =>
+              arg.name === "filter" ? { ...arg, name: "filters" } : arg,
+            ),
+          }
+        : node,
+  });
 
 export const plugin: PluginFunction<
   RawClientSideBasePluginConfig,
@@ -56,6 +77,9 @@ export const plugin: PluginFunction<
   for (const node of nodes) {
     compilerContext = compilerContext.add(node);
   }
+  compilerContext = compilerContext.applyTransform(
+    ConnectionFilterPluralizationTransform,
+  );
 
   const generatedNodes = compileRelayArtifacts(
     compilerContext,

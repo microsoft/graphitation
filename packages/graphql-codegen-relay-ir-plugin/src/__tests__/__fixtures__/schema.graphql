@@ -28,7 +28,12 @@ type Conversation implements Node {
   id: ID!
   title: String!
   hasUnreadMessages: Boolean!
-  messages(first: Int!, after: String, sort: Sort): MessagesConnection!
+  messages(
+    first: Int!
+    after: String
+    sort: Sort
+    deferPresence: Boolean
+  ): MessagesConnection!
 }
 
 type MessagesConnection {
