@@ -2,6 +2,27 @@
   "name": "@graphitation/relay-apollo-duct-tape",
   "entries": [
     {
+      "date": "Thu, 26 Jan 2023 21:25:11 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.9",
+      "version": "0.4.9",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "25dc9b0a47ea0eb84a0dcdc2f6445d41a511023f",
+            "comment": "Use complete Relay IR"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "comment": "Bump @graphitation/graphql-codegen-relay-ir-plugin to v1.2.3",
+            "commit": "da535a33b18bcc3b39bbd036772e28fc2b0761fc"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 23 Jan 2023 12:48:15 GMT",
       "tag": "@graphitation/relay-apollo-duct-tape_v0.4.8",
       "version": "0.4.8",
