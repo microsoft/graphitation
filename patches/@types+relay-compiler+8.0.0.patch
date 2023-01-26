@@ -30,6 +30,22 @@ index 0000000..1be6330
 +
 +export { generate }
 \ No newline at end of file
+diff --git a/node_modules/@types/relay-compiler/lib/codegen/compileRelayArtifacts.d.ts b/node_modules/@types/relay-compiler/lib/codegen/compileRelayArtifacts.d.ts
+new file mode 100644
+index 0000000..e968595
+--- /dev/null
++++ b/node_modules/@types/relay-compiler/lib/codegen/compileRelayArtifacts.d.ts
+@@ -0,0 +1,9 @@
++import type CompilerContext from '../core/CompilerContext';
++import type {GeneratedDefinition} from '../core/IR';
++import type {GeneratedNode} from 'relay-runtime';
++
++export default function compileRelayArtifacts(
++  context: CompilerContext,
++  transforms: typeof import("../core/RelayIRTransforms"),
++  reporter?: unknown,
++): ReadonlyArray<[GeneratedDefinition, GeneratedNode]>;
+\ No newline at end of file
 diff --git a/node_modules/@types/relay-compiler/lib/core/CompilerContext.d.ts b/node_modules/@types/relay-compiler/lib/core/CompilerContext.d.ts
 index f9753c2..474a6a9 100644
 --- a/node_modules/@types/relay-compiler/lib/core/CompilerContext.d.ts
@@ -62,6 +78,21 @@ index c79aea0..c122c3e 100644
 +
 +export function create(source: Source): Schema;
 \ No newline at end of file
+diff --git a/node_modules/@types/relay-compiler/lib/transforms/FieldHandleTransform.d.ts b/node_modules/@types/relay-compiler/lib/transforms/FieldHandleTransform.d.ts
+new file mode 100644
+index 0000000..f6066db
+--- /dev/null
++++ b/node_modules/@types/relay-compiler/lib/transforms/FieldHandleTransform.d.ts
+@@ -0,0 +1,9 @@
++import { CompilerContext } from '../core/CompilerContext';
++
++/**
++ * This transform rewrites LinkedField nodes with @connection_resolver and rewrites them
++ * into `ConnectionField` nodes.
++ */
++declare function connectionTransform(context: CompilerContext): CompilerContext;
++
++export { connectionTransform as transform };
 diff --git a/node_modules/@types/relay-compiler/lib/transforms/FlattenTransform.d.ts b/node_modules/@types/relay-compiler/lib/transforms/FlattenTransform.d.ts
 index a81eb0b..80c05fa 100644
 --- a/node_modules/@types/relay-compiler/lib/transforms/FlattenTransform.d.ts
@@ -72,6 +103,17 @@ index a81eb0b..80c05fa 100644
  
  export interface FlattenOptions {
      flattenAbstractTypes?: boolean;
+diff --git a/node_modules/@types/relay-compiler/lib/transforms/GenerateTypeNameTransform.d.ts b/node_modules/@types/relay-compiler/lib/transforms/GenerateTypeNameTransform.d.ts
+new file mode 100644
+index 0000000..25be3b0
+--- /dev/null
++++ b/node_modules/@types/relay-compiler/lib/transforms/GenerateTypeNameTransform.d.ts
+@@ -0,0 +1,5 @@
++import CompilerContext from 'relay-compiler/lib/core/CompilerContext';
++
++export function transform(
++  context: CompilerContext,
++): CompilerContext;
 diff --git a/node_modules/@types/relay-compiler/lib/transforms/InlineFragmentsTransform.d.ts b/node_modules/@types/relay-compiler/lib/transforms/InlineFragmentsTransform.d.ts
 index 11e6b33..7712bff 100644
 --- a/node_modules/@types/relay-compiler/lib/transforms/InlineFragmentsTransform.d.ts
