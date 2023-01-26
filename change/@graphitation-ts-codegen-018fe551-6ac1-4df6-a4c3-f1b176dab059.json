@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "Add compat mode and make typename optional",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
