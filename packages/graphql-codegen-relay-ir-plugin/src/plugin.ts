@@ -8,7 +8,8 @@ import CompilerContext, {
 import dedupeJSONStringify from "relay-compiler/lib/util/dedupeJSONStringify";
 import crypto from "crypto";
 
-import compileRelayArtifacts from "./vendor/relay-compiler-v12.0.0/lib/codegen/compileRelayArtifacts";
+import compileRelayArtifacts from "relay-compiler/lib/codegen/compileRelayArtifacts";
+import * as InlineFragmentsTransform from "./vendor/relay-compiler-v12.0.0/lib/transforms/InlineFragmentsTransform";
 import * as RelayIRTransforms from "relay-compiler/lib/core/RelayIRTransforms";
 
 import { PluginFunction, Types } from "@graphql-codegen/plugin-helpers";
@@ -27,6 +28,20 @@ const SchemaCache = new WeakMap();
 const SCHEMA_EXTENSIONS = `
   directive @connection(key: String!, filter: [String]) on FIELD
 `;
+
+// Inline all fragments, including for ReaderFragments, but do not remove them.
+const PluginIRTransforms = {
+  ...RelayIRTransforms,
+  fragmentTransforms: [
+    InlineFragmentsTransform.transform,
+    ...RelayIRTransforms.fragmentTransforms,
+  ],
+  codegenTransforms: RelayIRTransforms.codegenTransforms.map((transform) =>
+    transform.name === "InlineFragmentsTransform"
+      ? InlineFragmentsTransform.transform
+      : transform,
+  ),
+};
 
 /**
  * Changes the name of the "filter" argument to "filters" to match what
@@ -59,17 +74,6 @@ export const plugin: PluginFunction<
     );
   }
 
-  const operationsInDocument = documents.flatMap((source) =>
-    source
-      .document!.definitions.filter((def) => def.kind === "OperationDefinition")
-      .map((def) => (def as OperationDefinitionNode).name!.value),
-  );
-  const fragmentsInDocument = documents.flatMap((source) =>
-    source
-      .document!.definitions.filter((def) => def.kind === "FragmentDefinition")
-      .map((def) => (def as FragmentDefinitionNode).name!.value),
-  );
-
   const relaySchema = SchemaCache.get(schema);
   const nodes = collectIRNodes(relaySchema, documents, config);
 
@@ -83,35 +87,57 @@ export const plugin: PluginFunction<
 
   const generatedNodes = compileRelayArtifacts(
     compilerContext,
-    RelayIRTransforms,
-  ).map<GeneratedNode>(([_, node]) => node);
+    PluginIRTransforms,
+  ).map<GeneratedNode>(([_, node]) =>
+    isConcreteRequest(node)
+      ? // We do not need to include the operation text, at this time.
+        { ...node, params: { ...node.params, text: null } }
+      : node,
+  );
 
   return {
     content: generatedNodes
-      .filter((node) =>
-        isConcreteRequest(node)
-          ? operationsInDocument.includes(node.operation.name)
-          : isReaderFragment(node)
-          ? fragmentsInDocument.includes(node.name)
-          : false,
-      )
-      .flatMap((node) => {
-        const variable = getVariableName(node, config);
-        const json = dedupeJSONStringify(node);
-        return [
-          `(${variable} as any).__relay = ${json};`,
-          `(${variable} as any).__relay.hash = "${
-            isConcreteRequest(node) && node.params.cacheID
-              ? // For a ConcreteRequest we can re-use the cacheID and avoid some overhead
-                node.params.cacheID
-              : // For a ReaderFragment we need to generate a hash ourselves
-                crypto.createHash("md5").update(json, "utf8").digest("hex")
-          }";`,
-        ];
-      })
+      .filter(isNodePartOfMainDocuments(documents))
+      .flatMap(generateVariableDefinitions(config))
       .join("\n"),
   };
 };
+
+const generateVariableDefinitions = (config: RawClientSideBasePluginConfig) => {
+  return (node: GeneratedNode): string[] => {
+    const variable = getVariableName(node, config);
+    const json = dedupeJSONStringify(node);
+    return [
+      `(${variable} as any).__relay = ${json};`,
+      `(${variable} as any).__relay.hash = "${
+        isConcreteRequest(node) && node.params.cacheID
+          ? // For a ConcreteRequest we can re-use the cacheID and avoid some overhead
+            node.params.cacheID
+          : // For a ReaderFragment we need to generate a hash ourselves
+            crypto.createHash("md5").update(json, "utf8").digest("hex")
+      }";`,
+    ];
+  };
+};
+
+function isNodePartOfMainDocuments(documents: Types.DocumentFile[]) {
+  const operationsInDocument = documents.flatMap((source) =>
+    source
+      .document!.definitions.filter((def) => def.kind === "OperationDefinition")
+      .map((def) => (def as OperationDefinitionNode).name!.value),
+  );
+  const fragmentsInDocument = documents.flatMap((source) =>
+    source
+      .document!.definitions.filter((def) => def.kind === "FragmentDefinition")
+      .map((def) => (def as FragmentDefinitionNode).name!.value),
+  );
+  return (node: GeneratedNode) =>
+    isConcreteRequest(node)
+      ? operationsInDocument.includes(node.operation.name)
+      : isReaderFragment(node)
+      ? fragmentsInDocument.includes(node.name)
+      : false;
+}
 
 function isConcreteRequest(node: GeneratedNode): node is ConcreteRequest {
   return node.kind === "Request";

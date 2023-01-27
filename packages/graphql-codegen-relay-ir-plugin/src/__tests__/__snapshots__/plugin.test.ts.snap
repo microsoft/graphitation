@@ -67,7 +67,7 @@ return {
     ]
   },
   \\"params\\": {
-    \\"cacheID\\": \\"900dace19fa0c3e805661ca70a95dd76\\",
+    \\"cacheID\\": \\"41ed723f5e2c84c1b0502a56f1679ab9\\",
     \\"metadata\\": {},
     \\"name\\": \\"AbstractType\\",
     \\"operationKind\\": \\"query\\",
@@ -75,7 +75,7 @@ return {
   }
 };
 })();
-(AbstractTypeDocument as any).__relay.hash = \\"900dace19fa0c3e805661ca70a95dd76\\";"
+(AbstractTypeDocument as any).__relay.hash = \\"41ed723f5e2c84c1b0502a56f1679ab9\\";"
 `;
 
 exports[`plugin emits connection metadata 1`] = `
@@ -192,23 +192,16 @@ return {
         \\"plural\\": false,
         \\"selections\\": [
           {
-            \\"kind\\": \\"InlineFragment\\",
-            \\"selections\\": [
-              {
-                \\"alias\\": \\"messages\\",
-                \\"args\\": [
-                  (v1/*: any*/)
-                ],
-                \\"concreteType\\": \\"MessagesConnection\\",
-                \\"kind\\": \\"LinkedField\\",
-                \\"name\\": \\"__Connection_messages_connection\\",
-                \\"plural\\": false,
-                \\"selections\\": (v3/*: any*/),
-                \\"storageKey\\": \\"__Connection_messages_connection(sort:\\\\\\"DESC\\\\\\")\\"
-              }
+            \\"alias\\": \\"messages\\",
+            \\"args\\": [
+              (v1/*: any*/)
             ],
-            \\"type\\": \\"Conversation\\",
-            \\"abstractKey\\": null
+            \\"concreteType\\": \\"MessagesConnection\\",
+            \\"kind\\": \\"LinkedField\\",
+            \\"name\\": \\"__Connection_messages_connection\\",
+            \\"plural\\": false,
+            \\"selections\\": (v3/*: any*/),
+            \\"storageKey\\": \\"__Connection_messages_connection(sort:\\\\\\"DESC\\\\\\")\\"
           }
         ],
         \\"storageKey\\": \\"conversation(id:\\\\\\"42\\\\\\")\\"
@@ -259,7 +252,7 @@ return {
     ]
   },
   \\"params\\": {
-    \\"cacheID\\": \\"2db2e3051e8c35e5449d290d3f4af8da\\",
+    \\"cacheID\\": \\"b545935b1b7a297d75de659fc6449e75\\",
     \\"metadata\\": {},
     \\"name\\": \\"ConnectionQuery\\",
     \\"operationKind\\": \\"query\\",
@@ -267,7 +260,7 @@ return {
   }
 };
 })();
-(ConnectionQueryDocument as any).__relay.hash = \\"2db2e3051e8c35e5449d290d3f4af8da\\";
+(ConnectionQueryDocument as any).__relay.hash = \\"b545935b1b7a297d75de659fc6449e75\\";
 (Messages_conversationFragmentDoc as any).__relay = {
   \\"argumentDefinitions\\": [],
   \\"kind\\": \\"Fragment\\",
@@ -422,54 +415,40 @@ return {
         \\"name\\": \\"conversation\\",
         \\"plural\\": false,
         \\"selections\\": [
+          (v1/*: any*/),
           {
-            \\"kind\\": \\"InlineFragment\\",
+            \\"alias\\": null,
+            \\"args\\": (v2/*: any*/),
+            \\"concreteType\\": \\"MessagesConnection\\",
+            \\"kind\\": \\"LinkedField\\",
+            \\"name\\": \\"messages\\",
+            \\"plural\\": false,
             \\"selections\\": [
-              (v1/*: any*/),
               {
                 \\"alias\\": null,
-                \\"args\\": (v2/*: any*/),
-                \\"concreteType\\": \\"MessagesConnection\\",
+                \\"args\\": null,
+                \\"concreteType\\": \\"MessagesConnectionEdge\\",
                 \\"kind\\": \\"LinkedField\\",
-                \\"name\\": \\"messages\\",
-                \\"plural\\": false,
+                \\"name\\": \\"edges\\",
+                \\"plural\\": true,
                 \\"selections\\": [
                   {
                     \\"alias\\": null,
                     \\"args\\": null,
-                    \\"concreteType\\": \\"MessagesConnectionEdge\\",
+                    \\"concreteType\\": \\"Message\\",
                     \\"kind\\": \\"LinkedField\\",
-                    \\"name\\": \\"edges\\",
-                    \\"plural\\": true,
+                    \\"name\\": \\"node\\",
+                    \\"plural\\": false,
                     \\"selections\\": [
-                      {
-                        \\"alias\\": null,
-                        \\"args\\": null,
-                        \\"concreteType\\": \\"Message\\",
-                        \\"kind\\": \\"LinkedField\\",
-                        \\"name\\": \\"node\\",
-                        \\"plural\\": false,
-                        \\"selections\\": [
-                          {
-                            \\"kind\\": \\"InlineFragment\\",
-                            \\"selections\\": [
-                              (v3/*: any*/)
-                            ],
-                            \\"type\\": \\"Message\\",
-                            \\"abstractKey\\": null
-                          }
-                        ],
-                        \\"storageKey\\": null
-                      }
+                      (v3/*: any*/)
                     ],
                     \\"storageKey\\": null
                   }
                 ],
-                \\"storageKey\\": \\"messages(first:10)\\"
+                \\"storageKey\\": null
               }
             ],
-            \\"type\\": \\"Conversation\\",
-            \\"abstractKey\\": null
+            \\"storageKey\\": \\"messages(first:10)\\"
           }
         ],
         \\"storageKey\\": \\"conversation(id:\\\\\\"42\\\\\\")\\"
@@ -534,7 +513,7 @@ return {
     ]
   },
   \\"params\\": {
-    \\"cacheID\\": \\"5fe68f38752bb4f2db16c90657fa181e\\",
+    \\"cacheID\\": \\"ded85d51e7178c1af0a51c886c13e5e4\\",
     \\"metadata\\": {},
     \\"name\\": \\"SomeQuery\\",
     \\"operationKind\\": \\"query\\",
@@ -542,7 +521,7 @@ return {
   }
 };
 })();
-(SomeQueryDocument as any).__relay.hash = \\"5fe68f38752bb4f2db16c90657fa181e\\";"
+(SomeQueryDocument as any).__relay.hash = \\"ded85d51e7178c1af0a51c886c13e5e4\\";"
 `;
 
 exports[`plugin generates a ReaderFragment for a fragment 1`] = `
@@ -590,9 +569,11 @@ exports[`plugin generates a ReaderFragment for a fragment 1`] = `
               \\"plural\\": false,
               \\"selections\\": [
                 {
+                  \\"alias\\": null,
                   \\"args\\": null,
-                  \\"kind\\": \\"FragmentSpread\\",
-                  \\"name\\": \\"MessageFragment\\"
+                  \\"kind\\": \\"ScalarField\\",
+                  \\"name\\": \\"text\\",
+                  \\"storageKey\\": null
                 }
               ],
               \\"storageKey\\": null
@@ -607,7 +588,7 @@ exports[`plugin generates a ReaderFragment for a fragment 1`] = `
   \\"type\\": \\"Conversation\\",
   \\"abstractKey\\": null
 };
-(ConversationFragmentFragmentDoc as any).__relay.hash = \\"3070480a90158780c7529708ea80c630\\";"
+(ConversationFragmentFragmentDoc as any).__relay.hash = \\"f34c76e091a34b469fe4b3241a031c87\\";"
 `;
 
 exports[`plugin handles multiple operations in a single document 1`] = `
@@ -677,7 +658,7 @@ return {
     ]
   },
   \\"params\\": {
-    \\"cacheID\\": \\"e83bb39e3b4b4b59f07401d198e46753\\",
+    \\"cacheID\\": \\"2ce7aba0ae94e184e092aaa4b36cbf96\\",
     \\"metadata\\": {},
     \\"name\\": \\"QueryOne\\",
     \\"operationKind\\": \\"query\\",
@@ -685,7 +666,7 @@ return {
   }
 };
 })();
-(QueryOneDocument as any).__relay.hash = \\"e83bb39e3b4b4b59f07401d198e46753\\";
+(QueryOneDocument as any).__relay.hash = \\"2ce7aba0ae94e184e092aaa4b36cbf96\\";
 (QueryTwoDocument as any).__relay = (function(){
 var v0 = [
   {
@@ -731,7 +712,7 @@ return {
     \\"selections\\": (v0/*: any*/)
   },
   \\"params\\": {
-    \\"cacheID\\": \\"08e437d8016e71af0a72300bb3c6f1f2\\",
+    \\"cacheID\\": \\"eec8fc9912245b00c9ee5f2781f183e7\\",
     \\"metadata\\": {},
     \\"name\\": \\"QueryTwo\\",
     \\"operationKind\\": \\"query\\",
@@ -739,5 +720,5 @@ return {
   }
 };
 })();
-(QueryTwoDocument as any).__relay.hash = \\"08e437d8016e71af0a72300bb3c6f1f2\\";"
+(QueryTwoDocument as any).__relay.hash = \\"eec8fc9912245b00c9ee5f2781f183e7\\";"
 `;
