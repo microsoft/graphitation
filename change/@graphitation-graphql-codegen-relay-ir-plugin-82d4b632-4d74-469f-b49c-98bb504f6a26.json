@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Vendor inline transform and patch only that for our needs",
+  "packageName": "@graphitation/graphql-codegen-relay-ir-plugin",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}
