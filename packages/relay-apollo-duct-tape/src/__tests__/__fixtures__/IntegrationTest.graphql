@@ -12,13 +12,17 @@ query ApolloClientIntegrationTestQuery($id: String!, $cursor: String) {
       edges {
         cursor # TODO: Check if in TMP these are already being specified
         node {
-          __typename
-          id
-          text
+          ...ApolloClientIntegrationTestMessageFragment
         }
       }
     }
   }
+}
+
+fragment ApolloClientIntegrationTestMessageFragment on Message {
+  __typename
+  id
+  text
 }
 
 mutation ApolloClientIntegrationTestMutation($id: String!, $title: String!) {

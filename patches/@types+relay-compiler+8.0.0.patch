@@ -59,6 +59,43 @@ index f9753c2..474a6a9 100644
    constructor(schema: Schema);
    documents(): CompilerContextDocument[];
    forEachDocument(fn: (doc: CompilerContextDocument) => void): void;
+diff --git a/node_modules/@types/relay-compiler/lib/core/IR.d.ts b/node_modules/@types/relay-compiler/lib/core/IR.d.ts
+index efb36e3..050f7eb 100644
+--- a/node_modules/@types/relay-compiler/lib/core/IR.d.ts
++++ b/node_modules/@types/relay-compiler/lib/core/IR.d.ts
+@@ -68,7 +68,7 @@ export interface Fragment {
+     directives: ReadonlyArray<Directive>;
+     kind: 'Fragment';
+     loc: Location;
+-    metadata: Metadata;
++    metadata: Metadata | null;
+     name: string;
+     selections: ReadonlyArray<Selection>;
+     type: CompositeTypeID;
+@@ -252,12 +252,12 @@ export interface ObjectValue {
+ export interface Request {
+     kind: 'Request';
+     fragment: Fragment;
+-    id?: string;
++    id?: string | null;
+     loc: Location;
+     metadata: Metadata;
+     name: string;
+     root: Root;
+-    text?: string;
++    text?: string | null;
+ }
+ 
+ export interface Root {
+@@ -268,7 +268,7 @@ export interface Root {
+     metadata: Metadata;
+     name: string;
+     operation: 'query' | 'mutation' | 'subscription';
+-    selections: Readonly<Selection>;
++    selections: ReadonlyArray<Selection>;
+     type: CompositeTypeID;
+ }
+ 
 diff --git a/node_modules/@types/relay-compiler/lib/core/Schema.d.ts b/node_modules/@types/relay-compiler/lib/core/Schema.d.ts
 index c79aea0..c122c3e 100644
 --- a/node_modules/@types/relay-compiler/lib/core/Schema.d.ts

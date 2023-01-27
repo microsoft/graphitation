@@ -2,23 +2,16 @@ import { printSchema, Source } from "graphql";
 import { create as createRelaySchema } from "relay-compiler/lib/core/Schema";
 import { transform as transformToIR } from "relay-compiler/lib/core/RelayParser";
 import CompilerContext from "relay-compiler/lib/core/CompilerContext";
-import * as FlattenTransform from "relay-compiler/lib/transforms/FlattenTransform";
-import * as InlineFragmentsTransform from "relay-compiler/lib/transforms/InlineFragmentsTransform";
-import * as GenerateTypeNameTransform from "relay-compiler/lib/transforms/GenerateTypeNameTransform";
-import * as ConnectionTransform from "relay-compiler/lib/transforms/ConnectionTransform";
-import * as FieldHandleTransform from "relay-compiler/lib/transforms/FieldHandleTransform";
-import { generate as generateIRDocument } from "relay-compiler/lib/codegen/RelayCodeGenerator";
 import dedupeJSONStringify from "relay-compiler/lib/util/dedupeJSONStringify";
 import crypto from "crypto";
 
-import compileRelayArtifacts from "relay-compiler/lib/codegen/compileRelayArtifacts";
+import compileRelayArtifacts from "./vendor/relay-compiler-v12.0.0/lib/codegen/compileRelayArtifacts";
 import * as RelayIRTransforms from "relay-compiler/lib/core/RelayIRTransforms";
 
 import { PluginFunction, Types } from "@graphql-codegen/plugin-helpers";
 import type { RawClientSideBasePluginConfig } from "@graphql-codegen/visitor-plugin-common";
 import type { FragmentDefinitionNode, OperationDefinitionNode } from "graphql";
 import type { Schema } from "relay-compiler/lib/core/Schema";
-import type { Request } from "relay-compiler/lib/core/IR";
 import type {
   GeneratedNode,
   ConcreteRequest,
@@ -64,18 +57,10 @@ export const plugin: PluginFunction<
     compilerContext = compilerContext.add(node);
   }
 
-  // NOTE: This also prints the operation text, which is unnecessary for our
-  //       purposes. But unsure how much overhead it truly adds, so for now
-  //       I'm optimizing for having Relay parity without having to maintain
-  //       our own copy.
   const generatedNodes = compileRelayArtifacts(
     compilerContext,
     RelayIRTransforms,
-  ).map<GeneratedNode>(([_, node]) =>
-    isConcreteRequest(node)
-      ? { ...node, params: { ...node.params, text: null } }
-      : node,
-  );
+  ).map<GeneratedNode>(([_, node]) => node);
 
   return {
     content: generatedNodes
@@ -91,10 +76,13 @@ export const plugin: PluginFunction<
         const json = dedupeJSONStringify(node);
         return [
           `(${variable} as any).__relay = ${json};`,
-          `(${variable} as any).__relay.hash = "${crypto
-            .createHash("md5")
-            .update(json, "utf8")
-            .digest("hex")}";`,
+          `(${variable} as any).__relay.hash = "${
+            isConcreteRequest(node) && node.params.cacheID
+              ? // For a ConcreteRequest we can re-use the cacheID and avoid some overhead
+                node.params.cacheID
+              : // For a ReaderFragment we need to generate a hash ourselves
+                crypto.createHash("md5").update(json, "utf8").digest("hex")
+          }";`,
         ];
       })
       .join("\n"),

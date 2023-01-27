@@ -67,7 +67,7 @@ return {
     ]
   },
   \\"params\\": {
-    \\"cacheID\\": \\"41ed723f5e2c84c1b0502a56f1679ab9\\",
+    \\"cacheID\\": \\"900dace19fa0c3e805661ca70a95dd76\\",
     \\"metadata\\": {},
     \\"name\\": \\"AbstractType\\",
     \\"operationKind\\": \\"query\\",
@@ -75,7 +75,7 @@ return {
   }
 };
 })();
-(AbstractTypeDocument as any).__relay.hash = \\"c91a37574a4f8ff1642b0a0dd933f8b0\\";"
+(AbstractTypeDocument as any).__relay.hash = \\"900dace19fa0c3e805661ca70a95dd76\\";"
 `;
 
 exports[`plugin emits connection metadata 1`] = `
@@ -87,25 +87,90 @@ var v0 = [
     \\"value\\": \\"42\\"
   }
 ],
-v1 = [
-  {
-    \\"kind\\": \\"Literal\\",
-    \\"name\\": \\"first\\",
-    \\"value\\": 10
-  },
-  {
-    \\"kind\\": \\"Literal\\",
-    \\"name\\": \\"sort\\",
-    \\"value\\": \\"DESC\\"
-  }
-],
+v1 = {
+  \\"kind\\": \\"Literal\\",
+  \\"name\\": \\"sort\\",
+  \\"value\\": \\"DESC\\"
+},
 v2 = {
   \\"alias\\": null,
   \\"args\\": null,
   \\"kind\\": \\"ScalarField\\",
   \\"name\\": \\"id\\",
   \\"storageKey\\": null
-};
+},
+v3 = [
+  {
+    \\"alias\\": null,
+    \\"args\\": null,
+    \\"concreteType\\": \\"MessagesConnectionEdge\\",
+    \\"kind\\": \\"LinkedField\\",
+    \\"name\\": \\"edges\\",
+    \\"plural\\": true,
+    \\"selections\\": [
+      {
+        \\"alias\\": null,
+        \\"args\\": null,
+        \\"concreteType\\": \\"Message\\",
+        \\"kind\\": \\"LinkedField\\",
+        \\"name\\": \\"node\\",
+        \\"plural\\": false,
+        \\"selections\\": [
+          (v2/*: any*/),
+          {
+            \\"alias\\": null,
+            \\"args\\": null,
+            \\"kind\\": \\"ScalarField\\",
+            \\"name\\": \\"__typename\\",
+            \\"storageKey\\": null
+          }
+        ],
+        \\"storageKey\\": null
+      },
+      {
+        \\"alias\\": null,
+        \\"args\\": null,
+        \\"kind\\": \\"ScalarField\\",
+        \\"name\\": \\"cursor\\",
+        \\"storageKey\\": null
+      }
+    ],
+    \\"storageKey\\": null
+  },
+  {
+    \\"alias\\": null,
+    \\"args\\": null,
+    \\"concreteType\\": \\"PageInfo\\",
+    \\"kind\\": \\"LinkedField\\",
+    \\"name\\": \\"pageInfo\\",
+    \\"plural\\": false,
+    \\"selections\\": [
+      {
+        \\"alias\\": null,
+        \\"args\\": null,
+        \\"kind\\": \\"ScalarField\\",
+        \\"name\\": \\"endCursor\\",
+        \\"storageKey\\": null
+      },
+      {
+        \\"alias\\": null,
+        \\"args\\": null,
+        \\"kind\\": \\"ScalarField\\",
+        \\"name\\": \\"hasNextPage\\",
+        \\"storageKey\\": null
+      }
+    ],
+    \\"storageKey\\": null
+  }
+],
+v4 = [
+  {
+    \\"kind\\": \\"Literal\\",
+    \\"name\\": \\"first\\",
+    \\"value\\": 10
+  },
+  (v1/*: any*/)
+];
 return {
   \\"fragment\\": {
     \\"argumentDefinitions\\": [],
@@ -122,9 +187,23 @@ return {
         \\"plural\\": false,
         \\"selections\\": [
           {
-            \\"args\\": null,
-            \\"kind\\": \\"FragmentSpread\\",
-            \\"name\\": \\"Messages_conversation\\"
+            \\"kind\\": \\"InlineFragment\\",
+            \\"selections\\": [
+              {
+                \\"alias\\": \\"messages\\",
+                \\"args\\": [
+                  (v1/*: any*/)
+                ],
+                \\"concreteType\\": \\"MessagesConnection\\",
+                \\"kind\\": \\"LinkedField\\",
+                \\"name\\": \\"__Connection_messages_connection\\",
+                \\"plural\\": false,
+                \\"selections\\": (v3/*: any*/),
+                \\"storageKey\\": \\"__Connection_messages_connection(sort:\\\\\\"DESC\\\\\\")\\"
+              }
+            ],
+            \\"type\\": \\"Conversation\\",
+            \\"abstractKey\\": null
           }
         ],
         \\"storageKey\\": \\"conversation(id:\\\\\\"42\\\\\\")\\"
@@ -149,80 +228,17 @@ return {
         \\"selections\\": [
           {
             \\"alias\\": null,
-            \\"args\\": (v1/*: any*/),
+            \\"args\\": (v4/*: any*/),
             \\"concreteType\\": \\"MessagesConnection\\",
             \\"kind\\": \\"LinkedField\\",
             \\"name\\": \\"messages\\",
             \\"plural\\": false,
-            \\"selections\\": [
-              {
-                \\"alias\\": null,
-                \\"args\\": null,
-                \\"concreteType\\": \\"MessagesConnectionEdge\\",
-                \\"kind\\": \\"LinkedField\\",
-                \\"name\\": \\"edges\\",
-                \\"plural\\": true,
-                \\"selections\\": [
-                  {
-                    \\"alias\\": null,
-                    \\"args\\": null,
-                    \\"concreteType\\": \\"Message\\",
-                    \\"kind\\": \\"LinkedField\\",
-                    \\"name\\": \\"node\\",
-                    \\"plural\\": false,
-                    \\"selections\\": [
-                      (v2/*: any*/),
-                      {
-                        \\"alias\\": null,
-                        \\"args\\": null,
-                        \\"kind\\": \\"ScalarField\\",
-                        \\"name\\": \\"__typename\\",
-                        \\"storageKey\\": null
-                      }
-                    ],
-                    \\"storageKey\\": null
-                  },
-                  {
-                    \\"alias\\": null,
-                    \\"args\\": null,
-                    \\"kind\\": \\"ScalarField\\",
-                    \\"name\\": \\"cursor\\",
-                    \\"storageKey\\": null
-                  }
-                ],
-                \\"storageKey\\": null
-              },
-              {
-                \\"alias\\": null,
-                \\"args\\": null,
-                \\"concreteType\\": \\"PageInfo\\",
-                \\"kind\\": \\"LinkedField\\",
-                \\"name\\": \\"pageInfo\\",
-                \\"plural\\": false,
-                \\"selections\\": [
-                  {
-                    \\"alias\\": null,
-                    \\"args\\": null,
-                    \\"kind\\": \\"ScalarField\\",
-                    \\"name\\": \\"endCursor\\",
-                    \\"storageKey\\": null
-                  },
-                  {
-                    \\"alias\\": null,
-                    \\"args\\": null,
-                    \\"kind\\": \\"ScalarField\\",
-                    \\"name\\": \\"hasNextPage\\",
-                    \\"storageKey\\": null
-                  }
-                ],
-                \\"storageKey\\": null
-              }
-            ],
+            \\"selections\\": (v3/*: any*/),
             \\"storageKey\\": \\"messages(first:10,sort:\\\\\\"DESC\\\\\\")\\"
           },
           {
             \\"alias\\": null,
-            \\"args\\": (v1/*: any*/),
+            \\"args\\": (v4/*: any*/),
             \\"filters\\": [
               \\"sort\\"
             ],
@@ -238,7 +254,7 @@ return {
     ]
   },
   \\"params\\": {
-    \\"cacheID\\": \\"43ab8e669ba37d9ddcc97c84fbe9fdaa\\",
+    \\"cacheID\\": \\"76fc632059b7592c72fda1fc7bc3a8ad\\",
     \\"metadata\\": {},
     \\"name\\": \\"ConnectionQuery\\",
     \\"operationKind\\": \\"query\\",
@@ -246,7 +262,7 @@ return {
   }
 };
 })();
-(ConnectionQueryDocument as any).__relay.hash = \\"92a5e49e4f1cf92c658352a198250cad\\";
+(ConnectionQueryDocument as any).__relay.hash = \\"76fc632059b7592c72fda1fc7bc3a8ad\\";
 (Messages_conversationFragmentDoc as any).__relay = {
   \\"argumentDefinitions\\": [],
   \\"kind\\": \\"Fragment\\",
@@ -371,6 +387,20 @@ v1 = {
   \\"kind\\": \\"ScalarField\\",
   \\"name\\": \\"id\\",
   \\"storageKey\\": null
+},
+v2 = [
+  {
+    \\"kind\\": \\"Literal\\",
+    \\"name\\": \\"first\\",
+    \\"value\\": 10
+  }
+],
+v3 = {
+  \\"alias\\": null,
+  \\"args\\": null,
+  \\"kind\\": \\"ScalarField\\",
+  \\"name\\": \\"text\\",
+  \\"storageKey\\": null
 };
 return {
   \\"fragment\\": {
@@ -388,9 +418,53 @@ return {
         \\"plural\\": false,
         \\"selections\\": [
           {
-            \\"args\\": null,
-            \\"kind\\": \\"FragmentSpread\\",
-            \\"name\\": \\"ConversationFragment\\"
+            \\"kind\\": \\"InlineFragment\\",
+            \\"selections\\": [
+              (v1/*: any*/),
+              {
+                \\"alias\\": null,
+                \\"args\\": (v2/*: any*/),
+                \\"concreteType\\": \\"MessagesConnection\\",
+                \\"kind\\": \\"LinkedField\\",
+                \\"name\\": \\"messages\\",
+                \\"plural\\": false,
+                \\"selections\\": [
+                  {
+                    \\"alias\\": null,
+                    \\"args\\": null,
+                    \\"concreteType\\": \\"MessagesConnectionEdge\\",
+                    \\"kind\\": \\"LinkedField\\",
+                    \\"name\\": \\"edges\\",
+                    \\"plural\\": true,
+                    \\"selections\\": [
+                      {
+                        \\"alias\\": null,
+                        \\"args\\": null,
+                        \\"concreteType\\": \\"Message\\",
+                        \\"kind\\": \\"LinkedField\\",
+                        \\"name\\": \\"node\\",
+                        \\"plural\\": false,
+                        \\"selections\\": [
+                          {
+                            \\"kind\\": \\"InlineFragment\\",
+                            \\"selections\\": [
+                              (v3/*: any*/)
+                            ],
+                            \\"type\\": \\"Message\\",
+                            \\"abstractKey\\": null
+                          }
+                        ],
+                        \\"storageKey\\": null
+                      }
+                    ],
+                    \\"storageKey\\": null
+                  }
+                ],
+                \\"storageKey\\": \\"messages(first:10)\\"
+              }
+            ],
+            \\"type\\": \\"Conversation\\",
+            \\"abstractKey\\": null
           }
         ],
         \\"storageKey\\": \\"conversation(id:\\\\\\"42\\\\\\")\\"
@@ -416,13 +490,7 @@ return {
           (v1/*: any*/),
           {
             \\"alias\\": null,
-            \\"args\\": [
-              {
-                \\"kind\\": \\"Literal\\",
-                \\"name\\": \\"first\\",
-                \\"value\\": 10
-              }
-            ],
+            \\"args\\": (v2/*: any*/),
             \\"concreteType\\": \\"MessagesConnection\\",
             \\"kind\\": \\"LinkedField\\",
             \\"name\\": \\"messages\\",
@@ -444,13 +512,7 @@ return {
                     \\"name\\": \\"node\\",
                     \\"plural\\": false,
                     \\"selections\\": [
-                      {
-                        \\"alias\\": null,
-                        \\"args\\": null,
-                        \\"kind\\": \\"ScalarField\\",
-                        \\"name\\": \\"text\\",
-                        \\"storageKey\\": null
-                      },
+                      (v3/*: any*/),
                       (v1/*: any*/)
                     ],
                     \\"storageKey\\": null
@@ -467,7 +529,7 @@ return {
     ]
   },
   \\"params\\": {
-    \\"cacheID\\": \\"ded85d51e7178c1af0a51c886c13e5e4\\",
+    \\"cacheID\\": \\"5fe68f38752bb4f2db16c90657fa181e\\",
     \\"metadata\\": {},
     \\"name\\": \\"SomeQuery\\",
     \\"operationKind\\": \\"query\\",
@@ -475,7 +537,7 @@ return {
   }
 };
 })();
-(SomeQueryDocument as any).__relay.hash = \\"6c07723a7bd8b9835435b0609791ea26\\";"
+(SomeQueryDocument as any).__relay.hash = \\"5fe68f38752bb4f2db16c90657fa181e\\";"
 `;
 
 exports[`plugin generates a ReaderFragment for a fragment 1`] = `
@@ -610,7 +672,7 @@ return {
     ]
   },
   \\"params\\": {
-    \\"cacheID\\": \\"2ce7aba0ae94e184e092aaa4b36cbf96\\",
+    \\"cacheID\\": \\"e83bb39e3b4b4b59f07401d198e46753\\",
     \\"metadata\\": {},
     \\"name\\": \\"QueryOne\\",
     \\"operationKind\\": \\"query\\",
@@ -618,7 +680,7 @@ return {
   }
 };
 })();
-(QueryOneDocument as any).__relay.hash = \\"8963b9c1deb364dc049cc34e260b1e95\\";
+(QueryOneDocument as any).__relay.hash = \\"e83bb39e3b4b4b59f07401d198e46753\\";
 (QueryTwoDocument as any).__relay = (function(){
 var v0 = [
   {
@@ -664,7 +726,7 @@ return {
     \\"selections\\": (v0/*: any*/)
   },
   \\"params\\": {
-    \\"cacheID\\": \\"eec8fc9912245b00c9ee5f2781f183e7\\",
+    \\"cacheID\\": \\"08e437d8016e71af0a72300bb3c6f1f2\\",
     \\"metadata\\": {},
     \\"name\\": \\"QueryTwo\\",
     \\"operationKind\\": \\"query\\",
@@ -672,5 +734,5 @@ return {
   }
 };
 })();
-(QueryTwoDocument as any).__relay.hash = \\"3a8ddb99df51e47db330fdb0844db7e5\\";"
+(QueryTwoDocument as any).__relay.hash = \\"08e437d8016e71af0a72300bb3c6f1f2\\";"
 `;

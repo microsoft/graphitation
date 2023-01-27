@@ -295,3 +295,15 @@ index 8566ca5..b36ed5d 100755
  export type LogEvent =
      | Readonly<{
            name: 'suspense.fragment';
+diff --git a/node_modules/@types/relay-runtime/lib/util/RelayConcreteNode.d.ts b/node_modules/@types/relay-runtime/lib/util/RelayConcreteNode.d.ts
+index f0467d1..ce90fb5 100755
+--- a/node_modules/@types/relay-runtime/lib/util/RelayConcreteNode.d.ts
++++ b/node_modules/@types/relay-runtime/lib/util/RelayConcreteNode.d.ts
+@@ -27,6 +27,7 @@ export interface ConcreteUpdatableQuery {
+  */
+ export type RequestParameters =
+     | {
++          readonly cacheID: null;
+           readonly id: string;
+           readonly text: null;
+           // common fields
