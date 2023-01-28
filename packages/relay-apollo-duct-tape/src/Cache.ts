@@ -824,6 +824,7 @@ function getNodeQuery(
       ],
     },
     params: {
+      cacheID: null,
       // cacheID: "90613d3754cd5400b0b29433387dbb42", // TODO: What does this do specifically?
       id: id, // TODO: Is this actually the id value?
       metadata: {},

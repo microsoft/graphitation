@@ -98,7 +98,7 @@ index efb36e3..050f7eb 100644
  
 diff --git a/node_modules/@types/relay-compiler/lib/core/IRTransformer.d.ts b/node_modules/@types/relay-compiler/lib/core/IRTransformer.d.ts
 new file mode 100644
-index 0000000..d40f8c9
+index 0000000..a273d11
 --- /dev/null
 +++ b/node_modules/@types/relay-compiler/lib/core/IRTransformer.d.ts
 @@ -0,0 +1,59 @@
@@ -154,7 +154,7 @@ index 0000000..d40f8c9
 +    Stream?: NodeVisitorFunction<Stream, S>,
 +    Variable?: NodeVisitorFunction<Variable, S>,
 +}
-+type NodeVisitorFunction<N, S> = (node: N, state: S) => N | undefined | void;
++type NodeVisitorFunction<N, S> = (node: N, state: S) => N | undefined | void | null;
 +
 +export function transform<S>(
 +    context: CompilerContext,
