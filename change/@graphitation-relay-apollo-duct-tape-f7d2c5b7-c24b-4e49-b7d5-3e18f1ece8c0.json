@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Vendor inline transform and patch only that for our needs",
-  "packageName": "@graphitation/relay-apollo-duct-tape",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}

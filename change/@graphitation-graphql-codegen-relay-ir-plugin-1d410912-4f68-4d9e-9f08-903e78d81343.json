@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Inline fragments into operation IR",
-  "packageName": "@graphitation/graphql-codegen-relay-ir-plugin",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}

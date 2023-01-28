@@ -2,6 +2,27 @@
   "name": "@graphitation/graphql-codegen-relay-ir-plugin",
   "entries": [
     {
+      "date": "Sat, 28 Jan 2023 13:45:56 GMT",
+      "tag": "@graphitation/graphql-codegen-relay-ir-plugin_v1.2.4",
+      "version": "1.2.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-codegen-relay-ir-plugin",
+            "commit": "c3a1eca7e724da31bc535a83826f879a8b3d6563",
+            "comment": "Inline fragments into operation IR"
+          },
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-codegen-relay-ir-plugin",
+            "commit": "d3a6ce1ebecd942b25061a76f897152e4e92e6f4",
+            "comment": "Vendor inline transform and patch only that for our needs"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 26 Jan 2023 21:25:11 GMT",
       "tag": "@graphitation/graphql-codegen-relay-ir-plugin_v1.2.3",
       "version": "1.2.3",

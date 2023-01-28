@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/relay-apollo-duct-tape",
   "license": "MIT",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
@@ -27,11 +27,11 @@
   },
   "peerDependencies": {
     "@apollo/client": "^3.6.9",
-    "@graphitation/graphql-codegen-relay-ir-plugin": "^1.2.3"
+    "@graphitation/graphql-codegen-relay-ir-plugin": "^1.2.4"
   },
   "devDependencies": {
     "@apollo/client": "^3.6.9",
-    "@graphitation/graphql-codegen-relay-ir-plugin": "^1.2.3",
+    "@graphitation/graphql-codegen-relay-ir-plugin": "^1.2.4",
     "@graphql-codegen/typescript-operations": "^1.17.12",
     "@graphql-codegen/typed-document-node": "^1.18.1",
     "@graphql-codegen/cli": "1.19.4",
