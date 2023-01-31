@@ -42,7 +42,7 @@ export function supermassive(): Command {
       "from where to import context",
     )
     .option("-cn, --context-name [contextName]", "Context name")
-    .option("-l", "--legacy", "generate legacy types")
+    .option("-l, --legacy", "generate legacy types")
     .description("generate interfaces and models")
     .action(
       async (inputs: Array<string>, options: GenerateInterfacesOptions) => {
