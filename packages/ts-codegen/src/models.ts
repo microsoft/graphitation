@@ -27,7 +27,7 @@ export function generateModels(
   const extra = [];
 
   if (context.isLegacyCompatMode()) {
-    extra.push(createLegacyCompatNamespace(context, context.getAllTypes()));
+    extra.push(createLegacyCompatObject(context, context.getAllTypes()));
   }
 
   return factory.createSourceFile(
@@ -207,30 +207,26 @@ function createScalarModel(
   return context.getScalarDefinition(type.name) || null;
 }
 
-function createLegacyCompatNamespace(context: TsCodegenContext, types: Type[]) {
-  return factory.createModuleDeclaration(
+function createLegacyCompatObject(context: TsCodegenContext, types: Type[]) {
+  return factory.createTypeAliasDeclaration(
     undefined,
-    [
-      factory.createModifier(ts.SyntaxKind.ExportKeyword),
-      factory.createModifier(ts.SyntaxKind.DeclareKeyword),
-    ],
+    [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     factory.createIdentifier("_LegacyTypes"),
-    factory.createModuleBlock(
+    undefined,
+    factory.createTypeLiteralNode(
       types
         .map((type) => createLegacyCompatField(type))
-        .filter((t) => t != null) as ts.Statement[],
+        .filter((t) => t != null) as ts.PropertySignature[],
     ),
-    ts.NodeFlags.Namespace,
   );
 }
 
-function createLegacyCompatField(type: Type): ts.TypeAliasDeclaration | null {
+function createLegacyCompatField(type: Type): ts.PropertySignature | null {
   if (type.kind === "INPUT_OBJECT") {
     return null;
   } else {
-    return factory.createTypeAliasDeclaration(
+    return factory.createPropertySignature(
       undefined,
-      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
       factory.createIdentifier(type.name),
       undefined,
       factory.createTypeReferenceNode(
