@@ -51,6 +51,12 @@ const config = {
         items: [
           {
             type: "doc",
+            docId: "learn-graphql/intro",
+            position: "left",
+            label: "Learn GraphQL",
+          },
+          {
+            type: "doc",
             docId: "apollo-react-relay-duct-tape/intro",
             position: "left",
             label: "Apollo React/Relay Duct-Tape",
