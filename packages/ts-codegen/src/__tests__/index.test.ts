@@ -1228,10 +1228,15 @@ describe(generateTS, () => {
   });
 
   it("generateTS with legacy compat mode", () => {
-    const { models, resolvers } = runGenerateTest(
+    const { models, resolvers, legacyTypes } = runGenerateTest(
       graphql`
         interface Node {
           id: ID!
+        }
+
+        enum Type {
+          type1
+          type2
         }
 
         extend type Query {
@@ -1248,10 +1253,15 @@ describe(generateTS, () => {
       export interface NodeModel extends BaseModel {
           readonly __typename?: string;
       }
-      export declare namespace _LegacyTypes {
-          export type Node = NodeModel;
-          export type Query = QueryModel;
+      export const enum TypeModel {
+          type1 = "type1",
+          type2 = "type2"
       }
+      export type _LegacyTypes = {
+          Node: NodeModel;
+          Type: TypeModel;
+          Query: QueryModel;
+      };
       "
     `);
     expect(resolvers).toMatchInlineSnapshot(`
@@ -1270,6 +1280,11 @@ describe(generateTS, () => {
       }
       "
     `);
+    expect(legacyTypes).toMatchInlineSnapshot(`
+      "import { NodeModel, TypeModel, QueryModel } from "./models";
+      export { NodeModel as Node, TypeModel as Type, QueryModel as Query };
+      "
+    `);
   });
 });
 
@@ -1282,7 +1297,7 @@ function runGenerateTest(
     contextName?: string;
     legacyCompat?: boolean;
   } = {},
-): { models: string; resolvers: string } {
+): { models: string; resolvers: string; legacyTypes?: string } {
   const fullOptions: {
     outputPath: string;
     documentPath: string;
@@ -1295,10 +1310,11 @@ function runGenerateTest(
     ...options,
   };
   const document = parse(doc);
-  const result = generateTS(document, fullOptions);
+  const { models, resolvers, legacyTypes } = generateTS(document, fullOptions);
   const printer = ts.createPrinter();
   return {
-    models: printer.printFile(result.models),
-    resolvers: printer.printFile(result.resolvers),
+    models: printer.printFile(models),
+    resolvers: printer.printFile(resolvers),
+    legacyTypes: legacyTypes && printer.printFile(legacyTypes),
   };
 }

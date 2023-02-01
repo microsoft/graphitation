@@ -119,10 +119,9 @@ async function generateInterfaces(
     await fs.mkdir(outputPath, { recursive: true });
 
     const printer = ts.createPrinter();
-
-    await Promise.all([
+    const outputs = [
       fs.writeFile(
-        path.join(outputPath, "models.interface.ts"),
+        path.join(outputPath, `models.interface.ts`),
         PREPEND_TO_INTERFACES +
           printer.printNode(
             ts.EmitHint.SourceFile,
@@ -132,7 +131,7 @@ async function generateInterfaces(
         { encoding: "utf-8" },
       ),
       fs.writeFile(
-        path.join(outputPath, "resolvers.interface.ts"),
+        path.join(outputPath, `resolvers.interface.ts`),
         PREPEND_TO_INTERFACES +
           printer.printNode(
             ts.EmitHint.SourceFile,
@@ -141,7 +140,21 @@ async function generateInterfaces(
           ),
         { encoding: "utf-8" },
       ),
-    ]);
+    ];
+    if (options.legacy) {
+      outputs.concat(
+        fs.writeFile(
+          path.join(outputPath, `legacy-types.interface.ts`),
+          printer.printNode(
+            ts.EmitHint.SourceFile,
+            result.legacyTypes,
+            result.legacyTypes,
+          ),
+          { encoding: "utf-8" },
+        ),
+      );
+    }
+    await Promise.all(outputs);
   }
 }
 

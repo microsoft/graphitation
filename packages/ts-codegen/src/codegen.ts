@@ -3,6 +3,7 @@ import { DocumentNode } from "graphql";
 import { extractContext } from "./context/index";
 import { generateResolvers } from "./resolvers";
 import { generateModels } from "./models";
+import { generateLegacyTypes } from "./legacyTypes";
 
 export function generateTS(
   document: DocumentNode,
@@ -19,7 +20,11 @@ export function generateTS(
     contextName?: string;
     legacyCompat?: boolean;
   },
-): { models: ts.SourceFile; resolvers: ts.SourceFile } {
+): {
+  models: ts.SourceFile;
+  resolvers: ts.SourceFile;
+  legacyTypes?: ts.SourceFile;
+} {
   try {
     let context = extractContext(
       {
@@ -35,7 +40,11 @@ export function generateTS(
     );
     let models = generateModels(context, document);
     let resolvers = generateResolvers(context, document);
-    return { models, resolvers };
+    let legacyTypes;
+    if (legacyCompat) {
+      legacyTypes = generateLegacyTypes(context, document);
+    }
+    return { models, resolvers, legacyTypes };
   } catch (e) {
     console.error(e);
     throw e;
