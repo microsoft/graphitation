@@ -410,6 +410,8 @@ export class TsCodegenContext {
           this.usedEntitiesInModels.add(typeName);
         } else if (markUsage === "RESOLVERS") {
           this.usedEntitiesInResolvers.add(typeName);
+        } else if (markUsage === "LEGACY") {
+          return new TypeLocation(null, `_LegacyTypes.${typeName}`);
         }
         return new TypeLocation(null, addModelSuffix(typeName));
       } else {

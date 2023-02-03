@@ -4,6 +4,7 @@ import { extractContext } from "./context/index";
 import { generateResolvers } from "./resolvers";
 import { generateModels } from "./models";
 import { generateLegacyTypes } from "./legacyTypes";
+import { generateLegacyResolvers } from "./legacyResolvers";
 
 export function generateTS(
   document: DocumentNode,
@@ -24,6 +25,7 @@ export function generateTS(
   models: ts.SourceFile;
   resolvers: ts.SourceFile;
   legacyTypes?: ts.SourceFile;
+  legacyResolvers?: ts.SourceFile;
 } {
   try {
     let context = extractContext(
@@ -40,11 +42,12 @@ export function generateTS(
     );
     let models = generateModels(context, document);
     let resolvers = generateResolvers(context, document);
-    let legacyTypes;
+    let legacyTypes, legacyResolvers;
     if (legacyCompat) {
       legacyTypes = generateLegacyTypes(context, document);
+      legacyResolvers = generateLegacyResolvers(context, document);
     }
-    return { models, resolvers, legacyTypes };
+    return { models, resolvers, legacyTypes, legacyResolvers };
   } catch (e) {
     console.error(e);
     throw e;

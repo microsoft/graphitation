@@ -1,6 +1,5 @@
 import ts from "typescript";
 import { parse } from "graphql";
-import path from "path";
 import { blankGraphQLTag as graphql } from "../utilities";
 import { generateTS } from "..";
 
@@ -1239,6 +1238,7 @@ describe(generateTS, () => {
           type2
         }
 
+<<<<<<< Updated upstream
         type User implements Node {
           id: ID!
         }
@@ -1249,6 +1249,8 @@ describe(generateTS, () => {
 
         union Users = Admin | User
 
+=======
+>>>>>>> Stashed changes
         extend type Query {
           node(id: ID!): Node!
         }
@@ -1307,7 +1309,12 @@ function runGenerateTest(
     contextName?: string;
     legacyCompat?: boolean;
   } = {},
-): { models: string; resolvers: string; legacyTypes?: string } {
+): {
+  models: string;
+  resolvers: string;
+  legacyTypes?: string;
+  legacyResolvers?: string;
+} {
   const fullOptions: {
     outputPath: string;
     documentPath: string;
@@ -1320,11 +1327,15 @@ function runGenerateTest(
     ...options,
   };
   const document = parse(doc);
-  const { models, resolvers, legacyTypes } = generateTS(document, fullOptions);
+  const { models, resolvers, legacyTypes, legacyResolvers } = generateTS(
+    document,
+    fullOptions,
+  );
   const printer = ts.createPrinter();
   return {
     models: printer.printFile(models),
     resolvers: printer.printFile(resolvers),
     legacyTypes: legacyTypes && printer.printFile(legacyTypes),
+    legacyResolvers: legacyResolvers && printer.printFile(legacyResolvers),
   };
 }
