@@ -1239,6 +1239,16 @@ describe(generateTS, () => {
           type2
         }
 
+        type User implements Node {
+          id: ID!
+        }
+
+        type Admin implements Node {
+          id: ID!
+        }
+
+        union Users = Admin | User
+
         extend type Query {
           node(id: ID!): Node!
         }

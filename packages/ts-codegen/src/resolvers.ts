@@ -11,14 +11,14 @@ import {
   Field,
   InputObjectType,
   ObjectType,
+  UnionType,
   TsCodegenContext,
   Type,
 } from "./context";
 import {
-  createNullableType,
-  createNonNullableType,
   getResolverReturnType,
-  getAncestorEntity,
+  createUnionTypeResolvers,
+  createNonNullableTemplate,
 } from "./utilities";
 
 export function generateResolvers(
@@ -30,10 +30,11 @@ export function generateResolvers(
     .map((type) => createResolversForType(context, type))
     .filter((t) => t != null) as ts.Statement[];
   const imports = context.getAllResolverImportDeclarations() as ts.Statement[];
-  const extra = [];
+  const extra: ts.Statement[] = [];
   if (context.isLegacyCompatMode()) {
-    extra.push(createLegacyResolverNamespace(context, context.getAllTypes()));
+    extra.push(...createNonNullableTemplate());
   }
+
   return factory.createSourceFile(
     imports.concat(statements, extra),
     factory.createToken(ts.SyntaxKind.EndOfFileToken),
@@ -48,6 +49,26 @@ function createResolversForType(
   switch (type.kind) {
     case "OBJECT": {
       return createObjectTypeResolvers(context, type);
+    }
+    case "UNION": {
+      return factory.createModuleDeclaration(
+        undefined,
+        [
+          factory.createModifier(ts.SyntaxKind.ExportKeyword),
+          factory.createModifier(ts.SyntaxKind.DeclareKeyword),
+        ],
+        factory.createIdentifier(type.name),
+        factory.createModuleBlock([
+          factory.createTypeAliasDeclaration(
+            undefined,
+            [factory.createToken(ts.SyntaxKind.ExportKeyword)],
+            factory.createIdentifier("__resolveType"),
+            undefined,
+            createUnionTypeResolvers(context, type),
+          ),
+        ]),
+        ts.NodeFlags.Namespace,
+      );
     }
     case "INPUT_OBJECT": {
       return createInputObjectType(context, type);
@@ -159,48 +180,5 @@ function createInputObjectType(
         ),
       ),
     ),
-  );
-}
-
-function createLegacyResolverNamespace(
-  context: TsCodegenContext,
-  types: Type[],
-): ts.ModuleDeclaration {
-  const typeObjects: ts.Statement[] = [];
-  types.forEach((type) => {
-    if (type.kind === "OBJECT") {
-      typeObjects.push(
-        factory.createInterfaceDeclaration(
-          undefined,
-          [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-          type.name,
-          undefined,
-          undefined,
-          type.fields.map((field) =>
-            factory.createPropertySignature(
-              undefined,
-              factory.createIdentifier(field.name),
-              factory.createToken(ts.SyntaxKind.QuestionToken),
-              factory.createTypeReferenceNode(
-                factory.createQualifiedName(
-                  factory.createIdentifier(type.name),
-                  field.name,
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-  });
-  return factory.createModuleDeclaration(
-    undefined,
-    [
-      factory.createModifier(ts.SyntaxKind.ExportKeyword),
-      factory.createModifier(ts.SyntaxKind.DeclareKeyword),
-    ],
-    factory.createIdentifier("_LegacyResolvers"),
-    factory.createModuleBlock(typeObjects),
-    ts.NodeFlags.Namespace,
   );
 }
