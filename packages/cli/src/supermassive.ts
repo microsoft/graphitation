@@ -141,7 +141,7 @@ async function generateInterfaces(
         { encoding: "utf-8" },
       ),
     ];
-    if (options.legacy) {
+    if (options.legacy && result.legacyTypes && result.legacyResolvers) {
       outputs.concat(
         fs.writeFile(
           path.join(outputPath, `legacy-types.interface.ts`),
@@ -149,6 +149,17 @@ async function generateInterfaces(
             ts.EmitHint.SourceFile,
             result.legacyTypes,
             result.legacyTypes,
+          ),
+          { encoding: "utf-8" },
+        ),
+      );
+      outputs.concat(
+        fs.writeFile(
+          path.join(outputPath, `legacy-resolvers.interface.ts`),
+          printer.printNode(
+            ts.EmitHint.SourceFile,
+            result.legacyResolvers,
+            result.legacyResolvers,
           ),
           { encoding: "utf-8" },
         ),

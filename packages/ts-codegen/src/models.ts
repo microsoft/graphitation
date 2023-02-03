@@ -1,9 +1,5 @@
-import ts, {
-  collapseTextChangeRangesAcrossMultipleVersions,
-  factory,
-} from "typescript";
-import { DocumentNode, Kind } from "graphql";
-import { ASTReducer, visit } from "./typedVisitor";
+import ts, { factory } from "typescript";
+import { DocumentNode } from "graphql";
 import {
   ScalarType,
   TsCodegenContext,
