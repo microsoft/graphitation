@@ -1,6 +1,6 @@
 import ts, { factory } from "typescript";
 import { ASTNode, Kind, TypeNode } from "graphql";
-import { TsCodegenContext } from "./context";
+import { TsCodegenContext, UnionType } from "./context";
 
 const MODEL_SUFFIX = "Model";
 
@@ -22,10 +22,52 @@ export function getAncestorEntity(
 type ResolverParameterDefinition<T> = { name: string; type: T };
 type ResolverParametersDefinitions = {
   parent: ResolverParameterDefinition<ts.TypeReferenceNode>;
-  args: ResolverParameterDefinition<readonly ts.TypeElement[]>;
+  args?: ResolverParameterDefinition<readonly ts.TypeElement[]>;
   context: ResolverParameterDefinition<ts.TypeReferenceNode>;
   resolveInfo: ResolverParameterDefinition<ts.TypeReferenceNode>;
 };
+
+export function createUnionTypeResolvers(
+  context: TsCodegenContext,
+  type: UnionType,
+  parentUnknown = false,
+): ts.FunctionTypeNode {
+  return factory.createFunctionTypeNode(
+    undefined,
+    getResolverParameters({
+      parent: {
+        name: "parent",
+        type: parentUnknown
+          ? factory.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword)
+          : (factory.createUnionTypeNode(
+              type.types.map((name) =>
+                context.getModelType(name, "RESOLVERS").toTypeReference(),
+              ),
+            ) as any),
+      },
+      context: {
+        name: "context",
+        type: context.getContextType().toTypeReference(),
+      },
+      resolveInfo: {
+        name: "info",
+        type: context.getResolveInfoType().toTypeReference(),
+      },
+    }),
+    factory.createTypeReferenceNode(
+      factory.createIdentifier("PromiseOrValue"),
+      [
+        factory.createUnionTypeNode(
+          type.types
+            .map((value) =>
+              factory.createLiteralTypeNode(factory.createStringLiteral(value)),
+            )
+            .concat(factory.createLiteralTypeNode(factory.createNull())),
+        ),
+      ],
+    ),
+  );
+}
 
 export function getResolverParameters({
   parent,
@@ -42,14 +84,15 @@ export function getResolverParameters({
       undefined,
       parent.type,
     ),
-    factory.createParameterDeclaration(
-      undefined,
-      undefined,
-      undefined,
-      factory.createIdentifier(args.name),
-      undefined,
-      factory.createTypeLiteralNode(args.type),
-    ),
+    args &&
+      factory.createParameterDeclaration(
+        undefined,
+        undefined,
+        undefined,
+        factory.createIdentifier(args.name),
+        undefined,
+        factory.createTypeLiteralNode(args.type),
+      ),
     factory.createParameterDeclaration(
       undefined,
       undefined,
@@ -66,15 +109,32 @@ export function getResolverParameters({
       undefined,
       resolveInfo.type,
     ),
-  ];
+  ].filter(Boolean) as ts.ParameterDeclaration[];
 }
 
 export function getResolverReturnType(
   typeNode: ts.TypeNode,
   parentName: string,
   resolverParametersDefinitions: ResolverParametersDefinitions,
+  legacy = true,
 ) {
   if (parentName !== "Subscription") {
+    if (legacy) {
+      return factory.createFunctionTypeNode(
+        undefined,
+        getResolverParameters(resolverParametersDefinitions),
+        factory.createTypeReferenceNode(
+          factory.createIdentifier("OptionalNullable"),
+          [
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("PromiseOrValue"),
+              [typeNode],
+            ),
+          ],
+        ),
+      );
+    }
+
     return factory.createFunctionTypeNode(
       undefined,
       getResolverParameters(resolverParametersDefinitions),
@@ -132,6 +192,202 @@ export function getResolverReturnType(
       ),
     ]),
   ]);
+}
+
+export function createNonNullableTemplate(): ts.Statement[] {
+  return [
+    factory.createTypeAliasDeclaration(
+      undefined,
+      undefined,
+      factory.createIdentifier("PickNullable"),
+      [
+        factory.createTypeParameterDeclaration(
+          factory.createIdentifier("T"),
+          undefined,
+          undefined,
+        ),
+      ],
+      factory.createMappedTypeNode(
+        undefined,
+        factory.createTypeParameterDeclaration(
+          factory.createIdentifier("P"),
+          factory.createTypeOperatorNode(
+            ts.SyntaxKind.KeyOfKeyword,
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("T"),
+              undefined,
+            ),
+          ),
+          undefined,
+        ),
+        factory.createConditionalTypeNode(
+          factory.createLiteralTypeNode(factory.createNull()),
+          factory.createIndexedAccessTypeNode(
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("T"),
+              undefined,
+            ),
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("P"),
+              undefined,
+            ),
+          ),
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("P"),
+            undefined,
+          ),
+          factory.createKeywordTypeNode(ts.SyntaxKind.NeverKeyword),
+        ),
+        undefined,
+        factory.createIndexedAccessTypeNode(
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("T"),
+            undefined,
+          ),
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("P"),
+            undefined,
+          ),
+        ),
+        /* unknown */
+      ),
+    ),
+    factory.createTypeAliasDeclaration(
+      undefined,
+      undefined,
+      factory.createIdentifier("PickNotNullable"),
+      [
+        factory.createTypeParameterDeclaration(
+          factory.createIdentifier("T"),
+          undefined,
+          undefined,
+        ),
+      ],
+      factory.createMappedTypeNode(
+        undefined,
+        factory.createTypeParameterDeclaration(
+          factory.createIdentifier("P"),
+          factory.createTypeOperatorNode(
+            ts.SyntaxKind.KeyOfKeyword,
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("T"),
+              undefined,
+            ),
+          ),
+          undefined,
+        ),
+        factory.createConditionalTypeNode(
+          factory.createLiteralTypeNode(factory.createNull()),
+          factory.createIndexedAccessTypeNode(
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("T"),
+              undefined,
+            ),
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("P"),
+              undefined,
+            ),
+          ),
+          factory.createKeywordTypeNode(ts.SyntaxKind.NeverKeyword),
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("P"),
+            undefined,
+          ),
+        ),
+        undefined,
+        factory.createIndexedAccessTypeNode(
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("T"),
+            undefined,
+          ),
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("P"),
+            undefined,
+          ),
+        ),
+        /* unknown */
+      ),
+    ),
+    factory.createTypeAliasDeclaration(
+      undefined,
+      undefined,
+      factory.createIdentifier("OptionalNullable"),
+      [
+        factory.createTypeParameterDeclaration(
+          factory.createIdentifier("T"),
+          undefined,
+          undefined,
+        ),
+      ],
+      factory.createIntersectionTypeNode([
+        factory.createMappedTypeNode(
+          undefined,
+          factory.createTypeParameterDeclaration(
+            factory.createIdentifier("K"),
+            factory.createTypeOperatorNode(
+              ts.SyntaxKind.KeyOfKeyword,
+              factory.createTypeReferenceNode(
+                factory.createIdentifier("PickNullable"),
+                [
+                  factory.createTypeReferenceNode(
+                    factory.createIdentifier("T"),
+                    undefined,
+                  ),
+                ],
+              ),
+            ),
+            undefined,
+          ),
+          undefined,
+          factory.createToken(ts.SyntaxKind.QuestionToken),
+          factory.createTypeReferenceNode(factory.createIdentifier("Exclude"), [
+            factory.createIndexedAccessTypeNode(
+              factory.createTypeReferenceNode(
+                factory.createIdentifier("T"),
+                undefined,
+              ),
+              factory.createTypeReferenceNode(
+                factory.createIdentifier("K"),
+                undefined,
+              ),
+            ),
+            factory.createLiteralTypeNode(factory.createNull()),
+          ]),
+        ),
+        factory.createMappedTypeNode(
+          undefined,
+          factory.createTypeParameterDeclaration(
+            factory.createIdentifier("K"),
+            factory.createTypeOperatorNode(
+              ts.SyntaxKind.KeyOfKeyword,
+              factory.createTypeReferenceNode(
+                factory.createIdentifier("PickNotNullable"),
+                [
+                  factory.createTypeReferenceNode(
+                    factory.createIdentifier("T"),
+                    undefined,
+                  ),
+                ],
+              ),
+            ),
+            undefined,
+          ),
+          undefined,
+          undefined,
+          factory.createIndexedAccessTypeNode(
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("T"),
+              undefined,
+            ),
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("K"),
+              undefined,
+            ),
+          ),
+        ),
+      ]),
+    ),
+  ];
 }
 
 export function createListType(node: ts.TypeNode): ts.TypeNode {
