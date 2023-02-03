@@ -144,7 +144,7 @@ export class TsCodegenContext {
 
   getTypeReferenceForInputTypeFromTypeNode(
     node: TypeNode,
-    markUsage?: "MODELS" | "RESOLVERS",
+    markUsage?: "MODELS" | "RESOLVERS" | "LEGACY",
   ): ts.TypeNode {
     if (node.kind === Kind.NON_NULL_TYPE) {
       return createNonNullableType(
@@ -251,7 +251,7 @@ export class TsCodegenContext {
     return imports.concat(models);
   }
 
-  getAllResolverImportDeclarations(): ts.ImportDeclaration[] {
+  getBasicImports(): ts.ImportDeclaration[] {
     const imports = [];
     imports.push(
       createImportDeclaration(["PromiseOrValue"], "@graphitation/supermassive"),
@@ -273,6 +273,13 @@ export class TsCodegenContext {
         ),
       );
     }
+
+    return imports;
+  }
+  getAllResolverImportDeclarations(): ts.ImportDeclaration[] {
+    const imports: ts.ImportDeclaration[] = [];
+
+    imports.push(...this.getBasicImports());
 
     imports.push(
       createImportDeclaration(
@@ -382,7 +389,7 @@ export class TsCodegenContext {
 
   getInputType(
     typeName: string,
-    markUsage?: "MODELS" | "RESOLVERS",
+    markUsage?: "MODELS" | "RESOLVERS" | "LEGACY",
   ): TypeLocation {
     if (BUILT_IN_SCALARS.hasOwnProperty(typeName)) {
       return new TypeLocation(null, BUILT_IN_SCALARS[typeName]);
@@ -406,7 +413,10 @@ export class TsCodegenContext {
         }
         return new TypeLocation(null, addModelSuffix(typeName));
       } else {
-        return new TypeLocation(null, typeName);
+        return new TypeLocation(
+          null,
+          markUsage === "LEGACY" ? `_Resolvers.${typeName}` : typeName,
+        );
       }
     }
   }
