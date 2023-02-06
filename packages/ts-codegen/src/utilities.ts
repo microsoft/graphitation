@@ -116,82 +116,82 @@ export function getResolverReturnType(
   typeNode: ts.TypeNode,
   parentName: string,
   resolverParametersDefinitions: ResolverParametersDefinitions,
-  legacy = true,
 ) {
-  if (parentName !== "Subscription") {
-    if (legacy) {
-      return factory.createFunctionTypeNode(
-        undefined,
-        getResolverParameters(resolverParametersDefinitions),
-        factory.createTypeReferenceNode(
-          factory.createIdentifier("OptionalNullable"),
-          [
+  const resolverParams = getResolverParameters(resolverParametersDefinitions);
+  if (parentName === "Subscription") {
+    return factory.createUnionTypeNode([
+      factory.createTypeLiteralNode([
+        factory.createPropertySignature(
+          undefined,
+          factory.createIdentifier("subscribe"),
+          undefined,
+          factory.createFunctionTypeNode(
+            undefined,
+            resolverParams,
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("PromiseOrValue"),
+              [
+                factory.createTypeReferenceNode(
+                  factory.createIdentifier("AsyncIterator"),
+                  [
+                    factory.createTypeReferenceNode(
+                      factory.createIdentifier("A"),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        factory.createPropertySignature(
+          undefined,
+          factory.createIdentifier("resolve"),
+          undefined,
+          factory.createFunctionTypeNode(
+            undefined,
+            getResolverParameters({
+              ...resolverParametersDefinitions,
+              parent: {
+                name: "parent",
+                type: factory.createTypeReferenceNode(
+                  factory.createIdentifier("A"),
+                ),
+              },
+            }),
             factory.createTypeReferenceNode(
               factory.createIdentifier("PromiseOrValue"),
               [typeNode],
             ),
-          ],
+          ),
         ),
-      );
-    }
+      ]),
+      factory.createParenthesizedType(
+        factory.createFunctionTypeNode(
+          undefined,
+          resolverParams,
 
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("PromiseOrValue"),
+            [
+              factory.createTypeReferenceNode(
+                factory.createIdentifier("AsyncIterator"),
+                [typeNode],
+              ),
+            ],
+          ),
+        ),
+      ),
+    ]);
+  } else {
     return factory.createFunctionTypeNode(
       undefined,
-      getResolverParameters(resolverParametersDefinitions),
+      resolverParams,
       factory.createTypeReferenceNode(
         factory.createIdentifier("PromiseOrValue"),
         [typeNode],
       ),
     );
   }
-
-  return factory.createUnionTypeNode([
-    factory.createTypeLiteralNode([
-      factory.createPropertySignature(
-        undefined,
-        factory.createIdentifier("subscribe"),
-        undefined,
-        factory.createFunctionTypeNode(
-          undefined,
-          getResolverParameters(resolverParametersDefinitions),
-          factory.createTypeReferenceNode(
-            factory.createIdentifier("PromiseOrValue"),
-            [
-              factory.createTypeReferenceNode(
-                factory.createIdentifier("AsyncIterator"),
-                [
-                  factory.createTypeReferenceNode(
-                    factory.createIdentifier("A"),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-      factory.createPropertySignature(
-        undefined,
-        factory.createIdentifier("resolve"),
-        undefined,
-        factory.createFunctionTypeNode(
-          undefined,
-          getResolverParameters({
-            ...resolverParametersDefinitions,
-            parent: {
-              name: "parent",
-              type: factory.createTypeReferenceNode(
-                factory.createIdentifier("A"),
-              ),
-            },
-          }),
-          factory.createTypeReferenceNode(
-            factory.createIdentifier("PromiseOrValue"),
-            [typeNode],
-          ),
-        ),
-      ),
-    ]),
-  ]);
 }
 
 export function createNonNullableTemplate(): ts.Statement[] {
@@ -390,19 +390,29 @@ export function createNonNullableTemplate(): ts.Statement[] {
   ];
 }
 
-export function createListType(node: ts.TypeNode): ts.TypeNode {
+export function createListType(
+  node: ts.TypeNode,
+  alsoUndefined?: boolean,
+): ts.TypeNode {
   return createNullableType(
     factory.createTypeReferenceNode(factory.createIdentifier("ReadonlyArray"), [
       node,
     ]),
+    alsoUndefined,
   );
 }
 
-export function createNullableType(node: ts.TypeNode): ts.UnionTypeNode {
-  return factory.createUnionTypeNode([
-    node,
-    factory.createLiteralTypeNode(factory.createNull()),
-  ]);
+export function createNullableType(
+  node: ts.TypeNode,
+  alsoUndefined?: boolean,
+): ts.UnionTypeNode {
+  return factory.createUnionTypeNode(
+    [node, factory.createLiteralTypeNode(factory.createNull())].concat(
+      alsoUndefined
+        ? [factory.createKeywordTypeNode(ts.SyntaxKind.UndefinedKeyword)]
+        : [],
+    ),
+  );
 }
 
 export function createNonNullableType(node: ts.TypeNode): ts.TypeNode {

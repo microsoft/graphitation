@@ -134,10 +134,12 @@ export class TsCodegenContext {
     } else if (node.kind === Kind.LIST_TYPE) {
       return createListType(
         this.getTypeReferenceFromTypeNode(node.type, markUsage),
+        markUsage === "RESOLVERS" ? true : false,
       );
     } else {
       return createNullableType(
         this.getModelType(node.name.value, markUsage).toTypeReference(),
+        markUsage === "RESOLVERS" ? true : false,
       );
     }
   }

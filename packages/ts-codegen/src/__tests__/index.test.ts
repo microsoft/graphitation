@@ -1238,7 +1238,6 @@ describe(generateTS, () => {
           type2
         }
 
-<<<<<<< Updated upstream
         type User implements Node {
           id: ID!
         }
@@ -1249,8 +1248,6 @@ describe(generateTS, () => {
 
         union Users = Admin | User
 
-=======
->>>>>>> Stashed changes
         extend type Query {
           node(id: ID!): Node!
         }
