@@ -1,0 +1,2 @@
+1. Some way to solve models as server schema imports without removing "model" ending
+2. Export interface of all resolvers
