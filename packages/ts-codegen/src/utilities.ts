@@ -249,7 +249,6 @@ export function createNonNullableTemplate(): ts.Statement[] {
             undefined,
           ),
         ),
-        /* unknown */
       ),
     ),
     factory.createTypeAliasDeclaration(
@@ -305,7 +304,6 @@ export function createNonNullableTemplate(): ts.Statement[] {
             undefined,
           ),
         ),
-        /* unknown */
       ),
     ),
     factory.createTypeAliasDeclaration(
@@ -340,19 +338,21 @@ export function createNonNullableTemplate(): ts.Statement[] {
           ),
           undefined,
           factory.createToken(ts.SyntaxKind.QuestionToken),
-          factory.createTypeReferenceNode(factory.createIdentifier("Exclude"), [
-            factory.createIndexedAccessTypeNode(
-              factory.createTypeReferenceNode(
-                factory.createIdentifier("T"),
-                undefined,
-              ),
-              factory.createTypeReferenceNode(
-                factory.createIdentifier("K"),
-                undefined,
-              ),
+          factory.createIndexedAccessTypeNode(
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("PickNullable"),
+              [
+                factory.createTypeReferenceNode(
+                  factory.createIdentifier("T"),
+                  undefined,
+                ),
+              ],
             ),
-            factory.createLiteralTypeNode(factory.createNull()),
-          ]),
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("K"),
+              undefined,
+            ),
+          ),
         ),
         factory.createMappedTypeNode(
           undefined,
@@ -376,8 +376,13 @@ export function createNonNullableTemplate(): ts.Statement[] {
           undefined,
           factory.createIndexedAccessTypeNode(
             factory.createTypeReferenceNode(
-              factory.createIdentifier("T"),
-              undefined,
+              factory.createIdentifier("PickNotNullable"),
+              [
+                factory.createTypeReferenceNode(
+                  factory.createIdentifier("T"),
+                  undefined,
+                ),
+              ],
             ),
             factory.createTypeReferenceNode(
               factory.createIdentifier("K"),
