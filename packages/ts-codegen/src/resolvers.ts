@@ -83,9 +83,25 @@ function createObjectTypeResolvers(
   context: TsCodegenContext,
   type: ObjectType,
 ): ts.ModuleDeclaration | null {
-  const fields = type.fields.map((field) =>
+  const members: ts.Statement[] = type.fields.map((field) =>
     createResolverField(context, type, field),
   );
+  const resolversObject = factory.createInterfaceDeclaration(
+    undefined,
+    [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+    factory.createIdentifier("Resolvers"),
+    undefined,
+    undefined,
+    type.fields.map((field) =>
+      factory.createPropertySignature(
+        [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+        field.name,
+        factory.createToken(ts.SyntaxKind.QuestionToken),
+        factory.createTypeReferenceNode(toValidFieldName(field.name)),
+      ),
+    ),
+  );
+  members.unshift(resolversObject);
   return factory.createModuleDeclaration(
     undefined,
     [
@@ -93,7 +109,7 @@ function createObjectTypeResolvers(
       factory.createModifier(ts.SyntaxKind.DeclareKeyword),
     ],
     factory.createIdentifier(type.name),
-    factory.createModuleBlock(fields),
+    factory.createModuleBlock(members),
     ts.NodeFlags.Namespace,
   );
 }
@@ -143,7 +159,7 @@ function createResolverField(
   return factory.createTypeAliasDeclaration(
     undefined,
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-    factory.createIdentifier(field.name),
+    factory.createIdentifier(toValidFieldName(field.name)),
     type.name === "Subscription"
       ? [
           factory.createTypeParameterDeclaration(
@@ -182,3 +198,72 @@ function createInputObjectType(
     ),
   );
 }
+
+function toValidFieldName(fieldName: string): string {
+  if (RESERVED_KEYWORDS.includes(fieldName)) {
+    return `_${fieldName}`;
+  } else {
+    return fieldName;
+  }
+}
+
+const RESERVED_KEYWORDS: string[] = [
+  "break",
+  "case",
+  "catch",
+  "class",
+  "const",
+  "continue",
+  "debugger",
+  "default",
+  "delete",
+  "do",
+  "else",
+  "enum",
+  "export",
+  "extends",
+  "false",
+  "finally",
+  "for",
+  "function",
+  "if",
+  "import",
+  "in",
+  "instanceof",
+  "new",
+  "null",
+  "return",
+  "super",
+  "switch",
+  "this",
+  "throw",
+  "true",
+  "try",
+  "typeof",
+  "var",
+  "void",
+  "while",
+  "with",
+  "as",
+  "implements",
+  "interface",
+  "let",
+  "package",
+  "private",
+  "protected",
+  "public",
+  "static",
+  "yield",
+  "any",
+  "boolean",
+  "constructor",
+  "declare",
+  "get",
+  "module",
+  "require",
+  "number",
+  "set",
+  "string",
+  "symbol",
+  "type",
+];
