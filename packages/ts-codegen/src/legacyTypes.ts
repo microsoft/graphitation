@@ -1,77 +1,114 @@
 import ts, { factory } from "typescript";
 import { DocumentNode } from "graphql";
 import { TsCodegenContext, Type } from "./context";
-import { addModelSuffix } from "./utilities";
+import { addModelSuffix, createNonNullableTemplate } from "./utilities";
 
 const ROOT_OPERATIONS = ["Query", "Mutation", "Subscription"];
-const LEGACY_TYPES = ["OBJECT", "ENUM", "UNION", "INTERFACE", "SCALAR", "ENUM"];
+const LEGACY_TYPES = [
+  "OBJECT",
+  "INPUT_OBJECT",
+  "ENUM",
+  "UNION",
+  "INTERFACE",
+  "SCALAR",
+  "ENUM",
+];
 
 export function generateLegacyTypes(
   context: TsCodegenContext,
   document: DocumentNode,
 ): ts.SourceFile {
-  const legacyTypesExports = context
+  const statements: ts.Statement[] = [];
+  const allTypes = context
     .getAllTypes()
-    .map(getLegacyTypeExport)
-    .filter(Boolean) as ts.ExportSpecifier[];
-
-  const imports: ts.Statement[] = [];
-
-  const typesImports = context
-    .getAllTypes()
-    .map(getTypeImport)
-    .filter(Boolean) as ts.ImportSpecifier[];
-
-  const importDeclaration = factory.createImportDeclaration(
-    undefined,
-    undefined,
-    factory.createImportClause(
-      false,
+    .filter(
+      (type) =>
+        LEGACY_TYPES.includes(type.kind) &&
+        !ROOT_OPERATIONS.includes(type.name),
+    );
+  statements.push(
+    factory.createImportDeclaration(
       undefined,
-      factory.createNamedImports(typesImports),
+      undefined,
+      factory.createImportClause(
+        false,
+        undefined,
+        factory.createNamespaceImport(factory.createIdentifier("Models")),
+      ),
+      factory.createStringLiteral("./models.interface"),
     ),
-    factory.createStringLiteral("./models.interface"),
-  ) as ts.Statement;
+  );
+  statements.push(
+    factory.createImportDeclaration(
+      undefined,
+      undefined,
+      factory.createImportClause(
+        false,
+        undefined,
+        factory.createNamespaceImport(factory.createIdentifier("Resolvers")),
+      ),
+      factory.createStringLiteral("./resolvers.interface"),
+    ),
+  );
+  statements.push(
+    ...(allTypes.map(getLegacyTypeReExport).filter(Boolean) as ts.Statement[]),
+  );
 
-  imports.push(importDeclaration);
+  statements.push(
+    factory.createInterfaceDeclaration(
+      undefined,
+      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+      factory.createIdentifier("Types"),
+      undefined,
+      undefined,
+      allTypes.map((type) =>
+        factory.createPropertySignature(
+          [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+          type.name,
+          undefined,
+          factory.createTypeReferenceNode(
+            type.kind === "INPUT_OBJECT"
+              ? factory.createQualifiedName(
+                  factory.createIdentifier("Resolvers"),
+                  type.name,
+                )
+              : factory.createQualifiedName(
+                  factory.createIdentifier("Models"),
+                  addModelSuffix(type.name),
+                ),
+          ),
+        ),
+      ),
+    ),
+  );
 
-  const exportDeclaration = factory.createExportDeclaration(
-    undefined,
-    undefined,
-    false,
-    factory.createNamedExports(legacyTypesExports),
-    undefined,
-  ) as ts.Statement;
-
-  return factory.createSourceFile(
-    imports.concat(exportDeclaration),
+  const source = factory.createSourceFile(
+    statements,
     factory.createToken(ts.SyntaxKind.EndOfFileToken),
     ts.NodeFlags.None,
   );
+  source.fileName = "legacy-types.interface.ts";
+  return source;
 }
 
-function getTypeImport(type: Type): ts.ImportSpecifier | null {
-  if (
-    LEGACY_TYPES.includes(type.kind) &&
-    !ROOT_OPERATIONS.includes(type.name)
-  ) {
-    return factory.createImportSpecifier(
-      undefined,
-      factory.createIdentifier(addModelSuffix(type.name)),
-    );
-  }
-  return null;
-}
-
-function getLegacyTypeExport(type: Type): ts.ExportSpecifier | null {
-  if (
-    LEGACY_TYPES.includes(type.kind) &&
-    !ROOT_OPERATIONS.includes(type.name)
-  ) {
-    return factory.createExportSpecifier(
-      factory.createIdentifier(addModelSuffix(type.name)),
-      factory.createIdentifier(type.name),
-    );
-  }
-  return null;
+function getLegacyTypeReExport(type: Type): ts.Statement | null {
+  return factory.createExportDeclaration(
+    undefined,
+    undefined,
+    false,
+    factory.createNamedExports([
+      type.kind === "INPUT_OBJECT"
+        ? factory.createExportSpecifier(
+            undefined,
+            factory.createIdentifier(type.name),
+          )
+        : factory.createExportSpecifier(
+            factory.createIdentifier(addModelSuffix(type.name)),
+            factory.createIdentifier(type.name),
+          ),
+    ]),
+    type.kind === "INPUT_OBJECT"
+      ? factory.createStringLiteral("./resolvers.interface")
+      : factory.createStringLiteral("./models.interface"),
+  );
 }

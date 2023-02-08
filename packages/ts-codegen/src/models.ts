@@ -21,11 +21,13 @@ export function generateModels(
     .filter((t) => t != null) as ts.Statement[];
   const imports = context.getAllModelImportDeclarations() as ts.Statement[];
 
-  return factory.createSourceFile(
+  const source = factory.createSourceFile(
     imports.concat(context.getDefaultTypes(), statements),
     factory.createToken(ts.SyntaxKind.EndOfFileToken),
     ts.NodeFlags.None,
   );
+  source.fileName = "models.interface.ts";
+  return source;
 }
 
 function createModelForType(
@@ -75,7 +77,9 @@ function createObjectTypeModel(
     factory.createPropertySignature(
       [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
       factory.createIdentifier(name),
-      undefined,
+      fieldType.kind !== "NonNullType"
+        ? factory.createToken(ts.SyntaxKind.QuestionToken)
+        : undefined,
       context.getTypeReferenceFromTypeNode(
         fieldType,
         type.model ? undefined : "MODELS",
@@ -119,16 +123,18 @@ function createObjectTypeModel(
 function createEnumTypeModel(
   context: TsCodegenContext,
   type: EnumType,
-): ts.EnumDeclaration | null {
-  return factory.createEnumDeclaration(
+): ts.TypeAliasDeclaration | null {
+  return factory.createTypeAliasDeclaration(
     undefined,
-    [
-      factory.createModifier(ts.SyntaxKind.ExportKeyword),
-      factory.createModifier(ts.SyntaxKind.ConstKeyword),
-    ],
-    addModelSuffix(type.name),
-    type.values.map((name) =>
-      factory.createEnumMember(name, factory.createStringLiteral(name)),
+    [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+    factory.createIdentifier(addModelSuffix(type.name)),
+    undefined,
+    factory.createUnionTypeNode(
+      type.values?.map(
+        (value) =>
+          factory.createLiteralTypeNode(factory.createStringLiteral(value)) ||
+          [],
+      ),
     ),
   );
 }
