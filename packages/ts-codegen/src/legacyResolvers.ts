@@ -1,13 +1,13 @@
 import ts, { factory } from "typescript";
 import { DocumentNode } from "graphql";
 import { TsCodegenContext, Type, UnionType, Field } from "./context";
-import { createUnionTypeResolvers, camelCase } from "./utilities";
+import { camelCase } from "./utilities";
 
 export function generateLegacyResolvers(
   context: TsCodegenContext,
   document: DocumentNode,
 ): ts.SourceFile {
-  const imports: ts.Statement[] = context.getBasicImports();
+  const imports: ts.Statement[] = []; //context.getBasicImports();
   imports.push(
     factory.createImportDeclaration(
       undefined,
@@ -115,20 +115,19 @@ function createLegacyResolverNamespace(
       typeObjects.push(
         factory.createTypeAliasDeclaration(
           undefined,
-          [
-            factory.createToken(ts.SyntaxKind.ExportKeyword),
-            factory.createModifier(ts.SyntaxKind.DeclareKeyword),
-          ],
+          [factory.createToken(ts.SyntaxKind.ExportKeyword)],
           factory.createIdentifier(`${type.name}TypeResolvers`),
           undefined,
-          factory.createTypeLiteralNode([
-            factory.createPropertySignature(
-              undefined,
-              factory.createIdentifier("__resolveType"),
-              undefined,
-              createUnionTypeResolvers(context, type, true),
+          factory.createTypeReferenceNode(
+            factory.createQualifiedName(
+              factory.createQualifiedName(
+                factory.createIdentifier("Resolvers"),
+                factory.createIdentifier(type.name),
+              ),
+              factory.createIdentifier("Resolvers"),
             ),
-          ]),
+            undefined,
+          ),
         ),
       );
     }
