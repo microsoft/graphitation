@@ -17,9 +17,9 @@ import {
 } from "./context";
 import {
   getResolverReturnType,
-  createUnionTypeResolvers,
   createNonNullableTemplate,
   getSubscriptionResolver,
+  createUnionResolveType,
 } from "./utilities";
 
 export function generateResolvers(
@@ -50,24 +50,7 @@ function createResolversForType(
       return createObjectTypeResolvers(context, type);
     }
     case "UNION": {
-      return factory.createModuleDeclaration(
-        undefined,
-        [
-          factory.createModifier(ts.SyntaxKind.ExportKeyword),
-          factory.createModifier(ts.SyntaxKind.DeclareKeyword),
-        ],
-        factory.createIdentifier(type.name),
-        factory.createModuleBlock([
-          factory.createTypeAliasDeclaration(
-            undefined,
-            [factory.createToken(ts.SyntaxKind.ExportKeyword)],
-            factory.createIdentifier("__resolveType"),
-            undefined,
-            createUnionTypeResolvers(context, type),
-          ),
-        ]),
-        ts.NodeFlags.Namespace,
-      );
+      return createUnionTypeResolvers(context, type);
     }
     case "INPUT_OBJECT": {
       return createInputObjectType(context, type);
@@ -185,6 +168,47 @@ function createResolverField(
       context.getTypeReferenceFromTypeNode(field.type, "RESOLVERS"),
       resolverParametersDefinitions,
     ),
+  );
+}
+
+function createUnionTypeResolvers(
+  context: TsCodegenContext,
+  type: UnionType,
+): ts.ModuleDeclaration {
+  const resolversObject = factory.createInterfaceDeclaration(
+    undefined,
+    [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+    factory.createIdentifier("Resolvers"),
+    undefined,
+    undefined,
+    [
+      factory.createPropertySignature(
+        [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+        "__resolveType",
+        factory.createToken(ts.SyntaxKind.QuestionToken),
+
+        factory.createTypeReferenceNode("__resolveType"),
+      ),
+    ],
+  );
+  return factory.createModuleDeclaration(
+    undefined,
+    [
+      factory.createModifier(ts.SyntaxKind.ExportKeyword),
+      factory.createModifier(ts.SyntaxKind.DeclareKeyword),
+    ],
+    factory.createIdentifier(type.name),
+    factory.createModuleBlock([
+      resolversObject,
+      factory.createTypeAliasDeclaration(
+        undefined,
+        [factory.createToken(ts.SyntaxKind.ExportKeyword)],
+        factory.createIdentifier("__resolveType"),
+        undefined,
+        createUnionResolveType(context, type),
+      ),
+    ]),
+    ts.NodeFlags.Namespace,
   );
 }
 

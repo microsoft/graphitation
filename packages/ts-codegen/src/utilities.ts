@@ -27,23 +27,20 @@ type ResolverParametersDefinitions = {
   resolveInfo: ResolverParameterDefinition<ts.TypeReferenceNode>;
 };
 
-export function createUnionTypeResolvers(
+export function createUnionResolveType(
   context: TsCodegenContext,
   type: UnionType,
-  parentUnknown = false,
 ): ts.FunctionTypeNode {
   return factory.createFunctionTypeNode(
     undefined,
     getResolverParameters({
       parent: {
         name: "parent",
-        type: parentUnknown
-          ? factory.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword)
-          : (factory.createUnionTypeNode(
-              type.types.map((name) =>
-                context.getModelType(name, "RESOLVERS").toTypeReference(),
-              ),
-            ) as any),
+        type: factory.createUnionTypeNode(
+          type.types.map((name) =>
+            context.getModelType(name, "RESOLVERS").toTypeReference(),
+          ),
+        ) as any,
       },
       context: {
         name: "context",
