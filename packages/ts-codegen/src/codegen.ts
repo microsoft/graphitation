@@ -5,6 +5,7 @@ import { generateResolvers } from "./resolvers";
 import { generateModels } from "./models";
 import { generateLegacyTypes } from "./legacyTypes";
 import { generateLegacyResolvers } from "./legacyResolvers";
+import { generateEnums } from "./enums";
 
 export function generateTS(
   document: DocumentNode,
@@ -22,10 +23,7 @@ export function generateTS(
     legacyCompat?: boolean;
   },
 ): {
-  models: ts.SourceFile;
-  resolvers: ts.SourceFile;
-  legacyTypes?: ts.SourceFile;
-  legacyResolvers?: ts.SourceFile;
+  files: ts.SourceFile[];
 } {
   try {
     let context = extractContext(
@@ -40,14 +38,15 @@ export function generateTS(
       outputPath,
       documentPath,
     );
-    let models = generateModels(context, document);
-    let resolvers = generateResolvers(context, document);
-    let legacyTypes, legacyResolvers;
+    const result: ts.SourceFile[] = [];
+    result.push(generateModels(context, document));
+    result.push(generateResolvers(context, document));
+    result.push(generateEnums(context, document));
     if (legacyCompat) {
-      legacyTypes = generateLegacyTypes(context, document);
-      legacyResolvers = generateLegacyResolvers(context, document);
+      result.push(generateLegacyTypes(context, document));
+      result.push(generateLegacyResolvers(context, document));
     }
-    return { models, resolvers, legacyTypes, legacyResolvers };
+    return { files: result };
   } catch (e) {
     console.error(e);
     throw e;

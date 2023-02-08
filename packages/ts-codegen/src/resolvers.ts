@@ -19,6 +19,7 @@ import {
   getResolverReturnType,
   createUnionTypeResolvers,
   createNonNullableTemplate,
+  getSubscriptionResolver,
 } from "./utilities";
 
 export function generateResolvers(
@@ -31,15 +32,13 @@ export function generateResolvers(
     .filter((t) => t != null) as ts.Statement[];
   const imports = context.getAllResolverImportDeclarations() as ts.Statement[];
   const extra: ts.Statement[] = [];
-  if (context.isLegacyCompatMode()) {
-    extra.push(...createNonNullableTemplate());
-  }
-
-  return factory.createSourceFile(
+  const source = factory.createSourceFile(
     imports.concat(statements, extra),
     factory.createToken(ts.SyntaxKind.EndOfFileToken),
     ts.NodeFlags.None,
   );
+  source.fileName = "resolvers.interface.ts";
+  return source;
 }
 
 function createResolversForType(
@@ -141,7 +140,9 @@ function createResolverField(
         factory.createPropertySignature(
           [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
           factory.createIdentifier(name),
-          undefined,
+          type.kind !== "NonNullType"
+            ? factory.createToken(ts.SyntaxKind.QuestionToken)
+            : undefined,
           context.getTypeReferenceForInputTypeFromTypeNode(type, "RESOLVERS"),
         ),
       ),
@@ -156,6 +157,13 @@ function createResolverField(
     },
   };
 
+  if (type.name === "Subscription") {
+    return getSubscriptionResolver(
+      context.getTypeReferenceFromTypeNode(field.type, "RESOLVERS"),
+      resolverParametersDefinitions,
+      field.name,
+    );
+  }
   return factory.createTypeAliasDeclaration(
     undefined,
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
@@ -165,13 +173,12 @@ function createResolverField(
           factory.createTypeParameterDeclaration(
             factory.createIdentifier("A"),
             undefined,
-            factory.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword),
+            factory.createLiteralTypeNode(factory.createNull()),
           ),
         ]
       : undefined,
     getResolverReturnType(
       context.getTypeReferenceFromTypeNode(field.type, "RESOLVERS"),
-      type.name,
       resolverParametersDefinitions,
     ),
   );
@@ -191,7 +198,9 @@ function createInputObjectType(
         factory.createPropertySignature(
           [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
           factory.createIdentifier(name),
-          undefined,
+          type.kind !== "NonNullType"
+            ? factory.createToken(ts.SyntaxKind.QuestionToken)
+            : undefined,
           context.getTypeReferenceForInputTypeFromTypeNode(type, "RESOLVERS"),
         ),
       ),
@@ -266,4 +275,5 @@ const RESERVED_KEYWORDS: string[] = [
   "string",
   "symbol",
   "type",
+  "unknown",
 ];

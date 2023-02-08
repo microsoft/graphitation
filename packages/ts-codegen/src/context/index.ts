@@ -413,13 +413,13 @@ export class TsCodegenContext {
         } else if (markUsage === "RESOLVERS") {
           this.usedEntitiesInResolvers.add(typeName);
         } else if (markUsage === "LEGACY") {
-          return new TypeLocation(null, `_LegacyTypes.${typeName}`);
+          return new TypeLocation(null, `Types.${typeName}`);
         }
         return new TypeLocation(null, addModelSuffix(typeName));
       } else {
         return new TypeLocation(
           null,
-          markUsage === "LEGACY" ? `_Resolvers.${typeName}` : typeName,
+          markUsage === "LEGACY" ? `Resolvers.${typeName}` : typeName,
         );
       }
     }
