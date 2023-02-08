@@ -90,7 +90,7 @@ function createObjectTypeModel(
   return factory.createInterfaceDeclaration(
     undefined,
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-    factory.createIdentifier(addModelSuffix(type.name)),
+    factory.createIdentifier(type.name),
     undefined,
     [
       factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
@@ -123,18 +123,16 @@ function createObjectTypeModel(
 function createEnumTypeModel(
   context: TsCodegenContext,
   type: EnumType,
-): ts.TypeAliasDeclaration | null {
-  return factory.createTypeAliasDeclaration(
+): ts.EnumDeclaration {
+  return factory.createEnumDeclaration(
     undefined,
-    [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-    factory.createIdentifier(addModelSuffix(type.name)),
-    undefined,
-    factory.createUnionTypeNode(
-      type.values?.map(
-        (value) =>
-          factory.createLiteralTypeNode(factory.createStringLiteral(value)) ||
-          [],
-      ),
+    [
+      factory.createModifier(ts.SyntaxKind.ExportKeyword),
+      // factory.createModifier(ts.SyntaxKind.ConstKeyword),
+    ],
+    type.name,
+    type.values.map((name) =>
+      factory.createEnumMember(name, factory.createStringLiteral(name)),
     ),
   );
 }
@@ -146,7 +144,7 @@ function createUnionTypeModel(
   return factory.createTypeAliasDeclaration(
     undefined,
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-    factory.createIdentifier(addModelSuffix(type.name)),
+    factory.createIdentifier(type.name),
     undefined,
     factory.createUnionTypeNode(
       type.types?.map((type) => {
@@ -168,7 +166,7 @@ function createInterfaceTypeModel(
   return factory.createInterfaceDeclaration(
     undefined,
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-    factory.createIdentifier(addModelSuffix(type.name)),
+    factory.createIdentifier(type.name),
     undefined,
     [
       factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [

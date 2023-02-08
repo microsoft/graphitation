@@ -132,14 +132,12 @@ export function getSubscriptionResolver(
     factory.createIdentifier(fieldName),
     [
       factory.createTypeParameterDeclaration(
-        factory.createIdentifier("A"),
+        factory.createIdentifier("SubscribeResult"),
         undefined,
-        fullEvent,
+        factory.createKeywordTypeNode(ts.SyntaxKind.NeverKeyword),
       ),
     ],
-    factory.createConditionalTypeNode(
-      factory.createTypeReferenceNode(factory.createIdentifier("A"), undefined),
-      fullEvent,
+    factory.createUnionTypeNode([
       factory.createTypeLiteralNode([
         factory.createPropertySignature(
           undefined,
@@ -153,28 +151,18 @@ export function getSubscriptionResolver(
               [
                 factory.createTypeReferenceNode(
                   factory.createIdentifier("AsyncIterator"),
-                  [factory.createTypeReferenceNode("A", undefined)],
+                  [
+                    factory.createTypeLiteralNode([
+                      factory.createPropertySignature(
+                        undefined,
+                        factory.createIdentifier(fieldName),
+                        undefined,
+                        typeNode,
+                      ),
+                    ]),
+                  ],
                 ),
               ],
-            ),
-          ),
-        ),
-        factory.createPropertySignature(
-          undefined,
-          factory.createIdentifier("resolve"),
-          factory.createToken(ts.SyntaxKind.QuestionToken),
-          factory.createFunctionTypeNode(
-            undefined,
-            getResolverParameters({
-              ...resolverParametersDefinitions,
-              parent: {
-                name: "parent",
-                type: factory.createTypeReferenceNode("A", undefined),
-              },
-            }),
-            factory.createTypeReferenceNode(
-              factory.createIdentifier("PromiseOrValue"),
-              [typeNode],
             ),
           ),
         ),
@@ -192,7 +180,12 @@ export function getSubscriptionResolver(
               [
                 factory.createTypeReferenceNode(
                   factory.createIdentifier("AsyncIterator"),
-                  [factory.createTypeReferenceNode("A", undefined)],
+                  [
+                    factory.createTypeReferenceNode(
+                      factory.createIdentifier("SubscribeResult"),
+                      undefined,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -207,8 +200,11 @@ export function getSubscriptionResolver(
             getResolverParameters({
               ...resolverParametersDefinitions,
               parent: {
-                name: "parent",
-                type: factory.createTypeReferenceNode("A", undefined),
+                name: "subcribeResult",
+                type: factory.createTypeReferenceNode(
+                  factory.createIdentifier("SubscribeResult"),
+                  undefined,
+                ),
               },
             }),
             factory.createTypeReferenceNode(
@@ -218,7 +214,7 @@ export function getSubscriptionResolver(
           ),
         ),
       ]),
-    ),
+    ]),
   );
 }
 

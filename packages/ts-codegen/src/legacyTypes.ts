@@ -50,9 +50,9 @@ export function generateLegacyTypes(
       factory.createStringLiteral("./resolvers.interface"),
     ),
   );
-  statements.push(
-    ...(allTypes.map(getLegacyTypeReExport).filter(Boolean) as ts.Statement[]),
-  );
+  // statements.push(
+  //   ...(allTypes.map(getLegacyTypeReExport).filter(Boolean) as ts.Statement[]),
+  // );
 
   statements.push(
     factory.createInterfaceDeclaration(
@@ -74,7 +74,7 @@ export function generateLegacyTypes(
                 )
               : factory.createQualifiedName(
                   factory.createIdentifier("Models"),
-                  addModelSuffix(type.name),
+                  type.name,
                 ),
           ),
         ),
@@ -103,7 +103,7 @@ function getLegacyTypeReExport(type: Type): ts.Statement | null {
             factory.createIdentifier(type.name),
           )
         : factory.createExportSpecifier(
-            factory.createIdentifier(addModelSuffix(type.name)),
+            factory.createIdentifier(type.name),
             factory.createIdentifier(type.name),
           ),
     ]),
