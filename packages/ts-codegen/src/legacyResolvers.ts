@@ -30,7 +30,7 @@ export function generateLegacyResolvers(
         undefined,
         factory.createNamespaceImport(factory.createIdentifier("Types")),
       ),
-      factory.createStringLiteral("./legacy-types.interface"),
+      factory.createStringLiteral("./models.interface"),
     ),
   );
 

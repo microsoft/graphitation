@@ -181,7 +181,7 @@ export class TsCodegenContext {
       }
       // TODO: from.value needs to lead to another "module" index
       this.typeNameToImports.set(typeName, {
-        modelName: addModelSuffix(typeName),
+        modelName: typeName,
         imp,
       });
     }
@@ -223,7 +223,7 @@ export class TsCodegenContext {
         if (filteredDefs.length) {
           acc.push(
             createImportDeclaration(
-              filteredDefs.map(({ typeName }) => addModelSuffix(typeName)),
+              filteredDefs.map(({ typeName }) => typeName),
               from,
             ),
           );
@@ -288,7 +288,7 @@ export class TsCodegenContext {
         Array.from(this.usedEntitiesInResolvers)
           .sort()
           .filter((typeName) => !this.typeNameToImports.has(typeName))
-          .map((typeName) => addModelSuffix(typeName)),
+          .map((typeName) => typeName),
         "./models.interface",
       ),
     );
@@ -316,7 +316,7 @@ export class TsCodegenContext {
     return factory.createTypeAliasDeclaration(
       undefined,
       [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-      factory.createIdentifier(addModelSuffix(scalarName)),
+      factory.createIdentifier(scalarName),
       undefined,
       factory.createTypeReferenceNode(
         factory.createIdentifier(model),
@@ -384,7 +384,7 @@ export class TsCodegenContext {
         ) as ModelNameAndImport;
         return new TypeLocation(null, modelName);
       } else {
-        return new TypeLocation(null, addModelSuffix(typeName));
+        return new TypeLocation(null, typeName);
       }
     }
   }
@@ -415,7 +415,7 @@ export class TsCodegenContext {
         } else if (markUsage === "LEGACY") {
           return new TypeLocation(null, `Types.${typeName}`);
         }
-        return new TypeLocation(null, addModelSuffix(typeName));
+        return new TypeLocation(null, typeName);
       } else {
         return new TypeLocation(
           null,

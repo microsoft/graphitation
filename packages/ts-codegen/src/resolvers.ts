@@ -96,7 +96,11 @@ function createObjectTypeResolvers(
         [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
         field.name,
         factory.createToken(ts.SyntaxKind.QuestionToken),
-        factory.createTypeReferenceNode(toValidFieldName(field.name)),
+        type.name === "Subscription"
+          ? factory.createTypeReferenceNode(toValidFieldName(field.name), [
+              factory.createTypeReferenceNode("any", undefined),
+            ])
+          : factory.createTypeReferenceNode(toValidFieldName(field.name)),
       ),
     ),
   );
