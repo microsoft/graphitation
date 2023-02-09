@@ -3071,6 +3071,13 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
+"@swc/helpers@^0.4.14":
+  version "0.4.14"
+  resolved "https://registry.yarnpkg.com/@swc/helpers/-/helpers-0.4.14.tgz#1352ac6d95e3617ccb7c1498ff019654f1e12a74"
+  integrity sha512-4C7nX/dvpzB7za4Ql9K81xK3HPxCpHMgwTZVyf+9JQ6VUbn9jjZVN7/Nkdz/Ugzs2CSjqnL/UPXroiVBVHUWUw==
+  dependencies:
+    tslib "^2.4.0"
+
 "@szmarczak/http-timer@^1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@szmarczak/http-timer/-/http-timer-1.1.2.tgz#b1665e2c461a2cd92f4c1bbf50d5454de0d4b421"
@@ -3272,13 +3279,6 @@
   version "4.3.6"
   resolved "https://registry.yarnpkg.com/@types/lodash.camelcase/-/lodash.camelcase-4.3.6.tgz#393c748b70cd926fc629e6502a9d0929f217d5fd"
   integrity sha512-hd/TEuPd76Jtf1xEq85CHbCqR+iqvs5IOKyrYbiaOg69BRQgPN9XkvLj8Jl8rBp/dfJ2wQ1AVcP8mZmybq7kIg==
-  dependencies:
-    "@types/lodash" "*"
-
-"@types/lodash.clonedeep@^4.5.7":
-  version "4.5.7"
-  resolved "https://registry.yarnpkg.com/@types/lodash.clonedeep/-/lodash.clonedeep-4.5.7.tgz#0e119f582ed6f9e6b373c04a644651763214f197"
-  integrity sha512-ccNqkPptFIXrpVqUECi60/DFxjNKsfoQxSQsgcBJCX/fuX1wgyQieojkcWH/KpE3xzLoWN/2k+ZeGqIN3paSvw==
   dependencies:
     "@types/lodash" "*"
 
@@ -3801,14 +3801,15 @@ anymatch@~3.1.2:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
-apollo-inspector@^1.7.0:
-  version "1.7.0"
-  resolved "https://registry.yarnpkg.com/apollo-inspector/-/apollo-inspector-1.7.0.tgz#5559ddfb1f2aef7aec8dfe2d898a1f147dcbc113"
-  integrity sha512-NYEzv75uiv4R2oP8BIY9vafWK0l7dEukhxfZX6dxJ1m6AEJbEq3/jplbRLo6GSGjigZTZUl6TruzGdumHHQ6vQ==
+apollo-inspector@^1.11.0:
+  version "1.11.0"
+  resolved "https://registry.yarnpkg.com/apollo-inspector/-/apollo-inspector-1.11.0.tgz#3ecfd7b136f751d0328e07e363630cbc77419d8b"
+  integrity sha512-dtqpDiA50KqvQNOfOYEOq6zsB10wdwyQBtMFjZq+Wktmb7hs4F2UO7u4BsNhHyHcYsbD8RwnRcZygzXP1Fj3Kg==
   dependencies:
+    "@swc/helpers" "^0.4.14"
     "@types/node" "^18.11.17"
     graphql "^15.0.0"
-    lodash "^4.17.21"
+    lodash-es "4.17.6"
     timer-node "^5.0.7"
 
 aproba@^1.0.3:
@@ -8160,15 +8161,15 @@ locate-path@^6.0.0:
   dependencies:
     p-locate "^5.0.0"
 
+lodash-es@4.17.6:
+  version "4.17.6"
+  resolved "https://registry.yarnpkg.com/lodash-es/-/lodash-es-4.17.6.tgz#b90209ca7627de7cadd5212dff8b77c607aec8b0"
+  integrity sha512-KcGk5kdDAmD5NTWYuZir25GhKzhaMbPq2x1uOCswgI5Vp9l6eZmp5TUodEKHwc4yFempIiLAkCLIORuQs4pC3A==
+
 lodash.camelcase@^4.3.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/lodash.camelcase/-/lodash.camelcase-4.3.0.tgz#b28aa6288a2b9fc651035c7711f65ab6190331a6"
   integrity sha1-soqmKIorn8ZRA1x3EfZathkDMaY=
-
-lodash.clonedeep@^4.5.0:
-  version "4.5.0"
-  resolved "https://registry.yarnpkg.com/lodash.clonedeep/-/lodash.clonedeep-4.5.0.tgz#e23f3f9c4f8fbdde872529c1071857a086e5ccef"
-  integrity sha512-H5ZhCF25riFd9uB5UCkVKo61m3S/xZk1x4wA6yp/L3RFP6Z/eHH1ymQcGLo7J3GMPfm0V/7m1tryHuGVxpqEBQ==
 
 lodash.debounce@^4.0.8:
   version "4.0.8"
