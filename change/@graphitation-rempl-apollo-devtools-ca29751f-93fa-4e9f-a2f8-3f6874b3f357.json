@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Apollo-inspector updated",
+  "packageName": "@graphitation/rempl-apollo-devtools",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
