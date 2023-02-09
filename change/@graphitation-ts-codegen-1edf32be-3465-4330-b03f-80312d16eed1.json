@@ -1,7 +1,7 @@
 {
   "type": "major",
-  "comment": "Add compat mode and make typename optional",
+  "comment": "Added compat mode + generator re-written",
   "packageName": "@graphitation/ts-codegen",
-  "email": "mnovikov@microsoft.com",
+  "email": "jakubvejr@microsoft.com",
   "dependentChangeType": "patch"
 }
