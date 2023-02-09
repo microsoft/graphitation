@@ -1,7 +1,7 @@
 {
   "type": "minor",
-  "comment": "Add compat modbe",
+  "comment": "Added compat mode",
   "packageName": "@graphitation/cli",
-  "email": "mnovikov@microsoft.com",
+  "email": "jakubvejr@microsoft.com",
   "dependentChangeType": "patch"
 }
