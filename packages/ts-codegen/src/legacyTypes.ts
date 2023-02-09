@@ -50,9 +50,9 @@ export function generateLegacyTypes(
       factory.createStringLiteral("./resolvers.interface"),
     ),
   );
-  // statements.push(
-  //   ...(allTypes.map(getLegacyTypeReExport).filter(Boolean) as ts.Statement[]),
-  // );
+  statements.push(
+    ...(allTypes.map(getLegacyTypeReExport).filter(Boolean) as ts.Statement[]),
+  );
 
   statements.push(
     factory.createInterfaceDeclaration(
