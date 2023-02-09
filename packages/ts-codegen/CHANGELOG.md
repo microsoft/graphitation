@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-This log was last generated on Mon, 12 Dec 2022 15:37:15 GMT and should not be manually modified.
+This log was last generated on Thu, 09 Feb 2023 19:29:55 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.0.0-beta.1
+
+Thu, 09 Feb 2023 19:29:55 GMT
+
+### Changes
+
+- Added compat mode + generator re-written (jakubvejr@microsoft.com)
 
 ## 1.0.2
 
