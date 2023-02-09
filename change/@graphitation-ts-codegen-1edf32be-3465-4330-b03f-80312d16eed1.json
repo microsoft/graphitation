@@ -1,7 +1,7 @@
 {
-  "type": "major",
+  "type": "prerelease",
   "comment": "Added compat mode + generator re-written",
   "packageName": "@graphitation/ts-codegen",
   "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
+  "dependentChangeType": "prerelease"
 }
