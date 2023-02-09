@@ -2,5 +2,6 @@
   "type": "prerelease",
   "comment": "Added compat mode",
   "packageName": "@graphitation/cli",
-  "email": "jakubvejr@microsoft.com"
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "prerelease"
 }
