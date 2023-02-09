@@ -11,6 +11,7 @@ import {
 } from "./contexts/apollo-cache-context";
 import { Menu } from "../components";
 import RecentActivityContainer from "./apollo-recent-activity/recent-activity-container";
+import { OperationsTrackerContainer } from "./apollo-operations-tracker";
 import { ApolloGlobalOperationsContext } from "./contexts/apollo-global-operations-context";
 import { ApolloGlobalOperations } from "../types";
 
@@ -61,6 +62,9 @@ const Router = React.memo(() => {
           </Route>
           <Route path="/activity">
             <RecentActivityContainer />
+          </Route>
+          <Route path="/operations-tracker">
+            <OperationsTrackerContainer />
           </Route>
           <Route path="/graphiql">
             <GraphiQLRenderer />

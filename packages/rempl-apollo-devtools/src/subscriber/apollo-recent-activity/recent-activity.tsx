@@ -20,7 +20,6 @@ function getTime(timestamp: number) {
     date.getMinutes(),
   )}:${getDateValue(date.getSeconds())}.${date.getMilliseconds()}`;
 }
-
 export const RecentActivity = ({
   activity,
 }: {

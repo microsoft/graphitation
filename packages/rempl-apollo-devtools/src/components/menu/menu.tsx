@@ -8,6 +8,7 @@ import {
   DataFunnel24Regular,
   DataWhisker24Regular,
   Alert24Regular,
+  ArrowHookDownRight24Filled,
 } from "@fluentui/react-icons";
 import { mergeClasses, Text, Badge } from "@fluentui/react-components";
 import { useArrowNavigationGroup } from "@fluentui/react-tabster";
@@ -46,6 +47,11 @@ const menuElements = (props: MenuProps) => [
     url: "activity",
     name: "Activity monitor",
     icon: <Alert24Regular />,
+  },
+  {
+    url: "operations-tracker",
+    name: "Operations tracker",
+    icon: <ArrowHookDownRight24Filled />,
   },
   {
     url: "apollo-additional-informations",

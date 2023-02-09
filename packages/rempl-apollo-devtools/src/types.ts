@@ -3,6 +3,7 @@ import {
   ApolloClient,
   StoreObject,
 } from "@apollo/client";
+import { IDataView } from "apollo-inspector";
 import { createPublisher } from "rempl";
 
 export type Publisher = ReturnType<typeof createPublisher>;
@@ -72,6 +73,13 @@ export type ApolloTrackerMetadata = {
   mutationsHaveError: boolean;
 };
 
+export type ApolloOperationsTracker = {
+  data: IDataView | undefined;
+  setApolloOperationsData:
+    | React.Dispatch<React.SetStateAction<IDataView | null>>
+    | undefined;
+};
+
 export type ClientRecentCacheObject = NormalizedCacheObject;
 
 export type ApolloClientsObject = {
@@ -92,6 +100,13 @@ interface Query {
   errorMessage?: string;
 }
 
+export enum TabHeaders {
+  AllOperationsView,
+  OperationsView,
+  VerboseOperationView,
+  AffectedQueriesView,
+}
+
 export type WatchedQuery = Query & {
   typename: "WatchedQuery";
   queryString: string;
@@ -103,3 +118,9 @@ export type Mutation = Query & {
   typename: "Mutation";
   mutationString: string;
 };
+
+export enum ResultsFrom {
+  CACHE = "CACHE",
+  NETWORK = "NETWORK",
+  UNKNOWN = "UNKNOWN",
+}
