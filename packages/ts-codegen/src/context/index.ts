@@ -49,6 +49,7 @@ export type TsCodegenContextOptions = {
     name?: string;
     from: string | null;
   };
+  enumsImport: string | null;
   resolveInfo: {
     name: string;
     from: string | null;
@@ -70,6 +71,7 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
   moduleRoot: "",
   moduleModelsPath: "./__generated__/models.interface.ts",
   moduleResolversPath: "./__generated__/resolvers.interface.ts",
+  enumsImport: null,
   baseModel: {
     name: "BaseModel",
     from: null,
@@ -112,6 +114,10 @@ export class TsCodegenContext {
 
   isLegacyCompatMode(): boolean {
     return this.options.legacyCompat;
+  }
+
+  getEnumsImport(): string | null {
+    return this.options.enumsImport;
   }
 
   addType(type: Type): void {
@@ -204,6 +210,10 @@ export class TsCodegenContext {
 
   getModel(typeName: string): DefinitionModel | null {
     return this.typeNameToModels.get(typeName) || null;
+  }
+
+  isUsedEntityInModels(typeName: string) {
+    return this.usedEntitiesInModels.has(typeName);
   }
 
   getAllImportDeclarations(
