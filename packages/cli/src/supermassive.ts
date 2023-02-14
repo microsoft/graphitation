@@ -12,6 +12,7 @@ type GenerateInterfacesOptions = {
   outputDir?: string;
   contextImport?: string;
   contextName?: string;
+  enumsImport?: string;
   legacy?: boolean;
 };
 
@@ -42,6 +43,7 @@ export function supermassive(): Command {
       "from where to import context",
     )
     .option("-cn, --context-name [contextName]", "Context name")
+    .option("-ei, --enums-import [enumsImport]", "from where to import enums")
     .option("-l, --legacy", "generate legacy types")
     .description("generate interfaces and models")
     .action(
@@ -113,6 +115,7 @@ async function generateInterfaces(
       documentPath: fullPath,
       contextImport: getContextPath(outputPath, options.contextImport) || null,
       contextName: options.contextName,
+      enumsImport: getContextPath(outputPath, options.enumsImport) || null,
       legacyCompat: !!options.legacy,
     });
 

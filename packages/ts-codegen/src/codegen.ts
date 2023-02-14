@@ -14,12 +14,14 @@ export function generateTS(
     documentPath,
     contextImport,
     contextName,
+    enumsImport,
     legacyCompat,
   }: {
     outputPath: string;
     documentPath: string;
     contextImport?: string | null;
     contextName?: string;
+    enumsImport?: string | null;
     legacyCompat?: boolean;
   },
 ): {
@@ -33,6 +35,7 @@ export function generateTS(
           from: contextImport || null,
         },
         legacyCompat,
+        enumsImport,
       },
       document,
       outputPath,

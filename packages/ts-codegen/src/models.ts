@@ -15,17 +15,70 @@ export function generateModels(
   context: TsCodegenContext,
   document: DocumentNode,
 ): ts.SourceFile {
+  const enumsImport = context.getEnumsImport();
+
   const statements = context
     .getAllTypes()
     .map((type) => createModelForType(context, type))
     .filter((t) => t != null) as ts.Statement[];
+
   const imports = context.getAllModelImportDeclarations() as ts.Statement[];
 
+  const enumsStatements: ts.Statement[] = [];
+  enumsStatements.push(
+    ...context
+      .getAllTypes()
+      .map((type) => {
+        const enumsSource = enumsImport ? enumsImport : "./enums.interface";
+        const output: ts.Statement[] = [];
+        if (type.kind === "ENUM") {
+          if (context.isUsedEntityInModels(type.name)) {
+            output.push(
+              factory.createImportDeclaration(
+                undefined,
+                undefined,
+                factory.createImportClause(
+                  false,
+                  undefined,
+                  factory.createNamedImports([
+                    factory.createImportSpecifier(
+                      undefined,
+                      factory.createIdentifier(type.name),
+                    ),
+                  ]),
+                ),
+                factory.createStringLiteral(enumsSource),
+              ),
+            );
+          }
+
+          output.push(
+            factory.createExportDeclaration(
+              undefined,
+              undefined,
+              false,
+              factory.createNamedExports([
+                factory.createExportSpecifier(
+                  undefined,
+                  factory.createIdentifier(type.name),
+                ),
+              ]),
+              factory.createStringLiteral(enumsSource),
+            ),
+          );
+        }
+        return output;
+      })
+      .filter(Boolean)
+      .flat(),
+  );
+
   const source = factory.createSourceFile(
-    imports.concat(context.getDefaultTypes(), statements),
+    imports.concat(context.getDefaultTypes(), enumsStatements, statements),
     factory.createToken(ts.SyntaxKind.EndOfFileToken),
     ts.NodeFlags.None,
   );
+
   source.fileName = "models.interface.ts";
   return source;
 }
@@ -37,9 +90,6 @@ function createModelForType(
   switch (type.kind) {
     case "OBJECT": {
       return createObjectTypeModel(context, type);
-    }
-    case "ENUM": {
-      return createEnumTypeModel(context, type);
     }
     case "UNION": {
       return createUnionTypeModel(context, type);
@@ -117,23 +167,6 @@ function createObjectTypeModel(
       ),
       ...((!model && fields) || []),
     ],
-  );
-}
-
-function createEnumTypeModel(
-  context: TsCodegenContext,
-  type: EnumType,
-): ts.EnumDeclaration {
-  return factory.createEnumDeclaration(
-    undefined,
-    [
-      factory.createModifier(ts.SyntaxKind.ExportKeyword),
-      // factory.createModifier(ts.SyntaxKind.ConstKeyword),
-    ],
-    type.name,
-    type.values.map((name) =>
-      factory.createEnumMember(name, factory.createStringLiteral(name)),
-    ),
   );
 }
 
