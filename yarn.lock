@@ -1846,6 +1846,13 @@
     commander "^8.3.0"
     typescript "^4.4.3 <4.5.0"
 
+"@graphitation/supermassive@*":
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/@graphitation/supermassive/-/supermassive-2.0.4.tgz#b1c806584ddaf370a6aac34aa9bd72e1d4510f49"
+  integrity sha512-GRHWybaWd+narwJg8JW8iYPFGfDHlI6Ge52iqsDROSxRDCo6M08FVr/N3Gai/nhjukjxhixmv+ZgQZKXuHk25A==
+  dependencies:
+    graphql "^15.6.1"
+
 "@graphitation/ts-codegen@^1.0.2":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@graphitation/ts-codegen/-/ts-codegen-1.0.2.tgz#045eb59c58acb793bfddb8c73651c3e6141f49e2"
