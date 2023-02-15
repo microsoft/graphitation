@@ -500,13 +500,10 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
+        export { Rank } from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
-        }
-        export enum Rank {
-            User = "User",
-            Admin = "Admin"
         }
         "
       `);
@@ -616,11 +613,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
-        export enum PresenceAvailability {
-            Available = "Available",
-            Away = "Away",
-            Offline = "Offline"
-        }
+        import { PresenceAvailability } from "./enums.interface";
+        export { PresenceAvailability } from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
@@ -1018,11 +1012,8 @@ describe(generateTS, () => {
       export interface BaseModel {
           readonly __typename?: string;
       }
+      export { UserType } from "./enums.interface";
       export type DateTime = unknown;
-      export enum UserType {
-          Admin = "Admin",
-          User = "User"
-      }
       "
     `);
     expect(resolvers).toMatchInlineSnapshot(`
@@ -1467,12 +1458,9 @@ describe(generateTS, () => {
       export interface BaseModel {
           readonly __typename?: string;
       }
+      export { Type } from "./enums.interface";
       export interface Node extends BaseModel {
           readonly __typename?: string;
-      }
-      export enum Type {
-          type1 = "type1",
-          type2 = "type2"
       }
       export interface User extends BaseModel, Node {
           readonly __typename?: "User";
