@@ -1,0 +1,7 @@
+{
+  "type": "prerelease",
+  "comment": "Enums can be imported",
+  "packageName": "@graphitation/cli",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "prerelease"
+}
