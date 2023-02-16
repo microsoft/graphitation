@@ -1,7 +1,6 @@
 import ts, { factory } from "typescript";
 import { DocumentNode } from "graphql";
-import { TsCodegenContext, Type } from "./context";
-import { addModelSuffix, createNonNullableTemplate } from "./utilities";
+import { TsCodegenContext } from "./context";
 
 const ROOT_OPERATIONS = ["Query", "Mutation", "Subscription"];
 const LEGACY_TYPES = [
@@ -50,9 +49,6 @@ export function generateLegacyTypes(
       factory.createStringLiteral("./resolvers.interface"),
     ),
   );
-  statements.push(
-    ...(allTypes.map(getLegacyTypeReExport).filter(Boolean) as ts.Statement[]),
-  );
 
   statements.push(
     factory.createInterfaceDeclaration(
@@ -89,26 +85,4 @@ export function generateLegacyTypes(
   );
   source.fileName = "legacy-types.interface.ts";
   return source;
-}
-
-function getLegacyTypeReExport(type: Type): ts.Statement | null {
-  return factory.createExportDeclaration(
-    undefined,
-    undefined,
-    false,
-    factory.createNamedExports([
-      type.kind === "INPUT_OBJECT"
-        ? factory.createExportSpecifier(
-            undefined,
-            factory.createIdentifier(type.name),
-          )
-        : factory.createExportSpecifier(
-            undefined,
-            factory.createIdentifier(type.name),
-          ),
-    ]),
-    type.kind === "INPUT_OBJECT"
-      ? factory.createStringLiteral("./resolvers.interface")
-      : factory.createStringLiteral("./models.interface"),
-  );
 }

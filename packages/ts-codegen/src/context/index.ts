@@ -152,7 +152,7 @@ export class TsCodegenContext {
 
   getTypeReferenceForInputTypeFromTypeNode(
     node: TypeNode,
-    markUsage?: "MODELS" | "RESOLVERS" | "LEGACY",
+    markUsage?: "MODELS" | "RESOLVERS" | "LEGACY" | "INPUTS",
   ): ts.TypeNode {
     if (node.kind === Kind.NON_NULL_TYPE) {
       return createNonNullableType(
@@ -388,20 +388,34 @@ export class TsCodegenContext {
       } else if (markUsage === "RESOLVERS") {
         this.usedEntitiesInResolvers.add(typeName);
       }
+      let namespace = "";
+      const type = this.typeNameToType.get(typeName);
+
+      if (markUsage === "MODELS") {
+        if (type && type.kind === "ENUM") {
+          namespace = "Enums";
+        }
+      } else if (markUsage === "RESOLVERS") {
+        namespace = "Models";
+      }
+
       if (this.typeNameToImports.has(typeName)) {
         let { modelName } = this.typeNameToImports.get(
           typeName,
         ) as ModelNameAndImport;
         return new TypeLocation(null, modelName);
       } else {
-        return new TypeLocation(null, typeName);
+        return new TypeLocation(
+          null,
+          namespace ? `${namespace}.${typeName}` : typeName,
+        );
       }
     }
   }
 
   getInputType(
     typeName: string,
-    markUsage?: "MODELS" | "RESOLVERS" | "LEGACY",
+    markUsage?: "MODELS" | "RESOLVERS" | "LEGACY" | "INPUTS",
   ): TypeLocation {
     if (BUILT_IN_SCALARS.hasOwnProperty(typeName)) {
       return new TypeLocation(null, BUILT_IN_SCALARS[typeName]);
@@ -422,15 +436,21 @@ export class TsCodegenContext {
           this.usedEntitiesInModels.add(typeName);
         } else if (markUsage === "RESOLVERS") {
           this.usedEntitiesInResolvers.add(typeName);
+          return new TypeLocation(null, `Models.${typeName}`);
         } else if (markUsage === "LEGACY") {
           return new TypeLocation(null, `Types.${typeName}`);
+        } else if (markUsage === "INPUTS") {
+          return new TypeLocation(null, `Models.${typeName}`);
         }
         return new TypeLocation(null, typeName);
       } else {
-        return new TypeLocation(
-          null,
-          markUsage === "LEGACY" ? `Resolvers.${typeName}` : typeName,
-        );
+        if (markUsage === "LEGACY") {
+          return new TypeLocation(null, `Resolvers.${typeName}`);
+        } else if (markUsage === "RESOLVERS") {
+          return new TypeLocation(null, `Inputs.${typeName}`);
+        } else {
+          return new TypeLocation(null, typeName);
+        }
       }
     }
   }

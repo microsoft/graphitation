@@ -25,52 +25,29 @@ export function generateModels(
   const imports = context.getAllModelImportDeclarations() as ts.Statement[];
 
   const enumsStatements: ts.Statement[] = [];
-  enumsStatements.push(
-    ...context
-      .getAllTypes()
-      .map((type) => {
-        const enumsSource = enumsImport ? enumsImport : "./enums.interface";
-        const output: ts.Statement[] = [];
-        if (type.kind === "ENUM") {
-          if (context.isUsedEntityInModels(type.name)) {
-            output.push(
-              factory.createImportDeclaration(
-                undefined,
-                undefined,
-                factory.createImportClause(
-                  false,
-                  undefined,
-                  factory.createNamedImports([
-                    factory.createImportSpecifier(
-                      undefined,
-                      factory.createIdentifier(type.name),
-                    ),
-                  ]),
-                ),
-                factory.createStringLiteral(enumsSource),
-              ),
-            );
-          }
+  const enumsSource = enumsImport ? enumsImport : "./enums.interface";
 
-          output.push(
-            factory.createExportDeclaration(
-              undefined,
-              undefined,
-              false,
-              factory.createNamedExports([
-                factory.createExportSpecifier(
-                  undefined,
-                  factory.createIdentifier(type.name),
-                ),
-              ]),
-              factory.createStringLiteral(enumsSource),
-            ),
-          );
-        }
-        return output;
-      })
-      .filter(Boolean)
-      .flat(),
+  enumsStatements.push(
+    factory.createImportDeclaration(
+      undefined,
+      undefined,
+      factory.createImportClause(
+        false,
+        undefined,
+        factory.createNamespaceImport(factory.createIdentifier("Enums")),
+      ),
+      factory.createStringLiteral(enumsSource),
+    ),
+  );
+
+  enumsStatements.push(
+    factory.createExportDeclaration(
+      undefined,
+      undefined,
+      false,
+      undefined,
+      factory.createStringLiteral(enumsSource),
+    ),
   );
 
   const source = factory.createSourceFile(

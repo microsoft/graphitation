@@ -6,6 +6,7 @@ import { generateModels } from "./models";
 import { generateLegacyTypes } from "./legacyTypes";
 import { generateLegacyResolvers } from "./legacyResolvers";
 import { generateEnums } from "./enums";
+import { generateInputs } from "./inputs";
 
 export function generateTS(
   document: DocumentNode,
@@ -45,6 +46,7 @@ export function generateTS(
     result.push(generateModels(context, document));
     result.push(generateResolvers(context, document));
     result.push(generateEnums(context, document));
+    result.push(generateInputs(context, document));
     if (legacyCompat) {
       result.push(generateLegacyTypes(context, document));
       result.push(generateLegacyResolvers(context, document));

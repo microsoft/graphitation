@@ -26,14 +26,54 @@ export function generateResolvers(
   context: TsCodegenContext,
   document: DocumentNode,
 ): ts.SourceFile {
-  const statements = context
-    .getAllTypes()
-    .map((type) => createResolversForType(context, type))
-    .filter((t) => t != null) as ts.Statement[];
-  const imports = context.getAllResolverImportDeclarations() as ts.Statement[];
+  const statements: ts.Statement[] = [];
+  statements.push(...context.getBasicImports());
+  statements.push(
+    factory.createImportDeclaration(
+      undefined,
+      undefined,
+      factory.createImportClause(
+        false,
+        undefined,
+        factory.createNamespaceImport(factory.createIdentifier("Models")),
+      ),
+      factory.createStringLiteral("./models.interface"),
+    ),
+  );
+
+  statements.push(
+    factory.createImportDeclaration(
+      undefined,
+      undefined,
+      factory.createImportClause(
+        false,
+        undefined,
+        factory.createNamespaceImport(factory.createIdentifier("Inputs")),
+      ),
+      factory.createStringLiteral("./inputs.interface"),
+    ),
+  );
+
+  statements.push(
+    factory.createExportDeclaration(
+      undefined,
+      undefined,
+      false,
+      undefined,
+      factory.createStringLiteral("./inputs.interface"),
+    ),
+  );
+
+  statements.push(
+    ...(context
+      .getAllTypes()
+      .map((type) => createResolversForType(context, type))
+      .filter((t) => t != null) as ts.Statement[]),
+  );
+
   const extra: ts.Statement[] = [];
   const source = factory.createSourceFile(
-    imports.concat(statements, extra),
+    statements.concat(extra),
     factory.createToken(ts.SyntaxKind.EndOfFileToken),
     ts.NodeFlags.None,
   );
@@ -51,9 +91,6 @@ function createResolversForType(
     }
     case "UNION": {
       return createUnionTypeResolvers(context, type);
-    }
-    case "INPUT_OBJECT": {
-      return createInputObjectType(context, type);
     }
     default: {
       return null;
@@ -209,30 +246,6 @@ function createUnionTypeResolvers(
       ),
     ]),
     ts.NodeFlags.Namespace,
-  );
-}
-
-function createInputObjectType(
-  context: TsCodegenContext,
-  type: InputObjectType,
-): ts.TypeAliasDeclaration {
-  return factory.createTypeAliasDeclaration(
-    undefined,
-    [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-    type.name,
-    undefined,
-    factory.createTypeLiteralNode(
-      type.fields.map(({ name, type }) =>
-        factory.createPropertySignature(
-          [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
-          factory.createIdentifier(name),
-          type.kind !== "NonNullType"
-            ? factory.createToken(ts.SyntaxKind.QuestionToken)
-            : undefined,
-          context.getTypeReferenceForInputTypeFromTypeNode(type, "RESOLVERS"),
-        ),
-      ),
-    ),
   );
 }
 
