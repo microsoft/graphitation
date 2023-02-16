@@ -2,6 +2,27 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Thu, 16 Feb 2023 15:13:23 GMT",
+      "tag": "@graphitation/cli_v1.1.0-beta.4",
+      "version": "1.1.0-beta.4",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "1edc7c67fa29595bc91acb9333e4d0331a9736ea",
+            "comment": "legacyTypes types export aliasing removed"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.0.0-beta.4",
+            "commit": "8d8e15197503aaf2ded6808fd8e2248f1d457681"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 09 Feb 2023 19:29:55 GMT",
       "tag": "@graphitation/cli_v1.1.0-beta.1",
       "version": "1.1.0-beta.1",

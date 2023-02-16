@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "legacyTypes types export aliasing removed",
-  "packageName": "@graphitation/cli",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "prerelease"
-}

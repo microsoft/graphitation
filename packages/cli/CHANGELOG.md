@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-This log was last generated on Thu, 09 Feb 2023 19:29:55 GMT and should not be manually modified.
+This log was last generated on Thu, 16 Feb 2023 15:13:23 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.1.0-beta.4
+
+Thu, 16 Feb 2023 15:13:23 GMT
+
+### Changes
+
+- legacyTypes types export aliasing removed (jakubvejr@microsoft.com)
+- Bump @graphitation/ts-codegen to v2.0.0-beta.4
 
 ## 1.1.0-beta.1
 
