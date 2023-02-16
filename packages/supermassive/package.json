@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/supermassive",
   "license": "MIT",
-  "version": "2.0.5-0",
+  "version": "2.0.5-1",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
@@ -20,7 +20,7 @@
   "devDependencies": {
     "@graphitation/graphql-js-tag": "*",
     "@graphitation/supermassive-extractors": "*",
-    "@graphitation/cli": "1.0.4",
+    "@graphitation/cli": "*",
     "@graphql-tools/schema": "^7.1.5",
     "@ts-morph/bootstrap": "^0.11.0",
     "@types/benchmark": "^2.1.0",
