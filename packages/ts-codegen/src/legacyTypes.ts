@@ -103,7 +103,7 @@ function getLegacyTypeReExport(type: Type): ts.Statement | null {
             factory.createIdentifier(type.name),
           )
         : factory.createExportSpecifier(
-            factory.createIdentifier(type.name),
+            undefined,
             factory.createIdentifier(type.name),
           ),
     ]),

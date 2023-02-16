@@ -1508,11 +1508,11 @@ describe(generateTS, () => {
     expect(legacyTypes).toMatchInlineSnapshot(`
       "import * as Models from "./models.interface";
       import * as Resolvers from "./resolvers.interface";
-      export { Node as Node } from "./models.interface";
-      export { Type as Type } from "./models.interface";
-      export { User as User } from "./models.interface";
-      export { Admin as Admin } from "./models.interface";
-      export { Users as Users } from "./models.interface";
+      export { Node } from "./models.interface";
+      export { Type } from "./models.interface";
+      export { User } from "./models.interface";
+      export { Admin } from "./models.interface";
+      export { Users } from "./models.interface";
       export interface Types {
           readonly Node: Models.Node;
           readonly Type: Models.Type;
