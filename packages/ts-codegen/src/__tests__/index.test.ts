@@ -48,6 +48,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export interface Post extends BaseModel, _Post {
             readonly __typename?: "Post";
         }
@@ -76,19 +78,20 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { Message, Post, User } from "./models.interface";
-        import type { Avatar } from "@msteams/packages-test";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace Post {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: Post, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.Post, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Message {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: Message, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.Message, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace User {
             export interface Resolvers {
@@ -106,19 +109,19 @@ describe(generateTS, () => {
                 readonly avatar?: avatar;
                 readonly avatarRequired?: avatarRequired;
             }
-            export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-            export type name = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
-            export type messagesWithAnswersNonRequired = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Message | null | undefined> | null | undefined> | null | undefined>;
-            export type messagesWithAnswersRequired = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Message | null | undefined> | null | undefined>>;
-            export type messagesWithAnswersAllRequired = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Message>>>;
-            export type messagesNonRequired = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Message | null | undefined> | null | undefined>;
-            export type messagesWithArrayRequired = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Message | null | undefined>>;
-            export type messagesRequired = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Message>>;
-            export type messagesOnlyMessageRequired = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Message> | null | undefined>;
-            export type post = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Post | null | undefined>;
-            export type postRequired = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Post>;
-            export type avatar = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Avatar | null | undefined>;
-            export type avatarRequired = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Avatar>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type name = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
+            export type messagesWithAnswersNonRequired = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message | null | undefined> | null | undefined> | null | undefined>;
+            export type messagesWithAnswersRequired = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message | null | undefined> | null | undefined>>;
+            export type messagesWithAnswersAllRequired = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message>>>;
+            export type messagesNonRequired = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message | null | undefined> | null | undefined>;
+            export type messagesWithArrayRequired = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message | null | undefined>>;
+            export type messagesRequired = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message>>;
+            export type messagesOnlyMessageRequired = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message> | null | undefined>;
+            export type post = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
+            export type postRequired = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Post>;
+            export type avatar = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Avatar | null | undefined>;
+            export type avatarRequired = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Avatar>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -129,12 +132,12 @@ describe(generateTS, () => {
                 readonly requiredPost?: requiredPost;
                 readonly optionalPost?: optionalPost;
             }
-            export type requiredUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<User>>;
-            export type optionalUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<User | null | undefined> | null | undefined>;
-            export type optionalUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<User | null | undefined>;
-            export type requiredUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<User>;
-            export type requiredPost = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Post>;
-            export type optionalPost = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Post | null | undefined>;
+            export type requiredUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User>>;
+            export type optionalUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User | null | undefined> | null | undefined>;
+            export type optionalUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
+            export type requiredUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
+            export type requiredPost = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Post>;
+            export type optionalPost = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
         }
         "
       `);
@@ -154,6 +157,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
@@ -163,12 +168,14 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { User } from "./models.interface";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Subscription {
             export interface Resolvers {
@@ -176,11 +183,11 @@ describe(generateTS, () => {
             }
             export type userUpdated<SubscribeResult = never> = {
                 subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<{
-                    userUpdated: User;
+                    userUpdated: Models.User;
                 }>>;
             } | {
                 subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<SubscribeResult>>;
-                resolve: (subcribeResult: SubscribeResult, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<User>;
+                resolve: (subcribeResult: SubscribeResult, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
             };
         }
         "
@@ -199,12 +206,14 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { User } from "./models.interface";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Subscription {
             export interface Resolvers {
@@ -212,11 +221,11 @@ describe(generateTS, () => {
             }
             export type userUpdated<SubscribeResult = never> = {
                 subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<{
-                    userUpdated: User;
+                    userUpdated: Models.User;
                 }>>;
             } | {
                 subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<SubscribeResult>>;
-                resolve: (subcribeResult: SubscribeResult, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<User>;
+                resolve: (subcribeResult: SubscribeResult, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
             };
         }
         "
@@ -237,6 +246,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
@@ -246,18 +257,20 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { User } from "./models.interface";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Query {
             export interface Resolvers {
                 readonly users?: users;
             }
-            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<User>>;
+            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User>>;
         }
         "
       `);
@@ -292,6 +305,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export interface Node extends BaseModel {
             readonly __typename?: string;
         }
@@ -311,22 +326,24 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { Admin, User } from "./models.interface";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace Admin {
             export interface Resolvers {
                 readonly id?: id;
                 readonly rank?: rank;
             }
-            export type id = (model: Admin, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-            export type rank = (model: Admin, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number>;
+            export type id = (model: Models.Admin, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type rank = (model: Models.Admin, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number>;
         }
         export declare namespace Query {
             export interface Resolvers {
                 readonly users?: users;
                 readonly admins?: admins;
             }
-            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<User | null | undefined> | null | undefined>;
-            export type admins = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Admin | null | undefined> | null | undefined>;
+            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User | null | undefined> | null | undefined>;
+            export type admins = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Admin | null | undefined> | null | undefined>;
         }
         "
       `);
@@ -351,6 +368,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export interface Node extends BaseModel {
             readonly __typename?: string;
         }
@@ -364,20 +383,22 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { User } from "./models.interface";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
                 readonly name?: name;
             }
-            export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-            export type name = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type name = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Query {
             export interface Resolvers {
                 readonly users?: users;
             }
-            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<User | null | undefined> | null | undefined>;
+            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User | null | undefined> | null | undefined>;
         }
         "
       `);
@@ -399,6 +420,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export interface Node extends BaseModel {
             readonly __typename?: string;
         }
@@ -412,14 +435,16 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { User } from "./models.interface";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
                 readonly name?: name;
             }
-            export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-            export type name = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type name = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         "
       `);
@@ -444,6 +469,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
@@ -453,23 +480,22 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { User } from "./models.interface";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
-        export type UserParamsInput = {
-            readonly name?: string | null;
-        };
         export declare namespace Query {
             export interface Resolvers {
                 readonly userById?: userById;
             }
             export type userById = (model: unknown, args: {
-                readonly params?: UserParamsInput | null;
-            }, context: unknown, info: ResolveInfo) => PromiseOrValue<User | null | undefined>;
+                readonly params?: Inputs.UserParamsInput | null;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
         }
         "
       `);
@@ -500,7 +526,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
-        export { Rank } from "./enums.interface";
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
@@ -510,24 +537,22 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { Rank, User } from "./models.interface";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
-        export type UserParamsInput = {
-            readonly name?: string | null;
-            readonly rank?: Rank | null;
-        };
         export declare namespace Query {
             export interface Resolvers {
                 readonly userById?: userById;
             }
             export type userById = (model: unknown, args: {
-                readonly params?: UserParamsInput | null;
-            }, context: unknown, info: ResolveInfo) => PromiseOrValue<User | null | undefined>;
+                readonly params?: Inputs.UserParamsInput | null;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
         }
         "
       `);
@@ -557,6 +582,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
@@ -566,27 +593,22 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { User } from "./models.interface";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
-        export type PresenceInput = {
-            readonly type: string;
-        };
-        export type UserParamsInput = {
-            readonly name: string;
-            readonly presence?: PresenceInput | null;
-        };
         export declare namespace Query {
             export interface Resolvers {
                 readonly userById?: userById;
             }
             export type userById = (model: unknown, args: {
-                readonly params?: UserParamsInput | null;
-            }, context: unknown, info: ResolveInfo) => PromiseOrValue<User | null | undefined>;
+                readonly params?: Inputs.UserParamsInput | null;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
         }
         "
       `);
@@ -613,26 +635,28 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import { PresenceAvailability } from "./enums.interface";
-        export { PresenceAvailability } from "./enums.interface";
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
-            readonly availability: PresenceAvailability;
+            readonly availability: Enums.PresenceAvailability;
         }
         "
       `);
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { PresenceAvailability, User } from "./models.interface";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
                 readonly availability?: availability;
             }
-            export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-            export type availability = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<PresenceAvailability>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type availability = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.PresenceAvailability>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -640,7 +664,7 @@ describe(generateTS, () => {
             }
             export type userById = (model: unknown, args: {
                 readonly id: string;
-            }, context: unknown, info: ResolveInfo) => PromiseOrValue<User | null | undefined>;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
         }
         "
       `);
@@ -667,6 +691,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export interface Customer extends BaseModel {
             readonly __typename?: "Customer";
             readonly id: string;
@@ -681,24 +707,26 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { Admin, Customer, User } from "./models.interface";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace Customer {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: Customer, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.Customer, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Admin {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: Admin, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.Admin, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace User {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: Customer | Admin, context: unknown, info: ResolveInfo) => PromiseOrValue<"Customer" | "Admin" | null>;
+            export type __resolveType = (parent: Models.Customer | Models.Admin, context: unknown, info: ResolveInfo) => PromiseOrValue<"Customer" | "Admin" | null>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -706,7 +734,7 @@ describe(generateTS, () => {
             }
             export type userById = (model: unknown, args: {
                 readonly id: string;
-            }, context: unknown, info: ResolveInfo) => PromiseOrValue<User | null | undefined>;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
         }
         "
       `);
@@ -729,6 +757,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export interface User extends BaseModel, _User {
             readonly __typename?: "User";
         }
@@ -737,12 +767,14 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { User } from "./models.interface";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -750,7 +782,7 @@ describe(generateTS, () => {
             }
             export type userById = (model: unknown, args: {
                 readonly id: string;
-            }, context: unknown, info: ResolveInfo) => PromiseOrValue<User | null | undefined>;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
         }
         "
       `);
@@ -782,6 +814,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export interface Todo extends BaseModel {
             readonly __typename?: "Todo";
             readonly id: string;
@@ -792,18 +826,20 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { Todo } from "./models.interface";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace Query {
             export interface Resolvers {
                 readonly allTodos?: allTodos;
             }
-            export type allTodos = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Todo>>;
+            export type allTodos = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Todo>>;
         }
         export declare namespace Mutation {
             export interface Resolvers {
                 readonly createTodo?: createTodo;
             }
-            export type createTodo = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Todo>;
+            export type createTodo = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Todo>;
         }
         export declare namespace Subscription {
             export interface Resolvers {
@@ -811,11 +847,11 @@ describe(generateTS, () => {
             }
             export type emitTodos<SubscribeResult = never> = {
                 subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<{
-                    emitTodos: Todo | null | undefined;
+                    emitTodos: Models.Todo | null | undefined;
                 }>>;
             } | {
                 subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<SubscribeResult>>;
-                resolve: (subcribeResult: SubscribeResult, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Todo | null | undefined>;
+                resolve: (subcribeResult: SubscribeResult, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Todo | null | undefined>;
             };
         }
         export declare namespace Todo {
@@ -823,8 +859,8 @@ describe(generateTS, () => {
                 readonly id?: id;
                 readonly name?: name;
             }
-            export type id = (model: Todo, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-            export type name = (model: Todo, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.Todo, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type name = (model: Models.Todo, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         "
       `);
@@ -848,6 +884,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
@@ -858,15 +896,16 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { User } from "./models.interface";
-        import type { Avatar } from "@msteams/packages-test";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
                 readonly avatar?: avatar;
             }
-            export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-            export type avatar = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Avatar>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type avatar = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Avatar>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -874,7 +913,7 @@ describe(generateTS, () => {
             }
             export type userById = (model: unknown, args: {
                 readonly id: string;
-            }, context: unknown, info: ResolveInfo) => PromiseOrValue<User | null | undefined>;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
         }
         "
       `);
@@ -903,6 +942,8 @@ describe(generateTS, () => {
       export interface BaseModel {
           readonly __typename?: string;
       }
+      import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
       export interface Person extends BaseModel, Entity {
           readonly __typename?: string;
       }
@@ -915,12 +956,14 @@ describe(generateTS, () => {
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
-      import type { Person, User } from "./models.interface";
+      import * as Models from "./models.interface";
+      import * as Inputs from "./inputs.interface";
+      export * from "./inputs.interface";
       export declare namespace User {
           export interface Resolvers {
               readonly id?: id;
           }
-          export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
       }
       export declare namespace Query {
           export interface Resolvers {
@@ -928,7 +971,7 @@ describe(generateTS, () => {
           }
           export type userById = (model: unknown, args: {
               readonly id: string;
-          }, context: unknown, info: ResolveInfo) => PromiseOrValue<Person | null | undefined>;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Person | null | undefined>;
       }
       "
     `);
@@ -954,6 +997,8 @@ describe(generateTS, () => {
       export interface BaseModel {
           readonly __typename?: string;
       }
+      import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
       export interface User extends BaseModel {
           readonly __typename?: "User";
           readonly id: string;
@@ -964,15 +1009,16 @@ describe(generateTS, () => {
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
-      import type { User } from "./models.interface";
-      import type { Rank } from "@msteams/packages-rank";
+      import * as Models from "./models.interface";
+      import * as Inputs from "./inputs.interface";
+      export * from "./inputs.interface";
       export declare namespace User {
           export interface Resolvers {
               readonly id?: id;
               readonly rank?: rank;
           }
-          export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-          export type rank = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Rank>;
+          export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type rank = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Rank>;
       }
       export declare namespace Query {
           export interface Resolvers {
@@ -980,7 +1026,7 @@ describe(generateTS, () => {
           }
           export type userById = (model: unknown, args: {
               readonly id: string;
-          }, context: unknown, info: ResolveInfo) => PromiseOrValue<User | null | undefined>;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
       }
       "
     `);
@@ -1012,27 +1058,25 @@ describe(generateTS, () => {
       export interface BaseModel {
           readonly __typename?: string;
       }
-      export { UserType } from "./enums.interface";
+      import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
       export type DateTime = unknown;
       "
     `);
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
-      import type { DateTime, UserType } from "./models.interface";
-      import type { Rank } from "@msteams/packages-rank";
-      export type UserParam = {
-          readonly id: string;
-          readonly rank: Rank;
-      };
+      import * as Models from "./models.interface";
+      import * as Inputs from "./inputs.interface";
+      export * from "./inputs.interface";
       export declare namespace Query {
           export interface Resolvers {
               readonly isUser?: isUser;
           }
           export type isUser = (model: unknown, args: {
-              readonly userParam: UserParam;
-              readonly userType: UserType;
-              readonly dateTime: DateTime;
+              readonly userParam: Inputs.UserParam;
+              readonly userType: Models.UserType;
+              readonly dateTime: Models.DateTime;
           }, context: unknown, info: ResolveInfo) => PromiseOrValue<boolean | null | undefined>;
       }
       "
@@ -1064,6 +1108,8 @@ describe(generateTS, () => {
       export interface BaseModel {
           readonly __typename?: string;
       }
+      import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
       export interface User extends BaseModel {
           readonly __typename?: "User";
           readonly id: string;
@@ -1074,27 +1120,24 @@ describe(generateTS, () => {
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
-      import type { User } from "./models.interface";
-      import type { Rank } from "@msteams/packages-rank";
+      import * as Models from "./models.interface";
+      import * as Inputs from "./inputs.interface";
+      export * from "./inputs.interface";
       export declare namespace User {
           export interface Resolvers {
               readonly id?: id;
               readonly rank?: rank;
           }
-          export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-          export type rank = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Rank>;
+          export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type rank = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Rank>;
       }
-      export type UserInput = {
-          readonly id: string;
-          readonly rank: Rank;
-      };
       export declare namespace Query {
           export interface Resolvers {
               readonly userById?: userById;
           }
           export type userById = (model: unknown, args: {
-              readonly params?: UserInput | null;
-          }, context: unknown, info: ResolveInfo) => PromiseOrValue<User | null | undefined>;
+              readonly params?: Inputs.UserInput | null;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
       }
       "
     `);
@@ -1120,6 +1163,8 @@ describe(generateTS, () => {
       export interface BaseModel {
           readonly __typename?: string;
       }
+      import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
       export interface User extends BaseModel, _User {
           readonly __typename?: "User";
       }
@@ -1128,15 +1173,16 @@ describe(generateTS, () => {
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
-      import type { User } from "./models.interface";
-      import type { Rank } from "@msteams/packages-rank";
+      import * as Models from "./models.interface";
+      import * as Inputs from "./inputs.interface";
+      export * from "./inputs.interface";
       export declare namespace User {
           export interface Resolvers {
               readonly id?: id;
               readonly rank?: rank;
           }
-          export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-          export type rank = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Rank>;
+          export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type rank = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Rank>;
       }
       export declare namespace Query {
           export interface Resolvers {
@@ -1144,7 +1190,7 @@ describe(generateTS, () => {
           }
           export type userById = (model: unknown, args: {
               readonly id: string;
-          }, context: unknown, info: ResolveInfo) => PromiseOrValue<User | null | undefined>;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
       }
       "
     `);
@@ -1179,6 +1225,8 @@ describe(generateTS, () => {
       export interface BaseModel {
           readonly __typename?: string;
       }
+      import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
       export interface User extends BaseModel {
           readonly __typename?: "User";
           readonly id: string;
@@ -1189,30 +1237,24 @@ describe(generateTS, () => {
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
-      import type { User } from "./models.interface";
-      import type { Rank } from "@msteams/packages-rank";
+      import * as Models from "./models.interface";
+      import * as Inputs from "./inputs.interface";
+      export * from "./inputs.interface";
       export declare namespace User {
           export interface Resolvers {
               readonly id?: id;
               readonly rank?: rank;
           }
-          export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-          export type rank = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Rank>;
+          export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type rank = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Rank>;
       }
-      export type RankParams = {
-          readonly rank: Rank;
-      };
-      export type UserParams = {
-          readonly id: string;
-          readonly rank: RankParams;
-      };
       export declare namespace Query {
           export interface Resolvers {
               readonly userById?: userById;
           }
           export type userById = (model: unknown, args: {
-              readonly params?: UserParams | null;
-          }, context: unknown, info: ResolveInfo) => PromiseOrValue<User | null | undefined>;
+              readonly params?: Inputs.UserParams | null;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
       }
       "
     `);
@@ -1237,6 +1279,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export type DateTime = string;
         export interface User extends BaseModel {
             readonly __typename?: "User";
@@ -1248,14 +1292,16 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { DateTime, User } from "./models.interface";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
                 readonly dateTime?: dateTime;
             }
-            export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-            export type dateTime = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<DateTime>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type dateTime = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.DateTime>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -1263,7 +1309,7 @@ describe(generateTS, () => {
             }
             export type userById = (model: unknown, args: {
                 readonly id: string;
-            }, context: unknown, info: ResolveInfo) => PromiseOrValue<User | null | undefined>;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
         }
         "
       `);
@@ -1288,6 +1334,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export type DateTime = _DateTime;
         export interface User extends BaseModel {
             readonly __typename?: "User";
@@ -1299,14 +1347,16 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { DateTime, User } from "./models.interface";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
                 readonly dateTime?: dateTime;
             }
-            export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-            export type dateTime = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<DateTime>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type dateTime = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.DateTime>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -1314,7 +1364,7 @@ describe(generateTS, () => {
             }
             export type userById = (model: unknown, args: {
                 readonly id: string;
-            }, context: unknown, info: ResolveInfo) => PromiseOrValue<User | null | undefined>;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
         }
         "
       `);
@@ -1344,6 +1394,8 @@ describe(generateTS, () => {
         export interface BaseModel {
             readonly __typename?: string;
         }
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
@@ -1357,7 +1409,9 @@ describe(generateTS, () => {
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
-        import type { User } from "./models.interface";
+        import * as Models from "./models.interface";
+        import * as Inputs from "./inputs.interface";
+        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
@@ -1366,11 +1420,11 @@ describe(generateTS, () => {
                 readonly rating?: rating;
                 readonly isAdmin?: isAdmin;
             }
-            export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-            export type name = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-            export type age = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number | null | undefined>;
-            export type rating = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number | null | undefined>;
-            export type isAdmin = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<boolean>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type name = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type age = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number | null | undefined>;
+            export type rating = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number | null | undefined>;
+            export type isAdmin = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<boolean>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -1382,7 +1436,7 @@ describe(generateTS, () => {
                 readonly age?: number | null;
                 readonly rating?: number | null;
                 readonly isAdmin?: boolean | null;
-            }, context: unknown, info: ResolveInfo) => PromiseOrValue<User>;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
         }
         "
       `);
@@ -1404,6 +1458,8 @@ describe(generateTS, () => {
       export interface BaseModel {
           readonly __typename?: string;
       }
+      import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
       export interface Node extends BaseModel {
           readonly __typename?: string;
       }
@@ -1412,14 +1468,16 @@ describe(generateTS, () => {
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
-      import type { Node } from "./models.interface";
+      import * as Models from "./models.interface";
+      import * as Inputs from "./inputs.interface";
+      export * from "./inputs.interface";
       export declare namespace Query {
           export interface Resolvers {
               readonly node?: node;
           }
           export type node = (model: unknown, args: {
               readonly id: string;
-          }, context: unknown, info: ResolveInfo) => PromiseOrValue<Node>;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Node>;
       }
       "
     `);
@@ -1458,7 +1516,8 @@ describe(generateTS, () => {
       export interface BaseModel {
           readonly __typename?: string;
       }
-      export { Type } from "./enums.interface";
+      import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
       export interface Node extends BaseModel {
           readonly __typename?: string;
       }
@@ -1476,24 +1535,26 @@ describe(generateTS, () => {
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
-      import type { Admin, Node, User } from "./models.interface";
+      import * as Models from "./models.interface";
+      import * as Inputs from "./inputs.interface";
+      export * from "./inputs.interface";
       export declare namespace User {
           export interface Resolvers {
               readonly id?: id;
           }
-          export type id = (model: User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
       }
       export declare namespace Admin {
           export interface Resolvers {
               readonly id?: id;
           }
-          export type id = (model: Admin, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type id = (model: Models.Admin, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
       }
       export declare namespace Users {
           export interface Resolvers {
               readonly __resolveType?: __resolveType;
           }
-          export type __resolveType = (parent: Admin | User, context: unknown, info: ResolveInfo) => PromiseOrValue<"Admin" | "User" | null>;
+          export type __resolveType = (parent: Models.Admin | Models.User, context: unknown, info: ResolveInfo) => PromiseOrValue<"Admin" | "User" | null>;
       }
       export declare namespace Query {
           export interface Resolvers {
@@ -1501,25 +1562,12 @@ describe(generateTS, () => {
           }
           export type node = (model: unknown, args: {
               readonly id: string;
-          }, context: unknown, info: ResolveInfo) => PromiseOrValue<Node>;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Node>;
       }
       "
     `);
     expect(legacyTypes).toMatchInlineSnapshot(`
       "import * as Models from "./models.interface";
-      import * as Resolvers from "./resolvers.interface";
-      export { Node } from "./models.interface";
-      export { Type } from "./models.interface";
-      export { User } from "./models.interface";
-      export { Admin } from "./models.interface";
-      export { Users } from "./models.interface";
-      export interface Types {
-          readonly Node: Models.Node;
-          readonly Type: Models.Type;
-          readonly User: Models.User;
-          readonly Admin: Models.Admin;
-          readonly Users: Models.Users;
-      }
       "
     `);
   });
