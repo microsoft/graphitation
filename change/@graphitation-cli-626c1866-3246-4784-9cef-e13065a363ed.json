@@ -3,5 +3,5 @@
   "comment": "[HOTFIX] models and legacyTypes import local enums",
   "packageName": "@graphitation/cli",
   "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
+  "dependentChangeType": "prerelease"
 }
