@@ -1,0 +1,7 @@
+{
+  "type": "prerelease",
+  "comment": "[HOTFIX] models and legacyTypes import local enums",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "prerelease"
+}
