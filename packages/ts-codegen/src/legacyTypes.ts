@@ -50,15 +50,13 @@ export function generateLegacyTypes(
     ),
   );
 
-  const enumsImport = context.getEnumsImport();
-  const enumsSource = enumsImport ? enumsImport : "./enums.interface";
   statements.push(
     factory.createExportDeclaration(
       undefined,
       undefined,
       false,
       undefined,
-      factory.createStringLiteral(enumsSource),
+      factory.createStringLiteral("./enums.interface"),
     ),
   );
 

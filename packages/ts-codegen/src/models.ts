@@ -15,8 +15,6 @@ export function generateModels(
   context: TsCodegenContext,
   document: DocumentNode,
 ): ts.SourceFile {
-  const enumsImport = context.getEnumsImport();
-
   const statements = context
     .getAllTypes()
     .map((type) => createModelForType(context, type))
@@ -25,7 +23,6 @@ export function generateModels(
   const imports = context.getAllModelImportDeclarations() as ts.Statement[];
 
   const enumsStatements: ts.Statement[] = [];
-  const enumsSource = enumsImport ? enumsImport : "./enums.interface";
 
   enumsStatements.push(
     factory.createImportDeclaration(
@@ -36,7 +33,7 @@ export function generateModels(
         undefined,
         factory.createNamespaceImport(factory.createIdentifier("Enums")),
       ),
-      factory.createStringLiteral(enumsSource),
+      factory.createStringLiteral("./enums.interface"),
     ),
   );
 
@@ -46,7 +43,7 @@ export function generateModels(
       undefined,
       false,
       undefined,
-      factory.createStringLiteral(enumsSource),
+      factory.createStringLiteral("./enums.interface"),
     ),
   );
 
