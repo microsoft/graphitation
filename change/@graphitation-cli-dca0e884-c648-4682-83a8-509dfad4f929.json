@@ -1,0 +1,7 @@
+{
+  "type": "prerelease",
+  "comment": "enums exported in LegacyTypes",
+  "packageName": "@graphitation/cli",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "prerelease"
+}
