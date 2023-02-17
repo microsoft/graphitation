@@ -2,6 +2,29 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Fri, 17 Feb 2023 23:47:12 GMT",
+      "tag": "@graphitation/cli_v1.1.0",
+      "version": "1.1.0",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "e2928f31a6d091a36c8c0cbfa3b1fa299e4737b2",
+            "comment": "[HOTFIX] models and legacyTypes import local enums"
+          }
+        ],
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.0.0-beta.6",
+            "commit": "f5745f083edb7f326e683acd7c38749bf9c7f7ac"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 17 Feb 2023 17:47:03 GMT",
       "tag": "@graphitation/cli_v1.1.0-beta.5",
       "version": "1.1.0-beta.5",
