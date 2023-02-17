@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-This log was last generated on Thu, 16 Feb 2023 15:13:23 GMT and should not be manually modified.
+This log was last generated on Fri, 17 Feb 2023 17:47:03 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.1.0-beta.5
+
+Fri, 17 Feb 2023 17:47:03 GMT
+
+### Changes
+
+- enums exported in LegacyTypes (jakubvejr@microsoft.com)
+- Bump @graphitation/ts-codegen to v2.0.0-beta.5
 
 ## 1.1.0-beta.4
 

@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "Enums re-exported in LegacyTypes",
-  "packageName": "@graphitation/ts-codegen",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "prerelease"
-}

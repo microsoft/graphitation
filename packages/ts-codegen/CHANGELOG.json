@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Fri, 17 Feb 2023 17:47:03 GMT",
+      "tag": "@graphitation/ts-codegen_v2.0.0-beta.5",
+      "version": "2.0.0-beta.5",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "bf93b4e47d3959e8a7bca7cad7008ff03fec2290",
+            "comment": "Enums re-exported in LegacyTypes"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 16 Feb 2023 15:13:23 GMT",
       "tag": "@graphitation/ts-codegen_v2.0.0-beta.4",
       "version": "2.0.0-beta.4",
