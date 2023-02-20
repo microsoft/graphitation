@@ -1,6 +1,6 @@
 import ts, { factory } from "typescript";
 import { ASTNode, Kind, TypeNode } from "graphql";
-import { TsCodegenContext, UnionType } from "./context";
+import { InterfaceType, TsCodegenContext, UnionType } from "./context";
 
 const MODEL_SUFFIX = "Model";
 
@@ -62,6 +62,33 @@ export function createUnionResolveType(
             .concat(factory.createLiteralTypeNode(factory.createNull())),
         ),
       ],
+    ),
+  );
+}
+
+export function createInterfaceResolveType(
+  context: TsCodegenContext,
+  type: InterfaceType,
+): ts.FunctionTypeNode {
+  return factory.createFunctionTypeNode(
+    undefined,
+    getResolverParameters({
+      parent: {
+        name: "parent",
+        type: factory.createTypeReferenceNode("unknown"),
+      },
+      context: {
+        name: "context",
+        type: context.getContextType().toTypeReference(),
+      },
+      resolveInfo: {
+        name: "info",
+        type: context.getResolveInfoType().toTypeReference(),
+      },
+    }),
+    factory.createTypeReferenceNode(
+      factory.createIdentifier("PromiseOrValue"),
+      [factory.createTypeReferenceNode("string")],
     ),
   );
 }

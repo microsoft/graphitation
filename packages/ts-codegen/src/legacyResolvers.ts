@@ -111,7 +111,7 @@ function createLegacyResolverNamespace(
           ts.NodeFlags.Namespace,
         ),
       );
-    } else if (type.kind === "UNION") {
+    } else if (type.kind === "UNION" || type.kind === "INTERFACE") {
       typeObjects.push(
         factory.createTypeAliasDeclaration(
           undefined,
