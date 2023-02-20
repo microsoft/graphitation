@@ -100,6 +100,7 @@ export class TsCodegenContext {
     { modelName: string } & ModelNameAndImport
   >;
   private typeNameToModels: Map<string, DefinitionModel>;
+  private legacyInterfaces: Set<string>;
 
   constructor(private options: TsCodegenContextOptions) {
     this.allTypes = [];
@@ -110,6 +111,7 @@ export class TsCodegenContext {
     this.imports = [];
     this.typeNameToImports = new Map();
     this.typeNameToModels = new Map();
+    this.legacyInterfaces = new Set();
   }
 
   isLegacyCompatMode(): boolean {
@@ -351,6 +353,14 @@ export class TsCodegenContext {
     return new TypeLocation(null, this.options.resolveInfo.name);
   }
 
+  addLegacyInterface(string: string): void {
+    this.legacyInterfaces.add(string);
+  }
+
+  isLegacyInterface(string: string): boolean {
+    return this.legacyInterfaces.has(string);
+  }
+
   getDefaultTypes() {
     return [
       addSyntheticLeadingComment(
@@ -465,6 +475,8 @@ export class TsCodegenContext {
   }
 }
 
+const LEGACY_INTERFACE_DIRECTIVE_NAME = "legacyInterface_DO_NOT_USE";
+
 export function extractContext(
   options: Partial<TsCodegenContextOptions>,
   document: DocumentNode,
@@ -490,6 +502,22 @@ export function extractContext(
             processModelDirective(node, ancestors, outputPath, documentPath),
             node,
           );
+        } else if (node.name.value === LEGACY_INTERFACE_DIRECTIVE_NAME) {
+          const typeDef: ASTNode | readonly ASTNode[] | undefined =
+            ancestors[ancestors.length - 1];
+
+          if (
+            !typeDef ||
+            Array.isArray(typeDef) ||
+            (typeDef as ASTNode).kind !== "InterfaceTypeDefinition"
+          ) {
+            throw new GraphQLError(
+              "Directive @legacyInterface_DO_NOT_USE must be defined on Interface type",
+              [node],
+            );
+          }
+          const typeName = (typeDef as InterfaceTypeDefinitionNode).name.value;
+          context.addLegacyInterface(typeName);
         }
       },
     },
@@ -524,6 +552,7 @@ export function extractContext(
           name: node.name.value,
           interfaces:
             node.interfaces?.map(({ name: { value } }) => value) || [],
+          fields: node.fields?.map((field) => processField(field)) || [],
           node,
         });
       },
@@ -684,6 +713,7 @@ export interface InterfaceType {
   kind: "INTERFACE";
   name: string;
   interfaces: string[];
+  fields: Array<Field>;
 
   node: InterfaceTypeDefinitionNode;
 }

@@ -169,37 +169,83 @@ function createInterfaceTypeModel(
   const interfaces = type.interfaces.map((name) => {
     return context.getModelType(name, "MODELS").toExpression();
   });
+  const isLegacy = context.isLegacyInterface(type.name);
 
-  return factory.createInterfaceDeclaration(
-    undefined,
-    [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-    factory.createIdentifier(type.name),
-    undefined,
-    [
-      factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
-        ...extendTypes.map((type) =>
-          factory.createExpressionWithTypeArguments(
-            type.toExpression(),
-            undefined,
-          ),
-        ),
-        ...interfaces.map((interfaceExpression) =>
-          factory.createExpressionWithTypeArguments(
-            interfaceExpression,
-            undefined,
-          ),
-        ),
-      ]),
-    ],
-    [
+  if (isLegacy) {
+    const fields = type.fields.map(({ name, type: fieldType }) =>
       factory.createPropertySignature(
         [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
-        "__typename",
-        factory.createToken(ts.SyntaxKind.QuestionToken),
-        factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
+        factory.createIdentifier(name),
+        fieldType.kind !== "NonNullType"
+          ? factory.createToken(ts.SyntaxKind.QuestionToken)
+          : undefined,
+        context.getTypeReferenceFromTypeNode(fieldType, "MODELS"),
       ),
-    ],
-  );
+    );
+
+    return factory.createInterfaceDeclaration(
+      undefined,
+      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+      factory.createIdentifier(type.name),
+      undefined,
+      [
+        factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+          ...extendTypes.map((type) =>
+            factory.createExpressionWithTypeArguments(
+              type.toExpression(),
+              undefined,
+            ),
+          ),
+          ...interfaces.map((interfaceExpression) =>
+            factory.createExpressionWithTypeArguments(
+              interfaceExpression,
+              undefined,
+            ),
+          ),
+        ]),
+      ],
+      [
+        factory.createPropertySignature(
+          [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+          "__typename",
+          factory.createToken(ts.SyntaxKind.QuestionToken),
+          factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
+        ),
+        ...fields,
+      ],
+    );
+  } else {
+    return factory.createInterfaceDeclaration(
+      undefined,
+      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+      factory.createIdentifier(type.name),
+      undefined,
+      [
+        factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+          ...extendTypes.map((type) =>
+            factory.createExpressionWithTypeArguments(
+              type.toExpression(),
+              undefined,
+            ),
+          ),
+          ...interfaces.map((interfaceExpression) =>
+            factory.createExpressionWithTypeArguments(
+              interfaceExpression,
+              undefined,
+            ),
+          ),
+        ]),
+      ],
+      [
+        factory.createPropertySignature(
+          [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+          "__typename",
+          factory.createToken(ts.SyntaxKind.QuestionToken),
+          factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
+        ),
+      ],
+    );
+  }
 }
 
 function createScalarModel(
