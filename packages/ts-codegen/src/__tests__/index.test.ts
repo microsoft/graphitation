@@ -329,6 +329,24 @@ describe(generateTS, () => {
         import * as Models from "./models.interface";
         import * as Inputs from "./inputs.interface";
         export * from "./inputs.interface";
+        export declare namespace Node {
+            export interface Resolvers {
+                readonly __resolveType?: __resolveType;
+            }
+            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        export declare namespace Persona {
+            export interface Resolvers {
+                readonly __resolveType?: __resolveType;
+            }
+            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        export declare namespace User {
+            export interface Resolvers {
+                readonly __resolveType?: __resolveType;
+            }
+            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
         export declare namespace Admin {
             export interface Resolvers {
                 readonly id?: id;
@@ -386,6 +404,12 @@ describe(generateTS, () => {
         import * as Models from "./models.interface";
         import * as Inputs from "./inputs.interface";
         export * from "./inputs.interface";
+        export declare namespace Node {
+            export interface Resolvers {
+                readonly __resolveType?: __resolveType;
+            }
+            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
@@ -438,6 +462,12 @@ describe(generateTS, () => {
         import * as Models from "./models.interface";
         import * as Inputs from "./inputs.interface";
         export * from "./inputs.interface";
+        export declare namespace Node {
+            export interface Resolvers {
+                readonly __resolveType?: __resolveType;
+            }
+            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
@@ -959,6 +989,12 @@ describe(generateTS, () => {
       import * as Models from "./models.interface";
       import * as Inputs from "./inputs.interface";
       export * from "./inputs.interface";
+      export declare namespace Person {
+          export interface Resolvers {
+              readonly __resolveType?: __resolveType;
+          }
+          export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+      }
       export declare namespace User {
           export interface Resolvers {
               readonly id?: id;
@@ -1471,6 +1507,12 @@ describe(generateTS, () => {
       import * as Models from "./models.interface";
       import * as Inputs from "./inputs.interface";
       export * from "./inputs.interface";
+      export declare namespace Node {
+          export interface Resolvers {
+              readonly __resolveType?: __resolveType;
+          }
+          export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+      }
       export declare namespace Query {
           export interface Resolvers {
               readonly node?: node;
@@ -1538,6 +1580,12 @@ describe(generateTS, () => {
       import * as Models from "./models.interface";
       import * as Inputs from "./inputs.interface";
       export * from "./inputs.interface";
+      export declare namespace Node {
+          export interface Resolvers {
+              readonly __resolveType?: __resolveType;
+          }
+          export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+      }
       export declare namespace User {
           export interface Resolvers {
               readonly id?: id;
