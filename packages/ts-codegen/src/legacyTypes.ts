@@ -61,6 +61,16 @@ export function generateLegacyTypes(
   );
 
   statements.push(
+    factory.createExportDeclaration(
+      undefined,
+      undefined,
+      false,
+      undefined,
+      factory.createStringLiteral("./inputs.interface"),
+    ),
+  );
+
+  statements.push(
     factory.createInterfaceDeclaration(
       undefined,
       [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
