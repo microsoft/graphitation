@@ -88,7 +88,12 @@ export function createInterfaceResolveType(
     }),
     factory.createTypeReferenceNode(
       factory.createIdentifier("PromiseOrValue"),
-      [factory.createTypeReferenceNode("string")],
+      [
+        factory.createUnionTypeNode([
+          factory.createTypeReferenceNode("string"),
+          factory.createLiteralTypeNode(factory.createNull()),
+        ]),
+      ],
     ),
   );
 }
