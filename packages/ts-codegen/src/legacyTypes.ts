@@ -56,6 +56,16 @@ export function generateLegacyTypes(
       undefined,
       false,
       undefined,
+      factory.createStringLiteral("./models.interface"),
+    ),
+  );
+
+  statements.push(
+    factory.createExportDeclaration(
+      undefined,
+      undefined,
+      false,
+      undefined,
       factory.createStringLiteral("./enums.interface"),
     ),
   );
