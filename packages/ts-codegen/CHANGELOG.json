@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Mon, 20 Feb 2023 11:17:56 GMT",
+      "tag": "@graphitation/ts-codegen_v2.0.0-beta.7",
+      "version": "2.0.0-beta.7",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "8cd89a61b17b24943c0174447f4bf226e864c4de",
+            "comment": "Models and Inputs exported in LegacyModels"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 17 Feb 2023 23:47:12 GMT",
       "tag": "@graphitation/ts-codegen_v2.0.0-beta.6",
       "version": "2.0.0-beta.6",

@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-This log was last generated on Fri, 17 Feb 2023 23:47:12 GMT and should not be manually modified.
+This log was last generated on Mon, 20 Feb 2023 11:17:56 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.1.0-6
+
+Mon, 20 Feb 2023 11:17:56 GMT
+
+### Changes
+
+- Models and Inputs exported in LegacyModels (jakubvejr@microsoft.com)
+- Bump @graphitation/ts-codegen to v2.0.0-beta.7
 
 ## 1.1.0
 

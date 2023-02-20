@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "Models and Inputs exported in LegacyModels",
-  "packageName": "@graphitation/ts-codegen",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "prerelease"
-}
