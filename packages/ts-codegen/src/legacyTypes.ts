@@ -1,6 +1,6 @@
 import ts, { factory } from "typescript";
 import { DocumentNode } from "graphql";
-import { TsCodegenContext } from "./context";
+import { BUILT_IN_SCALARS, ScalarType, TsCodegenContext } from "./context";
 
 const ROOT_OPERATIONS = ["Query", "Mutation", "Subscription"];
 const LEGACY_TYPES = [
@@ -77,6 +77,42 @@ export function generateLegacyTypes(
       false,
       undefined,
       factory.createStringLiteral("./inputs.interface"),
+    ),
+  );
+
+  statements.push(
+    factory.createInterfaceDeclaration(
+      undefined,
+      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+      factory.createIdentifier("Scalars"),
+      undefined,
+      undefined,
+      Object.keys(BUILT_IN_SCALARS)
+        .map((name: keyof typeof BUILT_IN_SCALARS) =>
+          factory.createPropertySignature(
+            [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+            name,
+            undefined,
+            factory.createTypeReferenceNode(BUILT_IN_SCALARS[name]),
+          ),
+        )
+        .concat(
+          allTypes
+            .filter((type) => type.kind === "SCALAR")
+            .map((type) =>
+              factory.createPropertySignature(
+                [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+                type.name,
+                undefined,
+                factory.createTypeReferenceNode(
+                  factory.createQualifiedName(
+                    factory.createIdentifier("Models"),
+                    type.name,
+                  ),
+                ),
+              ),
+            ),
+        ),
     ),
   );
 
