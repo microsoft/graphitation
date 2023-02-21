@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "legacy Scalars fixed",
-  "packageName": "@graphitation/cli",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "prerelease"
-}

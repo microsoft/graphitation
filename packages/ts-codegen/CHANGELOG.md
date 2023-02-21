@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-This log was last generated on Tue, 21 Feb 2023 10:16:35 GMT and should not be manually modified.
+This log was last generated on Tue, 21 Feb 2023 14:58:31 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.0.0-beta.9
+
+Tue, 21 Feb 2023 14:58:31 GMT
+
+### Changes
+
+- legacy Scalars fixed (jakubvejr@microsoft.com)
 
 ## 2.0.0-beta.8
 

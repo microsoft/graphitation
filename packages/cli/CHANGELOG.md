@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-This log was last generated on Tue, 21 Feb 2023 10:16:35 GMT and should not be manually modified.
+This log was last generated on Tue, 21 Feb 2023 14:58:31 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.1.0-beta.8
+
+Tue, 21 Feb 2023 14:58:31 GMT
+
+### Changes
+
+- legacy Scalars fixed (jakubvejr@microsoft.com)
+- Bump @graphitation/ts-codegen to v2.0.0-beta.9
 
 ## 1.1.0-beta.7
 
