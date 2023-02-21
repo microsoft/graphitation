@@ -2,6 +2,27 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Tue, 21 Feb 2023 10:16:35 GMT",
+      "tag": "@graphitation/cli_v1.1.0-beta.7",
+      "version": "1.1.0-beta.7",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "394f1697e6afdd841d62494f18d980aa06a02eb0",
+            "comment": "Legacy interfaces fix"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.0.0-beta.8",
+            "commit": "394f1697e6afdd841d62494f18d980aa06a02eb0"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 20 Feb 2023 11:17:56 GMT",
       "tag": "@graphitation/cli_v1.1.0-6",
       "version": "1.1.0-6",
