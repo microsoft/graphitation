@@ -333,19 +333,19 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
         export declare namespace Persona {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
         export declare namespace User {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
         export declare namespace Admin {
             export interface Resolvers {
@@ -408,7 +408,7 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
         export declare namespace User {
             export interface Resolvers {
@@ -466,7 +466,7 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
         export declare namespace User {
             export interface Resolvers {
@@ -993,7 +993,7 @@ describe(generateTS, () => {
           export interface Resolvers {
               readonly __resolveType?: __resolveType;
           }
-          export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
       }
       export declare namespace User {
           export interface Resolvers {
@@ -1511,7 +1511,7 @@ describe(generateTS, () => {
           export interface Resolvers {
               readonly __resolveType?: __resolveType;
           }
-          export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
       }
       export declare namespace Query {
           export interface Resolvers {
@@ -1584,7 +1584,7 @@ describe(generateTS, () => {
           export interface Resolvers {
               readonly __resolveType?: __resolveType;
           }
-          export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
       }
       export declare namespace User {
           export interface Resolvers {
