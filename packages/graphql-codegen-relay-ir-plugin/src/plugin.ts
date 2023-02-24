@@ -1,4 +1,4 @@
-import { printSchema, Source } from "graphql";
+import { concatAST, printSchema, Source, visit as visitAST } from "graphql";
 import { create as createRelaySchema } from "relay-compiler/lib/core/Schema";
 import { transform as transformToIR } from "relay-compiler/lib/core/RelayParser";
 import * as IRTransformer from "relay-compiler/lib/core/IRTransformer";
@@ -14,7 +14,12 @@ import * as RelayIRTransforms from "relay-compiler/lib/core/RelayIRTransforms";
 
 import { PluginFunction, Types } from "@graphql-codegen/plugin-helpers";
 import type { RawClientSideBasePluginConfig } from "@graphql-codegen/visitor-plugin-common";
-import type { FragmentDefinitionNode, OperationDefinitionNode } from "graphql";
+import type {
+  ASTNode,
+  DocumentNode,
+  FragmentDefinitionNode,
+  OperationDefinitionNode,
+} from "graphql";
 import type { Schema } from "relay-compiler/lib/core/Schema";
 import type {
   GeneratedNode,
@@ -36,11 +41,15 @@ const PluginIRTransforms = {
     InlineFragmentsTransform.transform,
     ...RelayIRTransforms.fragmentTransforms,
   ],
-  codegenTransforms: RelayIRTransforms.codegenTransforms.map((transform) =>
-    transform.name === "InlineFragmentsTransform"
-      ? InlineFragmentsTransform.transform
-      : transform,
-  ),
+  codegenTransforms: RelayIRTransforms.codegenTransforms
+    .filter((transform) => transform.name !== "generateTypeNameTransform")
+    .map((transform) =>
+      // FIXME: This isn't actually removing the transform, but unsure what the
+      //        ramifications are of removing this now.
+      transform.name === "InlineFragmentsTransform"
+        ? InlineFragmentsTransform.transform
+        : transform,
+    ),
 };
 
 /**
@@ -177,7 +186,8 @@ function collectIRNodes(
 
   documents.forEach((doc) => {
     invariant(doc.document, "Expected document to be parsed");
-    (doc.document.definitions as Array<
+    const docWithTypenames = addTypename(doc.document);
+    (docWithTypenames.definitions as Array<
       OperationDefinitionNode | FragmentDefinitionNode
     >).forEach((definition) => {
       if (definition.kind === "OperationDefinition") {
@@ -213,4 +223,51 @@ function addNode(
     nodes.get(name)?.loc?.source?.name || "unknown",
   );
   nodes.set(name, definition);
+}
+
+// Doing this on the graphql-js AST for now, because we do the same in our
+// patched version of @graphql-codegen/typed-document-node and this will keep
+// it in sync more easily.
+function addTypename(document: DocumentNode): DocumentNode {
+  return visitAST(document, {
+    SelectionSet: {
+      leave(node, _, parent) {
+        if (
+          parent &&
+          !Array.isArray(parent) &&
+          (parent as ASTNode).kind === "OperationDefinition"
+        ) {
+          return;
+        }
+        const { selections } = node;
+        if (!selections) {
+          return;
+        }
+        // Check if there already is an unaliased __typename selection
+        if (
+          selections.some(
+            (selection) =>
+              selection.kind === "Field" &&
+              selection.name.value === "__typename" &&
+              selection.alias === undefined,
+          )
+        ) {
+          return;
+        }
+        return {
+          ...node,
+          selections: [
+            ...selections,
+            {
+              kind: "Field",
+              name: {
+                kind: "Name",
+                value: "__typename",
+              },
+            },
+          ],
+        };
+      },
+    },
+  });
 }
