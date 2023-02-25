@@ -9,7 +9,7 @@ description: What was GraphQL designed to solve for and how to leverage that?
 
 ## Flux
 
-To understand how Facebook designed GraphQL and React to work together, we must first go back to the origins of React and learn about [Flux](https://facebook.github.io/flux/docs/in-depth-overview/). Flux is the application architecture that Facebook uses for building client-side web applications. It complements React's composable view components by utilizing a unidirectional data flow, making interactions easier to reason about.
+To understand how Facebook designed GraphQL and React to work together, we must first go back to the origins of data flow in React and learn about [Flux](https://facebook.github.io/flux/docs/in-depth-overview/). Flux is the application architecture that Facebook uses for building client-side web applications. It complements React's composable view components by utilizing a unidirectional data flow, making interactions easier to reason about.
 
 ![](./slidedeck/Slide2.png)
 
