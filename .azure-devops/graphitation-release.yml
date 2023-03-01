@@ -2,7 +2,6 @@ pr: none
 trigger:
   - main
   - apollo-fragment-store-watching
-  - mnovikov/codegen-hacking
 
 variables:
   - group: InfoSec-SecurityResults
