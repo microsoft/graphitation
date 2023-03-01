@@ -700,7 +700,7 @@ describe(generateTS, () => {
       `);
     });
 
-    test("Union", () => {
+    test("Union and interface types", () => {
       const { resolvers, models } = runGenerateTest(graphql`
         type Customer {
           id: ID!
@@ -710,10 +710,15 @@ describe(generateTS, () => {
           id: ID!
         }
 
+        interface Node {
+          id: ID!
+        }
+
         union User = Customer | Admin
 
         extend type Query {
           userById(id: ID!): User
+          node(id: ID!): Node
         }
       `);
       expect(models).toMatchInlineSnapshot(`
@@ -730,6 +735,9 @@ describe(generateTS, () => {
         export interface Admin extends BaseModel {
             readonly __typename?: "Admin";
             readonly id: string;
+        }
+        export interface Node extends BaseModel {
+            readonly __typename?: string;
         }
         export type User = Customer | Admin;
         "
@@ -752,6 +760,12 @@ describe(generateTS, () => {
             }
             export type id = (model: Models.Admin, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
+        export declare namespace Node {
+            export interface Resolvers {
+                readonly __resolveType?: __resolveType;
+            }
+            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
+        }
         export declare namespace User {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
@@ -761,10 +775,14 @@ describe(generateTS, () => {
         export declare namespace Query {
             export interface Resolvers {
                 readonly userById?: userById;
+                readonly node?: node;
             }
             export type userById = (model: unknown, args: {
                 readonly id: string;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
+            export type node = (model: unknown, args: {
+                readonly id: string;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Node | null | undefined>;
         }
         "
       `);
