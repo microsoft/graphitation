@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "New version of ts-codegen and a new flag",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
