@@ -16,10 +16,10 @@
     "lint": "lage lint",
     "lage": "lage",
     "ci": "yarn lage build types test lint && yarn checkchange",
-    "beachball": "beachball -b origin/mnovikov/codegen-hacking",
+    "beachball": "beachball -b origin/main",
     "change": "yarn beachball change",
     "checkchange": "yarn beachball check",
-    "release": "yarn beachball publish --tag beta",
+    "release": "yarn beachball publish",
     "postinstall": "patch-package"
   },
   "devDependencies": {
