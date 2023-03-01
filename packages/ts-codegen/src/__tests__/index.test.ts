@@ -1,4 +1,4 @@
-import ts from "typescript";
+import ts, { isExpressionWithTypeArguments } from "typescript";
 import { parse } from "graphql";
 import { blankGraphQLTag as graphql } from "../utilities";
 import { generateTS } from "..";
@@ -6,7 +6,7 @@ import { generateTS } from "..";
 describe(generateTS, () => {
   describe("Tests basic syntax GraphQL syntax", () => {
     test("all possible nullable and non-nullable combinations", () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         extend schema @import(from: "@msteams/packages-test", defs: ["Avatar"]) 
         type Post @model(from: "./post-model.interface", tsType: "PostModel") {
           id: ID!
@@ -41,15 +41,20 @@ describe(generateTS, () => {
           optionalPost: Post
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
         "import type { Avatar } from "@msteams/packages-test";
         import type { PostModel as _Post } from "../post-model.interface";
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export interface Post extends BaseModel, _Post {
             readonly __typename?: "Post";
         }
@@ -143,7 +148,7 @@ describe(generateTS, () => {
       `);
     });
     test("Subscription", () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         type User {
           id: ID!
         }
@@ -152,13 +157,18 @@ describe(generateTS, () => {
           userUpdated: User!
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
-        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
@@ -194,7 +204,7 @@ describe(generateTS, () => {
       `);
     });
     test("Subscription with model", () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers } = runGenerateTest(graphql`
         type User @model(from: "./user-model.interface", tsType: "UserModel") {
           id: ID!
         }
@@ -232,7 +242,7 @@ describe(generateTS, () => {
       `);
     });
     test("extends by exteding a type with pre-generated BaseModel type", () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         type User {
           id: ID!
         }
@@ -241,13 +251,18 @@ describe(generateTS, () => {
           users: [User!]!
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
-        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
@@ -276,7 +291,7 @@ describe(generateTS, () => {
       `);
     });
     test("case when interface implements multiple interfaces", () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         interface Node {
           id: ID!
         }
@@ -300,13 +315,18 @@ describe(generateTS, () => {
           admins: [Admin]
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
-        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export interface Node extends BaseModel {
             readonly __typename?: string;
         }
@@ -367,7 +387,7 @@ describe(generateTS, () => {
       `);
     });
     test("implements", () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         interface Node {
           id: ID!
         }
@@ -381,13 +401,18 @@ describe(generateTS, () => {
           users: [User]
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
-        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export interface Node extends BaseModel {
             readonly __typename?: string;
         }
@@ -429,7 +454,7 @@ describe(generateTS, () => {
     });
 
     test("if a type is not used it still need to be imported in resolvers", () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         interface Node {
           id: ID!
         }
@@ -439,13 +464,18 @@ describe(generateTS, () => {
           name: String!
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
-        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export interface Node extends BaseModel {
             readonly __typename?: string;
         }
@@ -481,7 +511,7 @@ describe(generateTS, () => {
     });
 
     test("Input", () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         type User {
           id: ID!
         }
@@ -494,13 +524,21 @@ describe(generateTS, () => {
           userById(params: UserParamsInput): User
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        export type UserParamsInput = {
+            readonly name?: string | null;
+        };
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
-        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
@@ -532,7 +570,7 @@ describe(generateTS, () => {
     });
 
     test("Input containing Enum", () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         type User {
           id: ID!
         }
@@ -551,13 +589,28 @@ describe(generateTS, () => {
           userById(params: UserParamsInput): User
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`
+        "export enum Rank {
+            User = "User",
+            Admin = "Admin"
+        }
+        "
+      `);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        export type UserParamsInput = {
+            readonly name?: string | null;
+            readonly rank?: Models.Rank | null;
+        };
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
-        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
@@ -589,7 +642,7 @@ describe(generateTS, () => {
     });
 
     test("Two nested Inputs", () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         type User {
           id: ID!
         }
@@ -607,13 +660,25 @@ describe(generateTS, () => {
           userById(params: UserParamsInput): User
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        export type PresenceInput = {
+            readonly type: string;
+        };
+        export type UserParamsInput = {
+            readonly name: string;
+            readonly presence?: PresenceInput | null;
+        };
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
-        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
@@ -645,7 +710,7 @@ describe(generateTS, () => {
     });
 
     test("Enum", () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         enum PresenceAvailability {
           Available
           Away
@@ -660,13 +725,25 @@ describe(generateTS, () => {
           userById(id: ID!): User
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`
+        "export enum PresenceAvailability {
+            Available = "Available",
+            Away = "Away",
+            Offline = "Offline"
+        }
+        "
+      `);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
-        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
@@ -701,7 +778,7 @@ describe(generateTS, () => {
     });
 
     test("Union and interface types", () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         type Customer {
           id: ID!
         }
@@ -721,13 +798,18 @@ describe(generateTS, () => {
           node(id: ID!): Node
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
-        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export interface Customer extends BaseModel {
             readonly __typename?: "Customer";
             readonly id: string;
@@ -790,7 +872,7 @@ describe(generateTS, () => {
   });
   describe("Models", () => {
     it('should import the model and use it in User type"', () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         type User @model(from: "./user-model.interface", tsType: "UserModel") {
           id: ID!
         }
@@ -799,14 +881,19 @@ describe(generateTS, () => {
           userById(id: ID!): User
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
         "import type { UserModel as _User } from "../user-model.interface";
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export interface User extends BaseModel, _User {
             readonly __typename?: "User";
         }
@@ -839,7 +926,7 @@ describe(generateTS, () => {
 
   describe("Import", () => {
     it("shouldn't include Query, Mutation and Subscription in the models", () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         type Query {
           allTodos: [Todo!]!
         }
@@ -857,13 +944,18 @@ describe(generateTS, () => {
           name: String!
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
-        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export interface Todo extends BaseModel {
             readonly __typename?: "Todo";
             readonly id: string;
@@ -915,7 +1007,7 @@ describe(generateTS, () => {
     });
 
     it("should import Avatar type and use it in User type", () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         extend schema @import(from: "@msteams/packages-test", defs: ["Avatar"])
         type User {
           id: ID!
@@ -926,14 +1018,19 @@ describe(generateTS, () => {
           userById(id: ID!): User
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
         "import type { Avatar } from "@msteams/packages-test";
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
@@ -969,7 +1066,7 @@ describe(generateTS, () => {
   });
 
   it("imports an entity, which is used to implement interface and returned by resolver", () => {
-    const { resolvers, models } = runGenerateTest(graphql`
+    const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
       extend schema @import(from: "@msteams/packages-test", defs: ["Entity"])
       
       interface Person implements Entity {
@@ -984,14 +1081,19 @@ describe(generateTS, () => {
         userById(id: ID!): Person
       }
     `);
+    expect(enums).toMatchInlineSnapshot(`""`);
+    expect(inputs).toMatchInlineSnapshot(`
+      "import * as Models from "./models.interface";
+      "
+    `);
     expect(models).toMatchInlineSnapshot(`
       "import type { Entity } from "@msteams/packages-test";
+      import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
       }
-      import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
       export interface Person extends BaseModel, Entity {
           readonly __typename?: string;
       }
@@ -1032,7 +1134,7 @@ describe(generateTS, () => {
   });
 
   it("imports an entity, which is used in a type", () => {
-    const { resolvers, models } = runGenerateTest(graphql`
+    const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
       extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
                     @import(from: "@msteams/packages-rank", defs: ["Rank"])
 
@@ -1045,14 +1147,19 @@ describe(generateTS, () => {
         userById(id: ID!): User
       }
     `);
+    expect(enums).toMatchInlineSnapshot(`""`);
+    expect(inputs).toMatchInlineSnapshot(`
+      "import * as Models from "./models.interface";
+      "
+    `);
     expect(models).toMatchInlineSnapshot(`
       "import type { Rank } from "@msteams/packages-rank";
+      import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
       }
-      import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
       export interface User extends BaseModel {
           readonly __typename?: "User";
           readonly id: string;
@@ -1087,7 +1194,7 @@ describe(generateTS, () => {
   });
 
   it("works when an operation has scalar, input and Enum as parameters", () => {
-    const { resolvers, models } = runGenerateTest(graphql`
+    const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
       extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
                     @import(from: "@msteams/packages-rank", defs: ["Rank"])
 
@@ -1107,13 +1214,28 @@ describe(generateTS, () => {
         isUser(userParam: UserParam!, userType: UserType!, dateTime: DateTime!): Boolean
       }
     `);
+    expect(enums).toMatchInlineSnapshot(`
+      "export enum UserType {
+          Admin = "Admin",
+          User = "User"
+      }
+      "
+    `);
+    expect(inputs).toMatchInlineSnapshot(`
+      "import * as Models from "./models.interface";
+      export type UserParam = {
+          readonly id: string;
+          readonly rank: Rank;
+      };
+      "
+    `);
     expect(models).toMatchInlineSnapshot(`
-      "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      "import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
       }
-      import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
       export type DateTime = unknown;
       "
     `);
@@ -1138,7 +1260,7 @@ describe(generateTS, () => {
   });
 
   it("imports an entity, which is used in an input", () => {
-    const { resolvers, models } = runGenerateTest(graphql`
+    const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
       extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
                     @import(from: "@msteams/packages-rank", defs: ["Rank"])
 
@@ -1156,14 +1278,23 @@ describe(generateTS, () => {
         userById(params: UserInput): User
       }
     `);
+    expect(enums).toMatchInlineSnapshot(`""`);
+    expect(inputs).toMatchInlineSnapshot(`
+      "import * as Models from "./models.interface";
+      export type UserInput = {
+          readonly id: string;
+          readonly rank: Rank;
+      };
+      "
+    `);
     expect(models).toMatchInlineSnapshot(`
       "import type { Rank } from "@msteams/packages-rank";
+      import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
       }
-      import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
       export interface User extends BaseModel {
           readonly __typename?: "User";
           readonly id: string;
@@ -1198,7 +1329,7 @@ describe(generateTS, () => {
   });
 
   it("imported Rank shouldn't be imported in the model, because it's used in a type, which has the model directive", () => {
-    const { resolvers, models } = runGenerateTest(graphql`
+    const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
       extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
                     @import(from: "@msteams/packages-rank", defs: ["Rank"])
 
@@ -1211,14 +1342,19 @@ describe(generateTS, () => {
         userById(id: ID!): User
       }
     `);
+    expect(enums).toMatchInlineSnapshot(`""`);
+    expect(inputs).toMatchInlineSnapshot(`
+      "import * as Models from "./models.interface";
+      "
+    `);
     expect(models).toMatchInlineSnapshot(`
       "import type { User as _User } from "@msteams/custom-user";
+      import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
       }
-      import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
       export interface User extends BaseModel, _User {
           readonly __typename?: "User";
       }
@@ -1251,7 +1387,7 @@ describe(generateTS, () => {
   });
 
   it("imports an entity, which is used in a nested input", () => {
-    const { resolvers, models } = runGenerateTest(graphql`
+    const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
       extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
                     @import(from: "@msteams/packages-rank", defs: ["Rank"])
 
@@ -1273,14 +1409,26 @@ describe(generateTS, () => {
         userById(params: UserParams): User
       }
     `);
+    expect(enums).toMatchInlineSnapshot(`""`);
+    expect(inputs).toMatchInlineSnapshot(`
+      "import * as Models from "./models.interface";
+      export type RankParams = {
+          readonly rank: Rank;
+      };
+      export type UserParams = {
+          readonly id: string;
+          readonly rank: RankParams;
+      };
+      "
+    `);
     expect(models).toMatchInlineSnapshot(`
       "import type { Rank } from "@msteams/packages-rank";
+      import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
       }
-      import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
       export interface User extends BaseModel {
           readonly __typename?: "User";
           readonly id: string;
@@ -1316,7 +1464,7 @@ describe(generateTS, () => {
 
   describe("Scalars", () => {
     it('expects custom scalars "DateTime" to be "string"', () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         scalar DateTime @model(tsType: "string")
 
         type User {
@@ -1328,13 +1476,18 @@ describe(generateTS, () => {
           userById(id: ID!): User
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
-        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export type DateTime = string;
         export interface User extends BaseModel {
             readonly __typename?: "User";
@@ -1369,7 +1522,7 @@ describe(generateTS, () => {
       `);
     });
     it('expects custom scalars "DateTime" to be model', () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         scalar DateTime
           @model(tsType: "DateTimeModel", from: "@msteams/custom-scalars")
 
@@ -1382,14 +1535,19 @@ describe(generateTS, () => {
           userById(id: ID!): User
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
         "import type { DateTimeModel as _DateTime } from "@msteams/custom-scalars";
+        import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export type DateTime = _DateTime;
         export interface User extends BaseModel {
             readonly __typename?: "User";
@@ -1424,7 +1582,7 @@ describe(generateTS, () => {
       `);
     });
     it("expects built-in scalars to not be generated in models and typescript types used directly in resolvers", () => {
-      const { resolvers, models } = runGenerateTest(graphql`
+      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         type User {
           id: ID!
           name: String!
@@ -1443,13 +1601,18 @@ describe(generateTS, () => {
           ): User!
         }
       `);
+      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(inputs).toMatchInlineSnapshot(`
+        "import * as Models from "./models.interface";
+        "
+      `);
       expect(models).toMatchInlineSnapshot(`
-        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
@@ -1498,7 +1661,7 @@ describe(generateTS, () => {
   });
 
   it("generateTS without ContextName and ContextImport", () => {
-    const { models, resolvers } = runGenerateTest(graphql`
+    const { models, resolvers, enums, inputs } = runGenerateTest(graphql`
       interface Node {
         id: ID!
       }
@@ -1507,13 +1670,18 @@ describe(generateTS, () => {
         node(id: ID!): Node!
       }
     `);
+    expect(enums).toMatchInlineSnapshot(`""`);
+    expect(inputs).toMatchInlineSnapshot(`
+      "import * as Models from "./models.interface";
+      "
+    `);
     expect(models).toMatchInlineSnapshot(`
-      "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      "import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
       }
-      import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
       export interface Node extends BaseModel {
           readonly __typename?: string;
       }
@@ -1544,7 +1712,7 @@ describe(generateTS, () => {
   });
 
   it("generateTS with legacy compat mode", () => {
-    const { models, resolvers, legacyTypes } = runGenerateTest(
+    const { models, resolvers, legacyTypes, enums, inputs } = runGenerateTest(
       graphql`
         interface Node {
           id: ID!
@@ -1571,13 +1739,24 @@ describe(generateTS, () => {
       `,
       { legacyCompat: true },
     );
+    expect(enums).toMatchInlineSnapshot(`
+      "export enum Type {
+          type1 = "type1",
+          type2 = "type2"
+      }
+      "
+    `);
+    expect(inputs).toMatchInlineSnapshot(`
+      "import * as Models from "./models.interface";
+      "
+    `);
     expect(models).toMatchInlineSnapshot(`
-      "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      "import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
       }
-      import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
       export interface Node extends BaseModel {
           readonly __typename?: string;
       }
@@ -1634,6 +1813,165 @@ describe(generateTS, () => {
     `);
     expect(legacyTypes).toMatchInlineSnapshot(`
       "import * as Models from "./models.interface";
+      import * as Resolvers from "./resolvers.interface";
+      export * from "./models.interface";
+      export * from "./enums.interface";
+      export * from "./inputs.interface";
+      export interface Scalars {
+          readonly ID: string;
+          readonly Int: number;
+          readonly Float: number;
+          readonly String: string;
+          readonly Boolean: boolean;
+      }
+      export interface Types {
+          readonly Node: Models.Node;
+          readonly Type: Models.Type;
+          readonly User: Models.User;
+          readonly Admin: Models.Admin;
+          readonly Users: Models.Users;
+      }
+      "
+    `);
+  });
+
+  it("legacy interfaces", () => {
+    const { models, resolvers, enums, inputs } = runGenerateTest(
+      graphql`
+        interface MyInterface @legacyInterface_DO_NOT_USE {
+          id: ID!
+          field: String
+        }
+      `,
+      { legacyCompat: true },
+    );
+    expect(enums).toMatchInlineSnapshot(`""`);
+    expect(inputs).toMatchInlineSnapshot(`
+      "import * as Models from "./models.interface";
+      "
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          readonly __typename?: string;
+      }
+      export interface MyInterface extends BaseModel {
+          readonly __typename?: string;
+          readonly id: string;
+          readonly field?: string | null;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import * as Models from "./models.interface";
+      import * as Inputs from "./inputs.interface";
+      export * from "./inputs.interface";
+      export declare namespace MyInterface {
+          export interface Resolvers {
+              readonly __resolveType?: __resolveType;
+          }
+          export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
+      }
+      "
+    `);
+  });
+
+  it("handles reserved keywords", () => {
+    const { models, resolvers, enums, inputs } = runGenerateTest(
+      graphql`
+        input FooInput {
+          default: String!
+          number: Bar!
+        }
+
+        type Foo {
+          default: String!
+          number: Bar!
+        }
+      `,
+    );
+
+    expect(enums).toMatchInlineSnapshot(`""`);
+    expect(inputs).toMatchInlineSnapshot(`
+      "import * as Models from "./models.interface";
+      export type FooInput = {
+          readonly default: string;
+          readonly number: Bar;
+      };
+      "
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          readonly __typename?: string;
+      }
+      export interface Foo extends BaseModel {
+          readonly __typename?: "Foo";
+          readonly default: string;
+          readonly number: Bar;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import * as Models from "./models.interface";
+      import * as Inputs from "./inputs.interface";
+      export * from "./inputs.interface";
+      export declare namespace Foo {
+          export interface Resolvers {
+              readonly default?: _default;
+              readonly number?: _number;
+          }
+          export type _default = (model: Models.Foo, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type _number = (model: Models.Foo, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Bar>;
+      }
+      "
+    `);
+  });
+
+  it("legacy import enums", () => {
+    const { models, resolvers, enums, inputs } = runGenerateTest(
+      graphql`
+        enum Foo {
+          Bar
+          Braz
+        }
+      `,
+      {
+        enumsImport: "common-enums",
+      },
+    );
+
+    expect(enums).toMatchInlineSnapshot(`
+      "export { Foo } from "common-enums";
+      "
+    `);
+    expect(inputs).toMatchInlineSnapshot(`
+      "import * as Models from "./models.interface";
+      "
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          readonly __typename?: string;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import * as Models from "./models.interface";
+      import * as Inputs from "./inputs.interface";
+      export * from "./inputs.interface";
       "
     `);
   });
@@ -1647,8 +1985,11 @@ function runGenerateTest(
     contextImport?: string;
     contextName?: string;
     legacyCompat?: boolean;
+    enumsImport?: string;
   } = {},
 ): {
+  enums: string;
+  inputs: string;
   models: string;
   resolvers: string;
   legacyTypes?: string;
@@ -1666,12 +2007,18 @@ function runGenerateTest(
     ...options,
   };
   const document = parse(doc);
-  const [models, resolvers, enums, legacyTypes, legacyResolvers] = generateTS(
-    document,
-    fullOptions,
-  ).files;
+  const [
+    models,
+    resolvers,
+    enums,
+    inputs,
+    legacyTypes,
+    legacyResolvers,
+  ] = generateTS(document, fullOptions).files;
   const printer = ts.createPrinter();
   return {
+    enums: printer.printFile(enums),
+    inputs: printer.printFile(inputs),
     models: printer.printFile(models),
     resolvers: printer.printFile(resolvers),
     legacyTypes: legacyTypes && printer.printFile(legacyTypes),

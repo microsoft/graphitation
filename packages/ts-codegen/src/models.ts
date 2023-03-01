@@ -48,7 +48,7 @@ export function generateModels(
   );
 
   const source = factory.createSourceFile(
-    imports.concat(context.getDefaultTypes(), enumsStatements, statements),
+    imports.concat(enumsStatements, context.getDefaultTypes(), statements),
     factory.createToken(ts.SyntaxKind.EndOfFileToken),
     ts.NodeFlags.None,
   );
