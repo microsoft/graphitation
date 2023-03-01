@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Mon, 21 Nov 2022 14:12:11 GMT and should not be manually modified.
+This log was last generated on Wed, 01 Mar 2023 10:48:32 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.1.0
+
+Wed, 01 Mar 2023 10:48:32 GMT
+
+### Minor changes
+
+- New CLI (mnovikov@microsoft.com)
 
 ## 2.0.0
 

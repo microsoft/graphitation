@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Wed, 01 Mar 2023 10:48:32 GMT",
+      "tag": "@graphitation/supermassive_v2.1.0",
+      "version": "2.1.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "f1610c39336480ea1a631dba004a43e36caa99e0",
+            "comment": "New CLI"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 22 Nov 2022 18:01:10 GMT",
       "tag": "@graphitation/supermassive_v2.0.0",
       "version": "2.0.0",

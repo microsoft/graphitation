@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Minor changes",
-  "packageName": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

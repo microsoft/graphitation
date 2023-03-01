@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Wed, 01 Mar 2023 10:48:32 GMT",
+      "tag": "@graphitation/ts-codegen_v2.0.0",
+      "version": "2.0.0",
+      "comments": {
+        "major": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "f1610c39336480ea1a631dba004a43e36caa99e0",
+            "comment": "Big updates to ts-codegen, legacy mode, news names"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 21 Feb 2023 14:58:31 GMT",
       "tag": "@graphitation/ts-codegen_v2.0.0-beta.9",
       "version": "2.0.0-beta.9",

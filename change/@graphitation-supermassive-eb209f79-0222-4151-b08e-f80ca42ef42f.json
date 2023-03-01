@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "New CLI",
-  "packageName": "@graphitation/supermassive",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

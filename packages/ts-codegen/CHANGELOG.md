@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-This log was last generated on Tue, 21 Feb 2023 14:58:31 GMT and should not be manually modified.
+This log was last generated on Wed, 01 Mar 2023 10:48:32 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.0.0
+
+Wed, 01 Mar 2023 10:48:32 GMT
+
+### Major changes
+
+- Big updates to ts-codegen, legacy mode, news names (mnovikov@microsoft.com)
 
 ## 2.0.0-beta.9
 
