@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "New codegen and new option",
+  "packageName": "@graphitation/cli",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}

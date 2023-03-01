@@ -2,6 +2,111 @@
   "name": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
   "entries": [
     {
+      "date": "Tue, 21 Feb 2023 14:58:31 GMT",
+      "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v0.1.19-6",
+      "version": "0.1.19-6",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "comment": "Bump @graphitation/supermassive to v2.0.5-6",
+            "commit": "dabfc7695f4fa2bb47f98587a870d016d13feada"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 21 Feb 2023 10:16:35 GMT",
+      "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v0.1.19-5",
+      "version": "0.1.19-5",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "comment": "Bump @graphitation/supermassive to v2.0.5-5",
+            "commit": "394f1697e6afdd841d62494f18d980aa06a02eb0"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 20 Feb 2023 11:17:56 GMT",
+      "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v0.1.19-4",
+      "version": "0.1.19-4",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "comment": "Bump @graphitation/supermassive to v2.0.5-4",
+            "commit": "8cd89a61b17b24943c0174447f4bf226e864c4de"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Fri, 17 Feb 2023 23:47:12 GMT",
+      "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v0.1.19",
+      "version": "0.1.19",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "comment": "Bump @graphitation/supermassive to v2.0.5",
+            "commit": "f5745f083edb7f326e683acd7c38749bf9c7f7ac"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Fri, 17 Feb 2023 17:47:03 GMT",
+      "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v0.1.19-3",
+      "version": "0.1.19-3",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "comment": "Bump @graphitation/supermassive to v2.0.5-3",
+            "commit": "bf93b4e47d3959e8a7bca7cad7008ff03fec2290"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 16 Feb 2023 15:13:23 GMT",
+      "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v0.1.19-2",
+      "version": "0.1.19-2",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "comment": "Bump @graphitation/supermassive to v2.0.5-2",
+            "commit": "8d8e15197503aaf2ded6808fd8e2248f1d457681"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 09 Feb 2023 19:29:55 GMT",
+      "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v0.1.19-0",
+      "version": "0.1.19-0",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "comment": "Bump @graphitation/supermassive to v2.0.5-0",
+            "commit": "5be1fa2b15e0b426762fa26842f3958b5f9d0f9b"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 12 Dec 2022 15:37:15 GMT",
       "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v0.1.18",
       "version": "0.1.18",

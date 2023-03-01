@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "Big updates to ts-codegen, legacy mode, news names",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}

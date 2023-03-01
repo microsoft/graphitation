@@ -1,5 +1,6 @@
 import ts, { factory } from "typescript";
-import { ASTNode } from "graphql";
+import { ASTNode, Kind, TypeNode } from "graphql";
+import { InterfaceType, TsCodegenContext, UnionType } from "./context";
 
 const MODEL_SUFFIX = "Model";
 
@@ -18,20 +19,84 @@ export function getAncestorEntity(
   return ancestors[1][index];
 }
 
-export function createNullableType(node: ts.TypeNode): ts.UnionTypeNode {
-  return factory.createUnionTypeNode([
-    node,
-    factory.createLiteralTypeNode(factory.createNull()),
-  ]);
-}
-
 type ResolverParameterDefinition<T> = { name: string; type: T };
 type ResolverParametersDefinitions = {
   parent: ResolverParameterDefinition<ts.TypeReferenceNode>;
-  args: ResolverParameterDefinition<readonly ts.TypeElement[]>;
+  args?: ResolverParameterDefinition<readonly ts.TypeElement[]>;
   context: ResolverParameterDefinition<ts.TypeReferenceNode>;
   resolveInfo: ResolverParameterDefinition<ts.TypeReferenceNode>;
 };
+
+export function createUnionResolveType(
+  context: TsCodegenContext,
+  type: UnionType,
+): ts.FunctionTypeNode {
+  return factory.createFunctionTypeNode(
+    undefined,
+    getResolverParameters({
+      parent: {
+        name: "parent",
+        type: factory.createUnionTypeNode(
+          type.types.map((name) =>
+            context.getModelType(name, "RESOLVERS").toTypeReference(),
+          ),
+        ) as any,
+      },
+      context: {
+        name: "context",
+        type: context.getContextType().toTypeReference(),
+      },
+      resolveInfo: {
+        name: "info",
+        type: context.getResolveInfoType().toTypeReference(),
+      },
+    }),
+    factory.createTypeReferenceNode(
+      factory.createIdentifier("PromiseOrValue"),
+      [
+        factory.createUnionTypeNode(
+          type.types
+            .map((value) =>
+              factory.createLiteralTypeNode(factory.createStringLiteral(value)),
+            )
+            .concat(factory.createLiteralTypeNode(factory.createNull())),
+        ),
+      ],
+    ),
+  );
+}
+
+export function createInterfaceResolveType(
+  context: TsCodegenContext,
+  type: InterfaceType,
+): ts.FunctionTypeNode {
+  return factory.createFunctionTypeNode(
+    undefined,
+    getResolverParameters({
+      parent: {
+        name: "parent",
+        type: factory.createTypeReferenceNode("unknown"),
+      },
+      context: {
+        name: "context",
+        type: context.getContextType().toTypeReference(),
+      },
+      resolveInfo: {
+        name: "info",
+        type: context.getResolveInfoType().toTypeReference(),
+      },
+    }),
+    factory.createTypeReferenceNode(
+      factory.createIdentifier("PromiseOrValue"),
+      [
+        factory.createUnionTypeNode([
+          factory.createTypeReferenceNode("string"),
+          factory.createLiteralTypeNode(factory.createNull()),
+        ]),
+      ],
+    ),
+  );
+}
 
 export function getResolverParameters({
   parent,
@@ -48,14 +113,15 @@ export function getResolverParameters({
       undefined,
       parent.type,
     ),
-    factory.createParameterDeclaration(
-      undefined,
-      undefined,
-      undefined,
-      factory.createIdentifier(args.name),
-      undefined,
-      factory.createTypeLiteralNode(args.type),
-    ),
+    args &&
+      factory.createParameterDeclaration(
+        undefined,
+        undefined,
+        undefined,
+        factory.createIdentifier(args.name),
+        undefined,
+        factory.createTypeLiteralNode(args.type),
+      ),
     factory.createParameterDeclaration(
       undefined,
       undefined,
@@ -72,72 +138,355 @@ export function getResolverParameters({
       undefined,
       resolveInfo.type,
     ),
-  ];
+  ].filter(Boolean) as ts.ParameterDeclaration[];
+}
+
+export function getSubscriptionResolver(
+  typeNode: ts.TypeNode,
+  resolverParametersDefinitions: ResolverParametersDefinitions,
+  fieldName: string,
+): ts.TypeAliasDeclaration {
+  const fullEvent = factory.createTypeLiteralNode([
+    factory.createPropertySignature(
+      undefined,
+      factory.createIdentifier(fieldName),
+      undefined,
+      typeNode,
+    ),
+  ]);
+  const resolverParams = getResolverParameters(resolverParametersDefinitions);
+  return factory.createTypeAliasDeclaration(
+    undefined,
+    [factory.createToken(ts.SyntaxKind.ExportKeyword)],
+    factory.createIdentifier(fieldName),
+    [
+      factory.createTypeParameterDeclaration(
+        factory.createIdentifier("SubscribeResult"),
+        undefined,
+        factory.createKeywordTypeNode(ts.SyntaxKind.NeverKeyword),
+      ),
+    ],
+    factory.createUnionTypeNode([
+      factory.createTypeLiteralNode([
+        factory.createPropertySignature(
+          undefined,
+          factory.createIdentifier("subscribe"),
+          undefined,
+          factory.createFunctionTypeNode(
+            undefined,
+            resolverParams,
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("PromiseOrValue"),
+              [
+                factory.createTypeReferenceNode(
+                  factory.createIdentifier("AsyncIterator"),
+                  [
+                    factory.createTypeLiteralNode([
+                      factory.createPropertySignature(
+                        undefined,
+                        factory.createIdentifier(fieldName),
+                        undefined,
+                        typeNode,
+                      ),
+                    ]),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ]),
+      factory.createTypeLiteralNode([
+        factory.createPropertySignature(
+          undefined,
+          factory.createIdentifier("subscribe"),
+          undefined,
+          factory.createFunctionTypeNode(
+            undefined,
+            resolverParams,
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("PromiseOrValue"),
+              [
+                factory.createTypeReferenceNode(
+                  factory.createIdentifier("AsyncIterator"),
+                  [
+                    factory.createTypeReferenceNode(
+                      factory.createIdentifier("SubscribeResult"),
+                      undefined,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        factory.createPropertySignature(
+          undefined,
+          factory.createIdentifier("resolve"),
+          undefined,
+          factory.createFunctionTypeNode(
+            undefined,
+            getResolverParameters({
+              ...resolverParametersDefinitions,
+              parent: {
+                name: "subcribeResult",
+                type: factory.createTypeReferenceNode(
+                  factory.createIdentifier("SubscribeResult"),
+                  undefined,
+                ),
+              },
+            }),
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("PromiseOrValue"),
+              [typeNode],
+            ),
+          ),
+        ),
+      ]),
+    ]),
+  );
 }
 
 export function getResolverReturnType(
   typeNode: ts.TypeNode,
-  parentName: string,
   resolverParametersDefinitions: ResolverParametersDefinitions,
 ) {
-  if (parentName !== "Subscription") {
-    return factory.createFunctionTypeNode(
-      undefined,
-      getResolverParameters(resolverParametersDefinitions),
-      factory.createTypeReferenceNode(
-        factory.createIdentifier("PromiseOrValue"),
-        [typeNode],
-      ),
-    );
-  }
+  const resolverParams = getResolverParameters(resolverParametersDefinitions);
 
-  return factory.createUnionTypeNode([
-    factory.createTypeLiteralNode([
-      factory.createPropertySignature(
-        undefined,
-        factory.createIdentifier("subscribe"),
-        undefined,
-        factory.createFunctionTypeNode(
+  return factory.createFunctionTypeNode(
+    undefined,
+    resolverParams,
+    factory.createTypeReferenceNode(
+      factory.createIdentifier("PromiseOrValue"),
+      [typeNode],
+    ),
+  );
+}
+
+export function createNonNullableTemplate(): ts.Statement[] {
+  return [
+    factory.createTypeAliasDeclaration(
+      undefined,
+      undefined,
+      factory.createIdentifier("PickNullable"),
+      [
+        factory.createTypeParameterDeclaration(
+          factory.createIdentifier("T"),
           undefined,
-          getResolverParameters(resolverParametersDefinitions),
+          undefined,
+        ),
+      ],
+      factory.createMappedTypeNode(
+        undefined,
+        factory.createTypeParameterDeclaration(
+          factory.createIdentifier("P"),
+          factory.createTypeOperatorNode(
+            ts.SyntaxKind.KeyOfKeyword,
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("T"),
+              undefined,
+            ),
+          ),
+          undefined,
+        ),
+        factory.createConditionalTypeNode(
+          factory.createLiteralTypeNode(factory.createNull()),
+          factory.createIndexedAccessTypeNode(
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("T"),
+              undefined,
+            ),
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("P"),
+              undefined,
+            ),
+          ),
           factory.createTypeReferenceNode(
-            factory.createIdentifier("PromiseOrValue"),
-            [
+            factory.createIdentifier("P"),
+            undefined,
+          ),
+          factory.createKeywordTypeNode(ts.SyntaxKind.NeverKeyword),
+        ),
+        undefined,
+        factory.createIndexedAccessTypeNode(
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("T"),
+            undefined,
+          ),
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("P"),
+            undefined,
+          ),
+        ),
+      ),
+    ),
+    factory.createTypeAliasDeclaration(
+      undefined,
+      undefined,
+      factory.createIdentifier("PickNotNullable"),
+      [
+        factory.createTypeParameterDeclaration(
+          factory.createIdentifier("T"),
+          undefined,
+          undefined,
+        ),
+      ],
+      factory.createMappedTypeNode(
+        undefined,
+        factory.createTypeParameterDeclaration(
+          factory.createIdentifier("P"),
+          factory.createTypeOperatorNode(
+            ts.SyntaxKind.KeyOfKeyword,
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("T"),
+              undefined,
+            ),
+          ),
+          undefined,
+        ),
+        factory.createConditionalTypeNode(
+          factory.createLiteralTypeNode(factory.createNull()),
+          factory.createIndexedAccessTypeNode(
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("T"),
+              undefined,
+            ),
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("P"),
+              undefined,
+            ),
+          ),
+          factory.createKeywordTypeNode(ts.SyntaxKind.NeverKeyword),
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("P"),
+            undefined,
+          ),
+        ),
+        undefined,
+        factory.createIndexedAccessTypeNode(
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("T"),
+            undefined,
+          ),
+          factory.createTypeReferenceNode(
+            factory.createIdentifier("P"),
+            undefined,
+          ),
+        ),
+      ),
+    ),
+    factory.createTypeAliasDeclaration(
+      undefined,
+      undefined,
+      factory.createIdentifier("OptionalNullable"),
+      [
+        factory.createTypeParameterDeclaration(
+          factory.createIdentifier("T"),
+          undefined,
+          undefined,
+        ),
+      ],
+      factory.createIntersectionTypeNode([
+        factory.createMappedTypeNode(
+          undefined,
+          factory.createTypeParameterDeclaration(
+            factory.createIdentifier("K"),
+            factory.createTypeOperatorNode(
+              ts.SyntaxKind.KeyOfKeyword,
               factory.createTypeReferenceNode(
-                factory.createIdentifier("AsyncIterator"),
+                factory.createIdentifier("PickNullable"),
                 [
                   factory.createTypeReferenceNode(
-                    factory.createIdentifier("A"),
+                    factory.createIdentifier("T"),
+                    undefined,
                   ),
                 ],
               ),
-            ],
+            ),
+            undefined,
           ),
-        ),
-      ),
-      factory.createPropertySignature(
-        undefined,
-        factory.createIdentifier("resolve"),
-        undefined,
-        factory.createFunctionTypeNode(
           undefined,
-          getResolverParameters({
-            ...resolverParametersDefinitions,
-            parent: {
-              name: "parent",
-              type: factory.createTypeReferenceNode(
-                factory.createIdentifier("A"),
-              ),
-            },
-          }),
-          factory.createTypeReferenceNode(
-            factory.createIdentifier("PromiseOrValue"),
-            [typeNode],
+          factory.createToken(ts.SyntaxKind.QuestionToken),
+          factory.createIndexedAccessTypeNode(
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("PickNullable"),
+              [
+                factory.createTypeReferenceNode(
+                  factory.createIdentifier("T"),
+                  undefined,
+                ),
+              ],
+            ),
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("K"),
+              undefined,
+            ),
           ),
         ),
-      ),
+        factory.createMappedTypeNode(
+          undefined,
+          factory.createTypeParameterDeclaration(
+            factory.createIdentifier("K"),
+            factory.createTypeOperatorNode(
+              ts.SyntaxKind.KeyOfKeyword,
+              factory.createTypeReferenceNode(
+                factory.createIdentifier("PickNotNullable"),
+                [
+                  factory.createTypeReferenceNode(
+                    factory.createIdentifier("T"),
+                    undefined,
+                  ),
+                ],
+              ),
+            ),
+            undefined,
+          ),
+          undefined,
+          undefined,
+          factory.createIndexedAccessTypeNode(
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("PickNotNullable"),
+              [
+                factory.createTypeReferenceNode(
+                  factory.createIdentifier("T"),
+                  undefined,
+                ),
+              ],
+            ),
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("K"),
+              undefined,
+            ),
+          ),
+        ),
+      ]),
+    ),
+  ];
+}
+
+export function createListType(
+  node: ts.TypeNode,
+  alsoUndefined?: boolean,
+): ts.TypeNode {
+  return createNullableType(
+    factory.createTypeReferenceNode(factory.createIdentifier("ReadonlyArray"), [
+      node,
     ]),
-  ]);
+    alsoUndefined,
+  );
+}
+
+export function createNullableType(
+  node: ts.TypeNode,
+  alsoUndefined?: boolean,
+): ts.UnionTypeNode {
+  return factory.createUnionTypeNode(
+    [node, factory.createLiteralTypeNode(factory.createNull())].concat(
+      alsoUndefined
+        ? [factory.createKeywordTypeNode(ts.SyntaxKind.UndefinedKeyword)]
+        : [],
+    ),
+  );
 }
 
 export function createNonNullableType(node: ts.TypeNode): ts.TypeNode {

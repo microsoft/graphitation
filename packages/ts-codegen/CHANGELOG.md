@@ -1,8 +1,64 @@
 # Change Log - @graphitation/ts-codegen
 
-This log was last generated on Mon, 12 Dec 2022 15:37:15 GMT and should not be manually modified.
+This log was last generated on Tue, 21 Feb 2023 14:58:31 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.0.0-beta.9
+
+Tue, 21 Feb 2023 14:58:31 GMT
+
+### Changes
+
+- legacy Scalars fixed (jakubvejr@microsoft.com)
+
+## 2.0.0-beta.8
+
+Tue, 21 Feb 2023 10:16:35 GMT
+
+### Changes
+
+- Legacy interfaces fix (jakubvejr@microsoft.com)
+
+## 2.0.0-beta.7
+
+Mon, 20 Feb 2023 11:17:56 GMT
+
+### Changes
+
+- Models and Inputs exported in LegacyModels (jakubvejr@microsoft.com)
+
+## 2.0.0-beta.6
+
+Fri, 17 Feb 2023 23:47:12 GMT
+
+### Changes
+
+- [HOTFIX] models and legacyTypes import local enums (jakubvejr@microsoft.com)
+
+## 2.0.0-beta.5
+
+Fri, 17 Feb 2023 17:47:03 GMT
+
+### Changes
+
+- Enums re-exported in LegacyTypes (jakubvejr@microsoft.com)
+
+## 2.0.0-beta.4
+
+Thu, 16 Feb 2023 15:13:23 GMT
+
+### Changes
+
+- legacyTypes types export aliasing removed (jakubvejr@microsoft.com)
+
+## 2.0.0-beta.1
+
+Thu, 09 Feb 2023 19:29:55 GMT
+
+### Changes
+
+- Added compat mode + generator re-written (jakubvejr@microsoft.com)
 
 ## 1.0.2
 

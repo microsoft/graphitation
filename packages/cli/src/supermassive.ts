@@ -12,6 +12,8 @@ type GenerateInterfacesOptions = {
   outputDir?: string;
   contextImport?: string;
   contextName?: string;
+  enumsImport?: string;
+  legacy?: boolean;
 };
 
 const PREPEND_TO_INTERFACES = `/* eslint-disable */ \n// This file was automatically generated (by @graphitaiton/supermassive) and should not be edited.\n`;
@@ -41,6 +43,8 @@ export function supermassive(): Command {
       "from where to import context",
     )
     .option("-cn, --context-name [contextName]", "Context name")
+    .option("-ei, --enums-import [enumsImport]", "from where to import enums")
+    .option("-l, --legacy", "generate legacy types")
     .description("generate interfaces and models")
     .action(
       async (inputs: Array<string>, options: GenerateInterfacesOptions) => {
@@ -101,45 +105,33 @@ async function generateInterfaces(
     const content = await fs.readFile(fullPath, { encoding: "utf-8" });
     const document = parse(content);
 
-    const outputDir = path.join(
+    const outputPath = path.join(
       path.dirname(fullPath),
       options.outputDir ? options.outputDir : "__generated__",
     );
 
-    let result = generateTS(
-      document,
-      outputDir,
-      fullPath,
-      getContextPath(outputDir, options.contextImport) || null,
-      options.contextName,
-    );
+    let result = generateTS(document, {
+      outputPath,
+      documentPath: fullPath,
+      contextImport: getContextPath(outputPath, options.contextImport) || null,
+      contextName: options.contextName,
+      enumsImport: getContextPath(outputPath, options.enumsImport) || null,
+      legacyCompat: !!options.legacy,
+    });
 
-    await fs.mkdir(outputDir, { recursive: true });
+    await fs.mkdir(outputPath, { recursive: true });
 
     const printer = ts.createPrinter();
+    const outputs = result.files.map((file) =>
+      fs.writeFile(
+        path.join(outputPath, file.fileName),
+        PREPEND_TO_INTERFACES +
+          printer.printNode(ts.EmitHint.SourceFile, file, file),
+        { encoding: "utf-8" },
+      ),
+    );
 
-    await Promise.all([
-      fs.writeFile(
-        path.join(outputDir, "models.interface.ts"),
-        PREPEND_TO_INTERFACES +
-          printer.printNode(
-            ts.EmitHint.SourceFile,
-            result.models,
-            result.models,
-          ),
-        { encoding: "utf-8" },
-      ),
-      fs.writeFile(
-        path.join(outputDir, "resolvers.interface.ts"),
-        PREPEND_TO_INTERFACES +
-          printer.printNode(
-            ts.EmitHint.SourceFile,
-            result.resolvers,
-            result.resolvers,
-          ),
-        { encoding: "utf-8" },
-      ),
-    ]);
+    await Promise.all(outputs);
   }
 }
 

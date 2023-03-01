@@ -51,7 +51,7 @@ export function processModelDirective(
 
   return {
     typeName,
-    modelName: `_${addModelSuffix(typeName)}`,
+    modelName: `_${typeName}`,
     tsType: tsType.value,
     importName: from ? createVariableNameFromImport(from.value) : null,
     from: getRelativePath(from?.value, outputPath, documentPath),
