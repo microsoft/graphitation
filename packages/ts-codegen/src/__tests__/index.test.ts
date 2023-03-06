@@ -1975,6 +1975,55 @@ describe(generateTS, () => {
       "
     `);
   });
+
+  it("legacy no models", () => {
+    const { models, resolvers, enums, inputs } = runGenerateTest(
+      graphql`
+        scalar Foo @model(tsType: "string")
+
+        type Bar @model(tsType: "BarModel", from: "./bar_model.interface") {
+          id: ID!
+        }
+      `,
+      {
+        legacyNoModelsForObjects: true,
+      },
+    );
+
+    expect(enums).toMatchInlineSnapshot(`""`);
+    expect(inputs).toMatchInlineSnapshot(`
+      "import * as Models from "./models.interface";
+      "
+    `);
+    expect(models).toMatchInlineSnapshot(`
+      "import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          readonly __typename?: string;
+      }
+      export type Foo = string;
+      export interface Bar extends BaseModel {
+          readonly __typename?: "Bar";
+          readonly id: string;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import * as Models from "./models.interface";
+      import * as Inputs from "./inputs.interface";
+      export * from "./inputs.interface";
+      export declare namespace Bar {
+          export interface Resolvers {
+              readonly id?: id;
+          }
+          export type id = (model: Models.Bar, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+      }
+      "
+    `);
+  });
 });
 
 function runGenerateTest(
@@ -1986,6 +2035,7 @@ function runGenerateTest(
     contextName?: string;
     legacyCompat?: boolean;
     enumsImport?: string;
+    legacyNoModelsForObjects?: boolean;
   } = {},
 ): {
   enums: string;
@@ -1994,6 +2044,7 @@ function runGenerateTest(
   resolvers: string;
   legacyTypes?: string;
   legacyResolvers?: string;
+  legacyNoModelsForObjects?: boolean;
 } {
   const fullOptions: {
     outputPath: string;
@@ -2001,6 +2052,7 @@ function runGenerateTest(
     contextImport?: string | null;
     contextName?: string;
     legacyCompat?: boolean;
+    legacyNoModelsForObjects?: boolean;
   } = {
     outputPath: "__generated__",
     documentPath: "./typedef.graphql",

@@ -1,5 +1,4 @@
 import { DirectiveNode } from "graphql";
-import ts from "typescript";
 
 export type DefinitionImport = {
   from: string;
@@ -15,4 +14,5 @@ export type DefinitionModel = {
   from: string | null;
   importName: string | null;
   directive: DirectiveNode;
+  on: "ObjectTypeDefinition" | "ScalarTypeDefinition";
 };

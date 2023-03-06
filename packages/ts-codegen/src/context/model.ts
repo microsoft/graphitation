@@ -55,6 +55,9 @@ export function processModelDirective(
     tsType: tsType.value,
     importName: from ? createVariableNameFromImport(from.value) : null,
     from: getRelativePath(from?.value, outputPath, documentPath),
+    on: (typeDef as ASTNode).kind as
+      | "ObjectTypeDefinition"
+      | "ScalarTypeDefinition",
     directive: node,
   };
 }
