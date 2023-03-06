@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-This log was last generated on Mon, 06 Mar 2023 13:47:36 GMT and should not be manually modified.
+This log was last generated on Mon, 06 Mar 2023 15:25:06 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.1.1
+
+Mon, 06 Mar 2023 15:25:06 GMT
+
+### Patches
+
+- Hotfix to make enums generate in legacy model mode (mnovikov@microsoft.com)
 
 ## 2.1.0
 

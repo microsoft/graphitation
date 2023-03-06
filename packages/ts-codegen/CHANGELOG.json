@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Mon, 06 Mar 2023 15:25:06 GMT",
+      "tag": "@graphitation/ts-codegen_v2.1.1",
+      "version": "2.1.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "2d019572d1e3e83a74b126cb91ea242647ec9cd7",
+            "comment": "Hotfix to make enums generate in legacy model mode"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 06 Mar 2023 13:47:36 GMT",
       "tag": "@graphitation/ts-codegen_v2.1.0",
       "version": "2.1.0",
