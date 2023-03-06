@@ -1977,12 +1977,19 @@ describe(generateTS, () => {
   });
 
   it("does not generate models in legacy mode", () => {
-    const { models, resolvers, enums, inputs } = runGenerateTest(
+    const { models } = runGenerateTest(
       graphql`
         scalar Foo @model(tsType: "string")
 
+        enum Baz {
+          ONE
+          TWO
+        }
+
         type Bar @model(tsType: "BarModel", from: "./bar_model.interface") {
           id: ID!
+          foo: Foo
+          baz: Baz
         }
       `,
       {
@@ -1991,6 +1998,7 @@ describe(generateTS, () => {
     );
 
     expect(models).toMatch("type Foo = string");
+    expect(models).toMatch("Enums.Baz");
     expect(models).not.toMatch("extends BaseModel, _Bar");
     expect(models).not.toMatch("import type { BarModel as _Bar");
   });
