@@ -88,7 +88,10 @@ function createObjectTypeModel(
     return null;
   }
 
-  const model = context.getDefinedModelType(type.name);
+  let model;
+  if (!context.shouldNotGenerateObjectModels()) {
+    model = context.getDefinedModelType(type.name);
+  }
   const interfaces = type.interfaces.map((name) => {
     return context.getModelType(name, "MODELS").toExpression();
   });

@@ -1975,6 +1975,25 @@ describe(generateTS, () => {
       "
     `);
   });
+
+  it("does not generate models in legacy mode", () => {
+    const { models, resolvers, enums, inputs } = runGenerateTest(
+      graphql`
+        scalar Foo @model(tsType: "string")
+
+        type Bar @model(tsType: "BarModel", from: "./bar_model.interface") {
+          id: ID!
+        }
+      `,
+      {
+        legacyNoModelsForObjects: true,
+      },
+    );
+
+    expect(models).toMatch("type Foo = string");
+    expect(models).not.toMatch("extends BaseModel, _Bar");
+    expect(models).not.toMatch("import type { BarModel as _Bar");
+  });
 });
 
 function runGenerateTest(
@@ -1986,6 +2005,7 @@ function runGenerateTest(
     contextName?: string;
     legacyCompat?: boolean;
     enumsImport?: string;
+    legacyNoModelsForObjects?: boolean;
   } = {},
 ): {
   enums: string;
@@ -1994,6 +2014,7 @@ function runGenerateTest(
   resolvers: string;
   legacyTypes?: string;
   legacyResolvers?: string;
+  legacyNoModelsForObjects?: boolean;
 } {
   const fullOptions: {
     outputPath: string;
@@ -2001,6 +2022,7 @@ function runGenerateTest(
     contextImport?: string | null;
     contextName?: string;
     legacyCompat?: boolean;
+    legacyNoModelsForObjects?: boolean;
   } = {
     outputPath: "__generated__",
     documentPath: "./typedef.graphql",

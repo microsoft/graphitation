@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "More legacy options for fun and glory",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}

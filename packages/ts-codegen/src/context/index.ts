@@ -55,6 +55,7 @@ export type TsCodegenContextOptions = {
     from: string | null;
   };
   legacyCompat: boolean;
+  legacyNoModelsForObjects: boolean;
 };
 
 const DEFAULT_SCALAR_TYPE = "unknown";
@@ -85,6 +86,7 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
     from: "@graphitation/supermassive",
   },
   legacyCompat: false,
+  legacyNoModelsForObjects: false,
 };
 
 type ModelNameAndImport = { modelName: string; imp: DefinitionImport };
@@ -116,6 +118,10 @@ export class TsCodegenContext {
 
   isLegacyCompatMode(): boolean {
     return this.options.legacyCompat;
+  }
+
+  shouldNotGenerateObjectModels(): boolean {
+    return this.options.legacyNoModelsForObjects;
   }
 
   getEnumsImport(): string | null {
@@ -250,6 +256,13 @@ export class TsCodegenContext {
     const models = Array.from(this.typeNameToModels.values())
       .sort()
       .map((model) => {
+        if (
+          model.on === "ObjectTypeDefinition" &&
+          this.shouldNotGenerateObjectModels()
+        ) {
+          return;
+        }
+
         if (!model.from) {
           return;
         }
@@ -468,6 +481,7 @@ export class TsCodegenContext {
   getDefinedModelType(typeName: string): TypeLocation | null {
     if (this.typeNameToModels.has(typeName)) {
       let imp = this.typeNameToModels.get(typeName) as DefinitionModel;
+      this.usedEntitiesInModels.add(typeName);
       return new TypeLocation(null, imp.modelName);
     } else {
       return null;
