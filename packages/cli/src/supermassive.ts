@@ -46,7 +46,7 @@ export function supermassive(): Command {
     .option("-cn, --context-name [contextName]", "Context name")
     .option("-ei, --enums-import [enumsImport]", "from where to import enums")
     .option("-l, --legacy", "generate legacy types")
-    .option("-lm, --legacy-models", "do not use models for object types")
+    .option("--legacy-models", "do not use models for object types")
     .description("generate interfaces and models")
     .action(
       async (inputs: Array<string>, options: GenerateInterfacesOptions) => {

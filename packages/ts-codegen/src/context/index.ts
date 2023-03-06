@@ -258,7 +258,7 @@ export class TsCodegenContext {
       .map((model) => {
         if (
           model.on === "ObjectTypeDefinition" &&
-          this.isLegacyNoObjectModels()
+          this.shouldNotGenerateObjectModels()
         ) {
           return;
         }

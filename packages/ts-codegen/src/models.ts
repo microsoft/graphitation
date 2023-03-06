@@ -89,7 +89,7 @@ function createObjectTypeModel(
   }
 
   let model;
-  if (!context.isLegacyNoObjectModels()) {
+  if (!context.shouldNotGenerateObjectModels()) {
     model = context.getDefinedModelType(type.name);
   }
   const interfaces = type.interfaces.map((name) => {

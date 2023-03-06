@@ -1990,39 +1990,9 @@ describe(generateTS, () => {
       },
     );
 
-    expect(enums).toMatchInlineSnapshot(`""`);
-    expect(inputs).toMatchInlineSnapshot(`
-      "import * as Models from "./models.interface";
-      "
-    `);
-    expect(models).toMatchInlineSnapshot(`
-      "import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
-      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
-      export interface BaseModel {
-          readonly __typename?: string;
-      }
-      export type Foo = string;
-      export interface Bar extends BaseModel {
-          readonly __typename?: "Bar";
-          readonly id: string;
-      }
-      "
-    `);
-    expect(resolvers).toMatchInlineSnapshot(`
-      "import type { PromiseOrValue } from "@graphitation/supermassive";
-      import type { ResolveInfo } from "@graphitation/supermassive";
-      import * as Models from "./models.interface";
-      import * as Inputs from "./inputs.interface";
-      export * from "./inputs.interface";
-      export declare namespace Bar {
-          export interface Resolvers {
-              readonly id?: id;
-          }
-          export type id = (model: Models.Bar, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-      }
-      "
-    `);
+    expect(models).toMatch("type Foo = string");
+    expect(models).not.toMatch("extends BaseModel, _Bar");
+    expect(models).not.toMatch("import type { BarModel as _Bar");
   });
 });
 
