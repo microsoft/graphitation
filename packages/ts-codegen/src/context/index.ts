@@ -120,7 +120,7 @@ export class TsCodegenContext {
     return this.options.legacyCompat;
   }
 
-  isLegacyNoObjectModels(): boolean {
+  shouldNotGenerateObjectModels(): boolean {
     return this.options.legacyNoModelsForObjects;
   }
 

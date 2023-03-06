@@ -1976,7 +1976,7 @@ describe(generateTS, () => {
     `);
   });
 
-  it("legacy no models", () => {
+  it("does not generate models in legacy mode", () => {
     const { models, resolvers, enums, inputs } = runGenerateTest(
       graphql`
         scalar Foo @model(tsType: "string")
