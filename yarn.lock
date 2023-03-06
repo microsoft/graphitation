@@ -1836,31 +1836,6 @@
     "@n1ru4l/push-pull-async-iterable-iterator" "^3.1.0"
     meros "^1.1.4"
 
-"@graphitation/cli@*":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@graphitation/cli/-/cli-1.0.4.tgz#fadee17760e2241400326a03dad3d5fd163754d3"
-  integrity sha512-QVS7F1ajOIIvT6FVM2wD8S+J58iy85FE5m36o1C1ArNy4tBHR1loJJfyxHfeEvwXgo6DNjZNpjSN2kxWmQa6Gw==
-  dependencies:
-    "@graphitation/supermassive-extractors" "^2.0.0"
-    "@graphitation/ts-codegen" "^1.0.2"
-    commander "^8.3.0"
-    typescript "^4.4.3 <4.5.0"
-
-"@graphitation/supermassive@*":
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/@graphitation/supermassive/-/supermassive-2.0.4.tgz#b1c806584ddaf370a6aac34aa9bd72e1d4510f49"
-  integrity sha512-GRHWybaWd+narwJg8JW8iYPFGfDHlI6Ge52iqsDROSxRDCo6M08FVr/N3Gai/nhjukjxhixmv+ZgQZKXuHk25A==
-  dependencies:
-    graphql "^15.6.1"
-
-"@graphitation/ts-codegen@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@graphitation/ts-codegen/-/ts-codegen-1.0.2.tgz#045eb59c58acb793bfddb8c73651c3e6141f49e2"
-  integrity sha512-hFOacTvD76oVe0mGpHJ0xc+f2LvovpV4qL+iWwFffGOk+TbTtnCFIH8vJg59I+UZ/ve89jWGo37Crx0ghm7/uw==
-  dependencies:
-    graphql "^15.6.1"
-    typescript "^4.4.3 <4.5.0"
-
 "@graphql-codegen/cli@^2.6.2":
   version "2.6.2"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/cli/-/cli-2.6.2.tgz#a9aa4656141ee0998cae8c7ad7d0bf9ca8e0c9ae"
@@ -6793,9 +6768,9 @@ html-escaper@^2.0.0:
   integrity sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==
 
 http-cache-semantics@^4.0.0:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/http-cache-semantics/-/http-cache-semantics-4.1.0.tgz#49e91c5cbf36c9b94bcfcd71c23d5249ec74e390"
-  integrity sha512-carPklcUh7ROWRK7Cv27RPtdhYhUsela/ue5/jKzjegVvXDqM2ILE9Q2BGn9JZJh1g87cp56su/FgQSzcWS8cQ==
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/http-cache-semantics/-/http-cache-semantics-4.1.1.tgz#abe02fcb2985460bf0323be664436ec3476a6d5a"
+  integrity sha512-er295DKPVsV82j5kw1Gjt+ADA/XYHsajl82cGNQG2eyoPkvgUhX+nDIyelzhIWbbsXP39EHcI6l5tYs2FYqYXQ==
 
 http-proxy-agent@^5.0.0:
   version "5.0.0"
