@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Hotfix to make enums generate in legacy model mode",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
