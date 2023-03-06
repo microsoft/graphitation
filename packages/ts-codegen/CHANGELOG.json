@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Mon, 06 Mar 2023 13:47:36 GMT",
+      "tag": "@graphitation/ts-codegen_v2.1.0",
+      "version": "2.1.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "9f66a1c702029af2cea78b2efc2e8f907838caec",
+            "comment": "More legacy options for fun and glory"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 01 Mar 2023 10:48:32 GMT",
       "tag": "@graphitation/ts-codegen_v2.0.0",
       "version": "2.0.0",

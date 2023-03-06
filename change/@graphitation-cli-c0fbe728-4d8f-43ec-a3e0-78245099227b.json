@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "More legacy options for fun and glory",
-  "packageName": "@graphitation/cli",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}
