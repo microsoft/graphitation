@@ -123,7 +123,6 @@ function getVisitor(
           if (newImportSpecifiers.length || node.importClause.name) {
             const result = ts.factory.updateImportDeclaration(
               node,
-              node.decorators,
               node.modifiers,
               ts.factory.updateImportClause(
                 node.importClause,
@@ -137,6 +136,7 @@ function getVisitor(
                   : undefined,
               ),
               node.moduleSpecifier,
+              node.assertClause,
             );
             return result;
           } else {
