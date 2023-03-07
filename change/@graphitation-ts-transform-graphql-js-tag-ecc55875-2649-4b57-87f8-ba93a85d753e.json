@@ -1,7 +1,0 @@
-{
-  "type": "major",
-  "comment": "TS 4.9",
-  "packageName": "@graphitation/ts-transform-graphql-js-tag",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}
