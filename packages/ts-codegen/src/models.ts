@@ -8,8 +8,10 @@ import {
   InterfaceType,
   ObjectType,
   UnionType,
+  TypeLocation,
 } from "./context";
 import { addModelSuffix } from "./utilities";
+import { DefinitionModel } from "./types";
 
 export function generateModels(
   context: TsCodegenContext,
@@ -88,7 +90,7 @@ function createObjectTypeModel(
     return null;
   }
 
-  let model;
+  let model: TypeLocation | null = null;
   if (!context.shouldNotGenerateObjectModels()) {
     model = context.getDefinedModelType(type.name);
   }
@@ -100,19 +102,19 @@ function createObjectTypeModel(
     extendTypes.push(model);
   }
 
-  const fields = type.fields.map(({ name, type: fieldType }) =>
-    factory.createPropertySignature(
-      [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
-      factory.createIdentifier(name),
-      fieldType.kind !== "NonNullType"
-        ? factory.createToken(ts.SyntaxKind.QuestionToken)
-        : undefined,
-      context.getTypeReferenceFromTypeNode(
-        fieldType,
-        type.model ? undefined : "MODELS",
+  let fields: ts.PropertySignature[] = [];
+  if (!model) {
+    fields = type.fields.map(({ name, type: fieldType }) =>
+      factory.createPropertySignature(
+        [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+        factory.createIdentifier(name),
+        fieldType.kind !== "NonNullType"
+          ? factory.createToken(ts.SyntaxKind.QuestionToken)
+          : undefined,
+        context.getTypeReferenceFromTypeNode(fieldType, "MODELS"),
       ),
-    ),
-  );
+    );
+  }
 
   return factory.createInterfaceDeclaration(
     undefined,
@@ -142,7 +144,7 @@ function createObjectTypeModel(
         factory.createToken(ts.SyntaxKind.QuestionToken),
         factory.createLiteralTypeNode(factory.createStringLiteral(type.name)),
       ),
-      ...((!model && fields) || []),
+      ...fields,
     ],
   );
 }
