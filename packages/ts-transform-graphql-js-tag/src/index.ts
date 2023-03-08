@@ -85,7 +85,6 @@ function getVisitor(
             templateLiteralName = node.importClause.name.text;
             if (node.importClause.namedBindings) {
               return ts.factory.createImportDeclaration(
-                node.decorators,
                 node.modifiers,
                 ts.factory.updateImportClause(
                   node.importClause,
@@ -94,6 +93,7 @@ function getVisitor(
                   node.importClause.namedBindings,
                 ),
                 node.moduleSpecifier,
+                node.assertClause,
               );
             } else {
               return undefined;
