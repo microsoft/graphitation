@@ -134,6 +134,6 @@ Because we can only get the IDs of participants in a conversation, rather than t
 
 ## Generically fetching exactly what you need
 
-While we have learned that GraphQL was designed to be able to satisfy the needs of the UI in the application’s domain, this does not mean that any subset of the schema should cater to only a very specific piece of UI. Instead the data should be modeled in such a way that it allows for generic fetching of the data, _wihtin_ the application’s domain.
+While we have learned that GraphQL was designed to be able to satisfy the needs of the UI in the application’s domain, this does not mean that any subset of the schema should cater to only a single specific piece of UI. Instead the data should be modeled in such a way that it allows for generic fetching of the data, _within_ the application’s domain.
 
-Because of this, an important aspect of GraphQL is that it allows you to fetch _exactly what you need_ and **only get what you need**.
+The flexibility of GraphQL will then allow you to fetch _exactly what you need_ and, **importantly**, _only get what you need_.
