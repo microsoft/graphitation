@@ -1,0 +1,25 @@
+---
+sidebar_position: 4
+id: basics
+title: GraphQL Basics
+description: Basic understanding needed before moving being able to discuss the implementation concepts
+---
+
+# GraphQL Basics
+
+Before being able to discuss implementation concepts, we first need to establish a basic understaning of some of the building blocks of a GraphQL API.
+
+### Schema
+
+### Types
+
+- Concrete
+  - Scalar
+  - Object
+- Abstracr
+  - Interface
+  - Union
+
+### Fields
+
+learn about resolvers in the execution page

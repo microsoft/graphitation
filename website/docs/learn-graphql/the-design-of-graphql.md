@@ -11,7 +11,7 @@ When Facebook designed GraphQL, they had realized that user-interfaces and the b
 
 ## Example
 
-Let’s take a look at the `ChatList` component of Teams. There’s a list of conversations, content preview, and some details about the participants. So if we would structure this, there would be 3 major components.
+Let’s take a look at the `ChatList`re component of Teams. There’s a list of conversations, content preview, and some details about the participants. So if we would structure this, there would be 3 major components.
 
 - There’s going to be the outer `ChatList` component.
 - The `ChatList` component would contain many `ChatListItem` components, one for each conversation that the user has.
