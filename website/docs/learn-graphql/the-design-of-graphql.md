@@ -7,25 +7,11 @@ description: What was GraphQL designed to solve for and how to leverage that?
 
 # The design of GraphQL
 
-## Flux
+When Facebook designed GraphQL, they had realized that user-interfaces and the back-end services backing them would end up getting coupled together, making iterating on complex applications like theirs extremely hard.
 
-To understand how Facebook designed GraphQL and React to work together, we must first go back to the origins of data flow in React and learn about [Flux](https://facebook.github.io/flux/docs/in-depth-overview/). Flux is the application architecture that Facebook uses for building client-side web applications. It complements React's composable view components by utilizing a unidirectional data flow, making interactions easier to reason about.
+## Example
 
-![](./slidedeck/Slide2.png)
-
-But there’s a missing piece here. How do we get the data from the “remote” service into the client in the first place?
-
-![](./slidedeck/Slide3.png)
-
-And especially in complex applications, they realised that the service and the view end-up getting coupled together, which makes development difficult.
-
-![](./slidedeck/Slide4.png)
-
-## Design Considerations
-
-### Example
-
-Let’s take a simple example, here we have the Chat-List component of Teams. There’s a list of conversations, content preview, and some details about the participants. So if we would structure this, there would be 3 major components.
+Let’s take a look at the `ChatList` component of Teams. There’s a list of conversations, content preview, and some details about the participants. So if we would structure this, there would be 3 major components.
 
 - There’s going to be the outer `ChatList` component.
 - The `ChatList` component would contain many `ChatListItem` components, one for each conversation that the user has.
@@ -41,7 +27,7 @@ The service sends some data down to the client, `ChatList` passes it on to its c
 
 ![](./slidedeck/Slide11.png)
 
-### Leaky Abstractions
+## Problem
 
 But of course this is a simplification, what happens when we add some color to this? The `ChatList` component needs an item count, the `ChatListItem` component needs an avatar, and the `ConversationInfo` needs a title and last message preview.
 
@@ -58,7 +44,7 @@ How did we get here? How did we get to a place where making a simple change to `
 
 The big problem was a lack of modularity. We wanted `ConversationInfo` to be a self-contained component, but it wasn’t. Its implementation details were leaked to `ChatListItem`, _and_ up to the service. The thing that was missing was a way for `ConversationInfo` and other components to specify what data they require. That specification didn’t live in the component itself, it was spread all over the application.
 
-### The Solution
+## The Solution
 
 What we want is some way for each component to statically define its data needs in a simple way.
 
@@ -80,8 +66,6 @@ From here on out, it’s exactly the same diagram as before. We have a service, 
 
 ![](./slidedeck/Slide25.png)
 
-### Conclusion
-
 It’s a subtle change, but a _key_ one.
 
 We’ve taken the details about what data `ConversationInfo` requires _out_ of the service, where it doesn’t belong, and have put it _in_ the `ConversationInfo` component where it does.
@@ -90,7 +74,7 @@ Because inherently, our rendering logic for `ConversationInfo` and its data-spec
 
 So if we want to do this, if we want each component to be able to specify its own data needs, how can we do so? The realization is that our data-specification has a key property that it needs to fulfill, which is composition.
 
-## Composition
+### Composition
 
 Composition in GraphQL is achieved by leveraging fragments, which are snippets of a query that can be composed together to form larger queries. These fragments are colocated with their components and composed into a tree that very much follows the shape of the component tree.
 
