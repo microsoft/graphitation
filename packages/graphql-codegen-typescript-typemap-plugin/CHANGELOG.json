@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-typescript-typemap-plugin",
   "entries": [
     {
+      "date": "Mon, 13 Mar 2023 14:00:55 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-typemap-plugin_v0.1.5",
+      "version": "0.1.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "sjwilczynski@users.noreply.github.com",
+            "package": "@graphitation/graphql-codegen-typescript-typemap-plugin",
+            "commit": "6c25b80f7859da664f2e0913e97da1dc22a8dc33",
+            "comment": "fix: correctly handle types with prefix and underscore"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 22 Nov 2022 18:01:10 GMT",
       "tag": "@graphitation/graphql-codegen-typescript-typemap-plugin_v0.1.4",
       "version": "0.1.4",
