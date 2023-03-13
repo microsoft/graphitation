@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "fix: correctly handle types with prefix and underscore",
+  "packageName": "@graphitation/graphql-codegen-typescript-typemap-plugin",
+  "email": "sjwilczynski@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}
