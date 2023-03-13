@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-typescript-typemap-plugin
 
-This log was last generated on Mon, 20 Jun 2022 12:36:41 GMT and should not be manually modified.
+This log was last generated on Mon, 13 Mar 2023 14:00:55 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.1.5
+
+Mon, 13 Mar 2023 14:00:55 GMT
+
+### Patches
+
+- fix: correctly handle types with prefix and underscore (sjwilczynski@users.noreply.github.com)
 
 ## 0.1.4
 
