@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
   "license": "MIT",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
@@ -28,7 +28,7 @@
     "@graphql-codegen/visitor-plugin-common": ">= ^1.17.0 < 2",
     "graphql-tag": ">= 2.11.0 < 3",
     "@graphql-tools/optimize": "^1.0.1",
-    "@graphitation/supermassive": "^2.2.0"
+    "@graphitation/supermassive": "^2.2.1"
   },
   "sideEffects": false,
   "access": "public",

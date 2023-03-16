@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Fix typo that breaks everything",
-  "packageName": "@graphitation/cli",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

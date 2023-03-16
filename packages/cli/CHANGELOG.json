@@ -2,6 +2,21 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Thu, 16 Mar 2023 16:44:10 GMT",
+      "tag": "@graphitation/cli_v1.5.1",
+      "version": "1.5.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "e61c7abd70334213d9b34cf9b4f9b72004c4e44e",
+            "comment": "Fix typo that breaks everything"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 16 Mar 2023 15:48:01 GMT",
       "tag": "@graphitation/cli_v1.5.0",
       "version": "1.5.0",

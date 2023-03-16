@@ -1,8 +1,16 @@
 # Change Log - @graphitation/cli
 
-This log was last generated on Thu, 16 Mar 2023 15:48:01 GMT and should not be manually modified.
+This log was last generated on Thu, 16 Mar 2023 16:44:10 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.5.1
+
+Thu, 16 Mar 2023 16:44:10 GMT
+
+### Patches
+
+- Fix typo that breaks everything (mnovikov@microsoft.com)
 
 ## 1.5.0
 
