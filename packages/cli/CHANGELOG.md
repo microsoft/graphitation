@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-This log was last generated on Mon, 06 Mar 2023 15:25:06 GMT and should not be manually modified.
+This log was last generated on Thu, 16 Mar 2023 15:48:01 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.5.0
+
+Thu, 16 Mar 2023 15:48:01 GMT
+
+### Minor changes
+
+- Add ability to specify model scope (mnovikov@microsoft.com)
+- Bump @graphitation/ts-codegen to v2.2.0
 
 ## 1.4.1
 

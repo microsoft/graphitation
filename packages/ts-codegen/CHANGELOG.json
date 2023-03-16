@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Thu, 16 Mar 2023 15:48:01 GMT",
+      "tag": "@graphitation/ts-codegen_v2.2.0",
+      "version": "2.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "07595d459e81a39f8741b7c7881face08e25cd7e",
+            "comment": "Add ability to specify model scope"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 06 Mar 2023 15:25:06 GMT",
       "tag": "@graphitation/ts-codegen_v2.1.1",
       "version": "2.1.1",

@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Add ability to specify model scope",
-  "packageName": "@graphitation/cli",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "minor"
-}
