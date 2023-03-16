@@ -18,6 +18,7 @@ export function generateTS(
     enumsImport,
     legacyCompat,
     legacyNoModelsForObjects,
+    modelScope,
   }: {
     outputPath: string;
     documentPath: string;
@@ -26,6 +27,7 @@ export function generateTS(
     enumsImport?: string | null;
     legacyCompat?: boolean;
     legacyNoModelsForObjects?: boolean;
+    modelScope?: string | null;
   },
 ): {
   files: ts.SourceFile[];
@@ -40,6 +42,7 @@ export function generateTS(
         legacyCompat,
         enumsImport,
         legacyNoModelsForObjects,
+        modelScope,
       },
       document,
       outputPath,
