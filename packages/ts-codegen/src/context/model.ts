@@ -20,6 +20,7 @@ export function processModelDirective(
 ): DefinitionModel {
   const from = getArgumentValue(node.arguments, "from");
   const tsType = getArgumentValue(node.arguments, "tsType");
+  const scope = getArgumentValue(node.arguments, "scope");
 
   if (from && from.kind !== "StringValue") {
     throw new GraphQLError(
@@ -31,6 +32,12 @@ export function processModelDirective(
     throw new GraphQLError(
       `Directive @model requires "tsType" argument to exist and be a name of the exported typescript type`,
       [tsType ?? node],
+    );
+  }
+  if (scope && scope.kind !== "StringValue" && scope.kind !== "EnumValue") {
+    throw new GraphQLError(
+      `Directive @model scope argument must be string or enum`,
+      [scope ?? node],
     );
   }
   const typeDef: ASTNode | readonly ASTNode[] | undefined =
@@ -55,6 +62,7 @@ export function processModelDirective(
     tsType: tsType.value,
     importName: from ? createVariableNameFromImport(from.value) : null,
     from: getRelativePath(from?.value, outputPath, documentPath),
+    modelScope: scope ? scope.value : null,
     on: (typeDef as ASTNode).kind as
       | "ObjectTypeDefinition"
       | "ScalarTypeDefinition",

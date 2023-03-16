@@ -2002,6 +2002,61 @@ describe(generateTS, () => {
     expect(models).not.toMatch("extends BaseModel, _Bar");
     expect(models).not.toMatch("import type { BarModel as _Bar");
   });
+
+  it("uses only models that match the scope", () => {
+    const { models } = runGenerateTest(
+      graphql`
+        enum ModelScope {
+          our
+          other
+        }
+
+        type BlankScope
+          @model(tsType: "BlankScopeModel", from: "./blankmodels.interface") {
+          id: ID!
+        }
+
+        type WrongScope
+          @model(
+            tsType: "WrongScopeModel"
+            from: "./wrongmodels.interface"
+            scope: "other"
+          ) {
+          id: ID!
+        }
+
+        type EnumScope
+          @model(
+            tsType: "EnumScopeModel"
+            from: "./enummodels.interface"
+            scope: our
+          ) {
+          id: ID!
+        }
+
+        type StringScope
+          @model(
+            tsType: "StringScopeModel"
+            from: "./stringmodels.interface"
+            scope: "our"
+          ) {
+          id: ID!
+        }
+      `,
+      {
+        modelScope: "our",
+      },
+    );
+
+    expect(models).not.toMatch("extends BaseModel, _BlankScope");
+    expect(models).not.toMatch("import type { BlankScopeModel as _BlankScope");
+    expect(models).not.toMatch("extends BaseModel, _WrongScope");
+    expect(models).not.toMatch("import type { WrongScopeModel as _WrongScope");
+    expect(models).toMatch("extends BaseModel, _EnumScope");
+    expect(models).toMatch("import type { EnumScopeModel as _EnumScope");
+    expect(models).toMatch("extends BaseModel, _StringScope");
+    expect(models).toMatch("import type { StringScopeModel as _StringScope");
+  });
 });
 
 function runGenerateTest(
@@ -2014,6 +2069,7 @@ function runGenerateTest(
     legacyCompat?: boolean;
     enumsImport?: string;
     legacyNoModelsForObjects?: boolean;
+    modelScope?: string;
   } = {},
 ): {
   enums: string;
@@ -2023,6 +2079,7 @@ function runGenerateTest(
   legacyTypes?: string;
   legacyResolvers?: string;
   legacyNoModelsForObjects?: boolean;
+  modelScope?: string;
 } {
   const fullOptions: {
     outputPath: string;
