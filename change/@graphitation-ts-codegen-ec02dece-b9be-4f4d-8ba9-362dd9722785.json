@@ -3,5 +3,5 @@
   "comment": "Add ability to specify model scope",
   "packageName": "@graphitation/ts-codegen",
   "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
+  "dependentChangeType": "minor"
 }
