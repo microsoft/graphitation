@@ -1,0 +1,1 @@
+# graphql-codegen-typescript-operations
