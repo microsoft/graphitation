@@ -8,6 +8,9 @@ export const useStyles = makeStyles({
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: "auto",
+    backgroundColor: "darkgrey",
+    minWidth: 0,
+    color: "black",
   },
   operationNameAccPanel: {
     whiteSpace: "pre-wrap",
@@ -36,6 +39,9 @@ export const useStyles = makeStyles({
   operationDetails: {
     minHeight: 0,
     overflowY: "auto",
+    "::-webkit-scrollbar": {
+      display: "none",
+    },
   },
   operationName: {
     display: "flex",
@@ -44,6 +50,25 @@ export const useStyles = makeStyles({
   copyBtn: {
     minHeight: "32px",
     marginLeft: "1rem",
+  },
+  subHeading: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    height: "32.5px",
+    backgroundColor: "#e0e0e0",
+  },
+
+  closeButton: {
+    width: "40px",
+    marginRight: "10px",
+  },
+  accordionWrapper: {
+    minHeight: 0,
+    overflowX: "scroll",
+  },
+  accordioPreWrapper: {
+    maxWidth: "40rem",
   },
 });
 
