@@ -1,6 +1,8 @@
 import {
   AvoidOptionalsConfig,
   BaseDocumentsVisitor,
+  BaseVisitorConvertOptions,
+  ConvertOptions,
   DeclarationKind,
   generateFragmentImportStatement,
   getConfigValue,
@@ -14,6 +16,7 @@ import {
 } from "@graphql-codegen/visitor-plugin-common";
 import autoBind from "auto-bind";
 import {
+  ASTNode,
   GraphQLNamedType,
   GraphQLOutputType,
   GraphQLSchema,
@@ -27,13 +30,16 @@ import { TypeScriptSelectionSetProcessor } from "./ts-selection-set-processor";
 export interface TypeScriptDocumentsParsedConfig extends ParsedDocumentsConfig {
   avoidOptionals: AvoidOptionalsConfig;
   immutableTypes: boolean;
+  baseTypesPath: string;
   noExport: boolean;
 }
 
+const OPERATIONS = ["Mutation", "Query", "Subscription"];
 export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
   TypeScriptDocumentsPluginConfig,
   TypeScriptDocumentsParsedConfig
 > {
+  private usedTypes: Set<string>;
   constructor(
     schema: GraphQLSchema,
     config: TypeScriptDocumentsPluginConfig,
@@ -43,6 +49,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
       config,
       {
         noExport: getConfigValue(config.noExport, false),
+        baseTypesPath: getConfigValue(config.baseTypesPath, ""),
         avoidOptionals: normalizeAvoidOptionals(
           getConfigValue(config.avoidOptionals, false),
         ),
@@ -54,6 +61,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
 
     autoBind(this);
 
+    this.usedTypes = new Set();
     const wrapOptional = (type: string) => {
       const prefix = this.config.namespacedImportName
         ? `${this.config.namespacedImportName}.`
@@ -130,10 +138,38 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
 
   public getImports(): Array<string> {
     return !this.config.globalNamespace
-      ? this.config.fragmentImports.map((fragmentImport) =>
-          generateFragmentImportStatement(fragmentImport, "type"),
-        )
+      ? this.config.fragmentImports
+          .map((fragmentImport) =>
+            generateFragmentImportStatement(fragmentImport, "type"),
+          )
+          .concat(
+            this.config.baseTypesPath && this.usedTypes.size
+              ? `export {${Array.from(this.usedTypes).join(",")}} from "${
+                  this.config.baseTypesPath
+                }"`
+              : "",
+          )
       : [];
+  }
+
+  public convertName(
+    node: string | ASTNode,
+    options?: (BaseVisitorConvertOptions & ConvertOptions) | undefined,
+  ): string {
+    const convertedName = this.config.convert(node, options);
+    if (
+      OPERATIONS.every(
+        (operation) =>
+          !convertedName.endsWith(operation) &&
+          !convertedName.endsWith(`${operation}Variables`) &&
+          !convertedName.endsWith(`Fragment`) &&
+          !/.{1,}Fragment_\w{1,}_/.test(convertedName),
+      )
+    ) {
+      this.usedTypes.add(convertedName);
+    }
+
+    return super.convertName(node, options);
   }
 
   protected getPunctuation(_declarationKind: DeclarationKind): string {
