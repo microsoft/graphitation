@@ -43,9 +43,6 @@
     "rempl": "^1.0.0-alpha.24",
     "uuid": "^8.3.2"
   },
-  "resolutions": {
-    "@fluentui/react-icons": "2.0.166-rc.3"
-  },
   "publishConfig": {
     "main": "./dist/apollo-devtools.js",
     "access": "public"
