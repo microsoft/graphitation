@@ -11,25 +11,13 @@ export function generateEnums(
   const enumsStatements: ts.Statement[] = [];
   if (enumsImport) {
     enumsStatements.push(
-      ...(context
-        .getAllTypes()
-        .map((type) => {
-          if (type.kind === "ENUM") {
-            return factory.createExportDeclaration(
-              undefined,
-              undefined,
-              false,
-              factory.createNamedExports([
-                factory.createExportSpecifier(
-                  undefined,
-                  factory.createIdentifier(type.name),
-                ),
-              ]),
-              factory.createStringLiteral(enumsImport),
-            );
-          }
-        })
-        .filter(Boolean) as ts.Statement[]),
+      factory.createExportDeclaration(
+        undefined,
+        undefined,
+        false,
+        undefined,
+        factory.createStringLiteral(enumsImport),
+      ),
     );
   } else {
     enumsStatements.push(
