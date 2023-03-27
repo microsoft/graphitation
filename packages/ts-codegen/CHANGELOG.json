@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Mon, 27 Mar 2023 13:30:13 GMT",
+      "tag": "@graphitation/ts-codegen_v2.3.0",
+      "version": "2.3.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "873286626dd1b2f7557b7cddba5a66e42def2a1b",
+            "comment": "Export * enums"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 16 Mar 2023 15:48:01 GMT",
       "tag": "@graphitation/ts-codegen_v2.2.0",
       "version": "2.2.0",
