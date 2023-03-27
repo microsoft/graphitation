@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Apollo operations - grid view added",
-  "packageName": "@graphitation/rempl-apollo-devtools",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
