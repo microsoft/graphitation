@@ -6,6 +6,8 @@ import {
   AccordionPanel,
   Tooltip,
   Text,
+  Button,
+  Body1Strong,
 } from "@fluentui/react-components";
 import {
   IVerboseOperation,
@@ -17,41 +19,84 @@ import { OperationVariables, WatchQueryFetchPolicy } from "@apollo/client";
 import {
   getOperationName,
   isNumber,
+  sizeInBytes,
 } from "../utils/apollo-operations-tracker-utils";
 import { DocumentNode } from "graphql";
 import { ResultsFrom } from "../../../types";
+import {
+  IOperationsAction as IOperationsReducerActions,
+  OperationReducerActionEnum,
+} from "../operations-tracker-container-helper";
 
 const spaceForStringify = 2;
 
 interface IVerboseOperationViewProps {
-  operation: IVerboseOperation | undefined;
+  operation: IVerboseOperation | undefined | null;
+  dispatchOperationsState: React.Dispatch<IOperationsReducerActions>;
 }
 
 export const VerboseOperationView = (props: IVerboseOperationViewProps) => {
-  const classes = useStyles();
-  const { operation } = props;
+  const { operation, dispatchOperationsState } = props;
   if (!operation) {
     return <></>;
   }
+  const classes = useStyles();
 
-  const { operationType } = operation;
+  const { operationType, operationName } = operation;
 
   const accordionItems = React.useMemo(
     () => getAccordionItems(operation, classes),
     [operation, classes],
   );
 
+  const closePreview = React.useCallback(() => {
+    dispatchOperationsState({
+      type: OperationReducerActionEnum.UpdateSelectedOperation,
+      value: undefined,
+    });
+  }, [dispatchOperationsState]);
+
+  if (!operation) {
+    return null;
+  }
+
   return (
-    <div className={classes.operationView}>
-      <h2 key="operationType">{operationType}</h2>
-      <Accordion
-        className={classes.operationDetails}
-        key={"operationnViewAccordionn"}
-        multiple
-        collapsible
+    <div className={classes.operationView} key="verboseOperationView">
+      <div className={classes.subHeading} key="verboseHeader">
+        <div
+          style={{ display: "flex", alignItems: "center" }}
+          key="operationType1"
+        >
+          <h3 key="operationType">{`${operationType} : `}&nbsp;</h3>
+          <Body1Strong underline key="operationName1ç">
+            {operationName}
+          </Body1Strong>
+        </div>
+        <Button
+          size="small"
+          className={classes.closeButton}
+          onClick={closePreview}
+          appearance="primary"
+          key="closeButton"
+        >
+          Close
+        </Button>
+      </div>
+      <div
+        className={classes.accordionWrapper}
+        key="operationnViewAccordionnWrapper"
       >
-        {...accordionItems}
-      </Accordion>
+        <div className={classes.accordioPreWrapper}>
+          <Accordion
+            className={classes.operationDetails}
+            key={"operationnViewAccordionn"}
+            multiple
+            collapsible
+          >
+            {...accordionItems}
+          </Accordion>
+        </div>
+      </div>
     </div>
   );
 };
@@ -95,7 +140,9 @@ const getOperationNamePanel = (
 ) => {
   return (
     <AccordionItem value="operationName" key="operationName">
-      <AccordionHeader>{operationName}</AccordionHeader>
+      <AccordionHeader>
+        <Text style={{ fontWeight: "bold" }}>{operationName}</Text>
+      </AccordionHeader>
       <AccordionPanel>
         <div className={classes.operationNameAccPanel}>{operationString}</div>
       </AccordionPanel>
@@ -109,7 +156,9 @@ const getVariablesPanel = (
 ) => (
   <AccordionItem value="variables" key="variables">
     <Tooltip content={"Variables for the operation"} relationship="label">
-      <AccordionHeader>{"Variables"}</AccordionHeader>
+      <AccordionHeader>
+        <Text style={{ fontWeight: "bold" }}>{"Variables"}</Text>
+      </AccordionHeader>
     </Tooltip>
     <AccordionPanel>
       <div className={classes.operationVariablesAccPanel}>
@@ -125,7 +174,11 @@ const getFetchPolicyPanel = (
 ) => (
   <AccordionItem value="fetchPolicy" key="fetchPolicy">
     <Tooltip content={"Fetch policy of the operation"} relationship="label">
-      <AccordionHeader>{"Fetch Policy"}</AccordionHeader>
+      <AccordionHeader>
+        <Text style={{ fontWeight: "bold" }}>{`Fetch Policy ${
+          fetchPolicy ? `(${fetchPolicy})` : ``
+        }`}</Text>
+      </AccordionHeader>
     </Tooltip>
     <AccordionPanel>
       <div className={classes.fetchPolicyAccPanel}> {fetchPolicy}</div>
@@ -150,7 +203,11 @@ const getAffectedQueriesPanel = (
         }
         relationship="label"
       >
-        <AccordionHeader>{`Affected watch queries (${affectedQueriesItems.length})`}</AccordionHeader>
+        <AccordionHeader>
+          <Text
+            style={{ fontWeight: "bold" }}
+          >{`Affected watch queries (${affectedQueriesItems.length})`}</Text>
+        </AccordionHeader>
       </Tooltip>
       <AccordionPanel>
         <div className={classes.affectedQueriesAccPanel}>
@@ -168,12 +225,16 @@ const getResultPanel = (
   result: IOperationResult[],
   classes: Record<stylesKeys, string>,
 ) => {
-  const items = result.map((res) => {
+  const items = result.map((res: IOperationResult) => {
     const resultFrom = getResultFromString(res.from);
 
     return (
       <AccordionItem value={resultFrom} key={resultFrom}>
-        <AccordionHeader>{resultFrom}</AccordionHeader>
+        <AccordionHeader>
+          <Text style={{ fontWeight: "bold" }}>{`${resultFrom} ${
+            res.size ? `(${sizeInBytes(res.size)})` : ``
+          }`}</Text>
+        </AccordionHeader>
         <AccordionPanel>
           <div className={classes.resultPanel}>
             {`${JSON.stringify(res.result, null, spaceForStringify)}`}
@@ -191,9 +252,11 @@ const getResultPanel = (
         }
         relationship="label"
       >
-        <AccordionHeader>{`Result ${
-          isOptimistic ? "(Optimistic result)" : ""
-        }`}</AccordionHeader>
+        <AccordionHeader>
+          <Text style={{ fontWeight: "bold" }}>{`Result ${
+            isOptimistic ? "(Optimistic result)" : ""
+          }`}</Text>
+        </AccordionHeader>
       </Tooltip>
       <AccordionPanel>
         <Accordion collapsible>{...items}</Accordion>
@@ -220,7 +283,11 @@ const getErrorPanel = (error: unknown, classes: Record<stylesKeys, string>) => (
       content={"Error message for operation failure"}
       relationship="label"
     >
-      <AccordionHeader>{`Error ${error ? "(failed)" : ""}`}</AccordionHeader>
+      <AccordionHeader>
+        <Text style={{ fontWeight: "bold" }}>{`Error ${
+          error ? "(failed)" : ""
+        }`}</Text>
+      </AccordionHeader>
     </Tooltip>
     <AccordionPanel>
       <div className={classes.errorAccPanel}> {JSON.stringify(error)}</div>
@@ -239,7 +306,9 @@ const getWarningPanel = (
       }
       relationship="label"
     >
-      <AccordionHeader>{`Warning`}</AccordionHeader>
+      <AccordionHeader>
+        <Text style={{ fontWeight: "bold" }}>{`Warning`}</Text>
+      </AccordionHeader>
     </Tooltip>
     <AccordionPanel>
       <div className={classes.warningAccPanel}> {JSON.stringify(warning)}</div>
@@ -256,7 +325,11 @@ const getDurationPanel = (
       content={"Detailed time info for operation in milliSeconds"}
       relationship="label"
     >
-      <AccordionHeader>{`Duration (ms)`}</AccordionHeader>
+      <AccordionHeader>
+        <Text style={{ fontWeight: "bold" }}>{`Duration ${
+          duration?.totalTime ? `(${duration.totalTime} ms)` : `(ms)`
+        }`}</Text>
+      </AccordionHeader>
     </Tooltip>
     <AccordionPanel>
       <div className={classes.durationAccPanel}>
