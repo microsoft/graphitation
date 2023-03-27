@@ -71,3 +71,13 @@ export type {
   EnumTypeExtensionNode,
   InputObjectTypeExtensionNode,
 } from "./ast/TypedAST";
+
+export {
+  BeforeFieldResolveHookArgs,
+  AfterFieldResolveHookArgs,
+  AfterFieldCompleteHookArgs,
+  BeforeFieldResolveHook,
+  AfterFieldResolveHook,
+  AfterFieldCompleteHook,
+  ExecutionHooks,
+} from "./hooks/types";
