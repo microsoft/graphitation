@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-This log was last generated on Thu, 16 Mar 2023 15:48:01 GMT and should not be manually modified.
+This log was last generated on Mon, 27 Mar 2023 13:30:13 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.3.0
+
+Mon, 27 Mar 2023 13:30:13 GMT
+
+### Minor changes
+
+- Export * enums (mnovikov@microsoft.com)
 
 ## 2.2.0
 
