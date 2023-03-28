@@ -94,7 +94,7 @@ export interface ExecutionContext {
   fieldResolver: FunctionFieldResolver<any, any>;
   typeResolver: TypeResolver<any, any>;
   errors: Array<GraphQLError>;
-  hooks?: ExecutionHooks;
+  fieldExecutionHooks?: ExecutionHooks;
 }
 
 /**
@@ -120,7 +120,7 @@ export function executeWithoutSchema(
     operationName,
     fieldResolver,
     typeResolver,
-    hooks,
+    fieldExecutionHooks,
   } = args;
 
   const combinedResolvers = mergeResolvers(resolvers, schemaResolvers);
@@ -138,7 +138,7 @@ export function executeWithoutSchema(
     operationName,
     fieldResolver,
     typeResolver,
-    hooks,
+    fieldExecutionHooks,
   );
 
   // Return early errors if execution context failed.
@@ -211,7 +211,7 @@ export function buildExecutionContext(
   operationName: Maybe<string>,
   fieldResolver: Maybe<FunctionFieldResolver<unknown, unknown>>,
   typeResolver?: Maybe<TypeResolver<unknown, unknown>>,
-  hooks?: ExecutionHooks,
+  fieldExecutionHooks?: ExecutionHooks,
 ): Array<GraphQLError> | ExecutionContext {
   let operation: OperationDefinitionNode | undefined;
   const fragments: ObjMap<FragmentDefinitionNode> = Object.create(null);
@@ -268,7 +268,7 @@ export function buildExecutionContext(
     fieldResolver: fieldResolver ?? defaultFieldResolver,
     typeResolver: typeResolver ?? defaultTypeResolver,
     errors: [],
-    hooks,
+    fieldExecutionHooks,
   };
 }
 
@@ -955,7 +955,7 @@ function invokeBeforeFieldResolveHook(
   path: Path,
   exeContext: ExecutionContext,
 ): void {
-  const hook = exeContext.hooks?.beforeFieldResolve;
+  const hook = exeContext.fieldExecutionHooks?.beforeFieldResolve;
   if (!hook) {
     return;
   }
@@ -979,7 +979,7 @@ function invokeAfterFieldResolveHook(
   result?: unknown,
   error?: Error,
 ): void {
-  const hook = exeContext.hooks?.afterFieldResolve;
+  const hook = exeContext.fieldExecutionHooks?.afterFieldResolve;
   if (!hook) {
     return;
   }
@@ -1005,7 +1005,7 @@ function invokeAfterFieldCompleteHook(
   result?: unknown,
   error?: Error,
 ): void {
-  const hook = exeContext.hooks?.afterFieldComplete;
+  const hook = exeContext.fieldExecutionHooks?.afterFieldComplete;
   if (!hook) {
     return;
   }

@@ -36,7 +36,7 @@ describe.each([
         contextValue: {
           models,
         },
-        hooks,
+        fieldExecutionHooks: hooks,
       });
     },
   },
@@ -54,7 +54,7 @@ describe.each([
         contextValue: {
           models,
         },
-        hooks,
+        fieldExecutionHooks: hooks,
       });
     },
   },

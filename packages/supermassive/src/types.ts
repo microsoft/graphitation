@@ -163,7 +163,7 @@ export interface CommonExecutionArgs {
   fieldResolver?: Maybe<FunctionFieldResolver<any, any>>;
   typeResolver?: Maybe<TypeResolver<any, any>>;
   subscribeFieldResolver?: Maybe<FunctionFieldResolver<any, any>>;
-  hooks?: ExecutionHooks;
+  fieldExecutionHooks?: ExecutionHooks;
 }
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
   document: DocumentNode;
