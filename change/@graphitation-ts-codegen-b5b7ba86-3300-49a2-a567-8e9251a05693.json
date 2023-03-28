@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Revert * exports for enums",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}

@@ -1950,7 +1950,7 @@ describe(generateTS, () => {
     );
 
     expect(enums).toMatchInlineSnapshot(`
-      "export * from "common-enums";
+      "export { Foo } from "common-enums";
       "
     `);
     expect(inputs).toMatchInlineSnapshot(`
