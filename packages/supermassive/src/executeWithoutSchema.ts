@@ -409,6 +409,7 @@ function executeField(
   path: Path,
 ): PromiseOrValue<unknown> {
   const fieldName = fieldNodes[0].name.value;
+  const hooks = exeContext.fieldExecutionHooks;
 
   let resolveFn;
   let returnTypeName: string;
@@ -436,6 +437,7 @@ function executeField(
     }
   }
 
+  const isDefaultResolverUsed = !resolveFn;
   if (!resolveFn) {
     resolveFn = exeContext.fieldResolver;
   }
@@ -461,7 +463,9 @@ function executeField(
       exeContext.variableValues,
     );
 
-    invokeBeforeFieldResolveHook(path, exeContext);
+    if (!isDefaultResolverUsed && hooks?.beforeFieldResolve) {
+      invokeBeforeFieldResolveHook(info, exeContext);
+    }
 
     // The resolve function's optional third argument is a context value that
     // is provided to every resolve function within an execution. It is commonly
@@ -474,8 +478,9 @@ function executeField(
     if (isPromise(result)) {
       completed = result.then(
         (resolved) => {
-          invokeAfterFieldResolveHook(path, exeContext, resolved);
-
+          if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
+            invokeAfterFieldResolveHook(info, exeContext, resolved);
+          }
           return completeValue(
             exeContext,
             returnTypeNode,
@@ -488,14 +493,17 @@ function executeField(
         (rawError) => {
           // That's where afterResolve hook can only be called
           // in the case of async resolver promise rejection.
-          invokeAfterFieldResolveHook(path, exeContext, undefined, rawError);
+          if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
+            invokeAfterFieldResolveHook(info, exeContext, undefined, rawError);
+          }
           // Error will be handled on field completion
           throw rawError;
         },
       );
     } else {
-      invokeAfterFieldResolveHook(path, exeContext, result);
-
+      if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
+        invokeAfterFieldResolveHook(info, exeContext, result);
+      }
       completed = completeValue(
         exeContext,
         returnTypeNode,
@@ -511,7 +519,9 @@ function executeField(
       // to take a second callback for the error case.
       return completed.then(
         (resolved) => {
-          invokeAfterFieldCompleteHook(path, exeContext, resolved);
+          if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
+            invokeAfterFieldCompleteHook(info, exeContext, resolved);
+          }
           return resolved;
         },
         (rawError) => {
@@ -520,12 +530,16 @@ function executeField(
             fieldNodes as ReadonlyArray<GraphQLASTNode>,
             pathToArray(path),
           );
-          invokeAfterFieldCompleteHook(path, exeContext, undefined, error);
+          if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
+            invokeAfterFieldCompleteHook(info, exeContext, undefined, error);
+          }
           return handleFieldError(error, returnTypeNode, exeContext);
         },
       );
     }
-    invokeAfterFieldCompleteHook(path, exeContext, completed);
+    if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
+      invokeAfterFieldCompleteHook(info, exeContext, completed);
+    }
     return completed;
   } catch (rawError) {
     const pathArray = pathToArray(path);
@@ -538,10 +552,17 @@ function executeField(
     // it means that field itself resolved fine (so afterFieldResolve has been invoked already),
     // but non-nullable child field resolving throws an error,
     // so that error is propagated to the parent field according to spec
-    if (error.path && arraysAreEqual(pathArray, error.path)) {
-      invokeAfterFieldResolveHook(path, exeContext, undefined, error);
+    if (
+      !isDefaultResolverUsed &&
+      hooks?.afterFieldResolve &&
+      error.path &&
+      arraysAreEqual(pathArray, error.path)
+    ) {
+      invokeAfterFieldResolveHook(info, exeContext, undefined, error);
     }
-    invokeAfterFieldCompleteHook(path, exeContext, undefined, error);
+    if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
+      invokeAfterFieldCompleteHook(info, exeContext, undefined, error);
+    }
     return handleFieldError(error, returnTypeNode, exeContext);
   }
 }
@@ -952,93 +973,115 @@ function collectSubfields(
 }
 
 function invokeBeforeFieldResolveHook(
-  path: Path,
+  resolveInfo: ResolveInfo,
   exeContext: ExecutionContext,
 ): void {
   const hook = exeContext.fieldExecutionHooks?.beforeFieldResolve;
   if (!hook) {
     return;
   }
-
   executeSafe(
     () =>
       hook({
-        path,
+        resolveInfo,
         context: exeContext.contextValue,
       }),
-    () => {
-      // TBC what to do with the error in hook
-      // exeContext.errors.push(error);
+    (_, rawError) => {
+      const error = toGraphQLError(
+        rawError,
+        resolveInfo.path,
+        "Unexpected error in beforeFieldResolve hook",
+      );
+      exeContext.errors.push(error);
     },
   );
 }
 
 function invokeAfterFieldResolveHook(
-  path: Path,
+  resolveInfo: ResolveInfo,
   exeContext: ExecutionContext,
   result?: unknown,
-  error?: Error,
+  error?: any,
 ): void {
   const hook = exeContext.fieldExecutionHooks?.afterFieldResolve;
   if (!hook) {
     return;
   }
-
   executeSafe(
     () =>
       hook({
-        path,
+        resolveInfo,
         context: exeContext.contextValue,
         result,
         error,
       }),
-    () => {
-      // TBC what to do with the error in hook
-      // exeContext.errors.push(error);
+    (_, rawError) => {
+      const error = toGraphQLError(
+        rawError,
+        resolveInfo.path,
+        "Unexpected error in afterFieldResolve hook",
+      );
+      exeContext.errors.push(error);
     },
   );
 }
 
 function invokeAfterFieldCompleteHook(
-  path: Path,
+  resolveInfo: ResolveInfo,
   exeContext: ExecutionContext,
   result?: unknown,
-  error?: Error,
+  error?: any,
 ): void {
   const hook = exeContext.fieldExecutionHooks?.afterFieldComplete;
   if (!hook) {
     return;
   }
-
-  executeSafe<unknown>(
+  executeSafe(
     () =>
       hook({
-        path,
+        resolveInfo,
         context: exeContext.contextValue,
         result,
         error,
       }),
-    () => {
-      // TBC what to do with the error in hook
-      // exeContext.errors.push(error);
+    (_, rawError) => {
+      const error = toGraphQLError(
+        rawError,
+        resolveInfo.path,
+        "Unexpected error in afterFieldComplete hook",
+      );
+      exeContext.errors.push(error);
     },
   );
 }
 
 function executeSafe<T>(
   execute: () => T,
-  onComplete: (result: T | undefined, error: Error | undefined) => void,
+  onComplete: (result: T | undefined, error: any) => void,
 ): T {
-  let error: Error | undefined;
+  let error: any;
   let result: T | undefined;
   try {
     result = execute();
-  } catch (e: any) {
+  } catch (e) {
     error = e;
   } finally {
     onComplete(result, error);
     return result as T;
   }
+}
+
+function toGraphQLError(
+  originalError: any,
+  path: Path,
+  prependMessage: string,
+): GraphQLError {
+  const originalMessage =
+    originalError instanceof Error
+      ? originalError.message
+      : inspect(originalError);
+  const error = new Error(`${prependMessage}: ${originalMessage}`);
+  return locatedError(error, undefined, pathToArray(path));
 }
 
 /**

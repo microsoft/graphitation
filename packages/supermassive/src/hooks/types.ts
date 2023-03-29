@@ -1,23 +1,23 @@
-import { Path } from "../jsutils/Path";
+import { ResolveInfo } from "../types";
 
 interface BaseExecuteHookArgs {
   context: unknown;
 }
 
 interface BaseExecuteFieldHookArgs extends BaseExecuteHookArgs {
-  path: Path;
+  resolveInfo: ResolveInfo;
 }
 
 export interface BeforeFieldResolveHookArgs extends BaseExecuteFieldHookArgs {}
 
 export interface AfterFieldResolveHookArgs extends BaseExecuteFieldHookArgs {
   result?: unknown;
-  error?: Error;
+  error?: any;
 }
 
 export interface AfterFieldCompleteHookArgs extends BaseExecuteFieldHookArgs {
   result?: unknown;
-  error?: Error;
+  error?: any;
 }
 
 export interface BeforeFieldResolveHook {
