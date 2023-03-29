@@ -13,12 +13,20 @@ import {
   ExecutionHooks,
 } from "../hooks/types";
 import { pathToArray } from "../jsutils/Path";
+import { inspect } from "../jsutils/inspect";
 
 interface TestCase {
   name: string;
   query: string;
   resolvers: Resolvers;
   expectedHookCalls: string[];
+}
+
+interface HookExceptionTestCase {
+  name: string;
+  query: string;
+  hooks: ExecutionHooks;
+  expectedErrorMessage: string;
 }
 
 describe.each([
@@ -59,52 +67,58 @@ describe.each([
     },
   },
 ])("$name", ({ execute }) => {
-  let hookCalls: string[];
-
-  // Used hook acronyms:
-  //   BFR: beforeFieldResolve
-  //   AFR: afterFieldResolve
-  //   AFC: afterFieldComplete
-  const hooks: ExecutionHooks = {
-    beforeFieldResolve: jest
-      .fn()
-      .mockImplementation(({ path }: BeforeFieldResolveHookArgs) => {
-        hookCalls.push(`BFR|${pathToArray(path).join(".")}`);
-      }),
-    afterFieldResolve: jest
-      .fn()
-      .mockImplementation(
-        ({ path, result, error }: AfterFieldResolveHookArgs) => {
-          const resultValue =
-            typeof result === "object" && result !== null ? "[object]" : result;
-          hookCalls.push(
-            `AFR|${pathToArray(path).join(".")}|${resultValue}|${
-              error?.message
-            }`,
-          );
-        },
-      ),
-    afterFieldComplete: jest
-      .fn()
-      .mockImplementation(
-        ({ path, result, error }: AfterFieldCompleteHookArgs) => {
-          const resultValue =
-            typeof result === "object" && result !== null ? "[object]" : result;
-          hookCalls.push(
-            `AFC|${pathToArray(path).join(".")}|${resultValue}|${
-              error?.message
-            }`,
-          );
-        },
-      ),
-  };
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    hookCalls = [];
-  });
-
   describe("Execution hooks are invoked", () => {
+    let hookCalls: string[];
+
+    // Used hook acronyms:
+    //   BFR: beforeFieldResolve
+    //   AFR: afterFieldResolve
+    //   AFC: afterFieldComplete
+    const hooks: ExecutionHooks = {
+      beforeFieldResolve: jest
+        .fn()
+        .mockImplementation(({ resolveInfo }: BeforeFieldResolveHookArgs) => {
+          hookCalls.push(`BFR|${pathToArray(resolveInfo.path).join(".")}`);
+        }),
+      afterFieldResolve: jest
+        .fn()
+        .mockImplementation(
+          ({ resolveInfo, result, error }: AfterFieldResolveHookArgs) => {
+            const resultValue =
+              typeof result === "object" && result !== null
+                ? "[object]"
+                : result;
+            const errorMessage = error instanceof Error ? error.message : error;
+            hookCalls.push(
+              `AFR|${pathToArray(resolveInfo.path).join(
+                ".",
+              )}|${resultValue}|${errorMessage}`,
+            );
+          },
+        ),
+      afterFieldComplete: jest
+        .fn()
+        .mockImplementation(
+          ({ resolveInfo, result, error }: AfterFieldCompleteHookArgs) => {
+            const resultValue =
+              typeof result === "object" && result !== null
+                ? "[object]"
+                : result;
+            const errorMessage = error instanceof Error ? error.message : error;
+            hookCalls.push(
+              `AFC|${pathToArray(resolveInfo.path).join(
+                ".",
+              )}|${resultValue}|${errorMessage}`,
+            );
+          },
+        ),
+    };
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      hookCalls = [];
+    });
+
     const testCases: Array<TestCase> = [
       {
         name: "succeeded sync resolver",
@@ -256,6 +270,21 @@ describe.each([
           "AFC|film|undefined|Resolver error",
         ],
       },
+      {
+        name: "do not invoke hooks for the field with default resolver",
+        query: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        resolvers: resolvers as UserResolvers,
+        expectedHookCalls: [
+          "BFR|film",
+          "AFR|film|[object]|undefined",
+          "AFC|film|[object]|undefined",
+        ],
+      },
     ];
 
     it.each(testCases)(
@@ -270,6 +299,131 @@ describe.each([
         // so just verify whether corresponding hook calls happened
         expect(hookCalls).toHaveLength(expectedHookCalls.length);
         expect(hookCalls).toEqual(expect.arrayContaining(expectedHookCalls));
+      },
+    );
+  });
+
+  describe("Error thrown in the hook doesn't break execution and is returned in response 'errors'", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    const testCases: Array<HookExceptionTestCase> = [
+      {
+        name: "beforeFieldResolve (Error is thrown)",
+        query: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        hooks: {
+          beforeFieldResolve: jest.fn().mockImplementation(() => {
+            throw new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in beforeFieldResolve hook: Hook error",
+      },
+      {
+        name: "beforeFieldResolve (string is thrown)",
+        query: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        hooks: {
+          beforeFieldResolve: jest.fn().mockImplementation(() => {
+            throw "Hook error";
+          }),
+        },
+        expectedErrorMessage:
+          'Unexpected error in beforeFieldResolve hook: "Hook error"',
+      },
+      {
+        name: "afterFieldResolve (Error is thrown)",
+        query: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        hooks: {
+          afterFieldResolve: jest.fn().mockImplementation(() => {
+            throw new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in afterFieldResolve hook: Hook error",
+      },
+      {
+        name: "afterFieldResolve (string is thrown)",
+        query: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        hooks: {
+          afterFieldResolve: jest.fn().mockImplementation(() => {
+            throw "Hook error";
+          }),
+        },
+        expectedErrorMessage:
+          'Unexpected error in afterFieldResolve hook: "Hook error"',
+      },
+      {
+        name: "afterFieldComplete (Error is thrown)",
+        query: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        hooks: {
+          afterFieldComplete: jest.fn().mockImplementation(() => {
+            throw new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in afterFieldComplete hook: Hook error",
+      },
+      {
+        name: "afterFieldComplete (string is thrown)",
+        query: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        hooks: {
+          afterFieldComplete: jest.fn().mockImplementation(() => {
+            throw "Hook error";
+          }),
+        },
+        expectedErrorMessage:
+          'Unexpected error in afterFieldComplete hook: "Hook error"',
+      },
+    ];
+
+    it.each(testCases)(
+      "$name",
+      async ({ query, hooks, expectedErrorMessage }) => {
+        expect.assertions(4);
+        const document = parse(query);
+
+        const response = await execute(
+          document,
+          resolvers as UserResolvers,
+          hooks,
+        );
+        const errors = response.errors;
+
+        expect(response.data).toBeTruthy();
+        expect(errors).toBeDefined();
+        expect(errors).toHaveLength(1);
+        expect(errors![0].message).toBe(expectedErrorMessage);
       },
     );
   });
