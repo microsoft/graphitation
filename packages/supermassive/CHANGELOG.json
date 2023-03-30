@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 30 Mar 2023 08:30:21 GMT",
+      "tag": "@graphitation/supermassive_v2.3.0",
+      "version": "2.3.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "sergeystoyan@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "aef6a87d53c1fe82e000505e706996976b65e41c",
+            "comment": "[SUPERMASSIVE] Initial execution hooks implementation"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 01 Mar 2023 10:48:32 GMT",
       "tag": "@graphitation/supermassive_v2.1.0",
       "version": "2.1.0",

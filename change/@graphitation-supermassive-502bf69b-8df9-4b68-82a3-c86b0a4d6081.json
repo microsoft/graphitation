@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "[SUPERMASSIVE] Initial execution hooks implementation",
-  "packageName": "@graphitation/supermassive",
-  "email": "sergeystoyan@microsoft.com",
-  "dependentChangeType": "patch"
-}
