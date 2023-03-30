@@ -121,66 +121,69 @@ export function extractImplicitTypesToTypescript(
     );
   });
 
-  const graphQLImportDefinition: ts.ImportDeclaration = factory.createImportDeclaration(
-    undefined,
-    undefined,
-    factory.createImportClause(
-      false,
+  const graphQLImportDefinition: ts.ImportDeclaration =
+    factory.createImportDeclaration(
       undefined,
-      factory.createNamedImports(
-        graphQLImports.map((imp) =>
-          factory.createImportSpecifier(
-            undefined,
-            factory.createIdentifier(imp),
-          ),
-        ),
-      ),
-    ),
-    factory.createStringLiteral("graphql"),
-  );
-
-  const supermassiveImportDefinition: ts.ImportDeclaration = factory.createImportDeclaration(
-    undefined,
-    undefined,
-    factory.createImportClause(
-      false,
       undefined,
-      factory.createNamedImports(
-        supermassiveImports.map((imp) =>
-          factory.createImportSpecifier(
-            undefined,
-            factory.createIdentifier(imp),
-          ),
-        ),
-      ),
-    ),
-    factory.createStringLiteral("@graphitation/supermassive"),
-  );
-
-  const exportDefinition: ts.VariableStatement = factory.createVariableStatement(
-    [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-    factory.createVariableDeclarationList(
-      [
-        factory.createVariableDeclaration(
-          factory.createIdentifier("resolvers"),
-          undefined,
-          factory.createTypeReferenceNode(
-            factory.createIdentifier("Resolvers"),
-            undefined,
-          ),
-          factory.createObjectLiteralExpression(
-            identifiers.map((def: string) =>
-              factory.createShorthandPropertyAssignment(
-                factory.createIdentifier(def),
-                undefined,
-              ),
+      factory.createImportClause(
+        false,
+        undefined,
+        factory.createNamedImports(
+          graphQLImports.map((imp) =>
+            factory.createImportSpecifier(
+              undefined,
+              factory.createIdentifier(imp),
             ),
           ),
         ),
-      ],
-      ts.NodeFlags.Const,
-    ),
-  );
+      ),
+      factory.createStringLiteral("graphql"),
+    );
+
+  const supermassiveImportDefinition: ts.ImportDeclaration =
+    factory.createImportDeclaration(
+      undefined,
+      undefined,
+      factory.createImportClause(
+        false,
+        undefined,
+        factory.createNamedImports(
+          supermassiveImports.map((imp) =>
+            factory.createImportSpecifier(
+              undefined,
+              factory.createIdentifier(imp),
+            ),
+          ),
+        ),
+      ),
+      factory.createStringLiteral("@graphitation/supermassive"),
+    );
+
+  const exportDefinition: ts.VariableStatement =
+    factory.createVariableStatement(
+      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+      factory.createVariableDeclarationList(
+        [
+          factory.createVariableDeclaration(
+            factory.createIdentifier("resolvers"),
+            undefined,
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("Resolvers"),
+              undefined,
+            ),
+            factory.createObjectLiteralExpression(
+              identifiers.map((def: string) =>
+                factory.createShorthandPropertyAssignment(
+                  factory.createIdentifier(def),
+                  undefined,
+                ),
+              ),
+            ),
+          ),
+        ],
+        ts.NodeFlags.Const,
+      ),
+    );
 
   return factory.createSourceFile(
     [

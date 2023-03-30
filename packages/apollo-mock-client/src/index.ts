@@ -21,7 +21,7 @@ export interface RequestDescriptor<Node = DocumentNode> {
 
 export interface OperationDescriptor<
   Schema = GraphQLSchema,
-  Node = DocumentNode
+  Node = DocumentNode,
 > {
   readonly schema: Schema;
   readonly request: RequestDescriptor<Node>;

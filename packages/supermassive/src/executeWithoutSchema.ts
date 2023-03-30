@@ -428,9 +428,9 @@ function executeField(
     returnTypeNode = fieldNodes[0].__type;
     returnTypeName = typeNameFromAST(returnTypeNode);
     const typeResolvers = exeContext.resolvers[parentTypeName];
-    resolveFn = (typeResolvers as
-      | ObjectTypeResolver<any, any, any>
-      | undefined)?.[fieldName];
+    resolveFn = (
+      typeResolvers as ObjectTypeResolver<any, any, any> | undefined
+    )?.[fieldName];
 
     if (typeof resolveFn !== "function" && resolveFn != null) {
       resolveFn = resolveFn.resolve;
@@ -1108,19 +1108,17 @@ export const defaultTypeResolver: TypeResolver<unknown, unknown> = function (
  * and returns it as the result, or if it's a function, returns the result
  * of calling that function while passing along args and context value.
  */
-export const defaultFieldResolver: FunctionFieldResolver<
-  unknown,
-  unknown
-> = function (source: any, args, contextValue, info) {
-  // ensure source is a value for which property access is acceptable.
-  if (isObjectLike(source) || typeof source === "function") {
-    const property = source[info.fieldName];
-    if (typeof property === "function") {
-      return source[info.fieldName](args, contextValue, info);
+export const defaultFieldResolver: FunctionFieldResolver<unknown, unknown> =
+  function (source: any, args, contextValue, info) {
+    // ensure source is a value for which property access is acceptable.
+    if (isObjectLike(source) || typeof source === "function") {
+      const property = source[info.fieldName];
+      if (typeof property === "function") {
+        return source[info.fieldName](args, contextValue, info);
+      }
+      return property;
     }
-    return property;
-  }
-};
+  };
 
 // TODO(freiksenet): Custom root type names maybe?
 export function getOperationRootTypeName(

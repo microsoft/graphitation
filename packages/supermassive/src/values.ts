@@ -299,6 +299,6 @@ function graphqlTypeFromTypeAst(
   } else {
     const typeName = node.name.value;
     const type = specifiedScalars[typeName] || resolvers[typeName];
-    return (type as any) as GraphQLType;
+    return type as any as GraphQLType;
   }
 }

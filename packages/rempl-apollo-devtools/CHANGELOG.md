@@ -66,7 +66,7 @@ Thu, 03 Nov 2022 12:43:31 GMT
 
 ### Patches
 
--  Hotfix: set subscriber format to iife in build-separated-bundles.js (jakubvejr@microsoft.com)
+- Hotfix: set subscriber format to iife in build-separated-bundles.js (jakubvejr@microsoft.com)
 
 ## 0.3.4
 

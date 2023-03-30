@@ -34,7 +34,7 @@ const UserComponent: React.FC<Props> = (props) => {
         }
       }
     `,
-    props.user
+    props.user,
   );
 
   return (

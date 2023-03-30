@@ -49,7 +49,7 @@ export interface RequestDescriptor<Node = DocumentNode> {
 
 export interface OperationDescriptor<
   Schema = GraphQLSchema,
-  Node = DocumentNode
+  Node = DocumentNode,
 > {
   readonly schema: Schema;
   readonly request: RequestDescriptor<Node>;
@@ -285,9 +285,8 @@ function mockCompositeType(
       // We keep a reference to the path so we can rewrite the __typename
       // field in the output after execution to reflect that this not a
       // selection on a concrete type.
-      const possibleType = operation.schema.getPossibleTypes(
-        namedReturnType,
-      )[0];
+      const possibleType =
+        operation.schema.getPossibleTypes(namedReturnType)[0];
       invariant(
         possibleType,
         "Expected interface %s to be implemented by at least one concrete type",

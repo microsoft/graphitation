@@ -32,9 +32,11 @@ export const plugin: PluginFunction<
   );
 
   const allFragments: LoadedFragment[] = [
-    ...(allAst.definitions.filter(
-      (d) => d.kind === Kind.FRAGMENT_DEFINITION,
-    ) as FragmentDefinitionNode[]).map((fragmentDef) => ({
+    ...(
+      allAst.definitions.filter(
+        (d) => d.kind === Kind.FRAGMENT_DEFINITION,
+      ) as FragmentDefinitionNode[]
+    ).map((fragmentDef) => ({
       node: fragmentDef,
       name: fragmentDef.name.value,
       onType: fragmentDef.typeCondition.name.value,

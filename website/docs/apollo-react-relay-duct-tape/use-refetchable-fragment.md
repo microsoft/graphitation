@@ -36,7 +36,7 @@ const CommentBody: React.FC<Props> = (props) => {
         }
       }
     `,
-    props.comment
+    props.comment,
   );
 
   return (

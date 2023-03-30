@@ -60,9 +60,8 @@ export class ApolloCacheDuplicatesPublisher {
       return;
     }
 
-    const serializedCacheDuplicatesObject = this.serializeCacheDuplicatesObjects(
-      this.client,
-    );
+    const serializedCacheDuplicatesObject =
+      this.serializeCacheDuplicatesObjects(this.client);
     this.publishCacheDuplicates(serializedCacheDuplicatesObject);
   }
 

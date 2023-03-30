@@ -10,7 +10,7 @@ Tue, 28 Mar 2023 10:27:19 GMT
 
 ### Minor changes
 
-- Revert * exports for enums (mnovikov@microsoft.com)
+- Revert \* exports for enums (mnovikov@microsoft.com)
 
 ## 2.3.0
 
@@ -18,7 +18,7 @@ Mon, 27 Mar 2023 13:30:13 GMT
 
 ### Minor changes
 
-- Export * enums (mnovikov@microsoft.com)
+- Export \* enums (mnovikov@microsoft.com)
 
 ## 2.2.0
 

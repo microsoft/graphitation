@@ -7,7 +7,7 @@ describe(generateTS, () => {
   describe("Tests basic syntax GraphQL syntax", () => {
     test("all possible nullable and non-nullable combinations", () => {
       const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
-        extend schema @import(from: "@msteams/packages-test", defs: ["Avatar"]) 
+        extend schema @import(from: "@msteams/packages-test", defs: ["Avatar"])
         type Post @model(from: "./post-model.interface", tsType: "PostModel") {
           id: ID!
         }
@@ -1068,9 +1068,9 @@ describe(generateTS, () => {
   it("imports an entity, which is used to implement interface and returned by resolver", () => {
     const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
       extend schema @import(from: "@msteams/packages-test", defs: ["Entity"])
-      
+
       interface Person implements Entity {
-          id: ID!
+        id: ID!
       }
 
       type User implements Person {
@@ -1135,8 +1135,9 @@ describe(generateTS, () => {
 
   it("imports an entity, which is used in a type", () => {
     const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
-      extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
-                    @import(from: "@msteams/packages-rank", defs: ["Rank"])
+      extend schema
+        @import(from: "@msteams/packages-node", defs: ["Node"])
+        @import(from: "@msteams/packages-rank", defs: ["Rank"])
 
       type User {
         id: ID!
@@ -1195,8 +1196,9 @@ describe(generateTS, () => {
 
   it("works when an operation has scalar, input and Enum as parameters", () => {
     const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
-      extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
-                    @import(from: "@msteams/packages-rank", defs: ["Rank"])
+      extend schema
+        @import(from: "@msteams/packages-node", defs: ["Node"])
+        @import(from: "@msteams/packages-rank", defs: ["Rank"])
 
       scalar DateTime
 
@@ -1211,7 +1213,11 @@ describe(generateTS, () => {
       }
 
       extend type Query {
-        isUser(userParam: UserParam!, userType: UserType!, dateTime: DateTime!): Boolean
+        isUser(
+          userParam: UserParam!
+          userType: UserType!
+          dateTime: DateTime!
+        ): Boolean
       }
     `);
     expect(enums).toMatchInlineSnapshot(`
@@ -1261,8 +1267,9 @@ describe(generateTS, () => {
 
   it("imports an entity, which is used in an input", () => {
     const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
-      extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
-                    @import(from: "@msteams/packages-rank", defs: ["Rank"])
+      extend schema
+        @import(from: "@msteams/packages-node", defs: ["Node"])
+        @import(from: "@msteams/packages-rank", defs: ["Rank"])
 
       type User {
         id: ID!
@@ -1330,8 +1337,9 @@ describe(generateTS, () => {
 
   it("imported Rank shouldn't be imported in the model, because it's used in a type, which has the model directive", () => {
     const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
-      extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
-                    @import(from: "@msteams/packages-rank", defs: ["Rank"])
+      extend schema
+        @import(from: "@msteams/packages-node", defs: ["Node"])
+        @import(from: "@msteams/packages-rank", defs: ["Rank"])
 
       type User @model(tsType: "User", from: "@msteams/custom-user") {
         id: ID!
@@ -1388,8 +1396,9 @@ describe(generateTS, () => {
 
   it("imports an entity, which is used in a nested input", () => {
     const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
-      extend schema @import(from: "@msteams/packages-node", defs: ["Node"])
-                    @import(from: "@msteams/packages-rank", defs: ["Rank"])
+      extend schema
+        @import(from: "@msteams/packages-node", defs: ["Node"])
+        @import(from: "@msteams/packages-rank", defs: ["Rank"])
 
       type User {
         id: ID!
@@ -2094,14 +2103,8 @@ function runGenerateTest(
     ...options,
   };
   const document = parse(doc);
-  const [
-    models,
-    resolvers,
-    enums,
-    inputs,
-    legacyTypes,
-    legacyResolvers,
-  ] = generateTS(document, fullOptions).files;
+  const [models, resolvers, enums, inputs, legacyTypes, legacyResolvers] =
+    generateTS(document, fullOptions).files;
   const printer = ts.createPrinter();
   return {
     enums: printer.printFile(enums),

@@ -71,7 +71,7 @@ export const FilterView = React.memo((props: IFilterView) => {
   const statues = Object.entries(OperationStatus)
     .filter((status) => status[0] !== OperationStatus.InFlight)
     .map((value, key) => {
-      const checkboxValue = ((value as unknown) as Array<string>)[0];
+      const checkboxValue = (value as unknown as Array<string>)[0];
       return (
         <Checkbox
           onChange={onStatusChange}
@@ -83,7 +83,7 @@ export const FilterView = React.memo((props: IFilterView) => {
     });
 
   const resultsFrom = Object.entries(ResultsFrom).map((value, key) => {
-    const checkboxValue = ((value as unknown) as Array<string>)[0];
+    const checkboxValue = (value as unknown as Array<string>)[0];
     return (
       <Checkbox
         onChange={onResultChange}
@@ -192,17 +192,17 @@ const useOperationTypesCheckBox = ({
       .filter(
         (value) =>
           !querySubTypes.includes(
-            ((value as unknown) as Array<string>)[0] as OperationType,
+            (value as unknown as Array<string>)[0] as OperationType,
           ),
       )
       .filter(
         (value) =>
           !fragmentSubTypes.includes(
-            ((value as unknown) as Array<string>)[0] as OperationType,
+            (value as unknown as Array<string>)[0] as OperationType,
           ),
       )
       .map((value, key) => {
-        const checkboxValue = ((value as unknown) as Array<string>)[0];
+        const checkboxValue = (value as unknown as Array<string>)[0];
         return (
           <Checkbox
             onChange={onOperationTypeChange}

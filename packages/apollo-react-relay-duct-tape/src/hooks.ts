@@ -140,7 +140,7 @@ export function useFragment<TKey extends KeyType>(
 
 // https://github.com/facebook/relay/blob/master/website/docs/api-reference/types/GraphQLSubscriptionConfig.md
 interface GraphQLSubscriptionConfig<
-  TSubscriptionPayload extends OperationType
+  TSubscriptionPayload extends OperationType,
 > {
   subscription: GraphQLTaggedNode;
   variables: TSubscriptionPayload["variables"];
@@ -241,9 +241,8 @@ type MutationCommiter<TMutationPayload extends OperationType> = (
 export function useMutation<TMutationPayload extends OperationType>(
   mutation: GraphQLTaggedNode,
 ): [MutationCommiter<TMutationPayload>, boolean] {
-  const [apolloUpdater, { loading: mutationLoading }] = useApolloMutation(
-    mutation,
-  );
+  const [apolloUpdater, { loading: mutationLoading }] =
+    useApolloMutation(mutation);
 
   return [
     async (options: IMutationCommitterOptions<TMutationPayload>) => {

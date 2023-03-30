@@ -191,13 +191,8 @@ export async function createSourceEventStream(
 async function executeSubscription(
   exeContext: ExecutionContext,
 ): Promise<unknown> {
-  const {
-    resolvers,
-    fragments,
-    operation,
-    variableValues,
-    rootValue,
-  } = exeContext;
+  const { resolvers, fragments, operation, variableValues, rootValue } =
+    exeContext;
   const typeName = getOperationRootTypeName(operation);
   const fields = collectFields(
     resolvers,
@@ -229,9 +224,11 @@ async function executeSubscription(
     returnTypeNode = fieldNodes[0].__type as TypeNode;
     returnTypeName = typeNameFromAST(returnTypeNode);
     const typeResolvers = exeContext.resolvers[typeName];
-    resolveFn = ((typeResolvers as
-      | ObjectTypeResolver<any, any, any>
-      | undefined)?.[fieldName] as any).subscribe;
+    resolveFn = (
+      (typeResolvers as ObjectTypeResolver<any, any, any> | undefined)?.[
+        fieldName
+      ] as any
+    ).subscribe;
   }
 
   if (!resolveFn) {
