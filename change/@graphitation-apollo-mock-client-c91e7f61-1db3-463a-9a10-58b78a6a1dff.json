@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "Upgrade prettier",
+  "packageName": "@graphitation/apollo-mock-client",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "none"
+}
