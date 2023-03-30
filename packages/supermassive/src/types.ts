@@ -18,6 +18,7 @@ import {
 } from "./ast/TypedAST";
 import { ObjMap } from "./jsutils/ObjMap";
 import { Path } from "./jsutils/Path";
+import { ExecutionHooks } from "./hooks/types";
 
 export type ScalarTypeResolver = GraphQLScalarType;
 export type EnumTypeResolver = GraphQLEnumType; // TODO Record<string, any>;
@@ -162,6 +163,7 @@ export interface CommonExecutionArgs {
   fieldResolver?: Maybe<FunctionFieldResolver<any, any>>;
   typeResolver?: Maybe<TypeResolver<any, any>>;
   subscribeFieldResolver?: Maybe<FunctionFieldResolver<any, any>>;
+  fieldExecutionHooks?: ExecutionHooks;
 }
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
   document: DocumentNode;
