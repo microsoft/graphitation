@@ -45,6 +45,12 @@ To solve for this, we have had to invent a new name for this key concept: **broa
 
 ### Front-end perspective example
 
+:::info
+
+This section shows GraphQL query and schema definition syntax. The first part of [this upstream guide](https://graphql.org/learn/schema/) will be useful to explain any bits that are not immediately clear.
+
+:::
+
 When designing the schema in a vacuum, it might be hard to imagine what those connections should be. However, when considered from the perspective of a concrete piece of UI, and working your way backwards, it actually becomes a lot easier.
 
 Let's consider the conversation list UI example again:

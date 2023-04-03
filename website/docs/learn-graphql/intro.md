@@ -16,6 +16,12 @@ The authors of this guide have observed that **the original premise of GraphQL i
 
 This guide aims to teach you everything you need to understand about GraphQL from that perspective, including how to design schemas, how to implement field resolvers, and how to effectively use this to build these data-driven UIs.
 
+:::info
+
+This guide does not aim to replace [the canonical graphql.org site’s documentation](https://graphql.org/learn/). Some familiarity with GraphQL might be necessary for some sections, where possible the guide will link to the relevant existing documentation.
+
+:::
+
 ## About
 
 GraphQL is a new way of thinking about data and how to access it. It is a data query language that was invented by Facebook in 2012 to make it easier to deal with the complexity of data and state driven UI applications, combined with the scale of their workforce and codebase. GraphQL has since been open-sourced and is now used by many companies that have to deal with the same complexities.
