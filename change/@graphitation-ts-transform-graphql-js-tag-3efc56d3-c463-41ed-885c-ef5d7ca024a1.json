@@ -1,7 +1,0 @@
-{
-  "type": "none",
-  "comment": "Upgrade prettier",
-  "packageName": "@graphitation/ts-transform-graphql-js-tag",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "none"
-}

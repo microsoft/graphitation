@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Mon, 03 Apr 2023 14:51:36 GMT",
+      "tag": "@graphitation/ts-codegen_v2.4.0",
+      "version": "2.4.0",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "3cd00dd6254a9b7d9dfe615d9d35dba4c0b108c7",
+            "comment": "Upgrade prettier"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 28 Mar 2023 10:27:19 GMT",
       "tag": "@graphitation/ts-codegen_v2.4.0",
       "version": "2.4.0",

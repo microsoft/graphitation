@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-mock-client",
   "entries": [
     {
+      "date": "Mon, 03 Apr 2023 14:51:35 GMT",
+      "tag": "@graphitation/apollo-mock-client_v0.10.16",
+      "version": "0.10.16",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/apollo-mock-client",
+            "commit": "3cd00dd6254a9b7d9dfe615d9d35dba4c0b108c7",
+            "comment": "Upgrade prettier"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 13 Mar 2023 14:00:55 GMT",
       "tag": "@graphitation/apollo-mock-client_v0.10.16",
       "version": "0.10.16",
