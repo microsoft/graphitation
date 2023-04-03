@@ -27,14 +27,21 @@ import {
 import { optimizeDocumentNode } from "@graphql-tools/optimize";
 import gqlTag from "graphql-tag";
 
+type RawClientSidePluginConfig = RawClientSideBasePluginConfig & {
+  supermassiveDocumentNodeConditional?: string;
+};
+type ClientSidePluginConfig = ClientSideBasePluginConfig & {
+  supermassiveDocumentNodeConditional?: string;
+};
+
 export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
-  RawClientSideBasePluginConfig,
-  ClientSideBasePluginConfig
+  RawClientSidePluginConfig,
+  ClientSidePluginConfig
 > {
   constructor(
     schema: GraphQLSchema,
     fragments: LoadedFragment[],
-    rawConfig: RawClientSideBasePluginConfig,
+    rawConfig: RawClientSidePluginConfig,
     documents: Types.DocumentFile[],
   ) {
     super(
@@ -46,7 +53,10 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
           "@graphql-typed-document-node/core#TypedDocumentNode",
         ...rawConfig,
       },
-      {},
+      {
+        supermassiveDocumentNodeConditional:
+          rawConfig.supermassiveDocumentNodeConditional,
+      },
       documents,
     );
 
@@ -69,6 +79,18 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
   protected _gql(
     node: FragmentDefinitionNode | OperationDefinitionNode,
   ): string {
+    if (this.config.supermassiveDocumentNodeConditional) {
+      const supermassive = this._render(node, true);
+      const standard = this._render(node, false);
+      return `(process.env.__ENABLE_GRAPHQL_SUPERMASSIVE__\n? ${supermassive}\n: ${standard})`;
+    }
+    return this._render(node, true);
+  }
+
+  protected _render(
+    node: FragmentDefinitionNode | OperationDefinitionNode,
+    annotate = false,
+  ): string {
     const supermassiveNode = addTypesToRequestDocument(this._schema, {
       kind: Kind.DOCUMENT,
       definitions: [node],
@@ -90,8 +112,11 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
       if (this.config.optimizeDocumentNode) {
         gqlObj = optimizeDocumentNode(gqlObj);
       }
+      if (annotate) {
+        gqlObj = this._transformDocumentNodeToSupermassive(gqlObj);
+      }
 
-      return JSON.stringify(this._transformDocumentNodeToSupermassive(gqlObj));
+      return JSON.stringify(gqlObj);
     } else if (
       this.config.documentMode === DocumentMode.documentNodeImportFragments
     ) {
@@ -105,10 +130,12 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
         const definitions = [
           ...gqlObj.definitions.map((t) =>
             JSON.stringify(
-              addTypesToRequestDocument(this._schema, {
-                kind: Kind.DOCUMENT,
-                definitions: [t],
-              }).definitions[0],
+              annotate
+                ? addTypesToRequestDocument(this._schema, {
+                    kind: Kind.DOCUMENT,
+                    definitions: [t],
+                  }).definitions[0]
+                : t,
             ),
           ),
           ...fragments.map((name) => `...${name}.definitions`),
@@ -116,8 +143,11 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
 
         return `{"kind":"${Kind.DOCUMENT}","definitions":[${definitions}]}`;
       }
+      if (annotate) {
+        gqlObj = this._transformDocumentNodeToSupermassive(gqlObj);
+      }
 
-      return JSON.stringify(this._transformDocumentNodeToSupermassive(gqlObj));
+      return JSON.stringify(gqlObj);
     } else if (this.config.documentMode === DocumentMode.string) {
       return "`" + doc + "`";
     }
