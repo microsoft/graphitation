@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Support conditional annotations in `graphql-codegen-supermassive-typed-document-node-plugin`",
+  "packageName": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}
