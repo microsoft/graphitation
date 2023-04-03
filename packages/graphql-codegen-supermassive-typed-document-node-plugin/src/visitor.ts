@@ -82,7 +82,7 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
     if (this.config.supermassiveDocumentNodeConditional) {
       const supermassive = this._render(node, true);
       const standard = this._render(node, false);
-      return `(process.env.__ENABLE_GRAPHQL_SUPERMASSIVE__\n? ${supermassive}\n: ${standard})`;
+      return `(${this.config.supermassiveDocumentNodeConditional}\n? ${supermassive}\n: ${standard})`;
     }
     return this._render(node, true);
   }
