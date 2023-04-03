@@ -167,7 +167,7 @@ export interface CommonExecutionArgs {
 }
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
   document: DocumentNode;
-  schemaResolvers: Resolvers;
+  schemaResolvers?: Resolvers;
 };
 
 export type ExecutionWithSchemaArgs = CommonExecutionArgs & {

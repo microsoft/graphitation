@@ -123,7 +123,9 @@ export function executeWithoutSchema(
     fieldExecutionHooks,
   } = args;
 
-  const combinedResolvers = mergeResolvers(resolvers, schemaResolvers);
+  const combinedResolvers = schemaResolvers
+    ? mergeResolvers(resolvers, schemaResolvers)
+    : resolvers;
   // If arguments are missing or incorrect, throw an error.
   assertValidExecutionArguments(document, variableValues);
 

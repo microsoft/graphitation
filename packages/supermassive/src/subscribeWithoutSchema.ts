@@ -71,7 +71,9 @@ export async function subscribeWithoutSchema(
     subscribeFieldResolver,
   } = args;
 
-  const combinedResolvers = mergeResolvers(resolvers, schemaResolvers);
+  const combinedResolvers = schemaResolvers
+    ? mergeResolvers(resolvers, schemaResolvers)
+    : resolvers;
 
   const resultOrStream = await createSourceEventStream(
     combinedResolvers,
