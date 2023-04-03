@@ -167,7 +167,7 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
             definitions: [t],
           }).definitions[0],
       ),
-    };
+    } as DocumentNode;
   }
   protected getDocumentNodeSignature(
     resultType: string,
