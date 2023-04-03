@@ -13,6 +13,7 @@ export function processImportDirective(
 ): DefinitionImport {
   const from = getArgumentValue(node.arguments, "from");
   const defs = getArgumentValue(node.arguments, "defs");
+  const exts = getArgumentValue(node.arguments, "extends");
 
   if (from?.kind !== "StringValue") {
     throw new GraphQLError(
@@ -23,6 +24,13 @@ export function processImportDirective(
   if (defs?.kind !== "ListValue") {
     throw new GraphQLError(
       `Directive @import requires "defs" argument to exist and be a list of strings.`,
+      [defs ?? node],
+    );
+  }
+
+  if (exts && exts.kind !== "ListValue") {
+    throw new GraphQLError(
+      `Directive @import "extends" argument must be a list of strings.`,
       [defs ?? node],
     );
   }
@@ -38,9 +46,23 @@ export function processImportDirective(
     definitionNames.push(valueNode.value);
   });
 
+  const extendsNames: string[] = [];
+  exts?.values.forEach((valueNode: ValueNode) => {
+    if (valueNode.kind !== "StringValue") {
+      throw new GraphQLError(
+        `Directive @import "extends" argument must be a list of strings (got ${valueNode.kind}).`,
+        [valueNode],
+      );
+    }
+    extendsNames.push(valueNode.value);
+  });
+
   return {
     from: getRelativePath(from.value, outputPath, documentPath) as string,
     defs: definitionNames.map((typeName) => ({
+      typeName,
+    })),
+    extends: extendsNames.map((typeName) => ({
       typeName,
     })),
     importName: createVariableNameFromImport(from.value),

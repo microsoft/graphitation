@@ -1,0 +1,117 @@
+"""
+@oneOf is a proposed directive currently in RFC stage: https://github.com/graphql/graphql-spec/pull/825
+OneOf Input Objects are a special variant of Input Objects where the type system asserts
+that exactly one of the fields must be set and non-null, all others being omitted.
+Below is a placeholder definition of the directive until it is part of the spec
+"""
+directive @oneOf on INPUT_OBJECT
+
+type Query {
+  noop: Boolean # TODO: Needs to be removed during schema merging.
+}
+
+type Mutation {
+  noop: Boolean # TODO: Needs to be removed during schema merging.
+}
+
+"""
+Define a type to be compliant with the Global Object Identification best-practice spec.
+https://graphql.org/learn/global-object-identification/
+"""
+interface Node {
+  id: ID!
+}
+
+"""
+A type describing a relationship between Nodes.
+"""
+interface ConnectionEdge {
+  """
+  The Node that this edge points to
+  """
+  node: Node!
+}
+
+"""
+A ConnectionEdge with Cursor Pagination
+"""
+interface ConnectionEdgeWithCursorPagination implements ConnectionEdge {
+  """
+  The 'cursor' of this edge in the list of edges,
+  used to paginate relative to this item when performing
+  future queries.
+
+  See https://graphql.org/learn/pagination/
+  """
+  cursor: String!
+
+  """
+  The Node that this edge points to
+  """
+  node: Node!
+}
+
+"""
+The base Connection type.
+
+See https://www.apollographql.com/blog/explaining-graphql-connections-c48b7c3d6976
+"""
+interface Connection {
+  """
+  Edges to the member nodes of this collection
+  """
+  edges: [ConnectionEdge!]!
+}
+
+interface ConnectionWithCursorPagination {
+  """
+  Edges to the member nodes of this collection
+  """
+  edges: [ConnectionEdgeWithCursorPagination!]!
+
+  """
+  Information about cursors and pagination in the list of
+  edges above.
+  """
+  pageInfo: PageInfoWithCursorPagination!
+}
+
+"""
+The Cursor Pagination PageInfo type.
+
+https://relay.dev/graphql/connections.htm#sec-undefined.PageInfo
+"""
+type PageInfoWithCursorPagination {
+  """
+  True if there is another page after this one
+  """
+  hasNextPage: Boolean!
+
+  """
+  True if there is another page before this one
+  """
+  hasPreviousPage: Boolean!
+
+  """
+  Identifier of the first edge in this page
+  """
+  startCursor: String
+
+  """
+  Identifier of the last edge in this page
+  """
+  endCursor: String
+}
+
+interface MutationFailure {
+  failureCode: String!
+  """
+  Localized error message
+  """
+  errorMessage: String!
+}
+
+"""
+ISO8601 Date Time
+"""
+scalar DateTime

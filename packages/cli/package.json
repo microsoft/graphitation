@@ -3,6 +3,7 @@
   "license": "MIT",
   "version": "1.5.3",
   "bin": {
+    "graphitation": "./bin/graphitation.js",
     "supermassive": "./bin/supermassive.js"
   },
   "repository": {

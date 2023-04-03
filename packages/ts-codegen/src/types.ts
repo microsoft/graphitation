@@ -3,6 +3,7 @@ import { DirectiveNode } from "graphql";
 export type DefinitionImport = {
   from: string;
   defs: { typeName: string }[];
+  extends: { typeName: string }[];
   importName: string;
   directive: DirectiveNode;
 };

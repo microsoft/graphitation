@@ -1,0 +1,18 @@
+extend schema
+  @import(
+    from: "./FoundationalTypes"
+    defs: [
+      "Query"
+      "Mutation"
+      "Subscription"
+      "Node"
+      "oneOf"
+      "ConnectionEdge"
+      "ConnectionEdgeWithCursorPagination"
+      "Connection"
+      "ConnectionWithCursorPagination"
+      "MutationFailure"
+      "DateTime"
+    ]
+  )
+  @import(from: "./FirstClassTypes", defs: ["Person"])

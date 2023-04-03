@@ -1,0 +1,10 @@
+extend schema @import(from: "@graphitation/merge-schema-testing-core-graphql", defs: ["Node", "DateTime"])
+
+type Foo  implements Node {
+  id: ID!
+  timestamp: DateTime
+}
+
+type Bar implements Node {
+  id: ID!
+}
