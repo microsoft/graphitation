@@ -90,33 +90,37 @@ describe("TypeScript Resolvers Plugin", () => {
       },
     };
     expect(
-      ((await plugin(
-        testSchema,
-        [],
-        {
-          ...baseConfig,
-          mappers: {
-            ProjectRoleDetail: "../entities#ProjectRole",
+      (
+        (await plugin(
+          testSchema,
+          [],
+          {
+            ...baseConfig,
+            mappers: {
+              ProjectRoleDetail: "../entities#ProjectRole",
+            },
           },
-        },
-        {
-          outputFile: "graphql.ts",
-        },
-      )) as any).content,
+          {
+            outputFile: "graphql.ts",
+          },
+        )) as any
+      ).content,
     ).toEqual("");
 
     expect(
-      ((await plugin(
-        testSchema,
-        [],
-        {
-          ...baseConfig,
-          modelIntersectionSuffix: "Template",
-        },
-        {
-          outputFile: "graphql.ts",
-        },
-      )) as any).content,
+      (
+        (await plugin(
+          testSchema,
+          [],
+          {
+            ...baseConfig,
+            modelIntersectionSuffix: "Template",
+          },
+          {
+            outputFile: "graphql.ts",
+          },
+        )) as any
+      ).content,
     ).toEqual("");
   });
 });

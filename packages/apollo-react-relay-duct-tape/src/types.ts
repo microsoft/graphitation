@@ -43,7 +43,7 @@ export type KeyType<TData = unknown> = Readonly<{
 
 export type KeyTypeData<
   TKey extends KeyType<TData>,
-  TData = unknown
+  TData = unknown,
 > = Required<TKey>[" $data"];
 
 export type ArrayKeyType<TData = unknown> = ReadonlyArray<KeyType<
@@ -51,5 +51,5 @@ export type ArrayKeyType<TData = unknown> = ReadonlyArray<KeyType<
 > | null>;
 export type ArrayKeyTypeData<
   TKey extends ArrayKeyType<TData>,
-  TData = unknown
+  TData = unknown,
 > = KeyTypeData<NonNullable<TKey[number]>>;

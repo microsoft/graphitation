@@ -211,10 +211,8 @@ describe(useSubscription, () => {
       );
     });
 
-    const [
-      subscriptionOperation,
-      queryOperation,
-    ] = client.mock.getAllOperations();
+    const [subscriptionOperation, queryOperation] =
+      client.mock.getAllOperations();
 
     expect(getOperationName(subscriptionOperation.request.node)).toBe(
       "hooksTestSubscription",

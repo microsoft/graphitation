@@ -39,9 +39,8 @@ export const ApolloCacheRenderer = React.memo(
   }: IApolloCacheRenderer) => {
     const [searchKey, setSearchKey] = React.useState("");
     const [currentCache, setCurrentCache] = React.useState("all");
-    const [duplicatedDescriprion, setDuplicatedDescriprion] = React.useState(
-      false,
-    );
+    const [duplicatedDescriprion, setDuplicatedDescriprion] =
+      React.useState(false);
     const classes = useStyles();
     const buttonsAttrs = useArrowNavigationGroup({
       circular: true,

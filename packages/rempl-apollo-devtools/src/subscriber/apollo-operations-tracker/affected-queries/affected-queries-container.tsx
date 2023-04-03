@@ -10,9 +10,10 @@ export const AffectedQueriesContainer = (
   props: IAffectedQueriesContainerProps,
 ) => {
   const { affectedQueries } = props;
-  const listOfItems = React.useMemo(() => getListOfItems(affectedQueries), [
-    affectedQueries,
-  ]);
+  const listOfItems = React.useMemo(
+    () => getListOfItems(affectedQueries),
+    [affectedQueries],
+  );
   const [selectedItem, setSelectedItem] = React.useState<string>(
     (listOfItems && listOfItems.length > 0 && listOfItems[0].name) || "",
   );

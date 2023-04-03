@@ -101,9 +101,11 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
       },
       avoidOptionals: this.config.avoidOptionals,
     };
-    const processor = new (config.preResolveTypes
-      ? PreResolveTypesProcessor
-      : TypeScriptSelectionSetProcessor)(processorConfig);
+    const processor = new (
+      config.preResolveTypes
+        ? PreResolveTypesProcessor
+        : TypeScriptSelectionSetProcessor
+    )(processorConfig);
     this.setSelectionSetHandler(
       new SelectionSetToObject(
         processor,

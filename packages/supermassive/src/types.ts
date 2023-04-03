@@ -26,7 +26,7 @@ export type FunctionFieldResolver<
   TSource,
   TContext,
   TArgs = Record<string, any>,
-  TReturn = any
+  TReturn = any,
 > = (
   source: TSource,
   args: TArgs,
@@ -38,7 +38,7 @@ export type FieldResolver<
   TSource,
   TContext,
   TArgs = Record<string, any>,
-  TReturn = any
+  TReturn = any,
 > =
   | FunctionFieldResolver<TSource, TContext, TArgs, TReturn>
   | {
@@ -59,7 +59,7 @@ export type ObjectTypeResolver<TSource = any, TContext = any, TArgs = any> = {
 export type InterfaceTypeResolver<
   TSource = any,
   TContext = any,
-  TArgs = any
+  TArgs = any,
 > = {
   __implementedBy: string[];
   [key: string]: FieldResolver<TSource, TContext, TArgs> | string[] | undefined;
@@ -74,7 +74,7 @@ export type UnionTypeResolver = {
 export type UserInterfaceTypeResolver<
   TSource = any,
   TContext = any,
-  TArgs = any
+  TArgs = any,
 > = {
   [key: string]: FieldResolver<TSource, TContext, TArgs>;
 } & {
@@ -138,7 +138,7 @@ export interface ResolveInfo {
  */
 export interface ExecutionResult<
   TData = ObjMap<unknown>,
-  TExtensions = ObjMap<unknown>
+  TExtensions = ObjMap<unknown>,
 > {
   errors?: Array<GraphQLError>;
   data?: TData | null;
@@ -147,7 +147,7 @@ export interface ExecutionResult<
 
 export interface FormattedExecutionResult<
   TData = ObjMap<unknown>,
-  TExtensions = ObjMap<unknown>
+  TExtensions = ObjMap<unknown>,
 > {
   errors?: Array<GraphQLFormattedError>;
   data?: TData | null;

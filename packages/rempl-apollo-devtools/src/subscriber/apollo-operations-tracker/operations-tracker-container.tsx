@@ -20,10 +20,8 @@ import {
 
 export const OperationsTrackerContainer = () => {
   const [openDescription, setOpenDescription] = useState<boolean>(false);
-  const [
-    apollOperationsData,
-    setApolloOperationsData,
-  ] = useState<IDataView | null>(null);
+  const [apollOperationsData, setApolloOperationsData] =
+    useState<IDataView | null>(null);
   const [loader, setLoader] = React.useState<ILoader>({
     message: "",
     loading: false,

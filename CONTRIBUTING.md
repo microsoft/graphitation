@@ -34,7 +34,7 @@ yarn build
 
 ## Generating Types
 
-Type (d.ts) generation is done separately from build since 
+Type (d.ts) generation is done separately from build since
 
 ```
 yarn build

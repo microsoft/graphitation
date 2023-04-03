@@ -56,7 +56,6 @@ query CurrentUserNameQuery {
 }
 ```
 
-
 This would lead to the following [conceptual] tree-shaking after compilation of the field-resolver map:
 
 ```diff

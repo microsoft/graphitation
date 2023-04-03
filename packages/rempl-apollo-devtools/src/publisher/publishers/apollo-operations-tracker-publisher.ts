@@ -41,7 +41,7 @@ export class ApolloOperationsTrackerPublisher {
             options = undefined;
           }
           this.stopTracking = inspector.startTracking(
-            (options as unknown) as IInspectorTrackingConfig,
+            options as unknown as IInspectorTrackingConfig,
           );
         }
       },

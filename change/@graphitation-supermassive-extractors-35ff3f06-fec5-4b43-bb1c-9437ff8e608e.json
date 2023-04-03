@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "Upgrade prettier",
+  "packageName": "@graphitation/supermassive-extractors",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "none"
+}
