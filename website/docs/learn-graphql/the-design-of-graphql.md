@@ -7,11 +7,19 @@ description: What was GraphQL designed to solve for and how to leverage that?
 
 # The design of GraphQL
 
-When Facebook designed GraphQL, they had realized that user-interfaces and the back-end services backing them would end up getting coupled together, making iterating on complex applications like theirs extremely hard.
+Unfortunately, the community has largely lost sight of the original design considerations that Facebook had for GraphQL. Key components of its design are misunderstood and often entirely ignored by popular GraphQL clients. Facebook’s own GraphQL client, [Relay](https://relay.dev), incorporates all the GraphQL best-practices learned from using GraphQL _as it was designed_, but alas the choice was made to separate the strong opinions of how to use GraphQL from GraphQL’s own documentation.
+
+:::caution
+
+Any GraphQL client for data-driven UI applications that does **not** have a strong opinion on making “fragments” the unit around which the user-interface components are built, is **not** leveraging key GraphQL design components nor setting you up for success with complex data-driven UI applications.
+
+:::
+
+With that in mind, forget what you might already know about GraphQL for a bit and let’s go back to when Facebook designed GraphQL; when they had realized that user-interfaces and the back-end services backing them would end up getting coupled together, making iterating on complex applications like theirs extremely hard.
 
 ## Example
 
-Let’s take a look at the `ChatList`re component of Teams. There’s a list of conversations, content preview, and some details about the participants. So if we would structure this, there would be 3 major components.
+Let’s take a look at the `ChatList` component of Teams. There’s a list of conversations, content preview, and some details about the participants. So if we would structure this, there would be 3 major components.
 
 - There’s going to be the outer `ChatList` component.
 - The `ChatList` component would contain many `ChatListItem` components, one for each conversation that the user has.
@@ -164,10 +172,9 @@ At the framework level, transperantly to the UI engineer, we can:
 - Couple lazy asset loading to data resolving, including the required components themselves
 - Move extracted queries upstream so the pipeline can ahead-of-time optimize/prepare data in a generic manner across builds
 
-## Closing Statement
+## Takeaways
 
-Unfortunately, due in large part to lack of proper documentation and guidance by Facebook, the community has largely lost sight of these original design considerations. Fragments are seen as a way to DRY up code, rather than uniquely expressing the data requirements of a single component, and often entirely ignored by popular GraphQL clients.
-
-Any GraphQL client for data-driven UI applications that does not make fragments the unit around which everything is built, is not setting you up for success—assuming you have needs similar to Facebook.
-
-Facebook's own GraphQL client, [Relay](https://relay.dev), is the golden reference for how to do this right.
+- GraphQL was created to allow composition of data-requirements for UI components in complex data-driven applications.
+  - Smaller network payloads is great, but not the primary design goal.
+- Fragments are the manner in which a component's unique data-requirements can be composed.
+  - They are not meant simply for DRY purposes, nor should they be shared by different components.

@@ -12,7 +12,7 @@ sidebar_position: 1
 
 While technically accurate, its brevity leaves a lot of room for misguided understanding, typically based on prior experiences.
 
-The authors of this guide have observed that the original premise of GraphQL is lost on most users. On the one hand this speaks to the versatility of GraphQL, but on the other hand it means that missing key nuances can cause incorrect application in even the exact same context it was designed for: complex data-driven UI applications.
+The authors of this guide have observed that **the original premise of GraphQL is lost on most users**. On the one hand this speaks to the versatility of GraphQL, but on the other hand it means that missing key nuances can cause incorrect application of GraphQL, even in the exact same context it was designed for: **complex data-driven UI applications**.
 
 This guide aims to teach you everything you need to understand about GraphQL from that perspective, including how to design schemas, how to implement field resolvers, and how to effectively use this to build these data-driven UIs.
 
