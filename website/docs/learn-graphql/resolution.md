@@ -7,27 +7,34 @@ description: How data is retrieved and assembled according to the schema and req
 
 # GraphQL Resolution
 
-:::note
-Before learning how to build your resolvers, please first make sure that you understand [how to think in GraphQL](./thinking-in-graphql.md).
-:::
+The role of an execution engine in GraphQL is to convert between underlying services into GraphQL schema types for use in the front-end. We call this “resolution”.
+
+It does so by traversing the schema and resolving the fields requested in the query. The executor follows the structure of the query and passes the data returned by each field resolver to its child field resolvers. The executor ensures that only the fields that are requested by the client are resolved, and that the final result matches the shape of the query.
 
 ## Ask for what you need, get exactly that
 
-> Send a GraphQL query to your API and get exactly what you need, nothing more and nothing less. GraphQL queries always return predictable results. Apps using GraphQL are fast and stable because they control the data they get, not the server.
+GraphQL allows clients to specify **the exact data** they need from the service. Unlike traditional RESTful APIs, where clients have to make multiple requests or receive more data than they need, GraphQL lets clients define the structure of the data they want and get **_only_ that data** in a single request. This makes GraphQL APIs more efficient, flexible, and scalable.
 
-While this quote from [the canonical graphql site](https://graphql.org) accurately captures the external facing characteristics of a GraphQL API, it is important to note that because the application can get exactly and _only_ the data it needs for a specific piece of UI, the resolution part of a GraphQL request should **also** _only_ perform the work necessary to satisfy that exact request.
+One of the key features of GraphQL is that every field in a GraphQL schema has a corresponding field resolver function that is responsible for fetching and/or transforming the data for that field. Field resolvers can be defined on any type in the schema, not just the root types.
 
-The GraphQL executor makes this possible by backing every single field in a GraphQL API by a distinct field **resolver** that transforms data it receives from its parent field resolver. The executor will only invoke the field resolvers for those fields that were selected in the request, ensuring you only pay the overhead when you need it.
+By using field resolvers, the GraphQL executor can achieve a high level of performance and flexibility. Clients can get exactly what they need from the service, and the service can optimize their data fetching and processing based on the client's request. This way, GraphQL enables a powerful and elegant way of building APIs that meet the needs of complex data-driven applications.
 
 ## Execution
 
+To resolve the data of the GraphQL query, we need to define how each field in the schema is fetched from the data source. There are different ways to do this, depending on how we structure our code and how we optimize our performance. In this section, we will explore three examples of how to resolve the data of the query, starting with a naive version that just returns the full response from the root-field, to one that has explicit field resolvers for each field, and finally one that has proper models to represent the underlying data.
+
+Let's consider the conversation list UI once more:
+
 <table>
 <tr>
+<th>Conversation list</th>
 <th>Schema</th>
-<th>Models</th>
-<th>Resolvers</th>
+<th>Query</th>
 </tr>
 <tr>
+<td>
+<img src={require("./images/SmallChatList.png").default} border="1" />
+</td>
 <td>
 
 ```graphql
@@ -65,6 +72,63 @@ query {
 </td>
 </tr>
 </table>
+
+### Simplest and naive implementation
+
+The first example is the simplest one, where we just return the full response from the root-field. This means that we have a single resolver function for the `conversations` field in the `Query` type, and it returns an array of objects that match the shape of the `Conversation` type. We don't need to define any other resolver functions for the nested fields, because GraphQL will by default use the property values of the objects as the field values.
+
+:::info
+The default field resolver is a function that GraphQL uses to fetch the value of a field when no custom resolver is provided. It works by looking for a property or a method on the resolver's input that has the same name as the field. For example, if the query asks for a field called "name", the default field resolver will try to get the value of input.name or input.name(). This way, the default field resolver can pluck data from the resolvers input without any extra code.
+:::
+
+For example, if we have a data source that looks like this:
+
+```js
+const conversations = [
+  {
+    title: "GraphQL Basics",
+    lastMessage: "Thanks for sharing!",
+    participants: [
+      {
+        avatarURL: "https://example.com/anna.jpg",
+      },
+      {
+        avatarURL: "https://example.com/bob.jpg",
+      },
+    ],
+  },
+  {
+    title: "GraphQL Advanced",
+    lastMessage: "That's very interesting!",
+    participants: [
+      {
+        avatarURL: "https://example.com/carl.jpg",
+      },
+      {
+        avatarURL: "https://example.com/dana.jpg",
+      },
+    ],
+  },
+];
+```
+
+Then our resolver function for the conversations field can simply return this array:
+
+```js
+const resolvers = {
+  Query: {
+    conversations: () => conversations,
+  },
+};
+```
+
+This approach is easy to implement, and while it works for simple queries and data sources, it has some drawbacks.
+
+First, it can lead to inefficient resource usage and performance issues, because it always returns the full objects for each conversation and person, even if we only request some fields. For example, if we only want to get the `title` and `lastMessage` fields of each conversation, we still get the participants array with _all_ their `avatarURLs`. This may seem innocuous in this contrived example, but imagine complex data sources that require additional logic or transformations to fetch or format the data, and it can quickly add up.
+
+Second: Inflexible
+
+### True text
 
 The object type fields along the selection path may return _any_ type of data that the child field resolvers might need to perform their work—this data does not in any way need to resemble the public type that is reflected in the GraphQL schema. We call this data the resolver model, and is typically represented by JSON data from back-end services or all the way up to a full-fledged model class.
 
