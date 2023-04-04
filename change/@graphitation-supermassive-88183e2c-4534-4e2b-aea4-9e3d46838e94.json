@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Make execution argument `schemaResolvers` optional",
+  "packageName": "@graphitation/supermassive",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}

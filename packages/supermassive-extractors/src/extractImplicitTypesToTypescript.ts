@@ -197,6 +197,13 @@ export function extractImplicitTypesToTypescript(
   );
 }
 
+export function extractAndPrintImplicitTypesToTypescript(
+  document: DocumentNode,
+): string {
+  const file = extractImplicitTypesToTypescript(document);
+  return ts.createPrinter().printFile(file);
+}
+
 function createDeclaration(
   name: string,
   decl: ts.Expression,

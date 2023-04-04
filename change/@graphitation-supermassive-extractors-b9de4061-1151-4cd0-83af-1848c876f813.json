@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Expose printed TS version of extracted implicit types",
+  "packageName": "@graphitation/supermassive-extractors",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}
