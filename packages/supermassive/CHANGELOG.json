@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Tue, 04 Apr 2023 10:29:16 GMT",
+      "tag": "@graphitation/supermassive_v2.4.0",
+      "version": "2.4.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "05c91eddd493e948b646140191882f87b8815941",
+            "comment": "Make execution argument `schemaResolvers` optional"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 03 Apr 2023 14:51:36 GMT",
       "tag": "@graphitation/supermassive_v2.3.0",
       "version": "2.3.0",
