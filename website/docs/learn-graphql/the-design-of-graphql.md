@@ -7,15 +7,13 @@ description: What was GraphQL designed to solve for and how to leverage that?
 
 # The design of GraphQL
 
-Unfortunately, the community has largely lost sight of the original design considerations that Facebook had for GraphQL. Key components of its design are misunderstood and often entirely ignored by popular GraphQL clients. Facebook’s own GraphQL client, [Relay](https://relay.dev), incorporates all the GraphQL best-practices learned from using GraphQL _as it was designed_, but alas the choice was made to separate the strong opinions of how to use GraphQL from GraphQL’s own documentation.
+Unfortunately, the community has largely lost sight of the original design considerations that Facebook had for GraphQL. Key components of its design are misunderstood and often entirely ignored by popular GraphQL clients. Facebook’s own GraphQL client, [Relay](https://relay.dev), incorporates all the GraphQL best-practices learned from using GraphQL _as it was designed_, but alas the choice was made to separate the strong opinions of how to use GraphQL from GraphQL’s own documentation to avoid being prescriptive.
 
-:::caution
-
+:::danger
 Any GraphQL client for data-driven UI applications that does **not** have a strong opinion on making “fragments” the unit around which the user-interface components are built, is **not** leveraging key GraphQL design components nor setting you up for success with complex data-driven UI applications.
-
 :::
 
-With that in mind, forget what you might already know about GraphQL for a bit and let’s go back to when Facebook designed GraphQL; when they had realized that user-interfaces and the back-end services backing them would end up getting coupled together, making iterating on complex applications like theirs extremely hard.
+With that in mind, forget what you might already know about GraphQL for a bit and let’s go back to when Facebook designed GraphQL—when they had realized that user-interfaces and the back-end services backing them would end up getting coupled together, making iterating on complex applications like theirs extremely hard.
 
 ## Example
 

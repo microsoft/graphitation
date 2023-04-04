@@ -7,6 +7,10 @@ description: How to think of the GraphQL abstraction layer and its purpose.
 
 # Thinking in GraphQL
 
+:::info
+This section shows GraphQL query and schema definition syntax. The first part of [this upstream guide](https://graphql.org/learn/schema/) will be useful to explain any bits that are not immediately clear.
+:::
+
 As you have learned in [the design of GraphQL](./the-design-of-graphql.md) section, GraphQL was designed to allow components to express their own data requirements, and for those requirements to be composable into one or more larger UIs—whilst not introducing any unnecessary coupling between the various components that make up the larger UI. There is one part of this equation that we have not touched on yet, however, which is the other side of the data contract: the schema.
 
 ## Abstractions for complex data-driven UI
@@ -30,26 +34,20 @@ All of these needs are met by a GraphQL schema that acts as the abstraction laye
 
 Another important UI consideration is rendering performance, or sometimes perceived performance. The former is achieved by having all data available that is necessary, for the initial state of the UI that the user should see, such that only a single render pass is required. (Sometimes this might mean that it can take a little while longer before rendering can start, but even then a single render pass can still provide an improvement to perceived performance.)
 
-Ideally all this data can be provided within a reasonable time-frame, but even then there are provisions in state-of-the-art GraphQL stacks that allow you to design a controlled loading experience, using the “render-as-you-fetch” pattern.
-
-:::info
-For more information on render-as-you-fetch see [this React article](https://17.reactjs.org/docs/concurrent-mode-suspense.html#traditional-approaches-vs-suspense) or [this in-depth talk](https://www.youtube.com/watch?v=Tl0S7QkxFE4) by a Facebook engineer.
-:::
+Ideally all this data can be provided within a reasonable time-frame, but even then there are provisions in state-of-the-art GraphQL stacks that allow you to design a controlled loading experience using [the “render-as-you-fetch” pattern](https://17.reactjs.org/docs/concurrent-mode-suspense.html#traditional-approaches-vs-suspense), as outlined in [this in-depth presentation](https://www.youtube.com/watch?v=Tl0S7QkxFE4) by a Facebook/Relay engineer.
 
 All in all, what this means is that the schema _should_ enable a piece of UI to fetch all data it needs, in a single request. This is where “the graph” comes in, which means that the types that make up the schema are connected to each other in semantically meaningful ways and can be retrieved as a meaningful whole.
 
 :::note
-While the ability to fetch all related data in a single query is what GraphQL was designed for, it might still feel like a foreign concept to those people that are already familiar with GraphQL but in the context of a schema designed from the back-end perspective.
-To solve for this, we have had to invent a new name for this key concept: **broad query**.
+
+### Broad-Query
+
+This concept might seem foreign even to those already familiar with GraphQL. To solve this at Microsoft, we had to go as far as invent a new name for this very core concept: **Broad-Query**.
+
+However, because in GraphQL _all_ queries are meant to be “broad”, we will **not** keep repeating the “Broad-Query” term. After all, we want you to walk away from this guide as someone who truly understands GraphQL!
 :::
 
-### Front-end perspective example
-
-:::info
-
-This section shows GraphQL query and schema definition syntax. The first part of [this upstream guide](https://graphql.org/learn/schema/) will be useful to explain any bits that are not immediately clear.
-
-:::
+### 👍 Design from front-end perspective
 
 When designing the schema in a vacuum, it might be hard to imagine what those connections should be. However, when considered from the perspective of a concrete piece of UI, and working your way backwards, it actually becomes a lot easier.
 
@@ -119,7 +117,7 @@ type Person {
 }
 ```
 
-### Back-end perspective example
+### 👎 Design from back-end perspective
 
 To contrast, let’s look at a back-end perspective schema, and how it makes it impossible to fetch all data in a single request.
 
@@ -138,8 +136,10 @@ In this case, every root-field maps to a back-end service, and it of course does
 
 Because we can only get the IDs of participants in a conversation, rather than the actual `Person` objects they refer to, we are being forced to make an aditional request for _each_ participant in all of the conversations in the list. This is the N+1 problem and forces the UI to perform a waterfall of requests. This in turn will lead to a slow loading experience or staggered UI rendering.
 
-## Generically fetching exactly what you need
+## Generic _and_ domain-specific
 
-While we have learned that GraphQL was designed to be able to satisfy the needs of the UI in the application’s domain, this does not mean that any subset of the schema should cater to only a single specific piece of UI. Instead the data should be modeled in such a way that it allows for generic fetching of the data, _within_ the application’s domain.
+The benefit of GraphQL is that it allows you to design your data schema in a way that reflects the domain of your application, rather than the structure of your database or the layout of your UI. This means that you can define types and fields that represent the entities and relationships in your domain, and expose them through a single endpoint that can be queried in a concise manner.
 
-The flexibility of GraphQL will then allow you to fetch _exactly what you need_ and, **importantly**, _only get what you need_.
+However, this does not mean that you should create a schema that is tailored to a specific UI component or view. Doing so would limit the reusability and composability of your schema, and make it harder to evolve over time. Instead, you should aim to create a schema that is generic enough to support any UI requirement, but still specific enough to capture the domain logic and constraints.
+
+By using GraphQL, you can then leverage its powerful features to fetch exactly what you need from your schema, and nothing more. We will explore these features in more detail in the next section.

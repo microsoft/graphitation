@@ -16,10 +16,12 @@ The authors of this guide have observed that **the original premise of GraphQL i
 
 This guide aims to teach you everything you need to understand about GraphQL from that perspective, including how to design schemas, how to implement field resolvers, and how to effectively use this to build these data-driven UIs.
 
-:::info
-
 This guide does not aim to replace [the canonical graphql.org site’s documentation](https://graphql.org/learn/). Some familiarity with GraphQL might be necessary for some sections, where possible the guide will link to the relevant existing documentation.
 
+:::caution
+Each section of this guide builds upon the knowledge gained in the previous section. Not taking this into account means you may end-up repeating the mistakes made in the community to learn about GraphQL outside of the context that it was designed for.
+
+If possible, read the guide from start to finish.
 :::
 
 ## About
