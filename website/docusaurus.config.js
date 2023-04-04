@@ -45,8 +45,8 @@ const config = {
       navbar: {
         title: "graphitation",
         logo: {
-          alt: "My Site Logo",
-          src: "img/logo.svg",
+          alt: "Graphitation Logo",
+          src: "img/graphitation-logo.png",
         },
         items: [
           {
