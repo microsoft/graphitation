@@ -81,35 +81,37 @@ The first example is the simplest one, where we just return the full response fr
 The default field resolver is a function that GraphQL uses to fetch the value of a field when no custom resolver is provided. It works by looking for a property or a method on the resolver's input that has the same name as the field. For example, if the query asks for a field called "name", the default field resolver will try to get the value of input.name or input.name(). This way, the default field resolver can pluck data from the resolvers input without any extra code.
 :::
 
-For example, if we have a data source that looks like this:
+For example, if we have a data source that returns a payload like this:
 
 ```js
-const conversations = [
-  {
-    title: "GraphQL Basics",
-    lastMessage: "Thanks for sharing!",
-    participants: [
-      {
-        avatarURL: "https://example.com/anna.jpg",
-      },
-      {
-        avatarURL: "https://example.com/bob.jpg",
-      },
-    ],
-  },
-  {
-    title: "GraphQL Advanced",
-    lastMessage: "That's very interesting!",
-    participants: [
-      {
-        avatarURL: "https://example.com/carl.jpg",
-      },
-      {
-        avatarURL: "https://example.com/dana.jpg",
-      },
-    ],
-  },
-];
+function getConversations() {
+  return [
+    {
+      title: "GraphQL Basics",
+      lastMessage: "Thanks for sharing!",
+      participants: [
+        {
+          avatarURL: "https://example.com/anna.jpg",
+        },
+        {
+          avatarURL: "https://example.com/bob.jpg",
+        },
+      ],
+    },
+    {
+      title: "GraphQL Advanced",
+      lastMessage: "That's very interesting!",
+      participants: [
+        {
+          avatarURL: "https://example.com/carl.jpg",
+        },
+        {
+          avatarURL: "https://example.com/dana.jpg",
+        },
+      ],
+    },
+  ];
+}
 ```
 
 Then our resolver function for the conversations field can simply return this array:
@@ -117,7 +119,7 @@ Then our resolver function for the conversations field can simply return this ar
 ```js
 const resolvers = {
   Query: {
-    conversations: () => conversations,
+    conversations: () => getConversations(),
   },
 };
 ```
@@ -126,7 +128,33 @@ This approach is easy to implement, and while it works for simple queries and da
 
 First, it can lead to inefficient resource usage and performance issues, because it always returns the full objects for each conversation and person, even if we only request some fields. For example, if we only want to get the `title` and `lastMessage` fields of each conversation, we still get the participants array with _all_ their `avatarURLs`. This may seem innocuous in this contrived example, but imagine complex data sources that require additional logic or transformations to fetch or format the data, and it can quickly add up.
 
-Second: Inflexible
+Second, another limitation is that it only resolves conversations at the root level (`Query` type). But what if you want to resolve conversations nested in another type than `Query`? For example, what if you have a `Person` type that has a `conversations` field that returns all the conversations that a user participates in?
+
+#####
+
+The second example is more flexible and efficient, where we have explicit field resolvers for each field in the schema. This means that we have a resolver function for each field that defines how to get its value from the data source. For example, if we want to add a receivedAt field to each conversation that shows when the last message was received, we can define a resolver function for this field that calculates its value from the data source. We can also use this approach to optimize our performance by only fetching or returning the data that we need for each field. For example, if we only want to get the title and lastMessage fields of each conversation, we can avoid fetching or returning the participants array with all their avatarURLs. Here is how our resolver functions could look like in this approach:
+
+const resolvers = {
+Query: {
+conversations: () => conversations
+},
+Conversation: {
+title: (conversation) => conversation.title,
+lastMessage: (conversation) => conversation.lastMessage,
+participants: (conversation) => conversation.participants,
+receivedAt: (conversation) => {
+// some logic to calculate when the last message was received
+return new Date().toISOString();
+}
+},
+Person: {
+avatarURL: (person) => person.avatarURL
+}
+};
+
+This approach is more flexible and efficient than the first one, because it allows us to define custom logic and optimizations for each field in the schema. However, it also has some drawbacks. First, it may introduce more complexity and boilerplate code in our resolver functions, especially if we have many fields or nested types in our schema. For example, if we want to add more fields or types to our schema, we need to define more resolver functions for them. Second, it may not work well for modular or reusable code structures, because it couples our resolver functions with our schema definition. For example, if we want to use the same Conversation or Person type in different parts of our schema or application, we need to duplicate or import their resolver functions accordingly.
+
+The third example is
 
 ### True text
 
