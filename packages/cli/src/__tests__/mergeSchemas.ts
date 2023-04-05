@@ -59,7 +59,7 @@ describe(graphitation, () => {
   });
 
   it("complains about missing imports", async () => {
-    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const warn = jest.spyOn(console, "warn");
     const program = graphitation();
     const output = path.join(
       __dirname,
@@ -80,7 +80,7 @@ describe(graphitation, () => {
   });
 
   it("complains about missing imports, but allows passing with a flag", async () => {
-    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const warn = jest.spyOn(console, "warn");
     const program = graphitation();
     const output = path.join(
       __dirname,

@@ -351,7 +351,7 @@ function processModule(
   };
   const visitor: ASTVisitor = {
     [Kind.DIRECTIVE]: {
-      enter(node, _key, _parent, _path, _ancestors) {
+      enter(node) {
         if (node.name.value === IMPORT_DIRECTIVE_NAME) {
           const imp = processImportDirective(node, rootPath, rootPath);
           if (imp.from.startsWith(".")) {
