@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-typescript-operations",
   "entries": [
     {
+      "date": "Mon, 03 Apr 2023 14:51:35 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.1.0",
+      "version": "1.1.0",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "3cd00dd6254a9b7d9dfe615d9d35dba4c0b108c7",
+            "comment": "Upgrade prettier"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 22 Mar 2023 15:02:57 GMT",
       "tag": "@graphitation/graphql-codegen-typescript-operations_v1.1.0",
       "version": "1.1.0",

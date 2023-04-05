@@ -1,7 +1,0 @@
-{
-  "type": "none",
-  "comment": "Upgrade prettier",
-  "packageName": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "none"
-}

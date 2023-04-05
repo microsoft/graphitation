@@ -2,6 +2,42 @@
   "name": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
   "entries": [
     {
+      "date": "Tue, 04 Apr 2023 10:29:16 GMT",
+      "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v0.4.0",
+      "version": "0.4.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "commit": "05c91eddd493e948b646140191882f87b8815941",
+            "comment": "Support conditional annotations in `graphql-codegen-supermassive-typed-document-node-plugin`"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "comment": "Bump @graphitation/supermassive to v2.4.0",
+            "commit": "05c91eddd493e948b646140191882f87b8815941"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 03 Apr 2023 14:51:35 GMT",
+      "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v0.3.4",
+      "version": "0.3.4",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "commit": "3cd00dd6254a9b7d9dfe615d9d35dba4c0b108c7",
+            "comment": "Upgrade prettier"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 30 Mar 2023 08:30:21 GMT",
       "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v0.3.4",
       "version": "0.3.4",

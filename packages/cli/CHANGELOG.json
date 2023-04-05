@@ -2,6 +2,21 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Tue, 04 Apr 2023 10:29:16 GMT",
+      "tag": "@graphitation/cli_v1.5.4",
+      "version": "1.5.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/supermassive-extractors to v2.1.0",
+            "commit": "05c91eddd493e948b646140191882f87b8815941"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 28 Mar 2023 10:27:19 GMT",
       "tag": "@graphitation/cli_v1.5.3",
       "version": "1.5.3",

@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Thu, 30 Mar 2023 08:30:21 GMT and should not be manually modified.
+This log was last generated on Tue, 04 Apr 2023 10:29:16 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.4.0
+
+Tue, 04 Apr 2023 10:29:16 GMT
+
+### Minor changes
+
+- Make execution argument `schemaResolvers` optional (vladimir.razuvaev@gmail.com)
 
 ## 2.3.0
 

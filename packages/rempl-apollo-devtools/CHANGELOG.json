@@ -2,6 +2,21 @@
   "name": "@graphitation/rempl-apollo-devtools",
   "entries": [
     {
+      "date": "Mon, 03 Apr 2023 14:51:36 GMT",
+      "tag": "@graphitation/rempl-apollo-devtools_v0.5.0",
+      "version": "0.5.0",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/rempl-apollo-devtools",
+            "commit": "3cd00dd6254a9b7d9dfe615d9d35dba4c0b108c7",
+            "comment": "Upgrade prettier"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 27 Mar 2023 13:56:24 GMT",
       "tag": "@graphitation/rempl-apollo-devtools_v0.5.0",
       "version": "0.5.0",

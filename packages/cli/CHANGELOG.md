@@ -1,8 +1,16 @@
 # Change Log - @graphitation/cli
 
-This log was last generated on Tue, 28 Mar 2023 10:27:19 GMT and should not be manually modified.
+This log was last generated on Tue, 04 Apr 2023 10:29:16 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.5.4
+
+Tue, 04 Apr 2023 10:29:16 GMT
+
+### Patches
+
+- Bump @graphitation/supermassive-extractors to v2.1.0
 
 ## 1.5.3
 
