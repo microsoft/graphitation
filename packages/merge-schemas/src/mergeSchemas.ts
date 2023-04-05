@@ -1,20 +1,12 @@
 import {
-  TypeSystemDefinitionNode,
-  TypeSystemExtensionNode,
   visit,
   Kind,
-  SchemaExtensionNode,
-  isListType,
   ASTNode,
-  Visitor,
   TypeDefinitionNode,
   TypeExtensionNode,
-  DefinitionNode,
   DirectiveDefinitionNode,
   isTypeExtensionNode,
-  getNamedType,
   DocumentNode,
-  parse,
   NameNode,
 } from "graphql";
 import {
@@ -23,46 +15,209 @@ import {
   DefinitionImport,
 } from "@graphitation/ts-codegen";
 import path from "path";
-import fs from "fs/promises";
 import { ASTVisitor } from "graphql/language/visitor";
 import { typeNameFromAST } from "@graphitation/supermassive";
 import { ModuleLoader } from "./moduleLoader";
 
-interface EntryPoint {
-  absolutePath: string;
-}
+// How do extends get imported
+// 1. If you have extend in entry point, it's always included
+// 2. If you are importing a type from a module and it has extends defined or imported for that type, import them
+// 3. If you are importing an extend from a module, include it and any other extends for that type that it includes
 
-type TypeName = string;
+const BUILT_IN_SCALARS: Set<string> = new Set([
+  "ID",
+  "Int",
+  "Float",
+  "String",
+  "Boolean",
+]);
+
+export type EntryPoint = {
+  absolutePath: string;
+};
+
+type SymbolName = string;
 type AbsolutePath = string;
 
 interface Module {
   absolutePath: AbsolutePath;
   rootPath: AbsolutePath;
-  directives: Map<TypeName, DirectiveDefinitionNode>;
-  definitions: Map<TypeName, TypeDefinitionNode>;
-  extensions: Map<TypeName, TypeExtensionNode[]>;
-  importedTypes: Map<TypeName, DefinitionImport>;
-  missingTypes: Array<TypeToProcess>;
+  directives: Map<SymbolName, DirectiveDefinitionNode>;
+  definitions: Map<SymbolName, TypeDefinitionNode>;
+  extensions: Map<SymbolName, TypeExtensionNode[]>;
+  importedTypes: Map<SymbolName, DefinitionImport>;
+  importedExtensions: Map<SymbolName, DefinitionImport>;
+  requiredSymbols: Set<SymbolName>;
+  requiredExtensions: Set<SymbolName>;
+  missingTypes: Array<SymbolToProcess>;
 }
 
-interface TypeToProcess {
-  typeName: TypeName;
+interface SymbolToProcess {
+  name: SymbolName;
   module: AbsolutePath;
   isEntryPoint: boolean;
+  isExtension: boolean;
   forType?: {
-    node: ASTNode;
+    node?: ASTNode;
     module: AbsolutePath;
   };
 }
 
+export type MergeSchemasResult = {
+  document: DocumentNode;
+  errors?: Array<SymbolToProcess>;
+};
+
 export async function mergeSchemas(
   entryPoints: EntryPoint[],
   moduleLoader: ModuleLoader,
-): Promise<DocumentNode> {
-  const usedTypes: Set<TypeName> = new Set();
+): Promise<MergeSchemasResult> {
+  const seenSymbols: Array<SymbolToProcess> = [];
+
+  const { symbolsToProcess, modules } = await processEntryPoints(
+    moduleLoader,
+    entryPoints,
+  );
+
+  while (symbolsToProcess.length > 0) {
+    const symbolToProcess = symbolsToProcess.pop() as SymbolToProcess;
+    seenSymbols.push(symbolToProcess);
+    const { name, module, isEntryPoint, forType, isExtension } =
+      symbolToProcess;
+    if (!modules.has(module)) {
+      modules.set(module, createEmptyModule(module));
+    }
+    const mod = modules.get(module) as Module;
+    const potentialNewSymbols: Array<SymbolToProcess> = [];
+    if (
+      !isExtension &&
+      (mod.definitions.has(name) || mod.directives.has(name))
+    ) {
+      mod.requiredSymbols.add(name);
+      const def = (mod.definitions.get(name) || mod.directives.get(name)) as
+        | TypeDefinitionNode
+        | DirectiveDefinitionNode;
+      const newNamesToProcess = processTypeDefinitionOrExtension(def);
+      for (const newNameToProcess of newNamesToProcess) {
+        potentialNewSymbols.push({
+          name: newNameToProcess,
+          module,
+          isEntryPoint,
+          isExtension: false,
+          forType: {
+            node: def,
+            module,
+          },
+        });
+        potentialNewSymbols.push({
+          name: newNameToProcess,
+          module,
+          isEntryPoint,
+          isExtension: true,
+          forType: {
+            node: def,
+            module,
+          },
+        });
+      }
+    } else if (!isExtension && mod.importedTypes.has(name)) {
+      const imp = mod.importedTypes.get(name) as DefinitionImport;
+      if (!modules.has(imp.from)) {
+        const processedModule = await tryImportModule(moduleLoader, imp.from);
+        modules.set(processedModule.absolutePath, processedModule);
+      }
+      potentialNewSymbols.push({
+        name,
+        module: imp.from,
+        isEntryPoint: false,
+        isExtension: false,
+        forType,
+      });
+      // we import the type, so we also import all extensions
+      potentialNewSymbols.push({
+        name,
+        module: imp.from,
+        isEntryPoint: false,
+        isExtension: true,
+        forType,
+      });
+    } else if (isExtension && mod.extensions.has(name)) {
+      mod.requiredExtensions.add(name);
+      const defs = mod.extensions.get(name) as TypeExtensionNode[];
+      potentialNewSymbols.push({
+        name,
+        isEntryPoint,
+        isExtension: false,
+        module,
+        forType: {
+          node: defs[0],
+          module,
+        },
+      });
+      for (const def of defs) {
+        const newNamesToProcess = processTypeDefinitionOrExtension(def);
+        for (const newNameToProcess of newNamesToProcess) {
+          potentialNewSymbols.push({
+            name: newNameToProcess,
+            module,
+            isEntryPoint,
+            isExtension: false,
+            forType: {
+              node: def,
+              module,
+            },
+          });
+          potentialNewSymbols.push({
+            name: newNameToProcess,
+            module,
+            isEntryPoint,
+            isExtension: true,
+            forType: {
+              node: def,
+              module,
+            },
+          });
+        }
+      }
+    } else if (isExtension && mod.importedExtensions.has(name)) {
+      const imp = mod.importedExtensions.get(name) as DefinitionImport;
+      if (!modules.has(imp.from)) {
+        const processedModule = await tryImportModule(moduleLoader, imp.from);
+        modules.set(processedModule.absolutePath, processedModule);
+      }
+      potentialNewSymbols.push({
+        name,
+        module: imp.from,
+        isEntryPoint: false,
+        isExtension: true,
+        forType,
+      });
+    } else if (!isExtension) {
+      mod.missingTypes.push(symbolToProcess);
+    }
+
+    for (const newSymbolToProcess of potentialNewSymbols) {
+      if (
+        shouldProcessSymbol(seenSymbols, symbolsToProcess, newSymbolToProcess)
+      ) {
+        symbolsToProcess.push(newSymbolToProcess);
+      }
+    }
+  }
+
+  return resultFromModules(modules);
+}
+
+async function processEntryPoints(
+  moduleLoader: ModuleLoader,
+  entryPoints: EntryPoint[],
+): Promise<{
+  symbolsToProcess: SymbolToProcess[];
+  modules: Map<AbsolutePath, Module>;
+}> {
+  const symbolsToProcess: Array<SymbolToProcess> = [];
   const modules: Map<AbsolutePath, Module> = new Map();
-  const processedTypes: Array<TypeToProcess> = [];
-  const typesToProcess: Array<TypeToProcess> = [];
+
   for (const entryPoint of entryPoints) {
     const { document, rootPath } = await moduleLoader.resolveModuleFromPath(
       entryPoint.absolutePath,
@@ -73,102 +228,108 @@ export async function mergeSchemas(
       document,
     );
     modules.set(processedModule.absolutePath, processedModule);
-    typesToProcess.push(
-      ...Array.from(processedModule.definitions.keys()).map((typeName) => ({
-        typeName,
+    const names = [
+      ...processedModule.definitions.keys(),
+      ...processedModule.importedTypes.keys(),
+      ...processedModule.directives.keys(),
+    ];
+    symbolsToProcess.push(
+      ...names.map((name) => ({
+        name,
         module: processedModule.absolutePath,
         isEntryPoint: true,
+        isExtension: false,
+        forType: {
+          module: processedModule.absolutePath,
+        },
       })),
     );
-    typesToProcess.push(
-      ...Array.from(processedModule.importedTypes.keys()).map((typeName) => ({
-        typeName,
+    symbolsToProcess.push(
+      ...[
+        ...processedModule.extensions.keys(),
+        ...processedModule.importedExtensions.keys(),
+      ].map((name) => ({
+        name,
         module: processedModule.absolutePath,
         isEntryPoint: true,
+        isExtension: true,
+        forType: {
+          module: processedModule.absolutePath,
+        },
       })),
     );
   }
+  return {
+    modules,
+    symbolsToProcess,
+  };
+}
 
-  while (typesToProcess.length > 0) {
-    const typeToProcess = typesToProcess.pop() as TypeToProcess;
-    processedTypes.push(typeToProcess);
-    const { typeName, module, isEntryPoint, forType } = typeToProcess;
-    const mod = modules.get(module);
-    if (!mod) {
-      throw new Error(`Could not find module: ${module}`);
-    }
-    if (mod.definitions.has(typeName)) {
-      usedTypes.add(typeName);
-      const def = mod.definitions.get(typeName) as TypeDefinitionNode;
-      const newTypeNamesToProcess = processTypeDefinitionOrExtension(def);
-      for (const newTypeNameToProcess of newTypeNamesToProcess) {
-        const newTypeToProcess = {
-          typeName: newTypeNameToProcess,
-          module,
-          isEntryPoint,
-          forType: {
-            node: def,
-            module,
-          },
-        };
-
-        if (
-          !hasType(processedTypes, newTypeToProcess) &&
-          !hasType(typesToProcess, newTypeToProcess)
-        ) {
-          typesToProcess.push(newTypeToProcess);
-        }
-      }
-    } else if (mod.importedTypes.has(typeName)) {
-      const imp = mod.importedTypes.get(typeName) as DefinitionImport;
-      if (!modules.has(imp.from)) {
-        const { document, rootPath } = await moduleLoader.resolveModuleFromPath(
-          imp.from,
-        );
-        const processedModule = processModule(imp.from, rootPath, document);
-        modules.set(processedModule.absolutePath, processedModule);
-      }
-      const newTypeToProcess = {
-        typeName,
-        module: imp.from,
-        isEntryPoint: false,
-        forType,
-      };
-      if (
-        !hasType(processedTypes, newTypeToProcess) &&
-        !hasType(typesToProcess, newTypeToProcess)
-      ) {
-        typesToProcess.push(newTypeToProcess);
-      }
-    } else {
-      if (forType && !isEntryPoint) {
-        mod.missingTypes.push(typeToProcess);
-      }
-    }
-  }
-
+function resultFromModules(
+  modules: Map<AbsolutePath, Module>,
+): MergeSchemasResult {
   const modulesSorted = Array.from(modules.values()).sort((left, right) =>
     left.absolutePath.localeCompare(right.absolutePath, "en-US"),
   );
   const definitions = [];
+  const errors = [];
   for (const mod of modulesSorted) {
-    const modDefs = Array.from(mod.definitions.values())
+    const modDefs: Array<
+      TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode
+    > = [];
+    modDefs.push(
+      ...mod.definitions.values(),
+      ...mod.directives.values(),
+      ...Array.from(mod.extensions.values()).flat(),
+    );
+
+    const filteredDefs = modDefs
       .flat()
-      .filter((value) => usedTypes.has(value.name.value))
+      .filter((value) => {
+        if (value.kind === Kind.DIRECTIVE_DEFINITION) {
+          return mod.requiredSymbols.has(`@${value.name.value}`);
+        } else if (isTypeExtensionNode(value)) {
+          return mod.requiredExtensions.has(value.name.value);
+        } else {
+          return mod.requiredSymbols.has(value.name.value);
+        }
+      })
       .sort((left, right) =>
         (left as { name: NameNode }).name.value.localeCompare(
           (right as { name: NameNode }).name.value,
           "en-US",
         ),
       );
-    for (const def of modDefs) {
+    for (const def of filteredDefs) {
       definitions.push(def);
     }
+    errors.push(...mod.missingTypes);
   }
-  return {
-    kind: Kind.DOCUMENT,
-    definitions,
+  const result: MergeSchemasResult = {
+    document: {
+      kind: Kind.DOCUMENT,
+      definitions,
+    },
   };
+  if (errors.length > 0) {
+    result.errors = errors;
+  }
+  return result;
+}
+
+async function tryImportModule(
+  moduleLoader: ModuleLoader,
+  absolutePath: AbsolutePath,
+): Promise<Module> {
+  try {
+    const { document, rootPath } = await moduleLoader.resolveModuleFromPath(
+      absolutePath,
+    );
+    return processModule(absolutePath, rootPath, document);
+  } catch (e) {
+    console.warn(e);
+    return createEmptyModule(absolutePath);
+  }
 }
 
 function processModule(
@@ -183,6 +344,9 @@ function processModule(
     definitions: new Map(),
     extensions: new Map(),
     importedTypes: new Map(),
+    importedExtensions: new Map(),
+    requiredExtensions: new Set(),
+    requiredSymbols: new Set(),
     missingTypes: [],
   };
   const visitor: ASTVisitor = {
@@ -199,18 +363,15 @@ function processModule(
           imp.defs.forEach(({ typeName }) => {
             result.importedTypes.set(typeName, imp);
           });
+          imp.extends.forEach(({ typeName }) => {
+            result.importedExtensions.set(typeName, imp);
+          });
         }
-        // } else if (node.name.value === MODEL_DIRECTIVE_NAME) {
-        //   context.addModel(
-        //     processModelDirective(node, ancestors, outputPath, documentPath),
-        //     node,
-        //   );
-        // }
       },
     },
     [Kind.DIRECTIVE_DEFINITION]: {
       enter(node) {
-        result.directives.set(node.name.value, node);
+        result.directives.set(`@${node.name.value}`, node);
       },
     },
   };
@@ -234,10 +395,25 @@ function processModule(
   return result;
 }
 
+function createEmptyModule(absolutePath: AbsolutePath): Module {
+  return {
+    absolutePath,
+    rootPath: absolutePath,
+    directives: new Map(),
+    definitions: new Map(),
+    extensions: new Map(),
+    importedTypes: new Map(),
+    importedExtensions: new Map(),
+    requiredExtensions: new Set(),
+    requiredSymbols: new Set(),
+    missingTypes: [],
+  };
+}
+
 function processTypeDefinitionOrExtension(
   def: TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode,
-): Array<TypeName> {
-  let result = [];
+): Array<SymbolName> {
+  const result = [];
   if (
     def.kind === Kind.OBJECT_TYPE_DEFINITION ||
     def.kind === Kind.OBJECT_TYPE_EXTENSION ||
@@ -247,6 +423,11 @@ function processTypeDefinitionOrExtension(
   ) {
     for (const field of def.fields || []) {
       result.push(typeNameFromAST(field.type));
+      if (field.kind === "FieldDefinition") {
+        for (const arg of field.arguments || []) {
+          result.push(typeNameFromAST(arg.type));
+        }
+      }
     }
     if (def.kind !== Kind.INPUT_OBJECT_TYPE_DEFINITION) {
       for (const impl of def.interfaces || []) {
@@ -261,12 +442,12 @@ function processTypeDefinitionOrExtension(
     for (const arg of def.arguments || []) {
       result.push(typeNameFromAST(arg.type));
     }
-  } else if (isTypeExtensionNode(def)) {
-    // TODO: Handle model directives
-    return [];
-  } else {
-    return [];
   }
+
+  if (isTypeExtensionNode(def)) {
+    result.push(def.name.value);
+  }
+
   return result;
 }
 
@@ -288,8 +469,26 @@ const TYPE_EXTENSION_KINDS = [
   Kind.INPUT_OBJECT_TYPE_EXTENSION,
 ];
 
-function hasType(types: Array<TypeToProcess>, type: TypeToProcess): boolean {
+function shouldProcessSymbol(
+  seenSymbolToProcesss: Array<SymbolToProcess>,
+  symbolsToProcess: Array<SymbolToProcess>,
+  symbol: SymbolToProcess,
+): boolean {
+  return (
+    !BUILT_IN_SCALARS.has(symbol.name) &&
+    !hasType(seenSymbolToProcesss, symbol) &&
+    !hasType(symbolsToProcess, symbol)
+  );
+}
+
+function hasType(
+  types: Array<SymbolToProcess>,
+  type: SymbolToProcess,
+): boolean {
   return !!types.find(
-    (value) => value.typeName === type.typeName && value.module === type.module,
+    (value) =>
+      value.name === type.name &&
+      value.module === type.module &&
+      value.isExtension === type.isExtension,
   );
 }

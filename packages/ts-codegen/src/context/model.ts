@@ -3,6 +3,7 @@ import {
   ASTNode,
   DirectiveNode,
   GraphQLError,
+  Kind,
   ObjectTypeDefinitionNode,
 } from "graphql";
 import { ValueNode } from "graphql/language/ast";
@@ -46,11 +47,13 @@ export function processModelDirective(
   if (
     !typeDef ||
     Array.isArray(typeDef) ||
-    ((typeDef as ASTNode).kind !== "ObjectTypeDefinition" &&
-      (typeDef as ASTNode).kind !== "ScalarTypeDefinition")
+    ((typeDef as ASTNode).kind !== Kind.OBJECT_TYPE_DEFINITION &&
+      (typeDef as ASTNode).kind !== Kind.SCALAR_TYPE_DEFINITION &&
+      (typeDef as ASTNode).kind !== Kind.OBJECT_TYPE_EXTENSION &&
+      (typeDef as ASTNode).kind !== Kind.SCALAR_TYPE_EXTENSION)
   ) {
     throw new GraphQLError(
-      "Directive @model must be defined on Object or Scalar type",
+      "Directive @model must be defined on Object or Scalar type, or on extend of Object or Scalar type",
       [node],
     );
   }

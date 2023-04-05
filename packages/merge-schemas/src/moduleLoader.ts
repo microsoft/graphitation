@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs/promises";
-import { DirectiveNode, DocumentNode, parse } from "graphql";
+import { DocumentNode, parse } from "graphql";
 
 export interface ModuleLoader {
   resolveModuleFromPath(
@@ -21,6 +21,7 @@ export class FileSystemModuleLoader implements ModuleLoader {
     if (path.isAbsolute(absolutePath)) {
       modulePath = absolutePath;
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const packageJson = require(`${absolutePath}/package.json`);
       modulePath = require.resolve(`${absolutePath}/${packageJson.main}`);
     }

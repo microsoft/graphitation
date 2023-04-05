@@ -1,8 +1,4 @@
-extend schema
-  @import(
-    from: "@graphitation/merge-schema-testing-core-graphql"
-    defs: ["Node", "DateTime", "Person"]
-  )
+extend schema @import(from: "./core", defs: ["Node", "DateTime", "Person"])
 
 type Foo implements Node {
   id: ID!
@@ -15,4 +11,8 @@ type Bar implements Node {
 
 extend type Person {
   foo: Foo
+}
+
+type Frobnar implements Node {
+  id: ID!
 }

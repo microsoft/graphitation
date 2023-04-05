@@ -1,4 +1,4 @@
-import { Kind, parse, print } from "graphql";
+import { DocumentNode, Kind, parse, print } from "graphql";
 import { mergeSchemas } from "./mergeSchemas";
 import path from "path";
 import {
@@ -21,8 +21,13 @@ describe(mergeSchemas, () => {
       ],
       new FileSystemModuleLoader(),
     );
-    expect(print(result)).toMatchInlineSnapshot(`
-      """"ISO8601 Date Time"""
+    expect(result.errors).toBeUndefined();
+    expect(print(result.document)).toMatchInlineSnapshot(`
+      "type Person implements Node {
+        id: ID!
+      }
+
+      """ISO8601 Date Time"""
       scalar DateTime
 
       """
@@ -45,6 +50,10 @@ describe(mergeSchemas, () => {
       type Foo implements Node {
         id: ID!
         timestamp: DateTime
+      }
+
+      extend type Person {
+        foo: Foo
       }
       "
     `);
@@ -98,21 +107,14 @@ describe(mergeSchemas, () => {
       ],
       loader,
     );
-    expect(result.kind).toEqual(Kind.DOCUMENT);
-    expect(
-      result.definitions.map((def) => {
-        if ("name" in def) {
-          return def.name?.value;
-        } else {
-          return def;
-        }
-      }),
-    ).toEqual([
-      "TestDirective",
+    expect(result.errors).toBeUndefined();
+    expect(result.document.kind).toEqual(Kind.DOCUMENT);
+    expect(getOutputtedSymbolNames(result.document)).toEqual([
+      "@TestDirective",
       "TestInterface",
       "TestObject",
       "TestScalar",
-      "TestDirective2",
+      "@TestDirective2",
       "TestInterface2",
       "TestObject2",
       "TestScalar2",
@@ -131,6 +133,30 @@ describe(mergeSchemas, () => {
               from: "@graphitation/merge-schema-testing-core-graphql"
               defs: ["Person"]
             )
+            @import(
+              from: "@graphitation/merge-schema-testing-e2",
+              defs: ["UsingDateTimeInArgs", "@testDirective"]
+            )
+        `,
+      },
+      {
+        modulePath: "@graphitation/merge-schema-testing-e2",
+        document: `
+          extend schema
+            @import(
+              from: "@graphitation/merge-schema-testing-core-graphql"
+              defs: ["DateTime", "Cursor", "BigInt"]
+            )
+
+          type UsingDateTimeInArgs {
+            withDateTimeArg(date: DateTime): ID
+          }
+
+          type UsingBigIntInArgs {
+            withDateTimeArg(bigint: BigInt): ID
+          }
+
+          directive @testDirective(cursor: Cursor) on OBJECT
         `,
       },
     ]);
@@ -138,19 +164,96 @@ describe(mergeSchemas, () => {
       [{ absolutePath: "@graphitation/merge-schema-testing-e1" }],
       loader,
     );
-    expect(result.kind).toEqual(Kind.DOCUMENT);
-    const defs = result.definitions.map((def) => {
-      if ("name" in def) {
-        return def.name?.value;
-      } else {
-        return def;
-      }
-    });
+    expect(result.errors).toBeUndefined();
+    expect(result.document.kind).toEqual(Kind.DOCUMENT);
+    const defs = getOutputtedSymbolNames(result.document);
+
     expect(defs).not.toContain("ConnectionEdge");
-    expect(defs).toEqual(["Person", "Node"]);
+    expect(defs).not.toContain("UsingBigIntInArgs");
+    expect(defs).not.toContain("BigInt");
+    expect(defs).toEqual([
+      "@testDirective",
+      "UsingDateTimeInArgs",
+      "Person",
+      "Cursor",
+      "DateTime",
+      "Node",
+    ]);
   });
 
-  it("handles circular imports and entry point imports", async () => {
+  it("includes extensions", async () => {
+    const loader = createTestModuleLoader([
+      {
+        modulePath: "@graphitation/merge-schema-testing-e1",
+        document: `
+          extend schema
+            @import(
+              from: "@graphitation/merge-schema-testing-core-graphql"
+              defs: ["Person"]
+            )
+            @import(
+              from: "@graphitation/merge-schema-testing-e2"
+              defs: ["Presence"]
+              extends: ["Bar"]
+            )
+
+          extend type Person { # include all extensions in entry point
+            extendField: String
+          }
+
+          type Bar {
+            id: ID!
+          }
+
+          extend type Bar { # include all extensions in entry point
+            extendFieldBar: String
+          }
+        `,
+      },
+      {
+        modulePath: "@graphitation/merge-schema-testing-e2",
+        document: `
+          extend schema
+            @import(
+              from: "@graphitation/merge-schema-testing-core-graphql"
+              defs: ["Person", "Cursor"]
+            )
+
+            type Presence {
+              id: ID!
+            }
+
+            extend type Presence { # include imported types extend
+              extendPresence: Cursor
+            }
+
+            extend type Person { # don't include non imported extension
+              presence: Presence
+            }
+        `,
+      },
+    ]);
+
+    const result = await mergeSchemas(
+      [{ absolutePath: "@graphitation/merge-schema-testing-e1" }],
+      loader,
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.document.kind).toEqual(Kind.DOCUMENT);
+    expect(getOutputtedSymbolNames(result.document)).toEqual([
+      "Bar",
+      "extend Bar",
+      "extend Person",
+      "Presence",
+      "extend Presence",
+      "Person",
+      "Cursor",
+      "Node",
+    ]);
+  });
+
+  it("imports circular imports and entry point imports", async () => {
     const loader = createTestModuleLoader([
       {
         modulePath: "@graphitation/merge-schema-testing-e1",
@@ -222,17 +325,14 @@ describe(mergeSchemas, () => {
       ],
       loader,
     );
-
-    expect(result.kind).toEqual(Kind.DOCUMENT);
-    expect(
-      result.definitions.map((def) => {
-        if ("name" in def) {
-          return def.name?.value;
-        } else {
-          return def;
-        }
-      }),
-    ).toEqual(["Presence", "User", "Comment", "Node"]);
+    expect(result.errors).toBeUndefined();
+    expect(result.document.kind).toEqual(Kind.DOCUMENT);
+    expect(getOutputtedSymbolNames(result.document)).toEqual([
+      "Presence",
+      "User",
+      "Comment",
+      "Node",
+    ]);
   });
 
   it("includes extends for all used types in imported modules", async () => {
@@ -265,8 +365,9 @@ describe(mergeSchemas, () => {
         document: `
           extend schema
             @import(
-              from: "@graphitation/merge-schema-testing-e2"
-              defs: ["Presence"]
+              from: "@graphitation/merge-schema-testing-e1"
+              defs: ["Presence"],
+              extends: ["User"]
             )
 
           type User implements Node {
@@ -281,24 +382,116 @@ describe(mergeSchemas, () => {
       loader,
     );
 
-    expect(result.kind).toEqual(Kind.DOCUMENT);
-    expect(
-      result.definitions.map((def) => {
-        if ("name" in def) {
-          if (def.kind === Kind.OBJECT_TYPE_EXTENSION) {
-            return `extend ${def.name.value}`;
-          } else {
-            return def.name?.value;
-          }
-        } else {
-          return def;
-        }
-      }),
-    ).toEqual(["Presence", "extend User", "User", "Node"]);
+    expect(result.document.kind).toEqual(Kind.DOCUMENT);
+    expect(getOutputtedSymbolNames(result.document)).toEqual([
+      "Presence",
+      "extend User",
+      "User",
+      "Node",
+    ]);
   });
 
-  // it("reports missing types for modules")
-  // it("ignores missing types in entry points with a flag")
+  it("reports missing types for modules", async () => {
+    const loader = createTestModuleLoader([
+      {
+        modulePath: "@graphitation/merge-schema-testing-e1",
+        document: `
+          extend schema
+            @import(
+              from: "@graphitation/merge-schema-testing-core-graphql"
+              defs: ["Nodeee"] # Incorrect import
+            )
+            @import(
+              from: "@graphitation/merge-schema-testing-e2"
+              defs: ["User"]
+            )
+            @import(
+              from: "@graphitation/this-module-does-not-exist",
+              defs: ["Froobar"]
+            )
+
+          type Presence implements Node { # not imported import
+            id: ID!
+            user: User
+          }
+
+          extend type User {
+            presence: Presence # not imported
+          }
+        `,
+      },
+      {
+        modulePath: "@graphitation/merge-schema-testing-e2",
+        document: `
+            type User implements Node { # missing import implement
+              id: ID!
+              comment: Comment # missing import
+            }
+        `,
+      },
+    ]);
+
+    const result = await mergeSchemas(
+      [{ absolutePath: "@graphitation/merge-schema-testing-e1" }],
+      loader,
+    );
+    // Fix for jest's problem with circular objects
+    const errors = result.errors?.map((e) => ({
+      ...e,
+      forType: e.forType
+        ? {
+            module: e.forType.module,
+          }
+        : undefined,
+    }));
+    expect(errors).toEqual([
+      {
+        forType: {
+          module: "@graphitation/merge-schema-testing-e1",
+        },
+        isEntryPoint: false,
+        isExtension: false,
+        module: "@graphitation/merge-schema-testing-core-graphql",
+        name: "Nodeee",
+      },
+      {
+        forType: {
+          module: "@graphitation/merge-schema-testing-e1",
+        },
+        isEntryPoint: true,
+        isExtension: false,
+        module: "@graphitation/merge-schema-testing-e1",
+        name: "Node",
+      },
+      {
+        forType: {
+          module: "@graphitation/merge-schema-testing-e2",
+        },
+        isEntryPoint: false,
+        isExtension: false,
+        module: "@graphitation/merge-schema-testing-e2",
+        name: "Node",
+      },
+      {
+        forType: {
+          module: "@graphitation/merge-schema-testing-e2",
+        },
+        isEntryPoint: false,
+        isExtension: false,
+        module: "@graphitation/merge-schema-testing-e2",
+        name: "Comment",
+      },
+      {
+        forType: {
+          module: "@graphitation/merge-schema-testing-e1",
+        },
+        isEntryPoint: false,
+        isExtension: false,
+        module: "@graphitation/this-module-does-not-exist",
+        name: "Froobar",
+      },
+    ]);
+  });
 });
 
 function createTestModuleLoader(
@@ -312,4 +505,20 @@ function createTestModuleLoader(
     });
   }
   return new TestModuleLoader(moduleMap);
+}
+
+function getOutputtedSymbolNames(document: DocumentNode) {
+  return document.definitions.map((def) => {
+    if ("name" in def) {
+      if (def.kind === Kind.OBJECT_TYPE_EXTENSION) {
+        return `extend ${def.name.value}`;
+      } else if (def.kind === Kind.DIRECTIVE_DEFINITION) {
+        return `@${def.name.value}`;
+      } else {
+        return def.name?.value;
+      }
+    } else {
+      return def;
+    }
+  });
 }
