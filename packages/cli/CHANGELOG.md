@@ -1,8 +1,16 @@
 # Change Log - @graphitation/cli
 
-This log was last generated on Tue, 04 Apr 2023 10:29:16 GMT and should not be manually modified.
+This log was last generated on Thu, 06 Apr 2023 11:07:30 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.5.5
+
+Thu, 06 Apr 2023 11:07:30 GMT
+
+### Patches
+
+- Fix missing deps (mnovikov@microsoft.com)
 
 ## 1.5.4
 

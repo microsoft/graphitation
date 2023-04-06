@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Fix missing deps",
-  "packageName": "@graphitation/cli",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

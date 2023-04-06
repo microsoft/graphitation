@@ -2,6 +2,21 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Thu, 06 Apr 2023 11:07:30 GMT",
+      "tag": "@graphitation/cli_v1.5.5",
+      "version": "1.5.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "4d67f3de0d5c7cf35cb2e4b706613dc4e35e263a",
+            "comment": "Fix missing deps"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 04 Apr 2023 10:29:16 GMT",
       "tag": "@graphitation/cli_v1.5.4",
       "version": "1.5.4",
