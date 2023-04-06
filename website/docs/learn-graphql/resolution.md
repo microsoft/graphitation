@@ -181,6 +181,8 @@ const resolvers = {
 };
 ```
 
+Neat.
+
 #### Flexibility for different needs
 
 We can use this approach to optimize our performance by _only_ fetching or returning the data that we need for each field. For example, if we only want to get the `title`, `lastMessage`, and `receivedAt` fields of each conversation, we can avoid fetching or returning the participants array with all their `avatarURL`s.
@@ -232,12 +234,39 @@ In conclusion, lazy field resolvers are **the recommended way** to implement any
 
 ## Models
 
-TODO: Only fetch participants when necessary, and as another model.
+TODO: TS. Gets hard to do with graphql-codegen with non-nullable fields.
+
+In GraphQL execution, there is no need for the GraphQL schema to match the data source. This means that we can design our schema based on the needs of our clients, rather than the structure of our database or API. In fact, very often we will want to hide values that the clients don't need at all or those values from which we derive the field's result. For example, we might have a field called `fullName` that concatenates the `firstName` and `lastName` values from our data source. We don't need to expose those fields in our schema if they are not useful for our clients.
+
+However, the lazy field resolver functions _do_ need access to the raw data source for them to be able to do their work. For example, a field resolver function for the `fullName` field might look something like this:
+
+```js
+const resolvers = {
+  Person: {
+    fullName: (person) => `${person.firstName} ${person.lastName}`,
+  },
+};
+```
+
+We call such a data source, **the model**.
+
+A model can be a raw data source, an intermediate representation, or a full fledged model class instance. A raw data source is the most basic form of a model. It could be a row from a database table, a document from a database, or a JSON object from an API response. An intermediate representation is a model that has some processing or transformation applied to it, perhaps ahead of time. For example, we might have a model that adds some computed properties during a background synchronization task. A full fledged model class instance is a model that has methods and behaviors associated with it. For example, we might have a model class that implements validation rules, business logic, or custom methods for manipulating the data.
+
+Depending on our use case and preferences, we can choose any of these forms of models for our GraphQL execution. The only requirement is that our resolver functions can access the relevant properties of our models to return the correct values for our schema fields.
+
+:::caution
+
+#### A warning for statically typed language users
+
+For type-safe field resolver implementations, you will typicaly want to generate typings to use in your resolvers. By default, codegen tools will typically emit typings that _exactly_ match the schema types. What this means is that your field resolver function will be required to return the data for child fields already transformed according to the schema. I.e. this forces you to apply [greedy resolution](#-greedy-resolution). No bueno.
+
+You will therefore absolutely want to pick a codegen tool that allows you to specify custom model typings for specific schema types. In the TypeScript space, such tools include:
+
+- Our own [graphitation supermassive codegen](https://github.com/microsoft/graphitation/tree/main/packages/cli), which allows you to annotate your schema definition with the model typings to use.
+- The popular [graphql-codegen](https://the-guild.dev/graphql/codegen) tool, which [allows you to provide configuration](https://the-guild.dev/blog/better-type-safety-for-resolvers-with-graphql-codegen) with schema type to model type mappings.
+
+:::
 
 ## DataLoader
 
-## True text
-
-The object type fields along the selection path may return _any_ type of data that the child field resolvers might need to perform their work—this data does not in any way need to resemble the public type that is reflected in the GraphQL schema. We call this data the resolver model, and is typically represented by JSON data from back-end services or all the way up to a full-fledged model class.
-
-Finallly, work to transform data from the resolver models to the response can move to the leaf fields as much as possible—which are those fields that return scalar types.
+TODO
