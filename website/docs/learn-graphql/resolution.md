@@ -80,35 +80,37 @@ The first example is the simplest one, where we just return the full response fr
 
 For example, if we have a data source that looks like this:
 
-**TODO: Update to reflect screenshot!**
-
 ```js
 const conversations = [
   {
-    title: "GraphQL Basics",
-    lastMessage: "Thanks for sharing!",
+    title: "Joshua VanBuren",
+    lastMessage: "Thanks for reviewing!",
     participants: [
       {
-        avatarURL: "https://example.com/anna.jpg",
-      },
-      {
-        avatarURL: "https://example.com/bob.jpg",
+        avatarURL: "https://example.com/joshua.jpg",
       },
     ],
     receivedAt: "10:29 AM",
   },
   {
-    title: "GraphQL Advanced",
-    lastMessage: "That's very interesting!",
+    title: "Daichi Fukuda",
+    lastMessage: "You: Thank you!!",
     participants: [
       {
-        avatarURL: "https://example.com/carl.jpg",
-      },
-      {
-        avatarURL: "https://example.com/dana.jpg",
+        avatarURL: "https://example.com/daichi.jpg",
       },
     ],
     receivedAt: "10:20 AM",
+  },
+  {
+    title: "Kadji Bell",
+    lastMessage: "You: I like the idea, let’s pitch it!",
+    participants: [
+      {
+        avatarURL: "https://example.com/kadji.jpg",
+      },
+    ],
+    receivedAt: "10:02 AM",
   },
 ];
 ```
@@ -123,7 +125,7 @@ const resolvers = {
 };
 ```
 
-This approach is easy to implement, and while it works for trivial queries and data sources, it has some drawbacks. For instance, it can lead to inefficient resource usage and performance issues, because it always returns the full objects for each conversation and person, even if we only request some fields. If we only want to get the `title` and `lastMessage` fields of each conversation, we still get the participants array with _all_ their `avatarURLs`. This may seem innocuous in this contrived example, but imagine more complex data sources that require expensive logic to fullfil the participants data, and it can quickly add up.
+This approach is easy to implement, and while it works for trivial queries and data sources, it has some drawbacks. For instance, it can lead to inefficient resource usage and performance issues, because it always returns the full objects for each conversation and person, even if we only request some fields. If we only want to get the `title` and `lastMessage` fields of each conversation, we still get the participants array with _all_ their `avatarURLs`. This may seem innocuous in this contrived example, but imagine more complex data sources that require expensive logic to fulfil the participants data, and it can quickly add up.
 
 :::note
 
@@ -144,7 +146,7 @@ const resolvers = {
     participants: (conversation) => conversation.participants,
     receivedAt: (conversation) => conversation.receivedAt,
   },
-  Participant: {
+  Person: {
     avatarURL: (person) => person.avatarURL,
   },
 };
@@ -156,21 +158,13 @@ const resolvers = {
 
 The second example is more flexible and efficient than the first one, where we can have explicit field resolvers for each field in the schema. These field resolver functions allow us to define how to derive the field's value from the data source.
 
-For example, if the `receivedAt` value would not already be formatted in the data source, we can define a resolver function for this field that calculates its human-readable value from the raw format.
-
-Here is how our resolver functions could look like in this approach:
+For example, if the `receivedAt` value would not already be formatted in the data source, we can define a resolver function for this field that calculates its human-readable value from the raw format. Here is how that field resolver function could look like:
 
 ```js
 const resolvers = {
-  Query: {
-    conversations: () => getConversations(),
-  },
   Conversation: {
-    title: (conversation) => conversation.title,
-    lastMessage: (conversation) => conversation.lastMessage,
-    participants: (conversation) => conversation.participants,
+    // Transform the `conversation.receivedAt` value to HH:MM AM/PM
     receivedAt: (conversation) => {
-      // Transform the `conversation.receivedAt` value to HH:MM AM/PM
       const date = new Date(conversation.receivedAt);
       return date.toLocaleTimeString("en-US", {
         hour: "numeric",
@@ -179,43 +173,71 @@ const resolvers = {
       });
     },
   },
-  Person: {
-    avatarURL: (person) => person.avatarURL,
-  },
 };
 ```
 
-In this case, when we query for conversations, GraphQL will:
-
-1. Execute the resolver function for the `Query.conversations` field, which returns an array of conversation objects.
-1. Then, for each conversation object in the array, GraphQL will execute the resolver function for the `Conversation.title`, `Conversation.lastMessage`, `Conversation.participants`, and `Conversation.receivedAt` fields. The `Conversation.participants` field returns an array of participant objects.
-1. And finally, for each participant object in the array, GraphQL will execute the resolver function for the `Participant.avatarURL` field.
-
-We can also use this approach to optimize our performance by _only_ fetching or returning the data that we need for each field. For example, if we only want to get the `title`, `lastMessage`, and `receivedAt` fields of each conversation, we can avoid fetching or returning the participants array with all their `avatarURL`s.
-
-Another benefit of using explicit field resolvers is that they can apply to any field that returns a `Conversation` type, not just the top-level query. This means that you can reuse the same logic and transformations for different queries that involve conversations. For instance, if you have a `Person` type that has a `conversations` field that returns all the conversations that a user participates in, you can use the same field resolvers as you would use for the `Query.conversations` result. This way, you can avoid inconsistency in your API's results, while staying flexible in the queries it can execute.
-
-To support this aditional schema:
-
-type Person {
-conversations: [Conversation]
-}
-
-we only need this additional resolver
+Similarly, the `participants` value in the data source is more likely to be a list of person IDs, than it is to be a list of full-fledged person objects. In this scenario, we need to issue an extra call to the data source to get the actual data. It should go without saying that we absolutely want this to be done only when the client needs this data, and not fetch it greedily in the `Query.conversations` root-field. Here is how that field resolver function could look like:
 
 ```js
 const resolvers = {
-  Participant: {
-    conversations: (person) => getConversationsForPersonById(person.id),
+  Conversation: {
+    participants: (conversation) => getPeopleByIDs(conversation.participants),
   },
 };
 ```
 
-### Models
+#### Flexibility for different needs
+
+We can use this approach to optimize our performance by _only_ fetching or returning the data that we need for each field. For example, if we only want to get the `title`, `lastMessage`, and `receivedAt` fields of each conversation, we can avoid fetching or returning the participants array with all their `avatarURL`s.
+
+As you have learned in [The Design of GraphQL](the-design-of-graphql.md), this flexibility is at the heart of its design for composition of data requirements.
+
+#### Consistency throughout the schema
+
+Another benefit of using explicit field resolvers is that they can apply to any field that returns a `Conversation` type, not just the top-level query. This means that you can reuse the same logic and transformations for different queries that also involve conversations. For instance, if you have a `Person` type that has a `conversations` field which returns all the conversations that a user participates in, you can use the same field resolvers as you would use for the `Query.conversations` result. This way, you can avoid inconsistency in your API's results, while staying flexible in the queries it can execute.
+
+In this case, only the following schema addition would be necessary to enable the above example:
+
+```graphql
+type Person {
+  conversations: [Conversation]
+}
+```
+
+Plus a field resolver function that does no work other than getting the conversations based on the appropriate context:
+
+```js
+const resolvers = {
+  Person: {
+    conversations: (person) => getConversationsForPersonById(person.id),
+  },
+  Query: {
+    person: (_, args) => getPerson(args.id),
+  },
+};
+```
+
+With that in place, you now have a schema that allows lazy resolution with a query like the following:
+
+```graphql
+query {
+  person(id: "daichi-fukuda") {
+    conversations {
+      title
+    }
+  }
+}
+```
+
+### Striking the right balance between the
+
+## Models
 
 TODO: Only fetch participants when necessary, and as another model.
 
-### True text
+## DataLoader
+
+## True text
 
 The object type fields along the selection path may return _any_ type of data that the child field resolvers might need to perform their work—this data does not in any way need to resemble the public type that is reflected in the GraphQL schema. We call this data the resolver model, and is typically represented by JSON data from back-end services or all the way up to a full-fledged model class.
 
