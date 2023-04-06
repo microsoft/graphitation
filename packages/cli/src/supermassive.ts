@@ -15,9 +15,10 @@ type GenerateInterfacesOptions = {
   enumsImport?: string;
   legacy?: boolean;
   legacyModels?: boolean;
+  scope?: string;
 };
 
-const PREPEND_TO_INTERFACES = `/* eslint-disable */ \n// This file was automatically generated (by @graphitaiton/supermassive) and should not be edited.\n`;
+const PREPEND_TO_INTERFACES = `/* eslint-disable */ \n// This file was automatically generated (by @graphitation/supermassive) and should not be edited.\n`;
 
 export function supermassive(): Command {
   const extractSchemaCommand = new Command();
@@ -47,6 +48,7 @@ export function supermassive(): Command {
     .option("-ei, --enums-import [enumsImport]", "from where to import enums")
     .option("-l, --legacy", "generate legacy types")
     .option("--legacy-models", "do not use models for object types")
+    .option("--scope [scope]", "generate models only for scope")
     .description("generate interfaces and models")
     .action(
       async (inputs: Array<string>, options: GenerateInterfacesOptions) => {
@@ -120,6 +122,7 @@ async function generateInterfaces(
       enumsImport: getContextPath(outputPath, options.enumsImport) || null,
       legacyCompat: !!options.legacy,
       legacyNoModelsForObjects: !!options.legacyModels,
+      modelScope: options.scope || null,
     });
 
     await fs.mkdir(outputPath, { recursive: true });

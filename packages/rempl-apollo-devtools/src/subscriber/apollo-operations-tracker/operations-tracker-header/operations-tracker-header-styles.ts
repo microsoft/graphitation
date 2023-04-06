@@ -23,4 +23,7 @@ export const useStyles = makeStyles({
     height: "auto",
     ...shorthands.overflow("hidden", "auto"),
   },
+  buttonContainer: {
+    display: "flex",
+  },
 });

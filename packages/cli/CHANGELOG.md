@@ -1,8 +1,57 @@
 # Change Log - @graphitation/cli
 
-This log was last generated on Mon, 06 Mar 2023 15:25:06 GMT and should not be manually modified.
+This log was last generated on Thu, 06 Apr 2023 11:07:30 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.5.5
+
+Thu, 06 Apr 2023 11:07:30 GMT
+
+### Patches
+
+- Fix missing deps (mnovikov@microsoft.com)
+
+## 1.5.4
+
+Tue, 04 Apr 2023 10:29:16 GMT
+
+### Patches
+
+- Bump @graphitation/supermassive-extractors to v2.1.0
+
+## 1.5.3
+
+Tue, 28 Mar 2023 10:27:19 GMT
+
+### Patches
+
+- Bump @graphitation/ts-codegen to v2.4.0
+
+## 1.5.2
+
+Mon, 27 Mar 2023 13:30:13 GMT
+
+### Patches
+
+- Bump @graphitation/ts-codegen to v2.3.0
+
+## 1.5.1
+
+Thu, 16 Mar 2023 16:44:10 GMT
+
+### Patches
+
+- Fix typo that breaks everything (mnovikov@microsoft.com)
+
+## 1.5.0
+
+Thu, 16 Mar 2023 15:48:01 GMT
+
+### Minor changes
+
+- Add ability to specify model scope (mnovikov@microsoft.com)
+- Bump @graphitation/ts-codegen to v2.2.0
 
 ## 1.4.1
 

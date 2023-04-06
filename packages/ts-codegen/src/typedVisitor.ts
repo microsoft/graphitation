@@ -20,7 +20,7 @@ export type ReducerFieldMap<T> = {
 export declare type ASTReducer<
   T,
   TR extends ReducerResultMap<T>,
-  TRF extends ReducerFieldMap<T>
+  TRF extends ReducerFieldMap<T>,
 > = {
   readonly [NodeT in ASTNode as NodeT["kind"]]?: {
     readonly enter?: ASTVisitFn<NodeT>;
@@ -31,7 +31,7 @@ export declare type ASTReducer<
 declare type ASTReducerFn<
   TReducedNode extends ASTNode,
   TResult,
-  TReducerMap
+  TReducerMap,
 > = (
   /** The current node being visiting. */
   node: {

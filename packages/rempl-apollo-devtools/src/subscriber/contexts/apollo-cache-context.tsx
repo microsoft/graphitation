@@ -7,9 +7,8 @@ export type ApolloCacheContextType = {
   cache: NormalizedCacheObject;
 } | null;
 
-export const ApolloCacheContext = React.createContext<ApolloCacheContextType>(
-  null,
-);
+export const ApolloCacheContext =
+  React.createContext<ApolloCacheContextType>(null);
 
 export const ApolloCacheContextWrapper = ({
   children,

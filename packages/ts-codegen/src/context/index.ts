@@ -56,6 +56,8 @@ export type TsCodegenContextOptions = {
   };
   legacyCompat: boolean;
   legacyNoModelsForObjects: boolean;
+
+  modelScope: string | null;
 };
 
 const DEFAULT_SCALAR_TYPE = "unknown";
@@ -87,6 +89,8 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
   },
   legacyCompat: false,
   legacyNoModelsForObjects: false,
+
+  modelScope: null,
 };
 
 type ModelNameAndImport = { modelName: string; imp: DefinitionImport };
@@ -203,17 +207,19 @@ export class TsCodegenContext {
   }
 
   addModel(model: DefinitionModel, node: ASTNode): void {
-    const existingModel = this.typeNameToModels.get(model.typeName);
+    const scope = this.options.modelScope;
+    if (!scope || model.modelScope === scope) {
+      // const existingModel = this.typeNameToModels.get(model.typeName);
 
-    if (existingModel) {
-      throw new GraphQLError(
-        `Model for type ${model.typeName} is defined multiple times`,
+      // if (existingModel) {
+      //   throw new GraphQLError(
+      //     `Model for type ${model.typeName} is defined multiple times`,
 
-        [existingModel.directive, node],
-      );
+      //     [existingModel.directive, node],
+      //   );
+      // }
+      this.typeNameToModels.set(model.typeName, model);
     }
-
-    this.typeNameToModels.set(model.typeName, model);
   }
 
   getModel(typeName: string): DefinitionModel | null {

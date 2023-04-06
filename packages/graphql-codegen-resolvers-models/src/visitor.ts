@@ -13,7 +13,7 @@ import {
 
 export class ResolversModelsVisitor<
   TRawConfig extends ResolversModelsPluginConfig = ResolversModelsPluginConfig,
-  TPluginConfig extends ParsedResolversConfig = ParsedResolversConfig
+  TPluginConfig extends ParsedResolversConfig = ParsedResolversConfig,
 > extends BaseVisitor<TRawConfig, TPluginConfig> {
   protected _federation: ApolloFederation;
 

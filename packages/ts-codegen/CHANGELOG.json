@@ -2,6 +2,66 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Mon, 03 Apr 2023 14:51:36 GMT",
+      "tag": "@graphitation/ts-codegen_v2.4.0",
+      "version": "2.4.0",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "3cd00dd6254a9b7d9dfe615d9d35dba4c0b108c7",
+            "comment": "Upgrade prettier"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 28 Mar 2023 10:27:19 GMT",
+      "tag": "@graphitation/ts-codegen_v2.4.0",
+      "version": "2.4.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "be50c69d75ee476914522c961b4c0c5ddbcf9bc5",
+            "comment": "Revert * exports for enums"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 27 Mar 2023 13:30:13 GMT",
+      "tag": "@graphitation/ts-codegen_v2.3.0",
+      "version": "2.3.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "873286626dd1b2f7557b7cddba5a66e42def2a1b",
+            "comment": "Export * enums"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 16 Mar 2023 15:48:01 GMT",
+      "tag": "@graphitation/ts-codegen_v2.2.0",
+      "version": "2.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "07595d459e81a39f8741b7c7881face08e25cd7e",
+            "comment": "Add ability to specify model scope"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 06 Mar 2023 15:25:06 GMT",
       "tag": "@graphitation/ts-codegen_v2.1.1",
       "version": "2.1.1",

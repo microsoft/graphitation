@@ -7,9 +7,8 @@ export type ApolloCacheDuplicatesContextType = {
   cacheDuplicates: CacheDuplicates;
 } | null;
 
-export const ApolloCacheDuplicatesContext = React.createContext<ApolloCacheDuplicatesContextType>(
-  null,
-);
+export const ApolloCacheDuplicatesContext =
+  React.createContext<ApolloCacheDuplicatesContextType>(null);
 
 export const ApolloCacheDuplicatesContextWrapper = ({
   children,

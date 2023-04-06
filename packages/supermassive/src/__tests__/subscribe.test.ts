@@ -105,7 +105,7 @@ async function compareResultsForSubscribeWithSchema(
 
   const subscribeWithSchemaIterator = (await subscribeWithSchema({
     typeDefs,
-    resolvers: (resolvers as unknown) as UserResolvers<any, any>,
+    resolvers: resolvers as unknown as UserResolvers<any, any>,
     document,
     contextValue: {
       models,

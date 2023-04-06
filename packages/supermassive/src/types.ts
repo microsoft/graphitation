@@ -18,6 +18,7 @@ import {
 } from "./ast/TypedAST";
 import { ObjMap } from "./jsutils/ObjMap";
 import { Path } from "./jsutils/Path";
+import { ExecutionHooks } from "./hooks/types";
 
 export type ScalarTypeResolver = GraphQLScalarType;
 export type EnumTypeResolver = GraphQLEnumType; // TODO Record<string, any>;
@@ -25,7 +26,7 @@ export type FunctionFieldResolver<
   TSource,
   TContext,
   TArgs = Record<string, any>,
-  TReturn = any
+  TReturn = any,
 > = (
   source: TSource,
   args: TArgs,
@@ -37,7 +38,7 @@ export type FieldResolver<
   TSource,
   TContext,
   TArgs = Record<string, any>,
-  TReturn = any
+  TReturn = any,
 > =
   | FunctionFieldResolver<TSource, TContext, TArgs, TReturn>
   | {
@@ -58,7 +59,7 @@ export type ObjectTypeResolver<TSource = any, TContext = any, TArgs = any> = {
 export type InterfaceTypeResolver<
   TSource = any,
   TContext = any,
-  TArgs = any
+  TArgs = any,
 > = {
   __implementedBy: string[];
   [key: string]: FieldResolver<TSource, TContext, TArgs> | string[] | undefined;
@@ -73,7 +74,7 @@ export type UnionTypeResolver = {
 export type UserInterfaceTypeResolver<
   TSource = any,
   TContext = any,
-  TArgs = any
+  TArgs = any,
 > = {
   [key: string]: FieldResolver<TSource, TContext, TArgs>;
 } & {
@@ -137,7 +138,7 @@ export interface ResolveInfo {
  */
 export interface ExecutionResult<
   TData = ObjMap<unknown>,
-  TExtensions = ObjMap<unknown>
+  TExtensions = ObjMap<unknown>,
 > {
   errors?: Array<GraphQLError>;
   data?: TData | null;
@@ -146,7 +147,7 @@ export interface ExecutionResult<
 
 export interface FormattedExecutionResult<
   TData = ObjMap<unknown>,
-  TExtensions = ObjMap<unknown>
+  TExtensions = ObjMap<unknown>,
 > {
   errors?: Array<GraphQLFormattedError>;
   data?: TData | null;
@@ -162,10 +163,11 @@ export interface CommonExecutionArgs {
   fieldResolver?: Maybe<FunctionFieldResolver<any, any>>;
   typeResolver?: Maybe<TypeResolver<any, any>>;
   subscribeFieldResolver?: Maybe<FunctionFieldResolver<any, any>>;
+  fieldExecutionHooks?: ExecutionHooks;
 }
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
   document: DocumentNode;
-  schemaResolvers: Resolvers;
+  schemaResolvers?: Resolvers;
 };
 
 export type ExecutionWithSchemaArgs = CommonExecutionArgs & {

@@ -1,8 +1,24 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Wed, 01 Mar 2023 10:48:32 GMT and should not be manually modified.
+This log was last generated on Tue, 04 Apr 2023 10:29:16 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.4.0
+
+Tue, 04 Apr 2023 10:29:16 GMT
+
+### Minor changes
+
+- Make execution argument `schemaResolvers` optional (vladimir.razuvaev@gmail.com)
+
+## 2.3.0
+
+Thu, 30 Mar 2023 08:30:21 GMT
+
+### Minor changes
+
+- [SUPERMASSIVE] Initial execution hooks implementation (sergeystoyan@microsoft.com)
 
 ## 2.1.0
 

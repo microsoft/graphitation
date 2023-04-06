@@ -35,7 +35,7 @@ export type DefaultMockResolvers = Partial<{
 }>;
 
 export declare type MockResolvers<
-  TypeMap extends DefaultMockResolvers = DefaultMockResolvers
+  TypeMap extends DefaultMockResolvers = DefaultMockResolvers,
 > = {
   [K in keyof TypeMap]?: MockResolver<TypeMap[K]>;
 };

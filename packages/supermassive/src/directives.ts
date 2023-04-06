@@ -172,8 +172,8 @@ export const DEFAULT_DEPRECATION_REASON = "No longer supported";
 /**
  * Used to declare element of a GraphQL schema as deprecated.
  */
-export const GraphQLDeprecatedDirective: GraphQLDirective = new GraphQLDirective(
-  {
+export const GraphQLDeprecatedDirective: GraphQLDirective =
+  new GraphQLDirective({
     name: "deprecated",
     description: "Marks an element of a GraphQL schema as no longer supported.",
     locations: [
@@ -190,14 +190,13 @@ export const GraphQLDeprecatedDirective: GraphQLDirective = new GraphQLDirective
         defaultValue: DEFAULT_DEPRECATION_REASON,
       },
     },
-  },
-);
+  });
 
 /**
  * Used to provide a URL for specifying the behaviour of custom scalar definitions.
  */
-export const GraphQLSpecifiedByDirective: GraphQLDirective = new GraphQLDirective(
-  {
+export const GraphQLSpecifiedByDirective: GraphQLDirective =
+  new GraphQLDirective({
     name: "specifiedBy",
     description: "Exposes a URL that specifies the behaviour of this scalar.",
     locations: [DirectiveLocation.SCALAR],
@@ -207,20 +206,18 @@ export const GraphQLSpecifiedByDirective: GraphQLDirective = new GraphQLDirectiv
         description: "The URL that specifies the behaviour of this scalar.",
       },
     },
-  },
-);
+  });
 
 /**
  * The full list of specified directives.
  */
-export const specifiedDirectives: ReadonlyArray<GraphQLDirective> = Object.freeze(
-  [
+export const specifiedDirectives: ReadonlyArray<GraphQLDirective> =
+  Object.freeze([
     GraphQLIncludeDirective,
     GraphQLSkipDirective,
     GraphQLDeprecatedDirective,
     GraphQLSpecifiedByDirective,
-  ],
-);
+  ]);
 
 export function isSpecifiedDirective(directive: GraphQLDirective): boolean {
   return specifiedDirectives.some(({ name }) => name === directive.name);

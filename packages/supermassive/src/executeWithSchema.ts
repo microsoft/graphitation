@@ -18,6 +18,7 @@ export function executeWithSchema({
   operationName,
   fieldResolver,
   typeResolver,
+  fieldExecutionHooks,
 }: ExecutionWithSchemaArgs): PromiseOrValue<ExecutionResult> {
   const schema = buildASTSchema(typeDefs);
   let extractedResolvers: Resolvers = {};
@@ -42,5 +43,6 @@ export function executeWithSchema({
     operationName,
     fieldResolver,
     typeResolver,
+    fieldExecutionHooks,
   });
 }

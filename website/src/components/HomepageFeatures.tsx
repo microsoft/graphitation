@@ -1,6 +1,6 @@
-import React from 'react';
-import clsx from 'clsx';
-import styles from './HomepageFeatures.module.css';
+import React from "react";
+import clsx from "clsx";
+import styles from "./HomepageFeatures.module.css";
 
 type FeatureItem = {
   title: string;
@@ -10,8 +10,8 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
-    image: '/img/undraw_docusaurus_mountain.svg',
+    title: "Easy to Use",
+    image: "/img/undraw_docusaurus_mountain.svg",
     description: (
       <>
         Docusaurus was designed from the ground up to be easily installed and
@@ -20,8 +20,8 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
-    title: 'Focus on What Matters',
-    image: '/img/undraw_docusaurus_tree.svg',
+    title: "Focus on What Matters",
+    image: "/img/undraw_docusaurus_tree.svg",
     description: (
       <>
         Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
@@ -30,8 +30,8 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
-    title: 'Powered by React',
-    image: '/img/undraw_docusaurus_react.svg',
+    title: "Powered by React",
+    image: "/img/undraw_docusaurus_react.svg",
     description: (
       <>
         Extend or customize your website layout by reusing React. Docusaurus can
@@ -41,9 +41,9 @@ const FeatureList: FeatureItem[] = [
   },
 ];
 
-function Feature({title, image, description}: FeatureItem) {
+function Feature({ title, image, description }: FeatureItem) {
   return (
-    <div className={clsx('col col--4')}>
+    <div className={clsx("col col--4")}>
       <div className="text--center">
         <img className={styles.featureSvg} alt={title} src={image} />
       </div>

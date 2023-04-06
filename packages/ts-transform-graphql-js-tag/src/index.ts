@@ -159,9 +159,8 @@ function getVisitor(
       ) {
         let source = template.getText().slice(1, -1);
 
-        let interpolations: Array<
-          ts.Identifier | ts.PropertyAccessExpression
-        > = [];
+        let interpolations: Array<ts.Identifier | ts.PropertyAccessExpression> =
+          [];
         // `gql` tag with fragment interpolation
         if (isTemplateExpression) {
           interpolations = collectTemplateInterpolations(template, context);

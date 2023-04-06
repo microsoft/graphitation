@@ -253,9 +253,8 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
                         keyFieldsFound[fragmentSpreadSelection.name.value] ===
                           false
                       ) {
-                        keyFieldsFound[
-                          fragmentSpreadSelection.name.value
-                        ] = true;
+                        keyFieldsFound[fragmentSpreadSelection.name.value] =
+                          true;
                       }
                     }
                   }

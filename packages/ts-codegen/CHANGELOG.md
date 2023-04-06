@@ -1,8 +1,32 @@
 # Change Log - @graphitation/ts-codegen
 
-This log was last generated on Mon, 06 Mar 2023 15:25:06 GMT and should not be manually modified.
+This log was last generated on Tue, 28 Mar 2023 10:27:19 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.4.0
+
+Tue, 28 Mar 2023 10:27:19 GMT
+
+### Minor changes
+
+- Revert \* exports for enums (mnovikov@microsoft.com)
+
+## 2.3.0
+
+Mon, 27 Mar 2023 13:30:13 GMT
+
+### Minor changes
+
+- Export \* enums (mnovikov@microsoft.com)
+
+## 2.2.0
+
+Thu, 16 Mar 2023 15:48:01 GMT
+
+### Minor changes
+
+- Add ability to specify model scope (mnovikov@microsoft.com)
 
 ## 2.1.1
 

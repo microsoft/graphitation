@@ -14,5 +14,6 @@ export type DefinitionModel = {
   from: string | null;
   importName: string | null;
   directive: DirectiveNode;
+  modelScope: string | null;
   on: "ObjectTypeDefinition" | "ScalarTypeDefinition";
 };

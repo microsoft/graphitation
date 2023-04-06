@@ -1,1 +1,4 @@
 /.yarn/** linguist-vendored
+
+* text=auto eol=lf
+yarn.lock text eol=lf

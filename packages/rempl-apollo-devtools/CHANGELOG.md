@@ -1,8 +1,16 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-This log was last generated on Thu, 09 Feb 2023 20:03:55 GMT and should not be manually modified.
+This log was last generated on Mon, 27 Mar 2023 13:56:24 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.5.0
+
+Mon, 27 Mar 2023 13:56:24 GMT
+
+### Minor changes
+
+- Apollo operations - grid view added (jakubvejr@microsoft.com)
 
 ## 0.4.1
 
@@ -58,7 +66,7 @@ Thu, 03 Nov 2022 12:43:31 GMT
 
 ### Patches
 
--  Hotfix: set subscriber format to iife in build-separated-bundles.js (jakubvejr@microsoft.com)
+- Hotfix: set subscriber format to iife in build-separated-bundles.js (jakubvejr@microsoft.com)
 
 ## 0.3.4
 

@@ -54,9 +54,8 @@ export const RecentActivityContainer = React.memo(() => {
     [],
   );
 
-  const [recordRecentActivity, setRecordRecentActivity] = useState<boolean>(
-    false,
-  );
+  const [recordRecentActivity, setRecordRecentActivity] =
+    useState<boolean>(false);
 
   const [openDescription, setOpenDescription] = useState<boolean>(false);
   const [searchKey, setSearchKey] = React.useState("");

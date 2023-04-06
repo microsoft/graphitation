@@ -5,32 +5,39 @@ import { TabHeaders } from "../../../types";
 import { VerboseOperationsContainer } from "../verbose-operation/verbose-operations-container";
 import { useStyles } from "./operations-tracker-body-styles";
 import {
-  IReducerState,
-  IReducerAction,
-  ReducerActionEnum,
+  ICountReducerState,
+  ICountReducerAction,
+  CountReducerActionEnum,
 } from "./operations-tracker-body.interface";
+import { AffectedQueriesContainer } from "../affected-queries";
+import {
+  IOperationsAction,
+  IOperationsReducerState,
+} from "../operations-tracker-container-helper";
 
 export interface IOperationViewRendererProps {
   selectedTab: TabHeaders;
   data: IDataView;
-  filter: string;
-  dispatchOperationsCount: React.Dispatch<IReducerAction>;
+  operationsState: IOperationsReducerState;
+  dispatchOperationsCount: React.Dispatch<ICountReducerAction>;
+  dispatchOperationsState: React.Dispatch<IOperationsAction>;
 }
 
 export interface IOperationViewContainer {
   data: IDataView | null;
-  filter: string;
+  operationsState: IOperationsReducerState;
+  dispatchOperationsState: React.Dispatch<IOperationsAction>;
 }
 
 const tabHeaders = [
   { key: TabHeaders.AllOperationsView, name: "All operations" },
   { key: TabHeaders.OperationsView, name: "Only Cache operations" },
-  { key: TabHeaders.VerboseOperationView, name: "Verbose operations" },
+  { key: TabHeaders.VerboseOperationView, name: "Operations" },
   { key: TabHeaders.AffectedQueriesView, name: "Affected Queries" },
 ];
 
 export const OperationsTrackerBody = (props: IOperationViewContainer) => {
-  const { data, filter } = props;
+  const { data, operationsState, dispatchOperationsState } = props;
   const [selectedTab, setSelectedTab] = React.useState(
     TabHeaders.VerboseOperationView,
   );
@@ -45,12 +52,13 @@ export const OperationsTrackerBody = (props: IOperationViewContainer) => {
   const classes = useStyles();
   const updatedTabItems = React.useMemo(() => {
     const newTabHeaders = tabHeaders.filter(
-      (tabHeader) => tabHeader.key === TabHeaders.VerboseOperationView,
+      (tabHeader) =>
+        tabHeader.key === TabHeaders.VerboseOperationView ||
+        tabHeader.key === TabHeaders.AffectedQueriesView,
     );
 
     return newTabHeaders;
   }, []);
-
   const tabs = React.useMemo(() => {
     const items = updatedTabItems.map((item) => {
       return (
@@ -85,23 +93,39 @@ export const OperationsTrackerBody = (props: IOperationViewContainer) => {
       <OperationsViewRenderer
         data={data}
         selectedTab={selectedTab}
-        filter={filter}
+        operationsState={operationsState}
         dispatchOperationsCount={dispatchOperationsCount}
+        dispatchOperationsState={dispatchOperationsState}
       />
     </div>
   );
 };
 
 const OperationsViewRenderer = (props: IOperationViewRendererProps) => {
-  const { selectedTab, data, filter, dispatchOperationsCount } = props;
+  const {
+    selectedTab,
+    data,
+    operationsState,
+    dispatchOperationsCount,
+    dispatchOperationsState,
+  } = props;
 
   switch (selectedTab) {
     case TabHeaders.VerboseOperationView: {
       return (
         <VerboseOperationsContainer
           operations={data.verboseOperations}
-          filter={filter}
+          operationsState={operationsState}
           dispatchOperationsCount={dispatchOperationsCount}
+          dispatchOperationsState={dispatchOperationsState}
+        />
+      );
+    }
+
+    case TabHeaders.AffectedQueriesView: {
+      return (
+        <AffectedQueriesContainer
+          affectedQueries={data.affectedQueriesOperations}
         />
       );
     }
@@ -112,7 +136,7 @@ const OperationsViewRenderer = (props: IOperationViewRendererProps) => {
   }
 };
 
-const getCount = (key: TabHeaders, data: IReducerState) => {
+const getCount = (key: TabHeaders, data: ICountReducerState) => {
   switch (key) {
     case TabHeaders.VerboseOperationView: {
       return data.verboseOperationsCount;
@@ -131,17 +155,17 @@ const getCount = (key: TabHeaders, data: IReducerState) => {
 };
 
 const reducer = (
-  state: IReducerState,
-  action: IReducerAction,
-): IReducerState => {
+  state: ICountReducerState,
+  action: ICountReducerAction,
+): ICountReducerState => {
   switch (action.type) {
-    case ReducerActionEnum.UpdateAllOperationsCount: {
+    case CountReducerActionEnum.UpdateAllOperationsCount: {
       return { ...state, allOperationsCount: action.value };
     }
-    case ReducerActionEnum.UpdateCacheOperationsCount: {
+    case CountReducerActionEnum.UpdateCacheOperationsCount: {
       return { ...state, cacheOperationsCount: action.value };
     }
-    case ReducerActionEnum.UpdateVerboseOperationsCount: {
+    case CountReducerActionEnum.UpdateVerboseOperationsCount: {
       return { ...state, verboseOperationsCount: action.value };
     }
 
@@ -151,7 +175,9 @@ const reducer = (
   }
 };
 
-const computeInitialReducerState = (data: IDataView | null): IReducerState => {
+const computeInitialReducerState = (
+  data: IDataView | null,
+): ICountReducerState => {
   return {
     allOperationsCount: data?.allOperations?.length || 0,
     verboseOperationsCount: data?.verboseOperations?.length || 0,

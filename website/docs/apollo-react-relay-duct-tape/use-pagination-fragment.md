@@ -52,7 +52,7 @@ const FriendsList: React.FC<Props> = (props) => {
         }
       }
     `,
-    props.user
+    props.user,
   );
 
   return (

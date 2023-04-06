@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-transform-graphql-js-tag",
   "entries": [
     {
+      "date": "Mon, 03 Apr 2023 14:51:36 GMT",
+      "tag": "@graphitation/ts-transform-graphql-js-tag_v1.0.0",
+      "version": "1.0.0",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/ts-transform-graphql-js-tag",
+            "commit": "3cd00dd6254a9b7d9dfe615d9d35dba4c0b108c7",
+            "comment": "Upgrade prettier"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 07 Mar 2023 18:41:05 GMT",
       "tag": "@graphitation/ts-transform-graphql-js-tag_v1.0.0",
       "version": "1.0.0",

@@ -71,7 +71,9 @@ export async function subscribeWithoutSchema(
     subscribeFieldResolver,
   } = args;
 
-  const combinedResolvers = mergeResolvers(resolvers, schemaResolvers);
+  const combinedResolvers = schemaResolvers
+    ? mergeResolvers(resolvers, schemaResolvers)
+    : resolvers;
 
   const resultOrStream = await createSourceEventStream(
     combinedResolvers,
@@ -191,13 +193,8 @@ export async function createSourceEventStream(
 async function executeSubscription(
   exeContext: ExecutionContext,
 ): Promise<unknown> {
-  const {
-    resolvers,
-    fragments,
-    operation,
-    variableValues,
-    rootValue,
-  } = exeContext;
+  const { resolvers, fragments, operation, variableValues, rootValue } =
+    exeContext;
   const typeName = getOperationRootTypeName(operation);
   const fields = collectFields(
     resolvers,
@@ -229,9 +226,11 @@ async function executeSubscription(
     returnTypeNode = fieldNodes[0].__type as TypeNode;
     returnTypeName = typeNameFromAST(returnTypeNode);
     const typeResolvers = exeContext.resolvers[typeName];
-    resolveFn = ((typeResolvers as
-      | ObjectTypeResolver<any, any, any>
-      | undefined)?.[fieldName] as any).subscribe;
+    resolveFn = (
+      (typeResolvers as ObjectTypeResolver<any, any, any> | undefined)?.[
+        fieldName
+      ] as any
+    ).subscribe;
   }
 
   if (!resolveFn) {
