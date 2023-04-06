@@ -8,6 +8,9 @@ import {
   isTypeExtensionNode,
   DocumentNode,
   NameNode,
+  GraphQLError,
+  locatedError,
+  printError,
 } from "graphql";
 import {
   IMPORT_DIRECTIVE_NAME,
@@ -491,4 +494,15 @@ function hasType(
       value.module === type.module &&
       value.isExtension === type.isExtension,
   );
+}
+
+export function printMergeSchemaError(error: SymbolToProcess): string {
+  let message;
+  if (error.forType) {
+    message = `Missing type ${error.name} in module ${error.module} requested by module ${error.forType.module}`;
+  } else {
+    message = `Missing type ${error.name} in module ${error.module}`;
+  }
+  const locError = locatedError(new GraphQLError(message), error.forType?.node);
+  return printError(locError);
 }

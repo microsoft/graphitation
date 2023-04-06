@@ -4,10 +4,11 @@ import fsSync from "fs";
 import ts from "typescript";
 import { program, Command } from "commander";
 import { extractImplicitTypesToTypescript } from "@graphitation/supermassive-extractors";
-import { parse, print, locatedError, GraphQLError, printError } from "graphql";
+import { parse, print } from "graphql";
 import { generateTS } from "@graphitation/ts-codegen";
 import {
   mergeSchemas as mergeSchemasImpl,
+  printMergeSchemaError,
   FileSystemModuleLoader,
 } from "@graphitation/merge-schemas";
 import * as glob from "fast-glob";
@@ -211,17 +212,7 @@ async function mergeSchemas(
       if (!(options.ignoreEntryPointMissingTypes && error.isEntryPoint)) {
         fail = true;
       }
-      let message;
-      if (error.forType) {
-        message = `Missing type ${error.name} in module ${error.module} requested by module ${error.forType.module}`;
-      } else {
-        message = `Missing type ${error.name} in module ${error.module}`;
-      }
-      const locError = locatedError(
-        new GraphQLError(message),
-        error.forType?.node,
-      );
-      console.warn(printError(locError));
+      console.warn(printMergeSchemaError(error));
     }
   }
   if (fail) {

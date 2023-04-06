@@ -8,7 +8,7 @@ export interface ModuleLoader {
   ): Promise<{ document: DocumentNode; rootPath: string }>;
 }
 
-interface DocumentAndRootPath {
+export interface ModuleLoaderResult {
   document: DocumentNode;
   rootPath: string;
 }
@@ -16,7 +16,7 @@ interface DocumentAndRootPath {
 export class FileSystemModuleLoader implements ModuleLoader {
   async resolveModuleFromPath(
     absolutePath: string,
-  ): Promise<DocumentAndRootPath> {
+  ): Promise<ModuleLoaderResult> {
     let modulePath;
     if (path.isAbsolute(absolutePath)) {
       modulePath = absolutePath;
@@ -37,14 +37,14 @@ export class FileSystemModuleLoader implements ModuleLoader {
 
 export class TestModuleLoader implements ModuleLoader {
   private fileSystemLoader: FileSystemModuleLoader;
-  constructor(private moduleMap: Map<string, DocumentAndRootPath>) {
+  constructor(private moduleMap: Map<string, ModuleLoaderResult>) {
     this.fileSystemLoader = new FileSystemModuleLoader();
   }
 
-  resolveModuleFromPath(absolutePath: string): Promise<DocumentAndRootPath> {
+  resolveModuleFromPath(absolutePath: string): Promise<ModuleLoaderResult> {
     if (this.moduleMap.has(absolutePath)) {
       return Promise.resolve(
-        this.moduleMap.get(absolutePath) as DocumentAndRootPath,
+        this.moduleMap.get(absolutePath) as ModuleLoaderResult,
       );
     } else {
       return this.fileSystemLoader.resolveModuleFromPath(absolutePath);
