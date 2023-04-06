@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Fix another deprecation",
+  "packageName": "@graphitation/ts-transform-graphql-js-tag",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
