@@ -127,6 +127,8 @@ const resolvers = {
 
 This approach is easy to implement, and while it works for trivial queries and data sources, it has some drawbacks. For instance, it can lead to inefficient resource usage and performance issues, because it always returns the full objects for each conversation and person, even if we only request some fields. If we only want to get the `title` and `lastMessage` fields of each conversation, we still get the participants array with _all_ their `avatarURLs`. This may seem innocuous in this contrived example, but imagine more complex data sources that require expensive logic to fulfil the participants data, and it can quickly add up.
 
+In conclusion, using a greedy GraphQL field resolver that does all its work in a single root-field resolver can be a simple and straightforward way to implement a schema, but it has significant drawbacks in terms of resource usage and performance. It results in over-fetching data that is not needed by the client, and wasting time and memory on processing it. A better approach is to use more granular resolver functions for each field, and only fetch and return the data that is requested by the query. This way, we can optimize our data sources and improve our response times and scalability.
+
 :::note
 
 #### A note on the default field resolver
@@ -229,7 +231,7 @@ query {
 }
 ```
 
-### Striking the right balance between the
+### Striking the right balance between implicit and explicit field resolvers
 
 ## Models
 
