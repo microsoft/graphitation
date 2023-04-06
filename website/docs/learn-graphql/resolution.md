@@ -46,6 +46,7 @@ type Conversation {
   title: String
   lastMessage: String
   participants: [Person]
+  receivedAt: String
 }
 
 type Person {
@@ -187,12 +188,20 @@ const resolvers = {
 In this case, when we query for conversations, GraphQL will:
 
 1. Execute the resolver function for the `Query.conversations` field, which returns an array of conversation objects.
-1. Then, for each conversation object in the array, GraphQL will execute the resolver function for the `Conversation.title`, `Conversation.lastMessage`, `Conversation.participants`, and `Conversation.formattedReceivedAt` fields. The `Conversation.participants` field returns an array of participant objects.
+1. Then, for each conversation object in the array, GraphQL will execute the resolver function for the `Conversation.title`, `Conversation.lastMessage`, `Conversation.participants`, and `Conversation.receivedAt` fields. The `Conversation.participants` field returns an array of participant objects.
 1. And finally, for each participant object in the array, GraphQL will execute the resolver function for the `Participant.avatarURL` field.
 
-We can also use this approach to optimize our performance by _only_ fetching or returning the data that we need for each field. For example, if we only want to get the `title`, `lastMessage`, and `formattedReceivedAt` fields of each conversation, we can avoid fetching or returning the participants array with all their `avatarURL`s.
+We can also use this approach to optimize our performance by _only_ fetching or returning the data that we need for each field. For example, if we only want to get the `title`, `lastMessage`, and `receivedAt` fields of each conversation, we can avoid fetching or returning the participants array with all their `avatarURL`s.
 
 Another benefit of using explicit field resolvers is that they can apply to any field that returns a `Conversation` type, not just the top-level query. This means that you can reuse the same logic and transformations for different queries that involve conversations. For instance, if you have a `Person` type that has a `conversations` field that returns all the conversations that a user participates in, you can use the same field resolvers as you would use for the `Query.conversations` result. This way, you can avoid inconsistency in your API's results, while staying flexible in the queries it can execute.
+
+To support this aditional schema:
+
+type Person {
+conversations: [Conversation]
+}
+
+we only need this additional resolver
 
 ```js
 const resolvers = {
