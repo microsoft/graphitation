@@ -234,8 +234,6 @@ In conclusion, lazy field resolvers are **the recommended way** to implement any
 
 ## Models
 
-TODO: TS. Gets hard to do with graphql-codegen with non-nullable fields.
-
 In GraphQL execution, there is no need for the GraphQL schema to match the data source. This means that we can design our schema based on the needs of our clients, rather than the structure of our database or API. In fact, very often we will want to hide values that the clients don't need at all or those values from which we derive the field's result. For example, we might have a field called `fullName` that concatenates the `firstName` and `lastName` values from our data source. We don't need to expose those fields in our schema if they are not useful for our clients.
 
 However, the lazy field resolver functions _do_ need access to the raw data source for them to be able to do their work. For example, a field resolver function for the `fullName` field might look something like this:
