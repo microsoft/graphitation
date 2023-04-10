@@ -66,11 +66,22 @@ query {
 </tr>
 </table>
 
+```mermaid
+graph TD
+  A[Query.conversations] --> C["map(Array&lt;Conversation&gt;)"]
+  C --> D[Conversation.title]
+  C --> E[Conversation.lastMessage]
+  C --> F[Conversation.receivedAt]
+  C --> G[Conversation.participants]
+  G --> H["map(Array&lt;Person&gt;)"]
+  H --> I[Person.avatarURL]
+```
+
 In this case, when we query for conversations, GraphQL will:
 
-1. Execute the resolver function for the `Query.conversations` field, which returns an array of conversation objects.
-1. Then, for each conversation object in the array, GraphQL will execute the resolver function for the `Conversation.title`, `Conversation.lastMessage`, `Conversation.receivedAt`, and `Conversation.participants` fields.
-1. And finally, for each person object in the `Conversation.participants` array, GraphQL will execute the resolver function for the `Person.avatarURL` field.
+1. Execute the resolver function for the `Query.conversations` field, which returns an array of `Conversation` objects.
+1. Then, for each `Conversation` object in the array, GraphQL will execute the resolver function for the `Conversation.title`, `Conversation.lastMessage`, `Conversation.receivedAt`, and `Conversation.participants` fields.
+1. And finally, for each `Person` object in the `Conversation.participants` array, GraphQL will execute the resolver function for the `Person.avatarURL` field.
 
 :::info
 For a more details on the functional bits of execution, please refer to [this graphql.org page](https://graphql.org/learn/execution/), or [the spec](http://spec.graphql.org/October2021/#sec-Execution).
@@ -226,11 +237,11 @@ query {
 }
 ```
 
-### Conclusion
+### Striking the right balance
 
 Using a greedy GraphQL field resolver that does all its work in a single field resolver can _seem_ like a simple and straightforward way to implement a schema, but **it has significant drawbacks** in terms of resource usage and performance. It results in over-fetching data that is not needed by the client, and wasting time and memory on processing it.
 
-In conclusion, lazy field resolvers are **the recommended way** to implement any field that requires some custom logic. This can include scalar fields that need some derivation or transformation, as well as object fields that need to fetch associated data from other sources. On the other hand, for fields that are already present in the parent type’s data source and need no further processing, you can rely on the default field resolver. (This usually applies to scalar fields only.)
+In conclusion, lazy field resolvers are **the recommended way** to implement any field that requires some custom logic. This can include scalar fields that need some derivation or transformation, as well as object fields that need to fetch associated data from other sources. Only for fields that are already present in the parent type’s data source, and need no further processing, you can rely on the default field resolver—this usually applies to scalar fields only.
 
 ## Models
 

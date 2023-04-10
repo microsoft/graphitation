@@ -17,6 +17,11 @@ const config = {
   projectName: "graphitation",
   trailingSlash: false,
 
+  markdown: {
+    mermaid: true,
+  },
+  themes: ["@docusaurus/theme-mermaid"],
+
   presets: [
     [
       "classic",
