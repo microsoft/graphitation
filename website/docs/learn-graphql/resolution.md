@@ -80,8 +80,10 @@ graph TD
 In this case, when we query for conversations, GraphQL will:
 
 1. Execute the resolver function for the `Query.conversations` field, which returns an array of `Conversation` objects.
-1. Then, for each `Conversation` object in the array, GraphQL will execute the resolver function for the `Conversation.title`, `Conversation.lastMessage`, `Conversation.receivedAt`, and `Conversation.participants` fields.
+1. Then, for each individual `Conversation` object in the array, GraphQL will execute the resolver function for the `Conversation.title`, `Conversation.lastMessage`, `Conversation.receivedAt`, and `Conversation.participants` fields.
 1. And finally, for each `Person` object in the `Conversation.participants` array, GraphQL will execute the resolver function for the `Person.avatarURL` field.
+
+Crucially, each field resolver only resolves exactly that which it is named after. The `Query.conversations` field returns a list of conversations from the data source, it does not transform any values for fields that need custom logic applied, nor does it fetch the person objects for the `Conversation.participants` field.
 
 :::info
 For a more details on the functional bits of execution, please refer to [this graphql.org page](https://graphql.org/learn/execution/), or [the spec](http://spec.graphql.org/October2021/#sec-Execution).
