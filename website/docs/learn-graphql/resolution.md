@@ -278,6 +278,34 @@ You will therefore absolutely want to pick a codegen tool that allows you to spe
 
 :::
 
-## DataLoader
+## N+1 problem
 
-TODO
+Integral to resolution of a graph of connected data, is that a query will end-up containing many entities of the same kind, or perhaps even contain the same entity multiple times. These entities might be necessary for unrelated parts of the application, but still, what we really want is to be able to batch that entity data loading. [DataLoader](https://github.com/graphql/dataloader) is such a utility used to abstract request batching in GraphQL. It allows you to reason about a batch of requests, **whithout** needing to do so in the field resolver functions, keeping them decoupled without sacrificing the performance of batched data loading.
+
+In essence, DataLoader takes a function that, given a set of IDs (or keys), will return a promise for a set of values. However, what you really want in your field resolvers is that when you pass a _single_ ID, you get back a _single_ value. And that is exactly what DataLoader offers. How it works is that all requests made **during a single tick** of the JavaScript runloop will get batched together.
+
+It is important to realize that GraphQL execution does not wait for a promise to resolve after invoking each single field selection in a selection set, but instead invokes all field resolvers in parallel and awaits the total promise result set. If you imagine that in our example multiple entries in the chat-list will be loading user data, you can see that the place where they need that in the graph is the same. This means that those fields will be resolved in parallel, and thus each of them is awaiting the loading of a single person. All of the IDs of the requested people are passed to the function we provided and a single batched request is made to the underlying service.
+
+TODO: This is not actually an example of batching, all conversation ids are known here at a single time.
+
+```js
+const batchLoadPersonsById = async (ids) => {
+  return ids.map((id) => mockPersons.find((p) => p.id === id));
+};
+
+const personLoader = new DataLoader(batchLoadPersonsById);
+
+const resolvers = {
+  Conversation: {
+    participants: (conversation) => {
+      return personLoader.loadMany(conversation.participantIds);
+    },
+  },
+};
+```
+
+:::info
+A walkthrough of the DataLoader v1 source code by one of its authors, Lee Byron. While the source has changed since this video was made, it is still a good overview of the rationale of DataLoader and how it works.
+
+<a href="https://youtu.be/OQTnXNCDywA" target="_blank" alt="DataLoader Source Code Walkthrough"><img src="https://img.youtube.com/vi/OQTnXNCDywA/0.jpg" /></a>
+:::
