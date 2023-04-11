@@ -1,0 +1,43 @@
+{
+  "name": "@graphitation/graphql-codegen-near-operation-file-preset",
+  "license": "MIT",
+  "version": "1.1.0",
+  "main": "./src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/graphitation.git",
+    "directory": "packages/graphql-codegen-near-operation-file-preset"
+  },
+  "scripts": {
+    "build": "monorepo-scripts build",
+    "lint": "monorepo-scripts lint",
+    "types": "monorepo-scripts types",
+    "just": "monorepo-scripts"
+  },
+  "devDependencies": {
+    "@types/parse-filepath": "1.0.0"
+  },
+  "dependencies": {
+    "@graphql-codegen/add": "^2.0.2",
+    "@graphql-codegen/plugin-helpers": "^1.18.2",
+    "@graphql-codegen/visitor-plugin-common": "^1.17.20",
+    "parse-filepath": "^1.0.2",
+    "tslib": "~2.0.1"
+  },
+  "peerDependencies": {
+    "graphql": "^15.0.0"
+  },
+  "sideEffects": false,
+  "access": "public",
+  "publishConfig": {
+    "main": "./lib/index",
+    "types": "./lib/index.d.ts",
+    "module": "./lib/index.mjs",
+    "exports": {
+      ".": {
+        "import": "./lib/index.mjs",
+        "require": "./lib/index.js"
+      }
+    }
+  }
+}
