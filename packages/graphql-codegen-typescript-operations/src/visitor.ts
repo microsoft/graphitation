@@ -193,7 +193,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
     const typeNames = this.getTypeNames(inputNode);
     for (const typeName of typeNames) {
       const fieldType = this.schema.getType(typeName);
-      if (!fieldType || this.usedTypes.has(fieldType.name)) {
+      if (!fieldType || this.usedTypes.has(typeName)) {
         continue;
       }
 
