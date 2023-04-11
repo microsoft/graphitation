@@ -278,31 +278,63 @@ You will therefore absolutely want to pick a codegen tool that allows you to spe
 
 :::
 
-## N+1 problem
+## Performant data loading
 
-Integral to resolution of a graph of connected data, is that a query will end-up containing many entities of the same kind, or perhaps even contain the same entity multiple times. These entities might be necessary for unrelated parts of the application, but still, what we really want is to be able to batch that entity data loading. [DataLoader](https://github.com/graphql/dataloader) is such a utility used to abstract request batching in GraphQL. It allows you to reason about a batch of requests, **whithout** needing to do so in the field resolver functions, keeping them decoupled without sacrificing the performance of batched data loading.
+Integral to resolution of a graph of connected data, is that a query will end-up containing many entities of the same kind, or perhaps even contain the same entity multiple times. For instance, for each conversation fetch all participants—a classic N+1 problem.
 
-In essence, DataLoader takes a function that, given a set of IDs (or keys), will return a promise for a set of values. However, what you really want in your field resolvers is that when you pass a _single_ ID, you get back a _single_ value. And that is exactly what DataLoader offers. How it works is that all requests made **during a single tick** of the JavaScript runloop will get batched together.
+These entities might be necessary for unrelated parts of the application, but still, for performance reasons we want to be able to batch that entity data loading. [DataLoader](https://github.com/graphql/dataloader) is a utility used to abstract request batching in GraphQL. It allows you to reason about a batch of requests, **whithout** needing to do so in the field resolver functions—keeping them decoupled and without sacrificing the performance of batched data loading.
 
-It is important to realize that GraphQL execution does not wait for a promise to resolve after invoking each single field selection in a selection set, but instead invokes all field resolvers in parallel and awaits the total promise result set. If you imagine that in our example multiple entries in the chat-list will be loading user data, you can see that the place where they need that in the graph is the same. This means that those fields will be resolved in parallel, and thus each of them is awaiting the loading of a single person. All of the IDs of the requested people are passed to the function we provided and a single batched request is made to the underlying service.
+#### Basic data loading
 
-TODO: This is not actually an example of batching, all conversation ids are known here at a single time.
+Let’s look at how DataLoader could be used for the participants in our chat-list example. First we define the DatLoader instance, like so:
 
 ```js
-const batchLoadPersonsById = async (ids) => {
-  return ids.map((id) => mockPersons.find((p) => p.id === id));
-};
+const personLoader = new DataLoader(async (ids) => {
+  return getPeopleFromServiceByIDs(ids);
+});
+```
 
-const personLoader = new DataLoader(batchLoadPersonsById);
+In essence, DataLoader takes a function that, given a set of IDs (or keys), will return a promise for a set of values.
 
+Then, for an individual conversation in the chat-list, we could use the DataLoader instance, like so:
+
+```js
 const resolvers = {
   Conversation: {
-    participants: (conversation) => {
+    participants: async (conversation) => {
       return personLoader.loadMany(conversation.participantIds);
     },
   },
 };
 ```
+
+This example isn't all that ground-breaking, as we have the list of IDs in the one field resolver already and can easily load them as a batch. (The only true benefit would be the caching of the people data, allowing for fast retrieval when resolving the same people again elsewhere in the query.)
+
+#### Decoupled batching
+
+It gets more interesting when we consider that the execution engine will resolve the participants for each conversation in the list **in parallel**. You could imagine it to work something like this pseudo code:
+
+```js
+Promise.all([
+  Conversation.participants({ ... }),
+  Conversation.participants({ ... })
+])
+```
+
+Now, when we pass a single ID (_or set_) to the DataLoader, we expect a single value (_or respective set_) to be returned; yet still batch them with the participants of _all_ other conversations. How this works is that all requests made of a DataLoader during a single tick of the JavaScript runloop, will get batched together and passed to the batch function as a single list.
+
+So, given our [prior example data](#👎-greedy-resolution):
+
+1. The execution engine would invoke the `Conversation.participants` field resolver twice.
+   - Once in a conversation with Joshua and Daichi: `personLoader.loadMany(["joshua", "daichi"])`
+   - And once in a conversation with Kadji: `personLoader.loadMany(["kadji"])`
+1. The DataLoader instance would then receive the following enqueued IDs as a _single_ list: `["joshua", "daichi", "kadji"]`
+1. And return the requested people to the 2 invocations of the `Conversation.participants` field resolver for further transforming.
+1. Finally, the execution engine moves on to the next level of the query, by invoking the `Person.avatarURL` field resolver for each of the 3 people.
+
+#### Caching
+
+Additionally, DataLoader provides caching of entities during a single execution pass of an operation. This means that any participants present in all conversations, such as the authenticated user, will only get requested once. But also, if one of those people is requested again later on in the query, DataLoader will simply return it immediately.
 
 :::info
 A walkthrough of the DataLoader v1 source code by one of its authors, Lee Byron. While the source has changed since this video was made, it is still a good overview of the rationale of DataLoader and how it works.
