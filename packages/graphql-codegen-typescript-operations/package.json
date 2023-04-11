@@ -6,7 +6,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",
-    "directory": "packages/graphql-codegen-typescript-typemap-plugin"
+    "directory": "packages/graphql-codegen-typescript-operations"
   },
   "scripts": {
     "build": "monorepo-scripts build",
