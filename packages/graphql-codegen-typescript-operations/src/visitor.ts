@@ -24,8 +24,7 @@ import {
   GraphQLEnumType,
   isNonNullType,
   TypeNode,
-  NonNullTypeNode,
-  ListTypeNode,
+  Kind,
   GraphQLInputObjectType,
   InputObjectTypeDefinitionNode,
 } from "graphql";
@@ -165,26 +164,22 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
       new Set(
         node.fields
           ?.map((field) => {
-            return this.getFieldTypeName(field.type);
+            return this.typeNameFromAST(field.type);
           })
           .filter(Boolean) as string[],
       ) || [],
     );
   }
 
-  private getFieldTypeName(typeNode: TypeNode): string {
-    if (this.isListTypeNode(typeNode) || this.isNonNullType(typeNode)) {
-      return this.getFieldTypeName(typeNode.type);
+  private typeNameFromAST(typeAst: TypeNode): string {
+    if (
+      typeAst.kind === Kind.LIST_TYPE ||
+      typeAst.kind === Kind.NON_NULL_TYPE
+    ) {
+      return this.typeNameFromAST(typeAst.type);
+    } else {
+      return typeAst.name.value;
     }
-    return typeNode.name.value;
-  }
-
-  isListTypeNode(typeNode: TypeNode): typeNode is ListTypeNode {
-    return typeNode.kind === "ListType";
-  }
-
-  isNonNullType(typeNode: TypeNode): typeNode is NonNullTypeNode {
-    return typeNode.kind === "NonNullType";
   }
 
   private getAllEntitiesRelatedToInput(
