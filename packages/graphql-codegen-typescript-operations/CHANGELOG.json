@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-typescript-operations",
   "entries": [
     {
+      "date": "Tue, 11 Apr 2023 18:23:24 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.2.0",
+      "version": "1.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "0bdd73df567778237fadcce4e03a824edb3da8f5",
+            "comment": "Typescript operations plugin exports nested enums"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 03 Apr 2023 14:51:35 GMT",
       "tag": "@graphitation/graphql-codegen-typescript-operations_v1.1.0",
       "version": "1.1.0",
