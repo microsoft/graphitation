@@ -6,12 +6,13 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",
-    "directory": "packages/graphql-codegen-typescript-typemap-plugin"
+    "directory": "packages/graphql-codegen-typescript-operations"
   },
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
     "types": "monorepo-scripts types",
+    "test": "monorepo-scripts test",
     "just": "monorepo-scripts"
   },
   "dependencies": {
@@ -20,6 +21,10 @@
     "@graphql-codegen/visitor-plugin-common": "^1.17.22",
     "auto-bind": "~4.0.0",
     "tslib": "~2.0.1"
+  },
+  "devDependencies": {
+    "@graphql-codegen/testing": "1.17.7",
+    "@graphql-codegen/typescript": "^1.18.1"
   },
   "peerDependencies": {
     "graphql": "^15.0.0"

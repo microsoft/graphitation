@@ -32,17 +32,24 @@ export interface TypeScriptDocumentsParsedConfig extends ParsedDocumentsConfig {
   immutableTypes: boolean;
   baseTypesPath: string;
   noExport: boolean;
+  typesRelations?: Map<string, string[]>;
+  definedEntities?: Set<string>;
 }
 
+interface CustomConfig {
+  typesRelations?: Map<string, string[]>;
+  definedEntities?: Set<string>;
+}
 const OPERATIONS = ["Mutation", "Query", "Subscription"];
 export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
   TypeScriptDocumentsPluginConfig,
   TypeScriptDocumentsParsedConfig
 > {
   private usedTypes: Set<string>;
+
   constructor(
     schema: GraphQLSchema,
-    config: TypeScriptDocumentsPluginConfig,
+    config: TypeScriptDocumentsPluginConfig & CustomConfig,
     allFragments: LoadedFragment[],
   ) {
     super(
@@ -50,6 +57,8 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
       {
         noExport: getConfigValue(config.noExport, false),
         baseTypesPath: getConfigValue(config.baseTypesPath, ""),
+        typesRelations: getConfigValue(config.typesRelations, new Map()),
+        definedEntities: getConfigValue(config.definedEntities, new Set()),
         avoidOptionals: normalizeAvoidOptionals(
           getConfigValue(config.avoidOptionals, false),
         ),
@@ -133,6 +142,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
         true,
       ),
     );
+
     this._declarationBlockConfig = {
       ignoreExport: this.config.noExport,
     };
@@ -154,21 +164,34 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
       : [];
   }
 
+  private getAllEntitiesRelatedToType(typeNames: string[]) {
+    for (const typeName of typeNames) {
+      if (this.config.definedEntities?.has(typeName)) {
+        this.usedTypes.add(typeName);
+      }
+
+      const typeRelations = this.config.typesRelations?.get(typeName);
+
+      if (typeRelations && !this.usedTypes.has(typeName)) {
+        this.getAllEntitiesRelatedToType(typeRelations);
+      }
+    }
+  }
+
   public convertName(
     node: string | ASTNode,
     options?: (BaseVisitorConvertOptions & ConvertOptions) | undefined,
   ): string {
     const convertedName = this.config.convert(node, options);
-    if (
-      OPERATIONS.every(
-        (operation) =>
-          !convertedName.endsWith(operation) &&
-          !convertedName.endsWith(`${operation}Variables`) &&
-          !convertedName.endsWith(`Fragment`) &&
-          !/.{1,}Fragment_\w{1,}_/.test(convertedName),
-      )
-    ) {
-      this.usedTypes.add(convertedName);
+
+    if (this.config.definedEntities && this.config.typesRelations) {
+      const typeRelations = this.config.typesRelations.get(convertedName);
+      if (this.config.definedEntities.has(convertedName)) {
+        this.usedTypes.add(convertedName);
+      }
+      if (typeRelations) {
+        this.getAllEntitiesRelatedToType(typeRelations);
+      }
     }
 
     return super.convertName(node, options);

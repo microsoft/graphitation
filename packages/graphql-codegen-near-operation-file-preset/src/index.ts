@@ -1,8 +1,16 @@
 import { Types, CodegenPlugin } from "@graphql-codegen/plugin-helpers";
 import addPlugin from "@graphql-codegen/add";
 import { join } from "path";
-import { FragmentDefinitionNode, buildASTSchema, GraphQLSchema } from "graphql";
+import {
+  FragmentDefinitionNode,
+  buildASTSchema,
+  GraphQLSchema,
+  printSchema,
+  parse,
+} from "graphql";
 import { appendExtensionToFilePath, defineFilepathSubfolder } from "./utils";
+import { getDefinedEntities } from "./defined-entities-visitor";
+import { getTypesRelations } from "./types-relations-visitor";
 import {
   resolveDocumentImports,
   DocumentImportResolverOptions,
@@ -160,6 +168,11 @@ export const preset: Types.OutputPreset<NearOperationFileConfig> = {
 
     const shouldAbsolute = !baseTypesPath.startsWith("~");
 
+    const schemaAst = parse(printSchema(schemaObject));
+    const definedEntities = getDefinedEntities(schemaAst);
+
+    const typesRelations = getTypesRelations(schemaAst, definedEntities);
+
     const pluginMap: { [name: string]: CodegenPlugin } = {
       ...options.pluginMap,
       add: addPlugin,
@@ -217,6 +230,8 @@ export const preset: Types.OutputPreset<NearOperationFileConfig> = {
           exportFragmentSpreadSubTypes: true,
           namespacedImportName: importTypesNamespace,
           externalFragments,
+          typesRelations,
+          definedEntities,
           fragmentImports: fragmentImportsArr,
         };
 
