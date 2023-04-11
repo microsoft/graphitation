@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Typescript operations plugin exports nested enums",
+  "packageName": "@graphitation/graphql-codegen-typescript-operations",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}

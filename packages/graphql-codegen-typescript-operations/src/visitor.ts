@@ -21,7 +21,12 @@ import {
   GraphQLOutputType,
   GraphQLSchema,
   isEnumType,
+  GraphQLEnumType,
   isNonNullType,
+  TypeNode,
+  Kind,
+  GraphQLInputObjectType,
+  InputObjectTypeDefinitionNode,
 } from "graphql";
 import { TypeScriptDocumentsPluginConfig } from "./config";
 import { TypeScriptOperationVariablesToObject } from "./ts-operation-variables-to-object";
@@ -154,20 +159,76 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
       : [];
   }
 
+  private getTypeNames(node: InputObjectTypeDefinitionNode) {
+    return Array.from(
+      new Set(
+        node.fields
+          ?.map((field) => {
+            return this.typeNameFromAST(field.type);
+          })
+          .filter(Boolean) as string[],
+      ) || [],
+    );
+  }
+
+  private typeNameFromAST(typeAst: TypeNode): string {
+    if (
+      typeAst.kind === Kind.LIST_TYPE ||
+      typeAst.kind === Kind.NON_NULL_TYPE
+    ) {
+      return this.typeNameFromAST(typeAst.type);
+    } else {
+      return typeAst.name.value;
+    }
+  }
+
+  private getAllEntitiesRelatedToInput(
+    inputNode: InputObjectTypeDefinitionNode,
+  ) {
+    const typeNames = this.getTypeNames(inputNode);
+    for (const typeName of typeNames) {
+      const fieldType = this.schema.getType(typeName);
+      if (!fieldType || this.usedTypes.has(typeName)) {
+        continue;
+      }
+
+      if (
+        this.schema.getType(fieldType.name) instanceof GraphQLInputObjectType
+      ) {
+        const astNode = this.schema.getType(fieldType.name)?.astNode;
+        this.usedTypes.add(fieldType.name);
+
+        if (this.isInputObjectTypeDefinitionNode(astNode)) {
+          this.getAllEntitiesRelatedToInput(astNode);
+        }
+      } else if (
+        this.schema.getType(fieldType.name) instanceof GraphQLEnumType
+      ) {
+        this.usedTypes.add(fieldType.name);
+      }
+    }
+  }
+
+  private isInputObjectTypeDefinitionNode(
+    astNode?: ASTNode | null,
+  ): astNode is InputObjectTypeDefinitionNode {
+    return astNode?.kind === "InputObjectTypeDefinition";
+  }
+
   public convertName(
     node: string | ASTNode,
     options?: (BaseVisitorConvertOptions & ConvertOptions) | undefined,
   ): string {
     const convertedName = this.config.convert(node, options);
-    if (
-      OPERATIONS.every(
-        (operation) =>
-          !convertedName.endsWith(operation) &&
-          !convertedName.endsWith(`${operation}Variables`) &&
-          !convertedName.endsWith(`Fragment`) &&
-          !/.{1,}Fragment_\w{1,}_/.test(convertedName),
-      )
-    ) {
+
+    if (this.schema.getType(convertedName) instanceof GraphQLInputObjectType) {
+      const astNode = this.schema.getType(convertedName)?.astNode;
+
+      if (this.isInputObjectTypeDefinitionNode(astNode)) {
+        this.usedTypes.add(convertedName);
+        this.getAllEntitiesRelatedToInput(astNode);
+      }
+    } else if (this.schema.getType(convertedName) instanceof GraphQLEnumType) {
       this.usedTypes.add(convertedName);
     }
 
