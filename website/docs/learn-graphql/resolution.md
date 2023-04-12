@@ -247,27 +247,32 @@ In conclusion, lazy field resolvers are **the recommended way** to implement any
 
 ## Models
 
-In GraphQL execution, there is no need for the GraphQL schema to match the data source. This means that we can design our schema based on the needs of our clients, rather than the structure of our database or API. In fact, very often we will want to hide values that the clients don't need at all or those values from which we derive the field's result. For example, we might have a field called `fullName` that concatenates the `firstName` and `lastName` values from our data source. We don't need to expose those fields in our schema if they are not useful for our clients.
+In GraphQL execution, there is no need for the GraphQL schema to match the data source. This means that we can design our schema based on the needs of our clients, rather than the structure of our database or API. In fact, very often we will want to hide values that the clients don't need at all or those values from which we derive the field's result.
 
-However, the lazy field resolver functions _do_ need access to the raw data source for them to be able to do their work.
-
-TODO
+For example, we might have a field in the schema called `fullName`, which concatenates the `firstName` and `lastName` values from our model. We don't need to expose those fields in our schema if they are not useful to our clients, but the field resolver _does_ need access to the model data for it to be able to do its work.
 
 ```graphql
 type Person {
   fullName: String!
+
+  # NOTE: These fields do NOT exist in the schema.
+  # firstName: String!
+  # lastName: String!
 }
 ```
 
-```js
+```ts
 const resolvers = {
   Person: {
-    fullName: (person) => `${person.firstName} ${person.lastName}`,
+    fullName: (
+      person: DatabaseTablePersonRow,
+    ): SchemaTypes.Person["fullName"] =>
+      `${person.firstName} ${person.lastName}`,
   },
 };
 ```
 
-Here the `person` argument has the data we need. We call such a source, **the model**.
+Here, the `person` argument has all the underlying data we need. We call such a source, **the model**. _Crucially_, the model type is **not** equal to the schema type. The model type is where the data comes _from_, the schema type's field is what the resolver transforms the data _to_.
 
 A model can be a raw response from the data source, an intermediate representation, or a full fledged model class instance. A raw data source response is the most basic form of a model. It could be a row from a database table, a document from a database, or a JSON object from an API response.
 
