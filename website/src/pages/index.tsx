@@ -16,9 +16,9 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/intro"
+            to="https://github.com/microsoft/graphitation"
           >
-            Docusaurus Tutorial - 5min ⏱️
+            View on GitHub
           </Link>
         </div>
       </div>

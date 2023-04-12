@@ -5,6 +5,10 @@
   width: 100%;
 }
 
+.features a {
+  color: #000;
+}
+
 .featureSvg {
   height: 200px;
   width: 200px;
