@@ -136,6 +136,8 @@ In this case, every root-field maps to a back-end service, and it of course does
 
 Because we can only get the IDs of participants in a conversation, rather than the actual `Person` objects they refer to, we are being forced to make an aditional request for _each_ participant in all of the conversations in the list. This is the N+1 problem and forces the UI to perform a waterfall of requests. This in turn will lead to a slow loading experience or staggered UI rendering.
 
+TODO: Expand on the need for a single-source of truth, and refer to the not yet existant guide about how a graphql client works, combined with a FLUX store.
+
 ## Generic _and_ domain-specific
 
 The benefit of GraphQL is that it allows you to design your data schema in a way that reflects the domain of your application, rather than the structure of your database or the layout of your UI. This means that you can define types and fields that represent the entities and relationships in your domain, and expose them through a single endpoint that can be queried in a concise manner.

@@ -249,7 +249,15 @@ In conclusion, lazy field resolvers are **the recommended way** to implement any
 
 In GraphQL execution, there is no need for the GraphQL schema to match the data source. This means that we can design our schema based on the needs of our clients, rather than the structure of our database or API. In fact, very often we will want to hide values that the clients don't need at all or those values from which we derive the field's result. For example, we might have a field called `fullName` that concatenates the `firstName` and `lastName` values from our data source. We don't need to expose those fields in our schema if they are not useful for our clients.
 
-However, the lazy field resolver functions _do_ need access to the raw data source for them to be able to do their work. For example, a field resolver function for the `fullName` field might look something like this:
+However, the lazy field resolver functions _do_ need access to the raw data source for them to be able to do their work.
+
+TODO
+
+```graphql
+type Person {
+  fullName: String!
+}
+```
 
 ```js
 const resolvers = {
@@ -259,11 +267,19 @@ const resolvers = {
 };
 ```
 
-We call such a data source, **the model**.
+Here the `person` argument has the data we need. We call such a source, **the model**.
 
-A model can be a raw data source, an intermediate representation, or a full fledged model class instance. A raw data source is the most basic form of a model. It could be a row from a database table, a document from a database, or a JSON object from an API response. An intermediate representation is a model that has some processing or transformation applied to it, perhaps ahead of time. For example, we might have a model that adds some computed properties during a background synchronization task. A full fledged model class instance is a model that has methods and behaviors associated with it. For example, we might have a model class that implements validation rules, business logic, or custom methods for manipulating the data.
+A model can be a raw response from the data source, an intermediate representation, or a full fledged model class instance. A raw data source response is the most basic form of a model. It could be a row from a database table, a document from a database, or a JSON object from an API response.
+
+An intermediate representation is a model that has some processing or transformation applied to it, perhaps ahead of time. For example, we might have a model that adds some computed properties during a background synchronization task. Note that this should **not** be transformation to full schema types,
+
+A full fledged model class instance is a model that has methods and behaviors associated with it. For example, we might have a model class that implements validation rules, business logic, or custom methods for manipulating the data.
 
 Depending on our use case and preferences, we can choose any of these forms of models for our GraphQL execution. The only requirement is that our resolver functions can access the relevant properties of our models to return the correct values for our schema fields.
+
+:::tip
+A good way to think about a model, is that whatever your data source returns **is your model**. In turn, these models are what the resolvers operate on to _lazily_ map underlying data to the public schema types.
+:::
 
 :::caution
 
