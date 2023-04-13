@@ -307,7 +307,7 @@ These entities might be necessary for unrelated parts of the application, but st
 
 #### Basic data loading
 
-Let’s look at how DataLoader could be used for the participants in our chat-list example. First we define the DatLoader instance, like so:
+Let’s look at how DataLoader could be used for the participants in our chat-list example. First we define the DataLoader instance, like so:
 
 ```js
 const personLoader = new DataLoader(async (ids) => {
