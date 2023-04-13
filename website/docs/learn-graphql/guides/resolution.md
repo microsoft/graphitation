@@ -184,7 +184,7 @@ const resolvers = {
 };
 ```
 
-Similarly, the `participants` value in the data source is more likely to be a list of person IDs, than it is to be a list of full-fledged person objects. In this scenario, we need to issue an extra call to the data source to get the actual data. It should go without saying that we absolutely want this to be done only when the client needs this data, and not fetch it greedily in the `Query.conversations` root-field. Here is how that field resolver function could look like:
+Similarly, the `participants` value in the data source is more likely to be a list of person IDs, than it is to be a list of full-fledged person objects. In this scenario, we need to issue an extra call to the data source to get the actual data. It should go without saying that we absolutely want this to be done only when the client needs this data, and not fetch it greedily in the `Query.conversations` root-field. Here is what that field resolver function could look like:
 
 ```js
 const resolvers = {
