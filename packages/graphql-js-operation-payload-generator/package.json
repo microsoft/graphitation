@@ -20,7 +20,7 @@
   "dependencies": {
     "deepmerge": "^4.2.2",
     "invariant": "^2.2.4",
-    "graphql": "^15.5.0"
+    "graphql": "^15.0.0"
   },
   "devDependencies": {
     "@graphitation/graphql-js-tag": "^0.9.0",
