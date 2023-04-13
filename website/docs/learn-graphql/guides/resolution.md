@@ -276,7 +276,7 @@ Here, the `person` argument has all the underlying data we need. We call such a 
 
 A model can be a raw response from the data source, an intermediate representation, or a full fledged model class instance. A raw data source response is the most basic form of a model. It could be a row from a database table, a document from a database, or a JSON object from an API response.
 
-An intermediate representation is a model that has some processing or transformation applied to it, perhaps ahead of time. For example, we might have a model that adds some computed properties during a background synchronization task. Note that this should **not** be transformation to full schema types,
+An intermediate representation is a model that has some processing or transformation applied to it, perhaps ahead of time. For example, we might have a model that adds some computed properties during a background synchronization task. Note that this should **not** be transformation to full schema types.
 
 A full fledged model class instance is a model that has methods and behaviors associated with it. For example, we might have a model class that implements validation rules, business logic, or custom methods for manipulating the data.
 
