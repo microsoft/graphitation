@@ -303,7 +303,7 @@ You will therefore absolutely want to pick a codegen tool that allows you to spe
 
 Integral to resolution of a graph of connected data, is that a query will end up containing many entities of the same kind, or perhaps even contain the same entity multiple times. For instance, for each conversation fetch all participants—a classic N+1 problem.
 
-These entities might be necessary for unrelated parts of the application, but still, for performance reasons we want to be able to batch that entity data loading. [DataLoader](https://github.com/graphql/dataloader) is a utility used to abstract request batching in GraphQL. It allows you to reason about a batch of requests, **whithout** needing to do so in the field resolver functions—keeping them decoupled and without sacrificing the performance of batched data loading.
+These entities might be necessary for unrelated parts of the application, but still, for performance reasons we want to be able to batch that entity data loading. [DataLoader](https://github.com/graphql/dataloader) is a utility used to abstract request batching in GraphQL. It allows you to reason about a batch of requests, **without** needing to do so in the field resolver functions—keeping them decoupled and without sacrificing the performance of batched data loading.
 
 #### Basic data loading
 
