@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Add graphql as a dependency",
+  "packageName": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
+  "email": "scheruiyot@microsoft.com",
+  "dependentChangeType": "patch"
+}
