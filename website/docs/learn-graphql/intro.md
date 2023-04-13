@@ -19,7 +19,7 @@ This guide aims to teach you everything you need to understand about GraphQL fro
 This guide does not aim to replace [the canonical graphql.org site’s documentation](https://graphql.org/learn/). Some familiarity with GraphQL might be necessary for some sections, where possible the guide will link to the relevant existing documentation.
 
 :::caution
-Each section of this guide builds upon the knowledge gained in the previous section. Not taking this into account means you may end-up repeating the mistakes made in the community to learn about GraphQL outside of the context that it was designed for.
+Each section of this guide builds upon the knowledge gained in the previous section. Not taking this into account means you may end up repeating the mistakes made in the community to learn about GraphQL outside of the context that it was designed for.
 
 If possible, read the guide from start to finish.
 :::
