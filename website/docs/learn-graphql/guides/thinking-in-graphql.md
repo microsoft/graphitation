@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 2
 id: thinking-in-graphql
 title: Thinking in GraphQL
 description: How to think of the GraphQL abstraction layer and its purpose.
@@ -11,7 +11,7 @@ description: How to think of the GraphQL abstraction layer and its purpose.
 This section shows GraphQL query and schema definition syntax. The first part of [this upstream guide](https://graphql.org/learn/schema/) will be useful to explain any bits that are not immediately clear.
 :::
 
-As you have learned in [the design of GraphQL](./the-design-of-graphql.md) section, GraphQL was designed to allow components to express their own data requirements, and for those requirements to be composable into one or more larger UIs—whilst not introducing any unnecessary coupling between the various components that make up the larger UI. There is one part of this equation that we have not touched on yet, however, which is the other side of the data contract: the schema.
+As you will learn in [the design of GraphQL](./the-design-of-graphql.md) section, GraphQL was designed to allow components to express their own data requirements, and for those requirements to be composable into one or more larger UIs—whilst not introducing any unnecessary coupling between the various components that make up the larger UI. Before making our way to that section, though, let’s build a base-line understanding of how to think in GraphQL.
 
 ## Abstractions for complex data-driven UI
 

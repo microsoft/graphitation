@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 id: the-design-of-graphql
 title: The design of GraphQL
 description: What was GraphQL designed to solve for and how to leverage that?
