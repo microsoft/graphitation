@@ -47,7 +47,7 @@ This concept might seem foreign even to those already familiar with GraphQL. To 
 However, because in GraphQL _all_ queries are meant to be “broad”, we will **not** keep repeating the “Broad-Query” term. After all, we want you to walk away from this guide as someone who truly understands GraphQL!
 :::
 
-### 👍 Design from front-end perspective
+### 👍 Schema design from front-end perspective
 
 When designing the schema in a vacuum, it might be hard to imagine what those connections should be. However, when considered from the perspective of a concrete piece of UI, and working your way backwards, it actually becomes a lot easier.
 
@@ -117,7 +117,7 @@ type Person {
 }
 ```
 
-### 👎 Design from back-end perspective
+### 👎 Schema design from back-end perspective
 
 To contrast, let’s look at a back-end perspective schema, and how it makes it impossible to fetch all data in a single request.
 
@@ -144,4 +144,22 @@ The benefit of GraphQL is that it allows you to design your data schema in a way
 
 However, this does not mean that you should create a schema that is tailored to a specific UI component or view. Doing so would limit the reusability and composability of your schema, and make it harder to evolve over time. Instead, you should aim to create a schema that is generic enough to support any UI requirement, but still specific enough to capture the domain logic and constraints.
 
-By using GraphQL, you can then leverage its powerful features to fetch exactly what you need from your schema, and nothing more. We will explore these features in more detail in the next section.
+### Query design
+
+For example, a “person” whose name is rendered in one place of the UI, is the same “person” whose email address is rendered elsewhere in the UI. Modeling this with a single GraphQL type (e.g. `Person`), regardless of what data source the data originates, allows you to have a single source of truth to consider. Once you start applying this, you will notice how easy it becomes to re-use UI components and their fragments in various different component hierarchies, and also how easy it becomes to _update_ that data in a single place and have the change reflected everywhere in the UI.
+
+For example, this React component and GraphQL fragment:
+
+```jsx
+function PersonInfo(props) {
+  const person = useFragment(
+    graphql`
+      fragment PersonInfo on Person {
+        displayName
+      }
+    `,
+    props.person,
+  );
+  return <div>{person.displayName}</div>;
+}
+```
