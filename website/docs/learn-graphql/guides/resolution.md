@@ -135,6 +135,19 @@ const resolvers = {
 
 This approach is easy to implement, and while it works for trivial queries and data sources, it has some drawbacks. For instance, it does not follow the core idea of GraphQL to [get only what you need](#get-only-what-you-need), which leads to inefficient resource usage and performance issues. If we only want to get the `title` and `lastMessage` fields of each conversation, we still get the participants array with _all_ their `avatarURLs`. This may seem innocuous in this contrived example, but imagine more complex data sources that require expensive logic to fulfil the participants data, and it can quickly add up.
 
+:::info
+It is important to realize that what a field resolver returns does **not** equal what is returned to the client. Only fields selected in the request document are ever returned. If we had executed the following query, with the above resolver and rich data, the executor would still only ever send the `title` values to the client.
+
+```graphql
+query {
+  conversations {
+    title
+  }
+}
+```
+
+:::
+
 :::note
 
 ### A note on the default field resolver
