@@ -22,11 +22,11 @@ It is very natural to initially view GraphQL from a "back-end" perspective, but 
 For instance, a conversation list UI might care about presenting a list of conversations the user is in, with their last messages, associated participants, their avatars, and so on and so forth. It does not care about:
 
 - the conversation metadata coming from a different back-end service than the participant metadata
-- that in some cases the back-end might have denormalised [parts of] message metadata onto the conversation
+- that in some cases the back-end might have de-normalized [parts of] message metadata onto the conversation
 - that multiple back-end services might return different subsets for what is, semantically speaking, the same conversation object
 - or even the very act of fetching the data from the various back-end services
 
-These are the types of implementation details that you want to abstract away from complex data-driven UI code, as that makes it easier to reason about and thus to maintain/optimise over time. Additionally, when thinking of complex applications, you will want to encapsulate business logic in a way that allows you to re-use it for other UIs, or perhaps even compute/transform the data in a background thread.
+These are the types of implementation details that you want to abstract away from complex data-driven UI code, as that makes it easier to reason about and thus to maintain/optimize over time. Additionally, when thinking of complex applications, you will want to encapsulate business logic in a way that allows you to re-use it for other UIs, or perhaps even compute/transform the data in a background thread.
 
 All of these needs are met by a GraphQL schema that acts as the abstraction layer between your back-end and front-end.
 
@@ -134,9 +134,9 @@ type Conversation {
 
 In this case, every root-field maps to a back-end service, and it of course does not return the full data for each related entity in its response payload, but rather contains foreign-keys to those related entities.
 
-Because we can only get the IDs of participants in a conversation, rather than the actual `Person` objects they refer to, we are being forced to make an aditional request for _each_ participant in all of the conversations in the list. This is the N+1 problem and forces the UI to perform a waterfall of requests. This in turn will lead to a slow loading experience or staggered UI rendering.
+Because we can only get the IDs of participants in a conversation, rather than the actual `Person` objects they refer to, we are being forced to make an additional request for _each_ participant in all of the conversations in the list. This is the N+1 problem and forces the UI to perform a waterfall of requests. This in turn will lead to a slow loading experience or staggered UI rendering.
 
-TODO: Expand on the need for a single-source of truth, and refer to the not yet existant guide about how a graphql client works, combined with a FLUX store.
+TODO: Expand on the need for a single-source of truth, and refer to the not yet existent guide about how a graphql client works, combined with a FLUX store.
 
 ## Generic _and_ domain-specific
 

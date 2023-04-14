@@ -42,7 +42,7 @@ Furthermore, if we look at `ConversationInfo`, we have actually leaked its detai
 
 ![](./slidedeck/Slide13.png)
 
-So what happens when we change `ConversationInfo`? Well, we’re not just changing `ConversationInfo`, we’re also changing `ChatListItem` and what it passes down. We might have to change `ChatList`, dependending on how it structured things. And we _certainly_ have to change the service, so that it sends the new information.
+So what happens when we change `ConversationInfo`? Well, we’re not just changing `ConversationInfo`, we’re also changing `ChatListItem` and what it passes down. We might have to change `ChatList`, depending on how it structured things. And we _certainly_ have to change the service, so that it sends the new information.
 
 ![](./slidedeck/Slide14.png)
 
@@ -82,7 +82,7 @@ So if we want to do this, if we want each component to be able to specify its ow
 
 ### Composition
 
-Composition in GraphQL is achieved by leveraging fragments, which are snippets of a query that can be composed together to form larger queries. These fragments are colocated with their components and composed into a tree that very much follows the shape of the component tree.
+Composition in GraphQL is achieved by leveraging fragments, which are snippets of a query that can be composed together to form larger queries. These fragments are co-located with their components and composed into a tree that very much follows the shape of the component tree.
 
 ```tsx
 function ChatList() {
@@ -161,7 +161,7 @@ Because a component and its data requirements are self-contained:
 
 ### Global Optimization
 
-At the framework level, transperantly to the UI engineer, we can:
+At the framework level, transparently to the UI engineer, we can:
 
 - Use tooling to extract and optimize query
 - Fetch data in single request for a single render pass

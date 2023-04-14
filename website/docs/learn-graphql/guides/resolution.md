@@ -303,7 +303,7 @@ A good way to think about a model, is that whatever your data source returns **i
 
 #### A warning for statically typed language users
 
-For type-safe field resolver implementations, you will typicaly want to generate typings to use in your resolvers. By default, codegen tools will typically emit typings that _exactly_ match the schema types. What this means is that your field resolver function will be required to return the data for child fields already transformed according to the schema. I.e. this forces you to apply [greedy resolution](#-greedy-resolution). No bueno.
+For type-safe field resolver implementations, you will typically want to generate typings to use in your resolvers. By default, codegen tools will typically emit typings that _exactly_ match the schema types. What this means is that your field resolver function will be required to return the data for child fields already transformed according to the schema. I.e. this forces you to apply [greedy resolution](#-greedy-resolution). No bueno.
 
 You will therefore absolutely want to pick a codegen tool that allows you to specify custom model typings for specific schema types. In the TypeScript space, such tools include:
 
@@ -355,7 +355,7 @@ Promise.all([
 ])
 ```
 
-Now, when we pass a single ID (_or set_) to the DataLoader, we expect a single value (_or respective set_) to be returned; yet still batch them with the participants of _all_ other conversations. How this works is that all requests made of a DataLoader during a single tick of the JavaScript runloop, will get batched together and passed to the batch function as a single list.
+Now, when we pass a single ID (_or set_) to the DataLoader, we expect a single value (_or respective set_) to be returned; yet still batch them with the participants of _all_ other conversations. How this works is that all requests made of a DataLoader during a single tick of the JavaScript run-loop, will get batched together and passed to the batch function as a single list.
 
 So, given our [prior example data](#👎-greedy-resolution):
 
