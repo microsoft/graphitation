@@ -136,8 +136,6 @@ In this case, every root-field maps to a back-end service, and it of course does
 
 Because we can only get the IDs of participants in a conversation, rather than the actual `Person` objects they refer to, we are being forced to make an additional request for _each_ participant in all of the conversations in the list. This is the N+1 problem and forces the UI to perform a waterfall of requests. This in turn will lead to a slow loading experience or staggered UI rendering.
 
-TODO: Expand on the need for a single-source of truth, and refer to the not yet existent guide about how a graphql client works, combined with a FLUX store.
-
 ## Generic _and_ domain-specific
 
 The benefit of GraphQL is that it allows you to design your data schema in a way that reflects the domain of your application, rather than the structure of your database or the layout of your UI. This means that you can define types and fields that represent the entities and relationships in your domain, and expose them through a single endpoint that can be queried in a concise manner.
@@ -146,20 +144,86 @@ However, this does not mean that you should create a schema that is tailored to 
 
 ### Query design
 
-For example, a “person” whose name is rendered in one place of the UI, is the same “person” whose email address is rendered elsewhere in the UI. Modeling this with a single GraphQL type (e.g. `Person`), regardless of what data source the data originates, allows you to have a single source of truth to consider. Once you start applying this, you will notice how easy it becomes to re-use UI components and their fragments in various different component hierarchies, and also how easy it becomes to _update_ that data in a single place and have the change reflected everywhere in the UI.
+For example, a “person” whose name is rendered in one place of the UI, is the same “person” whose email address is rendered elsewhere in the UI. Modeling this with a single GraphQL type (e.g. `Person`), regardless of what data source the data originates, allows you to have a single source of truth to consider.
 
 For example, this React component and GraphQL fragment:
 
 ```jsx
-function PersonInfo(props) {
+function PersonAvatar(props) {
   const person = useFragment(
     graphql`
-      fragment PersonInfo on Person {
-        displayName
+      fragment PersonAvatarFragment on Person {
+        avatarUrl
       }
     `,
     props.person,
   );
-  return <div>{person.displayName}</div>;
+  return <img src={person.avatarUrl} />;
 }
 ```
+
+Can be used in _any_ component hierarchy that embeds a "person". Such as a chat-list item:
+
+```jsx
+function ChatListItem(props) {
+  const conversation = useFragment(
+    graphql`
+      fragment ChatListItemFragment on Conversation {
+        title
+        participants {
+          ...PersonAvatarFragment
+        }
+      }
+    `,
+    props.conversation,
+  );
+  return (
+    <li>
+      <h3>{conversation.title}</h3>
+      {conversation.participants.map(person => <PersonAvatar person={person}>)}
+    </li>
+  );
+}
+```
+
+Or in a signed-in user control:
+
+```jsx
+function MeControl(props) {
+  const { me } = useFragment(
+    graphql`
+      fragment MeControlFragment on Query {
+        me {
+          displayName
+          ...PersonAvatarFragment
+        }
+      }
+    `,
+    props.query,
+  );
+  return (
+    <div>
+      <h3>Signed-in as {me.displayName}</h3>
+      <PersonAvatar person={me}>
+    </div>
+  );
+}
+```
+
+But also crucial to a performant architecture when dealing with a complex data-driven application—_and as you will learn more about in [the GraphQL client guide](./graphql-client.md)_—because now the person avatar is backed by a single source of truth, updating the `Person` record in the GraphQL client's data-store with a new `avatarUrl` allows the frameworks to know exactly all of the places in the UI where that data is needed and thus which components to re-render.
+
+I.e. the following pseudo-code is all it takes to automatically re-render the `PersonAvatar` in the chat-list for each conversation the signed-in user participates in, as well as in the signed-in user control:
+
+```js
+client.update({
+  type: "Person",
+  id: "42",
+  avatarUrl: "http://example.com/new-me-who-dis",
+});
+```
+
+## Conclusion
+
+Once you start applying these patterns, you will notice how easy it becomes to re-use UI components and their fragments in various different component hierarchies, and also how easy it becomes to _update_ that data in a single place and have the change reflected everywhere in the UI.
+
+This is where it all comes together and GraphQL truly shines ☀️
