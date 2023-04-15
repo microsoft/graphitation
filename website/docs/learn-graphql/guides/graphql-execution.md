@@ -21,7 +21,7 @@ A core part of GraphQL is that it allows clients to specify **the exact data** t
 
 ## Resolution
 
-To resolve the data of the GraphQL query, we need to define how each field in the schema is fetched from the data source. There are different ways to do this, depending on how we structure our code and how we optimize our performance. In this section, we will explore two examples of how to resolve the data of the query, starting with a naive version that simply returns the full entire response from the root-field, to one that has explicit field resolvers for each field with custom logic.
+To resolve the data of the GraphQL query, we need to define how each field in the schema is fetched from the data source. There are different ways to do this, depending on how we structure our code and how we optimize our performance. In this section, we will explore two variants of how to resolve the data of the query, starting with a naive version that simply returns the full entire response from the root-field, to one that has explicit field resolvers for each field with custom logic.
 
 But first, let's quickly cover how the executor will process your query. Let's consider the conversation list UI once more:
 
@@ -89,36 +89,38 @@ In this case, when we query for conversations, GraphQL will:
 
 ### 👎 Greedy resolution
 
-The first example is the simplest one, where we just return the full response from the root-field. This means that we have a single resolver function for the `conversations` field in the `Query` type, and it returns an array of objects that match the shape of the `Conversation` type. We don't need to define any other resolver functions for the nested fields, because GraphQL will [by default](#a-note-on-the-default-field-resolver) use the property values of the objects as the field values.
+The first resolution variant is the simplest one, where we just return the full response from the root-field. This means that we have a single resolver function for the `conversations` field in the `Query` type, and it returns an array of objects that match the shape of the `Conversation` type. We don't need to define any other resolver functions for the nested fields, because GraphQL will [by default](#a-note-on-the-default-field-resolver) use the property values of the objects as the field values.
 
 For example, if we have a data source that looks like this:
 
 ```js
-const conversations = [
-  {
-    title: "Joshua and Daichi",
-    lastMessage: "You: Thank you!!",
-    receivedAt: "10:29 AM",
-    participants: [
-      {
-        avatarURL: "https://example.com/joshua.jpg",
-      },
-      {
-        avatarURL: "https://example.com/daichi.jpg",
-      },
-    ],
-  },
-  {
-    title: "Kadji Bell",
-    lastMessage: "You: I like the idea, let’s pitch it!",
-    participants: [
-      {
-        avatarURL: "https://example.com/kadji.jpg",
-      },
-    ],
-    receivedAt: "10:02 AM",
-  },
-];
+function getMyConversations() {
+  return [
+    {
+      title: "Joshua and Daichi",
+      lastMessage: "You: Thank you!!",
+      receivedAt: "10:29 AM",
+      participants: [
+        {
+          avatarURL: "https://example.com/joshua.jpg",
+        },
+        {
+          avatarURL: "https://example.com/daichi.jpg",
+        },
+      ],
+    },
+    {
+      title: "Kadji Bell",
+      lastMessage: "You: I like the idea, let’s pitch it!",
+      participants: [
+        {
+          avatarURL: "https://example.com/kadji.jpg",
+        },
+      ],
+      receivedAt: "10:02 AM",
+    },
+  ];
+}
 ```
 
 Then our resolver function for the conversations field can simply return this array:
@@ -126,7 +128,7 @@ Then our resolver function for the conversations field can simply return this ar
 ```js
 const resolvers = {
   Query: {
-    conversations: () => conversations,
+    conversations: () => getMyConversations(),
   },
 };
 ```
@@ -157,7 +159,7 @@ The following set of resolvers has the same result as the above, but _without_ r
 ```js
 const resolvers = {
   Query: {
-    conversations: () => conversations,
+    conversations: () => getMyConversations(),
   },
   Conversation: {
     title: (conversation) => conversation.title,
@@ -175,9 +177,36 @@ const resolvers = {
 
 ### 👍 Lazy resolution
 
-The second example is more flexible and efficient than the first one, where we can have explicit field resolvers for each field in the schema. These field resolver functions allow us to define how to derive the field's value from the data source.
+The second resolution variant is more flexible and efficient than the first one, where we can have explicit field resolvers for each field in the schema. These field resolver functions allow us to define how to derive the field's value from the data source.
 
-For example, if the `receivedAt` value would not already be formatted in the data source, we can define a resolver function for this field that calculates its human-readable value from the raw format. Here is what that field resolver function could look like:
+For the following examples, consider this updated version of the conversation data source:
+
+```js
+function getMyConversations() {
+  const conversations = [
+    {
+      title: "Joshua and Daichi",
+      lastMessage: "You: Thank you!!",
+      receivedAt: "2023-04-15T17:29:00-08:00",
+      participantIDs: ["joshua-van-buren", "daichi-fukuda"],
+    },
+    {
+      title: "Kadji Bell",
+      lastMessage: "You: I like the idea, let’s pitch it!",
+      participantIDs: ["kadji-bell"],
+      receivedAt: "2023-04-15T17:02:00-08:00",
+    },
+  ];
+}
+
+const resolvers = {
+  Query: {
+    conversations: () => getMyConversations(),
+  },
+};
+```
+
+Now consider that the `receivedAt` value has not already been formatted for display in the data source, so instead we define a resolver function for this field that calculates its human-readable value from the raw format. Here is what that field resolver function could look like:
 
 ```js
 const resolvers = {
@@ -205,7 +234,7 @@ const resolvers = {
 };
 ```
 
-Neat.
+_Neat_ 📸
 
 #### Flexibility for different needs
 
