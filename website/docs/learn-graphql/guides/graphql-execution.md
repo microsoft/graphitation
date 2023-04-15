@@ -188,12 +188,12 @@ function getMyConversations() {
       title: "Joshua and Daichi",
       lastMessage: "You: Thank you!!",
       receivedAt: "2023-04-15T17:29:00-08:00",
-      participantIDs: ["joshua-van-buren", "daichi-fukuda"],
+      participantIDs: ["joshua", "daichi"],
     },
     {
       title: "Kadji Bell",
       lastMessage: "You: I like the idea, let’s pitch it!",
-      participantIDs: ["kadji-bell"],
+      participantIDs: ["kadji"],
       receivedAt: "2023-04-15T17:02:00-08:00",
     },
   ];
@@ -345,6 +345,26 @@ You will therefore absolutely want to pick a codegen tool that allows you to spe
 
 Integral to resolution of a graph of connected data, is that a query will end up containing many entities of the same kind, or perhaps even contain the same entity multiple times. For instance, for each conversation fetch all participants—a classic N+1 problem.
 
+```mermaid
+graph LR
+  Q["Query.conversations"] --> C1["Conversation.participants"]
+  Q --> C2["Conversation.participants"]
+  subgraph Data Source
+    P1["Person Data"]
+    P2["Person Data"]
+    P3["Person Data"]
+  end
+  C1 -->|"getPerson('joshua')"| P1
+  C1 -->|"getPerson('daichi')"| P2
+  C2 -->|"getPerson('kadji')"| P3
+  P1 --> U1["Person"]
+  P2 --> U2["Person"]
+  P3 --> U3["Person"]
+
+classDef external fill:#f9f,stroke:#333;
+class P1,P2,P3 external;
+```
+
 These entities might be necessary for unrelated parts of the application, but still, for performance reasons we want to be able to batch that entity data loading. [DataLoader](https://github.com/graphql/dataloader) is a utility used to abstract request batching in GraphQL. It allows you to reason about a batch of requests, **without** needing to do so in the field resolver functions—keeping them decoupled and without sacrificing the performance of batched data loading.
 
 #### Basic data loading
@@ -371,7 +391,25 @@ const resolvers = {
 };
 ```
 
-This example isn't all that ground-breaking, as we have the list of IDs in the one field resolver already and can easily load them as a batch. (The only true benefit would be the caching of the people data, allowing for fast retrieval when resolving the same people again elsewhere in the query.)
+```mermaid
+graph LR
+  Q["Query.conversations"] --> C1["Conversation.participants"]
+  Q --> C2["Conversation.participants"]
+  subgraph Data Source
+    P1["Person Data"]
+    P2["Person Data"]
+  end
+  C1 -->|"personLoader.loadMany(['joshua', 'daichi'])"| P1
+  C2 -->|"personLoader.loadMany(['kadji'])"| P2
+  P1 --> U1["Person"]
+  P1 --> U2["Person"]
+  P2 --> U3["Person"]
+
+classDef external fill:#f9f,stroke:#333;
+class P1,P2 external;
+```
+
+This example isn't all that ground-breaking, as we already have the list of participant IDs for each conversation in the `Conversation.participants` field resolver and can easily load them as a batch. (The only true benefit would be the caching of the people data, allowing for fast retrieval when resolving the same people again elsewhere in the query.)
 
 #### Decoupled batching
 
@@ -384,7 +422,26 @@ Promise.all([
 ])
 ```
 
-Now, when we pass a single ID (_or set_) to the DataLoader, we expect a single value (_or respective set_) to be returned; yet still batch them with the participants of _all_ other conversations. How this works is that all requests made of a DataLoader during a single tick of the JavaScript run-loop, will get batched together and passed to the batch function as a single list.
+Now, when we pass a single ID (_or set_) to the DataLoader, we expect a single value (_or respective set_) to be returned; yet still batch them with the participants of _all_ other conversations.
+
+```mermaid
+graph LR
+  Q["Query.conversations"] --> C1["Conversation.participants"]
+  Q --> C2["Conversation.participants"]
+  subgraph Data Source
+    P["Person Data"]
+  end
+  C1 -->|"personLoader.loadMany(['joshua', 'daichi'])"| P
+  C2 -->|"personLoader.loadMany(['kadji'])"| P
+  P --> U1["Person"]
+  P --> U2["Person"]
+  P --> U3["Person"]
+
+classDef external fill:#f9f,stroke:#333;
+class P external;
+```
+
+How this works is that all requests made of a DataLoader during a single tick of the JavaScript run-loop, will get batched together and passed to the batch function as a single list.
 
 So, given our [prior example data](#👎-greedy-resolution):
 
