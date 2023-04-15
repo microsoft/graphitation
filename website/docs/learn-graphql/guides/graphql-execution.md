@@ -8,7 +8,7 @@ description: How data is retrieved and assembled according to the schema and req
 # GraphQL Execution
 
 :::info
-This section talks about field resolvers, the `Query` root type, and root-field resolvers—_which are ordinary field resolvers, but on the `Query` root type_. It is recommended to read at least sections 1 through 4 of [this upstream guide](https://graphql.org/learn/execution/), prior to reading this here guide.
+This section talks about field resolvers, the `Query` root type, and root-field resolvers—_which are ordinary field resolvers, but on the `Query` root type_. It is recommended to read at least sections 1 through 4 of [this upstream guide](https://graphql.org/learn/execution/), prior to reading this here guide; or [this section of the spec](http://spec.graphql.org/October2021/#sec-Execution).
 :::
 
 The role of an execution engine in GraphQL is to convert between underlying services into GraphQL schema types for use in the front-end. We call this “resolution”.
@@ -86,12 +86,6 @@ In this case, when we query for conversations, GraphQL will:
 1. Execute the resolver function for the `Query.conversations` field, which returns an array of `Conversation` objects.
 1. Then, for each individual `Conversation` object in the array, GraphQL will execute the resolver function for the `Conversation.title`, `Conversation.lastMessage`, `Conversation.receivedAt`, and `Conversation.participants` fields.
 1. And finally, for each `Person` object in the `Conversation.participants` array, GraphQL will execute the resolver function for the `Person.avatarURL` field.
-
-Crucially, each field resolver only resolves exactly that which it is named after. The `Query.conversations` field returns a list of conversations from the data source, it does not transform any values for fields that need custom logic applied, nor does it fetch the person objects for the `Conversation.participants` field.
-
-:::info
-For a more details on the functional bits of execution, please refer to [this graphql.org page](https://graphql.org/learn/execution/), or [the spec](http://spec.graphql.org/October2021/#sec-Execution).
-:::
 
 ### 👎 Greedy resolution
 
@@ -215,7 +209,9 @@ Neat.
 
 #### Flexibility for different needs
 
-We can use this approach to optimize our performance by _only_ fetching or returning the data that we need for each field. For example, if we only want to get the `title`, `lastMessage`, and `receivedAt` fields of each conversation, we can avoid fetching or returning the participants array with all their `avatarURL`s.
+We can use this approach to optimize our performance by _only_ fetching or returning the data that we need for each field.
+
+Crucially, each field resolver only resolves exactly that which it is named after. For example, the `Query.conversations` field returns a list of conversations from the data source. Similarly, if we only want to get the `title`, `lastMessage`, and `receivedAt` fields of each conversation, we can avoid fetching or returning the participants array with all their `avatarURL`s.
 
 As you have learned in [The Design of GraphQL](the-design-of-graphql.md), this flexibility is at the heart of its design for composition of data requirements.
 
