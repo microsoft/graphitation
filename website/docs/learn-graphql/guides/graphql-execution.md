@@ -347,10 +347,10 @@ Integral to resolution of a graph of connected data, is that a query will end up
 graph LR
   Q["Query.conversations"] --> C1["Conversation.participants"]
   Q --> C2["Conversation.participants"]
-  subgraph Data Source
-    P1["Person Data"]
-    P2["Person Data"]
-    P3["Person Data"]
+  subgraph Person Data Source
+    P1["Data Request 1"]
+    P2["Data Request 2"]
+    P3["Data Request 3"]
   end
   C1 -->|"getPerson('joshua')"| P1
   C1 -->|"getPerson('daichi')"| P2
@@ -393,9 +393,9 @@ const resolvers = {
 graph LR
   Q["Query.conversations"] --> C1["Conversation.participants"]
   Q --> C2["Conversation.participants"]
-  subgraph Data Source
-    P1["Person Data"]
-    P2["Person Data"]
+  subgraph Person Data Source
+    P1["Data Request 1"]
+    P2["Data Request 2"]
   end
   C1 -->|"personLoader.loadMany(['joshua', 'daichi'])"| P1
   C2 -->|"personLoader.loadMany(['kadji'])"| P2
@@ -426,8 +426,8 @@ Now, when we pass a single ID (_or set_) to the DataLoader, we expect a single v
 graph LR
   Q["Query.conversations"] --> C1["Conversation.participants"]
   Q --> C2["Conversation.participants"]
-  subgraph Data Source
-    P["Person Data"]
+  subgraph Person Data Source
+    P["Data Request 1"]
   end
   C1 -->|"personLoader.loadMany(['joshua', 'daichi'])"| P
   C2 -->|"personLoader.loadMany(['kadji'])"| P
