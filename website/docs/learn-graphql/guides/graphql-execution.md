@@ -306,15 +306,13 @@ type Person {
 ```ts
 const resolvers = {
   Person: {
-    fullName: (
-      person: DatabaseTablePersonRow,
-    ): SchemaTypes.Person["fullName"] =>
-      `${person.firstName} ${person.lastName}`,
+    fullName: (personDatabaseRow) =>
+      `${personDatabaseRow.firstName} ${personDatabaseRow.lastName}`,
   },
 };
 ```
 
-Here, the `person` argument has all the underlying data we need. We call such a source, **the model**. _Crucially_, the model type is **not** equal to the schema type. The model type is where the data comes _from_, the schema type's field is what the resolver transforms the data _to_.
+Here, the `personDatabaseRow` argument has all the underlying data we need. We call such a source, **the model**. _Crucially_, the model type is **not** equal to the schema type. The model type is where the data comes _from_, the schema type is what the resolver transforms the data _to_.
 
 A model can be a raw response from the data source, an intermediate representation, or a full fledged model class instance. A raw data source response is the most basic form of a model. It could be a row from a database table, a document from a database, or a JSON object from an API response.
 
