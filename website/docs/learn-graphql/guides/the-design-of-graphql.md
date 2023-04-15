@@ -84,6 +84,12 @@ So if we want to do this, if we want each component to be able to specify its ow
 
 Composition in GraphQL is achieved by leveraging fragments, which are snippets of a query that can be composed together to form larger queries. These fragments are co-located with their components and composed into a tree that very much follows the shape of the component tree.
 
+:::tip
+A good way to think about this, is that in a component’s fragment you select exactly and only the data that _this_ component needs to render. These are either properties the component renders directly, needs to pass to components not backed by GraphQL data (such as very basic controls), or a fragment spread for components it renders that are backed by GraphQL data.
+:::
+
+In the following React code samples, each component defines the exact properties it needs in a GraphQL fragment, and then for any child components it spreads [read: refers to] the fragment belonging to that component. It knows that it has children with data dependencies, but it doesn't _need_ to care about the details of that data.
+
 ```tsx
 function ChatList() {
   const data = useLazyLoadQuery(

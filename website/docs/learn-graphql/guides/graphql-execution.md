@@ -1,11 +1,15 @@
 ---
 sidebar_position: 4
-id: resolution
-title: GraphQL Resolution
+id: graphql-execution
+title: GraphQL Execution
 description: How data is retrieved and assembled according to the schema and requests
 ---
 
-# GraphQL Resolution
+# GraphQL Execution
+
+:::info
+This section talks about field resolvers, the `Query` root type, and root-field resolvers—_which are ordinary field resolvers, but on the `Query` root type_. It is recommended to read at least sections 1 through 4 of [this upstream guide](https://graphql.org/learn/execution/), prior to reading this here guide.
+:::
 
 The role of an execution engine in GraphQL is to convert between underlying services into GraphQL schema types for use in the front-end. We call this “resolution”.
 
@@ -15,7 +19,7 @@ It does so by traversing the schema and resolving the fields requested in the qu
 
 A core part of GraphQL is that it allows clients to specify **the exact data** they need from the service. Unlike traditional RESTful APIs, where clients have to make multiple requests or receive more data than they need, GraphQL lets clients define the structure of the data they want and get **_only_ that data** in a single request. Notably, this means that the client does not need to pay the price for any business logic required for fields that are not needed by the client. This makes GraphQL APIs more efficient, flexible, and scalable to clients that have such needs.
 
-## Execution
+## Resolution
 
 To resolve the data of the GraphQL query, we need to define how each field in the schema is fetched from the data source. There are different ways to do this, depending on how we structure our code and how we optimize our performance. In this section, we will explore two examples of how to resolve the data of the query, starting with a naive version that simply returns the full entire response from the root-field, to one that has explicit field resolvers for each field with custom logic.
 
