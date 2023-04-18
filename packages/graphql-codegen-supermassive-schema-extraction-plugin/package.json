@@ -24,7 +24,8 @@
   },
   "dependencies": {
     "@graphitation/supermassive-extractors": "^2.1.0",
-    "typescript": "^4.4.3 <4.5.0"
+    "typescript": "^4.4.3 <4.5.0",
+    "graphql": "^15.0.0"
   },
   "sideEffects": false,
   "access": "public",
