@@ -2,6 +2,27 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Tue, 18 Apr 2023 13:36:20 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v0.8.3",
+      "version": "0.8.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "comment": "Bump @graphitation/apollo-mock-client to v0.10.17",
+            "commit": "a1c7bbcee3bbc749d8469597ba0ecb5c470a02dd"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "comment": "Bump @graphitation/graphql-js-operation-payload-generator to v0.12.2",
+            "commit": "a1c7bbcee3bbc749d8469597ba0ecb5c470a02dd"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 03 Apr 2023 14:51:35 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v0.8.2",
       "version": "0.8.2",

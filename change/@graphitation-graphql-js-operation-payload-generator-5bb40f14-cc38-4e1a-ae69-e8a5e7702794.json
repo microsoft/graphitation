@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Add missing dependencies",
-  "packageName": "@graphitation/graphql-js-operation-payload-generator",
-  "email": "scheruiyot@microsoft.com",
-  "dependentChangeType": "patch"
-}

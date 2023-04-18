@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-This log was last generated on Mon, 13 Mar 2023 14:00:55 GMT and should not be manually modified.
+This log was last generated on Tue, 18 Apr 2023 13:36:20 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.12.2
+
+Tue, 18 Apr 2023 13:36:20 GMT
+
+### Patches
+
+- Add missing dependencies (scheruiyot@microsoft.com)
 
 ## 0.12.1
 
