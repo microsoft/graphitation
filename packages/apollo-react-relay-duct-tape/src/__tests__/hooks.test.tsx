@@ -67,9 +67,13 @@ const query = graphql`
 `;
 
 const QueryComponent: React.FC = () => {
-  const { data, error } = useLazyLoadQuery<hooksTestQuery>(query, {
-    id: "some-user-id",
-  });
+  const { data, error } = useLazyLoadQuery<hooksTestQuery>(
+    query,
+    {
+      id: "some-user-id",
+    },
+    { context: { callerInfo: "query-component" } },
+  );
   if (error) {
     return <div id="error">{error.message}</div>;
   } else if (data) {
@@ -120,6 +124,7 @@ const SubscriptionComponent: React.FC<SubjectProps> = ({
   useSubscription<hooksTestSubscription>({
     subscription,
     variables: { id: "some-user-id" },
+    context: { callerInfo: "subscription-component" },
     onNext,
     onError: onError || undefined,
   });
@@ -129,13 +134,14 @@ const SubscriptionComponent: React.FC<SubjectProps> = ({
 const MutationComponent: React.FC<{
   variables: any;
   optimisticResponse: any;
+  context?: any;
 }> = (props) => {
-  const { variables, optimisticResponse } = props;
+  const { variables, optimisticResponse, context } = props;
   const [commit, isInFlight] = useMutation<hooksTestMutation$key>(mutation);
   const [result, setResult] = React.useState<any>(null);
   React.useEffect(() => {
     (async function () {
-      const result = await commit({ variables, optimisticResponse });
+      const result = await commit({ variables, optimisticResponse, context });
       setResult(result);
     })();
   }, [variables, optimisticResponse]);
@@ -172,6 +178,10 @@ describe(useLazyLoadQuery, () => {
     const operation = client.mock.getMostRecentOperation();
     expect(getOperationName(operation.request.node)).toBe("hooksTestQuery");
     expect(operation.request.variables).toEqual({ id: "some-user-id" });
+    expect(operation.request.context).toHaveProperty(
+      "callerInfo",
+      "query-component",
+    );
 
     await act(() =>
       client.mock.resolve(operation, MockPayloadGenerator.generate(operation)),
@@ -220,6 +230,10 @@ describe(useSubscription, () => {
     expect(subscriptionOperation.request.variables).toEqual({
       id: "some-user-id",
     });
+    expect(subscriptionOperation.request.context).toHaveProperty(
+      "callerInfo",
+      "subscription-component",
+    );
 
     // First resolve query...
     await act(() =>
@@ -337,6 +351,7 @@ describe("useMutation", () => {
         <MutationComponent
           variables={{ name: "foo", id: "1" }}
           optimisticResponse={null}
+          context={{ callerInfo: "mutation-component" }}
         />
       </ApolloProvider>,
     );
@@ -358,6 +373,7 @@ describe("useMutation", () => {
                 name: '&lt;mock-value-for-field-"name"&gt;',
               },
             }}
+            context={{ callerInfo: "mutation-component" }}
           />
         </ApolloProvider>,
       );
@@ -387,5 +403,9 @@ describe("useMutation", () => {
       name: "foo",
       id: "1",
     });
+    expect(mutationOperation.request.context).toHaveProperty(
+      "callerInfo",
+      "mutation-component",
+    );
   });
 });
