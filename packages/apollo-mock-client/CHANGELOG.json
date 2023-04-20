@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-mock-client",
   "entries": [
     {
+      "date": "Thu, 20 Apr 2023 14:11:58 GMT",
+      "tag": "@graphitation/apollo-mock-client_v0.11.0",
+      "version": "0.11.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "52814187+ira-kaundal@users.noreply.github.com",
+            "package": "@graphitation/apollo-mock-client",
+            "commit": "b9986e7009c55c3285131fc078a7a514e55383e0",
+            "comment": "add support for context in request"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 18 Apr 2023 13:36:20 GMT",
       "tag": "@graphitation/apollo-mock-client_v0.10.17",
       "version": "0.10.17",

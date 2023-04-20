@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-mock-client
 
-This log was last generated on Tue, 18 Apr 2023 13:36:20 GMT and should not be manually modified.
+This log was last generated on Thu, 20 Apr 2023 14:11:58 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.11.0
+
+Thu, 20 Apr 2023 14:11:58 GMT
+
+### Minor changes
+
+- add support for context in request (52814187+ira-kaundal@users.noreply.github.com)
 
 ## 0.10.17
 
