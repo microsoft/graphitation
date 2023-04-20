@@ -178,7 +178,6 @@ describe(useLazyLoadQuery, () => {
     const operation = client.mock.getMostRecentOperation();
     expect(getOperationName(operation.request.node)).toBe("hooksTestQuery");
     expect(operation.request.variables).toEqual({ id: "some-user-id" });
-    console.log(operation.request);
     expect(operation.request.context).toHaveProperty(
       "callerInfo",
       "query-component",
