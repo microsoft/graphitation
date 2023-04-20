@@ -10,7 +10,7 @@ import {
 } from "@apollo/client";
 
 // import { GraphQLTaggedNode } from "./taggedNode";
-import { KeyType, KeyTypeData, OperationType, Variables } from "./types";
+import { KeyType, KeyTypeData, OperationType } from "./types";
 
 export type GraphQLTaggedNode = DocumentNode;
 
@@ -62,7 +62,7 @@ export type GraphQLTaggedNode = DocumentNode;
 export function useLazyLoadQuery<TQuery extends OperationType>(
   query: GraphQLTaggedNode,
   variables: TQuery["variables"],
-  options?: { fetchPolicy: "cache-first" },
+  options?: { fetchPolicy?: "cache-first"; context?: TQuery["context"] },
 ): { error?: Error; data?: TQuery["response"] } {
   return useApolloQuery(query as any, { variables, ...options });
 }
@@ -144,6 +144,7 @@ interface GraphQLSubscriptionConfig<
 > {
   subscription: GraphQLTaggedNode;
   variables: TSubscriptionPayload["variables"];
+  context?: TSubscriptionPayload["context"];
   /**
    * Should response be nullable?
    */
@@ -156,6 +157,7 @@ export function useSubscription<TSubscriptionPayload extends OperationType>(
 ): void {
   const { error } = useApolloSubscription(config.subscription, {
     variables: config.variables,
+    context: config.context,
     onSubscriptionData: ({ subscriptionData }) => {
       // Supposedly this never gets triggered for an error by design:
       // https://github.com/apollographql/react-apollo/issues/3177#issuecomment-506758144
@@ -184,6 +186,7 @@ export function useSubscription<TSubscriptionPayload extends OperationType>(
 
 interface IMutationCommitterOptions<TMutationPayload extends OperationType> {
   variables: TMutationPayload["variables"];
+  context?: TMutationPayload["context"];
   optimisticResponse?: Partial<TMutationPayload["response"]> | null;
 }
 
@@ -248,6 +251,7 @@ export function useMutation<TMutationPayload extends OperationType>(
     async (options: IMutationCommitterOptions<TMutationPayload>) => {
       const apolloResult = await apolloUpdater({
         variables: options.variables || {},
+        context: options.context,
         optimisticResponse: options.optimisticResponse,
       });
       if (apolloResult.errors) {
