@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 id: the-design-of-graphql
 title: The design of GraphQL
 description: What was GraphQL designed to solve for and how to leverage that?
@@ -7,25 +7,17 @@ description: What was GraphQL designed to solve for and how to leverage that?
 
 # The design of GraphQL
 
-## Flux
+Unfortunately, the community has largely lost sight of the original design considerations that Facebook had for GraphQL. Key components of its design are misunderstood and often entirely ignored by popular GraphQL clients. Facebook’s own GraphQL client, [Relay](https://relay.dev), incorporates all the GraphQL best-practices learned from using GraphQL _as it was designed_, but alas the choice was made to separate the strong opinions of how to use GraphQL from GraphQL’s own documentation to avoid being prescriptive.
 
-To understand how Facebook designed GraphQL and React to work together, we must first go back to the origins of React and learn about [Flux](https://facebook.github.io/flux/docs/in-depth-overview/). Flux is the application architecture that Facebook uses for building client-side web applications. It complements React's composable view components by utilizing a unidirectional data flow, making interactions easier to reason about.
+:::danger
+Any GraphQL client for data-driven UI applications that does **not** have a strong opinion on making “fragments” the unit around which the user-interface components are built, is **not** leveraging key GraphQL design components nor setting you up for success with complex data-driven UI applications.
+:::
 
-![](./slidedeck/Slide2.png)
+With that in mind, forget what you might already know about GraphQL for a bit and let’s go back to when Facebook designed GraphQL—when they had realized that user-interfaces and the back-end services backing them would end up getting coupled together, making iterating on complex applications like theirs extremely hard.
 
-But there’s a missing piece here. How do we get the data from the “remote” service into the client in the first place?
+## Example
 
-![](./slidedeck/Slide3.png)
-
-And especially in complex applications, they realised that the service and the view end-up getting coupled together, which makes development difficult.
-
-![](./slidedeck/Slide4.png)
-
-## The problem
-
-### Example
-
-Let’s take a simple example, here we have the Chat-List component of Teams. There’s a list of conversations, content preview, and some details about the participants. So if we would structure this, there would be 3 major components.
+Let’s take a look at the `ChatList` component of Teams. There’s a list of conversations, content preview, and some details about the participants. So if we would structure this, there would be 3 major components.
 
 - There’s going to be the outer `ChatList` component.
 - The `ChatList` component would contain many `ChatListItem` components, one for each conversation that the user has.
@@ -41,7 +33,7 @@ The service sends some data down to the client, `ChatList` passes it on to its c
 
 ![](./slidedeck/Slide11.png)
 
-### Leaky Abstractions
+## Problem
 
 But of course this is a simplification, what happens when we add some color to this? The `ChatList` component needs an item count, the `ChatListItem` component needs an avatar, and the `ConversationInfo` needs a title and last message preview.
 
@@ -50,7 +42,7 @@ Furthermore, if we look at `ConversationInfo`, we have actually leaked its detai
 
 ![](./slidedeck/Slide13.png)
 
-So what happens when we change `ConversationInfo`? Well, we’re not just changing `ConversationInfo`, we’re also changing `ChatListItem` and what it passes down. We might have to change `ChatList`, dependending on how it structured things. And we _certainly_ have to change the service, so that it sends the new information.
+So what happens when we change `ConversationInfo`? Well, we’re not just changing `ConversationInfo`, we’re also changing `ChatListItem` and what it passes down. We might have to change `ChatList`, depending on how it structured things. And we _certainly_ have to change the service, so that it sends the new information.
 
 ![](./slidedeck/Slide14.png)
 
@@ -58,7 +50,7 @@ How did we get here? How did we get to a place where making a simple change to `
 
 The big problem was a lack of modularity. We wanted `ConversationInfo` to be a self-contained component, but it wasn’t. Its implementation details were leaked to `ChatListItem`, _and_ up to the service. The thing that was missing was a way for `ConversationInfo` and other components to specify what data they require. That specification didn’t live in the component itself, it was spread all over the application.
 
-### The Solution
+## The Solution
 
 What we want is some way for each component to statically define its data needs in a simple way.
 
@@ -80,8 +72,6 @@ From here on out, it’s exactly the same diagram as before. We have a service, 
 
 ![](./slidedeck/Slide25.png)
 
-### Conclusion
-
 It’s a subtle change, but a _key_ one.
 
 We’ve taken the details about what data `ConversationInfo` requires _out_ of the service, where it doesn’t belong, and have put it _in_ the `ConversationInfo` component where it does.
@@ -90,9 +80,15 @@ Because inherently, our rendering logic for `ConversationInfo` and its data-spec
 
 So if we want to do this, if we want each component to be able to specify its own data needs, how can we do so? The realization is that our data-specification has a key property that it needs to fulfill, which is composition.
 
-## Composition
+### Composition
 
-Composition in GraphQL is achieved by leveraging fragments, which are snippets of a query that can be composed together to form larger queries. These fragments are colocated with their components and composed into a tree that very much follows the shape of the component tree.
+Composition in GraphQL is achieved by leveraging fragments, which are snippets of a query that can be composed together to form larger queries. These fragments are co-located with their components and composed into a tree that very much follows the shape of the component tree.
+
+:::tip
+A good way to think about this, is that in a component’s fragment you select exactly and only the data that _this_ component needs to render. These are either properties the component renders directly, needs to pass to components not backed by GraphQL data (such as very basic controls), or a fragment spread for components it renders that are backed by GraphQL data.
+:::
+
+In the following React code samples, each component defines the exact properties it needs in a GraphQL fragment, and then for any child components it spreads [read: refers to] the fragment belonging to that component. It knows that it has children with data dependencies, but it doesn't _need_ to care about the details of that data.
 
 ```tsx
 function ChatList() {
@@ -171,7 +167,7 @@ Because a component and its data requirements are self-contained:
 
 ### Global Optimization
 
-At the framework level, transperantly to the UI engineer, we can:
+At the framework level, transparently to the UI engineer, we can:
 
 - Use tooling to extract and optimize query
 - Fetch data in single request for a single render pass
@@ -180,10 +176,9 @@ At the framework level, transperantly to the UI engineer, we can:
 - Couple lazy asset loading to data resolving, including the required components themselves
 - Move extracted queries upstream so the pipeline can ahead-of-time optimize/prepare data in a generic manner across builds
 
-## Closing Statement
+## Takeaways
 
-Unfortunately, due in large part to lack of proper documentation and guidance by Facebook, the community has largely lost sight of these original design considerations. Fragments are seen as a way to DRY up code, rather than uniquely expressing the data requirements of a single component, and often entirely ignored by popular GraphQL clients.
-
-Any GraphQL client for data-driven UI applications that does not make fragments the unit around which everything is built, is not setting you up for success—assuming you have needs similar to Facebook.
-
-Facebook's own GraphQL client, [Relay](https://relay.dev), is the golden reference for how to do this right.
+- GraphQL was created to allow composition of data-requirements for UI components in complex data-driven applications.
+  - Smaller network payloads is great, but not the primary design goal.
+- Fragments are the manner in which a component's unique data-requirements can be composed.
+  - They are not meant simply for DRY purposes, nor should they be shared by different components.

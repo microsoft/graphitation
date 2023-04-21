@@ -17,6 +17,11 @@ const config = {
   projectName: "graphitation",
   trailingSlash: false,
 
+  markdown: {
+    mermaid: true,
+  },
+  themes: ["@docusaurus/theme-mermaid"],
+
   presets: [
     [
       "classic",
@@ -45,8 +50,8 @@ const config = {
       navbar: {
         title: "graphitation",
         logo: {
-          alt: "My Site Logo",
-          src: "img/logo.svg",
+          alt: "Graphitation Logo",
+          src: "img/graphitation-logo.png",
         },
         items: [
           {
@@ -57,9 +62,9 @@ const config = {
           },
           {
             type: "doc",
-            docId: "apollo-react-relay-duct-tape/intro",
+            docId: "packages/apollo-react-relay-duct-tape/intro",
             position: "left",
-            label: "Apollo React/Relay Duct-Tape",
+            label: "Packages",
           },
           {
             href: "https://github.com/microsoft/graphitation",
@@ -71,15 +76,15 @@ const config = {
       footer: {
         style: "dark",
         links: [
-          {
-            title: "Docs",
-            items: [
-              {
-                label: "Apollo React/Relay Duct-Tape",
-                to: "/docs/apollo-react-relay-duct-tape/intro",
-              },
-            ],
-          },
+          // {
+          //   title: "Docs",
+          //   items: [
+          //     {
+          //       label: "Apollo React/Relay Duct-Tape",
+          //       to: "/docs/apollo-react-relay-duct-tape/intro",
+          //     },
+          //   ],
+          // },
           {
             title: "Community",
             items: [
