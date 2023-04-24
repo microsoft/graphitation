@@ -99,7 +99,9 @@ function getMainFragmentMetadata(
   const mainFragmentSpread = selectionSet.selections.find(
     (selection) => selection.kind === "FragmentSpread"
   ) as FragmentSpreadNode | undefined;
-  invariant(mainFragmentSpread, "Expected a main fragment spread");
+  if (!mainFragmentSpread) {
+    return undefined;
+  }
   const mainFragment = fragmentDefinitions.find(
     (fragment) => fragment.name.value === mainFragmentSpread.name.value
   );

@@ -42,6 +42,20 @@ describe(extractMetadataTransform, () => {
         typeCondition: "User",
       });
     });
+
+    it("returns nothing if no fragment is found", () => {
+      const result = extractMetadataTransform(graphql`
+        query WatchQueryOnQueryType {
+          node(id: $id) {
+            id
+          }
+        }
+        fragment SomeFragment on User {
+          id
+        }
+      `);
+      expect(result?.mainFragment).toBeUndefined();
+    });
   });
 
   describe("concerning connections", () => {
