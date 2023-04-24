@@ -29,6 +29,11 @@ const TodoList: React.FC<{ query: TodoList_queryFragment$key }> = ({
         orderBy: { type: "OrderByInput" }
       ) {
         todos(first: $count, after: $after, orderBy: $orderBy)
+          # FIXME: This should not need to be empty, but currently there's a bug
+          #        in duct-tape which is making it unable to fetch the data from
+          #        the cache when the cache key includes filters.
+          #
+          # https://github.com/microsoft/graphitation/issues/296
           @connection(key: "TodosList_todos", filters: ["orderBy"]) {
           edges {
             node {
