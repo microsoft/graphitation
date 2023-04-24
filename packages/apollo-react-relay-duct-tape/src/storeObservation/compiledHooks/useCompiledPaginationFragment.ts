@@ -160,6 +160,7 @@ function getValueAtSelectionPath(
 ): any {
   let object: Record<string, any> = data;
   selectionPath.forEach((field) => {
+    // object is null here when filters are specified.
     object = object[field];
     invariant(object, "Expected path to connection in response to exist");
   });
