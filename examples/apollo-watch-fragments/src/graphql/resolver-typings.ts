@@ -56,6 +56,20 @@ export type Node = {
   id: Scalars['ID'];
 };
 
+export type OrderByInput = {
+  direction: OrderDirection;
+  field: OrderField;
+};
+
+export enum OrderDirection {
+  Asc = 'ASC',
+  Desc = 'DESC'
+}
+
+export enum OrderField {
+  IsCompleted = 'IS_COMPLETED'
+}
+
 export type PageInfo = {
   __typename?: 'PageInfo';
   endCursor?: Maybe<Scalars['String']>;
@@ -79,6 +93,7 @@ export type QueryNodeArgs = {
 export type QueryTodosArgs = {
   after?: Maybe<Scalars['String']>;
   first: Scalars['Int'];
+  orderBy?: Maybe<OrderByInput>;
 };
 
 export type Todo = Node & {
@@ -182,6 +197,9 @@ export type ResolversTypes = {
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
   Mutation: ResolverTypeWrapper<{}>;
   Node: ResolversTypes['Todo'] | ResolversTypes['TodosConnection'];
+  OrderByInput: ResolverTypeWrapper<Partial<OrderByInput>>;
+  OrderDirection: ResolverTypeWrapper<Partial<OrderDirection>>;
+  OrderField: ResolverTypeWrapper<Partial<OrderField>>;
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
@@ -201,6 +219,7 @@ export type ResolversParentTypes = {
   Int: Partial<Scalars['Int']>;
   Mutation: {};
   Node: ResolversParentTypes['Todo'] | ResolversParentTypes['TodosConnection'];
+  OrderByInput: Partial<OrderByInput>;
   PageInfo: Partial<PageInfo>;
   Query: {};
   String: Partial<Scalars['String']>;

@@ -87,7 +87,15 @@ const resolvers: Resolvers<Context> = {
         // loading indicator.
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
-      return connectionFromArray(context.db.getTodos(), args);
+
+      // undefined = Ignore orderBy
+      const orderByCompleted =
+        args.orderBy === undefined
+          ? undefined
+          : args.orderBy?.direction === "ASC"
+          ? true
+          : false;
+      return connectionFromArray(context.db.getTodos(orderByCompleted), args);
     },
   },
   Mutation: {

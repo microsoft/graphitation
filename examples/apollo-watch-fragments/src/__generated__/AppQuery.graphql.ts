@@ -37,7 +37,7 @@ fragment TodoListFooter_todosFragment on TodosConnection {
 }
 
 fragment TodoList_queryFragment on Query {
-  todos(first: 5, after: "") @connection(key: "TodosList_todos") {
+  todos(first: 5, after: "") @connection(key: "TodosList_todos", filter: ["orderBy"]) {
     edges {
       node {
         id
@@ -270,6 +270,23 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                         "kind": "StringValue",
                         "value": "TodosList_todos",
                         "block": false
+                      }
+                    },
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "filter"
+                      },
+                      "value": {
+                        "kind": "ListValue",
+                        "values": [
+                          {
+                            "kind": "StringValue",
+                            "value": "orderBy",
+                            "block": false
+                          }
+                        ]
                       }
                     }
                   ]

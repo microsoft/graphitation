@@ -3,8 +3,22 @@ interface Node {
 }
 
 type Query {
-  todos(first: Int!, after: String): TodosConnection!
+  todos(first: Int!, after: String, orderBy: OrderByInput): TodosConnection!
   node(id: ID!): Node
+}
+
+input OrderByInput {
+  field: OrderField!
+  direction: OrderDirection!
+}
+
+enum OrderDirection {
+  ASC
+  DESC
+}
+
+enum OrderField {
+  IS_COMPLETED
 }
 
 type PageInfo {

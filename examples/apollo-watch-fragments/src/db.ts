@@ -16,7 +16,20 @@ export class DB {
     });
   }
 
-  public getTodos(): ReadonlyArray<Readonly<TodoData>> {
+  public getTodos(
+    orderByCompleted: boolean | undefined
+  ): ReadonlyArray<Readonly<TodoData>> {
+    if (orderByCompleted !== undefined) {
+      return [...this.todos].sort((a, b) => {
+        if (a.isCompleted && b.isCompleted) {
+          return 0;
+        } else if (a.isCompleted && !b.isCompleted) {
+          return orderByCompleted ? 1 : -1;
+        } else {
+          return orderByCompleted ? -1 : 1;
+        }
+      });
+    }
     return this.todos;
   }
 

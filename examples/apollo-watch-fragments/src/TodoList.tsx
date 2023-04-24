@@ -18,6 +18,7 @@ const TodoList: React.FC<{ query: TodoList_queryFragment$key }> = ({
     hasNext,
     loadNext,
     isLoadingNext,
+    refetch,
   } = usePaginationFragment(
     graphql`
       fragment TodoList_queryFragment on Query
@@ -25,9 +26,10 @@ const TodoList: React.FC<{ query: TodoList_queryFragment$key }> = ({
       @argumentDefinitions(
         count: { type: "Int!", defaultValue: 5 }
         after: { type: "String!", defaultValue: "" }
+        orderBy: { type: "OrderByInput" }
       ) {
-        todos(first: $count, after: $after)
-          @connection(key: "TodosList_todos") {
+        todos(first: $count, after: $after, orderBy: $orderBy)
+          @connection(key: "TodosList_todos", filters: ["orderBy"]) {
           edges {
             node {
               id
@@ -45,6 +47,25 @@ const TodoList: React.FC<{ query: TodoList_queryFragment$key }> = ({
   /* <!-- List items should get the class `editing` when editing and `completed` when marked as completed --> */
   return (
     <ul className="todo-list">
+      <input
+        type="submit"
+        value="Refetch orderByComplete ASC"
+        onClick={() =>
+          refetch({ orderBy: { field: "IS_COMPLETED", direction: "ASC" } })
+        }
+      />
+      <input
+        type="submit"
+        value="Refetch orderByComplete DESC"
+        onClick={() =>
+          refetch({ orderBy: { field: "IS_COMPLETED", direction: "DESC" } })
+        }
+      />
+      <input
+        type="submit"
+        value="Refetch no filter"
+        onClick={() => refetch({})}
+      />
       {query.todos.edges.map(({ node: todo }) => {
         return (
           <li key={todo.id} className={todo.isCompleted ? "completed" : ""}>
