@@ -53,6 +53,11 @@ function main() {
         type: "string",
         array: true,
       },
+      include: {
+        demandOption: false,
+        type: "string",
+        array: true,
+      },
       schema: {
         demandOption: true,
         type: "string",
@@ -102,7 +107,7 @@ function main() {
     ...argv,
     language,
     extensions: ["ts", "tsx"], // FIXME: Why is this not taken from the language plugin?
-    include: ["**"],
+    include: argv.include || ["**"],
     exclude: [
       "**/node_modules/**",
       "**/__mocks__/**",
