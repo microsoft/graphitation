@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "support context in duct tape hooks",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape",
-  "email": "52814187+ira-kaundal@users.noreply.github.com",
-  "dependentChangeType": "none"
-}
