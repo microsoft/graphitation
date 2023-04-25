@@ -2,6 +2,27 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Tue, 25 Apr 2023 23:09:54 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v1.0.1-alpha.7",
+      "version": "1.0.1-alpha.7",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "52814187+ira-kaundal@users.noreply.github.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "67801ab7be9be56a0c6b8e058e2800efddc80313",
+            "comment": "support context in duct tape hooks"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "comment": "Bump @graphitation/apollo-mock-client to v0.10.6-0",
+            "commit": "549a89a5ac680e210689ab564e135b4ed5b71c6c"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 08 Jul 2022 14:17:12 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v1.0.1-alpha.6",
       "version": "1.0.1-alpha.6",
