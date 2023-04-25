@@ -36,12 +36,14 @@ import { useOverridenOrDefaultApolloClient } from "./useOverridenOrDefaultApollo
  * @param variables Object containing the variable values to fetch the query. These variables need to match GraphQL
  *                  variables declared inside the query.
  * @param options Options passed on to the underlying implementation.
+ * @param options.context The query context to pass along the apollo link chain. Should be avoided when possible as
+ *                        it will not be compatible with Relay APIs.
  * @returns An object with either an error, the result data, or neither while loading.
  */
 export function useLazyLoadQuery<TQuery extends OperationType>(
   query: GraphQLTaggedNode,
   variables: TQuery["variables"],
-  options?: { fetchPolicy?: FetchPolicy }
+  options?: { fetchPolicy?: FetchPolicy; context?: TQuery["context"] }
 ): { error?: Error; data?: TQuery["response"] } {
   const apolloOptions = options && {
     ...options,
@@ -159,6 +161,10 @@ interface GraphQLSubscriptionConfig<
   subscription: GraphQLTaggedNode;
   variables: TSubscriptionPayload["variables"];
   /**
+   * Should be avoided when possible as it will not be compatible with Relay APIs.
+   */
+  context?: TSubscriptionPayload["context"];
+  /**
    * Should response be nullable?
    */
   onNext?: (response: TSubscriptionPayload["response"]) => void;
@@ -180,6 +186,7 @@ export function useSubscription<TSubscriptionPayload extends OperationType>(
     {
       client,
       variables: config.variables,
+      context: config.context,
       onSubscriptionData: ({ subscriptionData }) => {
         // Supposedly this never gets triggered for an error by design:
         // https://github.com/apollographql/react-apollo/issues/3177#issuecomment-506758144
@@ -206,6 +213,10 @@ export function useSubscription<TSubscriptionPayload extends OperationType>(
 
 interface IMutationCommitterOptions<TMutationPayload extends OperationType> {
   variables: TMutationPayload["variables"];
+  /**
+   * Should be avoided when possible as it will not be compatible with Relay APIs.
+   */
+  context?: TMutationPayload["context"];
   optimisticResponse?: Partial<TMutationPayload["response"]> | null;
 }
 
@@ -233,6 +244,7 @@ export function useMutation<TMutationPayload extends OperationType>(
     async (options: IMutationCommitterOptions<TMutationPayload>) => {
       const apolloResult = await apolloUpdater({
         variables: options.variables || {},
+        context: options.context,
         optimisticResponse: options.optimisticResponse,
       });
       if (apolloResult.errors) {

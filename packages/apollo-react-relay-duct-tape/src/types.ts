@@ -4,8 +4,13 @@ export interface Variables {
   [name: string]: any;
 }
 
+export interface Context {
+  [name: string]: any;
+}
+
 export interface OperationType {
   readonly variables: Variables;
+  readonly context?: Context;
   readonly response: unknown;
   readonly rawResponse?: unknown;
 }

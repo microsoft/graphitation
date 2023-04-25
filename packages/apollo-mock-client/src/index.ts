@@ -20,6 +20,7 @@ import {
 export interface RequestDescriptor<Node = DocumentNode> {
   readonly node: Node;
   readonly variables: Record<string, any>;
+  readonly context?: Record<string, any>;
 }
 
 export interface OperationDescriptor<
@@ -167,6 +168,7 @@ class MockLink extends ApolloLink {
           request: {
             node: operation.query,
             variables: operation.variables || {},
+            context: operation.getContext(),
           },
         },
         observer

@@ -1,0 +1,7 @@
+{
+  "type": "prerelease",
+  "comment": "add support for context in request",
+  "packageName": "@graphitation/apollo-mock-client",
+  "email": "52814187+ira-kaundal@users.noreply.github.com",
+  "dependentChangeType": "none"
+}
