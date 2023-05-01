@@ -26,7 +26,7 @@ exports[`compiledHooks with default Apollo Client type-policies useCompiledLazyL
 Object {
   "__typename": "User",
   "avatarUrl({\\"size\\":21})": "<mock-value-for-field-\\"avatarUrl\\">",
-  "conversations:compiledHooks_user_conversations": Object {
+  "conversations:compiledHooks_user_conversations({\\"orderBy\\":\\"ARRIVAL_TIME\\"})": Object {
     "__typename": "ConversationsConnection",
     "edges": Array [
       Object {
@@ -94,7 +94,7 @@ Object {
   "User:42": Object {
     "__typename": "User",
     "avatarUrl({\\"size\\":21})": "<mock-value-for-field-\\"avatarUrl\\">",
-    "conversations:compiledHooks_user_conversations": Object {
+    "conversations:compiledHooks_user_conversations({\\"orderBy\\":\\"ARRIVAL_TIME\\"})": Object {
       "__typename": "ConversationsConnection",
       "edges": Array [
         Object {
@@ -166,7 +166,7 @@ exports[`compiledHooks with strict Global Object Id spec type-policies useCompil
 Object {
   "__typename": "User",
   "avatarUrl({\\"size\\":21})": "<mock-value-for-field-\\"avatarUrl\\">",
-  "conversations:compiledHooks_user_conversations": Object {
+  "conversations:compiledHooks_user_conversations({\\"orderBy\\":\\"ARRIVAL_TIME\\"})": Object {
     "__typename": "ConversationsConnection",
     "edges": Array [
       Object {
@@ -194,7 +194,7 @@ Object {
   "42": Object {
     "__typename": "User",
     "avatarUrl({\\"size\\":21})": "<mock-value-for-field-\\"avatarUrl\\">",
-    "conversations:compiledHooks_user_conversations": Object {
+    "conversations:compiledHooks_user_conversations({\\"orderBy\\":\\"ARRIVAL_TIME\\"})": Object {
       "__typename": "ConversationsConnection",
       "edges": Array [
         Object {

@@ -56,7 +56,8 @@ fragment compiledHooks_ForwardPaginationFragment_4o723C on User {
   conversations(
     first: $conversationsForwardCount
     after: $conversationsAfterCursor
-  ) @connection(key: "compiledHooks_user_conversations") {
+    orderBy: ARRIVAL_TIME
+  ) @connection(key: "compiledHooks_user_conversations", filter: ["orderBy"]) {
     edges {
       node {
         title
@@ -93,7 +94,8 @@ fragment compiledHooks_ForwardPaginationFragment_4o723C on User {
   conversations(
     first: $conversationsForwardCount
     after: $conversationsAfterCursor
-  ) @connection(key: "compiledHooks_user_conversations") {
+    orderBy: ARRIVAL_TIME
+  ) @connection(key: "compiledHooks_user_conversations", filter: ["orderBy"]) {
     edges {
       node {
         title
@@ -560,6 +562,17 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                       "value": "conversationsAfterCursor"
                     }
                   }
+                },
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "orderBy"
+                  },
+                  "value": {
+                    "kind": "EnumValue",
+                    "value": "ARRIVAL_TIME"
+                  }
                 }
               ],
               "directives": [
@@ -580,6 +593,23 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                         "kind": "StringValue",
                         "value": "compiledHooks_user_conversations",
                         "block": false
+                      }
+                    },
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "filter"
+                      },
+                      "value": {
+                        "kind": "ListValue",
+                        "values": [
+                          {
+                            "kind": "StringValue",
+                            "value": "orderBy",
+                            "block": false
+                          }
+                        ]
                       }
                     }
                   ]
@@ -995,6 +1025,17 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                       "value": "conversationsAfterCursor"
                     }
                   }
+                },
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "orderBy"
+                  },
+                  "value": {
+                    "kind": "EnumValue",
+                    "value": "ARRIVAL_TIME"
+                  }
                 }
               ],
               "directives": [
@@ -1015,6 +1056,23 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                         "kind": "StringValue",
                         "value": "compiledHooks_user_conversations",
                         "block": false
+                      }
+                    },
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "filter"
+                      },
+                      "value": {
+                        "kind": "ListValue",
+                        "values": [
+                          {
+                            "kind": "StringValue",
+                            "value": "orderBy",
+                            "block": false
+                          }
+                        ]
                       }
                     }
                   ]

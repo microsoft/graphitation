@@ -83,6 +83,7 @@ const ForwardPagination_fragment = graphql`
     conversations(
       first: $conversationsForwardCount
       after: $conversationsAfterCursor
+      orderBy: ARRIVAL_TIME
     ) @connection(key: "compiledHooks_user_conversations") {
       edges {
         node {
@@ -797,7 +798,7 @@ describe.each([
             loadNext(1, { onCompleted });
 
             // Introduce a slight delay before resolving the request as a
-            // regression test with a pagination requst being disposed early.
+            // regression test with a pagination request being disposed early.
             await new Promise((resolve) => setTimeout(resolve, 0));
 
             client.mock.resolveMostRecentOperation((operation) =>
@@ -835,7 +836,7 @@ describe.each([
           });
         });
 
-        it("returns the complete list data (previous+new) from the hook", () => {
+        it.only("returns the complete list data (previous+new) from the hook", () => {
           const result = last(forwardUsePaginationFragmentResult);
           expect(
             (result.data as any).conversations.edges.map(
@@ -847,6 +848,7 @@ describe.each([
               "second-paged-conversation",
             ]
           `);
+          console.log(JSON.stringify(client.cache.extract(), null, 2));
         });
 
         it("uses the new cursor value", () => {

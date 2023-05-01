@@ -18,13 +18,21 @@ type Subscription {
   userNameChanged(id: ID!): User!
 }
 
+enum ConversationsSortOrder {
+  ARRIVAL_TIME
+}
+
 type User implements Node {
   id: ID!
   name: String!
   petName: String!
   avatarUrl(size: Int!): String!
   hasFriends: Boolean!
-  conversations(first: Int!, after: String!): ConversationsConnection!
+  conversations(
+    first: Int!
+    after: String!
+    orderBy: ConversationsSortOrder
+  ): ConversationsConnection!
   contacts(last: Int!, before: String!): ContactsConnection!
 }
 
