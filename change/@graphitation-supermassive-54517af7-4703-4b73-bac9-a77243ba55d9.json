@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "[SUPERMASSIVE] fix invalid behavior in execution hooks error handling",
+  "packageName": "@graphitation/supermassive",
+  "email": "sergeystoyan@microsoft.com",
+  "dependentChangeType": "patch"
+}
