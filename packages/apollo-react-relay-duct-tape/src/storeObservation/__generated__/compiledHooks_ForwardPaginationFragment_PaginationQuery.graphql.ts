@@ -4,10 +4,12 @@
 ;
 
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
+export type ConversationsSortOrder = "ARRIVAL_TIME" | "DEPARTURE_TIME";
 export type compiledHooks_ForwardPaginationFragment_PaginationQueryVariables = {
     avatarSize: number;
     conversationsAfterCursor: string;
     conversationsForwardCount: number;
+    conversationsOrderBy?: ConversationsSortOrder | null | undefined;
     messagesBackwardCount: number;
     messagesBeforeCursor: string;
     id: string;
@@ -24,10 +26,10 @@ export type compiledHooks_ForwardPaginationFragment_PaginationQuery = {
 
 
 /*
-query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String! = "", $conversationsForwardCount: Int! = 1, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $id: ID!) {
+query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String! = "", $conversationsForwardCount: Int! = 1, $conversationsOrderBy: ConversationsSortOrder = DEPARTURE_TIME, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $id: ID!) {
   node(id: $id) {
     __typename
-    ...compiledHooks_ForwardPaginationFragment_4o723C
+    ...compiledHooks_ForwardPaginationFragment_2Gx1yv
     id
   }
 }
@@ -50,13 +52,13 @@ fragment compiledHooks_BackwardPaginationFragment on Conversation {
   id
 }
 
-fragment compiledHooks_ForwardPaginationFragment_4o723C on User {
+fragment compiledHooks_ForwardPaginationFragment_2Gx1yv on User {
   petName
   avatarUrl(size: $avatarSize)
   conversations(
     first: $conversationsForwardCount
     after: $conversationsAfterCursor
-    orderBy: ARRIVAL_TIME
+    orderBy: $conversationsOrderBy
   ) @connection(key: "compiledHooks_user_conversations", filter: ["orderBy"]) {
     edges {
       node {
@@ -77,10 +79,10 @@ fragment compiledHooks_ForwardPaginationFragment_4o723C on User {
 */
 
 /*
-query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String! = "", $conversationsForwardCount: Int! = 1, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $id: ID!) {
+query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String! = "", $conversationsForwardCount: Int! = 1, $conversationsOrderBy: ConversationsSortOrder = DEPARTURE_TIME, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $id: ID!) {
   node(id: $id) {
     __typename
-    ...compiledHooks_ForwardPaginationFragment_4o723C
+    ...compiledHooks_ForwardPaginationFragment_2Gx1yv
     id
     ... on Node {
       __fragments @client
@@ -88,13 +90,13 @@ query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!,
   }
 }
 
-fragment compiledHooks_ForwardPaginationFragment_4o723C on User {
+fragment compiledHooks_ForwardPaginationFragment_2Gx1yv on User {
   petName
   avatarUrl(size: $avatarSize)
   conversations(
     first: $conversationsForwardCount
     after: $conversationsAfterCursor
-    orderBy: ARRIVAL_TIME
+    orderBy: $conversationsOrderBy
   ) @connection(key: "compiledHooks_user_conversations", filter: ["orderBy"]) {
     edges {
       node {
@@ -203,6 +205,27 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               "kind": "Variable",
               "name": {
                 "kind": "Name",
+                "value": "conversationsOrderBy"
+              }
+            },
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ConversationsSortOrder"
+              }
+            },
+            "defaultValue": {
+              "kind": "EnumValue",
+              "value": "DEPARTURE_TIME"
+            }
+          },
+          {
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
                 "value": "messagesBackwardCount"
               }
             },
@@ -297,7 +320,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "kind": "FragmentSpread",
                     "name": {
                       "kind": "Name",
-                      "value": "compiledHooks_ForwardPaginationFragment_4o723C"
+                      "value": "compiledHooks_ForwardPaginationFragment_2Gx1yv"
                     }
                   },
                   {
@@ -486,7 +509,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
         "kind": "FragmentDefinition",
         "name": {
           "kind": "Name",
-          "value": "compiledHooks_ForwardPaginationFragment_4o723C"
+          "value": "compiledHooks_ForwardPaginationFragment_2Gx1yv"
         },
         "typeCondition": {
           "kind": "NamedType",
@@ -570,8 +593,11 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "value": "orderBy"
                   },
                   "value": {
-                    "kind": "EnumValue",
-                    "value": "ARRIVAL_TIME"
+                    "kind": "Variable",
+                    "name": {
+                      "kind": "Name",
+                      "value": "conversationsOrderBy"
+                    }
                   }
                 }
               ],
@@ -804,6 +830,27 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
               "kind": "Variable",
               "name": {
                 "kind": "Name",
+                "value": "conversationsOrderBy"
+              }
+            },
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ConversationsSortOrder"
+              }
+            },
+            "defaultValue": {
+              "kind": "EnumValue",
+              "value": "DEPARTURE_TIME"
+            }
+          },
+          {
+            "kind": "VariableDefinition",
+            "variable": {
+              "kind": "Variable",
+              "name": {
+                "kind": "Name",
                 "value": "messagesBackwardCount"
               }
             },
@@ -898,7 +945,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "kind": "FragmentSpread",
                     "name": {
                       "kind": "Name",
-                      "value": "compiledHooks_ForwardPaginationFragment_4o723C"
+                      "value": "compiledHooks_ForwardPaginationFragment_2Gx1yv"
                     }
                   },
                   {
@@ -949,7 +996,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
         "kind": "FragmentDefinition",
         "name": {
           "kind": "Name",
-          "value": "compiledHooks_ForwardPaginationFragment_4o723C"
+          "value": "compiledHooks_ForwardPaginationFragment_2Gx1yv"
         },
         "typeCondition": {
           "kind": "NamedType",
@@ -1033,8 +1080,11 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                     "value": "orderBy"
                   },
                   "value": {
-                    "kind": "EnumValue",
-                    "value": "ARRIVAL_TIME"
+                    "kind": "Variable",
+                    "name": {
+                      "kind": "Name",
+                      "value": "conversationsOrderBy"
+                    }
                   }
                 }
               ],
@@ -1208,7 +1258,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
   "metadata": {
     "rootSelection": "node",
     "mainFragment": {
-      "name": "compiledHooks_ForwardPaginationFragment_4o723C",
+      "name": "compiledHooks_ForwardPaginationFragment_2Gx1yv",
       "typeCondition": "User"
     },
     "connection": {

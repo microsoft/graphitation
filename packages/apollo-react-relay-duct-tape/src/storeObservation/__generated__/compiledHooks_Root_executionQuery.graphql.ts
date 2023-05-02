@@ -61,7 +61,7 @@ fragment compiledHooks_ChildFragment on User {
 fragment compiledHooks_ForwardPaginationFragment on User {
   petName
   avatarUrl(size: $avatarSize)
-  conversations(first: 1, after: "", orderBy: ARRIVAL_TIME) @connection(key: "compiledHooks_user_conversations", filter: ["orderBy"]) {
+  conversations(first: 1, after: "", orderBy: DEPARTURE_TIME) @connection(key: "compiledHooks_user_conversations", filter: ["orderBy"]) {
     edges {
       node {
         title
@@ -561,7 +561,7 @@ export const documents: import("relay-compiler-language-graphitation").CompiledA
                   },
                   "value": {
                     "kind": "EnumValue",
-                    "value": "ARRIVAL_TIME"
+                    "value": "DEPARTURE_TIME"
                   }
                 }
               ],

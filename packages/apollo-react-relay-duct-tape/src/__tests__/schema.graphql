@@ -20,6 +20,7 @@ type Subscription {
 
 enum ConversationsSortOrder {
   ARRIVAL_TIME
+  DEPARTURE_TIME
 }
 
 type User implements Node {

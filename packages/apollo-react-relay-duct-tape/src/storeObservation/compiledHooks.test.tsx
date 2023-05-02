@@ -77,13 +77,17 @@ const ForwardPagination_fragment = graphql`
   @argumentDefinitions(
     conversationsForwardCount: { type: "Int!", defaultValue: 1 }
     conversationsAfterCursor: { type: "String!", defaultValue: "" }
+    conversationsOrderBy: {
+      type: "ConversationsSortOrder"
+      defaultValue: DEPARTURE_TIME
+    }
   ) {
     petName
     avatarUrl(size: $avatarSize)
     conversations(
       first: $conversationsForwardCount
       after: $conversationsAfterCursor
-      orderBy: ARRIVAL_TIME
+      orderBy: $conversationsOrderBy
     ) @connection(key: "compiledHooks_user_conversations") {
       edges {
         node {
@@ -871,6 +875,25 @@ describe.each([
         it("invokes the onComplete callback without error", () => {
           expect(onCompleted).toHaveBeenCalledWith(null);
         });
+
+        // it("lets refetch and then load more", () => {
+        //   act(() => {
+        //     const { loadNext, refetch } = last(
+        //       forwardUsePaginationFragmentResult
+        //     );
+        //     // Refetch with new arguments - expect first page to be returned
+        //     refetch({ conversationsOrderBy: "DEPARTURE_TIME" });
+        //     // load next page with arguments from above^
+        //     loadNext(123);
+        //   });
+
+        //   const operation = client.mock.getMostRecentOperation();
+        //   expect(operation.request.variables).toMatchObject({
+        //     conversationsForwardCount: 123,
+        //     conversationsAfterCursor: "first-page-end-cursor",
+        //     conversationsOrderBy: "DEPARTURE_TIME",
+        //   });
+        // });
       });
     });
 
