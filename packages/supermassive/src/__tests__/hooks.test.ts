@@ -13,13 +13,13 @@ import {
   ExecutionHooks,
 } from "../hooks/types";
 import { pathToArray } from "../jsutils/Path";
-import { inspect } from "../jsutils/inspect";
 
 interface TestCase {
   name: string;
   query: string;
   resolvers: Resolvers;
   expectedHookCalls: string[];
+  resultHasErrors: boolean;
 }
 
 interface HookExceptionTestCase {
@@ -144,6 +144,7 @@ describe.each([
           "AFC|person.name|Luke Skywalker|undefined",
           "AFC|person|[object]|undefined",
         ],
+        resultHasErrors: false,
       },
       {
         name: "succeeded async resolver",
@@ -169,6 +170,7 @@ describe.each([
           "AFC|person.name|Luke Skywalker|undefined",
           "AFC|person|[object]|undefined",
         ],
+        resultHasErrors: false,
       },
       {
         name: "error in sync resolver for nullable field",
@@ -194,6 +196,7 @@ describe.each([
           "AFC|film.producer|undefined|Resolver error",
           "AFC|film|[object]|undefined",
         ],
+        resultHasErrors: true,
       },
       {
         name: "error in async resolver for nullable field",
@@ -219,6 +222,7 @@ describe.each([
           "AFC|film.producer|undefined|Resolver error",
           "AFC|film|[object]|undefined",
         ],
+        resultHasErrors: true,
       },
       {
         name: "error in sync resolver for non-nullable field",
@@ -244,6 +248,7 @@ describe.each([
           "AFC|film.title|undefined|Resolver error",
           "AFC|film|undefined|Resolver error",
         ],
+        resultHasErrors: true,
       },
       {
         name: "error in async resolver for non-nullable field",
@@ -269,6 +274,7 @@ describe.each([
           "AFC|film.title|undefined|Resolver error",
           "AFC|film|undefined|Resolver error",
         ],
+        resultHasErrors: true,
       },
       {
         name: "do not invoke hooks for the field with default resolver",
@@ -284,21 +290,23 @@ describe.each([
           "AFR|film|[object]|undefined",
           "AFC|film|[object]|undefined",
         ],
+        resultHasErrors: false,
       },
     ];
 
     it.each(testCases)(
       "$name",
-      async ({ query, resolvers, expectedHookCalls }) => {
-        expect.assertions(2);
+      async ({ query, resolvers, expectedHookCalls, resultHasErrors }) => {
+        expect.assertions(3);
         const document = parse(query);
 
-        await execute(document, resolvers, hooks);
+        const result = await execute(document, resolvers, hooks);
 
         // for async resolvers order of resolving isn't strict,
         // so just verify whether corresponding hook calls happened
         expect(hookCalls).toHaveLength(expectedHookCalls.length);
         expect(hookCalls).toEqual(expect.arrayContaining(expectedHookCalls));
+        expect((result.errors?.length ?? 0) > 0).toBe(resultHasErrors);
       },
     );
   });

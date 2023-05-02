@@ -989,12 +989,14 @@ function invokeBeforeFieldResolveHook(
         context: exeContext.contextValue,
       }),
     (_, rawError) => {
-      const error = toGraphQLError(
-        rawError,
-        resolveInfo.path,
-        "Unexpected error in beforeFieldResolve hook",
-      );
-      exeContext.errors.push(error);
+      if (rawError) {
+        const error = toGraphQLError(
+          rawError,
+          resolveInfo.path,
+          "Unexpected error in beforeFieldResolve hook",
+        );
+        exeContext.errors.push(error);
+      }
     },
   );
 }
@@ -1018,12 +1020,14 @@ function invokeAfterFieldResolveHook(
         error,
       }),
     (_, rawError) => {
-      const error = toGraphQLError(
-        rawError,
-        resolveInfo.path,
-        "Unexpected error in afterFieldResolve hook",
-      );
-      exeContext.errors.push(error);
+      if (rawError) {
+        const error = toGraphQLError(
+          rawError,
+          resolveInfo.path,
+          "Unexpected error in afterFieldResolve hook",
+        );
+        exeContext.errors.push(error);
+      }
     },
   );
 }
@@ -1047,12 +1051,14 @@ function invokeAfterFieldCompleteHook(
         error,
       }),
     (_, rawError) => {
-      const error = toGraphQLError(
-        rawError,
-        resolveInfo.path,
-        "Unexpected error in afterFieldComplete hook",
-      );
-      exeContext.errors.push(error);
+      if (rawError) {
+        const error = toGraphQLError(
+          rawError,
+          resolveInfo.path,
+          "Unexpected error in afterFieldComplete hook",
+        );
+        exeContext.errors.push(error);
+      }
     },
   );
 }
