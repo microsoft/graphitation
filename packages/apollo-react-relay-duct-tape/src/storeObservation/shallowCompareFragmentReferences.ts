@@ -63,7 +63,7 @@ export function shallowCompareFragmentReferences<K extends string>(
 function idsEqual(objA: { id?: any }, objB: { id?: any }) {
   invariant(
     objA.id && objB.id,
-    "Expected both fragment reference objects to have an id field"
+    "Expected both fragment reference objects to have an id field",
   );
   return objA.id === objB.id;
 }

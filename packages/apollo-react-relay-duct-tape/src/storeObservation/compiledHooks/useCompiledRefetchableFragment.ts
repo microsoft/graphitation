@@ -15,7 +15,7 @@ export interface Disposable {
 
 export type RefetchFn<Variables extends {} = {}> = (
   variables: Partial<Variables>,
-  options?: RefetchOptions
+  options?: RefetchOptions,
 ) => Disposable;
 
 export interface RefetchOptions {
@@ -33,7 +33,7 @@ export interface PrivateRefetchOptions
    */
   UNSTABLE_onCompletedWithData?: (
     error: Error | null,
-    data: Record<string, any> | null
+    data: Record<string, any> | null,
   ) => void;
 
   fetchPolicy?: FetchPolicy | "no-cache";
@@ -41,20 +41,20 @@ export interface PrivateRefetchOptions
 
 export function useCompiledRefetchableFragment(
   documents: CompiledArtefactModule,
-  fragmentReference: FragmentReference
+  fragmentReference: FragmentReference,
 ): [data: {}, refetch: RefetchFn] {
   const { executionQueryDocument, metadata } = documents;
   invariant(
     metadata && metadata.mainFragment,
     "useRefetchableFragment(): Expected metadata to have been extracted from " +
-      "the fragment. Did you forget to invoke the compiler?"
+      "the fragment. Did you forget to invoke the compiler?",
   );
   invariant(
     executionQueryDocument,
     "useRefetchableFragment(): Expected fragment `%s` to be refetchable when " +
       "using `useRefetchableFragment`. Did you forget to add a @refetchable " +
       "directive to the fragment?",
-    metadata.mainFragment.name
+    metadata.mainFragment.name,
   );
 
   const client = useOverridenOrDefaultApolloClient();
@@ -67,7 +67,7 @@ export function useCompiledRefetchableFragment(
   // ...this gets invoked again with updated variables.
   const data = useCompiledFragment(
     documents,
-    fragmentReferenceWithOwnVariables
+    fragmentReferenceWithOwnVariables,
   );
 
   const disposable = useRef<Disposable>();
@@ -78,7 +78,7 @@ export function useCompiledRefetchableFragment(
         disposable.current = undefined;
       }
     },
-    [] // On unmount
+    [], // On unmount
   );
 
   const refetch = useCallback<RefetchFn>(
@@ -93,58 +93,57 @@ export function useCompiledRefetchableFragment(
         query: executionQueryDocument,
         variables,
       });
-      let subscription:
-        | ZenObservable.Subscription
-        | undefined = observable.subscribe(
-        ({ data, error }) => {
-          // Be sure not to keep a retain cycle, so cleanup the reference first thing.
-          subscription!.unsubscribe();
-          subscription = undefined;
-          disposable.current = undefined;
+      let subscription: ZenObservable.Subscription | undefined =
+        observable.subscribe(
+          ({ data, error }) => {
+            // Be sure not to keep a retain cycle, so cleanup the reference first thing.
+            subscription!.unsubscribe();
+            subscription = undefined;
+            disposable.current = undefined;
 
-          unstable_batchedUpdates(() => {
-            if (options?.UNSTABLE_onCompletedWithData) {
-              options.UNSTABLE_onCompletedWithData(error || null, data);
-            } else {
-              options?.onCompleted?.(error || null);
-            }
-            if (!error) {
-              const { id: _, ...variablesToPropagate } = variables;
-              const nextVariables = {
-                ...fragmentReference.__fragments,
-                ...variablesToPropagate,
-              };
-              // No need to trigger an update to propagate new variables if they don't actually change.
-              if (
-                !isEqual(
-                  fragmentReferenceWithOwnVariables.__fragments,
-                  nextVariables
-                )
-              ) {
-                const nextFragmentReference: FragmentReference = {
-                  __fragments: nextVariables,
-                };
-                // Don't add an empty key if this is a fragment on the Query type.
-                if (fragmentReference.id !== undefined) {
-                  nextFragmentReference.id = fragmentReference.id;
-                }
-                setFragmentReferenceWithOwnVariables(nextFragmentReference);
+            unstable_batchedUpdates(() => {
+              if (options?.UNSTABLE_onCompletedWithData) {
+                options.UNSTABLE_onCompletedWithData(error || null, data);
+              } else {
+                options?.onCompleted?.(error || null);
               }
-            }
-          });
-        },
-        (error) => {
-          // Be sure not to keep a retain cycle
-          subscription!.unsubscribe();
-          subscription = undefined;
+              if (!error) {
+                const { id: _, ...variablesToPropagate } = variables;
+                const nextVariables = {
+                  ...fragmentReference.__fragments,
+                  ...variablesToPropagate,
+                };
+                // No need to trigger an update to propagate new variables if they don't actually change.
+                if (
+                  !isEqual(
+                    fragmentReferenceWithOwnVariables.__fragments,
+                    nextVariables,
+                  )
+                ) {
+                  const nextFragmentReference: FragmentReference = {
+                    __fragments: nextVariables,
+                  };
+                  // Don't add an empty key if this is a fragment on the Query type.
+                  if (fragmentReference.id !== undefined) {
+                    nextFragmentReference.id = fragmentReference.id;
+                  }
+                  setFragmentReferenceWithOwnVariables(nextFragmentReference);
+                }
+              }
+            });
+          },
+          (error) => {
+            // Be sure not to keep a retain cycle
+            subscription!.unsubscribe();
+            subscription = undefined;
 
-          if (options?.UNSTABLE_onCompletedWithData) {
-            options.UNSTABLE_onCompletedWithData(error, null);
-          } else {
-            options?.onCompleted?.(error);
-          }
-        }
-      );
+            if (options?.UNSTABLE_onCompletedWithData) {
+              options.UNSTABLE_onCompletedWithData(error, null);
+            } else {
+              options?.onCompleted?.(error);
+            }
+          },
+        );
       disposable.current = { dispose: () => subscription?.unsubscribe() };
       return disposable.current;
     },
@@ -153,7 +152,7 @@ export function useCompiledRefetchableFragment(
       executionQueryDocument,
       fragmentReference.id,
       fragmentReference.__fragments,
-    ]
+    ],
   );
 
   return [data, refetch];

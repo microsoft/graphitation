@@ -29,10 +29,11 @@ function generateTypePolicies(fieldReadFn: FieldReadFunction): TypePolicies {
   };
 }
 
-export const typePoliciesWithDefaultApolloClientStoreKeys = generateTypePolicies(
-  nodeFromCacheFieldPolicyWithDefaultApolloClientStoreKeys
-);
+export const typePoliciesWithDefaultApolloClientStoreKeys =
+  generateTypePolicies(
+    nodeFromCacheFieldPolicyWithDefaultApolloClientStoreKeys,
+  );
 
 export const typePoliciesWithGlobalObjectIdStoreKeys = generateTypePolicies(
-  nodeFromCacheFieldPolicyWithGlobalObjectIdStoreKeys
+  nodeFromCacheFieldPolicyWithGlobalObjectIdStoreKeys,
 );

@@ -13,18 +13,18 @@ import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultAp
 
 export function useCompiledFragment(
   documents: CompiledArtefactModule,
-  fragmentReference: FragmentReference
+  fragmentReference: FragmentReference,
 ): {} {
   invariant(
     fragmentReference,
     "useFragment(): Expected metadata to have been extracted from " +
-      "the fragment. Did you forget to invoke the compiler?"
+      "the fragment. Did you forget to invoke the compiler?",
   );
   const { watchQueryDocument, metadata } = documents;
   invariant(
     watchQueryDocument,
     "useFragment(): Expected a `watchQueryDocument` to have been " +
-      "extracted. Did you forget to invoke the compiler?"
+      "extracted. Did you forget to invoke the compiler?",
   );
 
   const client = useOverridenOrDefaultApolloClient();
@@ -42,7 +42,7 @@ export function useCompiledFragment(
           ...fragmentReference.__fragments,
         },
       }),
-    [client, fragmentReference.id, fragmentReference.__fragments]
+    [client, fragmentReference.id, fragmentReference.__fragments],
   );
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export function useCompiledFragment(
       },
       (error) => {
         console.log(error);
-      }
+      },
     );
     return () => subscription.unsubscribe();
   }, [observableQuery]);
@@ -70,7 +70,7 @@ export function useCompiledFragment(
   }
   invariant(
     data,
-    "useFragment(): Expected Apollo to respond with previously seeded data of the execution query document"
+    "useFragment(): Expected Apollo to respond with previously seeded data of the execution query document",
   );
   return data;
 }

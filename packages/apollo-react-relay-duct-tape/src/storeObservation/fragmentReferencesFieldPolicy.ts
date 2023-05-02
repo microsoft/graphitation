@@ -2,7 +2,7 @@ import { FieldReadFunction } from "@apollo/client";
 
 export const fragmentReferencesFieldPolicy: FieldReadFunction = (
   _existingCacheData,
-  { variables }
+  { variables },
 ) => {
   return !variables
     ? null

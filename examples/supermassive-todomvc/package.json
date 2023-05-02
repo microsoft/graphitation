@@ -5,7 +5,7 @@
   "version": "1.0.1-0",
   "scripts": {
     "start": "concurrently 'yarn relay --watch' 'yarn serve --progress --color --mode=development'",
-    "build": "webpack --mode production --config webpack.config.ts",
+    "build": "",
     "serve": "webpack serve --config webpack.config.ts",
     "extract-schema": "ts-node --project ./tsconfig-cli.json ../../packages/cli/bin/supermassive.js extract-schema ./src/schema/typeDefs.graphql",
     "generate:interfaces": "ts-node --project ./tsconfig-cli.json ../../packages/cli/bin/supermassive.js generate-interfaces ./src/schema/typeDefs.graphql",

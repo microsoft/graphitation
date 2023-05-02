@@ -45,7 +45,7 @@ describe(retainConnectionDirectiveTransform, () => {
 
     expect(transform(text)).toMatchInlineSnapshot(`
       "fragment SomeConnectionFragment on User {
-        comments(first: $commentCount, after: $commentCursor) @connection(key: \\"SomeUser_comments\\", filters: [\\"foo\\"]) {
+        comments(first: $commentCount, after: $commentCursor) @connection(key: "SomeUser_comments", filters: ["foo"]) {
           edges {
             node {
               canViewerComment
@@ -53,7 +53,7 @@ describe(retainConnectionDirectiveTransform, () => {
           }
         }
       }
-      
+
       fragment SomeOtherFragment on User {
         comments {
           pageInfo {

@@ -16,10 +16,10 @@ import { retainConnectionDirectiveTransform } from "./compilerTransforms/retainC
 function wrapTransform(
   transformName: string,
   transforms: IRTransform[],
-  wrapperTransform: (wrappedTransform: IRTransform) => IRTransform
+  wrapperTransform: (wrappedTransform: IRTransform) => IRTransform,
 ) {
   const transformIndex = transforms.findIndex(
-    (transform) => transform.name === transformName
+    (transform) => transform.name === transformName,
   );
   const wrappedTransform = transforms[transformIndex];
   transforms[transformIndex] = wrapperTransform(wrappedTransform);
@@ -31,16 +31,16 @@ IRTransforms.commonTransforms.unshift(enableNodeWatchQueryTransform);
 wrapTransform(
   "filterDirectivesTransform",
   IRTransforms.printTransforms,
-  retainConnectionDirectiveTransform
+  retainConnectionDirectiveTransform,
 );
 wrapTransform(
   "connectionTransform",
   IRTransforms.commonTransforms,
-  emitApolloClientConnectionTransform
+  emitApolloClientConnectionTransform,
 );
 
-function main() {
-  const argv = yargs
+async function main() {
+  const argv = await yargs
     .scriptName("nova-graphql-compiler")
     .options({
       src: {

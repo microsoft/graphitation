@@ -16,7 +16,7 @@ import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultAp
 
 export type PaginationFn = (
   count: number,
-  options?: RefetchOptions
+  options?: RefetchOptions,
 ) => Disposable;
 
 interface PaginationParams {
@@ -50,15 +50,15 @@ function useLoadMore({
     (countValue, options) => {
       invariant(
         countVariable,
-        "usePaginationFragment(): Expected a count variable to exist"
+        "usePaginationFragment(): Expected a count variable to exist",
       );
       invariant(
         cursorVariable,
-        "usePaginationFragment(): Expected a cursor variable to exist"
+        "usePaginationFragment(): Expected a cursor variable to exist",
       );
       invariant(
         cursorValue,
-        "usePaginationFragment(): Expected a cursor value to exist"
+        "usePaginationFragment(): Expected a cursor value to exist",
       );
       const previousVariables = {
         ...fragmentReference.__fragments,
@@ -79,7 +79,7 @@ function useLoadMore({
           if (!error) {
             invariant(
               data,
-              "usePaginationFragment(): Expected to have response data"
+              "usePaginationFragment(): Expected to have response data",
             );
             const newData = metadata.rootSelection
               ? data[metadata.rootSelection]
@@ -87,7 +87,7 @@ function useLoadMore({
             const mainFragment = metadata.mainFragment;
             invariant(
               mainFragment,
-              "usePaginationFragment(): Expected mainFragment metadata"
+              "usePaginationFragment(): Expected mainFragment metadata",
             );
             const cacheSelector: DataProxy.Fragment<any, any> = {
               id: cache.identify({
@@ -100,7 +100,7 @@ function useLoadMore({
               fragment: {
                 kind: "Document",
                 definitions: executionQueryDocument.definitions.filter(
-                  (def) => def.kind === "FragmentDefinition"
+                  (def) => def.kind === "FragmentDefinition",
                 ),
               },
             };
@@ -116,7 +116,7 @@ function useLoadMore({
               connectionSelectionPath,
               newData,
               existingData,
-              updater
+              updater,
             );
             cache.writeFragment({
               ...cacheSelector,
@@ -133,7 +133,7 @@ function useLoadMore({
       //       call in a batchedUpdates callback.
       const disposable = refetch(
         newVariables,
-        refetchOptions as RefetchOptions
+        refetchOptions as RefetchOptions,
       );
       setIsLoadingMore(true);
       return disposable;
@@ -149,14 +149,14 @@ function useLoadMore({
       cursorVariable,
       connectionSelectionPath,
       cursorValue,
-    ]
+    ],
   );
   return [loadPage, isLoadingMore];
 }
 
 function getValueAtSelectionPath(
   data: Record<string, any>,
-  selectionPath: string[]
+  selectionPath: string[],
 ): any {
   let object: Record<string, any> = data;
   selectionPath.forEach((field) => {
@@ -168,7 +168,7 @@ function getValueAtSelectionPath(
 
 function getPageInfo(
   data: Record<string, any>,
-  selectionPath: string[]
+  selectionPath: string[],
 ): {
   startCursor?: string;
   endCursor?: string;
@@ -185,7 +185,7 @@ function mergeEdges(
   connectionPath: string[],
   destination: {},
   source: {},
-  updater: <T>(existing: T[], incoming: T[]) => T[]
+  updater: <T>(existing: T[], incoming: T[]) => T[],
 ) {
   const edgesPath = [...connectionPath, "edges"];
   const existingEdges = getValueAtSelectionPath(source, edgesPath);
@@ -200,7 +200,7 @@ function mergeEdges(
 
 export function useCompiledPaginationFragment(
   documents: CompiledArtefactModule,
-  fragmentReference: FragmentReference
+  fragmentReference: FragmentReference,
 ): {
   data: any;
   loadNext: PaginationFn;
@@ -215,14 +215,14 @@ export function useCompiledPaginationFragment(
   invariant(
     metadata && metadata.mainFragment,
     "usePaginationFragment(): Expected metadata to have been extracted from " +
-      "the fragment. Did you forget to invoke the compiler?"
+      "the fragment. Did you forget to invoke the compiler?",
   );
   invariant(
     executionQueryDocument,
     "usePaginationFragment(): Expected fragment `%s` to be refetchable when " +
       "using `usePaginationFragment`. Did you forget to add a @refetchable " +
       "directive to the fragment?",
-    metadata.mainFragment.name
+    metadata.mainFragment.name,
   );
   const connectionMetadata = metadata.connection;
   invariant(
@@ -230,11 +230,11 @@ export function useCompiledPaginationFragment(
     "usePaginationFragment: Expected fragment `%s` to include a " +
       "connection when using `usePaginationFragment`. Did you forget to add a @connection " +
       "directive to the connection field in the fragment?",
-    metadata.mainFragment.name
+    metadata.mainFragment.name,
   );
   const [data, refetch] = useCompiledRefetchableFragment(
     documents,
-    fragmentReference
+    fragmentReference,
   );
   const commonPaginationParams = {
     fragmentReference,

@@ -25,7 +25,7 @@ describe(enableNodeWatchQueryTransform, () => {
     `;
 
     expect(transform(text)).toMatchInlineSnapshot(`
-      "fragment SomeModule_onNodeTypeFragment on User @refetchable(queryName: \\"SomeModule_onNodeTypeWatchNodeQuery\\") {
+      "fragment SomeModule_onNodeTypeFragment on User @refetchable(queryName: "SomeModule_onNodeTypeWatchNodeQuery") {
         id
       }
       "
@@ -44,7 +44,7 @@ describe(enableNodeWatchQueryTransform, () => {
     `;
 
     expect(transform(text)).toMatchInlineSnapshot(`
-      "fragment SomeModule_onQueryTypeFragment on Query @refetchable(queryName: \\"SomeModule_onQueryTypeWatchNodeQuery\\") {
+      "fragment SomeModule_onQueryTypeFragment on Query @refetchable(queryName: "SomeModule_onQueryTypeWatchNodeQuery") {
         neverNode {
           ... on NonNode {
             id
