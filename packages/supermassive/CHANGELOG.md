@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Tue, 04 Apr 2023 10:29:16 GMT and should not be manually modified.
+This log was last generated on Tue, 02 May 2023 10:22:49 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.4.2
+
+Tue, 02 May 2023 10:22:49 GMT
+
+### Patches
+
+- [SUPERMASSIVE] fix invalid behavior in execution hooks error handling (sergeystoyan@microsoft.com)
 
 ## 2.4.0
 

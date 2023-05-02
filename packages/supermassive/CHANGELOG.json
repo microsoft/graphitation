@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Tue, 02 May 2023 10:22:49 GMT",
+      "tag": "@graphitation/supermassive_v2.4.2",
+      "version": "2.4.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "sergeystoyan@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "1f576280ae8a9affec1f9d0d574d5a8aa6c0578f",
+            "comment": "[SUPERMASSIVE] fix invalid behavior in execution hooks error handling"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 04 Apr 2023 10:29:16 GMT",
       "tag": "@graphitation/supermassive_v2.4.0",
       "version": "2.4.0",
