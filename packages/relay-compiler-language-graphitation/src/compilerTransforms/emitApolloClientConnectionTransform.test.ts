@@ -38,7 +38,7 @@ describe(emitApolloClientConnectionTransform, () => {
 
     expect(transform(text)).toMatchInlineSnapshot(`
       "fragment SomeConnectionFragment on User {
-        comments(first: $commentCount, after: $commentCursor) @connection(key: \\"SomeUser_comments\\", filter: [\\"foo\\"]) {
+        comments(first: $commentCount, after: $commentCursor) @connection(key: "SomeUser_comments", filter: ["foo"]) {
           edges {
             node {
               canViewerComment

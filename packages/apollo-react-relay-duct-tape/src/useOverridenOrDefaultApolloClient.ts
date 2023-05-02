@@ -33,11 +33,11 @@ export const ApolloReactRelayDuctTapeProvider: React.FC<{
 }> = (props) => {
   invariant(
     props.client,
-    "ApolloReactRelayDuctTapeProvider: client is required"
+    "ApolloReactRelayDuctTapeProvider: client is required",
   );
   return React.createElement(
     ApolloReactRelayDuctTapeContext.Provider,
     { value: props.client },
-    props.children
+    props.children,
   );
 };

@@ -46,7 +46,7 @@ class ExecutionQueryHandler {
       },
       (err) => {
         this.handleResult(err);
-      }
+      },
     );
   }
 }
@@ -54,7 +54,7 @@ class ExecutionQueryHandler {
 function useExecutionQuery(
   client: ApolloClient<any>,
   executionQueryDocument: DocumentNode,
-  variables: Record<string, any>
+  variables: Record<string, any>,
 ): [loading: boolean, error?: Error] {
   const forceUpdate = useForceUpdate();
   const execution = useRef(new ExecutionQueryHandler(() => forceUpdate()));
@@ -64,7 +64,7 @@ function useExecutionQuery(
         client.watchQuery({
           query: executionQueryDocument,
           variables,
-        })
+        }),
       );
     }
     return () => {
@@ -84,19 +84,19 @@ function useExecutionQuery(
  */
 export function useCompiledLazyLoadQuery(
   documents: CompiledArtefactModule,
-  options: { variables: Record<string, any> }
+  options: { variables: Record<string, any> },
 ): { data?: any; error?: Error } {
   const { watchQueryDocument } = documents;
   invariant(
     watchQueryDocument,
     "useLazyLoadQuery(): Expected a `watchQueryDocument` to have been " +
-      "extracted. Did you forget to invoke the compiler?"
+      "extracted. Did you forget to invoke the compiler?",
   );
   const { executionQueryDocument } = documents;
   invariant(
     executionQueryDocument,
     "useLazyLoadQuery(): Expected a `executionQueryDocument` to have been " +
-      "extracted. Did you forget to invoke the compiler?"
+      "extracted. Did you forget to invoke the compiler?",
   );
   const client = useOverridenOrDefaultApolloClient();
   const variables = useDeepCompareMemoize(options.variables);
@@ -104,7 +104,7 @@ export function useCompiledLazyLoadQuery(
   const [loading, error] = useExecutionQuery(
     client,
     executionQueryDocument,
-    variables
+    variables,
   );
   // ...then fetch/watch data for only the calling component...
   const { data } = useApolloQuery(watchQueryDocument, {

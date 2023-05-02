@@ -58,12 +58,12 @@ export function reportError(
     ...node,
     loc: {
       start: {
-        line: node.loc.start.line,
-        column: node.loc.start.column - 1,
+        line: node.loc!.start.line,
+        column: node.loc!.start.column - 1,
       },
       end: {
-        line: node.loc.end.line,
-        column: node.loc.end.column - 1,
+        line: node.loc!.end.line,
+        column: node.loc!.end.column - 1,
       },
     },
   };
@@ -78,7 +78,7 @@ export function reportError(
   context.report({
     node: newNode,
     message,
-    fix: expectedName ? fix : undefined,
+    fix: expectedName ? (fix as any) : undefined,
   });
 }
 
@@ -86,9 +86,10 @@ const rule: GraphQLESLintRule = {
   meta: {
     type: "problem",
     fixable: "code",
+    schema: undefined,
     docs: {
+      ...({ description: `Enforce descriptive operation names` } as any), // FIXME: Why can we not pass this prop?
       category: "Operations",
-      description: `Enforce descriptive operation names`,
       requiresSiblings: true,
 
       examples: [

@@ -22,7 +22,7 @@ describe(useOverridenOrDefaultApolloClient, () => {
     createTestRenderer(
       <ApolloProvider client={expectedClient}>
         <Subject />
-      </ApolloProvider>
+      </ApolloProvider>,
     );
     expect(yieldedClient).toBe(expectedClient);
   });
@@ -46,7 +46,7 @@ describe(useOverridenOrDefaultApolloClient, () => {
           <OverridenSubject />
           <DefaultSubject />
         </ApolloReactRelayDuctTapeProvider>
-      </ApolloProvider>
+      </ApolloProvider>,
     );
     expect(yieldedOverridenClient).toBe(overridenClient);
     expect(yieldedDefaultClient).toBe(defaultClient);

@@ -489,7 +489,7 @@ test("check context in the mock resolver", () => {
        "alias": null,
        "args": {},
        "name": "profile_picture",
-       "parentType": null,
+       "parentType": "User",
        "path": [
          "viewer",
          "actor",

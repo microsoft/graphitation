@@ -10,6 +10,7 @@ import {
 } from "just-scripts";
 import * as path from "path";
 import * as glob from "fast-glob";
+import * as fs from "fs";
 
 export const types = () => {
   return tscTask({
@@ -42,7 +43,7 @@ export const build = () => {
                   const absolutePath = path.resolve(
                     args.importer,
                     "..",
-                    extPath
+                    extPath,
                   );
                   if (
                     fs.existsSync(absolutePath) &&

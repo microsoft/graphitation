@@ -43,8 +43,8 @@ import { compiledHooks_Root_executionQueryVariables } from "./__generated__/comp
 const schema = buildSchema(
   fs.readFileSync(
     path.resolve(__dirname, "../__tests__/schema.graphql"),
-    "utf8"
-  )
+    "utf8",
+  ),
 );
 
 const Child_fragment = graphql`
@@ -156,18 +156,18 @@ describe.each([
   const ChildComponent: React.FC<{ user: { id: any } }> = (props) => {
     const result = useCompiledFragment(
       compiledHooks_ChildFragment_documents,
-      props.user
+      props.user,
     );
     useFragmentResult.push(result as { id: number });
     return null;
   };
 
   const ChildRefetchableComponent: React.FC<{ user: { id: any } }> = (
-    props
+    props,
   ) => {
     const result = useCompiledRefetchableFragment(
       compiledHooks_RefetchableFragment_documents,
-      props.user
+      props.user,
     );
     useRefetchableFragmentResult.push(result);
     return null;
@@ -176,18 +176,18 @@ describe.each([
   const ComponentOnQueryType: React.FC<{ query: {} }> = (props) => {
     const result = useCompiledFragment(
       compiledHooks_QueryTypeFragment_documents,
-      props.query
+      props.query,
     );
     componentOnQueryTypeResult.push(result);
     return null;
   };
 
   const ChildForwardPaginationComponent: React.FC<{ user: { id: any } }> = (
-    props
+    props,
   ) => {
     const result = useCompiledPaginationFragment(
       compiledHooks_ForwardPaginationFragment_documents as any,
-      props.user
+      props.user,
     );
     forwardUsePaginationFragmentResult.push(result);
 
@@ -206,7 +206,7 @@ describe.each([
   }> = (props) => {
     const result = useCompiledPaginationFragment(
       compiledHooks_BackwardPaginationFragment_documents as any,
-      props.conversation
+      props.conversation,
     );
     backwardUsePaginationFragmentResult.push(result);
     return null;
@@ -217,7 +217,7 @@ describe.each([
   }> = (props) => {
     const result = useCompiledLazyLoadQuery(
       compiledHooks_Root_executionQuery_documents,
-      { variables: props.variables }
+      { variables: props.variables },
     );
     useLazyLoadQueryResult = result;
     return result.data ? (
@@ -267,7 +267,7 @@ describe.each([
               }}
             />
           </ErrorBoundary>
-        </ApolloReactRelayDuctTapeProvider>
+        </ApolloReactRelayDuctTapeProvider>,
       );
     });
   });
@@ -280,8 +280,8 @@ describe.each([
       });
       await act(() =>
         client.mock.resolveMostRecentOperation((operation) =>
-          MockPayloadGenerator.generate(operation)
-        )
+          MockPayloadGenerator.generate(operation),
+        ),
       );
       expect(useLazyLoadQueryResult).toEqual({
         data: expect.objectContaining({}),
@@ -323,14 +323,14 @@ describe.each([
               Message: () => ({
                 id: "first-paged-message",
               }),
-            })
-          )
+            }),
+          ),
         );
       });
 
       it("unsubscribes from the execution query", async () => {
         expect(
-          activeQueries(client).map((query) => query.queryId)
+          activeQueries(client).map((query) => query.queryId),
         ).not.toContain(executionQueryId);
       });
 
@@ -387,22 +387,22 @@ describe.each([
                   }}
                 />
               </ErrorBoundary>
-            </ApolloReactRelayDuctTapeProvider>
+            </ApolloReactRelayDuctTapeProvider>,
           );
         });
         await act(() =>
           client.mock.resolveMostRecentOperation((operation) =>
             MockPayloadGenerator.generate(operation, {
               User: () => ({ id: operation.request.variables.userId }),
-            })
-          )
+            }),
+          ),
         );
         expect(
           client.cache.extract()[
             typePolicies === typePoliciesWithDefaultApolloClientStoreKeys
               ? "User:21"
               : "21"
-          ]
+          ],
         ).toMatchSnapshot();
       });
 
@@ -420,7 +420,7 @@ describe.each([
                   }}
                 />
               </ErrorBoundary>
-            </ApolloReactRelayDuctTapeProvider>
+            </ApolloReactRelayDuctTapeProvider>,
           );
           return new Promise((resolve) => setTimeout(resolve, 100));
         });
@@ -439,7 +439,7 @@ describe.each([
 
   function itBehavesLikeFragment(
     returnedResults: () => { id: number }[],
-    fragmentSpecificFieldSelections?: {}
+    fragmentSpecificFieldSelections?: {},
   ) {
     // TODO: This should be scoped so it doesn't leak to other tests in the same parent describe
     // describe("behaves like useFragment", () => {
@@ -464,7 +464,7 @@ describe.each([
             }),
           });
           return result;
-        })
+        }),
       );
     });
 
@@ -477,7 +477,7 @@ describe.each([
           userId: 42,
         },
         __typename: "User",
-        id: 42,
+        id: "42",
         petName: '<mock-value-for-field-"petName">',
         ...fragmentSpecificFieldSelections,
       });
@@ -533,19 +533,18 @@ describe.each([
                 }}
               />
             </ErrorBoundary>
-          </ApolloReactRelayDuctTapeProvider>
+          </ApolloReactRelayDuctTapeProvider>,
         );
       });
       await act(() =>
         client.mock.resolveMostRecentOperation((operation) =>
           MockPayloadGenerator.generate(operation, {
             User: () => ({ id: operation.request.variables.userId }),
-          })
-        )
+          }),
+        ),
       );
-      expect(last(returnedResults()).id).toBe(21);
+      expect(last(returnedResults()).id).toBe("21");
     });
-    // });
   }
 
   describe(useCompiledFragment, () => {
@@ -555,16 +554,17 @@ describe.each([
 
     it("also works with fragments on the Query type", () => {
       expect(last(componentOnQueryTypeResult)).toMatchInlineSnapshot(`
-        Object {
-          "__fragments": Object {
+        {
+          "__fragments": {
             "avatarSize": 21,
             "messagesBackwardCount": 1,
             "messagesBeforeCursor": "",
             "userId": 42,
           },
-          "nonNode": Object {
+          "__typename": "Query",
+          "nonNode": {
             "__typename": "NonNode",
-            "id": "<mock-value-for-field-\\"id\\">",
+            "id": "<mock-value-for-field-"id">",
           },
         }
       `);
@@ -572,10 +572,10 @@ describe.each([
   });
 
   function itBehavesLikeRefetchableFragment(
-    returnedResults: () => [data: { id: number }, refetch: RefetchFn][]
+    returnedResults: () => [data: { id: number }, refetch: RefetchFn][],
   ) {
     it.todo(
-      "supports variables with default values on either operations or with @argumentDefinitions"
+      "supports variables with default values on either operations or with @argumentDefinitions",
     );
 
     describe("when refetching", () => {
@@ -612,7 +612,7 @@ describe.each([
                   id: 42,
                   avatarUrl: `avatarUrl-with-size-${operation.request.variables.avatarSize}`,
                 }),
-              })
+              }),
             );
             return new Promise((resolve) => setTimeout(resolve, 0));
           });
@@ -622,7 +622,7 @@ describe.each([
           expect(last(returnedResults())[0]).toMatchObject({
             __typename: "User",
             avatarUrl: "avatarUrl-with-size-42",
-            id: 42,
+            id: "42",
           });
         });
 
@@ -655,7 +655,7 @@ describe.each([
           const [_data, refetch] = last(returnedResults());
           refetch({});
           expect(
-            client.mock.getMostRecentOperation().request.variables.avatarSize
+            client.mock.getMostRecentOperation().request.variables.avatarSize,
           ).toBe(21);
         });
       });
@@ -666,17 +666,17 @@ describe.each([
     itBehavesLikeFragment(
       () =>
         useRefetchableFragmentResult.map(
-          ([data, _refetch]) => data as { id: number }
+          ([data, _refetch]) => data as { id: number },
         ),
-      { avatarUrl: '<mock-value-for-field-"avatarUrl">' }
+      { avatarUrl: '<mock-value-for-field-"avatarUrl">' },
     );
 
     itBehavesLikeRefetchableFragment(
       () =>
         useRefetchableFragmentResult as [
           data: { id: number },
-          refetch: RefetchFn
-        ][]
+          refetch: RefetchFn,
+        ][],
     );
   });
 
@@ -684,7 +684,7 @@ describe.each([
     itBehavesLikeFragment(
       () =>
         forwardUsePaginationFragmentResult.map(
-          ({ data }) => data as { id: number }
+          ({ data }) => data as { id: number },
         ),
       {
         avatarUrl: '<mock-value-for-field-"avatarUrl">',
@@ -713,14 +713,14 @@ describe.each([
             hasNextPage: true,
           },
         },
-      }
+      },
     );
 
     itBehavesLikeRefetchableFragment(() =>
       forwardUsePaginationFragmentResult.map(({ data, refetch }) => [
         data as { id: number },
         refetch,
-      ])
+      ]),
     );
 
     describe("when paginating forward", () => {
@@ -812,7 +812,7 @@ describe.each([
                   endCursor: "second-page-end-cursor",
                   hasNextPage: false,
                 }),
-              })
+              }),
             );
             return new Promise((resolve) => setTimeout(resolve, 0));
           });
@@ -839,10 +839,10 @@ describe.each([
           const result = last(forwardUsePaginationFragmentResult);
           expect(
             (result.data as any).conversations.edges.map(
-              (edge: any) => edge.node.id
-            )
+              (edge: any) => edge.node.id,
+            ),
           ).toMatchInlineSnapshot(`
-            Array [
+            [
               "first-paged-conversation",
               "second-paged-conversation",
             ]
@@ -957,7 +957,7 @@ describe.each([
                   startCursor: "second-page-start-cursor",
                   hasPreviousPage: false,
                 }),
-              })
+              }),
             );
             return new Promise((resolve) => setTimeout(resolve, 0));
           });
@@ -965,7 +965,7 @@ describe.each([
 
         it("returns that no pagination operation is in-flight", () => {
           const { isLoadingPrevious } = last(
-            backwardUsePaginationFragmentResult
+            backwardUsePaginationFragmentResult,
           );
           expect(isLoadingPrevious).toBeFalsy();
         });
@@ -985,9 +985,11 @@ describe.each([
         it("returns the complete list data (previous+new) from the hook", () => {
           const result = last(backwardUsePaginationFragmentResult);
           expect(
-            (result.data as any).messages.edges.map((edge: any) => edge.node.id)
+            (result.data as any).messages.edges.map(
+              (edge: any) => edge.node.id,
+            ),
           ).toMatchInlineSnapshot(`
-            Array [
+            [
               "second-paged-message",
               "first-paged-message",
             ]

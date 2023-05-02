@@ -24,7 +24,6 @@ import type {
   SelectionSetNode,
 } from "graphql";
 import { pathToArray } from "graphql/jsutils/Path";
-import type { Path } from "graphql/jsutils/Path";
 import {
   DefaultMockResolvers,
   createValueResolver,
@@ -315,7 +314,7 @@ function getDefaultValues(
     (resolveValue(
       typename,
       {
-        parentType: null,
+        parentType: info ? info.parentType.name : null,
         name: fieldNode?.name.value || "",
         alias: fieldNode?.alias?.value || null,
         path: info ? pathToArray(info.path).filter(isString) : [],

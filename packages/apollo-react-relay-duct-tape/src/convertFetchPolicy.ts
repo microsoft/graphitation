@@ -18,7 +18,7 @@ const FETCH_POLICY_MAPPING: Record<
 };
 
 export function convertFetchPolicy(
-  fetchPolicy: PrivateFetchPolicy | undefined
+  fetchPolicy: PrivateFetchPolicy | undefined,
 ): ApolloWatchQueryFetchPolicy | undefined {
   return fetchPolicy && FETCH_POLICY_MAPPING[fetchPolicy];
 }

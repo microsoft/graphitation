@@ -1,0 +1,13 @@
+diff --git a/node_modules/@graphql-eslint/eslint-plugin/utils.d.ts b/node_modules/@graphql-eslint/eslint-plugin/utils.d.ts
+index 5d66a8d..1dce3b3 100644
+--- a/node_modules/@graphql-eslint/eslint-plugin/utils.d.ts
++++ b/node_modules/@graphql-eslint/eslint-plugin/utils.d.ts
+@@ -23,7 +23,7 @@ export declare const normalizePath: (path: string) => string;
+ export declare const getOnDiskFilepath: (filepath: string) => string;
+ export declare const getTypeName: (node: any) => any;
+ export declare const loaderCache: Record<string, LoaderSource[]>;
+-export declare const TYPES_KINDS: readonly [Kind.OBJECT_TYPE_DEFINITION, Kind.INTERFACE_TYPE_DEFINITION, Kind.ENUM_TYPE_DEFINITION, Kind.SCALAR_TYPE_DEFINITION, Kind.INPUT_OBJECT_TYPE_DEFINITION, Kind.UNION_TYPE_DEFINITION];
++export declare const TYPES_KINDS: readonly [typeof Kind.OBJECT_TYPE_DEFINITION, typeof Kind.INTERFACE_TYPE_DEFINITION, typeof Kind.ENUM_TYPE_DEFINITION, typeof Kind.SCALAR_TYPE_DEFINITION, typeof Kind.INPUT_OBJECT_TYPE_DEFINITION, typeof Kind.UNION_TYPE_DEFINITION];
+ export declare type CaseStyle = 'camelCase' | 'PascalCase' | 'snake_case' | 'UPPER_CASE' | 'kebab-case';
+ export declare const camelCase: (str: string) => string;
+ export declare const convertCase: (style: CaseStyle, str: string) => string;

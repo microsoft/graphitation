@@ -30,7 +30,7 @@ export function createImportDocumentsTransform(): ts.TransformerFactory<ts.Sourc
       ) {
         const documentNodes = createGraphQLDocumentNodes(
           node,
-          context.getCompilerOptions().module
+          context.getCompilerOptions().module,
         );
         if (documentNodes) {
           const [modulePath, importStatement, replacementNode] = documentNodes;
@@ -44,7 +44,7 @@ export function createImportDocumentsTransform(): ts.TransformerFactory<ts.Sourc
           const artefactFile =
             path.join(
               path.dirname(node.getSourceFile().fileName),
-              modulePath.text
+              modulePath.text,
             ) + ".ts";
           const emitImport = fs.existsSync(artefactFile);
           if (emitImport) {
@@ -71,16 +71,16 @@ export { createImportDocumentsTransform as factory };
 
 function createGraphQLDocumentNodes(
   graphqlTagTemplateNode: ts.TaggedTemplateExpression,
-  moduleKind: ts.ModuleKind = ts.ModuleKind.ES2015
+  moduleKind: ts.ModuleKind = ts.ModuleKind.ES2015,
 ):
   | [
       modulePath: ts.StringLiteral,
       importStatement: ts.Statement,
-      importReference: ts.Identifier
+      importReference: ts.Identifier,
     ]
   | undefined {
   const graphqlDoc = ts.isNoSubstitutionTemplateLiteral(
-    graphqlTagTemplateNode.template
+    graphqlTagTemplateNode.template,
   )
     ? graphqlTagTemplateNode.template.rawText
     : graphqlTagTemplateNode.template.head.rawText;
@@ -121,7 +121,7 @@ function createModulePathNode(baseName: string) {
 function createImportStatement(
   moduleKind: ts.ModuleKind,
   namespaceName: string,
-  modulePath: ts.StringLiteral
+  modulePath: ts.StringLiteral,
 ): ts.Statement {
   if (moduleKind === ts.ModuleKind.CommonJS) {
     return ts.factory.createVariableStatement(
@@ -135,12 +135,12 @@ function createImportStatement(
             ts.factory.createCallExpression(
               ts.factory.createIdentifier("require"),
               [],
-              [modulePath]
+              [modulePath],
             ),
-            ts.factory.createIdentifier("documents")
-          )
+            ts.factory.createIdentifier("documents"),
+          ),
         ),
-      ])
+      ]),
     );
   } else {
     return ts.factory.createImportDeclaration(
@@ -153,11 +153,11 @@ function createImportStatement(
           ts.factory.createImportSpecifier(
             false,
             ts.factory.createIdentifier("documents"),
-            ts.factory.createIdentifier(namespaceName)
+            ts.factory.createIdentifier(namespaceName),
           ),
-        ])
+        ]),
       ),
-      modulePath
+      modulePath,
     );
   }
 }

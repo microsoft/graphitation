@@ -178,7 +178,7 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
           `,
         },
       ],
-      recommended: true,
+      ...({ recommended: true } as any), // FIXME: Why can we not pass this prop?
     },
     schema: {
       type: "array",
