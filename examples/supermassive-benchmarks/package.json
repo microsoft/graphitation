@@ -8,7 +8,7 @@
     "benchmark": "ts-node -T ./src/index.ts"
   },
   "devDependencies": {
-    "@graphitation/supermassive": "^0.8.3",
+    "@graphitation/supermassive": "^2.4.2",
     "@graphql-tools/schema": "^7.1.5",
     "@types/benchmark": "^2.1.0",
     "@types/node-json-db": "^0.9.3",
