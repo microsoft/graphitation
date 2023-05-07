@@ -51,8 +51,12 @@ export function generateTS(
     const result: ts.SourceFile[] = [];
     result.push(generateModels(context, document));
     result.push(generateResolvers(context, document));
-    result.push(generateEnums(context, document));
-    result.push(generateInputs(context, document));
+    if (context.hasEnums) {
+      result.push(generateEnums(context, document));
+    }
+    if (context.hasInputs) {
+      result.push(generateInputs(context, document));
+    }
     if (legacyCompat) {
       result.push(generateLegacyTypes(context, document));
       result.push(generateLegacyResolvers(context, document));

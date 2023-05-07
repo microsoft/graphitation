@@ -41,16 +41,11 @@ describe(generateTS, () => {
           optionalPost: Post
         }
       `);
-      expect(enums).toMatchInlineSnapshot(`""`);
-      expect(inputs).toMatchInlineSnapshot(`
-        "import * as Models from "./models.interface";
-        "
-      `);
+      expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
         "import type { Avatar } from "@msteams/packages-test";
         import type { PostModel as _Post } from "../post-model.interface";
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
@@ -84,8 +79,6 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import * as Inputs from "./inputs.interface";
-        export * from "./inputs.interface";
         export declare namespace Post {
             export interface Resolvers {
                 readonly id?: id;
@@ -157,15 +150,10 @@ describe(generateTS, () => {
           userUpdated: User!
         }
       `);
-      expect(enums).toMatchInlineSnapshot(`""`);
-      expect(inputs).toMatchInlineSnapshot(`
-        "import * as Models from "./models.interface";
-        "
-      `);
+      expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
-        "import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
-        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
@@ -179,8 +167,6 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import * as Inputs from "./inputs.interface";
-        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
@@ -217,8 +203,6 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import * as Inputs from "./inputs.interface";
-        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
@@ -251,15 +235,10 @@ describe(generateTS, () => {
           users: [User!]!
         }
       `);
-      expect(enums).toMatchInlineSnapshot(`""`);
-      expect(inputs).toMatchInlineSnapshot(`
-        "import * as Models from "./models.interface";
-        "
-      `);
+      expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
-        "import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
-        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
@@ -273,8 +252,6 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import * as Inputs from "./inputs.interface";
-        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
@@ -315,15 +292,10 @@ describe(generateTS, () => {
           admins: [Admin]
         }
       `);
-      expect(enums).toMatchInlineSnapshot(`""`);
-      expect(inputs).toMatchInlineSnapshot(`
-        "import * as Models from "./models.interface";
-        "
-      `);
+      expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
-        "import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
-        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
@@ -347,8 +319,6 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import * as Inputs from "./inputs.interface";
-        export * from "./inputs.interface";
         export declare namespace Node {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
@@ -401,15 +371,10 @@ describe(generateTS, () => {
           users: [User]
         }
       `);
-      expect(enums).toMatchInlineSnapshot(`""`);
-      expect(inputs).toMatchInlineSnapshot(`
-        "import * as Models from "./models.interface";
-        "
-      `);
+      expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
-        "import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
-        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
@@ -427,8 +392,6 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import * as Inputs from "./inputs.interface";
-        export * from "./inputs.interface";
         export declare namespace Node {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
@@ -464,15 +427,10 @@ describe(generateTS, () => {
           name: String!
         }
       `);
-      expect(enums).toMatchInlineSnapshot(`""`);
-      expect(inputs).toMatchInlineSnapshot(`
-        "import * as Models from "./models.interface";
-        "
-      `);
+      expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
-        "import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
-        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
@@ -490,8 +448,6 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import * as Inputs from "./inputs.interface";
-        export * from "./inputs.interface";
         export declare namespace Node {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
@@ -524,7 +480,7 @@ describe(generateTS, () => {
           userById(params: UserParamsInput): User
         }
       `);
-      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(enums).toMatchInlineSnapshot(`undefined`);
       expect(inputs).toMatchInlineSnapshot(`
         "import * as Models from "./models.interface";
         export type UserParamsInput = {
@@ -533,9 +489,7 @@ describe(generateTS, () => {
         "
       `);
       expect(models).toMatchInlineSnapshot(`
-        "import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
-        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
@@ -660,7 +614,7 @@ describe(generateTS, () => {
           userById(params: UserParamsInput): User
         }
       `);
-      expect(enums).toMatchInlineSnapshot(`""`);
+      expect(enums).toMatchInlineSnapshot(`undefined`);
       expect(inputs).toMatchInlineSnapshot(`
         "import * as Models from "./models.interface";
         export type PresenceInput = {
@@ -673,9 +627,7 @@ describe(generateTS, () => {
         "
       `);
       expect(models).toMatchInlineSnapshot(`
-        "import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
-        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
@@ -733,10 +685,7 @@ describe(generateTS, () => {
         }
         "
       `);
-      expect(inputs).toMatchInlineSnapshot(`
-        "import * as Models from "./models.interface";
-        "
-      `);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
         "import * as Enums from "./enums.interface";
         export * from "./enums.interface";
@@ -755,8 +704,6 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import * as Inputs from "./inputs.interface";
-        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
@@ -798,15 +745,10 @@ describe(generateTS, () => {
           node(id: ID!): Node
         }
       `);
-      expect(enums).toMatchInlineSnapshot(`""`);
-      expect(inputs).toMatchInlineSnapshot(`
-        "import * as Models from "./models.interface";
-        "
-      `);
+      expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
-        "import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
-        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
@@ -828,8 +770,6 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import * as Inputs from "./inputs.interface";
-        export * from "./inputs.interface";
         export declare namespace Customer {
             export interface Resolvers {
                 readonly id?: id;
@@ -881,15 +821,10 @@ describe(generateTS, () => {
           userById(id: ID!): User
         }
       `);
-      expect(enums).toMatchInlineSnapshot(`""`);
-      expect(inputs).toMatchInlineSnapshot(`
-        "import * as Models from "./models.interface";
-        "
-      `);
+      expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
         "import type { UserModel as _User } from "../user-model.interface";
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
@@ -903,8 +838,6 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import * as Inputs from "./inputs.interface";
-        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
@@ -944,15 +877,10 @@ describe(generateTS, () => {
           name: String!
         }
       `);
-      expect(enums).toMatchInlineSnapshot(`""`);
-      expect(inputs).toMatchInlineSnapshot(`
-        "import * as Models from "./models.interface";
-        "
-      `);
+      expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
-        "import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
-        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
@@ -967,8 +895,6 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import * as Inputs from "./inputs.interface";
-        export * from "./inputs.interface";
         export declare namespace Query {
             export interface Resolvers {
                 readonly allTodos?: allTodos;
@@ -1018,15 +944,10 @@ describe(generateTS, () => {
           userById(id: ID!): User
         }
       `);
-      expect(enums).toMatchInlineSnapshot(`""`);
-      expect(inputs).toMatchInlineSnapshot(`
-        "import * as Models from "./models.interface";
-        "
-      `);
+      expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
         "import type { Avatar } from "@msteams/packages-test";
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
@@ -1042,8 +963,6 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import * as Inputs from "./inputs.interface";
-        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
@@ -1081,15 +1000,10 @@ describe(generateTS, () => {
         userById(id: ID!): Person
       }
     `);
-    expect(enums).toMatchInlineSnapshot(`""`);
-    expect(inputs).toMatchInlineSnapshot(`
-      "import * as Models from "./models.interface";
-      "
-    `);
+    expect(enums).toMatchInlineSnapshot(`undefined`);
+    expect(inputs).toMatchInlineSnapshot(`undefined`);
     expect(models).toMatchInlineSnapshot(`
       "import type { Entity } from "@msteams/packages-test";
-      import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
@@ -1107,8 +1021,6 @@ describe(generateTS, () => {
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
       import * as Models from "./models.interface";
-      import * as Inputs from "./inputs.interface";
-      export * from "./inputs.interface";
       export declare namespace Person {
           export interface Resolvers {
               readonly __resolveType?: __resolveType;
@@ -1148,15 +1060,10 @@ describe(generateTS, () => {
         userById(id: ID!): User
       }
     `);
-    expect(enums).toMatchInlineSnapshot(`""`);
-    expect(inputs).toMatchInlineSnapshot(`
-      "import * as Models from "./models.interface";
-      "
-    `);
+    expect(enums).toMatchInlineSnapshot(`undefined`);
+    expect(inputs).toMatchInlineSnapshot(`undefined`);
     expect(models).toMatchInlineSnapshot(`
       "import type { Rank } from "@msteams/packages-rank";
-      import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
@@ -1172,8 +1079,6 @@ describe(generateTS, () => {
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
       import * as Models from "./models.interface";
-      import * as Inputs from "./inputs.interface";
-      export * from "./inputs.interface";
       export declare namespace User {
           export interface Resolvers {
               readonly id?: id;
@@ -1285,7 +1190,7 @@ describe(generateTS, () => {
         userById(params: UserInput): User
       }
     `);
-    expect(enums).toMatchInlineSnapshot(`""`);
+    expect(enums).toMatchInlineSnapshot(`undefined`);
     expect(inputs).toMatchInlineSnapshot(`
       "import * as Models from "./models.interface";
       export type UserInput = {
@@ -1296,8 +1201,6 @@ describe(generateTS, () => {
     `);
     expect(models).toMatchInlineSnapshot(`
       "import type { Rank } from "@msteams/packages-rank";
-      import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
@@ -1350,15 +1253,10 @@ describe(generateTS, () => {
         userById(id: ID!): User
       }
     `);
-    expect(enums).toMatchInlineSnapshot(`""`);
-    expect(inputs).toMatchInlineSnapshot(`
-      "import * as Models from "./models.interface";
-      "
-    `);
+    expect(enums).toMatchInlineSnapshot(`undefined`);
+    expect(inputs).toMatchInlineSnapshot(`undefined`);
     expect(models).toMatchInlineSnapshot(`
       "import type { User as _User } from "@msteams/custom-user";
-      import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
@@ -1372,8 +1270,6 @@ describe(generateTS, () => {
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
       import * as Models from "./models.interface";
-      import * as Inputs from "./inputs.interface";
-      export * from "./inputs.interface";
       export declare namespace User {
           export interface Resolvers {
               readonly id?: id;
@@ -1418,7 +1314,7 @@ describe(generateTS, () => {
         userById(params: UserParams): User
       }
     `);
-    expect(enums).toMatchInlineSnapshot(`""`);
+    expect(enums).toMatchInlineSnapshot(`undefined`);
     expect(inputs).toMatchInlineSnapshot(`
       "import * as Models from "./models.interface";
       export type RankParams = {
@@ -1432,8 +1328,6 @@ describe(generateTS, () => {
     `);
     expect(models).toMatchInlineSnapshot(`
       "import type { Rank } from "@msteams/packages-rank";
-      import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
@@ -1485,15 +1379,10 @@ describe(generateTS, () => {
           userById(id: ID!): User
         }
       `);
-      expect(enums).toMatchInlineSnapshot(`""`);
-      expect(inputs).toMatchInlineSnapshot(`
-        "import * as Models from "./models.interface";
-        "
-      `);
+      expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
-        "import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
-        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
@@ -1509,8 +1398,6 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import * as Inputs from "./inputs.interface";
-        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
@@ -1544,15 +1431,10 @@ describe(generateTS, () => {
           userById(id: ID!): User
         }
       `);
-      expect(enums).toMatchInlineSnapshot(`""`);
-      expect(inputs).toMatchInlineSnapshot(`
-        "import * as Models from "./models.interface";
-        "
-      `);
+      expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
         "import type { DateTimeModel as _DateTime } from "@msteams/custom-scalars";
-        import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
@@ -1569,8 +1451,6 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import * as Inputs from "./inputs.interface";
-        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
@@ -1610,15 +1490,10 @@ describe(generateTS, () => {
           ): User!
         }
       `);
-      expect(enums).toMatchInlineSnapshot(`""`);
-      expect(inputs).toMatchInlineSnapshot(`
-        "import * as Models from "./models.interface";
-        "
-      `);
+      expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
-        "import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
-        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
         }
@@ -1636,8 +1511,6 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import * as Inputs from "./inputs.interface";
-        export * from "./inputs.interface";
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
@@ -1679,15 +1552,10 @@ describe(generateTS, () => {
         node(id: ID!): Node!
       }
     `);
-    expect(enums).toMatchInlineSnapshot(`""`);
-    expect(inputs).toMatchInlineSnapshot(`
-      "import * as Models from "./models.interface";
-      "
-    `);
+    expect(enums).toMatchInlineSnapshot(`undefined`);
+    expect(inputs).toMatchInlineSnapshot(`undefined`);
     expect(models).toMatchInlineSnapshot(`
-      "import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
-      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
       }
@@ -1700,8 +1568,6 @@ describe(generateTS, () => {
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
       import * as Models from "./models.interface";
-      import * as Inputs from "./inputs.interface";
-      export * from "./inputs.interface";
       export declare namespace Node {
           export interface Resolvers {
               readonly __resolveType?: __resolveType;
@@ -1755,10 +1621,7 @@ describe(generateTS, () => {
       }
       "
     `);
-    expect(inputs).toMatchInlineSnapshot(`
-      "import * as Models from "./models.interface";
-      "
-    `);
+    expect(inputs).toMatchInlineSnapshot(`undefined`);
     expect(models).toMatchInlineSnapshot(`
       "import * as Enums from "./enums.interface";
       export * from "./enums.interface";
@@ -1784,8 +1647,6 @@ describe(generateTS, () => {
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
       import * as Models from "./models.interface";
-      import * as Inputs from "./inputs.interface";
-      export * from "./inputs.interface";
       export declare namespace Node {
           export interface Resolvers {
               readonly __resolveType?: __resolveType;
@@ -1825,7 +1686,6 @@ describe(generateTS, () => {
       import * as Resolvers from "./resolvers.interface";
       export * from "./models.interface";
       export * from "./enums.interface";
-      export * from "./inputs.interface";
       export interface Scalars {
           readonly ID: string;
           readonly Int: number;
@@ -1854,15 +1714,10 @@ describe(generateTS, () => {
       `,
       { legacyCompat: true },
     );
-    expect(enums).toMatchInlineSnapshot(`""`);
-    expect(inputs).toMatchInlineSnapshot(`
-      "import * as Models from "./models.interface";
-      "
-    `);
+    expect(enums).toMatchInlineSnapshot(`undefined`);
+    expect(inputs).toMatchInlineSnapshot(`undefined`);
     expect(models).toMatchInlineSnapshot(`
-      "import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
-      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
       }
@@ -1877,8 +1732,6 @@ describe(generateTS, () => {
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
       import * as Models from "./models.interface";
-      import * as Inputs from "./inputs.interface";
-      export * from "./inputs.interface";
       export declare namespace MyInterface {
           export interface Resolvers {
               readonly __resolveType?: __resolveType;
@@ -1904,7 +1757,7 @@ describe(generateTS, () => {
       `,
     );
 
-    expect(enums).toMatchInlineSnapshot(`""`);
+    expect(enums).toMatchInlineSnapshot(`undefined`);
     expect(inputs).toMatchInlineSnapshot(`
       "import * as Models from "./models.interface";
       export type FooInput = {
@@ -1914,9 +1767,7 @@ describe(generateTS, () => {
       "
     `);
     expect(models).toMatchInlineSnapshot(`
-      "import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
-      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
       }
@@ -1962,10 +1813,7 @@ describe(generateTS, () => {
       "export { Foo } from "common-enums";
       "
     `);
-    expect(inputs).toMatchInlineSnapshot(`
-      "import * as Models from "./models.interface";
-      "
-    `);
+    expect(inputs).toMatchInlineSnapshot(`undefined`);
     expect(models).toMatchInlineSnapshot(`
       "import * as Enums from "./enums.interface";
       export * from "./enums.interface";
@@ -1979,8 +1827,6 @@ describe(generateTS, () => {
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
       import * as Models from "./models.interface";
-      import * as Inputs from "./inputs.interface";
-      export * from "./inputs.interface";
       "
     `);
   });
@@ -2081,8 +1927,8 @@ function runGenerateTest(
     modelScope?: string;
   } = {},
 ): {
-  enums: string;
-  inputs: string;
+  enums?: string;
+  inputs?: string;
   models: string;
   resolvers: string;
   legacyTypes?: string;
@@ -2103,12 +1949,26 @@ function runGenerateTest(
     ...options,
   };
   const document = parse(doc);
-  const [models, resolvers, enums, inputs, legacyTypes, legacyResolvers] =
-    generateTS(document, fullOptions).files;
+  const { files } = generateTS(document, fullOptions);
+
+  function getFileByFileName(fileName: string) {
+    return files.find((file) => file.fileName === fileName);
+  }
+
+  const { models, resolvers, enums, inputs, legacyTypes, legacyResolvers } = {
+    models: getFileByFileName("models.interface.ts") as ts.SourceFile,
+    inputs: getFileByFileName("inputs.interface.ts"),
+    enums: getFileByFileName("enums.interface.ts"),
+    resolvers: getFileByFileName("resolvers.interface.ts") as ts.SourceFile,
+    legacyTypes: getFileByFileName("legacy-types.interface.ts"),
+    legacyResolvers: getFileByFileName("legacy-resolvers.interface.ts"),
+  };
+
   const printer = ts.createPrinter();
+
   return {
-    enums: printer.printFile(enums),
-    inputs: printer.printFile(inputs),
+    enums: enums && printer.printFile(enums),
+    inputs: inputs && printer.printFile(inputs),
     models: printer.printFile(models),
     resolvers: printer.printFile(resolvers),
     legacyTypes: legacyTypes && printer.printFile(legacyTypes),

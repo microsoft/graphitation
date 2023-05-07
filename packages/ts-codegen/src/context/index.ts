@@ -107,6 +107,8 @@ export class TsCodegenContext {
   >;
   private typeNameToModels: Map<string, DefinitionModel>;
   private legacyInterfaces: Set<string>;
+  hasEnums: boolean;
+  hasInputs: boolean;
 
   constructor(private options: TsCodegenContextOptions) {
     this.allTypes = [];
@@ -118,6 +120,8 @@ export class TsCodegenContext {
     this.typeNameToImports = new Map();
     this.typeNameToModels = new Map();
     this.legacyInterfaces = new Set();
+    this.hasInputs = false;
+    this.hasEnums = Boolean(options.enumsImport);
   }
 
   isLegacyCompatMode(): boolean {
@@ -543,6 +547,10 @@ export function extractContext(
     },
     EnumTypeDefinition: {
       leave(node) {
+        if (!context.hasEnums) {
+          context.hasEnums = true;
+        }
+
         context.addType({
           kind: "ENUM",
           name: node.name.value,
@@ -579,6 +587,10 @@ export function extractContext(
     },
     InputObjectTypeDefinition: {
       leave(node) {
+        if (!context.hasInputs) {
+          context.hasInputs = true;
+        }
+
         context.addType({
           kind: "INPUT_OBJECT",
           name: node.name.value,

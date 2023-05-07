@@ -43,28 +43,30 @@ export function generateResolvers(
     ),
   );
 
-  statements.push(
-    factory.createImportDeclaration(
-      undefined,
-      undefined,
-      factory.createImportClause(
+  if (context.hasInputs) {
+    statements.push(
+      factory.createImportDeclaration(
+        undefined,
+        undefined,
+        factory.createImportClause(
+          false,
+          undefined,
+          factory.createNamespaceImport(factory.createIdentifier("Inputs")),
+        ),
+        factory.createStringLiteral("./inputs.interface"),
+      ),
+    );
+
+    statements.push(
+      factory.createExportDeclaration(
+        undefined,
+        undefined,
         false,
         undefined,
-        factory.createNamespaceImport(factory.createIdentifier("Inputs")),
+        factory.createStringLiteral("./inputs.interface"),
       ),
-      factory.createStringLiteral("./inputs.interface"),
-    ),
-  );
-
-  statements.push(
-    factory.createExportDeclaration(
-      undefined,
-      undefined,
-      false,
-      undefined,
-      factory.createStringLiteral("./inputs.interface"),
-    ),
-  );
+    );
+  }
 
   statements.push(
     ...(context

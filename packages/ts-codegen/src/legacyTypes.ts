@@ -60,25 +60,29 @@ export function generateLegacyTypes(
     ),
   );
 
-  statements.push(
-    factory.createExportDeclaration(
-      undefined,
-      undefined,
-      false,
-      undefined,
-      factory.createStringLiteral("./enums.interface"),
-    ),
-  );
+  if (context.hasEnums) {
+    statements.push(
+      factory.createExportDeclaration(
+        undefined,
+        undefined,
+        false,
+        undefined,
+        factory.createStringLiteral("./enums.interface"),
+      ),
+    );
+  }
 
-  statements.push(
-    factory.createExportDeclaration(
-      undefined,
-      undefined,
-      false,
-      undefined,
-      factory.createStringLiteral("./inputs.interface"),
-    ),
-  );
+  if (context.hasInputs) {
+    statements.push(
+      factory.createExportDeclaration(
+        undefined,
+        undefined,
+        false,
+        undefined,
+        factory.createStringLiteral("./inputs.interface"),
+      ),
+    );
+  }
 
   statements.push(
     factory.createInterfaceDeclaration(
