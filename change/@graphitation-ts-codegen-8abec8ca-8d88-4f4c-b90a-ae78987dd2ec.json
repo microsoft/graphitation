@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "fixed file generation when some of the file is empty",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
