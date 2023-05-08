@@ -2206,6 +2206,12 @@
     "@n1ru4l/push-pull-async-iterable-iterator" "^3.1.0"
     meros "^1.1.4"
 
+"@graphitation/merge-schema-testing-core-graphql@file:./packages/merge-schemas/src/__tests__/fixtures/merge-schema-testing-core-graphql":
+  version "1.0.0"
+
+"@graphitation/merge-schema-testing-invalid-graphql-module@file:./packages/merge-schemas/src/__tests__/fixtures/merge-schema-testing-invalid-graphql-module":
+  version "1.0.0"
+
 "@graphql-codegen/cli@^2.6.2":
   version "2.6.2"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/cli/-/cli-2.6.2.tgz#a9aa4656141ee0998cae8c7ad7d0bf9ca8e0c9ae"
@@ -8885,9 +8891,9 @@ minimatch@^5.1.0:
     brace-expansion "^2.0.1"
 
 minimist@^1.2.0, minimist@^1.2.5, minimist@^1.2.6:
-  version "1.2.7"
-  resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.7.tgz#daa1c4d91f507390437c6a8bc01078e7000c4d18"
-  integrity sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==
+  version "1.2.8"
+  resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.8.tgz#c1a464e7693302e082a075cee0c057741ac4772c"
+  integrity sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==
 
 minipass@^3.0.0:
   version "3.1.5"

@@ -1,0 +1,5 @@
+extend schema @import(from: "./core", defs: ["Nodeee"])
+
+extend type NonType {
+  foo: DateTime
+}

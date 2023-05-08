@@ -24,6 +24,8 @@ export { specifiedScalars } from "./values";
 
 export { annotateDocumentGraphQLTransform } from "./transforms/annotateDocumentGraphQLTransform";
 
+export { typeNameFromAST } from "./utilities/typeNameFromAST";
+
 export type { PromiseOrValue } from "./jsutils/PromiseOrValue";
 
 export type {

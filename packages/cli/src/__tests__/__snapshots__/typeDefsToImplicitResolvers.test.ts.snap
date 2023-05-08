@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`supermassive should generate 1`] = `
+exports[`graphitation should generate 1`] = `
 "import { GraphQLList, GraphQLNonNull, GraphQLID, GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLEnumType } from "graphql";
 import { Resolvers, UnionTypeResolver, EnumTypeResolver, ObjectTypeResolver, InterfaceTypeResolver } from "@graphitation/supermassive";
 const SearchResult: UnionTypeResolver = { __types: ["Person", "Starship", "Transport", "Species", "Vehicle", "Planet", "Film"], __resolveType: undefined };

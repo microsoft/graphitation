@@ -1,0 +1,18 @@
+extend schema @import(from: "./core", defs: ["Node", "DateTime", "Person"])
+
+type Foo implements Node {
+  id: ID!
+  timestamp: DateTime
+}
+
+type Bar implements Node {
+  id: ID!
+}
+
+extend type Person {
+  foo: Foo
+}
+
+type Frobnar implements Node {
+  id: ID!
+}

@@ -1,0 +1,8 @@
+extend schema
+  @import(from: "./test-import", defs: ["Foo", "Bar"], extends: ["Person"])
+  @import(from: "./core", defs: ["Node", "Person"])
+
+type Baz implements Node {
+  id: ID!
+  foo: Foo
+}

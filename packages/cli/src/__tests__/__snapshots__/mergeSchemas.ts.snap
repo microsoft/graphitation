@@ -1,0 +1,82 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`graphitation complains about missing imports, but allows passing with a flag 1`] = `
+"# This file was automatically generated (by @graphitation/cli) and should not be edited.
+extend type NonType {
+  foo: DateTime
+}
+"
+`;
+
+exports[`graphitation generates from glob 1`] = `
+"# This file was automatically generated (by @graphitation/cli) and should not be edited.
+type Person implements Node {
+  id: ID!
+}
+
+"""ISO8601 Date Time"""
+scalar DateTime
+
+"""
+Define a type to be compliant with the Global Object Identification best-practice spec.
+https://graphql.org/learn/global-object-identification/
+"""
+interface Node {
+  id: ID!
+}
+
+type Bar implements Node {
+  id: ID!
+}
+
+type Foo implements Node {
+  id: ID!
+  timestamp: DateTime
+}
+
+type Frobnar implements Node {
+  id: ID!
+}
+
+extend type Person {
+  foo: Foo
+}
+"
+`;
+
+exports[`graphitation generates from single file 1`] = `
+"# This file was automatically generated (by @graphitation/cli) and should not be edited.
+type Baz implements Node {
+  id: ID!
+  foo: Foo
+}
+
+type Person implements Node {
+  id: ID!
+}
+
+"""ISO8601 Date Time"""
+scalar DateTime
+
+"""
+Define a type to be compliant with the Global Object Identification best-practice spec.
+https://graphql.org/learn/global-object-identification/
+"""
+interface Node {
+  id: ID!
+}
+
+type Bar implements Node {
+  id: ID!
+}
+
+type Foo implements Node {
+  id: ID!
+  timestamp: DateTime
+}
+
+extend type Person {
+  foo: Foo
+}
+"
+`;

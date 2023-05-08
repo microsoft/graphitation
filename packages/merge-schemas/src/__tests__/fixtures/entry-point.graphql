@@ -1,0 +1,11 @@
+extend schema
+  @import(from: "./test-import", defs: ["Foo", "Bar"], extends: ["Person"])
+  @import(
+    from: "@graphitation/merge-schema-testing-core-graphql"
+    defs: ["Node", "Person"]
+  )
+
+type Baz implements Node {
+  id: ID!
+  foo: Foo
+}

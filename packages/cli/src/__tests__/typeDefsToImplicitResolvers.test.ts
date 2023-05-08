@@ -1,8 +1,8 @@
 import fs from "fs/promises";
 import path from "path";
-import { supermassive } from "../supermassive";
+import { graphitation } from "../graphitation";
 
-describe(supermassive, () => {
+describe(graphitation, () => {
   beforeAll(async () => {
     await fs.rm(path.join(__dirname, "fixtures", "__generated__"), {
       recursive: true,
@@ -18,10 +18,10 @@ describe(supermassive, () => {
   });
 
   it("should generate", async () => {
-    const program = supermassive();
+    const program = graphitation();
     await program.parseAsync([
       "node",
-      "supermassive",
+      "graphitation",
       "extract-schema",
       path.join(__dirname, "./fixtures/schema.graphql"),
     ]);

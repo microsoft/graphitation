@@ -1,0 +1,11 @@
+{
+  "name": "@graphitation/merge-schema-testing-invalid-graphql-module",
+  "version": "1.0.0",
+  "author": "Microsoft Corporation",
+  "license": "MIT",
+  "private": false,
+  "main": "index.graphql",
+  "files": [
+    "*.graphql"
+  ]
+}

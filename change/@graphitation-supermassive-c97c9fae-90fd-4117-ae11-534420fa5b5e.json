@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Added a tool and CLI command to merge schema using @import dependency resolution",
+  "packageName": "@graphitation/supermassive",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
