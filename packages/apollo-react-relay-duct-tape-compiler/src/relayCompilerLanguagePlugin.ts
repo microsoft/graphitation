@@ -26,4 +26,4 @@ const pluginInitializer: PluginInitializer = () => {
   };
 };
 
-export = pluginInitializer;
+export default pluginInitializer;

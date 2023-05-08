@@ -1,9 +1,10 @@
 import { useEffect, useMemo } from "react";
 import invariant from "invariant";
-import { CompiledArtefactModule } from "relay-compiler-language-graphitation";
-import { FragmentReference } from "./types";
 import { useForceUpdate } from "./useForceUpdate";
 import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultApolloClient";
+
+import type { FragmentReference } from "./types";
+import type { CompiledArtefactModule } from "@graphitation/apollo-react-relay-duct-tape-compiler";
 
 /**
  * @param documents Compiled watch query document that is used to setup a narrow

@@ -10,7 +10,9 @@
   "references": [],
   "ts-node": {
     "transpileOnly": true,
-    "target": "es5",
-    "module": "commonjs"
+    "compilerOptions": {
+      "target": "es5",
+      "module": "commonjs"
+    }
   }
 }

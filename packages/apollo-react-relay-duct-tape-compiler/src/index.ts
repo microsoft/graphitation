@@ -1,3 +1,2 @@
-export function bar(input: string) {
-  return `bar ${input} - adding change without a change file`;
-}
+export * from "./typescriptTransforms/createImportDocumentsTransform";
+export * from "./types";

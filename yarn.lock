@@ -10584,14 +10584,14 @@ relateurl@^0.2.7:
   resolved "https://registry.yarnpkg.com/relateurl/-/relateurl-0.2.7.tgz#54dbf377e51440aca90a4cd274600d3ff2d888a9"
   integrity sha1-VNvzd+UUQKypCkzSdGANP/LYiKk=
 
-relay-compiler-language-typescript@>=14.0.0:
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/relay-compiler-language-typescript/-/relay-compiler-language-typescript-15.0.0.tgz#565900106eeb7150d70c5792ef092a2807a8e25e"
-  integrity sha512-vx6V+uBJLIyzTFz1fFiuS0J+L81juGUComb5emKNaYGZRWOPSalxyS+0/I6umrNChNDFB5uLuTnAqxia4+ZMBg==
+relay-compiler-language-typescript@^15.0.1:
+  version "15.0.1"
+  resolved "https://registry.yarnpkg.com/relay-compiler-language-typescript/-/relay-compiler-language-typescript-15.0.1.tgz#78e952cdf6d7c9f833f168c6f8765e985a791d3d"
+  integrity sha512-hy760TxYhylNhSDkkxrQJvEqbhtknE8YtzmY+tRpgKGCq1Axi7eh3YjCLmfc3P2jumJXNEROQTkqqz8IbgU+tg==
   dependencies:
     invariant "^2.2.4"
 
-relay-compiler@11.0.2, relay-compiler@^11.0.2:
+relay-compiler@11.0.2:
   version "11.0.2"
   resolved "https://registry.yarnpkg.com/relay-compiler/-/relay-compiler-11.0.2.tgz#e1e09a1c881d169a7a524ead728ad6a89c7bd4af"
   integrity sha512-nDVAURT1YncxSiDOKa39OiERkAr0DUcPmlHlg+C8zD+EiDo2Sgczf2R6cDsN4UcDvucYtkLlDLFErPwgLs8WzA==
@@ -11917,10 +11917,10 @@ ts-jest@^29.0.3, ts-jest@^29.0.5:
     semver "7.x"
     yargs-parser "^21.0.1"
 
-ts-loader@^9.0.0, ts-loader@^9.2.6:
-  version "9.2.6"
-  resolved "https://registry.yarnpkg.com/ts-loader/-/ts-loader-9.2.6.tgz#9937c4dd0a1e3dbbb5e433f8102a6601c6615d74"
-  integrity sha512-QMTC4UFzHmu9wU2VHZEmWWE9cUajjfcdcws+Gh7FhiO+Dy0RnR1bNz0YCHqhI0yRowCE9arVnNxYHqELOy9Hjw==
+ts-loader@9.3.1, ts-loader@^9.0.0:
+  version "9.3.1"
+  resolved "https://registry.yarnpkg.com/ts-loader/-/ts-loader-9.3.1.tgz#fe25cca56e3e71c1087fe48dc67f4df8c59b22d4"
+  integrity sha512-OkyShkcZTsTwyS3Kt7a4rsT/t2qvEVQuKCTg4LJmpj9fhFR7ukGdZwV6Qq3tRUkqcXtfGpPR7+hFKHCG/0d3Lw==
   dependencies:
     chalk "^4.1.0"
     enhanced-resolve "^5.0.0"
@@ -12049,7 +12049,12 @@ typedarray-to-buffer@^3.1.5:
   dependencies:
     is-typedarray "^1.0.0"
 
-typescript@>=4.2.3, typescript@^4.5.0, typescript@^4.6.2, typescript@^4.9.0:
+typescript@4.7.4, "typescript@^4.5.0, <4.8.0":
+  version "4.7.4"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.7.4.tgz#1a88596d1cf47d59507a1bcdfb5b9dfe4d488235"
+  integrity sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ==
+
+typescript@>=4.2.3, typescript@^4.6.2, typescript@^4.9.0:
   version "4.9.5"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.9.5.tgz#095979f9bcc0d09da324d58d03ce8f8374cbe65a"
   integrity sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==

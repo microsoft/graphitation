@@ -5,16 +5,16 @@
 
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type hooksTestSubscriptionVariables = {
-  id: string;
+    id: string;
 };
 export type hooksTestSubscriptionResponse = {
-  readonly userNameChanged: {
-    readonly " $fragmentRefs": FragmentRefs<"hooksTestFragment">;
-  };
+    readonly userNameChanged: {
+        readonly " $fragmentRefs": FragmentRefs<"hooksTestFragment">;
+    };
 };
 export type hooksTestSubscription = {
-  readonly response: hooksTestSubscriptionResponse;
-  readonly variables: hooksTestSubscriptionVariables;
+    readonly response: hooksTestSubscriptionResponse;
+    readonly variables: hooksTestSubscriptionVariables;
 };
 
 
@@ -44,7 +44,7 @@ subscription hooksTestSubscription($id: ID!) {
 }
 */
 
-export const documents: import("relay-compiler-language-graphitation").CompiledArtefactModule = {
+export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = {
   "executionQueryDocument": {
     "kind": "Document",
     "definitions": [

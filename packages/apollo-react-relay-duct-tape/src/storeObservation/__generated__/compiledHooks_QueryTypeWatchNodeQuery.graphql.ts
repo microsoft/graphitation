@@ -16,7 +16,7 @@ fragment compiledHooks_QueryTypeFragment on Query {
 }
 */
 
-export const documents: import("relay-compiler-language-graphitation").CompiledArtefactModule = {
+export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = {
   "watchQueryDocument": {
     "kind": "Document",
     "definitions": [

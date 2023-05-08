@@ -1,18 +1,21 @@
 import { useState, useCallback } from "react";
 import { ApolloCache, DataProxy, StoreValue } from "@apollo/client";
 import invariant from "invariant";
-import { CompiledArtefactModule } from "relay-compiler-language-graphitation";
 import { useCompiledRefetchableFragment } from "./useCompiledRefetchableFragment";
-import { FragmentReference } from "./types";
+import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultApolloClient";
+
+import type { FragmentReference } from "./types";
 import type {
   RefetchFn,
   Disposable,
   PrivateRefetchOptions,
   RefetchOptions,
 } from "./useCompiledRefetchableFragment";
-import type { Metadata } from "relay-compiler-language-graphitation";
+import type {
+  CompiledArtefactModule,
+  Metadata,
+} from "@graphitation/apollo-react-relay-duct-tape-compiler";
 import type { DocumentNode } from "graphql";
-import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultApolloClient";
 
 export type PaginationFn = (
   count: number,
