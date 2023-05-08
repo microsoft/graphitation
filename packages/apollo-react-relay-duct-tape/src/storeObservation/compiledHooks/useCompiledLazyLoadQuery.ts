@@ -1,15 +1,13 @@
 import { useRef, useEffect } from "react";
-import {
-  useQuery as useApolloQuery,
-  ObservableQuery,
-  ApolloClient,
-} from "@apollo/client";
+import { useQuery as useApolloQuery } from "@apollo/client";
 import invariant from "invariant";
 import { useDeepCompareMemoize } from "./useDeepCompareMemoize";
-import { CompiledArtefactModule } from "relay-compiler-language-graphitation";
-import { DocumentNode } from "graphql";
 import { useForceUpdate } from "./useForceUpdate";
 import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultApolloClient";
+
+import type { ObservableQuery, ApolloClient } from "@apollo/client";
+import type { DocumentNode } from "graphql";
+import type { CompiledArtefactModule } from "@graphitation/apollo-react-relay-duct-tape-compiler";
 
 class ExecutionQueryHandler {
   public status: [loading: boolean, error?: Error];

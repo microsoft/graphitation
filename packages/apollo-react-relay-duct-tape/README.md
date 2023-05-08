@@ -4,7 +4,7 @@ A compatibility wrapper that provides the react-relay API on top of Apollo Clien
 
 _The name is a reference to the Apollo 13 mission._
 
-Use this together with [relay-compiler-language-graphitation](../relay-compiler-language-graphitation) to have typings generated.
+Use this together with [@graphitation/apollo-react-relay-duct-tape-compiler](../apollo-react-relay-duct-tape-compiler) to have typings and compiled documents generated.
 
 # Setup
 
@@ -14,7 +14,7 @@ Use this together with [relay-compiler-language-graphitation](../relay-compiler-
 
   ```
   yarn add @graphitation/apollo-react-relay-duct-tape
-  yarn add --dev relay-compiler-language-graphitation
+  yarn add --dev @graphitation/apollo-react-relay-duct-tape-compiler
   ```
 
 - Patch your version of `@apollo/client` using the patch found in [the patches directory](../../patches). You can either do so manually or use a tool like [patch-package](https://github.com/ds300/patch-package).
@@ -66,7 +66,7 @@ Use this together with [relay-compiler-language-graphitation](../relay-compiler-
   ```ts
   const {
     createImportDocumentsTransform,
-  } = require("@graphitation/apollo-react-relay-duct-tape/lib/storeObservation/createImportDocumentsTransform");
+  } = require("@graphitation/apollo-react-relay-duct-tape-compiler");
 
   const config: webpack.Configuration = {
     module: {
@@ -102,7 +102,7 @@ Use this together with [relay-compiler-language-graphitation](../relay-compiler-
 In a shell, start the compiler and point it to your schema and source. Depending on the size of the code-base a first run may take a while, but subsequent builds should cached. For developer-expedience, it is advised to run the compiler using the watch mode -- provided you have installed the `watchman` tool.
 
 ```
-$ yarn graphitation-compiler          \
+$ yarn duct-tape-compiler          \
     --schema ./path/to/schema.graphql \
     --src ./path/to/source            \
     --watch

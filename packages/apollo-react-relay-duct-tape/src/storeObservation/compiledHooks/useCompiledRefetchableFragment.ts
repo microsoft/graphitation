@@ -1,13 +1,14 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { unstable_batchedUpdates } from "react-dom";
 import invariant from "invariant";
-import { CompiledArtefactModule } from "relay-compiler-language-graphitation";
 import { useCompiledFragment } from "./useCompiledFragment";
-import { FragmentReference } from "./types";
 import { isEqual } from "lodash";
-import { FetchPolicy } from "../../types";
 import { convertFetchPolicy } from "../../convertFetchPolicy";
 import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultApolloClient";
+
+import type { CompiledArtefactModule } from "@graphitation/apollo-react-relay-duct-tape-compiler";
+import type { FragmentReference } from "./types";
+import type { FetchPolicy } from "../../types";
 
 export interface Disposable {
   dispose(): void;

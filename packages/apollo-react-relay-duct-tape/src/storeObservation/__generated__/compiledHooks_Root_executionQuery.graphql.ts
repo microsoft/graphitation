@@ -105,7 +105,7 @@ query compiledHooks_Root_executionQuery($userId: Int!, $avatarSize: Int = 21, $m
 }
 */
 
-export const documents: import("relay-compiler-language-graphitation").CompiledArtefactModule = {
+export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = {
   "executionQueryDocument": {
     "kind": "Document",
     "definitions": [

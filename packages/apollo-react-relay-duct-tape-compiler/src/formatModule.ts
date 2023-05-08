@@ -23,15 +23,14 @@ function generateExports(moduleName: string, docText: string) {
   const optimizedDocument = optimizeDocumentNode(originalDocument);
 
   if (!moduleName.endsWith("WatchNodeQuery.graphql")) {
-    exports.executionQueryDocument = stripFragmentReferenceFieldSelectionTransform(
-      optimizedDocument
-    );
+    exports.executionQueryDocument =
+      stripFragmentReferenceFieldSelectionTransform(optimizedDocument);
   }
 
   invariant(schema, "Expected a schema to be passed in or set in the env");
   exports.watchQueryDocument = reduceNodeWatchQueryTransform(
     schema,
-    optimizedDocument
+    optimizedDocument,
   );
 
   exports.metadata = extractMetadataTransform(exports.watchQueryDocument);
@@ -56,10 +55,10 @@ export const formatModule: FormatModule = ({
       exports.watchQueryDocument &&
       printDocumentComment(exports.watchQueryDocument),
     exports &&
-      `export const documents: import("relay-compiler-language-graphitation").CompiledArtefactModule = ${JSON.stringify(
+      `export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = ${JSON.stringify(
         exports,
         null,
-        2
+        2,
       )};`,
   ].filter(Boolean) as string[];
 

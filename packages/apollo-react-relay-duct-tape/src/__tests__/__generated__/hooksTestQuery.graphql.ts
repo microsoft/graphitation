@@ -8,13 +8,13 @@ export type hooksTestQueryVariables = {
     id: number;
 };
 export type hooksTestQueryResponse = {
-  readonly user: {
-    readonly " $fragmentRefs": FragmentRefs<"hooksTestFragment">;
-  };
+    readonly user: {
+        readonly " $fragmentRefs": FragmentRefs<"hooksTestFragment">;
+    };
 };
 export type hooksTestQuery = {
-  readonly response: hooksTestQueryResponse;
-  readonly variables: hooksTestQueryVariables;
+    readonly response: hooksTestQueryResponse;
+    readonly variables: hooksTestQueryVariables;
 };
 
 
@@ -44,7 +44,7 @@ query hooksTestQuery($id: Int!) {
 }
 */
 
-export const documents: import("relay-compiler-language-graphitation").CompiledArtefactModule = {
+export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = {
   "executionQueryDocument": {
     "kind": "Document",
     "definitions": [
