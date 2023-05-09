@@ -1,7 +1,7 @@
 import type { PluginInitializer } from "relay-compiler/lib/language/RelayLanguagePluginInterface";
 import typescriptPluginInitializer from "relay-compiler-language-typescript";
 
-import { find as findGraphQLTags } from "./findGraphQLTags";
+import { findGraphQLTagsFactory } from "./findGraphQLTags";
 import { formatModuleFactory } from "./formatModule";
 import { generateFactory } from "./typeGenerator";
 import type { FormatModuleOptions } from "./formatModule";
@@ -13,7 +13,9 @@ export function pluginFactory(
     const typescriptPlugin = typescriptPluginInitializer();
     return {
       ...typescriptPlugin,
-      findGraphQLTags,
+      findGraphQLTags: findGraphQLTagsFactory(
+        !formatModuleOptions.emitDocuments,
+      ),
       formatModule: formatModuleFactory(formatModuleOptions),
       typeGenerator: {
         ...typescriptPlugin.typeGenerator,
