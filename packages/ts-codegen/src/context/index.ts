@@ -537,9 +537,7 @@ export function extractContext(
     },
     EnumTypeDefinition: {
       leave(node) {
-        if (!context.hasEnums) {
-          context.hasEnums = true;
-        }
+        context.hasEnums = true;
 
         context.addType({
           kind: "ENUM",
@@ -577,9 +575,7 @@ export function extractContext(
     },
     InputObjectTypeDefinition: {
       leave(node) {
-        if (!context.hasInputs) {
-          context.hasInputs = true;
-        }
+        context.hasInputs = true;
 
         context.addType({
           kind: "INPUT_OBJECT",
