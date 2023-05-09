@@ -29,7 +29,7 @@
     "@graphql-codegen/typescript": "^2.5.1",
     "@types/jest": "^26.0.22",
     "monorepo-scripts": "*",
-    "relay-test-utils-internal": "^11.0.2",
+    "relay-test-utils-internal": "^12.0.0",
     "ts-node": "^10.8.1"
   },
   "publishConfig": {
