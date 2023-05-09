@@ -77,7 +77,9 @@ export function generateResolvers(
 
   const extra: ts.Statement[] = [];
   const source = factory.createSourceFile(
-    statements.concat(extra),
+    (context.getAllImportDeclarations("RESOLVERS") as ts.Statement[])
+      .concat(statements)
+      .concat(extra),
     factory.createToken(ts.SyntaxKind.EndOfFileToken),
     ts.NodeFlags.None,
   );

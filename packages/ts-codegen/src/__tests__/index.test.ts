@@ -76,7 +76,8 @@ describe(generateTS, () => {
         "
       `);
       expect(resolvers).toMatchInlineSnapshot(`
-        "import type { PromiseOrValue } from "@graphitation/supermassive";
+        "import type { Avatar } from "@msteams/packages-test";
+        import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
         export declare namespace Post {
@@ -960,7 +961,8 @@ describe(generateTS, () => {
         "
       `);
       expect(resolvers).toMatchInlineSnapshot(`
-        "import type { PromiseOrValue } from "@graphitation/supermassive";
+        "import type { Avatar } from "@msteams/packages-test";
+        import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
         export declare namespace User {
@@ -1076,7 +1078,8 @@ describe(generateTS, () => {
       "
     `);
     expect(resolvers).toMatchInlineSnapshot(`
-      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      "import type { Rank } from "@msteams/packages-rank";
+      import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
       import * as Models from "./models.interface";
       export declare namespace User {
@@ -1213,7 +1216,8 @@ describe(generateTS, () => {
       "
     `);
     expect(resolvers).toMatchInlineSnapshot(`
-      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      "import type { Rank } from "@msteams/packages-rank";
+      import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
       import * as Models from "./models.interface";
       import * as Inputs from "./inputs.interface";
@@ -1267,7 +1271,8 @@ describe(generateTS, () => {
       "
     `);
     expect(resolvers).toMatchInlineSnapshot(`
-      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      "import type { Rank } from "@msteams/packages-rank";
+      import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
       import * as Models from "./models.interface";
       export declare namespace User {
@@ -1340,7 +1345,8 @@ describe(generateTS, () => {
       "
     `);
     expect(resolvers).toMatchInlineSnapshot(`
-      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      "import type { Rank } from "@msteams/packages-rank";
+      import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
       import * as Models from "./models.interface";
       import * as Inputs from "./inputs.interface";

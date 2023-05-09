@@ -313,25 +313,6 @@ export class TsCodegenContext {
 
     return imports;
   }
-  getAllResolverImportDeclarations(): ts.ImportDeclaration[] {
-    const imports: ts.ImportDeclaration[] = [];
-
-    imports.push(...this.getBasicImports());
-
-    imports.push(
-      createImportDeclaration(
-        Array.from(this.usedEntitiesInResolvers)
-          .sort()
-          .filter((typeName) => !this.typeNameToImports.has(typeName))
-          .map((typeName) => typeName),
-        "./models.interface",
-      ),
-    );
-
-    imports.push(...this.getAllImportDeclarations("RESOLVERS"));
-
-    return imports;
-  }
 
   getScalarDefinition(scalarName: string | null) {
     if (!scalarName || BUILT_IN_SCALARS.hasOwnProperty(scalarName)) {
