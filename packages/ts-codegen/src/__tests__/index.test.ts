@@ -483,8 +483,7 @@ describe(generateTS, () => {
       `);
       expect(enums).toMatchInlineSnapshot(`undefined`);
       expect(inputs).toMatchInlineSnapshot(`
-        "import * as Models from "./models.interface";
-        export type UserParamsInput = {
+        "export type UserParamsInput = {
             readonly name?: string | null;
         };
         "
@@ -617,8 +616,7 @@ describe(generateTS, () => {
       `);
       expect(enums).toMatchInlineSnapshot(`undefined`);
       expect(inputs).toMatchInlineSnapshot(`
-        "import * as Models from "./models.interface";
-        export type PresenceInput = {
+        "export type PresenceInput = {
             readonly type: string;
         };
         export type UserParamsInput = {
@@ -1136,7 +1134,7 @@ describe(generateTS, () => {
       "
     `);
     expect(inputs).toMatchInlineSnapshot(`
-      "import * as Models from "./models.interface";
+      "import type { Rank } from "@msteams/packages-rank";
       export type UserParam = {
           readonly id: string;
           readonly rank: Rank;
@@ -1195,7 +1193,7 @@ describe(generateTS, () => {
     `);
     expect(enums).toMatchInlineSnapshot(`undefined`);
     expect(inputs).toMatchInlineSnapshot(`
-      "import * as Models from "./models.interface";
+      "import type { Rank } from "@msteams/packages-rank";
       export type UserInput = {
           readonly id: string;
           readonly rank: Rank;
@@ -1321,7 +1319,7 @@ describe(generateTS, () => {
     `);
     expect(enums).toMatchInlineSnapshot(`undefined`);
     expect(inputs).toMatchInlineSnapshot(`
-      "import * as Models from "./models.interface";
+      "import type { Rank } from "@msteams/packages-rank";
       export type RankParams = {
           readonly rank: Rank;
       };
@@ -1765,8 +1763,7 @@ describe(generateTS, () => {
 
     expect(enums).toMatchInlineSnapshot(`undefined`);
     expect(inputs).toMatchInlineSnapshot(`
-      "import * as Models from "./models.interface";
-      export type FooInput = {
+      "export type FooInput = {
           readonly default: string;
           readonly number: Bar;
       };
