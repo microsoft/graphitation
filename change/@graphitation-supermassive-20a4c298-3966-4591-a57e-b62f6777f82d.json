@@ -1,7 +1,0 @@
-{
-  "type": "none",
-  "comment": "monorepo dep tree flattening",
-  "packageName": "@graphitation/supermassive",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "none"
-}
