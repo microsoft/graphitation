@@ -4,17 +4,12 @@
  * Copyright 2018 Kaare Hoff Skovgaard kaare@kaareskovgaard.net, Eloy Durán eloy.de.enige@gmail.com
  */
 
-/**
- * NOTE: This is currently in-flight and mostly re-uses code from the above mentioned package, where it's tested.
- */
-/* istanbul ignore file */
-
 import * as ts from "typescript";
 import {
   GraphQLTag,
   GraphQLTagFinder,
 } from "relay-compiler/lib/language/RelayLanguagePluginInterface";
-import { rewriteGraphitationDirectives } from "./rewriteGraphitationDirectives";
+// import { rewriteGraphitationDirectives } from "./rewriteGraphitationDirectives";
 
 /**
  * @note Difference from the TS language plugin is that we only support hooks, so no need for HOCs.

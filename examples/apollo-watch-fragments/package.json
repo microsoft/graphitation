@@ -15,7 +15,7 @@
     "start": "yarn generate-resolver-typings && concurrently 'yarn duct-tape-compiler --watch' 'yarn serve'",
     "serve": "webpack serve",
     "build": "webpack",
-    "duct-tape-compiler": "duct-tape-compiler --schema ./data/schema.graphql --src ./src --printWatchQueries",
+    "duct-tape-compiler": "duct-tape-compiler --schema ./data/schema.graphql --src ./src --emitQueryDebugComments",
     "generate-resolver-typings": "graphql-codegen --config codegen.yml"
   },
   "eslintConfig": {
@@ -48,7 +48,6 @@
     "@welldone-software/why-did-you-render": "^6.2.1",
     "concurrently": "^6.2.1",
     "graphql-relay": "^0.10.0",
-    "relay-compiler": "^10",
     "ts-loader": "9.3.1",
     "ts-node": "^10.2.1",
     "typescript": "4.7.4",

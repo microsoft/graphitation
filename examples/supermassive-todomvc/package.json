@@ -4,12 +4,12 @@
   "private": true,
   "version": "1.0.1-0",
   "scripts": {
-    "start": "concurrently 'yarn relay --watch' 'yarn serve --progress --color --mode=development'",
+    "start": "concurrently 'yarn duct-tape-compiler --watch' 'yarn serve --progress --color --mode=development'",
     "build": "",
     "serve": "webpack serve --config webpack.config.ts",
     "extract-schema": "ts-node --project ./tsconfig-cli.json ../../packages/cli/bin/supermassive.js extract-schema ./src/schema/typeDefs.graphql",
     "generate:interfaces": "ts-node --project ./tsconfig-cli.json ../../packages/cli/bin/supermassive.js generate-interfaces ./src/schema/typeDefs.graphql",
-    "relay": "relay-compiler --language graphitation --schema ./src/schema/typeDefs.graphql --src ./src"
+    "duct-tape-compiler": "duct-tape-compiler --schema ./src/schema/typeDefs.graphql --src ./src --emitDocuments=false"
   },
   "dependencies": {
     "@apollo/client": "^3.4.16",
@@ -26,7 +26,6 @@
     "lodash": "^4.17.21",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "relay-compiler": "^12.0.0",
     "ts-loader": "^9.0.0",
     "ts-node": "^10.4.0",
     "typescript": "^4.6.2",

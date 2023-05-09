@@ -15,7 +15,7 @@ type PathWithConnectionDirective = [any[], Directive];
  *   relay-compiler's filter directives transform
  */
 export function retainConnectionDirectiveTransform(
-  wrappedFilterDirectivesTransform: IRTransform
+  wrappedFilterDirectivesTransform: IRTransform,
 ): IRTransform {
   const filterDirectivesTransformWrapper: IRTransform = (context) => {
     let nextContext = context;
@@ -26,7 +26,8 @@ export function retainConnectionDirectiveTransform(
 
     // Store @connection directives
     nextContext.forEachDocument((document) => {
-      const fieldPathsWithConnectionDirectives: PathWithConnectionDirective[] = [];
+      const fieldPathsWithConnectionDirectives: PathWithConnectionDirective[] =
+        [];
       visit(document, {
         Directive(directiveNode, _key, _parent, path) {
           if (directiveNode.name === "connection") {
@@ -37,9 +38,8 @@ export function retainConnectionDirectiveTransform(
           }
         },
       });
-      documentsWithConnectionDirectives[
-        document.name
-      ] = fieldPathsWithConnectionDirectives;
+      documentsWithConnectionDirectives[document.name] =
+        fieldPathsWithConnectionDirectives;
     });
 
     // Apply original upstream transform
@@ -54,7 +54,7 @@ export function retainConnectionDirectiveTransform(
           LinkedField(linkedFieldNode, _key, _parent, path) {
             const match = fieldPathsWithConnectionDirectives.find(
               ([p, _]) =>
-                path!.length === p.length && path!.every((x, i) => p[i] === x)
+                path!.length === p.length && path!.every((x, i) => p[i] === x),
             );
             if (match) {
               const nextLinkedFieldNode: LinkedField = {

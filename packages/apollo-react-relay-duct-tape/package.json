@@ -15,7 +15,7 @@
     "test": "monorepo-scripts test",
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts",
-    "duct-tape-compiler": "duct-tape-compiler --printWatchQueries --schema ./src/__tests__/schema.graphql --src ./src --exclude storeObservation/*FieldPolicy.test.ts"
+    "duct-tape-compiler": "duct-tape-compiler --emitQueryDebugComments --schema ./src/__tests__/schema.graphql --src ./src --exclude storeObservation/*FieldPolicy.test.ts"
   },
   "devDependencies": {
     "@apollo/client": "^3.3.15",

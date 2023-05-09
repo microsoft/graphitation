@@ -4,6 +4,7 @@
 
 import * as yargs from "yargs";
 import { relayCompiler } from "relay-compiler";
+import { pluginFactory } from "./relayCompilerLanguagePlugin";
 
 // TODO: This needs to be done here to ensure we get to mutate the transforms lists that get used.
 import { IRTransforms } from "relay-compiler";
@@ -25,9 +26,6 @@ function wrapTransform(
   transforms[transformIndex] = wrapperTransform(wrappedTransform);
 }
 
-IRTransforms.printTransforms.push(annotateFragmentReferenceTransform); // TODO: Moving this up in the list might potentially optimize the query further
-IRTransforms.commonTransforms.unshift(enableNodeWatchQueryTransform);
-
 wrapTransform(
   "filterDirectivesTransform",
   IRTransforms.printTransforms,
@@ -41,7 +39,7 @@ wrapTransform(
 
 async function main() {
   const argv = await yargs
-    .scriptName("nova-graphql-compiler")
+    .scriptName("duct-tape-compiler")
     .options({
       src: {
         demandOption: false,
@@ -87,25 +85,38 @@ async function main() {
         default: false,
         type: "boolean",
       },
-      printWatchQueries: {
+      emitDocuments: {
+        demandOption: false,
+        default: true,
+        type: "boolean",
+      },
+      emitNarrowObservables: {
+        demandOption: false,
+        default: true,
+        type: "boolean",
+      },
+      emitQueryDebugComments: {
         demandOption: false,
         default: false,
         type: "boolean",
       },
     })
     .help().argv;
-  // First ensure the schema env var is set...
-  if (process.env.SCHEMA_PATH === undefined) {
-    process.env.SCHEMA_PATH = argv.schema;
+
+  if (!argv.emitDocuments) {
+    argv.emitNarrowObservables = false;
+    argv.emitQueryDebugComments = false;
   }
-  if (argv.printWatchQueries) {
-    process.env.PRINT_WATCH_QUERIES = "true";
+
+  if (argv.emitNarrowObservables) {
+    // TODO: Moving this up in the list might potentially optimize the query further
+    IRTransforms.printTransforms.push(annotateFragmentReferenceTransform);
+    IRTransforms.commonTransforms.unshift(enableNodeWatchQueryTransform);
   }
-  // ...then load the language plugin, which looks for the schema path on module load (bad)
-  const language = require("./relayCompilerLanguagePlugin");
+
   return relayCompiler({
     ...argv,
-    language,
+    language: pluginFactory(argv),
     extensions: ["ts", "tsx"], // FIXME: Why is this not taken from the language plugin?
     include: argv.include || ["**"],
     exclude: [

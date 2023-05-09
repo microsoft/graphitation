@@ -1,8 +1,3 @@
-/**
- * NOTE: This is currently in-flight and mostly re-uses code from the above mentioned package, where it's tested.
- */
-/* istanbul ignore file */
-
 import { TypeGenerator } from "relay-compiler/lib/language/RelayLanguagePluginInterface";
 
 export function generateFactory(wrappedGenerate: TypeGenerator["generate"]) {

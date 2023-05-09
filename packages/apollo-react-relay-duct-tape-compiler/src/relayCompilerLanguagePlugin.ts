@@ -2,28 +2,23 @@ import type { PluginInitializer } from "relay-compiler/lib/language/RelayLanguag
 import typescriptPluginInitializer from "relay-compiler-language-typescript";
 
 import { find as findGraphQLTags } from "./findGraphQLTags";
-import { formatModule } from "./formatModule";
+import { formatModuleFactory } from "./formatModule";
 import { generateFactory } from "./typeGenerator";
+import type { FormatModuleOptions } from "./formatModule";
 
-// TODO: Ideally this would be done from here, but this module is either loaded too late
-//       or it's mutating the individual modules and the cli bin being used is the bundled
-//       relay-compiler bin file.
-//
-// import { IRTransforms } from "relay-compiler";
-// import { enableNodeWatchQueryTransform } from "./enableNodeWatchQueryTransform";
-// IRTransforms.commonTransforms.unshift(enableNodeWatchQueryTransform);
-
-const pluginInitializer: PluginInitializer = () => {
-  const typescriptPlugin = typescriptPluginInitializer();
-  return {
-    ...typescriptPlugin,
-    findGraphQLTags,
-    formatModule,
-    typeGenerator: {
-      ...typescriptPlugin.typeGenerator,
-      generate: generateFactory(typescriptPlugin.typeGenerator.generate),
-    },
+export function pluginFactory(
+  formatModuleOptions: FormatModuleOptions,
+): PluginInitializer {
+  return () => {
+    const typescriptPlugin = typescriptPluginInitializer();
+    return {
+      ...typescriptPlugin,
+      findGraphQLTags,
+      formatModule: formatModuleFactory(formatModuleOptions),
+      typeGenerator: {
+        ...typescriptPlugin.typeGenerator,
+        generate: generateFactory(typescriptPlugin.typeGenerator.generate),
+      },
+    };
   };
-};
-
-export default pluginInitializer;
+}
