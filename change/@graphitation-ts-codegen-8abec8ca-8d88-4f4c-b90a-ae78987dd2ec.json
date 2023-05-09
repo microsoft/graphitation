@@ -1,6 +1,6 @@
 {
   "type": "patch",
-  "comment": "fixed file generation when some of the file is empty",
+  "comment": "HOTFIXES: empty files + unsused imports + @import directive fixed",
   "packageName": "@graphitation/ts-codegen",
   "email": "jakubvejr@microsoft.com",
   "dependentChangeType": "patch"
