@@ -1,8 +1,8 @@
 diff --git a/node_modules/relay-test-utils-internal/lib/testschema.graphql b/node_modules/relay-test-utils-internal/lib/testschema.graphql
-index ce0e0f3..5e96d03 100644
+index 2b6036e..4536218 100644
 --- a/node_modules/relay-test-utils-internal/lib/testschema.graphql
 +++ b/node_modules/relay-test-utils-internal/lib/testschema.graphql
-@@ -485,7 +485,7 @@ interface FeedUnit {
+@@ -496,7 +496,7 @@ interface FeedUnit {
  
  type FriendsConnection {
    count: Int
@@ -11,7 +11,7 @@ index ce0e0f3..5e96d03 100644
    pageInfo: PageInfo
  }
  
-@@ -1008,6 +1008,7 @@ type User implements Named & Node & Actor & HasJsField & Entity & AllConcreteTyp
+@@ -1024,6 +1024,7 @@ type User implements Named & Node & Actor & HasJsField & Entity & AllConcreteTyp
      last: Int
      orderby: String
    ): CommentsConnection
