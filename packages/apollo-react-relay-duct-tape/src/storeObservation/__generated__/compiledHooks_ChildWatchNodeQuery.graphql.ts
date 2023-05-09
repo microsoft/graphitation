@@ -1,7 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
 // @ts-nocheck
-;
 
 /*
 query compiledHooks_ChildWatchNodeQuery($id: ID!) {

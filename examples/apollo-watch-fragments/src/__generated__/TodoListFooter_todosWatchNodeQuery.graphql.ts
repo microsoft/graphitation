@@ -1,7 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
 // @ts-nocheck
-;
 
 /*
 query TodoListFooter_todosWatchNodeQuery($id: ID!) {

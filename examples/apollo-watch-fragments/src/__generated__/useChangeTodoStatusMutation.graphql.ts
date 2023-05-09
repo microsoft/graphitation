@@ -1,7 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
 // @ts-nocheck
-;
 
 export type ChangeTodoStatusInput = {
     id: string;

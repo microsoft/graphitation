@@ -1,7 +1,3 @@
-/**
- * NOTE: This is currently in-flight and mostly re-uses code from the above mentioned package, where it's tested.
- */
-
 import {
   DirectiveNode,
   parse,
@@ -34,7 +30,7 @@ export function rewriteGraphitationDirectives(document: string) {
       _key,
       _parent,
       _path,
-      ancestors
+      ancestors,
     ): DirectiveNode | undefined {
       switch (directiveNode.name.value) {
         case "watchNode": {
@@ -42,7 +38,7 @@ export function rewriteGraphitationDirectives(document: string) {
           invariant(
             !Array.isArray(fragmentDefinitionNode) &&
               fragmentDefinitionNode.kind === "FragmentDefinition",
-            "Expected @watchNode to be used on a fragment"
+            "Expected @watchNode to be used on a fragment",
           );
           return emitRefetchableDirective(fragmentDefinitionNode);
         }
@@ -65,7 +61,7 @@ export function rewriteGraphitationDirectives(document: string) {
 }
 
 function emitRefetchableDirective(
-  fragmentDefinitionNode: FragmentDefinitionNode
+  fragmentDefinitionNode: FragmentDefinitionNode,
 ): DirectiveNode {
   const fragmentName = fragmentDefinitionNode.name.value;
   const fragmentBaseName = fragmentName.replace(/Fragment$/, "");

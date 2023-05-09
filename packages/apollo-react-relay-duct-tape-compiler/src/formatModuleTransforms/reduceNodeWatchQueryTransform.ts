@@ -31,19 +31,19 @@ const ALLOWED_REFETCH_QUERY_FIELD_SELECTIONS = [
  */
 export function reduceNodeWatchQueryTransform(
   schema: GraphQLSchema,
-  document: DocumentNode
+  document: DocumentNode,
 ): DocumentNode {
   const nodeType = schema.getType("Node");
   invariant(
     nodeType && isInterfaceType(nodeType),
-    "Expected schema to define a Node interface"
+    "Expected schema to define a Node interface in order to support narrow observables.",
   );
 
   const typeInfo = new TypeInfo(schema);
   let retainFragment: string;
 
   const removeNonWatchQueryFragmentNodes = (
-    node: FragmentSpreadNode | FragmentDefinitionNode
+    node: FragmentSpreadNode | FragmentDefinitionNode,
   ) => {
     if (retainFragment && node.name.value === retainFragment) {
       return undefined;
@@ -69,13 +69,13 @@ export function reduceNodeWatchQueryTransform(
       OperationDefinition(operationDefinitionNode) {
         const selections = operationDefinitionNode.selectionSet!.selections;
         const fragmentSpreadNode = selections.find(
-          (sel) => sel.kind === "FragmentSpread"
+          (sel) => sel.kind === "FragmentSpread",
         ) as FragmentSpreadNode;
         if (
           selections.length === 2 &&
           fragmentSpreadNode &&
           selections.find(
-            (sel) => sel.kind === "Field" && sel.name.value === "__fragments"
+            (sel) => sel.kind === "Field" && sel.name.value === "__fragments",
           )
         ) {
           retainFragment = fragmentSpreadNode.name.value;
@@ -90,7 +90,7 @@ export function reduceNodeWatchQueryTransform(
         ) {
           const selections = fieldNode.selectionSet!.selections;
           const fragmentSpreadSelections = selections.filter(
-            (sel) => sel.kind === "FragmentSpread"
+            (sel) => sel.kind === "FragmentSpread",
           ) as FragmentSpreadNode[];
           // This is a refetch query only if...
           if (
@@ -100,7 +100,9 @@ export function reduceNodeWatchQueryTransform(
             selections.filter(
               (sel) =>
                 sel.kind === "Field" &&
-                !ALLOWED_REFETCH_QUERY_FIELD_SELECTIONS.includes(sel.name.value)
+                !ALLOWED_REFETCH_QUERY_FIELD_SELECTIONS.includes(
+                  sel.name.value,
+                ),
             ).length === 0 ||
             // ...and no inline fragment.
             selections.filter((sel) => sel.kind === "InlineFragment").length ===
@@ -113,6 +115,6 @@ export function reduceNodeWatchQueryTransform(
       },
       FragmentSpread: removeNonWatchQueryFragmentNodes,
       FragmentDefinition: removeNonWatchQueryFragmentNodes,
-    })
+    }),
   );
 }
