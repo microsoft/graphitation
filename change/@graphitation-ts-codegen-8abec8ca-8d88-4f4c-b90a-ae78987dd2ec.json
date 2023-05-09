@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "HOTFIXES: empty files + unsused imports + @import directive fixed",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}

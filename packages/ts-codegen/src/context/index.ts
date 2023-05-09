@@ -100,6 +100,7 @@ export class TsCodegenContext {
   private typeNameToType: Map<string, Type>;
   private usedEntitiesInModels: Set<string>;
   private usedEntitiesInResolvers: Set<string>;
+  private usedEntitiesInInputs: Set<string>;
   private imports: DefinitionImport[];
   private typeNameToImports: Map<
     string,
@@ -107,17 +108,24 @@ export class TsCodegenContext {
   >;
   private typeNameToModels: Map<string, DefinitionModel>;
   private legacyInterfaces: Set<string>;
+  hasUsedModelInInputs: boolean;
+  hasEnums: boolean;
+  hasInputs: boolean;
 
   constructor(private options: TsCodegenContextOptions) {
     this.allTypes = [];
     this.typeNameToType = new Map();
     this.usedEntitiesInModels = new Set();
     this.usedEntitiesInResolvers = new Set();
+    this.usedEntitiesInInputs = new Set();
 
     this.imports = [];
     this.typeNameToImports = new Map();
     this.typeNameToModels = new Map();
     this.legacyInterfaces = new Set();
+    this.hasUsedModelInInputs = false;
+    this.hasInputs = false;
+    this.hasEnums = Boolean(options.enumsImport);
   }
 
   isLegacyCompatMode(): boolean {
@@ -231,11 +239,13 @@ export class TsCodegenContext {
   }
 
   getAllImportDeclarations(
-    filterFor: "MODELS" | "RESOLVERS",
+    filterFor: "MODELS" | "RESOLVERS" | "INPUTS",
   ): ts.ImportDeclaration[] {
     let filter: (typeName: string) => boolean;
     if (filterFor === "MODELS") {
       filter = (typeName: string) => this.usedEntitiesInModels.has(typeName);
+    } else if (filterFor === "INPUTS") {
+      filter = (typeName: string) => this.usedEntitiesInInputs.has(typeName);
     } else {
       filter = (typeName: string) => this.usedEntitiesInResolvers.has(typeName);
     }
@@ -306,25 +316,6 @@ export class TsCodegenContext {
         ),
       );
     }
-
-    return imports;
-  }
-  getAllResolverImportDeclarations(): ts.ImportDeclaration[] {
-    const imports: ts.ImportDeclaration[] = [];
-
-    imports.push(...this.getBasicImports());
-
-    imports.push(
-      createImportDeclaration(
-        Array.from(this.usedEntitiesInResolvers)
-          .sort()
-          .filter((typeName) => !this.typeNameToImports.has(typeName))
-          .map((typeName) => typeName),
-        "./models.interface",
-      ),
-    );
-
-    imports.push(...this.getAllImportDeclarations("RESOLVERS"));
 
     return imports;
   }
@@ -453,6 +444,8 @@ export class TsCodegenContext {
         this.usedEntitiesInModels.add(typeName);
       } else if (markUsage === "RESOLVERS") {
         this.usedEntitiesInResolvers.add(typeName);
+      } else if (markUsage === "INPUTS") {
+        this.usedEntitiesInInputs.add(typeName);
       }
       let { modelName } = this.typeNameToImports.get(
         typeName,
@@ -469,6 +462,7 @@ export class TsCodegenContext {
         } else if (markUsage === "LEGACY") {
           return new TypeLocation(null, `Types.${typeName}`);
         } else if (markUsage === "INPUTS") {
+          this.hasUsedModelInInputs = true;
           return new TypeLocation(null, `Models.${typeName}`);
         }
         return new TypeLocation(null, typeName);
@@ -543,6 +537,8 @@ export function extractContext(
     },
     EnumTypeDefinition: {
       leave(node) {
+        context.hasEnums = true;
+
         context.addType({
           kind: "ENUM",
           name: node.name.value,
@@ -579,6 +575,8 @@ export function extractContext(
     },
     InputObjectTypeDefinition: {
       leave(node) {
+        context.hasInputs = true;
+
         context.addType({
           kind: "INPUT_OBJECT",
           name: node.name.value,

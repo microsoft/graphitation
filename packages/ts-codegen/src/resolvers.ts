@@ -43,28 +43,30 @@ export function generateResolvers(
     ),
   );
 
-  statements.push(
-    factory.createImportDeclaration(
-      undefined,
-      undefined,
-      factory.createImportClause(
+  if (context.hasInputs) {
+    statements.push(
+      factory.createImportDeclaration(
+        undefined,
+        undefined,
+        factory.createImportClause(
+          false,
+          undefined,
+          factory.createNamespaceImport(factory.createIdentifier("Inputs")),
+        ),
+        factory.createStringLiteral("./inputs.interface"),
+      ),
+    );
+
+    statements.push(
+      factory.createExportDeclaration(
+        undefined,
+        undefined,
         false,
         undefined,
-        factory.createNamespaceImport(factory.createIdentifier("Inputs")),
+        factory.createStringLiteral("./inputs.interface"),
       ),
-      factory.createStringLiteral("./inputs.interface"),
-    ),
-  );
-
-  statements.push(
-    factory.createExportDeclaration(
-      undefined,
-      undefined,
-      false,
-      undefined,
-      factory.createStringLiteral("./inputs.interface"),
-    ),
-  );
+    );
+  }
 
   statements.push(
     ...(context
@@ -75,7 +77,9 @@ export function generateResolvers(
 
   const extra: ts.Statement[] = [];
   const source = factory.createSourceFile(
-    statements.concat(extra),
+    (context.getAllImportDeclarations("RESOLVERS") as ts.Statement[])
+      .concat(statements)
+      .concat(extra),
     factory.createToken(ts.SyntaxKind.EndOfFileToken),
     ts.NodeFlags.None,
   );

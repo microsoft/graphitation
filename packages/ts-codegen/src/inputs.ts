@@ -7,28 +7,31 @@ export function generateInputs(
   document: DocumentNode,
 ): ts.SourceFile {
   const statements: ts.Statement[] = [];
-  statements.push(
-    factory.createImportDeclaration(
-      undefined,
-      undefined,
-      factory.createImportClause(
-        false,
-        undefined,
-        factory.createNamespaceImport(factory.createIdentifier("Models")),
-      ),
-      factory.createStringLiteral("./models.interface"),
-    ),
-  );
 
-  statements.push(
-    ...(context
-      .getAllTypes()
-      .map((type) => createResolversForType(context, type))
-      .filter((t) => t != null) as ts.Statement[]),
-  );
+  const typeStatements = context
+    .getAllTypes()
+    .map((type) => createResolversForType(context, type))
+    .filter((t) => t != null) as ts.Statement[];
+
+  statements.push(...context.getAllImportDeclarations("INPUTS"));
+
+  if (context.hasUsedModelInInputs) {
+    statements.push(
+      factory.createImportDeclaration(
+        undefined,
+        undefined,
+        factory.createImportClause(
+          false,
+          undefined,
+          factory.createNamespaceImport(factory.createIdentifier("Models")),
+        ),
+        factory.createStringLiteral("./models.interface"),
+      ),
+    );
+  }
 
   const source = factory.createSourceFile(
-    statements,
+    statements.concat(typeStatements),
     factory.createToken(ts.SyntaxKind.EndOfFileToken),
     ts.NodeFlags.None,
   );
