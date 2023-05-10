@@ -64,6 +64,7 @@ function useLoadMore({
         "usePaginationFragment(): Expected a cursor value to exist",
       );
       const previousVariables = {
+        ...metadata.connection?.filterVariableDefaults,
         ...fragmentReference.__fragments,
         id: fragmentReference.id,
       };

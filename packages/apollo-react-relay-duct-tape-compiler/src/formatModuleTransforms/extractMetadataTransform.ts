@@ -5,7 +5,12 @@ import {
   FragmentDefinitionNode,
   FragmentSpreadNode,
   OperationDefinitionNode,
+  ValueNode,
+  parseValue,
   visit,
+  valueFromAST,
+  valueFromASTUntyped,
+  DirectiveNode,
 } from "graphql";
 import invariant from "invariant";
 
@@ -14,6 +19,7 @@ interface ConnectionMetadata {
   forwardCursorVariable?: string;
   backwardCountVariable?: string;
   backwardCursorVariable?: string;
+  filterVariableDefaults?: Record<string, any>;
   selectionPath: string[];
 }
 export interface Metadata {
@@ -39,7 +45,7 @@ export interface Metadata {
  * @returns The metadata needed at runtime
  */
 export function extractMetadataTransform(
-  document: DocumentNode
+  document: DocumentNode,
 ): Metadata | undefined {
   const metadata: Metadata = {};
   const nodeFieldSelection = extractNodeFieldSelection(document);
@@ -48,7 +54,7 @@ export function extractMetadataTransform(
   }
   const mainFragment = getMainFragmentMetadata(
     document,
-    nodeFieldSelection?.name.value
+    nodeFieldSelection?.name.value,
   );
   if (mainFragment) {
     metadata.mainFragment = mainFragment;
@@ -62,24 +68,22 @@ export function extractMetadataTransform(
 
 function getMainFragmentMetadata(
   document: DocumentNode,
-  rootSelection: string | undefined
+  rootSelection: string | undefined,
 ):
   | {
       name: string;
       typeCondition: string;
     }
   | undefined {
-  const [
-    operationDefinition,
-    ...fragmentDefinitions
-  ] = document.definitions as [
-    OperationDefinitionNode,
-    ...FragmentDefinitionNode[]
-  ];
+  const [operationDefinition, ...fragmentDefinitions] =
+    document.definitions as [
+      OperationDefinitionNode,
+      ...FragmentDefinitionNode[],
+    ];
   invariant(
     operationDefinition.kind === "OperationDefinition" &&
       fragmentDefinitions.every((node) => node.kind === "FragmentDefinition"),
-    "Expected definition nodes in specific order"
+    "Expected definition nodes in specific order",
   );
   if (fragmentDefinitions.length === 0) {
     return undefined;
@@ -88,22 +92,22 @@ function getMainFragmentMetadata(
   if (rootSelection) {
     const field = selectionSet.selections.find(
       (selection) =>
-        selection.kind === "Field" && selection.name.value === rootSelection
+        selection.kind === "Field" && selection.name.value === rootSelection,
     ) as FieldNode | undefined;
     invariant(
       field?.selectionSet,
-      "Expected root selection to exist in document"
+      "Expected root selection to exist in document",
     );
     selectionSet = field.selectionSet;
   }
   const mainFragmentSpread = selectionSet.selections.find(
-    (selection) => selection.kind === "FragmentSpread"
+    (selection) => selection.kind === "FragmentSpread",
   ) as FragmentSpreadNode | undefined;
   if (!mainFragmentSpread) {
     return undefined;
   }
   const mainFragment = fragmentDefinitions.find(
-    (fragment) => fragment.name.value === mainFragmentSpread.name.value
+    (fragment) => fragment.name.value === mainFragmentSpread.name.value,
   );
   invariant(mainFragment, "Expected a main fragment");
   return {
@@ -114,57 +118,68 @@ function getMainFragmentMetadata(
 
 function extractNodeFieldSelection(document: DocumentNode) {
   const operationDefinition = document.definitions.find(
-    (def) => def.kind === "OperationDefinition"
+    (def) => def.kind === "OperationDefinition",
   ) as OperationDefinitionNode | undefined;
   invariant(operationDefinition, "Expected an operation");
   const nodeFieldSelection = operationDefinition.selectionSet.selections.find(
-    (selection) => selection.kind === "Field" && selection.name.value === "node"
+    (selection) =>
+      selection.kind === "Field" && selection.name.value === "node",
   ) as FieldNode | undefined;
   return nodeFieldSelection;
 }
 
 function extractConnectionMetadataTransform(
-  document: DocumentNode
+  document: DocumentNode,
 ): ConnectionMetadata | undefined {
   let foundConnection = false;
   const metadata: ConnectionMetadata = { selectionPath: [] };
+  const variableDefaults = new Map<string, ValueNode | undefined>();
   visit(document, {
+    VariableDefinition: {
+      enter(variableNode) {
+        variableDefaults.set(
+          variableNode.variable.name.value,
+          variableNode.defaultValue,
+        );
+      },
+    },
     Field: {
       enter(fieldNode) {
         if (!foundConnection) {
           metadata.selectionPath.push(fieldNode.name.value);
         }
-        if (
-          fieldNode.directives?.find(
-            (directive) => directive.name.value === "connection"
-          )
-        ) {
+        const connectionDirective = fieldNode.directives?.find(
+          (directive) => directive.name.value === "connection",
+        );
+        if (connectionDirective) {
           invariant(
             !foundConnection,
-            "Expected to find a single connection in one document"
+            "Expected to find a single connection in one document",
           );
           foundConnection = true;
 
-          fieldNode.arguments?.forEach((arg) => {
-            switch (arg.name.value) {
-              case "first": {
-                metadata.forwardCountVariable = getVariableValue(arg);
-                break;
-              }
-              case "after": {
-                metadata.forwardCursorVariable = getVariableValue(arg);
-                break;
-              }
-              case "last": {
-                metadata.backwardCountVariable = getVariableValue(arg);
-                break;
-              }
-              case "before": {
-                metadata.backwardCursorVariable = getVariableValue(arg);
-                break;
-              }
-            }
-          });
+          const fieldArguments = new Map(
+            fieldNode.arguments?.map((arg) => [arg.name.value, arg]),
+          );
+
+          metadata.forwardCountVariable = getVariableValue(
+            fieldArguments.get("first"),
+          );
+          metadata.forwardCursorVariable = getVariableValue(
+            fieldArguments.get("after"),
+          );
+          metadata.backwardCountVariable = getVariableValue(
+            fieldArguments.get("last"),
+          );
+          metadata.backwardCursorVariable = getVariableValue(
+            fieldArguments.get("before"),
+          );
+
+          metadata.filterVariableDefaults = extractFilterVariableDefaults(
+            connectionDirective,
+            fieldArguments,
+            variableDefaults,
+          );
         }
       },
       leave() {
@@ -178,7 +193,7 @@ function extractConnectionMetadataTransform(
     invariant(
       (metadata.forwardCountVariable && metadata.forwardCursorVariable) ||
         (metadata.backwardCountVariable && metadata.backwardCursorVariable),
-      "Expected correct count and cursor variables combinations"
+      "Expected correct count and cursor variables combinations",
     );
     return metadata;
   } else {
@@ -186,6 +201,54 @@ function extractConnectionMetadataTransform(
   }
 }
 
-function getVariableValue(arg: ArgumentNode) {
-  return arg.value.kind === "Variable" ? arg.value.name.value : undefined;
+function getVariableValue(arg: ArgumentNode | undefined) {
+  return arg && arg.value.kind === "Variable"
+    ? arg.value.name.value
+    : undefined;
+}
+
+function extractFilterVariableDefaults(
+  connectionDirective: DirectiveNode,
+  fieldArguments: Map<string, ArgumentNode>,
+  variableDefaults: Map<string, ValueNode | undefined>,
+) {
+  invariant(
+    connectionDirective.arguments !== undefined,
+    "Expected connection directive to have arguments",
+  );
+  const filterVariableDefaults = new Map<string, any>();
+  const [, filters] = connectionDirective.arguments;
+  if (filters) {
+    invariant(
+      filters.name.value === "filter" && filters.value.kind === "ListValue",
+      "Expected filters argument to be a list of field arguments",
+    );
+    const fieldArgumentNames = filters.value.values.map((value) => {
+      invariant(
+        value.kind === "StringValue",
+        "Expected field argument to be a string",
+      );
+      return value.value;
+    });
+    fieldArgumentNames.forEach((name) => {
+      const arg = fieldArguments.get(name);
+      invariant(
+        arg !== undefined,
+        "Expected filter name to refer to a field argument",
+      );
+      const variable = getVariableValue(arg);
+      if (variable) {
+        const defaultValue = variableDefaults.get(variable);
+        if (defaultValue) {
+          filterVariableDefaults.set(
+            variable,
+            valueFromASTUntyped(defaultValue),
+          );
+        }
+      }
+    });
+  }
+  return filterVariableDefaults.size > 0
+    ? Object.fromEntries(filterVariableDefaults)
+    : undefined;
 }
