@@ -1,5 +1,5 @@
 import { graphql } from "@graphitation/graphql-js-tag";
-import { extractMetadataTransform } from "./extractMetadataTransform";
+import { Metadata, extractMetadataTransform } from "./extractMetadataTransform";
 
 describe(extractMetadataTransform, () => {
   describe("concerning the root of resolved watch query data", () => {
@@ -64,6 +64,7 @@ describe(extractMetadataTransform, () => {
         query UserWithFriendsQuery(
           $friendsForwardCount: Int!
           $friendsAfterCursor: String!
+          $friendsSortOrder: FriendsSortOrder = { field: NAME, direction: ASC }
         ) {
           ...UserFriendsFragment
         }
@@ -74,7 +75,8 @@ describe(extractMetadataTransform, () => {
               after: $friendsAfterCursor
               last: $friendsBackwardCount
               before: $friendsBeforeCursor
-            ) @connection(key: "UserFriends") {
+              sortBy: $friendsSortOrder
+            ) @connection(key: "UserFriends", filter: ["sortBy"]) {
               edges {
                 node {
                   ...FriendFragment
@@ -97,8 +99,14 @@ describe(extractMetadataTransform, () => {
           backwardCountVariable: "friendsBackwardCount",
           backwardCursorVariable: "friendsBeforeCursor",
           selectionPath: ["me", "friends"],
+          filterVariableDefaults: {
+            friendsSortOrder: {
+              field: "NAME",
+              direction: "ASC",
+            },
+          },
         },
-      });
+      } as Metadata);
     });
 
     it("returns nothing if no connection is declared", () => {

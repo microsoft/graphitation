@@ -16,7 +16,7 @@ const SchemaUtils = require("relay-compiler/lib/core/SchemaUtils");
  *   relay-compiler's connection client-handle transform
  */
 export function emitApolloClientConnectionTransform(
-  wrappedConnectionTransform: IRTransform
+  wrappedConnectionTransform: IRTransform,
 ): IRTransform {
   const connectionTransformWrapper: IRTransform = (context) => {
     const schema = context.getSchema();
@@ -28,7 +28,7 @@ export function emitApolloClientConnectionTransform(
       const nextDocument = visit(document, {
         LinkedField(linkedFieldNode) {
           const connectionHandle = linkedFieldNode.handles?.find(
-            (handle) => handle.name === "connection"
+            (handle) => handle.name === "connection",
           );
           if (connectionHandle) {
             const args: Argument[] = [
@@ -50,7 +50,7 @@ export function emitApolloClientConnectionTransform(
                 kind: "Argument",
                 name: "filter",
                 type: schema.assertInputType(
-                  schema.expectTypeFromString("[String!]")
+                  schema.expectTypeFromString("[String!]"),
                 ),
                 value: {
                   kind: "ListValue",
@@ -59,7 +59,7 @@ export function emitApolloClientConnectionTransform(
                       kind: "Literal",
                       value: filter,
                       loc: { kind: "Generated" },
-                    })
+                    }),
                   ),
                   loc: { kind: "Generated" },
                   metadata: undefined,
@@ -71,7 +71,7 @@ export function emitApolloClientConnectionTransform(
             const nextLinkedFieldNode: LinkedField = {
               ...linkedFieldNode,
               handles: linkedFieldNode.handles?.filter(
-                (handle) => handle.name !== "connection"
+                (handle) => handle.name !== "connection",
               ),
               directives: [
                 ...linkedFieldNode.directives,
