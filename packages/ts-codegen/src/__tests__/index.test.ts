@@ -357,6 +357,35 @@ describe(generateTS, () => {
         "
       `);
     });
+    test("extensions are not generated in the models", () => {
+      const { models } = runGenerateTest(graphql`
+        extend schema @import(from: "@msteams/packages-test", defs: ["User"])
+
+        extend type User {
+          id: ID!
+          name: String!
+        }
+
+        type Post {
+          id: ID!
+          user: User!
+        }
+      `);
+      expect(models).toMatchInlineSnapshot(`
+        "import type { User } from "@msteams/packages-test";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
+            readonly __typename?: string;
+        }
+        export interface Post extends BaseModel {
+            readonly __typename?: "Post";
+            readonly id: string;
+            readonly user: User;
+        }
+        "
+      `);
+    });
+
     test("implements", () => {
       const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
         interface Node {
