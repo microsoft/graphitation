@@ -262,5 +262,36 @@ describe("transformer tests", () => {
         "
       `);
     });
+
+    it("should convert to imports in relay mode", () => {
+      expect.assertions(1);
+      const transformer = new Transformer()
+        .addTransformer((program: ts.Program) =>
+          getTransformer({
+            graphqlTagModule: "graphql-tag",
+            graphqlTagModuleExport: "gql",
+            relayMode: true,
+          }),
+        )
+        .addMock({
+          name: "graphql-tag",
+          content: `export const gql:any = () => {}`,
+        })
+        .setFilePath("/index.tsx");
+
+      const actual = transformer.transform(`
+      import { gql } from "graphql-tag"
+
+      export const query = gql\`
+        query Foo {
+          foo
+        }
+      \`
+      `);
+      expect(actual).toMatchInlineSnapshot(`
+        "export const query = require("./__generated__/Foo.graphql.ts").default;
+        "
+      `);
+    });
   });
 });

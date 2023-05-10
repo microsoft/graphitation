@@ -63,6 +63,10 @@ export function createTransformerContext(
 
   context.transformer = options.transformer;
 
+  if (options.relayMode) {
+    context.relayMode = options.relayMode;
+  }
+
   return context;
 }
 
@@ -175,7 +179,7 @@ function getVisitor(
 
         if (transformerContext.relayMode) {
           let definitions = getDefinitions(source, undefined);
-          return createRelayImport(definitions);
+          return createRelayImport(definitions as DefinitionNode[]);
         } else {
           let definitions = getDefinitions(
             source,
@@ -297,22 +301,18 @@ function createRelayImport(definitions: Array<DefinitionNode>) {
         definition.kind === "FragmentDefinition") &&
       definition.name
     ) {
-      return [
-        ts.factory.createExpressionStatement(
-          ts.factory.createPropertyAccessExpression(
-            ts.factory.createCallExpression(
-              ts.factory.createIdentifier("require"),
-              undefined,
-              [
-                ts.factory.createStringLiteral(
-                  `./__generated__/${definition.name.value}.graphql.ts`,
-                ),
-              ],
+      return ts.factory.createPropertyAccessExpression(
+        ts.factory.createCallExpression(
+          ts.factory.createIdentifier("require"),
+          undefined,
+          [
+            ts.factory.createStringLiteral(
+              `./__generated__/${definition.name.value}.graphql.ts`,
             ),
-            ts.factory.createIdentifier("default"),
-          ),
+          ],
         ),
-      ];
+        ts.factory.createIdentifier("default"),
+      );
     } else {
       throw new Error(
         "In relay mode for each graphql tag, you can only have one definition, it must be named and be either operation of fragment.",
