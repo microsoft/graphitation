@@ -4,6 +4,7 @@ import {
   OperationDefinitionNode,
   parse,
   Kind,
+  DefinitionNode,
 } from "graphql";
 
 interface GraphQLTagTransformContext {
@@ -12,6 +13,7 @@ interface GraphQLTagTransformContext {
   transformer?: (
     node: FragmentDefinitionNode | OperationDefinitionNode,
   ) => unknown;
+  relayMode: boolean;
 }
 export interface GraphQLTagTransformOptions {
   graphqlTagModule?: string;
@@ -19,11 +21,13 @@ export interface GraphQLTagTransformOptions {
   transformer?: (
     node: FragmentDefinitionNode | OperationDefinitionNode,
   ) => unknown;
+  relayMode?: boolean;
 }
 
 const DefaultContext: GraphQLTagTransformContext = {
   graphqlTagModuleRegexp: new RegExp(/^['"]@graphitation\/graphql-js-tag['"]$/),
   graphqlTagModuleExport: "graphql",
+  relayMode: false,
 };
 
 export function getTransformer(
@@ -169,12 +173,16 @@ function getVisitor(
           source = source.replace(/\$\{(.*)\}/g, "");
         }
 
-        let definitions = getDefinitions(
-          source,
-          transformerContext.transformer,
-        );
-
-        return createDocument(definitions, interpolations);
+        if (transformerContext.relayMode) {
+          let definitions = getDefinitions(source, undefined);
+          return createRelayImport(definitions);
+        } else {
+          let definitions = getDefinitions(
+            source,
+            transformerContext.transformer,
+          );
+          return createDocument(definitions, interpolations);
+        }
       }
     }
 
@@ -276,6 +284,41 @@ function createDocument(
     ),
     ts.factory.createPropertyAssignment("definitions", allDefinitions),
   ]);
+}
+
+function createRelayImport(definitions: Array<DefinitionNode>) {
+  if (definitions.length > 1) {
+    throw new Error("In relay mode you can only have one definition.");
+  }
+  const definition = definitions[0];
+  if (definition) {
+    if (
+      (definition.kind === "OperationDefinition" ||
+        definition.kind === "FragmentDefinition") &&
+      definition.name
+    ) {
+      return [
+        ts.factory.createExpressionStatement(
+          ts.factory.createPropertyAccessExpression(
+            ts.factory.createCallExpression(
+              ts.factory.createIdentifier("require"),
+              undefined,
+              [
+                ts.factory.createStringLiteral(
+                  `./__generated__/${definition.name.value}.graphql.ts`,
+                ),
+              ],
+            ),
+            ts.factory.createIdentifier("default"),
+          ),
+        ),
+      ];
+    } else {
+      throw new Error(
+        "In relay mode for each graphql tag, you can only have one definition, it must be named and be either operation of fragment.",
+      );
+    }
+  }
 }
 
 function toAst(literal: any): ts.Expression {
