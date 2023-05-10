@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-This log was last generated on Tue, 09 May 2023 16:38:29 GMT and should not be manually modified.
+This log was last generated on Wed, 10 May 2023 11:46:01 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.4.2
+
+Wed, 10 May 2023 11:46:01 GMT
+
+### Patches
+
+- HOTFIX: don't generate type extensions in models (jakubvejr@microsoft.com)
 
 ## 2.4.1
 

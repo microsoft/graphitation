@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-supermassive-typed-document-node-plugin
 
-This log was last generated on Tue, 09 May 2023 16:38:29 GMT and should not be manually modified.
+This log was last generated on Wed, 10 May 2023 11:46:01 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.4.4
+
+Wed, 10 May 2023 11:46:01 GMT
+
+### Patches
+
+- Bump @graphitation/supermassive to v2.4.4
 
 ## 0.4.3
 
