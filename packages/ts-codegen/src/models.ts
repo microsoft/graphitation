@@ -88,7 +88,10 @@ function createObjectTypeModel(
   context: TsCodegenContext,
   type: ObjectType,
 ): ts.InterfaceDeclaration | null {
-  if (["Query", "Mutation", "Subscription"].includes(type.name)) {
+  if (
+    ["Query", "Mutation", "Subscription"].includes(type.name) ||
+    type.isExtension
+  ) {
     return null;
   }
 
