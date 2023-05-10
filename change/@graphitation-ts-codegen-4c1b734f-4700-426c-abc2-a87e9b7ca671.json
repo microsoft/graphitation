@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "HOTFIX: don't generate type extensions in models",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
