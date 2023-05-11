@@ -179,10 +179,12 @@ describe(generateTS, () => {
                 readonly userUpdated?: userUpdated<any>;
             }
             export type userUpdated<SubscribeResult = never> = {
+                kind?: "Subscribe";
                 subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<{
                     userUpdated: Models.User;
                 }>>;
             } | {
+                kind?: "SubscribeAndResolve";
                 subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<SubscribeResult>>;
                 resolve: (subcribeResult: SubscribeResult, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
             };
@@ -215,10 +217,12 @@ describe(generateTS, () => {
                 readonly userUpdated?: userUpdated<any>;
             }
             export type userUpdated<SubscribeResult = never> = {
+                kind?: "Subscribe";
                 subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<{
                     userUpdated: Models.User;
                 }>>;
             } | {
+                kind?: "SubscribeAndResolve";
                 subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<SubscribeResult>>;
                 resolve: (subcribeResult: SubscribeResult, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
             };
@@ -940,10 +944,12 @@ describe(generateTS, () => {
                 readonly emitTodos?: emitTodos<any>;
             }
             export type emitTodos<SubscribeResult = never> = {
+                kind?: "Subscribe";
                 subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<{
                     emitTodos: Models.Todo | null | undefined;
                 }>>;
             } | {
+                kind?: "SubscribeAndResolve";
                 subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<SubscribeResult>>;
                 resolve: (subcribeResult: SubscribeResult, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Todo | null | undefined>;
             };

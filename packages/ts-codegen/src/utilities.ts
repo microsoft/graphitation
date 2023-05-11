@@ -170,6 +170,14 @@ export function getSubscriptionResolver(
       factory.createTypeLiteralNode([
         factory.createPropertySignature(
           undefined,
+          factory.createIdentifier("kind"),
+          factory.createToken(ts.SyntaxKind.QuestionToken),
+          factory.createLiteralTypeNode(
+            factory.createStringLiteral("Subscribe"),
+          ),
+        ),
+        factory.createPropertySignature(
+          undefined,
           factory.createIdentifier("subscribe"),
           undefined,
           factory.createFunctionTypeNode(
@@ -197,6 +205,14 @@ export function getSubscriptionResolver(
         ),
       ]),
       factory.createTypeLiteralNode([
+        factory.createPropertySignature(
+          undefined,
+          factory.createIdentifier("kind"),
+          factory.createToken(ts.SyntaxKind.QuestionToken),
+          factory.createLiteralTypeNode(
+            factory.createStringLiteral("SubscribeAndResolve"),
+          ),
+        ),
         factory.createPropertySignature(
           undefined,
           factory.createIdentifier("subscribe"),
