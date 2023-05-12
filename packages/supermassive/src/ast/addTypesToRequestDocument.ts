@@ -7,7 +7,6 @@ import {
   parseValue,
   TypeInfo,
   visit,
-  print,
   visitWithTypeInfo,
   Kind,
 } from "graphql";

@@ -100,6 +100,11 @@ async function main() {
         default: false,
         type: "boolean",
       },
+      emitSupermassiveDocuments: {
+        demandOption: false,
+        default: false,
+        type: "boolean",
+      },
     })
     .help().argv;
 
@@ -114,9 +119,11 @@ async function main() {
     IRTransforms.commonTransforms.unshift(enableNodeWatchQueryTransform);
   }
 
+  const ductTapeCompilerLanguagePlugin = await pluginFactory(argv);
+
   return relayCompiler({
     ...argv,
-    language: pluginFactory(argv),
+    language: ductTapeCompilerLanguagePlugin,
     extensions: ["ts", "tsx"], // FIXME: Why is this not taken from the language plugin?
     include: argv.include || ["**"],
     exclude: [

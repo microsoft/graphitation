@@ -6,9 +6,10 @@ import { formatModuleFactory } from "./formatModule";
 import { generateFactory } from "./typeGenerator";
 import type { FormatModuleOptions } from "./formatModule";
 
-export function pluginFactory(
+export async function pluginFactory(
   formatModuleOptions: FormatModuleOptions,
-): PluginInitializer {
+): Promise<PluginInitializer> {
+  const formatModule = await formatModuleFactory(formatModuleOptions);
   return () => {
     const typescriptPlugin = typescriptPluginInitializer();
     return {
@@ -16,7 +17,7 @@ export function pluginFactory(
       findGraphQLTags: findGraphQLTagsFactory(
         !formatModuleOptions.emitDocuments,
       ),
-      formatModule: formatModuleFactory(formatModuleOptions),
+      formatModule,
       typeGenerator: {
         ...typescriptPlugin.typeGenerator,
         generate: generateFactory(typescriptPlugin.typeGenerator.generate),

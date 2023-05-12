@@ -15,6 +15,7 @@ export interface FormatModuleOptions {
   emitDocuments: boolean;
   emitNarrowObservables: boolean;
   emitQueryDebugComments: boolean;
+  emitSupermassiveDocuments: boolean;
   schema: string;
 }
 
@@ -22,14 +23,23 @@ function printDocumentComment(document: DocumentNode) {
   return `/*\n${print(document).trim()}\n*/`;
 }
 
-export function formatModuleFactory(
+export async function formatModuleFactory(
   options: FormatModuleOptions,
-): FormatModule {
+): Promise<FormatModule> {
   const schema = options.emitNarrowObservables
     ? buildSchema(
         new Source(readFileSync(options.schema, "utf-8"), options.schema),
       )
     : null;
+
+  let addTypesToRequestDocument:
+    | undefined
+    | typeof import("@graphitation/supermassive").addTypesToRequestDocument;
+  if (options.emitSupermassiveDocuments) {
+    ({ addTypesToRequestDocument } = await import(
+      "@graphitation/supermassive"
+    ));
+  }
 
   function generateExports(moduleName: string, docText: string) {
     const exports: CompiledArtefactModule = {};
@@ -51,6 +61,14 @@ export function formatModuleFactory(
       );
 
       exports.metadata = extractMetadataTransform(exports.watchQueryDocument);
+    }
+
+    if (addTypesToRequestDocument && exports.executionQueryDocument) {
+      invariant(schema, "Expected a schema instance");
+      exports.executionQueryDocument = addTypesToRequestDocument(
+        schema,
+        exports.executionQueryDocument,
+      ) as DocumentNode;
     }
 
     return exports;
