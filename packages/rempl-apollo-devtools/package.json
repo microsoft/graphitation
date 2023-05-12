@@ -9,6 +9,7 @@
     "directory": "packages/apollo-devtools"
   },
   "scripts": {
+    "playground": "watch 'node scripts/playground' ./src & (cd ../../examples/apollo-devtools-playground && yarn && yarn start)",
     "build": "node scripts/build-single-bundle && node scripts/build-separated-bundles",
     "watch": "watch 'node scripts/build.js'",
     "lint": "monorepo-scripts lint",
@@ -41,7 +42,8 @@
     "react-dom": "^17.0.2",
     "react-router-dom": "^5.3.3",
     "rempl": "^1.0.0-alpha.24",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "watch": "^1.0.2"
   },
   "publishConfig": {
     "main": "./dist/apollo-devtools.js",

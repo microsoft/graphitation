@@ -1,0 +1,24 @@
+{
+  "name": "graphql-playground",
+  "private": true,
+  "scripts": {
+    "start": "react-scripts start"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@emotion/react": "^11.8.1",
+    "react-scripts": "^5.0.0",
+    "@graphql-tools/schema": "^8.3.2"
+  }
+}
