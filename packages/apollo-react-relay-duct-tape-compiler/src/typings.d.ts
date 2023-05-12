@@ -8,3 +8,7 @@ declare module "relay-compiler/lib/transforms/ConnectionTransform" {
   export const transform: IRTransform;
   export const SCHEMA_EXTENSION: string;
 }
+
+declare module "relay-compiler/lib/util/dedupeJSONStringify" {
+  export default function dedupeJSONStringify(obj: unknown): string;
+}

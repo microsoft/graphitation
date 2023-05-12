@@ -6,6 +6,7 @@ import { stripFragmentReferenceFieldSelectionTransform } from "./formatModuleTra
 import { extractMetadataTransform } from "./formatModuleTransforms/extractMetadataTransform";
 import { buildSchema, Source } from "graphql";
 import { readFileSync } from "fs";
+import dedupeJSONStringify from "relay-compiler/lib/util/dedupeJSONStringify";
 
 import type { DocumentNode } from "graphql";
 import type { FormatModule } from "relay-compiler/lib/language/RelayLanguagePluginInterface";
@@ -89,10 +90,8 @@ export async function formatModuleFactory(
         exports.watchQueryDocument &&
         printDocumentComment(exports.watchQueryDocument),
       exports &&
-        `export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = ${JSON.stringify(
+        `export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = ${dedupeJSONStringify(
           exports,
-          null,
-          2,
         )};`,
     ].filter(Boolean) as string[];
 
