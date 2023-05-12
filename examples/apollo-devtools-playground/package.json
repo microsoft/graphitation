@@ -2,7 +2,7 @@
   "name": "graphql-playground",
   "private": true,
   "scripts": {
-    "start": "react-scripts start"
+    "start": "DISABLE_ESLINT_PLUGIN=true react-scripts start"
   },
   "browserslist": {
     "production": [
@@ -15,5 +15,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "react-scripts": "^5.0.0"
   }
 }
