@@ -39,7 +39,8 @@
     "ts-node": "^10.4.0"
   },
   "peerDependencies": {
-    "graphql": "^15.0.0"
+    "graphql": "^15.0.0",
+    "@graphitation/supermassive": "^2.0.0"
   },
   "publishConfig": {
     "main": "./lib/index.js",
