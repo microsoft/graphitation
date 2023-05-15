@@ -23,6 +23,13 @@ export class RemplWrapper {
 
   constructor(enableRemplHotkey: string) {
     this.publisher = createPublisher("apollo-devtools", () => {
+      if (
+        !browserWindow.__REMPL_APOLLO_DEVTOOLS_URL__ &&
+        __APOLLO_DEVTOOLS_SUBSCRIBER__
+      ) {
+        return { type: "script", value: __APOLLO_DEVTOOLS_SUBSCRIBER__ };
+      }
+
       return {
         type: "url",
         value: browserWindow.__REMPL_APOLLO_DEVTOOLS_URL__ || "",

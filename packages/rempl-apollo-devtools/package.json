@@ -9,6 +9,7 @@
     "directory": "packages/apollo-devtools"
   },
   "scripts": {
+    "playground": "watch 'node scripts/playground' ./src & (cd ../../examples/apollo-devtools-playground && yarn && yarn start)",
     "build": "node scripts/build-single-bundle && node scripts/build-separated-bundles",
     "watch": "watch 'node scripts/build.js'",
     "lint": "monorepo-scripts lint",
@@ -18,10 +19,12 @@
   },
   "devDependencies": {
     "@apollo/client": "^3.4.11",
+    "@emotion/react": "^11.8.1",
     "@fluentui/react-components": "^9.0.0-rc.15",
     "@fluentui/react-data-grid-react-window": "^9.0.0-beta.14",
     "@fluentui/react-icons": "2.0.166-rc.3",
     "@fluentui/react-tabster": "^9.0.0-rc.14",
+    "@graphql-tools/schema": "^7.1.5",
     "@types/lodash.debounce": "^4.0.6",
     "@types/lodash.isequal": "^4.5.5",
     "@types/react": "^17.0.2",
@@ -30,8 +33,8 @@
     "@types/react-router-dom": "^5.3.3",
     "@types/uuid": "^8.3.4",
     "apollo-inspector": "^1.16.3",
-    "eslint-plugin-react": "^7.25.2",
     "graphiql": "^2.0.9",
+    "graphql": "^15.6.1",
     "hotkeys-js": "^3.8.7",
     "lodash.debounce": "^4.0.8",
     "lodash.isequal": "^4.5.0",
@@ -41,7 +44,9 @@
     "react-dom": "^17.0.2",
     "react-router-dom": "^5.3.3",
     "rempl": "^1.0.0-alpha.24",
-    "uuid": "^8.3.2"
+    "scheduler": "^0.20.2",
+    "uuid": "^8.3.2",
+    "watch": "^1.0.2"
   },
   "publishConfig": {
     "main": "./dist/apollo-devtools.js",
