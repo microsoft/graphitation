@@ -1,8 +1,16 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-This log was last generated on Mon, 27 Mar 2023 13:56:24 GMT and should not be manually modified.
+This log was last generated on Mon, 15 May 2023 05:46:46 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.0
+
+Mon, 15 May 2023 05:46:46 GMT
+
+### Major changes
+
+- added playground + original repo migrated (jakubvejr@microsoft.com)
 
 ## 0.5.0
 

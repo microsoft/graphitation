@@ -1,7 +1,0 @@
-{
-  "type": "major",
-  "comment": "added playground + original repo migrated",
-  "packageName": "@graphitation/rempl-apollo-devtools",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
