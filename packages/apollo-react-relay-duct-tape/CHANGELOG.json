@@ -2,6 +2,29 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Mon, 22 May 2023 13:58:50 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v1.0.1",
+      "version": "1.0.1",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "ca284b39c37755a4e0701a251a35931afb5004a8",
+            "comment": "Remove test files"
+          }
+        ],
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.0.0-alpha.2",
+            "commit": "ca284b39c37755a4e0701a251a35931afb5004a8"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 22 May 2023 13:07:26 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v1.0.1-alpha.8",
       "version": "1.0.1-alpha.8",

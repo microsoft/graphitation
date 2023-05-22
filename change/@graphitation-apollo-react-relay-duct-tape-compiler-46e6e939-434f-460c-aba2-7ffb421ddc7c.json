@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "Testing release",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape-compiler",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}
