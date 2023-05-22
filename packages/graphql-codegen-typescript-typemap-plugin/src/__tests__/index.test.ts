@@ -1,4 +1,4 @@
-import { plugin } from ".";
+import { plugin } from "..";
 import { buildSchema } from "graphql";
 
 describe(plugin, () => {

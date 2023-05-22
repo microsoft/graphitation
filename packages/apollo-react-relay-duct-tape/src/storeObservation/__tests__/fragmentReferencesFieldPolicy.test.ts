@@ -1,4 +1,4 @@
-import { fragmentReferencesFieldPolicy } from "./fragmentReferencesFieldPolicy";
+import { fragmentReferencesFieldPolicy } from "../fragmentReferencesFieldPolicy";
 import { graphql } from "@graphitation/graphql-js-tag";
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 

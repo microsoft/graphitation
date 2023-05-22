@@ -1,7 +1,7 @@
 import { CompilerContext, Printer } from "relay-compiler";
 import { transform as filterDirectivesTransform } from "relay-compiler/lib/transforms/FilterDirectivesTransform";
 import { SCHEMA_EXTENSION } from "relay-compiler/lib/transforms/ConnectionTransform";
-import { retainConnectionDirectiveTransform } from "./retainConnectionDirectiveTransform";
+import { retainConnectionDirectiveTransform } from "../retainConnectionDirectiveTransform";
 
 const { TestSchema, parseGraphQLText } = require("relay-test-utils-internal");
 

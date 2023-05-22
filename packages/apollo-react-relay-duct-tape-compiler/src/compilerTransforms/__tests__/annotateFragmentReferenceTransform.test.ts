@@ -1,5 +1,5 @@
 import { CompilerContext, Printer } from "relay-compiler";
-import { annotateFragmentReferenceTransform } from "./annotateFragmentReferenceTransform";
+import { annotateFragmentReferenceTransform } from "../annotateFragmentReferenceTransform";
 
 const { TestSchema, parseGraphQLText } = require("relay-test-utils-internal");
 

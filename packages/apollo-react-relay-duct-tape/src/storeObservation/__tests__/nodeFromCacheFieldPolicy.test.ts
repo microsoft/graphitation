@@ -7,7 +7,7 @@ import { graphql } from "@graphitation/graphql-js-tag";
 import {
   nodeFromCacheFieldPolicyWithDefaultApolloClientStoreKeys,
   nodeFromCacheFieldPolicyWithGlobalObjectIdStoreKeys,
-} from "./nodeFromCacheFieldPolicy";
+} from "../nodeFromCacheFieldPolicy";
 
 const FRAGMENTS = graphql`
   fragment SomeFragment on SomeType {

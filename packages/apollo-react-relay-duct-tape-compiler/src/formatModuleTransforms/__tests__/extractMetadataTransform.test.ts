@@ -1,5 +1,8 @@
 import { graphql } from "@graphitation/graphql-js-tag";
-import { Metadata, extractMetadataTransform } from "./extractMetadataTransform";
+import {
+  Metadata,
+  extractMetadataTransform,
+} from "../extractMetadataTransform";
 
 describe(extractMetadataTransform, () => {
   describe("concerning the root of resolved watch query data", () => {

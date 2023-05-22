@@ -15,7 +15,12 @@ fragment compiledHooks_QueryTypeFragment on Query {
 }
 */
 
-export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = {
+export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = (function(){
+var v0 = {
+  "kind": "Name",
+  "value": "compiledHooks_QueryTypeFragment"
+};
+return {
   "watchQueryDocument": {
     "kind": "Document",
     "definitions": [
@@ -31,10 +36,7 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
           "selections": [
             {
               "kind": "FragmentSpread",
-              "name": {
-                "kind": "Name",
-                "value": "compiledHooks_QueryTypeFragment"
-              }
+              "name": (v0/*: any*/)
             },
             {
               "kind": "Field",
@@ -57,10 +59,7 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
       },
       {
         "kind": "FragmentDefinition",
-        "name": {
-          "kind": "Name",
-          "value": "compiledHooks_QueryTypeFragment"
-        },
+        "name": (v0/*: any*/),
         "typeCondition": {
           "kind": "NamedType",
           "name": {
@@ -102,3 +101,4 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
     }
   }
 };
+})();

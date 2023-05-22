@@ -1,5 +1,5 @@
 import { buildSchema } from "graphql";
-import { plugin } from "../src";
+import { plugin } from "..";
 
 const testSchema = buildSchema(/* GraphQL */ `
   schema {

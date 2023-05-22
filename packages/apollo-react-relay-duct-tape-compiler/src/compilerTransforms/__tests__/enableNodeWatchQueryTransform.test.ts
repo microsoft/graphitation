@@ -1,5 +1,5 @@
 import { CompilerContext, Printer } from "relay-compiler";
-import { enableNodeWatchQueryTransform } from "./enableNodeWatchQueryTransform";
+import { enableNodeWatchQueryTransform } from "../enableNodeWatchQueryTransform";
 
 const { TestSchema, parseGraphQLText } = require("relay-test-utils-internal");
 
