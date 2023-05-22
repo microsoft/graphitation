@@ -1,0 +1,20 @@
+{
+  "name": "supermassive-benchmarks",
+  "entries": [
+    {
+      "date": "Mon, 22 May 2023 13:07:26 GMT",
+      "tag": "supermassive-benchmarks_v1.0.0",
+      "version": "1.0.0",
+      "comments": {
+        "undefined": [
+          {
+            "author": "beachball",
+            "package": "supermassive-benchmarks",
+            "comment": "Bump @graphitation/supermassive to v2.4.4",
+            "commit": "de4267db192e40b25d8be85ec7c563cdcaf9392c"
+          }
+        ]
+      }
+    }
+  ]
+}
