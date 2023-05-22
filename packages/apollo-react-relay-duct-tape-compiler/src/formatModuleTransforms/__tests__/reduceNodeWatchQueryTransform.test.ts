@@ -1,4 +1,4 @@
-import { reduceNodeWatchQueryTransform } from "./reduceNodeWatchQueryTransform";
+import { reduceNodeWatchQueryTransform } from "../reduceNodeWatchQueryTransform";
 import { graphql } from "@graphitation/graphql-js-tag";
 import { buildASTSchema, print } from "graphql";
 
@@ -74,7 +74,7 @@ describe(reduceNodeWatchQueryTransform, () => {
             height
           }
         }
-      `
+      `,
     );
     expect(print(result)).toEqual(
       print(graphql`
@@ -93,7 +93,7 @@ describe(reduceNodeWatchQueryTransform, () => {
             }
           }
         }
-      `)
+      `),
     );
   });
 
@@ -115,7 +115,7 @@ describe(reduceNodeWatchQueryTransform, () => {
         fragment AnotherFragmentOnQueryType on Query {
           __typename
         }
-      `
+      `,
     );
     expect(print(result)).toEqual(
       print(graphql`
@@ -129,7 +129,7 @@ describe(reduceNodeWatchQueryTransform, () => {
           }
           __fragments @client
         }
-      `)
+      `),
     );
   });
 
@@ -174,7 +174,7 @@ describe(reduceNodeWatchQueryTransform, () => {
             height
           }
         }
-      `
+      `,
     );
     expect(print(result)).toEqual(
       print(graphql`
@@ -201,7 +201,7 @@ describe(reduceNodeWatchQueryTransform, () => {
             }
           }
         }
-      `)
+      `),
     );
   });
 
@@ -246,7 +246,7 @@ describe(reduceNodeWatchQueryTransform, () => {
             height
           }
         }
-      `
+      `,
     );
     expect(print(result)).toEqual(
       print(graphql`
@@ -273,7 +273,7 @@ describe(reduceNodeWatchQueryTransform, () => {
             }
           }
         }
-      `)
+      `),
     );
   });
 });

@@ -22,12 +22,12 @@ import {
   useCompiledLazyLoadQuery,
   useCompiledPaginationFragment,
   useCompiledRefetchableFragment,
-} from "./compiledHooks";
+} from "../compiledHooks";
 import {
   typePoliciesWithDefaultApolloClientStoreKeys,
   typePoliciesWithGlobalObjectIdStoreKeys,
-} from "./typePolicies";
-import { ApolloReactRelayDuctTapeProvider } from "../useOverridenOrDefaultApolloClient";
+} from "../typePolicies";
+import { ApolloReactRelayDuctTapeProvider } from "../../useOverridenOrDefaultApolloClient";
 
 /**
  * NOTE: These compiler artefacts are normally imported using the transform from the createImportDocumentsTransform.ts module
@@ -42,7 +42,7 @@ import { compiledHooks_Root_executionQueryVariables } from "./__generated__/comp
 
 const schema = buildSchema(
   fs.readFileSync(
-    path.resolve(__dirname, "../__tests__/schema.graphql"),
+    path.resolve(__dirname, "../../__tests__/schema.graphql"),
     "utf8",
   ),
 );

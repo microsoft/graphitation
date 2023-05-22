@@ -1,4 +1,4 @@
-import { rewriteGraphitationDirectives } from "./rewriteGraphitationDirectives";
+import { rewriteGraphitationDirectives } from "../rewriteGraphitationDirectives";
 import dedent from "dedent";
 
 describe(rewriteGraphitationDirectives, () => {

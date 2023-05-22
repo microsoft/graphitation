@@ -1,4 +1,4 @@
-import { stripFragmentReferenceFieldSelectionTransform } from "./stripFragmentReferenceFieldSelectionTransform";
+import { stripFragmentReferenceFieldSelectionTransform } from "../stripFragmentReferenceFieldSelectionTransform";
 import { graphql } from "@graphitation/graphql-js-tag";
 import { print } from "graphql";
 
@@ -23,7 +23,7 @@ describe(stripFragmentReferenceFieldSelectionTransform, () => {
             }
           }
         }
-      `)
+      `),
     );
   });
 
@@ -45,7 +45,7 @@ describe(stripFragmentReferenceFieldSelectionTransform, () => {
             id
           }
         }
-      `)
+      `),
     );
   });
 });

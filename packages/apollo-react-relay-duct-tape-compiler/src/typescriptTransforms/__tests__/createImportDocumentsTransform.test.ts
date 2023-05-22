@@ -1,5 +1,5 @@
 import * as ts from "typescript";
-import { createImportDocumentsTransform } from "./createImportDocumentsTransform";
+import { createImportDocumentsTransform } from "../createImportDocumentsTransform";
 
 import * as _fs from "fs";
 const fs = _fs as jest.Mocked<typeof _fs>;

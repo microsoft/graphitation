@@ -3,7 +3,7 @@ import {
   transform as connectionTransform,
   SCHEMA_EXTENSION,
 } from "relay-compiler/lib/transforms/ConnectionTransform";
-import { emitApolloClientConnectionTransform } from "./emitApolloClientConnectionTransform";
+import { emitApolloClientConnectionTransform } from "../emitApolloClientConnectionTransform";
 
 const { TestSchema, parseGraphQLText } = require("relay-test-utils-internal");
 
