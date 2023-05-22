@@ -1,8 +1,17 @@
-# Change Log - relay-compiler-language-graphitation
+# Change Log - @graphitation/apollo-react-relay-duct-tape-compiler
 
-This log was last generated on Mon, 24 Jan 2022 13:40:52 GMT and should not be manually modified.
+This log was last generated on Mon, 22 May 2023 13:58:50 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.0-alpha.2
+
+Mon, 22 May 2023 13:58:50 GMT
+
+### Changes
+
+- Testing release (eloy.de.enige@gmail.com)
+- Bump @graphitation/supermassive to v2.4.4
 
 ## 0.8.2
 
