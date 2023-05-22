@@ -1,6 +1,6 @@
 import ts from "typescript";
-import { Transformer } from "./transformerTestUtils";
-import { getTransformer } from "./index";
+import { Transformer } from "../transformerTestUtils";
+import { getTransformer } from "../index";
 
 describe("transformer tests", () => {
   it("should convert simple queries", () => {
