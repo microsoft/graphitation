@@ -250,6 +250,38 @@ query Person($id: Int!) {
     }
     `,
   },
+  {
+    name: "Default value in variables",
+    document: `
+    query ($title: String! = "The Empire Strikes Back") {
+      searchFilmsByTitle(title: $title) {
+        title
+      }
+    }`,
+  },
+  {
+    name: "Default value",
+    document: `
+    {
+      searchFilmsByTitle {
+        title
+      }
+    }`,
+  },
+  {
+    name: "Advanced Default value in variables",
+    document: `
+    query ($input: AdvancedInput! = { enumField: Film, otherField: "The Empire Strikes Back" }) {
+      advancedDefaultInput(input: $input)
+    }`,
+  },
+  {
+    name: "Advanced Default value",
+    document: `
+    {
+      advancedDefaultInput
+    }`,
+  },
 ];
 
 describe("executeWithSchema", () => {

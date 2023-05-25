@@ -10,6 +10,7 @@ import {
   print,
   visitWithTypeInfo,
   Kind,
+  astFromValue,
 } from "graphql";
 
 import * as TypelessAST from "graphql/language/ast";
@@ -33,9 +34,12 @@ export function addTypesToRequestDocument(
               ...node,
               __type: typeNode,
               __defaultValue: argument.defaultValue
-                ? parseValue(JSON.stringify(argument.defaultValue))
+                ? astFromValue(argument.defaultValue, argument.type)
                 : undefined,
             };
+            if (newNode.__defaultValue) {
+              console.log(newNode);
+            }
             return newNode;
           }
         },

@@ -15,16 +15,25 @@ const schema = buildASTSchema(graphql`
   }
 
   type Mutation {
-    createFilm(input: CreateFilmInput!): Film
+    createFilm(
+      input: CreateFilmInput! = { filmType: GOOD, title: "Default" }
+      enumInput: FilmType!
+    ): Film
   }
 
   type Film {
-    title: String!
+    title(foo: String = "Bar"): String!
     actors: [String!]
+  }
+
+  enum FilmType {
+    GOOD
+    BAD
   }
 
   input CreateFilmInput {
     title: String!
+    filmType: FilmType!
   }
 `);
 
@@ -183,8 +192,11 @@ describe(addTypesToRequestDocument, () => {
       const document = addTypesToRequestDocument(
         schema,
         graphql`
-          mutation {
-            createFilm(input: { title: "The Phantom Menace" }) {
+          mutation Test($filmType: FilmType) {
+            createFilm(
+              input: { title: "The Phantom Menace", filmType: $filmType }
+              enumInput: $filmType
+            ) {
               title
             }
           }
@@ -207,6 +219,53 @@ describe(addTypesToRequestDocument, () => {
           },
         }
       `);
+
+      expect(argumentNode.__defaultValue).toMatchInlineSnapshot(`
+        {
+          "fields": [
+            {
+              "kind": "ObjectField",
+              "name": {
+                "kind": "Name",
+                "value": "title",
+              },
+              "value": {
+                "kind": "StringValue",
+                "value": "Default",
+              },
+            },
+            {
+              "kind": "ObjectField",
+              "name": {
+                "kind": "Name",
+                "value": "filmType",
+              },
+              "value": {
+                "kind": "EnumValue",
+                "value": "GOOD",
+              },
+            },
+          ],
+          "kind": "ObjectValue",
+        }
+      `);
+
+      const secondArgument = fieldNode.arguments![1];
+
+      expect(secondArgument.__type).toMatchInlineSnapshot(`
+        {
+          "kind": "NonNullType",
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "FilmType",
+            },
+          },
+        }
+      `);
+
+      expect(secondArgument.__defaultValue).toMatchInlineSnapshot(`undefined`);
     });
 
     it("errors nicely for unknown fields", () => {

@@ -227,7 +227,7 @@ export function getArgumentValues(
       isNull = !variableValues || variableValues[variableName] == null;
     }
 
-    const coercedValue = valueFromAST(
+    let coercedValue = valueFromAST(
       valueNode as GraphQLValueNode,
       argType,
       variableValues,

@@ -331,6 +331,9 @@ const resolvers: IExecutableSchemaDefinition["resolvers"] = {
     allTransports(parent, args, { models }) {
       return models.getData("/transport");
     },
+    advancedDefaultInput(parent, args) {
+      return JSON.stringify(args);
+    },
   },
   Film: {
     starships,
