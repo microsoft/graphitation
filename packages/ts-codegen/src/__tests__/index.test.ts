@@ -588,8 +588,7 @@ describe(generateTS, () => {
         "
       `);
       expect(models).toMatchInlineSnapshot(`
-        "import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
+        "export * from "./enums.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
@@ -1171,8 +1170,7 @@ describe(generateTS, () => {
       "
     `);
     expect(models).toMatchInlineSnapshot(`
-      "import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
+      "export * from "./enums.interface";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
@@ -1656,8 +1654,7 @@ describe(generateTS, () => {
     `);
     expect(inputs).toMatchInlineSnapshot(`undefined`);
     expect(models).toMatchInlineSnapshot(`
-      "import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
+      "export * from "./enums.interface";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
@@ -1847,8 +1844,7 @@ describe(generateTS, () => {
     `);
     expect(inputs).toMatchInlineSnapshot(`undefined`);
     expect(models).toMatchInlineSnapshot(`
-      "import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
+      "export * from "./enums.interface";
       // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
       export interface BaseModel {
           readonly __typename?: string;
