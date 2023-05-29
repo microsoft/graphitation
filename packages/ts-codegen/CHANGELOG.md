@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-This log was last generated on Wed, 10 May 2023 11:46:01 GMT and should not be manually modified.
+This log was last generated on Mon, 29 May 2023 13:14:30 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.4.3
+
+Mon, 29 May 2023 13:14:30 GMT
+
+### Patches
+
+- HOTFIX: Removed unused enums import in model files (jakubvejr@microsoft.com)
 
 ## 2.4.2
 

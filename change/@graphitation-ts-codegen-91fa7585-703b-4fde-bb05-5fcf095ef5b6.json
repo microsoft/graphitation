@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "HOTFIX: Removed unused enums import in model files",
-  "packageName": "@graphitation/ts-codegen",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
