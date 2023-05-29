@@ -109,6 +109,7 @@ export class TsCodegenContext {
   private typeNameToModels: Map<string, DefinitionModel>;
   private legacyInterfaces: Set<string>;
   hasUsedModelInInputs: boolean;
+  hasUsedEnumsInModels: boolean;
   hasEnums: boolean;
   hasInputs: boolean;
 
@@ -126,6 +127,7 @@ export class TsCodegenContext {
     this.hasUsedModelInInputs = false;
     this.hasInputs = false;
     this.hasEnums = Boolean(options.enumsImport);
+    this.hasUsedEnumsInModels = false;
   }
 
   isLegacyCompatMode(): boolean {
@@ -413,6 +415,7 @@ export class TsCodegenContext {
 
       if (markUsage === "MODELS") {
         if (type && type.kind === "ENUM") {
+          this.hasUsedEnumsInModels = true;
           namespace = "Enums";
         }
       } else if (markUsage === "RESOLVERS") {

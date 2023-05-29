@@ -27,18 +27,20 @@ export function generateModels(
   const enumsStatements: ts.Statement[] = [];
 
   if (context.hasEnums) {
-    enumsStatements.push(
-      factory.createImportDeclaration(
-        undefined,
-        undefined,
-        factory.createImportClause(
-          false,
+    if (context.hasUsedEnumsInModels) {
+      enumsStatements.push(
+        factory.createImportDeclaration(
           undefined,
-          factory.createNamespaceImport(factory.createIdentifier("Enums")),
+          undefined,
+          factory.createImportClause(
+            false,
+            undefined,
+            factory.createNamespaceImport(factory.createIdentifier("Enums")),
+          ),
+          factory.createStringLiteral("./enums.interface"),
         ),
-        factory.createStringLiteral("./enums.interface"),
-      ),
-    );
+      );
+    }
 
     enumsStatements.push(
       factory.createExportDeclaration(
