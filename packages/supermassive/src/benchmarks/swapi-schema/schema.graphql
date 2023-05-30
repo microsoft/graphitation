@@ -40,16 +40,17 @@ type Query {
   searchPlanetsByName(search: String!): [Planet]
   searchFilmsByTitle(search: String! = "The Empire Strikes Back"): [Film]
 
-  advancedDefaultInput(
-    input: AdvancedInput! = { enumField: Transport, otherField: "Foo" }
-  ): String
-
   allFilms: [Film]
   allStarships: [Starship]
   allPeople: [Person]
   allPlanets: [Planet]
   allSpecies: [Species]
   allTransports: [Transport]
+
+  advancedDefaultInput(
+    input: AdvancedInput! = { enumField: Transport, otherField: "Foo" }
+  ): String
+  multiArger(a: Int, b: String, c: AdvancedInput): String
 }
 
 interface Node {

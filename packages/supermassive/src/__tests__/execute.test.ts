@@ -254,7 +254,7 @@ query Person($id: Int!) {
     name: "Default value in variables",
     document: `
     query ($title: String! = "The Empire Strikes Back") {
-      searchFilmsByTitle(title: $title) {
+      searchFilmsByTitle(search: $title) {
         title
       }
     }`,
@@ -281,6 +281,22 @@ query Person($id: Int!) {
     {
       advancedDefaultInput
     }`,
+  },
+  {
+    name: "Not passing arg value vs passing arg value",
+    document: `
+    {
+      multiArger
+    }
+    `,
+  },
+  {
+    name: "Not passing arg value vs passing arg value",
+    document: `
+    {
+      multiArger(a:null)
+    }
+    `,
   },
 ];
 
@@ -351,5 +367,10 @@ async function compareResultsForExecuteWithoutSchema(
     schema,
     variableValues: variables,
   });
+  if (result.errors) {
+    for (const error of result.errors) {
+      console.error(error);
+    }
+  }
   expect(result).toEqual(validResult);
 }

@@ -334,6 +334,9 @@ const resolvers: IExecutableSchemaDefinition["resolvers"] = {
     advancedDefaultInput(parent, args) {
       return JSON.stringify(args);
     },
+    multiArger(parent, args) {
+      return JSON.stringify(args);
+    },
   },
   Film: {
     starships,
