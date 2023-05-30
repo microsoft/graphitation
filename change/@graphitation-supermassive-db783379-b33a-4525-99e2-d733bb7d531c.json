@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Fix supermassive not supporting unpassed default arguments",
-  "packageName": "@graphitation/supermassive",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

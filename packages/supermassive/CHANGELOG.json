@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Tue, 30 May 2023 15:52:16 GMT",
+      "tag": "@graphitation/supermassive_v2.4.6",
+      "version": "2.4.6",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "d89d98807aa7915e76e43cbe474f32b0a3f3fde3",
+            "comment": "Fix supermassive not supporting unpassed default arguments"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 02 May 2023 10:22:49 GMT",
       "tag": "@graphitation/supermassive_v2.4.2",
       "version": "2.4.2",
