@@ -34,6 +34,7 @@ import type { ObjMap } from "./jsutils/ObjMap";
 import { printPathArray } from "./jsutils/printPathArray";
 import { Resolvers } from "./types";
 import { GraphQLDirective } from "./directives";
+import { filterAndExtractExtensionDefinitions } from "@graphql-tools/schema";
 
 type CoercedVariableValues =
   | { errors: Array<GraphQLError>; coerced?: never }
@@ -183,10 +184,6 @@ export function getArgumentValues(
 
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
   const argumentNodes = node.arguments ?? [];
-  const argNodeMap = keyMap(
-    argumentNodes,
-    (arg: ArgumentNode) => arg.name.value,
-  );
 
   for (const argumentNode of argumentNodes) {
     const name = argumentNode.name.value;
@@ -194,7 +191,6 @@ export function getArgumentValues(
     const argType = graphqlTypeFromTypeAst(resolvers, argTypeNode);
 
     if (!isInputType(argType)) {
-      console.log(argType, isInputType(argType));
       throw new GraphQLError(
         `Argument "$${name}" expected value of type "${inspect(
           argType,
@@ -204,7 +200,6 @@ export function getArgumentValues(
     }
 
     let valueNode = argumentNode.value;
-    let isNull = valueNode.kind === Kind.NULL;
 
     if (valueNode.kind === Kind.VARIABLE) {
       const variableName = valueNode.name.value;
@@ -212,7 +207,7 @@ export function getArgumentValues(
         variableValues == null ||
         !hasOwnProperty(variableValues, variableName)
       ) {
-        if (argumentNode.__defaultValue != undefined) {
+        if (argumentNode.__defaultValue) {
           valueNode = argumentNode.__defaultValue;
         } else if (isNonNullType(argType)) {
           throw new GraphQLError(
@@ -224,7 +219,6 @@ export function getArgumentValues(
 
         continue;
       }
-      isNull = !variableValues || variableValues[variableName] == null;
     }
 
     const coercedValue = valueFromAST(

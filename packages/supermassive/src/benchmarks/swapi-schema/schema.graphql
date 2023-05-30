@@ -38,7 +38,7 @@ type Query {
   searchSpeciesByName(search: String!): [Species]
   searchVehiclesByName(search: String!): [Vehicle]
   searchPlanetsByName(search: String!): [Planet]
-  searchFilmsByTitle(search: String!): [Film]
+  searchFilmsByTitle(search: String! = "The Empire Strikes Back"): [Film]
 
   allFilms: [Film]
   allStarships: [Starship]
@@ -46,6 +46,11 @@ type Query {
   allPlanets: [Planet]
   allSpecies: [Species]
   allTransports: [Transport]
+
+  advancedDefaultInput(
+    input: AdvancedInput! = { enumField: Transport, otherField: "Foo" }
+  ): String
+  multiArger(a: Int, b: String, c: AdvancedInput): String
 }
 
 interface Node {
@@ -182,4 +187,9 @@ type Transport implements Node {
   manufacturer: String
   image: String
   id: Int
+}
+
+input AdvancedInput {
+  enumField: NodeType!
+  otherField: String!
 }

@@ -250,6 +250,54 @@ query Person($id: Int!) {
     }
     `,
   },
+  {
+    name: "Default value in variables",
+    document: `
+    query ($title: String! = "The Empire Strikes Back") {
+      searchFilmsByTitle(search: $title) {
+        title
+      }
+    }`,
+  },
+  {
+    name: "Default value",
+    document: `
+    {
+      searchFilmsByTitle {
+        title
+      }
+    }`,
+  },
+  {
+    name: "Advanced Default value in variables",
+    document: `
+    query ($input: AdvancedInput! = { enumField: Film, otherField: "The Empire Strikes Back" }) {
+      advancedDefaultInput(input: $input)
+    }`,
+  },
+  {
+    name: "Advanced Default value",
+    document: `
+    {
+      advancedDefaultInput
+    }`,
+  },
+  {
+    name: "Not passing arg value vs passing arg value",
+    document: `
+    {
+      multiArger
+    }
+    `,
+  },
+  {
+    name: "Not passing arg value vs passing arg value",
+    document: `
+    {
+      multiArger(a:null)
+    }
+    `,
+  },
 ];
 
 describe("executeWithSchema", () => {
@@ -319,5 +367,10 @@ async function compareResultsForExecuteWithoutSchema(
     schema,
     variableValues: variables,
   });
+  if (result.errors) {
+    for (const error of result.errors) {
+      console.error(error);
+    }
+  }
   expect(result).toEqual(validResult);
 }

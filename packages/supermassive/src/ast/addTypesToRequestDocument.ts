@@ -10,6 +10,8 @@ import {
   print,
   visitWithTypeInfo,
   Kind,
+  astFromValue,
+  GraphQLArgument,
 } from "graphql";
 
 import * as TypelessAST from "graphql/language/ast";
@@ -25,65 +27,90 @@ export function addTypesToRequestDocument(
     document as any,
     visitWithTypeInfo(typeInfo, {
       Argument: {
-        leave(node) {
+        leave(node, _key, _parent, _path, ancestors) {
           const argument = typeInfo.getArgument()!;
           if (argument) {
             const typeNode = generateTypeNode(argument.type);
             const newNode: TypedAST.ArgumentNode = {
               ...node,
               __type: typeNode,
-              __defaultValue: argument.defaultValue
-                ? parseValue(JSON.stringify(argument.defaultValue))
-                : undefined,
             };
+            // We only need default value for arguments with variable values
+            if (argument.defaultValue && node.value.kind === Kind.VARIABLE) {
+              (newNode.__defaultValue as
+                | TypedAST.ValueNode
+                | null
+                | undefined) = astFromValue(
+                argument.defaultValue,
+                argument.type,
+              );
+            }
             return newNode;
           }
+          const errorPath = makeReadableErrorPath(ancestors);
+          throw new Error(
+            `Cannot find type for argument: ${errorPath.join(".")}.${
+              node.name.value
+            }`,
+          );
         },
       },
       Field: {
         leave(
-          node: Omit<
-            TypelessAST.FieldNode,
-            "selectionSet" | "arguments" | "directives"
-          >,
+          node: Omit<TypelessAST.FieldNode, "selectionSet" | "directives">,
           _key,
           _parent,
           _path,
           ancestors,
         ) {
-          const type = typeInfo.getType();
-          if (type) {
-            const typeNode = generateTypeNode(type);
-            const newNode: TypedAST.FieldNode = {
-              ...node,
-              __type: typeNode,
-            };
-            return newNode;
-          }
-          const path: string[] = [];
-          ancestors.forEach((ancestorOrArray) => {
-            let ancestor: TypelessAST.ASTNode;
-            if (!Array.isArray(ancestorOrArray)) {
-              ancestor = ancestorOrArray as TypelessAST.ASTNode;
-              if (ancestor && ancestor.kind === Kind.FIELD) {
-                path.push(ancestor.name.value);
-              } else if (
-                ancestor &&
-                ancestor.kind === Kind.OPERATION_DEFINITION
-              ) {
-                let name;
-                if (ancestor.name) {
-                  name = `${ancestor.operation} ${ancestor.name.value}`;
-                } else {
-                  name = ancestor.operation;
-                }
-                path.push(name);
+          const fieldDef = typeInfo.getFieldDef();
+          if (fieldDef) {
+            const type = fieldDef.type;
+            if (type) {
+              const typeNode = generateTypeNode(type);
+              const missingArgs: Array<GraphQLArgument> = fieldDef.args.filter(
+                (argDef) =>
+                  argDef.defaultValue != null &&
+                  node.arguments?.findIndex(
+                    (arg) => arg.name.value === argDef.name,
+                  ) === -1,
+              );
+              const newNode: TypedAST.FieldNode = {
+                ...(node as Omit<
+                  TypelessAST.FieldNode,
+                  "selectionSet" | "arguments" | "directives"
+                >),
+                __type: typeNode,
+              };
+              if (missingArgs) {
+                (newNode.arguments as TypedAST.ArgumentNode[]) = (
+                  newNode.arguments || []
+                ).concat(
+                  missingArgs.map((arg) => ({
+                    __type: generateTypeNode(arg.type),
+                    kind: Kind.ARGUMENT,
+                    name: {
+                      kind: Kind.NAME,
+                      value: arg.name,
+                    },
+                    value: astFromValue(
+                      arg.defaultValue,
+                      arg.type,
+                    ) as TypedAST.ValueNode,
+                  })),
+                );
               }
+              return newNode;
             }
-          });
+          }
+
+          const errorPath = makeReadableErrorPath(ancestors);
+
           // This happens whenever a new field is requested that hasn't been defined in schema
           throw new Error(
-            `Cannot find type for field: ${path.join(".")}.${node.name.value}`,
+            `Cannot find type for field: ${errorPath.join(".")}.${
+              node.name.value
+            }`,
           );
         },
       },
@@ -118,4 +145,30 @@ function generateTypeNode(type: GraphQLType): TypedAST.TypeNode {
     };
   }
   throw new Error(`Can't generate TypeNode for type: ${type}`);
+}
+
+function makeReadableErrorPath(
+  ancestors: ReadonlyArray<
+    readonly TypelessAST.ASTNode[] | TypelessAST.ASTNode
+  >,
+): string[] {
+  const path: string[] = [];
+  ancestors.forEach((ancestorOrArray) => {
+    let ancestor: TypelessAST.ASTNode;
+    if (!Array.isArray(ancestorOrArray)) {
+      ancestor = ancestorOrArray as TypelessAST.ASTNode;
+      if (ancestor && ancestor.kind === Kind.FIELD) {
+        path.push(ancestor.name.value);
+      } else if (ancestor && ancestor.kind === Kind.OPERATION_DEFINITION) {
+        let name;
+        if (ancestor.name) {
+          name = `${ancestor.operation} ${ancestor.name.value}`;
+        } else {
+          name = ancestor.operation;
+        }
+        path.push(name);
+      }
+    }
+  });
+  return path;
 }
