@@ -6,7 +6,12 @@ import {
   specifiedScalars,
 } from "./index";
 import { PromiseOrValue } from "./jsutils/PromiseOrValue";
-import { Resolvers, ExecutionResult, ExecutionWithSchemaArgs } from "./types";
+import {
+  Resolvers,
+  ExecutionResult,
+  ExecutionWithSchemaArgs,
+  IncrementalExecutionResults,
+} from "./types";
 
 export function executeWithSchema({
   typeDefs,
@@ -19,7 +24,9 @@ export function executeWithSchema({
   fieldResolver,
   typeResolver,
   fieldExecutionHooks,
-}: ExecutionWithSchemaArgs): PromiseOrValue<ExecutionResult> {
+}: ExecutionWithSchemaArgs): PromiseOrValue<
+  ExecutionResult | IncrementalExecutionResults
+> {
   const schema = buildASTSchema(typeDefs);
   let extractedResolvers: Resolvers = {};
   const getTypeByName = (name: string) => {
