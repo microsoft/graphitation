@@ -34,7 +34,6 @@ import type { ObjMap } from "./jsutils/ObjMap";
 import { printPathArray } from "./jsutils/printPathArray";
 import { Resolvers } from "./types";
 import { GraphQLDirective } from "./directives";
-import { filterAndExtractExtensionDefinitions } from "@graphql-tools/schema";
 
 type CoercedVariableValues =
   | { errors: Array<GraphQLError>; coerced?: never }
@@ -103,7 +102,7 @@ function coerceVariableValues(
       onError(
         new GraphQLError(
           `Variable "$${varName}" expected value of type "${varTypeStr}" which cannot be used as an input type.`,
-          varDefNode.type as GraphQLTypeNode,
+          { nodes: varDefNode.type as GraphQLTypeNode },
         ),
       );
       continue;
@@ -120,7 +119,7 @@ function coerceVariableValues(
         onError(
           new GraphQLError(
             `Variable "$${varName}" of required type "${varTypeStr}" was not provided.`,
-            varDefNode as GraphQLVariableDefinitionNode,
+            { nodes: varDefNode as GraphQLVariableDefinitionNode },
           ),
         );
       }
@@ -133,7 +132,7 @@ function coerceVariableValues(
       onError(
         new GraphQLError(
           `Variable "$${varName}" of non-null type "${varTypeStr}" must not be null.`,
-          varDefNode as GraphQLVariableDefinitionNode,
+          { nodes: varDefNode as GraphQLVariableDefinitionNode },
         ),
       );
       continue;
@@ -149,14 +148,10 @@ function coerceVariableValues(
           prefix += ` at "${varName}${printPathArray(path)}"`;
         }
         onError(
-          new GraphQLError(
-            prefix + "; " + error.message,
-            varDefNode as GraphQLVariableDefinitionNode,
-            undefined,
-            undefined,
-            undefined,
-            error.originalError,
-          ),
+          new GraphQLError(prefix + "; " + error.message, {
+            nodes: varDefNode as GraphQLVariableDefinitionNode,
+            originalError: error.originalError,
+          }),
         );
       },
     );
@@ -195,7 +190,7 @@ export function getArgumentValues(
         `Argument "$${name}" expected value of type "${inspect(
           argType,
         )}" which cannot be used as an input type.`,
-        argumentNode as GraphQLArgumentNode,
+        { nodes: argumentNode as GraphQLArgumentNode },
       );
     }
 
@@ -213,7 +208,7 @@ export function getArgumentValues(
           throw new GraphQLError(
             `Argument "${name}" of required type "${inspect(argType)}" ` +
               `was provided the variable "$${variableName}" which was not provided a runtime value.`,
-            valueNode as GraphQLValueNode,
+            { nodes: valueNode as GraphQLValueNode },
           );
         }
 
@@ -234,7 +229,7 @@ export function getArgumentValues(
         `Argument "${name}" has invalid value ${print(
           valueNode as GraphQLValueNode,
         )}.`,
-        valueNode as GraphQLValueNode,
+        { nodes: valueNode as GraphQLValueNode },
       );
     }
     coercedValues[name] = coercedValue;

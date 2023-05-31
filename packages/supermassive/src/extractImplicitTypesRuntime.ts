@@ -152,6 +152,9 @@ function getDeprecationReason(
     | FieldDefinitionNode
     | InputValueDefinitionNode,
 ): Maybe<string> {
-  const deprecated = getDirectiveValues(GraphQLDeprecatedDirective, node);
+  const deprecated = getDirectiveValues(
+    GraphQLDeprecatedDirective,
+    node,
+  ) as any;
   return deprecated?.reason;
 }

@@ -34,6 +34,7 @@ import {
   Resolvers,
   ExecutionResult,
 } from "./types";
+import { PromiseOrValue } from "graphql/jsutils/PromiseOrValue";
 
 /**
  * Implements the "Subscribe" algorithm described in the GraphQL specification.
@@ -105,7 +106,7 @@ export async function subscribeWithoutSchema(
       variableValues,
       operationName,
       fieldResolver,
-    });
+    }) as PromiseOrValue<ExecutionResult>; // TODO - ban defer here;
 
   // Map every source value to a ExecutionResult value as described above.
   return mapAsyncIterator(resultOrStream, mapSourceToResponse);
@@ -196,14 +197,12 @@ async function executeSubscription(
   const { resolvers, fragments, operation, variableValues, rootValue } =
     exeContext;
   const typeName = getOperationRootTypeName(operation);
-  const fields = collectFields(
+  const { groupedFieldSet: fields } = collectFields(
     resolvers,
     fragments,
     variableValues,
     typeName,
-    operation.selectionSet,
-    new Map(),
-    new Set(),
+    operation,
   );
 
   const [responseName, fieldNodes] = [...fields.entries()][0];

@@ -4,7 +4,7 @@ import schema, { typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
 import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
-import { Resolvers, UserResolvers } from "../types";
+import { ExecutionResult, Resolvers, UserResolvers } from "../types";
 import { resolvers as extractedResolvers } from "../benchmarks/swapi-schema/__generated__/schema";
 import {
   AfterFieldCompleteHookArgs,
@@ -306,7 +306,9 @@ describe.each([
         // so just verify whether corresponding hook calls happened
         expect(hookCalls).toHaveLength(expectedHookCalls.length);
         expect(hookCalls).toEqual(expect.arrayContaining(expectedHookCalls));
-        expect((result.errors?.length ?? 0) > 0).toBe(resultHasErrors);
+        expect(((result as ExecutionResult).errors?.length ?? 0) > 0).toBe(
+          resultHasErrors,
+        );
       },
     );
   });
@@ -421,11 +423,11 @@ describe.each([
         expect.assertions(4);
         const document = parse(query);
 
-        const response = await execute(
+        const response = (await execute(
           document,
           resolvers as UserResolvers,
           hooks,
-        );
+        )) as ExecutionResult;
         const errors = response.errors;
 
         expect(response.data).toBeTruthy();

@@ -1,4 +1,8 @@
-import { parse, execute as graphQLExecute, isInputType } from "graphql";
+import {
+  parse,
+  experimentalExecuteIncrementally as graphQLExecute,
+  isInputType,
+} from "graphql";
 import { executeWithoutSchema, executeWithSchema } from "..";
 import schema, { typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
@@ -367,7 +371,7 @@ async function compareResultsForExecuteWithoutSchema(
     schema,
     variableValues: variables,
   });
-  if (result.errors) {
+  if ("errors" in result && result.errors) {
     for (const error of result.errors) {
       console.error(error);
     }

@@ -19,7 +19,7 @@
   "devDependencies": {
     "@types/invariant": "^2.0.0",
     "@types/jest": "^26.0.22",
-    "graphql": "^15.0.0",
+    "graphql": "^17.0.0-alpha.2",
     "monorepo-scripts": "*"
   },
   "sideEffects": false,
@@ -39,6 +39,6 @@
     "invariant": "^2.0.0"
   },
   "peerDependencies": {
-    "graphql": "^15.0.0"
+    "graphql": "^15.0.0 || ^16.0.0 || ^17.0.0"
   }
 }

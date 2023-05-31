@@ -20,7 +20,12 @@ import {
   OperationTypeDefinitionNode,
   TypeNode,
 } from "./ast/TypedAST";
-import { collectFields } from "./collectFields";
+import {
+  collectFields,
+  collectSubfields,
+  FieldGroup,
+  GroupedFieldSet,
+} from "./collectFields";
 import { devAssert } from "./jsutils/devAssert";
 import { inspect } from "./jsutils/inspect";
 import { invariant } from "./jsutils/invariant";
@@ -48,6 +53,7 @@ import {
   TypeResolver,
   UnionTypeResolver,
   ExecutionResult,
+  IncrementalExecutionResults,
 } from "./types";
 import { typeNameFromAST } from "./utilities/typeNameFromAST";
 import {
@@ -95,6 +101,7 @@ export interface ExecutionContext {
   typeResolver: TypeResolver<any, any>;
   errors: Array<GraphQLError>;
   fieldExecutionHooks?: ExecutionHooks;
+  subsequentPayloads: Set<IncrementalDataRecord>;
 }
 
 /**
@@ -109,7 +116,7 @@ export interface ExecutionContext {
  */
 export function executeWithoutSchema(
   args: ExecutionWithoutSchemaArgs,
-): PromiseOrValue<ExecutionResult> {
+): PromiseOrValue<ExecutionResult | IncrementalExecutionResults> {
   const {
     resolvers,
     schemaResolvers,
@@ -271,6 +278,7 @@ export function buildExecutionContext(
     typeResolver: typeResolver ?? defaultTypeResolver,
     errors: [],
     fieldExecutionHooks,
+    subsequentPayloads: new Set(),
   };
 }
 
@@ -283,14 +291,12 @@ function executeOperation(
   rootValue: unknown,
 ): PromiseOrValue<ObjMap<unknown> | null> {
   const typeName = getOperationRootTypeName(operation);
-  const fields = collectFields(
+  const { groupedFieldSet: fields } = collectFields(
     exeContext.resolvers,
     exeContext.fragments,
     exeContext.variableValues,
     typeName,
-    operation.selectionSet,
-    new Map(),
-    new Set(),
+    operation,
   );
 
   const path = undefined;
@@ -325,7 +331,7 @@ function executeFieldsSerially(
   parentTypeName: string,
   sourceValue: unknown,
   path: Path | undefined,
-  fields: Map<string, Array<FieldNode>>,
+  fields: GroupedFieldSet,
 ): PromiseOrValue<ObjMap<unknown>> {
   return promiseReduce(
     fields.entries(),
@@ -363,7 +369,7 @@ function executeFields(
   parentTypeName: string,
   sourceValue: unknown,
   path: Path | undefined,
-  fields: Map<string, Array<FieldNode>>,
+  fields: GroupedFieldSet,
 ): PromiseOrValue<ObjMap<unknown>> {
   const results = Object.create(null);
   let containsPromise = false;
@@ -407,7 +413,7 @@ function executeField(
   exeContext: ExecutionContext,
   parentTypeName: string,
   source: unknown,
-  fieldNodes: Array<FieldNode>,
+  fieldNodes: FieldGroup,
   path: Path,
 ): PromiseOrValue<unknown> {
   const fieldName = fieldNodes[0].name.value;
@@ -575,7 +581,7 @@ function executeField(
 export function buildResolveInfo(
   exeContext: ExecutionContext,
   fieldName: string,
-  fieldNodes: Array<FieldNode>,
+  fieldNodes: FieldGroup,
   parentTypeName: string,
   returnTypeName: string,
   returnTypeNode: TypeNode,
@@ -638,7 +644,7 @@ function handleFieldError(
 function completeValue(
   exeContext: ExecutionContext,
   returnTypeNode: TypeNode,
-  fieldNodes: Array<FieldNode>,
+  fieldNodes: FieldGroup,
   info: ResolveInfo,
   path: Path,
   result: unknown,
@@ -740,7 +746,7 @@ function completeValue(
 function completeListValue(
   exeContext: ExecutionContext,
   returnTypeNode: TypeNode,
-  fieldNodes: Array<FieldNode>,
+  fieldNodes: FieldGroup,
   info: ResolveInfo,
   path: Path,
   result: unknown,
@@ -834,7 +840,7 @@ function completeLeafValue(
 function completeAbstractValue(
   exeContext: ExecutionContext,
   returnType: UnionTypeResolver | InterfaceTypeResolver,
-  fieldNodes: Array<FieldNode>,
+  fieldNodes: FieldGroup,
   info: ResolveInfo,
   path: Path,
   result: unknown,
@@ -920,14 +926,17 @@ function getRuntimeTypeInstanceName(runtimeType: Resolver<any, any>): string {
 function completeObjectValue(
   exeContext: ExecutionContext,
   returnTypeName: string,
-  fieldNodes: Array<FieldNode>,
+  fieldNodes: FieldGroup,
   info: ResolveInfo,
   path: Path,
   result: unknown,
 ): PromiseOrValue<ObjMap<unknown>> {
   // Collect sub-fields to execute to complete this value.
-  const subFieldNodes = collectSubfields(
-    exeContext,
+  const { groupedFieldSet: subFieldNodes } = collectSubfields(
+    exeContext.resolvers,
+    exeContext.fragments,
+    exeContext.variableValues,
+    exeContext.operation,
     returnTypeName,
     fieldNodes,
   );
@@ -941,37 +950,8 @@ function invalidReturnTypeError(
 ): GraphQLError {
   return new GraphQLError(
     `Expected value of type "${returnType.name}" but got: ${inspect(result)}.`,
-    fieldNodes as ReadonlyArray<GraphQLASTNode>,
+    { nodes: fieldNodes as ReadonlyArray<GraphQLASTNode> },
   );
-}
-
-/**
- * A memoized collection of relevant subfields with regard to the return
- * type. Memoizing ensures the subfields are not repeatedly calculated, which
- * saves overhead when resolving lists of values.
- */
-// TODO: memoize const collectSubfields = memoize3(_collectSubfields);
-function collectSubfields(
-  exeContext: ExecutionContext,
-  returnTypeName: string,
-  fieldNodes: Array<FieldNode>,
-): Map<string, Array<FieldNode>> {
-  let subFieldNodes = new Map();
-  const visitedFragmentNames = new Set<string>();
-  for (const node of fieldNodes) {
-    if (node.selectionSet) {
-      subFieldNodes = collectFields(
-        exeContext.resolvers,
-        exeContext.fragments,
-        exeContext.variableValues,
-        returnTypeName,
-        node.selectionSet,
-        subFieldNodes,
-        visitedFragmentNames,
-      );
-    }
-  }
-  return subFieldNodes;
 }
 
 function invokeBeforeFieldResolveHook(
@@ -1139,5 +1119,114 @@ export function getOperationRootTypeName(
       return "Mutation";
     case "subscription":
       return "Subscription";
+  }
+}
+
+export type IncrementalDataRecord = DeferredFragmentRecord | StreamItemsRecord;
+
+function isStreamItemsRecord(
+  incrementalDataRecord: IncrementalDataRecord,
+): incrementalDataRecord is StreamItemsRecord {
+  return incrementalDataRecord.type === "stream";
+}
+
+class DeferredFragmentRecord {
+  type: "defer";
+  errors: Array<GraphQLError>;
+  label: string | undefined;
+  path: Array<string | number>;
+  promise: Promise<void>;
+  data: ObjMap<unknown> | null;
+  parentContext: IncrementalDataRecord | undefined;
+  isCompleted: boolean;
+  _exeContext: ExecutionContext;
+  _resolve?: (arg: PromiseOrValue<ObjMap<unknown> | null>) => void;
+  constructor(opts: {
+    label: string | undefined;
+    path: Path | undefined;
+    parentContext: IncrementalDataRecord | undefined;
+    exeContext: ExecutionContext;
+  }) {
+    this.type = "defer";
+    this.label = opts.label;
+    this.path = pathToArray(opts.path);
+    this.parentContext = opts.parentContext;
+    this.errors = [];
+    this._exeContext = opts.exeContext;
+    this._exeContext.subsequentPayloads.add(this);
+    this.isCompleted = false;
+    this.data = null;
+    this.promise = new Promise<ObjMap<unknown> | null>((resolve) => {
+      this._resolve = (promiseOrValue) => {
+        resolve(promiseOrValue);
+      };
+    }).then((data) => {
+      this.data = data;
+      this.isCompleted = true;
+    });
+  }
+
+  addData(data: PromiseOrValue<ObjMap<unknown> | null>) {
+    const parentData = this.parentContext?.promise;
+    if (parentData) {
+      this._resolve?.(parentData.then(() => data));
+      return;
+    }
+    this._resolve?.(data);
+  }
+}
+
+class StreamItemsRecord {
+  type: "stream";
+  errors: Array<GraphQLError>;
+  label: string | undefined;
+  path: Array<string | number>;
+  items: Array<unknown> | null;
+  promise: Promise<void>;
+  parentContext: IncrementalDataRecord | undefined;
+  asyncIterator: AsyncIterator<unknown> | undefined;
+  isCompletedAsyncIterator?: boolean;
+  isCompleted: boolean;
+  _exeContext: ExecutionContext;
+  _resolve?: (arg: PromiseOrValue<Array<unknown> | null>) => void;
+  constructor(opts: {
+    label: string | undefined;
+    path: Path | undefined;
+    asyncIterator?: AsyncIterator<unknown>;
+    parentContext: IncrementalDataRecord | undefined;
+    exeContext: ExecutionContext;
+  }) {
+    this.type = "stream";
+    this.items = null;
+    this.label = opts.label;
+    this.path = pathToArray(opts.path);
+    this.parentContext = opts.parentContext;
+    this.asyncIterator = opts.asyncIterator;
+    this.errors = [];
+    this._exeContext = opts.exeContext;
+    this._exeContext.subsequentPayloads.add(this);
+    this.isCompleted = false;
+    this.items = null;
+    this.promise = new Promise<Array<unknown> | null>((resolve) => {
+      this._resolve = (promiseOrValue) => {
+        resolve(promiseOrValue);
+      };
+    }).then((items) => {
+      this.items = items;
+      this.isCompleted = true;
+    });
+  }
+
+  addItems(items: PromiseOrValue<Array<unknown> | null>) {
+    const parentData = this.parentContext?.promise;
+    if (parentData) {
+      this._resolve?.(parentData.then(() => items));
+      return;
+    }
+    this._resolve?.(items);
+  }
+
+  setIsCompletedAsyncIterator() {
+    this.isCompletedAsyncIterator = true;
   }
 }
