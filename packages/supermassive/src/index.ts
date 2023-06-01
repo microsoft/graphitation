@@ -14,7 +14,12 @@ export type {
   Resolvers,
   UserResolvers,
   ResolveInfo,
+  TotalExecutionResult,
+  ExecutionResult,
+  IncrementalExecutionResult,
 } from "./types";
+
+export { isTotalExecutionResult, isIncrementalExecutionResult } from "./types";
 
 export { addTypesToRequestDocument } from "./ast/addTypesToRequestDocument";
 

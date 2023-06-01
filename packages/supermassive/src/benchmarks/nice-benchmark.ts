@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Suite } from "benchmark";
 
 export default class NiceBenchmark {

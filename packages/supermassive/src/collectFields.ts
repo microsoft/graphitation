@@ -18,7 +18,7 @@ import {
 import { typeNameFromAST } from "./utilities/typeNameFromAST";
 import { isUnionResolverType, isInterfaceResolverType } from "./definition";
 
-import { Resolvers, UnionTypeResolver, InterfaceTypeResolver } from "./types";
+import { Resolvers } from "./types";
 
 import { AccumulatorMap } from "./jsutils/AccumulatorMap";
 import invariant from "invariant";

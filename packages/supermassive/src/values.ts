@@ -21,14 +21,12 @@ import {
   coerceInputValue,
 } from "graphql";
 import {
-  ArgumentNode,
   DirectiveNode,
   FieldNode,
   TypeNode,
   VariableDefinitionNode,
 } from "./ast/TypedAST";
 import { inspect } from "./jsutils/inspect";
-import { keyMap } from "./jsutils/keyMap";
 import type { Maybe } from "./jsutils/Maybe";
 import type { ObjMap } from "./jsutils/ObjMap";
 import { printPathArray } from "./jsutils/printPathArray";
@@ -56,7 +54,7 @@ export function getVariableValues(
   inputs: { [variable: string]: unknown },
   options?: { maxErrors?: number },
 ): CoercedVariableValues {
-  const errors = [];
+  const errors: GraphQLError[] = [];
   const maxErrors = options?.maxErrors;
   try {
     const coerced = coerceVariableValues(
@@ -77,10 +75,10 @@ export function getVariableValues(
       return { coerced };
     }
   } catch (error) {
-    errors.push(error);
+    errors.push(error as GraphQLError);
   }
 
-  return { errors: errors as any };
+  return { errors: errors };
 }
 
 function coerceVariableValues(
@@ -288,6 +286,6 @@ function graphqlTypeFromTypeAst(
   } else {
     const typeName = node.name.value;
     const type = specifiedScalars[typeName] || resolvers[typeName];
-    return type as any as GraphQLType;
+    return type as GraphQLType;
   }
 }

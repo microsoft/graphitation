@@ -4,14 +4,12 @@ import {
   GraphQLFormattedError,
   GraphQLInputObjectType,
   GraphQLScalarType,
-  GraphQLSchema,
   DocumentNode as UntypedDocumentNode,
 } from "graphql";
 import { Maybe } from "./jsutils/Maybe";
 import { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import {
   DocumentNode,
-  FieldNode,
   FragmentDefinitionNode,
   OperationDefinitionNode,
   TypeNode,
@@ -26,8 +24,8 @@ export type EnumTypeResolver = GraphQLEnumType; // TODO Record<string, any>;
 export type FunctionFieldResolver<
   TSource,
   TContext,
-  TArgs = Record<string, any>,
-  TReturn = any,
+  TArgs = Record<string, unknown>,
+  TReturn = unknown,
 > = (
   source: TSource,
   args: TArgs,
@@ -38,14 +36,21 @@ export type FunctionFieldResolver<
 export type FieldResolver<
   TSource,
   TContext,
-  TArgs = Record<string, any>,
-  TReturn = any,
+  TArgs = Record<string, unknown>,
+  TReturn = unknown,
 > =
   | FunctionFieldResolver<TSource, TContext, TArgs, TReturn>
-  | {
-      subscribe?: FunctionFieldResolver<TSource, TContext, TArgs, TReturn>;
-      resolve?: FunctionFieldResolver<TSource, TContext, TArgs, TReturn>;
-    };
+  | FieldResolverObject<TSource, TContext, TArgs, TReturn>;
+
+export type FieldResolverObject<
+  TSource,
+  TContext,
+  TArgs = Record<string, unknown>,
+  TReturn = unknown,
+> = {
+  subscribe?: FunctionFieldResolver<TSource, TContext, TArgs, TReturn>;
+  resolve?: FunctionFieldResolver<TSource, TContext, TArgs, TReturn>;
+};
 
 export type TypeResolver<TSource, TContext> = (
   value: TSource,
@@ -53,37 +58,41 @@ export type TypeResolver<TSource, TContext> = (
   info: ResolveInfo,
 ) => PromiseOrValue<Maybe<string>>;
 
-export type ObjectTypeResolver<TSource = any, TContext = any, TArgs = any> = {
+export type ObjectTypeResolver<
+  TSource = unknown,
+  TContext = unknown,
+  TArgs = unknown,
+> = {
   [key: string]: FieldResolver<TSource, TContext, TArgs>;
 };
 
 export type InterfaceTypeResolver<
-  TSource = any,
-  TContext = any,
-  TArgs = any,
+  TSource = unknown,
+  TContext = unknown,
+  TArgs = unknown,
 > = {
   __implementedBy: string[];
   [key: string]: FieldResolver<TSource, TContext, TArgs> | string[] | undefined;
 } & {
-  __resolveType?: TypeResolver<any, any>;
+  __resolveType?: TypeResolver<unknown, unknown>;
 };
 export type UnionTypeResolver = {
-  __resolveType?: TypeResolver<any, any>;
+  __resolveType?: TypeResolver<unknown, unknown>;
   __types: string[];
 };
 
 export type UserInterfaceTypeResolver<
-  TSource = any,
-  TContext = any,
-  TArgs = any,
+  TSource = unknown,
+  TContext = unknown,
+  TArgs = unknown,
 > = {
   [key: string]: FieldResolver<TSource, TContext, TArgs>;
 } & {
-  __resolveType?: TypeResolver<any, any>;
+  __resolveType?: TypeResolver<unknown, unknown>;
 };
 
 export type UserUnionTypeResolver = {
-  __resolveType?: TypeResolver<any, any>;
+  __resolveType?: TypeResolver<unknown, unknown>;
 };
 
 export type InputObjectTypeResolver = GraphQLInputObjectType;
@@ -104,19 +113,19 @@ export type Resolver<TSource, TContext> =
   | EnumTypeResolver
   | InputObjectTypeResolver;
 
-export type Resolvers<TSource = any, TContext = any> = Record<
+export type Resolvers<TSource = unknown, TContext = unknown> = Record<
   string,
   Resolver<TSource, TContext>
 >;
 
-export type UserResolvers<TSource = any, TContext = any> = Record<
+export type UserResolvers<TSource = unknown, TContext = unknown> = Record<
   string,
   UserResolver<TSource, TContext>
 >;
 
 export interface ResolveInfo {
   fieldName: string;
-  fieldNodes: FieldGroup;
+  fieldGroup: FieldGroup;
   returnTypeName: string;
   parentTypeName: string;
   returnTypeNode: TypeNode;
@@ -130,6 +139,14 @@ export interface ResolveInfo {
   variableValues: { [variable: string]: unknown };
 }
 
+export type ExecutionResult<
+  TData = ObjMap<unknown>,
+  TExtensions = ObjMap<unknown>,
+> =
+  | TotalExecutionResult<TData, TExtensions>
+  | SubscriptionExecutionResult<TData, TExtensions>
+  | IncrementalExecutionResult<TData, TExtensions>;
+
 /**
  * The result of GraphQL execution.
  *
@@ -139,7 +156,7 @@ export interface ResolveInfo {
  *   - `extensions` is reserved for adding non-standard properties.
  *   - `incremental` is a list of the results from defer/stream directives.
  */
-export interface ExecutionResult<
+export interface TotalExecutionResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
 > {
@@ -148,7 +165,12 @@ export interface ExecutionResult<
   extensions?: TExtensions;
 }
 
-export interface FormattedExecutionResult<
+export type SubscriptionExecutionResult<
+  TData = ObjMap<unknown>,
+  TExtensions = ObjMap<unknown>,
+> = AsyncGenerator<TotalExecutionResult<TData, TExtensions>>;
+
+export interface FormattedTotalExecutionResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
 > {
@@ -157,7 +179,7 @@ export interface FormattedExecutionResult<
   extensions?: TExtensions;
 }
 
-export interface IncrementalExecutionResults<
+export interface IncrementalExecutionResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
 > {
@@ -172,7 +194,7 @@ export interface IncrementalExecutionResults<
 export interface InitialIncrementalExecutionResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
-> extends ExecutionResult<TData, TExtensions> {
+> extends TotalExecutionResult<TData, TExtensions> {
   hasNext: boolean;
   incremental?: ReadonlyArray<IncrementalResult<TData, TExtensions>>;
   extensions?: TExtensions;
@@ -181,7 +203,7 @@ export interface InitialIncrementalExecutionResult<
 export interface FormattedInitialIncrementalExecutionResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
-> extends FormattedExecutionResult<TData, TExtensions> {
+> extends FormattedTotalExecutionResult<TData, TExtensions> {
   hasNext: boolean;
   incremental?: ReadonlyArray<FormattedIncrementalResult<TData, TExtensions>>;
   extensions?: TExtensions;
@@ -208,7 +230,7 @@ export interface FormattedSubsequentIncrementalExecutionResult<
 export interface IncrementalDeferResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
-> extends ExecutionResult<TData, TExtensions> {
+> extends TotalExecutionResult<TData, TExtensions> {
   path?: ReadonlyArray<string | number>;
   label?: string;
 }
@@ -216,7 +238,7 @@ export interface IncrementalDeferResult<
 export interface FormattedIncrementalDeferResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
-> extends FormattedExecutionResult<TData, TExtensions> {
+> extends FormattedTotalExecutionResult<TData, TExtensions> {
   path?: ReadonlyArray<string | number>;
   label?: string;
 }
@@ -261,11 +283,12 @@ export interface CommonExecutionArgs {
   resolvers: UserResolvers;
   rootValue?: unknown;
   contextValue?: unknown;
+  buildContextValue?: (contextValue?: unknown) => unknown;
   variableValues?: Maybe<{ [variable: string]: unknown }>;
   operationName?: Maybe<string>;
-  fieldResolver?: Maybe<FunctionFieldResolver<any, any>>;
-  typeResolver?: Maybe<TypeResolver<any, any>>;
-  subscribeFieldResolver?: Maybe<FunctionFieldResolver<any, any>>;
+  fieldResolver?: Maybe<FunctionFieldResolver<unknown, unknown>>;
+  typeResolver?: Maybe<TypeResolver<unknown, unknown>>;
+  subscribeFieldResolver?: Maybe<FunctionFieldResolver<unknown, unknown>>;
   fieldExecutionHooks?: ExecutionHooks;
 }
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
@@ -277,3 +300,21 @@ export type ExecutionWithSchemaArgs = CommonExecutionArgs & {
   document: UntypedDocumentNode;
   typeDefs: UntypedDocumentNode;
 };
+
+export function isIncrementalExecutionResult<
+  TData = ObjMap<unknown>,
+  TExtensions = ObjMap<unknown>,
+>(
+  result: ExecutionResult<TData, TExtensions>,
+): result is IncrementalExecutionResult<TData, TExtensions> {
+  return "initialResult" in result;
+}
+
+export function isTotalExecutionResult<
+  TData = ObjMap<unknown>,
+  TExtensions = ObjMap<unknown>,
+>(
+  result: ExecutionResult<TData, TExtensions>,
+): result is IncrementalExecutionResult<TData, TExtensions> {
+  return !("initialResult" in result);
+}

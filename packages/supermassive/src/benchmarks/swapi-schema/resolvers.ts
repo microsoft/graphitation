@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { GraphQLFieldResolver } from "graphql/type/definition";
 import { IExecutableSchemaDefinition } from "@graphql-tools/schema";
 import { createAsyncIterator } from "iterall";
 
 const films: GraphQLFieldResolver<any, any, any, any> = (
   parent,
-  args,
+  _args,
   { models },
 ) => {
   return models
@@ -14,7 +15,7 @@ const films: GraphQLFieldResolver<any, any, any, any> = (
 
 const starships: GraphQLFieldResolver<any, any, any, any> = (
   parent,
-  { id },
+  _args,
   { models },
 ) => {
   return models
@@ -23,7 +24,7 @@ const starships: GraphQLFieldResolver<any, any, any, any> = (
 };
 
 function people(key: string): GraphQLFieldResolver<any, any, any, any> {
-  return (parent, args, { models }) => {
+  return (parent, _args, { models }) => {
     return models
       .getData("/people")
       .filter(({ id }: { id: any }) => parent[key].includes(id));
@@ -32,7 +33,7 @@ function people(key: string): GraphQLFieldResolver<any, any, any, any> {
 
 const vehicles: GraphQLFieldResolver<any, any, any, any> = (
   parent,
-  args,
+  _args,
   { models },
 ) => {
   return models
@@ -40,19 +41,9 @@ const vehicles: GraphQLFieldResolver<any, any, any, any> = (
     .filter(({ id }: { id: any }) => parent.vehicles.includes(id));
 };
 
-const transports: GraphQLFieldResolver<any, any, any, any> = (
-  parent,
-  args,
-  { models },
-) => {
-  return models
-    .getData("/transport")
-    .filter(({ id }: { id: any }) => parent.starships.includes(id));
-};
-
 const planets: GraphQLFieldResolver<any, any, any, any> = (
   parent,
-  args,
+  _args,
   { models },
 ) => {
   return models
@@ -62,7 +53,7 @@ const planets: GraphQLFieldResolver<any, any, any, any> = (
 
 const species: GraphQLFieldResolver<any, any, any, any> = (
   parent,
-  args,
+  _args,
   { models },
 ) => {
   return models
@@ -71,7 +62,7 @@ const species: GraphQLFieldResolver<any, any, any, any> = (
 };
 const homeworld: GraphQLFieldResolver<any, any, any, any> = (
   parent,
-  args,
+  _args,
   { models },
 ) => {
   return models
@@ -313,28 +304,28 @@ const resolvers: IExecutableSchemaDefinition["resolvers"] = {
     searchPlanetsByName,
     searchFilmsByTitle,
 
-    allStarships(parent, args, { models }) {
+    allStarships(_parent, _args, { models }) {
       return models.getData("/starships");
     },
-    allFilms(parent, args, { models }) {
+    allFilms(_parent, _args, { models }) {
       return models.getData("/films");
     },
-    allPeople(parent, args, { models }) {
+    allPeople(_parent, _args, { models }) {
       return models.getData("/people");
     },
-    allPlanets(parent, args, { models }) {
+    allPlanets(_parent, _args, { models }) {
       return models.getData("/planets");
     },
-    allSpecies(parent, args, { models }) {
+    allSpecies(_parent, _args, { models }) {
       return models.getData("/species");
     },
-    allTransports(parent, args, { models }) {
+    allTransports(_parent, _args, { models }) {
       return models.getData("/transport");
     },
-    advancedDefaultInput(parent, args) {
+    advancedDefaultInput(_parent, args) {
       return JSON.stringify(args);
     },
-    multiArger(parent, args) {
+    multiArger(_parent, args) {
       return JSON.stringify(args);
     },
   },
@@ -361,6 +352,7 @@ const resolvers: IExecutableSchemaDefinition["resolvers"] = {
     mass: (pilot) => +pilot.mass,
     starships,
     homeworld,
+    films,
   },
   Vehicle: {
     cargo_capacity: (vehicle) => +vehicle.cargo_capacity,

@@ -1,14 +1,6 @@
-import {
-  GraphQLInputType,
-  InputValueDefinitionNode,
-  GraphQLArgumentExtensions,
-  GraphQLFieldConfigArgumentMap,
-  GraphQLArgument,
-} from "graphql";
+import { GraphQLFieldConfigArgumentMap, GraphQLArgument } from "graphql";
 
 import { Resolver, UnionTypeResolver, InterfaceTypeResolver } from "./types";
-import type { Maybe } from "./jsutils/Maybe";
-import type { ObjMap } from "./jsutils/ObjMap";
 import { toObjMap } from "./jsutils/toObjMap";
 import { keyValMap } from "./jsutils/keyValMap";
 
@@ -21,7 +13,7 @@ export function defineArguments(
     type: argConfig.type,
     defaultValue: argConfig.defaultValue,
     deprecationReason: argConfig.deprecationReason,
-    extensions: argConfig.extensions && toObjMap(argConfig.extensions),
+    extensions: argConfig.extensions ? toObjMap(argConfig.extensions) : {},
     astNode: argConfig.astNode,
   }));
 }
@@ -44,13 +36,13 @@ export function argsToArgsConfig(
 }
 
 export function isInterfaceResolverType(
-  resolver: Resolver<any, any>,
+  resolver: Resolver<unknown, unknown>,
 ): resolver is InterfaceTypeResolver {
   return "__implementedBy" in resolver && "__resolveType" in resolver;
 }
 
 export function isUnionResolverType(
-  resolver: Resolver<any, any>,
+  resolver: Resolver<unknown, unknown>,
 ): resolver is UnionTypeResolver {
   return "__types" in resolver && "__resolveType" in resolver;
 }

@@ -6,7 +6,7 @@ import {
   specifiedScalars,
 } from "./index";
 import { PromiseOrValue } from "./jsutils/PromiseOrValue";
-import { Resolvers, ExecutionResult, ExecutionWithSchemaArgs } from "./types";
+import { Resolvers, ExecutionWithSchemaArgs, ExecutionResult } from "./types";
 
 export function subscribeWithSchema({
   typeDefs,
@@ -18,9 +18,7 @@ export function subscribeWithSchema({
   operationName,
   fieldResolver,
   typeResolver,
-}: ExecutionWithSchemaArgs): Promise<
-  AsyncGenerator<ExecutionResult, void, void> | ExecutionResult
-> {
+}: ExecutionWithSchemaArgs): PromiseOrValue<ExecutionResult> {
   const schema = buildASTSchema(typeDefs);
   let extractedResolvers: Resolvers = {};
   const getTypeByName = (name: string) => {

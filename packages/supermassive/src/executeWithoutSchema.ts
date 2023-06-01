@@ -2,7 +2,6 @@ import {
   ASTNode as GraphQLASTNode,
   GraphQLEnumType,
   GraphQLError,
-  GraphQLFormattedError,
   GraphQLInputObjectType,
   GraphQLLeafType,
   GraphQLObjectType,
@@ -18,6 +17,7 @@ import {
   FragmentDefinitionNode,
   OperationDefinitionNode,
   OperationTypeDefinitionNode,
+  OperationTypeNode,
   TypeNode,
 } from "./ast/TypedAST";
 import {
@@ -43,7 +43,6 @@ import { isUnionResolverType, isInterfaceResolverType } from "./definition";
 import { mergeResolvers } from "./utilities/mergeResolvers";
 import {
   ExecutionWithoutSchemaArgs,
-  FieldResolver,
   FunctionFieldResolver,
   InterfaceTypeResolver,
   ObjectTypeResolver,
@@ -53,7 +52,8 @@ import {
   TypeResolver,
   UnionTypeResolver,
   ExecutionResult,
-  IncrementalExecutionResults,
+  FieldResolverObject,
+  TotalExecutionResult,
 } from "./types";
 import { typeNameFromAST } from "./utilities/typeNameFromAST";
 import {
@@ -63,6 +63,8 @@ import {
 } from "./values";
 import { ExecutionHooks } from "./hooks/types";
 import { arraysAreEqual } from "./utilities/array";
+import { isAsyncIterable } from "./jsutils/isAsyncIterable";
+import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
 
 /**
  * Terminology
@@ -95,10 +97,12 @@ export interface ExecutionContext {
   fragments: ObjMap<FragmentDefinitionNode>;
   rootValue: unknown;
   contextValue: unknown;
+  buildContextValue?: (contextValue?: unknown) => unknown;
   operation: OperationDefinitionNode;
   variableValues: { [variable: string]: unknown };
-  fieldResolver: FunctionFieldResolver<any, any>;
-  typeResolver: TypeResolver<any, any>;
+  fieldResolver: FunctionFieldResolver<unknown, unknown>;
+  typeResolver: TypeResolver<unknown, unknown>;
+  subscribeFieldResolver: FunctionFieldResolver<unknown, unknown>;
   errors: Array<GraphQLError>;
   fieldExecutionHooks?: ExecutionHooks;
   subsequentPayloads: Set<IncrementalDataRecord>;
@@ -116,72 +120,17 @@ export interface ExecutionContext {
  */
 export function executeWithoutSchema(
   args: ExecutionWithoutSchemaArgs,
-): PromiseOrValue<ExecutionResult | IncrementalExecutionResults> {
-  const {
-    resolvers,
-    schemaResolvers,
-    document,
-    rootValue,
-    contextValue,
-    variableValues,
-    operationName,
-    fieldResolver,
-    typeResolver,
-    fieldExecutionHooks,
-  } = args;
-
-  const combinedResolvers = schemaResolvers
-    ? mergeResolvers(resolvers, schemaResolvers)
-    : resolvers;
-  // If arguments are missing or incorrect, throw an error.
-  assertValidExecutionArguments(document, variableValues);
-
+): PromiseOrValue<ExecutionResult> {
   // If a valid execution context cannot be created due to incorrect arguments,
   // a "Response" with only errors is returned.
-  const exeContext = buildExecutionContext(
-    combinedResolvers,
-    document,
-    rootValue,
-    contextValue,
-    variableValues,
-    operationName,
-    fieldResolver,
-    typeResolver,
-    fieldExecutionHooks,
-  );
+  const exeContext = buildExecutionContext(args);
 
   // Return early errors if execution context failed.
   if (!("resolvers" in exeContext)) {
     return { errors: exeContext };
   } else {
-    // Return a Promise that will eventually resolve to the data described by
-    // The "Response" section of the GraphQL specification.
-    //
-    // If errors are encountered while executing a GraphQL field, only that
-    // field and its descendants will be omitted, and sibling fields will still
-    // be executed. An execution which encounters errors will still result in a
-    // resolved Promise.
-    const data = executeOperation(exeContext, exeContext.operation, rootValue);
-    return buildResponse(exeContext, data);
+    return executeOperation(exeContext);
   }
-}
-
-/**
- * Given a completed execution context and data, build the { errors, data }
- * response defined by the "Response" section of the GraphQL specification.
- */
-function buildResponse(
-  exeContext: ExecutionContext,
-  data: PromiseOrValue<ObjMap<unknown> | null>,
-): PromiseOrValue<ExecutionResult> {
-  if (isPromise(data)) {
-    return data.then((resolved: PromiseOrValue<ObjMap<unknown> | null>) =>
-      buildResponse(exeContext, resolved),
-    );
-  }
-  return exeContext.errors.length === 0
-    ? { data }
-    : { errors: exeContext.errors, data };
 }
 
 /**
@@ -211,17 +160,30 @@ export function assertValidExecutionArguments(
  *
  * @internal
  */
-export function buildExecutionContext(
-  resolvers: Resolvers,
-  document: DocumentNode,
-  rootValue: unknown,
-  contextValue: unknown,
-  rawVariableValues: Maybe<{ [variable: string]: unknown }>,
-  operationName: Maybe<string>,
-  fieldResolver: Maybe<FunctionFieldResolver<unknown, unknown>>,
-  typeResolver?: Maybe<TypeResolver<unknown, unknown>>,
-  fieldExecutionHooks?: ExecutionHooks,
+function buildExecutionContext(
+  args: ExecutionWithoutSchemaArgs,
 ): Array<GraphQLError> | ExecutionContext {
+  const {
+    resolvers,
+    schemaResolvers,
+    document,
+    rootValue,
+    contextValue,
+    buildContextValue,
+    variableValues,
+    operationName,
+    fieldResolver,
+    typeResolver,
+    subscribeFieldResolver,
+    fieldExecutionHooks,
+  } = args;
+
+  assertValidExecutionArguments(document, variableValues);
+
+  const combinedResolvers = schemaResolvers
+    ? mergeResolvers(resolvers, schemaResolvers)
+    : (resolvers as Resolvers);
+
   let operation: OperationDefinitionNode | undefined;
   const fragments: ObjMap<FragmentDefinitionNode> = Object.create(null);
   for (const definition of document.definitions) {
@@ -257,9 +219,9 @@ export function buildExecutionContext(
   const variableDefinitions = operation.variableDefinitions ?? [];
 
   const coercedVariableValues = getVariableValues(
-    resolvers,
+    combinedResolvers,
     variableDefinitions,
-    rawVariableValues ?? {},
+    variableValues ?? {},
     { maxErrors: 50 },
   );
 
@@ -268,58 +230,119 @@ export function buildExecutionContext(
   }
 
   return {
-    resolvers,
+    resolvers: combinedResolvers,
     fragments,
     rootValue,
-    contextValue,
+    contextValue: buildContextValue
+      ? buildContextValue(contextValue)
+      : contextValue,
+    buildContextValue,
     operation,
     variableValues: coercedVariableValues.coerced,
     fieldResolver: fieldResolver ?? defaultFieldResolver,
     typeResolver: typeResolver ?? defaultTypeResolver,
+    subscribeFieldResolver: subscribeFieldResolver ?? defaultFieldResolver,
     errors: [],
     fieldExecutionHooks,
     subsequentPayloads: new Set(),
   };
 }
 
-/**
- * Implements the "Executing operations" section of the spec.
- */
+function buildPerEventExecutionContext(
+  exeContext: ExecutionContext,
+  payload: unknown,
+): ExecutionContext {
+  return {
+    ...exeContext,
+    contextValue: exeContext.buildContextValue
+      ? exeContext.buildContextValue(exeContext.contextValue)
+      : exeContext.contextValue,
+    rootValue: payload,
+    subsequentPayloads: new Set(),
+    errors: [],
+  };
+}
+
 function executeOperation(
   exeContext: ExecutionContext,
-  operation: OperationDefinitionNode,
-  rootValue: unknown,
-): PromiseOrValue<ObjMap<unknown> | null> {
-  const typeName = getOperationRootTypeName(operation);
-  const { groupedFieldSet: fields } = collectFields(
-    exeContext.resolvers,
-    exeContext.fragments,
-    exeContext.variableValues,
-    typeName,
+): PromiseOrValue<ExecutionResult> {
+  const { operation, rootValue, resolvers, fragments, variableValues } =
+    exeContext;
+  const rootTypeName = getOperationRootTypeName(operation);
+
+  const { groupedFieldSet } = collectFields(
+    resolvers,
+    fragments,
+    variableValues,
+    rootTypeName,
     operation,
   );
-
   const path = undefined;
+  let result;
 
-  // Errors from sub-fields of a NonNull type may propagate to the top level,
-  // at which point we still log the error and null the parent field, which
-  // in this case is the entire response.
-  try {
-    const result =
-      operation.operation === "mutation"
-        ? executeFieldsSerially(exeContext, typeName, rootValue, path, fields)
-        : executeFields(exeContext, typeName, rootValue, path, fields);
-    if (isPromise(result)) {
-      return result.then(undefined, (error: GraphQLError) => {
-        exeContext.errors.push(error);
-        return Promise.resolve(null);
-      });
+  switch (operation.operation) {
+    case OperationTypeNode.QUERY:
+      result = executeFields(
+        exeContext,
+        rootTypeName,
+        rootValue,
+        path,
+        groupedFieldSet,
+      );
+      result = buildResponse(exeContext, result);
+      break;
+    case OperationTypeNode.MUTATION:
+      result = executeFieldsSerially(
+        exeContext,
+        rootTypeName,
+        rootValue,
+        path,
+        groupedFieldSet,
+      );
+      result = buildResponse(exeContext, result);
+      break;
+    case OperationTypeNode.SUBSCRIPTION: {
+      const resultOrStreamOrPromise = createSourceEventStream(exeContext);
+      result = mapResultOrEventStreamOrPromise(
+        resultOrStreamOrPromise,
+        exeContext,
+        rootTypeName,
+        path,
+        groupedFieldSet,
+      );
     }
-    return result;
-  } catch (error) {
-    exeContext.errors.push(error as any);
-    return null;
   }
+
+  // for (const patch of patches) {
+  //   const { label, groupedFieldSet: patchGroupedFieldSet } = patch;
+  //   executeDeferredFragment(
+  //     exeContext,
+  //     rootType,
+  //     rootValue,
+  //     patchGroupedFieldSet,
+  //     label,
+  //     path,
+  //   );
+  // }
+
+  return result;
+}
+
+/**
+ * Given a completed execution context and data, build the { errors, data }
+ * response defined by the "Response" section of the GraphQL specification.
+ */
+function buildResponse(
+  exeContext: ExecutionContext,
+  data: PromiseOrValue<ObjMap<unknown> | null>,
+): PromiseOrValue<TotalExecutionResult> {
+  if (isPromise(data)) {
+    return data.then((resolved) => buildResponse(exeContext, resolved));
+  }
+
+  return exeContext.errors.length === 0
+    ? { data }
+    : { errors: exeContext.errors, data };
 }
 
 /**
@@ -335,13 +358,13 @@ function executeFieldsSerially(
 ): PromiseOrValue<ObjMap<unknown>> {
   return promiseReduce(
     fields.entries(),
-    (results, [responseName, fieldNodes]) => {
+    (results, [responseName, fieldGroup]) => {
       const fieldPath = addPath(path, responseName, parentTypeName);
       const result = executeField(
         exeContext,
         parentTypeName,
         sourceValue,
-        fieldNodes,
+        fieldGroup,
         fieldPath,
       );
       if (result === undefined) {
@@ -374,13 +397,13 @@ function executeFields(
   const results = Object.create(null);
   let containsPromise = false;
 
-  for (const [responseName, fieldNodes] of fields.entries()) {
+  for (const [responseName, fieldGroup] of fields.entries()) {
     const fieldPath = addPath(path, responseName, parentTypeName);
     const result = executeField(
       exeContext,
       parentTypeName,
       sourceValue,
-      fieldNodes,
+      fieldGroup,
       fieldPath,
     );
 
@@ -413,10 +436,10 @@ function executeField(
   exeContext: ExecutionContext,
   parentTypeName: string,
   source: unknown,
-  fieldNodes: FieldGroup,
+  fieldGroup: FieldGroup,
   path: Path,
 ): PromiseOrValue<unknown> {
-  const fieldName = fieldNodes[0].name.value;
+  const fieldName = fieldGroup[0].name.value;
   const hooks = exeContext.fieldExecutionHooks;
 
   let resolveFn;
@@ -433,11 +456,11 @@ function executeField(
       },
     };
   } else {
-    returnTypeNode = fieldNodes[0].__type;
+    returnTypeNode = fieldGroup[0].__type;
     returnTypeName = typeNameFromAST(returnTypeNode);
     const typeResolvers = exeContext.resolvers[parentTypeName];
     resolveFn = (
-      typeResolvers as ObjectTypeResolver<any, any, any> | undefined
+      typeResolvers as ObjectTypeResolver<unknown, unknown, unknown> | undefined
     )?.[fieldName];
 
     if (typeof resolveFn !== "function" && resolveFn != null) {
@@ -453,7 +476,7 @@ function executeField(
   const info = buildResolveInfo(
     exeContext,
     fieldName,
-    fieldNodes,
+    fieldGroup,
     parentTypeName,
     returnTypeName,
     returnTypeNode,
@@ -467,7 +490,7 @@ function executeField(
     // TODO: find a way to memoize, in case this field is within a List type.
     const args = getArgumentValues(
       exeContext.resolvers,
-      fieldNodes[0],
+      fieldGroup[0],
       exeContext.variableValues,
     );
 
@@ -492,7 +515,7 @@ function executeField(
           return completeValue(
             exeContext,
             returnTypeNode,
-            fieldNodes,
+            fieldGroup,
             info,
             path,
             resolved,
@@ -515,7 +538,7 @@ function executeField(
       completed = completeValue(
         exeContext,
         returnTypeNode,
-        fieldNodes,
+        fieldGroup,
         info,
         path,
         result,
@@ -535,7 +558,7 @@ function executeField(
         (rawError) => {
           const error = locatedError(
             rawError,
-            fieldNodes as ReadonlyArray<GraphQLASTNode>,
+            fieldGroup as ReadonlyArray<GraphQLASTNode>,
             pathToArray(path),
           );
           if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
@@ -553,7 +576,7 @@ function executeField(
     const pathArray = pathToArray(path);
     const error = locatedError(
       rawError,
-      fieldNodes as ReadonlyArray<GraphQLASTNode>,
+      fieldGroup as ReadonlyArray<GraphQLASTNode>,
       pathArray,
     );
     // Do not invoke afterFieldResolve hook when error path and current field path are not equal:
@@ -576,12 +599,210 @@ function executeField(
 }
 
 /**
+ * Implements the "CreateSourceEventStream" algorithm described in the
+ * GraphQL specification, resolving the subscription source event stream.
+ *
+ * Returns a Promise which resolves to either an AsyncIterable (if successful)
+ * or an ExecutionResult (error). The promise will be rejected if the schema or
+ * other arguments to this function are invalid, or if the resolved event stream
+ * is not an async iterable.
+ *
+ * If the client-provided arguments to this function do not result in a
+ * compliant subscription, a GraphQL Response (ExecutionResult) with
+ * descriptive errors and no data will be returned.
+ *
+ * If the the source stream could not be created due to faulty subscription
+ * resolver logic or underlying systems, the promise will resolve to a single
+ * ExecutionResult containing `errors` and no `data`.
+ *
+ * If the operation succeeded, the promise resolves to the AsyncIterable for the
+ * event stream returned by the resolver.
+ *
+ * A Source Event Stream represents a sequence of events, each of which triggers
+ * a GraphQL execution for that event.
+ *
+ * This may be useful when hosting the stateful subscription service in a
+ * different process or machine than the stateless GraphQL execution engine,
+ * or otherwise separating these two steps. For more on this, see the
+ * "Supporting Subscriptions at Scale" information in the GraphQL specification.
+ */
+function createSourceEventStream(
+  exeContext: ExecutionContext,
+): PromiseOrValue<ExecutionResult | AsyncIterable<unknown>> {
+  try {
+    const eventStream = executeSubscriptionImpl(exeContext);
+    if (isPromise(eventStream)) {
+      return eventStream.then(undefined, (error) => ({ errors: [error] }));
+    }
+
+    return eventStream;
+  } catch (error) {
+    return { errors: [error as GraphQLError] };
+  }
+}
+
+function executeSubscriptionImpl(
+  exeContext: ExecutionContext,
+): PromiseOrValue<AsyncIterable<unknown>> {
+  const { resolvers, fragments, operation, variableValues, rootValue } =
+    exeContext;
+  const typeName = getOperationRootTypeName(operation);
+  const { groupedFieldSet } = collectFields(
+    resolvers,
+    fragments,
+    variableValues,
+    typeName,
+    operation,
+  );
+
+  const firstRootField = groupedFieldSet.entries().next().value;
+  const [responseName, fieldGroup] = firstRootField;
+  const fieldName = fieldGroup[0].name.value;
+
+  let resolveFn;
+  let returnTypeName: string;
+  let returnTypeNode: TypeNode;
+  if (fieldName === "__typename" && !resolveFn) {
+    resolveFn = () => typeName;
+    returnTypeName = "String";
+    returnTypeNode = {
+      kind: Kind.NAMED_TYPE,
+      name: {
+        kind: Kind.NAME,
+        value: "String",
+      },
+    };
+  } else {
+    returnTypeNode = fieldGroup[0].__type as TypeNode;
+    returnTypeName = typeNameFromAST(returnTypeNode);
+    const typeResolvers = exeContext.resolvers[typeName] as
+      | ObjectTypeResolver<unknown, unknown, unknown>
+      | undefined;
+    const fieldResolver = typeResolvers?.[fieldName] as
+      | FieldResolverObject<unknown, unknown, unknown, unknown>
+      | undefined;
+    resolveFn = fieldResolver?.subscribe;
+  }
+
+  if (!resolveFn) {
+    resolveFn = exeContext.subscribeFieldResolver;
+  }
+
+  const path = addPath(undefined, responseName, typeName);
+  const info = buildResolveInfo(
+    exeContext,
+    fieldName,
+    fieldGroup,
+    typeName,
+    returnTypeName,
+    returnTypeNode,
+    path,
+  );
+
+  try {
+    // Implements the "ResolveFieldEventStream" algorithm from GraphQL specification.
+    // It differs from "ResolveFieldValue" due to providing a different `resolveFn`.
+
+    // Build a JS object of arguments from the field.arguments AST, using the
+    // variables scope to fulfill any variable references.
+    const args = getArgumentValues(resolvers, fieldGroup[0], variableValues);
+
+    // The resolve function's optional third argument is a context value that
+    // is provided to every resolve function within an execution. It is commonly
+    // used to represent an authenticated user, or request-specific caches.
+    const contextValue = exeContext.contextValue;
+
+    // Call the `subscribe()` resolver or the default resolver to produce an
+    // AsyncIterable yielding raw payloads.
+    const result = resolveFn(rootValue, args, contextValue, info);
+
+    if (isPromise(result)) {
+      return result.then(assertEventStream).then(undefined, (error) => {
+        throw locatedError(error, fieldGroup, pathToArray(path));
+      });
+    }
+
+    return assertEventStream(result);
+  } catch (error) {
+    throw locatedError(error, fieldGroup, pathToArray(path));
+  }
+}
+
+function assertEventStream(result: unknown): AsyncIterable<unknown> {
+  if (result instanceof Error) {
+    throw result;
+  }
+
+  // Assert field returned an event stream, otherwise yield an error.
+  if (!isAsyncIterable(result)) {
+    throw new GraphQLError(
+      "Subscription field must return Async Iterable. " +
+        `Received: ${inspect(result)}.`,
+    );
+  }
+
+  return result;
+}
+
+// Either map or return potential event stream
+function mapResultOrEventStreamOrPromise(
+  resultOrStreamOrPromise: PromiseOrValue<
+    ExecutionResult | AsyncIterable<unknown>
+  >,
+  exeContext: ExecutionContext,
+  parentTypeName: string,
+  path: Path | undefined,
+  groupedFieldSet: GroupedFieldSet,
+): PromiseOrValue<
+  TotalExecutionResult | AsyncGenerator<TotalExecutionResult, void, void>
+> {
+  if (isPromise(resultOrStreamOrPromise)) {
+    return resultOrStreamOrPromise.then((resultOrStream) =>
+      mapResultOrEventStreamOrPromise(
+        resultOrStream,
+        exeContext,
+        parentTypeName,
+        path,
+        groupedFieldSet,
+      ),
+    );
+  } else {
+    if (!isAsyncIterable(resultOrStreamOrPromise)) {
+      return resultOrStreamOrPromise as TotalExecutionResult;
+    } else {
+      // For each payload yielded from a subscription, map it over the normal
+      // GraphQL `execute` function, with `payload` as the rootValue.
+      // This implements the "MapSourceToResponseEvent" algorithm described in
+      // the GraphQL specification. The `executeFields` function provides the
+      // "ExecuteSubscriptionEvent" algorithm, as it is nearly identical to the
+      // "ExecuteQuery" algorithm, for which `execute` is also used.
+      const mapSourceToResponse = (payload: unknown) => {
+        const perEventContext = buildPerEventExecutionContext(
+          exeContext,
+          payload,
+        );
+        const data = executeFields(
+          exeContext,
+          parentTypeName,
+          payload,
+          path,
+          groupedFieldSet,
+        );
+        return buildResponse(perEventContext, data);
+      };
+
+      return mapAsyncIterator(resultOrStreamOrPromise, mapSourceToResponse);
+    }
+  }
+}
+
+/**
  * @internal
  */
 export function buildResolveInfo(
   exeContext: ExecutionContext,
   fieldName: string,
-  fieldNodes: FieldGroup,
+  fieldGroup: FieldGroup,
   parentTypeName: string,
   returnTypeName: string,
   returnTypeNode: TypeNode,
@@ -591,7 +812,7 @@ export function buildResolveInfo(
   // information about the current execution state.
   return {
     fieldName: fieldName,
-    fieldNodes,
+    fieldGroup,
     returnTypeName,
     parentTypeName,
     returnTypeNode,
@@ -644,7 +865,7 @@ function handleFieldError(
 function completeValue(
   exeContext: ExecutionContext,
   returnTypeNode: TypeNode,
-  fieldNodes: FieldGroup,
+  fieldGroup: FieldGroup,
   info: ResolveInfo,
   path: Path,
   result: unknown,
@@ -660,7 +881,7 @@ function completeValue(
     const completed = completeValue(
       exeContext,
       returnTypeNode.type,
-      fieldNodes,
+      fieldGroup,
       info,
       path,
       result,
@@ -683,7 +904,7 @@ function completeValue(
     return completeListValue(
       exeContext,
       returnTypeNode.type,
-      fieldNodes,
+      fieldGroup,
       info,
       path,
       result,
@@ -691,7 +912,8 @@ function completeValue(
   }
 
   const returnTypeName = returnTypeNode.name.value;
-  let returnType: Resolver<any, any> = exeContext.resolvers[returnTypeName];
+  let returnType: Resolver<unknown, unknown> =
+    exeContext.resolvers[returnTypeName];
   if (!returnType) {
     returnType = specifiedScalars[returnTypeName];
   }
@@ -712,7 +934,7 @@ function completeValue(
     return completeAbstractValue(
       exeContext,
       returnType,
-      fieldNodes,
+      fieldGroup,
       info,
       path,
       result,
@@ -725,7 +947,7 @@ function completeValue(
     return completeObjectValue(
       exeContext,
       returnTypeName,
-      fieldNodes,
+      fieldGroup,
       info,
       path,
       result,
@@ -746,7 +968,7 @@ function completeValue(
 function completeListValue(
   exeContext: ExecutionContext,
   returnTypeNode: TypeNode,
-  fieldNodes: FieldGroup,
+  fieldGroup: FieldGroup,
   info: ResolveInfo,
   path: Path,
   result: unknown,
@@ -771,7 +993,7 @@ function completeListValue(
           completeValue(
             exeContext,
             returnTypeNode,
-            fieldNodes,
+            fieldGroup,
             info,
             itemPath,
             resolved,
@@ -781,7 +1003,7 @@ function completeListValue(
         completedItem = completeValue(
           exeContext,
           returnTypeNode,
-          fieldNodes,
+          fieldGroup,
           info,
           itemPath,
           item,
@@ -795,7 +1017,7 @@ function completeListValue(
         return completedItem.then(undefined, (rawError) => {
           const error = locatedError(
             rawError,
-            fieldNodes as ReadonlyArray<GraphQLASTNode>,
+            fieldGroup as ReadonlyArray<GraphQLASTNode>,
             pathToArray(itemPath),
           );
           return handleFieldError(error, returnTypeNode, exeContext);
@@ -805,7 +1027,7 @@ function completeListValue(
     } catch (rawError) {
       const error = locatedError(
         rawError,
-        fieldNodes as ReadonlyArray<GraphQLASTNode>,
+        fieldGroup as ReadonlyArray<GraphQLASTNode>,
         pathToArray(itemPath),
       );
       return handleFieldError(error, returnTypeNode, exeContext);
@@ -840,7 +1062,7 @@ function completeLeafValue(
 function completeAbstractValue(
   exeContext: ExecutionContext,
   returnType: UnionTypeResolver | InterfaceTypeResolver,
-  fieldNodes: FieldGroup,
+  fieldGroup: FieldGroup,
   info: ResolveInfo,
   path: Path,
   result: unknown,
@@ -854,7 +1076,7 @@ function completeAbstractValue(
       completeObjectValue(
         exeContext,
         ensureValidRuntimeType(resolvedRuntimeTypeName, exeContext),
-        fieldNodes,
+        fieldGroup,
         info,
         path,
         result,
@@ -865,7 +1087,7 @@ function completeAbstractValue(
   return completeObjectValue(
     exeContext,
     ensureValidRuntimeType(runtimeTypeName, exeContext),
-    fieldNodes,
+    fieldGroup,
     info,
     path,
     result,
@@ -882,7 +1104,8 @@ function ensureValidRuntimeType(
     );
   }
 
-  const runtimeType: Resolver<any, any> = exeContext.resolvers[runtimeTypeName];
+  const runtimeType: Resolver<unknown, unknown> =
+    exeContext.resolvers[runtimeTypeName];
 
   if (!runtimeType) {
     throw new GraphQLError(
@@ -904,7 +1127,9 @@ function ensureValidRuntimeType(
   }
 }
 
-function getRuntimeTypeInstanceName(runtimeType: Resolver<any, any>): string {
+function getRuntimeTypeInstanceName(
+  runtimeType: Resolver<unknown, unknown>,
+): string {
   if (runtimeType instanceof GraphQLScalarType) {
     return "GraphQLScalarType";
   } else if (runtimeType instanceof GraphQLEnumType) {
@@ -926,31 +1151,37 @@ function getRuntimeTypeInstanceName(runtimeType: Resolver<any, any>): string {
 function completeObjectValue(
   exeContext: ExecutionContext,
   returnTypeName: string,
-  fieldNodes: FieldGroup,
+  fieldGroup: FieldGroup,
   info: ResolveInfo,
   path: Path,
   result: unknown,
 ): PromiseOrValue<ObjMap<unknown>> {
   // Collect sub-fields to execute to complete this value.
-  const { groupedFieldSet: subFieldNodes } = collectSubfields(
+  const { groupedFieldSet } = collectSubfields(
     exeContext.resolvers,
     exeContext.fragments,
     exeContext.variableValues,
     exeContext.operation,
     returnTypeName,
-    fieldNodes,
+    fieldGroup,
   );
-  return executeFields(exeContext, returnTypeName, result, path, subFieldNodes);
+  return executeFields(
+    exeContext,
+    returnTypeName,
+    result,
+    path,
+    groupedFieldSet,
+  );
 }
 
 function invalidReturnTypeError(
   returnType: GraphQLObjectType,
   result: unknown,
-  fieldNodes: Array<FieldNode>,
+  fieldGroup: Array<FieldNode>,
 ): GraphQLError {
   return new GraphQLError(
     `Expected value of type "${returnType.name}" but got: ${inspect(result)}.`,
-    { nodes: fieldNodes as ReadonlyArray<GraphQLASTNode> },
+    { nodes: fieldGroup as ReadonlyArray<GraphQLASTNode> },
   );
 }
 
@@ -985,7 +1216,7 @@ function invokeAfterFieldResolveHook(
   resolveInfo: ResolveInfo,
   exeContext: ExecutionContext,
   result?: unknown,
-  error?: any,
+  error?: unknown,
 ): void {
   const hook = exeContext.fieldExecutionHooks?.afterFieldResolve;
   if (!hook) {
@@ -1016,7 +1247,7 @@ function invokeAfterFieldCompleteHook(
   resolveInfo: ResolveInfo,
   exeContext: ExecutionContext,
   result?: unknown,
-  error?: any,
+  error?: unknown,
 ): void {
   const hook = exeContext.fieldExecutionHooks?.afterFieldComplete;
   if (!hook) {
@@ -1045,9 +1276,9 @@ function invokeAfterFieldCompleteHook(
 
 function executeSafe<T>(
   execute: () => T,
-  onComplete: (result: T | undefined, error: any) => void,
+  onComplete: (result: T | undefined, error: unknown) => void,
 ): T {
-  let error: any;
+  let error: unknown;
   let result: T | undefined;
   try {
     result = execute();
@@ -1060,7 +1291,7 @@ function executeSafe<T>(
 }
 
 function toGraphQLError(
-  originalError: any,
+  originalError: unknown,
   path: Path,
   prependMessage: string,
 ): GraphQLError {
@@ -1097,6 +1328,7 @@ export const defaultTypeResolver: TypeResolver<unknown, unknown> = function (
  * of calling that function while passing along args and context value.
  */
 export const defaultFieldResolver: FunctionFieldResolver<unknown, unknown> =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function (source: any, args, contextValue, info) {
     // ensure source is a value for which property access is acceptable.
     if (isObjectLike(source) || typeof source === "function") {
@@ -1113,11 +1345,11 @@ export function getOperationRootTypeName(
   operation: OperationDefinitionNode | OperationTypeDefinitionNode,
 ): string {
   switch (operation.operation) {
-    case "query":
+    case OperationTypeNode.QUERY:
       return "Query";
-    case "mutation":
+    case OperationTypeNode.MUTATION:
       return "Mutation";
-    case "subscription":
+    case OperationTypeNode.SUBSCRIPTION:
       return "Subscription";
   }
 }

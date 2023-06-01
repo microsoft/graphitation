@@ -4,7 +4,11 @@ import schema, { typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
 import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
-import { ExecutionResult, Resolvers, UserResolvers } from "../types";
+import {
+  UserResolvers,
+  TotalExecutionResult,
+  isTotalExecutionResult,
+} from "../types";
 import { resolvers as extractedResolvers } from "../benchmarks/swapi-schema/__generated__/schema";
 import {
   AfterFieldCompleteHookArgs,
@@ -17,7 +21,7 @@ import { pathToArray } from "../jsutils/Path";
 interface TestCase {
   name: string;
   query: string;
-  resolvers: Resolvers;
+  resolvers: UserResolvers;
   expectedHookCalls: string[];
   resultHasErrors: boolean;
 }
@@ -131,7 +135,7 @@ describe.each([
         resolvers: {
           ...resolvers,
           Person: {
-            name: (parent: any, _args: {}, _context: any) => {
+            name: (parent: any, _args: unknown, _context: any) => {
               return parent.name;
             },
           },
@@ -157,7 +161,7 @@ describe.each([
         resolvers: {
           ...resolvers,
           Person: {
-            name: async (parent: any, _args: {}, _context: any) => {
+            name: async (parent: any, _args: unknown, _context: any) => {
               return Promise.resolve(parent.name);
             },
           },
@@ -183,7 +187,7 @@ describe.each([
         resolvers: {
           ...resolvers,
           Film: {
-            producer: (_parent: any, _args: {}, _context: any) => {
+            producer: (_parent: any, _args: unknown, _context: any) => {
               throw new Error("Resolver error");
             },
           },
@@ -209,7 +213,7 @@ describe.each([
         resolvers: {
           ...resolvers,
           Film: {
-            producer: async (_parent: any, _args: {}, _context: any) => {
+            producer: async (_parent: any, _args: unknown, _context: any) => {
               return Promise.reject(new Error("Resolver error"));
             },
           },
@@ -235,7 +239,7 @@ describe.each([
         resolvers: {
           ...resolvers,
           Film: {
-            title: (_parent: any, _args: {}, _context: any) => {
+            title: (_parent: any, _args: unknown, _context: any) => {
               throw new Error("Resolver error");
             },
           },
@@ -261,7 +265,7 @@ describe.each([
         resolvers: {
           ...resolvers,
           Film: {
-            title: async (_parent: any, _args: {}, _context: any) => {
+            title: async (_parent: any, _args: unknown, _context: any) => {
               return Promise.reject(new Error("Resolver error"));
             },
           },
@@ -297,7 +301,7 @@ describe.each([
     it.each(testCases)(
       "$name",
       async ({ query, resolvers, expectedHookCalls, resultHasErrors }) => {
-        expect.assertions(3);
+        expect.assertions(4);
         const document = parse(query);
 
         const result = await execute(document, resolvers, hooks);
@@ -306,7 +310,8 @@ describe.each([
         // so just verify whether corresponding hook calls happened
         expect(hookCalls).toHaveLength(expectedHookCalls.length);
         expect(hookCalls).toEqual(expect.arrayContaining(expectedHookCalls));
-        expect(((result as ExecutionResult).errors?.length ?? 0) > 0).toBe(
+        expect(isTotalExecutionResult(result)).toBe(true);
+        expect(((result as TotalExecutionResult).errors?.length ?? 0) > 0).toBe(
           resultHasErrors,
         );
       },
@@ -420,20 +425,21 @@ describe.each([
     it.each(testCases)(
       "$name",
       async ({ query, hooks, expectedErrorMessage }) => {
-        expect.assertions(4);
+        expect.assertions(5);
         const document = parse(query);
 
         const response = (await execute(
           document,
           resolvers as UserResolvers,
           hooks,
-        )) as ExecutionResult;
+        )) as TotalExecutionResult;
+        expect(isTotalExecutionResult(response)).toBe(true);
         const errors = response.errors;
 
         expect(response.data).toBeTruthy();
         expect(errors).toBeDefined();
         expect(errors).toHaveLength(1);
-        expect(errors![0].message).toBe(expectedErrorMessage);
+        expect(errors?.[0].message).toBe(expectedErrorMessage);
       },
     );
   });

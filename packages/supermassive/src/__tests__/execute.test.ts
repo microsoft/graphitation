@@ -1,18 +1,27 @@
 import {
   parse,
   experimentalExecuteIncrementally as graphQLExecute,
-  isInputType,
+  subscribe as graphQLSubscribe,
+  ExecutionArgs as GraphQLExecutionArgs,
+  Kind,
+  ExecutionResult as GraphQLExecutionResult,
+  ExperimentalIncrementalExecutionResults as GraphQLExperimentalExecutionResult,
 } from "graphql";
 import { executeWithoutSchema, executeWithSchema } from "..";
 import schema, { typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
-import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
-import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
-import { Resolvers, Resolver, UserResolvers } from "../types";
-import { specifiedScalars } from "../values";
-import { mergeResolvers } from "../utilities/mergeResolvers";
+import {
+  DocumentNode,
+  OperationDefinitionNode,
+  OperationTypeNode,
+  addTypesToRequestDocument,
+} from "../ast/addTypesToRequestDocument";
+import { ExecutionResult, UserResolvers } from "../types";
 import { resolvers as extractedResolvers } from "../benchmarks/swapi-schema/__generated__/schema";
+import { forAwaitEach, isAsyncIterable } from "iterall";
+import { ObjMap } from "../jsutils/ObjMap";
+import { PromiseOrValue } from "graphql/jsutils/PromiseOrValue";
 
 interface TestCase {
   name: string;
@@ -302,24 +311,347 @@ query Person($id: Int!) {
     }
     `,
   },
+  // subscription
+  {
+    name: "basic subscription with variables",
+    document: `
+  subscription emitPersons($limit: Int!) {
+    emitPersons(limit: $limit) {
+      name
+      gender
+    }
+  }
+ `,
+    variables: {
+      limit: 5,
+    },
+  },
+  {
+    name: "basic subscription with unused non-required variable",
+    document: `
+  subscription emitPersons($limit: Int!, $throwError: Boolean) {
+    emitPersons(limit: $limit, throwError: $throwError) {
+      name
+      gender
+    }
+  }
+ `,
+    variables: {
+      limit: 5,
+    },
+  },
+  {
+    name: "subscription throw an error",
+    document: `
+  subscription emitPersons($limit: Int!, $throwError: Boolean) {
+    emitPersons(limit: $limit, throwError: $throwError) {
+      name
+      gender
+    }
+  }
+ `,
+    variables: {
+      limit: 5,
+      throwError: true,
+    },
+  },
+  // defer
+  {
+    name: "@defer on inline fragment",
+    document: `
+    {
+      person(id: 1) {
+        name
+        ... on Person @defer {
+          gender
+          birth_year
+        }
+      }
+    }
+    `,
+  },
+  {
+    name: "@defer on fragment",
+    document: `
+    {
+      person(id: 1) {
+        name
+        ...DeferredPerson @defer
+      }
+    }
+
+    fragment DeferredPerson on Person {
+      gender
+      birth_year
+    }
+    `,
+  },
+  {
+    name: "@defer multiple fragments",
+    document: `
+    {
+      person(id: 1) {
+        name
+        ... on Person @defer {
+          gender
+        }
+        ...DeferredPerson @defer
+      }
+    }
+
+    fragment DeferredPerson on Person {
+      birth_year
+    }
+    `,
+  },
+  {
+    name: "@defer overlapping fragment",
+    document: `
+    {
+      person(id: 1) {
+        name
+        ... on Person @defer {
+          gender
+        }
+        ...DeferredPerson @defer
+      }
+    }
+
+    fragment DeferredPerson on Person {
+      gender
+      birth_year
+    }
+    `,
+  },
+
+  {
+    name: "@defer nested",
+    document: `
+    {
+      person(id: 1) {
+        name
+        ...DeferredPerson @defer
+      }
+    }
+
+    fragment DeferredPerson on Person {
+      birth_year
+      ... on Person @defer {
+        films {
+          title
+        }
+      }
+    }
+    `,
+  },
+
+  {
+    name: "@defer label simple",
+    document: `
+   {
+      person(id: 1) {
+        name
+        ... on Person @defer(label: "INLINE") {
+          gender
+        }
+        ...DeferredPerson @defer(label: null)
+      }
+    }
+
+    fragment DeferredPerson on Person {
+      birth_year
+    }
+    `,
+  },
+
+  // TODO: Does not error in graphql-js even though it should in spec
+  // {
+  //   name: "@defer label as  variable error",
+  //   document: `
+  //   query ($label: String) {
+  //     person(id: 1) {
+  //       name
+  //       ... on Person @defer(label: $label) {
+  //         gender
+  //       }
+  //       ...DeferredPerson @defer
+  //     }
+  //   }
+
+  //   fragment DeferredPerson on Person {
+  //     birth_year
+  //   }
+  //   `,
+  //   variables: {
+  //     inlineLabel: "INLINE",
+  //   },
+  // },
+
+  /// TODO: Does not error in graphql-js even though it should by spec
+  // {
+  //   name: "@defer label duplicate labels",
+  //   document: `
+  //   query  {
+  //     person(id: 1) {
+  //       name
+  //       ... on Person @defer(label: "SAME") {
+  //         gender
+  //       }
+  //       ...DeferredPerson @defer(label: "SAME")
+  //     }
+  //   }
+
+  //   fragment DeferredPerson on Person {
+  //     birth_year
+  //   }
+  //   `,
+  // },
+
+  {
+    name: "@defer if",
+    document: `
+   {
+      person(id: 1) {
+        name
+        ... on Person @defer(if: true) {
+          gender
+        }
+        ...DeferredPerson @defer(if: false)
+      }
+    }
+
+    fragment DeferredPerson on Person {
+      birth_year
+    }
+    `,
+  },
+
+  {
+    name: "@stream basic",
+    document: `
+    {
+      person(id: 1) {
+        name
+        films @stream {
+          title
+        }
+      }
+    }
+    `,
+  },
+
+  {
+    name: "@stream inside @defer",
+    document: `
+    {
+      person(id: 1) {
+        name
+        ...DeferredPerson @defer
+      }
+    }
+
+    fragment DeferredPerson on Person {
+      birth_year
+      ... on Person @defer {
+        films @stream {
+          title
+        }
+      }
+    }`,
+  },
+
+  {
+    name: "@stream if",
+    document: `
+    {
+      person(id: 1) {
+        name
+        films @stream(if: true) {
+          title
+        }
+        starships @stream(if: false) {
+          name
+        }
+      }
+    }
+    `,
+  },
+
+  {
+    name: "@stream multiple",
+    document: `
+      {
+        person(id: 1) {
+          name
+          films @stream {
+            title
+          }
+          starships @stream {
+            name
+          }
+        }
+      }
+      `,
+  },
+
+  {
+    name: "@stream nested",
+    document: `
+      {
+        person(id: 1) {
+          name
+          films @stream {
+            title
+            planets @stream
+          }
+        }
+      }
+      `,
+  },
+
+  {
+    name: "@stream label",
+    document: `
+      {
+        person(id: 1) {
+          name
+          films @stream(label: "FILMS") {
+            title
+          }
+          starships @stream(label: "STARSHIPS") {
+            name
+          }
+        }
+      }
+      `,
+  },
+  // TODO: not throwing in graphql-js but should by spec - duplicate labels, labels as vars
+
+  {
+    name: "@stream initialCount",
+    document: `
+    {
+      person(id: 1) {
+        name
+        films @stream(label: "FILMS", initialCount: 2) {
+          title
+        }
+      }
+    }
+    `,
+  },
 ];
 
 describe("executeWithSchema", () => {
-  test.each(testCases)(
-    "$name",
-    async ({ name, document, variables }: TestCase) => {
-      await compareResultsForExecuteWithSchema(document, variables);
-    },
-  );
+  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
+    await compareResultsForExecuteWithSchema(document, variables);
+  });
 });
 
 describe("executeWithoutSchema", () => {
-  test.each(testCases)(
-    "$name",
-    async ({ name, document, variables }: TestCase) => {
-      await compareResultsForExecuteWithoutSchema(document, variables);
-    },
-  );
+  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
+    await compareResultsForExecuteWithoutSchema(document, variables);
+  });
 });
 
 async function compareResultsForExecuteWithSchema(
@@ -337,7 +669,7 @@ async function compareResultsForExecuteWithSchema(
     },
     variableValues: variables,
   });
-  const validResult = await graphQLExecute({
+  const validResult = await graphqlExecuteOrSubscribe({
     document,
     contextValue: {
       models,
@@ -345,7 +677,7 @@ async function compareResultsForExecuteWithSchema(
     schema,
     variableValues: variables,
   });
-  expect(result).toEqual(validResult);
+  await compareResults(result, validResult);
 }
 
 async function compareResultsForExecuteWithoutSchema(
@@ -363,7 +695,7 @@ async function compareResultsForExecuteWithoutSchema(
     schemaResolvers: extractedResolvers,
     variableValues: variables,
   });
-  const validResult = await graphQLExecute({
+  const validResult = await graphqlExecuteOrSubscribe({
     document,
     contextValue: {
       models,
@@ -371,10 +703,88 @@ async function compareResultsForExecuteWithoutSchema(
     schema,
     variableValues: variables,
   });
-  if ("errors" in result && result.errors) {
-    for (const error of result.errors) {
-      console.error(error);
+  await compareResults(result, validResult);
+}
+
+function graphqlExecuteOrSubscribe(
+  args: GraphQLExecutionArgs,
+): PromiseOrValue<GraphQLResult> {
+  const operationName = args.operationName;
+  let operation: OperationDefinitionNode | undefined;
+  for (const definition of (args.document as unknown as DocumentNode)
+    .definitions) {
+    switch (definition.kind) {
+      case Kind.OPERATION_DEFINITION:
+        if (operationName == null) {
+          if (operation !== undefined) {
+            throw new Error("Bad operation in test");
+          }
+          operation = definition;
+        } else if (definition.name?.value === operationName) {
+          operation = definition;
+        }
+        break;
     }
   }
-  expect(result).toEqual(validResult);
+  if (!operation) {
+    throw new Error("Bad operation in test");
+  }
+
+  if (operation.operation === OperationTypeNode.SUBSCRIPTION) {
+    return graphQLSubscribe(args);
+  } else {
+    return graphQLExecute(args);
+  }
+}
+
+type GraphQLResult<TData = ObjMap<unknown>, TExtensions = ObjMap<unknown>> =
+  | GraphQLExecutionResult<TData, TExtensions>
+  | AsyncGenerator<GraphQLExecutionResult<TData, TExtensions>, void, void>
+  | GraphQLExperimentalExecutionResult<TData, TExtensions>;
+
+async function compareResults(
+  supermassiveResult: ExecutionResult,
+  graphqljsResult: GraphQLResult,
+) {
+  let processedGraphqljsResult;
+  let processedSupermassiveResult;
+  if (isAsyncIterable(graphqljsResult)) {
+    processedGraphqljsResult = await drainAsyncGeneratorToArray(
+      graphqljsResult,
+    );
+  } else if ("subsequentResults" in graphqljsResult) {
+    processedGraphqljsResult = {
+      ...graphqljsResult,
+      subsequentResults: await drainAsyncGeneratorToArray(
+        graphqljsResult.subsequentResults,
+      ),
+    };
+  } else {
+    processedGraphqljsResult = graphqljsResult;
+  }
+
+  if (isAsyncIterable(supermassiveResult)) {
+    processedSupermassiveResult = await drainAsyncGeneratorToArray(
+      supermassiveResult,
+    );
+  } else if ("subsequentResults" in supermassiveResult) {
+    processedSupermassiveResult = {
+      ...supermassiveResult,
+      subsequentResults: await drainAsyncGeneratorToArray(
+        supermassiveResult.subsequentResults,
+      ),
+    };
+  } else {
+    processedSupermassiveResult = supermassiveResult;
+  }
+
+  expect(processedSupermassiveResult).toEqual(processedGraphqljsResult);
+}
+
+async function drainAsyncGeneratorToArray<T>(
+  collection: AsyncGenerator<T, void, void>,
+): Promise<T[]> {
+  const result: T[] = [];
+  await forAwaitEach(collection, (item) => result.push(item));
+  return result;
 }

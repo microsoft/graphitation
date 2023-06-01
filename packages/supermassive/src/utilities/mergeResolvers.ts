@@ -1,12 +1,12 @@
 import { UserResolvers, Resolvers, Resolver } from "../types";
 
-export function mergeResolvers(
-  resolvers: UserResolvers<any, any>,
-  extractedResolvers: Resolvers,
-) {
+export function mergeResolvers<TSource, TContext>(
+  resolvers: UserResolvers<TSource, TContext>,
+  extractedResolvers: Resolvers<TSource, TContext>,
+): Resolvers<TSource, TContext> {
   const fullResolvers = {
     ...extractedResolvers,
-  } as Resolvers;
+  } as Resolvers<TSource, TContext>;
 
   Object.keys(resolvers).forEach((resolverKey: string) => {
     if (
@@ -17,9 +17,12 @@ export function mergeResolvers(
       fullResolvers[resolverKey] = {
         ...fullResolvers[resolverKey],
         ...resolvers[resolverKey],
-      } as Resolver<any, any>;
+      } as Resolver<unknown, unknown>;
     } else {
-      fullResolvers[resolverKey] = resolvers[resolverKey] as Resolver<any, any>;
+      fullResolvers[resolverKey] = resolvers[resolverKey] as Resolver<
+        TSource,
+        TContext
+      >;
     }
   });
 
