@@ -12,13 +12,6 @@
   },
   "ignorePatterns": ["**/coverage", "**/lib", "**/temp", "**/__generated__"],
   "plugins": ["check-file", "prettier", "jest"],
-
-  "extends": [
-    "plugin:prettier/recommended",
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended"
-  ],
-
   "rules": {
     "check-file/folder-match-with-fex": [
       "error",

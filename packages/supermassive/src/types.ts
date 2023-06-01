@@ -10,7 +10,6 @@ import { Maybe } from "./jsutils/Maybe";
 import { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import {
   DocumentNode,
-  FieldNode,
   FragmentDefinitionNode,
   OperationDefinitionNode,
   TypeNode,
@@ -126,7 +125,7 @@ export type UserResolvers<TSource = unknown, TContext = unknown> = Record<
 
 export interface ResolveInfo {
   fieldName: string;
-  fieldNodes: FieldGroup;
+  fieldGroup: FieldGroup;
   returnTypeName: string;
   parentTypeName: string;
   returnTypeNode: TypeNode;
@@ -140,6 +139,14 @@ export interface ResolveInfo {
   variableValues: { [variable: string]: unknown };
 }
 
+export type ExecutionResult<
+  TData = ObjMap<unknown>,
+  TExtensions = ObjMap<unknown>,
+> =
+  | TotalExecutionResult<TData, TExtensions>
+  | SubscriptionExecutionResult<TData, TExtensions>
+  | IncrementalExecutionResult<TData, TExtensions>;
+
 /**
  * The result of GraphQL execution.
  *
@@ -149,7 +156,7 @@ export interface ResolveInfo {
  *   - `extensions` is reserved for adding non-standard properties.
  *   - `incremental` is a list of the results from defer/stream directives.
  */
-export interface ExecutionResult<
+export interface TotalExecutionResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
 > {
@@ -158,7 +165,12 @@ export interface ExecutionResult<
   extensions?: TExtensions;
 }
 
-export interface FormattedExecutionResult<
+export type SubscriptionExecutionResult<
+  TData = ObjMap<unknown>,
+  TExtensions = ObjMap<unknown>,
+> = AsyncGenerator<TotalExecutionResult<TData, TExtensions>>;
+
+export interface FormattedTotalExecutionResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
 > {
@@ -167,7 +179,7 @@ export interface FormattedExecutionResult<
   extensions?: TExtensions;
 }
 
-export interface IncrementalExecutionResults<
+export interface IncrementalExecutionResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
 > {
@@ -182,7 +194,7 @@ export interface IncrementalExecutionResults<
 export interface InitialIncrementalExecutionResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
-> extends ExecutionResult<TData, TExtensions> {
+> extends TotalExecutionResult<TData, TExtensions> {
   hasNext: boolean;
   incremental?: ReadonlyArray<IncrementalResult<TData, TExtensions>>;
   extensions?: TExtensions;
@@ -191,7 +203,7 @@ export interface InitialIncrementalExecutionResult<
 export interface FormattedInitialIncrementalExecutionResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
-> extends FormattedExecutionResult<TData, TExtensions> {
+> extends FormattedTotalExecutionResult<TData, TExtensions> {
   hasNext: boolean;
   incremental?: ReadonlyArray<FormattedIncrementalResult<TData, TExtensions>>;
   extensions?: TExtensions;
@@ -218,7 +230,7 @@ export interface FormattedSubsequentIncrementalExecutionResult<
 export interface IncrementalDeferResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
-> extends ExecutionResult<TData, TExtensions> {
+> extends TotalExecutionResult<TData, TExtensions> {
   path?: ReadonlyArray<string | number>;
   label?: string;
 }
@@ -226,7 +238,7 @@ export interface IncrementalDeferResult<
 export interface FormattedIncrementalDeferResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
-> extends FormattedExecutionResult<TData, TExtensions> {
+> extends FormattedTotalExecutionResult<TData, TExtensions> {
   path?: ReadonlyArray<string | number>;
   label?: string;
 }
@@ -271,6 +283,7 @@ export interface CommonExecutionArgs {
   resolvers: UserResolvers;
   rootValue?: unknown;
   contextValue?: unknown;
+  buildContextValue?: (contextValue?: unknown) => unknown;
   variableValues?: Maybe<{ [variable: string]: unknown }>;
   operationName?: Maybe<string>;
   fieldResolver?: Maybe<FunctionFieldResolver<unknown, unknown>>;
@@ -287,3 +300,21 @@ export type ExecutionWithSchemaArgs = CommonExecutionArgs & {
   document: UntypedDocumentNode;
   typeDefs: UntypedDocumentNode;
 };
+
+export function isIncrementalExecutionResult<
+  TData = ObjMap<unknown>,
+  TExtensions = ObjMap<unknown>,
+>(
+  result: ExecutionResult<TData, TExtensions>,
+): result is IncrementalExecutionResult<TData, TExtensions> {
+  return "initialResult" in result;
+}
+
+export function isTotalExecutionResult<
+  TData = ObjMap<unknown>,
+  TExtensions = ObjMap<unknown>,
+>(
+  result: ExecutionResult<TData, TExtensions>,
+): result is IncrementalExecutionResult<TData, TExtensions> {
+  return !("initialResult" in result);
+}

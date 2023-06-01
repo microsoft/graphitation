@@ -24,7 +24,7 @@ const starships: GraphQLFieldResolver<any, any, any, any> = (
 };
 
 function people(key: string): GraphQLFieldResolver<any, any, any, any> {
-  return (parent, args, { models }) => {
+  return (parent, _args, { models }) => {
     return models
       .getData("/people")
       .filter(({ id }: { id: any }) => parent[key].includes(id));
@@ -39,16 +39,6 @@ const vehicles: GraphQLFieldResolver<any, any, any, any> = (
   return models
     .getData("/vehicles")
     .filter(({ id }: { id: any }) => parent.vehicles.includes(id));
-};
-
-const transports: GraphQLFieldResolver<any, any, any, any> = (
-  parent,
-  args,
-  { models },
-) => {
-  return models
-    .getData("/transport")
-    .filter(({ id }: { id: any }) => parent.starships.includes(id));
 };
 
 const planets: GraphQLFieldResolver<any, any, any, any> = (
@@ -362,6 +352,7 @@ const resolvers: IExecutableSchemaDefinition["resolvers"] = {
     mass: (pilot) => +pilot.mass,
     starships,
     homeworld,
+    films,
   },
   Vehicle: {
     cargo_capacity: (vehicle) => +vehicle.cargo_capacity,

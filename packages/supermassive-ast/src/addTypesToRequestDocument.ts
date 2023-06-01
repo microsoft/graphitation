@@ -22,7 +22,7 @@ export function addTypesToRequestDocument(
 ): TypedAST.DocumentNode {
   const typeInfo = new TypeInfo(schema);
   return visit(
-    document,
+    document as TypelessAST.DocumentNode,
     visitWithTypeInfo(typeInfo, {
       Argument: {
         leave(node, _key, _parent, _path, ancestors) {
@@ -113,7 +113,7 @@ export function addTypesToRequestDocument(
         },
       },
     }),
-  );
+  ) as TypedAST.DocumentNode;
 }
 
 function generateTypeNode(type: GraphQLType): TypedAST.TypeNode {

@@ -14,14 +14,14 @@ export type {
   Resolvers,
   UserResolvers,
   ResolveInfo,
+  TotalExecutionResult,
+  ExecutionResult,
+  IncrementalExecutionResult,
 } from "./types";
 
-export {
-  /** @deprecated Use "@graphitation/supermassive-ast" */
-  addTypesToRequestDocument,
-  /** @deprecated Use "@graphitation/supermassive-ast" */
-  annotateDocumentGraphQLTransform,
-} from "@graphitation/supermassive-ast";
+export { isTotalExecutionResult, isIncrementalExecutionResult } from "./types";
+
+export { addTypesToRequestDocument } from "./ast/addTypesToRequestDocument";
 
 export { extractImplicitTypes } from "./extractImplicitTypesRuntime";
 

@@ -54,7 +54,7 @@ export function getVariableValues(
   inputs: { [variable: string]: unknown },
   options?: { maxErrors?: number },
 ): CoercedVariableValues {
-  const errors = [];
+  const errors: GraphQLError[] = [];
   const maxErrors = options?.maxErrors;
   try {
     const coerced = coerceVariableValues(
@@ -75,10 +75,10 @@ export function getVariableValues(
       return { coerced };
     }
   } catch (error) {
-    errors.push(error);
+    errors.push(error as GraphQLError);
   }
 
-  return { errors: errors as GraphQLError[] };
+  return { errors: errors };
 }
 
 function coerceVariableValues(
@@ -286,6 +286,6 @@ function graphqlTypeFromTypeAst(
   } else {
     const typeName = node.name.value;
     const type = specifiedScalars[typeName] || resolvers[typeName];
-    return type as unknown as GraphQLType;
+    return type as GraphQLType;
   }
 }
