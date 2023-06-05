@@ -90,7 +90,7 @@ queryRunningSuite.add("supermassive - runtime schemaless", async () => {
     document: typeAnnotatedQuery,
     contextValue: { models },
   });
-  if (result.errors || !result.data) {
+  if ("data" in result && (result.errors || !result.data)) {
     throw new Error("Stuff ain't executing");
   }
 });

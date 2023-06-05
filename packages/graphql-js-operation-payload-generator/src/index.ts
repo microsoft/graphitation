@@ -471,7 +471,7 @@ function removeDeferAndStream(doc: DocumentNode): DocumentNode {
 function getRootType(operation: OperationDescriptor): GraphQLNamedType {
   const rootType = getOperationAST(operation.request.node);
   invariant(rootType, "Expected operation to have a root type");
-  switch (rootType.operation) {
+  switch (rootType.operation as "query" | "mutation" | "subscription") {
     case "query":
       return operation.schema.getQueryType()!;
     case "mutation":
