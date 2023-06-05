@@ -209,21 +209,6 @@ export const GraphQLSpecifiedByDirective: GraphQLDirective =
   });
 
 /**
- * The full list of specified directives.
- */
-export const specifiedDirectives: ReadonlyArray<GraphQLDirective> =
-  Object.freeze([
-    GraphQLIncludeDirective,
-    GraphQLSkipDirective,
-    GraphQLDeprecatedDirective,
-    GraphQLSpecifiedByDirective,
-  ]);
-
-export function isSpecifiedDirective(directive: GraphQLDirective): boolean {
-  return specifiedDirectives.some(({ name }) => name === directive.name);
-}
-
-/**
  * Used to conditionally defer fragments.
  */
 export const GraphQLDeferDirective = new GraphQLDirective({
@@ -272,3 +257,43 @@ export const GraphQLStreamDirective = new GraphQLDirective({
     },
   },
 });
+
+/**
+ * The full list of specified directives.
+ */
+export const specifiedDirectives: ReadonlyArray<GraphQLDirective> =
+  Object.freeze([
+    GraphQLIncludeDirective,
+    GraphQLSkipDirective,
+    GraphQLDeprecatedDirective,
+    GraphQLSpecifiedByDirective,
+    GraphQLDeferDirective,
+    GraphQLStreamDirective,
+  ]);
+
+export function isSpecifiedDirective(directive: GraphQLDirective): boolean {
+  return specifiedDirectives.some(({ name }) => name === directive.name);
+}
+
+export const specifiedDirectivesSDL = `
+directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+directive @deprecated(
+  reason: String = "No longer supported"
+) on FIELD_DEFINITION | ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION | ENUM_VALUE
+
+directive @specifiedBy(url: String!) on SCALAR
+
+directive @defer(
+  label: String
+  if: Boolean! = true
+) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+directive @stream(
+  label: String
+  if: Boolean! = true
+  initialCount: Int = 0
+) on FIELD
+`;

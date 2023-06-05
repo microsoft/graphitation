@@ -11,6 +11,6 @@ export const typeDefs = parse(
 );
 
 export default makeExecutableSchema({
-  typeDefs,
+  typeDefs: [typeDefs],
   resolvers,
 });
