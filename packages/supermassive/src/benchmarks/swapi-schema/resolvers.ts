@@ -8,9 +8,11 @@ const films: GraphQLFieldResolver<any, any, any, any> = (
   _args,
   { models },
 ) => {
-  return models
-    .getData("/films")
-    .filter(({ id }: { id: any }) => parent.films.includes(id));
+  return createAsyncIterator(
+    models
+      .getData("/films")
+      .filter(({ id }: { id: any }) => parent.films.includes(id)),
+  );
 };
 
 const starships: GraphQLFieldResolver<any, any, any, any> = (
@@ -18,9 +20,11 @@ const starships: GraphQLFieldResolver<any, any, any, any> = (
   _args,
   { models },
 ) => {
-  return models
-    .getData("/starships")
-    .filter(({ id }: { id: any }) => parent.starships.includes(id));
+  return createAsyncIterator(
+    models
+      .getData("/starships")
+      .filter(({ id }: { id: any }) => parent.starships.includes(id)),
+  );
 };
 
 function people(key: string): GraphQLFieldResolver<any, any, any, any> {

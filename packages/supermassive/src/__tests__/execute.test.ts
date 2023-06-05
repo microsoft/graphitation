@@ -660,24 +660,28 @@ async function compareResultsForExecuteWithSchema(
 ) {
   expect.assertions(1);
   const document = parse(query);
-  const result = await executeWithSchema({
-    typeDefs,
-    resolvers: resolvers as UserResolvers<any, any>,
-    document,
-    contextValue: {
-      models,
-    },
-    variableValues: variables,
-  });
-  const validResult = await graphqlExecuteOrSubscribe({
-    document,
-    contextValue: {
-      models,
-    },
-    schema,
-    variableValues: variables,
-  });
-  await compareResults(result, validResult);
+  const result = await drainExecution(
+    await executeWithSchema({
+      typeDefs,
+      resolvers: resolvers as UserResolvers<any, any>,
+      document,
+      contextValue: {
+        models,
+      },
+      variableValues: variables,
+    }),
+  );
+  const validResult = await drainExecution(
+    await graphqlExecuteOrSubscribe({
+      document,
+      contextValue: {
+        models,
+      },
+      schema,
+      variableValues: variables,
+    }),
+  );
+  expect(result).toEqual(validResult);
 }
 
 async function compareResultsForExecuteWithoutSchema(
@@ -686,24 +690,28 @@ async function compareResultsForExecuteWithoutSchema(
 ) {
   expect.assertions(1);
   const document = parse(query);
-  const result = await executeWithoutSchema({
-    document: addTypesToRequestDocument(schema, document),
-    contextValue: {
-      models,
-    },
-    resolvers: resolvers as UserResolvers,
-    schemaResolvers: extractedResolvers,
-    variableValues: variables,
-  });
-  const validResult = await graphqlExecuteOrSubscribe({
-    document,
-    contextValue: {
-      models,
-    },
-    schema,
-    variableValues: variables,
-  });
-  await compareResults(result, validResult);
+  const result = await drainExecution(
+    await executeWithoutSchema({
+      document: addTypesToRequestDocument(schema, document),
+      contextValue: {
+        models,
+      },
+      resolvers: resolvers as UserResolvers,
+      schemaResolvers: extractedResolvers,
+      variableValues: variables,
+    }),
+  );
+  const validResult = await drainExecution(
+    await graphqlExecuteOrSubscribe({
+      document,
+      contextValue: {
+        models,
+      },
+      schema,
+      variableValues: variables,
+    }),
+  );
+  expect(result).toEqual(validResult);
 }
 
 function graphqlExecuteOrSubscribe(
@@ -742,43 +750,23 @@ type GraphQLResult<TData = ObjMap<unknown>, TExtensions = ObjMap<unknown>> =
   | AsyncGenerator<GraphQLExecutionResult<TData, TExtensions>, void, void>
   | GraphQLExperimentalExecutionResult<TData, TExtensions>;
 
-async function compareResults(
-  supermassiveResult: ExecutionResult,
-  graphqljsResult: GraphQLResult,
-) {
-  let processedGraphqljsResult;
-  let processedSupermassiveResult;
-  if (isAsyncIterable(graphqljsResult)) {
-    processedGraphqljsResult = await drainAsyncGeneratorToArray(
-      graphqljsResult,
-    );
-  } else if ("subsequentResults" in graphqljsResult) {
-    processedGraphqljsResult = {
-      ...graphqljsResult,
+async function drainExecution(
+  result: ExecutionResult | GraphQLResult,
+): Promise<unknown> {
+  let processedResult;
+  if (isAsyncIterable(result)) {
+    processedResult = await drainAsyncGeneratorToArray(result);
+  } else if ("subsequentResults" in result) {
+    processedResult = {
+      ...result,
       subsequentResults: await drainAsyncGeneratorToArray(
-        graphqljsResult.subsequentResults,
+        result.subsequentResults,
       ),
     };
   } else {
-    processedGraphqljsResult = graphqljsResult;
+    processedResult = result;
   }
-
-  if (isAsyncIterable(supermassiveResult)) {
-    processedSupermassiveResult = await drainAsyncGeneratorToArray(
-      supermassiveResult,
-    );
-  } else if ("subsequentResults" in supermassiveResult) {
-    processedSupermassiveResult = {
-      ...supermassiveResult,
-      subsequentResults: await drainAsyncGeneratorToArray(
-        supermassiveResult.subsequentResults,
-      ),
-    };
-  } else {
-    processedSupermassiveResult = supermassiveResult;
-  }
-
-  expect(processedSupermassiveResult).toEqual(processedGraphqljsResult);
+  return processedResult;
 }
 
 async function drainAsyncGeneratorToArray<T>(

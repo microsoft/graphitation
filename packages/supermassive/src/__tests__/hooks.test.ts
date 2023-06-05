@@ -308,8 +308,8 @@ describe.each([
 
         // for async resolvers order of resolving isn't strict,
         // so just verify whether corresponding hook calls happened
-        expect(hookCalls).toHaveLength(expectedHookCalls.length);
         expect(hookCalls).toEqual(expect.arrayContaining(expectedHookCalls));
+        expect(hookCalls).toHaveLength(expectedHookCalls.length);
         expect(isTotalExecutionResult(result)).toBe(true);
         expect(((result as TotalExecutionResult).errors?.length ?? 0) > 0).toBe(
           resultHasErrors,
