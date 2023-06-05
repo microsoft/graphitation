@@ -23,20 +23,15 @@ import {
   GraphQLList,
 } from "graphql";
 import { Maybe } from "./jsutils/Maybe";
-import {
-  Resolvers,
-  UnionTypeResolver,
-  InterfaceTypeResolver,
-  ObjectTypeResolver,
-} from "./types";
+import { Resolvers, UnionTypeResolver, InterfaceTypeResolver } from "./types";
 
-export function extractImplicitTypes<TSource = any, TContext = any>(
+export function extractImplicitTypes<TSource = unknown, TContext = unknown>(
   document: DocumentNode,
   getTypeByName: (name: string) => GraphQLInputType,
 ): Resolvers<TSource, TContext> {
   const result: Resolvers<TSource, TContext> = Object.create(null);
   const implementedBy: Record<string, Array<string>> = {};
-  for (let astNode of document.definitions) {
+  for (const astNode of document.definitions) {
     if (astNode.kind === Kind.SCALAR_TYPE_DEFINITION) {
       const name = astNode.name.value;
       result[name] = new GraphQLScalarType({
@@ -120,7 +115,7 @@ function buildInputFieldMap(
     // Note: While this could make assertions to get the correctly typed
     // value, that would throw immediately while type system validation
     // with validateSchema() will produce more actionable results.
-    const type: any = getWrappedType(field.type, getTypeByName);
+    const type: GraphQLInputType = getWrappedType(field.type, getTypeByName);
 
     inputFieldMap[field.name.value] = {
       type,

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-var-requires */
 
 const path = require("path");
 const { addResolvePath } = require("just-scripts");

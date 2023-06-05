@@ -45,7 +45,7 @@ export function mapAsyncIterator<T, U, R = undefined>(
       // If iterator.return() does not exist, then type R must be undefined.
       return typeof iterator.return === "function"
         ? mapResult(await iterator.return())
-        : { value: undefined as any, done: true };
+        : { value: undefined as unknown as R, done: true };
     },
     async throw(error?: unknown) {
       return typeof iterator.throw === "function"

@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { GraphQLFieldResolver } from "graphql/type/definition";
 import { IExecutableSchemaDefinition } from "@graphql-tools/schema";
 import { createAsyncIterator } from "iterall";
 
 const films: GraphQLFieldResolver<any, any, any> = (
   parent,
-  args,
+  _args,
   { models },
 ) => {
   return models
@@ -14,7 +15,7 @@ const films: GraphQLFieldResolver<any, any, any> = (
 
 const starships: GraphQLFieldResolver<any, any, any> = (
   parent,
-  { id },
+  _args,
   { models },
 ) => {
   return models
@@ -23,7 +24,7 @@ const starships: GraphQLFieldResolver<any, any, any> = (
 };
 
 function people(key: string): GraphQLFieldResolver<any, any, any> {
-  return (parent, args, { models }) => {
+  return (parent, _args, { models }) => {
     return models
       .getData("/people")
       .filter(({ id }: { id: any }) => parent[key].includes(id));
@@ -32,7 +33,7 @@ function people(key: string): GraphQLFieldResolver<any, any, any> {
 
 const vehicles: GraphQLFieldResolver<any, any, any> = (
   parent,
-  args,
+  _args,
   { models },
 ) => {
   return models
@@ -40,19 +41,9 @@ const vehicles: GraphQLFieldResolver<any, any, any> = (
     .filter(({ id }: { id: any }) => parent.vehicles.includes(id));
 };
 
-const transports: GraphQLFieldResolver<any, any, any> = (
-  parent,
-  args,
-  { models },
-) => {
-  return models
-    .getData("/transport")
-    .filter(({ id }: { id: any }) => parent.starships.includes(id));
-};
-
 const planets: GraphQLFieldResolver<any, any, any> = (
   parent,
-  args,
+  _args,
   { models },
 ) => {
   return models
@@ -62,7 +53,7 @@ const planets: GraphQLFieldResolver<any, any, any> = (
 
 const species: GraphQLFieldResolver<any, any, any> = (
   parent,
-  args,
+  _args,
   { models },
 ) => {
   return models
@@ -71,7 +62,7 @@ const species: GraphQLFieldResolver<any, any, any> = (
 };
 const homeworld: GraphQLFieldResolver<any, any, any> = (
   parent,
-  args,
+  _args,
   { models },
 ) => {
   return models
@@ -80,7 +71,7 @@ const homeworld: GraphQLFieldResolver<any, any, any> = (
 };
 
 const person: GraphQLFieldResolver<any, any, any> = (
-  parent,
+  _parent,
   { id },
   { models },
 ) => {
@@ -88,7 +79,7 @@ const person: GraphQLFieldResolver<any, any, any> = (
 };
 
 const planet: GraphQLFieldResolver<any, any, any> = (
-  parent,
+  _parent,
   { id },
   { models },
 ) => {
@@ -96,7 +87,7 @@ const planet: GraphQLFieldResolver<any, any, any> = (
 };
 
 const film: GraphQLFieldResolver<any, any, any> = (
-  parent,
+  _parent,
   { id },
   { models },
 ) => {
@@ -104,7 +95,7 @@ const film: GraphQLFieldResolver<any, any, any> = (
 };
 
 const starship: GraphQLFieldResolver<any, any, any> = (
-  parent,
+  _parent,
   { id },
   { models },
 ) => {
@@ -114,7 +105,7 @@ const starship: GraphQLFieldResolver<any, any, any> = (
 };
 
 const transport: GraphQLFieldResolver<any, any, any> = (
-  parent,
+  _parent,
   { id },
   { models },
 ) => {
@@ -124,7 +115,7 @@ const transport: GraphQLFieldResolver<any, any, any> = (
 };
 
 const vehicle: GraphQLFieldResolver<any, any, any> = (
-  parent,
+  _parent,
   { id },
   { models },
 ) => {
@@ -132,7 +123,7 @@ const vehicle: GraphQLFieldResolver<any, any, any> = (
 };
 
 const searchPeopleByName: GraphQLFieldResolver<any, any, any> = (
-  parent,
+  _parent,
   { search },
   { models },
 ) => {
@@ -142,7 +133,7 @@ const searchPeopleByName: GraphQLFieldResolver<any, any, any> = (
 };
 
 const searchPlanetsByName: GraphQLFieldResolver<any, any, any> = (
-  parent,
+  _parent,
   { search },
   { models },
 ) => {
@@ -152,7 +143,7 @@ const searchPlanetsByName: GraphQLFieldResolver<any, any, any> = (
 };
 
 const searchFilmsByTitle: GraphQLFieldResolver<any, any, any> = (
-  parent,
+  _parent,
   { search },
   { models },
 ) => {
@@ -162,7 +153,7 @@ const searchFilmsByTitle: GraphQLFieldResolver<any, any, any> = (
 };
 
 const searchSpeciesByName: GraphQLFieldResolver<any, any, any> = (
-  parent,
+  _parent,
   { search },
   { models },
 ) => {
@@ -172,7 +163,7 @@ const searchSpeciesByName: GraphQLFieldResolver<any, any, any> = (
 };
 
 const searchStarshipsByName: GraphQLFieldResolver<any, any, any> = (
-  parent,
+  _parent,
   { search },
   { models },
 ) => {
@@ -182,7 +173,7 @@ const searchStarshipsByName: GraphQLFieldResolver<any, any, any> = (
 };
 
 const searchVehiclesByName: GraphQLFieldResolver<any, any, any> = (
-  parent,
+  _parent,
   { search },
   { models },
 ) => {
@@ -192,7 +183,7 @@ const searchVehiclesByName: GraphQLFieldResolver<any, any, any> = (
 };
 
 const emitPersons: GraphQLFieldResolver<any, any, any> = async function (
-  parent,
+  _parent,
   { limit, throwError },
   { models },
 ) {
@@ -210,7 +201,7 @@ const emitPersons: GraphQLFieldResolver<any, any, any> = async function (
 };
 
 const searchTransportsByName: GraphQLFieldResolver<any, any, any> = (
-  parent,
+  _parent,
   { search },
   { models },
 ) => {
@@ -313,28 +304,28 @@ const resolvers: IExecutableSchemaDefinition["resolvers"] = {
     searchPlanetsByName,
     searchFilmsByTitle,
 
-    allStarships(parent, args, { models }) {
+    allStarships(_parent, _args, { models }) {
       return models.getData("/starships");
     },
-    allFilms(parent, args, { models }) {
+    allFilms(_parent, _args, { models }) {
       return models.getData("/films");
     },
-    allPeople(parent, args, { models }) {
+    allPeople(_parent, _args, { models }) {
       return models.getData("/people");
     },
-    allPlanets(parent, args, { models }) {
+    allPlanets(_parent, _args, { models }) {
       return models.getData("/planets");
     },
-    allSpecies(parent, args, { models }) {
+    allSpecies(_parent, _args, { models }) {
       return models.getData("/species");
     },
-    allTransports(parent, args, { models }) {
+    allTransports(_parent, _args, { models }) {
       return models.getData("/transport");
     },
-    advancedDefaultInput(parent, args) {
+    advancedDefaultInput(_parent, args) {
       return JSON.stringify(args);
     },
-    multiArger(parent, args) {
+    multiArger(_parent, args) {
       return JSON.stringify(args);
     },
   },

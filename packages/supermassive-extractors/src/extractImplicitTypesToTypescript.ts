@@ -52,7 +52,7 @@ export function extractImplicitTypesToTypescript(
   const implementedBy: Record<string, Array<string>> = {};
   const interfaceAstNodes = [];
 
-  for (let astNode of document.definitions) {
+  for (const astNode of document.definitions) {
     if (astNode.kind === Kind.SCALAR_TYPE_DEFINITION) {
       definitions.push(createScalarType(astNode));
       addToSetArray(graphQLImports, "GraphQLScalarType");

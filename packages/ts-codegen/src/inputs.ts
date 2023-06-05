@@ -1,11 +1,7 @@
 import ts, { factory } from "typescript";
-import { DocumentNode } from "graphql";
 import { InputObjectType, TsCodegenContext, Type } from "./context";
 
-export function generateInputs(
-  context: TsCodegenContext,
-  document: DocumentNode,
-): ts.SourceFile {
+export function generateInputs(context: TsCodegenContext): ts.SourceFile {
   const statements: ts.Statement[] = [];
 
   const typeStatements = context

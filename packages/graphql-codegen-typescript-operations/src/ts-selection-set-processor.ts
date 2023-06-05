@@ -40,7 +40,7 @@ export class TypeScriptSelectionSetProcessor extends BaseSelectionSetProcessor<S
     if (hasConditionals) {
       const avoidOptional =
         // TODO: check type and exec only if relevant
-        this.config.avoidOptionals === true ||
+        (this.config.avoidOptionals as unknown as boolean) === true ||
         this.config.avoidOptionals?.field ||
         this.config.avoidOptionals?.inputValue ||
         this.config.avoidOptionals?.object;

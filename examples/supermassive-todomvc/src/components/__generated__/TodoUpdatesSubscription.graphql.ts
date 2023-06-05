@@ -1,17 +1,18 @@
 /* tslint:disable */
 /* eslint-disable */
 // @ts-nocheck
+;
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type TodoUpdatesSubscriptionVariables = {
-  limit: number;
+    limit: number;
 };
 export type TodoUpdatesSubscriptionResponse = {
-  readonly emitTodos: {
-    readonly id: string;
-    readonly " $fragmentRefs": FragmentRefs<"TodoFragment">;
-  } | null;
+    readonly emitTodos: {
+        readonly id: string;
+        readonly " $fragmentRefs": FragmentRefs<"TodoFragment">;
+    } | null;
 };
 export type TodoUpdatesSubscription = {
-  readonly response: TodoUpdatesSubscriptionResponse;
-  readonly variables: TodoUpdatesSubscriptionVariables;
+    readonly response: TodoUpdatesSubscriptionResponse;
+    readonly variables: TodoUpdatesSubscriptionVariables;
 };

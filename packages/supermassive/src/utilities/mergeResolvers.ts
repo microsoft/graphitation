@@ -1,9 +1,9 @@
 import { UserResolvers, Resolvers, Resolver } from "../types";
 
 export function mergeResolvers(
-  resolvers: UserResolvers<any, any>,
+  resolvers: UserResolvers<unknown, unknown>,
   extractedResolvers: Resolvers,
-) {
+): Resolvers {
   const fullResolvers = {
     ...extractedResolvers,
   } as Resolvers;
@@ -17,9 +17,12 @@ export function mergeResolvers(
       fullResolvers[resolverKey] = {
         ...fullResolvers[resolverKey],
         ...resolvers[resolverKey],
-      } as Resolver<any, any>;
+      } as Resolver<unknown, unknown>;
     } else {
-      fullResolvers[resolverKey] = resolvers[resolverKey] as Resolver<any, any>;
+      fullResolvers[resolverKey] = resolvers[resolverKey] as Resolver<
+        unknown,
+        unknown
+      >;
     }
   });
 

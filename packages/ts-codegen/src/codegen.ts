@@ -33,7 +33,7 @@ export function generateTS(
   files: ts.SourceFile[];
 } {
   try {
-    let context = extractContext(
+    const context = extractContext(
       {
         context: {
           name: contextName,
@@ -49,17 +49,17 @@ export function generateTS(
       documentPath,
     );
     const result: ts.SourceFile[] = [];
-    result.push(generateModels(context, document));
-    result.push(generateResolvers(context, document));
+    result.push(generateModels(context));
+    result.push(generateResolvers(context));
     if (context.hasEnums) {
-      result.push(generateEnums(context, document));
+      result.push(generateEnums(context));
     }
     if (context.hasInputs) {
-      result.push(generateInputs(context, document));
+      result.push(generateInputs(context));
     }
     if (legacyCompat) {
-      result.push(generateLegacyTypes(context, document));
-      result.push(generateLegacyResolvers(context, document));
+      result.push(generateLegacyTypes(context));
+      result.push(generateLegacyResolvers(context));
     }
     return { files: result };
   } catch (e) {

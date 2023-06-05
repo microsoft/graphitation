@@ -169,7 +169,7 @@ function getVisitor(
           source = source.replace(/\$\{(.*)\}/g, "");
         }
 
-        let definitions = getDefinitions(
+        const definitions = getDefinitions(
           source,
           transformerContext.transformer,
         );

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const webpack = require("webpack");
 const fs = require("fs");
 const path = require("path");
@@ -42,7 +43,7 @@ const config: () => Promise<typeof webpack.Configuration> = async () => {
         },
         {
           test: /\.graphql$/,
-          loader: "webpack-graphql-loader",
+          loader: "@graphql-tools/webpack-loader",
         },
       ],
     },

@@ -32,6 +32,7 @@ export const plugin: PluginFunction<
     ? printSchemaWithDirectives(transformedSchema)
     : printSchema(transformedSchema);
   const astNode = parse(printedSchema);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   visit(astNode, { leave: visitor } as any);
 
   const content = Object.entries(visitor.getValidMappers()).reduce(

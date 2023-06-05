@@ -5,7 +5,6 @@ import {
   extractImplicitTypes,
   specifiedScalars,
 } from "./index";
-import { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import { Resolvers, ExecutionResult, ExecutionWithSchemaArgs } from "./types";
 
 export function subscribeWithSchema({

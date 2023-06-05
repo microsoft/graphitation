@@ -1,10 +1,7 @@
 import { TextDecoder } from "util";
 global.TextDecoder = TextDecoder as any;
 
-import {
-  GraphQLRuleTester,
-  ParserOptions,
-} from "@graphql-eslint/eslint-plugin";
+import { GraphQLRuleTester } from "@graphql-eslint/eslint-plugin";
 import rule from "../operation-naming-conventions";
 
 const ruleTester = new GraphQLRuleTester();

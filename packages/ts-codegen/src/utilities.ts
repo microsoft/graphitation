@@ -1,6 +1,6 @@
 import ts, { factory } from "typescript";
-import { ASTNode, Kind, TypeNode } from "graphql";
-import { InterfaceType, TsCodegenContext, UnionType } from "./context";
+import { ASTNode } from "graphql";
+import { TsCodegenContext, UnionType } from "./context";
 
 const MODEL_SUFFIX = "Model";
 
@@ -68,7 +68,6 @@ export function createUnionResolveType(
 
 export function createInterfaceResolveType(
   context: TsCodegenContext,
-  type: InterfaceType,
 ): ts.FunctionTypeNode {
   return factory.createFunctionTypeNode(
     undefined,
@@ -146,14 +145,6 @@ export function getSubscriptionResolver(
   resolverParametersDefinitions: ResolverParametersDefinitions,
   fieldName: string,
 ): ts.TypeAliasDeclaration {
-  const fullEvent = factory.createTypeLiteralNode([
-    factory.createPropertySignature(
-      undefined,
-      factory.createIdentifier(fieldName),
-      undefined,
-      typeNode,
-    ),
-  ]);
   const resolverParams = getResolverParameters(resolverParametersDefinitions);
   return factory.createTypeAliasDeclaration(
     undefined,
@@ -670,7 +661,7 @@ export function camelCase(
     return "";
   }
 
-  let locale = options.locale;
+  const locale = options.locale;
   let toLowerCase;
   let toUpperCase;
   if (locale === false) {

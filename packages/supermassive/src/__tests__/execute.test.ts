@@ -1,13 +1,10 @@
-import { parse, execute as graphQLExecute, isInputType } from "graphql";
+import { parse, execute as graphQLExecute } from "graphql";
 import { executeWithoutSchema, executeWithSchema } from "..";
 import schema, { typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
 import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
-import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
-import { Resolvers, Resolver, UserResolvers } from "../types";
-import { specifiedScalars } from "../values";
-import { mergeResolvers } from "../utilities/mergeResolvers";
+import { UserResolvers } from "../types";
 import { resolvers as extractedResolvers } from "../benchmarks/swapi-schema/__generated__/schema";
 
 interface TestCase {
@@ -301,21 +298,15 @@ query Person($id: Int!) {
 ];
 
 describe("executeWithSchema", () => {
-  test.each(testCases)(
-    "$name",
-    async ({ name, document, variables }: TestCase) => {
-      await compareResultsForExecuteWithSchema(document, variables);
-    },
-  );
+  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
+    await compareResultsForExecuteWithSchema(document, variables);
+  });
 });
 
 describe("executeWithoutSchema", () => {
-  test.each(testCases)(
-    "$name",
-    async ({ name, document, variables }: TestCase) => {
-      await compareResultsForExecuteWithoutSchema(document, variables);
-    },
-  );
+  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
+    await compareResultsForExecuteWithoutSchema(document, variables);
+  });
 });
 
 async function compareResultsForExecuteWithSchema(

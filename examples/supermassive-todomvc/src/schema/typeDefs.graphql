@@ -1,3 +1,5 @@
+directive @model(from: String, tsType: String!) repeatable on OBJECT | SCALAR
+
 type Query {
   allTodos: [Todo!]!
 }

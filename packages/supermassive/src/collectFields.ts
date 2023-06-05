@@ -12,7 +12,7 @@ import { GraphQLSkipDirective, GraphQLIncludeDirective } from "./directives";
 import { typeNameFromAST } from "./utilities/typeNameFromAST";
 import { isUnionResolverType, isInterfaceResolverType } from "./definition";
 
-import { Resolvers, UnionTypeResolver, InterfaceTypeResolver } from "./types";
+import { Resolvers } from "./types";
 
 /**
  * Given a selectionSet, adds all of the fields in that selection to
