@@ -64,7 +64,7 @@ export function getVariableValues(
       (error) => {
         if (maxErrors != null && errors.length >= maxErrors) {
           throw new GraphQLError(
-            "Too munknown errors processing variables, error limit reached. Execution aborted.",
+            "Too many errors processing variables, error limit reached. Execution aborted.",
           );
         }
         errors.push(error);

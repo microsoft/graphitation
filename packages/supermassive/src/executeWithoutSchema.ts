@@ -390,7 +390,7 @@ function executeFields(
 
   // Otherwise, results is a map from field name to the result of resolving that
   // field, which is possibly a promise. Return a promise that will return this
-  // same map, but with unknown promises replaced with the values they resolved to.
+  // same map, but with any promises replaced with the values they resolved to.
   return promiseForObject(results);
 }
 
@@ -454,7 +454,7 @@ function executeField(
   // Get the resolve function, regardless of if its result is normal or abrupt (error).
   try {
     // Build a JS object of arguments from the field.arguments AST, using the
-    // variables scope to fulfill unknown variable references.
+    // variables scope to fulfill any variable references.
     // TODO: find a way to memoize, in case this field is within a List type.
     const args = getArgumentValues(
       exeContext.resolvers,
@@ -599,7 +599,7 @@ function handleFieldError(
   returnTypeNode: TypeNode,
   exeContext: ExecutionContext,
 ): null {
-  // If the field type is non-nullable, then it is resolved without unknown
+  // If the field type is non-nullable, then it is resolved without any
   // protection from errors, however it still properly locates the error.
   if (returnTypeNode.kind === Kind.NON_NULL_TYPE) {
     throw error;
