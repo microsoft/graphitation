@@ -19,7 +19,6 @@ import {
   GraphQLESTreeNode,
   GraphQLESLintRuleContext,
 } from "@graphql-eslint/eslint-plugin";
-import { RuleFixer } from "@typescript-eslint/utils/dist/ts-eslint";
 
 export const REQUIRE_KEY_FIELDS_WHEN_AVAILABLE = "missing-apollo-key-fields";
 const DEFAULT_KEY_FIELD_NAME = "id";
@@ -30,7 +29,7 @@ interface MissingApolloKeyFieldsRuleConfig {
 
 type TypePolicies = Record<
   string,
-  { keyFields?: KeySpecifier | false | (() => any) }
+  { keyFields?: KeySpecifier | false | (() => unknown) }
 >;
 type KeySpecifier = (string | KeySpecifier)[];
 
@@ -134,7 +133,7 @@ function hasIdFieldInInterfaceSelectionSet(node: unknown, keyFields: string[]) {
 
 const missingApolloKeyFieldsRule: GraphQLESLintRule<
   [MissingApolloKeyFieldsRuleConfig]
-> = {
+> & { meta: { docs: { description?: string } } } = {
   meta: {
     type: "problem",
     fixable: "code",
@@ -178,7 +177,7 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
           `,
         },
       ],
-      recommended: true,
+      ...({ recommended: true } as object), // FIXME: Why can we not pass this prop?
     },
     schema: {
       type: "array",
@@ -201,13 +200,13 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
       SelectionSet(node: GraphQLESTreeNode<SelectionSetNode, true>) {
         checkRequiredParameters(REQUIRE_KEY_FIELDS_WHEN_AVAILABLE, context);
         const { typePolicies } = context.options[0];
-        const siblings = context.parserServices!.siblingOperations;
+        const siblings = context.parserServices?.siblingOperations;
 
         if (!node.selections || node.selections.length === 0) {
           return;
         }
 
-        const typeInfo = node.typeInfo!();
+        const typeInfo = node.typeInfo?.();
         if (typeInfo && typeInfo.gqlType) {
           const rawType = getBaseType(typeInfo.gqlType);
           if (
@@ -236,7 +235,7 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
                       keyFieldsFound[fragmentSelection.name.value] = true;
                     }
                   }
-                } else if (selection.kind === "FragmentSpread") {
+                } else if (siblings && selection.kind === "FragmentSpread") {
                   const foundSpread = siblings.getFragment(
                     selection.name.value,
                   );
@@ -268,16 +267,18 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
               ) {
                 const newNode = {
                   ...node,
-                  loc: {
-                    start: {
-                      line: node.loc.start.line,
-                      column: node.loc.start.column - 1,
-                    },
-                    end: {
-                      line: node.loc.end.line,
-                      column: node.loc.end.column - 1,
-                    },
-                  },
+                  loc: node.loc
+                    ? {
+                        start: {
+                          line: node.loc.start.line,
+                          column: node.loc.start.column - 1,
+                        },
+                        end: {
+                          line: node.loc.end.line,
+                          column: node.loc.end.column - 1,
+                        },
+                      }
+                    : undefined,
                 };
 
                 context.report({
@@ -291,18 +292,19 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
                         " and " +
                         unusedKeyFields[unusedKeyFields.length - 1]
                   }" must be selected for proper Apollo Client store denormalisation purposes.`,
-                  fix(fixer: RuleFixer) {
+                  fix(fixer) {
                     if (!node.selections.length) {
-                      return;
+                      return null;
                     }
 
                     const firstSelection = node.selections[0];
 
                     if (firstSelection.kind !== "Field") {
-                      return;
+                      return null;
                     }
 
                     return fixer.insertTextBefore(
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       firstSelection as any,
                       `${unusedKeyFields.join(`\n`)}\n`,
                     );

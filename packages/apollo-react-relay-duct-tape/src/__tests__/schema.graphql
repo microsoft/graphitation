@@ -1,5 +1,13 @@
+directive @connection(key: String!, filter: [String]) on FIELD
+
+interface Node {
+  id: ID!
+}
+
 type Query {
-  user(id: ID!): User!
+  user(id: Int!): User!
+  node(id: ID!): Node
+  nonNode: NonNode!
 }
 
 type Mutation {
@@ -10,7 +18,68 @@ type Subscription {
   userNameChanged(id: ID!): User!
 }
 
-type User {
+type User implements Node {
   id: ID!
   name: String!
+  petName: String!
+  avatarUrl(size: Int!): String!
+  hasFriends: Boolean!
+  conversations(first: Int!, after: String!): ConversationsConnection!
+  contacts(last: Int!, before: String!): ContactsConnection!
+}
+
+type ContactsConnection {
+  pageInfo: PageInfo!
+  edges: [ContactsConnectionEdge!]!
+}
+
+type ContactsConnectionEdge {
+  cursor: String!
+  node: Contact!
+}
+
+type Contact implements Node {
+  id: ID!
+}
+
+type ConversationsConnection {
+  pageInfo: PageInfo!
+  edges: [ConversationsConnectionEdge!]!
+}
+
+type ConversationsConnectionEdge {
+  cursor: String!
+  node: Conversation!
+}
+
+type Conversation implements Node {
+  id: ID!
+  title: String!
+  messages(last: Int!, before: String!): ConversationMessagesConnection!
+}
+
+type ConversationMessagesConnection {
+  pageInfo: PageInfo!
+  edges: [ConversationMessagesConnectionEdge!]!
+}
+
+type ConversationMessagesConnectionEdge {
+  cursor: String!
+  node: Message!
+}
+
+type Message implements Node {
+  id: ID!
+  text: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String!
+  endCursor: String!
+}
+
+type NonNode {
+  id: String
 }

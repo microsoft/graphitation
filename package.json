@@ -3,6 +3,7 @@
   "private": true,
   "workspaces": {
     "packages": [
+      "examples/*",
       "packages/*",
       "scripts"
     ]
@@ -19,7 +20,7 @@
     "beachball": "beachball -b origin/main",
     "change": "yarn beachball change",
     "checkchange": "yarn beachball check",
-    "release": "yarn beachball publish",
+    "release": "yarn beachball publish -t next",
     "postinstall": "patch-package"
   },
   "devDependencies": {

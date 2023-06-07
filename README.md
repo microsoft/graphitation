@@ -19,7 +19,7 @@ GraphQL tooling & runtime support needed for MS Teams and beyond
 - [@graphitation/rempl-apollo-devtools](./packages/apollo-devtools): Rempl apollo devtools
 - [@graphitation/supermassive](./packages/supermassive): Supermassive is a lightweight schema-less GraphQL executor and query build-time compiler
 - [@graphitation/supermassive-extractors](./packages/supermassive-extractors): extracts implicit resolvers
-- [relay-compiler-language-graphitation](./packages/relay-compiler-language-graphitation): A relay-compiler plugin that wraps [the TypeScript plugin](https://github.com/relay-tools/relay-compiler-language-typescript) and augments it slightly for [@graphitation/apollo-react-relay-duct-tape](./packages/apollo-react-relay-duct-tape)'s needs.
+- [@graphitation/apollo-react-relay-duct-tape-compiler](./packages/apollo-react-relay-duct-tape-compiler): The build tools to cater to @graphitation/apollo-react-relay-duct-tape's needs.
 
 ## Contributing
 

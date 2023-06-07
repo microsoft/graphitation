@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": ".tsbuildinfo",
+    "rootDir": "src",
+    "outDir": "lib",
+    "module": "commonjs"
+  },
+  "include": ["src"],
+  "references": [],
+  "ts-node": {
+    "transpileOnly": true,
+    "compilerOptions": {
+      "target": "es5",
+      "module": "commonjs"
+    }
+  }
+}

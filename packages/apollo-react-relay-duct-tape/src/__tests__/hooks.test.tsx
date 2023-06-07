@@ -58,7 +58,7 @@ const FragmentComponent: React.FC<{ user: hooksTestFragment$key }> = (
  */
 
 const query = graphql`
-  query hooksTestQuery($id: ID!) {
+  query hooksTestQuery($id: Int!) {
     user(id: $id) {
       ...hooksTestFragment
     }
@@ -70,7 +70,7 @@ const QueryComponent: React.FC = () => {
   const { data, error } = useLazyLoadQuery<hooksTestQuery>(
     query,
     {
-      id: "some-user-id",
+      id: 42,
     },
     { context: { callerInfo: "query-component" } },
   );
@@ -161,20 +161,23 @@ const MutationComponent: React.FC<{
 let client: ApolloMockClient;
 
 beforeEach(() => {
-  client = createMockClient(schema);
+  client = createMockClient(schema, { cache: { addTypename: false } });
 });
 
 describe(useLazyLoadQuery, () => {
   it("uses Apollo's useQuery hook", async () => {
-    const tree: ReactTestRenderer = createTestRenderer(
-      <ApolloProvider client={client}>
-        <QueryComponent />
-      </ApolloProvider>,
-    );
+    let tree: ReactTestRenderer | undefined;
+    act(() => {
+      tree = createTestRenderer(
+        <ApolloProvider client={client}>
+          <QueryComponent />
+        </ApolloProvider>,
+      );
+    });
 
     const operation = client.mock.getMostRecentOperation();
-    expect(getOperationName(operation.request.node)).toBe("hooksTestQuery");
-    expect(operation.request.variables).toEqual({ id: "some-user-id" });
+    expect(operation.request.node).toBe(query);
+    expect(operation.request.variables).toEqual({ id: 42 });
     expect(operation.request.context).toHaveProperty(
       "callerInfo",
       "query-component",
@@ -207,13 +210,16 @@ describe(useFragment, () => {
 
 describe(useSubscription, () => {
   it("uses Apollo's useSubscription hook and updates the store", async () => {
-    const tree: ReactTestRenderer = createTestRenderer(
-      <ApolloProvider client={client}>
-        <SubscriptionComponent>
-          <QueryComponent />
-        </SubscriptionComponent>
-      </ApolloProvider>,
-    );
+    let tree: ReactTestRenderer | undefined;
+    act(() => {
+      tree = createTestRenderer(
+        <ApolloProvider client={client}>
+          <SubscriptionComponent>
+            <QueryComponent />
+          </SubscriptionComponent>
+        </ApolloProvider>,
+      );
+    });
 
     const [subscriptionOperation, queryOperation] =
       client.mock.getAllOperations();
