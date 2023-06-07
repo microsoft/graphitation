@@ -1,10 +1,12 @@
 import type { DocumentNode } from "graphql";
 
 export interface Variables {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [name: string]: any;
 }
 
 export interface Context {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [name: string]: any;
 }
 

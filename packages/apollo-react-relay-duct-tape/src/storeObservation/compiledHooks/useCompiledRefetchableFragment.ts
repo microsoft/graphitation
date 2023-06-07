@@ -14,7 +14,7 @@ export interface Disposable {
   dispose(): void;
 }
 
-export type RefetchFn<Variables extends {} = {}> = (
+export type RefetchFn<Variables extends object = object> = (
   variables: Partial<Variables>,
   options?: RefetchOptions,
 ) => Disposable;
@@ -34,6 +34,7 @@ export interface PrivateRefetchOptions
    */
   UNSTABLE_onCompletedWithData?: (
     error: Error | null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: Record<string, any> | null,
   ) => void;
 
@@ -43,7 +44,7 @@ export interface PrivateRefetchOptions
 export function useCompiledRefetchableFragment(
   documents: CompiledArtefactModule,
   fragmentReference: FragmentReference,
-): [data: {}, refetch: RefetchFn] {
+): [data: object, refetch: RefetchFn] {
   const { executionQueryDocument, metadata } = documents;
   invariant(
     metadata && metadata.mainFragment,
@@ -98,7 +99,7 @@ export function useCompiledRefetchableFragment(
         observable.subscribe(
           ({ data, error }) => {
             // Be sure not to keep a retain cycle, so cleanup the reference first thing.
-            subscription!.unsubscribe();
+            subscription?.unsubscribe();
             subscription = undefined;
             disposable.current = undefined;
 
@@ -135,7 +136,7 @@ export function useCompiledRefetchableFragment(
           },
           (error) => {
             // Be sure not to keep a retain cycle
-            subscription!.unsubscribe();
+            subscription?.unsubscribe();
             subscription = undefined;
 
             if (options?.UNSTABLE_onCompletedWithData) {

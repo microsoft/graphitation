@@ -50,9 +50,9 @@ class ExecutionQueryHandler {
 }
 
 function useExecutionQuery(
-  client: ApolloClient<any>,
+  client: ApolloClient<unknown>,
   executionQueryDocument: DocumentNode,
-  variables: Record<string, any>,
+  variables: Record<string, unknown>,
 ): [loading: boolean, error?: Error] {
   const forceUpdate = useForceUpdate();
   const execution = useRef(new ExecutionQueryHandler(() => forceUpdate()));
@@ -82,8 +82,8 @@ function useExecutionQuery(
  */
 export function useCompiledLazyLoadQuery(
   documents: CompiledArtefactModule,
-  options: { variables: Record<string, any> },
-): { data?: any; error?: Error } {
+  options: { variables: Record<string, unknown> },
+): { data?: object; error?: Error } {
   const { watchQueryDocument } = documents;
   invariant(
     watchQueryDocument,

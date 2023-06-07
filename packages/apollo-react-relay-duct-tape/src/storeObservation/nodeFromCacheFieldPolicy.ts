@@ -14,11 +14,11 @@ import invariant from "invariant";
  */
 export const nodeFromCacheFieldPolicyWithDefaultApolloClientStoreKeys: FieldReadFunction =
   (_existingCacheData, options) => {
-    const nodeId = options.args!.id;
+    const nodeId = options.args?.id;
     invariant(nodeId, "Expected an `id` argument");
 
     const fragmentNames = (
-      options.field!.selectionSet!.selections.filter(
+      options.field?.selectionSet?.selections.filter(
         (sel) => sel.kind === "FragmentSpread",
       ) as FragmentSpreadNode[]
     ).map((fragmentSpreadNode) => fragmentSpreadNode.name.value);
@@ -73,7 +73,7 @@ export const nodeFromCacheFieldPolicyWithDefaultApolloClientStoreKeys: FieldRead
  */
 export const nodeFromCacheFieldPolicyWithGlobalObjectIdStoreKeys: FieldReadFunction =
   (_existingCacheData, options) => {
-    const nodeId = options.args!.id?.toString();
+    const nodeId = options.args?.id?.toString();
     invariant(nodeId, "Expected an `id` argument");
     return options.toReference(nodeId);
   };

@@ -15,7 +15,7 @@ import type { CompiledArtefactModule } from "@graphitation/apollo-react-relay-du
 export function useCompiledFragment(
   documents: CompiledArtefactModule,
   fragmentReference: FragmentReference,
-): {} {
+): object {
   invariant(
     fragmentReference,
     "useFragment(): Expected metadata to have been extracted from " +

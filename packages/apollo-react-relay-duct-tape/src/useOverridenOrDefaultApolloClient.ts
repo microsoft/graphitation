@@ -8,7 +8,7 @@ import React from "react";
 /**
  * @internal
  */
-export function useOverridenOrDefaultApolloClient(): ApolloClient<any> {
+export function useOverridenOrDefaultApolloClient(): ApolloClient<unknown> {
   const client = React.useContext(ApolloReactRelayDuctTapeContext);
   if (client) {
     return client;
@@ -17,7 +17,7 @@ export function useOverridenOrDefaultApolloClient(): ApolloClient<any> {
 }
 
 const ApolloReactRelayDuctTapeContext = React.createContext<
-  ApolloClient<any> | undefined
+  ApolloClient<unknown> | undefined
 >(undefined);
 
 /**
@@ -29,7 +29,7 @@ const ApolloReactRelayDuctTapeContext = React.createContext<
  * different ApolloClient instance than the rest of the tree above and below it.
  */
 export const ApolloReactRelayDuctTapeProvider: React.FC<{
-  client: ApolloClient<any>;
+  client: ApolloClient<unknown>;
 }> = (props) => {
   invariant(
     props.client,

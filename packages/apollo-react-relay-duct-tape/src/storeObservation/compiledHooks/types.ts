@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export interface FragmentReference {
   /**
    * In case of a watch query on a Node type, the `id` needs to be provided.

@@ -47,7 +47,6 @@ function useLoadMore({
   cursorValue,
   updater,
 }: PaginationParams): [loadPage: PaginationFn, isLoadingMore: boolean] {
-  const apolloClient = useOverridenOrDefaultApolloClient();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const loadPage = useCallback<PaginationFn>(
     (countValue, options) => {
@@ -93,7 +92,7 @@ function useLoadMore({
               mainFragment,
               "usePaginationFragment(): Expected mainFragment metadata",
             );
-            const cacheSelector: DataProxy.Fragment<any, any> = {
+            const cacheSelector: DataProxy.Fragment<unknown, object> = {
               id: cache.identify({
                 __typename: mainFragment.typeCondition,
                 id: fragmentReference.id as StoreValue,
@@ -116,6 +115,7 @@ function useLoadMore({
              * to the cache, then that would be preferable.
              */
             const existingData = cache.readFragment(cacheSelector);
+            invariant(existingData, "Expected existing data");
             const newCacheData = mergeEdges(
               connectionSelectionPath,
               newData,
@@ -159,9 +159,12 @@ function useLoadMore({
 }
 
 function getValueAtSelectionPath(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>,
   selectionPath: string[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let object: Record<string, any> = data;
   selectionPath.forEach((field) => {
     object = object[field];
@@ -171,6 +174,7 @@ function getValueAtSelectionPath(
 }
 
 function getPageInfo(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>,
   selectionPath: string[],
 ): {
@@ -187,8 +191,8 @@ function getPageInfo(
 
 function mergeEdges(
   connectionPath: string[],
-  destination: {},
-  source: {},
+  destination: object,
+  source: object,
   updater: <T>(existing: T[], incoming: T[]) => T[],
 ) {
   const edgesPath = [...connectionPath, "edges"];
@@ -206,6 +210,7 @@ export function useCompiledPaginationFragment(
   documents: CompiledArtefactModule,
   fragmentReference: FragmentReference,
 ): {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
   loadNext: PaginationFn;
   loadPrevious: PaginationFn;

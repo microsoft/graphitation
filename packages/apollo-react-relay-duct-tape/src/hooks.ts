@@ -25,6 +25,8 @@ import {
 } from "./storeObservation/compiledHooks";
 import { convertFetchPolicy } from "./convertFetchPolicy";
 import { useOverridenOrDefaultApolloClient } from "./useOverridenOrDefaultApolloClient";
+import type { CompiledArtefactModule } from "@graphitation/apollo-react-relay-duct-tape-compiler";
+import { FragmentReference } from "./storeObservation/compiledHooks/types";
 
 /**
  * Executes a GraphQL query.
@@ -52,7 +54,7 @@ export function useLazyLoadQuery<TQuery extends OperationType>(
     fetchPolicy: convertFetchPolicy(options.fetchPolicy),
   };
   if (query.watchQueryDocument) {
-    return useCompiledLazyLoadQuery(query as any, {
+    return useCompiledLazyLoadQuery(query as CompiledArtefactModule, {
       variables,
       ...apolloOptions,
     });
@@ -87,7 +89,7 @@ export function useFragment<TKey extends KeyType>(
   fragmentRef: TKey,
 ): KeyTypeData<TKey> {
   if (fragmentInput.watchQueryDocument) {
-    return useCompiledFragment(fragmentInput, fragmentRef as any);
+    return useCompiledFragment(fragmentInput, fragmentRef as FragmentReference);
   } else {
     return fragmentRef as unknown;
   }
@@ -115,8 +117,8 @@ export function useRefetchableFragment<
     "useRefetchableFragment is only supported at this time when using compilation",
   );
   return useCompiledRefetchableFragment(
-    fragmentInput as any,
-    fragmentRef as any,
+    fragmentInput as CompiledArtefactModule,
+    fragmentRef as FragmentReference,
   );
 }
 
@@ -151,8 +153,8 @@ export function usePaginationFragment<
     "usePaginationFragment is only supported at this time when using compilation",
   );
   return useCompiledPaginationFragment(
-    fragmentInput as any,
-    fragmentRef as any,
+    fragmentInput as CompiledArtefactModule,
+    fragmentRef as FragmentReference,
   );
 }
 

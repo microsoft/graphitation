@@ -32,7 +32,10 @@ import invariant from "invariant";
 export function shallowCompareFragmentReferences<K extends string>(
   ...fragmentReferenceProps: K[]
 ) {
-  return (prevProps: Record<K, any>, nextProps: Record<K, any>) => {
+  return (
+    prevProps: Record<K, { id?: unknown }>,
+    nextProps: Record<K, { id?: unknown }>,
+  ) => {
     if (Object.is(prevProps, nextProps)) {
       return true;
     }
@@ -47,7 +50,7 @@ export function shallowCompareFragmentReferences<K extends string>(
     for (let i = 0; i < keysPrev.length; i++) {
       const checkKey = keysPrev[i] as K;
       if (
-        !nextProps.hasOwnProperty(checkKey) ||
+        !Object.prototype.hasOwnProperty.call(nextProps, checkKey) ||
         fragmentReferenceProps.includes(checkKey)
           ? !idsEqual(prevProps[checkKey], nextProps[checkKey])
           : !Object.is(prevProps[checkKey], nextProps[checkKey])
@@ -60,7 +63,7 @@ export function shallowCompareFragmentReferences<K extends string>(
   };
 }
 
-function idsEqual(objA: { id?: any }, objB: { id?: any }) {
+function idsEqual(objA: { id?: unknown }, objB: { id?: unknown }) {
   invariant(
     objA.id && objB.id,
     "Expected both fragment reference objects to have an id field",

@@ -52,28 +52,32 @@ export function reportError(
 ) {
   const newNode = {
     ...node,
-    loc: {
-      start: {
-        line: node.loc!.start.line,
-        column: node.loc!.start.column - 1,
-      },
-      end: {
-        line: node.loc!.end.line,
-        column: node.loc!.end.column - 1,
-      },
-    },
+    loc: node.loc
+      ? {
+          start: {
+            line: node.loc.start.line,
+            column: node.loc.start.column - 1,
+          },
+          end: {
+            line: node.loc.end.line,
+            column: node.loc.end.column - 1,
+          },
+        }
+      : undefined,
   };
 
   const fix = (fixer: RuleFixer) => {
     if (!expectedName) {
       return;
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return fixer.replaceText(node.name as any, expectedName);
   };
 
   context.report({
     node: newNode,
     message,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     fix: expectedName ? (fix as any) : undefined,
   });
 }
@@ -84,6 +88,7 @@ const rule: GraphQLESLintRule = {
     fixable: "code",
     schema: undefined,
     docs: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...({ description: `Enforce descriptive operation names` } as any), // FIXME: Why can we not pass this prop?
       category: "Operations",
       requiresSiblings: true,

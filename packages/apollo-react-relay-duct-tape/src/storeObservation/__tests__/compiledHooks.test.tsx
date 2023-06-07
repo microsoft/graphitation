@@ -47,13 +47,13 @@ const schema = buildSchema(
   ),
 );
 
-const Child_fragment = graphql`
+const _Child_fragment = graphql`
   fragment compiledHooks_ChildFragment on User {
     petName
   }
 `;
 
-const Refetchable_fragment = graphql`
+const _Refetchable_fragment = graphql`
   fragment compiledHooks_RefetchableFragment on User
   @refetchable(queryName: "compiledHooks_RefetchableFragment_RefetchQuery") {
     petName
@@ -61,7 +61,7 @@ const Refetchable_fragment = graphql`
   }
 `;
 
-const QueryType_fragment = graphql`
+const _QueryType_fragment = graphql`
   fragment compiledHooks_QueryTypeFragment on Query {
     nonNode {
       id
@@ -69,7 +69,7 @@ const QueryType_fragment = graphql`
   }
 `;
 
-const ForwardPagination_fragment = graphql`
+const _ForwardPagination_fragment = graphql`
   fragment compiledHooks_ForwardPaginationFragment on User
   @refetchable(
     queryName: "compiledHooks_ForwardPaginationFragment_PaginationQuery"
@@ -94,7 +94,7 @@ const ForwardPagination_fragment = graphql`
   }
 `;
 
-const BackwardPagination_fragment = graphql`
+const _BackwardPagination_fragment = graphql`
   fragment compiledHooks_BackwardPaginationFragment on Conversation
   @refetchable(
     queryName: "compiledHooks_BackwardPaginationFragment_PaginationQuery"
@@ -110,7 +110,7 @@ const BackwardPagination_fragment = graphql`
   }
 `;
 
-const Root_executionQueryDocument = graphql`
+const _Root_executionQueryDocument = graphql`
   query compiledHooks_Root_executionQuery(
     $userId: Int!
     $avatarSize: Int = 21
@@ -151,7 +151,7 @@ describe.each([
     typeof useCompiledPaginationFragment
   >[];
   let useLazyLoadQueryResult: { data?: any; error?: Error } | null = null;
-  let componentOnQueryTypeResult: {}[];
+  let componentOnQueryTypeResult: object[];
 
   const ChildComponent: React.FC<{ user: { id: any } }> = (props) => {
     const result = useCompiledFragment(
@@ -173,7 +173,7 @@ describe.each([
     return null;
   };
 
-  const ComponentOnQueryType: React.FC<{ query: {} }> = (props) => {
+  const ComponentOnQueryType: React.FC<{ query: object }> = (props) => {
     const result = useCompiledFragment(
       compiledHooks_QueryTypeFragment_documents,
       props.query,
@@ -339,11 +339,11 @@ describe.each([
       });
 
       it("only returns the fields selected in the watch query to the component", () => {
-        expect(useLazyLoadQueryResult!.data).toMatchSnapshot();
+        expect(useLazyLoadQueryResult?.data).toMatchSnapshot();
       });
 
       it("does not re-render when a field that was not selected in the watch query is updated in the store", async () => {
-        const before = useLazyLoadQueryResult!.data;
+        const before = useLazyLoadQueryResult?.data;
         await act(async () => {
           client.cache.modify({
             id: "User:42",
@@ -353,11 +353,11 @@ describe.each([
           });
           return new Promise((resolve) => setTimeout(resolve, 0));
         });
-        expect(useLazyLoadQueryResult!.data).toBe(before);
+        expect(useLazyLoadQueryResult?.data).toBe(before);
       });
 
       it("does re-render when a field that was selected in the watch query is updated in the store", async () => {
-        const before = useLazyLoadQueryResult!.data;
+        const before = useLazyLoadQueryResult?.data;
         await act(async () => {
           client.cache.modify({
             id:
@@ -370,8 +370,8 @@ describe.each([
           });
           return new Promise((resolve) => setTimeout(resolve, 0));
         });
-        expect(useLazyLoadQueryResult!.data).not.toBe(before);
-        expect(useLazyLoadQueryResult!.data).toMatchSnapshot();
+        expect(useLazyLoadQueryResult?.data).not.toBe(before);
+        expect(useLazyLoadQueryResult?.data).toMatchSnapshot();
       });
 
       it("fetches new data when variables change", async () => {
@@ -439,7 +439,7 @@ describe.each([
 
   function itBehavesLikeFragment(
     returnedResults: () => { id: number }[],
-    fragmentSpecificFieldSelections?: {},
+    fragmentSpecificFieldSelections?: object,
   ) {
     // TODO: This should be scoped so it doesn't leak to other tests in the same parent describe
     // describe("behaves like useFragment", () => {
@@ -1024,7 +1024,7 @@ describe.each([
 class ErrorBoundary extends React.Component {
   state = { hasError: false };
 
-  static getDerivedStateFromError(error: Error) {
+  static getDerivedStateFromError(_error: Error) {
     return { hasError: true };
   }
 
