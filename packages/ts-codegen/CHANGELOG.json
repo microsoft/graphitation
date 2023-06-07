@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Wed, 07 Jun 2023 14:07:36 GMT",
+      "tag": "@graphitation/ts-codegen_v2.4.3",
+      "version": "2.4.3",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "5219d8efa17a1286fd664b52ecc95c0535359efb",
+            "comment": "Fix all new lint issues"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 07 Jun 2023 08:48:18 GMT",
       "tag": "@graphitation/ts-codegen_v2.4.3",
       "version": "2.4.3",

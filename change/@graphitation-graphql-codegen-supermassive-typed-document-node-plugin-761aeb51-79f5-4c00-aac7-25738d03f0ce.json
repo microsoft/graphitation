@@ -1,7 +1,0 @@
-{
-  "type": "none",
-  "comment": "Fix all new lint issues",
-  "packageName": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "none"
-}
