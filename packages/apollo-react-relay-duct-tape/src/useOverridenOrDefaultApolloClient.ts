@@ -8,12 +8,13 @@ import React from "react";
 /**
  * @internal
  */
-export function useOverridenOrDefaultApolloClient(): ApolloClient<unknown> {
+export function useOverridenOrDefaultApolloClient() {
   const client = React.useContext(ApolloReactRelayDuctTapeContext);
   if (client) {
     return client;
   }
-  return useDefaultApolloClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return useDefaultApolloClient() as ApolloClient<any>;
 }
 
 const ApolloReactRelayDuctTapeContext = React.createContext<

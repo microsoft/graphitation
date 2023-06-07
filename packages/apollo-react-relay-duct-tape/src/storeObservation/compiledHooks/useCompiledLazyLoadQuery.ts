@@ -83,7 +83,8 @@ function useExecutionQuery(
 export function useCompiledLazyLoadQuery(
   documents: CompiledArtefactModule,
   options: { variables: Record<string, unknown> },
-): { data?: object; error?: Error } {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): { data?: Record<string, any>; error?: Error } {
   const { watchQueryDocument } = documents;
   invariant(
     watchQueryDocument,

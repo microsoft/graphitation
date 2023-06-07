@@ -6,6 +6,7 @@ import {
   useMutation as useApolloMutation,
   SubscriptionHookOptions as ApolloSubscriptionHookOptions,
   ErrorPolicy as ApolloErrorPolicy,
+  ApolloClient,
 } from "@apollo/client";
 
 import {
@@ -244,7 +245,8 @@ export function useMutation<TMutationPayload extends OperationType>(
   const [apolloUpdater, { loading: mutationLoading }] = useApolloMutation(
     // TODO: Right now we don't replace mutation documents with imported artefacts.
     mutation as DocumentNode,
-    { client },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    { client: client as ApolloClient<any> },
   );
 
   return [

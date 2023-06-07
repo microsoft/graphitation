@@ -166,11 +166,14 @@ beforeEach(() => {
 
 describe(useLazyLoadQuery, () => {
   it("uses Apollo's useQuery hook", async () => {
-    const tree: ReactTestRenderer = createTestRenderer(
-      <ApolloProvider client={client}>
-        <QueryComponent />
-      </ApolloProvider>,
-    );
+    let tree: ReactTestRenderer | undefined;
+    act(() => {
+      tree = createTestRenderer(
+        <ApolloProvider client={client}>
+          <QueryComponent />
+        </ApolloProvider>,
+      );
+    });
 
     const operation = client.mock.getMostRecentOperation();
     expect(operation.request.node).toBe(query);
@@ -207,13 +210,16 @@ describe(useFragment, () => {
 
 describe(useSubscription, () => {
   it("uses Apollo's useSubscription hook and updates the store", async () => {
-    const tree: ReactTestRenderer = createTestRenderer(
-      <ApolloProvider client={client}>
-        <SubscriptionComponent>
-          <QueryComponent />
-        </SubscriptionComponent>
-      </ApolloProvider>,
-    );
+    let tree: ReactTestRenderer | undefined;
+    act(() => {
+      tree = createTestRenderer(
+        <ApolloProvider client={client}>
+          <SubscriptionComponent>
+            <QueryComponent />
+          </SubscriptionComponent>
+        </ApolloProvider>,
+      );
+    });
 
     const [subscriptionOperation, queryOperation] =
       client.mock.getAllOperations();
