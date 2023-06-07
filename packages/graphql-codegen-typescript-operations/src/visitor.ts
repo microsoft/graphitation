@@ -38,8 +38,6 @@ export interface TypeScriptDocumentsParsedConfig extends ParsedDocumentsConfig {
   baseTypesPath: string;
   noExport: boolean;
 }
-
-const OPERATIONS = ["Mutation", "Query", "Subscription"];
 export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
   TypeScriptDocumentsPluginConfig,
   TypeScriptDocumentsParsedConfig

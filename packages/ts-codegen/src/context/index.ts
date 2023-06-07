@@ -5,9 +5,6 @@ import {
   ArgumentNode,
   ValueNode,
   ASTNode,
-  NamedTypeNode,
-  isScalarType,
-  FieldNode,
   FieldDefinitionNode,
   ObjectTypeDefinitionNode,
   EnumTypeDefinitionNode,
@@ -24,12 +21,10 @@ import ts, {
   factory,
   addSyntheticLeadingComment,
   SyntaxKind,
-  collapseTextChangeRangesAcrossMultipleVersions,
 } from "typescript";
 import { DefinitionImport, DefinitionModel } from "../types";
 import { createImportDeclaration } from "./utilities";
 import {
-  addModelSuffix,
   createListType,
   createNonNullableType,
   createNullableType,
@@ -216,7 +211,7 @@ export class TsCodegenContext {
     this.imports.push(imp);
   }
 
-  addModel(model: DefinitionModel, node: ASTNode): void {
+  addModel(model: DefinitionModel, _node: ASTNode): void {
     const scope = this.options.modelScope;
     if (!scope || model.modelScope === scope) {
       // const existingModel = this.typeNameToModels.get(model.typeName);
@@ -323,7 +318,10 @@ export class TsCodegenContext {
   }
 
   getScalarDefinition(scalarName: string | null) {
-    if (!scalarName || BUILT_IN_SCALARS.hasOwnProperty(scalarName)) {
+    if (
+      !scalarName ||
+      Object.prototype.hasOwnProperty.call(BUILT_IN_SCALARS, scalarName)
+    ) {
       return;
     }
 
@@ -402,7 +400,7 @@ export class TsCodegenContext {
     typeName: string,
     markUsage?: "MODELS" | "RESOLVERS",
   ): TypeLocation {
-    if (BUILT_IN_SCALARS.hasOwnProperty(typeName)) {
+    if (Object.prototype.hasOwnProperty.call(BUILT_IN_SCALARS, typeName)) {
       return new TypeLocation(null, BUILT_IN_SCALARS[typeName]);
     } else {
       if (markUsage === "MODELS") {
@@ -423,7 +421,7 @@ export class TsCodegenContext {
       }
 
       if (this.typeNameToImports.has(typeName)) {
-        let { modelName } = this.typeNameToImports.get(
+        const { modelName } = this.typeNameToImports.get(
           typeName,
         ) as ModelNameAndImport;
         return new TypeLocation(null, modelName);
@@ -440,7 +438,7 @@ export class TsCodegenContext {
     typeName: string,
     markUsage?: "MODELS" | "RESOLVERS" | "LEGACY" | "INPUTS",
   ): TypeLocation {
-    if (BUILT_IN_SCALARS.hasOwnProperty(typeName)) {
+    if (Object.prototype.hasOwnProperty.call(BUILT_IN_SCALARS, typeName)) {
       return new TypeLocation(null, BUILT_IN_SCALARS[typeName]);
     } else if (this.typeNameToImports.has(typeName)) {
       if (markUsage === "MODELS") {
@@ -450,7 +448,7 @@ export class TsCodegenContext {
       } else if (markUsage === "INPUTS") {
         this.usedEntitiesInInputs.add(typeName);
       }
-      let { modelName } = this.typeNameToImports.get(
+      const { modelName } = this.typeNameToImports.get(
         typeName,
       ) as ModelNameAndImport;
       return new TypeLocation(null, modelName);
@@ -483,7 +481,7 @@ export class TsCodegenContext {
 
   getDefinedModelType(typeName: string): TypeLocation | null {
     if (this.typeNameToModels.has(typeName)) {
-      let imp = this.typeNameToModels.get(typeName) as DefinitionModel;
+      const imp = this.typeNameToModels.get(typeName) as DefinitionModel;
       this.usedEntitiesInModels.add(typeName);
       return new TypeLocation(null, imp.modelName);
     } else {
@@ -504,7 +502,7 @@ export function extractContext(
     ...TsCodegenContextDefault,
     ...options,
   };
-  let context = new TsCodegenContext(fullOptions);
+  const context = new TsCodegenContext(fullOptions);
 
   visit(document, {
     Directive: {

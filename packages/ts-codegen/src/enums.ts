@@ -1,12 +1,7 @@
 import ts, { factory } from "typescript";
-import { DocumentNode } from "graphql";
-import { TsCodegenContext, Type, EnumType } from "./context";
-import { addModelSuffix, createNonNullableTemplate } from "./utilities";
+import { TsCodegenContext, EnumType } from "./context";
 
-export function generateEnums(
-  context: TsCodegenContext,
-  document: DocumentNode,
-): ts.SourceFile {
+export function generateEnums(context: TsCodegenContext): ts.SourceFile {
   const enumsImport = context.getEnumsImport();
   const enumsStatements: ts.Statement[] = [];
   if (enumsImport) {

@@ -6,7 +6,7 @@ describe("transformer tests", () => {
   it("should convert simple queries", () => {
     expect.assertions(1);
     const transformer = new Transformer()
-      .addTransformer((program: ts.Program) => getTransformer({}))
+      .addTransformer((_program: ts.Program) => getTransformer({}))
       .addMock({
         name: "@graphitation/graphql-js-tag",
         content: `export const graphql:any = () => {}`,
@@ -23,7 +23,7 @@ describe("transformer tests", () => {
         \`
     `);
     expect(actual).toMatchInlineSnapshot(`
-      "export const query = { kind: \"Document\", definitions: [{ kind: \"OperationDefinition\", operation: \"query\", name: { kind: \"Name\", value: \"Foo\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \"SelectionSet\", selections: [{ kind: \"Field\", alias: undefined, name: { kind: \"Name\", value: \"foo\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
+      "export const query = { kind: "Document", definitions: [{ kind: "OperationDefinition", operation: "query", name: { kind: "Name", value: "Foo", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "foo", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
       "
     `);
   });
@@ -31,7 +31,7 @@ describe("transformer tests", () => {
   it("should use fragments", () => {
     expect.assertions(1);
     const transformer = new Transformer()
-      .addTransformer((program: ts.Program) => getTransformer({}))
+      .addTransformer((_program: ts.Program) => getTransformer({}))
       .addMock({
         name: "@graphitation/graphql-js-tag",
         content: `export const graphql:any = () => {}`,
@@ -57,8 +57,8 @@ describe("transformer tests", () => {
         \`
     `);
     expect(actual).toMatchInlineSnapshot(`
-      "const fragment = { kind: \"Document\", definitions: [{ kind: \"FragmentDefinition\", name: { kind: \"Name\", value: \"FooFragment\", loc: undefined }, typeCondition: { kind: \"NamedType\", name: { kind: \"Name\", value: \"Foo\", loc: undefined }, loc: undefined }, directives: [], selectionSet: { kind: \"SelectionSet\", selections: [{ kind: \"Field\", alias: undefined, name: { kind: \"Name\", value: \"bar\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
-      export const query = { kind: \"Document\", definitions: [{ kind: \"OperationDefinition\", operation: \"query\", name: { kind: \"Name\", value: \"Foo\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \"SelectionSet\", selections: [{ kind: \"Field\", alias: undefined, name: { kind: \"Name\", value: \"foo\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }, { kind: \"FragmentSpread\", name: { kind: \"Name\", value: \"FooFragment\", loc: undefined }, directives: [], loc: undefined }], loc: undefined }, loc: undefined }].concat(fragment.definitions) };
+      "const fragment = { kind: "Document", definitions: [{ kind: "FragmentDefinition", name: { kind: "Name", value: "FooFragment", loc: undefined }, typeCondition: { kind: "NamedType", name: { kind: "Name", value: "Foo", loc: undefined }, loc: undefined }, directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "bar", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
+      export const query = { kind: "Document", definitions: [{ kind: "OperationDefinition", operation: "query", name: { kind: "Name", value: "Foo", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "foo", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }, { kind: "FragmentSpread", name: { kind: "Name", value: "FooFragment", loc: undefined }, directives: [], loc: undefined }], loc: undefined }, loc: undefined }].concat(fragment.definitions) };
       "
     `);
   });
@@ -66,9 +66,9 @@ describe("transformer tests", () => {
   it("should apply transformer", () => {
     expect.assertions(1);
     const transformer = new Transformer()
-      .addTransformer((program: ts.Program) =>
+      .addTransformer((_program: ts.Program) =>
         getTransformer({
-          transformer: (document) => "haha, imma here, breaking your graphql",
+          transformer: (_document) => "haha, imma here, breaking your graphql",
         }),
       )
       .addMock({
@@ -87,7 +87,7 @@ describe("transformer tests", () => {
      \`
    `);
     expect(actual).toMatchInlineSnapshot(`
-      "export const query = { kind: \"Document\", definitions: [\"haha, imma here, breaking your graphql\"].concat([]) };
+      "export const query = { kind: "Document", definitions: ["haha, imma here, breaking your graphql"].concat([]) };
       "
     `);
   });
@@ -96,7 +96,7 @@ describe("transformer tests", () => {
     it("should remove single import", () => {
       expect.assertions(1);
       const transformer = new Transformer()
-        .addTransformer((program: ts.Program) =>
+        .addTransformer((_program: ts.Program) =>
           getTransformer({
             graphqlTagModule: "graphql-tag",
             graphqlTagModuleExport: "gql",
@@ -118,14 +118,14 @@ describe("transformer tests", () => {
       \`
       `);
       expect(actual).toMatchInlineSnapshot(`
-        "export const query = { kind: \"Document\", definitions: [{ kind: \"OperationDefinition\", operation: \"query\", name: { kind: \"Name\", value: \"Foo\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \"SelectionSet\", selections: [{ kind: \"Field\", alias: undefined, name: { kind: \"Name\", value: \"foo\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
+        "export const query = { kind: "Document", definitions: [{ kind: "OperationDefinition", operation: "query", name: { kind: "Name", value: "Foo", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "foo", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
         "
       `);
     });
     it("should remove single default import", () => {
       expect.assertions(1);
       const transformer = new Transformer()
-        .addTransformer((program: ts.Program) =>
+        .addTransformer((_program: ts.Program) =>
           getTransformer({
             graphqlTagModuleExport: "default",
           }),
@@ -146,14 +146,14 @@ describe("transformer tests", () => {
       \`
       `);
       expect(actual).toMatchInlineSnapshot(`
-        "export const query = { kind: \"Document\", definitions: [{ kind: \"OperationDefinition\", operation: \"query\", name: { kind: \"Name\", value: \"Foo\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \"SelectionSet\", selections: [{ kind: \"Field\", alias: undefined, name: { kind: \"Name\", value: \"foo\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
+        "export const query = { kind: "Document", definitions: [{ kind: "OperationDefinition", operation: "query", name: { kind: "Name", value: "Foo", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "foo", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
         "
       `);
     });
     it("should keep different single import", () => {
       expect.assertions(1);
       const transformer = new Transformer()
-        .addTransformer((program: ts.Program) => getTransformer({}))
+        .addTransformer((_program: ts.Program) => getTransformer({}))
         .addMock({
           name: "@graphitation/graphql-js-tag",
           content: `export const graphql:any = () => {}, someOtherExport: any = 1;`,
@@ -164,14 +164,14 @@ describe("transformer tests", () => {
       import { someOtherExport } from "@graphitation/graphql-js-tag"
       `);
       expect(actual).toMatchInlineSnapshot(`
-        "import { someOtherExport } from \"@graphitation/graphql-js-tag\";
+        "import { someOtherExport } from "@graphitation/graphql-js-tag";
         "
       `);
     });
     it("should keep different single import but remove itself", () => {
       expect.assertions(1);
       const transformer = new Transformer()
-        .addTransformer((program: ts.Program) => getTransformer({}))
+        .addTransformer((_program: ts.Program) => getTransformer({}))
         .addMock({
           name: "@graphitation/graphql-js-tag",
           content: `export const graphql:any = () => {}, someOtherExport: any = 1;`,
@@ -182,14 +182,14 @@ describe("transformer tests", () => {
       import { someOtherExport, graphql } from "@graphitation/graphql-js-tag"
       `);
       expect(actual).toMatchInlineSnapshot(`
-        "import { someOtherExport } from \"@graphitation/graphql-js-tag\";
+        "import { someOtherExport } from "@graphitation/graphql-js-tag";
         "
       `);
     });
     it("should keep different default import", () => {
       expect.assertions(1);
       const transformer = new Transformer()
-        .addTransformer((program: ts.Program) => getTransformer({}))
+        .addTransformer((_program: ts.Program) => getTransformer({}))
         .addMock({
           name: "@graphitation/graphql-js-tag",
           content: `export const graphql:any = () => {}; const defaultExport = 1; export default defaultExport ;`,
@@ -203,7 +203,7 @@ describe("transformer tests", () => {
         someOtherDefault;
         `);
       expect(actual).toMatchInlineSnapshot(`
-        "import someOtherDefault from \"@graphitation/graphql-js-tag\";
+        "import someOtherDefault from "@graphitation/graphql-js-tag";
         someOtherDefault;
         "
       `);
@@ -211,7 +211,7 @@ describe("transformer tests", () => {
     it("should remove import, but keep default", () => {
       expect.assertions(1);
       const transformer = new Transformer()
-        .addTransformer((program: ts.Program) => getTransformer({}))
+        .addTransformer((_program: ts.Program) => getTransformer({}))
         .addMock({
           name: "@graphitation/graphql-js-tag",
           content: `export const graphql:any = () => {}; const defaultExport = 1; export default defaultExport ;`,
@@ -228,15 +228,15 @@ describe("transformer tests", () => {
         \`
         `);
       expect(actual).toMatchInlineSnapshot(`
-        "import someOtherDefault from \"@graphitation/graphql-js-tag\";
-        export const query = { kind: \"Document\", definitions: [{ kind: \"OperationDefinition\", operation: \"query\", name: { kind: \"Name\", value: \"Foo\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \"SelectionSet\", selections: [{ kind: \"Field\", alias: undefined, name: { kind: \"Name\", value: \"foo\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
+        "import someOtherDefault from "@graphitation/graphql-js-tag";
+        export const query = { kind: "Document", definitions: [{ kind: "OperationDefinition", operation: "query", name: { kind: "Name", value: "Foo", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "foo", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
         "
       `);
     });
     it("should remove default, but keep imports", () => {
       expect.assertions(1);
       const transformer = new Transformer()
-        .addTransformer((program: ts.Program) =>
+        .addTransformer((_program: ts.Program) =>
           getTransformer({
             graphqlTagModuleExport: "default",
           }),
@@ -257,8 +257,8 @@ describe("transformer tests", () => {
       \`
       `);
       expect(actual).toMatchInlineSnapshot(`
-        "import { someOtherExport } from \"@graphitation/graphql-js-tag\";
-        export const query = { kind: \"Document\", definitions: [{ kind: \"OperationDefinition\", operation: \"query\", name: { kind: \"Name\", value: \"Foo\", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: \"SelectionSet\", selections: [{ kind: \"Field\", alias: undefined, name: { kind: \"Name\", value: \"foo\", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
+        "import { someOtherExport } from "@graphitation/graphql-js-tag";
+        export const query = { kind: "Document", definitions: [{ kind: "OperationDefinition", operation: "query", name: { kind: "Name", value: "Foo", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "foo", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
         "
       `);
     });

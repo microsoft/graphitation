@@ -1,3 +1,4 @@
+/* eslint-disable no-prototype-builtins */
 import * as React from "react";
 import { IAffectedQueryMap, IDueToOperation } from "apollo-inspector";
 import { AffectedQueriesRenderer } from "./affected-queries-renderer";

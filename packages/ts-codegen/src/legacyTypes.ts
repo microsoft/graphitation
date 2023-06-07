@@ -1,6 +1,5 @@
 import ts, { factory } from "typescript";
-import { DocumentNode } from "graphql";
-import { BUILT_IN_SCALARS, ScalarType, TsCodegenContext } from "./context";
+import { BUILT_IN_SCALARS, TsCodegenContext } from "./context";
 
 const ROOT_OPERATIONS = ["Query", "Mutation", "Subscription"];
 const LEGACY_TYPES = [
@@ -13,10 +12,7 @@ const LEGACY_TYPES = [
   "ENUM",
 ];
 
-export function generateLegacyTypes(
-  context: TsCodegenContext,
-  document: DocumentNode,
-): ts.SourceFile {
+export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
   const statements: ts.Statement[] = [];
   const allTypes = context
     .getAllTypes()

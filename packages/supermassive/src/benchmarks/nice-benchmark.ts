@@ -24,7 +24,7 @@ export default class NiceBenchmark {
     });
   }
 
-  run(options?: any): Promise<any> {
+  run(options?: any): Promise<unknown> {
     return new Promise((resolve) => {
       this.suite.on("complete", resolve);
       console.log(this.name);

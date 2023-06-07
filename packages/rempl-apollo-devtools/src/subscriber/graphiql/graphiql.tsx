@@ -1,3 +1,4 @@
+/* eslint-disable no-prototype-builtins */
 import React, { useContext, useRef } from "react";
 import GraphiQL from "graphiql";
 import { ActiveClientContext } from "../contexts/active-client-context";

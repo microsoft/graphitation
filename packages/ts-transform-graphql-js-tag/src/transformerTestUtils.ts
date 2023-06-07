@@ -19,7 +19,8 @@ export class Transformer {
     const target = new Transformer();
 
     for (const prop in this) {
-      if (this.hasOwnProperty(prop)) {
+      if (Object.prototype.hasOwnProperty.call(this, prop)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (target as any)[prop] = this[prop];
       }
     }

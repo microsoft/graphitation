@@ -1,11 +1,9 @@
 import ts, { factory } from "typescript";
-import { DocumentNode } from "graphql";
-import { TsCodegenContext, Type, UnionType, Field } from "./context";
+import { TsCodegenContext, Field } from "./context";
 import { camelCase } from "./utilities";
 
 export function generateLegacyResolvers(
   context: TsCodegenContext,
-  document: DocumentNode,
 ): ts.SourceFile {
   const imports: ts.Statement[] = []; //context.getBasicImports();
   imports.push(

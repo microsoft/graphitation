@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Wed, 07 Jun 2023 08:48:18 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.12.2",
+      "version": "0.12.2",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "commit": "774440b8fa15ecb500765c0aae65ea71bead547d",
+            "comment": "Massive repository janitor work"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 18 Apr 2023 13:36:20 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.12.2",
       "version": "0.12.2",

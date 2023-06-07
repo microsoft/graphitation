@@ -134,7 +134,7 @@ describe("ReactRelayTestMocker with Containers", () => {
     it("should throw if it unable to find operation", () => {
       expect(client.mock.getAllOperations().length).toEqual(1);
       expect(() => {
-        client.mock.findOperation((operation) => false);
+        client.mock.findOperation((_operation) => false);
       }).toThrow(/Operation was not found/);
     });
   });

@@ -12,6 +12,13 @@
   },
   "ignorePatterns": ["**/coverage", "**/lib", "**/temp", "**/__generated__"],
   "plugins": ["check-file", "prettier", "jest"],
+
+  "extends": [
+    "plugin:prettier/recommended",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+
   "rules": {
     "check-file/folder-match-with-fex": [
       "error",
@@ -19,7 +26,22 @@
         "*.test.{js,jsx,ts,tsx}": "**/__tests__/"
       }
     ],
-    "prettier/prettier": "error"
+    "prettier/prettier": "error",
+
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      { "argsIgnorePattern": "^_" }
+    ],
+    "@typescript-eslint/no-empty-function": "off"
   },
-  "extends": ["plugin:prettier/recommended"]
+
+  "overrides": [
+    {
+      "files": ["**/__tests__/**"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off"
+      }
+    }
+  ]
 }

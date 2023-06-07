@@ -20,7 +20,7 @@ import { ExecutionHooks } from "./hooks/types";
 import { FieldGroup } from "./collectFields";
 
 export type ScalarTypeResolver = GraphQLScalarType;
-export type EnumTypeResolver = GraphQLEnumType; // TODO Record<string, any>;
+export type EnumTypeResolver = GraphQLEnumType; // TODO Record<string, unknown>;
 export type FunctionFieldResolver<
   TSource,
   TContext,

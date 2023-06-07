@@ -1,4 +1,4 @@
-import ts, { isExpressionWithTypeArguments } from "typescript";
+import ts from "typescript";
 import { parse } from "graphql";
 import { blankGraphQLTag as graphql } from "../utilities";
 import { generateTS } from "..";

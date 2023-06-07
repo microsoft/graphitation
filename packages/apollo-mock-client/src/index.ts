@@ -16,7 +16,9 @@ import invariant from "invariant";
 
 export interface RequestDescriptor<Node = DocumentNode> {
   readonly node: Node;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly variables: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly context?: Record<string, any>;
 }
 

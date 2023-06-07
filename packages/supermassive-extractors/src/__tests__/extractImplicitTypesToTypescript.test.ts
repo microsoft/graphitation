@@ -13,7 +13,7 @@ describe(extractImplicitTypesToTypescript, () => {
     const typeDefs = fs.readFileSync(
       path.join(
         __dirname,
-        "../../../../examples/supermassive-benchmarks/src/swapi-schema/schema.graphql",
+        "../../../supermassive/src/benchmarks/swapi-schema/schema.graphql",
       ),
       {
         encoding: "utf-8",

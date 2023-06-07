@@ -2,6 +2,7 @@
 
 exports[`extractImplicitTypes benchmark schema extract 1`] = `
 {
+  "AdvancedInput": "AdvancedInput",
   "Alive": {
     "__resolveType": undefined,
     "__types": [

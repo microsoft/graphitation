@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Tue, 30 May 2023 15:52:16 GMT and should not be manually modified.
+This log was last generated on Wed, 07 Jun 2023 08:48:18 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.4.7
+
+Wed, 07 Jun 2023 08:48:18 GMT
+
+### Patches
+
+- Fix type export (mnovikov@microsoft.com)
 
 ## 2.4.6
 

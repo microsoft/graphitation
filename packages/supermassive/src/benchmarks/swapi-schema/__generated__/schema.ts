@@ -1,7 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`extractImplicitTypesToTypescript benchmark schema extract 1`] = `
-"import { GraphQLList, GraphQLNonNull, GraphQLID, GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLEnumType, GraphQLInputObjectType } from "graphql";
+import { GraphQLList, GraphQLNonNull, GraphQLID, GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLEnumType, GraphQLInputObjectType } from "graphql";
 import { Resolvers, UnionTypeResolver, EnumTypeResolver, ObjectTypeResolver, InterfaceTypeResolver, InputObjectTypeResolver } from "@graphitation/supermassive";
 const SearchResult: UnionTypeResolver = { __types: ["Person", "Starship", "Transport", "Species", "Vehicle", "Planet", "Film"], __resolveType: undefined };
 const NodeType: EnumTypeResolver = new GraphQLEnumType({ name: "NodeType", description: "", values: { Person: { description: "" }, Starship: { description: "" }, Transport: { description: "" }, Species: { description: "" }, Vehicle: { description: "" }, Planet: { description: "" }, Film: { description: "" } } });
@@ -31,5 +28,3 @@ const AdvancedInput: InputObjectTypeResolver = new GraphQLInputObjectType({
 });
 const Node: InterfaceTypeResolver = { __implementedBy: ["Film", "Vehicle", "Person", "Starship", "Planet", "Species", "Transport"], __resolveType: undefined };
 export const resolvers: Resolvers = { SearchResult, NodeType, Subscription, Query, Node, Alive, Film, Vehicle, Person, Starship, Planet, Species, Transport, AdvancedInput };
-"
-`;
