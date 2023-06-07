@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Wed, 07 Jun 2023 14:13:33 GMT",
+      "tag": "@graphitation/supermassive_v2.4.7",
+      "version": "2.4.7",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "not available",
+            "comment": "Fix all new lint issues"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 07 Jun 2023 14:07:36 GMT",
       "tag": "@graphitation/supermassive_v2.4.7",
       "version": "2.4.7",

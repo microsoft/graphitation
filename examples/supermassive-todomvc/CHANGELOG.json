@@ -2,6 +2,21 @@
   "name": "supermassive-todomvc",
   "entries": [
     {
+      "date": "Wed, 07 Jun 2023 14:13:33 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "none": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/supermassive to v2.4.7",
+            "commit": "248c3a1335601353b03b8ae85487301e999ae806"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 07 Jun 2023 14:07:36 GMT",
       "tag": "supermassive-todomvc_v1.0.1-0",
       "version": "1.0.1-0",
