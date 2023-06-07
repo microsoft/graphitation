@@ -77,268 +77,281 @@ fragment TodoList_queryFragment_2QE1um on Query {
 }
 */
 
-export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = {
+export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = (function(){
+var v0 = {
+  "kind": "Name",
+  "value": "TodoListPaginationQuery"
+},
+v1 = {
+  "kind": "Name",
+  "value": "after"
+},
+v2 = {
+  "kind": "Variable",
+  "name": (v1/*: any*/)
+},
+v3 = {
+  "kind": "Variable",
+  "name": {
+    "kind": "Name",
+    "value": "count"
+  }
+},
+v4 = {
+  "kind": "Variable",
+  "name": {
+    "kind": "Name",
+    "value": "includeSomeOtherField"
+  }
+},
+v5 = [
+  {
+    "kind": "VariableDefinition",
+    "variable": (v2/*: any*/),
+    "type": {
+      "kind": "NonNullType",
+      "type": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "String"
+        }
+      }
+    },
+    "defaultValue": {
+      "kind": "StringValue",
+      "value": "",
+      "block": false
+    }
+  },
+  {
+    "kind": "VariableDefinition",
+    "variable": (v3/*: any*/),
+    "type": {
+      "kind": "NonNullType",
+      "type": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "Int"
+        }
+      }
+    },
+    "defaultValue": {
+      "kind": "IntValue",
+      "value": "5"
+    }
+  },
+  {
+    "kind": "VariableDefinition",
+    "variable": (v4/*: any*/),
+    "type": {
+      "kind": "NamedType",
+      "name": {
+        "kind": "Name",
+        "value": "Boolean"
+      }
+    }
+  }
+],
+v6 = {
+  "kind": "Name",
+  "value": "TodoList_queryFragment_2QE1um"
+},
+v7 = {
+  "kind": "FragmentSpread",
+  "name": (v6/*: any*/)
+},
+v8 = {
+  "kind": "NamedType",
+  "name": {
+    "kind": "Name",
+    "value": "Query"
+  }
+},
+v9 = {
+  "kind": "Name",
+  "value": "todos"
+},
+v10 = [
+  {
+    "kind": "Argument",
+    "name": {
+      "kind": "Name",
+      "value": "first"
+    },
+    "value": (v3/*: any*/)
+  },
+  {
+    "kind": "Argument",
+    "name": (v1/*: any*/),
+    "value": (v2/*: any*/)
+  }
+],
+v11 = [
+  {
+    "kind": "Directive",
+    "name": {
+      "kind": "Name",
+      "value": "connection"
+    },
+    "arguments": [
+      {
+        "kind": "Argument",
+        "name": {
+          "kind": "Name",
+          "value": "key"
+        },
+        "value": {
+          "kind": "StringValue",
+          "value": "TodosList_todos",
+          "block": false
+        }
+      }
+    ]
+  }
+],
+v12 = {
+  "kind": "Name",
+  "value": "edges"
+},
+v13 = {
+  "kind": "Name",
+  "value": "node"
+},
+v14 = {
+  "kind": "Field",
+  "name": {
+    "kind": "Name",
+    "value": "id"
+  }
+},
+v15 = {
+  "kind": "Field",
+  "name": {
+    "kind": "Name",
+    "value": "isCompleted"
+  }
+},
+v16 = {
+  "kind": "Name",
+  "value": "Todo_todoFragment"
+},
+v17 = {
+  "kind": "Field",
+  "name": {
+    "kind": "Name",
+    "value": "__typename"
+  }
+},
+v18 = {
+  "kind": "Field",
+  "name": {
+    "kind": "Name",
+    "value": "cursor"
+  }
+},
+v19 = {
+  "kind": "Field",
+  "name": {
+    "kind": "Name",
+    "value": "pageInfo"
+  },
+  "selectionSet": {
+    "kind": "SelectionSet",
+    "selections": [
+      {
+        "kind": "Field",
+        "name": {
+          "kind": "Name",
+          "value": "endCursor"
+        }
+      },
+      {
+        "kind": "Field",
+        "name": {
+          "kind": "Name",
+          "value": "hasNextPage"
+        }
+      }
+    ]
+  }
+},
+v20 = {
+  "kind": "Field",
+  "name": {
+    "kind": "Name",
+    "value": "__fragments"
+  },
+  "directives": [
+    {
+      "kind": "Directive",
+      "name": {
+        "kind": "Name",
+        "value": "client"
+      }
+    }
+  ]
+};
+return {
   "executionQueryDocument": {
     "kind": "Document",
     "definitions": [
       {
         "kind": "OperationDefinition",
         "operation": "query",
-        "name": {
-          "kind": "Name",
-          "value": "TodoListPaginationQuery"
-        },
-        "variableDefinitions": [
-          {
-            "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
-              "name": {
-                "kind": "Name",
-                "value": "after"
-              }
-            },
-            "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "String"
-                }
-              }
-            },
-            "defaultValue": {
-              "kind": "StringValue",
-              "value": "",
-              "block": false
-            }
-          },
-          {
-            "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
-              "name": {
-                "kind": "Name",
-                "value": "count"
-              }
-            },
-            "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Int"
-                }
-              }
-            },
-            "defaultValue": {
-              "kind": "IntValue",
-              "value": "5"
-            }
-          },
-          {
-            "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
-              "name": {
-                "kind": "Name",
-                "value": "includeSomeOtherField"
-              }
-            },
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "Boolean"
-              }
-            }
-          }
-        ],
+        "name": (v0/*: any*/),
+        "variableDefinitions": (v5/*: any*/),
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
-            {
-              "kind": "FragmentSpread",
-              "name": {
-                "kind": "Name",
-                "value": "TodoList_queryFragment_2QE1um"
-              }
-            }
+            (v7/*: any*/)
           ]
         }
       },
       {
         "kind": "FragmentDefinition",
-        "name": {
-          "kind": "Name",
-          "value": "TodoList_queryFragment_2QE1um"
-        },
-        "typeCondition": {
-          "kind": "NamedType",
-          "name": {
-            "kind": "Name",
-            "value": "Query"
-          }
-        },
+        "name": (v6/*: any*/),
+        "typeCondition": (v8/*: any*/),
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
             {
               "kind": "Field",
-              "name": {
-                "kind": "Name",
-                "value": "todos"
-              },
-              "arguments": [
-                {
-                  "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "first"
-                  },
-                  "value": {
-                    "kind": "Variable",
-                    "name": {
-                      "kind": "Name",
-                      "value": "count"
-                    }
-                  }
-                },
-                {
-                  "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "after"
-                  },
-                  "value": {
-                    "kind": "Variable",
-                    "name": {
-                      "kind": "Name",
-                      "value": "after"
-                    }
-                  }
-                }
-              ],
-              "directives": [
-                {
-                  "kind": "Directive",
-                  "name": {
-                    "kind": "Name",
-                    "value": "connection"
-                  },
-                  "arguments": [
-                    {
-                      "kind": "Argument",
-                      "name": {
-                        "kind": "Name",
-                        "value": "key"
-                      },
-                      "value": {
-                        "kind": "StringValue",
-                        "value": "TodosList_todos",
-                        "block": false
-                      }
-                    }
-                  ]
-                }
-              ],
+              "name": (v9/*: any*/),
+              "arguments": (v10/*: any*/),
+              "directives": (v11/*: any*/),
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
                   {
                     "kind": "Field",
-                    "name": {
-                      "kind": "Name",
-                      "value": "edges"
-                    },
+                    "name": (v12/*: any*/),
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
                         {
                           "kind": "Field",
-                          "name": {
-                            "kind": "Name",
-                            "value": "node"
-                          },
+                          "name": (v13/*: any*/),
                           "selectionSet": {
                             "kind": "SelectionSet",
                             "selections": [
-                              {
-                                "kind": "Field",
-                                "name": {
-                                  "kind": "Name",
-                                  "value": "id"
-                                }
-                              },
-                              {
-                                "kind": "Field",
-                                "name": {
-                                  "kind": "Name",
-                                  "value": "isCompleted"
-                                }
-                              },
+                              (v14/*: any*/),
+                              (v15/*: any*/),
                               {
                                 "kind": "FragmentSpread",
-                                "name": {
-                                  "kind": "Name",
-                                  "value": "Todo_todoFragment"
-                                }
+                                "name": (v16/*: any*/)
                               },
-                              {
-                                "kind": "Field",
-                                "name": {
-                                  "kind": "Name",
-                                  "value": "__typename"
-                                }
-                              }
+                              (v17/*: any*/)
                             ]
                           }
                         },
-                        {
-                          "kind": "Field",
-                          "name": {
-                            "kind": "Name",
-                            "value": "cursor"
-                          }
-                        }
+                        (v18/*: any*/)
                       ]
                     }
                   },
-                  {
-                    "kind": "Field",
-                    "name": {
-                      "kind": "Name",
-                      "value": "pageInfo"
-                    },
-                    "selectionSet": {
-                      "kind": "SelectionSet",
-                      "selections": [
-                        {
-                          "kind": "Field",
-                          "name": {
-                            "kind": "Name",
-                            "value": "endCursor"
-                          }
-                        },
-                        {
-                          "kind": "Field",
-                          "name": {
-                            "kind": "Name",
-                            "value": "hasNextPage"
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "kind": "Field",
-                    "name": {
-                      "kind": "Name",
-                      "value": "id"
-                    }
-                  }
+                  (v19/*: any*/),
+                  (v14/*: any*/)
                 ]
               }
             }
@@ -347,10 +360,7 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
       },
       {
         "kind": "FragmentDefinition",
-        "name": {
-          "kind": "Name",
-          "value": "Todo_todoFragment"
-        },
+        "name": (v16/*: any*/),
         "typeCondition": {
           "kind": "NamedType",
           "name": {
@@ -361,13 +371,7 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
-            {
-              "kind": "Field",
-              "name": {
-                "kind": "Name",
-                "value": "id"
-              }
-            },
+            (v14/*: any*/),
             {
               "kind": "Field",
               "name": {
@@ -375,13 +379,7 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
                 "value": "description"
               }
             },
-            {
-              "kind": "Field",
-              "name": {
-                "kind": "Name",
-                "value": "isCompleted"
-              }
-            },
+            (v15/*: any*/),
             {
               "kind": "Field",
               "name": {
@@ -402,13 +400,7 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
                         "kind": "Name",
                         "value": "if"
                       },
-                      "value": {
-                        "kind": "Variable",
-                        "name": {
-                          "kind": "Name",
-                          "value": "includeSomeOtherField"
-                        }
-                      }
+                      "value": (v4/*: any*/)
                     }
                   ]
                 }
@@ -425,224 +417,46 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
       {
         "kind": "OperationDefinition",
         "operation": "query",
-        "name": {
-          "kind": "Name",
-          "value": "TodoListPaginationQuery"
-        },
-        "variableDefinitions": [
-          {
-            "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
-              "name": {
-                "kind": "Name",
-                "value": "after"
-              }
-            },
-            "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "String"
-                }
-              }
-            },
-            "defaultValue": {
-              "kind": "StringValue",
-              "value": "",
-              "block": false
-            }
-          },
-          {
-            "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
-              "name": {
-                "kind": "Name",
-                "value": "count"
-              }
-            },
-            "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Int"
-                }
-              }
-            },
-            "defaultValue": {
-              "kind": "IntValue",
-              "value": "5"
-            }
-          },
-          {
-            "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
-              "name": {
-                "kind": "Name",
-                "value": "includeSomeOtherField"
-              }
-            },
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "Boolean"
-              }
-            }
-          }
-        ],
+        "name": (v0/*: any*/),
+        "variableDefinitions": (v5/*: any*/),
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
-            {
-              "kind": "FragmentSpread",
-              "name": {
-                "kind": "Name",
-                "value": "TodoList_queryFragment_2QE1um"
-              }
-            },
-            {
-              "kind": "Field",
-              "name": {
-                "kind": "Name",
-                "value": "__fragments"
-              },
-              "directives": [
-                {
-                  "kind": "Directive",
-                  "name": {
-                    "kind": "Name",
-                    "value": "client"
-                  }
-                }
-              ]
-            }
+            (v7/*: any*/),
+            (v20/*: any*/)
           ]
         }
       },
       {
         "kind": "FragmentDefinition",
-        "name": {
-          "kind": "Name",
-          "value": "TodoList_queryFragment_2QE1um"
-        },
-        "typeCondition": {
-          "kind": "NamedType",
-          "name": {
-            "kind": "Name",
-            "value": "Query"
-          }
-        },
+        "name": (v6/*: any*/),
+        "typeCondition": (v8/*: any*/),
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
             {
               "kind": "Field",
-              "name": {
-                "kind": "Name",
-                "value": "todos"
-              },
-              "arguments": [
-                {
-                  "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "first"
-                  },
-                  "value": {
-                    "kind": "Variable",
-                    "name": {
-                      "kind": "Name",
-                      "value": "count"
-                    }
-                  }
-                },
-                {
-                  "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "after"
-                  },
-                  "value": {
-                    "kind": "Variable",
-                    "name": {
-                      "kind": "Name",
-                      "value": "after"
-                    }
-                  }
-                }
-              ],
-              "directives": [
-                {
-                  "kind": "Directive",
-                  "name": {
-                    "kind": "Name",
-                    "value": "connection"
-                  },
-                  "arguments": [
-                    {
-                      "kind": "Argument",
-                      "name": {
-                        "kind": "Name",
-                        "value": "key"
-                      },
-                      "value": {
-                        "kind": "StringValue",
-                        "value": "TodosList_todos",
-                        "block": false
-                      }
-                    }
-                  ]
-                }
-              ],
+              "name": (v9/*: any*/),
+              "arguments": (v10/*: any*/),
+              "directives": (v11/*: any*/),
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
                   {
                     "kind": "Field",
-                    "name": {
-                      "kind": "Name",
-                      "value": "edges"
-                    },
+                    "name": (v12/*: any*/),
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
                         {
                           "kind": "Field",
-                          "name": {
-                            "kind": "Name",
-                            "value": "node"
-                          },
+                          "name": (v13/*: any*/),
                           "selectionSet": {
                             "kind": "SelectionSet",
                             "selections": [
-                              {
-                                "kind": "Field",
-                                "name": {
-                                  "kind": "Name",
-                                  "value": "id"
-                                }
-                              },
-                              {
-                                "kind": "Field",
-                                "name": {
-                                  "kind": "Name",
-                                  "value": "isCompleted"
-                                }
-                              },
-                              {
-                                "kind": "Field",
-                                "name": {
-                                  "kind": "Name",
-                                  "value": "__typename"
-                                }
-                              },
+                              (v14/*: any*/),
+                              (v15/*: any*/),
+                              (v17/*: any*/),
                               {
                                 "kind": "InlineFragment",
                                 "typeCondition": {
@@ -655,71 +469,19 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
                                 "selectionSet": {
                                   "kind": "SelectionSet",
                                   "selections": [
-                                    {
-                                      "kind": "Field",
-                                      "name": {
-                                        "kind": "Name",
-                                        "value": "__fragments"
-                                      },
-                                      "directives": [
-                                        {
-                                          "kind": "Directive",
-                                          "name": {
-                                            "kind": "Name",
-                                            "value": "client"
-                                          }
-                                        }
-                                      ]
-                                    }
+                                    (v20/*: any*/)
                                   ]
                                 }
                               }
                             ]
                           }
                         },
-                        {
-                          "kind": "Field",
-                          "name": {
-                            "kind": "Name",
-                            "value": "cursor"
-                          }
-                        }
+                        (v18/*: any*/)
                       ]
                     }
                   },
-                  {
-                    "kind": "Field",
-                    "name": {
-                      "kind": "Name",
-                      "value": "pageInfo"
-                    },
-                    "selectionSet": {
-                      "kind": "SelectionSet",
-                      "selections": [
-                        {
-                          "kind": "Field",
-                          "name": {
-                            "kind": "Name",
-                            "value": "endCursor"
-                          }
-                        },
-                        {
-                          "kind": "Field",
-                          "name": {
-                            "kind": "Name",
-                            "value": "hasNextPage"
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "kind": "Field",
-                    "name": {
-                      "kind": "Name",
-                      "value": "id"
-                    }
-                  }
+                  (v19/*: any*/),
+                  (v14/*: any*/)
                 ]
               }
             }
@@ -742,3 +504,4 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
     }
   }
 };
+})();

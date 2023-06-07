@@ -75,108 +75,144 @@ query AppQuery($includeSomeOtherField: Boolean!) {
 }
 */
 
-export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = {
+export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = (function(){
+var v0 = {
+  "kind": "Name",
+  "value": "AppQuery"
+},
+v1 = {
+  "kind": "Variable",
+  "name": {
+    "kind": "Name",
+    "value": "includeSomeOtherField"
+  }
+},
+v2 = [
+  {
+    "kind": "VariableDefinition",
+    "variable": (v1/*: any*/),
+    "type": {
+      "kind": "NonNullType",
+      "type": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "Boolean"
+        }
+      }
+    }
+  }
+],
+v3 = {
+  "kind": "Name",
+  "value": "todoStats"
+},
+v4 = {
+  "kind": "Name",
+  "value": "todos"
+},
+v5 = {
+  "kind": "Name",
+  "value": "first"
+},
+v6 = [
+  {
+    "kind": "Argument",
+    "name": (v5/*: any*/),
+    "value": {
+      "kind": "IntValue",
+      "value": "0"
+    }
+  }
+],
+v7 = {
+  "kind": "Field",
+  "name": {
+    "kind": "Name",
+    "value": "id"
+  }
+},
+v8 = {
+  "kind": "Field",
+  "name": {
+    "kind": "Name",
+    "value": "totalCount"
+  }
+},
+v9 = {
+  "kind": "Name",
+  "value": "TodoListFooter_todosFragment"
+},
+v10 = {
+  "kind": "Name",
+  "value": "TodoList_queryFragment"
+},
+v11 = {
+  "kind": "Field",
+  "name": {
+    "kind": "Name",
+    "value": "isCompleted"
+  }
+},
+v12 = {
+  "kind": "Name",
+  "value": "Todo_todoFragment"
+},
+v13 = {
+  "kind": "Field",
+  "name": {
+    "kind": "Name",
+    "value": "__fragments"
+  },
+  "directives": [
+    {
+      "kind": "Directive",
+      "name": {
+        "kind": "Name",
+        "value": "client"
+      }
+    }
+  ]
+};
+return {
   "executionQueryDocument": {
     "kind": "Document",
     "definitions": [
       {
         "kind": "OperationDefinition",
         "operation": "query",
-        "name": {
-          "kind": "Name",
-          "value": "AppQuery"
-        },
-        "variableDefinitions": [
-          {
-            "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
-              "name": {
-                "kind": "Name",
-                "value": "includeSomeOtherField"
-              }
-            },
-            "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Boolean"
-                }
-              }
-            }
-          }
-        ],
+        "name": (v0/*: any*/),
+        "variableDefinitions": (v2/*: any*/),
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
             {
               "kind": "Field",
-              "alias": {
-                "kind": "Name",
-                "value": "todoStats"
-              },
-              "name": {
-                "kind": "Name",
-                "value": "todos"
-              },
-              "arguments": [
-                {
-                  "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "first"
-                  },
-                  "value": {
-                    "kind": "IntValue",
-                    "value": "0"
-                  }
-                }
-              ],
+              "alias": (v3/*: any*/),
+              "name": (v4/*: any*/),
+              "arguments": (v6/*: any*/),
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
-                  {
-                    "kind": "Field",
-                    "name": {
-                      "kind": "Name",
-                      "value": "id"
-                    }
-                  },
-                  {
-                    "kind": "Field",
-                    "name": {
-                      "kind": "Name",
-                      "value": "totalCount"
-                    }
-                  },
+                  (v7/*: any*/),
+                  (v8/*: any*/),
                   {
                     "kind": "FragmentSpread",
-                    "name": {
-                      "kind": "Name",
-                      "value": "TodoListFooter_todosFragment"
-                    }
+                    "name": (v9/*: any*/)
                   }
                 ]
               }
             },
             {
               "kind": "FragmentSpread",
-              "name": {
-                "kind": "Name",
-                "value": "TodoList_queryFragment"
-              }
+              "name": (v10/*: any*/)
             }
           ]
         }
       },
       {
         "kind": "FragmentDefinition",
-        "name": {
-          "kind": "Name",
-          "value": "TodoListFooter_todosFragment"
-        },
+        "name": (v9/*: any*/),
         "typeCondition": {
           "kind": "NamedType",
           "name": {
@@ -194,22 +230,13 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
                 "value": "uncompletedCount"
               }
             },
-            {
-              "kind": "Field",
-              "name": {
-                "kind": "Name",
-                "value": "id"
-              }
-            }
+            (v7/*: any*/)
           ]
         }
       },
       {
         "kind": "FragmentDefinition",
-        "name": {
-          "kind": "Name",
-          "value": "TodoList_queryFragment"
-        },
+        "name": (v10/*: any*/),
         "typeCondition": {
           "kind": "NamedType",
           "name": {
@@ -222,17 +249,11 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
           "selections": [
             {
               "kind": "Field",
-              "name": {
-                "kind": "Name",
-                "value": "todos"
-              },
+              "name": (v4/*: any*/),
               "arguments": [
                 {
                   "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "first"
-                  },
+                  "name": (v5/*: any*/),
                   "value": {
                     "kind": "IntValue",
                     "value": "5"
@@ -295,26 +316,11 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
                           "selectionSet": {
                             "kind": "SelectionSet",
                             "selections": [
-                              {
-                                "kind": "Field",
-                                "name": {
-                                  "kind": "Name",
-                                  "value": "id"
-                                }
-                              },
-                              {
-                                "kind": "Field",
-                                "name": {
-                                  "kind": "Name",
-                                  "value": "isCompleted"
-                                }
-                              },
+                              (v7/*: any*/),
+                              (v11/*: any*/),
                               {
                                 "kind": "FragmentSpread",
-                                "name": {
-                                  "kind": "Name",
-                                  "value": "Todo_todoFragment"
-                                }
+                                "name": (v12/*: any*/)
                               },
                               {
                                 "kind": "Field",
@@ -362,13 +368,7 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
                       ]
                     }
                   },
-                  {
-                    "kind": "Field",
-                    "name": {
-                      "kind": "Name",
-                      "value": "id"
-                    }
-                  }
+                  (v7/*: any*/)
                 ]
               }
             }
@@ -377,10 +377,7 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
       },
       {
         "kind": "FragmentDefinition",
-        "name": {
-          "kind": "Name",
-          "value": "Todo_todoFragment"
-        },
+        "name": (v12/*: any*/),
         "typeCondition": {
           "kind": "NamedType",
           "name": {
@@ -391,13 +388,7 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
-            {
-              "kind": "Field",
-              "name": {
-                "kind": "Name",
-                "value": "id"
-              }
-            },
+            (v7/*: any*/),
             {
               "kind": "Field",
               "name": {
@@ -405,13 +396,7 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
                 "value": "description"
               }
             },
-            {
-              "kind": "Field",
-              "name": {
-                "kind": "Name",
-                "value": "isCompleted"
-              }
-            },
+            (v11/*: any*/),
             {
               "kind": "Field",
               "name": {
@@ -432,13 +417,7 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
                         "kind": "Name",
                         "value": "if"
                       },
-                      "value": {
-                        "kind": "Variable",
-                        "name": {
-                          "kind": "Name",
-                          "value": "includeSomeOtherField"
-                        }
-                      }
+                      "value": (v1/*: any*/)
                     }
                   ]
                 }
@@ -455,75 +434,21 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
       {
         "kind": "OperationDefinition",
         "operation": "query",
-        "name": {
-          "kind": "Name",
-          "value": "AppQuery"
-        },
-        "variableDefinitions": [
-          {
-            "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
-              "name": {
-                "kind": "Name",
-                "value": "includeSomeOtherField"
-              }
-            },
-            "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Boolean"
-                }
-              }
-            }
-          }
-        ],
+        "name": (v0/*: any*/),
+        "variableDefinitions": (v2/*: any*/),
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
             {
               "kind": "Field",
-              "alias": {
-                "kind": "Name",
-                "value": "todoStats"
-              },
-              "name": {
-                "kind": "Name",
-                "value": "todos"
-              },
-              "arguments": [
-                {
-                  "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "first"
-                  },
-                  "value": {
-                    "kind": "IntValue",
-                    "value": "0"
-                  }
-                }
-              ],
+              "alias": (v3/*: any*/),
+              "name": (v4/*: any*/),
+              "arguments": (v6/*: any*/),
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
-                  {
-                    "kind": "Field",
-                    "name": {
-                      "kind": "Name",
-                      "value": "id"
-                    }
-                  },
-                  {
-                    "kind": "Field",
-                    "name": {
-                      "kind": "Name",
-                      "value": "totalCount"
-                    }
-                  },
+                  (v7/*: any*/),
+                  (v8/*: any*/),
                   {
                     "kind": "InlineFragment",
                     "typeCondition": {
@@ -536,47 +461,18 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
-                        {
-                          "kind": "Field",
-                          "name": {
-                            "kind": "Name",
-                            "value": "__fragments"
-                          },
-                          "directives": [
-                            {
-                              "kind": "Directive",
-                              "name": {
-                                "kind": "Name",
-                                "value": "client"
-                              }
-                            }
-                          ]
-                        }
+                        (v13/*: any*/)
                       ]
                     }
                   }
                 ]
               }
             },
-            {
-              "kind": "Field",
-              "name": {
-                "kind": "Name",
-                "value": "__fragments"
-              },
-              "directives": [
-                {
-                  "kind": "Directive",
-                  "name": {
-                    "kind": "Name",
-                    "value": "client"
-                  }
-                }
-              ]
-            }
+            (v13/*: any*/)
           ]
         }
       }
     ]
   }
 };
+})();

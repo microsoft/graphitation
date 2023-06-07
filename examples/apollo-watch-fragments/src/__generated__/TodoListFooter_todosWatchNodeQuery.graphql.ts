@@ -20,7 +20,24 @@ fragment TodoListFooter_todosFragment on TodosConnection {
 }
 */
 
-export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = {
+export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = (function(){
+var v0 = {
+  "kind": "Name",
+  "value": "id"
+},
+v1 = {
+  "kind": "Variable",
+  "name": (v0/*: any*/)
+},
+v2 = {
+  "kind": "Name",
+  "value": "TodoListFooter_todosFragment"
+},
+v3 = {
+  "kind": "Field",
+  "name": (v0/*: any*/)
+};
+return {
   "watchQueryDocument": {
     "kind": "Document",
     "definitions": [
@@ -34,13 +51,7 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
         "variableDefinitions": [
           {
             "kind": "VariableDefinition",
-            "variable": {
-              "kind": "Variable",
-              "name": {
-                "kind": "Name",
-                "value": "id"
-              }
-            },
+            "variable": (v1/*: any*/),
             "type": {
               "kind": "NonNullType",
               "type": {
@@ -65,17 +76,8 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
               "arguments": [
                 {
                   "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "id"
-                  },
-                  "value": {
-                    "kind": "Variable",
-                    "name": {
-                      "kind": "Name",
-                      "value": "id"
-                    }
-                  }
+                  "name": (v0/*: any*/),
+                  "value": (v1/*: any*/)
                 }
               ],
               "selectionSet": {
@@ -90,18 +92,9 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
                   },
                   {
                     "kind": "FragmentSpread",
-                    "name": {
-                      "kind": "Name",
-                      "value": "TodoListFooter_todosFragment"
-                    }
+                    "name": (v2/*: any*/)
                   },
-                  {
-                    "kind": "Field",
-                    "name": {
-                      "kind": "Name",
-                      "value": "id"
-                    }
-                  },
+                  (v3/*: any*/),
                   {
                     "kind": "InlineFragment",
                     "typeCondition": {
@@ -141,10 +134,7 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
       },
       {
         "kind": "FragmentDefinition",
-        "name": {
-          "kind": "Name",
-          "value": "TodoListFooter_todosFragment"
-        },
+        "name": (v2/*: any*/),
         "typeCondition": {
           "kind": "NamedType",
           "name": {
@@ -162,13 +152,7 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
                 "value": "uncompletedCount"
               }
             },
-            {
-              "kind": "Field",
-              "name": {
-                "kind": "Name",
-                "value": "id"
-              }
-            }
+            (v3/*: any*/)
           ]
         }
       }
@@ -182,3 +166,4 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
     }
   }
 };
+})();
