@@ -172,9 +172,9 @@ describe(addTypesToRequestDocument, () => {
 
       const operationNode = document.definitions[0] as OperationDefinitionNode;
       const fieldNode = operationNode.selectionSet.selections[0] as FieldNode;
-      const argumentNode = fieldNode.arguments![0];
+      const argumentNode = fieldNode.arguments?.[0];
 
-      expect(argumentNode.__type).toMatchInlineSnapshot(`
+      expect(argumentNode?.__type).toMatchInlineSnapshot(`
         {
           "kind": "NonNullType",
           "type": {
@@ -205,9 +205,9 @@ describe(addTypesToRequestDocument, () => {
 
       const operationNode = document.definitions[0] as OperationDefinitionNode;
       const fieldNode = operationNode.selectionSet.selections[0] as FieldNode;
-      const argumentNode = fieldNode.arguments![0];
+      const argumentNode = fieldNode.arguments?.[0];
 
-      expect(argumentNode.__type).toMatchInlineSnapshot(`
+      expect(argumentNode?.__type).toMatchInlineSnapshot(`
         {
           "kind": "NonNullType",
           "type": {
@@ -220,7 +220,7 @@ describe(addTypesToRequestDocument, () => {
         }
       `);
 
-      expect(fieldNode.arguments![1]?.__type).toMatchInlineSnapshot(`
+      expect(fieldNode.arguments?.[1]?.__type).toMatchInlineSnapshot(`
         {
           "kind": "NonNullType",
           "type": {
@@ -233,9 +233,9 @@ describe(addTypesToRequestDocument, () => {
         }
       `);
 
-      const secondArgument = fieldNode.arguments![1];
+      const secondArgument = fieldNode.arguments?.[1];
 
-      expect(secondArgument.__type).toMatchInlineSnapshot(`
+      expect(secondArgument?.__type).toMatchInlineSnapshot(`
         {
           "kind": "NonNullType",
           "type": {
@@ -248,7 +248,7 @@ describe(addTypesToRequestDocument, () => {
         }
       `);
 
-      expect(secondArgument.__defaultValue).toMatchInlineSnapshot(`undefined`);
+      expect(secondArgument?.__defaultValue).toMatchInlineSnapshot(`undefined`);
     });
 
     it("adds missing types with default values", () => {
@@ -265,9 +265,9 @@ describe(addTypesToRequestDocument, () => {
 
       const operationNode = document.definitions[0] as OperationDefinitionNode;
       const fieldNode = operationNode.selectionSet.selections[0] as FieldNode;
-      const argumentNode = fieldNode.arguments![0];
+      const argumentNode = fieldNode.arguments?.[0];
 
-      expect(argumentNode.__type).toMatchInlineSnapshot(`
+      expect(argumentNode?.__type).toMatchInlineSnapshot(`
         {
           "kind": "NonNullType",
           "type": {
@@ -280,7 +280,7 @@ describe(addTypesToRequestDocument, () => {
         }
       `);
 
-      expect(fieldNode.arguments![1]?.__type).toMatchInlineSnapshot(`
+      expect(fieldNode.arguments?.[1]?.__type).toMatchInlineSnapshot(`
         {
           "kind": "NonNullType",
           "type": {

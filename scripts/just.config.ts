@@ -6,7 +6,6 @@ import {
   argv,
   parallel,
   EsbuildBuildOptions,
-  series,
 } from "just-scripts";
 import * as path from "path";
 import * as glob from "fast-glob";

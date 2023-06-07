@@ -1,15 +1,6 @@
 import ts, { factory } from "typescript";
 import {
-  ASTNode,
-  DocumentNode,
-  isTypeDefinitionNode,
-  isTypeExtensionNode,
-  Kind,
-} from "graphql";
-import { ASTReducer, visit } from "./typedVisitor";
-import {
   Field,
-  InputObjectType,
   ObjectType,
   UnionType,
   TsCodegenContext,
@@ -18,16 +9,12 @@ import {
 } from "./context";
 import {
   getResolverReturnType,
-  createNonNullableTemplate,
   getSubscriptionResolver,
   createUnionResolveType,
   createInterfaceResolveType,
 } from "./utilities";
 
-export function generateResolvers(
-  context: TsCodegenContext,
-  document: DocumentNode,
-): ts.SourceFile {
+export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
   const statements: ts.Statement[] = [];
   statements.push(...context.getBasicImports());
   statements.push(
@@ -292,7 +279,7 @@ function createInterfaceTypeResolvers(
         [factory.createToken(ts.SyntaxKind.ExportKeyword)],
         factory.createIdentifier("__resolveType"),
         undefined,
-        createInterfaceResolveType(context, type),
+        createInterfaceResolveType(context),
       ),
     ]),
     ts.NodeFlags.Namespace,

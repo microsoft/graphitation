@@ -72,7 +72,7 @@ export type {
   InputObjectTypeExtensionNode,
 } from "./ast/TypedAST";
 
-export {
+export type {
   BeforeFieldResolveHookArgs,
   AfterFieldResolveHookArgs,
   AfterFieldCompleteHookArgs,

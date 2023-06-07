@@ -23,9 +23,7 @@ import { graphql } from "@graphitation/graphql-js-tag";
 import { generate, MockResolvers } from "..";
 import { TypeMap } from "./__generated__/schema-types";
 
-const {
-  FIXTURE_TAG,
-} = require("relay-test-utils-internal/lib/generateTestsFromFixtures");
+import { FIXTURE_TAG } from "relay-test-utils-internal/lib/generateTestsFromFixtures";
 
 const schema = buildSchema(
   readFileSync(
@@ -313,7 +311,7 @@ test("generate mock using custom mock functions", () => {
       ${fragment}
     `,
     {
-      ID(context, generateId) {
+      ID(_context, generateId) {
         return `my-id-${String(generateId() + 1000)}`;
       },
       String({ name }) {
@@ -435,7 +433,7 @@ test("generate mock using custom mock functions for object type (multiple object
           name: "My user name",
         };
       },
-      Image: (...args) => {
+      Image: (..._args) => {
         return {
           width: 200,
           height: 100,
@@ -1196,7 +1194,7 @@ describe("with @relay_test_operation", () => {
         }
       `,
       {
-        User(_, generateId) {
+        User(_, _generateId) {
           return {
             emailAddresses: [],
           };
@@ -1232,7 +1230,7 @@ describe("with @relay_test_operation", () => {
         }
       `,
       {
-        FriendsConnection(_, generateId) {
+        FriendsConnection(_, _generateId) {
           return {
             edges: Array(5).fill(undefined),
           };
@@ -1268,7 +1266,7 @@ describe("with @relay_test_operation", () => {
         }
       `,
       {
-        FriendsConnection(_, generateId) {
+        FriendsConnection(_, _generateId) {
           return {
             edges: [null, undefined],
           };
@@ -1498,7 +1496,7 @@ describe("with @relay_test_operation", () => {
         }
       `,
       {
-        User(context) {
+        User(_context) {
           return {
             // TODO: The upstream test here returns a string instead of a list.
             emailAddresses: ["my@email.com"],
@@ -1526,7 +1524,7 @@ describe("with @relay_test_operation", () => {
         }
       `,
       {
-        User(context) {
+        User(_context) {
           return {
             environment: "Web" as any,
           };
@@ -1550,7 +1548,7 @@ describe("with @relay_test_operation", () => {
         }
       `,
       {
-        User(context) {
+        User(_context) {
           return {
             traits: ["CHEERFUL", "DERISIVE"],
           };
@@ -1573,7 +1571,7 @@ describe("with @relay_test_operation", () => {
           }
         `,
         {
-          User(context) {
+          User(_context) {
             return {
               environment: "INVALID_VALUE" as any,
             };
@@ -1598,7 +1596,7 @@ describe("with @relay_test_operation", () => {
         }
       `,
       {
-        User(context) {
+        User(_context) {
           return {
             environment: null,
           };

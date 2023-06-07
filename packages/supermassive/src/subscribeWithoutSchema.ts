@@ -30,9 +30,9 @@ import {
   ObjectTypeResolver,
   FunctionFieldResolver,
   ExecutionWithoutSchemaArgs,
-  FieldResolver,
   Resolvers,
   ExecutionResult,
+  FieldResolverObject,
 } from "./types";
 
 /**
@@ -73,7 +73,7 @@ export async function subscribeWithoutSchema(
 
   const combinedResolvers = schemaResolvers
     ? mergeResolvers(resolvers, schemaResolvers)
-    : resolvers;
+    : (resolvers as Resolvers);
 
   const resultOrStream = await createSourceEventStream(
     combinedResolvers,
@@ -146,7 +146,7 @@ export async function createSourceEventStream(
   contextValue?: unknown,
   variableValues?: Maybe<{ readonly [variable: string]: unknown }>,
   operationName?: Maybe<string>,
-  fieldResolver?: Maybe<FunctionFieldResolver<any, any>>,
+  fieldResolver?: Maybe<FunctionFieldResolver<unknown, unknown>>,
 ): Promise<AsyncIterable<unknown> | ExecutionResult> {
   // If arguments are missing or incorrectly typed, this is an internal
   // developer mistake which should throw an early error.
@@ -225,12 +225,13 @@ async function executeSubscription(
   } else {
     returnTypeNode = fieldNodes[0].__type as TypeNode;
     returnTypeName = typeNameFromAST(returnTypeNode);
-    const typeResolvers = exeContext.resolvers[typeName];
-    resolveFn = (
-      (typeResolvers as ObjectTypeResolver<any, any, any> | undefined)?.[
-        fieldName
-      ] as any
-    ).subscribe;
+    const typeResolvers = exeContext.resolvers[typeName] as
+      | ObjectTypeResolver<unknown, unknown, unknown>
+      | undefined;
+    const fieldResolver = typeResolvers?.[fieldName] as
+      | FieldResolverObject<unknown, unknown, unknown, unknown>
+      | undefined;
+    resolveFn = fieldResolver?.subscribe;
   }
 
   if (!resolveFn) {
@@ -253,7 +254,7 @@ async function executeSubscription(
     // It differs from "ResolveFieldValue" due to providing a different `resolveFn`.
 
     // Build a JS object of arguments from the field.arguments AST, using the
-    // variables scope to fulfill any variable references.
+    // variables scope to fulfill unknown variable references.
     const args = getArgumentValues(resolvers, fieldNodes[0], variableValues);
 
     // The resolve function's optional third argument is a context value that

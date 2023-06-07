@@ -1,6 +1,6 @@
 export function arraysAreEqual(
-  array1: readonly any[],
-  array2: readonly any[],
+  array1: readonly unknown[],
+  array2: readonly unknown[],
 ): boolean {
   if (array1.length !== array2.length) {
     return false;

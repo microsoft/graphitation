@@ -8,16 +8,16 @@ interface BaseExecuteFieldHookArgs extends BaseExecuteHookArgs {
   resolveInfo: ResolveInfo;
 }
 
-export interface BeforeFieldResolveHookArgs extends BaseExecuteFieldHookArgs {}
+export type BeforeFieldResolveHookArgs = BaseExecuteFieldHookArgs;
 
 export interface AfterFieldResolveHookArgs extends BaseExecuteFieldHookArgs {
   result?: unknown;
-  error?: any;
+  error?: unknown;
 }
 
 export interface AfterFieldCompleteHookArgs extends BaseExecuteFieldHookArgs {
   result?: unknown;
-  error?: any;
+  error?: unknown;
 }
 
 export interface BeforeFieldResolveHook {

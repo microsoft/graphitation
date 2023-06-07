@@ -1,14 +1,11 @@
-import { parse, subscribe as graphQLSubscribe, isInputType } from "graphql";
+import { parse, subscribe as graphQLSubscribe } from "graphql";
 import { subscribeWithoutSchema, subscribeWithSchema } from "..";
 import schema, { typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
 import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
-import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
-import { UserResolvers, Resolvers } from "../types";
-import { specifiedScalars } from "../values";
+import { UserResolvers } from "../types";
 import { forAwaitEach } from "iterall";
-import { mergeResolvers } from "../utilities/mergeResolvers";
 import { resolvers as extractedResolvers } from "../benchmarks/swapi-schema/__generated__/schema";
 
 interface TestCase {
@@ -69,13 +66,13 @@ const errorTestCases: Array<TestCase> = [
 describe("subscribeWithSchema", () => {
   test.each(testCases)(
     ".subscribeWithSchema %s",
-    async ({ name, document, variables }: TestCase) => {
+    async ({ document, variables }: TestCase) => {
       await compareResultsForSubscribeWithSchema(document, variables);
     },
   );
   test.each(errorTestCases)(
     ".subscribeWithSchema %s",
-    async ({ name, document, variables }: TestCase) => {
+    async ({ document, variables }: TestCase) => {
       await compareErrorsForSubscribeWithSchema(document, variables);
     },
   );
@@ -84,13 +81,13 @@ describe("subscribeWithSchema", () => {
 describe("subscribeWithoutSchema", () => {
   test.each(testCases)(
     ".subscribeWithoutSchema %s",
-    async ({ name, document, variables }: TestCase) => {
+    async ({ document, variables }: TestCase) => {
       await compareResultsForSubscribeWithoutSchema(document, variables);
     },
   );
   test.each(errorTestCases)(
     ".subscribeWithoutSchema %s",
-    async ({ name, document, variables }: TestCase) => {
+    async ({ document, variables }: TestCase) => {
       await compareErrorsForSubscribeWithoutSchema(document, variables);
     },
   );
@@ -151,7 +148,7 @@ async function compareErrorsForSubscribeWithSchema(
   })) as any;
   let subscribeWithSchemaIteratorError;
   try {
-    await forAwaitEach(subscribeWithSchemaIterator, (result) => {});
+    await forAwaitEach(subscribeWithSchemaIterator, () => {});
   } catch (err: any) {
     subscribeWithSchemaIteratorError = err.message;
   }
@@ -167,7 +164,7 @@ async function compareErrorsForSubscribeWithSchema(
   })) as any;
 
   try {
-    await forAwaitEach(graphQLSubscribeIterator, (result) => {});
+    await forAwaitEach(graphQLSubscribeIterator, () => {});
   } catch (err: any) {
     graphqlSubscribeError = err.message;
   }
@@ -227,7 +224,7 @@ async function compareErrorsForSubscribeWithoutSchema(
       schemaResolvers: extractedResolvers,
       variableValues: variables,
     })) as any;
-    await forAwaitEach(subscribeWithoutSchemaIterator, (result) => {});
+    await forAwaitEach(subscribeWithoutSchemaIterator, () => {});
   } catch (err: any) {
     subscribeWithoutSchemaError = err.message;
   }
@@ -242,7 +239,7 @@ async function compareErrorsForSubscribeWithoutSchema(
       schema,
       variableValues: variables,
     })) as any;
-    await forAwaitEach(graphQLSubscribeIterator, (result) => {});
+    await forAwaitEach(graphQLSubscribeIterator, () => {});
   } catch (err: any) {
     graphqlSubscribeError = err.message;
   }

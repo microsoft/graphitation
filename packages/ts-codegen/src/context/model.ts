@@ -7,7 +7,7 @@ import {
 } from "graphql";
 import { ValueNode } from "graphql/language/ast";
 import { DefinitionModel } from "../types";
-import { createVariableNameFromImport, addModelSuffix } from "../utilities";
+import { createVariableNameFromImport } from "../utilities";
 import { getRelativePath } from "./utilities";
 
 export const MODEL_DIRECTIVE_NAME = "model";

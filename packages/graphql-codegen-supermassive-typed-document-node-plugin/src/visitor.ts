@@ -20,10 +20,7 @@ import {
   Kind,
   OperationDefinitionNode,
 } from "graphql";
-import {
-  addTypesToRequestDocument,
-  DocumentNode as SupermassiveDocumentNode,
-} from "@graphitation/supermassive";
+import { addTypesToRequestDocument } from "@graphitation/supermassive";
 import { optimizeDocumentNode } from "@graphql-tools/optimize";
 import gqlTag from "graphql-tag";
 

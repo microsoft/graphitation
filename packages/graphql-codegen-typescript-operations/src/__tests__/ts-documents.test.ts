@@ -5,6 +5,7 @@ import { plugin as tsPlugin } from "@graphql-codegen/typescript";
 import { mergeOutputs, Types } from "@graphql-codegen/plugin-helpers";
 
 describe("TypeScript Operations Plugin", () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const gitHuntSchema = buildClientSchema(require("./schema.json"));
 
   const schema = buildSchema(/* GraphQL */ `

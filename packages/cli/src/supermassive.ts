@@ -114,7 +114,7 @@ async function generateInterfaces(
       options.outputDir ? options.outputDir : "__generated__",
     );
 
-    let result = generateTS(document, {
+    const result = generateTS(document, {
       outputPath,
       documentPath: fullPath,
       contextImport: getContextPath(outputPath, options.contextImport) || null,

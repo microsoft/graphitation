@@ -1,22 +1,15 @@
 import ts, { factory } from "typescript";
-import { DocumentNode } from "graphql";
 import {
   ScalarType,
   TsCodegenContext,
   Type,
-  EnumType,
   InterfaceType,
   ObjectType,
   UnionType,
   TypeLocation,
 } from "./context";
-import { addModelSuffix } from "./utilities";
-import { DefinitionModel } from "./types";
 
-export function generateModels(
-  context: TsCodegenContext,
-  document: DocumentNode,
-): ts.SourceFile {
+export function generateModels(context: TsCodegenContext): ts.SourceFile {
   const statements = context
     .getAllTypes()
     .map((type) => createModelForType(context, type))

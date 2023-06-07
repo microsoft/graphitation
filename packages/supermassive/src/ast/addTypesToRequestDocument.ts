@@ -4,10 +4,8 @@ import {
   isListType,
   isNamedType,
   isNonNullType,
-  parseValue,
   TypeInfo,
   visit,
-  print,
   visitWithTypeInfo,
   Kind,
   astFromValue,
@@ -24,11 +22,11 @@ export function addTypesToRequestDocument(
 ): TypedAST.DocumentNode {
   const typeInfo = new TypeInfo(schema);
   return visit(
-    document as any,
+    document,
     visitWithTypeInfo(typeInfo, {
       Argument: {
         leave(node, _key, _parent, _path, ancestors) {
-          const argument = typeInfo.getArgument()!;
+          const argument = typeInfo.getArgument();
           if (argument) {
             const typeNode = generateTypeNode(argument.type);
             const newNode: TypedAST.ArgumentNode = {

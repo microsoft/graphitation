@@ -9,10 +9,7 @@ describe(extractImplicitTypes, () => {
   it("benchmark schema extract", () => {
     expect.assertions(1);
     const typeDefs = fs.readFileSync(
-      path.join(
-        __dirname,
-        "../../../../examples/supermassive-benchmarks/src/swapi-schema/schema.graphql",
-      ),
+      path.join(__dirname, "../benchmarks/swapi-schema/schema.graphql"),
       {
         encoding: "utf-8",
       },

@@ -166,14 +166,11 @@ beforeEach(() => {
 
 describe(useLazyLoadQuery, () => {
   it("uses Apollo's useQuery hook", async () => {
-    let tree: ReactTestRenderer;
-    act(() => {
-      tree = createTestRenderer(
-        <ApolloProvider client={client}>
-          <QueryComponent />
-        </ApolloProvider>,
-      );
-    });
+    const tree: ReactTestRenderer = createTestRenderer(
+      <ApolloProvider client={client}>
+        <QueryComponent />
+      </ApolloProvider>,
+    );
 
     const operation = client.mock.getMostRecentOperation();
     expect(getOperationName(operation.request.node)).toBe("hooksTestQuery");
@@ -187,7 +184,7 @@ describe(useLazyLoadQuery, () => {
       client.mock.resolve(operation, MockPayloadGenerator.generate(operation)),
     );
 
-    expect(tree!.root.findByType("div").props).toMatchObject({
+    expect(tree?.root.findByType("div").props).toMatchObject({
       id: "User",
       children: `<mock-value-for-field-"name">`,
     });
@@ -210,16 +207,13 @@ describe(useFragment, () => {
 
 describe(useSubscription, () => {
   it("uses Apollo's useSubscription hook and updates the store", async () => {
-    let tree: ReactTestRenderer;
-    act(() => {
-      tree = createTestRenderer(
-        <ApolloProvider client={client}>
-          <SubscriptionComponent>
-            <QueryComponent />
-          </SubscriptionComponent>
-        </ApolloProvider>,
-      );
-    });
+    const tree: ReactTestRenderer = createTestRenderer(
+      <ApolloProvider client={client}>
+        <SubscriptionComponent>
+          <QueryComponent />
+        </SubscriptionComponent>
+      </ApolloProvider>,
+    );
 
     const [subscriptionOperation, queryOperation] =
       client.mock.getAllOperations();
@@ -250,7 +244,7 @@ describe(useSubscription, () => {
       ),
     );
     // ...and verify
-    expect(tree!.root.findByType("div").props.children).toEqual(
+    expect(tree?.root.findByType("div").props.children).toEqual(
       "user-name-from-query",
     );
 
@@ -269,7 +263,7 @@ describe(useSubscription, () => {
       ),
     );
     // ...and verify
-    expect(tree!.root.findByType("div").props.children).toEqual(
+    expect(tree?.root.findByType("div").props.children).toEqual(
       "user-name-from-subscription",
     );
   });
@@ -345,8 +339,7 @@ describe(useSubscription, () => {
 
 describe("useMutation", () => {
   it("uses Apollo's useMutation hook", async () => {
-    let tree: ReactTestRenderer;
-    tree = createTestRenderer(
+    const tree = createTestRenderer(
       <ApolloProvider client={client}>
         <MutationComponent
           variables={{ name: "foo", id: "1" }}

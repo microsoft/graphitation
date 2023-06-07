@@ -1,4 +1,5 @@
 import {
+  GraphQLObjectType,
   executeSync,
   getNamedType,
   getNullableType,
@@ -24,7 +25,6 @@ import type {
   SelectionSetNode,
 } from "graphql";
 import { pathToArray } from "graphql/jsutils/Path";
-import type { Path } from "graphql/jsutils/Path";
 import {
   DefaultMockResolvers,
   createValueResolver,
@@ -44,7 +44,7 @@ export type { MockResolvers };
 
 export interface RequestDescriptor<Node = DocumentNode> {
   readonly node: Node;
-  readonly variables: Record<string, any>;
+  readonly variables: Record<string, unknown>;
 }
 
 export interface OperationDescriptor<
@@ -63,6 +63,7 @@ const TYPENAME_KEY = "__typename";
 
 export function generate<TypeMap extends DefaultMockResolvers>(
   operation: OperationDescriptor,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mockResolvers: MockResolvers<TypeMap> = DEFAULT_MOCK_RESOLVERS as any, // FIXME: Why does TS not accept this?
   enableDefer: undefined | false = false,
   generateId?: () => number,
@@ -77,7 +78,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
   //
   // TODO: Is this a bug in RelayMockPayloadGenerator?
   const undefinedBooleanVariables: string[] = [];
-  getOperationAST(operation.request.node)!.variableDefinitions?.forEach(
+  getOperationAST(operation.request.node)?.variableDefinitions?.forEach(
     (variableDefinition) => {
       if (
         variableDefinition.type.kind === "NamedType" &&
@@ -108,7 +109,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
     variableValues: operation.request.variables,
     rootValue: mockCompositeType(
       mockResolvers,
-      getRootType(operation),
+      getRootType(operation) as GraphQLObjectType,
       null,
       resolveValue,
       null,
@@ -155,10 +156,10 @@ export function generate<TypeMap extends DefaultMockResolvers>(
           const value = source[selectionName];
           const result = Array.isArray(value)
             ? value.map(generateValue)
-            : [generateValue(value as {})];
+            : [generateValue(value as object)];
           return result;
         } else {
-          return generateValue(source[selectionName] as {} | undefined);
+          return generateValue(source[selectionName] as object | undefined);
         }
       } else if (isScalarType(namedReturnType)) {
         if (source[selectionName] !== undefined) {
@@ -202,7 +203,7 @@ function mockCompositeType(
   resolveValue: ValueResolver,
   fieldNode: FieldNode | null,
   info: GraphQLResolveInfo | null,
-  args: { [argName: string]: any },
+  args: { [argName: string]: unknown },
   operation: OperationDescriptor<GraphQLSchema, DocumentNode>,
 ) {
   // Get the concrete type selection, concrete type on an abstract type
@@ -218,7 +219,7 @@ function mockCompositeType(
         ...acc,
         ...getPossibleConcreteTypeNamesFromAbstractTypeSelections(
           operation.schema,
-          fieldNode.selectionSet!,
+          fieldNode.selectionSet as SelectionSetNode,
           info.fragments,
         ),
       ],
@@ -308,10 +309,10 @@ function getDefaultValues(
   resolveValue: ValueResolver,
   fieldNode: FieldNode | null,
   info: GraphQLResolveInfo | null,
-  args: { [argName: string]: any },
+  args: { [argName: string]: unknown },
 ) {
   const defaultValues =
-    mockResolvers![typename] &&
+    mockResolvers?.[typename] &&
     (resolveValue(
       typename,
       {
@@ -333,7 +334,7 @@ function getDefaultValues(
   return defaultValues;
 }
 
-function isString(value: any): value is string {
+function isString(value: unknown): value is string {
   return typeof value === "string";
 }
 
@@ -387,7 +388,7 @@ function getFragmentSelection(
 
 function mockScalar(
   fieldNode: FieldNode,
-  args: { [argName: string]: any },
+  args: { [argName: string]: unknown },
   type: GraphQLScalarType,
   info: GraphQLResolveInfo,
   parentType: GraphQLCompositeType,
@@ -468,15 +469,17 @@ function removeDeferAndStream(doc: DocumentNode): DocumentNode {
   });
 }
 
-function getRootType(operation: OperationDescriptor): GraphQLNamedType {
+function getRootType(
+  operation: OperationDescriptor,
+): GraphQLObjectType | undefined | null {
   const rootType = getOperationAST(operation.request.node);
   invariant(rootType, "Expected operation to have a root type");
   switch (rootType.operation) {
     case "query":
-      return operation.schema.getQueryType()!;
+      return operation.schema.getQueryType();
     case "mutation":
-      return operation.schema.getMutationType()!;
+      return operation.schema.getMutationType();
     case "subscription":
-      return operation.schema.getSubscriptionType()!;
+      return operation.schema.getSubscriptionType();
   }
 }

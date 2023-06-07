@@ -2,10 +2,8 @@ import {
   ASTNode as GraphQLASTNode,
   GraphQLEnumType,
   GraphQLError,
-  GraphQLFormattedError,
   GraphQLInputObjectType,
   GraphQLLeafType,
-  GraphQLObjectType,
   GraphQLScalarType,
   isLeafType,
   Kind,
@@ -38,7 +36,6 @@ import { isUnionResolverType, isInterfaceResolverType } from "./definition";
 import { mergeResolvers } from "./utilities/mergeResolvers";
 import {
   ExecutionWithoutSchemaArgs,
-  FieldResolver,
   FunctionFieldResolver,
   InterfaceTypeResolver,
   ObjectTypeResolver,
@@ -91,8 +88,8 @@ export interface ExecutionContext {
   contextValue: unknown;
   operation: OperationDefinitionNode;
   variableValues: { [variable: string]: unknown };
-  fieldResolver: FunctionFieldResolver<any, any>;
-  typeResolver: TypeResolver<any, any>;
+  fieldResolver: FunctionFieldResolver<unknown, unknown>;
+  typeResolver: TypeResolver<unknown, unknown>;
   errors: Array<GraphQLError>;
   fieldExecutionHooks?: ExecutionHooks;
 }
@@ -125,7 +122,7 @@ export function executeWithoutSchema(
 
   const combinedResolvers = schemaResolvers
     ? mergeResolvers(resolvers, schemaResolvers)
-    : resolvers;
+    : (resolvers as Resolvers);
   // If arguments are missing or incorrect, throw an error.
   assertValidExecutionArguments(document, variableValues);
 
@@ -311,7 +308,7 @@ function executeOperation(
     }
     return result;
   } catch (error) {
-    exeContext.errors.push(error as any);
+    exeContext.errors.push(error as GraphQLError);
     return null;
   }
 }
@@ -431,7 +428,7 @@ function executeField(
     returnTypeName = typeNameFromAST(returnTypeNode);
     const typeResolvers = exeContext.resolvers[parentTypeName];
     resolveFn = (
-      typeResolvers as ObjectTypeResolver<any, any, any> | undefined
+      typeResolvers as ObjectTypeResolver<unknown, unknown, unknown> | undefined
     )?.[fieldName];
 
     if (typeof resolveFn !== "function" && resolveFn != null) {
@@ -685,7 +682,8 @@ function completeValue(
   }
 
   const returnTypeName = returnTypeNode.name.value;
-  let returnType: Resolver<any, any> = exeContext.resolvers[returnTypeName];
+  let returnType: Resolver<unknown, unknown> =
+    exeContext.resolvers[returnTypeName];
   if (!returnType) {
     returnType = specifiedScalars[returnTypeName];
   }
@@ -876,7 +874,8 @@ function ensureValidRuntimeType(
     );
   }
 
-  const runtimeType: Resolver<any, any> = exeContext.resolvers[runtimeTypeName];
+  const runtimeType: Resolver<unknown, unknown> =
+    exeContext.resolvers[runtimeTypeName];
 
   if (!runtimeType) {
     throw new GraphQLError(
@@ -898,7 +897,9 @@ function ensureValidRuntimeType(
   }
 }
 
-function getRuntimeTypeInstanceName(runtimeType: Resolver<any, any>): string {
+function getRuntimeTypeInstanceName(
+  runtimeType: Resolver<unknown, unknown>,
+): string {
   if (runtimeType instanceof GraphQLScalarType) {
     return "GraphQLScalarType";
   } else if (runtimeType instanceof GraphQLEnumType) {
@@ -921,7 +922,7 @@ function completeObjectValue(
   exeContext: ExecutionContext,
   returnTypeName: string,
   fieldNodes: Array<FieldNode>,
-  info: ResolveInfo,
+  _info: ResolveInfo,
   path: Path,
   result: unknown,
 ): PromiseOrValue<ObjMap<unknown>> {
@@ -932,17 +933,6 @@ function completeObjectValue(
     fieldNodes,
   );
   return executeFields(exeContext, returnTypeName, result, path, subFieldNodes);
-}
-
-function invalidReturnTypeError(
-  returnType: GraphQLObjectType,
-  result: unknown,
-  fieldNodes: Array<FieldNode>,
-): GraphQLError {
-  return new GraphQLError(
-    `Expected value of type "${returnType.name}" but got: ${inspect(result)}.`,
-    fieldNodes as ReadonlyArray<GraphQLASTNode>,
-  );
 }
 
 /**
@@ -1005,7 +995,7 @@ function invokeAfterFieldResolveHook(
   resolveInfo: ResolveInfo,
   exeContext: ExecutionContext,
   result?: unknown,
-  error?: any,
+  error?: unknown,
 ): void {
   const hook = exeContext.fieldExecutionHooks?.afterFieldResolve;
   if (!hook) {
@@ -1036,7 +1026,7 @@ function invokeAfterFieldCompleteHook(
   resolveInfo: ResolveInfo,
   exeContext: ExecutionContext,
   result?: unknown,
-  error?: any,
+  error?: unknown,
 ): void {
   const hook = exeContext.fieldExecutionHooks?.afterFieldComplete;
   if (!hook) {
@@ -1065,9 +1055,9 @@ function invokeAfterFieldCompleteHook(
 
 function executeSafe<T>(
   execute: () => T,
-  onComplete: (result: T | undefined, error: any) => void,
+  onComplete: (result: T | undefined, error: unknown) => void,
 ): T {
-  let error: any;
+  let error: unknown;
   let result: T | undefined;
   try {
     result = execute();
@@ -1075,12 +1065,12 @@ function executeSafe<T>(
     error = e;
   } finally {
     onComplete(result, error);
-    return result as T;
   }
+  return result as T;
 }
 
 function toGraphQLError(
-  originalError: any,
+  originalError: unknown,
   path: Path,
   prependMessage: string,
 ): GraphQLError {
@@ -1117,6 +1107,7 @@ export const defaultTypeResolver: TypeResolver<unknown, unknown> = function (
  * of calling that function while passing along args and context value.
  */
 export const defaultFieldResolver: FunctionFieldResolver<unknown, unknown> =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function (source: any, args, contextValue, info) {
     // ensure source is a value for which property access is acceptable.
     if (isObjectLike(source) || typeof source === "function") {

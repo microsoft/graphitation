@@ -16,7 +16,6 @@ import {
   FragmentDefinitionNode,
   DocumentNode,
   DefinitionNode,
-  OperationDefinitionNode,
 } from "graphql";
 import { extname } from "path";
 import {

@@ -1,24 +1,18 @@
 import {
   GraphQLESLintRule,
-  GraphQLESLintRuleContext,
   GraphQLESTreeNode,
 } from "@graphql-eslint/eslint-plugin";
-import { FragmentDefinitionNode, ASTNode } from "graphql";
-import { Kind } from "graphql";
-import { relative } from "path";
+import { FragmentDefinitionNode } from "graphql";
 import { checkDirForPkg } from "./utils";
 import path from "path";
 import camelCase from "lodash.camelcase";
-import { RuleFixer } from "@typescript-eslint/utils/dist/ts-eslint";
 import {
   getMissingLastDirectoryPrefixErrorMessage,
-  MISSING_OPERATION_NAME_ERROR_MESSAGE,
   isFilenameSuffixValid,
   isFilenamePrefixValid,
   reportError,
 } from "./operation-naming-conventions";
 
-const RULE_NAME = "fragment-naming-convention";
 const OPERATIONS = ["Query", "Mutation", "Subscription"];
 const CONDITIONAL_SUFFIX_REGEXP = /^[a-z]+(?:[A-Z][a-z]+)*$/;
 

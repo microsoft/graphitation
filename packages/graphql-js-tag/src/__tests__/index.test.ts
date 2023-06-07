@@ -1,5 +1,5 @@
 import { graphql } from "..";
-import { DocumentNode, parse, print } from "graphql";
+import { parse, print } from "graphql";
 
 describe(graphql, () => {
   const SomeFragment = graphql`
