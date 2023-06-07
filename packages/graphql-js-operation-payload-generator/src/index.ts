@@ -316,7 +316,7 @@ function getDefaultValues(
     (resolveValue(
       typename,
       {
-        parentType: null,
+        parentType: info ? info.parentType.name : null,
         name: fieldNode?.name.value || "",
         alias: fieldNode?.alias?.value || null,
         path: info ? pathToArray(info.path).filter(isString) : [],

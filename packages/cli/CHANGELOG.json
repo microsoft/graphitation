@@ -2,6 +2,36 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Wed, 07 Jun 2023 14:13:32 GMT",
+      "tag": "@graphitation/cli_v1.5.8",
+      "version": "1.5.8",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/cli",
+            "commit": "not available",
+            "comment": "Fix all new lint issues"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 07 Jun 2023 14:07:35 GMT",
+      "tag": "@graphitation/cli_v1.5.8",
+      "version": "1.5.8",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/cli",
+            "commit": "5219d8efa17a1286fd664b52ecc95c0535359efb",
+            "comment": "Fix all new lint issues"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 07 Jun 2023 08:48:18 GMT",
       "tag": "@graphitation/cli_v1.5.8",
       "version": "1.5.8",

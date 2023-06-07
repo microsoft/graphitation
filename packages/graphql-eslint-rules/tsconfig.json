@@ -4,7 +4,6 @@
     "composite": true,
     "tsBuildInfoFile": ".tsbuildinfo",
     "rootDir": "src",
-    "skipLibCheck": true,
     "outDir": "lib"
   },
   "include": ["src"],

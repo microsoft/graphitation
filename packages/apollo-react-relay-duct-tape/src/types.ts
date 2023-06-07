@@ -1,8 +1,12 @@
+import type { DocumentNode } from "graphql";
+
 export interface Variables {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [name: string]: any;
 }
 
 export interface Context {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [name: string]: any;
 }
 
@@ -12,6 +16,16 @@ export interface OperationType {
   readonly response: unknown;
   readonly rawResponse?: unknown;
 }
+
+export type GraphQLTaggedNode =
+  | (DocumentNode & { watchQueryDocument?: never })
+  | { watchQueryDocument: DocumentNode; executeQueryDocument?: DocumentNode };
+
+export type FetchPolicy =
+  | "store-or-network"
+  | "store-and-network"
+  | "network-only"
+  | "store-only";
 
 /**
  * relay-compiler-language-typescript support for fragment references

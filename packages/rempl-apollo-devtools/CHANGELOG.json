@@ -2,6 +2,36 @@
   "name": "@graphitation/rempl-apollo-devtools",
   "entries": [
     {
+      "date": "Wed, 07 Jun 2023 14:13:33 GMT",
+      "tag": "@graphitation/rempl-apollo-devtools_v1.0.0",
+      "version": "1.0.0",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/rempl-apollo-devtools",
+            "commit": "not available",
+            "comment": "Fix all new lint issues"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 07 Jun 2023 14:07:36 GMT",
+      "tag": "@graphitation/rempl-apollo-devtools_v1.0.0",
+      "version": "1.0.0",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/rempl-apollo-devtools",
+            "commit": "5219d8efa17a1286fd664b52ecc95c0535359efb",
+            "comment": "Fix all new lint issues"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 07 Jun 2023 08:48:18 GMT",
       "tag": "@graphitation/rempl-apollo-devtools_v1.0.0",
       "version": "1.0.0",

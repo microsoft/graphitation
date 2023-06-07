@@ -1,4 +1,3 @@
-// import { useNovaFacade } from "@nova-facade/react";
 import { DocumentNode } from "graphql";
 import invariant from "invariant";
 import {
@@ -7,12 +6,28 @@ import {
   useMutation as useApolloMutation,
   SubscriptionHookOptions as ApolloSubscriptionHookOptions,
   ErrorPolicy as ApolloErrorPolicy,
+  ApolloClient,
 } from "@apollo/client";
 
-// import { GraphQLTaggedNode } from "./taggedNode";
-import { KeyType, KeyTypeData, OperationType } from "./types";
-
-export type GraphQLTaggedNode = DocumentNode;
+import {
+  FetchPolicy,
+  GraphQLTaggedNode,
+  KeyType,
+  KeyTypeData,
+  OperationType,
+} from "./types";
+import {
+  RefetchFn,
+  PaginationFn,
+  useCompiledLazyLoadQuery,
+  useCompiledFragment,
+  useCompiledRefetchableFragment,
+  useCompiledPaginationFragment,
+} from "./storeObservation/compiledHooks";
+import { convertFetchPolicy } from "./convertFetchPolicy";
+import { useOverridenOrDefaultApolloClient } from "./useOverridenOrDefaultApolloClient";
+import type { CompiledArtefactModule } from "@graphitation/apollo-react-relay-duct-tape-compiler";
+import { FragmentReference } from "./storeObservation/compiledHooks/types";
 
 /**
  * Executes a GraphQL query.
@@ -20,43 +35,12 @@ export type GraphQLTaggedNode = DocumentNode;
  * This hook is called 'lazy' as it is used to fetch a GraphQL query _during_ render. This hook can trigger multiple
  * round trips, one for loading and one for resolving.
  *
- * @see {useFragment} This function largely follows the documentation of `useFragment`, except that this is a root of a
- *                    GraphQL operation and thus does not take in any props such as opaque fragment references.
- *
- * @example
- ```typescript
- import { graphql, useLazyLoadQuery } from "@nova-facade/react-graphql";
- import { SomeReactComponent, fragment as SomeReactComponent_someGraphQLType } from "./SomeReactComponent";
- import { SomeRootReactComponentQuery } from "./__generated__/SomeRootReactComponentQuery.graphql";
-
- const query = graphql`
-   query SomeRootReactComponentQuery {
-     someGraphQLType {
-       ...SomeReactComponent_someGraphQLType
-     }
-   }
-   ${SomeReactComponent_someGraphQLType}
- `;
-
- export const SomeRootReactComponent: React.FC = () => {
-   const result = useLazyLoadQuery<SomeRootReactComponentQuery>(query);
-   if (result.error) {
-     throw result.error;
-   } else if (!result.data) {
-     // Loading
-     return null;
-   }
-
-   return (
-     <SomeReactComponent someGraphQLType={result.data.someGraphQLType} />
-   );
- };
- ```
+ * @see {@link https://microsoft.github.io/graphitation/docs/apollo-react-relay-duct-tape/use-lazy-load-query}
  *
  * @param query The query operation to perform.
  * @param variables Object containing the variable values to fetch the query. These variables need to match GraphQL
  *                  variables declared inside the query.
- * @param options Options passed on to the underlying implementation. 
+ * @param options Options passed on to the underlying implementation.
  * @param options.context The query context to pass along the apollo link chain. Should be avoided when possible as
  *                        it will not be compatible with Relay APIs.
  * @returns An object with either an error, the result data, or neither while loading.
@@ -64,9 +48,21 @@ export type GraphQLTaggedNode = DocumentNode;
 export function useLazyLoadQuery<TQuery extends OperationType>(
   query: GraphQLTaggedNode,
   variables: TQuery["variables"],
-  options?: { fetchPolicy?: "cache-first"; context?: TQuery["context"] },
+  options?: { fetchPolicy?: FetchPolicy; context?: TQuery["context"] },
 ): { error?: Error; data?: TQuery["response"] } {
-  return useApolloQuery(query as any, { variables, ...options });
+  const apolloOptions = options && {
+    ...options,
+    fetchPolicy: convertFetchPolicy(options.fetchPolicy),
+  };
+  if (query.watchQueryDocument) {
+    return useCompiledLazyLoadQuery(query as CompiledArtefactModule, {
+      variables,
+      ...apolloOptions,
+    });
+  } else {
+    const client = useOverridenOrDefaultApolloClient();
+    return useApolloQuery(query, { client, variables, ...apolloOptions });
+  }
 }
 
 /**
@@ -78,66 +74,89 @@ export function useLazyLoadQuery<TQuery extends OperationType>(
  * For children that *do* have their own data requirements expressed using GraphQL, the fragment should ensure to
  * spread in the child's fragment.
  *
- * For each fragment defined using the `graphql` tagged template function, the Nova graphql-compiler will emit
- * TypeScript typings that correspond to the selected fields and referenced child component fragments. These typings
- * live in files in the sibling `./__generated__/` directory and are called after the fragment name. The compiler will
- * enforce some constraints about the fragment name, such that it starts with the name of the file it is defined in
- * (i.e. the name of the component) and ends with the name of the fragment reference prop that this component takes in
- * (which typically will be named after the GraphQL type that the fragment is defined on).
- *
- * The typing that has a `$key` suffix is meant to be used for the opaque fragment reference prop, whereas the typing
- * without a suffix describes the actual data and is only meant for usage internally to the file. When the opaque
- * fragment reference prop is passed to a `useFragment` call, the returned data will be unmasked and be typed according
- * to the typing without a suffix. As such, the unmasked typing is only ever needed when extracting pieces of the
- * component to the file scope. For functions extracted to different files, however, you should type those separately
- * and *not* use the emitted typings.
- *
- * @example
- ```typescript
- import { graphql, useFragment } from "@nova-facade/react-graphql";
- import { SomeChildReactComponent, fragment as SomeChildReactComponent_someGraphQLType } from "./SomeChildReactComponent";
- import { SomeReactComponent_someGraphQLType$key } from "./__generated__/SomeReactComponent_someGraphQLType.graphql";
-
- export const fragment = graphql`
-   fragment SomeReactComponent_someGraphQLType on SomeGraphQLType {
-     someDataThatThisComponentNeeds
-     ...SomeChildReactComponent_someGraphQLType
-   }
-   ${SomeChildReactComponent_someGraphQLType}
- `;
-
- export interface SomeReactComponentProps {
-   someGraphQLType: SomeReactComponent_someGraphQLType$key;
- }
-
- export const SomeReactComponent: React.FunctionComponent<SomeReactComponentProps> = props => {
-   const someGraphQLType = useFragment(fragment, props.someGraphQLType);
-   return (
-     <div>
-       <span>{someGraphQLType.someDataThatThisComponentNeeds}</span>
-       <SomeChildReactComponent someGraphQLType={someGraphQLType} />
-     </div>
-   );
- }
- ```
+ * @see {@link https://microsoft.github.io/graphitation/docs/apollo-react-relay-duct-tape/use-fragment}
  *
  * @note For now, the fragment objects should be exported such that parent's can interpolate them into their own
  *       GraphQL documents. This may change in the future when/if we entirely switch to static compilation and will
  *       allow us to also move the usage of the graphql tagged template function inline at the `useFragment` call-site.
  *
- * @todo 1613321: Connect useFragment hooks directly to a GraphQL client store for targeted updates. Currently the data
- *       is simply unmasked at compile-time but otherwise passed through from the parent at run-time.
- *
- * @param _fragmentInput The GraphQL fragment document created using the `graphql` tagged template function.
+ * @param fragmentInput The GraphQL fragment document created using the `graphql` tagged template function.
  * @param fragmentRef The opaque fragment reference passed in by a parent component that has spread in this component's
  *                    fragment.
  * @returns The data corresponding to the field selections.
  */
 export function useFragment<TKey extends KeyType>(
-  _fragmentInput: GraphQLTaggedNode,
+  fragmentInput: GraphQLTaggedNode,
   fragmentRef: TKey,
 ): KeyTypeData<TKey> {
-  return fragmentRef as unknown;
+  if (fragmentInput.watchQueryDocument) {
+    return useCompiledFragment(fragmentInput, fragmentRef as FragmentReference);
+  } else {
+    return fragmentRef as unknown;
+  }
+}
+
+/**
+ * Equivalent to `useFragment`, but allows refetching of its subtree of the overall query.
+ *
+ * @see {@link https://microsoft.github.io/graphitation/docs/apollo-react-relay-duct-tape/use-refetchable-fragment}
+ *
+ * @param fragmentInput The GraphQL fragment document created using the `graphql` tagged template function.
+ * @param fragmentRef The opaque fragment reference passed in by a parent component that has spread in this component's
+ *                    fragment.
+ * @returns The data corresponding to the field selections and a function to perform the refetch.
+ */
+export function useRefetchableFragment<
+  TQuery extends OperationType,
+  TKey extends KeyType,
+>(
+  fragmentInput: GraphQLTaggedNode,
+  fragmentRef: TKey,
+): [data: KeyTypeData<TKey>, refetch: RefetchFn<TQuery["variables"]>] {
+  invariant(
+    !!fragmentInput.watchQueryDocument,
+    "useRefetchableFragment is only supported at this time when using compilation",
+  );
+  return useCompiledRefetchableFragment(
+    fragmentInput as CompiledArtefactModule,
+    fragmentRef as FragmentReference,
+  );
+}
+
+/**
+ * Equivalent to `useFragment`, but allows pagination of its subtree of the overall query.
+ *
+ * @see {@link https://microsoft.github.io/graphitation/docs/apollo-react-relay-duct-tape/use-pagination-fragment}
+ *
+ * @param fragmentInput The GraphQL fragment document created using the `graphql` tagged template function.
+ * @param fragmentRef The opaque fragment reference passed in by a parent component that has spread in this component's
+ *                    fragment.
+ * @returns The data corresponding to the field selections and functions to deal with pagination.
+ */
+export function usePaginationFragment<
+  TQuery extends OperationType,
+  TKey extends KeyType,
+>(
+  fragmentInput: GraphQLTaggedNode,
+  fragmentRef: TKey,
+): {
+  data: KeyTypeData<TKey>;
+  loadNext: PaginationFn;
+  loadPrevious: PaginationFn;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  isLoadingNext: boolean;
+  isLoadingPrevious: boolean;
+  refetch: RefetchFn<TQuery["variables"]>;
+} {
+  invariant(
+    !!fragmentInput.watchQueryDocument,
+    "usePaginationFragment is only supported at this time when using compilation",
+  );
+  return useCompiledPaginationFragment(
+    fragmentInput as CompiledArtefactModule,
+    fragmentRef as FragmentReference,
+  );
 }
 
 // https://github.com/facebook/relay/blob/master/website/docs/api-reference/types/GraphQLSubscriptionConfig.md
@@ -157,27 +176,38 @@ interface GraphQLSubscriptionConfig<
   onError?: (error: Error) => void;
 }
 
+/**
+ * @see {@link https://microsoft.github.io/graphitation/docs/apollo-react-relay-duct-tape/use-subscription}
+ *
+ * @param config
+ */
 export function useSubscription<TSubscriptionPayload extends OperationType>(
   config: GraphQLSubscriptionConfig<TSubscriptionPayload>,
 ): void {
-  const { error } = useApolloSubscription(config.subscription, {
-    variables: config.variables,
-    context: config.context,
-    onSubscriptionData: ({ subscriptionData }) => {
-      // Supposedly this never gets triggered for an error by design:
-      // https://github.com/apollographql/react-apollo/issues/3177#issuecomment-506758144
-      invariant(
-        !subscriptionData.error,
-        "Did not expect to receive an error here",
-      );
-      if (subscriptionData.data && config.onNext) {
-        config.onNext(subscriptionData.data);
-      }
+  const client = useOverridenOrDefaultApolloClient();
+  const { error } = useApolloSubscription(
+    // TODO: Right now we don't replace mutation documents with imported artefacts.
+    config.subscription as DocumentNode,
+    {
+      client,
+      variables: config.variables,
+      context: config.context,
+      onSubscriptionData: ({ subscriptionData }) => {
+        // Supposedly this never gets triggered for an error by design:
+        // https://github.com/apollographql/react-apollo/issues/3177#issuecomment-506758144
+        invariant(
+          !subscriptionData.error,
+          "Did not expect to receive an error here",
+        );
+        if (subscriptionData.data && config.onNext) {
+          config.onNext(subscriptionData.data);
+        }
+      },
+      errorPolicy: "ignore",
+    } as ApolloSubscriptionHookOptions & {
+      errorPolicy: ApolloErrorPolicy;
     },
-    errorPolicy: "ignore",
-  } as ApolloSubscriptionHookOptions & {
-    errorPolicy: ApolloErrorPolicy;
-  });
+  );
   if (error) {
     if (config.onError) {
       config.onError(error);
@@ -203,62 +233,21 @@ type MutationCommiter<TMutationPayload extends OperationType> = (
 ) => Promise<{ errors?: Error[]; data?: TMutationPayload["response"] }>;
 
 /**
- * Declare use of a mutation within component. Returns an array of a function and loading state boolean.
+ * @see {@link https://microsoft.github.io/graphitation/docs/apollo-react-relay-duct-tape/use-mutation}
  *
- * Returned function can be called to perform the actual mutation with provided variables.
- *
- * @param mutation Mutation document
- * @returns [commitMutationFn, isInFlight]
- *
- * commitMutationFn
- * @param options.variables map of variables to pass to mutation
- * @param options.optimisticResponse proposed response to apply to the store while mutation is in flight
- * @param options.context mutation context to pass along the apollo link chain. Should be avoided when possible as
- *                        it will not be compatible with Relay APIs.
- * @returns A Promise to an object with either errors or/and the result data
- * 
- * Example
- ```
-
- const mutation = graphql`
- mutation SomeReactComponentMutation($newName: String!) {
-   someMutation(newName: $newName) {
-     __typeName
-     id
-     newName
-   }
- }
- `
-
- export const SomeReactComponent: React.FunctionComponent<SomeReactComponentProps> = props => {
-   const [commitMutation, isInFlight] = useMutation(mutation);
-   return (
-     <div>
-       <button onClick={() => commitMutation({
-         variables: {
-            newName: "foo"
-         },
-         optimisticResponse: {
-            someMutation: {
-              __typename: "SomeMutationPayload",
-              id: "1",
-              newName: "foo",
-            }
-         }
-         context: {
-            callerInfo: "SomeReactComponent"
-         }
-       })} disabled={isInFlight}/>
-     </div>
-   );
- }
- ```
+ * @param mutation
+ * @returns
  */
 export function useMutation<TMutationPayload extends OperationType>(
   mutation: GraphQLTaggedNode,
 ): [MutationCommiter<TMutationPayload>, boolean] {
-  const [apolloUpdater, { loading: mutationLoading }] =
-    useApolloMutation(mutation);
+  const client = useOverridenOrDefaultApolloClient();
+  const [apolloUpdater, { loading: mutationLoading }] = useApolloMutation(
+    // TODO: Right now we don't replace mutation documents with imported artefacts.
+    mutation as DocumentNode,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    { client: client as ApolloClient<any> },
+  );
 
   return [
     async (options: IMutationCommitterOptions<TMutationPayload>) => {
