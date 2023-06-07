@@ -1,8 +1,8 @@
 diff --git a/node_modules/@apollo/client/cache/cache.cjs b/node_modules/@apollo/client/cache/cache.cjs
-index 2451026..a9f3575 100644
+index 751e6f0..68535cf 100644
 --- a/node_modules/@apollo/client/cache/cache.cjs
 +++ b/node_modules/@apollo/client/cache/cache.cjs
-@@ -1502,7 +1502,7 @@ var Policies = (function () {
+@@ -1501,7 +1501,7 @@ var Policies = (function () {
          }
          var storeFieldName = this.getStoreFieldName(options);
          var fieldName = fieldNameFromStoreName(storeFieldName);
@@ -11,7 +11,7 @@ index 2451026..a9f3575 100644
          var policy = this.getFieldPolicy(options.typename, fieldName, false);
          var read = policy && policy.read;
          if (read) {
-@@ -1549,6 +1549,7 @@ function makeFieldFunctionOptions(policies, objectOrReference, fieldSpec, contex
+@@ -1548,6 +1548,7 @@ function makeFieldFunctionOptions(policies, objectOrReference, fieldSpec, contex
      return {
          args: argsFromFieldSpecifier(fieldSpec),
          field: fieldSpec.field || null,
@@ -20,7 +20,7 @@ index 2451026..a9f3575 100644
          storeFieldName: storeFieldName,
          variables: variables,
 diff --git a/node_modules/@apollo/client/cache/inmemory/policies.d.ts b/node_modules/@apollo/client/cache/inmemory/policies.d.ts
-index 6a93238..fdef0a4 100644
+index b93b087..e4d22f7 100644
 --- a/node_modules/@apollo/client/cache/inmemory/policies.d.ts
 +++ b/node_modules/@apollo/client/cache/inmemory/policies.d.ts
 @@ -1,4 +1,4 @@
@@ -38,7 +38,7 @@ index 6a93238..fdef0a4 100644
      isReference: typeof isReference;
      toReference: ToReferenceFunction;
 diff --git a/node_modules/@apollo/client/cache/inmemory/policies.js b/node_modules/@apollo/client/cache/inmemory/policies.js
-index a2c1b93..d28dddf 100644
+index 3c28fb6..f367d69 100644
 --- a/node_modules/@apollo/client/cache/inmemory/policies.js
 +++ b/node_modules/@apollo/client/cache/inmemory/policies.js
 @@ -297,7 +297,7 @@ var Policies = (function () {
