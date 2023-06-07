@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "Fix all new lint issues",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "none"
+}
