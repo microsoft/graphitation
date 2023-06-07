@@ -11,3 +11,25 @@ index efb36e3..d82f352 100644
      type: CompositeTypeID;
  }
  
+diff --git a/node_modules/@types/relay-compiler/lib/core/Schema.d.ts b/node_modules/@types/relay-compiler/lib/core/Schema.d.ts
+index c79aea0..e171a26 100644
+--- a/node_modules/@types/relay-compiler/lib/core/Schema.d.ts
++++ b/node_modules/@types/relay-compiler/lib/core/Schema.d.ts
+@@ -1,7 +1,7 @@
+ import {
+     TypeNode,
+     DocumentNode,
+-    DirectiveLocationEnum,
++    DirectiveLocation,
+     ValueNode,
+ } from 'graphql';
+ import { Field as IRField } from './IR';
+@@ -29,7 +29,7 @@ export type Argument = Readonly<{
+ export type Directive = Readonly<{
+     args: ReadonlyArray<Argument>,
+     isClient: boolean,
+-    locations: ReadonlyArray<DirectiveLocationEnum>,
++    locations: ReadonlyArray<DirectiveLocation>,
+     name: string
+ }>;
+ 

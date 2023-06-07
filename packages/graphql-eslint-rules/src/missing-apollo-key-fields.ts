@@ -133,7 +133,7 @@ function hasIdFieldInInterfaceSelectionSet(node: unknown, keyFields: string[]) {
 
 const missingApolloKeyFieldsRule: GraphQLESLintRule<
   [MissingApolloKeyFieldsRuleConfig]
-> & { meta: { docs: { description?: string } } } = {
+> = {
   meta: {
     type: "problem",
     fixable: "code",
@@ -178,7 +178,8 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
         },
       ],
       ...({ recommended: true } as object), // FIXME: Why can we not pass this prop?
-    },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any,
     schema: {
       type: "array",
       additionalItems: false,

@@ -46,13 +46,15 @@ export const plugin: PluginFunction<RawClientSideBasePluginConfig> = (
     ...(config.externalFragments || []),
   ];
 
-  const visitor = new TypeScriptDocumentNodesVisitor(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const visitor: any = new TypeScriptDocumentNodesVisitor(
     schema,
     allFragments,
     config,
     documents,
   );
-  const visitorResult = visit(allAst, { leave: visitor });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const visitorResult = visit(allAst, { leave: visitor as any });
 
   return {
     prepend: allAst.definitions.length === 0 ? [] : visitor.getImports(),
@@ -68,7 +70,8 @@ export const plugin: PluginFunction<RawClientSideBasePluginConfig> = (
 export const validate: PluginValidateFn<RawClientSideBasePluginConfig> = async (
   schema: GraphQLSchema,
   documents: Types.DocumentFile[],
-  config,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  config: any,
   outputFile: string,
 ) => {
   if (config && config.documentMode === DocumentMode.string) {
