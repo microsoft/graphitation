@@ -17,7 +17,7 @@
     "lint": "lage lint --continue",
     "lage": "lage",
     "ci": "yarn lage build types test lint && yarn checkchange",
-    "beachball": "beachball -b origin/apollo-fragment-store-watching",
+    "beachball": "beachball -b origin/main",
     "change": "yarn beachball change",
     "checkchange": "yarn beachball check",
     "release": "yarn beachball publish -t next",
