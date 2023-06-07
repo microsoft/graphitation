@@ -18,7 +18,7 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@apollo/client": "^3.4.11",
+    "@apollo/client": "3.7.0",
     "@emotion/react": "^11.8.1",
     "@fluentui/react-components": "^9.0.0-rc.15",
     "@fluentui/react-data-grid-react-window": "^9.0.0-beta.14",

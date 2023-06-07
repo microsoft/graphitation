@@ -9,7 +9,8 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "paths": {
-      "@graphql-tools/utils": ["./node_modules/@graphql-tools/utils"]
+      "@graphql-tools/utils": ["./node_modules/@graphql-tools/utils"],
+      "graphql": ["./packages/supermassive/node_modules/graphql"]
     }
   }
 }

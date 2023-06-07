@@ -12,7 +12,7 @@
     "duct-tape-compiler": "duct-tape-compiler --schema ./src/schema/typeDefs.graphql --src ./src --emitDocuments=false"
   },
   "dependencies": {
-    "@apollo/client": "^3.7.15",
+    "@apollo/client": "3.7.0",
     "@babel/runtime": "^7.12.0",
     "@graphitation/apollo-react-relay-duct-tape": "^1.0.3",
     "@graphitation/apollo-react-relay-duct-tape-compiler": "^1.1.0",

@@ -3,8 +3,8 @@ import {
   parse,
   print,
   visit,
-  ASTNode,
   FragmentDefinitionNode,
+  Kind,
 } from "graphql";
 import invariant from "invariant";
 
@@ -46,7 +46,7 @@ export function rewriteGraphitationDirectives(document: string) {
           return {
             ...directiveNode,
             name: {
-              kind: "Name",
+              kind: Kind.NAME,
               value: "raw_response_type",
             },
           };
@@ -66,20 +66,20 @@ function emitRefetchableDirective(
   const fragmentName = fragmentDefinitionNode.name.value;
   const fragmentBaseName = fragmentName.replace(/Fragment$/, "");
   return {
-    kind: "Directive",
+    kind: Kind.DIRECTIVE,
     name: {
-      kind: "Name",
+      kind: Kind.NAME,
       value: "refetchable",
     },
     arguments: [
       {
-        kind: "Argument",
+        kind: Kind.ARGUMENT,
         name: {
-          kind: "Name",
+          kind: Kind.NAME,
           value: "queryName",
         },
         value: {
-          kind: "StringValue",
+          kind: Kind.STRING,
           value: `${fragmentBaseName}WatchNodeQuery`,
         },
       },

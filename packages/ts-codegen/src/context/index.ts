@@ -192,7 +192,7 @@ export class TsCodegenContext {
         this.typeNameToImports.get(typeName) || {};
 
       if (existingImport) {
-        throw new GraphQLError(
+        throw locatedError(
           `Definition ${typeName} is imported multiple times: ${existingImport.from}`,
           [
             getArgumentValue(existingImport.directive.arguments, "from") ??
