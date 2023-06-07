@@ -1,6 +1,6 @@
 import {
   DocumentNode,
-  GraphQLError,
+  locatedError,
   visit,
   ArgumentNode,
   ValueNode,
@@ -526,7 +526,7 @@ export function extractContext(
             Array.isArray(typeDef) ||
             (typeDef as ASTNode).kind !== "InterfaceTypeDefinition"
           ) {
-            throw new GraphQLError(
+            throw locatedError(
               "Directive @legacyInterface_DO_NOT_USE must be defined on Interface type",
               [node],
             );

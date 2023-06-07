@@ -2016,7 +2016,7 @@
     parse-filepath "^1.0.2"
     tslib "~2.4.0"
 
-"@graphql-eslint/eslint-plugin@^3.7.0":
+"@graphql-eslint/eslint-plugin@3.7.0", "@graphql-eslint/eslint-plugin@^3.7.0":
   version "3.7.0"
   resolved "https://registry.yarnpkg.com/@graphql-eslint/eslint-plugin/-/eslint-plugin-3.7.0.tgz#2fb4d1fb50fbabd9c421ac83570b5f689134b4e8"
   integrity sha512-l6LZehnPsEXe7BR8UNp0JucyTBYqb5a7yJ9EbJMao69BaxkwIBGSc0LUhqnRuOCwVJwPbKoyxaGSzg4mUisAiQ==
