@@ -3,5 +3,5 @@
   "comment": "Implement stream and defer",
   "packageName": "@graphitation/supermassive",
   "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
+  "dependentChangeType": "none"
 }
