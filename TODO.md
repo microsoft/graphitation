@@ -1,0 +1,2 @@
+- [ ] Restore graphql-codegen-supermassive-typed-operations-plugin so it depends on supermassive
+- [ ] Separate AST stuff from supermassive into a package

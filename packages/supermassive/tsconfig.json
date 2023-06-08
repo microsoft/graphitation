@@ -5,7 +5,10 @@
     "tsBuildInfoFile": ".tsbuildinfo",
     "rootDir": "src",
     "outDir": "lib",
-    "jsx": "react"
+    "jsx": "react",
+    "paths": {
+      "graphql": ["./packages/supermassive/node_modules/graphql"]
+    }
   },
   "include": ["src"],
   "references": [
