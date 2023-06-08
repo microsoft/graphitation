@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`executeWithSchema @defer if 1`] = `
+exports[`graphql-js snapshot check to ensure test stability @defer if 1`] = `
 {
   "initialResult": {
     "data": {
@@ -29,7 +29,7 @@ exports[`executeWithSchema @defer if 1`] = `
 }
 `;
 
-exports[`executeWithSchema @defer label simple 1`] = `
+exports[`graphql-js snapshot check to ensure test stability @defer label simple 1`] = `
 {
   "initialResult": {
     "data": {
@@ -66,7 +66,7 @@ exports[`executeWithSchema @defer label simple 1`] = `
 }
 `;
 
-exports[`executeWithSchema @defer multiple fragments 1`] = `
+exports[`graphql-js snapshot check to ensure test stability @defer multiple fragments 1`] = `
 {
   "initialResult": {
     "data": {
@@ -102,7 +102,7 @@ exports[`executeWithSchema @defer multiple fragments 1`] = `
 }
 `;
 
-exports[`executeWithSchema @defer nested 1`] = `
+exports[`graphql-js snapshot check to ensure test stability @defer nested 1`] = `
 {
   "initialResult": {
     "data": {
@@ -156,7 +156,7 @@ exports[`executeWithSchema @defer nested 1`] = `
 }
 `;
 
-exports[`executeWithSchema @defer on fragment 1`] = `
+exports[`graphql-js snapshot check to ensure test stability @defer on fragment 1`] = `
 {
   "initialResult": {
     "data": {
@@ -185,7 +185,7 @@ exports[`executeWithSchema @defer on fragment 1`] = `
 }
 `;
 
-exports[`executeWithSchema @defer on inline fragment 1`] = `
+exports[`graphql-js snapshot check to ensure test stability @defer on inline fragment 1`] = `
 {
   "initialResult": {
     "data": {
@@ -214,7 +214,7 @@ exports[`executeWithSchema @defer on inline fragment 1`] = `
 }
 `;
 
-exports[`executeWithSchema @defer overlapping fragment 1`] = `
+exports[`graphql-js snapshot check to ensure test stability @defer overlapping fragment 1`] = `
 {
   "initialResult": {
     "data": {
@@ -251,7 +251,7 @@ exports[`executeWithSchema @defer overlapping fragment 1`] = `
 }
 `;
 
-exports[`executeWithSchema @stream basic 1`] = `
+exports[`graphql-js snapshot check to ensure test stability @stream basic 1`] = `
 {
   "initialResult": {
     "data": {
@@ -338,7 +338,7 @@ exports[`executeWithSchema @stream basic 1`] = `
 }
 `;
 
-exports[`executeWithSchema @stream if 1`] = `
+exports[`graphql-js snapshot check to ensure test stability @stream if 1`] = `
 {
   "initialResult": {
     "data": {
@@ -428,7 +428,7 @@ exports[`executeWithSchema @stream if 1`] = `
 }
 `;
 
-exports[`executeWithSchema @stream initialCount 1`] = `
+exports[`graphql-js snapshot check to ensure test stability @stream initialCount 1`] = `
 {
   "initialResult": {
     "data": {
@@ -490,7 +490,7 @@ exports[`executeWithSchema @stream initialCount 1`] = `
 }
 `;
 
-exports[`executeWithSchema @stream inside @defer 1`] = `
+exports[`graphql-js snapshot check to ensure test stability @stream inside @defer 1`] = `
 {
   "initialResult": {
     "data": {
@@ -602,7 +602,7 @@ exports[`executeWithSchema @stream inside @defer 1`] = `
 }
 `;
 
-exports[`executeWithSchema @stream label 1`] = `
+exports[`graphql-js snapshot check to ensure test stability @stream label 1`] = `
 {
   "initialResult": {
     "data": {
@@ -730,7 +730,7 @@ exports[`executeWithSchema @stream label 1`] = `
 }
 `;
 
-exports[`executeWithSchema @stream multiple 1`] = `
+exports[`graphql-js snapshot check to ensure test stability @stream multiple 1`] = `
 {
   "initialResult": {
     "data": {
@@ -852,7 +852,7 @@ exports[`executeWithSchema @stream multiple 1`] = `
 }
 `;
 
-exports[`executeWithSchema @stream nested 1`] = `
+exports[`graphql-js snapshot check to ensure test stability @stream nested 1`] = `
 {
   "initialResult": {
     "data": {
@@ -1330,7 +1330,7 @@ exports[`executeWithSchema @stream nested 1`] = `
 }
 `;
 
-exports[`executeWithSchema Advanced Default value 1`] = `
+exports[`graphql-js snapshot check to ensure test stability Advanced Default value 1`] = `
 {
   "data": {
     "advancedDefaultInput": "{"input":{"enumField":"Transport","otherField":"Foo"}}",
@@ -1338,7 +1338,7 @@ exports[`executeWithSchema Advanced Default value 1`] = `
 }
 `;
 
-exports[`executeWithSchema Advanced Default value in variables 1`] = `
+exports[`graphql-js snapshot check to ensure test stability Advanced Default value in variables 1`] = `
 {
   "data": {
     "advancedDefaultInput": "{"input":{"enumField":"Film","otherField":"The Empire Strikes Back"}}",
@@ -1346,7 +1346,7 @@ exports[`executeWithSchema Advanced Default value in variables 1`] = `
 }
 `;
 
-exports[`executeWithSchema Default value 1`] = `
+exports[`graphql-js snapshot check to ensure test stability Default value 1`] = `
 {
   "data": {
     "searchFilmsByTitle": [
@@ -1358,7 +1358,7 @@ exports[`executeWithSchema Default value 1`] = `
 }
 `;
 
-exports[`executeWithSchema Default value in variables 1`] = `
+exports[`graphql-js snapshot check to ensure test stability Default value in variables 1`] = `
 {
   "data": {
     "searchFilmsByTitle": [
@@ -1370,7 +1370,7 @@ exports[`executeWithSchema Default value in variables 1`] = `
 }
 `;
 
-exports[`executeWithSchema Not passing arg value vs passing arg value 1`] = `
+exports[`graphql-js snapshot check to ensure test stability Not passing arg value vs passing arg value 1`] = `
 {
   "data": {
     "multiArger": "{}",
@@ -1378,7 +1378,7 @@ exports[`executeWithSchema Not passing arg value vs passing arg value 1`] = `
 }
 `;
 
-exports[`executeWithSchema Not passing arg value vs passing arg value 2`] = `
+exports[`graphql-js snapshot check to ensure test stability Not passing arg value vs passing arg value 2`] = `
 {
   "data": {
     "multiArger": "{"a":null}",
@@ -1386,7 +1386,7 @@ exports[`executeWithSchema Not passing arg value vs passing arg value 2`] = `
 }
 `;
 
-exports[`executeWithSchema basic query 1`] = `
+exports[`graphql-js snapshot check to ensure test stability basic query 1`] = `
 {
   "data": {
     "person": {
@@ -1397,7 +1397,7 @@ exports[`executeWithSchema basic query 1`] = `
 }
 `;
 
-exports[`executeWithSchema basic query with variables 1`] = `
+exports[`graphql-js snapshot check to ensure test stability basic query with variables 1`] = `
 {
   "data": {
     "person": {
@@ -1408,7 +1408,7 @@ exports[`executeWithSchema basic query with variables 1`] = `
 }
 `;
 
-exports[`executeWithSchema basic subscription with unused non-required variable 1`] = `
+exports[`graphql-js snapshot check to ensure test stability basic subscription with unused non-required variable 1`] = `
 [
   {
     "data": {
@@ -1453,7 +1453,7 @@ exports[`executeWithSchema basic subscription with unused non-required variable 
 ]
 `;
 
-exports[`executeWithSchema basic subscription with variables 1`] = `
+exports[`graphql-js snapshot check to ensure test stability basic subscription with variables 1`] = `
 [
   {
     "data": {
@@ -1498,7 +1498,7 @@ exports[`executeWithSchema basic subscription with variables 1`] = `
 ]
 `;
 
-exports[`executeWithSchema benchmark kitchen-sink query 1`] = `
+exports[`graphql-js snapshot check to ensure test stability benchmark kitchen-sink query 1`] = `
 {
   "data": {
     "empireHero": {
@@ -1530,7 +1530,7 @@ exports[`executeWithSchema benchmark kitchen-sink query 1`] = `
 }
 `;
 
-exports[`executeWithSchema include directive FALSE 1`] = `
+exports[`graphql-js snapshot check to ensure test stability include directive FALSE 1`] = `
 {
   "data": {
     "person": {
@@ -1540,7 +1540,7 @@ exports[`executeWithSchema include directive FALSE 1`] = `
 }
 `;
 
-exports[`executeWithSchema include directive TRUE 1`] = `
+exports[`graphql-js snapshot check to ensure test stability include directive TRUE 1`] = `
 {
   "data": {
     "person": {
@@ -1551,7 +1551,7 @@ exports[`executeWithSchema include directive TRUE 1`] = `
 }
 `;
 
-exports[`executeWithSchema interface in object fragment spread 1`] = `
+exports[`graphql-js snapshot check to ensure test stability interface in object fragment spread 1`] = `
 {
   "data": {
     "person": {
@@ -1561,7 +1561,7 @@ exports[`executeWithSchema interface in object fragment spread 1`] = `
 }
 `;
 
-exports[`executeWithSchema interface in union fragment spread 1`] = `
+exports[`graphql-js snapshot check to ensure test stability interface in union fragment spread 1`] = `
 {
   "data": {
     "person": {
@@ -1571,7 +1571,7 @@ exports[`executeWithSchema interface in union fragment spread 1`] = `
 }
 `;
 
-exports[`executeWithSchema query with interfaces 1`] = `
+exports[`graphql-js snapshot check to ensure test stability query with interfaces 1`] = `
 {
   "data": {
     "person": {
@@ -1584,7 +1584,7 @@ exports[`executeWithSchema query with interfaces 1`] = `
 }
 `;
 
-exports[`executeWithSchema query with union 1`] = `
+exports[`graphql-js snapshot check to ensure test stability query with union 1`] = `
 {
   "data": {
     "search": [
@@ -1621,7 +1621,7 @@ exports[`executeWithSchema query with union 1`] = `
 }
 `;
 
-exports[`executeWithSchema skip directive FALSE 1`] = `
+exports[`graphql-js snapshot check to ensure test stability skip directive FALSE 1`] = `
 {
   "data": {
     "person": {
@@ -1632,7 +1632,7 @@ exports[`executeWithSchema skip directive FALSE 1`] = `
 }
 `;
 
-exports[`executeWithSchema skip directive TRUE 1`] = `
+exports[`graphql-js snapshot check to ensure test stability skip directive TRUE 1`] = `
 {
   "data": {
     "person": {
@@ -1642,7 +1642,7 @@ exports[`executeWithSchema skip directive TRUE 1`] = `
 }
 `;
 
-exports[`executeWithSchema subscription throw an error 1`] = `
+exports[`graphql-js snapshot check to ensure test stability subscription throw an error 1`] = `
 {
   "errors": [
     [GraphQLError: error],
@@ -1650,7 +1650,7 @@ exports[`executeWithSchema subscription throw an error 1`] = `
 }
 `;
 
-exports[`executeWithSchema union in interface fragment spread 1`] = `
+exports[`graphql-js snapshot check to ensure test stability union in interface fragment spread 1`] = `
 {
   "data": {
     "person": {
@@ -1660,7 +1660,7 @@ exports[`executeWithSchema union in interface fragment spread 1`] = `
 }
 `;
 
-exports[`executeWithSchema union in object fragment spread 1`] = `
+exports[`graphql-js snapshot check to ensure test stability union in object fragment spread 1`] = `
 {
   "data": {
     "person": {
@@ -1670,7 +1670,7 @@ exports[`executeWithSchema union in object fragment spread 1`] = `
 }
 `;
 
-exports[`executeWithSchema union in object fragment spread 2`] = `
+exports[`graphql-js snapshot check to ensure test stability union in object fragment spread 2`] = `
 {
   "data": {
     "person": {},
@@ -1678,7 +1678,7 @@ exports[`executeWithSchema union in object fragment spread 2`] = `
 }
 `;
 
-exports[`executeWithSchema with __typename 1`] = `
+exports[`graphql-js snapshot check to ensure test stability with __typename 1`] = `
 {
   "data": {
     "person": {
