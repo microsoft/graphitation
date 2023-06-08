@@ -6,9 +6,10 @@ import {
   Kind,
   ExecutionResult as GraphQLExecutionResult,
   ExperimentalIncrementalExecutionResults as GraphQLExperimentalExecutionResult,
+  GraphQLSchema,
 } from "graphql";
 import { executeWithoutSchema, executeWithSchema } from "..";
-import schema, { typeDefs } from "../benchmarks/swapi-schema";
+import { makeSchema, typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
 import {
@@ -134,6 +135,7 @@ const testCases: Array<TestCase> = [
       name
       gender
       birth_year
+      # This is async iterator
       starships {
         name
       }
@@ -643,22 +645,34 @@ query Person($id: Int!) {
 ];
 
 describe("executeWithSchema", () => {
+  let schema: GraphQLSchema;
+  beforeEach(() => {
+    jest.resetAllMocks();
+    schema = makeSchema();
+  });
+
   test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
-    await compareResultsForExecuteWithSchema(document, variables);
+    await compareResultsForExecuteWithSchema(schema, document, variables);
   });
 });
 
 describe("executeWithoutSchema", () => {
+  let schema: GraphQLSchema;
+  beforeEach(() => {
+    jest.resetAllMocks();
+    schema = makeSchema();
+  });
   test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
-    await compareResultsForExecuteWithoutSchema(document, variables);
+    await compareResultsForExecuteWithoutSchema(schema, document, variables);
   });
 });
 
 async function compareResultsForExecuteWithSchema(
+  schema: GraphQLSchema,
   query: string,
   variables?: Record<string, unknown>,
 ) {
-  expect.assertions(1);
+  expect.assertions(2);
   const document = parse(query);
   const result = await drainExecution(
     await executeWithSchema({
@@ -681,10 +695,12 @@ async function compareResultsForExecuteWithSchema(
       variableValues: variables,
     }),
   );
+  expect(validResult).toMatchSnapshot();
   expect(result).toEqual(validResult);
 }
 
 async function compareResultsForExecuteWithoutSchema(
+  schema: GraphQLSchema,
   query: string,
   variables: Record<string, unknown> = {},
 ) {
