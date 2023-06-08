@@ -644,6 +644,30 @@ query Person($id: Int!) {
   },
 ];
 
+describe("graphql-js snapshot check to ensure test stability", () => {
+  let schema: GraphQLSchema;
+  beforeEach(() => {
+    jest.resetAllMocks();
+    schema = makeSchema();
+  });
+
+  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
+    expect.assertions(1);
+    const parsedDocument = parse(document);
+    const result = await drainExecution(
+      await graphqlExecuteOrSubscribe({
+        schema,
+        document: parsedDocument,
+        contextValue: {
+          models,
+        },
+        variableValues: variables,
+      }),
+    );
+    expect(result).toMatchSnapshot();
+  });
+});
+
 describe("executeWithSchema", () => {
   let schema: GraphQLSchema;
   beforeEach(() => {
@@ -672,7 +696,7 @@ async function compareResultsForExecuteWithSchema(
   query: string,
   variables?: Record<string, unknown>,
 ) {
-  expect.assertions(2);
+  expect.assertions(1);
   const document = parse(query);
   const result = await drainExecution(
     await executeWithSchema({
@@ -695,7 +719,6 @@ async function compareResultsForExecuteWithSchema(
       variableValues: variables,
     }),
   );
-  expect(validResult).toMatchSnapshot();
   expect(result).toEqual(validResult);
 }
 
