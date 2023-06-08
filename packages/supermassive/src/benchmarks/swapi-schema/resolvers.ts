@@ -1,17 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { GraphQLFieldResolver } from "graphql/type/definition";
 import { IExecutableSchemaDefinition } from "@graphql-tools/schema";
-import { createAsyncIterator } from "iterall";
+import { createAsyncIterator, getAsyncIterator } from "iterall";
+import { mapAsyncIterator } from "../../utilities/mapAsyncIterator";
 
 const films: GraphQLFieldResolver<any, any, any, any> = (
   parent,
   _args,
   { models },
 ) => {
-  return createAsyncIterator(
-    models
-      .getData("/films")
-      .filter(({ id }: { id: any }) => parent.films.includes(id)),
+  return mapAsyncIterator(
+    getAsyncIterator(
+      createAsyncIterator(
+        models
+          .getData("/films")
+          .filter(({ id }: { id: any }) => parent.films.includes(id)),
+      ),
+    ) as unknown as AsyncIterable<any>,
+    // this ensures it's a awaitable iterator
+    async (item) => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      return item;
+    },
   );
 };
 
@@ -20,10 +30,20 @@ const starships: GraphQLFieldResolver<any, any, any, any> = (
   _args,
   { models },
 ) => {
-  return createAsyncIterator(
-    models
-      .getData("/starships")
-      .filter(({ id }: { id: any }) => parent.starships.includes(id)),
+  return mapAsyncIterator(
+    getAsyncIterator(
+      createAsyncIterator(
+        models
+          .getData("/starships")
+          .filter(({ id }: { id: any }) => parent.starships.includes(id)),
+      ),
+    ) as unknown as AsyncIterable<any>,
+    // this ensures it's a awaitable iterator
+
+    async (item) => {
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      return item;
+    },
   );
 };
 

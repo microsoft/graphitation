@@ -107,10 +107,10 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
     ${(this as any)._includeFragments(fragments)}`);
 
     if ((this as any).config.documentMode === DocumentMode.documentNode) {
-      let gqlObj = gqlTag([doc]);
+      let gqlObj: any = gqlTag([doc]);
 
       if ((this as any).config.optimizeDocumentNode) {
-        gqlObj = optimizeDocumentNode(gqlObj);
+        gqlObj = optimizeDocumentNode(gqlObj as any);
       }
       if (annotate) {
         gqlObj = (this as any)._transformDocumentNodeToSupermassive(gqlObj);
@@ -121,15 +121,15 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
       (this as any).config.documentMode ===
       DocumentMode.documentNodeImportFragments
     ) {
-      let gqlObj = gqlTag([doc]);
+      let gqlObj: any = gqlTag([doc]);
 
       if ((this as any).config.optimizeDocumentNode) {
-        gqlObj = optimizeDocumentNode(gqlObj);
+        gqlObj = optimizeDocumentNode(gqlObj as any);
       }
 
       if (fragments.length > 0) {
         const definitions = [
-          ...gqlObj.definitions.map((t) =>
+          ...gqlObj.definitions.map((t: any) =>
             JSON.stringify(
               annotate
                 ? addTypesToRequestDocument((this as any)._schema, {
@@ -139,7 +139,7 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
                 : t,
             ),
           ),
-          ...fragments.map((name) => `...${name}.definitions`),
+          ...fragments.map((name: any) => `...${name}.definitions`),
         ].join();
 
         return `{"kind":"${Kind.DOCUMENT}","definitions":[${definitions}]}`;
