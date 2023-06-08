@@ -93,7 +93,7 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
   ): string {
     const supermassiveNode = addTypesToRequestDocument((this as any)._schema, {
       kind: Kind.DOCUMENT,
-      definitions: [node],
+      definitions: [node as any],
     }).definitions[0] as FragmentDefinitionNode | OperationDefinitionNode;
 
     const fragments = (this as any)._transformFragments(supermassiveNode);
@@ -167,7 +167,7 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
         (t) =>
           addTypesToRequestDocument((this as any)._schema, {
             kind: Kind.DOCUMENT,
-            definitions: [t],
+            definitions: [t as any],
           }).definitions[0],
       ),
     } as DocumentNode;

@@ -12,7 +12,7 @@ index efb36e3..d82f352 100644
  }
  
 diff --git a/node_modules/@types/relay-compiler/lib/core/Schema.d.ts b/node_modules/@types/relay-compiler/lib/core/Schema.d.ts
-index c79aea0..e171a26 100644
+index c79aea0..3aeab5b 100644
 --- a/node_modules/@types/relay-compiler/lib/core/Schema.d.ts
 +++ b/node_modules/@types/relay-compiler/lib/core/Schema.d.ts
 @@ -1,7 +1,7 @@
@@ -29,7 +29,7 @@ index c79aea0..e171a26 100644
      args: ReadonlyArray<Argument>,
      isClient: boolean,
 -    locations: ReadonlyArray<DirectiveLocationEnum>,
-+    locations: ReadonlyArray<DirectiveLocation>,
++    locations: ReadonlyArray<typeof DirectiveLocation>,
      name: string
  }>;
  
