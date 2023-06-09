@@ -1,7 +1,35 @@
-import { webpackLoader } from "../webpack";
+import { RunLoaderResult, runLoaders } from "loader-runner";
 
-describe(webpackLoader, () => {
+function runLoader(source: string) {
+  return new Promise<RunLoaderResult>((resolve, reject) => {
+    runLoaders(
+      {
+        resource: "/path/to/your/resource.js",
+        loaders: [
+          {
+            loader: require.resolve("../webpack.ts"),
+            options: {},
+          },
+        ],
+        context: {},
+        readResource: (_path, callback) => {
+          callback(null, Buffer.from(source));
+        },
+      },
+      (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      },
+    );
+  });
+}
+
+describe("webpackLoader", () => {
   it.todo("works with watch query documents");
+  it.todo("has a dependency on the artefact file");
 
   it.each([
     {
@@ -84,7 +112,8 @@ describe(webpackLoader, () => {
         );
       `,
     },
-  ])("works with $name", ({ source }) => {
-    expect(webpackLoader.bind({} as any)(source)).toMatchSnapshot();
+  ])("works with $name", async ({ source }) => {
+    const result = await runLoader(source);
+    expect(result.result).toMatchSnapshot();
   });
 });
