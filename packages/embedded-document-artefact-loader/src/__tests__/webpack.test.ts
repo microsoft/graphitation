@@ -1,17 +1,20 @@
 import { RunLoaderResult, runLoaders } from "loader-runner";
+import { SourceMapConsumer } from "source-map";
 
-function runLoader(source: string) {
+function runLoader(source: string, context?: { sourceMap: boolean }) {
   return new Promise<RunLoaderResult>((resolve, reject) => {
     runLoaders(
       {
-        resource: "/path/to/your/resource.js",
+        resource: "/path/to/index.js",
         loaders: [
           {
             loader: require.resolve("../webpack.ts"),
             options: {},
           },
         ],
-        context: {},
+        context: {
+          sourceMap: context?.sourceMap ?? true,
+        },
         readResource: (_path, callback) => {
           callback(null, Buffer.from(source));
         },
@@ -25,6 +28,16 @@ function runLoader(source: string) {
       },
     );
   });
+}
+
+function getPositionOffset(str: string, line: number, column: number): number {
+  const lines = str.split("\n");
+  let offset = 0;
+  for (let i = 0; i < line - 1; i++) {
+    offset += lines[i].length + 1;
+  }
+  offset += column;
+  return offset;
 }
 
 describe("webpackLoader", () => {
@@ -114,6 +127,96 @@ describe("webpackLoader", () => {
     },
   ])("works with $name", async ({ source }) => {
     const result = await runLoader(source);
-    expect(result.result).toMatchSnapshot();
+    expect(result.result![0]).toMatchSnapshot();
+  });
+
+  describe("concerning source-maps", () => {
+    it("does not emit source-maps if webpack is configured to not emit them", async () => {
+      const source = `
+        import { graphql } from "@nova/react";
+        const doc = graphql\`query SomeComponentQuery($id: ID!) { helloWorld }\`;
+        console.log()
+      `;
+
+      const result = await runLoader(source, { sourceMap: false });
+      const sourceMap = result.result![1];
+
+      expect(sourceMap).toBeUndefined();
+    });
+
+    it("emits source-map for tagged template on a single line", async () => {
+      const source = `
+        import { graphql } from "@nova/react";
+        const doc = graphql\`query SomeComponentQuery($id: ID!) { helloWorld }\`;
+        console.log()
+      `;
+
+      const result = await runLoader(source);
+      const transpiled = result.result![0]?.toString();
+      const sourceMap = result.result![1];
+
+      const consumer = new SourceMapConsumer(sourceMap!.toString() as any);
+      const [startPosition, endPosition] = consumer.allGeneratedPositionsFor({
+        line: 2,
+        column: undefined as any,
+        source: "/path/to/index.js",
+      });
+      const startOffset = getPositionOffset(
+        transpiled!,
+        startPosition.line,
+        startPosition.column,
+      );
+      const endOffset = getPositionOffset(
+        transpiled!,
+        endPosition.line,
+        endPosition.column,
+      );
+
+      expect(transpiled?.slice(startOffset, endOffset)).toMatchInlineSnapshot(
+        `"require("./__generated__/SomeComponentQuery.graphql").default"`,
+      );
+    });
+
+    it("emits source-map for tagged template with multiple lines", async () => {
+      const source = `
+        import { graphql } from "@nova/react";
+        const doc = graphql\`
+          query SomeComponentQuery($id: ID!) {
+            helloWorld
+          }
+        \`;
+        console.log()
+      `;
+
+      const result = await runLoader(source);
+      const transpiled = result.result![0]?.toString();
+      const sourceMap = result.result![1];
+
+      const consumer = new SourceMapConsumer(sourceMap!.toString() as any);
+      const startPosition = consumer.generatedPositionFor({
+        line: 3,
+        column: 20,
+        source: "/path/to/index.js",
+      });
+      const endPosition = consumer.generatedPositionFor({
+        line: 7,
+        column: 10,
+        source: "/path/to/index.js",
+      });
+      const startOffset = getPositionOffset(
+        transpiled!,
+        startPosition.line,
+        startPosition.column,
+      );
+      const endOffset = getPositionOffset(
+        transpiled!,
+        endPosition.line,
+        endPosition.column,
+      );
+
+      expect(transpiled?.slice(startOffset, endOffset)).toMatchInlineSnapshot(
+        `"require("./__generated__/SomeComponentQuery.graphql").default"`,
+      );
+    });
   });
 });

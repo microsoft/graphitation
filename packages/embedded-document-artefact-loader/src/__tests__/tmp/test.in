@@ -1,0 +1,4 @@
+
+        import { graphql } from "@nova/react";
+        const doc = graphql\`query SomeComponentQuery($id: ID!) { helloWorld }\`;
+        console.log()

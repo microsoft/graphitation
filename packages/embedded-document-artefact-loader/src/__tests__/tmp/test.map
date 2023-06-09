@@ -1,0 +1,1 @@
+{"version":3,"sources":["/path/to/index.js"],"names":[],"mappings":";;oBAEoB,6DAIX","file":"/path/to/index.js.map","sourcesContent":["\n        import { graphql } from \"@nova/react\";\n        const doc = graphql`\n          query SomeComponentQuery($id: ID!) {\n            helloWorld\n          }\n        `;\n        console.log()\n      "]}

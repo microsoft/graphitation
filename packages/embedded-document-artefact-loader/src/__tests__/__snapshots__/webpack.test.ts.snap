@@ -1,71 +1,57 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`webpackLoader works with documents captured as variable 1`] = `
-[
-  "
+"
         import { graphql } from "@nova/react";
         const doc = require("./__generated__/SomeComponentFragment.graphql").default
         const {data} = useFragment(doc, props);
-      ",
-]
+      "
 `;
 
 exports[`webpackLoader works with documents with mutation operations 1`] = `
-[
-  "
+"
         import { graphql } from "@nova/react";
         const doc = require("./__generated__/SomeComponentMutation.graphql").default;
         console.log()
-      ",
-]
+      "
 `;
 
 exports[`webpackLoader works with documents with query operations 1`] = `
-[
-  "
+"
         import { graphql } from "@nova/react";
         const doc = require("./__generated__/SomeComponentQuery.graphql").default;
         console.log()
-      ",
-]
+      "
 `;
 
 exports[`webpackLoader works with documents with subscription operations 1`] = `
-[
-  "
+"
         import { graphql } from "@nova/react";
         const doc = require("./__generated__/SomeComponentSubscription.graphql").default;
         console.log()
-      ",
-]
+      "
 `;
 
 exports[`webpackLoader works with files that contain no embedded documents 1`] = `
-[
-  "
+"
         import { graphql } from "@nova/react";
         console.log()
-      ",
-]
+      "
 `;
 
 exports[`webpackLoader works with inline documents 1`] = `
-[
-  "
+"
         import { graphql } from "@nova/react";
         const {data} = useFragment(require("./__generated__/SomeComponentFragment.graphql").default, props);
-      ",
-]
+      "
 `;
 
 exports[`webpackLoader works with inline documents over multiple lines 1`] = `
-[
-  "
+"
         import { graphql } from "@nova/react";
         const {data} = useFragment(
           require("./__generated__/SomeComponentFragment.graphql").default,
           props
         );
-      ",
-]
+      "
 `;
