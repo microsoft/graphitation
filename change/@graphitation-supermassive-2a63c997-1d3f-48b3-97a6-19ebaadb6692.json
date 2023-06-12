@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "fix: use 'isObjectLike' in mergeResolvers due to failure when resolvers entry is esModule",
+  "packageName": "@graphitation/supermassive",
+  "email": "sergeystoyan@microsoft.com",
+  "dependentChangeType": "patch"
+}
