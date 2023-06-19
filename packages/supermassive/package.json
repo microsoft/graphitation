@@ -19,7 +19,6 @@
   },
   "devDependencies": {
     "@graphitation/graphql-js-tag": "*",
-    "@graphitation/supermassive-ast": "*",
     "@graphitation/supermassive-extractors": "*",
     "@graphitation/cli": "*",
     "@graphql-tools/schema": "^9.0.19",
@@ -48,6 +47,7 @@
     }
   },
   "dependencies": {
+    "@graphitation/supermassive-ast": "*",
     "@graphql-tools/schema": "^9.0.19",
     "commander": "^8.3.0",
     "graphql": "^15.6.1",
