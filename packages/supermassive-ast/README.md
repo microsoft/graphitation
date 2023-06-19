@@ -1,9 +1,47 @@
-# package template
+# @graphitation/supermassive-ast
 
-## TODO
+AST definitions and AST transform for supermassive. Annotates a document so a supermassive can execute it without runtime schema.
 
-- [ ] copy pasta this template into /packages
-- [ ] open package.json and change the name
-- [ ] run `yarn` at repo root
-- [ ] run `yarn build` and make sure the new package is building alongside with the rest of repo packages
-- [ ] change this README.md
+## Transform
+
+`addTypesToRequestDocument` converts untyped graphql-js AST node into a Supermassive typed one.
+
+```js
+function addTypesToRequestDocument(
+  schema: GraphQLSchema,
+  document: TypelessAST.DocumentNode
+): TypedAST.DocumentNode
+```
+
+With `@graphitation/graphql-js-tag` and `@graphitation/ts-transform-graphql-js-tag` (in webpack config)
+
+```js
+import { buildASTSchema } from 'graphql'
+import { getTransformer } from "@graphitation/ts-transform-graphql-js-tag";
+import { annotateDocumentGraphQLTransform } from "@graphitation/supermassive";
+
+// ...
+
+{
+  test: /\.tsx?$/,
+  loader: "ts-loader",
+  options: {
+    getCustomTransformers: () => ({
+       before: [
+          getTransformer({
+            graphqlTagModuleExport: "graphql",
+            transformer: annotateDocumentGraphQLTransform(
+              buildASTSchema({
+                fs.readFileSync(
+                  "PATH_TO_SCHEMA_TYPEDEFS.graphql",
+                  { encoding: "utf-8" }
+                ),
+              )
+            ),
+          }),
+        ],
+      }),
+    },
+  },
+}
+```
