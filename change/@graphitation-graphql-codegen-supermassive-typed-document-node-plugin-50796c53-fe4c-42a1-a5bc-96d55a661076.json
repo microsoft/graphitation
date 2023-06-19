@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Move to supermassive-ast package",
-  "packageName": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}
