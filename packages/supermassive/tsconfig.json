@@ -11,7 +11,10 @@
     }
   },
   "include": ["src"],
-  "references": [],
+  "references": [
+    { "path": "../supermassive-ast" },
+    { "path": "../supermassive-extractors" }
+  ],
   "ts-node": {
     "transpileOnly": true,
     "compilerOptions": {

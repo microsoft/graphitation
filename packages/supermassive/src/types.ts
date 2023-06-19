@@ -13,7 +13,7 @@ import {
   FragmentDefinitionNode,
   OperationDefinitionNode,
   TypeNode,
-} from "./ast/TypedAST";
+} from "@graphitation/supermassive-ast";
 import { ObjMap } from "./jsutils/ObjMap";
 import { Path } from "./jsutils/Path";
 import { ExecutionHooks } from "./hooks/types";

@@ -35,10 +35,10 @@ export async function formatModuleFactory(
 
   let addTypesToRequestDocument:
     | undefined
-    | typeof import("@graphitation/supermassive").addTypesToRequestDocument;
+    | typeof import("@graphitation/supermassive-ast").addTypesToRequestDocument;
   if (options.emitSupermassiveDocuments) {
     ({ addTypesToRequestDocument } = await import(
-      "@graphitation/supermassive"
+      "@graphitation/supermassive-ast"
     ));
   }
 

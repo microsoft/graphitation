@@ -1,8 +1,25 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape-compiler
 
-This log was last generated on Mon, 22 May 2023 13:58:50 GMT and should not be manually modified.
+This log was last generated on Mon, 19 Jun 2023 12:22:22 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.1.0
+
+Mon, 19 Jun 2023 12:22:22 GMT
+
+### Minor changes
+
+- Move to supermassive-ast package (mnovikov@microsoft.com)
+- Bump @graphitation/supermassive-ast to v2.0.0
+
+## 1.0.0
+
+Mon, 12 Jun 2023 12:50:51 GMT
+
+### Patches
+
+- Bump @graphitation/supermassive to v2.4.8
 
 ## 1.0.0-alpha.2
 

@@ -12,7 +12,7 @@ import {
 } from "graphql";
 import { compileQuery, isCompiledQuery } from "graphql-jit";
 import { executeWithoutSchema as supermassiveExecute } from "../executeWithoutSchema";
-import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
+import { addTypesToRequestDocument } from "@graphitation/supermassive-ast";
 import { Resolvers, UserResolvers } from "../types";
 import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
 import { specifiedScalars } from "../values";

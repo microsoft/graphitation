@@ -21,13 +21,16 @@ export type {
 
 export { isTotalExecutionResult, isIncrementalExecutionResult } from "./types";
 
-export { addTypesToRequestDocument } from "./ast/addTypesToRequestDocument";
+export {
+  /** @deprecated Use "@graphitation/supermassive-ast" */
+  addTypesToRequestDocument,
+  /** @deprecated Use "@graphitation/supermassive-ast" */
+  annotateDocumentGraphQLTransform,
+} from "@graphitation/supermassive-ast";
 
 export { extractImplicitTypes } from "./extractImplicitTypesRuntime";
 
 export { specifiedScalars } from "./values";
-
-export { annotateDocumentGraphQLTransform } from "./transforms/annotateDocumentGraphQLTransform";
 
 export type { PromiseOrValue } from "./jsutils/PromiseOrValue";
 
@@ -75,7 +78,7 @@ export type {
   UnionTypeExtensionNode,
   EnumTypeExtensionNode,
   InputObjectTypeExtensionNode,
-} from "./ast/TypedAST";
+} from "@graphitation/supermassive-ast";
 
 export type {
   BeforeFieldResolveHookArgs,

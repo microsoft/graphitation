@@ -7,7 +7,7 @@ import {
   OperationDefinitionNode,
   SelectionNode,
   SelectionSetNode,
-} from "./ast/TypedAST";
+} from "@graphitation/supermassive-ast";
 import type { ObjMap } from "./jsutils/ObjMap";
 import { getDirectiveValues } from "./values";
 import {

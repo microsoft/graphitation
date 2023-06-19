@@ -14,7 +14,7 @@ import { instanceOf } from "./jsutils/instanceOf";
 import { isObjectLike } from "./jsutils/isObjectLike";
 import type { Maybe } from "./jsutils/Maybe";
 
-import type { DirectiveDefinitionNode } from "./ast/TypedAST";
+import type { DirectiveDefinitionNode } from "@graphitation/supermassive-ast";
 
 import { defineArguments, argsToArgsConfig } from "./definition";
 

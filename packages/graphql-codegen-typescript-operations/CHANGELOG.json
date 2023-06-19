@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-typescript-operations",
   "entries": [
     {
+      "date": "Wed, 07 Jun 2023 14:42:08 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.2.0",
+      "version": "1.2.0",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "be90cd060911466429f83a3f47b61b749c621cc1",
+            "comment": "Merging into main"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 07 Jun 2023 14:13:33 GMT",
       "tag": "@graphitation/graphql-codegen-typescript-operations_v1.2.0",
       "version": "1.2.0",

@@ -1,4 +1,5 @@
 import { UserResolvers, Resolvers, Resolver } from "../types";
+import { isObjectLike } from "../jsutils/isObjectLike";
 
 export function mergeResolvers<TSource, TContext>(
   resolvers: UserResolvers<TSource, TContext>,
@@ -9,11 +10,7 @@ export function mergeResolvers<TSource, TContext>(
   } as Resolvers<TSource, TContext>;
 
   Object.keys(resolvers).forEach((resolverKey: string) => {
-    if (
-      fullResolvers[resolverKey] &&
-      typeof resolvers[resolverKey] === "object" &&
-      resolvers[resolverKey].constructor === Object
-    ) {
+    if (isObjectLike(fullResolvers[resolverKey])) {
       fullResolvers[resolverKey] = {
         ...fullResolvers[resolverKey],
         ...resolvers[resolverKey],

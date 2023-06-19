@@ -17,7 +17,7 @@ import {
   OperationDefinitionNode,
   OperationTypeNode,
   addTypesToRequestDocument,
-} from "../ast/addTypesToRequestDocument";
+} from "@graphitation/supermassive-ast";
 import { ExecutionResult, UserResolvers } from "../types";
 import { resolvers as extractedResolvers } from "../benchmarks/swapi-schema/__generated__/schema";
 import { forAwaitEach, isAsyncIterable } from "iterall";

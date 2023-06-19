@@ -18,7 +18,7 @@ import {
   OperationTypeDefinitionNode,
   OperationTypeNode,
   TypeNode,
-} from "./ast/TypedAST";
+} from "@graphitation/supermassive-ast";
 import {
   collectFields,
   collectSubfields as _collectSubfields,
