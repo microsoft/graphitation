@@ -1,8 +1,24 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Wed, 07 Jun 2023 08:48:18 GMT and should not be manually modified.
+This log was last generated on Mon, 19 Jun 2023 12:22:22 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.5.0
+
+Mon, 19 Jun 2023 12:22:22 GMT
+
+### Minor changes
+
+- Separate ast annotator from supermassive (mnovikov@microsoft.com)
+
+## 2.4.8
+
+Mon, 12 Jun 2023 12:50:51 GMT
+
+### Patches
+
+- fix: use 'isObjectLike' in mergeResolvers due to failure when resolvers entry is esModule (sergeystoyan@microsoft.com)
 
 ## 2.4.7
 

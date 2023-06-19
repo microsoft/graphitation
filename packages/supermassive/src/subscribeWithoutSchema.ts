@@ -9,7 +9,7 @@ import {
   ASTNode as GraphQLASTNode,
   TypeNode,
 } from "graphql";
-import { DocumentNode } from "./ast/TypedAST";
+import { DocumentNode } from "@graphitation/supermassive-ast";
 
 import type { ExecutionContext } from "./executeWithoutSchema";
 import {

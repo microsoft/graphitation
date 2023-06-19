@@ -2,6 +2,48 @@
   "name": "apollo-watch-fragments",
   "entries": [
     {
+      "date": "Mon, 19 Jun 2023 12:22:22 GMT",
+      "tag": "apollo-watch-fragments_v0.1.0",
+      "version": "0.1.0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "apollo-watch-fragments",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.0.3",
+            "commit": "77593c97a1aeb72bcdbb095fe9fd803836517fe2"
+          },
+          {
+            "author": "beachball",
+            "package": "apollo-watch-fragments",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.1.0",
+            "commit": "77593c97a1aeb72bcdbb095fe9fd803836517fe2"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 12 Jun 2023 12:50:51 GMT",
+      "tag": "apollo-watch-fragments_v0.1.0",
+      "version": "0.1.0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "apollo-watch-fragments",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.0.2",
+            "commit": "cfb76b7e21688e1f7693074894df2073b2bffcac"
+          },
+          {
+            "author": "beachball",
+            "package": "apollo-watch-fragments",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.0.0",
+            "commit": "cfb76b7e21688e1f7693074894df2073b2bffcac"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 22 May 2023 13:58:50 GMT",
       "tag": "apollo-watch-fragments_v0.1.0",
       "version": "0.1.0",
