@@ -45,5 +45,6 @@ export type {
   SelectionNode,
   TypeNode,
 } from "./TypedAST";
+export { OperationTypeNode } from "./TypedAST";
 export { addTypesToRequestDocument } from "./addTypesToRequestDocument";
 export { annotateDocumentGraphQLTransform } from "./annotateDocumentGraphQLTransform";
