@@ -23,6 +23,9 @@
     "release": "yarn beachball publish -t next",
     "postinstall": "patch-package"
   },
+  "dependencies": {
+    "graphql": "^17.0.0-alpha.2"
+  },
   "devDependencies": {
     "beachball": "^2.20.0",
     "lage": "^2.7.1",

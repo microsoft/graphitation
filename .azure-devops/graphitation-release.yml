@@ -1,7 +1,6 @@
 pr: none
 trigger:
   - main
-  - supermassive-v3
 
 variables:
   - group: InfoSec-SecurityResults

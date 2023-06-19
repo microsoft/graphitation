@@ -48,3 +48,14 @@ export type {
 export { OperationTypeNode } from "./TypedAST";
 export { addTypesToRequestDocument } from "./addTypesToRequestDocument";
 export { annotateDocumentGraphQLTransform } from "./annotateDocumentGraphQLTransform";
+
+export {
+  specifiedDirectives,
+  isSpecifiedDirective,
+  GraphQLIncludeDirective,
+  GraphQLSkipDirective,
+  GraphQLDeprecatedDirective,
+  GraphQLSpecifiedByDirective,
+  GraphQLDeferDirective,
+  GraphQLStreamDirective,
+} from "./directives";

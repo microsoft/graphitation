@@ -1659,6 +1659,11 @@
     "@n1ru4l/push-pull-async-iterable-iterator" "^3.1.0"
     meros "^1.1.4"
 
+"@graphitation/supermassive-ast@*", "@graphitation/supermassive-ast@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@graphitation/supermassive-ast/-/supermassive-ast-2.0.0.tgz#d49155c6b7213811d99b8609d496d6c460a4d1e2"
+  integrity sha512-YXguoTpIMI/ISavl98CrSOLohYVMr3JmPRhT6Qg4q6MfaonSKajvva9OUFOxxEmuAaEXfjhZ33ySWaNSu/XcLQ==
+
 "@graphitation/supermassive@^2.5.0":
   version "2.5.0"
   resolved "https://registry.yarnpkg.com/@graphitation/supermassive/-/supermassive-2.5.0.tgz#3b611dfb09adf65e12593d858d226c8018af4ad5"

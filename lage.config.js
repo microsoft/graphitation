@@ -1,7 +1,7 @@
 module.exports = {
   pipeline: {
     types: ["^types"],
-    build: [],
+    build: ["^build"],
     test: ["build"],
     lint: [],
   },

@@ -5,10 +5,7 @@
     "tsBuildInfoFile": ".tsbuildinfo",
     "rootDir": "src",
     "outDir": "lib",
-    "jsx": "react",
-    "paths": {
-      "graphql": ["./node_modules/graphql"]
-    }
+    "jsx": "react"
   },
   "include": ["src"],
   "references": [

@@ -19,6 +19,7 @@ import {
   VariableDefinitionNode as GraphQLVariableDefinitionNode,
   valueFromAST,
   coerceInputValue,
+  GraphQLDirective,
 } from "graphql";
 import {
   DirectiveNode,
@@ -31,7 +32,6 @@ import type { Maybe } from "./jsutils/Maybe";
 import type { ObjMap } from "./jsutils/ObjMap";
 import { printPathArray } from "./jsutils/printPathArray";
 import { Resolvers } from "./types";
-import { GraphQLDirective } from "./directives";
 
 type CoercedVariableValues =
   | { errors: Array<GraphQLError>; coerced?: never }

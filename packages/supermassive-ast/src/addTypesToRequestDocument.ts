@@ -25,13 +25,14 @@ import {
   isObjectType,
   isOutputType,
   typeFromAST,
+  GraphQLDirective,
 } from "graphql";
 
 import * as TypelessAST from "graphql/language/ast";
 import * as TypedAST from "./TypedAST";
 import { Maybe } from "graphql/jsutils/Maybe";
 export * from "./TypedAST";
-import { specifiedDirectives, GraphQLDirective } from "../directives";
+import { specifiedDirectives } from "./directives";
 
 export function addTypesToRequestDocument(
   schema: GraphQLSchema,
