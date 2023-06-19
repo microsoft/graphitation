@@ -4,18 +4,13 @@
     "composite": true,
     "tsBuildInfoFile": ".tsbuildinfo",
     "rootDir": "src",
-    "outDir": "lib",
-    "jsx": "react"
+    "outDir": "lib"
   },
   "include": ["src"],
-  "references": [
-    { "path": "../supermassive-ast" },
-    { "path": "../supermassive-extractors" }
-  ],
+  "references": [],
   "ts-node": {
     "transpileOnly": true,
-    "compilerOptions": {
-      "module": "CommonJS"
-    }
+    "target": "es5",
+    "module": "commonjs"
   }
 }

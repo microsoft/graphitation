@@ -208,51 +208,11 @@ function executeWithSchema(args: ExecutionWithSchemaArgs): PromiseOrValue<Execut
 
 ### Transform
 
-`addTypesToRequestDocument` converts untyped graphql-js AST node into a Supermassive typed one.
-
-```js
-function addTypesToRequestDocument(
-  schema: GraphQLSchema,
-  document: TypelessAST.DocumentNode
-): TypedAST.DocumentNode
-```
-
-With `@graphitation/graphql-js-tag` and `@graphitation/ts-transform-graphql-js-tag` (in webpack config)
-
-```js
-import { buildASTSchema } from 'graphql'
-import { getTransformer } from "@graphitation/ts-transform-graphql-js-tag";
-import { annotateDocumentGraphQLTransform } from "@graphitation/supermassive";
-
-// ...
-
-{
-  test: /\.tsx?$/,
-  loader: "ts-loader",
-  options: {
-    getCustomTransformers: () => ({
-       before: [
-          getTransformer({
-            graphqlTagModuleExport: "graphql",
-            transformer: annotateDocumentGraphQLTransform(
-              buildASTSchema({
-                fs.readFileSync(
-                  "PATH_TO_SCHEMA_TYPEDEFS.graphql",
-                  { encoding: "utf-8" }
-                ),
-              )
-            ),
-          }),
-        ],
-      }),
-    },
-  },
-}
-```
+Supermassive requires annotated GraphQL documents. See [`@graphitation/supermassive-ast`](../supermassive-ast/).
 
 ### Resolver extractor
 
-Supermassive provides a bin command to extract implicit resolvers.
+Supermassive provides a bin command to extract implicit resolvers. See [`@graphitation/supermassive-extractors`](../supermassive-extractors/) and [`@graphitation/cli`](../cli).
 
 ```sh
 supermassive extract-schema PATH_TO_TYPEDEFS.graphql

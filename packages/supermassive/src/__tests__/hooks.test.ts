@@ -3,7 +3,7 @@ import { executeWithoutSchema, executeWithSchema } from "..";
 import schema, { typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
-import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
+import { addTypesToRequestDocument } from "@graphitation/supermassive-ast";
 import { UserResolvers } from "../types";
 import { resolvers as extractedResolvers } from "../benchmarks/swapi-schema/__generated__/schema";
 import {
