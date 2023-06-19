@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Emit source-map for single and multi-line docs",
+  "packageName": "@graphitation/embedded-document-artefact-loader",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}

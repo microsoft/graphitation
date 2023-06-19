@@ -1,0 +1,45 @@
+{
+  "name": "@graphitation/embedded-document-artefact-loader",
+  "license": "MIT",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/graphitation.git",
+    "directory": "packages/embedded-document-artefact-loader"
+  },
+  "scripts": {
+    "build": "monorepo-scripts build",
+    "lint": "monorepo-scripts lint",
+    "test": "monorepo-scripts test",
+    "types": "monorepo-scripts types",
+    "just": "monorepo-scripts"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.22",
+    "@types/loader-runner": "^2.2.4",
+    "loader-runner": "^4.3.0",
+    "monorepo-scripts": "*"
+  },
+  "sideEffects": false,
+  "access": "public",
+  "exports": {
+    "jest": {
+      "import": "./lib/jest.ts"
+    },
+    "webpack": {
+      "import": "./lib/webpack.ts"
+    }
+  },
+  "publishConfig": {
+    "exports": {
+      "jest": {
+        "import": "./lib/jest.mjs",
+        "require": "./lib/jest.js"
+      },
+      "webpack": {
+        "import": "./lib/webpack.mjs",
+        "require": "./lib/webpack.js"
+      }
+    }
+  }
+}

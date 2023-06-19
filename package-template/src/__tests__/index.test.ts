@@ -1,4 +1,4 @@
-import { bar } from ".";
+import { bar } from "..";
 
 describe("bar", () => {
   it("returns a string", () => {
