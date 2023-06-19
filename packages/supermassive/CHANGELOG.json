@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Mon, 19 Jun 2023 12:22:22 GMT",
+      "tag": "@graphitation/supermassive_v2.5.0",
+      "version": "2.5.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "77593c97a1aeb72bcdbb095fe9fd803836517fe2",
+            "comment": "Separate ast annotator from supermassive"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 12 Jun 2023 12:50:51 GMT",
       "tag": "@graphitation/supermassive_v2.4.8",
       "version": "2.4.8",
