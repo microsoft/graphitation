@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@graphitation/graphql-js-tag": "^0.9.0",
+    "@graphitation/supermassive-ast": "*",
     "@types/dedent": "^0.7.0",
     "@types/jest": "^26.0.22",
     "@types/relay-compiler": "^8.0.0",
@@ -40,7 +41,7 @@
   },
   "peerDependencies": {
     "graphql": "^15.0.0",
-    "@graphitation/supermassive": "^2.4.8"
+    "@graphitation/supermassive-ast": "^1.0.0"
   },
   "publishConfig": {
     "main": "./lib/index.js",

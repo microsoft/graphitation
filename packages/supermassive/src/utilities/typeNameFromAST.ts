@@ -1,5 +1,5 @@
 import { Kind } from "graphql";
-import { TypeNode } from "../ast/TypedAST";
+import { TypeNode } from "@graphitation/supermassive-ast";
 
 export function typeNameFromAST(typeAst: TypeNode): string {
   if (typeAst.kind === Kind.LIST_TYPE || typeAst.kind === Kind.NON_NULL_TYPE) {
