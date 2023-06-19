@@ -7,8 +7,11 @@
     "outDir": "lib",
     "jsx": "react"
   },
-  "include": ["src", "../supermassive-ast/transforms"],
-  "references": [],
+  "include": ["src"],
+  "references": [
+    { "path": "../supermassive-ast" },
+    { "path": "../supermassive-extractors" }
+  ],
   "ts-node": {
     "transpileOnly": true,
     "compilerOptions": {
