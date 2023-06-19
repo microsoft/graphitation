@@ -17,7 +17,7 @@ import {
   OperationDefinitionNode,
   OperationTypeDefinitionNode,
   TypeNode,
-} from "./ast/TypedAST";
+} from "@graphitation/supermassive-ast";
 import { collectFields } from "./collectFields";
 import { devAssert } from "./jsutils/devAssert";
 import { inspect } from "./jsutils/inspect";

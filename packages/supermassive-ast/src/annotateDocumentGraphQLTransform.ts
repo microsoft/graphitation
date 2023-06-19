@@ -4,7 +4,7 @@ import {
   Kind,
   OperationDefinitionNode,
 } from "graphql";
-import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
+import { addTypesToRequestDocument } from "./addTypesToRequestDocument";
 
 export const annotateDocumentGraphQLTransform = (schema: GraphQLSchema) => {
   return (node: FragmentDefinitionNode | OperationDefinitionNode) => {
