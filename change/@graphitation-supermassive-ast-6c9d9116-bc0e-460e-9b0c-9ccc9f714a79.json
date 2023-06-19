@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "Separate ast annotator from supermassive",
+  "packageName": "@graphitation/supermassive-ast",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
