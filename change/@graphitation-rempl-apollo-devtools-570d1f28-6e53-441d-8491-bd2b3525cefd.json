@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "Make tests pass",
+  "packageName": "@graphitation/rempl-apollo-devtools",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "none"
+}

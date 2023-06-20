@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "Make tests pass",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "none"
+}

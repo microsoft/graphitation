@@ -35,6 +35,7 @@ import * as TypedAST from "./TypedAST";
 import { Maybe } from "graphql/jsutils/Maybe";
 export * from "./TypedAST";
 import { specifiedDirectives } from "./directives";
+import { GraphQLInputObjectType } from "graphql";
 
 export function addTypesToRequestDocument(
   schema: GraphQLSchema,
@@ -537,7 +538,8 @@ function getFieldDef(
 ) {
   if (
     parentType instanceof GraphQLObjectType ||
-    parentType instanceof GraphQLInterfaceType
+    parentType instanceof GraphQLInterfaceType ||
+    parentType instanceof GraphQLInputObjectType
   ) {
     return parentType.getFields()[fieldNode.name.value];
   } else {

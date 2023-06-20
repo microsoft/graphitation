@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /*
  * Taken from https://github.com/dotansimha/graphql-code-generator/blob/4fee8c8c523b30163e913438b85a064c58e39087/packages/plugins/typescript/typed-document-node/src/visitor.ts
  * MIT license https://github.com/dotansimha/graphql-code-generator/blob/4fee8c8c523b30163e913438b85a064c58e39087/LICENSE
@@ -94,9 +93,7 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
     const supermassiveNode = addTypesToRequestDocument((this as any)._schema, {
       kind: Kind.DOCUMENT,
       definitions: [node as any],
-    } as any).definitions[0] as
-      | FragmentDefinitionNode
-      | OperationDefinitionNode;
+    }).definitions[0] as FragmentDefinitionNode | OperationDefinitionNode;
 
     const fragments = (this as any)._transformFragments(supermassiveNode);
 
@@ -170,7 +167,7 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
           addTypesToRequestDocument((this as any)._schema, {
             kind: Kind.DOCUMENT,
             definitions: [t as any],
-          } as any).definitions[0],
+          }).definitions[0],
       ),
     } as DocumentNode;
   }
