@@ -2,7 +2,7 @@
   "name": "@graphitation/apollo-react-relay-duct-tape-compiler",
   "description": "The build tools to cater to @graphitation/apollo-react-relay-duct-tape's needs.",
   "license": "MIT",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "main": "./src/index.ts",
   "bin": {
     "duct-tape-compiler": "./src/cli-cjs.js"

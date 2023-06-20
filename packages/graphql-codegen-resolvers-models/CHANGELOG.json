@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-resolvers-models",
   "entries": [
     {
+      "date": "Tue, 20 Jun 2023 11:38:47 GMT",
+      "tag": "@graphitation/graphql-codegen-resolvers-models_v1.1.0",
+      "version": "1.1.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-codegen-resolvers-models",
+            "commit": "76002f5737ad48c800f114bc47eb15e5e6c4653e",
+            "comment": "Bump TS version in dev, move TS to peerDep"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 07 Jun 2023 14:13:33 GMT",
       "tag": "@graphitation/graphql-codegen-resolvers-models_v1.0.1",
       "version": "1.0.1",

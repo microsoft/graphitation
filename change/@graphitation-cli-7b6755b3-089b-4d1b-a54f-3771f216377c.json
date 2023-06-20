@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Bump TS version in dev, move TS to peerDep",
-  "packageName": "@graphitation/cli",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

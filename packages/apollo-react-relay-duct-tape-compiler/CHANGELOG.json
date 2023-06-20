@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape-compiler",
   "entries": [
     {
+      "date": "Tue, 20 Jun 2023 11:38:47 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.2.0",
+      "version": "1.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "commit": "76002f5737ad48c800f114bc47eb15e5e6c4653e",
+            "comment": "Bump TS version in dev, move TS to peerDep"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 19 Jun 2023 12:22:22 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.1.0",
       "version": "1.1.0",
