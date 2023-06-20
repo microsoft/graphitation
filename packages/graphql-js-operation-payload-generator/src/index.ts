@@ -474,7 +474,7 @@ function getRootType(
 ): GraphQLObjectType | undefined | null {
   const rootType = getOperationAST(operation.request.node);
   invariant(rootType, "Expected operation to have a root type");
-  switch (rootType.operation as "query" | "mutation" | "subscription") {
+  switch (rootType.operation) {
     case "query":
       return operation.schema.getQueryType();
     case "mutation":

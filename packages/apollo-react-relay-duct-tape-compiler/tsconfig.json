@@ -8,7 +8,7 @@
     "module": "commonjs"
   },
   "include": ["src"],
-  "references": [{ "path": "../supermassive-ast" }],
+  "references": [],
   "ts-node": {
     "transpileOnly": true,
     "compilerOptions": {

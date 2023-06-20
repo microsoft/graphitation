@@ -48,8 +48,7 @@ export const plugin: PluginFunction<
   const visitor = new TypeScriptDocumentsVisitor(schema, config, allFragments);
 
   const visitorResult = visit(allAst, {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    leave: visitor as any,
+    leave: visitor,
   });
 
   let content = visitorResult.definitions.join("\n");
@@ -65,10 +64,7 @@ export const plugin: PluginFunction<
       }
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    content = (visitorResult.definitions as any)
-      .concat(exportConsts)
-      .join("\n");
+    content = visitorResult.definitions.concat(exportConsts).join("\n");
   }
 
   if (config.globalNamespace) {

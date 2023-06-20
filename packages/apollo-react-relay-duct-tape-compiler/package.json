@@ -41,7 +41,7 @@
   },
   "peerDependencies": {
     "graphql": "^15.0.0",
-    "@graphitation/supermassive": "^2.4.7 || ^3.0.0"
+    "@graphitation/supermassive-ast": "^2.0.0"
   },
   "publishConfig": {
     "main": "./lib/index.js",

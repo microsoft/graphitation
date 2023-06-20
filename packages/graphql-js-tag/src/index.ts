@@ -1,4 +1,4 @@
-import { parse, Kind } from "graphql";
+import { parse } from "graphql";
 import type { DocumentNode } from "graphql";
 import invariant from "invariant";
 
@@ -54,5 +54,5 @@ export function graphql(
   fragments.forEach((doc) =>
     doc.definitions.forEach((def) => definitions.add(def)),
   );
-  return { kind: Kind.DOCUMENT, definitions: Array.from(definitions) };
+  return { kind: "Document", definitions: Array.from(definitions) };
 }

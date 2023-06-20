@@ -57,104 +57,99 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
       documents,
     );
 
-    autoBind(this as any);
+    autoBind(this);
 
-    // We need to make sure it's there because in (this as any) mode, the base plugin doesn't add the import
-    if ((this as any).config.documentMode === DocumentMode.graphQLTag) {
-      const documentNodeImport = (this as any)._parseImport(
-        (this as any).config.documentNodeImport || "graphql#DocumentNode",
+    // We need to make sure it's there because in this mode, the base plugin doesn't add the import
+    if (this.config.documentMode === DocumentMode.graphQLTag) {
+      const documentNodeImport = this._parseImport(
+        this.config.documentNodeImport || "graphql#DocumentNode",
       );
-      const tagImport = (this as any)._generateImport(
+      const tagImport = this._generateImport(
         documentNodeImport,
         "DocumentNode",
         true,
       ) as string;
-      (this as any)._imports.add(tagImport);
+      this._imports.add(tagImport);
     }
   }
 
   protected _gql(
     node: FragmentDefinitionNode | OperationDefinitionNode,
   ): string {
-    if ((this as any).config.supermassiveDocumentNodeConditional) {
-      const supermassive = (this as any)._render(node, true);
-      const standard = (this as any)._render(node, false);
-      return `(${
-        (this as any).config.supermassiveDocumentNodeConditional
-      }\n? ${supermassive}\n: ${standard})`;
+    if (this.config.supermassiveDocumentNodeConditional) {
+      const supermassive = this._render(node, true);
+      const standard = this._render(node, false);
+      return `(${this.config.supermassiveDocumentNodeConditional}\n? ${supermassive}\n: ${standard})`;
     }
-    return (this as any)._render(node, true);
+    return this._render(node, true);
   }
 
   protected _render(
     node: FragmentDefinitionNode | OperationDefinitionNode,
     annotate = false,
   ): string {
-    const supermassiveNode = addTypesToRequestDocument((this as any)._schema, {
+    const supermassiveNode = addTypesToRequestDocument(this._schema, {
       kind: Kind.DOCUMENT,
-      definitions: [node as any],
+      definitions: [node],
     }).definitions[0] as FragmentDefinitionNode | OperationDefinitionNode;
 
-    const fragments = (this as any)._transformFragments(supermassiveNode);
+    const fragments = this._transformFragments(supermassiveNode);
 
-    const doc = (this as any)._prepareDocument(`
+    const doc = this._prepareDocument(`
     ${
       print(supermassiveNode)
         .split("\\")
         .join("\\\\") /* Re-escape escaped values in GraphQL syntax */
     }
-    ${(this as any)._includeFragments(fragments)}`);
+    ${this._includeFragments(fragments)}`);
 
-    if ((this as any).config.documentMode === DocumentMode.documentNode) {
-      let gqlObj: any = gqlTag([doc]);
+    if (this.config.documentMode === DocumentMode.documentNode) {
+      let gqlObj = gqlTag([doc]);
 
-      if ((this as any).config.optimizeDocumentNode) {
-        gqlObj = optimizeDocumentNode(gqlObj as any);
+      if (this.config.optimizeDocumentNode) {
+        gqlObj = optimizeDocumentNode(gqlObj);
       }
       if (annotate) {
-        gqlObj = (this as any)._transformDocumentNodeToSupermassive(gqlObj);
+        gqlObj = this._transformDocumentNodeToSupermassive(gqlObj);
       }
 
       return JSON.stringify(gqlObj);
     } else if (
-      (this as any).config.documentMode ===
-      DocumentMode.documentNodeImportFragments
+      this.config.documentMode === DocumentMode.documentNodeImportFragments
     ) {
-      let gqlObj: any = gqlTag([doc]);
+      let gqlObj = gqlTag([doc]);
 
-      if ((this as any).config.optimizeDocumentNode) {
-        gqlObj = optimizeDocumentNode(gqlObj as any);
+      if (this.config.optimizeDocumentNode) {
+        gqlObj = optimizeDocumentNode(gqlObj);
       }
 
       if (fragments.length > 0) {
         const definitions = [
-          ...gqlObj.definitions.map((t: any) =>
+          ...gqlObj.definitions.map((t) =>
             JSON.stringify(
               annotate
-                ? addTypesToRequestDocument((this as any)._schema, {
+                ? addTypesToRequestDocument(this._schema, {
                     kind: Kind.DOCUMENT,
                     definitions: [t],
-                  } as any).definitions[0]
+                  }).definitions[0]
                 : t,
             ),
           ),
-          ...fragments.map((name: any) => `...${name}.definitions`),
+          ...fragments.map((name) => `...${name}.definitions`),
         ].join();
 
         return `{"kind":"${Kind.DOCUMENT}","definitions":[${definitions}]}`;
       }
       if (annotate) {
-        gqlObj = (this as any)._transformDocumentNodeToSupermassive(gqlObj);
+        gqlObj = this._transformDocumentNodeToSupermassive(gqlObj);
       }
 
       return JSON.stringify(gqlObj);
-    } else if ((this as any).config.documentMode === DocumentMode.string) {
+    } else if (this.config.documentMode === DocumentMode.string) {
       return "`" + doc + "`";
     }
 
-    const gqlImport = (this as any)._parseImport(
-      (this as any).config.gqlImport || "graphql-tag",
-    );
+    const gqlImport = this._parseImport(this.config.gqlImport || "graphql-tag");
 
     return (gqlImport.propName || "gql") + "`" + doc + "`";
   }
@@ -164,9 +159,9 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
       ...document,
       definitions: document.definitions.map(
         (t) =>
-          addTypesToRequestDocument((this as any)._schema, {
+          addTypesToRequestDocument(this._schema, {
             kind: Kind.DOCUMENT,
-            definitions: [t as any],
+            definitions: [t],
           }).definitions[0],
       ),
     } as DocumentNode;
@@ -177,10 +172,9 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
     node: FragmentDefinitionNode | OperationDefinitionNode,
   ) {
     if (
-      (this as any).config.documentMode === DocumentMode.documentNode ||
-      (this as any).config.documentMode ===
-        DocumentMode.documentNodeImportFragments ||
-      (this as any).config.documentMode === DocumentMode.graphQLTag
+      this.config.documentMode === DocumentMode.documentNode ||
+      this.config.documentMode === DocumentMode.documentNodeImportFragments ||
+      this.config.documentMode === DocumentMode.graphQLTag
     ) {
       return ` as unknown as DocumentNode<${resultType}, ${variablesTypes}>`;
     }

@@ -2,10 +2,10 @@ import {
   ArgumentNode,
   ASTNode,
   DirectiveNode,
-  ValueNode,
+  GraphQLError,
   ObjectTypeDefinitionNode,
-  locatedError,
 } from "graphql";
+import { ValueNode } from "graphql/language/ast";
 import { DefinitionModel } from "../types";
 import { createVariableNameFromImport } from "../utilities";
 import { getRelativePath } from "./utilities";
@@ -23,19 +23,19 @@ export function processModelDirective(
   const scope = getArgumentValue(node.arguments, "scope");
 
   if (from && from.kind !== "StringValue") {
-    throw locatedError(
+    throw new GraphQLError(
       `Directive @module requires "from" argument to exist and be a path to a typescript file.`,
       [from ?? node],
     );
   }
   if (tsType?.kind !== "StringValue") {
-    throw locatedError(
+    throw new GraphQLError(
       `Directive @model requires "tsType" argument to exist and be a name of the exported typescript type`,
       [tsType ?? node],
     );
   }
   if (scope && scope.kind !== "StringValue" && scope.kind !== "EnumValue") {
-    throw locatedError(
+    throw new GraphQLError(
       `Directive @model scope argument must be string or enum`,
       [scope ?? node],
     );
@@ -49,7 +49,7 @@ export function processModelDirective(
     ((typeDef as ASTNode).kind !== "ObjectTypeDefinition" &&
       (typeDef as ASTNode).kind !== "ScalarTypeDefinition")
   ) {
-    throw locatedError(
+    throw new GraphQLError(
       "Directive @model must be defined on Object or Scalar type",
       [node],
     );

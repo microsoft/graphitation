@@ -67,10 +67,8 @@ export async function formatModuleFactory(
     if (addTypesToRequestDocument && exports.executionQueryDocument) {
       invariant(schema, "Expected a schema instance");
       exports.executionQueryDocument = addTypesToRequestDocument(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        schema as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        exports.executionQueryDocument as any,
+        schema,
+        exports.executionQueryDocument,
       ) as DocumentNode;
     }
 

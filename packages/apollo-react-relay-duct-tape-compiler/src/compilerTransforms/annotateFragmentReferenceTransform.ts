@@ -67,7 +67,7 @@ export const annotateFragmentReferenceTransform: IRTransform = (context) => {
 
 function visitNodeWithSelections(
   context: CompilerContext,
-  node: Root | Fragment | InlineFragment | LinkedField,
+  node: Root | Fragment | InlineFragment | LinkedField
 ): Root | Fragment | InlineFragment | LinkedField | undefined {
   for (const selection of node.selections) {
     if (selection.kind === "FragmentSpread") {

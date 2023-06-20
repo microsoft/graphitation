@@ -1,6 +1,6 @@
 import {
   DocumentNode,
-  locatedError,
+  GraphQLError,
   visit,
   ArgumentNode,
   ValueNode,
@@ -192,7 +192,7 @@ export class TsCodegenContext {
         this.typeNameToImports.get(typeName) || {};
 
       if (existingImport) {
-        throw locatedError(
+        throw new GraphQLError(
           `Definition ${typeName} is imported multiple times: ${existingImport.from}`,
           [
             getArgumentValue(existingImport.directive.arguments, "from") ??
@@ -526,7 +526,7 @@ export function extractContext(
             Array.isArray(typeDef) ||
             (typeDef as ASTNode).kind !== "InterfaceTypeDefinition"
           ) {
-            throw locatedError(
+            throw new GraphQLError(
               "Directive @legacyInterface_DO_NOT_USE must be defined on Interface type",
               [node],
             );
