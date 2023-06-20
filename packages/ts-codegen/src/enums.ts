@@ -50,16 +50,16 @@ export function generateEnums(context: TsCodegenContext): ts.SourceFile {
 function createEnumTypeModel(
   context: TsCodegenContext,
   type: EnumType,
-): ts.EnumDeclaration {
-  return factory.createEnumDeclaration(
+): ts.TypeAliasDeclaration {
+  return factory.createTypeAliasDeclaration(
     undefined,
-    [
-      factory.createModifier(ts.SyntaxKind.ExportKeyword),
-      // factory.createModifier(ts.SyntaxKind.ConstKeyword),
-    ],
+    [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     type.name,
-    type.values.map((name) =>
-      factory.createEnumMember(name, factory.createStringLiteral(name)),
+    undefined,
+    factory.createUnionTypeNode(
+      type.values.map((name) =>
+        factory.createLiteralTypeNode(factory.createStringLiteral(name)),
+      ),
     ),
   );
 }
