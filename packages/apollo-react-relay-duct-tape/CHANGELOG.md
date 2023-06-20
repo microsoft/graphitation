@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Mon, 19 Jun 2023 12:22:22 GMT and should not be manually modified.
+This log was last generated on Tue, 20 Jun 2023 11:38:47 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.4
+
+Tue, 20 Jun 2023 11:38:47 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.2.0
 
 ## 1.0.3
 

@@ -1,8 +1,19 @@
 # Change Log - supermassive-todomvc
 
-This log was last generated on Mon, 19 Jun 2023 12:22:22 GMT and should not be manually modified.
+This log was last generated on Tue, 20 Jun 2023 11:38:47 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.1-0
+
+Tue, 20 Jun 2023 11:38:47 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape to v1.0.4
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.2.0
+- Bump @graphitation/supermassive to v2.6.0
+- Bump @graphitation/ts-transform-graphql-js-tag to v1.1.0
 
 ## 1.0.1-0
 
