@@ -11,7 +11,7 @@
     "jest/globals": true
   },
   "ignorePatterns": ["**/coverage", "**/lib", "**/temp", "**/__generated__"],
-  "plugins": ["check-file", "prettier", "jest"],
+  "plugins": ["check-file", "prettier", "jest", "@typescript-eslint"],
   "rules": {
     "check-file/folder-match-with-fex": [
       "error",

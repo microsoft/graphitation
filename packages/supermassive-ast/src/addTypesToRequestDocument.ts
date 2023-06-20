@@ -385,7 +385,7 @@ export class TypeInfo {
             fieldType = fieldDef.type;
           }
         }
-        this._fieldDefStack.push(fieldDef);
+        this._fieldDefStack.push(fieldDef as any);
         this._typeStack.push(isOutputType(fieldType) ? fieldType : undefined);
         break;
       }

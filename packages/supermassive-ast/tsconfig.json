@@ -4,10 +4,7 @@
     "composite": true,
     "tsBuildInfoFile": ".tsbuildinfo",
     "rootDir": "src",
-    "outDir": "lib",
-    "paths": {
-      "graphql": ["../supermassive/node_modules/graphql"]
-    }
+    "outDir": "lib"
   },
   "include": ["src"],
   "references": [],
