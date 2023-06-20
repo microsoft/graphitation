@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/graphql-codegen-resolvers-models",
   "license": "MIT",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
@@ -19,16 +19,15 @@
     "@graphql-codegen/plugin-helpers": "^1.18.2",
     "@graphql-codegen/visitor-plugin-common": "^1.17.20",
     "@types/jest": "^26.0.22",
+    "typescript": "^4.9.5",
     "monorepo-scripts": "*"
   },
   "peerDependencies": {
     "@graphql-codegen/plugin-helpers": ">= 1.18.0 < 2",
     "@graphql-codegen/visitor-plugin-common": ">= ^1.17.0 < 2",
-    "typescript": "^4.4.3 <4.5.0"
+    "typescript": "^4.3.5"
   },
-  "dependencies": {
-    "typescript": "^4.4.3 <4.5.0"
-  },
+  "dependencies": {},
   "sideEffects": false,
   "access": "public",
   "publishConfig": {

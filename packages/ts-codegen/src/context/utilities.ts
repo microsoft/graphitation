@@ -15,6 +15,7 @@ export function createImportDeclaration(
       factory.createNamedImports(
         importNames.map((importName) =>
           factory.createImportSpecifier(
+            false,
             importAlias ? factory.createIdentifier(importAlias) : undefined,
             factory.createIdentifier(importName),
           ),

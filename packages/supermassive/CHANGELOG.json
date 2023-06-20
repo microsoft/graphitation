@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Tue, 20 Jun 2023 11:38:47 GMT",
+      "tag": "@graphitation/supermassive_v2.6.0",
+      "version": "2.6.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "76002f5737ad48c800f114bc47eb15e5e6c4653e",
+            "comment": "Bump TS version in dev, move TS to peerDep"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 19 Jun 2023 12:22:22 GMT",
       "tag": "@graphitation/supermassive_v2.5.0",
       "version": "2.5.0",

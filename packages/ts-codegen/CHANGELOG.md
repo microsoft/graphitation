@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-This log was last generated on Mon, 29 May 2023 13:14:30 GMT and should not be manually modified.
+This log was last generated on Tue, 20 Jun 2023 11:38:47 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.5.0
+
+Tue, 20 Jun 2023 11:38:47 GMT
+
+### Minor changes
+
+- Bump TS version in dev, move TS to peerDep (mnovikov@microsoft.com)
 
 ## 2.4.3
 

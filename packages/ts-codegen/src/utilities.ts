@@ -309,6 +309,7 @@ export function createNonNullableTemplate(): ts.Statement[] {
             undefined,
           ),
         ),
+        undefined,
       ),
     ),
     factory.createTypeAliasDeclaration(
@@ -364,6 +365,7 @@ export function createNonNullableTemplate(): ts.Statement[] {
             undefined,
           ),
         ),
+        undefined,
       ),
     ),
     factory.createTypeAliasDeclaration(
@@ -413,6 +415,7 @@ export function createNonNullableTemplate(): ts.Statement[] {
               undefined,
             ),
           ),
+          undefined,
         ),
         factory.createMappedTypeNode(
           undefined,
@@ -449,6 +452,7 @@ export function createNonNullableTemplate(): ts.Statement[] {
               undefined,
             ),
           ),
+          undefined,
         ),
       ]),
     ),
