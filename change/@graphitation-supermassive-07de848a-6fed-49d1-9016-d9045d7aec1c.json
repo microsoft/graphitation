@@ -1,0 +1,7 @@
+{
+  "type": "prerelease",
+  "comment": "Supermassive v3 alpha - defer and stream stuff",
+  "packageName": "@graphitation/supermassive",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
