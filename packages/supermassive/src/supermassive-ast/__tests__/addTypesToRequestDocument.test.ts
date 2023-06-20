@@ -344,7 +344,8 @@ describe(addTypesToRequestDocument, () => {
   it("supports built-in directives", () => {
     const document = addTypesToRequestDocument(
       schema,
-      parse(`
+      parse(
+        `
         query {
           film(id: 42)
             @skip(if: false)
@@ -358,7 +359,11 @@ describe(addTypesToRequestDocument, () => {
             }
           }
         }
-      `),
+      `,
+        {
+          noLocation: true,
+        },
+      ),
     );
 
     const operationNode = document.definitions[0] as OperationDefinitionNode;
