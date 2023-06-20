@@ -1,8 +1,8 @@
 diff --git a/node_modules/@apollo/client/cache/cache.cjs b/node_modules/@apollo/client/cache/cache.cjs
-index 2451026..a9f3575 100644
+index afbbcd0..d93d0af 100644
 --- a/node_modules/@apollo/client/cache/cache.cjs
 +++ b/node_modules/@apollo/client/cache/cache.cjs
-@@ -1502,7 +1502,7 @@ var Policies = (function () {
+@@ -1479,7 +1479,7 @@ var Policies = (function () {
          }
          var storeFieldName = this.getStoreFieldName(options);
          var fieldName = fieldNameFromStoreName(storeFieldName);
@@ -11,7 +11,7 @@ index 2451026..a9f3575 100644
          var policy = this.getFieldPolicy(options.typename, fieldName, false);
          var read = policy && policy.read;
          if (read) {
-@@ -1549,6 +1549,7 @@ function makeFieldFunctionOptions(policies, objectOrReference, fieldSpec, contex
+@@ -1526,6 +1526,7 @@ function makeFieldFunctionOptions(policies, objectOrReference, fieldSpec, contex
      return {
          args: argsFromFieldSpecifier(fieldSpec),
          field: fieldSpec.field || null,
