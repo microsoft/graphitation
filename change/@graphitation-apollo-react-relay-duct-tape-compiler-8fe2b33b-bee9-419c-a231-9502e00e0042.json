@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Bump TS version in dev, move TS to peerDep",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape-compiler",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}

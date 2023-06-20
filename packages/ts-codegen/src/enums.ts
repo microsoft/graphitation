@@ -16,6 +16,7 @@ export function generateEnums(context: TsCodegenContext): ts.SourceFile {
               false,
               factory.createNamedExports([
                 factory.createExportSpecifier(
+                  false,
                   undefined,
                   factory.createIdentifier(type.name),
                 ),

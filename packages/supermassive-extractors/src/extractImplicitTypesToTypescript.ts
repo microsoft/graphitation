@@ -131,6 +131,7 @@ export function extractImplicitTypesToTypescript(
         factory.createNamedImports(
           graphQLImports.map((imp) =>
             factory.createImportSpecifier(
+              false,
               undefined,
               factory.createIdentifier(imp),
             ),
@@ -150,6 +151,7 @@ export function extractImplicitTypesToTypescript(
         factory.createNamedImports(
           supermassiveImports.map((imp) =>
             factory.createImportSpecifier(
+              false,
               undefined,
               factory.createIdentifier(imp),
             ),

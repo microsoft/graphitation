@@ -19,16 +19,19 @@
   },
   "devDependencies": {
     "@types/jest": "^26.0.22",
+    "typescript": "^4.9.5",
     "monorepo-scripts": "*"
   },
   "dependencies": {
     "@graphitation/supermassive-extractors": "^2.1.0",
     "@graphitation/ts-codegen": "^2.4.3",
     "commander": "^8.3.0",
-    "typescript": "^4.4.3 <4.5.0",
     "fast-glob": "^3.2.12",
     "graphql": "^15.6.1"
   },
   "sideEffects": false,
-  "access": "public"
+  "access": "public",
+  "peerDependencies": {
+    "typescript": "^4.3.0"
+  }
 }
