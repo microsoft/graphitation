@@ -1659,16 +1659,13 @@
     "@n1ru4l/push-pull-async-iterable-iterator" "^3.1.0"
     meros "^1.1.4"
 
-"@graphitation/supermassive@^2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@graphitation/supermassive/-/supermassive-2.5.0.tgz#3b611dfb09adf65e12593d858d226c8018af4ad5"
-  integrity sha512-L5bfCRFBIKKQTdFfWpNFQTxsJmhLgnxn3QgszkxhMsL0DdAtMIbLaf7HFtOUmGbLF2A+coyELZJ+b+6wDy5v7g==
+"@graphitation/supermassive@^2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@graphitation/supermassive/-/supermassive-2.6.0.tgz#ac43287d2098105833797810e6c9025c26d8e773"
+  integrity sha512-GI6mFcWFxmA2rW9QbLAM8ZECQBtIskMm/KkCzHcBG2+SOaJj19rTc2hH55ExMf4fDP91LBgNl6hEWH7PYYZstA==
   dependencies:
     "@graphitation/supermassive-ast" "*"
-    "@graphql-tools/schema" "^9.0.19"
-    commander "^8.3.0"
     graphql "^15.6.1"
-    typescript "^4.4.3 <4.5.0"
 
 "@graphql-codegen/add@^3.1.0":
   version "3.1.0"
