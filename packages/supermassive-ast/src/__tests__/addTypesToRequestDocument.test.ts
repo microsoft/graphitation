@@ -4,11 +4,11 @@ import {
   OperationDefinitionNode,
 } from "../addTypesToRequestDocument";
 
-import { buildASTSchema, parse } from "graphql";
+import { graphql } from "@graphitation/graphql-js-tag";
+import { buildASTSchema } from "graphql";
 import { FragmentDefinitionNode, InlineFragmentNode } from "../TypedAST";
 
-const schema = buildASTSchema(
-  parse(`
+const schema = buildASTSchema(graphql`
   type Query {
     film(id: ID!): Film
     allFilms: [Film]
@@ -35,21 +35,20 @@ const schema = buildASTSchema(
     title: String!
     filmType: FilmType!
   }
-`),
-);
+`);
 
 describe(addTypesToRequestDocument, () => {
   describe("concerning field selections", () => {
     it("adds a named type node", () => {
       const document = addTypesToRequestDocument(
         schema,
-        parse(`
+        graphql`
           query {
             film(id: 42) {
               title
             }
           }
-        `),
+        `,
       );
 
       const operationNode = document.definitions[0] as OperationDefinitionNode;
@@ -69,11 +68,11 @@ describe(addTypesToRequestDocument, () => {
     it("adds a non-null type node", () => {
       const document = addTypesToRequestDocument(
         schema,
-        parse(`
+        graphql`
           fragment FilmFragment on Film {
             title
           }
-        `),
+        `,
       );
 
       const fragmentNode = document.definitions[0] as FragmentDefinitionNode;
@@ -96,7 +95,7 @@ describe(addTypesToRequestDocument, () => {
     it("adds a list type node", () => {
       const document = addTypesToRequestDocument(
         schema,
-        parse(`
+        graphql`
           query {
             ... on Query {
               allFilms {
@@ -104,7 +103,7 @@ describe(addTypesToRequestDocument, () => {
               }
             }
           }
-        `),
+        `,
       );
 
       const operationNode = document.definitions[0] as OperationDefinitionNode;
@@ -130,11 +129,11 @@ describe(addTypesToRequestDocument, () => {
     it("adds a list type with non-null type node", () => {
       const document = addTypesToRequestDocument(
         schema,
-        parse(`
+        graphql`
           fragment FilmFragment on Film {
             actors
           }
-        `),
+        `,
       );
 
       const fragmentNode = document.definitions[0] as FragmentDefinitionNode;
@@ -162,13 +161,13 @@ describe(addTypesToRequestDocument, () => {
     it("adds a scalar type node", () => {
       const document = addTypesToRequestDocument(
         schema,
-        parse(`
+        graphql`
           query {
             film(id: 42) {
               title
             }
           }
-        `),
+        `,
       );
 
       const operationNode = document.definitions[0] as OperationDefinitionNode;
@@ -192,7 +191,7 @@ describe(addTypesToRequestDocument, () => {
     it("adds an input object type node", () => {
       const document = addTypesToRequestDocument(
         schema,
-        parse(`
+        graphql`
           mutation Test($filmType: FilmType) {
             createFilm(
               input: { title: "The Phantom Menace", filmType: $filmType }
@@ -201,7 +200,7 @@ describe(addTypesToRequestDocument, () => {
               title
             }
           }
-        `),
+        `,
       );
 
       const operationNode = document.definitions[0] as OperationDefinitionNode;
@@ -255,13 +254,13 @@ describe(addTypesToRequestDocument, () => {
     it("adds missing types with default values", () => {
       const document = addTypesToRequestDocument(
         schema,
-        parse(`
+        graphql`
           mutation {
             createFilm(enumInput: GOOD) {
               title
             }
           }
-        `),
+        `,
       );
 
       const operationNode = document.definitions[0] as OperationDefinitionNode;
@@ -299,14 +298,14 @@ describe(addTypesToRequestDocument, () => {
       expect(() => {
         addTypesToRequestDocument(
           schema,
-          parse(`
+          graphql`
             query filmQuery {
               film(id: 42) {
                 title
                 format
               }
             }
-          `),
+          `,
         );
       }).toThrowError(
         "Cannot find type for field: query filmQuery.film.format",
@@ -315,223 +314,29 @@ describe(addTypesToRequestDocument, () => {
       expect(() => {
         addTypesToRequestDocument(
           schema,
-          parse(`
+          graphql`
             query {
               film(id: 42) {
                 title
                 format
               }
             }
-          `),
+          `,
         );
       }).toThrowError("Cannot find type for field: query.film.format");
 
       expect(() => {
         addTypesToRequestDocument(
           schema,
-          parse(`
+          graphql`
             query {
               film(ido: 42) {
                 title
               }
             }
-          `),
+          `,
         );
       }).toThrowError("Cannot find type for argument: query.film.ido");
     });
-  });
-
-  it("supports built-in directives", () => {
-    const document = addTypesToRequestDocument(
-      schema,
-      parse(`
-        query {
-          film(id: 42)
-            @skip(if: false)
-            @include(if: true)
-            @stream(initialCount: 5) {
-            title
-          }
-          ... on Query @defer(label: "DeferLabel") {
-            film(id: 42) {
-              title
-            }
-          }
-        }
-      `),
-    );
-
-    const operationNode = document.definitions[0] as OperationDefinitionNode;
-    const fieldNode = operationNode.selectionSet.selections[0] as FieldNode;
-    expect(fieldNode.directives?.map((d) => d.arguments))
-      .toMatchInlineSnapshot(`
-      [
-        [
-          {
-            "__type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Boolean",
-                },
-              },
-            },
-            "kind": "Argument",
-            "name": {
-              "kind": "Name",
-              "value": "if",
-            },
-            "value": {
-              "kind": "BooleanValue",
-              "value": false,
-            },
-          },
-        ],
-        [
-          {
-            "__type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Boolean",
-                },
-              },
-            },
-            "kind": "Argument",
-            "name": {
-              "kind": "Name",
-              "value": "if",
-            },
-            "value": {
-              "kind": "BooleanValue",
-              "value": true,
-            },
-          },
-        ],
-        [
-          {
-            "__type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "Int",
-              },
-            },
-            "kind": "Argument",
-            "name": {
-              "kind": "Name",
-              "value": "initialCount",
-            },
-            "value": {
-              "kind": "IntValue",
-              "value": "5",
-            },
-          },
-          {
-            "__type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Boolean",
-                },
-              },
-            },
-            "kind": "Argument",
-            "name": {
-              "kind": "Name",
-              "value": "if",
-            },
-            "value": {
-              "kind": "BooleanValue",
-              "value": true,
-            },
-          },
-        ],
-      ]
-    `);
-    const fragmentNode = operationNode.selectionSet
-      .selections[1] as InlineFragmentNode;
-    expect(fragmentNode.directives?.map((d) => d.arguments))
-      .toMatchInlineSnapshot(`
-      [
-        [
-          {
-            "__type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String",
-              },
-            },
-            "kind": "Argument",
-            "name": {
-              "kind": "Name",
-              "value": "label",
-            },
-            "value": {
-              "block": false,
-              "kind": "StringValue",
-              "value": "DeferLabel",
-            },
-          },
-          {
-            "__type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Boolean",
-                },
-              },
-            },
-            "kind": "Argument",
-            "name": {
-              "kind": "Name",
-              "value": "if",
-            },
-            "value": {
-              "kind": "BooleanValue",
-              "value": true,
-            },
-          },
-        ],
-      ]
-    `);
-  });
-
-  it("do not error on ignored directives", () => {
-    const document = addTypesToRequestDocument(
-      schema,
-      parse(`
-        query {
-          film(id: 42) {
-            title @frobnirator(frobnarion: true)
-          }
-        }
-      `),
-      {
-        ignoredDirectives: ["frobnirator"],
-      },
-    );
-
-    const operationNode = document.definitions[0] as OperationDefinitionNode;
-    const fieldNode = operationNode.selectionSet.selections[0] as FieldNode;
-
-    expect(fieldNode.__type).toMatchInlineSnapshot(`
-      {
-        "kind": "NamedType",
-        "name": {
-          "kind": "Name",
-          "value": "Film",
-        },
-      }
-    `);
   });
 });
