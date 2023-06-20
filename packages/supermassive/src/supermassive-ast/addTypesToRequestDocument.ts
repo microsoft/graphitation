@@ -15,6 +15,7 @@ import {
   GraphQLInputField,
   GraphQLInputType,
   GraphQLOutputType,
+  getEnterLeaveForKind,
   getNamedType,
   getNullableType,
   isCompositeType,
@@ -25,9 +26,6 @@ import {
   isOutputType,
   typeFromAST,
   GraphQLDirective,
-  GraphQLObjectType,
-  GraphQLInterfaceType,
-  getVisitFn,
 } from "graphql";
 
 import * as TypelessAST from "graphql/language/ast";
@@ -368,7 +366,7 @@ export class TypeInfo {
     // which occurs before guarantees of schema and document validity.
     switch (node.kind) {
       case Kind.SELECTION_SET: {
-        const namedType: unknown = getNamedType(this.getType() as GraphQLType);
+        const namedType: unknown = getNamedType(this.getType());
         this._parentTypeStack.push(
           isCompositeType(namedType) ? namedType : undefined,
         );
@@ -402,7 +400,7 @@ export class TypeInfo {
         break;
       }
       case Kind.OPERATION_DEFINITION: {
-        const rootType = schema.getType(node.operation);
+        const rootType = schema.getRootType(node.operation);
         this._typeStack.push(isObjectType(rootType) ? rootType : undefined);
         break;
       }
@@ -411,15 +409,12 @@ export class TypeInfo {
         const typeConditionAST = node.typeCondition;
         const outputType: unknown = typeConditionAST
           ? typeFromAST(schema, typeConditionAST)
-          : getNamedType(this.getType() as GraphQLType);
+          : getNamedType(this.getType());
         this._typeStack.push(isOutputType(outputType) ? outputType : undefined);
         break;
       }
       case Kind.VARIABLE_DEFINITION: {
-        const inputType: unknown = typeFromAST(
-          schema,
-          node.type as TypelessAST.NamedTypeNode,
-        );
+        const inputType: unknown = typeFromAST(schema, node.type);
         this._inputTypeStack.push(
           isInputType(inputType) ? inputType : undefined,
         );
@@ -443,9 +438,7 @@ export class TypeInfo {
         break;
       }
       case Kind.LIST: {
-        const listType: unknown = getNullableType(
-          this.getInputType() as GraphQLType,
-        );
+        const listType: unknown = getNullableType(this.getInputType());
         const itemType: unknown = isListType(listType)
           ? listType.ofType
           : listType;
@@ -455,9 +448,7 @@ export class TypeInfo {
         break;
       }
       case Kind.OBJECT_FIELD: {
-        const objectType: unknown = getNamedType(
-          this.getInputType() as GraphQLType,
-        );
+        const objectType: unknown = getNamedType(this.getInputType());
         let inputFieldType: GraphQLInputType | undefined;
         let inputField: GraphQLInputField | undefined;
         if (isInputObjectType(objectType)) {
@@ -475,9 +466,7 @@ export class TypeInfo {
         break;
       }
       case Kind.ENUM: {
-        const enumType: unknown = getNamedType(
-          this.getInputType() as GraphQLType,
-        );
+        const enumType: unknown = getNamedType(this.getInputType());
         let enumValue;
         if (isEnumType(enumType)) {
           enumValue = enumType.getValue(node.value);
@@ -535,14 +524,7 @@ function getFieldDef(
   parentType: GraphQLCompositeType,
   fieldNode: TypelessAST.FieldNode,
 ) {
-  if (
-    parentType instanceof GraphQLObjectType ||
-    parentType instanceof GraphQLInterfaceType
-  ) {
-    return parentType.getFields()[fieldNode.name.value];
-  } else {
-    return null;
-  }
+  return schema.getField(parentType, fieldNode.name.value);
 }
 
 /**
@@ -557,7 +539,7 @@ export function visitWithTypeInfo(
     enter(...args) {
       const node = args[0];
       typeInfo.enter(node);
-      const fn = getVisitFn(visitor, node.kind, false);
+      const fn = getEnterLeaveForKind(visitor, node.kind).enter;
       if (fn) {
         const result = fn.apply(visitor, args);
         if (result !== undefined) {
@@ -571,7 +553,7 @@ export function visitWithTypeInfo(
     },
     leave(...args) {
       const node = args[0];
-      const fn = getVisitFn(visitor, node.kind, true);
+      const fn = getEnterLeaveForKind(visitor, node.kind).leave;
       let result;
       if (fn) {
         result = fn.apply(visitor, args);

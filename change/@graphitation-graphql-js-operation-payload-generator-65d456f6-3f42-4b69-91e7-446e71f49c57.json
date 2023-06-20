@@ -1,7 +1,0 @@
-{
-  "type": "none",
-  "comment": "Make tests pass",
-  "packageName": "@graphitation/graphql-js-operation-payload-generator",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "none"
-}

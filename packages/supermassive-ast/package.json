@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/supermassive-ast",
   "license": "MIT",
-  "version": "3.0.0-alpha.0",
+  "version": "2.0.0",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
@@ -20,7 +20,7 @@
     "graphql": "^15.0.0 || ^16.0.0 || ^17.0.0"
   },
   "devDependencies": {
-    "graphql": "^17.0.0-alpha.2",
+    "graphql": "^15.6.1",
     "@types/jest": "^26.0.22",
     "monorepo-scripts": "*",
     "ts-node": "^10.4.0"

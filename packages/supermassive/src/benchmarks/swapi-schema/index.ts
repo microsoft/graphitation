@@ -1,5 +1,5 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
-import { GraphQLSchema, parse } from "graphql";
+import { DocumentNode, GraphQLSchema, parse } from "graphql";
 import { join } from "path";
 import { readFileSync } from "fs";
 import resolvers from "./resolvers";
@@ -11,7 +11,7 @@ export const typeDefs = parse(
 );
 
 const schema = makeExecutableSchema({
-  typeDefs: [typeDefs],
+  typeDefs: [typeDefs as DocumentNode],
   resolvers,
 });
 

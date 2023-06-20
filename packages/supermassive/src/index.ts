@@ -26,7 +26,7 @@ export {
   addTypesToRequestDocument,
   /** @deprecated Use "@graphitation/supermassive-ast" */
   annotateDocumentGraphQLTransform,
-} from "@graphitation/supermassive-ast";
+} from "./supermassive-ast";
 
 export { extractImplicitTypes } from "./extractImplicitTypesRuntime";
 
@@ -78,7 +78,7 @@ export type {
   UnionTypeExtensionNode,
   EnumTypeExtensionNode,
   InputObjectTypeExtensionNode,
-} from "@graphitation/supermassive-ast";
+} from "./supermassive-ast";
 
 export type {
   BeforeFieldResolveHookArgs,

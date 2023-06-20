@@ -11,7 +11,7 @@ export {
   GraphQLSpecifiedByDirective,
   GraphQLDeferDirective,
   GraphQLStreamDirective,
-} from "@graphitation/supermassive-ast";
+} from "./supermassive-ast";
 
 /**
  * Test if the given value is a GraphQL directive.

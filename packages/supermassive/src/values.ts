@@ -26,7 +26,7 @@ import {
   FieldNode,
   TypeNode,
   VariableDefinitionNode,
-} from "@graphitation/supermassive-ast";
+} from "./supermassive-ast";
 import { inspect } from "./jsutils/inspect";
 import type { Maybe } from "./jsutils/Maybe";
 import type { ObjMap } from "./jsutils/ObjMap";
