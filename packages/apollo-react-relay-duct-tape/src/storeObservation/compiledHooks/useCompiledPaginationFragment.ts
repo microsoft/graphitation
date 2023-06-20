@@ -16,7 +16,6 @@ import type {
   Metadata,
 } from "@graphitation/apollo-react-relay-duct-tape-compiler";
 import type { DocumentNode } from "graphql";
-import { Kind } from "graphql";
 
 export type PaginationFn = (
   count: number,
@@ -102,7 +101,7 @@ function useLoadMore({
               fragmentName: mainFragment.name,
               // Create new document with operation filtered out.
               fragment: {
-                kind: Kind.DOCUMENT,
+                kind: "Document",
                 definitions: executionQueryDocument.definitions.filter(
                   (def) => def.kind === "FragmentDefinition",
                 ),
