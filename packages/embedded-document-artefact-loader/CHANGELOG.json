@@ -1,0 +1,20 @@
+{
+  "name": "@graphitation/embedded-document-artefact-loader",
+  "entries": [
+    {
+      "date": "Mon, 19 Jun 2023 22:17:53 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.2.0",
+      "version": "0.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "7be3f886f3a697a981a07e94f1fc28fdd66f227f",
+            "comment": "Emit source-map for single and multi-line docs"
+          }
+        ]
+      }
+    }
+  ]
+}
