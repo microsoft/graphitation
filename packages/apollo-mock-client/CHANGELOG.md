@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-mock-client
 
-This log was last generated on Thu, 20 Apr 2023 14:11:58 GMT and should not be manually modified.
+This log was last generated on Tue, 20 Jun 2023 12:24:10 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.11.1
+
+Tue, 20 Jun 2023 12:24:10 GMT
+
+### Patches
+
+- Pin apollo to TMP version (mnovikov@microsoft.com)
 
 ## 0.11.0
 
