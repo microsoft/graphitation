@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Bump TS version in dev, move TS to peerDep",
+  "packageName": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
