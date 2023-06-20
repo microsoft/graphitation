@@ -11,7 +11,7 @@
     "jest/globals": true
   },
   "ignorePatterns": ["**/coverage", "**/lib", "**/temp", "**/__generated__"],
-  "plugins": ["check-file", "prettier", "jest"],
+  "plugins": ["check-file", "prettier", "jest", "@typescript-eslint"],
 
   "extends": [
     "plugin:prettier/recommended",
