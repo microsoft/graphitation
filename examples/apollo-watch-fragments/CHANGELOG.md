@@ -1,8 +1,16 @@
 # Change Log - apollo-watch-fragments
 
-This log was last generated on Tue, 20 Jun 2023 11:38:47 GMT and should not be manually modified.
+This log was last generated on Tue, 20 Jun 2023 12:24:10 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.1.0
+
+Tue, 20 Jun 2023 12:24:10 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape to v1.0.5
 
 ## 0.1.0
 

@@ -1,8 +1,16 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-This log was last generated on Mon, 15 May 2023 05:46:46 GMT and should not be manually modified.
+This log was last generated on Tue, 20 Jun 2023 12:24:10 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.1
+
+Tue, 20 Jun 2023 12:24:10 GMT
+
+### Patches
+
+- Pin apollo to TMP version (mnovikov@microsoft.com)
 
 ## 1.0.0
 

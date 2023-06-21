@@ -2,7 +2,7 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "description": "A compatibility wrapper that provides the react-relay API on top of Apollo Client.",
   "license": "MIT",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",
@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@apollo/client": ">= ^3.3.0 < 3.7.0",
-    "@graphitation/apollo-mock-client": "^0.11.0",
+    "@graphitation/apollo-mock-client": "^0.11.1",
     "@graphitation/graphql-js-operation-payload-generator": "^0.12.2",
     "@graphitation/graphql-js-tag": "^0.9.0",
     "@types/jest": "^26.0.22",
