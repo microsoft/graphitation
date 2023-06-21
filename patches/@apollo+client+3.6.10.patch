@@ -20,7 +20,7 @@ index afbbcd0..d93d0af 100644
          storeFieldName: storeFieldName,
          variables: variables,
 diff --git a/node_modules/@apollo/client/cache/inmemory/policies.d.ts b/node_modules/@apollo/client/cache/inmemory/policies.d.ts
-index b93b087..e4d22f7 100644
+index 6a93238..fdef0a4 100644
 --- a/node_modules/@apollo/client/cache/inmemory/policies.d.ts
 +++ b/node_modules/@apollo/client/cache/inmemory/policies.d.ts
 @@ -1,4 +1,4 @@
@@ -38,7 +38,7 @@ index b93b087..e4d22f7 100644
      isReference: typeof isReference;
      toReference: ToReferenceFunction;
 diff --git a/node_modules/@apollo/client/cache/inmemory/policies.js b/node_modules/@apollo/client/cache/inmemory/policies.js
-index 3c28fb6..f367d69 100644
+index a2c1b93..d28dddf 100644
 --- a/node_modules/@apollo/client/cache/inmemory/policies.js
 +++ b/node_modules/@apollo/client/cache/inmemory/policies.js
 @@ -297,7 +297,7 @@ var Policies = (function () {
