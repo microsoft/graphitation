@@ -8,12 +8,10 @@ import {
   DocumentNode,
   EnumValueDefinitionNode,
   FieldDefinitionNode,
-  GraphQLArgument,
   GraphQLArgumentConfig,
   GraphQLBoolean,
   GraphQLDirective,
   GraphQLEnumType,
-  GraphQLEnumValue,
   GraphQLEnumValueConfig,
   GraphQLEnumValueConfigMap,
   GraphQLField,
@@ -22,7 +20,6 @@ import {
   GraphQLFieldConfigMap,
   GraphQLFloat,
   GraphQLID,
-  GraphQLInputField,
   GraphQLInputFieldConfig,
   GraphQLInputFieldConfigMap,
   GraphQLInputObjectType,
@@ -698,8 +695,7 @@ function getTypeMapper(
   let typeMapper: NamedTypeMapper | undefined;
   const stack = [...specifiers];
   while (!typeMapper && stack.length > 0) {
-    // It is safe to use the ! operator here as we check the length.
-    const next = stack.pop()!;
+    const next = stack.pop() as MapperKind;
     typeMapper = schemaMapper[next] as NamedTypeMapper;
   }
 
@@ -745,8 +741,8 @@ function getFieldMapper<
   let fieldMapper: GenericFieldMapper<F> | undefined;
   const stack = [...specifiers];
   while (!fieldMapper && stack.length > 0) {
-    // It is safe to use the ! operator here as we check the length.
-    const next = stack.pop()!;
+    // It is safe to use as here as we check the length.
+    const next = stack.pop() as MapperKind;
     // TODO: fix this as unknown cast
     fieldMapper = schemaMapper[next] as unknown as GenericFieldMapper<F>;
   }
