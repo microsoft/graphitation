@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Pin apollo to TMP version",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

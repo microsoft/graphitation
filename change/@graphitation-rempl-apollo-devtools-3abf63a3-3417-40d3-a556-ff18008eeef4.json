@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Pin apollo to TMP version",
-  "packageName": "@graphitation/rempl-apollo-devtools",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}
