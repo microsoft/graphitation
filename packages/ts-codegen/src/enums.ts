@@ -32,7 +32,7 @@ export function generateEnums(context: TsCodegenContext): ts.SourceFile {
       ...(context
         .getAllTypes()
         .filter((type) => type.kind === "ENUM")
-        .map((type) =>
+        .flatMap((type) =>
           createEnumTypeModel(context, type as EnumType),
         ) as ts.Statement[]),
     );
@@ -50,16 +50,53 @@ export function generateEnums(context: TsCodegenContext): ts.SourceFile {
 function createEnumTypeModel(
   context: TsCodegenContext,
   type: EnumType,
-): ts.TypeAliasDeclaration {
-  return factory.createTypeAliasDeclaration(
-    undefined,
-    [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-    type.name,
-    undefined,
-    factory.createUnionTypeNode(
-      type.values.map((name) =>
-        factory.createLiteralTypeNode(factory.createStringLiteral(name)),
+): ts.Statement[] {
+  return [
+    factory.createVariableStatement(
+      [factory.createToken(ts.SyntaxKind.ExportKeyword)],
+      factory.createVariableDeclarationList(
+        [
+          factory.createVariableDeclaration(
+            factory.createIdentifier(type.name),
+            undefined,
+            undefined,
+            factory.createAsExpression(
+              factory.createObjectLiteralExpression(
+                type.values.map((value) =>
+                  factory.createPropertyAssignment(
+                    factory.createIdentifier(value),
+                    factory.createStringLiteral(value),
+                  ),
+                ),
+                true,
+              ),
+              factory.createTypeReferenceNode(
+                factory.createIdentifier("const"),
+                undefined,
+              ),
+            ),
+          ),
+        ],
+        ts.NodeFlags.Const,
       ),
     ),
-  );
+    factory.createTypeAliasDeclaration(
+      [factory.createToken(ts.SyntaxKind.ExportKeyword)],
+      factory.createIdentifier(type.name),
+      undefined,
+      factory.createIndexedAccessTypeNode(
+        factory.createTypeQueryNode(
+          factory.createIdentifier(type.name),
+          undefined,
+        ),
+        factory.createTypeOperatorNode(
+          ts.SyntaxKind.KeyOfKeyword,
+          factory.createTypeQueryNode(
+            factory.createIdentifier(type.name),
+            undefined,
+          ),
+        ),
+      ),
+    ),
+  ];
 }
