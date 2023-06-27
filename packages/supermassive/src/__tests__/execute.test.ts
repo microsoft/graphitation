@@ -313,6 +313,19 @@ query Person($id: Int!) {
     }
     `,
   },
+  // errors
+  {
+    name: "errors and nulls",
+    document: `
+    {
+      person(id: 1) {
+        name
+        bubblingError
+        bubblingListError
+      }
+    }
+    `,
+  },
   // subscription
   {
     name: "basic subscription with variables",
@@ -466,6 +479,48 @@ query Person($id: Int!) {
     `,
   },
 
+  {
+    name: "@defer on list",
+    document: `
+    {
+      person(id: 1) {
+        name
+        films {
+          ... on Film @defer {
+            title
+          }
+        }
+      }
+    }
+    `,
+  },
+
+  {
+    name: "@defer on query with union",
+    document: `
+    {
+      search(search: "Lu") {
+        __typename
+        ...on Person @defer {
+          name
+        }
+        ...on Planet {
+          name
+        }
+        ... on Transport {
+          name
+        }
+        ... on Species {
+          name
+        }
+        ... on Vehicle{
+          name
+        }
+      }
+    }
+    `,
+  },
+
   // TODO: Does not error in graphql-js even though it should in spec
   // {
   //   name: "@defer label as  variable error",
@@ -524,6 +579,44 @@ query Person($id: Int!) {
 
     fragment DeferredPerson on Person {
       birth_year
+    }
+    `,
+  },
+
+  {
+    name: "@defer crossselection",
+    document: `
+   {
+      person(id: 1) {
+        name
+        gender
+        ... on Person @defer {
+          gender
+        }
+      }
+    }
+    `,
+  },
+
+  {
+    name: "@defer skip/include",
+    document: `
+   {
+      person(id: 1) {
+        name
+        ... on Person @defer {
+          gender @skip(if: true)
+        }
+        ... on Person @defer {
+          birth_year @include(if: false)
+        }
+        ... on Person @defer @skip(if: true) {
+          skin_color
+        }
+        ... on Person @defer @include(if: false) {
+          hair_color
+        }
+      }
     }
     `,
   },
@@ -641,6 +734,20 @@ query Person($id: Int!) {
       }
     }
     `,
+  },
+
+  {
+    name: "@stream/defer errors",
+    document: `
+      {
+        person(id: 1) {
+          name
+          ... on Person @defer {
+            bubblingError
+          }
+          bubblingListError @stream
+        }
+      }`,
   },
 ];
 

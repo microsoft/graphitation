@@ -915,7 +915,7 @@ function resolveAndCompleteField(
           if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
             invokeAfterFieldCompleteHook(info, exeContext, undefined, error);
           }
-          return handleFieldError(
+          handleFieldError(
             rawError,
             exeContext,
             returnTypeNode,
@@ -923,6 +923,7 @@ function resolveAndCompleteField(
             path,
             incrementalDataRecord,
           );
+          return null;
         },
       );
     }
@@ -952,7 +953,7 @@ function resolveAndCompleteField(
     if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
       invokeAfterFieldCompleteHook(info, exeContext, undefined, error);
     }
-    return handleFieldError(
+    handleFieldError(
       rawError,
       exeContext,
       returnTypeNode,
@@ -960,6 +961,7 @@ function resolveAndCompleteField(
       path,
       incrementalDataRecord,
     );
+    return null;
   }
 }
 

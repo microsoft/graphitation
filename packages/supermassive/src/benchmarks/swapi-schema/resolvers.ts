@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { GraphQLFieldResolver } from "graphql/type/definition";
 import { IExecutableSchemaDefinition } from "@graphql-tools/schema";
-import { createAsyncIterator, getAsyncIterator } from "iterall";
+import { createAsyncIterator, forAwaitEach, getAsyncIterator } from "iterall";
 import { mapAsyncIterator } from "../../utilities/mapAsyncIterator";
 
 const films: GraphQLFieldResolver<any, any, any, any> = (
@@ -377,6 +377,18 @@ const resolvers: IExecutableSchemaDefinition["resolvers"] = {
     starships,
     homeworld,
     films,
+    bubblingError: () => {
+      throw new Error("Bubbling!");
+    },
+    bubblingListError: () => {
+      return forAwaitEach([1, 2, 3], async (item) => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        if (item === 2) {
+          throw new Error("Bubbling in list!");
+        }
+        return item;
+      });
+    },
   },
   Vehicle: {
     cargo_capacity: (vehicle) => +vehicle.cargo_capacity,

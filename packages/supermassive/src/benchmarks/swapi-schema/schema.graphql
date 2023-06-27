@@ -123,6 +123,8 @@ type Person implements Node {
   vehicles: [Vehicle]
   starships: [Starship]
   films: [Film]
+  bubblingError: String
+  bubblingListError: [String!]
 }
 
 type Starship implements Node {

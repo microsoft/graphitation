@@ -1,5 +1,34 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`graphql-js snapshot check to ensure test stability @defer crossselection 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "gender": "male",
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {
+            "gender": "male",
+          },
+          "path": [
+            "person",
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
 exports[`graphql-js snapshot check to ensure test stability @defer if 1`] = `
 {
   "initialResult": {
@@ -214,6 +243,135 @@ exports[`graphql-js snapshot check to ensure test stability @defer on inline fra
 }
 `;
 
+exports[`graphql-js snapshot check to ensure test stability @defer on list 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "films": [
+          {},
+          {},
+          {},
+          {},
+        ],
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {
+            "title": "A New Hope",
+          },
+          "path": [
+            "person",
+            "films",
+            0,
+          ],
+        },
+        {
+          "data": {
+            "title": "The Empire Strikes Back",
+          },
+          "path": [
+            "person",
+            "films",
+            1,
+          ],
+        },
+        {
+          "data": {
+            "title": "Return of the Jedi",
+          },
+          "path": [
+            "person",
+            "films",
+            2,
+          ],
+        },
+        {
+          "data": {
+            "title": "Revenge of the Sith",
+          },
+          "path": [
+            "person",
+            "films",
+            3,
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @defer on query with union 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "search": [
+        {
+          "__typename": "Person",
+        },
+        {
+          "__typename": "Person",
+        },
+        {
+          "__typename": "Planet",
+          "name": "Felucia",
+        },
+        {
+          "__typename": "Planet",
+          "name": "Sullust",
+        },
+        {
+          "__typename": "Species",
+          "name": "Sullustan",
+        },
+        {
+          "__typename": "Transport",
+          "name": "Raddaugh Gnasp fluttercraft",
+        },
+        {
+          "__typename": "Vehicle",
+          "name": "Raddaugh Gnasp fluttercraft",
+        },
+      ],
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {
+            "name": "Luke Skywalker",
+          },
+          "path": [
+            "search",
+            0,
+          ],
+        },
+        {
+          "data": {
+            "name": "Luminara Unduli",
+          },
+          "path": [
+            "search",
+            1,
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
 exports[`graphql-js snapshot check to ensure test stability @defer overlapping fragment 1`] = `
 {
   "initialResult": {
@@ -241,6 +399,38 @@ exports[`graphql-js snapshot check to ensure test stability @defer overlapping f
             "birth_year": "19BBY",
             "gender": "male",
           },
+          "path": [
+            "person",
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @defer skip/include 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {},
+          "path": [
+            "person",
+          ],
+        },
+        {
+          "data": {},
           "path": [
             "person",
           ],
@@ -1330,6 +1520,41 @@ exports[`graphql-js snapshot check to ensure test stability @stream nested 1`] =
 }
 `;
 
+exports[`graphql-js snapshot check to ensure test stability @stream/defer errors 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "bubblingListError": null,
+        "name": "Luke Skywalker",
+      },
+    },
+    "errors": [
+      [GraphQLError: Bubbling in list!],
+    ],
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {
+            "bubblingError": null,
+          },
+          "errors": [
+            [GraphQLError: Bubbling!],
+          ],
+          "path": [
+            "person",
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
 exports[`graphql-js snapshot check to ensure test stability Advanced Default value 1`] = `
 {
   "data": {
@@ -1527,6 +1752,22 @@ exports[`graphql-js snapshot check to ensure test stability benchmark kitchen-si
       ],
     },
   },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability errors and nulls 1`] = `
+{
+  "data": {
+    "person": {
+      "bubblingError": null,
+      "bubblingListError": null,
+      "name": "Luke Skywalker",
+    },
+  },
+  "errors": [
+    [GraphQLError: Bubbling!],
+    [GraphQLError: Bubbling in list!],
+  ],
 }
 `;
 
