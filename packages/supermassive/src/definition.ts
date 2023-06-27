@@ -13,7 +13,7 @@ export function defineArguments(
     type: argConfig.type,
     defaultValue: argConfig.defaultValue,
     deprecationReason: argConfig.deprecationReason,
-    extensions: argConfig.extensions && toObjMap(argConfig.extensions),
+    extensions: argConfig.extensions ? toObjMap(argConfig.extensions) : {},
     astNode: argConfig.astNode,
   }));
 }

@@ -3,8 +3,12 @@ import { executeWithoutSchema, executeWithSchema } from "..";
 import schema, { typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
-import { addTypesToRequestDocument } from "@graphitation/supermassive-ast";
-import { UserResolvers } from "../types";
+import { addTypesToRequestDocument } from "../supermassive-ast";
+import {
+  UserResolvers,
+  TotalExecutionResult,
+  isTotalExecutionResult,
+} from "../types";
 import { resolvers as extractedResolvers } from "../benchmarks/swapi-schema/__generated__/schema";
 import {
   AfterFieldCompleteHookArgs,
@@ -297,16 +301,19 @@ describe.each([
     it.each(testCases)(
       "$name",
       async ({ query, resolvers, expectedHookCalls, resultHasErrors }) => {
-        expect.assertions(3);
+        expect.assertions(4);
         const document = parse(query);
 
         const result = await execute(document, resolvers, hooks);
 
         // for async resolvers order of resolving isn't strict,
         // so just verify whether corresponding hook calls happened
-        expect(hookCalls).toHaveLength(expectedHookCalls.length);
         expect(hookCalls).toEqual(expect.arrayContaining(expectedHookCalls));
-        expect((result.errors?.length ?? 0) > 0).toBe(resultHasErrors);
+        expect(hookCalls).toHaveLength(expectedHookCalls.length);
+        expect(isTotalExecutionResult(result)).toBe(true);
+        expect(((result as TotalExecutionResult).errors?.length ?? 0) > 0).toBe(
+          resultHasErrors,
+        );
       },
     );
   });
@@ -418,14 +425,15 @@ describe.each([
     it.each(testCases)(
       "$name",
       async ({ query, hooks, expectedErrorMessage }) => {
-        expect.assertions(4);
+        expect.assertions(5);
         const document = parse(query);
 
-        const response = await execute(
+        const response = (await execute(
           document,
           resolvers as UserResolvers,
           hooks,
-        );
+        )) as TotalExecutionResult;
+        expect(isTotalExecutionResult(response)).toBe(true);
         const errors = response.errors;
 
         expect(response.data).toBeTruthy();

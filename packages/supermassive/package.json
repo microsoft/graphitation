@@ -18,10 +18,8 @@
     "benchmark": "ts-node -T ./src/benchmarks/index.ts"
   },
   "devDependencies": {
-    "@graphitation/graphql-js-tag": "*",
     "@graphitation/supermassive-extractors": "*",
     "@graphitation/cli": "*",
-    "@graphql-tools/schema": "^9.0.19",
     "@ts-morph/bootstrap": "^0.11.0",
     "@types/benchmark": "^2.1.0",
     "@types/jest": "^26.0.22",
@@ -48,7 +46,6 @@
     }
   },
   "dependencies": {
-    "@graphitation/supermassive-ast": "*",
-    "graphql": "^15.6.1"
+    "graphql": "^17.0.0-alpha.2"
   }
 }

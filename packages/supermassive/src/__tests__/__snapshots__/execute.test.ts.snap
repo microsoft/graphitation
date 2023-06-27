@@ -1,0 +1,1930 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`graphql-js snapshot check to ensure test stability @defer crossselection 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "gender": "male",
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {
+            "gender": "male",
+          },
+          "path": [
+            "person",
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @defer if 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "birth_year": "19BBY",
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {
+            "gender": "male",
+          },
+          "path": [
+            "person",
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @defer label simple 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {
+            "gender": "male",
+          },
+          "label": "INLINE",
+          "path": [
+            "person",
+          ],
+        },
+        {
+          "data": {
+            "birth_year": "19BBY",
+          },
+          "path": [
+            "person",
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @defer multiple fragments 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {
+            "gender": "male",
+          },
+          "path": [
+            "person",
+          ],
+        },
+        {
+          "data": {
+            "birth_year": "19BBY",
+          },
+          "path": [
+            "person",
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @defer nested 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "data": {
+            "birth_year": "19BBY",
+          },
+          "path": [
+            "person",
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {
+            "films": [
+              {
+                "title": "A New Hope",
+              },
+              {
+                "title": "The Empire Strikes Back",
+              },
+              {
+                "title": "Return of the Jedi",
+              },
+              {
+                "title": "Revenge of the Sith",
+              },
+            ],
+          },
+          "path": [
+            "person",
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @defer on fragment 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {
+            "birth_year": "19BBY",
+            "gender": "male",
+          },
+          "path": [
+            "person",
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @defer on inline fragment 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {
+            "birth_year": "19BBY",
+            "gender": "male",
+          },
+          "path": [
+            "person",
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @defer on list 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "films": [
+          {},
+          {},
+          {},
+          {},
+        ],
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {
+            "title": "A New Hope",
+          },
+          "path": [
+            "person",
+            "films",
+            0,
+          ],
+        },
+        {
+          "data": {
+            "title": "The Empire Strikes Back",
+          },
+          "path": [
+            "person",
+            "films",
+            1,
+          ],
+        },
+        {
+          "data": {
+            "title": "Return of the Jedi",
+          },
+          "path": [
+            "person",
+            "films",
+            2,
+          ],
+        },
+        {
+          "data": {
+            "title": "Revenge of the Sith",
+          },
+          "path": [
+            "person",
+            "films",
+            3,
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @defer on query with union 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "search": [
+        {
+          "__typename": "Person",
+        },
+        {
+          "__typename": "Person",
+        },
+        {
+          "__typename": "Planet",
+          "name": "Felucia",
+        },
+        {
+          "__typename": "Planet",
+          "name": "Sullust",
+        },
+        {
+          "__typename": "Species",
+          "name": "Sullustan",
+        },
+        {
+          "__typename": "Transport",
+          "name": "Raddaugh Gnasp fluttercraft",
+        },
+        {
+          "__typename": "Vehicle",
+          "name": "Raddaugh Gnasp fluttercraft",
+        },
+      ],
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {
+            "name": "Luke Skywalker",
+          },
+          "path": [
+            "search",
+            0,
+          ],
+        },
+        {
+          "data": {
+            "name": "Luminara Unduli",
+          },
+          "path": [
+            "search",
+            1,
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @defer overlapping fragment 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {
+            "gender": "male",
+          },
+          "path": [
+            "person",
+          ],
+        },
+        {
+          "data": {
+            "birth_year": "19BBY",
+            "gender": "male",
+          },
+          "path": [
+            "person",
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @defer skip/include 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {},
+          "path": [
+            "person",
+          ],
+        },
+        {
+          "data": {},
+          "path": [
+            "person",
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @stream basic 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "films": [],
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "A New Hope",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            0,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "The Empire Strikes Back",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            1,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "Return of the Jedi",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            2,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "Revenge of the Sith",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": false,
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @stream if 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "films": [],
+        "name": "Luke Skywalker",
+        "starships": [
+          {
+            "name": "X-wing",
+          },
+          {
+            "name": "Imperial shuttle",
+          },
+        ],
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "A New Hope",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            0,
+          ],
+        },
+        {
+          "items": [
+            {
+              "title": "The Empire Strikes Back",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            1,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "Return of the Jedi",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            2,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "Revenge of the Sith",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": false,
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @stream initialCount 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "films": [
+          {
+            "title": "A New Hope",
+          },
+          {
+            "title": "The Empire Strikes Back",
+          },
+        ],
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "Return of the Jedi",
+            },
+          ],
+          "label": "FILMS",
+          "path": [
+            "person",
+            "films",
+            2,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "Revenge of the Sith",
+            },
+          ],
+          "label": "FILMS",
+          "path": [
+            "person",
+            "films",
+            3,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": false,
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @stream inside @defer 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "data": {
+            "birth_year": "19BBY",
+          },
+          "path": [
+            "person",
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "data": {
+            "films": [],
+          },
+          "path": [
+            "person",
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "A New Hope",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            0,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "The Empire Strikes Back",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            1,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "Return of the Jedi",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            2,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "Revenge of the Sith",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": false,
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @stream label 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "films": [],
+        "name": "Luke Skywalker",
+        "starships": [],
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "A New Hope",
+            },
+          ],
+          "label": "FILMS",
+          "path": [
+            "person",
+            "films",
+            0,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "name": "X-wing",
+            },
+          ],
+          "label": "STARSHIPS",
+          "path": [
+            "person",
+            "starships",
+            0,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "The Empire Strikes Back",
+            },
+          ],
+          "label": "FILMS",
+          "path": [
+            "person",
+            "films",
+            1,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "name": "Imperial shuttle",
+            },
+          ],
+          "label": "STARSHIPS",
+          "path": [
+            "person",
+            "starships",
+            1,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "Return of the Jedi",
+            },
+          ],
+          "label": "FILMS",
+          "path": [
+            "person",
+            "films",
+            2,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "Revenge of the Sith",
+            },
+          ],
+          "label": "FILMS",
+          "path": [
+            "person",
+            "films",
+            3,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": false,
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @stream multiple 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "films": [],
+        "name": "Luke Skywalker",
+        "starships": [],
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "A New Hope",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            0,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "name": "X-wing",
+            },
+          ],
+          "path": [
+            "person",
+            "starships",
+            0,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "The Empire Strikes Back",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            1,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "name": "Imperial shuttle",
+            },
+          ],
+          "path": [
+            "person",
+            "starships",
+            1,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "Return of the Jedi",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            2,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "title": "Revenge of the Sith",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": false,
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @stream nested 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "films": [],
+        "name": "Luke Skywalker",
+      },
+    },
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "planets": [],
+              "title": "A New Hope",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            0,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            0,
+            "planets",
+            0,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            0,
+            "planets",
+            1,
+          ],
+        },
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            0,
+            "planets",
+            2,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "planets": [],
+              "title": "The Empire Strikes Back",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            1,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            1,
+            "planets",
+            0,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            1,
+            "planets",
+            1,
+          ],
+        },
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            1,
+            "planets",
+            2,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            1,
+            "planets",
+            3,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "planets": [],
+              "title": "Return of the Jedi",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            2,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            2,
+            "planets",
+            0,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            2,
+            "planets",
+            1,
+          ],
+        },
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            2,
+            "planets",
+            2,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            2,
+            "planets",
+            3,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            2,
+            "planets",
+            4,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {
+              "planets": [],
+              "title": "Revenge of the Sith",
+            },
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+            "planets",
+            0,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+            "planets",
+            1,
+          ],
+        },
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+            "planets",
+            2,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+            "planets",
+            3,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+            "planets",
+            4,
+          ],
+        },
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+            "planets",
+            5,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+            "planets",
+            6,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+            "planets",
+            7,
+          ],
+        },
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+            "planets",
+            8,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+            "planets",
+            9,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+            "planets",
+            10,
+          ],
+        },
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+            "planets",
+            11,
+          ],
+        },
+      ],
+    },
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "items": [
+            {},
+          ],
+          "path": [
+            "person",
+            "films",
+            3,
+            "planets",
+            12,
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability @stream/defer errors 1`] = `
+{
+  "initialResult": {
+    "data": {
+      "person": {
+        "bubblingListError": null,
+        "name": "Luke Skywalker",
+      },
+    },
+    "errors": [
+      [GraphQLError: Bubbling in list!],
+    ],
+    "hasNext": true,
+  },
+  "subsequentResults": [
+    {
+      "hasNext": false,
+      "incremental": [
+        {
+          "data": {
+            "bubblingError": null,
+          },
+          "errors": [
+            [GraphQLError: Bubbling!],
+          ],
+          "path": [
+            "person",
+          ],
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability Advanced Default value 1`] = `
+{
+  "data": {
+    "advancedDefaultInput": "{"input":{"enumField":"Transport","otherField":"Foo"}}",
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability Advanced Default value in variables 1`] = `
+{
+  "data": {
+    "advancedDefaultInput": "{"input":{"enumField":"Film","otherField":"The Empire Strikes Back"}}",
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability Default value 1`] = `
+{
+  "data": {
+    "searchFilmsByTitle": [
+      {
+        "title": "The Empire Strikes Back",
+      },
+    ],
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability Default value in variables 1`] = `
+{
+  "data": {
+    "searchFilmsByTitle": [
+      {
+        "title": "The Empire Strikes Back",
+      },
+    ],
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability Not passing arg value vs passing arg value 1`] = `
+{
+  "data": {
+    "multiArger": "{}",
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability Not passing arg value vs passing arg value 2`] = `
+{
+  "data": {
+    "multiArger": "{"a":null}",
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability basic query 1`] = `
+{
+  "data": {
+    "person": {
+      "gender": "male",
+      "name": "Luke Skywalker",
+    },
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability basic query with variables 1`] = `
+{
+  "data": {
+    "person": {
+      "gender": "male",
+      "name": "Luke Skywalker",
+    },
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability basic subscription with unused non-required variable 1`] = `
+[
+  {
+    "data": {
+      "emitPersons": {
+        "gender": "male",
+        "name": "Luke Skywalker",
+      },
+    },
+  },
+  {
+    "data": {
+      "emitPersons": {
+        "gender": "n/a",
+        "name": "C-3PO",
+      },
+    },
+  },
+  {
+    "data": {
+      "emitPersons": {
+        "gender": "n/a",
+        "name": "R2-D2",
+      },
+    },
+  },
+  {
+    "data": {
+      "emitPersons": {
+        "gender": "male",
+        "name": "Darth Vader",
+      },
+    },
+  },
+  {
+    "data": {
+      "emitPersons": {
+        "gender": "female",
+        "name": "Leia Organa",
+      },
+    },
+  },
+]
+`;
+
+exports[`graphql-js snapshot check to ensure test stability basic subscription with variables 1`] = `
+[
+  {
+    "data": {
+      "emitPersons": {
+        "gender": "male",
+        "name": "Luke Skywalker",
+      },
+    },
+  },
+  {
+    "data": {
+      "emitPersons": {
+        "gender": "n/a",
+        "name": "C-3PO",
+      },
+    },
+  },
+  {
+    "data": {
+      "emitPersons": {
+        "gender": "n/a",
+        "name": "R2-D2",
+      },
+    },
+  },
+  {
+    "data": {
+      "emitPersons": {
+        "gender": "male",
+        "name": "Darth Vader",
+      },
+    },
+  },
+  {
+    "data": {
+      "emitPersons": {
+        "gender": "female",
+        "name": "Leia Organa",
+      },
+    },
+  },
+]
+`;
+
+exports[`graphql-js snapshot check to ensure test stability benchmark kitchen-sink query 1`] = `
+{
+  "data": {
+    "empireHero": {
+      "birth_year": "19BBY",
+      "gender": "male",
+      "height": 172,
+      "mass": 77,
+      "name": "Luke Skywalker",
+      "starships": [
+        {
+          "name": "X-wing",
+        },
+        {
+          "name": "Imperial shuttle",
+        },
+      ],
+    },
+    "jediHero": {
+      "birth_year": "41.9BBY",
+      "gender": "male",
+      "name": "Darth Vader",
+      "starships": [
+        {
+          "name": "TIE Advanced x1",
+        },
+      ],
+    },
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability errors and nulls 1`] = `
+{
+  "data": {
+    "person": {
+      "bubblingError": null,
+      "bubblingListError": null,
+      "name": "Luke Skywalker",
+    },
+  },
+  "errors": [
+    [GraphQLError: Bubbling!],
+    [GraphQLError: Bubbling in list!],
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability include directive FALSE 1`] = `
+{
+  "data": {
+    "person": {
+      "name": "Luke Skywalker",
+    },
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability include directive TRUE 1`] = `
+{
+  "data": {
+    "person": {
+      "gender": "male",
+      "name": "Luke Skywalker",
+    },
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability interface in object fragment spread 1`] = `
+{
+  "data": {
+    "person": {
+      "id": 1,
+    },
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability interface in union fragment spread 1`] = `
+{
+  "data": {
+    "person": {
+      "id": 1,
+    },
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability query with interfaces 1`] = `
+{
+  "data": {
+    "person": {
+      "name": "Luke Skywalker",
+    },
+    "vehicle": {
+      "name": "Snowspeeder",
+    },
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability query with union 1`] = `
+{
+  "data": {
+    "search": [
+      {
+        "__typename": "Person",
+        "name": "Luke Skywalker",
+      },
+      {
+        "__typename": "Person",
+        "name": "Luminara Unduli",
+      },
+      {
+        "__typename": "Planet",
+        "name": "Felucia",
+      },
+      {
+        "__typename": "Planet",
+        "name": "Sullust",
+      },
+      {
+        "__typename": "Species",
+        "name": "Sullustan",
+      },
+      {
+        "__typename": "Transport",
+        "name": "Raddaugh Gnasp fluttercraft",
+      },
+      {
+        "__typename": "Vehicle",
+        "name": "Raddaugh Gnasp fluttercraft",
+      },
+    ],
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability skip directive FALSE 1`] = `
+{
+  "data": {
+    "person": {
+      "gender": "male",
+      "name": "Luke Skywalker",
+    },
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability skip directive TRUE 1`] = `
+{
+  "data": {
+    "person": {
+      "name": "Luke Skywalker",
+    },
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability subscription throw an error 1`] = `
+{
+  "errors": [
+    [GraphQLError: error],
+  ],
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability union in interface fragment spread 1`] = `
+{
+  "data": {
+    "person": {
+      "name": "Luke Skywalker",
+    },
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability union in object fragment spread 1`] = `
+{
+  "data": {
+    "person": {
+      "name": "Luke Skywalker",
+    },
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability union in object fragment spread 2`] = `
+{
+  "data": {
+    "person": {},
+  },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability with __typename 1`] = `
+{
+  "data": {
+    "person": {
+      "__typename": "Person",
+    },
+  },
+}
+`;

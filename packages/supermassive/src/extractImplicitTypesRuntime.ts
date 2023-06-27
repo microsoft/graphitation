@@ -107,11 +107,11 @@ function makeInputObject(
 }
 
 function buildInputFieldMap(
-  fieldNodes: ReadonlyArray<InputValueDefinitionNode>,
+  fieldGroup: ReadonlyArray<InputValueDefinitionNode>,
   getTypeByName: (name: string) => GraphQLInputType,
 ): GraphQLInputFieldConfigMap {
   const inputFieldMap = Object.create(null);
-  for (const field of fieldNodes) {
+  for (const field of fieldGroup) {
     // Note: While this could make assertions to get the correctly typed
     // value, that would throw immediately while type system validation
     // with validateSchema() will produce more actionable results.
@@ -147,6 +147,8 @@ function getDeprecationReason(
     | FieldDefinitionNode
     | InputValueDefinitionNode,
 ): Maybe<string> {
-  const deprecated = getDirectiveValues(GraphQLDeprecatedDirective, node);
+  const deprecated = getDirectiveValues(GraphQLDeprecatedDirective, node) as
+    | { reason: string }
+    | undefined;
   return deprecated?.reason;
 }

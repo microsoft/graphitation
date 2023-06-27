@@ -14,14 +14,19 @@ export type {
   Resolvers,
   UserResolvers,
   ResolveInfo,
+  TotalExecutionResult,
+  ExecutionResult,
+  IncrementalExecutionResult,
 } from "./types";
+
+export { isTotalExecutionResult, isIncrementalExecutionResult } from "./types";
 
 export {
   /** @deprecated Use "@graphitation/supermassive-ast" */
   addTypesToRequestDocument,
   /** @deprecated Use "@graphitation/supermassive-ast" */
   annotateDocumentGraphQLTransform,
-} from "@graphitation/supermassive-ast";
+} from "./supermassive-ast";
 
 export { extractImplicitTypes } from "./extractImplicitTypesRuntime";
 
@@ -73,7 +78,7 @@ export type {
   UnionTypeExtensionNode,
   EnumTypeExtensionNode,
   InputObjectTypeExtensionNode,
-} from "@graphitation/supermassive-ast";
+} from "./supermassive-ast";
 
 export type {
   BeforeFieldResolveHookArgs,

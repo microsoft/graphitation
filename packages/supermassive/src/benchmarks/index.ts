@@ -12,7 +12,7 @@ import {
 } from "graphql";
 import { compileQuery, isCompiledQuery } from "graphql-jit";
 import { executeWithoutSchema as supermassiveExecute } from "../executeWithoutSchema";
-import { addTypesToRequestDocument } from "@graphitation/supermassive-ast";
+import { addTypesToRequestDocument } from "../supermassive-ast";
 import { Resolvers, UserResolvers } from "../types";
 import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
 import { specifiedScalars } from "../values";
@@ -90,7 +90,7 @@ queryRunningSuite.add("supermassive - runtime schemaless", async () => {
     document: typeAnnotatedQuery,
     contextValue: { models },
   });
-  if (result.errors || !result.data) {
+  if ("data" in result && (result.errors || !result.data)) {
     throw new Error("Stuff ain't executing");
   }
 });

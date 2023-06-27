@@ -19,19 +19,19 @@ import {
   VariableDefinitionNode as GraphQLVariableDefinitionNode,
   valueFromAST,
   coerceInputValue,
+  GraphQLDirective,
 } from "graphql";
 import {
   DirectiveNode,
   FieldNode,
   TypeNode,
   VariableDefinitionNode,
-} from "@graphitation/supermassive-ast";
+} from "./supermassive-ast";
 import { inspect } from "./jsutils/inspect";
 import type { Maybe } from "./jsutils/Maybe";
 import type { ObjMap } from "./jsutils/ObjMap";
 import { printPathArray } from "./jsutils/printPathArray";
 import { Resolvers } from "./types";
-import { GraphQLDirective } from "./directives";
 
 type CoercedVariableValues =
   | { errors: Array<GraphQLError>; coerced?: never }
@@ -54,7 +54,7 @@ export function getVariableValues(
   inputs: { [variable: string]: unknown },
   options?: { maxErrors?: number },
 ): CoercedVariableValues {
-  const errors = [];
+  const errors: GraphQLError[] = [];
   const maxErrors = options?.maxErrors;
   try {
     const coerced = coerceVariableValues(
@@ -75,10 +75,10 @@ export function getVariableValues(
       return { coerced };
     }
   } catch (error) {
-    errors.push(error);
+    errors.push(error as GraphQLError);
   }
 
-  return { errors: errors as GraphQLError[] };
+  return { errors: errors };
 }
 
 function coerceVariableValues(
@@ -100,7 +100,7 @@ function coerceVariableValues(
       onError(
         new GraphQLError(
           `Variable "$${varName}" expected value of type "${varTypeStr}" which cannot be used as an input type.`,
-          varDefNode.type as GraphQLTypeNode,
+          { nodes: varDefNode.type as GraphQLTypeNode },
         ),
       );
       continue;
@@ -117,7 +117,7 @@ function coerceVariableValues(
         onError(
           new GraphQLError(
             `Variable "$${varName}" of required type "${varTypeStr}" was not provided.`,
-            varDefNode as GraphQLVariableDefinitionNode,
+            { nodes: varDefNode as GraphQLVariableDefinitionNode },
           ),
         );
       }
@@ -130,7 +130,7 @@ function coerceVariableValues(
       onError(
         new GraphQLError(
           `Variable "$${varName}" of non-null type "${varTypeStr}" must not be null.`,
-          varDefNode as GraphQLVariableDefinitionNode,
+          { nodes: varDefNode as GraphQLVariableDefinitionNode },
         ),
       );
       continue;
@@ -146,14 +146,10 @@ function coerceVariableValues(
           prefix += ` at "${varName}${printPathArray(path)}"`;
         }
         onError(
-          new GraphQLError(
-            prefix + "; " + error.message,
-            varDefNode as GraphQLVariableDefinitionNode,
-            undefined,
-            undefined,
-            undefined,
-            error.originalError,
-          ),
+          new GraphQLError(prefix + "; " + error.message, {
+            nodes: varDefNode as GraphQLVariableDefinitionNode,
+            originalError: error.originalError,
+          }),
         );
       },
     );
@@ -192,7 +188,7 @@ export function getArgumentValues(
         `Argument "$${name}" expected value of type "${inspect(
           argType,
         )}" which cannot be used as an input type.`,
-        argumentNode as GraphQLArgumentNode,
+        { nodes: argumentNode as GraphQLArgumentNode },
       );
     }
 
@@ -210,7 +206,7 @@ export function getArgumentValues(
           throw new GraphQLError(
             `Argument "${name}" of required type "${inspect(argType)}" ` +
               `was provided the variable "$${variableName}" which was not provided a runtime value.`,
-            valueNode as GraphQLValueNode,
+            { nodes: valueNode as GraphQLValueNode },
           );
         }
 
@@ -231,7 +227,7 @@ export function getArgumentValues(
         `Argument "${name}" has invalid value ${print(
           valueNode as GraphQLValueNode,
         )}.`,
-        valueNode as GraphQLValueNode,
+        { nodes: valueNode as GraphQLValueNode },
       );
     }
     coercedValues[name] = coercedValue;
@@ -290,6 +286,6 @@ function graphqlTypeFromTypeAst(
   } else {
     const typeName = node.name.value;
     const type = specifiedScalars[typeName] || resolvers[typeName];
-    return type as unknown as GraphQLType;
+    return type as GraphQLType;
   }
 }
