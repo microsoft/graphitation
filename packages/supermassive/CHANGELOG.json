@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Tue, 27 Jun 2023 11:47:30 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0-alpha.1",
+      "version": "3.0.0-alpha.1",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "df161b319c99c4e1b298870bfff4a03a602ea66a",
+            "comment": "Supermassive v3 alpha - defer and stream stuff"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 20 Jun 2023 11:38:47 GMT",
       "tag": "@graphitation/supermassive_v2.6.0",
       "version": "2.6.0",

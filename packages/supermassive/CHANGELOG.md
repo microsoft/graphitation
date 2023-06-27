@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Tue, 20 Jun 2023 11:38:47 GMT and should not be manually modified.
+This log was last generated on Tue, 27 Jun 2023 11:47:30 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.0.0-alpha.1
+
+Tue, 27 Jun 2023 11:47:30 GMT
+
+### Changes
+
+- Supermassive v3 alpha - defer and stream stuff (mnovikov@microsoft.com)
 
 ## 2.6.0
 
