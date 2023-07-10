@@ -14,29 +14,34 @@
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts"
   },
+  "peerDependencies": {
+    "ts-jest": "*"
+  },
   "devDependencies": {
     "@types/jest": "^26.0.22",
     "@types/loader-runner": "^2.2.4",
     "loader-runner": "^4.3.0",
-    "monorepo-scripts": "*"
+    "monorepo-scripts": "*",
+    "ts-jest": "^29.0.3",
+    "ts-loader": "^9.4.3"
   },
   "sideEffects": false,
   "access": "public",
   "exports": {
-    "jest": {
+    "./jest": {
       "import": "./lib/jest.ts"
     },
-    "webpack": {
+    "./webpack": {
       "import": "./lib/webpack.ts"
     }
   },
   "publishConfig": {
     "exports": {
-      "jest": {
+      "./jest": {
         "import": "./lib/jest.mjs",
         "require": "./lib/jest.js"
       },
-      "webpack": {
+      "./webpack": {
         "import": "./lib/webpack.mjs",
         "require": "./lib/webpack.js"
       }
