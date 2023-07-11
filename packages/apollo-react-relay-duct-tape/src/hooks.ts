@@ -50,6 +50,10 @@ export function useLazyLoadQuery<TQuery extends OperationType>(
   variables: TQuery["variables"],
   options?: { fetchPolicy?: FetchPolicy; context?: TQuery["context"] },
 ): { error?: Error; data?: TQuery["response"] } {
+  invariant(
+    query?.__brand === undefined,
+    "useLazyLoadQuery: query must be a valid runtime type.",
+  );
   const apolloOptions = options && {
     ...options,
     fetchPolicy: convertFetchPolicy(options.fetchPolicy),
@@ -61,7 +65,16 @@ export function useLazyLoadQuery<TQuery extends OperationType>(
     });
   } else {
     const client = useOverridenOrDefaultApolloClient();
-    return useApolloQuery(query, { client, variables, ...apolloOptions });
+    return useApolloQuery(
+      // Compiled documents without narrow observables should be treated like
+      // normal queries.
+      query.executionQueryDocument || query,
+      {
+        client,
+        variables,
+        ...apolloOptions,
+      },
+    );
   }
 }
 
@@ -76,20 +89,33 @@ export function useLazyLoadQuery<TQuery extends OperationType>(
  *
  * @see {@link https://microsoft.github.io/graphitation/docs/apollo-react-relay-duct-tape/use-fragment}
  *
- * @note For now, the fragment objects should be exported such that parent's can interpolate them into their own
- *       GraphQL documents. This may change in the future when/if we entirely switch to static compilation and will
- *       allow us to also move the usage of the graphql tagged template function inline at the `useFragment` call-site.
+ * @note For migration purposes, this hook supports the notion that the fragment reference can be undefined. This is
+ *       to support cases where useFragment is used in a tree that is conditionally using fragments.
  *
  * @param fragmentInput The GraphQL fragment document created using the `graphql` tagged template function.
  * @param fragmentRef The opaque fragment reference passed in by a parent component that has spread in this component's
  *                    fragment.
  * @returns The data corresponding to the field selections.
  */
+export function useFragment(
+  fragmentInput: GraphQLTaggedNode,
+  fragmentRef: undefined,
+): undefined;
 export function useFragment<TKey extends KeyType>(
   fragmentInput: GraphQLTaggedNode,
   fragmentRef: TKey,
+): KeyTypeData<TKey>;
+export function useFragment<TKey extends KeyType>(
+  fragmentInput: GraphQLTaggedNode | undefined,
+  fragmentRef: TKey,
 ): KeyTypeData<TKey> {
-  if (fragmentInput.watchQueryDocument) {
+  invariant(
+    fragmentInput?.__brand === undefined,
+    "useFragment: fragmentInput must be a valid runtime type.",
+  );
+  // If fragmentInput is undefined, it means the fragment is not compiled and we should just return the fragmentRef.
+  // This is an implementation detail that should never surface to the user.
+  if (fragmentInput && fragmentInput.watchQueryDocument) {
     return useCompiledFragment(fragmentInput, fragmentRef as FragmentReference);
   } else {
     return fragmentRef as unknown;
@@ -113,6 +139,10 @@ export function useRefetchableFragment<
   fragmentInput: GraphQLTaggedNode,
   fragmentRef: TKey,
 ): [data: KeyTypeData<TKey>, refetch: RefetchFn<TQuery["variables"]>] {
+  invariant(
+    fragmentInput && fragmentInput.__brand === undefined,
+    "useRefetchableFragment: fragmentInput must be a valid runtime type.",
+  );
   invariant(
     !!fragmentInput.watchQueryDocument,
     "useRefetchableFragment is only supported at this time when using compilation",
@@ -149,6 +179,10 @@ export function usePaginationFragment<
   isLoadingPrevious: boolean;
   refetch: RefetchFn<TQuery["variables"]>;
 } {
+  invariant(
+    fragmentInput && fragmentInput.__brand === undefined,
+    "usePaginationFragment: fragmentInput must be a valid runtime type.",
+  );
   invariant(
     !!fragmentInput.watchQueryDocument,
     "usePaginationFragment is only supported at this time when using compilation",
