@@ -18,8 +18,19 @@ export interface OperationType {
 }
 
 export type GraphQLTaggedNode =
-  | (DocumentNode & { watchQueryDocument?: never })
-  | { watchQueryDocument: DocumentNode; executeQueryDocument?: DocumentNode };
+  | {
+      __brand: "GraphQLTaggedNode";
+    }
+  | (DocumentNode & {
+      watchQueryDocument?: never;
+      executionQueryDocument?: DocumentNode;
+      __brand?: never;
+    })
+  | {
+      watchQueryDocument: DocumentNode;
+      executionQueryDocument?: DocumentNode;
+      __brand?: never;
+    };
 
 export type FetchPolicy =
   | "store-or-network"
