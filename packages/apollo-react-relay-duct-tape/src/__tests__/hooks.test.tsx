@@ -26,7 +26,10 @@ import {
 
 import { hooksTestQuery } from "./__generated__/hooksTestQuery.graphql";
 import { hooksTestSubscription } from "./__generated__/hooksTestSubscription.graphql";
-import { hooksTestFragment$key } from "./__generated__/hooksTestFragment.graphql";
+import {
+  hooksTestFragment,
+  hooksTestFragment$key,
+} from "./__generated__/hooksTestFragment.graphql";
 import { hooksTestMutation as hooksTestMutation$key } from "./__generated__/hooksTestMutation.graphql";
 import { getOperationName } from "@apollo/client/utilities";
 
@@ -205,6 +208,17 @@ describe(useFragment, () => {
     const user = useFragment(fragment, fragmentRef);
     expectType<string>(user.id);
     expectType<string>(user.name);
+  });
+
+  it("returns a union of the opaque data's type and undefined when fragmentRef is either a key or undefined", () => {
+    const fragmentRef: hooksTestFragment$key | undefined = undefined;
+    const user = useFragment(fragment, fragmentRef);
+    expectType<hooksTestFragment | undefined>(user);
+  });
+
+  it("returns undefined when fragmentRef is undefined", () => {
+    const user = useFragment(fragment, undefined);
+    expectType<undefined>(user);
   });
 });
 
