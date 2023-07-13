@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "[duct-tape] Fix order of useFragment overloads to properly support variations",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}

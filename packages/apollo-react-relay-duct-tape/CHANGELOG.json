@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Thu, 13 Jul 2023 01:43:35 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v1.0.7",
+      "version": "1.0.7",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "3f39a65519342f456e688dda1fbb974ebf11b1d8",
+            "comment": "[duct-tape] Fix order of useFragment overloads to properly support variations"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 11 Jul 2023 23:53:57 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v1.0.6",
       "version": "1.0.6",
