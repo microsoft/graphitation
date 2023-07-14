@@ -2,6 +2,21 @@
   "name": "@graphitation/embedded-document-artefact-loader",
   "entries": [
     {
+      "date": "Fri, 14 Jul 2023 01:21:51 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.3.0",
+      "version": "0.3.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "8cd6e846c55326a977dea1b5eb2b0b469d03db3f",
+            "comment": "Adds jest loader"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 19 Jun 2023 22:17:53 GMT",
       "tag": "@graphitation/embedded-document-artefact-loader_v0.2.0",
       "version": "0.2.0",

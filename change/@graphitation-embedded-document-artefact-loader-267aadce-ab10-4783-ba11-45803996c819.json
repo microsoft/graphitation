@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Adds jest loader",
-  "packageName": "@graphitation/embedded-document-artefact-loader",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}
