@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Rename jest loader to reflect it wrapping ts-jest",
-  "packageName": "@graphitation/embedded-document-artefact-loader",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}
