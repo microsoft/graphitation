@@ -20,7 +20,7 @@ describe("jest loader", () => {
         runInBand: true,
         useStderr: true,
         transform: JSON.stringify({
-          "\\.ts$": path.join(__dirname, "../jest.ts"),
+          "\\.ts$": path.join(__dirname, "../ts-jest.ts"),
         }),
       } as Config.Argv,
       roots,

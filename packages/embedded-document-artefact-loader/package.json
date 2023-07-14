@@ -28,8 +28,8 @@
   "sideEffects": false,
   "access": "public",
   "exports": {
-    "./jest": {
-      "import": "./lib/jest.ts"
+    "./ts-jest": {
+      "import": "./lib/ts-jest.ts"
     },
     "./webpack": {
       "import": "./lib/webpack.ts"
@@ -37,9 +37,9 @@
   },
   "publishConfig": {
     "exports": {
-      "./jest": {
-        "import": "./lib/jest.mjs",
-        "require": "./lib/jest.js"
+      "./ts-jest": {
+        "import": "./lib/ts-jest.mjs",
+        "require": "./lib/ts-jest.js"
       },
       "./webpack": {
         "import": "./lib/webpack.mjs",

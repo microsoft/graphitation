@@ -1,6 +1,8 @@
-import type { TransformerFactory, SyncTransformer } from "@jest/transform";
 import { transform } from "./transform";
-import tsLoader, { TsJestGlobalOptions } from "ts-jest";
+import tsLoader from "ts-jest";
+
+import type { TransformerFactory, SyncTransformer } from "@jest/transform";
+import type { TsJestGlobalOptions } from "ts-jest";
 
 const transformerFactory: TransformerFactory<SyncTransformer<unknown>> = {
   createTransformer(config) {
