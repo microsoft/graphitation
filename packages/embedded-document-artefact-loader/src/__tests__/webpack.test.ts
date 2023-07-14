@@ -1,19 +1,26 @@
 import { RunLoaderResult, runLoaders } from "loader-runner";
 import { SourceMapConsumer } from "source-map";
 
-function runLoader(source: string, context?: { sourceMap: boolean }) {
+function runLoader(
+  source: string,
+  options?: { sourceMap?: boolean; compileTS?: boolean },
+) {
   return new Promise<RunLoaderResult>((resolve, reject) => {
     runLoaders(
       {
-        resource: "/path/to/index.js",
+        resource: "fixture.ts",
         loaders: [
           {
             loader: require.resolve("../webpack.ts"),
             options: {},
           },
-        ],
+          options?.compileTS && {
+            loader: require.resolve("./utils/simple-ts-loader.ts"),
+            options: {},
+          },
+        ].filter(Boolean),
         context: {
-          sourceMap: context?.sourceMap ?? true,
+          sourceMap: options?.sourceMap ?? true,
         },
         readResource: (_path, callback) => {
           callback(null, Buffer.from(source));
@@ -159,7 +166,7 @@ describe("webpackLoader", () => {
       const [startPosition, endPosition] = consumer.allGeneratedPositionsFor({
         line: 2,
         column: undefined as any,
-        source: "/path/to/index.js",
+        source: "fixture.ts",
       });
       const startOffset = getPositionOffset(
         transpiled!,
@@ -196,12 +203,12 @@ describe("webpackLoader", () => {
       const startPosition = consumer.generatedPositionFor({
         line: 3,
         column: 20,
-        source: "/path/to/index.js",
+        source: "fixture.ts",
       });
       const endPosition = consumer.generatedPositionFor({
         line: 7,
         column: 10,
-        source: "/path/to/index.js",
+        source: "fixture.ts",
       });
       const startOffset = getPositionOffset(
         transpiled!,
@@ -212,6 +219,62 @@ describe("webpackLoader", () => {
         transpiled!,
         endPosition.line,
         endPosition.column,
+      );
+
+      expect(transpiled?.slice(startOffset, endOffset)).toMatchInlineSnapshot(
+        `"require("./__generated__/SomeComponentQuery.graphql").default"`,
+      );
+    });
+
+    xit("emits source-map that expands on existing input map", async () => {
+      // The import over multiple lines is important here, as it will transpile to a single line
+      // and the source-map should be able to map back to the original source with multiple lines.
+      const source = `
+        import {
+          graphql
+        } from "@nova/react";
+        const doc = graphql\`query SomeComponentQuery($id: ID!) { helloWorld }\`;
+        console.log()
+      `;
+
+      const result = await runLoader(source, { compileTS: true });
+      const transpiled = result.result![0]?.toString();
+      const sourceMap = result.result![1];
+      // console.log(transpiled);
+      console.log(sourceMap);
+
+      const consumer = new SourceMapConsumer(sourceMap!.toString() as any);
+      // consumer.eachMapping((mapping) => {
+      //   console.log(mapping);
+      // });
+      consumer.computeColumnSpans();
+      console.log(
+        consumer.allGeneratedPositionsFor({
+          line: 5,
+          column: undefined as any,
+          source: "fixture.ts",
+        }),
+      );
+      const [startPosition, endPosition] = consumer.allGeneratedPositionsFor({
+        line: 5,
+        column: undefined as any,
+        source: "fixture.ts",
+      });
+      const x = consumer.generatedPositionFor({
+        line: 5,
+        column: 20,
+        source: "fixture.ts",
+      });
+      console.log(x);
+      const startOffset = getPositionOffset(
+        transpiled!,
+        2, // startPosition.line,
+        12, // startPosition.column,
+      );
+      const endOffset = getPositionOffset(
+        transpiled!,
+        2, // endPosition.line,
+        73, // endPosition.column,
       );
 
       expect(transpiled?.slice(startOffset, endOffset)).toMatchInlineSnapshot(
