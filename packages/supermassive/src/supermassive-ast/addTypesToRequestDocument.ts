@@ -226,7 +226,7 @@ function generateTypeNode(type: GraphQLType): TypedAST.TypeNode {
   throw new Error(`Can't generate TypeNode for type: ${type}`);
 }
 
-function makeReadableErrorPath(
+export function makeReadableErrorPath(
   ancestors: ReadonlyArray<
     readonly TypelessAST.ASTNode[] | TypelessAST.ASTNode
   >,
