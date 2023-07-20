@@ -14,6 +14,9 @@
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts"
   },
+  "dependencies": {
+    "source-map-js": "^1.0.2"
+  },
   "peerDependencies": {
     "ts-jest": "*"
   },

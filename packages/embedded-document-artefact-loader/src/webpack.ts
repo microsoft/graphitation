@@ -1,6 +1,7 @@
 import type { LoaderDefinitionFunction } from "webpack";
-import { SourceMapConsumer, SourceMapGenerator } from "source-map";
+import { SourceMapConsumer, SourceMapGenerator } from "source-map-js";
 import { transform } from "./transform";
+import { applySourceMap } from "./source-map-utils";
 
 const webpackLoader: LoaderDefinitionFunction = function (
   source,
@@ -11,33 +12,31 @@ const webpackLoader: LoaderDefinitionFunction = function (
 
   let sourceMap: SourceMapGenerator | undefined;
   if (this.sourceMap) {
-    // sourceMap = inputSourceMap
-    //   ? SourceMapGenerator.fromSourceMap(
-    //       new SourceMapConsumer(JSON.parse(inputSourceMap as string)),
-    //     )
-    //   : new SourceMapGenerator({
-    //       file: this.resourcePath + ".map",
-    //     });
     sourceMap = new SourceMapGenerator({
       file: this.resourcePath + ".map",
     });
     sourceMap.setSourceContent(this.resourcePath, source);
   }
 
-  const result = transform(source, this.resourcePath, sourceMap);
+  const transformed = transform(source, this.resourcePath, sourceMap);
 
-  if (sourceMap && inputSourceMap) {
-    const compoundSourceMap = SourceMapGenerator.fromSourceMap(
-      new SourceMapConsumer(JSON.parse(inputSourceMap as string)),
+  if (transformed && sourceMap && inputSourceMap) {
+    callback(
+      null,
+      transformed,
+      applySourceMap(
+        this.resourcePath,
+        inputSourceMap as string,
+        sourceMap.toString(),
+      ),
     );
-    compoundSourceMap.applySourceMap(
-      new SourceMapConsumer(JSON.parse(sourceMap.toString())),
-    );
-
-    sourceMap = compoundSourceMap;
+  } else if (transformed && sourceMap) {
+    callback(null, transformed, sourceMap.toString());
+  } else if (transformed) {
+    callback(null, transformed);
+  } else {
+    callback(null, source);
   }
-
-  callback(null, result, sourceMap?.toString());
 };
 
 export default webpackLoader;
