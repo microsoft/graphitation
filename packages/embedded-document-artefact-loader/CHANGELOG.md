@@ -1,8 +1,16 @@
 # Change Log - @graphitation/embedded-document-artefact-loader
 
-This log was last generated on Fri, 14 Jul 2023 16:21:39 GMT and should not be manually modified.
+This log was last generated on Fri, 21 Jul 2023 06:18:50 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.5.0
+
+Fri, 21 Jul 2023 06:18:50 GMT
+
+### Minor changes
+
+- Webpack and jest now have line source-map support, but coluns are still lacking (eloy.de.enige@gmail.com)
 
 ## 0.4.0
 

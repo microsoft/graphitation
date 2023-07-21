@@ -2,6 +2,21 @@
   "name": "@graphitation/embedded-document-artefact-loader",
   "entries": [
     {
+      "date": "Fri, 21 Jul 2023 06:18:50 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.5.0",
+      "version": "0.5.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "13ac619ad0b720af81197a56bb7c0b9b830ef142",
+            "comment": "Webpack and jest now have line source-map support, but coluns are still lacking"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 14 Jul 2023 16:21:39 GMT",
       "tag": "@graphitation/embedded-document-artefact-loader_v0.4.0",
       "version": "0.4.0",
