@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Webpack and jest now have line source-map support, but coluns are still lacking",
+  "packageName": "@graphitation/embedded-document-artefact-loader",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}

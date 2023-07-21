@@ -3,7 +3,7 @@ function graphql(..._args: any[]) {
 }
 
 describe("a jest test", () => {
-  it("works", () => {
+  it("succeeds", () => {
     expect(
       graphql`
         fragment SomeComponent_query on Query {
@@ -11,5 +11,15 @@ describe("a jest test", () => {
         }
       `,
     ).toEqual("hello world");
+  });
+
+  it("fails", () => {
+    expect(
+      graphql`
+        fragment SomeComponent_query on Query {
+          helloWorld
+        }
+      `,
+    ).toEqual("bye world");
   });
 });
