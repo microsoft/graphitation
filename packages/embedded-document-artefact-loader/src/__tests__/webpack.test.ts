@@ -155,6 +155,20 @@ describe("webpackLoader", () => {
         );
       `,
     },
+    {
+      name: "a refetchable fragment",
+      source: `
+        import { graphql } from "@nova/react";
+        const {data} = useRefetchableFragment(
+          graphql\`
+            fragment SomeComponentFragment on Query @refetchable(queryName: "SomeRefetchableQuery") {
+              helloWorld
+            }
+          \`,
+          props
+        );
+      `,
+    },
   ])("works with $name", async ({ source }) => {
     const result = await runLoader(source);
     expect(result.result![0]).toMatchSnapshot();
