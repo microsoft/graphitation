@@ -290,3 +290,5 @@ return {
   }
 };
 })();
+
+export default documents;

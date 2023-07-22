@@ -181,3 +181,5 @@ return {
   "watchQueryDocument": (v3/*: any*/)
 };
 })();
+
+export default documents;
