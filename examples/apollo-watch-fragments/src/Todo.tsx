@@ -20,7 +20,7 @@ const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({ todo: todoRef }) => {
         someOtherField @include(if: $includeSomeOtherField)
       }
     `,
-    todoRef
+    todoRef,
   );
   console.log("Todo watch data:", todo);
 
@@ -30,7 +30,7 @@ const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({ todo: todoRef }) => {
       const isCompleted = e.currentTarget.checked;
       changeTodoStatus({ id: todo.id, isCompleted });
     },
-    [changeTodoStatus]
+    [changeTodoStatus],
   );
 
   const refresh = useCallback(() => {
@@ -52,7 +52,7 @@ const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({ todo: todoRef }) => {
           onClick={refresh}
           title={`To test refetching, run the following in your\nDevTools console and then click the refresh button:\n\n$client.link.context.db.setTodoStatus(${todo.id.replace(
             "Todo:",
-            ""
+            "",
           )}, ${!todo.isCompleted})`}
         ></button>
         <button className="destroy"></button>
