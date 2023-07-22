@@ -2,6 +2,21 @@
   "name": "@graphitation/embedded-document-artefact-loader",
   "entries": [
     {
+      "date": "Sat, 22 Jul 2023 07:35:09 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.6.0",
+      "version": "0.6.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "a6ac41623e4857191d9f86e45c522d35ee917c14",
+            "comment": "Use @refetchable(queryName) as artefact filename"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 21 Jul 2023 06:18:50 GMT",
       "tag": "@graphitation/embedded-document-artefact-loader_v0.5.0",
       "version": "0.5.0",

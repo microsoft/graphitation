@@ -1,8 +1,16 @@
 # Change Log - @graphitation/embedded-document-artefact-loader
 
-This log was last generated on Fri, 21 Jul 2023 06:18:50 GMT and should not be manually modified.
+This log was last generated on Sat, 22 Jul 2023 07:35:09 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.0
+
+Sat, 22 Jul 2023 07:35:09 GMT
+
+### Minor changes
+
+- Use @refetchable(queryName) as artefact filename (eloy.de.enige@gmail.com)
 
 ## 0.5.0
 

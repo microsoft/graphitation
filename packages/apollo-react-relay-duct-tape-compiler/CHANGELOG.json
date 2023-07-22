@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape-compiler",
   "entries": [
     {
+      "date": "Sat, 22 Jul 2023 07:35:09 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.2.1",
+      "version": "1.2.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "commit": "a6ac41623e4857191d9f86e45c522d35ee917c14",
+            "comment": "Backport compiler fixes from TMP"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 20 Jun 2023 11:38:47 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.2.0",
       "version": "1.2.0",
