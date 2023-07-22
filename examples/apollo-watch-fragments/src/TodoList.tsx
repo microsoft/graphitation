@@ -38,7 +38,7 @@ const TodoList: React.FC<{ query: TodoList_queryFragment$key }> = ({
         }
       }
     `,
-    queryRef
+    queryRef,
   );
   console.log("TodoList watch data:", query);
 
@@ -73,6 +73,6 @@ const TodoList: React.FC<{ query: TodoList_queryFragment$key }> = ({
 
 const MemoizedTodoList = React.memo(
   TodoList,
-  shallowCompareFragmentReferences("query")
+  shallowCompareFragmentReferences("query"),
 );
 export { MemoizedTodoList as TodoList };

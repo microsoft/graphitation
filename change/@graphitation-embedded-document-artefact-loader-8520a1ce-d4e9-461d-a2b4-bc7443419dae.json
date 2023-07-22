@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Use @refetchable(queryName) as artefact filename",
+  "packageName": "@graphitation/embedded-document-artefact-loader",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}

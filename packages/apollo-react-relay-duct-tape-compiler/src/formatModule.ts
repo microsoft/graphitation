@@ -27,11 +27,12 @@ function printDocumentComment(document: DocumentNode) {
 export async function formatModuleFactory(
   options: FormatModuleOptions,
 ): Promise<FormatModule> {
-  const schema = options.emitNarrowObservables
-    ? buildSchema(
-        new Source(readFileSync(options.schema, "utf-8"), options.schema),
-      )
-    : null;
+  const schema =
+    options.emitNarrowObservables || options.emitSupermassiveDocuments
+      ? buildSchema(
+          new Source(readFileSync(options.schema, "utf-8"), options.schema),
+        )
+      : null;
 
   let addTypesToRequestDocument:
     | undefined
@@ -92,7 +93,7 @@ export async function formatModuleFactory(
       exports &&
         `export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = ${dedupeJSONStringify(
           exports,
-        )};`,
+        )};\n\nexport default documents;`,
     ].filter(Boolean) as string[];
 
     return `/* tslint:disable */

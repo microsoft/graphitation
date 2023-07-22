@@ -32,10 +32,12 @@
   "access": "public",
   "exports": {
     "./ts-jest": {
-      "import": "./lib/ts-jest.ts"
+      "import": "./src/ts-jest.ts",
+      "require": "./src/ts-jest.ts"
     },
     "./webpack": {
-      "import": "./lib/webpack.ts"
+      "import": "./src/webpack.ts",
+      "require": "./src/webpack.ts"
     }
   },
   "publishConfig": {

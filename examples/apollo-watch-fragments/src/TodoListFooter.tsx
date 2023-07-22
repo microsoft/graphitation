@@ -16,7 +16,7 @@ const TodoListFooter: React.FC<{
         uncompletedCount
       }
     `,
-    todosRef
+    todosRef,
   );
   console.log("TodoListFooter watch data:", todos);
 
@@ -35,6 +35,6 @@ const TodoListFooter: React.FC<{
 
 const MemoizedTodoListFooter = React.memo(
   TodoListFooter,
-  shallowCompareFragmentReferences("todos")
+  shallowCompareFragmentReferences("todos"),
 );
 export { MemoizedTodoListFooter as TodoListFooter };

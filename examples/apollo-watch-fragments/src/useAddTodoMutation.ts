@@ -3,7 +3,6 @@ import { useCallback } from "react";
 import { useMutation } from "@apollo/client";
 import { graphql } from "@graphitation/graphql-js-tag";
 
-import { AppQuery } from "./App";
 import { useAddTodoMutationResponse } from "./__generated__/useAddTodoMutation.graphql";
 import invariant from "invariant";
 
@@ -115,6 +114,6 @@ export function useAddTodoMutation() {
         //   }
       });
     },
-    [commit]
+    [commit],
   );
 }

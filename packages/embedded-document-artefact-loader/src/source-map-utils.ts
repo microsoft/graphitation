@@ -1,13 +1,21 @@
-import { SourceMapConsumer, SourceMapGenerator } from "source-map-js";
+import {
+  SourceMapConsumer,
+  SourceMapGenerator,
+  RawSourceMap,
+} from "source-map-js";
 
 export function applySourceMap(
   sourcePath: string,
-  sourceMap1: string,
-  sourceMap2: string,
+  previousSourceMap: string | RawSourceMap,
+  nextSourceMap: string,
 ): string {
-  const smc1 = new SourceMapConsumer(JSON.parse(sourceMap1));
-  const smc2 = new SourceMapConsumer(JSON.parse(sourceMap2!));
-  const pipeline = SourceMapGenerator.fromSourceMap(smc2);
-  pipeline.applySourceMap(smc1, sourcePath);
+  const prev = new SourceMapConsumer(
+    typeof previousSourceMap === "string"
+      ? JSON.parse(previousSourceMap)
+      : previousSourceMap,
+  );
+  const next = new SourceMapConsumer(JSON.parse(nextSourceMap));
+  const pipeline = SourceMapGenerator.fromSourceMap(next);
+  pipeline.applySourceMap(prev, sourcePath);
   return pipeline.toString();
 }

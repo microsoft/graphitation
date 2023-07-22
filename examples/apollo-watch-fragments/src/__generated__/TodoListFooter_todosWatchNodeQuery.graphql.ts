@@ -167,3 +167,5 @@ return {
   }
 };
 })();
+
+export default documents;

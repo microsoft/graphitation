@@ -505,3 +505,5 @@ return {
   }
 };
 })();
+
+export default documents;
