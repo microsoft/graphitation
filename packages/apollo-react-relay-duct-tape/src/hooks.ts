@@ -144,7 +144,11 @@ export function useRefetchableFragment<
   fragmentRef: TKey,
 ): [data: KeyTypeData<TKey>, refetch: RefetchFn<TQuery["variables"]>] {
   invariant(
-    fragmentInput && fragmentInput.__brand === undefined,
+    fragmentInput,
+    "useRefetchableFragment: Missing metadata; did you forget to use the @refetchable directive?",
+  );
+  invariant(
+    fragmentInput.__brand === undefined,
     "useRefetchableFragment: fragmentInput must be a valid runtime type.",
   );
   invariant(
@@ -184,7 +188,11 @@ export function usePaginationFragment<
   refetch: RefetchFn<TQuery["variables"]>;
 } {
   invariant(
-    fragmentInput && fragmentInput.__brand === undefined,
+    fragmentInput,
+    "usePaginationFragment: Missing metadata; did you forget to use the @refetchable directive?",
+  );
+  invariant(
+    fragmentInput.__brand === undefined,
     "usePaginationFragment: fragmentInput must be a valid runtime type.",
   );
   invariant(
