@@ -2,6 +2,21 @@
   "name": "@graphitation/embedded-document-artefact-loader",
   "entries": [
     {
+      "date": "Tue, 25 Jul 2023 08:18:03 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.6.1",
+      "version": "0.6.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "751b49c95837e7d4d3add621e79598d14e8a587f",
+            "comment": "Keep loader agnostic to duct-tape specifics and handle refetchable outside of it"
+          }
+        ]
+      }
+    },
+    {
       "date": "Sat, 22 Jul 2023 07:35:09 GMT",
       "tag": "@graphitation/embedded-document-artefact-loader_v0.6.0",
       "version": "0.6.0",

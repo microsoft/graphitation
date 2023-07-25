@@ -1,8 +1,16 @@
 # Change Log - @graphitation/embedded-document-artefact-loader
 
-This log was last generated on Sat, 22 Jul 2023 07:35:09 GMT and should not be manually modified.
+This log was last generated on Tue, 25 Jul 2023 08:18:03 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.1
+
+Tue, 25 Jul 2023 08:18:03 GMT
+
+### Patches
+
+- Keep loader agnostic to duct-tape specifics and handle refetchable outside of it (eloy.de.enige@gmail.com)
 
 ## 0.6.0
 
