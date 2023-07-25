@@ -20,3 +20,7 @@ export type TodoList_queryFragment$key = {
     readonly " $data"?: TodoList_queryFragment$data | undefined;
     readonly " $fragmentRefs": FragmentRefs<"TodoList_queryFragment">;
 };
+
+
+import { documents } from "./TodoListPaginationQuery.graphql";
+export default documents;

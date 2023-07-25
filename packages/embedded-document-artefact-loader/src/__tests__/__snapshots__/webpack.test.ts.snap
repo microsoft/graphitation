@@ -1,15 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`webpackLoader works with a refetchable fragment 1`] = `
-"
-        import { graphql } from "@nova/react";
-        const {data} = useRefetchableFragment(
-          require("./__generated__/SomeRefetchableQuery.graphql").default,
-          props
-        );
-      "
-`;
-
 exports[`webpackLoader works with documents captured as variable 1`] = `
 "
         import { graphql } from "@nova/react";

@@ -8,7 +8,7 @@ export function applySourceMap(
   sourcePath: string,
   previousSourceMap: string | RawSourceMap,
   nextSourceMap: string,
-): string {
+): SourceMapGenerator {
   const prev = new SourceMapConsumer(
     typeof previousSourceMap === "string"
       ? JSON.parse(previousSourceMap)
@@ -17,5 +17,5 @@ export function applySourceMap(
   const next = new SourceMapConsumer(JSON.parse(nextSourceMap));
   const pipeline = SourceMapGenerator.fromSourceMap(next);
   pipeline.applySourceMap(prev, sourcePath);
-  return pipeline.toString();
+  return pipeline;
 }

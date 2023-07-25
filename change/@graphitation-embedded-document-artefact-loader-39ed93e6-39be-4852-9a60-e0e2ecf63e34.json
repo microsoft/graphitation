@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Keep loader agnostic to duct-tape specifics and handle refetchable outside of it",
+  "packageName": "@graphitation/embedded-document-artefact-loader",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}

@@ -11,6 +11,7 @@ import dedupeJSONStringify from "relay-compiler/lib/util/dedupeJSONStringify";
 import type { DocumentNode } from "graphql";
 import type { FormatModule } from "relay-compiler/lib/language/RelayLanguagePluginInterface";
 import type { CompiledArtefactModule } from "./types";
+import { Definition, Fragment } from "relay-compiler";
 
 export interface FormatModuleOptions {
   emitDocuments: boolean;
@@ -76,10 +77,13 @@ export async function formatModuleFactory(
     return exports;
   }
 
-  return ({ docText, hash, moduleName, typeText }) => {
+  return ({ docText, hash, moduleName, typeText, definition }) => {
     const exports = options.emitDocuments
       ? docText && generateExports(moduleName, docText)
       : null;
+    const reExportWatchNodeQuery =
+      options.emitDocuments && definition.kind === "Fragment";
+
     const components = [
       typeText,
       exports &&
@@ -90,10 +94,8 @@ export async function formatModuleFactory(
         options.emitQueryDebugComments &&
         exports.watchQueryDocument &&
         printDocumentComment(exports.watchQueryDocument),
-      exports &&
-        `export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = ${dedupeJSONStringify(
-          exports,
-        )};\n\nexport default documents;`,
+      exports && printExports(exports),
+      reExportWatchNodeQuery && printWatchNodeQueryReExport(definition),
     ].filter(Boolean) as string[];
 
     return `/* tslint:disable */
@@ -102,4 +104,29 @@ export async function formatModuleFactory(
 ${hash ? `/* ${hash} */\n` : ""}
 ${components.join("\n\n")}`;
   };
+}
+
+// TODO: hould simply not emit a WatchNodeQuery refetchable directive when there already is a @refetchable directive
+function printWatchNodeQueryReExport(definition: Fragment) {
+  const refetchable =
+    definition.directives.find(
+      (d) => d.name === "refetchable" && d.loc.kind === "Source",
+    ) ||
+    definition.directives.find(
+      (d) => d.name === "refetchable" && d.loc.kind === "Generated",
+    );
+  invariant(refetchable, "Expected to find a @refetchable directive");
+  const queryNameArg = refetchable.args[0];
+  invariant(
+    queryNameArg.name === "queryName" && queryNameArg.value.kind === "Literal",
+    "Expected a @refetchable(queryName:) argument",
+  );
+
+  return `import { documents } from "./${queryNameArg.value.value}.graphql";\nexport default documents;`;
+}
+
+function printExports(exports: CompiledArtefactModule) {
+  return `export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = ${dedupeJSONStringify(
+    exports,
+  )};\n\nexport default documents;`;
 }

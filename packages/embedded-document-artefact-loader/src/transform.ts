@@ -40,24 +40,11 @@ export function transform(
 
       lastChunkOffset = offset + taggedTemplateExpression.length;
 
-      const match =
-        taggedTemplateExpression.match(
-          /@refetchable\(\s*queryName:\s*"(?<queryName>.+?)"/,
-        ) ||
-        taggedTemplateExpression.match(
-          /(query|mutation|subscription|fragment)\s+\b(?<documentName>.+?)\b/,
-        );
-      if (match) {
-        const fileName =
-          match.groups?.["queryName"] || match.groups?.["documentName"];
-        if (!fileName) {
-          console.error(
-            "Expected to find a GraphQL document name or @refetchable query name",
-          );
-          return taggedTemplateExpression;
-        }
-
-        const generated = `require("./__generated__/${fileName}.graphql").default`;
+      const match = taggedTemplateExpression.match(
+        /(query|mutation|subscription|fragment)\s+\b(.+?)\b/,
+      );
+      if (match && match[2]) {
+        const generated = `require("./__generated__/${match[2]}.graphql").default`;
 
         if (sourceMap) {
           const originalStart = offsetToLineColumn(source, offset);
