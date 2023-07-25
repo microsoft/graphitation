@@ -40,7 +40,11 @@ const transformerFactory: TransformerFactory<SyncTransformer<unknown>> = {
           //       ourselves rather than letting jest do the work.
           tsResult = {
             code: tsResultCode,
-            map: applySourceMap(sourcePath, sourceMap.toString(), tsResultMap),
+            map: applySourceMap(
+              sourcePath,
+              sourceMap.toString(),
+              tsResultMap,
+            ) as any, // SourceMapGenerator seems to satisfy the runtime needs, but it's unclear which properties it uses exactly
           };
         }
 

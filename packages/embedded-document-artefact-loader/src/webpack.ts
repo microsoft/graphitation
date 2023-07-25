@@ -28,10 +28,10 @@ const webpackLoader: LoaderDefinitionFunction = function (
         this.resourcePath,
         inputSourceMap as string,
         sourceMap.toString(),
-      ),
+      ) as any, // SourceMapGenerator seems to satisfy the runtime needs, but it's unclear which properties it uses exactly
     );
   } else if (transformed && sourceMap) {
-    callback(null, transformed, sourceMap.toString());
+    callback(null, transformed, sourceMap as any); // SourceMapGenerator seems to satisfy the runtime needs, but it's unclear which properties it uses exactly
   } else if (transformed) {
     callback(null, transformed);
   } else {
