@@ -31,7 +31,7 @@ const config: webpack.Configuration = {
         exclude: /node_modules/,
       },
       {
-        test: /\.tsx$/,
+        test: /\.tsx?$/,
         loader: "@graphitation/embedded-document-artefact-loader/webpack",
         exclude: /node_modules/,
       },

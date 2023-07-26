@@ -230,10 +230,18 @@ interface GraphQLSubscriptionConfig<
 export function useSubscription<TSubscriptionPayload extends OperationType>(
   config: GraphQLSubscriptionConfig<TSubscriptionPayload>,
 ): void {
+  const document = config.subscription;
+  invariant(
+    document?.__brand === undefined,
+    "useSubscription: Document must be a valid runtime type.",
+  );
+  invariant(
+    !document.watchQueryDocument,
+    "useSubscription: Did not expect a watch query document",
+  );
   const client = useOverridenOrDefaultApolloClient();
   const { error } = useApolloSubscription(
-    // TODO: Right now we don't replace mutation documents with imported artefacts.
-    config.subscription as DocumentNode,
+    document.executionQueryDocument || document,
     {
       client,
       variables: config.variables,
@@ -287,10 +295,17 @@ type MutationCommiter<TMutationPayload extends OperationType> = (
 export function useMutation<TMutationPayload extends OperationType>(
   mutation: GraphQLTaggedNode,
 ): [MutationCommiter<TMutationPayload>, boolean] {
+  invariant(
+    mutation?.__brand === undefined,
+    "useMutation: Document must be a valid runtime type.",
+  );
+  invariant(
+    !mutation.watchQueryDocument,
+    "useMutation: Did not expect a watch query document",
+  );
   const client = useOverridenOrDefaultApolloClient();
   const [apolloUpdater, { loading: mutationLoading }] = useApolloMutation(
-    // TODO: Right now we don't replace mutation documents with imported artefacts.
-    mutation as DocumentNode,
+    mutation.executionQueryDocument || mutation,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     { client: client as ApolloClient<any> },
   );
