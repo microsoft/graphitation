@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/supermassive",
   "license": "MIT",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",

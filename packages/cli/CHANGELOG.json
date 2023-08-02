@@ -2,6 +2,27 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Wed, 02 Aug 2023 12:50:20 GMT",
+      "tag": "@graphitation/cli_v1.7.0",
+      "version": "1.7.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "ea95aac89851fb20bae9a5f495bd6776c6607d87",
+            "comment": "enums in types are now string unions by default and added backwards compatibility flag + deprecation fixes"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.6.0",
+            "commit": "ea95aac89851fb20bae9a5f495bd6776c6607d87"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 20 Jun 2023 11:38:47 GMT",
       "tag": "@graphitation/cli_v1.6.0",
       "version": "1.6.0",

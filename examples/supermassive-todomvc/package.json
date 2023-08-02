@@ -17,7 +17,7 @@
     "@graphitation/apollo-react-relay-duct-tape": "^1.0.9",
     "@graphitation/apollo-react-relay-duct-tape-compiler": "^1.2.2",
     "@graphitation/graphql-js-tag": "^0.9.0",
-    "@graphitation/supermassive": "^2.6.0",
+    "@graphitation/supermassive": "^2.6.1",
     "@graphitation/ts-transform-graphql-js-tag": "^1.1.0",
     "concurrently": "^6.5.1",
     "graphql": "^15.6.1",
