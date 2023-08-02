@@ -24,7 +24,6 @@ export function generateModels(context: TsCodegenContext): ts.SourceFile {
       enumsStatements.push(
         factory.createImportDeclaration(
           undefined,
-          undefined,
           factory.createImportClause(
             false,
             undefined,
@@ -37,7 +36,6 @@ export function generateModels(context: TsCodegenContext): ts.SourceFile {
 
     enumsStatements.push(
       factory.createExportDeclaration(
-        undefined,
         undefined,
         false,
         undefined,
@@ -117,7 +115,6 @@ function createObjectTypeModel(
   }
 
   return factory.createInterfaceDeclaration(
-    undefined,
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     factory.createIdentifier(type.name),
     undefined,
@@ -154,7 +151,6 @@ function createUnionTypeModel(
   type: UnionType,
 ): ts.TypeAliasDeclaration | null {
   return factory.createTypeAliasDeclaration(
-    undefined,
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     factory.createIdentifier(type.name),
     undefined,
@@ -189,7 +185,6 @@ function createInterfaceTypeModel(
     );
 
     return factory.createInterfaceDeclaration(
-      undefined,
       [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
       factory.createIdentifier(type.name),
       undefined,
@@ -221,7 +216,6 @@ function createInterfaceTypeModel(
     );
   } else {
     return factory.createInterfaceDeclaration(
-      undefined,
       [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
       factory.createIdentifier(type.name),
       undefined,

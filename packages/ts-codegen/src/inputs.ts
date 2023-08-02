@@ -15,7 +15,6 @@ export function generateInputs(context: TsCodegenContext): ts.SourceFile {
     statements.push(
       factory.createImportDeclaration(
         undefined,
-        undefined,
         factory.createImportClause(
           false,
           undefined,
@@ -54,7 +53,6 @@ function createInputObjectType(
   type: InputObjectType,
 ): ts.TypeAliasDeclaration {
   return factory.createTypeAliasDeclaration(
-    undefined,
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     type.name,
     undefined,

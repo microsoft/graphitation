@@ -51,6 +51,7 @@ export type TsCodegenContextOptions = {
   };
   legacyCompat: boolean;
   legacyNoModelsForObjects: boolean;
+  legacyEnumsCompatibility: boolean;
 
   modelScope: string | null;
 };
@@ -84,6 +85,7 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
   },
   legacyCompat: false,
   legacyNoModelsForObjects: false,
+  legacyEnumsCompatibility: false,
 
   modelScope: null,
 };
@@ -336,7 +338,6 @@ export class TsCodegenContext {
     }
 
     return factory.createTypeAliasDeclaration(
-      undefined,
       [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
       factory.createIdentifier(scalarName),
       undefined,
@@ -375,7 +376,6 @@ export class TsCodegenContext {
     return [
       addSyntheticLeadingComment(
         factory.createInterfaceDeclaration(
-          undefined,
           [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
           factory.createIdentifier("BaseModel"),
           undefined,
@@ -408,16 +408,19 @@ export class TsCodegenContext {
       } else if (markUsage === "RESOLVERS") {
         this.usedEntitiesInResolvers.add(typeName);
       }
-      let namespace = "";
+      let modifiedTypeName = "";
       const type = this.typeNameToType.get(typeName);
 
       if (markUsage === "MODELS") {
         if (type && type.kind === "ENUM") {
           this.hasUsedEnumsInModels = true;
-          namespace = "Enums";
+          const namespacedTypeName = `Enums.${typeName}`;
+          modifiedTypeName = this.options.legacyEnumsCompatibility
+            ? namespacedTypeName + " | `${" + namespacedTypeName + "}`"
+            : "`${" + namespacedTypeName + "}`";
         }
       } else if (markUsage === "RESOLVERS") {
-        namespace = "Models";
+        modifiedTypeName = `Models.${typeName}`;
       }
 
       if (this.typeNameToImports.has(typeName)) {
@@ -428,7 +431,7 @@ export class TsCodegenContext {
       } else {
         return new TypeLocation(
           null,
-          namespace ? `${namespace}.${typeName}` : typeName,
+          modifiedTypeName ? modifiedTypeName : typeName,
         );
       }
     }

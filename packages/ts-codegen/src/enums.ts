@@ -12,7 +12,6 @@ export function generateEnums(context: TsCodegenContext): ts.SourceFile {
           if (type.kind === "ENUM") {
             return factory.createExportDeclaration(
               undefined,
-              undefined,
               false,
               factory.createNamedExports([
                 factory.createExportSpecifier(
@@ -52,7 +51,6 @@ function createEnumTypeModel(
   type: EnumType,
 ): ts.EnumDeclaration {
   return factory.createEnumDeclaration(
-    undefined,
     [
       factory.createModifier(ts.SyntaxKind.ExportKeyword),
       // factory.createModifier(ts.SyntaxKind.ConstKeyword),
