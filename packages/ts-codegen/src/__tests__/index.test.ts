@@ -573,10 +573,7 @@ describe(generateTS, () => {
         }
       `);
       expect(enums).toMatchInlineSnapshot(`
-        "export enum Rank {
-            User = "User",
-            Admin = "Admin"
-        }
+        "export type Rank = "User" | "Admin";
         "
       `);
       expect(inputs).toMatchInlineSnapshot(`
@@ -705,6 +702,68 @@ describe(generateTS, () => {
         }
       `);
       expect(enums).toMatchInlineSnapshot(`
+        "export type PresenceAvailability = "Available" | "Away" | "Offline";
+        "
+      `);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
+      expect(models).toMatchInlineSnapshot(`
+        "import * as Enums from "./enums.interface";
+        export * from "./enums.interface";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
+            readonly __typename?: string;
+        }
+        export interface User extends BaseModel {
+            readonly __typename?: "User";
+            readonly id: string;
+            readonly availability: Enums.PresenceAvailability;
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from "@graphitation/supermassive";
+        import type { ResolveInfo } from "@graphitation/supermassive";
+        import * as Models from "./models.interface";
+        export declare namespace User {
+            export interface Resolvers {
+                readonly id?: id;
+                readonly availability?: availability;
+            }
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type availability = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.PresenceAvailability>;
+        }
+        export declare namespace Query {
+            export interface Resolvers {
+                readonly userById?: userById;
+            }
+            export type userById = (model: unknown, args: {
+                readonly id: string;
+            }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
+        }
+        "
+      `);
+    });
+
+    test("Legacy enums compatibility mode", () => {
+      const { resolvers, models, enums, inputs } = runGenerateTest(
+        graphql`
+          enum PresenceAvailability {
+            Available
+            Away
+            Offline
+          }
+          type User {
+            id: ID!
+            availability: PresenceAvailability!
+          }
+
+          extend type Query {
+            userById(id: ID!): User
+          }
+        `,
+        { legacyEnumsCompatibility: true },
+      );
+      expect(enums).toMatchInlineSnapshot(`
         "export enum PresenceAvailability {
             Available = "Available",
             Away = "Away",
@@ -723,7 +782,7 @@ describe(generateTS, () => {
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
-            readonly availability: Enums.PresenceAvailability;
+            readonly availability: Enums.PresenceAvailability | \`\${Enums.PresenceAvailability}\`;
         }
         "
       `);
@@ -1155,10 +1214,7 @@ describe(generateTS, () => {
       }
     `);
     expect(enums).toMatchInlineSnapshot(`
-      "export enum UserType {
-          Admin = "Admin",
-          User = "User"
-      }
+      "export type UserType = "Admin" | "User";
       "
     `);
     expect(inputs).toMatchInlineSnapshot(`
@@ -1646,10 +1702,7 @@ describe(generateTS, () => {
       { legacyCompat: true },
     );
     expect(enums).toMatchInlineSnapshot(`
-      "export enum Type {
-          type1 = "type1",
-          type2 = "type2"
-      }
+      "export type Type = "type1" | "type2";
       "
     `);
     expect(inputs).toMatchInlineSnapshot(`undefined`);
@@ -1952,6 +2005,7 @@ function runGenerateTest(
     legacyCompat?: boolean;
     enumsImport?: string;
     legacyNoModelsForObjects?: boolean;
+    legacyEnumsCompatibility?: boolean;
     modelScope?: string;
   } = {},
 ): {
@@ -1962,6 +2016,7 @@ function runGenerateTest(
   legacyTypes?: string;
   legacyResolvers?: string;
   legacyNoModelsForObjects?: boolean;
+  legacyEnumsCompatibility?: boolean;
   modelScope?: string;
 } {
   const fullOptions: {
@@ -1970,6 +2025,7 @@ function runGenerateTest(
     contextImport?: string | null;
     contextName?: string;
     legacyCompat?: boolean;
+    legacyEnumsCompatibility?: boolean;
     legacyNoModelsForObjects?: boolean;
   } = {
     outputPath: "__generated__",

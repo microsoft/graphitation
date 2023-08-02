@@ -91,7 +91,6 @@ function getModelAST(
   if (!mapperConfig || !mapperConfig.extend) {
     return [
       factory.createTypeAliasDeclaration(
-        undefined,
         [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
         factory.createIdentifier(mapper.type),
         undefined,
@@ -108,7 +107,6 @@ function getModelAST(
   if (!omittedFields) {
     return [
       factory.createTypeAliasDeclaration(
-        undefined,
         [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
         factory.createIdentifier(mapper.type),
         undefined,
@@ -135,7 +133,6 @@ function getModelAST(
   return [
     omittedFields,
     factory.createTypeAliasDeclaration(
-      undefined,
       [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
       factory.createIdentifier(mapper.type),
       undefined,
