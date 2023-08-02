@@ -127,6 +127,10 @@ export class TsCodegenContext {
     this.hasUsedEnumsInModels = false;
   }
 
+  legacyEnumsCompatibility(): boolean {
+    return this.options.legacyEnumsCompatibility;
+  }
+
   isLegacyCompatMode(): boolean {
     return this.options.legacyCompat;
   }

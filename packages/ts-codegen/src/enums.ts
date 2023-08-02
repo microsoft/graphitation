@@ -50,7 +50,7 @@ function createEnumTypeModel(
   context: TsCodegenContext,
   type: EnumType,
 ): ts.EnumDeclaration | ts.TypeAliasDeclaration {
-  if (context.hasUsedEnumsInModels) {
+  if (context.legacyEnumsCompatibility()) {
     return factory.createEnumDeclaration(
       [
         factory.createModifier(ts.SyntaxKind.ExportKeyword),
@@ -63,7 +63,7 @@ function createEnumTypeModel(
     );
   }
   return factory.createTypeAliasDeclaration(
-    undefined,
+    [factory.createToken(ts.SyntaxKind.ExportKeyword)],
     factory.createIdentifier(type.name),
     undefined,
     factory.createUnionTypeNode(

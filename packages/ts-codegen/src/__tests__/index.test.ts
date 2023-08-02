@@ -573,7 +573,7 @@ describe(generateTS, () => {
         }
       `);
       expect(enums).toMatchInlineSnapshot(`
-        "type Rank = "User" | "Admin";
+        "export type Rank = "User" | "Admin";
         "
       `);
       expect(inputs).toMatchInlineSnapshot(`
@@ -702,11 +702,7 @@ describe(generateTS, () => {
         }
       `);
       expect(enums).toMatchInlineSnapshot(`
-        "export enum PresenceAvailability {
-            Available = "Available",
-            Away = "Away",
-            Offline = "Offline"
-        }
+        "export type PresenceAvailability = "Available" | "Away" | "Offline";
         "
       `);
       expect(inputs).toMatchInlineSnapshot(`undefined`);
@@ -1218,7 +1214,7 @@ describe(generateTS, () => {
       }
     `);
     expect(enums).toMatchInlineSnapshot(`
-      "type UserType = "Admin" | "User";
+      "export type UserType = "Admin" | "User";
       "
     `);
     expect(inputs).toMatchInlineSnapshot(`
@@ -1706,7 +1702,7 @@ describe(generateTS, () => {
       { legacyCompat: true },
     );
     expect(enums).toMatchInlineSnapshot(`
-      "type Type = "type1" | "type2";
+      "export type Type = "type1" | "type2";
       "
     `);
     expect(inputs).toMatchInlineSnapshot(`undefined`);
