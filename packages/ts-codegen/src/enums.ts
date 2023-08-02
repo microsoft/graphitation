@@ -49,15 +49,27 @@ export function generateEnums(context: TsCodegenContext): ts.SourceFile {
 function createEnumTypeModel(
   context: TsCodegenContext,
   type: EnumType,
-): ts.EnumDeclaration {
-  return factory.createEnumDeclaration(
-    [
-      factory.createModifier(ts.SyntaxKind.ExportKeyword),
-      // factory.createModifier(ts.SyntaxKind.ConstKeyword),
-    ],
-    type.name,
-    type.values.map((name) =>
-      factory.createEnumMember(name, factory.createStringLiteral(name)),
+): ts.EnumDeclaration | ts.TypeAliasDeclaration {
+  if (context.hasUsedEnumsInModels) {
+    return factory.createEnumDeclaration(
+      [
+        factory.createModifier(ts.SyntaxKind.ExportKeyword),
+        // factory.createModifier(ts.SyntaxKind.ConstKeyword),
+      ],
+      type.name,
+      type.values.map((name) =>
+        factory.createEnumMember(name, factory.createStringLiteral(name)),
+      ),
+    );
+  }
+  return factory.createTypeAliasDeclaration(
+    undefined,
+    factory.createIdentifier(type.name),
+    undefined,
+    factory.createUnionTypeNode(
+      type.values.map((name) =>
+        factory.createLiteralTypeNode(factory.createStringLiteral(name)),
+      ),
     ),
   );
 }

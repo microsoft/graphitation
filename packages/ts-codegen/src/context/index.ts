@@ -417,7 +417,7 @@ export class TsCodegenContext {
           const namespacedTypeName = `Enums.${typeName}`;
           modifiedTypeName = this.options.legacyEnumsCompatibility
             ? namespacedTypeName + " | `${" + namespacedTypeName + "}`"
-            : "`${" + namespacedTypeName + "}`";
+            : namespacedTypeName;
         }
       } else if (markUsage === "RESOLVERS") {
         modifiedTypeName = `Models.${typeName}`;

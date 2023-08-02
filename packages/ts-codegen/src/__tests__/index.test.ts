@@ -573,10 +573,7 @@ describe(generateTS, () => {
         }
       `);
       expect(enums).toMatchInlineSnapshot(`
-        "export enum Rank {
-            User = "User",
-            Admin = "Admin"
-        }
+        "type Rank = "User" | "Admin";
         "
       `);
       expect(inputs).toMatchInlineSnapshot(`
@@ -723,7 +720,7 @@ describe(generateTS, () => {
         export interface User extends BaseModel {
             readonly __typename?: "User";
             readonly id: string;
-            readonly availability: \`\${Enums.PresenceAvailability}\`;
+            readonly availability: Enums.PresenceAvailability;
         }
         "
       `);
@@ -1221,10 +1218,7 @@ describe(generateTS, () => {
       }
     `);
     expect(enums).toMatchInlineSnapshot(`
-      "export enum UserType {
-          Admin = "Admin",
-          User = "User"
-      }
+      "type UserType = "Admin" | "User";
       "
     `);
     expect(inputs).toMatchInlineSnapshot(`
@@ -1712,10 +1706,7 @@ describe(generateTS, () => {
       { legacyCompat: true },
     );
     expect(enums).toMatchInlineSnapshot(`
-      "export enum Type {
-          type1 = "type1",
-          type2 = "type2"
-      }
+      "type Type = "type1" | "type2";
       "
     `);
     expect(inputs).toMatchInlineSnapshot(`undefined`);

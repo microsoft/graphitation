@@ -51,7 +51,7 @@ export function supermassive(): Command {
     .option("--legacy-models", "do not use models for object types")
     .option(
       "--legacy-enums-compatibility",
-      "uses enums along side with string unions",
+      "When this flag is set, then enums are generated using typescript 'Enum' keyword, which is then used in fields along side with string unions. If this flag is not set, then enums are generated as string unions.",
     )
     .option("--scope [scope]", "generate models only for scope")
     .description("generate interfaces and models")
