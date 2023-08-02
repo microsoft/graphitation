@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "enums in types are now string unions by default and added backwards compatibility flag + deprecation fixes",
+  "packageName": "@graphitation/cli",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
