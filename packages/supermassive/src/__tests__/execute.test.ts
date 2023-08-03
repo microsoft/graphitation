@@ -7,6 +7,7 @@ import {
   ExecutionResult as GraphQLExecutionResult,
   ExperimentalIncrementalExecutionResults as GraphQLExperimentalExecutionResult,
   GraphQLSchema,
+  TypeDefinitionNode,
 } from "graphql";
 import { executeWithoutSchema, executeWithSchema } from "..";
 import { makeSchema, typeDefs } from "../benchmarks/swapi-schema";
@@ -23,6 +24,8 @@ import { resolvers as extractedResolvers } from "../benchmarks/swapi-schema/__ge
 import { forAwaitEach, isAsyncIterable } from "iterall";
 import { ObjMap } from "../jsutils/ObjMap";
 import { PromiseOrValue } from "graphql/jsutils/PromiseOrValue";
+import { extractMinimalViableSchemaForRequestDocument } from "../supermassive-ast/addMinimalViableSchemaToRequestDocument";
+import { specifiedDirectivesSDL } from "../supermassive-ast/directives";
 
 interface TestCase {
   name: string;
@@ -798,6 +801,21 @@ describe("executeWithoutSchema", () => {
   });
 });
 
+describe("executeWithoutSchema - minimal viable schema annotation", () => {
+  let schema: GraphQLSchema;
+  beforeEach(() => {
+    jest.resetAllMocks();
+    schema = makeSchema();
+  });
+  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
+    await compareResultForExecuteWithoutSchemaWithMVSAnnotation(
+      schema,
+      document,
+      variables,
+    );
+  });
+});
+
 async function compareResultsForExecuteWithSchema(
   schema: GraphQLSchema,
   query: string,
@@ -844,6 +862,42 @@ async function compareResultsForExecuteWithoutSchema(
       },
       resolvers: resolvers as UserResolvers,
       schemaResolvers: extractedResolvers,
+      variableValues: variables,
+    }),
+  );
+  const validResult = await drainExecution(
+    await graphqlExecuteOrSubscribe({
+      document,
+      contextValue: {
+        models,
+      },
+      schema,
+      variableValues: variables,
+    }),
+  );
+  expect(result).toEqual(validResult);
+}
+
+async function compareResultForExecuteWithoutSchemaWithMVSAnnotation(
+  schema: GraphQLSchema,
+  query: string,
+  variables: Record<string, unknown> = {},
+) {
+  expect.assertions(1);
+  const document = parse(query);
+  const result = await drainExecution(
+    await executeWithoutSchema({
+      document: document as unknown as DocumentNode,
+      contextValue: {
+        models,
+      },
+      resolvers: resolvers as UserResolvers,
+      schemaResolvers: extractedResolvers,
+      schemaFragment: parse(
+        extractMinimalViableSchemaForRequestDocument(schema, document) +
+          "\n\n" +
+          specifiedDirectivesSDL,
+      ).definitions as TypeDefinitionNode[],
       variableValues: variables,
     }),
   );

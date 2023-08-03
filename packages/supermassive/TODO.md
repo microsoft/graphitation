@@ -1,0 +1,15 @@
+- [ ] Reimplement execution context so it extract implicit resolvers
+  - [ ] Fix logic to use default values properly from schema
+  - [ ] Alternatively, get rid of dependency on graphql-js and use some other way to parse scalars
+    - [ ] Parsing in values.ts
+    - [ ] Serializing in completeLeafValue
+    - [ ] Maybe ban custom enum values
+- [ ] In executeWithSchema
+  - [ ] Remove \_\_type support
+    - [ ] If you want to optimize, you can change the way we store types - currently it's just parsed AST
+- [ ] In supermassive-ast (inlined atm)
+  - [ ] Remove AST document types - no longer needed
+  - [ ] Make a function that uses extractMinimalViableSchemaForRequestDocument to add directive
+- [ ] Tests currentlry try to run old and new mode
+- [ ] Mark old subscribe as deprecated
+- [ ] Take a look at graphqljs future dependency and if we can get rid of that

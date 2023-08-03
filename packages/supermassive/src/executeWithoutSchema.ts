@@ -8,6 +8,8 @@ import {
   isLeafType,
   Kind,
   locatedError,
+  ObjectTypeDefinitionNode,
+  TypeDefinitionNode,
 } from "graphql";
 
 import {
@@ -83,15 +85,7 @@ const collectSubfields = memoize3(
     // HAX??
     returnTypeName: { name: string },
     fieldGroup: FieldGroup,
-  ) =>
-    _collectSubfields(
-      exeContext.resolvers,
-      exeContext.fragments,
-      exeContext.variableValues,
-      exeContext.operation,
-      returnTypeName.name,
-      fieldGroup,
-    ),
+  ) => _collectSubfields(exeContext, returnTypeName.name, fieldGroup),
 );
 
 /**
@@ -122,6 +116,7 @@ const collectSubfields = memoize3(
  */
 export interface ExecutionContext {
   resolvers: Resolvers;
+  schemaTypes: Map<string, TypeDefinitionNode>;
   fragments: ObjMap<FragmentDefinitionNode>;
   rootValue: unknown;
   contextValue: unknown;
@@ -194,6 +189,7 @@ function buildExecutionContext(
   const {
     resolvers,
     schemaResolvers,
+    schemaFragment,
     document,
     rootValue,
     contextValue,
@@ -257,8 +253,16 @@ function buildExecutionContext(
     return coercedVariableValues.errors;
   }
 
+  const schemaTypes: Map<string, TypeDefinitionNode> = (
+    schemaFragment || []
+  ).reduce((map, next) => {
+    map.set(next.name.value, next);
+    return map;
+  }, new Map() as Map<string, TypeDefinitionNode>);
+
   return {
     resolvers: combinedResolvers,
+    schemaTypes,
     fragments,
     rootValue,
     contextValue: buildContextValue
@@ -294,17 +298,10 @@ function buildPerEventExecutionContext(
 function executeOperation(
   exeContext: ExecutionContext,
 ): PromiseOrValue<ExecutionResult> {
-  const { operation, rootValue, resolvers, fragments, variableValues } =
-    exeContext;
+  const { operation, rootValue } = exeContext;
   const rootTypeName = getOperationRootTypeName(operation);
 
-  const { groupedFieldSet, patches } = collectFields(
-    resolvers,
-    fragments,
-    variableValues,
-    rootTypeName,
-    operation,
-  );
+  const { groupedFieldSet, patches } = collectFields(exeContext, rootTypeName);
   const path = undefined;
   let result;
 
@@ -511,8 +508,25 @@ function executeField(
       },
     };
   } else {
-    returnTypeNode = fieldGroup[0].__type;
-    returnTypeName = typeNameFromAST(returnTypeNode);
+    if (fieldGroup[0].__type) {
+      returnTypeNode = fieldGroup[0].__type;
+      returnTypeName = typeNameFromAST(returnTypeNode);
+    } else {
+      const parentType = exeContext.schemaTypes.get(parentTypeName) as
+        | ObjectTypeDefinitionNode
+        | undefined;
+      returnTypeNode = parentType?.fields?.find(
+        (field) => field.name.value === fieldName,
+      )?.type as TypeNode;
+
+      if (!returnTypeNode) {
+        throw locatedError(
+          `Could not find definition for field "${fieldName}" of type "${parentTypeName}"`,
+          fieldGroup as ReadonlyArray<GraphQLASTNode>,
+        );
+      }
+      returnTypeName = typeNameFromAST(returnTypeNode);
+    }
     const typeResolvers = exeContext.resolvers[parentTypeName];
     resolveFn = (
       typeResolvers as ObjectTypeResolver<unknown, unknown, unknown> | undefined
@@ -540,6 +554,7 @@ function executeField(
 
   return resolveAndCompleteField(
     exeContext,
+    parentTypeName,
     returnTypeNode,
     fieldGroup,
     info,
@@ -597,16 +612,9 @@ function createSourceEventStream(
 function executeSubscriptionImpl(
   exeContext: ExecutionContext,
 ): PromiseOrValue<AsyncIterable<unknown>> {
-  const { resolvers, fragments, operation, variableValues, rootValue } =
-    exeContext;
+  const { operation, rootValue } = exeContext;
   const typeName = getOperationRootTypeName(operation);
-  const { groupedFieldSet } = collectFields(
-    resolvers,
-    fragments,
-    variableValues,
-    typeName,
-    operation,
-  );
+  const { groupedFieldSet } = collectFields(exeContext, typeName);
 
   const firstRootField = groupedFieldSet.entries().next().value;
   const [responseName, fieldGroup] = firstRootField;
@@ -658,7 +666,7 @@ function executeSubscriptionImpl(
 
     // Build a JS object of arguments from the field.arguments AST, using the
     // variables scope to fulfill any variable references.
-    const args = getArgumentValues(resolvers, fieldGroup[0], variableValues);
+    const args = getArgumentValues(exeContext, fieldGroup[0], typeName);
 
     // The resolve function's optional third argument is a context value that
     // is provided to every resolve function within an execution. It is commonly
@@ -817,6 +825,7 @@ function handleFieldError(
 
 function resolveAndCompleteField(
   exeContext: ExecutionContext,
+  parentTypeName: string,
   returnTypeNode: TypeNode,
   fieldGroup: FieldGroup,
   info: ResolveInfo,
@@ -837,11 +846,7 @@ function resolveAndCompleteField(
     // Build a JS object of arguments from the field.arguments AST, using the
     // variables scope to fulfill any variable references.
     // TODO: find a way to memoize, in case this field is within a List type.
-    const args = getArgumentValues(
-      exeContext.resolvers,
-      fieldGroup[0],
-      exeContext.variableValues,
-    );
+    const args = getArgumentValues(exeContext, fieldGroup[0], parentTypeName);
 
     // The resolve function's optional third argument is a context value that
     // is provided to every resolve function within an execution. It is commonly
@@ -1320,8 +1325,7 @@ function getStreamValues(
   const stream = getDirectiveValues(
     GraphQLStreamDirective,
     fieldGroup[0],
-    exeContext.resolvers,
-    exeContext.variableValues,
+    exeContext,
   );
 
   if (!stream) {

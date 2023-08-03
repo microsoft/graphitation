@@ -121,20 +121,21 @@ export function extractMinimalViableSchemaForRequestDocument(
             });
           }
 
-          if (!typeInfo.isInIgnoredDirective()) {
+          if (!directive && !typeInfo.isInIgnoredDirective()) {
             const errorPath = makeReadableErrorPath(ancestors);
 
             // This happens whenever a directive is requested that hasn't been defined in schema
-            throw new Error(
+            throw locatedError(
               `Cannot find type for directive: ${errorPath.join(".")}.${
                 node.name.value
               }`,
+              [node],
             );
           }
         },
       },
       FragmentSpread: {
-        leave(node, _key, _parent, _path, ancestors) {
+        leave(node) {
           const type = getNamedType(
             typeInfo.getParentType(),
           ) as GraphQLNamedType;
@@ -165,7 +166,7 @@ export function extractMinimalViableSchemaForRequestDocument(
         },
       },
       InlineFragment: {
-        leave(node, _key, _parent, _path, ancestors) {
+        leave(node) {
           const type = getNamedType(
             typeInfo.getParentType(),
           ) as GraphQLNamedType;
@@ -204,6 +205,9 @@ export function extractMinimalViableSchemaForRequestDocument(
       },
       Field: {
         leave(node, _key, _parent, _path, ancestors) {
+          if (node.name.value === "__typename") {
+            return;
+          }
           const fieldDef = typeInfo.getFieldDef();
           const type = getNamedType(
             typeInfo.getParentType(),
@@ -245,7 +249,6 @@ export function extractMinimalViableSchemaForRequestDocument(
                 );
               }
               extractedTypes.set(extractedType.type.name, extractedType);
-            } else if (type instanceof GraphQLUnionType) {
             } else {
               const extractedType: ExtractedOtherType = (extractedTypes.get(
                 type.name,
@@ -268,10 +271,11 @@ export function extractMinimalViableSchemaForRequestDocument(
             const errorPath = makeReadableErrorPath(ancestors);
 
             // This happens whenever a new field is requested that hasn't been defined in schema
-            throw new Error(
+            throw locatedError(
               `Cannot find type for field: ${errorPath.join(".")}.${
                 node.name.value
               }`,
+              [node],
             );
           }
         },

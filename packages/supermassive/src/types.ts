@@ -1,9 +1,12 @@
 import {
+  DefinitionNode,
   GraphQLEnumType,
   GraphQLError,
   GraphQLFormattedError,
   GraphQLInputObjectType,
   GraphQLScalarType,
+  TypeDefinitionNode,
+  TypeSystemDefinitionNode,
   DocumentNode as UntypedDocumentNode,
 } from "graphql";
 import { Maybe } from "./jsutils/Maybe";
@@ -294,6 +297,7 @@ export interface CommonExecutionArgs {
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
   document: DocumentNode;
   schemaResolvers?: Resolvers;
+  schemaFragment?: TypeDefinitionNode[];
 };
 
 export type ExecutionWithSchemaArgs = CommonExecutionArgs & {

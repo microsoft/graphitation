@@ -20,6 +20,13 @@ import {
   valueFromAST,
   coerceInputValue,
   GraphQLDirective,
+  locatedError,
+  ASTNode,
+  ObjectTypeDefinitionNode,
+  FieldDefinitionNode,
+  specifiedDirectives,
+  DirectiveDefinitionNode,
+  ValueNode,
 } from "graphql";
 import {
   DirectiveNode,
@@ -29,9 +36,9 @@ import {
 } from "./supermassive-ast";
 import { inspect } from "./jsutils/inspect";
 import type { Maybe } from "./jsutils/Maybe";
-import type { ObjMap } from "./jsutils/ObjMap";
 import { printPathArray } from "./jsutils/printPathArray";
 import { Resolvers } from "./types";
+import { ExecutionContext } from "./executeWithoutSchema";
 
 type CoercedVariableValues =
   | { errors: Array<GraphQLError>; coerced?: never }
@@ -169,9 +176,9 @@ function coerceVariableValues(
  * @internal
  */
 export function getArgumentValues(
-  resolvers: Resolvers,
+  exeContext: ExecutionContext,
   node: FieldNode | DirectiveNode,
-  variableValues?: Maybe<ObjMap<unknown>>,
+  parentTypeName?: string,
 ): { [argument: string]: unknown } {
   const coercedValues: { [argument: string]: unknown } = {};
 
@@ -180,8 +187,41 @@ export function getArgumentValues(
 
   for (const argumentNode of argumentNodes) {
     const name = argumentNode.name.value;
-    const argTypeNode = argumentNode.__type;
-    const argType = graphqlTypeFromTypeAst(resolvers, argTypeNode);
+    let argTypeNode: TypeNode | undefined = undefined;
+    let argType: GraphQLType | undefined = undefined;
+    let argDefaultValue: ValueNode | undefined = undefined;
+    if (argumentNode.__type) {
+      argTypeNode = argumentNode.__type;
+      argType = graphqlTypeFromTypeAst(exeContext.resolvers, argTypeNode);
+      argDefaultValue = argumentNode.__defaultValue as ValueNode;
+    } else if (parentTypeName || node.kind === Kind.DIRECTIVE) {
+      const parentType = exeContext.schemaTypes.get(
+        parentTypeName || node.name.value,
+      ) as ObjectTypeDefinitionNode | DirectiveDefinitionNode | undefined;
+      let fieldNode;
+      if (parentType?.kind === Kind.OBJECT_TYPE_DEFINITION) {
+        fieldNode = parentType?.fields?.find(
+          (field) => field.name.value === node.name.value,
+        );
+      } else {
+        fieldNode = parentType;
+      }
+      const argNode = fieldNode?.arguments?.find(
+        (arg) => arg.name.value === name,
+      );
+      argTypeNode = argNode?.type;
+      argDefaultValue = argNode?.defaultValue;
+      if (argTypeNode) {
+        argType = graphqlTypeFromTypeAst(exeContext.resolvers, argTypeNode);
+      }
+    }
+
+    if (!argTypeNode || !argType) {
+      throw locatedError(
+        `Could not find type for argument ${name} in field ${node.name.value}`,
+        [argumentNode, node] as ASTNode[],
+      );
+    }
 
     if (!isInputType(argType)) {
       throw new GraphQLError(
@@ -197,11 +237,11 @@ export function getArgumentValues(
     if (valueNode.kind === Kind.VARIABLE) {
       const variableName = valueNode.name.value;
       if (
-        variableValues == null ||
-        !hasOwnProperty(variableValues, variableName)
+        exeContext.variableValues == null ||
+        !hasOwnProperty(exeContext.variableValues, variableName)
       ) {
-        if (argumentNode.__defaultValue) {
-          valueNode = argumentNode.__defaultValue;
+        if (argDefaultValue) {
+          valueNode = argDefaultValue;
         } else if (isNonNullType(argType)) {
           throw new GraphQLError(
             `Argument "${name}" of required type "${inspect(argType)}" ` +
@@ -217,7 +257,7 @@ export function getArgumentValues(
     const coercedValue = valueFromAST(
       valueNode as GraphQLValueNode,
       argType,
-      variableValues,
+      exeContext.variableValues,
     );
     if (coercedValue === undefined) {
       // Note: ValuesOfCorrectTypeRule validation should catch this before
@@ -250,8 +290,7 @@ export function getArgumentValues(
 export function getDirectiveValues(
   directiveDef: GraphQLDirective,
   node: { directives?: ReadonlyArray<DirectiveNode> },
-  resolvers: Resolvers,
-  variableValues?: Maybe<ObjMap<unknown>>,
+  exeContext: ExecutionContext,
 ): undefined | { [argument: string]: unknown } {
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
   const directiveNode = node.directives?.find(
@@ -259,7 +298,7 @@ export function getDirectiveValues(
   );
 
   if (directiveNode) {
-    return getArgumentValues(resolvers, directiveNode, variableValues);
+    return getArgumentValues(exeContext, directiveNode);
   }
 }
 
