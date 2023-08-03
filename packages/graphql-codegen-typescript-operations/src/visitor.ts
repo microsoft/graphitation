@@ -36,6 +36,7 @@ export interface TypeScriptDocumentsParsedConfig extends ParsedDocumentsConfig {
   avoidOptionals: AvoidOptionalsConfig;
   immutableTypes: boolean;
   baseTypesPath: string;
+  legacyEnumsCompatibility: boolean;
   noExport: boolean;
 }
 export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
@@ -53,6 +54,10 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
       {
         noExport: getConfigValue(config.noExport, false),
         baseTypesPath: getConfigValue(config.baseTypesPath, ""),
+        legacyEnumsCompatibility: getConfigValue(
+          config.legacyEnumsCompatibility,
+          false,
+        ),
         avoidOptionals: normalizeAvoidOptionals(
           getConfigValue(config.avoidOptionals, false),
         ),
@@ -149,9 +154,14 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
           )
           .concat(
             this.config.baseTypesPath && this.usedTypes.size
-              ? `export {${Array.from(this.usedTypes).join(",")}} from "${
+              ? `import {${Array.from(this.usedTypes).join(",")}} from "${
                   this.config.baseTypesPath
                 }"`
+              : "",
+          )
+          .concat(
+            this.config.baseTypesPath && this.usedTypes.size
+              ? `export {${Array.from(this.usedTypes).join(",")}}`
               : "",
           )
       : [];
@@ -228,6 +238,11 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
       }
     } else if (this.schema.getType(convertedName) instanceof GraphQLEnumType) {
       this.usedTypes.add(convertedName);
+
+      if (this.config.legacyEnumsCompatibility) {
+        const superConvertedName = super.convertName(node, options);
+        return superConvertedName + " | `${" + superConvertedName + "}`";
+      }
     }
 
     return super.convertName(node, options);
