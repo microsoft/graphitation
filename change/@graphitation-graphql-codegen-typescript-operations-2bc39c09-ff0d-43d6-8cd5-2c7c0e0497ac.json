@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "GraphQL codegen enums + string unions patch",
-  "packageName": "@graphitation/graphql-codegen-typescript-operations",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}

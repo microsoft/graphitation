@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-typescript-operations
 
-This log was last generated on Tue, 11 Apr 2023 18:23:24 GMT and should not be manually modified.
+This log was last generated on Thu, 03 Aug 2023 09:39:38 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.3.0
+
+Thu, 03 Aug 2023 09:39:38 GMT
+
+### Minor changes
+
+- GraphQL codegen enums + string unions patch (jakubvejr@microsoft.com)
 
 ## 1.2.0
 
