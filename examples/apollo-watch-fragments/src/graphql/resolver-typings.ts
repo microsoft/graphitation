@@ -36,6 +36,18 @@ export type ChangeTodoStatusPayload = {
   todos: TodosConnection;
 };
 
+export type Me = Node & NodeWithTodos & {
+  __typename?: 'Me';
+  id: Scalars['ID'];
+  todos: TodosConnection;
+};
+
+
+export type MeTodosArgs = {
+  after?: Maybe<Scalars['String']>;
+  first: Scalars['Int'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   addTodo?: Maybe<AddTodoPayload>;
@@ -56,6 +68,17 @@ export type Node = {
   id: Scalars['ID'];
 };
 
+export type NodeWithTodos = {
+  id: Scalars['ID'];
+  todos: TodosConnection;
+};
+
+
+export type NodeWithTodosTodosArgs = {
+  after?: Maybe<Scalars['String']>;
+  first: Scalars['Int'];
+};
+
 export type PageInfo = {
   __typename?: 'PageInfo';
   endCursor?: Maybe<Scalars['String']>;
@@ -66,19 +89,13 @@ export type PageInfo = {
 
 export type Query = {
   __typename?: 'Query';
+  me: Me;
   node?: Maybe<Node>;
-  todos: TodosConnection;
 };
 
 
 export type QueryNodeArgs = {
   id: Scalars['ID'];
-};
-
-
-export type QueryTodosArgs = {
-  after?: Maybe<Scalars['String']>;
-  first: Scalars['Int'];
 };
 
 export type Todo = Node & {
@@ -180,8 +197,10 @@ export type ResolversTypes = {
   ChangeTodoStatusPayload: ResolverTypeWrapper<Partial<Omit<ChangeTodoStatusPayload, 'todo' | 'todos'> & { todo: ResolversTypes['Todo'], todos: ResolversTypes['TodosConnection'] }>>;
   ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
+  Me: ResolverTypeWrapper<Partial<Omit<Me, 'todos'> & { todos: ResolversTypes['TodosConnection'] }>>;
   Mutation: ResolverTypeWrapper<{}>;
-  Node: ResolversTypes['Todo'] | ResolversTypes['TodosConnection'];
+  Node: ResolversTypes['Me'] | ResolversTypes['Todo'] | ResolversTypes['TodosConnection'];
+  NodeWithTodos: ResolversTypes['Me'];
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
@@ -199,8 +218,10 @@ export type ResolversParentTypes = {
   ChangeTodoStatusPayload: Partial<Omit<ChangeTodoStatusPayload, 'todo' | 'todos'> & { todo: ResolversParentTypes['Todo'], todos: ResolversParentTypes['TodosConnection'] }>;
   ID: Partial<Scalars['ID']>;
   Int: Partial<Scalars['Int']>;
+  Me: Partial<Omit<Me, 'todos'> & { todos: ResolversParentTypes['TodosConnection'] }>;
   Mutation: {};
-  Node: ResolversParentTypes['Todo'] | ResolversParentTypes['TodosConnection'];
+  Node: ResolversParentTypes['Me'] | ResolversParentTypes['Todo'] | ResolversParentTypes['TodosConnection'];
+  NodeWithTodos: ResolversParentTypes['Me'];
   PageInfo: Partial<PageInfo>;
   Query: {};
   String: Partial<Scalars['String']>;
@@ -221,14 +242,26 @@ export type ChangeTodoStatusPayloadResolvers<ContextType = any, ParentType = Res
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type MeResolvers<ContextType = any, ParentType = ResolversParentTypes['Me']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  todos?: Resolver<ResolversTypes['TodosConnection'], ParentType, ContextType, RequireFields<MeTodosArgs, 'first'>>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type MutationResolvers<ContextType = any, ParentType = ResolversParentTypes['Mutation']> = {
   addTodo?: Resolver<Maybe<ResolversTypes['AddTodoPayload']>, ParentType, ContextType, RequireFields<MutationAddTodoArgs, 'input'>>;
   changeTodoStatus?: Resolver<Maybe<ResolversTypes['ChangeTodoStatusPayload']>, ParentType, ContextType, RequireFields<MutationChangeTodoStatusArgs, 'input'>>;
 };
 
 export type NodeResolvers<ContextType = any, ParentType = ResolversParentTypes['Node']> = {
-  __resolveType: TypeResolveFn<'Todo' | 'TodosConnection', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'Me' | 'Todo' | 'TodosConnection', ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+};
+
+export type NodeWithTodosResolvers<ContextType = any, ParentType = ResolversParentTypes['NodeWithTodos']> = {
+  __resolveType: TypeResolveFn<'Me', ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  todos?: Resolver<ResolversTypes['TodosConnection'], ParentType, ContextType, RequireFields<NodeWithTodosTodosArgs, 'first'>>;
 };
 
 export type PageInfoResolvers<ContextType = any, ParentType = ResolversParentTypes['PageInfo']> = {
@@ -240,8 +273,8 @@ export type PageInfoResolvers<ContextType = any, ParentType = ResolversParentTyp
 };
 
 export type QueryResolvers<ContextType = any, ParentType = ResolversParentTypes['Query']> = {
+  me?: Resolver<ResolversTypes['Me'], ParentType, ContextType>;
   node?: Resolver<Maybe<ResolversTypes['Node']>, ParentType, ContextType, RequireFields<QueryNodeArgs, 'id'>>;
-  todos?: Resolver<ResolversTypes['TodosConnection'], ParentType, ContextType, RequireFields<QueryTodosArgs, 'first'>>;
 };
 
 export type TodoResolvers<ContextType = any, ParentType = ResolversParentTypes['Todo']> = {
@@ -270,8 +303,10 @@ export type TodosConnectionEdgeResolvers<ContextType = any, ParentType = Resolve
 export type Resolvers<ContextType = any> = {
   AddTodoPayload?: AddTodoPayloadResolvers<ContextType>;
   ChangeTodoStatusPayload?: ChangeTodoStatusPayloadResolvers<ContextType>;
+  Me?: MeResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Node?: NodeResolvers<ContextType>;
+  NodeWithTodos?: NodeWithTodosResolvers<ContextType>;
   PageInfo?: PageInfoResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Todo?: TodoResolvers<ContextType>;

@@ -49,7 +49,8 @@ fragment compiledHooks_BackwardPaginationFragment on Conversation {
   id
 }
 
-fragment compiledHooks_ForwardPaginationFragment_4o723C on User {
+fragment compiledHooks_ForwardPaginationFragment_4o723C on NodeWithPetAvatarAndConversations {
+  __isNodeWithPetAvatarAndConversations: __typename
   petName
   avatarUrl(size: $avatarSize)
   conversations(
@@ -70,7 +71,10 @@ fragment compiledHooks_ForwardPaginationFragment_4o723C on User {
       hasNextPage
     }
   }
-  id
+  ... on Node {
+    __isNode: __typename
+    id
+  }
 }
 */
 
@@ -86,7 +90,8 @@ query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!,
   }
 }
 
-fragment compiledHooks_ForwardPaginationFragment_4o723C on User {
+fragment compiledHooks_ForwardPaginationFragment_4o723C on NodeWithPetAvatarAndConversations {
+  __isNodeWithPetAvatarAndConversations: __typename
   petName
   avatarUrl(size: $avatarSize)
   conversations(
@@ -109,7 +114,10 @@ fragment compiledHooks_ForwardPaginationFragment_4o723C on User {
       hasNextPage
     }
   }
-  id
+  ... on Node {
+    __isNode: __typename
+    id
+  }
 }
 */
 
@@ -243,66 +251,75 @@ v12 = [
   }
 ],
 v13 = {
-  "kind": "Field",
-  "name": {
-    "kind": "Name",
-    "value": "__typename"
-  }
+  "kind": "Name",
+  "value": "__typename"
 },
 v14 = {
+  "kind": "Field",
+  "name": (v13/*: any*/)
+},
+v15 = {
   "kind": "Name",
   "value": "compiledHooks_ForwardPaginationFragment_4o723C"
 },
-v15 = {
-  "kind": "FragmentSpread",
-  "name": (v14/*: any*/)
-},
 v16 = {
+  "kind": "FragmentSpread",
+  "name": (v15/*: any*/)
+},
+v17 = {
   "kind": "Field",
   "name": (v8/*: any*/)
 },
-v17 = {
+v18 = {
   "kind": "Name",
   "value": "compiledHooks_BackwardPaginationFragment"
 },
-v18 = {
+v19 = {
   "kind": "Name",
   "value": "connection"
 },
-v19 = {
+v20 = {
   "kind": "Name",
   "value": "key"
 },
-v20 = {
+v21 = {
   "kind": "Name",
   "value": "edges"
 },
-v21 = {
+v22 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
     "value": "cursor"
   }
 },
-v22 = {
+v23 = {
   "kind": "Name",
   "value": "pageInfo"
 },
-v23 = {
+v24 = {
   "kind": "NamedType",
   "name": {
     "kind": "Name",
-    "value": "User"
+    "value": "NodeWithPetAvatarAndConversations"
   }
 },
-v24 = {
+v25 = {
+  "kind": "Field",
+  "alias": {
+    "kind": "Name",
+    "value": "__isNodeWithPetAvatarAndConversations"
+  },
+  "name": (v13/*: any*/)
+},
+v26 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
     "value": "petName"
   }
 },
-v25 = {
+v27 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
@@ -319,11 +336,11 @@ v25 = {
     }
   ]
 },
-v26 = {
+v28 = {
   "kind": "Name",
   "value": "conversations"
 },
-v27 = [
+v29 = [
   {
     "kind": "Argument",
     "name": {
@@ -341,14 +358,14 @@ v27 = [
     "value": (v3/*: any*/)
   }
 ],
-v28 = [
+v30 = [
   {
     "kind": "Directive",
-    "name": (v18/*: any*/),
+    "name": (v19/*: any*/),
     "arguments": [
       {
         "kind": "Argument",
-        "name": (v19/*: any*/),
+        "name": (v20/*: any*/),
         "value": {
           "kind": "StringValue",
           "value": "compiledHooks_user_conversations",
@@ -358,16 +375,16 @@ v28 = [
     ]
   }
 ],
-v29 = {
+v31 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
     "value": "title"
   }
 },
-v30 = {
+v32 = {
   "kind": "Field",
-  "name": (v22/*: any*/),
+  "name": (v23/*: any*/),
   "selectionSet": {
     "kind": "SelectionSet",
     "selections": [
@@ -388,15 +405,34 @@ v30 = {
     ]
   }
 },
-v31 = {
+v33 = {
+  "kind": "NamedType",
+  "name": {
+    "kind": "Name",
+    "value": "Node"
+  }
+},
+v34 = {
   "kind": "InlineFragment",
-  "typeCondition": {
-    "kind": "NamedType",
-    "name": {
-      "kind": "Name",
-      "value": "Node"
-    }
-  },
+  "typeCondition": (v33/*: any*/),
+  "selectionSet": {
+    "kind": "SelectionSet",
+    "selections": [
+      {
+        "kind": "Field",
+        "alias": {
+          "kind": "Name",
+          "value": "__isNode"
+        },
+        "name": (v13/*: any*/)
+      },
+      (v17/*: any*/)
+    ]
+  }
+},
+v35 = {
+  "kind": "InlineFragment",
+  "typeCondition": (v33/*: any*/),
   "selectionSet": {
     "kind": "SelectionSet",
     "selections": [
@@ -438,9 +474,9 @@ return {
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
-                  (v13/*: any*/),
-                  (v15/*: any*/),
-                  (v16/*: any*/)
+                  (v14/*: any*/),
+                  (v16/*: any*/),
+                  (v17/*: any*/)
                 ]
               }
             }
@@ -449,7 +485,7 @@ return {
       },
       {
         "kind": "FragmentDefinition",
-        "name": (v17/*: any*/),
+        "name": (v18/*: any*/),
         "typeCondition": {
           "kind": "NamedType",
           "name": {
@@ -487,11 +523,11 @@ return {
               "directives": [
                 {
                   "kind": "Directive",
-                  "name": (v18/*: any*/),
+                  "name": (v19/*: any*/),
                   "arguments": [
                     {
                       "kind": "Argument",
-                      "name": (v19/*: any*/),
+                      "name": (v20/*: any*/),
                       "value": {
                         "kind": "StringValue",
                         "value": "compiledHooks_conversation_messages",
@@ -506,7 +542,7 @@ return {
                 "selections": [
                   {
                     "kind": "Field",
-                    "name": (v20/*: any*/),
+                    "name": (v21/*: any*/),
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
@@ -523,18 +559,18 @@ return {
                                   "value": "text"
                                 }
                               },
-                              (v16/*: any*/),
-                              (v13/*: any*/)
+                              (v17/*: any*/),
+                              (v14/*: any*/)
                             ]
                           }
                         },
-                        (v21/*: any*/)
+                        (v22/*: any*/)
                       ]
                     }
                   },
                   {
                     "kind": "Field",
-                    "name": (v22/*: any*/),
+                    "name": (v23/*: any*/),
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
@@ -558,30 +594,31 @@ return {
                 ]
               }
             },
-            (v16/*: any*/)
+            (v17/*: any*/)
           ]
         }
       },
       {
         "kind": "FragmentDefinition",
-        "name": (v14/*: any*/),
-        "typeCondition": (v23/*: any*/),
+        "name": (v15/*: any*/),
+        "typeCondition": (v24/*: any*/),
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
-            (v24/*: any*/),
             (v25/*: any*/),
+            (v26/*: any*/),
+            (v27/*: any*/),
             {
               "kind": "Field",
-              "name": (v26/*: any*/),
-              "arguments": (v27/*: any*/),
-              "directives": (v28/*: any*/),
+              "name": (v28/*: any*/),
+              "arguments": (v29/*: any*/),
+              "directives": (v30/*: any*/),
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
                   {
                     "kind": "Field",
-                    "name": (v20/*: any*/),
+                    "name": (v21/*: any*/),
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
@@ -591,25 +628,25 @@ return {
                           "selectionSet": {
                             "kind": "SelectionSet",
                             "selections": [
-                              (v29/*: any*/),
+                              (v31/*: any*/),
                               {
                                 "kind": "FragmentSpread",
-                                "name": (v17/*: any*/)
+                                "name": (v18/*: any*/)
                               },
-                              (v16/*: any*/),
-                              (v13/*: any*/)
+                              (v17/*: any*/),
+                              (v14/*: any*/)
                             ]
                           }
                         },
-                        (v21/*: any*/)
+                        (v22/*: any*/)
                       ]
                     }
                   },
-                  (v30/*: any*/)
+                  (v32/*: any*/)
                 ]
               }
             },
-            (v16/*: any*/)
+            (v34/*: any*/)
           ]
         }
       }
@@ -633,10 +670,10 @@ return {
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
-                  (v13/*: any*/),
-                  (v15/*: any*/),
+                  (v14/*: any*/),
                   (v16/*: any*/),
-                  (v31/*: any*/)
+                  (v17/*: any*/),
+                  (v35/*: any*/)
                 ]
               }
             }
@@ -645,24 +682,25 @@ return {
       },
       {
         "kind": "FragmentDefinition",
-        "name": (v14/*: any*/),
-        "typeCondition": (v23/*: any*/),
+        "name": (v15/*: any*/),
+        "typeCondition": (v24/*: any*/),
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
-            (v24/*: any*/),
             (v25/*: any*/),
+            (v26/*: any*/),
+            (v27/*: any*/),
             {
               "kind": "Field",
-              "name": (v26/*: any*/),
-              "arguments": (v27/*: any*/),
-              "directives": (v28/*: any*/),
+              "name": (v28/*: any*/),
+              "arguments": (v29/*: any*/),
+              "directives": (v30/*: any*/),
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
                   {
                     "kind": "Field",
-                    "name": (v20/*: any*/),
+                    "name": (v21/*: any*/),
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
@@ -672,22 +710,22 @@ return {
                           "selectionSet": {
                             "kind": "SelectionSet",
                             "selections": [
-                              (v29/*: any*/),
-                              (v16/*: any*/),
-                              (v13/*: any*/),
-                              (v31/*: any*/)
+                              (v31/*: any*/),
+                              (v17/*: any*/),
+                              (v14/*: any*/),
+                              (v35/*: any*/)
                             ]
                           }
                         },
-                        (v21/*: any*/)
+                        (v22/*: any*/)
                       ]
                     }
                   },
-                  (v30/*: any*/)
+                  (v32/*: any*/)
                 ]
               }
             },
-            (v16/*: any*/)
+            (v34/*: any*/)
           ]
         }
       }
@@ -697,7 +735,7 @@ return {
     "rootSelection": "node",
     "mainFragment": {
       "name": "compiledHooks_ForwardPaginationFragment_4o723C",
-      "typeCondition": "User"
+      "typeCondition": "NodeWithPetAvatarAndConversations"
     },
     "connection": {
       "selectionPath": [
@@ -709,3 +747,5 @@ return {
   }
 };
 })();
+
+export default documents;

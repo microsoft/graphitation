@@ -11,5 +11,5 @@ export function implementsNodeInterface(
     nodeType && schema.isInterface(nodeType),
     "Expected schema to define a Node interface in order to support narrow observables.",
   );
-  return schema.getInterfaces(fragmentDefinition.type).includes(nodeType);
+  return schema.mayImplement(fragmentDefinition.type, nodeType);
 }

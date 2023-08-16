@@ -57,7 +57,8 @@ fragment compiledHooks_ChildFragment on User {
   id
 }
 
-fragment compiledHooks_ForwardPaginationFragment on User {
+fragment compiledHooks_ForwardPaginationFragment on NodeWithPetAvatarAndConversations {
+  __isNodeWithPetAvatarAndConversations: __typename
   petName
   avatarUrl(size: $avatarSize)
   conversations(first: 1, after: "") @connection(key: "compiledHooks_user_conversations") {
@@ -75,7 +76,10 @@ fragment compiledHooks_ForwardPaginationFragment on User {
       hasNextPage
     }
   }
-  id
+  ... on Node {
+    __isNode: __typename
+    id
+  }
 }
 
 fragment compiledHooks_QueryTypeFragment on Query {
@@ -246,38 +250,39 @@ v21 = {
   "value": "node"
 },
 v22 = {
-  "kind": "Field",
-  "name": {
-    "kind": "Name",
-    "value": "__typename"
-  }
+  "kind": "Name",
+  "value": "__typename"
 },
 v23 = {
+  "kind": "Field",
+  "name": (v22/*: any*/)
+},
+v24 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
     "value": "cursor"
   }
 },
-v24 = {
+v25 = {
   "kind": "Name",
   "value": "pageInfo"
 },
-v25 = {
+v26 = {
   "kind": "NamedType",
   "name": {
     "kind": "Name",
     "value": "User"
   }
 },
-v26 = {
+v27 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
     "value": "petName"
   }
 },
-v27 = {
+v28 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
@@ -294,7 +299,14 @@ v27 = {
     }
   ]
 },
-v28 = {
+v29 = {
+  "kind": "NamedType",
+  "name": {
+    "kind": "Name",
+    "value": "Node"
+  }
+},
+v30 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
@@ -430,17 +442,17 @@ return {
                                 }
                               },
                               (v15/*: any*/),
-                              (v22/*: any*/)
+                              (v23/*: any*/)
                             ]
                           }
                         },
-                        (v23/*: any*/)
+                        (v24/*: any*/)
                       ]
                     }
                   },
                   {
                     "kind": "Field",
-                    "name": (v24/*: any*/),
+                    "name": (v25/*: any*/),
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
@@ -471,11 +483,11 @@ return {
       {
         "kind": "FragmentDefinition",
         "name": (v12/*: any*/),
-        "typeCondition": (v25/*: any*/),
+        "typeCondition": (v26/*: any*/),
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
-            (v26/*: any*/),
+            (v27/*: any*/),
             (v15/*: any*/)
           ]
         }
@@ -483,12 +495,26 @@ return {
       {
         "kind": "FragmentDefinition",
         "name": (v14/*: any*/),
-        "typeCondition": (v25/*: any*/),
+        "typeCondition": {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "NodeWithPetAvatarAndConversations"
+          }
+        },
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
-            (v26/*: any*/),
+            {
+              "kind": "Field",
+              "alias": {
+                "kind": "Name",
+                "value": "__isNodeWithPetAvatarAndConversations"
+              },
+              "name": (v22/*: any*/)
+            },
             (v27/*: any*/),
+            (v28/*: any*/),
             {
               "kind": "Field",
               "name": {
@@ -564,17 +590,17 @@ return {
                                 "name": (v17/*: any*/)
                               },
                               (v15/*: any*/),
-                              (v22/*: any*/)
+                              (v23/*: any*/)
                             ]
                           }
                         },
-                        (v23/*: any*/)
+                        (v24/*: any*/)
                       ]
                     }
                   },
                   {
                     "kind": "Field",
-                    "name": (v24/*: any*/),
+                    "name": (v25/*: any*/),
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
@@ -598,7 +624,24 @@ return {
                 ]
               }
             },
-            (v15/*: any*/)
+            {
+              "kind": "InlineFragment",
+              "typeCondition": (v29/*: any*/),
+              "selectionSet": {
+                "kind": "SelectionSet",
+                "selections": [
+                  {
+                    "kind": "Field",
+                    "alias": {
+                      "kind": "Name",
+                      "value": "__isNode"
+                    },
+                    "name": (v22/*: any*/)
+                  },
+                  (v15/*: any*/)
+                ]
+              }
+            }
           ]
         }
       },
@@ -634,12 +677,12 @@ return {
       {
         "kind": "FragmentDefinition",
         "name": (v13/*: any*/),
-        "typeCondition": (v25/*: any*/),
+        "typeCondition": (v26/*: any*/),
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
-            (v26/*: any*/),
             (v27/*: any*/),
+            (v28/*: any*/),
             (v15/*: any*/)
           ]
         }
@@ -668,24 +711,18 @@ return {
                   (v15/*: any*/),
                   {
                     "kind": "InlineFragment",
-                    "typeCondition": {
-                      "kind": "NamedType",
-                      "name": {
-                        "kind": "Name",
-                        "value": "Node"
-                      }
-                    },
+                    "typeCondition": (v29/*: any*/),
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
-                        (v28/*: any*/)
+                        (v30/*: any*/)
                       ]
                     }
                   }
                 ]
               }
             },
-            (v28/*: any*/)
+            (v30/*: any*/)
           ]
         }
       }
@@ -693,3 +730,5 @@ return {
   }
 };
 })();
+
+export default documents;

@@ -3,7 +3,8 @@
 // @ts-nocheck
 
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
-export type TodoList_queryFragment = {
+export type TodoList_nodeFragment = {
+    readonly __typename: string;
     readonly todos: {
         readonly edges: ReadonlyArray<{
             readonly node: {
@@ -13,12 +14,13 @@ export type TodoList_queryFragment = {
             };
         }>;
     };
-    readonly " $refType": "TodoList_queryFragment";
+    readonly id: string;
+    readonly " $refType": "TodoList_nodeFragment";
 };
-export type TodoList_queryFragment$data = TodoList_queryFragment;
-export type TodoList_queryFragment$key = {
-    readonly " $data"?: TodoList_queryFragment$data | undefined;
-    readonly " $fragmentRefs": FragmentRefs<"TodoList_queryFragment">;
+export type TodoList_nodeFragment$data = TodoList_nodeFragment;
+export type TodoList_nodeFragment$key = {
+    readonly " $data"?: TodoList_nodeFragment$data | undefined;
+    readonly " $fragmentRefs": FragmentRefs<"TodoList_nodeFragment">;
 };
 
 
