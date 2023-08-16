@@ -18,7 +18,14 @@ type Subscription {
   userNameChanged(id: ID!): User!
 }
 
-type User implements Node {
+interface NodeWithPetAvatarAndConversations implements Node {
+  id: ID!
+  petName: String!
+  avatarUrl(size: Int!): String!
+  conversations(first: Int!, after: String!): ConversationsConnection!
+}
+
+type User implements Node & NodeWithPetAvatarAndConversations {
   id: ID!
   name: String!
   petName: String!
@@ -83,3 +90,5 @@ type PageInfo {
 type NonNode {
   id: String
 }
+
+union SearchResult = User | Contact | Conversation | Message

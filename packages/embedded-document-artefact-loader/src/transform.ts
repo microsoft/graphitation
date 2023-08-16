@@ -1,4 +1,5 @@
 import { SourceMapGenerator } from "source-map-js";
+import { parse } from "graphql";
 
 export function transform(
   source: string,
@@ -23,8 +24,17 @@ export function transform(
   let lineDelta = 0;
 
   const result = source.replace(
-    /graphql\s*`(?:[^`])*`/g,
-    (taggedTemplateExpression, offset: number) => {
+    /graphql\s*`((?:[^`])*)`/g,
+    (taggedTemplateExpression: string, sdl: string, offset: number) => {
+      // In the absence of parsing the full JS/TS file, we may run into false
+      // positives. We detect this by attempting to parse the tagged template
+      // expression. If it fails, we assume it is not a [valid] graphql tag.
+      try {
+        parse(sdl, { noLocation: true });
+      } catch {
+        return taggedTemplateExpression;
+      }
+
       anyChanges = true;
 
       if (sourceMap) {
@@ -40,7 +50,7 @@ export function transform(
 
       lastChunkOffset = offset + taggedTemplateExpression.length;
 
-      const match = taggedTemplateExpression.match(
+      const match = sdl.match(
         /(query|mutation|subscription|fragment)\s+\b(.+?)\b/,
       );
       if (match && match[2]) {

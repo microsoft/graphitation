@@ -3,8 +3,18 @@ interface Node {
 }
 
 type Query {
-  todos(first: Int!, after: String): TodosConnection!
   node(id: ID!): Node
+  me: Me!
+}
+
+interface NodeWithTodos implements Node {
+  id: ID!
+  todos(first: Int!, after: String): TodosConnection!
+}
+
+type Me implements Node & NodeWithTodos {
+  id: ID!
+  todos(first: Int!, after: String): TodosConnection!
 }
 
 type PageInfo {

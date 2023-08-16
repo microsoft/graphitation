@@ -1,12 +1,6 @@
 import { FormatModuleOptions, formatModuleFactory } from "../formatModule";
 import * as path from "path";
-import {
-  Argument,
-  Directive,
-  Fragment,
-  Literal,
-  Request,
-} from "relay-compiler";
+import { Request } from "relay-compiler";
 import { SourceLocation } from "relay-compiler/lib/core/IR";
 
 import type { FormatModule } from "relay-compiler/lib/language/RelayLanguagePluginInterface";
@@ -38,6 +32,10 @@ describe("formatModule", () => {
         {
           definition: {
             kind: "Request",
+            root: {
+              kind: "Root",
+              operation: "query",
+            },
           } as Request,
           typeText: `
             export type MessageComponent_message = {
@@ -71,6 +69,10 @@ describe("formatModule", () => {
         {
           definition: {
             kind: "Request",
+            root: {
+              kind: "Root",
+              operation: "query",
+            },
           } as Request,
           typeText: `
             export type MessageComponent_message = {
@@ -228,6 +230,10 @@ describe("formatModule", () => {
         {
           definition: {
             kind: "Request",
+            root: {
+              kind: "Root",
+              operation: "query",
+            },
           } as Request,
           typeText: `export type UserComponentQuery = {};`,
           docText: `
@@ -455,6 +461,226 @@ describe("formatModule", () => {
         export default documents;"
       `);
     });
+
+    it("does not export from sibling refetch query artefact for fragments that do not contain @refetchable, either by user or generated", async () => {
+      expect(
+        await formatModule(
+          {
+            emitDocuments: true,
+            emitSupermassiveDocuments: true,
+            emitNarrowObservables: true,
+          },
+          {
+            definition: {
+              kind: "Fragment",
+              name: "MessageComponent_viewData",
+              directives: [],
+              argumentDefinitions: [],
+              metadata: undefined,
+              selections: [],
+              type: "unknown",
+              loc: { kind: "Generated" },
+            },
+            typeText: `
+              export type MessageComponent_viewData = {
+                title: string;
+              };
+            `,
+            docText: null,
+          },
+        ),
+      ).toMatchInlineSnapshot(`
+        "/* tslint:disable */
+        /* eslint-disable */
+        // @ts-nocheck
+
+
+                      export type MessageComponent_viewData = {
+                        title: string;
+                      };
+                    "
+      `);
+    });
+  });
+
+  it("does not add watch node queries for mutations", async () => {
+    expect(
+      await formatModule(
+        {
+          emitDocuments: true,
+          emitSupermassiveDocuments: false,
+          emitNarrowObservables: true,
+        },
+        {
+          definition: {
+            kind: "Request",
+            root: {
+              kind: "Root",
+              operation: "mutation",
+            },
+          } as Request,
+          typeText: `export type MessageComponent_message = {};`,
+          docText: `
+            mutation MessageComponent_message {
+              user(id: 42) {
+                id
+              }
+            }
+          `,
+        },
+      ),
+    ).toMatchInlineSnapshot(`
+      "/* tslint:disable */
+      /* eslint-disable */
+      // @ts-nocheck
+
+      export type MessageComponent_message = {};
+
+      export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = (function(){
+      var v0 = {
+        "kind": "Name",
+        "value": "id"
+      };
+      return {
+        "executionQueryDocument": {
+          "kind": "Document",
+          "definitions": [
+            {
+              "kind": "OperationDefinition",
+              "operation": "mutation",
+              "name": {
+                "kind": "Name",
+                "value": "MessageComponent_message"
+              },
+              "selectionSet": {
+                "kind": "SelectionSet",
+                "selections": [
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "user"
+                    },
+                    "arguments": [
+                      {
+                        "kind": "Argument",
+                        "name": (v0/*: any*/),
+                        "value": {
+                          "kind": "IntValue",
+                          "value": "42"
+                        }
+                      }
+                    ],
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": (v0/*: any*/)
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      };
+      })();
+
+      export default documents;"
+    `);
+  });
+
+  it("does not add watch node queries for subscriptions", async () => {
+    expect(
+      await formatModule(
+        {
+          emitDocuments: true,
+          emitSupermassiveDocuments: false,
+          emitNarrowObservables: true,
+        },
+        {
+          definition: {
+            kind: "Request",
+            root: {
+              kind: "Root",
+              operation: "subscription",
+            },
+          } as Request,
+          typeText: `export type MessageComponent_message = {};`,
+          docText: `
+          subscription MessageComponent_message {
+              user(id: 42) {
+                id
+              }
+            }
+          `,
+        },
+      ),
+    ).toMatchInlineSnapshot(`
+      "/* tslint:disable */
+      /* eslint-disable */
+      // @ts-nocheck
+
+      export type MessageComponent_message = {};
+
+      export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = (function(){
+      var v0 = {
+        "kind": "Name",
+        "value": "id"
+      };
+      return {
+        "executionQueryDocument": {
+          "kind": "Document",
+          "definitions": [
+            {
+              "kind": "OperationDefinition",
+              "operation": "subscription",
+              "name": {
+                "kind": "Name",
+                "value": "MessageComponent_message"
+              },
+              "selectionSet": {
+                "kind": "SelectionSet",
+                "selections": [
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "user"
+                    },
+                    "arguments": [
+                      {
+                        "kind": "Argument",
+                        "name": (v0/*: any*/),
+                        "value": {
+                          "kind": "IntValue",
+                          "value": "42"
+                        }
+                      }
+                    ],
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": (v0/*: any*/)
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      };
+      })();
+
+      export default documents;"
+    `);
   });
 
   it.todo("reducing watch query to node fragment");

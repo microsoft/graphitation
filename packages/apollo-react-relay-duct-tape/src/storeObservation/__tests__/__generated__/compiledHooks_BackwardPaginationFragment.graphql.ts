@@ -19,3 +19,7 @@ export type compiledHooks_BackwardPaginationFragment$key = {
     readonly " $data"?: compiledHooks_BackwardPaginationFragment$data | undefined;
     readonly " $fragmentRefs": FragmentRefs<"compiledHooks_BackwardPaginationFragment">;
 };
+
+
+import { documents } from "./compiledHooks_BackwardPaginationFragment_PaginationQuery.graphql";
+export default documents;

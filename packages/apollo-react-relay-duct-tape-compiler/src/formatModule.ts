@@ -11,7 +11,7 @@ import dedupeJSONStringify from "relay-compiler/lib/util/dedupeJSONStringify";
 import type { DocumentNode } from "graphql";
 import type { FormatModule } from "relay-compiler/lib/language/RelayLanguagePluginInterface";
 import type { CompiledArtefactModule } from "./types";
-import { Definition, Fragment } from "relay-compiler";
+import { Fragment } from "relay-compiler";
 
 export interface FormatModuleOptions {
   emitDocuments: boolean;
@@ -44,12 +44,16 @@ export async function formatModuleFactory(
     ));
   }
 
-  function generateExports(moduleName: string, docText: string) {
+  function generateExports(
+    moduleName: string,
+    docText: string,
+    emitNarrowObservables: boolean,
+  ) {
     const exports: CompiledArtefactModule = {};
     const originalDocument = parse(docText, { noLocation: true });
     const optimizedDocument = optimizeDocumentNode(originalDocument);
 
-    if (!options.emitNarrowObservables) {
+    if (!emitNarrowObservables) {
       exports.executionQueryDocument = optimizedDocument;
     } else {
       if (!moduleName.endsWith("WatchNodeQuery.graphql")) {
@@ -79,7 +83,14 @@ export async function formatModuleFactory(
 
   return ({ docText, hash, moduleName, typeText, definition }) => {
     const exports = options.emitDocuments
-      ? docText && generateExports(moduleName, docText)
+      ? docText &&
+        generateExports(
+          moduleName,
+          docText,
+          options.emitNarrowObservables &&
+            definition.kind === "Request" &&
+            definition.root.operation === "query",
+        )
       : null;
     const reExportWatchNodeQuery =
       options.emitDocuments && definition.kind === "Fragment";
@@ -115,7 +126,9 @@ function printWatchNodeQueryReExport(definition: Fragment) {
     definition.directives.find(
       (d) => d.name === "refetchable" && d.loc.kind === "Generated",
     );
-  invariant(refetchable, "Expected to find a @refetchable directive");
+  if (!refetchable) {
+    return undefined;
+  }
   const queryNameArg = refetchable.args[0];
   invariant(
     queryNameArg.name === "queryName" && queryNameArg.value.kind === "Literal",

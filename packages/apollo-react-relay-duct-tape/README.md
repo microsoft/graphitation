@@ -25,6 +25,11 @@ Use this together with [@graphitation/apollo-react-relay-duct-tape-compiler](../
 
 ### Configuration
 
+TODO:
+
+- We cannot support the default apollo cache keys for fragments on Node [derived] interfaces. Seeing as Node semantics are so core to the ability to provide these APIs, it makes sense to remove the apollo default cache key support.
+- Copy apollo cache config required from the example app. This includes getting the list of possible types and the dataIdFromObject implemenation.
+
 - Configure Apollo Client's cache to automatically add `__typename` field selections, which concrete types implement the `Node` interface, and the type-policies needed to read the watch query data from the store:
 
   ```ts

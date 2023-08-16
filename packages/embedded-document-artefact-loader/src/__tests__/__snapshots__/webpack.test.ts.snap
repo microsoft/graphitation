@@ -55,3 +55,16 @@ exports[`webpackLoader works with inline documents over multiple lines 1`] = `
         );
       "
 `;
+
+exports[`webpackLoader works with invalid documents by not replacing them 1`] = `
+"
+        import { graphql } from "@nova/react";
+        // some \`graphql\` tag comment
+        const {data} = useFragment(
+          graphql\`
+            fragment SomeComponentFragment on Query {
+          \`,
+          props
+        );
+      "
+`;

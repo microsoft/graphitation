@@ -12,3 +12,7 @@ export type compiledHooks_ChildFragment$key = {
     readonly " $data"?: compiledHooks_ChildFragment$data | undefined;
     readonly " $fragmentRefs": FragmentRefs<"compiledHooks_ChildFragment">;
 };
+
+
+import { documents } from "./compiledHooks_ChildWatchNodeQuery.graphql";
+export default documents;

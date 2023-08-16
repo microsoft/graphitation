@@ -1,4 +1,3 @@
-import { DocumentNode } from "graphql";
 import invariant from "invariant";
 import {
   useSubscription as useApolloSubscription,
@@ -7,6 +6,7 @@ import {
   SubscriptionHookOptions as ApolloSubscriptionHookOptions,
   ErrorPolicy as ApolloErrorPolicy,
   ApolloClient,
+  ApolloCache,
 } from "@apollo/client";
 
 import {
@@ -52,7 +52,7 @@ export function useLazyLoadQuery<TQuery extends OperationType>(
 ): { error?: Error; data?: TQuery["response"] } {
   invariant(
     query?.__brand === undefined,
-    "useLazyLoadQuery: query must be a valid runtime type.",
+    "useLazyLoadQuery: Document must be a valid runtime type.",
   );
   const apolloOptions = options && {
     ...options,
@@ -230,10 +230,18 @@ interface GraphQLSubscriptionConfig<
 export function useSubscription<TSubscriptionPayload extends OperationType>(
   config: GraphQLSubscriptionConfig<TSubscriptionPayload>,
 ): void {
+  const document = config.subscription;
+  invariant(
+    document?.__brand === undefined,
+    "useSubscription: Document must be a valid runtime type.",
+  );
+  invariant(
+    !document.watchQueryDocument,
+    "useSubscription: Did not expect a watch query document",
+  );
   const client = useOverridenOrDefaultApolloClient();
   const { error } = useApolloSubscription(
-    // TODO: Right now we don't replace mutation documents with imported artefacts.
-    config.subscription as DocumentNode,
+    document.executionQueryDocument || document,
     {
       client,
       variables: config.variables,
@@ -267,11 +275,20 @@ export function useSubscription<TSubscriptionPayload extends OperationType>(
 
 interface IMutationCommitterOptions<TMutationPayload extends OperationType> {
   variables: TMutationPayload["variables"];
+  optimisticResponse?: Partial<TMutationPayload["response"]> | null;
   /**
-   * Should be avoided when possible as it will not be compatible with Relay APIs.
+   * This version yields the ApolloCache instance, instead of the RelayStore,
+   * and usage of it will not be portable to Relay directly. However, it is a
+   * necessary evil for migration purposes.
+   */
+  updater?: (
+    cache: ApolloCache<unknown>,
+    data: TMutationPayload["response"],
+  ) => void;
+  /**
+   * @deprecated Should be avoided when possible as it will not be compatible with Relay APIs.
    */
   context?: TMutationPayload["context"];
-  optimisticResponse?: Partial<TMutationPayload["response"]> | null;
 }
 
 type MutationCommiter<TMutationPayload extends OperationType> = (
@@ -287,10 +304,17 @@ type MutationCommiter<TMutationPayload extends OperationType> = (
 export function useMutation<TMutationPayload extends OperationType>(
   mutation: GraphQLTaggedNode,
 ): [MutationCommiter<TMutationPayload>, boolean] {
+  invariant(
+    mutation?.__brand === undefined,
+    "useMutation: Document must be a valid runtime type.",
+  );
+  invariant(
+    !mutation.watchQueryDocument,
+    "useMutation: Did not expect a watch query document",
+  );
   const client = useOverridenOrDefaultApolloClient();
   const [apolloUpdater, { loading: mutationLoading }] = useApolloMutation(
-    // TODO: Right now we don't replace mutation documents with imported artefacts.
-    mutation as DocumentNode,
+    mutation.executionQueryDocument || mutation,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     { client: client as ApolloClient<any> },
   );
@@ -301,6 +325,7 @@ export function useMutation<TMutationPayload extends OperationType>(
         variables: options.variables || {},
         context: options.context,
         optimisticResponse: options.optimisticResponse,
+        update: options.updater,
       });
       if (apolloResult.errors) {
         return {

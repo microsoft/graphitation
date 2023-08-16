@@ -44,22 +44,6 @@ mutation useChangeTodoStatusMutation($input: ChangeTodoStatusInput!) {
 }
 */
 
-/*
-mutation useChangeTodoStatusMutation($input: ChangeTodoStatusInput!) {
-  changeTodoStatus(input: $input) {
-    todo {
-      id
-      isCompleted
-    }
-    todos {
-      id
-      totalCount
-      uncompletedCount
-    }
-  }
-}
-*/
-
 export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = (function(){
 var v0 = {
   "kind": "Name",
@@ -75,110 +59,108 @@ v2 = {
     "kind": "Name",
     "value": "id"
   }
-},
-v3 = {
-  "kind": "Document",
-  "definitions": [
-    {
-      "kind": "OperationDefinition",
-      "operation": "mutation",
-      "name": {
-        "kind": "Name",
-        "value": "useChangeTodoStatusMutation"
-      },
-      "variableDefinitions": [
-        {
-          "kind": "VariableDefinition",
-          "variable": (v1/*: any*/),
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "ChangeTodoStatusInput"
-              }
-            }
-          }
-        }
-      ],
-      "selectionSet": {
-        "kind": "SelectionSet",
-        "selections": [
-          {
-            "kind": "Field",
-            "name": {
-              "kind": "Name",
-              "value": "changeTodoStatus"
-            },
-            "arguments": [
-              {
-                "kind": "Argument",
-                "name": (v0/*: any*/),
-                "value": (v1/*: any*/)
-              }
-            ],
-            "selectionSet": {
-              "kind": "SelectionSet",
-              "selections": [
-                {
-                  "kind": "Field",
-                  "name": {
-                    "kind": "Name",
-                    "value": "todo"
-                  },
-                  "selectionSet": {
-                    "kind": "SelectionSet",
-                    "selections": [
-                      (v2/*: any*/),
-                      {
-                        "kind": "Field",
-                        "name": {
-                          "kind": "Name",
-                          "value": "isCompleted"
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "kind": "Field",
-                  "name": {
-                    "kind": "Name",
-                    "value": "todos"
-                  },
-                  "selectionSet": {
-                    "kind": "SelectionSet",
-                    "selections": [
-                      (v2/*: any*/),
-                      {
-                        "kind": "Field",
-                        "name": {
-                          "kind": "Name",
-                          "value": "totalCount"
-                        }
-                      },
-                      {
-                        "kind": "Field",
-                        "name": {
-                          "kind": "Name",
-                          "value": "uncompletedCount"
-                        }
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          }
-        ]
-      }
-    }
-  ]
 };
 return {
-  "executionQueryDocument": (v3/*: any*/),
-  "watchQueryDocument": (v3/*: any*/)
+  "executionQueryDocument": {
+    "kind": "Document",
+    "definitions": [
+      {
+        "kind": "OperationDefinition",
+        "operation": "mutation",
+        "name": {
+          "kind": "Name",
+          "value": "useChangeTodoStatusMutation"
+        },
+        "variableDefinitions": [
+          {
+            "kind": "VariableDefinition",
+            "variable": (v1/*: any*/),
+            "type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "ChangeTodoStatusInput"
+                }
+              }
+            }
+          }
+        ],
+        "selectionSet": {
+          "kind": "SelectionSet",
+          "selections": [
+            {
+              "kind": "Field",
+              "name": {
+                "kind": "Name",
+                "value": "changeTodoStatus"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": (v0/*: any*/),
+                  "value": (v1/*: any*/)
+                }
+              ],
+              "selectionSet": {
+                "kind": "SelectionSet",
+                "selections": [
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "todo"
+                    },
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        (v2/*: any*/),
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "isCompleted"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "todos"
+                    },
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        (v2/*: any*/),
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "totalCount"
+                          }
+                        },
+                        {
+                          "kind": "Field",
+                          "name": {
+                            "kind": "Name",
+                            "value": "uncompletedCount"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
 };
 })();
 

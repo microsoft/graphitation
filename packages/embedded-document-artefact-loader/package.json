@@ -18,11 +18,13 @@
     "source-map-js": "^1.0.2"
   },
   "peerDependencies": {
+    "graphql": "*",
     "ts-jest": "*"
   },
   "devDependencies": {
     "@types/jest": "^26.0.22",
     "@types/loader-runner": "^2.2.4",
+    "graphql": "^15.0.0",
     "loader-runner": "^4.3.0",
     "monorepo-scripts": "*",
     "ts-jest": "^29.0.3",

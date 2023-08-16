@@ -155,6 +155,19 @@ describe("webpackLoader", () => {
         );
       `,
     },
+    {
+      name: "invalid documents by not replacing them",
+      source: `
+        import { graphql } from "@nova/react";
+        // some \`graphql\` tag comment
+        const {data} = useFragment(
+          graphql\`
+            fragment SomeComponentFragment on Query {
+          \`,
+          props
+        );
+      `,
+    },
   ])("works with $name", async ({ source }) => {
     const result = await runLoader(source);
     expect(result.result![0]).toMatchSnapshot();
