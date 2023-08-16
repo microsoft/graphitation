@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { ApolloCache, DataProxy, StoreValue } from "@apollo/client";
+import { ApolloCache, DataProxy } from "@apollo/client";
 import invariant from "invariant";
 import { useCompiledRefetchableFragment } from "./useCompiledRefetchableFragment";
 import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultApolloClient";
