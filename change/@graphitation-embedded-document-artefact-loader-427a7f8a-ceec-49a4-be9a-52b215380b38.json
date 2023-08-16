@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Various PeopleApp fixes",
+  "packageName": "@graphitation/embedded-document-artefact-loader",
+  "email": "eloy.de.enige@gmail.com",
+  "dependentChangeType": "patch"
+}
