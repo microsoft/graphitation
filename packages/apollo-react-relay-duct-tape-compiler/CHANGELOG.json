@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape-compiler",
   "entries": [
     {
+      "date": "Wed, 16 Aug 2023 06:31:21 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.2.3",
+      "version": "1.2.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "commit": "3962d767eb6ac9dbafe0255062c23c20fb63e5c5",
+            "comment": "Various PeopleApp fixes"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 25 Jul 2023 08:18:03 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.2.2",
       "version": "1.2.2",

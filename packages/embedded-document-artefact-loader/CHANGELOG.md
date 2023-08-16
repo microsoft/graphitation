@@ -1,8 +1,16 @@
 # Change Log - @graphitation/embedded-document-artefact-loader
 
-This log was last generated on Tue, 25 Jul 2023 08:18:03 GMT and should not be manually modified.
+This log was last generated on Wed, 16 Aug 2023 06:31:21 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.2
+
+Wed, 16 Aug 2023 06:31:21 GMT
+
+### Patches
+
+- Various PeopleApp fixes (eloy.de.enige@gmail.com)
 
 ## 0.6.1
 
