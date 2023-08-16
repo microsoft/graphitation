@@ -15,15 +15,17 @@ const App: React.FC = () => {
   const result = useLazyLoadQuery<AppQueryType>(
     graphql`
       query AppQuery($includeSomeOtherField: Boolean!) {
-        todoStats: todos(first: 0) {
-          id
-          totalCount
-          ...TodoListFooter_todosFragment
+        me {
+          todoStats: todos(first: 0) {
+            id
+            totalCount
+            ...TodoListFooter_todosFragment
+          }
+          ...TodoList_nodeFragment
         }
-        ...TodoList_queryFragment
       }
     `,
-    { includeSomeOtherField: false }
+    { includeSomeOtherField: false },
   );
   if (result.error) {
     throw result.error;
@@ -45,10 +47,10 @@ const App: React.FC = () => {
       <section className="main">
         <input id="toggle-all" className="toggle-all" type="checkbox" />
         <label htmlFor="toggle-all">Mark all as complete</label>
-        <TodoList query={result.data} />
+        <TodoList node={result.data.me} />
       </section>
-      {result.data.todoStats.totalCount > 0 && (
-        <TodoListFooter todos={result.data.todoStats} />
+      {result.data.me.todoStats.totalCount > 0 && (
+        <TodoListFooter todos={result.data.me.todoStats} />
       )}
     </section>
   );

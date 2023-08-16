@@ -93,10 +93,12 @@ function useLoadMore({
               "usePaginationFragment(): Expected mainFragment metadata",
             );
             const cacheSelector: DataProxy.Fragment<unknown, object> = {
-              id: cache.identify({
-                __typename: mainFragment.typeCondition,
-                id: fragmentReference.id as StoreValue,
-              }),
+              // TODO: If we're dropping default Apollo Cache keys, we can probably just do the below
+              id: fragmentReference.id as string,
+              // id: cache.identify({
+              //   __typename: mainFragment.typeCondition,
+              //   id: fragmentReference.id as StoreValue,
+              // }),
               variables: previousVariables,
               fragmentName: mainFragment.name,
               // Create new document with operation filtered out.

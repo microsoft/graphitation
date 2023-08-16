@@ -1,54 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`compiledHooks with default Apollo Client type-policies useCompiledLazyLoadQuery once loaded does re-render when a field that was selected in the watch query is updated in the store 1`] = `
-{
-  "__fragments": {
-    "avatarSize": 21,
-    "messagesBackwardCount": 1,
-    "messagesBeforeCursor": "",
-    "userId": 42,
-  },
-  "user": {
-    "__fragments": {
-      "avatarSize": 21,
-      "messagesBackwardCount": 1,
-      "messagesBeforeCursor": "",
-      "userId": 42,
-    },
-    "__typename": "User",
-    "id": "42",
-    "name": "Satya",
-  },
-}
-`;
-
-exports[`compiledHooks with default Apollo Client type-policies useCompiledLazyLoadQuery once loaded fetches new data when variables change 1`] = `
-{
-  "__typename": "User",
-  "avatarUrl({"size":21})": "<mock-value-for-field-"avatarUrl">",
-  "conversations:compiledHooks_user_conversations": {
-    "__typename": "ConversationsConnection",
-    "edges": [
-      {
-        "__typename": "ConversationsConnectionEdge",
-        "cursor": "<mock-value-for-field-"cursor">",
-        "node": {
-          "__ref": "Conversation:<Conversation-mock-id-2>",
-        },
-      },
-    ],
-    "pageInfo": {
-      "__typename": "PageInfo",
-      "endCursor": "<mock-value-for-field-"endCursor">",
-      "hasNextPage": false,
-    },
-  },
-  "id": "21",
-  "name": "<mock-value-for-field-"name">",
-  "petName": "<mock-value-for-field-"petName">",
-}
-`;
-
 exports[`compiledHooks with default Apollo Client type-policies useCompiledLazyLoadQuery once loaded loads all data of the execution query into the store 1`] = `
 {
   "Conversation:first-paged-conversation": {

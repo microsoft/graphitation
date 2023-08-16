@@ -32,6 +32,21 @@ describe(enableNodeWatchQueryTransform, () => {
     `);
   });
 
+  it("adds Relay's @refetchable directive to fragments on interfaces that implement Node", () => {
+    const text = `
+      fragment SomeModule_onNodeTypeFragment on FeedUnit {
+        id
+      }
+    `;
+
+    expect(transform(text)).toMatchInlineSnapshot(`
+      "fragment SomeModule_onNodeTypeFragment on FeedUnit @refetchable(queryName: "SomeModule_onNodeTypeWatchNodeQuery") {
+        id
+      }
+      "
+    `);
+  });
+
   it("adds Relay's @refetchable directive to fragments on the Query type", () => {
     const text = `
       fragment SomeModule_onQueryTypeFragment on Query {

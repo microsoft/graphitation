@@ -126,7 +126,9 @@ function printWatchNodeQueryReExport(definition: Fragment) {
     definition.directives.find(
       (d) => d.name === "refetchable" && d.loc.kind === "Generated",
     );
-  invariant(refetchable, "Expected to find a @refetchable directive");
+  if (!refetchable) {
+    return undefined;
+  }
   const queryNameArg = refetchable.args[0];
   invariant(
     queryNameArg.name === "queryName" && queryNameArg.value.kind === "Literal",

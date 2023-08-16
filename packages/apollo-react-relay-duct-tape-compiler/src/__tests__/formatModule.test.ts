@@ -461,6 +461,46 @@ describe("formatModule", () => {
         export default documents;"
       `);
     });
+
+    it("does not export from sibling refetch query artefact for fragments that do not contain @refetchable, either by user or generated", async () => {
+      expect(
+        await formatModule(
+          {
+            emitDocuments: true,
+            emitSupermassiveDocuments: true,
+            emitNarrowObservables: true,
+          },
+          {
+            definition: {
+              kind: "Fragment",
+              name: "MessageComponent_viewData",
+              directives: [],
+              argumentDefinitions: [],
+              metadata: undefined,
+              selections: [],
+              type: "unknown",
+              loc: { kind: "Generated" },
+            },
+            typeText: `
+              export type MessageComponent_viewData = {
+                title: string;
+              };
+            `,
+            docText: null,
+          },
+        ),
+      ).toMatchInlineSnapshot(`
+        "/* tslint:disable */
+        /* eslint-disable */
+        // @ts-nocheck
+
+
+                      export type MessageComponent_viewData = {
+                        title: string;
+                      };
+                    "
+      `);
+    });
   });
 
   it("does not add watch node queries for mutations", async () => {

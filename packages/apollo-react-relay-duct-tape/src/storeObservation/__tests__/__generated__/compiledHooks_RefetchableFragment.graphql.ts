@@ -14,3 +14,7 @@ export type compiledHooks_RefetchableFragment$key = {
     readonly " $data"?: compiledHooks_RefetchableFragment$data | undefined;
     readonly " $fragmentRefs": FragmentRefs<"compiledHooks_RefetchableFragment">;
 };
+
+
+import { documents } from "./compiledHooks_RefetchableFragment_RefetchQuery.graphql";
+export default documents;

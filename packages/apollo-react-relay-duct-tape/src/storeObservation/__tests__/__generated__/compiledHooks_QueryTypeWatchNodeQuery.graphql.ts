@@ -102,3 +102,5 @@ return {
   }
 };
 })();
+
+export default documents;
