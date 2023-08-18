@@ -8,8 +8,6 @@ import {
   isLeafType,
   Kind,
   locatedError,
-  ObjectTypeDefinitionNode,
-  TypeDefinitionNode,
 } from "graphql";
 
 import {
@@ -20,6 +18,8 @@ import {
   OperationTypeDefinitionNode,
   OperationTypeNode,
   TypeNode,
+  SchemaFacade,
+  createSchemaFacade,
 } from "./supermassive-ast";
 import {
   collectFields,
@@ -116,7 +116,8 @@ const collectSubfields = memoize3(
  */
 export interface ExecutionContext {
   resolvers: Resolvers;
-  schemaTypes: Map<string, TypeDefinitionNode>;
+  // schemaTypes: Map<string, TypeDefinitionNode>;
+  schemaTypes: SchemaFacade;
   fragments: ObjMap<FragmentDefinitionNode>;
   rootValue: unknown;
   contextValue: unknown;
@@ -189,7 +190,7 @@ function buildExecutionContext(
   const {
     resolvers,
     schemaResolvers,
-    schemaFragment,
+    // schemaFragment,
     document,
     rootValue,
     contextValue,
@@ -253,12 +254,14 @@ function buildExecutionContext(
     return coercedVariableValues.errors;
   }
 
-  const schemaTypes: Map<string, TypeDefinitionNode> = (
-    schemaFragment || []
-  ).reduce((map, next) => {
-    map.set(next.name.value, next);
-    return map;
-  }, new Map() as Map<string, TypeDefinitionNode>);
+  const schemaTypes = createSchemaFacade({ types: [] });
+
+  // const schemaTypes: Map<string, TypeDefinitionNode> = (
+  //   schemaFragment || []
+  // ).reduce((map, next) => {
+  //   map.set(next.name.value, next);
+  //   return map;
+  // }, new Map() as Map<string, TypeDefinitionNode>);
 
   return {
     resolvers: combinedResolvers,
@@ -496,7 +499,7 @@ function executeField(
 
   let resolveFn;
   let returnTypeName: string;
-  let returnTypeNode: TypeNode;
+  let returnTypeNode: TypeNode | undefined;
   if (fieldName === "__typename" && !resolveFn) {
     resolveFn = () => parentTypeName;
     returnTypeName = "String";
@@ -512,13 +515,10 @@ function executeField(
       returnTypeNode = fieldGroup[0].__type;
       returnTypeName = typeNameFromAST(returnTypeNode);
     } else {
-      const parentType = exeContext.schemaTypes.get(parentTypeName) as
-        | ObjectTypeDefinitionNode
-        | undefined;
-      returnTypeNode = parentType?.fields?.find(
-        (field) => field.name.value === fieldName,
-      )?.type as TypeNode;
-
+      returnTypeNode = exeContext.schemaTypes.returnTypeNode(
+        parentTypeName,
+        fieldName,
+      );
       if (!returnTypeNode) {
         throw locatedError(
           `Could not find definition for field "${fieldName}" of type "${parentTypeName}"`,
