@@ -48,11 +48,6 @@ export type {
 export { OperationTypeNode } from "./TypedAST";
 export { addTypesToRequestDocument } from "./addTypesToRequestDocument";
 export { annotateDocumentGraphQLTransform } from "./annotateDocumentGraphQLTransform";
-export {
-  EncodedSchema,
-  SchemaFacade,
-  createSchemaFacade,
-} from "./encodeSchema";
 
 export {
   specifiedDirectives,

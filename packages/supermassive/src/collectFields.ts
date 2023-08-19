@@ -14,7 +14,10 @@ import {
   GraphQLDeferDirective,
 } from "./directives";
 import { typeNameFromAST } from "./utilities/typeNameFromAST";
-import { isUnionResolverType, isInterfaceResolverType } from "./definition";
+import {
+  isUnionResolverType,
+  isInterfaceResolverType,
+} from "./types/predicates";
 
 import { Resolvers } from "./types";
 

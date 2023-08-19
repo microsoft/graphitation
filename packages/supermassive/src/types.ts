@@ -1,12 +1,9 @@
 import {
-  DefinitionNode,
-  GraphQLEnumType,
   GraphQLError,
   GraphQLFormattedError,
   GraphQLInputObjectType,
   GraphQLScalarType,
   TypeDefinitionNode,
-  TypeSystemDefinitionNode,
   DocumentNode as UntypedDocumentNode,
 } from "graphql";
 import { Maybe } from "./jsutils/Maybe";
@@ -23,7 +20,7 @@ import { ExecutionHooks } from "./hooks/types";
 import { FieldGroup } from "./collectFields";
 
 export type ScalarTypeResolver = GraphQLScalarType;
-export type EnumTypeResolver = GraphQLEnumType; // TODO Record<string, unknown>;
+export type EnumTypeResolver = Record<string, unknown>;
 export type FunctionFieldResolver<
   TSource,
   TContext,
@@ -105,20 +102,14 @@ export type UserResolver<TSource, TContext> =
   | UserInterfaceTypeResolver<TSource, TContext>
   | UserUnionTypeResolver
   | ScalarTypeResolver
-  | EnumTypeResolver
-  | InputObjectTypeResolver;
+  | EnumTypeResolver;
 
-export type Resolver<TSource, TContext> =
-  | ObjectTypeResolver<TSource, TContext>
-  | InterfaceTypeResolver<TSource, TContext>
-  | UnionTypeResolver
-  | ScalarTypeResolver
-  | EnumTypeResolver
-  | InputObjectTypeResolver;
+// TODO: Keep only UserResolver
+export type Resolver<TSource, TContext> = UserResolver<TSource, TContext>;
 
-export type Resolvers<TSource = unknown, TContext = unknown> = Record<
-  string,
-  Resolver<TSource, TContext>
+export type Resolvers<TSource = unknown, TContext = unknown> = UserResolvers<
+  TSource,
+  TContext
 >;
 
 export type UserResolvers<TSource = unknown, TContext = unknown> = Record<
