@@ -1,44 +1,27 @@
 import {
-  ArgumentNode as GraphQLArgumentNode,
-  GraphQLBoolean,
   GraphQLError,
-  GraphQLFloat,
-  GraphQLID,
-  GraphQLInt,
-  GraphQLList,
-  GraphQLNonNull,
-  GraphQLScalarType,
-  GraphQLString,
-  GraphQLType,
-  isInputType,
-  isNonNullType,
   Kind,
   print,
   TypeNode as GraphQLTypeNode,
   ValueNode as GraphQLValueNode,
   VariableDefinitionNode as GraphQLVariableDefinitionNode,
-  valueFromAST,
-  coerceInputValue,
   GraphQLDirective,
   locatedError,
   ASTNode,
-  ObjectTypeDefinitionNode,
-  FieldDefinitionNode,
-  specifiedDirectives,
-  DirectiveDefinitionNode,
-  ValueNode,
 } from "graphql";
 import {
   DirectiveNode,
   FieldNode,
-  TypeNode,
   VariableDefinitionNode,
 } from "./supermassive-ast";
 import { inspect } from "./jsutils/inspect";
 import type { Maybe } from "./jsutils/Maybe";
 import { printPathArray } from "./jsutils/printPathArray";
-import { Resolvers } from "./types";
 import { ExecutionContext } from "./executeWithoutSchema";
+import { InputValueDefinitionTuple } from "./types/definition";
+import { valueFromAST } from "./utilities/valueFromAST";
+import { SchemaFragment } from "./types/schema";
+import { coerceInputValue } from "./utilities/coerceInputValue";
 
 type CoercedVariableValues =
   | { errors: Array<GraphQLError>; coerced?: never }
@@ -56,7 +39,7 @@ type CoercedVariableValues =
  * @internal
  */
 export function getVariableValues(
-  resolvers: Resolvers,
+  schemaTypes: SchemaFragment,
   varDefNodes: ReadonlyArray<VariableDefinitionNode>,
   inputs: { [variable: string]: unknown },
   options?: { maxErrors?: number },
@@ -65,7 +48,7 @@ export function getVariableValues(
   const maxErrors = options?.maxErrors;
   try {
     const coerced = coerceVariableValues(
-      resolvers,
+      schemaTypes,
       varDefNodes,
       inputs,
       (error) => {
@@ -89,7 +72,7 @@ export function getVariableValues(
 }
 
 function coerceVariableValues(
-  resolvers: Resolvers,
+  schemaTypes: SchemaFragment,
   varDefNodes: ReadonlyArray<VariableDefinitionNode>,
   inputs: { [variable: string]: unknown },
   onError: (error: GraphQLError) => void,
@@ -97,13 +80,12 @@ function coerceVariableValues(
   const coercedValues: { [variable: string]: unknown } = {};
   for (const varDefNode of varDefNodes) {
     const varName = varDefNode.variable.name.value;
-    const varTypeAst = varDefNode.type;
-    const varType: GraphQLType = graphqlTypeFromTypeAst(resolvers, varTypeAst);
+    const varTypeNode = varDefNode.type;
 
-    if (!isInputType(varType)) {
+    if (!schemaTypes.isInputType(varTypeNode)) {
       // Must use input types for variables. This should be caught during
       // validation, however is checked again here for safety.
-      const varTypeStr = inspect(varType);
+      const varTypeStr = schemaTypes.printTypeRef(varTypeNode);
       onError(
         new GraphQLError(
           `Variable "$${varName}" expected value of type "${varTypeStr}" which cannot be used as an input type.`,
@@ -117,10 +99,11 @@ function coerceVariableValues(
       if (varDefNode.defaultValue) {
         coercedValues[varName] = valueFromAST(
           varDefNode.defaultValue as Maybe<GraphQLValueNode>,
-          varType,
+          varTypeNode,
+          schemaTypes,
         );
-      } else if (isNonNullType(varType)) {
-        const varTypeStr = print(varDefNode.type as GraphQLTypeNode);
+      } else if (schemaTypes.isNonNullType(varTypeNode)) {
+        const varTypeStr = schemaTypes.printTypeRef(varTypeNode);
         onError(
           new GraphQLError(
             `Variable "$${varName}" of required type "${varTypeStr}" was not provided.`,
@@ -132,8 +115,8 @@ function coerceVariableValues(
     }
 
     const value = inputs[varName];
-    if (value === null && isNonNullType(varType)) {
-      const varTypeStr = inspect(varType);
+    if (value === null && schemaTypes.isNonNullType(varTypeNode)) {
+      const varTypeStr = schemaTypes.printTypeRef(varTypeNode);
       onError(
         new GraphQLError(
           `Variable "$${varName}" of non-null type "${varTypeStr}" must not be null.`,
@@ -145,7 +128,8 @@ function coerceVariableValues(
 
     coercedValues[varName] = coerceInputValue(
       value,
-      varType,
+      varTypeNode,
+      schemaTypes,
       (path, invalidValue, error) => {
         let prefix =
           `Variable "$${varName}" got invalid value ` + inspect(invalidValue);
@@ -177,62 +161,51 @@ function coerceVariableValues(
  */
 export function getArgumentValues(
   exeContext: ExecutionContext,
+  argumentDefs: Record<string, InputValueDefinitionTuple>,
   node: FieldNode | DirectiveNode,
-  parentTypeName?: string,
 ): { [argument: string]: unknown } {
+  const schemaTypes = exeContext.schemaTypes;
   const coercedValues: { [argument: string]: unknown } = {};
 
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
   const argumentNodes = node.arguments ?? [];
+  const argNodeMap = new Map(argumentNodes.map((arg) => [arg.name.value, arg]));
 
-  for (const argumentNode of argumentNodes) {
-    const name = argumentNode.name.value;
-    let argTypeNode: TypeNode | undefined = undefined;
-    let argType: GraphQLType | undefined = undefined;
-    let argDefaultValue: ValueNode | undefined = undefined;
-    if (argumentNode.__type) {
-      argTypeNode = argumentNode.__type;
-      argType = graphqlTypeFromTypeAst(exeContext.resolvers, argTypeNode);
-      argDefaultValue = argumentNode.__defaultValue as ValueNode;
-    } else if (parentTypeName || node.kind === Kind.DIRECTIVE) {
-      const parentType = exeContext.schemaTypes.get(
-        parentTypeName || node.name.value,
-      ) as ObjectTypeDefinitionNode | DirectiveDefinitionNode | undefined;
-      let fieldNode;
-      if (parentType?.kind === Kind.OBJECT_TYPE_DEFINITION) {
-        fieldNode = parentType?.fields?.find(
-          (field) => field.name.value === node.name.value,
+  for (const [name, argumentDef] of Object.entries(argumentDefs)) {
+    const argumentNode = argNodeMap.get(name);
+    const argumentTypeRef = schemaTypes.getTypeRef(argumentDef);
+    const defaultValue = schemaTypes.getDefaultValue(argumentDef);
+
+    if (argumentNode == null) {
+      if (defaultValue !== undefined) {
+        coercedValues[name] = defaultValue;
+      } else if (schemaTypes.isNonNullType(argumentTypeRef)) {
+        const type = schemaTypes.printTypeRef(argumentTypeRef);
+        throw locatedError(
+          `Argument "${name}" of required type "${type}" was not provided.`,
+          [node] as ASTNode[],
         );
-      } else {
-        fieldNode = parentType;
       }
-      const argNode = fieldNode?.arguments?.find(
-        (arg) => arg.name.value === name,
-      );
-      argTypeNode = argNode?.type;
-      argDefaultValue = argNode?.defaultValue;
-      if (argTypeNode) {
-        argType = graphqlTypeFromTypeAst(exeContext.resolvers, argTypeNode);
-      }
+      continue;
     }
 
-    if (!argTypeNode || !argType) {
+    if (!schemaTypes.isDefined(argumentTypeRef)) {
       throw locatedError(
-        `Could not find type for argument ${name} in field ${node.name.value}`,
-        [argumentNode, node] as ASTNode[],
+        `Could not find type for argument ${name} in ${node.kind} ${node.name.value}`,
+        [argumentNode] as ASTNode[],
       );
     }
 
-    if (!isInputType(argType)) {
-      throw new GraphQLError(
-        `Argument "$${name}" expected value of type "${inspect(
-          argType,
-        )}" which cannot be used as an input type.`,
-        { nodes: argumentNode as GraphQLArgumentNode },
-      );
-    }
+    // if (!schemaTypes.isInputType(argumentTypeRef)) {
+    //   const type = schemaTypes.printTypeRef(argumentTypeRef);
+    //   throw locatedError(
+    //     `Argument "$${name}" expected value of type "${type}" which cannot be used as an input type.`,
+    //     [argumentNode] as ASTNode[],
+    //   );
+    // }
 
-    let valueNode = argumentNode.value;
+    const valueNode = argumentNode.value;
+    let isNull = valueNode.kind === Kind.NULL;
 
     if (valueNode.kind === Kind.VARIABLE) {
       const variableName = valueNode.name.value;
@@ -240,23 +213,33 @@ export function getArgumentValues(
         exeContext.variableValues == null ||
         !hasOwnProperty(exeContext.variableValues, variableName)
       ) {
-        if (argDefaultValue) {
-          valueNode = argDefaultValue;
-        } else if (isNonNullType(argType)) {
-          throw new GraphQLError(
-            `Argument "${name}" of required type "${inspect(argType)}" ` +
+        if (defaultValue !== undefined) {
+          coercedValues[name] = defaultValue;
+        } else if (schemaTypes.isNonNullType(argumentTypeRef)) {
+          const type = schemaTypes.printTypeRef(argumentTypeRef);
+          throw locatedError(
+            `Argument "${name}" of required type "${type}" ` +
               `was provided the variable "$${variableName}" which was not provided a runtime value.`,
-            { nodes: valueNode as GraphQLValueNode },
+            [valueNode] as ASTNode[],
           );
         }
-
         continue;
       }
+      isNull = exeContext.variableValues[variableName] == null;
+    }
+
+    if (isNull && schemaTypes.isNonNullType(argumentTypeRef)) {
+      const type = schemaTypes.printTypeRef(argumentTypeRef);
+      throw locatedError(
+        `Argument "${name}" of non-null type "${type}" must not be null."`,
+        [valueNode] as ASTNode[],
+      );
     }
 
     const coercedValue = valueFromAST(
       valueNode as GraphQLValueNode,
-      argType,
+      argumentTypeRef,
+      schemaTypes,
       exeContext.variableValues,
     );
     if (coercedValue === undefined) {
@@ -298,33 +281,10 @@ export function getDirectiveValues(
   );
 
   if (directiveNode) {
-    return getArgumentValues(exeContext, directiveNode);
+    return getArgumentValues(exeContext, directiveDef, directiveNode);
   }
 }
 
 function hasOwnProperty(obj: unknown, prop: string): boolean {
   return Object.prototype.hasOwnProperty.call(obj, prop);
-}
-
-export const specifiedScalars: { [key: string]: GraphQLScalarType } = {
-  ID: GraphQLID,
-  String: GraphQLString,
-  Int: GraphQLInt,
-  Float: GraphQLFloat,
-  Boolean: GraphQLBoolean,
-};
-
-function graphqlTypeFromTypeAst(
-  resolvers: Resolvers,
-  node: TypeNode,
-): GraphQLType {
-  if (node.kind === Kind.NON_NULL_TYPE) {
-    return new GraphQLNonNull(graphqlTypeFromTypeAst(resolvers, node.type));
-  } else if (node.kind === Kind.LIST_TYPE) {
-    return new GraphQLList(graphqlTypeFromTypeAst(resolvers, node.type));
-  } else {
-    const typeName = node.name.value;
-    const type = specifiedScalars[typeName] || resolvers[typeName];
-    return type as GraphQLType;
-  }
 }

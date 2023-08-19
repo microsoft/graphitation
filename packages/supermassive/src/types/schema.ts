@@ -99,7 +99,9 @@ export class SchemaFragment {
     return tuple[0];
   }
 
-  public isDefined(typeRef: TypeReference) {
+  // TODO: it might be cheaper to always rely on TypeReference
+  //  (custom TypeNode may be expensive to print)
+  public isDefined(typeRef: TypeReference | TypeNode) {
     if (typeof typeRef === "number" && EncodedSpecTypes[typeRef]) {
       return true;
     }
@@ -108,7 +110,7 @@ export class SchemaFragment {
     return typeNode ? !!types[typeNameFromAST(typeNode)] : false;
   }
 
-  public isInputType(typeRef: TypeReference): boolean {
+  public isInputType(typeRef: TypeReference | TypeNode): boolean {
     if (typeof typeRef === "number" && EncodedSpecTypes[typeRef]) {
       return true;
     }
@@ -125,18 +127,21 @@ export class SchemaFragment {
   }
 
   public getInputObjectType(
-    typeRef: TypeReference,
+    typeRef: TypeReference | TypeNode,
   ): InputObjectTypeDefinitionTuple | undefined {
-    const type = this.encodedFragment.types[typeRef];
+    const ref = this.toTypeRef(typeRef);
+    const type = this.encodedFragment.types[ref];
     return type?.[0] === TypeKind.INPUT ? type : undefined;
   }
 
   public getLeafTypeResolver(
-    typeRef: TypeReference,
+    typeRef: TypeReference | TypeNode,
   ): GraphQLLeafType | undefined {
     // TODO: consider removing these bits?
     const typeName =
-      typeof typeRef === "number" ? EncodedSpecTypes[typeRef] : typeRef;
+      typeof typeRef === "number"
+        ? EncodedSpecTypes[typeRef]
+        : this.toTypeRef(typeRef);
 
     if (specifiedScalars[typeName]) {
       return specifiedScalars[typeName];
@@ -178,7 +183,7 @@ export class SchemaFragment {
   }
 
   public getLeafType(
-    typeRef: TypeReference,
+    typeRef: TypeReference | TypeNode,
   ): EnumTypeDefinitionTuple | ScalarTypeDefinitionTuple | undefined {
     const typeNode = this.resolveTypeNode(typeRef);
     if (typeNode?.kind !== "NamedType") {
@@ -194,17 +199,17 @@ export class SchemaFragment {
     return type;
   }
 
-  public isNonNullType(typeRef: TypeReference): boolean {
+  public isNonNullType(typeRef: TypeReference | TypeNode): boolean {
     const typeNode = this.resolveTypeNode(typeRef);
     return typeNode?.kind === "NonNullType";
   }
 
-  public isListType(typeRef: TypeReference): boolean {
+  public isListType(typeRef: TypeReference | TypeNode): boolean {
     const typeNode = this.resolveTypeNode(typeRef);
     return typeNode?.kind === "ListType";
   }
 
-  public unwrap(typeRef: TypeReference): TypeReference {
+  public unwrap(typeRef: TypeReference | TypeNode): TypeReference {
     const typeNode = this.resolveTypeNode(typeRef);
     if (typeNode?.kind !== "NonNullType" && typeNode?.kind !== "ListType") {
       const type = this.printTypeRef(typeRef);
@@ -217,10 +222,22 @@ export class SchemaFragment {
     return index === -1 ? printed : index;
   }
 
-  public printTypeRef(typeRef: TypeReference): string {
+  public printTypeRef(typeRef: TypeReference | TypeNode): string {
+    if (typeof typeRef === "object") {
+      return print(typeRef as ASTNode);
+    }
     return typeof typeRef === "number"
       ? EncodedSpecTypes[typeRef] ?? "(UnknownType)"
       : typeRef;
+  }
+
+  public toTypeRef(typeNode: TypeReference | TypeNode): TypeReference {
+    if (typeof typeNode === "object") {
+      const ref = print(typeNode as ASTNode);
+      const index = EncodedSpecTypes.indexOf(ref);
+      return index === -1 ? ref : index;
+    }
+    return typeNode;
   }
 
   public getInputObjectFields(
@@ -241,7 +258,12 @@ export class SchemaFragment {
       : undefined;
   }
 
-  private resolveTypeNode(typeRef: TypeReference): TypeNode | undefined {
+  private resolveTypeNode(
+    typeRef: TypeReference | TypeNode,
+  ): TypeNode | undefined {
+    if (typeof typeRef === "object") {
+      return typeRef;
+    }
     if (typeof typeRef === "number") {
       return SchemaFragment.specTypeNodes[typeRef];
     }

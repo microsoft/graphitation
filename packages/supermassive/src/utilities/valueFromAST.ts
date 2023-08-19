@@ -5,6 +5,7 @@ import type { ObjMap } from "../jsutils/ObjMap";
 import { TypeReference } from "../types/definition";
 import { SchemaFragment } from "../types/schema";
 import { ValueNode, Kind } from "graphql";
+import { TypeNode } from "../supermassive-ast";
 
 /**
  * Produces a JavaScript value given a GraphQL Value AST.
@@ -28,7 +29,7 @@ import { ValueNode, Kind } from "graphql";
  */
 export function valueFromAST(
   valueNode: Maybe<ValueNode>,
-  typeRef: TypeReference,
+  typeRef: TypeReference | TypeNode,
   schemaTypes: SchemaFragment,
   variables?: Maybe<ObjMap<unknown>>,
 ): unknown {
