@@ -31,8 +31,9 @@ import {
 } from "./definition";
 import { TypeNode } from "../supermassive-ast";
 import { typeNameFromAST } from "../utilities/typeNameFromAST";
-import { UserResolvers } from "../types";
+import { ObjectTypeResolver, UserResolvers } from "../types";
 import { isObjectLike } from "../jsutils/isObjectLike";
+import { isInterfaceTypeResolver, isUnionTypeResolver } from "./predicates";
 
 export const specifiedScalars: { [key: string]: GraphQLScalarType } = {
   ID: GraphQLID,
@@ -61,10 +62,6 @@ export class SchemaFragment {
         parseType(name, SchemaFragment.parseOptions),
       );
     }
-  }
-
-  public getFieldTypeRef(field: FieldDefinitionTuple): TypeReference {
-    return field[FieldKeys.type];
   }
 
   public getFieldArguments(
@@ -114,15 +111,48 @@ export class SchemaFragment {
     if (typeof typeRef === "number" && EncodedSpecTypes[typeRef]) {
       return true;
     }
-    const types = this.encodedFragment.types;
     const typeNode = this.resolveTypeNode(typeRef);
     if (!typeNode) {
       return false;
     }
+    const types = this.encodedFragment.types;
     const typeName = typeNameFromAST(typeNode);
     return (
       types[typeName]?.[0] === TypeKind.INPUT ||
       EncodedSpecTypes.includes(typeName)
+    );
+  }
+
+  // TODO: this should probably just accept typeName?
+  public isObjectType(typeRef: TypeReference | TypeNode): boolean {
+    if (typeof typeRef === "number") {
+      return false;
+    }
+    const typeNode = this.resolveTypeNode(typeRef);
+    if (!typeNode) {
+      return false;
+    }
+    const types = this.encodedFragment.types;
+    const typeName = typeNameFromAST(typeNode);
+    return (
+      types[typeName]?.[0] === TypeKind.UNION ||
+      types[typeName]?.[0] === TypeKind.INTERFACE
+    );
+  }
+
+  public isAbstractType(typeRef: TypeReference | TypeNode): boolean {
+    if (typeof typeRef === "number") {
+      return false;
+    }
+    const typeNode = this.resolveTypeNode(typeRef);
+    if (!typeNode) {
+      return false;
+    }
+    const types = this.encodedFragment.types;
+    const typeName = typeNameFromAST(typeNode);
+    return (
+      types[typeName]?.[0] === TypeKind.UNION ||
+      types[typeName]?.[0] === TypeKind.INTERFACE
     );
   }
 
@@ -134,6 +164,21 @@ export class SchemaFragment {
     return type?.[0] === TypeKind.INPUT ? type : undefined;
   }
 
+  public getFieldResolver(typeName: string, fieldName: string) {
+    // TODO: sanity check that this is an object type and it is indeed defined?
+    const typeResolvers = this.resolvers[typeName] as
+      | ObjectTypeResolver<unknown, unknown, unknown>
+      | undefined;
+    return typeResolvers?.[fieldName];
+  }
+
+  public getAbstractTypeResolver(typeName: string) {
+    const resolver = this.resolvers[typeName];
+    return isUnionTypeResolver(resolver) || isInterfaceTypeResolver(resolver)
+      ? resolver.__resolveType
+      : undefined;
+  }
+
   public getLeafTypeResolver(
     typeRef: TypeReference | TypeNode,
   ): GraphQLLeafType | undefined {
@@ -141,7 +186,7 @@ export class SchemaFragment {
     const typeName =
       typeof typeRef === "number"
         ? EncodedSpecTypes[typeRef]
-        : this.toTypeRef(typeRef);
+        : this.getUnwrappedTypeName(typeRef);
 
     if (specifiedScalars[typeName]) {
       return specifiedScalars[typeName];
@@ -238,6 +283,20 @@ export class SchemaFragment {
       return index === -1 ? ref : index;
     }
     return typeNode;
+  }
+
+  public toTypeNode(typeRef: TypeReference | TypeNode): TypeNode {
+    const typeNode = this.resolveTypeNode(typeRef);
+    if (!typeNode) {
+      throw new Error(
+        `Could not resolve type from reference ${this.printTypeRef(typeRef)}`,
+      );
+    }
+    return typeNode;
+  }
+
+  public getUnwrappedTypeName(typeRef: TypeReference | TypeNode): string {
+    return typeNameFromAST(this.toTypeNode(typeRef));
   }
 
   public getInputObjectFields(

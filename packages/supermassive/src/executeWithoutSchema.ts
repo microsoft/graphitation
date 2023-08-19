@@ -5,7 +5,6 @@ import {
   GraphQLInputObjectType,
   GraphQLLeafType,
   GraphQLScalarType,
-  isLeafType,
   Kind,
   locatedError,
 } from "graphql";
@@ -18,8 +17,6 @@ import {
   OperationTypeDefinitionNode,
   OperationTypeNode,
   TypeNode,
-  SchemaFacade,
-  createSchemaFacade,
 } from "./supermassive-ast";
 import {
   collectFields,
@@ -40,18 +37,12 @@ import { addPath, pathToArray } from "./jsutils/Path";
 import { promiseForObject } from "./jsutils/promiseForObject";
 import type { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import { promiseReduce } from "./jsutils/promiseReduce";
-import { isUnionResolverType, isInterfaceResolverType } from "./definition";
-import { mergeResolvers } from "./utilities/mergeResolvers";
 import {
   ExecutionWithoutSchemaArgs,
   FunctionFieldResolver,
-  InterfaceTypeResolver,
-  ObjectTypeResolver,
   ResolveInfo,
   Resolver,
-  Resolvers,
   TypeResolver,
-  UnionTypeResolver,
   ExecutionResult,
   FieldResolverObject,
   TotalExecutionResult,
@@ -60,11 +51,9 @@ import {
   IncrementalResult,
   IncrementalStreamResult,
 } from "./types";
-import { typeNameFromAST } from "./utilities/typeNameFromAST";
 import {
   getArgumentValues,
   getVariableValues,
-  specifiedScalars,
   getDirectiveValues,
 } from "./values";
 import { ExecutionHooks } from "./hooks/types";
@@ -73,6 +62,8 @@ import { isAsyncIterable } from "./jsutils/isAsyncIterable";
 import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
 import { GraphQLStreamDirective } from "./directives";
 import { memoize3 } from "./jsutils/memoize3";
+import { SchemaFragment } from "./types/schema";
+import { FieldDefinitionTuple, TypeKind } from "./types/definition";
 
 /**
  * A memoized collection of relevant subfields with regard to the return
@@ -115,9 +106,7 @@ const collectSubfields = memoize3(
  * and the fragments defined in the query document
  */
 export interface ExecutionContext {
-  resolvers: Resolvers;
-  // schemaTypes: Map<string, TypeDefinitionNode>;
-  schemaTypes: SchemaFacade;
+  schemaTypes: SchemaFragment;
   fragments: ObjMap<FragmentDefinitionNode>;
   rootValue: unknown;
   contextValue: unknown;
@@ -150,7 +139,7 @@ export function executeWithoutSchema(
   const exeContext = buildExecutionContext(args);
 
   // Return early errors if execution context failed.
-  if (!("resolvers" in exeContext)) {
+  if (!("schemaTypes" in exeContext)) {
     return { errors: exeContext };
   } else {
     return executeOperation(exeContext);
@@ -189,8 +178,7 @@ function buildExecutionContext(
 ): Array<GraphQLError> | ExecutionContext {
   const {
     resolvers,
-    schemaResolvers,
-    // schemaFragment,
+    schemaFragment,
     document,
     rootValue,
     contextValue,
@@ -204,10 +192,6 @@ function buildExecutionContext(
   } = args;
 
   assertValidExecutionArguments(document, variableValues);
-
-  const combinedResolvers = schemaResolvers
-    ? mergeResolvers(resolvers, schemaResolvers)
-    : (resolvers as Resolvers);
 
   let operation: OperationDefinitionNode | undefined;
   const fragments: ObjMap<FragmentDefinitionNode> = Object.create(null);
@@ -242,9 +226,10 @@ function buildExecutionContext(
 
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
   const variableDefinitions = operation.variableDefinitions ?? [];
+  const schemaTypes = new SchemaFragment(schemaFragment, resolvers);
 
   const coercedVariableValues = getVariableValues(
-    combinedResolvers,
+    schemaTypes,
     variableDefinitions,
     variableValues ?? {},
     { maxErrors: 50 },
@@ -254,8 +239,6 @@ function buildExecutionContext(
     return coercedVariableValues.errors;
   }
 
-  const schemaTypes = createSchemaFacade({ types: [] });
-
   // const schemaTypes: Map<string, TypeDefinitionNode> = (
   //   schemaFragment || []
   // ).reduce((map, next) => {
@@ -264,8 +247,7 @@ function buildExecutionContext(
   // }, new Map() as Map<string, TypeDefinitionNode>);
 
   return {
-    resolvers: combinedResolvers,
-    schemaTypes,
+    schemaTypes: schemaTypes,
     fragments,
     rootValue,
     contextValue: buildContextValue
@@ -496,10 +478,12 @@ function executeField(
   incrementalDataRecord: IncrementalDataRecord | undefined,
 ): PromiseOrValue<unknown> {
   const fieldName = fieldGroup[0].name.value;
+  const schemaTypes = exeContext.schemaTypes;
 
   let resolveFn;
   let returnTypeName: string;
   let returnTypeNode: TypeNode | undefined;
+  let fieldDefinition: FieldDefinitionTuple | undefined;
   if (fieldName === "__typename" && !resolveFn) {
     resolveFn = () => parentTypeName;
     returnTypeName = "String";
@@ -510,27 +494,23 @@ function executeField(
         value: "String",
       },
     };
+    fieldDefinition = [TypeKind.SCALAR];
   } else {
-    if (fieldGroup[0].__type) {
-      returnTypeNode = fieldGroup[0].__type;
-      returnTypeName = typeNameFromAST(returnTypeNode);
-    } else {
-      returnTypeNode = exeContext.schemaTypes.returnTypeNode(
-        parentTypeName,
-        fieldName,
+    fieldDefinition = schemaTypes.getObjectField(parentTypeName, fieldName);
+
+    const fieldReturnTypeRef = fieldDefinition
+      ? schemaTypes.getTypeRef(fieldDefinition)
+      : undefined;
+
+    if (!fieldDefinition || !fieldReturnTypeRef) {
+      throw locatedError(
+        `Could not find definition for field "${fieldName}" of type "${parentTypeName}"`,
+        fieldGroup as ReadonlyArray<GraphQLASTNode>,
       );
-      if (!returnTypeNode) {
-        throw locatedError(
-          `Could not find definition for field "${fieldName}" of type "${parentTypeName}"`,
-          fieldGroup as ReadonlyArray<GraphQLASTNode>,
-        );
-      }
-      returnTypeName = typeNameFromAST(returnTypeNode);
     }
-    const typeResolvers = exeContext.resolvers[parentTypeName];
-    resolveFn = (
-      typeResolvers as ObjectTypeResolver<unknown, unknown, unknown> | undefined
-    )?.[fieldName];
+    returnTypeNode = schemaTypes.toTypeNode(fieldReturnTypeRef);
+    returnTypeName = schemaTypes.getUnwrappedTypeName(returnTypeNode);
+    resolveFn = schemaTypes.getFieldResolver(parentTypeName, fieldName);
 
     if (typeof resolveFn !== "function" && resolveFn != null) {
       resolveFn = resolveFn.resolve;
@@ -556,6 +536,7 @@ function executeField(
     exeContext,
     parentTypeName,
     returnTypeNode,
+    fieldDefinition,
     fieldGroup,
     info,
     path,
@@ -612,7 +593,7 @@ function createSourceEventStream(
 function executeSubscriptionImpl(
   exeContext: ExecutionContext,
 ): PromiseOrValue<AsyncIterable<unknown>> {
-  const { operation, rootValue } = exeContext;
+  const { operation, rootValue, schemaTypes } = exeContext;
   const typeName = getOperationRootTypeName(operation);
   const { groupedFieldSet } = collectFields(exeContext, typeName);
 
@@ -623,6 +604,7 @@ function executeSubscriptionImpl(
   let resolveFn;
   let returnTypeName: string;
   let returnTypeNode: TypeNode;
+  let fieldDefinition;
   if (fieldName === "__typename" && !resolveFn) {
     resolveFn = () => typeName;
     returnTypeName = "String";
@@ -634,14 +616,23 @@ function executeSubscriptionImpl(
       },
     };
   } else {
-    returnTypeNode = fieldGroup[0].__type as TypeNode;
-    returnTypeName = typeNameFromAST(returnTypeNode);
-    const typeResolvers = exeContext.resolvers[typeName] as
-      | ObjectTypeResolver<unknown, unknown, unknown>
-      | undefined;
-    const fieldResolver = typeResolvers?.[fieldName] as
+    fieldDefinition = schemaTypes.getObjectField(typeName, fieldName);
+    const fieldReturnTypeRef = fieldDefinition
+      ? schemaTypes.getTypeRef(fieldDefinition)
+      : undefined;
+    const fieldResolver = schemaTypes.getFieldResolver(typeName, fieldName) as
       | FieldResolverObject<unknown, unknown, unknown, unknown>
       | undefined;
+
+    if (!fieldReturnTypeRef) {
+      throw locatedError(
+        `Could not find definition for field "${fieldName}" of type "${typeName}"`,
+        fieldGroup as ReadonlyArray<GraphQLASTNode>,
+      );
+    }
+
+    returnTypeNode = schemaTypes.toTypeNode(fieldReturnTypeRef);
+    returnTypeName = schemaTypes.getUnwrappedTypeName(returnTypeNode);
     resolveFn = fieldResolver?.subscribe;
   }
 
@@ -666,7 +657,13 @@ function executeSubscriptionImpl(
 
     // Build a JS object of arguments from the field.arguments AST, using the
     // variables scope to fulfill any variable references.
-    const args = getArgumentValues(exeContext, fieldGroup[0], typeName);
+    const args = fieldDefinition
+      ? getArgumentValues(
+          exeContext,
+          schemaTypes.getFieldArguments(fieldDefinition) ?? {},
+          fieldGroup[0],
+        )
+      : {};
 
     // The resolve function's optional third argument is a context value that
     // is provided to every resolve function within an execution. It is commonly
@@ -827,6 +824,7 @@ function resolveAndCompleteField(
   exeContext: ExecutionContext,
   parentTypeName: string,
   returnTypeNode: TypeNode,
+  fieldDefinition: FieldDefinitionTuple,
   fieldGroup: FieldGroup,
   info: ResolveInfo,
   path: Path,
@@ -846,7 +844,9 @@ function resolveAndCompleteField(
     // Build a JS object of arguments from the field.arguments AST, using the
     // variables scope to fulfill any variable references.
     // TODO: find a way to memoize, in case this field is within a List type.
-    const args = getArgumentValues(exeContext, fieldGroup[0], parentTypeName);
+    const schemaArgNames =
+      exeContext.schemaTypes.getFieldArguments(fieldDefinition) ?? {};
+    const args = getArgumentValues(exeContext, schemaArgNames, fieldGroup[0]);
 
     // The resolve function's optional third argument is a context value that
     // is provided to every resolve function within an execution. It is commonly
@@ -993,7 +993,7 @@ function resolveAndCompleteField(
  */
 function completeValue(
   exeContext: ExecutionContext,
-  returnTypeNode: TypeNode,
+  returnTypeNode: TypeNode, // TODO: TypeReference here may be faster, consider removing TypeNode usages ?
   fieldGroup: FieldGroup,
   info: ResolveInfo,
   path: Path,
@@ -1043,29 +1043,22 @@ function completeValue(
     );
   }
 
+  const schemaTypes = exeContext.schemaTypes;
   const returnTypeName = returnTypeNode.name.value;
-  let returnType: Resolver<unknown, unknown> =
-    exeContext.resolvers[returnTypeName];
-  if (!returnType) {
-    returnType = specifiedScalars[returnTypeName];
-  }
 
   // If field type is a leaf type, Scalar or Enum, serialize to a valid value,
   // returning null if serialization is not possible.
-  if (isLeafType(returnType)) {
-    return completeLeafValue(returnType, result);
-  }
-
-  if (returnType instanceof GraphQLInputObjectType) {
-    // todo
+  const leafType = schemaTypes.getLeafTypeResolver(returnTypeNode);
+  if (leafType) {
+    return completeLeafValue(leafType, result);
   }
 
   // If field type is an abstract type, Interface or Union, determine the
   // runtime Object type and complete for that type.
-  if (isUnionResolverType(returnType) || isInterfaceResolverType(returnType)) {
+  if (schemaTypes.isAbstractType(returnTypeNode)) {
     return completeAbstractValue(
       exeContext,
-      returnType,
+      returnTypeName,
       fieldGroup,
       info,
       path,
@@ -1076,7 +1069,7 @@ function completeValue(
 
   // If field type is Object, execute and complete all sub-selections.
   // istanbul ignore else (See: 'https://github.com/graphql/graphql-js/issues/2618')
-  if (typeof returnType === "object") {
+  if (schemaTypes.isObjectType(returnTypeNode)) {
     return completeObjectValue(
       exeContext,
       returnTypeName,
@@ -1090,7 +1083,8 @@ function completeValue(
   // istanbul ignore next (Not reachable. All possible output types have been considered)
   invariant(
     false,
-    "Cannot complete value of unexpected output type: " + inspect(returnType),
+    "Cannot complete value of unexpected output type: " +
+      schemaTypes.printTypeRef(returnTypeNode),
   );
 }
 
@@ -1455,14 +1449,16 @@ function completeLeafValue(
  */
 function completeAbstractValue(
   exeContext: ExecutionContext,
-  returnType: UnionTypeResolver | InterfaceTypeResolver,
+  returnTypeName: string,
   fieldGroup: FieldGroup,
   info: ResolveInfo,
   path: Path,
   result: unknown,
   incrementalDataRecord: IncrementalDataRecord | undefined,
 ): PromiseOrValue<ObjMap<unknown>> {
-  const resolveTypeFn = returnType.__resolveType ?? exeContext.typeResolver;
+  const resolveTypeFn =
+    exeContext.schemaTypes.getAbstractTypeResolver(returnTypeName) ??
+    exeContext.typeResolver;
   const contextValue = exeContext.contextValue;
   const runtimeTypeName = resolveTypeFn(result, contextValue, info);
 
@@ -1498,6 +1494,7 @@ function ensureValidRuntimeType(
       `Could not determine runtime type for abstract type ${runtimeTypeName}`,
     );
   }
+  // TODO
 
   const runtimeType: Resolver<unknown, unknown> =
     exeContext.resolvers[runtimeTypeName];

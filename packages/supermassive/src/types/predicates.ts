@@ -1,14 +1,17 @@
-import { Resolver, UnionTypeResolver, InterfaceTypeResolver } from "../types";
-import { TypeNode } from "../supermassive-ast";
+import {
+  Resolver,
+  UserUnionTypeResolver,
+  UserInterfaceTypeResolver,
+} from "../types";
 
-export function isInterfaceResolverType(
+export function isInterfaceTypeResolver(
   resolver: Resolver<unknown, unknown>,
-): resolver is InterfaceTypeResolver {
-  return "__implementedBy" in resolver && "__resolveType" in resolver;
+): resolver is UserInterfaceTypeResolver {
+  return "__resolveType" in resolver;
 }
 
-export function isUnionResolverType(
+export function isUnionTypeResolver(
   resolver: Resolver<unknown, unknown>,
-): resolver is UnionTypeResolver {
-  return "__types" in resolver && "__resolveType" in resolver;
+): resolver is UserUnionTypeResolver {
+  return resolver && "__resolveType" in resolver;
 }

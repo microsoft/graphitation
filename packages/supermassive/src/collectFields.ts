@@ -15,8 +15,8 @@ import {
 } from "./directives";
 import { typeNameFromAST } from "./utilities/typeNameFromAST";
 import {
-  isUnionResolverType,
-  isInterfaceResolverType,
+  isUnionTypeResolver,
+  isInterfaceTypeResolver,
 } from "./types/predicates";
 
 import { Resolvers } from "./types";
@@ -286,7 +286,7 @@ function getSubTypes(
   conditionalType: string,
 ): Set<string> {
   const resolver = resolvers[conditionalType];
-  if (isInterfaceResolverType(resolver)) {
+  if (isInterfaceTypeResolver(resolver)) {
     const result = resolver.__implementedBy.reduce(
       (acc: string[], item: string) => {
         if (!abstractTypes.has(item)) {
@@ -302,7 +302,7 @@ function getSubTypes(
     return new Set([...result]);
   }
 
-  if (isUnionResolverType(resolver)) {
+  if (isUnionTypeResolver(resolver)) {
     const result = resolver.__types.reduce((acc: string[], item: string) => {
       if (!abstractTypes.has(item)) {
         const newTypes = new Set([...abstractTypes, item]);

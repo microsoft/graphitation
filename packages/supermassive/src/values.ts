@@ -161,7 +161,7 @@ function coerceVariableValues(
  */
 export function getArgumentValues(
   exeContext: ExecutionContext,
-  argumentDefs: Record<string, InputValueDefinitionTuple>,
+  argumentDefs: Record<string, InputValueDefinitionTuple>, // FIXME: FieldDefinitionTuple | DirectiveDefinitionTuple
   node: FieldNode | DirectiveNode,
 ): { [argument: string]: unknown } {
   const schemaTypes = exeContext.schemaTypes;

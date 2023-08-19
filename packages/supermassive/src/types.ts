@@ -3,7 +3,6 @@ import {
   GraphQLFormattedError,
   GraphQLInputObjectType,
   GraphQLScalarType,
-  TypeDefinitionNode,
   DocumentNode as UntypedDocumentNode,
 } from "graphql";
 import { Maybe } from "./jsutils/Maybe";
@@ -18,6 +17,7 @@ import { ObjMap } from "./jsutils/ObjMap";
 import { Path } from "./jsutils/Path";
 import { ExecutionHooks } from "./hooks/types";
 import { FieldGroup } from "./collectFields";
+import { EncodedSchemaFragment } from "./types/definition";
 
 export type ScalarTypeResolver = GraphQLScalarType;
 export type EnumTypeResolver = Record<string, unknown>;
@@ -66,28 +66,7 @@ export type ObjectTypeResolver<
   [key: string]: FieldResolver<TSource, TContext, TArgs>;
 };
 
-export type InterfaceTypeResolver<
-  TSource = unknown,
-  TContext = unknown,
-  TArgs = unknown,
-> = {
-  __implementedBy: string[];
-  [key: string]: FieldResolver<TSource, TContext, TArgs> | string[] | undefined;
-} & {
-  __resolveType?: TypeResolver<unknown, unknown>;
-};
-export type UnionTypeResolver = {
-  __resolveType?: TypeResolver<unknown, unknown>;
-  __types: string[];
-};
-
-export type UserInterfaceTypeResolver<
-  TSource = unknown,
-  TContext = unknown,
-  TArgs = unknown,
-> = {
-  [key: string]: FieldResolver<TSource, TContext, TArgs>;
-} & {
+export type UserInterfaceTypeResolver = {
   __resolveType?: TypeResolver<unknown, unknown>;
 };
 
@@ -99,7 +78,7 @@ export type InputObjectTypeResolver = GraphQLInputObjectType;
 
 export type UserResolver<TSource, TContext> =
   | ObjectTypeResolver<TSource, TContext>
-  | UserInterfaceTypeResolver<TSource, TContext>
+  | UserInterfaceTypeResolver
   | UserUnionTypeResolver
   | ScalarTypeResolver
   | EnumTypeResolver;
@@ -287,8 +266,7 @@ export interface CommonExecutionArgs {
 }
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
   document: DocumentNode;
-  schemaResolvers?: Resolvers;
-  schemaFragment?: TypeDefinitionNode[];
+  schemaFragment: EncodedSchemaFragment; // FIXME: should be an array of fragments to be merged?
 };
 
 export type ExecutionWithSchemaArgs = CommonExecutionArgs & {
