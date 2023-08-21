@@ -3,15 +3,12 @@ import {
   GraphQLFormattedError,
   GraphQLInputObjectType,
   GraphQLScalarType,
-  DocumentNode as UntypedDocumentNode,
-} from "graphql";
-import { Maybe } from "./jsutils/Maybe";
-import { PromiseOrValue } from "./jsutils/PromiseOrValue";
-import {
   DocumentNode,
   FragmentDefinitionNode,
   OperationDefinitionNode,
-} from "./supermassive-ast";
+} from "graphql";
+import { Maybe } from "./jsutils/Maybe";
+import { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import { ObjMap } from "./jsutils/ObjMap";
 import { Path } from "./jsutils/Path";
 import { ExecutionHooks } from "./hooks/types";
@@ -268,8 +265,8 @@ export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
 };
 
 export type ExecutionWithSchemaArgs = CommonExecutionArgs & {
-  document: UntypedDocumentNode;
-  typeDefs: UntypedDocumentNode;
+  document: DocumentNode;
+  typeDefs: DocumentNode;
 };
 
 export function isIncrementalExecutionResult<

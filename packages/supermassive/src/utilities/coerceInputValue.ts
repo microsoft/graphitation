@@ -1,13 +1,13 @@
 import { GraphQLError } from "graphql";
-import { didYouMean } from "../jsutils/didYouMean.js";
-import { inspect } from "../jsutils/inspect.js";
-import { invariant } from "../jsutils/invariant.js";
-import { isIterableObject } from "../jsutils/isIterableObject.js";
-import { isObjectLike } from "../jsutils/isObjectLike.js";
-import type { Path } from "../jsutils/Path.js";
-import { addPath, pathToArray } from "../jsutils/Path.js";
-import { printPathArray } from "../jsutils/printPathArray.js";
-import { suggestionList } from "../jsutils/suggestionList.js";
+import { didYouMean } from "../jsutils/didYouMean";
+import { inspect } from "../jsutils/inspect";
+import { invariant } from "../jsutils/invariant";
+import { isIterableObject } from "../jsutils/isIterableObject";
+import { isObjectLike } from "../jsutils/isObjectLike";
+import type { Path } from "../jsutils/Path";
+import { addPath, pathToArray } from "../jsutils/Path";
+import { printPathArray } from "../jsutils/printPathArray";
+import { suggestionList } from "../jsutils/suggestionList";
 import { TypeReference } from "../types/definition";
 import { SchemaFragment } from "../types/schema";
 import {

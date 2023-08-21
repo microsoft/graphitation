@@ -20,6 +20,10 @@ import {
   DirectiveDefinitionTuple,
   DirectiveKeys,
   InterfaceKeys,
+  UnionTypeDefinitionTuple,
+  UnionKeys,
+  InterfaceTypeDefinitionTuple,
+  TypeName,
 } from "./definition";
 import {
   FunctionFieldResolver,
@@ -61,7 +65,7 @@ export class SchemaFragment {
   }
 
   public getObjectType(
-    typeName: string,
+    typeName: TypeName,
   ): ObjectTypeDefinitionTuple | undefined {
     const type = this.encodedFragment.types[typeName];
     return type?.[0] === TypeKind.OBJECT ? type : undefined;
@@ -74,7 +78,7 @@ export class SchemaFragment {
   }
 
   public getField(
-    typeName: string,
+    typeName: TypeName,
     fieldName: string,
   ): FieldDefinitionTuple | undefined {
     const type = this.encodedFragment.types[typeName];
@@ -189,8 +193,43 @@ export class SchemaFragment {
     return type?.[0] === TypeKind.UNION || type?.[0] === TypeKind.INTERFACE;
   }
 
+  public getUnionType(
+    typeRef: TypeReference,
+  ): UnionTypeDefinitionTuple | undefined {
+    const types = this.encodedFragment.types;
+    const type = types[typeRef] ?? types[typeNameFromReference(typeRef)];
+    return type?.[0] === TypeKind.UNION ? type : undefined;
+  }
+
+  public getInterfaceType(
+    typeRef: TypeReference,
+  ): InterfaceTypeDefinitionTuple | undefined {
+    const types = this.encodedFragment.types;
+    const type = types[typeRef] ?? types[typeNameFromReference(typeRef)];
+    return type?.[0] === TypeKind.INTERFACE ? type : undefined;
+  }
+
+  public isSubType(
+    abstractTypeName: TypeName,
+    maybeSubTypeName: TypeName,
+  ): boolean {
+    const union = this.getUnionType(abstractTypeName);
+    if (union) {
+      return union[UnionKeys.types].includes(maybeSubTypeName);
+    }
+    const object = this.getObjectType(maybeSubTypeName);
+    if (object) {
+      return !!object[ObjectKeys.interfaces]?.includes(abstractTypeName);
+    }
+    const iface = this.getInterfaceType(maybeSubTypeName);
+    if (iface) {
+      return !!iface[InterfaceKeys.interfaces]?.includes(abstractTypeName);
+    }
+    return false;
+  }
+
   public getFieldResolver(
-    typeName: string,
+    typeName: TypeName,
     fieldName: string,
   ): FunctionFieldResolver<unknown, unknown> | undefined {
     // TODO: sanity check that this is an object type resolver
@@ -204,7 +243,7 @@ export class SchemaFragment {
   }
 
   public getSubscriptionFieldResolver(
-    subscriptionTypeName: string,
+    subscriptionTypeName: TypeName,
     fieldName: string,
   ): FunctionFieldResolver<unknown, unknown> | undefined {
     // TODO: sanity check that this is an object type resolver
@@ -217,7 +256,7 @@ export class SchemaFragment {
       : fieldResolver?.subscribe;
   }
 
-  public getAbstractTypeResolver(typeName: string) {
+  public getAbstractTypeResolver(typeName: TypeName) {
     const resolver = this.resolvers[typeName];
     return isUnionTypeResolver(resolver) || isInterfaceTypeResolver(resolver)
       ? resolver.__resolveType

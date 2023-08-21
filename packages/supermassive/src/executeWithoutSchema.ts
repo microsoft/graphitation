@@ -1,18 +1,14 @@
 import {
-  ASTNode as GraphQLASTNode,
   GraphQLError,
   GraphQLLeafType,
   Kind,
   locatedError,
-} from "graphql";
-
-import {
   DocumentNode,
   FragmentDefinitionNode,
   OperationDefinitionNode,
   OperationTypeDefinitionNode,
   OperationTypeNode,
-} from "./supermassive-ast";
+} from "graphql";
 import {
   collectFields,
   collectSubfields as _collectSubfields,
@@ -608,21 +604,13 @@ function executeSubscriptionImpl(
 
     if (isPromise(result)) {
       return result.then(assertEventStream).then(undefined, (error) => {
-        throw locatedError(
-          error,
-          fieldGroup as ReadonlyArray<GraphQLASTNode>,
-          pathToArray(path),
-        );
+        throw locatedError(error, fieldGroup, pathToArray(path));
       });
     }
 
     return assertEventStream(result);
   } catch (error) {
-    throw locatedError(
-      error,
-      fieldGroup as ReadonlyArray<GraphQLASTNode>,
-      pathToArray(path),
-    );
+    throw locatedError(error, fieldGroup, pathToArray(path));
   }
 }
 
@@ -731,11 +719,7 @@ function handleFieldError(
   path: Path,
   incrementalDataRecord: IncrementalDataRecord | undefined,
 ): void {
-  const error = locatedError(
-    rawError,
-    fieldGroup as ReadonlyArray<GraphQLASTNode>,
-    pathToArray(path),
-  );
+  const error = locatedError(rawError, fieldGroup, pathToArray(path));
 
   // If the field type is non-nullable, then it is resolved without any
   // protection from errors, however it still properly locates the error.
@@ -835,11 +819,7 @@ function resolveAndCompleteField(
           return resolved;
         },
         (rawError) => {
-          const error = locatedError(
-            rawError,
-            fieldGroup as ReadonlyArray<GraphQLASTNode>,
-            pathToArray(path),
-          );
+          const error = locatedError(rawError, fieldGroup, pathToArray(path));
           if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
             invokeAfterFieldCompleteHook(info, exeContext, undefined, error);
           }
@@ -861,11 +841,7 @@ function resolveAndCompleteField(
     return completed;
   } catch (rawError) {
     const pathArray = pathToArray(path);
-    const error = locatedError(
-      rawError,
-      fieldGroup as ReadonlyArray<GraphQLASTNode>,
-      pathArray,
-    );
+    const error = locatedError(rawError, fieldGroup, pathArray);
     // Do not invoke afterFieldResolve hook when error path and current field path are not equal:
     // it means that field itself resolved fine (so afterFieldResolve has been invoked already),
     // but non-nullable child field resolving throws an error,
@@ -1322,11 +1298,7 @@ async function completeAsyncIteratorValue(
         break;
       }
     } catch (rawError) {
-      throw locatedError(
-        rawError,
-        fieldGroup as ReadonlyArray<GraphQLASTNode>,
-        pathToArray(path),
-      );
+      throw locatedError(rawError, fieldGroup, pathToArray(path));
     }
 
     if (
@@ -1857,11 +1829,7 @@ async function executeStreamAsyncIteratorItem(
     }
     item = value;
   } catch (rawError) {
-    throw locatedError(
-      rawError,
-      fieldGroup as ReadonlyArray<GraphQLASTNode>,
-      pathToArray(path),
-    );
+    throw locatedError(rawError, fieldGroup, pathToArray(path));
   }
   let completedItem;
   try {

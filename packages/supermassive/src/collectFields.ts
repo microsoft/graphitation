@@ -1,29 +1,23 @@
-import { Kind } from "graphql";
 import {
-  // FieldNode,
+  Kind,
+  FieldNode,
   FragmentDefinitionNode,
   FragmentSpreadNode,
   InlineFragmentNode,
   SelectionNode,
   SelectionSetNode,
-} from "./supermassive-ast";
+} from "graphql";
 import { getDirectiveValues } from "./values";
 import {
   GraphQLSkipDirective,
   GraphQLIncludeDirective,
   GraphQLDeferDirective,
 } from "./directives";
-import { typeNameFromAST } from "./utilities/typeNameFromAST";
-import {
-  isUnionTypeResolver,
-  isInterfaceTypeResolver,
-} from "./types/predicates";
-
-import { Resolvers } from "./types";
 
 import { AccumulatorMap } from "./jsutils/AccumulatorMap";
 import invariant from "invariant";
 import { ExecutionContext } from "./executeWithoutSchema";
+import { SchemaFragment } from "./types/schema";
 
 export type FieldGroup = ReadonlyArray<FieldNode>;
 
@@ -130,7 +124,7 @@ function collectFieldsImpl(
           !doesFragmentConditionMatch(
             selection,
             runtimeTypeName,
-            exeContext.resolvers,
+            exeContext.schemaTypes,
           )
         ) {
           continue;
@@ -182,7 +176,7 @@ function collectFieldsImpl(
           !doesFragmentConditionMatch(
             fragment,
             runtimeTypeName,
-            exeContext.resolvers,
+            exeContext.schemaTypes,
           )
         ) {
           continue;
@@ -234,21 +228,12 @@ function shouldIncludeNode(
     return true;
   }
 
-  const skip = getDirectiveValues(
-    GraphQLSkipDirective,
-    node as SelectionNode,
-    exeContext,
-  );
+  const skip = getDirectiveValues(exeContext, GraphQLSkipDirective, node);
   if (skip?.if === true) {
     return false;
   }
 
-  const include = getDirectiveValues(
-    GraphQLIncludeDirective,
-    node as SelectionNode,
-    exeContext,
-  );
-
+  const include = getDirectiveValues(exeContext, GraphQLIncludeDirective, node);
   if (include?.if === false) {
     return false;
   }
@@ -262,60 +247,23 @@ function shouldIncludeNode(
 function doesFragmentConditionMatch(
   fragment: FragmentDefinitionNode | InlineFragmentNode,
   typeName: string,
-  resolvers: Resolvers,
+  // resolvers: Resolvers,
+  schemaFragment: SchemaFragment,
 ): boolean {
   const typeConditionNode = fragment.typeCondition;
   if (!typeConditionNode) {
     return true;
   }
 
-  const conditionalType = typeNameFromAST(typeConditionNode);
+  const conditionalTypeName = typeConditionNode.name.value;
 
-  if (conditionalType === typeName) {
+  if (conditionalTypeName === typeName) {
     return true;
   }
-
-  const subTypes = getSubTypes(resolvers, new Set(), conditionalType);
-
-  return subTypes.has(typeName);
-}
-
-function getSubTypes(
-  resolvers: Resolvers,
-  abstractTypes: Set<string>,
-  conditionalType: string,
-): Set<string> {
-  const resolver = resolvers[conditionalType];
-  if (isInterfaceTypeResolver(resolver)) {
-    const result = resolver.__implementedBy.reduce(
-      (acc: string[], item: string) => {
-        if (!abstractTypes.has(item)) {
-          const newTypes = new Set([...abstractTypes, item]);
-
-          acc.push(...abstractTypes, ...getSubTypes(resolvers, newTypes, item));
-        }
-        return acc;
-      },
-      [],
-    );
-
-    return new Set([...result]);
+  if (schemaFragment.isAbstractType(conditionalTypeName)) {
+    return schemaFragment.isSubType(conditionalTypeName, typeName);
   }
-
-  if (isUnionTypeResolver(resolver)) {
-    const result = resolver.__types.reduce((acc: string[], item: string) => {
-      if (!abstractTypes.has(item)) {
-        const newTypes = new Set([...abstractTypes, item]);
-
-        acc.push(...abstractTypes, ...getSubTypes(resolvers, newTypes, item));
-      }
-      return acc;
-    }, []);
-
-    return new Set([...result]);
-  }
-
-  return abstractTypes;
+  return false;
 }
 
 /**
@@ -334,7 +282,7 @@ function getDeferValues(
   exeContext: ExecutionContext,
   node: FragmentSpreadNode | InlineFragmentNode,
 ): undefined | { label: string | undefined } {
-  const defer = getDirectiveValues(GraphQLDeferDirective, node, exeContext);
+  const defer = getDirectiveValues(exeContext, GraphQLDeferDirective, node);
 
   if (!defer) {
     return;

@@ -2,19 +2,12 @@ import {
   GraphQLError,
   Kind,
   print,
-  TypeNode as GraphQLTypeNode,
-  ValueNode as GraphQLValueNode,
-  VariableDefinitionNode as GraphQLVariableDefinitionNode,
   locatedError,
-  ASTNode,
-} from "graphql";
-import {
   DirectiveNode,
   FieldNode,
   VariableDefinitionNode,
-} from "./supermassive-ast";
+} from "graphql";
 import { inspect } from "./jsutils/inspect";
-import type { Maybe } from "./jsutils/Maybe";
 import { printPathArray } from "./jsutils/printPathArray";
 import { ExecutionContext } from "./executeWithoutSchema";
 import {
@@ -96,7 +89,7 @@ function coerceVariableValues(
       onError(
         new GraphQLError(
           `Variable "$${varName}" expected value of type "${varTypeStr}" which cannot be used as an input type.`,
-          { nodes: varDefNode.type as GraphQLTypeNode },
+          { nodes: varDefNode.type },
         ),
       );
       continue;
@@ -105,7 +98,7 @@ function coerceVariableValues(
     if (!hasOwnProperty(inputs, varName)) {
       if (varDefNode.defaultValue) {
         coercedValues[varName] = valueFromAST(
-          varDefNode.defaultValue as Maybe<GraphQLValueNode>,
+          varDefNode.defaultValue,
           varTypeReference,
           schemaTypes,
         );
@@ -114,7 +107,7 @@ function coerceVariableValues(
         onError(
           new GraphQLError(
             `Variable "$${varName}" of required type "${varTypeStr}" was not provided.`,
-            { nodes: varDefNode as GraphQLVariableDefinitionNode },
+            { nodes: varDefNode },
           ),
         );
       }
@@ -127,7 +120,7 @@ function coerceVariableValues(
       onError(
         new GraphQLError(
           `Variable "$${varName}" of non-null type "${varTypeStr}" must not be null.`,
-          { nodes: varDefNode as GraphQLVariableDefinitionNode },
+          { nodes: varDefNode },
         ),
       );
       continue;
@@ -145,7 +138,7 @@ function coerceVariableValues(
         }
         onError(
           new GraphQLError(prefix + "; " + error.message, {
-            nodes: varDefNode as GraphQLVariableDefinitionNode,
+            nodes: varDefNode,
             originalError: error.originalError,
           }),
         );
@@ -193,7 +186,7 @@ export function getArgumentValues(
         const type = inspectTypeReference(argumentTypeRef);
         throw locatedError(
           `Argument "${name}" of required type "${type}" was not provided.`,
-          [node] as ASTNode[],
+          [node],
         );
       }
       continue;
@@ -202,7 +195,7 @@ export function getArgumentValues(
     if (!schemaTypes.isDefined(argumentTypeRef)) {
       throw locatedError(
         `Could not find type for argument ${name} in ${node.kind} ${node.name.value}`,
-        [argumentNode] as ASTNode[],
+        [argumentNode],
       );
     }
 
@@ -210,7 +203,7 @@ export function getArgumentValues(
     //   const type = schemaTypes.printTypeRef(argumentTypeRef);
     //   throw locatedError(
     //     `Argument "$${name}" expected value of type "${type}" which cannot be used as an input type.`,
-    //     [argumentNode] as ASTNode[],
+    //     [argumentNode],
     //   );
     // }
 
@@ -230,7 +223,7 @@ export function getArgumentValues(
           throw locatedError(
             `Argument "${name}" of required type "${type}" ` +
               `was provided the variable "$${variableName}" which was not provided a runtime value.`,
-            [valueNode] as ASTNode[],
+            [valueNode],
           );
         }
         continue;
@@ -242,12 +235,12 @@ export function getArgumentValues(
       const type = inspectTypeReference(argumentTypeRef);
       throw locatedError(
         `Argument "${name}" of non-null type "${type}" must not be null."`,
-        [valueNode] as ASTNode[],
+        [valueNode],
       );
     }
 
     const coercedValue = valueFromAST(
-      valueNode as GraphQLValueNode,
+      valueNode,
       argumentTypeRef,
       schemaTypes,
       exeContext.variableValues,
@@ -257,10 +250,8 @@ export function getArgumentValues(
       // execution. This is a runtime check to ensure execution does not
       // continue with an invalid argument value.
       throw new GraphQLError(
-        `Argument "${name}" has invalid value ${print(
-          valueNode as GraphQLValueNode,
-        )}.`,
-        { nodes: valueNode as GraphQLValueNode },
+        `Argument "${name}" has invalid value ${print(valueNode)}.`,
+        { nodes: valueNode },
       );
     }
     coercedValues[name] = coercedValue;
