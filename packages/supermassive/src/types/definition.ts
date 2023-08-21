@@ -1,4 +1,13 @@
-export type TypeReference = string | number; // Name or index of the encoded spec type
+import {
+  GraphQLBoolean,
+  GraphQLFloat,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLScalarType,
+  GraphQLString,
+} from "graphql";
+
+export type TypeReference = string | number;
 export type ComplexTypeReference = string;
 
 export type InputValueDefinitionTuple = [
@@ -83,44 +92,6 @@ export type EncodedSchemaFragment = {
   // implementations: Record<ComplexTypeReference, ComplexTypeReference[]>;
 };
 
-export const EncodedSpecTypes = [
-  "String",
-  "Boolean",
-  "Int",
-  "Float",
-  "ID",
-
-  "String!",
-  "Boolean!",
-  "Int!",
-  "Float!",
-  "ID!",
-
-  "[String]",
-  "[Boolean]",
-  "[Int]",
-  "[Float]",
-  "[ID]",
-
-  "[String!]",
-  "[Boolean!]",
-  "[Int!]",
-  "[Float!]",
-  "[ID!]",
-
-  "[String]!",
-  "[Boolean]!",
-  "[Int]!",
-  "[Float]!",
-  "[ID]!",
-
-  "[String!]!",
-  "[Boolean!]!",
-  "[Int!]!",
-  "[Float!]!",
-  "[ID!]!",
-];
-
 export const TypeKind = {
   SCALAR: 1,
   OBJECT: 2,
@@ -136,13 +107,16 @@ export const FieldKeys = { type: 0, arguments: 1 } as const;
 export const InputValueKeys = { type: 0, defaultValue: 1 } as const;
 export const EnumKeys = { values: 1 } as const;
 
-// TODO:
-function concatSchemaFragments(
-  fragments: EncodedSchemaFragment[],
-): EncodedSchemaFragment {
-  // TODO: copy on merge (i.e. do not clone objects and arrays prematurely)
-  const result: EncodedSchemaFragment = {
-    types: {},
-  };
-  return result;
+export const specifiedScalars: { [key: string]: GraphQLScalarType } = {
+  ID: GraphQLID,
+  String: GraphQLString,
+  Int: GraphQLInt,
+  Float: GraphQLFloat,
+  Boolean: GraphQLBoolean,
+};
+
+export function isSpecifiedScalarType(typeName: string): boolean {
+  return !!specifiedScalars[typeName];
 }
+
+// TODO: function concatEncodedSchemaFragments
