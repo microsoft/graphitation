@@ -8,17 +8,13 @@ import { valueFromAST } from "../valueFromAST";
 import { SchemaFragment } from "../../types/schema";
 import {
   EncodedSchemaFragment,
-  EncodedSpecTypes,
   InputObjectTypeDefinitionTuple,
   TypeKind,
 } from "../../types/definition";
+import { typeReferenceFromName as ref } from "../../types/reference";
 import { invariant } from "../../jsutils/invariant";
 
 describe("valueFromAST", () => {
-  function ref(name: string) {
-    const index = EncodedSpecTypes.indexOf(name);
-    return index === -1 ? name : index;
-  }
   function expectValueFrom(
     valueText: string | null,
     type: string,

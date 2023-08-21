@@ -23,7 +23,7 @@ export type InputValueDefinitionRecord = Record<
 
 export type DirectiveTuple = [
   name: string,
-  arguments?: InputValueDefinitionRecord,
+  arguments?: Record<string, unknown>, // JS values (cannot be a variable inside schema definition, so it is fine)
 ];
 
 export type FieldDefinitionTuple = [
@@ -35,38 +35,38 @@ export type FieldDefinitionTuple = [
 export type FieldDefinitionRecord = Record<string, FieldDefinitionTuple>;
 
 export type ScalarTypeDefinitionTuple = [
-  kind: 1,
+  kind: TypeKind.SCALAR,
   directives?: DirectiveTuple[],
 ];
 
 export type ObjectTypeDefinitionTuple = [
-  kind: 2,
+  kind: TypeKind.OBJECT,
   fields: FieldDefinitionRecord,
   interfaces?: ComplexTypeReference[],
   directives?: DirectiveTuple[],
 ];
 
 export type InterfaceTypeDefinitionTuple = [
-  kind: 3,
+  kind: TypeKind.INTERFACE,
   fields: FieldDefinitionRecord,
   interfaces?: ComplexTypeReference[],
   directives?: DirectiveTuple[],
 ];
 
 export type UnionTypeDefinitionTuple = [
-  kind: 4,
+  kind: TypeKind.UNION,
   types: ComplexTypeReference[],
   directives?: DirectiveTuple[],
 ];
 
 export type EnumTypeDefinitionTuple = [
-  kind: 5,
+  kind: TypeKind.ENUM,
   values?: string[],
   directives?: DirectiveTuple[],
 ];
 
 export type InputObjectTypeDefinitionTuple = [
-  kind: 6,
+  kind: TypeKind.INPUT,
   fields: InputValueDefinitionRecord,
   directives?: DirectiveTuple[],
 ];
@@ -79,8 +79,13 @@ export type TypeDefinitionTuple =
   | EnumTypeDefinitionTuple
   | InputObjectTypeDefinitionTuple;
 
-export type EncodedType = TypeDefinitionTuple;
-export type EncodedTypesRecord = Record<string, EncodedType>;
+export type DirectiveDefinitionTuple = [
+  name: string,
+  arguments?: InputValueDefinitionRecord,
+];
+
+export type EncodedTypeRecord = Record<string, TypeDefinitionTuple>;
+export type EncodedDirectives = DirectiveDefinitionTuple[];
 
 export type ComplexType =
   | ObjectTypeDefinitionTuple
@@ -88,24 +93,46 @@ export type ComplexType =
   | UnionTypeDefinitionTuple;
 
 export type EncodedSchemaFragment = {
-  types: EncodedTypesRecord;
+  types: EncodedTypeRecord;
+  directives: EncodedDirectives;
   // implementations: Record<ComplexTypeReference, ComplexTypeReference[]>;
 };
 
-export const TypeKind = {
-  SCALAR: 1,
-  OBJECT: 2,
-  INTERFACE: 3,
-  UNION: 4,
-  ENUM: 5,
-  INPUT: 6,
-} as const;
-
-export const ObjectKeys = { fields: 1, interfaces: 2 } as const;
-export const InputObjectKeys = { fields: 1 } as const;
-export const FieldKeys = { type: 0, arguments: 1 } as const;
-export const InputValueKeys = { type: 0, defaultValue: 1 } as const;
-export const EnumKeys = { values: 1 } as const;
+// Perf: const enums are inlined in the build (+small integers are stored on the stack in v8)
+export const enum TypeKind {
+  SCALAR = 1,
+  OBJECT = 2,
+  INTERFACE = 3,
+  UNION = 4,
+  ENUM = 5,
+  INPUT = 6,
+}
+export const enum ObjectKeys {
+  fields = 1,
+  interfaces = 2,
+}
+export const enum InterfaceKeys {
+  fields = 1,
+  interfaces = 2,
+}
+export const enum InputObjectKeys {
+  fields = 1,
+}
+export const enum FieldKeys {
+  type = 0,
+  arguments = 1,
+}
+export const enum InputValueKeys {
+  type = 0,
+  defaultValue = 1,
+}
+export const enum EnumKeys {
+  values = 1,
+}
+export const enum DirectiveKeys {
+  name = 0,
+  arguments = 1,
+}
 
 export const specifiedScalars: { [key: string]: GraphQLScalarType } = {
   ID: GraphQLID,

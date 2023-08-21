@@ -58,4 +58,4 @@ export {
   GraphQLSpecifiedByDirective,
   GraphQLDeferDirective,
   GraphQLStreamDirective,
-} from "./directives";
+} from "../types/directives";

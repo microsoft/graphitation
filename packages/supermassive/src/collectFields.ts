@@ -1,6 +1,6 @@
 import { Kind } from "graphql";
 import {
-  FieldNode,
+  // FieldNode,
   FragmentDefinitionNode,
   FragmentSpreadNode,
   InlineFragmentNode,

@@ -5,7 +5,12 @@ import type { ObjMap } from "../jsutils/ObjMap";
 import { TypeReference } from "../types/definition";
 import { SchemaFragment } from "../types/schema";
 import { ValueNode, Kind } from "graphql";
-import { TypeNode } from "../supermassive-ast";
+import {
+  inspectTypeReference,
+  isListType,
+  isNonNullType,
+  unwrap,
+} from "../types/reference";
 
 /**
  * Produces a JavaScript value given a GraphQL Value AST.
@@ -29,7 +34,7 @@ import { TypeNode } from "../supermassive-ast";
  */
 export function valueFromAST(
   valueNode: Maybe<ValueNode>,
-  typeRef: TypeReference | TypeNode,
+  typeRef: TypeReference,
   schemaTypes: SchemaFragment,
   variables?: Maybe<ObjMap<unknown>>,
 ): unknown {
@@ -46,7 +51,7 @@ export function valueFromAST(
       return;
     }
     const variableValue = variables[variableName];
-    if (variableValue === null && schemaTypes.isNonNullType(typeRef)) {
+    if (variableValue === null && isNonNullType(typeRef)) {
       return; // Invalid: intentionally return no value.
     }
     // Note: This does no further checking that this variable is correct.
@@ -55,16 +60,11 @@ export function valueFromAST(
     return variableValue;
   }
 
-  if (schemaTypes.isNonNullType(typeRef)) {
+  if (isNonNullType(typeRef)) {
     if (valueNode.kind === Kind.NULL) {
       return; // Invalid: intentionally return no value.
     }
-    return valueFromAST(
-      valueNode,
-      schemaTypes.unwrap(typeRef),
-      schemaTypes,
-      variables,
-    );
+    return valueFromAST(valueNode, unwrap(typeRef), schemaTypes, variables);
   }
 
   if (valueNode.kind === Kind.NULL) {
@@ -72,15 +72,15 @@ export function valueFromAST(
     return null;
   }
 
-  if (schemaTypes.isListType(typeRef)) {
-    const itemTypeRef = schemaTypes.unwrap(typeRef);
+  if (isListType(typeRef)) {
+    const itemTypeRef = unwrap(typeRef);
     if (valueNode.kind === Kind.LIST) {
       const coercedValues = [];
       for (const itemNode of valueNode.values) {
         if (isMissingVariable(itemNode, variables)) {
           // If an array contains a missing variable, it is either coerced to
           // null or if the item type is non-null, it considered invalid.
-          if (schemaTypes.isNonNullType(itemTypeRef)) {
+          if (isNonNullType(itemTypeRef)) {
             return; // Invalid: intentionally return no value.
           }
           coercedValues.push(null);
@@ -125,12 +125,12 @@ export function valueFromAST(
 
     for (const [name, field] of Object.entries(fieldDefs)) {
       const fieldNode = fieldNodes.get(name);
-      const fieldTypeRef = schemaTypes.getTypeRef(field);
+      const fieldTypeRef = schemaTypes.getTypeReference(field);
       if (fieldNode == null || isMissingVariable(fieldNode.value, variables)) {
-        const defaultValue = schemaTypes.getDefaultValue(field);
+        const defaultValue = schemaTypes.getInputDefaultValue(field);
         if (defaultValue !== undefined) {
           coercedObj[name] = defaultValue;
-        } else if (schemaTypes.isNonNullType(fieldTypeRef)) {
+        } else if (isNonNullType(fieldTypeRef)) {
           return; // Invalid: intentionally return no value.
         }
         continue;
@@ -167,10 +167,7 @@ export function valueFromAST(
   }
   /* c8 ignore next 3 */
   // Not reachable, all possible input types have been considered.
-  invariant(
-    false,
-    "Unexpected input type: " + schemaTypes.printTypeRef(typeRef),
-  );
+  invariant(false, "Unexpected input type: " + inspectTypeReference(typeRef));
 }
 
 // Returns true if the provided valueNode is a variable which is not defined

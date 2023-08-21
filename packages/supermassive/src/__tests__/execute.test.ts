@@ -25,7 +25,7 @@ import { forAwaitEach, isAsyncIterable } from "iterall";
 import { ObjMap } from "../jsutils/ObjMap";
 import { PromiseOrValue } from "graphql/jsutils/PromiseOrValue";
 import { extractMinimalViableSchemaForRequestDocument } from "../supermassive-ast/addMinimalViableSchemaToRequestDocument";
-import { specifiedDirectivesSDL } from "../supermassive-ast/directives";
+import { specifiedDirectivesSDL } from "../types/directives";
 
 interface TestCase {
   name: string;

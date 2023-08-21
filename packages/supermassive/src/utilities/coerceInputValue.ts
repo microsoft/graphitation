@@ -10,7 +10,12 @@ import { printPathArray } from "../jsutils/printPathArray.js";
 import { suggestionList } from "../jsutils/suggestionList.js";
 import { TypeReference } from "../types/definition";
 import { SchemaFragment } from "../types/schema";
-import { TypeNode } from "../supermassive-ast";
+import {
+  inspectTypeReference,
+  isListType,
+  isNonNullType,
+  unwrap,
+} from "../types/reference";
 
 type OnErrorCB = (
   path: ReadonlyArray<string | number>,
@@ -23,7 +28,7 @@ type OnErrorCB = (
  */
 export function coerceInputValue(
   inputValue: unknown,
-  typeRef: TypeReference | TypeNode,
+  typeRef: TypeReference,
   schemaTypes: SchemaFragment,
   onError: OnErrorCB = defaultOnError,
 ): unknown {
@@ -51,16 +56,16 @@ function defaultOnError(
 
 function coerceInputValueImpl(
   inputValue: unknown,
-  typeRef: TypeReference | TypeNode,
+  typeRef: TypeReference,
   schemaTypes: SchemaFragment,
   onError: OnErrorCB,
   path: Path | undefined,
 ): unknown {
-  if (schemaTypes.isNonNullType(typeRef)) {
+  if (isNonNullType(typeRef)) {
     if (inputValue != null) {
       return coerceInputValueImpl(
         inputValue,
-        schemaTypes.unwrap(typeRef),
+        unwrap(typeRef),
         schemaTypes,
         onError,
         path,
@@ -70,7 +75,7 @@ function coerceInputValueImpl(
       pathToArray(path),
       inputValue,
       new GraphQLError(
-        `Expected non-nullable type "${schemaTypes.printTypeRef(
+        `Expected non-nullable type "${inspectTypeReference(
           typeRef,
         )}" not to be null.`,
       ),
@@ -83,8 +88,8 @@ function coerceInputValueImpl(
     return null;
   }
 
-  if (schemaTypes.isListType(typeRef)) {
-    const itemType = schemaTypes.unwrap(typeRef);
+  if (isListType(typeRef)) {
+    const itemType = unwrap(typeRef);
     if (isIterableObject(inputValue)) {
       return Array.from(inputValue, (itemValue, index) => {
         const itemPath = addPath(path, index, undefined);
@@ -105,7 +110,7 @@ function coerceInputValueImpl(
 
   const inputObjectType = schemaTypes.getInputObjectType(typeRef);
   if (inputObjectType) {
-    const typeName = schemaTypes.printTypeRef(typeRef);
+    const typeName = inspectTypeReference(typeRef);
     if (!isObjectLike(inputValue)) {
       onError(
         pathToArray(path),
@@ -120,14 +125,14 @@ function coerceInputValueImpl(
 
     for (const [fieldName, field] of Object.entries(fieldDefs)) {
       const fieldValue = inputValue[fieldName];
-      const defaultValue = schemaTypes.getDefaultValue(field);
-      const fieldType = schemaTypes.getTypeRef(field);
+      const defaultValue = schemaTypes.getInputDefaultValue(field);
+      const fieldTypeRef = schemaTypes.getTypeReference(field);
 
       if (fieldValue === undefined) {
         if (defaultValue !== undefined) {
           coercedValue[fieldName] = defaultValue;
-        } else if (schemaTypes.isNonNullType(fieldType)) {
-          const typeStr = schemaTypes.printTypeRef(fieldType);
+        } else if (isNonNullType(fieldTypeRef)) {
+          const typeStr = inspectTypeReference(fieldTypeRef);
           onError(
             pathToArray(path),
             inputValue,
@@ -141,7 +146,7 @@ function coerceInputValueImpl(
 
       coercedValue[fieldName] = coerceInputValueImpl(
         fieldValue,
-        fieldType,
+        fieldTypeRef,
         schemaTypes,
         onError,
         addPath(path, fieldName, typeName),
@@ -178,7 +183,7 @@ function coerceInputValueImpl(
       if (error instanceof GraphQLError) {
         onError(pathToArray(path), inputValue, error);
       } else {
-        const typeName = schemaTypes.printTypeRef(typeRef);
+        const typeName = inspectTypeReference(typeRef);
         onError(
           pathToArray(path),
           inputValue,
@@ -193,19 +198,15 @@ function coerceInputValueImpl(
       return;
     }
     if (parseResult === undefined) {
-      const typeName = schemaTypes.printTypeRef(typeRef);
       onError(
         pathToArray(path),
         inputValue,
-        new GraphQLError(`Expected type "${typeName}".`),
+        new GraphQLError(`Expected type "${inspectTypeReference(typeRef)}".`),
       );
     }
     return parseResult;
   }
   /* c8 ignore next 3 */
   // Not reachable, all possible types have been considered.
-  invariant(
-    false,
-    "Unexpected input type: " + schemaTypes.printTypeRef(typeRef),
-  );
+  invariant(false, "Unexpected input type: " + inspectTypeReference(typeRef));
 }

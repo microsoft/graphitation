@@ -17,8 +17,12 @@ import {
   isSpecifiedScalarType,
   ObjectTypeDefinitionTuple,
   specifiedScalars,
+  DirectiveDefinitionTuple,
+  DirectiveKeys,
+  InterfaceKeys,
 } from "./definition";
 import {
+  FunctionFieldResolver,
   ObjectTypeResolver,
   ScalarTypeResolver,
   UserResolvers,
@@ -32,6 +36,7 @@ import {
 import { typeNameFromReference } from "./reference";
 
 const specifiedScalarDefinition: ScalarTypeDefinitionTuple = [TypeKind.SCALAR];
+const typeNameMetaFieldDef: FieldDefinitionTuple = ["String"];
 const emptyObject = Object.freeze(Object.create(null));
 
 // Lifecycle: one instance per GraphQL operation
@@ -56,22 +61,55 @@ export class SchemaFragment {
   }
 
   public getObjectType(
-    typeRef: TypeReference,
+    typeName: string,
   ): ObjectTypeDefinitionTuple | undefined {
-    const type = this.encodedFragment.types[typeNameFromReference(typeRef)];
+    const type = this.encodedFragment.types[typeName];
     return type?.[0] === TypeKind.OBJECT ? type : undefined;
   }
 
   public getObjectFields(
-    typeRef: TypeReference,
+    def: ObjectTypeDefinitionTuple,
   ): Record<string, FieldDefinitionTuple> | undefined {
-    return this.getObjectType(typeRef)?.[ObjectKeys.fields];
+    return def[ObjectKeys.fields];
+  }
+
+  public getField(
+    typeName: string,
+    fieldName: string,
+  ): FieldDefinitionTuple | undefined {
+    const type = this.encodedFragment.types[typeName];
+    if (!type) {
+      return undefined;
+    }
+    if (fieldName === "__typename") {
+      return typeNameMetaFieldDef;
+    }
+    if (type[0] === TypeKind.OBJECT) {
+      return type[ObjectKeys.fields]?.[fieldName];
+    }
+    if (type[0] === TypeKind.INTERFACE) {
+      return type[InterfaceKeys.fields]?.[fieldName];
+    }
+    return undefined;
   }
 
   public getFieldArguments(
     field: FieldDefinitionTuple,
   ): Record<string, InputValueDefinitionTuple> | undefined {
     return field[FieldKeys.arguments];
+  }
+
+  public getDirectiveArguments(
+    directive: DirectiveDefinitionTuple,
+  ): Record<string, InputValueDefinitionTuple> | undefined {
+    return directive[DirectiveKeys.arguments];
+  }
+
+  public resolveDefinitionArguments(
+    def: FieldDefinitionTuple | DirectiveDefinitionTuple,
+  ): Record<string, InputValueDefinitionTuple> | undefined {
+    // Note: both FieldDefinition and DirectiveDefinition store arguments at the same position
+    return def[FieldKeys.arguments];
   }
 
   public getInputObjectType(
@@ -110,13 +148,13 @@ export class SchemaFragment {
     return type;
   }
 
-  public isDefined(typeRef: TypeReference) {
+  public isDefined(typeRef: TypeReference): boolean {
     if (typeof typeRef === "number") {
       // Fast-path: spec type
       return true;
     }
     const types = this.encodedFragment.types;
-    return !!types[typeNameFromReference(typeRef)];
+    return Boolean(types[typeRef] || types[typeNameFromReference(typeRef)]);
   }
 
   public isInputType(typeRef: TypeReference): boolean {
@@ -136,7 +174,8 @@ export class SchemaFragment {
       // Fast-path: all spec types are scalars
       return false;
     }
-    const type = this.encodedFragment.types[typeNameFromReference(typeRef)];
+    const types = this.encodedFragment.types;
+    const type = types[typeRef] ?? types[typeNameFromReference(typeRef)];
     return type?.[0] === TypeKind.OBJECT;
   }
 
@@ -145,16 +184,37 @@ export class SchemaFragment {
       // Fast-path: all spec types are scalars
       return false;
     }
-    const type = this.encodedFragment.types[typeNameFromReference(typeRef)];
+    const types = this.encodedFragment.types;
+    const type = types[typeRef] ?? types[typeNameFromReference(typeRef)];
     return type?.[0] === TypeKind.UNION || type?.[0] === TypeKind.INTERFACE;
   }
 
-  public getFieldResolver(typeName: string, fieldName: string) {
+  public getFieldResolver(
+    typeName: string,
+    fieldName: string,
+  ): FunctionFieldResolver<unknown, unknown> | undefined {
     // TODO: sanity check that this is an object type resolver
     const typeResolvers = this.resolvers[typeName] as
       | ObjectTypeResolver<unknown, unknown, unknown>
       | undefined;
-    return typeResolvers?.[fieldName];
+    const fieldResolver = typeResolvers?.[fieldName];
+    return typeof fieldResolver === "function"
+      ? fieldResolver
+      : fieldResolver?.resolve;
+  }
+
+  public getSubscriptionFieldResolver(
+    subscriptionTypeName: string,
+    fieldName: string,
+  ): FunctionFieldResolver<unknown, unknown> | undefined {
+    // TODO: sanity check that this is an object type resolver
+    const typeResolvers = this.resolvers[subscriptionTypeName] as
+      | ObjectTypeResolver<unknown, unknown, unknown>
+      | undefined;
+    const fieldResolver = typeResolvers?.[fieldName];
+    return typeof fieldResolver === "function"
+      ? fieldResolver
+      : fieldResolver?.subscribe;
   }
 
   public getAbstractTypeResolver(typeName: string) {
@@ -216,5 +276,9 @@ export class SchemaFragment {
       return enumType;
     }
     return undefined;
+  }
+
+  public getDirectiveName(def: DirectiveDefinitionTuple) {
+    return def[DirectiveKeys.name];
   }
 }

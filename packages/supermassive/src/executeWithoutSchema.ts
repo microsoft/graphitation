@@ -1,22 +1,17 @@
 import {
   ASTNode as GraphQLASTNode,
-  GraphQLEnumType,
   GraphQLError,
-  GraphQLInputObjectType,
   GraphQLLeafType,
-  GraphQLScalarType,
   Kind,
   locatedError,
 } from "graphql";
 
 import {
   DocumentNode,
-  ListTypeNode,
   FragmentDefinitionNode,
   OperationDefinitionNode,
   OperationTypeDefinitionNode,
   OperationTypeNode,
-  TypeNode,
 } from "./supermassive-ast";
 import {
   collectFields,
@@ -41,10 +36,8 @@ import {
   ExecutionWithoutSchemaArgs,
   FunctionFieldResolver,
   ResolveInfo,
-  Resolver,
   TypeResolver,
   ExecutionResult,
-  FieldResolverObject,
   TotalExecutionResult,
   SubsequentIncrementalExecutionResult,
   IncrementalDeferResult,
@@ -63,7 +56,14 @@ import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
 import { GraphQLStreamDirective } from "./directives";
 import { memoize3 } from "./jsutils/memoize3";
 import { SchemaFragment } from "./types/schema";
-import { FieldDefinitionTuple, TypeKind } from "./types/definition";
+import { FieldDefinitionTuple, TypeReference } from "./types/definition";
+import {
+  inspectTypeReference,
+  isListType,
+  isNonNullType,
+  typeNameFromReference,
+  unwrap,
+} from "./types/reference";
 
 /**
  * A memoized collection of relevant subfields with regard to the return
@@ -477,73 +477,38 @@ function executeField(
   path: Path,
   incrementalDataRecord: IncrementalDataRecord | undefined,
 ): PromiseOrValue<unknown> {
-  const fieldName = fieldGroup[0].name.value;
   const schemaTypes = exeContext.schemaTypes;
-
-  let resolveFn;
-  let returnTypeName: string;
-  let returnTypeNode: TypeNode | undefined;
-  let fieldDefinition: FieldDefinitionTuple | undefined;
-  if (fieldName === "__typename" && !resolveFn) {
-    resolveFn = () => parentTypeName;
-    returnTypeName = "String";
-    returnTypeNode = {
-      kind: Kind.NAMED_TYPE,
-      name: {
-        kind: Kind.NAME,
-        value: "String",
-      },
-    };
-    fieldDefinition = [TypeKind.SCALAR];
-  } else {
-    fieldDefinition = schemaTypes.getObjectField(parentTypeName, fieldName);
-
-    const fieldReturnTypeRef = fieldDefinition
-      ? schemaTypes.getTypeRef(fieldDefinition)
-      : undefined;
-
-    if (!fieldDefinition || !fieldReturnTypeRef) {
-      throw locatedError(
-        `Could not find definition for field "${fieldName}" of type "${parentTypeName}"`,
-        fieldGroup as ReadonlyArray<GraphQLASTNode>,
-      );
-    }
-    returnTypeNode = schemaTypes.toTypeNode(fieldReturnTypeRef);
-    returnTypeName = schemaTypes.getUnwrappedTypeName(returnTypeNode);
-    resolveFn = schemaTypes.getFieldResolver(parentTypeName, fieldName);
-
-    if (typeof resolveFn !== "function" && resolveFn != null) {
-      resolveFn = resolveFn.resolve;
-    }
+  const fieldName = fieldGroup[0].name.value;
+  const fieldDef = schemaTypes.getField(parentTypeName, fieldName);
+  if (!fieldDef) {
+    return;
   }
 
-  const isDefaultResolverUsed = !resolveFn;
-  if (!resolveFn) {
-    resolveFn = exeContext.fieldResolver;
-  }
+  const returnTypeRef = schemaTypes.getTypeReference(fieldDef);
+  const resolveFn =
+    schemaTypes.getFieldResolver(parentTypeName, fieldName) ??
+    exeContext.fieldResolver;
 
   const info = buildResolveInfo(
     exeContext,
     fieldName,
     fieldGroup,
     parentTypeName,
-    returnTypeName,
-    returnTypeNode,
+    typeNameFromReference(returnTypeRef),
     path,
   );
 
   return resolveAndCompleteField(
     exeContext,
     parentTypeName,
-    returnTypeNode,
-    fieldDefinition,
+    returnTypeRef,
+    fieldDef,
     fieldGroup,
     info,
     path,
     resolveFn,
     source,
     incrementalDataRecord,
-    isDefaultResolverUsed,
   );
 }
 
@@ -594,60 +559,33 @@ function executeSubscriptionImpl(
   exeContext: ExecutionContext,
 ): PromiseOrValue<AsyncIterable<unknown>> {
   const { operation, rootValue, schemaTypes } = exeContext;
-  const typeName = getOperationRootTypeName(operation);
-  const { groupedFieldSet } = collectFields(exeContext, typeName);
+  const rootTypeName = getOperationRootTypeName(operation);
+  const { groupedFieldSet } = collectFields(exeContext, rootTypeName);
 
   const firstRootField = groupedFieldSet.entries().next().value;
   const [responseName, fieldGroup] = firstRootField;
   const fieldName = fieldGroup[0].name.value;
+  const fieldDef = schemaTypes.getField(rootTypeName, fieldName);
 
-  let resolveFn;
-  let returnTypeName: string;
-  let returnTypeNode: TypeNode;
-  let fieldDefinition;
-  if (fieldName === "__typename" && !resolveFn) {
-    resolveFn = () => typeName;
-    returnTypeName = "String";
-    returnTypeNode = {
-      kind: Kind.NAMED_TYPE,
-      name: {
-        kind: Kind.NAME,
-        value: "String",
-      },
-    };
-  } else {
-    fieldDefinition = schemaTypes.getObjectField(typeName, fieldName);
-    const fieldReturnTypeRef = fieldDefinition
-      ? schemaTypes.getTypeRef(fieldDefinition)
-      : undefined;
-    const fieldResolver = schemaTypes.getFieldResolver(typeName, fieldName) as
-      | FieldResolverObject<unknown, unknown, unknown, unknown>
-      | undefined;
-
-    if (!fieldReturnTypeRef) {
-      throw locatedError(
-        `Could not find definition for field "${fieldName}" of type "${typeName}"`,
-        fieldGroup as ReadonlyArray<GraphQLASTNode>,
-      );
-    }
-
-    returnTypeNode = schemaTypes.toTypeNode(fieldReturnTypeRef);
-    returnTypeName = schemaTypes.getUnwrappedTypeName(returnTypeNode);
-    resolveFn = fieldResolver?.subscribe;
+  if (!fieldDef) {
+    throw new GraphQLError(
+      `The subscription field "${fieldName}" is not defined.`,
+      { nodes: fieldGroup },
+    );
   }
 
-  if (!resolveFn) {
-    resolveFn = exeContext.subscribeFieldResolver;
-  }
+  const returnTypeRef = schemaTypes.getTypeReference(fieldDef);
+  const resolveFn =
+    schemaTypes.getSubscriptionFieldResolver(rootTypeName, fieldName) ??
+    exeContext.subscribeFieldResolver;
 
-  const path = addPath(undefined, responseName, typeName);
+  const path = addPath(undefined, responseName, rootTypeName);
   const info = buildResolveInfo(
     exeContext,
     fieldName,
     fieldGroup,
-    typeName,
-    returnTypeName,
-    returnTypeNode,
+    rootTypeName,
+    typeNameFromReference(returnTypeRef),
     path,
   );
 
@@ -657,13 +595,7 @@ function executeSubscriptionImpl(
 
     // Build a JS object of arguments from the field.arguments AST, using the
     // variables scope to fulfill any variable references.
-    const args = fieldDefinition
-      ? getArgumentValues(
-          exeContext,
-          schemaTypes.getFieldArguments(fieldDefinition) ?? {},
-          fieldGroup[0],
-        )
-      : {};
+    const args = getArgumentValues(exeContext, fieldDef, fieldGroup[0]);
 
     // The resolve function's optional third argument is a context value that
     // is provided to every resolve function within an execution. It is commonly
@@ -774,7 +706,6 @@ export function buildResolveInfo(
   fieldGroup: FieldGroup,
   parentTypeName: string,
   returnTypeName: string,
-  returnTypeNode: TypeNode,
   path: Path,
 ): ResolveInfo {
   // The resolve function's optional fourth argument is a collection of
@@ -784,7 +715,6 @@ export function buildResolveInfo(
     fieldGroup,
     returnTypeName,
     parentTypeName,
-    returnTypeNode,
     path,
     fragments: exeContext.fragments,
     rootValue: exeContext.rootValue,
@@ -796,7 +726,7 @@ export function buildResolveInfo(
 function handleFieldError(
   rawError: unknown,
   exeContext: ExecutionContext,
-  returnTypeNode: TypeNode,
+  returnTypeRef: TypeReference,
   fieldGroup: FieldGroup,
   path: Path,
   incrementalDataRecord: IncrementalDataRecord | undefined,
@@ -809,7 +739,7 @@ function handleFieldError(
 
   // If the field type is non-nullable, then it is resolved without any
   // protection from errors, however it still properly locates the error.
-  if (returnTypeNode.kind === Kind.NON_NULL_TYPE) {
+  if (isNonNullType(returnTypeRef)) {
     throw error;
   }
 
@@ -823,30 +753,23 @@ function handleFieldError(
 function resolveAndCompleteField(
   exeContext: ExecutionContext,
   parentTypeName: string,
-  returnTypeNode: TypeNode,
+  returnTypeRef: TypeReference,
   fieldDefinition: FieldDefinitionTuple,
   fieldGroup: FieldGroup,
   info: ResolveInfo,
   path: Path,
-  resolveFn: FunctionFieldResolver<
-    unknown,
-    unknown,
-    Record<string, unknown>,
-    unknown
-  >,
+  resolveFn: FunctionFieldResolver<unknown, unknown>,
   source: unknown,
   incrementalDataRecord: IncrementalDataRecord | undefined,
-  isDefaultResolverUsed: boolean,
 ): PromiseOrValue<unknown> {
+  const isDefaultResolverUsed = resolveFn === exeContext.fieldResolver;
   const hooks = exeContext.fieldExecutionHooks;
   //  the resolve function, regardless of if its result is normal or abrupt (error).
   try {
     // Build a JS object of arguments from the field.arguments AST, using the
     // variables scope to fulfill any variable references.
     // TODO: find a way to memoize, in case this field is within a List type.
-    const schemaArgNames =
-      exeContext.schemaTypes.getFieldArguments(fieldDefinition) ?? {};
-    const args = getArgumentValues(exeContext, schemaArgNames, fieldGroup[0]);
+    const args = getArgumentValues(exeContext, fieldDefinition, fieldGroup[0]);
 
     // The resolve function's optional third argument is a context value that
     // is provided to every resolve function within an execution. It is commonly
@@ -868,7 +791,7 @@ function resolveAndCompleteField(
           }
           return completeValue(
             exeContext,
-            returnTypeNode,
+            returnTypeRef,
             fieldGroup,
             info,
             path,
@@ -892,7 +815,7 @@ function resolveAndCompleteField(
       }
       completed = completeValue(
         exeContext,
-        returnTypeNode,
+        returnTypeRef,
         fieldGroup,
         info,
         path,
@@ -923,7 +846,7 @@ function resolveAndCompleteField(
           handleFieldError(
             rawError,
             exeContext,
-            returnTypeNode,
+            returnTypeRef,
             fieldGroup,
             path,
             incrementalDataRecord,
@@ -961,7 +884,7 @@ function resolveAndCompleteField(
     handleFieldError(
       rawError,
       exeContext,
-      returnTypeNode,
+      returnTypeRef,
       fieldGroup,
       path,
       incrementalDataRecord,
@@ -993,7 +916,7 @@ function resolveAndCompleteField(
  */
 function completeValue(
   exeContext: ExecutionContext,
-  returnTypeNode: TypeNode, // TODO: TypeReference here may be faster, consider removing TypeNode usages ?
+  returnTypeRef: TypeReference,
   fieldGroup: FieldGroup,
   info: ResolveInfo,
   path: Path,
@@ -1007,10 +930,10 @@ function completeValue(
 
   // If field type is NonNull, complete for inner type, and throw field error
   // if result is null.
-  if (returnTypeNode.kind === Kind.NON_NULL_TYPE) {
+  if (isNonNullType(returnTypeRef)) {
     const completed = completeValue(
       exeContext,
-      returnTypeNode.type,
+      unwrap(returnTypeRef),
       fieldGroup,
       info,
       path,
@@ -1031,10 +954,10 @@ function completeValue(
   }
 
   // If field type is List, complete each item in the list with the inner type
-  if (returnTypeNode.kind === Kind.LIST_TYPE) {
+  if (isListType(returnTypeRef)) {
     return completeListValue(
       exeContext,
-      returnTypeNode,
+      returnTypeRef,
       fieldGroup,
       info,
       path,
@@ -1044,18 +967,18 @@ function completeValue(
   }
 
   const schemaTypes = exeContext.schemaTypes;
-  const returnTypeName = returnTypeNode.name.value;
+  const returnTypeName = typeNameFromReference(returnTypeRef);
 
   // If field type is a leaf type, Scalar or Enum, serialize to a valid value,
   // returning null if serialization is not possible.
-  const leafType = schemaTypes.getLeafTypeResolver(returnTypeNode);
+  const leafType = schemaTypes.getLeafTypeResolver(returnTypeRef);
   if (leafType) {
     return completeLeafValue(leafType, result);
   }
 
   // If field type is an abstract type, Interface or Union, determine the
   // runtime Object type and complete for that type.
-  if (schemaTypes.isAbstractType(returnTypeNode)) {
+  if (schemaTypes.isAbstractType(returnTypeRef)) {
     return completeAbstractValue(
       exeContext,
       returnTypeName,
@@ -1069,7 +992,7 @@ function completeValue(
 
   // If field type is Object, execute and complete all sub-selections.
   // istanbul ignore else (See: 'https://github.com/graphql/graphql-js/issues/2618')
-  if (schemaTypes.isObjectType(returnTypeNode)) {
+  if (schemaTypes.isObjectType(returnTypeRef)) {
     return completeObjectValue(
       exeContext,
       returnTypeName,
@@ -1084,13 +1007,13 @@ function completeValue(
   invariant(
     false,
     "Cannot complete value of unexpected output type: " +
-      schemaTypes.printTypeRef(returnTypeNode),
+      inspectTypeReference(returnTypeRef),
   );
 }
 
 async function completePromisedValue(
   exeContext: ExecutionContext,
-  returnTypeNode: TypeNode,
+  returnTypeRef: TypeReference,
   fieldGroup: FieldGroup,
   info: ResolveInfo,
   path: Path,
@@ -1101,7 +1024,7 @@ async function completePromisedValue(
     const resolved = await result;
     let completed = completeValue(
       exeContext,
-      returnTypeNode,
+      returnTypeRef,
       fieldGroup,
       info,
       path,
@@ -1116,7 +1039,7 @@ async function completePromisedValue(
     handleFieldError(
       rawError,
       exeContext,
-      returnTypeNode,
+      returnTypeRef,
       fieldGroup,
       path,
       incrementalDataRecord,
@@ -1132,20 +1055,20 @@ async function completePromisedValue(
  */
 function completeListValue(
   exeContext: ExecutionContext,
-  returnTypeNode: ListTypeNode,
+  returnTypeRef: TypeReference, // assuming list type
   fieldGroup: FieldGroup,
   info: ResolveInfo,
   path: Path,
   result: unknown,
   incrementalDataRecord: IncrementalDataRecord | undefined,
 ): PromiseOrValue<ReadonlyArray<unknown>> {
-  const itemType = returnTypeNode.type;
+  const itemTypeRef = unwrap(returnTypeRef);
   if (isAsyncIterable(result)) {
     const asyncIterator = result[Symbol.asyncIterator]();
 
     return completeAsyncIteratorValue(
       exeContext,
-      itemType,
+      itemTypeRef,
       fieldGroup,
       info,
       path,
@@ -1185,7 +1108,7 @@ function completeListValue(
         exeContext,
         fieldGroup,
         info,
-        itemType,
+        itemTypeRef,
         stream.label,
         previousIncrementalDataRecord,
       );
@@ -1198,7 +1121,7 @@ function completeListValue(
         item,
         completedResults,
         exeContext,
-        itemType,
+        itemTypeRef,
         fieldGroup,
         info,
         itemPath,
@@ -1223,7 +1146,7 @@ function completeListItemValue(
   item: unknown,
   completedResults: Array<unknown>,
   exeContext: ExecutionContext,
-  itemTypeNode: TypeNode,
+  itemTypeRef: TypeReference,
   fieldGroup: FieldGroup,
   info: ResolveInfo,
   itemPath: Path,
@@ -1233,7 +1156,7 @@ function completeListItemValue(
     completedResults.push(
       completePromisedValue(
         exeContext,
-        itemTypeNode,
+        itemTypeRef,
         fieldGroup,
         info,
         itemPath,
@@ -1248,7 +1171,7 @@ function completeListItemValue(
   try {
     const completedItem = completeValue(
       exeContext,
-      itemTypeNode,
+      itemTypeRef,
       fieldGroup,
       info,
       itemPath,
@@ -1264,7 +1187,7 @@ function completeListItemValue(
           handleFieldError(
             rawError,
             exeContext,
-            itemTypeNode,
+            itemTypeRef,
             fieldGroup,
             itemPath,
             incrementalDataRecord,
@@ -1282,7 +1205,7 @@ function completeListItemValue(
     handleFieldError(
       rawError,
       exeContext,
-      itemTypeNode,
+      itemTypeRef,
       fieldGroup,
       itemPath,
       incrementalDataRecord,
@@ -1317,9 +1240,9 @@ function getStreamValues(
   // validation only allows equivalent streams on multiple fields, so it is
   // safe to only check the first fieldNode for the stream directive
   const stream = getDirectiveValues(
+    exeContext,
     GraphQLStreamDirective,
     fieldGroup[0],
-    exeContext,
   );
 
   if (!stream) {
@@ -1357,7 +1280,7 @@ function getStreamValues(
  */
 async function completeAsyncIteratorValue(
   exeContext: ExecutionContext,
-  itemType: TypeNode,
+  itemTypeRef: TypeReference,
   fieldGroup: FieldGroup,
   info: ResolveInfo,
   path: Path,
@@ -1382,7 +1305,7 @@ async function completeAsyncIteratorValue(
         exeContext,
         fieldGroup,
         info,
-        itemType,
+        itemTypeRef,
         path,
         stream.label,
         incrementalDataRecord,
@@ -1411,7 +1334,7 @@ async function completeAsyncIteratorValue(
         iteration.value,
         completedResults,
         exeContext,
-        itemType,
+        itemTypeRef,
         fieldGroup,
         info,
         itemPath,
@@ -1466,7 +1389,14 @@ function completeAbstractValue(
     return runtimeTypeName.then((resolvedRuntimeTypeName) =>
       completeObjectValue(
         exeContext,
-        ensureValidRuntimeType(resolvedRuntimeTypeName, exeContext),
+        ensureValidRuntimeType(
+          resolvedRuntimeTypeName,
+          exeContext,
+          returnTypeName,
+          fieldGroup,
+          info,
+          result,
+        ),
         fieldGroup,
         path,
         result,
@@ -1477,7 +1407,14 @@ function completeAbstractValue(
 
   return completeObjectValue(
     exeContext,
-    ensureValidRuntimeType(runtimeTypeName, exeContext),
+    ensureValidRuntimeType(
+      runtimeTypeName,
+      exeContext,
+      returnTypeName,
+      fieldGroup,
+      info,
+      result,
+    ),
     fieldGroup,
     path,
     result,
@@ -1488,53 +1425,50 @@ function completeAbstractValue(
 function ensureValidRuntimeType(
   runtimeTypeName: unknown,
   exeContext: ExecutionContext,
+  returnTypeName: string,
+  fieldGroup: FieldGroup,
+  info: ResolveInfo,
+  result: unknown,
 ): string {
+  if (runtimeTypeName == null) {
+    throw new GraphQLError(
+      `Abstract type "${returnTypeName}" must resolve to an Object type at runtime for field "${info.parentTypeName}.${info.fieldName}".` +
+        ` Either the "${returnTypeName}" should provide a "__resolveType" resolver function` +
+        ` or "${info.parentTypeName}.${info.fieldName}" should be an object with "__typename" property.`,
+      { nodes: fieldGroup },
+    );
+  }
+
   if (typeof runtimeTypeName !== "string") {
     throw new GraphQLError(
-      `Could not determine runtime type for abstract type ${runtimeTypeName}`,
+      `Abstract type "${returnTypeName}" must resolve to an Object type at runtime for field "${info.returnTypeName}.${info.fieldName}" with ` +
+        `value ${inspect(result)}, received "${inspect(runtimeTypeName)}".`,
     );
   }
-  // TODO
 
-  const runtimeType: Resolver<unknown, unknown> =
-    exeContext.resolvers[runtimeTypeName];
-
-  if (!runtimeType) {
+  if (!exeContext.schemaTypes.isDefined(runtimeTypeName)) {
     throw new GraphQLError(
-      `Type "${runtimeTypeName}" does not exist inside the schema.`,
+      `Abstract type "${returnTypeName}" was resolved to a type "${runtimeTypeName}" that does not exist inside the schema.`,
+      { nodes: fieldGroup },
     );
-  } else if (
-    runtimeType instanceof GraphQLScalarType ||
-    runtimeType instanceof GraphQLEnumType ||
-    runtimeType instanceof GraphQLInputObjectType ||
-    runtimeType.__resolveType
-  ) {
-    throw new GraphQLError(
-      `Given runtime object "${getRuntimeTypeInstanceName(
-        runtimeType,
-      )}" type is not a possible type for "${runtimeTypeName}".`,
-    );
-  } else {
-    return runtimeTypeName;
   }
-}
 
-function getRuntimeTypeInstanceName(
-  runtimeType: Resolver<unknown, unknown>,
-): string {
-  if (runtimeType instanceof GraphQLScalarType) {
-    return "GraphQLScalarType";
-  } else if (runtimeType instanceof GraphQLEnumType) {
-    return "GraphQLEnumType";
-  } else if (runtimeType instanceof GraphQLInputObjectType) {
-    return "GraphQLInputObjectType";
-  } else if ("__types" in runtimeType) {
-    return "GraphQLUnionType";
-  } else if ("__implementedBy" in runtimeType) {
-    return "GraphQLInterfaceType";
-  } else {
-    return "Unknown";
+  if (!exeContext.schemaTypes.isObjectType(runtimeTypeName)) {
+    throw new GraphQLError(
+      `Abstract type "${returnTypeName}" was resolved to a non-object type "${runtimeTypeName}".`,
+      { nodes: fieldGroup },
+    );
   }
+
+  // TODO:
+  // if (!exeContext.schemaTypes.isSubType(returnTypeName, runtimeTypeName)) {
+  //   throw new GraphQLError(
+  //     `Runtime Object type "${runtimeTypeName}" is not a possible type for "${returnTypeName}".`,
+  //     { nodes: fieldGroup },
+  //   );
+  // }
+
+  return runtimeTypeName;
 }
 
 /**
@@ -1810,7 +1744,7 @@ function executeStreamField(
   exeContext: ExecutionContext,
   fieldGroup: FieldGroup,
   info: ResolveInfo,
-  itemTypeNode: TypeNode,
+  itemTypeRef: TypeReference,
   label?: string,
   parentContext?: IncrementalDataRecord,
 ): IncrementalDataRecord {
@@ -1823,7 +1757,7 @@ function executeStreamField(
   if (isPromise(item)) {
     const completedItems = completePromisedValue(
       exeContext,
-      itemTypeNode,
+      itemTypeRef,
       fieldGroup,
       info,
       itemPath,
@@ -1847,7 +1781,7 @@ function executeStreamField(
     try {
       completedItem = completeValue(
         exeContext,
-        itemTypeNode,
+        itemTypeRef,
         fieldGroup,
         info,
         itemPath,
@@ -1858,7 +1792,7 @@ function executeStreamField(
       handleFieldError(
         rawError,
         exeContext,
-        itemTypeNode,
+        itemTypeRef,
         fieldGroup,
         itemPath,
         incrementalDataRecord,
@@ -1879,7 +1813,7 @@ function executeStreamField(
         handleFieldError(
           rawError,
           exeContext,
-          itemTypeNode,
+          itemTypeRef,
           fieldGroup,
           itemPath,
           incrementalDataRecord,
@@ -1909,7 +1843,7 @@ async function executeStreamAsyncIteratorItem(
   exeContext: ExecutionContext,
   fieldGroup: FieldGroup,
   info: ResolveInfo,
-  itemTypeNode: TypeNode,
+  itemTypeRef: TypeReference,
   incrementalDataRecord: StreamItemsRecord,
   path: Path,
   itemPath: Path,
@@ -1933,7 +1867,7 @@ async function executeStreamAsyncIteratorItem(
   try {
     completedItem = completeValue(
       exeContext,
-      itemTypeNode,
+      itemTypeRef,
       fieldGroup,
       info,
       itemPath,
@@ -1946,7 +1880,7 @@ async function executeStreamAsyncIteratorItem(
         handleFieldError(
           rawError,
           exeContext,
-          itemTypeNode,
+          itemTypeRef,
           fieldGroup,
           itemPath,
           incrementalDataRecord,
@@ -1960,7 +1894,7 @@ async function executeStreamAsyncIteratorItem(
     handleFieldError(
       rawError,
       exeContext,
-      itemTypeNode,
+      itemTypeRef,
       fieldGroup,
       itemPath,
       incrementalDataRecord,
@@ -1976,7 +1910,7 @@ async function executeStreamAsyncIterator(
   exeContext: ExecutionContext,
   fieldGroup: FieldGroup,
   info: ResolveInfo,
-  itemTypeNode: TypeNode,
+  itemTypeRef: TypeReference,
   path: Path,
   label?: string,
   parentContext?: IncrementalDataRecord,
@@ -2002,7 +1936,7 @@ async function executeStreamAsyncIterator(
         exeContext,
         fieldGroup,
         info,
-        itemTypeNode,
+        itemTypeRef,
         incrementalDataRecord,
         path,
         itemPath,

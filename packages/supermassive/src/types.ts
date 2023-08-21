@@ -11,7 +11,6 @@ import {
   DocumentNode,
   FragmentDefinitionNode,
   OperationDefinitionNode,
-  TypeNode,
 } from "./supermassive-ast";
 import { ObjMap } from "./jsutils/ObjMap";
 import { Path } from "./jsutils/Path";
@@ -101,7 +100,6 @@ export interface ResolveInfo {
   fieldGroup: FieldGroup;
   returnTypeName: string;
   parentTypeName: string;
-  returnTypeNode: TypeNode;
   // readonly returnType: GraphQLOutputType;
   // readonly parentType: GraphQLObjectType;
   path: Path;

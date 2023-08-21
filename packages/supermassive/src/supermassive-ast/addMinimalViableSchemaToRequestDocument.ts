@@ -31,7 +31,7 @@ import {
   makeReadableErrorPath,
   visitWithTypeInfo,
 } from "./addTypesToRequestDocument";
-import { specifiedDirectives } from "./directives";
+import { specifiedDirectives } from "../types/directives";
 import { inspect } from "../jsutils/inspect";
 import { specifiedScalars } from "../values";
 

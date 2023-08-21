@@ -1,5 +1,6 @@
 import { TypeReference } from "./definition";
-import { TypeNode, print } from "graphql";
+import { print, ASTNode } from "graphql";
+import { TypeNode } from "../supermassive-ast";
 
 // Assumes strict reference format (i.e. no whitespaces, comments, etc)
 // (must be enforced at build-time)
@@ -47,12 +48,12 @@ const LIST_START_TOKEN = "[";
 const LIST_END_TOKEN = "]";
 
 export function isNonNullType(typeRef: TypeReference): boolean {
-  const ref = normalize(typeRef);
+  const ref = decode(typeRef);
   return ref[ref.length - 1] === NON_NULL_TOKEN;
 }
 
 export function isListType(typeRef: TypeReference): boolean {
-  const ref = normalize(typeRef);
+  const ref = decode(typeRef);
   return ref[ref.length - 1] === LIST_END_TOKEN;
 }
 
@@ -60,13 +61,13 @@ export function isWrapperType(typeRef: TypeReference): boolean {
   return isNonNullType(typeRef) || isListType(typeRef);
 }
 
-export function unwrapOne(typeRef: TypeReference): TypeReference {
-  const ref = normalize(typeRef);
+export function unwrap(typeRef: TypeReference): TypeReference {
+  const ref = decode(typeRef);
   if (isListType(ref)) {
-    return optimize(ref.slice(1, ref.length - 1));
+    return encode(ref.slice(1, ref.length - 1));
   }
   if (isNonNullType(ref)) {
-    return optimize(ref.slice(0, ref.length - 1));
+    return encode(ref.slice(0, ref.length - 1));
   }
   throw new Error(
     `Can not unwrap type "${ref}": it is a nullable type and is not a list`,
@@ -75,7 +76,7 @@ export function unwrapOne(typeRef: TypeReference): TypeReference {
 
 export function unwrapAll(typeRef: TypeReference): TypeReference {
   const typeName = typeNameFromReference(typeRef);
-  return optimize(typeName);
+  return encode(typeName);
 }
 
 export function typeNameFromReference(typeRef: TypeReference): string {
@@ -86,7 +87,7 @@ export function typeNameFromReference(typeRef: TypeReference): string {
     // Fast path for spec types
     return EncodedSpecTypes[typeRef % EncodedSpecTypeCount];
   }
-  const ref = normalize(typeRef);
+  const ref = decode(typeRef);
   let startIndex = 0;
   let endIndex = ref.length - 1;
   while (ref[startIndex] === LIST_START_TOKEN) {
@@ -101,11 +102,11 @@ export function typeNameFromReference(typeRef: TypeReference): string {
 }
 
 export function typeReferenceFromNode(typeNode: TypeNode): TypeReference {
-  return optimize(print(typeNode));
+  return encode(print(typeNode as ASTNode));
 }
 
 export function typeReferenceFromName(name: string): TypeReference {
-  return optimize(name);
+  return encode(name);
 }
 
 export function inspectTypeReference(typeRef: TypeReference): string {
@@ -114,7 +115,7 @@ export function inspectTypeReference(typeRef: TypeReference): string {
     : typeRef;
 }
 
-function normalize(typeRef: TypeReference): string {
+function decode(typeRef: TypeReference): string {
   if (typeof typeRef === "number") {
     const stringRef = EncodedSpecTypes[typeRef];
     if (!stringRef) {
@@ -129,7 +130,7 @@ function normalize(typeRef: TypeReference): string {
   return typeRef;
 }
 
-function optimize(typeRef: string): TypeReference {
+function encode(typeRef: string): TypeReference {
   const index = EncodedSpecTypes.indexOf(typeRef);
   return index === -1 ? typeRef : index;
 }

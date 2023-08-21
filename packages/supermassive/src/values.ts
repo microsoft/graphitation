@@ -5,7 +5,6 @@ import {
   TypeNode as GraphQLTypeNode,
   ValueNode as GraphQLValueNode,
   VariableDefinitionNode as GraphQLVariableDefinitionNode,
-  GraphQLDirective,
   locatedError,
   ASTNode,
 } from "graphql";
@@ -18,10 +17,18 @@ import { inspect } from "./jsutils/inspect";
 import type { Maybe } from "./jsutils/Maybe";
 import { printPathArray } from "./jsutils/printPathArray";
 import { ExecutionContext } from "./executeWithoutSchema";
-import { InputValueDefinitionTuple } from "./types/definition";
+import {
+  DirectiveDefinitionTuple,
+  FieldDefinitionTuple,
+} from "./types/definition";
 import { valueFromAST } from "./utilities/valueFromAST";
 import { SchemaFragment } from "./types/schema";
 import { coerceInputValue } from "./utilities/coerceInputValue";
+import {
+  inspectTypeReference,
+  isNonNullType,
+  typeReferenceFromNode,
+} from "./types/reference";
 
 type CoercedVariableValues =
   | { errors: Array<GraphQLError>; coerced?: never }
@@ -80,12 +87,12 @@ function coerceVariableValues(
   const coercedValues: { [variable: string]: unknown } = {};
   for (const varDefNode of varDefNodes) {
     const varName = varDefNode.variable.name.value;
-    const varTypeNode = varDefNode.type;
+    const varTypeReference = typeReferenceFromNode(varDefNode.type);
 
-    if (!schemaTypes.isInputType(varTypeNode)) {
+    if (!schemaTypes.isInputType(varTypeReference)) {
       // Must use input types for variables. This should be caught during
       // validation, however is checked again here for safety.
-      const varTypeStr = schemaTypes.printTypeRef(varTypeNode);
+      const varTypeStr = inspectTypeReference(varTypeReference);
       onError(
         new GraphQLError(
           `Variable "$${varName}" expected value of type "${varTypeStr}" which cannot be used as an input type.`,
@@ -99,11 +106,11 @@ function coerceVariableValues(
       if (varDefNode.defaultValue) {
         coercedValues[varName] = valueFromAST(
           varDefNode.defaultValue as Maybe<GraphQLValueNode>,
-          varTypeNode,
+          varTypeReference,
           schemaTypes,
         );
-      } else if (schemaTypes.isNonNullType(varTypeNode)) {
-        const varTypeStr = schemaTypes.printTypeRef(varTypeNode);
+      } else if (isNonNullType(varTypeReference)) {
+        const varTypeStr = inspectTypeReference(varTypeReference);
         onError(
           new GraphQLError(
             `Variable "$${varName}" of required type "${varTypeStr}" was not provided.`,
@@ -115,8 +122,8 @@ function coerceVariableValues(
     }
 
     const value = inputs[varName];
-    if (value === null && schemaTypes.isNonNullType(varTypeNode)) {
-      const varTypeStr = schemaTypes.printTypeRef(varTypeNode);
+    if (value === null && isNonNullType(varTypeReference)) {
+      const varTypeStr = inspectTypeReference(varTypeReference);
       onError(
         new GraphQLError(
           `Variable "$${varName}" of non-null type "${varTypeStr}" must not be null.`,
@@ -128,7 +135,7 @@ function coerceVariableValues(
 
     coercedValues[varName] = coerceInputValue(
       value,
-      varTypeNode,
+      varTypeReference,
       schemaTypes,
       (path, invalidValue, error) => {
         let prefix =
@@ -161,26 +168,29 @@ function coerceVariableValues(
  */
 export function getArgumentValues(
   exeContext: ExecutionContext,
-  argumentDefs: Record<string, InputValueDefinitionTuple>, // FIXME: FieldDefinitionTuple | DirectiveDefinitionTuple
+  def: FieldDefinitionTuple | DirectiveDefinitionTuple,
   node: FieldNode | DirectiveNode,
 ): { [argument: string]: unknown } {
   const schemaTypes = exeContext.schemaTypes;
   const coercedValues: { [argument: string]: unknown } = {};
-
+  const argumentDefs = schemaTypes.resolveDefinitionArguments(def);
+  if (!argumentDefs) {
+    return coercedValues;
+  }
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
   const argumentNodes = node.arguments ?? [];
   const argNodeMap = new Map(argumentNodes.map((arg) => [arg.name.value, arg]));
 
   for (const [name, argumentDef] of Object.entries(argumentDefs)) {
     const argumentNode = argNodeMap.get(name);
-    const argumentTypeRef = schemaTypes.getTypeRef(argumentDef);
-    const defaultValue = schemaTypes.getDefaultValue(argumentDef);
+    const argumentTypeRef = schemaTypes.getTypeReference(argumentDef);
+    const defaultValue = schemaTypes.getInputDefaultValue(argumentDef);
 
     if (argumentNode == null) {
       if (defaultValue !== undefined) {
         coercedValues[name] = defaultValue;
-      } else if (schemaTypes.isNonNullType(argumentTypeRef)) {
-        const type = schemaTypes.printTypeRef(argumentTypeRef);
+      } else if (isNonNullType(argumentTypeRef)) {
+        const type = inspectTypeReference(argumentTypeRef);
         throw locatedError(
           `Argument "${name}" of required type "${type}" was not provided.`,
           [node] as ASTNode[],
@@ -215,8 +225,8 @@ export function getArgumentValues(
       ) {
         if (defaultValue !== undefined) {
           coercedValues[name] = defaultValue;
-        } else if (schemaTypes.isNonNullType(argumentTypeRef)) {
-          const type = schemaTypes.printTypeRef(argumentTypeRef);
+        } else if (isNonNullType(argumentTypeRef)) {
+          const type = inspectTypeReference(argumentTypeRef);
           throw locatedError(
             `Argument "${name}" of required type "${type}" ` +
               `was provided the variable "$${variableName}" which was not provided a runtime value.`,
@@ -228,8 +238,8 @@ export function getArgumentValues(
       isNull = exeContext.variableValues[variableName] == null;
     }
 
-    if (isNull && schemaTypes.isNonNullType(argumentTypeRef)) {
-      const type = schemaTypes.printTypeRef(argumentTypeRef);
+    if (isNull && isNonNullType(argumentTypeRef)) {
+      const type = inspectTypeReference(argumentTypeRef);
       throw locatedError(
         `Argument "${name}" of non-null type "${type}" must not be null."`,
         [valueNode] as ASTNode[],
@@ -271,13 +281,16 @@ export function getArgumentValues(
  * Object prototype.
  */
 export function getDirectiveValues(
-  directiveDef: GraphQLDirective,
-  node: { directives?: ReadonlyArray<DirectiveNode> },
   exeContext: ExecutionContext,
+  directiveDef: DirectiveDefinitionTuple,
+  node: { directives?: ReadonlyArray<DirectiveNode> },
 ): undefined | { [argument: string]: unknown } {
+  const schemaTypes = exeContext.schemaTypes;
+  const name = schemaTypes.getDirectiveName(directiveDef);
+
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
   const directiveNode = node.directives?.find(
-    (directive) => directive.name.value === directiveDef.name,
+    (directive) => directive.name.value === name,
   );
 
   if (directiveNode) {
