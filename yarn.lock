@@ -916,6 +916,11 @@
   resolved "https://registry.yarnpkg.com/@eslint/js/-/js-8.41.0.tgz#080321c3b68253522f7646b55b577dd99d2950b3"
   integrity sha512-LxcyMGxwmTh2lY9FwHPGWOHmYFCZvbrFCBZL4FzSSsxsRPuhrYUg/49/0KDfW8tnIEaEHtfmn6+NPN+1DqaNmA==
 
+"@fastify/deepmerge@^1.0.0":
+  version "1.3.0"
+  resolved "https://registry.npmjs.org/@fastify/deepmerge/-/deepmerge-1.3.0.tgz#8116858108f0c7d9fd460d05a7d637a13fe3239a"
+  integrity sha512-J8TOSBq3SoZbDhM9+R/u77hP93gz/rajSA+K2kGyijPpORPWUXHUpTaleoj+92As0S9uPRP7Oi8IqMf0u+ro6A==
+
 "@floating-ui/core@^1.2.4":
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/@floating-ui/core/-/core-1.2.4.tgz#89e6311b021190c9e121fcf20306e76ac66e4066"
@@ -1639,14 +1644,6 @@
     "@n1ru4l/push-pull-async-iterable-iterator" "^3.1.0"
     meros "^1.1.4"
 
-"@graphitation/supermassive@^2.6.0":
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/@graphitation/supermassive/-/supermassive-2.6.0.tgz#ac43287d2098105833797810e6c9025c26d8e773"
-  integrity sha512-GI6mFcWFxmA2rW9QbLAM8ZECQBtIskMm/KkCzHcBG2+SOaJj19rTc2hH55ExMf4fDP91LBgNl6hEWH7PYYZstA==
-  dependencies:
-    "@graphitation/supermassive-ast" "*"
-    graphql "^15.6.1"
-
 "@graphql-codegen/add@^3.1.0":
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/add/-/add-3.1.0.tgz#cd02fd6d80a7f62839cb27160b62e48366a237c5"
@@ -2302,6 +2299,11 @@
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/@graphql-typed-document-node/core/-/core-3.1.1.tgz#076d78ce99822258cf813ecc1e7fa460fa74d052"
   integrity sha512-NQ17ii0rK1b34VZonlmT2QMJFI70m0TRwbknO/ihlbatXyaktDhN/98vBiUU6kNBPljqGqyIrl2T4nY2RpFANg==
+
+"@graphql-typed-document-node/core@^3.2.0":
+  version "3.2.0"
+  resolved "https://registry.npmjs.org/@graphql-typed-document-node/core/-/core-3.2.0.tgz#5f3d96ec6b2354ad6d8a28bf216a1d97b5426861"
+  integrity sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==
 
 "@griffel/core@^1.10.0", "@griffel/core@^1.9.0":
   version "1.10.0"
@@ -3848,7 +3850,7 @@ ajv-keywords@^5.1.0:
   dependencies:
     fast-deep-equal "^3.1.3"
 
-ajv@^6.1.0, ajv@^6.10.0, ajv@^6.11.0, ajv@^6.12.4, ajv@^6.12.5:
+ajv@^6.1.0, ajv@^6.10.0, ajv@^6.12.4, ajv@^6.12.5:
   version "6.12.6"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-6.12.6.tgz#baf5a62e802b07d977034586f8c3baf5adf26df4"
   integrity sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==
@@ -3858,7 +3860,7 @@ ajv@^6.1.0, ajv@^6.10.0, ajv@^6.11.0, ajv@^6.12.4, ajv@^6.12.5:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
-ajv@^8.0.0, ajv@^8.9.0:
+ajv@^8.0.0, ajv@^8.10.0, ajv@^8.9.0:
   version "8.12.0"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-8.12.0.tgz#d1a0527323e22f53562c567c00991577dfbe19d1"
   integrity sha512-sRu1kpcO9yLtYxBKvqfTeh9KzZEwO3STyX1HT+4CaDzC6HpTGYhIhPIzj9XuKU7KYDwnaeh5hcOwjy1QuJzBPA==
@@ -6248,14 +6250,17 @@ fast-json-stable-stringify@2.x, fast-json-stable-stringify@^2.0.0, fast-json-sta
   resolved "https://registry.yarnpkg.com/fast-json-stable-stringify/-/fast-json-stable-stringify-2.1.0.tgz#874bf69c6f404c2b5d99c481341399fd55892633"
   integrity sha512-lhd/wF+Lk98HZoTCtlVraHtfh5XYijIjalXck7saUtuanSDyLMxnHhSXEDJqHxD7msR8D0uCmqlkwjCV8xvwHw==
 
-fast-json-stringify@^1.13.0:
-  version "1.21.0"
-  resolved "https://registry.yarnpkg.com/fast-json-stringify/-/fast-json-stringify-1.21.0.tgz#51bc8c6d77d8c7b2cc7e5fa754f7f909f9e1262f"
-  integrity sha512-xY6gyjmHN3AK1Y15BCbMpeO9+dea5ePVsp3BouHCdukcx0hOHbXwFhRodhcI0NpZIgDChSeAKkHW9YjKvhwKBA==
+fast-json-stringify@^5.7.0:
+  version "5.8.0"
+  resolved "https://registry.npmjs.org/fast-json-stringify/-/fast-json-stringify-5.8.0.tgz#b229ed01ac5f92f3b82001a916c31324652f46d7"
+  integrity sha512-VVwK8CFMSALIvt14U8AvrSzQAwN/0vaVRiFFUVlpnXSnDGrSkOAO5MtzyN8oQNjLd5AqTW5OZRgyjoNuAuR3jQ==
   dependencies:
-    ajv "^6.11.0"
-    deepmerge "^4.2.2"
-    string-similarity "^4.0.1"
+    "@fastify/deepmerge" "^1.0.0"
+    ajv "^8.10.0"
+    ajv-formats "^2.1.1"
+    fast-deep-equal "^3.1.3"
+    fast-uri "^2.1.0"
+    rfdc "^1.2.0"
 
 fast-levenshtein@^1.0.0:
   version "1.1.4"
@@ -6266,6 +6271,11 @@ fast-levenshtein@^2.0.6:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=
+
+fast-uri@^2.1.0:
+  version "2.2.0"
+  resolved "https://registry.npmjs.org/fast-uri/-/fast-uri-2.2.0.tgz#519a0f849bef714aad10e9753d69d8f758f7445a"
+  integrity sha512-cIusKBIt/R/oI6z/1nyfe2FvGKVTohVRfvkOhvx0nCEW+xf5NoCXjAHcWp93uOUBchzYcsvPlrapAdX1uW+YGg==
 
 fastest-levenshtein@^1.0.12:
   version "1.0.12"
@@ -6864,14 +6874,14 @@ graphql-depth-limit@1.1.0:
   dependencies:
     arrify "^1.0.1"
 
-graphql-jit@^0.5.1:
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/graphql-jit/-/graphql-jit-0.5.2.tgz#f1fe88e106f6e5b6daa43f9f9a021f733697aee6"
-  integrity sha512-8XNFsdFTUujjqu2q26Vkh4U6ZJ5dKZ2KxtiuCe95VlHK9Xn4+yz1P/nOj7ipZvXhMG4/s2gwoEhkSig9IEoahQ==
+graphql-jit@^0.8.4:
+  version "0.8.4"
+  resolved "https://registry.npmjs.org/graphql-jit/-/graphql-jit-0.8.4.tgz#53c2e43b90ec98ea0942f4062516de910fbff709"
+  integrity sha512-4KRrJ1ROy3Usgbl3eAoUMfdfZCRjkcw9cCGT7QwTUIHm9dPGaSaldxzGUttyjErU0rsYEb6WWyb6mMh5r6lEoQ==
   dependencies:
-    fast-json-stringify "^1.13.0"
+    "@graphql-typed-document-node/core" "^3.2.0"
+    fast-json-stringify "^5.7.0"
     generate-function "^2.3.1"
-    json-schema "^0.2.3"
     lodash.memoize "^4.1.2"
     lodash.merge "4.6.2"
     lodash.mergewith "4.6.2"
@@ -8435,11 +8445,6 @@ json-schema-traverse@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/json-schema-traverse/-/json-schema-traverse-1.0.0.tgz#ae7bcb3656ab77a73ba5c49bf654f38e6b6860e2"
   integrity sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==
-
-json-schema@^0.2.3:
-  version "0.2.5"
-  resolved "https://registry.yarnpkg.com/json-schema/-/json-schema-0.2.5.tgz#97997f50972dd0500214e208c407efa4b5d7063b"
-  integrity sha512-gWJOWYFrhQ8j7pVm0EM8Slr+EPVq1Phf6lvzvD/WCeqkrx/f2xBI0xOsRRS9xCn3I4vKtP519dvs3TP09r24wQ==
 
 json-stable-stringify-without-jsonify@^1.0.1:
   version "1.0.1"
@@ -10670,6 +10675,11 @@ reusify@^1.0.4:
   resolved "https://registry.yarnpkg.com/reusify/-/reusify-1.0.4.tgz#90da382b1e126efc02146e90845a88db12925d76"
   integrity sha512-U9nH88a3fc/ekCF1l0/UP1IosiuIjyTh7hBvXVMHYgVcfGvt897Xguj2UOLDeI5BG2m7/uwyaLVT6fbtCwTyzw==
 
+rfdc@^1.2.0:
+  version "1.3.0"
+  resolved "https://registry.npmjs.org/rfdc/-/rfdc-1.3.0.tgz#d0b7c441ab2720d05dc4cf26e01c89631d9da08b"
+  integrity sha512-V2hovdzFbOi77/WajaSMXk2OLm+xNIeQdMMuB7icj7bk6zi2F8GGAxigcnDFpJHbNyNcgyJDiP+8nOrY5cZGrA==
+
 rimraf@^2.6.3:
   version "2.7.1"
   resolved "https://registry.yarnpkg.com/rimraf/-/rimraf-2.7.1.tgz#35797f13a7fdadc566142c29d4f07ccad483e3ec"
@@ -11250,11 +11260,6 @@ string-length@^4.0.1:
   dependencies:
     char-regex "^1.0.2"
     strip-ansi "^6.0.0"
-
-string-similarity@^4.0.1:
-  version "4.0.4"
-  resolved "https://registry.yarnpkg.com/string-similarity/-/string-similarity-4.0.4.tgz#42d01ab0b34660ea8a018da8f56a3309bb8b2a5b"
-  integrity sha512-/q/8Q4Bl4ZKAPjj8WerIBJWALKkaPRfrvhfF8k/B23i4nzrlRj2/go1m90In7nG/3XDSbOo0+pu6RvCTM9RGMQ==
 
 string-width@^1.0.1:
   version "1.0.2"
