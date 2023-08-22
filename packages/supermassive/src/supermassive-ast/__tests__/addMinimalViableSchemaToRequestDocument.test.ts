@@ -23,6 +23,9 @@ const schema = buildASTSchema(
       input: CreateFilmInput! = { filmType: GOOD, title: "Default" }
       enumInput: FilmType!
     ): Film
+    isPopularFirm(
+      input: FilmFilterInput! = { genre: COMEDY }
+    ): Boolean
   }
 
   type Film implements Node {
@@ -51,6 +54,15 @@ const schema = buildASTSchema(
     title: String!
     filmType: FilmType!
   }
+  
+  input FilmFilterInput {
+    genre: FilmGenre
+  }
+
+  enum FilmGenre {
+    COMEDY
+    DRAMA
+  }
 `),
 );
 
@@ -72,6 +84,48 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       }
       type Query {
         film(id: ID!): Film
+      }"
+    `);
+  });
+
+  it("with __typename only", () => {
+    const mvs = extractMinimalViableSchemaForRequestDocument(
+      schema,
+      parse(`
+        query {
+          film(id: 42) {
+            __typename
+          }
+        }
+      `),
+    );
+    expect(mvs).toMatchInlineSnapshot(`
+      "type Film implements Node
+      type Query {
+        film(id: ID!): Film
+      }"
+    `);
+  });
+
+  it("complex input objects", () => {
+    const mvs = extractMinimalViableSchemaForRequestDocument(
+      schema,
+      parse(`
+        mutation ($input: CreateFilmInput! = { filmType: GOOD, title: "The Empire Strikes Back" }) {
+          isPopularFirm(input: $input)
+        }
+      `),
+    );
+    expect(mvs).toMatchInlineSnapshot(`
+      "type Mutation {
+        isPopularFirm(input: FilmFilterInput! = { genre: COMEDY }): Boolean
+      }
+      input FilmFilterInput {
+        genre: FilmGenre
+      }
+      enum FilmGenre {
+        COMEDY
+        DRAMA
       }"
     `);
   });

@@ -12,7 +12,7 @@ import {
   GraphQLSkipDirective,
   GraphQLIncludeDirective,
   GraphQLDeferDirective,
-} from "./directives";
+} from "./types/directives";
 
 import { AccumulatorMap } from "./jsutils/AccumulatorMap";
 import invariant from "invariant";

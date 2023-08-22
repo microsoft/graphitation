@@ -24,6 +24,7 @@ import {
   GraphQLCompositeType,
   locatedError,
   isCompositeType,
+  specifiedDirectives,
 } from "graphql";
 import * as TypelessAST from "graphql/language/ast";
 import {
@@ -31,9 +32,8 @@ import {
   makeReadableErrorPath,
   visitWithTypeInfo,
 } from "./addTypesToRequestDocument";
-import { specifiedDirectives } from "../types/directives";
 import { inspect } from "../jsutils/inspect";
-import { specifiedScalars } from "../values";
+import { specifiedScalars } from "../types/definition";
 
 // export function addMinimalViableSchemaToRequestDocument(
 //   schema: GraphQLSchema,
@@ -101,6 +101,24 @@ export function extractMinimalViableSchemaForRequestDocument(
       }
     }
   });
+  function addInputType(type: GraphQLInputObjectType) {
+    if (!extractedTypes.has(type.name)) {
+      extractedTypes.set(type.name, {
+        kind: "OTHER",
+        type: type,
+      });
+      for (const field of Object.values(type.getFields())) {
+        const fieldType = getNamedType(field.type);
+        extractedTypes.set(fieldType.name, {
+          kind: "OTHER",
+          type: fieldType,
+        });
+        if (fieldType instanceof GraphQLInputObjectType) {
+          addInputType(fieldType);
+        }
+      }
+    }
+  }
   const typeInfo = new TypeInfo(schema, {
     defaultDirectives: specifiedDirectives,
     ignoredDirectives: options.ignoredDirectives,
@@ -209,10 +227,26 @@ export function extractMinimalViableSchemaForRequestDocument(
             return;
           }
           const fieldDef = typeInfo.getFieldDef();
-          const type = getNamedType(
-            typeInfo.getParentType(),
-          ) as GraphQLNamedType;
+          const type = getNamedType(typeInfo.getParentType());
           if (fieldDef) {
+            const returnType = getNamedType(fieldDef.type);
+            if (isCompositeType(returnType)) {
+              const kind = isObjectType(returnType)
+                ? "OBJECT"
+                : isInterfaceType(returnType)
+                ? "INTERFACE"
+                : "UNION";
+
+              const extractedType: ExtractedObjectType = (extractedTypes.get(
+                returnType.name,
+              ) as ExtractedObjectType) || {
+                kind,
+                type: returnType,
+                usedFields: new Set(),
+              };
+              extractedTypes.set(extractedType.type.name, extractedType);
+            }
+
             if (type instanceof GraphQLObjectType) {
               const extractedType: ExtractedObjectType = (extractedTypes.get(
                 type.name,
@@ -249,7 +283,7 @@ export function extractMinimalViableSchemaForRequestDocument(
                 );
               }
               extractedTypes.set(extractedType.type.name, extractedType);
-            } else {
+            } else if (type) {
               const extractedType: ExtractedOtherType = (extractedTypes.get(
                 type.name,
               ) as ExtractedOtherType) || {
@@ -258,9 +292,12 @@ export function extractMinimalViableSchemaForRequestDocument(
               };
               extractedTypes.set(extractedType.type.name, extractedType);
             }
+
             for (const arg of fieldDef.args) {
               const argType = getNamedType(arg.type);
-              if (!extractedTypes.has(argType.name)) {
+              if (argType instanceof GraphQLInputObjectType) {
+                addInputType(argType);
+              } else if (!extractedTypes.has(argType.name)) {
                 extractedTypes.set(argType.name, {
                   kind: "OTHER",
                   type: argType,

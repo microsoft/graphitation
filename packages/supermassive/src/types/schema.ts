@@ -143,9 +143,7 @@ export class SchemaFragment {
     if (isSpecifiedScalarType(typeName)) {
       return specifiedScalarDefinition;
     }
-
     const type = this.encodedFragment.types[typeName];
-
     if (type?.[0] !== TypeKind.ENUM && type?.[0] !== TypeKind.SCALAR) {
       return undefined;
     }
@@ -158,7 +156,8 @@ export class SchemaFragment {
       return true;
     }
     const types = this.encodedFragment.types;
-    return Boolean(types[typeRef] || types[typeNameFromReference(typeRef)]);
+    const typeName = typeNameFromReference(typeRef);
+    return !!types[typeName] || isSpecifiedScalarType(typeName);
   }
 
   public isInputType(typeRef: TypeReference): boolean {
@@ -258,9 +257,10 @@ export class SchemaFragment {
 
   public getAbstractTypeResolver(typeName: TypeName) {
     const resolver = this.resolvers[typeName];
-    return isUnionTypeResolver(resolver) || isInterfaceTypeResolver(resolver)
+    return resolver &&
+      (isUnionTypeResolver(resolver) || isInterfaceTypeResolver(resolver))
       ? resolver.__resolveType
-      : undefined; // FIXME: should this throw instead?
+      : undefined;
   }
 
   public getLeafTypeResolver(

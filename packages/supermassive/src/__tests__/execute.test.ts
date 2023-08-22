@@ -26,6 +26,7 @@ import { ObjMap } from "../jsutils/ObjMap";
 import { PromiseOrValue } from "graphql/jsutils/PromiseOrValue";
 import { extractMinimalViableSchemaForRequestDocument } from "../supermassive-ast/addMinimalViableSchemaToRequestDocument";
 import { specifiedDirectivesSDL } from "../types/directives";
+import { encodeSchema } from "../utilities/encodeSchema";
 
 interface TestCase {
   name: string;
@@ -856,7 +857,7 @@ async function compareResultsForExecuteWithoutSchema(
   const document = parse(query);
   const result = await drainExecution(
     await executeWithoutSchema({
-      document: addTypesToRequestDocument(schema, document),
+      document: addTypesToRequestDocument(schema, document) as any,
       contextValue: {
         models,
       },
@@ -892,12 +893,13 @@ async function compareResultForExecuteWithoutSchemaWithMVSAnnotation(
         models,
       },
       resolvers: resolvers as UserResolvers,
-      schemaResolvers: extractedResolvers,
-      schemaFragment: parse(
-        extractMinimalViableSchemaForRequestDocument(schema, document) +
-          "\n\n" +
-          specifiedDirectivesSDL,
-      ).definitions as TypeDefinitionNode[],
+      schemaFragment: encodeSchema(
+        parse(
+          extractMinimalViableSchemaForRequestDocument(schema, document) +
+            "\n\n" +
+            specifiedDirectivesSDL,
+        ),
+      ),
       variableValues: variables,
     }),
   );
