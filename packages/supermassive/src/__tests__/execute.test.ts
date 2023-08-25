@@ -7,16 +7,14 @@ import {
   ExecutionResult as GraphQLExecutionResult,
   ExperimentalIncrementalExecutionResults as GraphQLExperimentalExecutionResult,
   GraphQLSchema,
+  DocumentNode,
+  OperationDefinitionNode,
+  OperationTypeNode,
 } from "graphql";
 import { executeWithoutSchema, executeWithSchema } from "..";
 import { makeSchema, typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
-import {
-  DocumentNode,
-  OperationDefinitionNode,
-  OperationTypeNode,
-} from "../supermassive-ast";
 import { ExecutionResult, UserResolvers } from "../types";
 import { forAwaitEach, isAsyncIterable } from "iterall";
 import { ObjMap } from "../jsutils/ObjMap";

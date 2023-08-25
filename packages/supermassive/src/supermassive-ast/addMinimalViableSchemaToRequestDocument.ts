@@ -31,14 +31,17 @@ import {
   TypeInfo,
   makeReadableErrorPath,
   visitWithTypeInfo,
-} from "./addTypesToRequestDocument";
+} from "./utilities";
 import { inspect } from "../jsutils/inspect";
-import { specifiedScalars } from "../types/definition";
+import { isSpecifiedScalarType } from "../types/resolvers";
 
-// export function addMinimalViableSchemaToRequestDocument(
-//   schema: GraphQLSchema,
-//   document: TypelessAST.DocumentNode,
-// ): TypelessAST.DocumentNode {}
+// TODO:
+export function addMinimalViableSchemaToRequestDocument(
+  _schema: GraphQLSchema,
+  _document: TypelessAST.DocumentNode,
+): TypelessAST.DocumentNode | undefined {
+  return undefined;
+}
 
 type ExtractedTypes = Map<string, ExtractedType>;
 
@@ -337,7 +340,7 @@ export function extractMinimalViableSchemaForRequestDocument(
         result.push(printDirective(type.type));
       }
     } else if (type.type instanceof GraphQLScalarType) {
-      if (!specifiedScalars[type.type.name]) {
+      if (!isSpecifiedScalarType(type.type.name)) {
         result.push(printType(type.type));
       }
     } else {

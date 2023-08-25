@@ -10,6 +10,7 @@ const schema = buildASTSchema(
     allFilms: [Film!]!
     node(id: ID!): Node
     screenable(id: ID!): Screenable
+    countFilms(filter: FilmFilterInput!): Int!
   }
 
   interface Node {
@@ -23,9 +24,6 @@ const schema = buildASTSchema(
       input: CreateFilmInput! = { filmType: GOOD, title: "Default" }
       enumInput: FilmType!
     ): Film
-    isPopularFirm(
-      input: FilmFilterInput! = { genre: COMEDY }
-    ): Boolean
   }
 
   type Film implements Node {
@@ -111,14 +109,14 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     const mvs = extractMinimalViableSchemaForRequestDocument(
       schema,
       parse(`
-        mutation ($input: CreateFilmInput! = { filmType: GOOD, title: "The Empire Strikes Back" }) {
-          isPopularFirm(input: $input)
+        query ($input: FilmFilterInput! = { genre: COMEDY }) {
+          countFilms(filter: $input)
         }
       `),
     );
     expect(mvs).toMatchInlineSnapshot(`
-      "type Mutation {
-        isPopularFirm(input: FilmFilterInput! = { genre: COMEDY }): Boolean
+      "type Query {
+        countFilms(filter: FilmFilterInput!): Int!
       }
       input FilmFilterInput {
         genre: FilmGenre
