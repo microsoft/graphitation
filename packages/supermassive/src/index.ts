@@ -5,11 +5,8 @@ export { subscribeWithoutSchema } from "./subscribeWithoutSchema";
 
 export type {
   ObjectTypeResolver,
-  InterfaceTypeResolver,
-  UnionTypeResolver,
   ScalarTypeResolver,
   EnumTypeResolver,
-  InputObjectTypeResolver,
   FunctionFieldResolver,
   Resolvers,
   UserResolvers,
@@ -21,16 +18,7 @@ export type {
 
 export { isTotalExecutionResult, isIncrementalExecutionResult } from "./types";
 
-export {
-  /** @deprecated Use "@graphitation/supermassive-ast" */
-  addTypesToRequestDocument,
-  /** @deprecated Use "@graphitation/supermassive-ast" */
-  annotateDocumentGraphQLTransform,
-} from "./supermassive-ast";
-
-export { extractImplicitTypes } from "./extractImplicitTypesRuntime";
-
-export { specifiedScalars } from "./values";
+// export { specifiedScalars } from "./types/definition";
 
 export type { PromiseOrValue } from "./jsutils/PromiseOrValue";
 

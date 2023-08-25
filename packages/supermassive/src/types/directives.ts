@@ -1,4 +1,8 @@
-import { DirectiveDefinitionTuple, DirectiveKeys } from "./definition";
+import {
+  DirectiveDefinitionTuple,
+  DirectiveKeys,
+  DirectiveName,
+} from "./definition";
 
 /**
  * Used to conditionally include fields or fragments.
@@ -68,33 +72,11 @@ export const specifiedDirectives: ReadonlyArray<DirectiveDefinitionTuple> =
   ]);
 
 export function isSpecifiedDirective(
-  directive: DirectiveDefinitionTuple,
+  directive: DirectiveName | DirectiveDefinitionTuple,
 ): boolean {
+  const name =
+    typeof directive === "string" ? directive : directive[DirectiveKeys.name];
   return specifiedDirectives.some(
-    (specDirective) =>
-      specDirective[DirectiveKeys.name] === directive[DirectiveKeys.name],
+    (specDirective) => specDirective[DirectiveKeys.name] === name,
   );
 }
-
-export const specifiedDirectivesSDL = `
-directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
-
-directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
-
-directive @deprecated(
-  reason: String = "No longer supported"
-) on FIELD_DEFINITION | ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION | ENUM_VALUE
-
-directive @specifiedBy(url: String!) on SCALAR
-
-directive @defer(
-  label: String
-  if: Boolean! = true
-) on FRAGMENT_SPREAD | INLINE_FRAGMENT
-
-directive @stream(
-  label: String
-  if: Boolean! = true
-  initialCount: Int = 0
-) on FIELD
-`;

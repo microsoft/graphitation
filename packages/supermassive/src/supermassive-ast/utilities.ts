@@ -2,11 +2,7 @@ import {
   GraphQLType,
   GraphQLSchema,
   isListType,
-  isNamedType,
-  isNonNullType,
-  visit,
   Kind,
-  astFromValue,
   GraphQLArgument,
   ASTVisitor,
   GraphQLCompositeType,
@@ -26,205 +22,11 @@ import {
   isOutputType,
   typeFromAST,
   GraphQLDirective,
+  isInterfaceType,
 } from "graphql";
 
 import * as TypelessAST from "graphql/language/ast";
-import * as TypedAST from "./TypedAST";
 import { Maybe } from "graphql/jsutils/Maybe";
-export * from "./TypedAST";
-import { specifiedDirectives } from "../types/directives";
-
-export function addTypesToRequestDocument(
-  schema: GraphQLSchema,
-  document: TypelessAST.DocumentNode,
-  options: {
-    ignoredDirectives?: string[];
-  } = {},
-): TypedAST.DocumentNode {
-  const typeInfo = new TypeInfo(schema, {
-    defaultDirectives: specifiedDirectives,
-    ignoredDirectives: options.ignoredDirectives,
-  });
-  return visit(
-    document as TypelessAST.DocumentNode,
-    visitWithTypeInfo(typeInfo, {
-      Argument: {
-        leave(node, _key, _parent, _path, ancestors) {
-          const argument = typeInfo.getArgument();
-          if (argument) {
-            const typeNode = generateTypeNode(argument.type);
-            const newNode: TypedAST.ArgumentNode = {
-              ...node,
-              __type: typeNode,
-            };
-            // We only need default value for arguments with variable values
-            if (argument.defaultValue && node.value.kind === Kind.VARIABLE) {
-              (newNode.__defaultValue as
-                | TypedAST.ValueNode
-                | null
-                | undefined) = astFromValue(
-                argument.defaultValue,
-                argument.type,
-              );
-            }
-            return newNode;
-          }
-          if (!typeInfo.isInIgnoredDirective()) {
-            const errorPath = makeReadableErrorPath(ancestors);
-            throw new Error(
-              `Cannot find type for argument: ${errorPath.join(".")}.${
-                node.name.value
-              }`,
-            );
-          }
-        },
-      },
-      Directive: {
-        leave(
-          node: TypelessAST.DirectiveNode,
-          _key,
-          _parent,
-          _path,
-          ancestors,
-        ) {
-          const directiveDef = typeInfo.getDirective();
-          if (directiveDef) {
-            const missingArgs: Array<GraphQLArgument> =
-              directiveDef.args.filter(
-                (argDef) =>
-                  argDef.defaultValue != null &&
-                  node.arguments?.findIndex(
-                    (arg) => arg.name.value === argDef.name,
-                  ) === -1,
-              );
-            if (missingArgs) {
-              const newNode: TypedAST.DirectiveNode = {
-                ...(node as Omit<TypelessAST.DirectiveNode, "arguments">),
-              };
-              (newNode.arguments as TypedAST.ArgumentNode[]) = (
-                newNode.arguments || []
-              ).concat(
-                missingArgs.map((arg) => ({
-                  __type: generateTypeNode(arg.type),
-                  kind: Kind.ARGUMENT,
-                  name: {
-                    kind: Kind.NAME,
-                    value: arg.name,
-                  },
-                  value: astFromValue(
-                    arg.defaultValue,
-                    arg.type,
-                  ) as TypedAST.ValueNode,
-                })),
-              );
-              return newNode;
-            }
-            return node as TypedAST.DirectiveNode;
-          }
-
-          if (!typeInfo.isInIgnoredDirective()) {
-            const errorPath = makeReadableErrorPath(ancestors);
-
-            // This happens whenever a directive is requested that hasn't been defined in schema
-            throw new Error(
-              `Cannot find type for directive: ${errorPath.join(".")}.${
-                node.name.value
-              }`,
-            );
-          }
-        },
-      },
-      Field: {
-        leave(
-          node: Omit<TypelessAST.FieldNode, "selectionSet" | "directives">,
-          _key,
-          _parent,
-          _path,
-          ancestors,
-        ) {
-          const fieldDef = typeInfo.getFieldDef();
-          if (fieldDef) {
-            const type = fieldDef.type;
-            if (type) {
-              const typeNode = generateTypeNode(type);
-              const missingArgs: Array<GraphQLArgument> = fieldDef.args.filter(
-                (argDef) =>
-                  argDef.defaultValue != null &&
-                  node.arguments?.findIndex(
-                    (arg) => arg.name.value === argDef.name,
-                  ) === -1,
-              );
-              const newNode: TypedAST.FieldNode = {
-                ...(node as Omit<
-                  TypelessAST.FieldNode,
-                  "selectionSet" | "arguments" | "directives"
-                >),
-                __type: typeNode,
-              };
-              if (missingArgs) {
-                (newNode.arguments as TypedAST.ArgumentNode[]) = (
-                  newNode.arguments || []
-                ).concat(
-                  missingArgs.map((arg) => ({
-                    __type: generateTypeNode(arg.type),
-                    kind: Kind.ARGUMENT,
-                    name: {
-                      kind: Kind.NAME,
-                      value: arg.name,
-                    },
-                    value: astFromValue(
-                      arg.defaultValue,
-                      arg.type,
-                    ) as TypedAST.ValueNode,
-                  })),
-                );
-              }
-              return newNode;
-            }
-          }
-
-          const errorPath = makeReadableErrorPath(ancestors);
-
-          // This happens whenever a new field is requested that hasn't been defined in schema
-          throw new Error(
-            `Cannot find type for field: ${errorPath.join(".")}.${
-              node.name.value
-            }`,
-          );
-        },
-      },
-    }),
-  ) as TypedAST.DocumentNode;
-}
-
-function generateTypeNode(type: GraphQLType): TypedAST.TypeNode {
-  if (isNonNullType(type)) {
-    const typeNode = generateTypeNode(type.ofType) as
-      | TypedAST.NamedTypeNode
-      | TypedAST.ListTypeNode;
-    return {
-      kind: "NonNullType",
-      type: typeNode,
-    };
-  } else if (isListType(type)) {
-    const typeNode = generateTypeNode(type.ofType) as
-      | TypedAST.NamedTypeNode
-      | TypedAST.NonNullTypeNode;
-    return {
-      kind: "ListType",
-      type: typeNode,
-    };
-  } else if (isNamedType(type)) {
-    return {
-      kind: "NamedType",
-      name: {
-        kind: "Name",
-        value: type.name,
-      },
-    };
-  }
-  throw new Error(`Can't generate TypeNode for type: ${type}`);
-}
 
 export function makeReadableErrorPath(
   ancestors: ReadonlyArray<
@@ -524,7 +326,11 @@ function getFieldDef(
   parentType: GraphQLCompositeType,
   fieldNode: TypelessAST.FieldNode,
 ) {
-  return schema.getField(parentType, fieldNode.name.value);
+  if (isObjectType(parentType) || isInterfaceType(parentType)) {
+    return parentType.getFields()[fieldNode.name.value];
+  }
+  return undefined;
+  // return schema.getField(parentType, fieldNode.name.value);
 }
 
 /**

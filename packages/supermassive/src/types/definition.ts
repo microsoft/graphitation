@@ -1,12 +1,3 @@
-import {
-  GraphQLBoolean,
-  GraphQLFloat,
-  GraphQLID,
-  GraphQLInt,
-  GraphQLScalarType,
-  GraphQLString,
-} from "graphql";
-
 export type TypeName = string; // name without wrappers, i.e. "MyType", but not "[MyType]"
 export type SpecTypeIndex = number;
 export type TypeReference = string | SpecTypeIndex; // e.g. "ComplexType" | "ComplexType!" | "[ComplexType!]" | 4 (i.e. "ID")
@@ -107,12 +98,13 @@ export const enum InputValueKeys {
 export type InputValueDefinition = TypeReference | InputValueDefinitionTuple;
 export type InputValueDefinitionRecord = Record<string, InputValueDefinition>;
 
+export type DirectiveName = string;
 export type DirectiveTuple = [
-  name: string,
+  name: DirectiveName,
   arguments?: Record<string, unknown>, // JS values (cannot be a variable inside schema definition, so it is fine)
 ];
 export type DirectiveDefinitionTuple = [
-  name: string,
+  name: DirectiveName,
   arguments?: InputValueDefinitionRecord,
 ];
 export const enum DirectiveKeys {
@@ -127,17 +119,3 @@ export type EncodedSchemaFragment = {
   types: EncodedTypeRecord;
   directives?: EncodedDirectives;
 };
-
-export const specifiedScalars: { [key: string]: GraphQLScalarType } = {
-  ID: GraphQLID,
-  String: GraphQLString,
-  Int: GraphQLInt,
-  Float: GraphQLFloat,
-  Boolean: GraphQLBoolean,
-};
-
-export function isSpecifiedScalarType(typeName: string): boolean {
-  return !!specifiedScalars[typeName];
-}
-
-// TODO: function concatEncodedSchemaFragments

@@ -44,9 +44,9 @@ export type {
   InputObjectTypeExtensionNode,
   SelectionNode,
   TypeNode,
-} from "./TypedAST";
-export { OperationTypeNode } from "./TypedAST";
-export { addTypesToRequestDocument } from "./addTypesToRequestDocument";
+  OperationTypeNode,
+} from "graphql";
+// export { addMinimalViableSchemaToRequestDocument } from "./addMinimalViableSchemaToRequestDocument";
 export { annotateDocumentGraphQLTransform } from "./annotateDocumentGraphQLTransform";
 
 export {

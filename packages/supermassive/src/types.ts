@@ -1,7 +1,6 @@
 import {
   GraphQLError,
   GraphQLFormattedError,
-  GraphQLInputObjectType,
   GraphQLScalarType,
   DocumentNode,
   FragmentDefinitionNode,
@@ -69,8 +68,6 @@ export type UserInterfaceTypeResolver = {
 export type UserUnionTypeResolver = {
   __resolveType?: TypeResolver<unknown, unknown>;
 };
-
-export type InputObjectTypeResolver = GraphQLInputObjectType;
 
 export type UserResolver<TSource, TContext> =
   | ObjectTypeResolver<TSource, TContext>

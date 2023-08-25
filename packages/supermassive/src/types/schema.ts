@@ -7,16 +7,13 @@ import {
   InputObjectKeys,
   InputValueKeys,
   FieldDefinitionTuple,
-  InputValueDefinitionTuple,
   TypeReference,
   InputObjectTypeDefinitionTuple,
   InputValueDefinitionRecord,
   EnumTypeDefinitionTuple,
   ScalarTypeDefinitionTuple,
   EnumKeys,
-  isSpecifiedScalarType,
   ObjectTypeDefinitionTuple,
-  specifiedScalars,
   DirectiveDefinitionTuple,
   DirectiveKeys,
   InterfaceKeys,
@@ -32,6 +29,7 @@ import {
   FunctionFieldResolver,
   ObjectTypeResolver,
   ScalarTypeResolver,
+  TypeResolver,
   UserResolvers,
 } from "../types";
 import { isObjectLike } from "../jsutils/isObjectLike";
@@ -39,6 +37,8 @@ import {
   isInterfaceTypeResolver,
   isUnionTypeResolver,
   isScalarTypeResolver,
+  isSpecifiedScalarType,
+  specifiedScalarResolvers,
 } from "./resolvers";
 import { typeNameFromReference } from "./reference";
 
@@ -260,7 +260,9 @@ export class SchemaFragment {
       : fieldResolver?.subscribe;
   }
 
-  public getAbstractTypeResolver(typeName: TypeName) {
+  public getAbstractTypeResolver(
+    typeName: TypeName,
+  ): TypeResolver<unknown, unknown> | undefined {
     const resolver = this.resolvers[typeName];
     return resolver &&
       (isUnionTypeResolver(resolver) || isInterfaceTypeResolver(resolver))
@@ -274,8 +276,8 @@ export class SchemaFragment {
     // TODO: consider removing GraphQLEnumType and GraphQLScalarType
     const typeName = typeNameFromReference(typeRef);
 
-    if (specifiedScalars[typeName]) {
-      return specifiedScalars[typeName];
+    if (specifiedScalarResolvers[typeName]) {
+      return specifiedScalarResolvers[typeName];
     }
 
     const typeDef = this.getLeafType(typeRef);
