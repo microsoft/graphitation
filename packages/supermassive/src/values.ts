@@ -10,10 +10,7 @@ import {
 import { inspect } from "./jsutils/inspect";
 import { printPathArray } from "./jsutils/printPathArray";
 import { ExecutionContext } from "./executeWithoutSchema";
-import {
-  DirectiveDefinitionTuple,
-  FieldDefinitionTuple,
-} from "./types/definition";
+import { DirectiveDefinitionTuple, FieldDefinition } from "./types/definition";
 import { valueFromAST } from "./utilities/valueFromAST";
 import { SchemaFragment } from "./types/schema";
 import { coerceInputValue } from "./utilities/coerceInputValue";
@@ -161,7 +158,7 @@ function coerceVariableValues(
  */
 export function getArgumentValues(
   exeContext: ExecutionContext,
-  def: FieldDefinitionTuple | DirectiveDefinitionTuple,
+  def: FieldDefinition | DirectiveDefinitionTuple,
   node: FieldNode | DirectiveNode,
 ): { [argument: string]: unknown } {
   const schemaTypes = exeContext.schemaTypes;

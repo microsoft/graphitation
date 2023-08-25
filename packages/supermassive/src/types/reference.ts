@@ -41,7 +41,7 @@ const EncodedSpecTypes = [
   "[Float!]!",
   "[ID!]!",
 ];
-const EncodedSpecTypeCount = 5;
+const NamedTypeMod = 5;
 
 const NON_NULL_TOKEN = "!";
 const LIST_START_TOKEN = "[";
@@ -80,12 +80,9 @@ export function unwrapAll(typeRef: TypeReference): TypeReference {
 }
 
 export function typeNameFromReference(typeRef: TypeReference): string {
-  if (
-    typeof typeRef === "number" &&
-    EncodedSpecTypes[typeRef % EncodedSpecTypeCount]
-  ) {
+  if (typeof typeRef === "number" && EncodedSpecTypes[typeRef % NamedTypeMod]) {
     // Fast path for spec types
-    return EncodedSpecTypes[typeRef % EncodedSpecTypeCount];
+    return EncodedSpecTypes[typeRef % NamedTypeMod];
   }
   const ref = decode(typeRef);
   let startIndex = 0;

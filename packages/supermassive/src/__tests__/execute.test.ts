@@ -7,7 +7,6 @@ import {
   ExecutionResult as GraphQLExecutionResult,
   ExperimentalIncrementalExecutionResults as GraphQLExperimentalExecutionResult,
   GraphQLSchema,
-  TypeDefinitionNode,
 } from "graphql";
 import { executeWithoutSchema, executeWithSchema } from "..";
 import { makeSchema, typeDefs } from "../benchmarks/swapi-schema";
@@ -17,15 +16,12 @@ import {
   DocumentNode,
   OperationDefinitionNode,
   OperationTypeNode,
-  addTypesToRequestDocument,
 } from "../supermassive-ast";
 import { ExecutionResult, UserResolvers } from "../types";
-import { resolvers as extractedResolvers } from "../benchmarks/swapi-schema/__generated__/schema";
 import { forAwaitEach, isAsyncIterable } from "iterall";
 import { ObjMap } from "../jsutils/ObjMap";
 import { PromiseOrValue } from "graphql/jsutils/PromiseOrValue";
 import { extractMinimalViableSchemaForRequestDocument } from "../supermassive-ast/addMinimalViableSchemaToRequestDocument";
-import { specifiedDirectivesSDL } from "../types/directives";
 import { encodeSchema } from "../utilities/encodeSchema";
 
 interface TestCase {
@@ -791,17 +787,6 @@ describe.skip("executeWithSchema", () => {
   });
 });
 
-describe.skip("executeWithoutSchema", () => {
-  let schema: GraphQLSchema;
-  beforeEach(() => {
-    jest.resetAllMocks();
-    schema = makeSchema();
-  });
-  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
-    await compareResultsForExecuteWithoutSchema(schema, document, variables);
-  });
-});
-
 describe("executeWithoutSchema - minimal viable schema annotation", () => {
   let schema: GraphQLSchema;
   beforeEach(() => {
@@ -848,37 +833,6 @@ async function compareResultsForExecuteWithSchema(
   expect(result).toEqual(validResult);
 }
 
-async function compareResultsForExecuteWithoutSchema(
-  schema: GraphQLSchema,
-  query: string,
-  variables: Record<string, unknown> = {},
-) {
-  expect.assertions(1);
-  const document = parse(query);
-  const result = await drainExecution(
-    await executeWithoutSchema({
-      document: addTypesToRequestDocument(schema, document) as any,
-      contextValue: {
-        models,
-      },
-      resolvers: resolvers as UserResolvers,
-      schemaResolvers: extractedResolvers,
-      variableValues: variables,
-    }),
-  );
-  const validResult = await drainExecution(
-    await graphqlExecuteOrSubscribe({
-      document,
-      contextValue: {
-        models,
-      },
-      schema,
-      variableValues: variables,
-    }),
-  );
-  expect(result).toEqual(validResult);
-}
-
 async function compareResultForExecuteWithoutSchemaWithMVSAnnotation(
   schema: GraphQLSchema,
   query: string,
@@ -894,11 +848,7 @@ async function compareResultForExecuteWithoutSchemaWithMVSAnnotation(
       },
       resolvers: resolvers as UserResolvers,
       schemaFragment: encodeSchema(
-        parse(
-          extractMinimalViableSchemaForRequestDocument(schema, document) +
-            "\n\n" +
-            specifiedDirectivesSDL,
-        ),
+        parse(extractMinimalViableSchemaForRequestDocument(schema, document)),
       ),
       variableValues: variables,
     }),

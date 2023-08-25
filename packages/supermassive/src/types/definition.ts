@@ -92,7 +92,8 @@ export const enum FieldKeys {
   type = 0,
   arguments = 1,
 }
-export type FieldDefinitionRecord = Record<string, FieldDefinitionTuple>;
+export type FieldDefinition = TypeReference | FieldDefinitionTuple;
+export type FieldDefinitionRecord = Record<string, FieldDefinition>;
 
 export type InputValueDefinitionTuple = [
   type: TypeReference,
@@ -103,10 +104,8 @@ export const enum InputValueKeys {
   type = 0,
   defaultValue = 1,
 }
-export type InputValueDefinitionRecord = Record<
-  string,
-  InputValueDefinitionTuple
->;
+export type InputValueDefinition = TypeReference | InputValueDefinitionTuple;
+export type InputValueDefinitionRecord = Record<string, InputValueDefinition>;
 
 export type DirectiveTuple = [
   name: string,

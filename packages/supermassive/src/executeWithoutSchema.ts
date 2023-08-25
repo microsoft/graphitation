@@ -52,7 +52,7 @@ import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
 import { GraphQLStreamDirective } from "./directives";
 import { memoize3 } from "./jsutils/memoize3";
 import { SchemaFragment } from "./types/schema";
-import { FieldDefinitionTuple, TypeReference } from "./types/definition";
+import { FieldDefinition, TypeReference } from "./types/definition";
 import {
   inspectTypeReference,
   isListType,
@@ -476,7 +476,7 @@ function executeField(
   const schemaTypes = exeContext.schemaTypes;
   const fieldName = fieldGroup[0].name.value;
   const fieldDef = schemaTypes.getField(parentTypeName, fieldName);
-  if (!fieldDef) {
+  if (fieldDef === undefined) {
     return;
   }
 
@@ -738,7 +738,7 @@ function resolveAndCompleteField(
   exeContext: ExecutionContext,
   parentTypeName: string,
   returnTypeRef: TypeReference,
-  fieldDefinition: FieldDefinitionTuple,
+  fieldDefinition: FieldDefinition,
   fieldGroup: FieldGroup,
   info: ResolveInfo,
   path: Path,

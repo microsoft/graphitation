@@ -24,6 +24,9 @@ import {
   UnionKeys,
   InterfaceTypeDefinitionTuple,
   TypeName,
+  FieldDefinitionRecord,
+  FieldDefinition,
+  InputValueDefinition,
 } from "./definition";
 import {
   FunctionFieldResolver,
@@ -59,9 +62,9 @@ export class SchemaFragment {
   ) {}
 
   public getTypeReference(
-    tuple: FieldDefinitionTuple | InputValueDefinitionTuple,
+    tupleOrRef: FieldDefinition | InputValueDefinition,
   ): TypeReference {
-    return tuple[0];
+    return Array.isArray(tupleOrRef) ? tupleOrRef[0] : tupleOrRef;
   }
 
   public getObjectType(
@@ -73,14 +76,14 @@ export class SchemaFragment {
 
   public getObjectFields(
     def: ObjectTypeDefinitionTuple,
-  ): Record<string, FieldDefinitionTuple> | undefined {
+  ): FieldDefinitionRecord | undefined {
     return def[ObjectKeys.fields];
   }
 
   public getField(
     typeName: TypeName,
     fieldName: string,
-  ): FieldDefinitionTuple | undefined {
+  ): FieldDefinition | undefined {
     const type = this.encodedFragment.types[typeName];
     if (!type) {
       return undefined;
@@ -98,22 +101,22 @@ export class SchemaFragment {
   }
 
   public getFieldArguments(
-    field: FieldDefinitionTuple,
-  ): Record<string, InputValueDefinitionTuple> | undefined {
-    return field[FieldKeys.arguments];
+    field: FieldDefinition,
+  ): InputValueDefinitionRecord | undefined {
+    return Array.isArray(field) ? field[FieldKeys.arguments] : undefined;
   }
 
   public getDirectiveArguments(
     directive: DirectiveDefinitionTuple,
-  ): Record<string, InputValueDefinitionTuple> | undefined {
+  ): InputValueDefinitionRecord | undefined {
     return directive[DirectiveKeys.arguments];
   }
 
   public resolveDefinitionArguments(
-    def: FieldDefinitionTuple | DirectiveDefinitionTuple,
-  ): Record<string, InputValueDefinitionTuple> | undefined {
+    def: FieldDefinition | DirectiveDefinitionTuple,
+  ): InputValueDefinitionRecord | undefined {
     // Note: both FieldDefinition and DirectiveDefinition store arguments at the same position
-    return def[FieldKeys.arguments];
+    return Array.isArray(def) ? def[FieldKeys.arguments] : undefined;
   }
 
   public getInputObjectType(
@@ -130,9 +133,11 @@ export class SchemaFragment {
   }
 
   public getInputDefaultValue(
-    inputValue: InputValueDefinitionTuple,
+    inputValue: InputValueDefinition,
   ): unknown | undefined {
-    return inputValue[InputValueKeys.defaultValue];
+    return Array.isArray(inputValue)
+      ? inputValue[InputValueKeys.defaultValue]
+      : undefined;
   }
 
   public getLeafType(

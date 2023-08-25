@@ -23,6 +23,7 @@ import {
   UnionTypeDefinitionTuple,
   EncodedSchemaFragment,
   TypeKind,
+  TypeReference,
 } from "../types/definition";
 import { typeReferenceFromNode } from "../types/reference";
 import { valueFromASTUntyped } from "./valueFromASTUntyped";
@@ -112,9 +113,11 @@ function encodeInputObjectType(
   return [TypeKind.INPUT, fields];
 }
 
-function encodeField(node: FieldDefinitionNode): FieldDefinitionTuple {
-  return !node.arguments
-    ? [typeReferenceFromNode(node.type)]
+function encodeField(
+  node: FieldDefinitionNode,
+): TypeReference | FieldDefinitionTuple {
+  return !node.arguments?.length
+    ? typeReferenceFromNode(node.type)
     : [typeReferenceFromNode(node.type), encodeArguments(node)];
 }
 
@@ -130,9 +133,9 @@ function encodeArguments(
 
 function encodeInputValue(
   node: InputValueDefinitionNode,
-): InputValueDefinitionTuple {
+): InputValueDefinitionTuple | TypeReference {
   if (!node.defaultValue) {
-    return [typeReferenceFromNode(node.type)];
+    return typeReferenceFromNode(node.type);
   }
   return [
     typeReferenceFromNode(node.type),
@@ -143,5 +146,7 @@ function encodeInputValue(
 function encodeDirective(
   node: DirectiveDefinitionNode,
 ): DirectiveDefinitionTuple {
-  return [node.name.value, encodeArguments(node)];
+  return !node.arguments?.length
+    ? [node.name.value]
+    : [node.name.value, encodeArguments(node)];
 }
