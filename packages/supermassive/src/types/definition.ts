@@ -112,10 +112,9 @@ export const enum DirectiveKeys {
   arguments = 1,
 }
 
-export type EncodedTypeRecord = Record<TypeName, TypeDefinitionTuple>;
-export type EncodedDirectives = DirectiveDefinitionTuple[];
+export type TypeDefinitionRecord = Record<TypeName, TypeDefinitionTuple>;
 
 export type EncodedSchemaFragment = {
-  types: EncodedTypeRecord;
-  directives?: EncodedDirectives;
+  types: TypeDefinitionRecord;
+  directives?: DirectiveDefinitionTuple[];
 };

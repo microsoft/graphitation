@@ -57,7 +57,7 @@ export class SchemaFragment {
     Object.create(null);
 
   constructor(
-    private encodedFragment: EncodedSchemaFragment,
+    private definitions: EncodedSchemaFragment,
     private resolvers: UserResolvers,
   ) {}
 
@@ -70,7 +70,7 @@ export class SchemaFragment {
   public getObjectType(
     typeName: TypeName,
   ): ObjectTypeDefinitionTuple | undefined {
-    const type = this.encodedFragment.types[typeName];
+    const type = this.definitions.types[typeName];
     return type?.[0] === TypeKind.OBJECT ? type : undefined;
   }
 
@@ -84,7 +84,7 @@ export class SchemaFragment {
     typeName: TypeName,
     fieldName: string,
   ): FieldDefinition | undefined {
-    const type = this.encodedFragment.types[typeName];
+    const type = this.definitions.types[typeName];
     if (!type) {
       return undefined;
     }
@@ -122,7 +122,7 @@ export class SchemaFragment {
   public getInputObjectType(
     typeRef: TypeReference,
   ): InputObjectTypeDefinitionTuple | undefined {
-    const type = this.encodedFragment.types[typeNameFromReference(typeRef)];
+    const type = this.definitions.types[typeNameFromReference(typeRef)];
     return type?.[0] === TypeKind.INPUT ? type : undefined;
   }
 
@@ -148,7 +148,7 @@ export class SchemaFragment {
     if (isSpecifiedScalarType(typeName)) {
       return specifiedScalarDefinition;
     }
-    const type = this.encodedFragment.types[typeName];
+    const type = this.definitions.types[typeName];
     if (type?.[0] !== TypeKind.ENUM && type?.[0] !== TypeKind.SCALAR) {
       return undefined;
     }
@@ -160,7 +160,7 @@ export class SchemaFragment {
       // Fast-path: spec type
       return true;
     }
-    const types = this.encodedFragment.types;
+    const types = this.definitions.types;
     const typeName = typeNameFromReference(typeRef);
     return !!types[typeName] || isSpecifiedScalarType(typeName);
   }
@@ -172,7 +172,7 @@ export class SchemaFragment {
     }
     const typeName = typeNameFromReference(typeRef);
     return (
-      this.encodedFragment.types[typeName]?.[0] === TypeKind.INPUT ||
+      this.definitions.types[typeName]?.[0] === TypeKind.INPUT ||
       isSpecifiedScalarType(typeName)
     );
   }
@@ -182,7 +182,7 @@ export class SchemaFragment {
       // Fast-path: all spec types are scalars
       return false;
     }
-    const types = this.encodedFragment.types;
+    const types = this.definitions.types;
     const type = types[typeRef] ?? types[typeNameFromReference(typeRef)];
     return type?.[0] === TypeKind.OBJECT;
   }
@@ -192,7 +192,7 @@ export class SchemaFragment {
       // Fast-path: all spec types are scalars
       return false;
     }
-    const types = this.encodedFragment.types;
+    const types = this.definitions.types;
     const type = types[typeRef] ?? types[typeNameFromReference(typeRef)];
     return type?.[0] === TypeKind.UNION || type?.[0] === TypeKind.INTERFACE;
   }
@@ -200,7 +200,7 @@ export class SchemaFragment {
   public getUnionType(
     typeRef: TypeReference,
   ): UnionTypeDefinitionTuple | undefined {
-    const types = this.encodedFragment.types;
+    const types = this.definitions.types;
     const type = types[typeRef] ?? types[typeNameFromReference(typeRef)];
     return type?.[0] === TypeKind.UNION ? type : undefined;
   }
@@ -208,7 +208,7 @@ export class SchemaFragment {
   public getInterfaceType(
     typeRef: TypeReference,
   ): InterfaceTypeDefinitionTuple | undefined {
-    const types = this.encodedFragment.types;
+    const types = this.definitions.types;
     const type = types[typeRef] ?? types[typeNameFromReference(typeRef)];
     return type?.[0] === TypeKind.INTERFACE ? type : undefined;
   }
