@@ -74,9 +74,14 @@ export type TypeDefinitionTuple =
   | EnumTypeDefinitionTuple
   | InputObjectTypeDefinitionTuple;
 
+export type CompositeTypeTuple =
+  | ObjectTypeDefinitionTuple
+  | InterfaceTypeDefinitionTuple
+  | UnionTypeDefinitionTuple;
+
 export type FieldDefinitionTuple = [
   type: TypeReference,
-  arguments?: InputValueDefinitionRecord,
+  arguments: InputValueDefinitionRecord,
   // directives?: DirectiveTuple[],
 ];
 export const enum FieldKeys {
@@ -88,7 +93,7 @@ export type FieldDefinitionRecord = Record<string, FieldDefinition>;
 
 export type InputValueDefinitionTuple = [
   type: TypeReference,
-  defaultValue?: unknown,
+  defaultValue: unknown,
   // directives?: DirectiveTuple[],
 ];
 export const enum InputValueKeys {

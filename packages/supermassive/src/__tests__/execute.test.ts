@@ -773,7 +773,7 @@ describe("graphql-js snapshot check to ensure test stability", () => {
   });
 });
 
-describe.skip("executeWithSchema", () => {
+describe("executeWithSchema", () => {
   let schema: GraphQLSchema;
   beforeEach(() => {
     jest.resetAllMocks();

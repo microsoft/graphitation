@@ -1,39 +1,60 @@
 import {
-  GraphQLDirective,
+  FieldNode,
+  GraphQLArgument,
+  GraphQLCompositeType,
   GraphQLEnumType,
+  GraphQLField,
   GraphQLInputObjectType,
-  GraphQLInterfaceType,
-  GraphQLNamedType,
-  GraphQLObjectType,
   GraphQLScalarType,
   GraphQLSchema,
-  GraphQLUnionType,
-  getNamedType,
-  visit,
-  isScalarType,
-  GraphQLArgument,
-  GraphQLInputField,
-  astFromValue,
+  isCompositeType,
   isEnumType,
   isInputObjectType,
-  isInterfaceType,
+  isNonNullType,
   isObjectType,
+  isScalarType,
+  isSpecifiedScalarType,
   isUnionType,
-  print,
-  Kind,
-  GraphQLCompositeType,
   locatedError,
-  isCompositeType,
   specifiedDirectives,
+  visit,
 } from "graphql";
 import * as TypelessAST from "graphql/language/ast";
 import {
-  TypeInfo,
   makeReadableErrorPath,
+  TypeInfo,
   visitWithTypeInfo,
 } from "./utilities";
-import { inspect } from "../jsutils/inspect";
-import { isSpecifiedScalarType } from "../types/resolvers";
+import {
+  CompositeTypeTuple,
+  DirectiveDefinitionTuple,
+  DirectiveKeys,
+  EncodedSchemaFragment,
+  EnumTypeDefinitionTuple,
+  FieldDefinition,
+  FieldDefinitionTuple,
+  FieldKeys,
+  InputObjectKeys,
+  InputObjectTypeDefinitionTuple,
+  InputValueDefinition,
+  InputValueDefinitionRecord,
+  InputValueKeys,
+  InterfaceKeys,
+  InterfaceTypeDefinitionTuple,
+  ObjectKeys,
+  ObjectTypeDefinitionTuple,
+  ScalarTypeDefinitionTuple,
+  TypeDefinitionRecord,
+  TypeKind,
+  TypeReference,
+} from "../types/definition";
+import {
+  inspectTypeReference,
+  typeNameFromReference,
+  typeReferenceFromName,
+} from "../types/reference";
+import { GraphQLInputField } from "graphql/type/definition";
+import { invariant } from "../jsutils/invariant";
 
 // TODO:
 export function addMinimalViableSchemaToRequestDocument(
@@ -43,85 +64,16 @@ export function addMinimalViableSchemaToRequestDocument(
   return undefined;
 }
 
-type ExtractedTypes = Map<string, ExtractedType>;
-
-type ExtractedType =
-  | ExtractedObjectType
-  | ExtractedAbstractType
-  | ExtractedOtherType;
-
-type ExtractedObjectType = {
-  kind: "OBJECT";
-  type: GraphQLObjectType;
-  usedFields: Set<string>;
-};
-
-type ExtractedAbstractType = {
-  kind: "ABSTRACT";
-  type: GraphQLInterfaceType; // | GraphQLUnionType;
-  usedImplementations: Set<string>;
-};
-
-type ExtractedOtherType = {
-  kind: "OTHER";
-  type:
-    | GraphQLUnionType
-    | GraphQLScalarType
-    | GraphQLEnumType
-    | GraphQLInputObjectType
-    | GraphQLDirective;
-};
-
 export function extractMinimalViableSchemaForRequestDocument(
   schema: GraphQLSchema,
   document: TypelessAST.DocumentNode,
   options: {
     ignoredDirectives?: string[];
   } = {},
-): string {
-  const extractedTypes: ExtractedTypes = new Map();
-  const fragments: Map<
-    string,
-    {
-      type: GraphQLCompositeType;
-      def: TypelessAST.FragmentDefinitionNode;
-    }
-  > = new Map();
-  document.definitions.forEach((def) => {
-    if (def.kind === Kind.FRAGMENT_DEFINITION) {
-      const typeName = def.typeCondition.name.value;
-      const type = schema.getType(typeName);
-      if (!type || !isCompositeType(type)) {
-        throw locatedError(
-          `Cannot find type ${typeName} for fragment ${def.name.value}.`,
-          [def],
-        );
-      } else {
-        fragments.set(def.name.value, {
-          type,
-          def,
-        });
-      }
-    }
-  });
-  function addInputType(type: GraphQLInputObjectType) {
-    if (!extractedTypes.has(type.name)) {
-      extractedTypes.set(type.name, {
-        kind: "OTHER",
-        type: type,
-      });
-      for (const field of Object.values(type.getFields())) {
-        const fieldType = getNamedType(field.type);
-        extractedTypes.set(fieldType.name, {
-          kind: "OTHER",
-          type: fieldType,
-        });
-        if (fieldType instanceof GraphQLInputObjectType) {
-          addInputType(fieldType);
-        }
-      }
-    }
-  }
+): EncodedSchemaFragment {
+  const types: TypeDefinitionRecord = Object.create(null);
+  const directives: DirectiveDefinitionTuple[] = Object.create(null);
+
   const typeInfo = new TypeInfo(schema, {
     defaultDirectives: specifiedDirectives,
     ignoredDirectives: options.ignoredDirectives,
@@ -129,369 +81,216 @@ export function extractMinimalViableSchemaForRequestDocument(
   visit(
     document,
     visitWithTypeInfo(typeInfo, {
-      // Argument: {
-      //   leave(node, _key, _parent, _path, ancestors) {},
-      // },
-      Directive: {
-        leave(node, _key, _parent, _path, ancestors) {
-          const directive = typeInfo.getDirective();
-          if (directive && !extractedTypes.has(directive.name)) {
-            extractedTypes.set(directive.name, {
-              kind: "OTHER",
-              type: directive,
-            });
-          }
-
-          if (!directive && !typeInfo.isInIgnoredDirective()) {
-            const errorPath = makeReadableErrorPath(ancestors);
-
-            // This happens whenever a directive is requested that hasn't been defined in schema
-            throw locatedError(
-              `Cannot find type for directive: ${errorPath.join(".")}.${
-                node.name.value
-              }`,
-              [node],
-            );
-          }
-        },
+      Field(node, _key, _parent, _path, ancestors): void {
+        const parentType = typeInfo.getParentType();
+        if (!parentType) {
+          const path =
+            makeReadableErrorPath(ancestors).join(".") + "." + node.name.value;
+          throw locatedError(`Cannot find type for field: ${path}`, [node]);
+        }
+        const typeDef = addCompositeType(types, parentType);
+        if (typeDef[0] === TypeKind.UNION || node.name.value === "__typename") {
+          return;
+        }
+        const field = typeInfo.getFieldDef();
+        if (!field) {
+          const path =
+            makeReadableErrorPath(ancestors).join(".") + "." + node.name.value;
+          throw locatedError(`Cannot find field: ${path}`, [node]);
+        }
+        const fieldDef = addField(typeDef, field, node);
+        if (Array.isArray(fieldDef)) {
+          addReferencedOutputType(schema, types, fieldDef[FieldKeys.type]);
+          addReferencedInputTypes(schema, types, fieldDef[FieldKeys.arguments]);
+        } else {
+          addReferencedOutputType(schema, types, fieldDef);
+        }
       },
-      FragmentSpread: {
-        leave(node) {
-          const type = getNamedType(
-            typeInfo.getParentType(),
-          ) as GraphQLNamedType;
-          const { type: fragmentType } = fragments.get(node.name.value) || {};
-          if (!fragmentType) {
-            throw locatedError(`Unknown fragment ${node.name.value}.`, [node]);
-          } else {
-            if (type instanceof GraphQLInterfaceType) {
-              const extractedType: ExtractedAbstractType = (extractedTypes.get(
-                type.name,
-              ) as ExtractedAbstractType) || {
-                kind: "ABSTRACT",
-                type,
-                usedImplementations: new Set(),
-              };
-              extractedType.usedImplementations.add(fragmentType.name);
-              extractedTypes.set(extractedType.type.name, extractedType);
-            } else if (type instanceof GraphQLUnionType) {
-              const extractedType: ExtractedOtherType = (extractedTypes.get(
-                type.name,
-              ) as ExtractedOtherType) || {
-                kind: "OTHER",
-                type,
-              };
-              extractedTypes.set(extractedType.type.name, extractedType);
-            }
-          }
-        },
+      Argument() {
+        return false;
       },
-      InlineFragment: {
-        leave(node) {
-          const type = getNamedType(
-            typeInfo.getParentType(),
-          ) as GraphQLNamedType;
-          const typeName = node.typeCondition?.name.value;
-          if (!typeName) {
-            return;
-          }
-          const fragmentType = schema.getType(typeName);
-          if (!fragmentType || !isCompositeType(fragmentType)) {
-            throw locatedError(
-              `Cannot find type ${typeName} for inline fragment spread.`,
-              [node],
-            );
-          } else {
-            if (type instanceof GraphQLInterfaceType) {
-              const extractedType: ExtractedAbstractType = (extractedTypes.get(
-                type.name,
-              ) as ExtractedAbstractType) || {
-                kind: "ABSTRACT",
-                type,
-                usedImplementations: new Set(),
-              };
-              extractedType.usedImplementations.add(fragmentType.name);
-              extractedTypes.set(extractedType.type.name, extractedType);
-            } else if (type instanceof GraphQLUnionType) {
-              const extractedType: ExtractedOtherType = (extractedTypes.get(
-                type.name,
-              ) as ExtractedOtherType) || {
-                kind: "OTHER",
-                type,
-              };
-              extractedTypes.set(extractedType.type.name, extractedType);
-            }
-          }
-        },
-      },
-      Field: {
-        leave(node, _key, _parent, _path, ancestors) {
-          if (node.name.value === "__typename") {
-            return;
-          }
-          const fieldDef = typeInfo.getFieldDef();
-          const type = getNamedType(typeInfo.getParentType());
-          if (fieldDef) {
-            const returnType = getNamedType(fieldDef.type);
-            if (isCompositeType(returnType)) {
-              const kind = isObjectType(returnType)
-                ? "OBJECT"
-                : isInterfaceType(returnType)
-                ? "INTERFACE"
-                : "UNION";
+      Directive(node, _key, _parent, _path, ancestors) {
+        const directive = typeInfo.getDirective();
 
-              const extractedType: ExtractedObjectType = (extractedTypes.get(
-                returnType.name,
-              ) as ExtractedObjectType) || {
-                kind,
-                type: returnType,
-                usedFields: new Set(),
-              };
-              extractedTypes.set(extractedType.type.name, extractedType);
-            }
+        if (!directive && !typeInfo.isInIgnoredDirective()) {
+          const errorPath = makeReadableErrorPath(ancestors);
 
-            if (type instanceof GraphQLObjectType) {
-              const extractedType: ExtractedObjectType = (extractedTypes.get(
-                type.name,
-              ) as ExtractedObjectType) || {
-                kind: "OBJECT",
-                type,
-                usedFields: new Set(),
-              };
-              extractedType.usedFields.add(fieldDef.name);
-              extractedTypes.set(extractedType.type.name, extractedType);
-            } else if (type instanceof GraphQLInterfaceType) {
-              const extractedType: ExtractedAbstractType = (extractedTypes.get(
-                type.name,
-              ) as ExtractedAbstractType) || {
-                kind: "ABSTRACT",
-                type,
-                usedImplementations: new Set(),
-              };
-              // We add all implementations as we don't know which ones we need
-              for (const implementation of schema.getImplementations(type)
-                .objects) {
-                extractedType.usedImplementations.add(implementation.name);
-                const extractedImplementation = (extractedTypes.get(
-                  implementation.name,
-                ) as ExtractedObjectType) || {
-                  kind: "OBJECT",
-                  type: implementation,
-                  usedFields: new Set(),
-                };
-                extractedImplementation.usedFields.add(fieldDef.name);
-                extractedTypes.set(
-                  implementation.name,
-                  extractedImplementation,
-                );
-              }
-              extractedTypes.set(extractedType.type.name, extractedType);
-            } else if (type) {
-              const extractedType: ExtractedOtherType = (extractedTypes.get(
-                type.name,
-              ) as ExtractedOtherType) || {
-                kind: "OTHER",
-                type,
-              };
-              extractedTypes.set(extractedType.type.name, extractedType);
-            }
+          // This happens whenever a directive is requested that hasn't been defined in schema
+          throw locatedError(
+            `Cannot find type for directive: ${errorPath.join(".")}.${
+              node.name.value
+            }`,
+            [node],
+          );
+        }
 
-            for (const arg of fieldDef.args) {
-              const argType = getNamedType(arg.type);
-              if (argType instanceof GraphQLInputObjectType) {
-                addInputType(argType);
-              } else if (!extractedTypes.has(argType.name)) {
-                extractedTypes.set(argType.name, {
-                  kind: "OTHER",
-                  type: argType,
-                });
-              }
-            }
-          } else {
-            const errorPath = makeReadableErrorPath(ancestors);
-
-            // This happens whenever a new field is requested that hasn't been defined in schema
-            throw locatedError(
-              `Cannot find type for field: ${errorPath.join(".")}.${
-                node.name.value
-              }`,
-              [node],
-            );
-          }
-        },
+        if (
+          directive &&
+          !directives.some((d) => d[DirectiveKeys.name] === directive.name)
+        ) {
+          directives.push([directive.name]);
+        }
       },
     }),
   );
+  return { types, directives };
+}
 
-  const result: string[] = [];
+function addReferencedOutputType(
+  schema: GraphQLSchema,
+  types: TypeDefinitionRecord,
+  typeRef: TypeReference,
+) {
+  const name = typeNameFromReference(typeRef);
+  const schemaType = schema.getType(name);
 
-  for (const type of extractedTypes.values()) {
-    if (type.kind === "OBJECT") {
-      result.push(
-        printType(createFilteredObjectType(type.type, type.usedFields)),
+  if (!schemaType) {
+    throw new Error(`Type ${name} not found in schema`);
+  }
+  if (types[name] || isSpecifiedScalarType(schemaType)) {
+    // Assuming already added
+    return;
+  }
+  if (isCompositeType(schemaType)) {
+    addCompositeType(types, schemaType);
+  } else if (isEnumType(schemaType)) {
+    types[name] = encodeEnumType(schemaType);
+  } else if (isScalarType(schemaType)) {
+    types[name] = encodeScalarType(schemaType);
+  } else {
+    invariant(false, "Got non-output type: " + inspectTypeReference(typeRef));
+  }
+}
+
+function addReferencedInputTypes(
+  schema: GraphQLSchema,
+  types: TypeDefinitionRecord,
+  inputValues: InputValueDefinitionRecord,
+): void {
+  for (const inputValueDef of Object.values(inputValues)) {
+    const typeRef = Array.isArray(inputValueDef)
+      ? inputValueDef[InputValueKeys.type]
+      : inputValueDef;
+
+    const name = typeNameFromReference(typeRef);
+    const schemaType = schema.getType(name);
+
+    if (!schemaType) {
+      throw new Error(`Type ${name} not found in schema`);
+    }
+    if (types[name] || isSpecifiedScalarType(schemaType)) {
+      // Assuming already fully added
+      continue;
+    }
+    if (isInputObjectType(schemaType)) {
+      const inputObjectDef = encodeInputObjectType(schemaType);
+      types[name] = inputObjectDef;
+      addReferencedInputTypes(
+        schema,
+        types,
+        inputObjectDef[InputObjectKeys.fields],
       );
-    } else if (
-      type.kind === "ABSTRACT" &&
-      type.type instanceof GraphQLInterfaceType
-    ) {
-      result.push(printType(type.type));
-    } else if (type.type instanceof GraphQLDirective) {
-      if (!specifiedDirectives.includes(type.type)) {
-        result.push(printDirective(type.type));
-      }
-    } else if (type.type instanceof GraphQLScalarType) {
-      if (!isSpecifiedScalarType(type.type.name)) {
-        result.push(printType(type.type));
-      }
+    } else if (isEnumType(schemaType)) {
+      types[name] = encodeEnumType(schemaType);
+    } else if (isScalarType(schemaType)) {
+      types[name] = encodeScalarType(schemaType);
     } else {
-      result.push(printType(type.type));
+      invariant(false, "Got non-input type: " + inspectTypeReference(typeRef));
     }
   }
-
-  return result.join("\n");
 }
 
-function createFilteredObjectType(
-  type: GraphQLObjectType,
-  usedFields: Set<string>,
-): GraphQLObjectType {
-  const config = type.toConfig();
-  return new GraphQLObjectType({
-    ...config,
-    fields: pick(config.fields, usedFields),
-  });
+function addCompositeType(
+  types: TypeDefinitionRecord,
+  type: GraphQLCompositeType,
+): CompositeTypeTuple {
+  if (types[type.name]) {
+    // TODO: double check that the kind match?
+    return types[type.name] as CompositeTypeTuple;
+  }
+  return (types[type.name] = encodeCompositeType(type));
 }
 
-function pick<T extends object, U extends keyof T>(
-  object: T,
-  keys: Set<keyof T>,
-): Pick<T, U> {
-  const result: Partial<T> = {};
-  keys.forEach((key) => {
-    result[key] = object[key];
-  });
-  return result as Pick<T, U>;
+function addField(
+  type: ObjectTypeDefinitionTuple | InterfaceTypeDefinitionTuple,
+  field: GraphQLField<unknown, unknown>,
+  fieldNode: FieldNode,
+): FieldDefinition {
+  const fields =
+    type[0] === TypeKind.OBJECT
+      ? type[ObjectKeys.fields]
+      : type[InterfaceKeys.fields];
+
+  const existingFieldDef: FieldDefinition = fields[field.name];
+  const previouslyAddedArgs = Array.isArray(existingFieldDef)
+    ? existingFieldDef[FieldKeys.arguments]
+    : Object.create(null);
+
+  const nodeArgs = new Set(fieldNode.arguments?.map((node) => node.name.value));
+
+  const argsFilter = (argDef: GraphQLArgument) =>
+    previouslyAddedArgs[argDef.name] ||
+    isNonNullType(argDef.type) ||
+    argDef.defaultValue !== undefined ||
+    nodeArgs.has(argDef.name);
+
+  return (fields[field.name] = encodeFieldDef(field, argsFilter));
 }
 
-export function printType(type: GraphQLNamedType): string {
-  if (isScalarType(type)) {
-    return printScalar(type);
-  }
-  if (isObjectType(type)) {
-    return printObject(type);
-  }
-  if (isInterfaceType(type)) {
-    return printInterface(type);
-  }
+function encodeCompositeType(type: GraphQLCompositeType): CompositeTypeTuple {
   if (isUnionType(type)) {
-    return printUnion(type);
+    return [TypeKind.UNION, type.getTypes().map((type) => type.name)];
   }
-  if (isEnumType(type)) {
-    return printEnum(type);
+  const ifaces = type.getInterfaces().map((iface) => iface.name);
+  const typeKind = isObjectType(type) ? TypeKind.OBJECT : TypeKind.INTERFACE;
+  return ifaces.length ? [typeKind, {}, ifaces] : [typeKind, {}];
+}
+
+function encodeInputObjectType(
+  type: GraphQLInputObjectType,
+): InputObjectTypeDefinitionTuple {
+  const result = Object.create(null);
+  for (const [fieldName, field] of Object.entries(type.getFields())) {
+    result[fieldName] = encodeInputField(field);
   }
-  if (isInputObjectType(type)) {
-    return printInputObject(type);
+  return [TypeKind.INPUT, result];
+}
+
+function encodeInputField(field: GraphQLInputField): InputValueDefinition {
+  const typeReference = typeReferenceFromName(field.type.toString());
+  return field.defaultValue === undefined
+    ? typeReference
+    : [typeReference, field.defaultValue];
+}
+
+function encodeFieldDef(
+  field: GraphQLField<unknown, unknown>,
+  argumentsFilter?: (arg: GraphQLArgument) => boolean,
+): FieldDefinition {
+  const typeReference = typeReferenceFromName(field.type.toString());
+  if (!field.args.length) {
+    return typeReference;
   }
-  /* c8 ignore next 3 */
-  // Not reachable, all possible types have been considered.
-  throw new Error("Unexpected type: " + inspect(type));
-}
+  const args: InputValueDefinitionRecord = {};
+  const fieldDef: FieldDefinitionTuple = [typeReference, args];
 
-function printScalar(type: GraphQLScalarType): string {
-  return `scalar ${type.name}`;
-}
-
-function printImplementedInterfaces(
-  type: GraphQLObjectType | GraphQLInterfaceType,
-): string {
-  const interfaces = type.getInterfaces();
-  return interfaces.length
-    ? " implements " + interfaces.map((i) => i.name).join(" & ")
-    : "";
-}
-
-function printObject(type: GraphQLObjectType): string {
-  return (
-    `type ${type.name}` + printImplementedInterfaces(type) + printFields(type)
-  );
-}
-
-function printInterface(type: GraphQLInterfaceType): string {
-  return (
-    `interface ${type.name}` +
-    printImplementedInterfaces(type) +
-    printFields(type)
-  );
-}
-
-function printUnion(type: GraphQLUnionType): string {
-  const types = type.getTypes();
-  const possibleTypes = types.length ? " = " + types.join(" | ") : "";
-  return "union " + type.name + possibleTypes;
-}
-
-function printEnum(type: GraphQLEnumType): string {
-  const values = type.getValues().map((value) => "  " + value.name);
-
-  return `enum ${type.name}` + printBlock(values);
-}
-
-function printInputObject(type: GraphQLInputObjectType): string {
-  const fields = Object.values(type.getFields()).map(
-    (f) => "  " + printInputValue(f),
-  );
-  return `input ${type.name}` + printBlock(fields);
-}
-
-function printFields(type: GraphQLObjectType | GraphQLInterfaceType): string {
-  const fields = Object.values(type.getFields()).map(
-    (f) => "  " + f.name + printArgs(f.args, "  ") + ": " + String(f.type),
-  );
-  return printBlock(fields);
-}
-
-function printBlock(items: ReadonlyArray<string>): string {
-  return items.length !== 0 ? " {\n" + items.join("\n") + "\n}" : "";
-}
-
-function printArgs(
-  args: ReadonlyArray<GraphQLArgument>,
-  indentation = "",
-): string {
-  if (args.length === 0) {
-    return "";
+  for (const argDef of field.args) {
+    if (argumentsFilter && !argumentsFilter(argDef)) {
+      continue;
+    }
+    const typeReference = typeReferenceFromName(argDef.type.toString());
+    args[argDef.name] =
+      argDef.defaultValue === undefined
+        ? typeReference
+        : [typeReference, argDef.defaultValue];
   }
-
-  // If every arg does not have a description, print them on one line.
-  if (args.every((arg) => arg.description == null)) {
-    return "(" + args.map(printInputValue).join(", ") + ")";
-  }
-
-  return (
-    "(\n" +
-    args.map((arg) => "  " + indentation + printInputValue(arg)).join("\n") +
-    "\n" +
-    indentation +
-    ")"
-  );
+  return fieldDef;
 }
 
-function printInputValue(arg: GraphQLInputField): string {
-  const defaultAST = astFromValue(arg.defaultValue, arg.type);
-  let argDecl = arg.name + ": " + String(arg.type);
-  if (defaultAST) {
-    argDecl += ` = ${print(defaultAST)}`;
-  }
-  return argDecl;
+function encodeEnumType(type: GraphQLEnumType): EnumTypeDefinitionTuple {
+  return [TypeKind.ENUM, type.getValues().map((v) => v.name)];
 }
 
-export function printDirective(directive: GraphQLDirective): string {
-  return (
-    "directive @" +
-    directive.name +
-    printArgs(directive.args) +
-    (directive.isRepeatable ? " repeatable" : "") +
-    " on " +
-    directive.locations.join(" | ")
-  );
+function encodeScalarType(_type: GraphQLScalarType): ScalarTypeDefinitionTuple {
+  return [TypeKind.SCALAR];
 }

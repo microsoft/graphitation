@@ -49,7 +49,7 @@ import { ExecutionHooks } from "./hooks/types";
 import { arraysAreEqual } from "./utilities/array";
 import { isAsyncIterable } from "./jsutils/isAsyncIterable";
 import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
-import { GraphQLStreamDirective } from "./directives";
+import { GraphQLStreamDirective } from "./types/directives";
 import { memoize3 } from "./jsutils/memoize3";
 import { SchemaFragment } from "./types/schema";
 import { FieldDefinition, TypeReference } from "./types/definition";
