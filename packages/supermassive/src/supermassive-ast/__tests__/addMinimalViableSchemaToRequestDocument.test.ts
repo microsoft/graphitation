@@ -1,22 +1,17 @@
-import { extractMinimalViableSchemaForRequestDocument } from "../addMinimalViableSchemaToRequestDocument";
+import {
+  extractMinimalViableSchemaForRequestDocument,
+  addMinimalViableSchemaToRequestDocument,
+} from "../addMinimalViableSchemaToRequestDocument";
 
-import { buildASTSchema, GraphQLSchema, parse, print } from "graphql";
+import {
+  buildASTSchema,
+  GraphQLSchema,
+  Kind,
+  OperationDefinitionNode,
+  parse,
+  print,
+} from "graphql";
 import { decodeSchema } from "../../utilities/decodeASTSchema";
-
-function extractSchemaFragmentForTest(
-  schema: GraphQLSchema,
-  doc: string,
-  options?: {
-    ignoredDirectives?: string[];
-  },
-) {
-  const encodedFragment = extractMinimalViableSchemaForRequestDocument(
-    schema,
-    parse(doc),
-    options,
-  );
-  return print(decodeSchema(encodedFragment));
-}
 
 const schema = buildASTSchema(
   parse(`
@@ -25,7 +20,7 @@ const schema = buildASTSchema(
     allFilms: [Film!]!
     node(id: ID!): Node
     screenable(id: ID!): Screenable
-    countFilms(filter: FilmFilterInput!): Int!
+    countFilms(filter: FilmFilterInput): Int!
   }
 
   interface Node {
@@ -39,6 +34,7 @@ const schema = buildASTSchema(
       input: CreateFilmInput! = { filmType: GOOD, title: "Default" }
       enumInput: FilmType!
     ): Film
+    deleteFilm(id: ID!): Boolean
   }
 
   type Film implements Node {
@@ -82,8 +78,23 @@ const schema = buildASTSchema(
 );
 
 describe(extractMinimalViableSchemaForRequestDocument, () => {
+  function testHelper(
+    schema: GraphQLSchema,
+    doc: string,
+    options?: {
+      ignoredDirectives?: string[];
+    },
+  ) {
+    const encodedFragment = extractMinimalViableSchemaForRequestDocument(
+      schema,
+      parse(doc),
+      options,
+    );
+    return print(decodeSchema(encodedFragment));
+  }
+
   it("extracts from operation", () => {
-    const mvs = extractSchemaFragmentForTest(
+    const mvs = testHelper(
       schema,
       `query {
         film(id: 42) {
@@ -103,7 +114,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
   });
 
   it("extracts from a fragment", () => {
-    const mvs = extractSchemaFragmentForTest(
+    const mvs = testHelper(
       schema,
       `fragment MyQuery on Query {
         film(id: 42) {
@@ -124,7 +135,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
   });
 
   it("extracts from inline fragment", () => {
-    const mvs = extractSchemaFragmentForTest(
+    const mvs = testHelper(
       schema,
       `query {
         ... on Query {
@@ -147,7 +158,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
   });
 
   it("extracts from an operation with fragments", () => {
-    const mvs = extractSchemaFragmentForTest(
+    const mvs = testHelper(
       schema,
       `query {
         ... on Query {
@@ -173,7 +184,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
   });
 
   it("extracts from multiple nested fragments", () => {
-    const mvs = extractSchemaFragmentForTest(
+    const mvs = testHelper(
       schema,
       `query {
         ... on Query {
@@ -210,7 +221,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
   describe("complex selections", () => {
     it("selects __typename on object", () => {
-      const mvs = extractSchemaFragmentForTest(
+      const mvs = testHelper(
         schema,
         `query {
           film(id: 42) {
@@ -228,7 +239,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("selects __typename on union", () => {
-      const mvs = extractSchemaFragmentForTest(
+      const mvs = testHelper(
         schema,
         `query {
           screenable(id: 42) {
@@ -246,7 +257,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("selects __typename only on interface", () => {
-      const mvs = extractSchemaFragmentForTest(
+      const mvs = testHelper(
         schema,
         `query {
           node(id: 42) {
@@ -267,7 +278,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       // Note: listing all implementations can be extremely expensive for shared interfaces
       //   instead, we use interface field definitions at runtime for object types
       // TODO: list all possible implementations as a part of encoded fragment
-      const mvs = extractSchemaFragmentForTest(
+      const mvs = testHelper(
         schema,
         `query {
           node(id: 42) {
@@ -287,7 +298,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("selects a mix of interface and specific object fields", () => {
-      const mvs = extractSchemaFragmentForTest(
+      const mvs = testHelper(
         schema,
         `query {
           node(id: 42) {
@@ -314,7 +325,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("selects interface fields on concrete types", () => {
-      const mvs = extractSchemaFragmentForTest(
+      const mvs = testHelper(
         schema,
         `query {
           node(id: 42) {
@@ -347,7 +358,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("selects union member fields", () => {
-      const mvs = extractSchemaFragmentForTest(
+      const mvs = testHelper(
         schema,
         `query {
           screenable(id: 42) {
@@ -373,7 +384,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("selects on union and interface", () => {
-      const mvs = extractSchemaFragmentForTest(
+      const mvs = testHelper(
         schema,
         `query {
         screenable(id: 42) {
@@ -408,7 +419,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
   describe("complex arguments", () => {
     it("supports inputs and enums", () => {
-      const mvs = extractSchemaFragmentForTest(
+      const mvs = testHelper(
         schema,
         `mutation Test($filmType: FilmType) {
           createFilm(
@@ -440,8 +451,77 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       `);
     });
 
+    it("omits optional arguments", () => {
+      const mvs = testHelper(
+        schema,
+        `query {
+          countFilms
+        }`,
+      );
+      expect(mvs).toMatchInlineSnapshot(`
+        "type Query {
+          countFilms: Int!
+        }"
+      `);
+    });
+
+    it("adds optional arguments when referenced at least once", () => {
+      const mvs = testHelper(
+        schema,
+        `query {
+          countFilms
+          countDramas: countFilms(filter: { genre: DRAMA })
+          countAllFilms: countFilms
+        }`,
+      );
+      expect(mvs).toMatchInlineSnapshot(`
+        "type Query {
+          countFilms(filter: FilmFilterInput): Int!
+        }
+
+        input FilmFilterInput {
+          genre: FilmGenre
+        }
+
+        enum FilmGenre {
+          COMEDY
+          DRAMA
+        }"
+      `);
+    });
+
+    it("includes arguments with default values", () => {
+      const mvs = testHelper(
+        schema,
+        `mutation Test($filmType: FilmType) {
+          createFilm(enumInput: $filmType) {
+            title
+          }
+        }`,
+      );
+      expect(mvs).toMatchInlineSnapshot(`
+        "type Mutation {
+          createFilm(input: CreateFilmInput! = { title: "Default", filmType: GOOD }, enumInput: FilmType!): Film
+        }
+
+        type Film implements Node {
+          title(foo: String = "Bar"): String!
+        }
+
+        input CreateFilmInput {
+          title: String!
+          filmType: FilmType!
+        }
+
+        enum FilmType {
+          GOOD
+          BAD
+        }"
+      `);
+    });
+
     it("supports enums inside input objects", () => {
-      const mvs = extractSchemaFragmentForTest(
+      const mvs = testHelper(
         schema,
         `query ($input: FilmFilterInput! = { genre: COMEDY }) {
           countFilms(filter: $input)
@@ -449,7 +529,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       );
       expect(mvs).toMatchInlineSnapshot(`
         "type Query {
-          countFilms(filter: FilmFilterInput!): Int!
+          countFilms(filter: FilmFilterInput): Int!
         }
 
         input FilmFilterInput {
@@ -466,7 +546,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
   describe("directives", () => {
     it("supports built-in directives", () => {
-      const mvs = extractSchemaFragmentForTest(
+      const mvs = testHelper(
         schema,
         `query {
           film(id: 42)
@@ -495,7 +575,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
     it("errors on unknown directives", () => {
       expect(() => {
-        extractSchemaFragmentForTest(
+        testHelper(
           schema,
           `query {
             film(id: 42) {
@@ -510,7 +590,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
     it("does not error on ignored directives", () => {
       expect(() => {
-        extractSchemaFragmentForTest(
+        testHelper(
           schema,
           `query {
               film(id: 42) {
@@ -526,7 +606,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("supports custom directives", () => {
-      const mvs = extractSchemaFragmentForTest(
+      const mvs = testHelper(
         schema,
         `query @i18n(locale: "en_US") {
           film(id: 42) {
@@ -550,7 +630,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
   it("errors nicely for unknown fields", () => {
     expect(() => {
-      extractSchemaFragmentForTest(
+      testHelper(
         schema,
         `query filmQuery {
           film(id: 42) {
@@ -562,7 +642,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     }).toThrowError("Cannot find field: query filmQuery.film.format");
 
     expect(() => {
-      extractSchemaFragmentForTest(
+      testHelper(
         schema,
         `query {
           film(id: 42) {
@@ -574,7 +654,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     }).toThrowError("Cannot find field: query.film.format");
 
     expect(() => {
-      extractSchemaFragmentForTest(
+      testHelper(
         schema,
         `query {
           film(ido: 42) {
@@ -583,5 +663,116 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
         }`,
       );
     }).toThrowError("Cannot find type for argument: query.film(ido: ...)");
+  });
+});
+
+describe(addMinimalViableSchemaToRequestDocument, () => {
+  function testHelper(
+    schema: GraphQLSchema,
+    doc: string,
+    options?: {
+      ignoredDirectives?: string[];
+    },
+  ) {
+    const processedDoc = addMinimalViableSchemaToRequestDocument(
+      schema,
+      parse(doc),
+      options,
+    );
+    return {
+      processedDoc,
+      printedDoc: print(processedDoc),
+      operationDefinition: processedDoc.definitions.find(
+        (def): def is OperationDefinitionNode =>
+          def.kind === Kind.OPERATION_DEFINITION,
+      ),
+    };
+  }
+
+  it("adds minimal viable schema to operation definition", () => {
+    const { printedDoc } = testHelper(
+      schema,
+      `query @i18n(locale: "en_US") {
+        film(id: 42) {
+          __typename
+        }
+      }`,
+    );
+    expect(printedDoc).toMatchInlineSnapshot(`
+      "query @i18n(locale: "en_US") @schema(types: "{\\"Query\\":[2,{\\"film\\":[\\"Film\\",{\\"id\\":9}]}],\\"Film\\":[2,{},[\\"Node\\"]]}", directives: "[[\\"i18n\\",{\\"locale\\":0}]]") {
+        film(id: 42) {
+          __typename
+        }
+      }"
+    `);
+  });
+
+  it("adds minimal viable schema to a fragment", () => {
+    const { printedDoc } = testHelper(
+      schema,
+      `fragment FilmFragment on Film {
+        id
+      }`,
+    );
+    expect(printedDoc).toMatchInlineSnapshot(`
+      "fragment FilmFragment on Film @schema(types: "{\\"Film\\":[2,{\\"id\\":9},[\\"Node\\"]]}") {
+        id
+      }"
+    `);
+  });
+
+  it("adds minimal viable schema to a every executable definition", () => {
+    const { printedDoc } = testHelper(
+      schema,
+      `query {
+        film(id: 42) {
+          ...FilmFragment
+        }
+      }
+      fragment FilmFragment on Film {
+        ...FilmTitle
+        ...FilmActors
+      }
+      fragment FilmTitle on Film {
+        title
+      }
+      fragment FilmActors on Film {
+        actors
+      }
+      `,
+    );
+    expect(printedDoc).toMatchInlineSnapshot(`
+      "query @schema(types: "{\\"Query\\":[2,{\\"film\\":[\\"Film\\",{\\"id\\":9}]}],\\"Film\\":[2,{},[\\"Node\\"]]}") {
+        film(id: 42) {
+          ...FilmFragment
+        }
+      }
+
+      fragment FilmFragment on Film @schema(types: "{}") {
+        ...FilmTitle
+        ...FilmActors
+      }
+
+      fragment FilmTitle on Film @schema(types: "{\\"Film\\":[2,{\\"title\\":[5,{\\"foo\\":[0,\\"Bar\\"]}]},[\\"Node\\"]]}") {
+        title
+      }
+
+      fragment FilmActors on Film @schema(types: "{\\"Film\\":[2,{\\"actors\\":15},[\\"Node\\"]]}") {
+        actors
+      }"
+    `);
+  });
+
+  it("is idempotent", () => {
+    const run1 = testHelper(
+      schema,
+      `query @i18n(locale: "en_US") {
+        film(id: 42) {
+          __typename
+        }
+      }`,
+    );
+    const run2 = testHelper(schema, run1.printedDoc);
+    expect(run2.printedDoc).toEqual(run1.printedDoc);
   });
 });

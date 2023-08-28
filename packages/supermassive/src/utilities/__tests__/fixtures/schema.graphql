@@ -193,3 +193,5 @@ input AdvancedInput {
   enumField: NodeType!
   otherField: String!
 }
+
+directive @i18n(locale: String) on QUERY

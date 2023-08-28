@@ -1,4 +1,6 @@
 import {
+  ArgumentNode,
+  ASTNode,
   DirectiveNode,
   DocumentNode,
   ExecutableDefinitionNode,
@@ -24,7 +26,6 @@ import {
   NameNode,
   visit,
 } from "graphql";
-import * as TypelessAST from "graphql/language/ast";
 import {
   makeReadableErrorPath,
   TypeInfo,
@@ -62,16 +63,26 @@ import { invariant } from "../jsutils/invariant";
 import { Maybe } from "../jsutils/Maybe";
 import { isSpecifiedDirective } from "../types/directives";
 
+export type AddMinimalViableSchemaToRequestDocumentOptions = {
+  ignoredDirectives?: string[];
+  includeImplementations?: boolean; // TODO
+};
+
 export function addMinimalViableSchemaToRequestDocument(
   schema: GraphQLSchema,
   document: DocumentNode,
+  options?: AddMinimalViableSchemaToRequestDocumentOptions,
 ): DocumentNode {
   return {
     ...document,
     definitions: document.definitions.map((node) =>
       node.kind === Kind.OPERATION_DEFINITION ||
       node.kind === Kind.FRAGMENT_DEFINITION
-        ? addMinimalViableSchemaToExecutableDefinitionNode(schema, node)
+        ? addMinimalViableSchemaToExecutableDefinitionNode(
+            schema,
+            node,
+            options,
+          )
         : node,
     ),
   };
@@ -82,29 +93,32 @@ export function addMinimalViableSchemaToRequestDocument(
  */
 function addMinimalViableSchemaToExecutableDefinitionNode<
   T extends ExecutableDefinitionNode,
->(schema: GraphQLSchema, node: T): T {
+>(
+  schema: GraphQLSchema,
+  node: T,
+  options?: AddMinimalViableSchemaToRequestDocumentOptions,
+): T {
   if (node.directives?.some((directive) => directive.name.value === "schema")) {
     return node;
   }
-  const schemaFragment = extractMinimalViableSchemaForRequestDocument(schema, {
-    kind: Kind.DOCUMENT,
-    definitions: [node],
-  });
+  const schemaFragment = extractMinimalViableSchemaForRequestDocument(
+    schema,
+    { kind: Kind.DOCUMENT, definitions: [node] },
+    options,
+  );
+  const directive: DirectiveNode = {
+    kind: Kind.DIRECTIVE,
+    name: nameNode("schema"),
+    arguments: schemaFragment.directives
+      ? [
+          argNode("types", schemaFragment.types),
+          argNode("directives", schemaFragment.directives),
+        ]
+      : [argNode("types", schemaFragment.types)],
+  };
   return {
     ...node,
-    directives: [
-      {
-        name: nameNode("schema"),
-        arguments: [
-          {
-            kind: Kind.ARGUMENT,
-            name: nameNode("def"),
-            value: { kind: Kind.STRING, value: JSON.stringify(schemaFragment) },
-          },
-        ],
-      },
-      ...(node.directives ?? []),
-    ],
+    directives: [...(node.directives ?? []), directive],
   };
 }
 
@@ -112,13 +126,18 @@ function nameNode(name: string): NameNode {
   return { kind: Kind.NAME, value: name };
 }
 
+function argNode(name: string, value: unknown): ArgumentNode {
+  return {
+    kind: Kind.ARGUMENT,
+    name: nameNode(name),
+    value: { kind: Kind.STRING, value: JSON.stringify(value) },
+  };
+}
+
 export function extractMinimalViableSchemaForRequestDocument(
   schema: GraphQLSchema,
-  document: TypelessAST.DocumentNode,
-  options: {
-    ignoredDirectives?: string[];
-    includeImplementations?: boolean; // TODO
-  } = {},
+  document: DocumentNode,
+  options?: AddMinimalViableSchemaToRequestDocumentOptions,
 ): EncodedSchemaFragment {
   const types: TypeDefinitionsRecord = Object.create(null);
   const directives: DirectiveDefinitionTuple[] = [];
@@ -174,7 +193,7 @@ export function extractMinimalViableSchemaForRequestDocument(
       },
     }),
   );
-  return { types, directives };
+  return directives.length ? { types, directives } : { types };
 }
 
 function addReferencedOutputType(
@@ -375,9 +394,7 @@ function encodeScalarType(_type: GraphQLScalarType): ScalarTypeDefinitionTuple {
 function assertParentType(
   parentType: Maybe<GraphQLCompositeType>,
   node: FieldNode,
-  ancestors: ReadonlyArray<
-    readonly TypelessAST.ASTNode[] | TypelessAST.ASTNode
-  >,
+  ancestors: ReadonlyArray<readonly ASTNode[] | ASTNode>,
 ): asserts parentType is GraphQLCompositeType {
   if (!parentType) {
     const path =
@@ -391,9 +408,7 @@ function assertParentType(
 function assertExistingField(
   field: Maybe<GraphQLField<unknown, unknown>>,
   node: FieldNode,
-  ancestors: ReadonlyArray<
-    readonly TypelessAST.ASTNode[] | TypelessAST.ASTNode
-  >,
+  ancestors: ReadonlyArray<readonly ASTNode[] | ASTNode>,
 ): asserts field is GraphQLField<unknown, unknown> {
   if (!field) {
     const path =
@@ -405,9 +420,7 @@ function assertExistingField(
 function assertAllArgumentsAreDefined(
   field: GraphQLField<unknown, unknown> | GraphQLDirective,
   node: FieldNode | DirectiveNode,
-  ancestors: ReadonlyArray<
-    readonly TypelessAST.ASTNode[] | TypelessAST.ASTNode
-  >,
+  ancestors: ReadonlyArray<readonly ASTNode[] | ASTNode>,
 ) {
   const defArgs = new Set(field.args.map((arg) => arg.name));
   for (const arg of node.arguments ?? []) {
