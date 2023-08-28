@@ -1,28 +1,28 @@
-import { GraphQLLeafType, GraphQLEnumType } from "graphql";
+import { GraphQLEnumType, GraphQLLeafType } from "graphql";
 import {
-  ObjectKeys,
-  EncodedSchemaFragment,
-  TypeKind,
-  FieldKeys,
-  InputObjectKeys,
-  InputValueKeys,
-  TypeReference,
-  InputObjectTypeDefinitionTuple,
-  InputValueDefinitionRecord,
-  EnumTypeDefinitionTuple,
-  ScalarTypeDefinitionTuple,
-  EnumKeys,
-  ObjectTypeDefinitionTuple,
   DirectiveDefinitionTuple,
   DirectiveKeys,
-  InterfaceKeys,
-  UnionTypeDefinitionTuple,
-  UnionKeys,
-  InterfaceTypeDefinitionTuple,
-  TypeName,
-  FieldDefinitionRecord,
+  EncodedSchemaFragment,
+  EnumKeys,
+  EnumTypeDefinitionTuple,
   FieldDefinition,
+  FieldDefinitionRecord,
+  FieldKeys,
+  InputObjectKeys,
+  InputObjectTypeDefinitionTuple,
   InputValueDefinition,
+  InputValueDefinitionRecord,
+  InputValueKeys,
+  InterfaceKeys,
+  InterfaceTypeDefinitionTuple,
+  ObjectKeys,
+  ObjectTypeDefinitionTuple,
+  ScalarTypeDefinitionTuple,
+  TypeKind,
+  TypeName,
+  TypeReference,
+  UnionKeys,
+  UnionTypeDefinitionTuple,
 } from "./definition";
 import {
   FunctionFieldResolver,
@@ -34,9 +34,9 @@ import {
 import { isObjectLike } from "../jsutils/isObjectLike";
 import {
   isInterfaceTypeResolver,
-  isUnionTypeResolver,
   isScalarTypeResolver,
   isSpecifiedScalarType,
+  isUnionTypeResolver,
   specifiedScalarResolvers,
 } from "./resolvers";
 import { typeNameFromReference } from "./reference";
@@ -79,7 +79,47 @@ export class SchemaFragment {
     return def[ObjectKeys.fields];
   }
 
-  public getField(
+  public addInterfaceImplementation(
+    interfaceType: TypeName,
+    objectType: TypeName,
+  ) {
+    const iface = this.getInterfaceType(interfaceType);
+    const type = this.definitions.types[objectType];
+
+    if (!iface) {
+      throw new Error(
+        `Type ${interfaceType} either doesn't exist or is not an interface`,
+      );
+    }
+    if (!type) {
+      this.definitions.types[objectType] = [
+        TypeKind.OBJECT,
+        Object.create(null),
+        [interfaceType],
+      ];
+      return;
+    }
+    let knownInterfaces = type[ObjectKeys.interfaces];
+    if (!knownInterfaces) {
+      knownInterfaces = [];
+      type[ObjectKeys.interfaces] = knownInterfaces;
+    }
+    if (!knownInterfaces.includes(interfaceType)) {
+      knownInterfaces.push(interfaceType);
+    }
+  }
+
+  public getField(typeName: TypeName, fieldName: string) {
+    if (fieldName === "__typename") {
+      return typeNameMetaFieldDef;
+    }
+    return (
+      this.getOwnField(typeName, fieldName) ??
+      this.findInterfaceField(typeName, fieldName)
+    );
+  }
+
+  private getOwnField(
     typeName: TypeName,
     fieldName: string,
   ): FieldDefinition | undefined {
@@ -87,14 +127,37 @@ export class SchemaFragment {
     if (!type) {
       return undefined;
     }
-    if (fieldName === "__typename") {
-      return typeNameMetaFieldDef;
+    if (type[0] === TypeKind.INTERFACE) {
+      return type[InterfaceKeys.fields]?.[fieldName];
     }
     if (type[0] === TypeKind.OBJECT) {
       return type[ObjectKeys.fields]?.[fieldName];
     }
-    if (type[0] === TypeKind.INTERFACE) {
-      return type[InterfaceKeys.fields]?.[fieldName];
+    return undefined;
+  }
+
+  private findInterfaceField(typeName: TypeName, fieldName: string) {
+    const type = this.definitions.types[typeName];
+    if (!type) {
+      return undefined;
+    }
+    if (type[0] === TypeKind.INTERFACE && type[InterfaceKeys.interfaces]) {
+      return this.findField(type[InterfaceKeys.interfaces], fieldName);
+    }
+    if (type[0] === TypeKind.OBJECT && type[ObjectKeys.interfaces]) {
+      return this.findField(type[ObjectKeys.interfaces], fieldName);
+    }
+    return undefined;
+  }
+
+  private findField(interfaceTypes: TypeName[], fieldName: string) {
+    // TODO: merge field definition from all interface types to ensure all necessary arguments are present
+    //   (or maybe instead always encode all arguments in the schema fragment for simplicity?)
+    for (const interfaceName of interfaceTypes) {
+      const ownField = this.getOwnField(interfaceName, fieldName);
+      if (ownField !== undefined) {
+        return ownField;
+      }
     }
     return undefined;
   }

@@ -5,17 +5,17 @@ import schema from "./swapi-schema";
 import resolvers from "./swapi-schema/resolvers";
 import models from "./swapi-schema/models";
 import {
-  graphql,
-  execute as graphqlExecute,
+  // graphql,
+  // execute as graphqlExecute,
   parse,
   isInputType,
+  experimentalExecuteIncrementally as graphqlExecute,
 } from "graphql";
 import { compileQuery, isCompiledQuery } from "graphql-jit";
 import { executeWithoutSchema as supermassiveExecute } from "../executeWithoutSchema";
 import { Resolvers, UserResolvers } from "../types";
 import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
 import { extractMinimalViableSchemaForRequestDocument } from "../supermassive-ast/addMinimalViableSchemaToRequestDocument";
-import { encodeSchema } from "../utilities/encodeSchema";
 import { specifiedScalars } from "../types/definition";
 
 const query = fs.readFileSync(
@@ -29,15 +29,16 @@ const parsedQuery = parse(query);
 
 const compiledQuery = compileQuery(schema, parsedQuery);
 
-const schemaFragment = encodeSchema(
-  parse(extractMinimalViableSchemaForRequestDocument(schema, parsedQuery)),
+const schemaFragment = extractMinimalViableSchemaForRequestDocument(
+  schema,
+  parsedQuery,
 );
 
 const queryRunningSuite = new NiceBenchmark("Query Running");
 queryRunningSuite.add("graphql-js - string queries", async () => {
-  const result = await graphql({
+  const result = await graphqlExecute({
     schema,
-    source: query,
+    document: parse(query),
     contextValue: { models },
   });
   if (result.errors || !result.data) {
@@ -76,20 +77,9 @@ queryRunningSuite.add("graphql-js - parsed queries", async () => {
 //   }
 // });
 queryRunningSuite.add("supermassive - runtime schemaless", async () => {
-  let extractedResolvers: Resolvers = {};
-  const getTypeByName = (name: string) => {
-    const type = specifiedScalars[name] || extractedResolvers[name];
-    if (isInputType(type)) {
-      return type;
-    } else {
-      throw new Error("Invalid type");
-    }
-  };
-  extractedResolvers = extractImplicitTypes(parsedQuery, getTypeByName);
-
   const result = await supermassiveExecute({
     resolvers: resolvers as UserResolvers,
-    schemaFragment: schemaFragment,
+    schemaFragment,
     document: parsedQuery,
     contextValue: { models },
   });

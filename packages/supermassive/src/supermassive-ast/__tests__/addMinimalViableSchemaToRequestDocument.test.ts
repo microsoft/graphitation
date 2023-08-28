@@ -274,6 +274,34 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       `);
     });
 
+    it("selects union in interface fragment spread", () => {
+      const mvs = testHelper(
+        schema,
+        `query {
+          node(id: 42) {
+            ... on Screenable {
+              ... on Film {
+                title
+              }
+            }
+          }
+        }`,
+      );
+      expect(mvs).toMatchInlineSnapshot(`
+        "type Query {
+          node(id: ID!): Node
+        }
+
+        interface Node
+
+        union Screenable = Film | Series | Episode
+
+        type Film implements Node {
+          title(foo: String = "Bar"): String!
+        }"
+      `);
+    });
+
     it("selects interface fields only", () => {
       // Note: listing all implementations can be extremely expensive for shared interfaces
       //   instead, we use interface field definitions at runtime for object types
@@ -748,7 +776,7 @@ describe(addMinimalViableSchemaToRequestDocument, () => {
         }
       }
 
-      fragment FilmFragment on Film @schema(types: "{}") {
+      fragment FilmFragment on Film @schema(types: "{\\"Film\\":[2,{},[\\"Node\\"]]}") {
         ...FilmTitle
         ...FilmActors
       }

@@ -12,6 +12,7 @@ import {
   GraphQLError,
   GraphQLField,
   GraphQLInputObjectType,
+  GraphQLOutputType,
   GraphQLScalarType,
   GraphQLSchema,
   isCompositeType,
@@ -148,7 +149,7 @@ export function extractMinimalViableSchemaForRequestDocument(
     visitWithTypeInfo(typeInfo, {
       Field(node, _key, _parent, _path, ancestors): void {
         const parentType = typeInfo.getParentType();
-        assertParentType(parentType, node, ancestors);
+        assertCompositeType(parentType, node, ancestors);
 
         const typeDef = addCompositeType(types, parentType);
         if (typeDef[0] === TypeKind.UNION || node.name.value === "__typename") {
@@ -186,6 +187,18 @@ export function extractMinimalViableSchemaForRequestDocument(
           );
         }
         addDirective(directives, directive, node);
+      },
+      FragmentDefinition(node, _key, _parent, _path, ancestors): void {
+        const type = typeInfo.getType();
+        assertCompositeType(type, node, ancestors);
+        addCompositeType(types, type);
+      },
+      InlineFragment(node, _key, _parent, _path, ancestors): void {
+        if (node?.typeCondition) {
+          const type = typeInfo.getType();
+          assertCompositeType(type, node, ancestors);
+          addCompositeType(types, type);
+        }
       },
       Argument() {
         // Perf: no need to visit arguments - they were handled by Field/Directive visitors
@@ -391,15 +404,17 @@ function encodeScalarType(_type: GraphQLScalarType): ScalarTypeDefinitionTuple {
   return [TypeKind.SCALAR];
 }
 
-function assertParentType(
-  parentType: Maybe<GraphQLCompositeType>,
-  node: FieldNode,
+function assertCompositeType(
+  type: Maybe<GraphQLOutputType>,
+  node: ASTNode,
   ancestors: ReadonlyArray<readonly ASTNode[] | ASTNode>,
-): asserts parentType is GraphQLCompositeType {
-  if (!parentType) {
+): asserts type is GraphQLCompositeType {
+  if (!type || !isCompositeType(type)) {
     const path =
-      makeReadableErrorPath(ancestors).join(".") + "." + node.name.value;
-    throw new GraphQLError(`Cannot find parent type for field: ${path}`, {
+      node.kind === Kind.FIELD
+        ? makeReadableErrorPath(ancestors).join(".") + "." + node.name.value
+        : makeReadableErrorPath(ancestors).join(".");
+    throw new GraphQLError(`Cannot find type for: ${path}`, {
       nodes: node,
     });
   }

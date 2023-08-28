@@ -1418,27 +1418,62 @@ function ensureValidRuntimeType(
     );
   }
 
-  if (!exeContext.schemaTypes.isDefined(runtimeTypeName)) {
-    throw new GraphQLError(
-      `Abstract type "${returnTypeName}" was resolved to a type "${runtimeTypeName}" that does not exist inside the schema.`,
-      { nodes: fieldGroup },
-    );
-  }
+  const schemaTypes = exeContext.schemaTypes;
+  const iface = schemaTypes.getInterfaceType(returnTypeName);
+  if (iface) {
+    // Significant deviation from graphql-js:
+    //   1. There is no guarantee that schema fragment contains definitions for all object types implementing
+    //      given interface
+    //   2. Even if `runtimeTypeName` is present in the schema fragment, fields selected on interface type
+    //      won't be a part of its definition
+    // This is by design as it is too expensive to encode all implementations of the interface with all
+    // interface fields in every operation doing selection on interface type.
+    //
+    // The solution is to merge field definitions from interface into runtime object type at runtime.
+    if (
+      schemaTypes.isDefined(runtimeTypeName) &&
+      !schemaTypes.isObjectType(runtimeTypeName)
+    ) {
+      throw new GraphQLError(
+        `Abstract type "${returnTypeName}" was resolved to a non-object type "${runtimeTypeName}".`,
+        { nodes: fieldGroup },
+      );
+    }
 
-  if (!exeContext.schemaTypes.isObjectType(runtimeTypeName)) {
-    throw new GraphQLError(
-      `Abstract type "${returnTypeName}" was resolved to a non-object type "${runtimeTypeName}".`,
-      { nodes: fieldGroup },
-    );
-  }
+    // TODO: today we _assume_ `returnTypeName` is a valid implementation of interface.
+    //   For additional correctness validation we must expose all existing implementations in the app-wide
+    //   shared fragment that is merged with operation-level fragment before execution.
+    //   Then the following will work:
+    // if (!exeContext.schemaTypes.isSubType(returnTypeName, runtimeTypeName)) {
+    //   throw new GraphQLError(
+    //     `Runtime Object type "${runtimeTypeName}" is not a possible type for "${returnTypeName}".`,
+    //     { nodes: fieldGroup },
+    //   );
+    // }
+    schemaTypes.addInterfaceImplementation(returnTypeName, runtimeTypeName);
+  } else {
+    // Unions are as usual
+    if (!schemaTypes.isDefined(runtimeTypeName)) {
+      throw new GraphQLError(
+        `Abstract type "${returnTypeName}" was resolved to a type "${runtimeTypeName}" that does not exist inside the schema.`,
+        { nodes: fieldGroup },
+      );
+    }
 
-  // TODO:
-  // if (!exeContext.schemaTypes.isSubType(returnTypeName, runtimeTypeName)) {
-  //   throw new GraphQLError(
-  //     `Runtime Object type "${runtimeTypeName}" is not a possible type for "${returnTypeName}".`,
-  //     { nodes: fieldGroup },
-  //   );
-  // }
+    if (!schemaTypes.isObjectType(runtimeTypeName)) {
+      throw new GraphQLError(
+        `Abstract type "${returnTypeName}" was resolved to a non-object type "${runtimeTypeName}".`,
+        { nodes: fieldGroup },
+      );
+    }
+
+    if (!exeContext.schemaTypes.isSubType(returnTypeName, runtimeTypeName)) {
+      throw new GraphQLError(
+        `Runtime Object type "${runtimeTypeName}" is not a possible type for "${returnTypeName}".`,
+        { nodes: fieldGroup },
+      );
+    }
+  }
 
   return runtimeTypeName;
 }
