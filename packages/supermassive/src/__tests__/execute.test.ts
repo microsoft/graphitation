@@ -20,7 +20,6 @@ import { forAwaitEach, isAsyncIterable } from "iterall";
 import { ObjMap } from "../jsutils/ObjMap";
 import { PromiseOrValue } from "graphql/jsutils/PromiseOrValue";
 import { extractMinimalViableSchemaForRequestDocument } from "../supermassive-ast/addMinimalViableSchemaToRequestDocument";
-import { encodeSchema } from "../utilities/encodeSchema";
 
 interface TestCase {
   name: string;
@@ -845,8 +844,9 @@ async function compareResultForExecuteWithoutSchemaWithMVSAnnotation(
         models,
       },
       resolvers: resolvers as UserResolvers,
-      schemaFragment: encodeSchema(
-        parse(extractMinimalViableSchemaForRequestDocument(schema, document)),
+      schemaFragment: extractMinimalViableSchemaForRequestDocument(
+        schema,
+        document,
       ),
       variableValues: variables,
     }),

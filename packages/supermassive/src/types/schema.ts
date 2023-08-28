@@ -6,7 +6,6 @@ import {
   FieldKeys,
   InputObjectKeys,
   InputValueKeys,
-  FieldDefinitionTuple,
   TypeReference,
   InputObjectTypeDefinitionTuple,
   InputValueDefinitionRecord,
@@ -43,7 +42,7 @@ import {
 import { typeNameFromReference } from "./reference";
 
 const specifiedScalarDefinition: ScalarTypeDefinitionTuple = [TypeKind.SCALAR];
-const typeNameMetaFieldDef: FieldDefinitionTuple = ["String"];
+const typeNameMetaFieldDef: FieldDefinition = "String";
 const emptyObject = Object.freeze(Object.create(null));
 
 // Lifecycle: one instance per GraphQL operation

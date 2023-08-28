@@ -2,8 +2,6 @@ import { buildASTSchema } from "graphql";
 import { subscribeWithoutSchema } from "./index";
 import { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import { ExecutionWithSchemaArgs, ExecutionResult } from "./types";
-import { encodeSchema } from "./utilities/encodeSchema";
-import { parse } from "graphql/index";
 import { extractMinimalViableSchemaForRequestDocument } from "./supermassive-ast/addMinimalViableSchemaToRequestDocument";
 
 export function subscribeWithSchema({
@@ -18,8 +16,9 @@ export function subscribeWithSchema({
   typeResolver,
 }: ExecutionWithSchemaArgs): PromiseOrValue<ExecutionResult> {
   const schema = buildASTSchema(typeDefs);
-  const schemaFragment = encodeSchema(
-    parse(extractMinimalViableSchemaForRequestDocument(schema, document)),
+  const schemaFragment = extractMinimalViableSchemaForRequestDocument(
+    schema,
+    document,
   );
 
   return subscribeWithoutSchema({

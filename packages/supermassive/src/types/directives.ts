@@ -9,7 +9,7 @@ import {
  */
 export const GraphQLIncludeDirective: DirectiveDefinitionTuple = [
   "include",
-  { if: ["Boolean!"] },
+  { if: "Boolean!" },
   // TODO: locations for all directives (maybe not - they are irrelevant for runtime)?
 ];
 
@@ -18,7 +18,7 @@ export const GraphQLIncludeDirective: DirectiveDefinitionTuple = [
  */
 export const GraphQLSkipDirective: DirectiveDefinitionTuple = [
   "skip",
-  { if: ["Boolean!"] },
+  { if: "Boolean!" },
 ];
 
 /**
@@ -39,7 +39,7 @@ export const GraphQLDeprecatedDirective: DirectiveDefinitionTuple = [
  */
 export const GraphQLSpecifiedByDirective: DirectiveDefinitionTuple = [
   "specifiedBy",
-  { url: ["String!"] },
+  { url: "String!" },
 ];
 
 /**
@@ -47,7 +47,7 @@ export const GraphQLSpecifiedByDirective: DirectiveDefinitionTuple = [
  */
 export const GraphQLDeferDirective: DirectiveDefinitionTuple = [
   "defer",
-  { if: ["Boolean!", true], label: ["String"] },
+  { if: ["Boolean!", true], label: "String" },
 ];
 
 /**
@@ -55,7 +55,7 @@ export const GraphQLDeferDirective: DirectiveDefinitionTuple = [
  */
 export const GraphQLStreamDirective: DirectiveDefinitionTuple = [
   "stream",
-  { if: ["Boolean!", true], label: ["String"], initialCount: ["Int", 0] },
+  { if: ["Boolean!", true], label: "String", initialCount: ["Int", 0] },
 ];
 
 /**

@@ -28,7 +28,7 @@ import {
 import { typeReferenceFromNode } from "../types/reference";
 import { valueFromASTUntyped } from "./valueFromASTUntyped";
 
-export function encodeSchema(
+export function encodeASTSchema(
   schemaFragment: DocumentNode,
 ): EncodedSchemaFragment {
   const types = Object.create(null);

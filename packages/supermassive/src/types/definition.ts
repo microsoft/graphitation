@@ -50,7 +50,7 @@ export const enum UnionKeys {
 
 export type EnumTypeDefinitionTuple = [
   kind: TypeKind.ENUM,
-  values?: string[],
+  values: string[],
   // directives?: DirectiveTuple[],
 ];
 export const enum EnumKeys {
@@ -117,9 +117,11 @@ export const enum DirectiveKeys {
   arguments = 1,
 }
 
-export type TypeDefinitionRecord = Record<TypeName, TypeDefinitionTuple>;
+export type TypeDefinitionsRecord = Record<TypeName, TypeDefinitionTuple>;
+export type InterfaceImplementationsRecord = Record<TypeName, TypeName[]>;
 
 export type EncodedSchemaFragment = {
-  types: TypeDefinitionRecord;
+  types: TypeDefinitionsRecord;
+  implementations?: InterfaceImplementationsRecord; // TODO?
   directives?: DirectiveDefinitionTuple[];
 };

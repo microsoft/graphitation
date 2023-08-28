@@ -5,7 +5,7 @@ import {
   InputValueDefinitionRecord,
   InterfaceKeys,
   ObjectKeys,
-  TypeDefinitionRecord,
+  TypeDefinitionsRecord,
   TypeKind,
 } from "../types/definition";
 import { inspect } from "../jsutils/inspect";
@@ -14,8 +14,8 @@ import { inspect } from "../jsutils/inspect";
  * Adds missing definitions from source into target. Mutates target in place.
  */
 export function mergeTypes(
-  target: TypeDefinitionRecord,
-  source: TypeDefinitionRecord,
+  target: TypeDefinitionsRecord,
+  source: TypeDefinitionsRecord,
 ): void {
   for (const [typeName, sourceDef] of Object.entries(source)) {
     const targetDef = target[typeName];

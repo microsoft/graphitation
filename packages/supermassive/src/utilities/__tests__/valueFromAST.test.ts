@@ -33,8 +33,8 @@ describe("valueFromAST", () => {
       TypeKind.INPUT,
       {
         int: [ref("Int"), 42],
-        bool: [ref("Boolean")],
-        requiredBool: [ref("Boolean!")],
+        bool: ref("Boolean"),
+        requiredBool: ref("Boolean!"),
       },
     ];
     return new SchemaFragment({ types: { TestInput } }, {});

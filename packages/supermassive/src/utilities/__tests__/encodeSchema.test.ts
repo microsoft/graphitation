@@ -1,4 +1,4 @@
-import { encodeSchema } from "../encodeSchema";
+import { encodeASTSchema } from "../encodeASTSchema";
 import { parse } from "graphql";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -9,9 +9,9 @@ export const schemaSDL = parse(
   }),
 );
 
-describe(encodeSchema, () => {
-  test("correctly encodes sample schema", () => {
-    const encoded = encodeSchema(schemaSDL);
+describe(encodeASTSchema, () => {
+  test("correctly encodes sample AST schema", () => {
+    const encoded = encodeASTSchema(schemaSDL);
     expect(encoded).toMatchSnapshot();
   });
 });

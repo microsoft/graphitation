@@ -1,8 +1,13 @@
 import {
+  DirectiveNode,
+  DocumentNode,
+  ExecutableDefinitionNode,
   FieldNode,
   GraphQLArgument,
   GraphQLCompositeType,
+  GraphQLDirective,
   GraphQLEnumType,
+  GraphQLError,
   GraphQLField,
   GraphQLInputObjectType,
   GraphQLScalarType,
@@ -15,8 +20,8 @@ import {
   isScalarType,
   isSpecifiedScalarType,
   isUnionType,
-  locatedError,
-  specifiedDirectives,
+  Kind,
+  NameNode,
   visit,
 } from "graphql";
 import * as TypelessAST from "graphql/language/ast";
@@ -32,7 +37,6 @@ import {
   EncodedSchemaFragment,
   EnumTypeDefinitionTuple,
   FieldDefinition,
-  FieldDefinitionTuple,
   FieldKeys,
   InputObjectKeys,
   InputObjectTypeDefinitionTuple,
@@ -44,7 +48,7 @@ import {
   ObjectKeys,
   ObjectTypeDefinitionTuple,
   ScalarTypeDefinitionTuple,
-  TypeDefinitionRecord,
+  TypeDefinitionsRecord,
   TypeKind,
   TypeReference,
 } from "../types/definition";
@@ -55,13 +59,57 @@ import {
 } from "../types/reference";
 import { GraphQLInputField } from "graphql/type/definition";
 import { invariant } from "../jsutils/invariant";
+import { Maybe } from "../jsutils/Maybe";
+import { isSpecifiedDirective } from "../types/directives";
 
-// TODO:
 export function addMinimalViableSchemaToRequestDocument(
-  _schema: GraphQLSchema,
-  _document: TypelessAST.DocumentNode,
-): TypelessAST.DocumentNode | undefined {
-  return undefined;
+  schema: GraphQLSchema,
+  document: DocumentNode,
+): DocumentNode {
+  return {
+    ...document,
+    definitions: document.definitions.map((node) =>
+      node.kind === Kind.OPERATION_DEFINITION ||
+      node.kind === Kind.FRAGMENT_DEFINITION
+        ? addMinimalViableSchemaToExecutableDefinitionNode(schema, node)
+        : node,
+    ),
+  };
+}
+
+/**
+ * Adds directive with minimal viable schema to every individual executable node (operation, fragment)
+ */
+function addMinimalViableSchemaToExecutableDefinitionNode<
+  T extends ExecutableDefinitionNode,
+>(schema: GraphQLSchema, node: T): T {
+  if (node.directives?.some((directive) => directive.name.value === "schema")) {
+    return node;
+  }
+  const schemaFragment = extractMinimalViableSchemaForRequestDocument(schema, {
+    kind: Kind.DOCUMENT,
+    definitions: [node],
+  });
+  return {
+    ...node,
+    directives: [
+      {
+        name: nameNode("schema"),
+        arguments: [
+          {
+            kind: Kind.ARGUMENT,
+            name: nameNode("def"),
+            value: { kind: Kind.STRING, value: JSON.stringify(schemaFragment) },
+          },
+        ],
+      },
+      ...(node.directives ?? []),
+    ],
+  };
+}
+
+function nameNode(name: string): NameNode {
+  return { kind: Kind.NAME, value: name };
 }
 
 export function extractMinimalViableSchemaForRequestDocument(
@@ -69,35 +117,28 @@ export function extractMinimalViableSchemaForRequestDocument(
   document: TypelessAST.DocumentNode,
   options: {
     ignoredDirectives?: string[];
+    includeImplementations?: boolean; // TODO
   } = {},
 ): EncodedSchemaFragment {
-  const types: TypeDefinitionRecord = Object.create(null);
-  const directives: DirectiveDefinitionTuple[] = Object.create(null);
+  const types: TypeDefinitionsRecord = Object.create(null);
+  const directives: DirectiveDefinitionTuple[] = [];
 
-  const typeInfo = new TypeInfo(schema, {
-    defaultDirectives: specifiedDirectives,
-    ignoredDirectives: options.ignoredDirectives,
-  });
+  const typeInfo = new TypeInfo(schema);
   visit(
     document,
     visitWithTypeInfo(typeInfo, {
       Field(node, _key, _parent, _path, ancestors): void {
         const parentType = typeInfo.getParentType();
-        if (!parentType) {
-          const path =
-            makeReadableErrorPath(ancestors).join(".") + "." + node.name.value;
-          throw locatedError(`Cannot find type for field: ${path}`, [node]);
-        }
+        assertParentType(parentType, node, ancestors);
+
         const typeDef = addCompositeType(types, parentType);
         if (typeDef[0] === TypeKind.UNION || node.name.value === "__typename") {
           return;
         }
         const field = typeInfo.getFieldDef();
-        if (!field) {
-          const path =
-            makeReadableErrorPath(ancestors).join(".") + "." + node.name.value;
-          throw locatedError(`Cannot find field: ${path}`, [node]);
-        }
+        assertExistingField(field, node, ancestors);
+        assertAllArgumentsAreDefined(field, node, ancestors);
+
         const fieldDef = addField(typeDef, field, node);
         if (Array.isArray(fieldDef)) {
           addReferencedOutputType(schema, types, fieldDef[FieldKeys.type]);
@@ -106,30 +147,30 @@ export function extractMinimalViableSchemaForRequestDocument(
           addReferencedOutputType(schema, types, fieldDef);
         }
       },
-      Argument() {
-        return false;
-      },
       Directive(node, _key, _parent, _path, ancestors) {
+        if (
+          isSpecifiedDirective(node.name.value) ||
+          options?.ignoredDirectives?.includes(node.name.value)
+        ) {
+          return;
+        }
         const directive = typeInfo.getDirective();
-
-        if (!directive && !typeInfo.isInIgnoredDirective()) {
+        if (!directive) {
           const errorPath = makeReadableErrorPath(ancestors);
 
           // This happens whenever a directive is requested that hasn't been defined in schema
-          throw locatedError(
-            `Cannot find type for directive: ${errorPath.join(".")}.${
+          throw new GraphQLError(
+            `Cannot find definition for directive: ${errorPath.join(".")} @${
               node.name.value
             }`,
-            [node],
+            { nodes: node },
           );
         }
-
-        if (
-          directive &&
-          !directives.some((d) => d[DirectiveKeys.name] === directive.name)
-        ) {
-          directives.push([directive.name]);
-        }
+        addDirective(directives, directive, node);
+      },
+      Argument() {
+        // Perf: no need to visit arguments - they were handled by Field/Directive visitors
+        return false;
       },
     }),
   );
@@ -138,7 +179,7 @@ export function extractMinimalViableSchemaForRequestDocument(
 
 function addReferencedOutputType(
   schema: GraphQLSchema,
-  types: TypeDefinitionRecord,
+  types: TypeDefinitionsRecord,
   typeRef: TypeReference,
 ) {
   const name = typeNameFromReference(typeRef);
@@ -164,7 +205,7 @@ function addReferencedOutputType(
 
 function addReferencedInputTypes(
   schema: GraphQLSchema,
-  types: TypeDefinitionRecord,
+  types: TypeDefinitionsRecord,
   inputValues: InputValueDefinitionRecord,
 ): void {
   for (const inputValueDef of Object.values(inputValues)) {
@@ -201,7 +242,7 @@ function addReferencedInputTypes(
 }
 
 function addCompositeType(
-  types: TypeDefinitionRecord,
+  types: TypeDefinitionsRecord,
   type: GraphQLCompositeType,
 ): CompositeTypeTuple {
   if (types[type.name]) {
@@ -226,15 +267,46 @@ function addField(
     ? existingFieldDef[FieldKeys.arguments]
     : Object.create(null);
 
-  const nodeArgs = new Set(fieldNode.arguments?.map((node) => node.name.value));
+  const nodeArgs = new Set(fieldNode.arguments?.map((arg) => arg.name.value));
 
   const argsFilter = (argDef: GraphQLArgument) =>
-    previouslyAddedArgs[argDef.name] ||
-    isNonNullType(argDef.type) ||
-    argDef.defaultValue !== undefined ||
-    nodeArgs.has(argDef.name);
+    Boolean(
+      previouslyAddedArgs[argDef.name] ||
+        isNonNullType(argDef.type) ||
+        argDef.defaultValue !== undefined ||
+        nodeArgs.has(argDef.name),
+    );
 
   return (fields[field.name] = encodeFieldDef(field, argsFilter));
+}
+
+function addDirective(
+  directives: DirectiveDefinitionTuple[],
+  directive: GraphQLDirective,
+  node: DirectiveNode,
+) {
+  const name = directive.name;
+  let tuple = directives.find((d) => d[DirectiveKeys.name] === name);
+  if (!tuple) {
+    tuple = [directive.name];
+    directives.push(tuple);
+  }
+
+  const previouslyAddedArgs = tuple[DirectiveKeys.arguments];
+  const nodeArgs = new Set(node.arguments?.map((arg) => arg.name.value));
+
+  const argsFilter = (argDef: GraphQLArgument) =>
+    Boolean(
+      previouslyAddedArgs?.[argDef.name] ||
+        isNonNullType(argDef.type) ||
+        argDef.defaultValue !== undefined ||
+        nodeArgs.has(argDef.name),
+    );
+  const [hasArgs, argsRecord] = encodeArguments(directive.args, argsFilter);
+  if (hasArgs) {
+    tuple[DirectiveKeys.arguments] = argsRecord;
+  }
+  return tuple;
 }
 
 function encodeCompositeType(type: GraphQLCompositeType): CompositeTypeTuple {
@@ -268,23 +340,28 @@ function encodeFieldDef(
   argumentsFilter?: (arg: GraphQLArgument) => boolean,
 ): FieldDefinition {
   const typeReference = typeReferenceFromName(field.type.toString());
-  if (!field.args.length) {
-    return typeReference;
-  }
-  const args: InputValueDefinitionRecord = {};
-  const fieldDef: FieldDefinitionTuple = [typeReference, args];
+  const [hasArgs, argsRecord] = encodeArguments(field.args, argumentsFilter);
+  return !hasArgs ? typeReference : [typeReference, argsRecord];
+}
 
-  for (const argDef of field.args) {
+function encodeArguments(
+  args: ReadonlyArray<GraphQLArgument>,
+  argumentsFilter?: (arg: GraphQLArgument) => boolean,
+): [boolean, InputValueDefinitionRecord] {
+  let hasArgs = false;
+  const argsRecord: InputValueDefinitionRecord = {};
+  for (const argDef of args) {
     if (argumentsFilter && !argumentsFilter(argDef)) {
       continue;
     }
     const typeReference = typeReferenceFromName(argDef.type.toString());
-    args[argDef.name] =
+    argsRecord[argDef.name] =
       argDef.defaultValue === undefined
         ? typeReference
         : [typeReference, argDef.defaultValue];
+    hasArgs = true;
   }
-  return fieldDef;
+  return [hasArgs, argsRecord];
 }
 
 function encodeEnumType(type: GraphQLEnumType): EnumTypeDefinitionTuple {
@@ -293,4 +370,56 @@ function encodeEnumType(type: GraphQLEnumType): EnumTypeDefinitionTuple {
 
 function encodeScalarType(_type: GraphQLScalarType): ScalarTypeDefinitionTuple {
   return [TypeKind.SCALAR];
+}
+
+function assertParentType(
+  parentType: Maybe<GraphQLCompositeType>,
+  node: FieldNode,
+  ancestors: ReadonlyArray<
+    readonly TypelessAST.ASTNode[] | TypelessAST.ASTNode
+  >,
+): asserts parentType is GraphQLCompositeType {
+  if (!parentType) {
+    const path =
+      makeReadableErrorPath(ancestors).join(".") + "." + node.name.value;
+    throw new GraphQLError(`Cannot find parent type for field: ${path}`, {
+      nodes: node,
+    });
+  }
+}
+
+function assertExistingField(
+  field: Maybe<GraphQLField<unknown, unknown>>,
+  node: FieldNode,
+  ancestors: ReadonlyArray<
+    readonly TypelessAST.ASTNode[] | TypelessAST.ASTNode
+  >,
+): asserts field is GraphQLField<unknown, unknown> {
+  if (!field) {
+    const path =
+      makeReadableErrorPath(ancestors).join(".") + "." + node.name.value;
+    throw new GraphQLError(`Cannot find field: ${path}`, { nodes: node });
+  }
+}
+
+function assertAllArgumentsAreDefined(
+  field: GraphQLField<unknown, unknown> | GraphQLDirective,
+  node: FieldNode | DirectiveNode,
+  ancestors: ReadonlyArray<
+    readonly TypelessAST.ASTNode[] | TypelessAST.ASTNode
+  >,
+) {
+  const defArgs = new Set(field.args.map((arg) => arg.name));
+  for (const arg of node.arguments ?? []) {
+    if (!defArgs.has(arg.name.value)) {
+      const path =
+        makeReadableErrorPath(ancestors).join(".") +
+        "." +
+        node.name.value +
+        `(${arg.name.value}: ...)`;
+      throw new GraphQLError(`Cannot find type for argument: ${path}`, {
+        nodes: arg,
+      });
+    }
+  }
 }
