@@ -34,7 +34,7 @@ import {
   CompositeTypeTuple,
   DirectiveDefinitionTuple,
   DirectiveKeys,
-  EncodedSchemaFragment,
+  SchemaFragmentDefinitions,
   EnumTypeDefinitionTuple,
   FieldDefinition,
   FieldKeys,
@@ -51,15 +51,15 @@ import {
   TypeDefinitionsRecord,
   TypeKind,
   TypeReference,
-} from "../types/definition";
+} from "../schema/definition";
 import {
   inspectTypeReference,
   typeNameFromReference,
   typeReferenceFromName,
-} from "../types/reference";
+} from "../schema/reference";
 import { invariant } from "../jsutils/invariant";
 import { Maybe } from "../jsutils/Maybe";
-import { isSpecifiedDirective } from "../types/directives";
+import { isSpecifiedDirective } from "../schema/directives";
 import { makeReadableErrorPath } from "./makeReadableErrorPath";
 
 export type AddMinimalViableSchemaToRequestDocumentOptions = {
@@ -137,7 +137,7 @@ export function extractMinimalViableSchemaForRequestDocument(
   schema: GraphQLSchema,
   document: DocumentNode,
   options?: AddMinimalViableSchemaToRequestDocumentOptions,
-): EncodedSchemaFragment {
+): SchemaFragmentDefinitions {
   const types: TypeDefinitionsRecord = Object.create(null);
   const directives: DirectiveDefinitionTuple[] = [];
 

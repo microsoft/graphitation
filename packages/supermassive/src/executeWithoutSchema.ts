@@ -49,17 +49,17 @@ import { ExecutionHooks } from "./hooks/types";
 import { arraysAreEqual } from "./utilities/array";
 import { isAsyncIterable } from "./jsutils/isAsyncIterable";
 import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
-import { GraphQLStreamDirective } from "./types/directives";
+import { GraphQLStreamDirective } from "./schema/directives";
 import { memoize3 } from "./jsutils/memoize3";
-import { SchemaFragment } from "./types/schema";
-import { FieldDefinition, TypeReference } from "./types/definition";
+import { SchemaFragment } from "./schema/fragment";
+import { FieldDefinition, TypeReference } from "./schema/definition";
 import {
   inspectTypeReference,
   isListType,
   isNonNullType,
   typeNameFromReference,
   unwrap,
-} from "./types/reference";
+} from "./schema/reference";
 
 /**
  * A memoized collection of relevant subfields with regard to the return

@@ -2,15 +2,15 @@ import { invariant } from "../jsutils/invariant";
 import type { Maybe } from "../jsutils/Maybe";
 import type { ObjMap } from "../jsutils/ObjMap";
 
-import { TypeReference } from "../types/definition";
-import { SchemaFragment } from "../types/schema";
+import { TypeReference } from "../schema/definition";
+import { SchemaFragment } from "../schema/fragment";
 import { ValueNode, Kind } from "graphql";
 import {
   inspectTypeReference,
   isListType,
   isNonNullType,
   unwrap,
-} from "../types/reference";
+} from "../schema/reference";
 
 /**
  * Produces a JavaScript value given a GraphQL Value AST.

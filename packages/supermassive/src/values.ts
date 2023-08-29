@@ -10,15 +10,15 @@ import {
 import { inspect } from "./jsutils/inspect";
 import { printPathArray } from "./jsutils/printPathArray";
 import { ExecutionContext } from "./executeWithoutSchema";
-import { DirectiveDefinitionTuple, FieldDefinition } from "./types/definition";
+import { DirectiveDefinitionTuple, FieldDefinition } from "./schema/definition";
 import { valueFromAST } from "./utilities/valueFromAST";
-import { SchemaFragment } from "./types/schema";
+import { SchemaFragment } from "./schema/fragment";
 import { coerceInputValue } from "./utilities/coerceInputValue";
 import {
   inspectTypeReference,
   isNonNullType,
   typeReferenceFromNode,
-} from "./types/reference";
+} from "./schema/reference";
 
 type CoercedVariableValues =
   | { errors: Array<GraphQLError>; coerced?: never }

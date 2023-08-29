@@ -19,7 +19,7 @@ import {
 import {
   DirectiveDefinitionTuple,
   DirectiveKeys,
-  EncodedSchemaFragment,
+  SchemaFragmentDefinitions,
   EnumKeys,
   EnumTypeDefinitionTuple,
   FieldDefinition,
@@ -37,14 +37,14 @@ import {
   TypeReference,
   UnionKeys,
   UnionTypeDefinitionTuple,
-} from "../types/definition";
+} from "../schema/definition";
 import {
   inspectTypeReference,
   isListType,
   isNonNullType,
   typeNameFromReference,
   unwrap,
-} from "../types/reference";
+} from "../schema/reference";
 import { invariant } from "../jsutils/invariant";
 import { ConstValueNode } from "graphql/language/ast";
 import { inspect } from "../jsutils/inspect";
@@ -53,7 +53,7 @@ import { inspect } from "../jsutils/inspect";
  * Converts encoded schema to standard AST representation of the same schema
  */
 export function decodeSchema(
-  encodedSchema: EncodedSchemaFragment,
+  encodedSchema: SchemaFragmentDefinitions,
 ): DocumentNode {
   const definitions = [];
   const types = encodedSchema.types;

@@ -749,7 +749,7 @@ describe(addMinimalViableSchemaToRequestDocument, () => {
     `);
   });
 
-  it("adds minimal viable schema to a every executable definition", () => {
+  it("adds minimal viable schema to every executable definition", () => {
     const { printedDoc } = testHelper(
       schema,
       `query {

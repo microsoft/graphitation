@@ -2,7 +2,7 @@ import { GraphQLEnumType, GraphQLLeafType } from "graphql";
 import {
   DirectiveDefinitionTuple,
   DirectiveKeys,
-  EncodedSchemaFragment,
+  SchemaFragmentDefinitions,
   EnumKeys,
   EnumTypeDefinitionTuple,
   FieldDefinition,
@@ -45,7 +45,6 @@ const specifiedScalarDefinition: ScalarTypeDefinitionTuple = [TypeKind.SCALAR];
 const typeNameMetaFieldDef: FieldDefinition = "String";
 const emptyObject = Object.freeze(Object.create(null));
 
-// Lifecycle: one instance per GraphQL operation
 export class SchemaFragment {
   static parseOptions = { noLocation: true };
 
@@ -55,8 +54,9 @@ export class SchemaFragment {
   private static enumTypeResolvers: Record<string, GraphQLEnumType> =
     Object.create(null);
 
+  // Lifecycle: one instance per GraphQL operation
   constructor(
-    private definitions: EncodedSchemaFragment,
+    private definitions: SchemaFragmentDefinitions,
     private resolvers: UserResolvers,
   ) {}
 

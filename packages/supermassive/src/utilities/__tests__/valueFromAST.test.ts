@@ -5,13 +5,13 @@ import { parseValue } from "graphql";
 import { GraphQLScalarType } from "graphql";
 
 import { valueFromAST } from "../valueFromAST";
-import { SchemaFragment } from "../../types/schema";
+import { SchemaFragment } from "../../schema/fragment";
 import {
-  EncodedSchemaFragment,
+  SchemaFragmentDefinitions,
   InputObjectTypeDefinitionTuple,
   TypeKind,
-} from "../../types/definition";
-import { typeReferenceFromName as ref } from "../../types/reference";
+} from "../../schema/definition";
+import { typeReferenceFromName as ref } from "../../schema/reference";
 import { invariant } from "../../jsutils/invariant";
 
 describe("valueFromAST", () => {
@@ -91,7 +91,7 @@ describe("valueFromAST", () => {
         parseValue: identityFunc,
       }),
     };
-    const schema: EncodedSchemaFragment = {
+    const schema: SchemaFragmentDefinitions = {
       types: {
         Passthrough: [TypeKind.SCALAR],
         ThrowScalar: [TypeKind.SCALAR],
@@ -116,7 +116,7 @@ describe("valueFromAST", () => {
         NO_CUSTOM_VALUE: undefined,
       },
     };
-    const schema: EncodedSchemaFragment = {
+    const schema: SchemaFragmentDefinitions = {
       types: {
         TestColor: [
           TypeKind.ENUM,

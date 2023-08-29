@@ -8,14 +8,14 @@ import type { Path } from "../jsutils/Path";
 import { addPath, pathToArray } from "../jsutils/Path";
 import { printPathArray } from "../jsutils/printPathArray";
 import { suggestionList } from "../jsutils/suggestionList";
-import { TypeReference } from "../types/definition";
-import { SchemaFragment } from "../types/schema";
+import { TypeReference } from "../schema/definition";
+import { SchemaFragment } from "../schema/fragment";
 import {
   inspectTypeReference,
   isListType,
   isNonNullType,
   unwrap,
-} from "../types/reference";
+} from "../schema/reference";
 
 type OnErrorCB = (
   path: ReadonlyArray<string | number>,

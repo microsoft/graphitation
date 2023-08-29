@@ -21,16 +21,16 @@ import {
   ObjectTypeDefinitionTuple,
   ScalarTypeDefinitionTuple,
   UnionTypeDefinitionTuple,
-  EncodedSchemaFragment,
+  SchemaFragmentDefinitions,
   TypeKind,
   TypeReference,
-} from "../types/definition";
-import { typeReferenceFromNode } from "../types/reference";
+} from "../schema/definition";
+import { typeReferenceFromNode } from "../schema/reference";
 import { valueFromASTUntyped } from "./valueFromASTUntyped";
 
 export function encodeASTSchema(
   schemaFragment: DocumentNode,
-): EncodedSchemaFragment {
+): SchemaFragmentDefinitions {
   const types = Object.create(null);
   const directives = [];
   for (const definition of schemaFragment.definitions) {

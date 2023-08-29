@@ -12,12 +12,12 @@ import {
   GraphQLSkipDirective,
   GraphQLIncludeDirective,
   GraphQLDeferDirective,
-} from "./types/directives";
+} from "./schema/directives";
 
 import { AccumulatorMap } from "./jsutils/AccumulatorMap";
 import invariant from "invariant";
 import { ExecutionContext } from "./executeWithoutSchema";
-import { SchemaFragment } from "./types/schema";
+import { SchemaFragment } from "./schema/fragment";
 
 export type FieldGroup = ReadonlyArray<FieldNode>;
 
