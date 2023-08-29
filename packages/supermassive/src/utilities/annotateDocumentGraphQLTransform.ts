@@ -4,14 +4,14 @@ import {
   Kind,
   OperationDefinitionNode,
 } from "graphql";
-import { addTypesToRequestDocument } from "./addTypesToRequestDocument";
+import { addMinimalViableSchemaToRequestDocument } from "./addMinimalViableSchemaToRequestDocument";
 
 export const annotateDocumentGraphQLTransform = (schema: GraphQLSchema) => {
   return (node: FragmentDefinitionNode | OperationDefinitionNode) => {
-    const document = addTypesToRequestDocument(schema, {
+    const document = addMinimalViableSchemaToRequestDocument(schema, {
       kind: Kind.DOCUMENT,
       definitions: [node],
     });
-    return document.definitions[0];
+    return document?.definitions[0]; // FIXME
   };
 };

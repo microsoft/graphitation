@@ -6,6 +6,7 @@
     "rootDir": "src",
     "outDir": "lib",
     "jsx": "react",
+    "skipLibCheck": true,
     "paths": {
       "@graphql-tools/schema": ["./node_modules/@graphql-tools/schema"],
       "graphql": ["./node_modules/graphql"]

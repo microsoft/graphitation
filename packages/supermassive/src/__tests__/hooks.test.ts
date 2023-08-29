@@ -3,13 +3,12 @@ import { executeWithoutSchema, executeWithSchema } from "..";
 import schema, { typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
-import { addTypesToRequestDocument } from "../supermassive-ast";
+import { extractMinimalViableSchemaForRequestDocument } from "../utilities/addMinimalViableSchemaToRequestDocument";
 import {
   UserResolvers,
   TotalExecutionResult,
   isTotalExecutionResult,
 } from "../types";
-import { resolvers as extractedResolvers } from "../benchmarks/swapi-schema/__generated__/schema";
 import {
   AfterFieldCompleteHookArgs,
   AfterFieldResolveHookArgs,
@@ -42,9 +41,12 @@ describe.each([
       hooks: ExecutionHooks,
     ) => {
       return executeWithoutSchema({
-        document: addTypesToRequestDocument(schema, document),
+        document,
         resolvers,
-        schemaResolvers: extractedResolvers,
+        schemaFragment: extractMinimalViableSchemaForRequestDocument(
+          schema,
+          document,
+        ),
         contextValue: {
           models,
         },

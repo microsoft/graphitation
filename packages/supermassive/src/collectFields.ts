@@ -1,27 +1,23 @@
-import { Kind } from "graphql";
 import {
+  Kind,
   FieldNode,
   FragmentDefinitionNode,
   FragmentSpreadNode,
   InlineFragmentNode,
-  OperationDefinitionNode,
   SelectionNode,
   SelectionSetNode,
-} from "./supermassive-ast";
-import type { ObjMap } from "./jsutils/ObjMap";
+} from "graphql";
 import { getDirectiveValues } from "./values";
 import {
   GraphQLSkipDirective,
   GraphQLIncludeDirective,
   GraphQLDeferDirective,
-} from "./directives";
-import { typeNameFromAST } from "./utilities/typeNameFromAST";
-import { isUnionResolverType, isInterfaceResolverType } from "./definition";
-
-import { Resolvers } from "./types";
+} from "./schema/directives";
 
 import { AccumulatorMap } from "./jsutils/AccumulatorMap";
 import invariant from "invariant";
+import { ExecutionContext } from "./executeWithoutSchema";
+import { SchemaFragment } from "./schema/fragment";
 
 export type FieldGroup = ReadonlyArray<FieldNode>;
 
@@ -47,19 +43,14 @@ export interface FieldsAndPatches {
  * @internal
  */
 export function collectFields(
-  resolvers: Resolvers,
-  fragments: ObjMap<FragmentDefinitionNode>,
-  variableValues: { [variable: string]: unknown },
+  exeContext: ExecutionContext,
   runtimeTypeName: string,
-  operation: OperationDefinitionNode,
 ): FieldsAndPatches {
+  const { operation } = exeContext;
   const groupedFieldSet = new AccumulatorMap<string, FieldNode>();
   const patches: Array<PatchFields> = [];
   collectFieldsImpl(
-    resolvers,
-    fragments,
-    variableValues,
-    operation,
+    exeContext,
     runtimeTypeName,
     operation.selectionSet,
     groupedFieldSet,
@@ -81,10 +72,7 @@ export function collectFields(
  */
 // eslint-disable-next-line max-params
 export function collectSubfields(
-  resolvers: Resolvers,
-  fragments: ObjMap<FragmentDefinitionNode>,
-  variableValues: { [variable: string]: unknown },
-  operation: OperationDefinitionNode,
+  exeContext: ExecutionContext,
   returnTypeName: string,
   fieldGroup: FieldGroup,
 ): FieldsAndPatches {
@@ -100,10 +88,7 @@ export function collectSubfields(
   for (const node of fieldGroup) {
     if (node.selectionSet) {
       collectFieldsImpl(
-        resolvers,
-        fragments,
-        variableValues,
-        operation,
+        exeContext,
         returnTypeName,
         node.selectionSet,
         subGroupedFieldSet,
@@ -117,10 +102,7 @@ export function collectSubfields(
 
 // eslint-disable-next-line max-params
 function collectFieldsImpl(
-  resolvers: Resolvers,
-  fragments: ObjMap<FragmentDefinitionNode>,
-  variableValues: { [variable: string]: unknown },
-  operation: OperationDefinitionNode,
+  exeContext: ExecutionContext,
   runtimeTypeName: string,
   selectionSet: SelectionSetNode,
   groupedFieldSet: AccumulatorMap<string, FieldNode>,
@@ -130,7 +112,7 @@ function collectFieldsImpl(
   for (const selection of selectionSet.selections) {
     switch (selection.kind) {
       case Kind.FIELD: {
-        if (!shouldIncludeNode(resolvers, variableValues, selection)) {
+        if (!shouldIncludeNode(exeContext, selection)) {
           continue;
         }
         groupedFieldSet.add(getFieldEntryKey(selection), selection);
@@ -138,26 +120,22 @@ function collectFieldsImpl(
       }
       case Kind.INLINE_FRAGMENT: {
         if (
-          !shouldIncludeNode(resolvers, variableValues, selection) ||
-          !doesFragmentConditionMatch(selection, runtimeTypeName, resolvers)
+          !shouldIncludeNode(exeContext, selection) ||
+          !doesFragmentConditionMatch(
+            selection,
+            runtimeTypeName,
+            exeContext.schemaTypes,
+          )
         ) {
           continue;
         }
 
-        const defer = getDeferValues(
-          resolvers,
-          operation,
-          variableValues,
-          selection,
-        );
+        const defer = getDeferValues(exeContext, selection);
 
         if (defer) {
           const patchFields = new AccumulatorMap<string, FieldNode>();
           collectFieldsImpl(
-            resolvers,
-            fragments,
-            variableValues,
-            operation,
+            exeContext,
             runtimeTypeName,
             selection.selectionSet,
             patchFields,
@@ -170,10 +148,7 @@ function collectFieldsImpl(
           });
         } else {
           collectFieldsImpl(
-            resolvers,
-            fragments,
-            variableValues,
-            operation,
+            exeContext,
             runtimeTypeName,
             selection.selectionSet,
             groupedFieldSet,
@@ -186,24 +161,23 @@ function collectFieldsImpl(
       case Kind.FRAGMENT_SPREAD: {
         const fragName = selection.name.value;
 
-        if (!shouldIncludeNode(resolvers, variableValues, selection)) {
+        if (!shouldIncludeNode(exeContext, selection)) {
           continue;
         }
 
-        const defer = getDeferValues(
-          resolvers,
-          operation,
-          variableValues,
-          selection,
-        );
+        const defer = getDeferValues(exeContext, selection);
         if (visitedFragmentNames.has(fragName) && !defer) {
           continue;
         }
 
-        const fragment = fragments[fragName];
+        const fragment = exeContext.fragments[fragName];
         if (
           fragment == null ||
-          !doesFragmentConditionMatch(fragment, runtimeTypeName, resolvers)
+          !doesFragmentConditionMatch(
+            fragment,
+            runtimeTypeName,
+            exeContext.schemaTypes,
+          )
         ) {
           continue;
         }
@@ -215,10 +189,7 @@ function collectFieldsImpl(
         if (defer) {
           const patchFields = new AccumulatorMap<string, FieldNode>();
           collectFieldsImpl(
-            resolvers,
-            fragments,
-            variableValues,
-            operation,
+            exeContext,
             runtimeTypeName,
             fragment.selectionSet,
             patchFields,
@@ -231,10 +202,7 @@ function collectFieldsImpl(
           });
         } else {
           collectFieldsImpl(
-            resolvers,
-            fragments,
-            variableValues,
-            operation,
+            exeContext,
             runtimeTypeName,
             fragment.selectionSet,
             groupedFieldSet,
@@ -253,31 +221,19 @@ function collectFieldsImpl(
  * directives, where @skip has higher precedence than @include.
  */
 function shouldIncludeNode(
-  resolvers: Resolvers,
-  variableValues: { [variable: string]: unknown },
+  exeContext: ExecutionContext,
   node: SelectionNode,
 ): boolean {
   if (!node.directives?.length) {
     return true;
   }
 
-  const skip = getDirectiveValues(
-    GraphQLSkipDirective,
-    node as SelectionNode,
-    resolvers,
-    variableValues,
-  );
+  const skip = getDirectiveValues(exeContext, GraphQLSkipDirective, node);
   if (skip?.if === true) {
     return false;
   }
 
-  const include = getDirectiveValues(
-    GraphQLIncludeDirective,
-    node as SelectionNode,
-    resolvers,
-    variableValues,
-  );
-
+  const include = getDirectiveValues(exeContext, GraphQLIncludeDirective, node);
   if (include?.if === false) {
     return false;
   }
@@ -291,60 +247,23 @@ function shouldIncludeNode(
 function doesFragmentConditionMatch(
   fragment: FragmentDefinitionNode | InlineFragmentNode,
   typeName: string,
-  resolvers: Resolvers,
+  // resolvers: Resolvers,
+  schemaFragment: SchemaFragment,
 ): boolean {
   const typeConditionNode = fragment.typeCondition;
   if (!typeConditionNode) {
     return true;
   }
 
-  const conditionalType = typeNameFromAST(typeConditionNode);
+  const conditionalTypeName = typeConditionNode.name.value;
 
-  if (conditionalType === typeName) {
+  if (conditionalTypeName === typeName) {
     return true;
   }
-
-  const subTypes = getSubTypes(resolvers, new Set(), conditionalType);
-
-  return subTypes.has(typeName);
-}
-
-function getSubTypes(
-  resolvers: Resolvers,
-  abstractTypes: Set<string>,
-  conditionalType: string,
-): Set<string> {
-  const resolver = resolvers[conditionalType];
-  if (isInterfaceResolverType(resolver)) {
-    const result = resolver.__implementedBy.reduce(
-      (acc: string[], item: string) => {
-        if (!abstractTypes.has(item)) {
-          const newTypes = new Set([...abstractTypes, item]);
-
-          acc.push(...abstractTypes, ...getSubTypes(resolvers, newTypes, item));
-        }
-        return acc;
-      },
-      [],
-    );
-
-    return new Set([...result]);
+  if (schemaFragment.isAbstractType(conditionalTypeName)) {
+    return schemaFragment.isSubType(conditionalTypeName, typeName);
   }
-
-  if (isUnionResolverType(resolver)) {
-    const result = resolver.__types.reduce((acc: string[], item: string) => {
-      if (!abstractTypes.has(item)) {
-        const newTypes = new Set([...abstractTypes, item]);
-
-        acc.push(...abstractTypes, ...getSubTypes(resolvers, newTypes, item));
-      }
-      return acc;
-    }, []);
-
-    return new Set([...result]);
-  }
-
-  return abstractTypes;
+  return false;
 }
 
 /**
@@ -360,17 +279,10 @@ function getFieldEntryKey(node: FieldNode): string {
  * not disabled by the "if" argument.
  */
 function getDeferValues(
-  resolvers: Resolvers,
-  operation: OperationDefinitionNode,
-  variableValues: { [variable: string]: unknown },
+  exeContext: ExecutionContext,
   node: FragmentSpreadNode | InlineFragmentNode,
 ): undefined | { label: string | undefined } {
-  const defer = getDirectiveValues(
-    GraphQLDeferDirective,
-    node,
-    resolvers,
-    variableValues,
-  );
+  const defer = getDirectiveValues(exeContext, GraphQLDeferDirective, node);
 
   if (!defer) {
     return;
@@ -381,7 +293,7 @@ function getDeferValues(
   }
 
   invariant(
-    operation.operation !== "subscription",
+    exeContext.operation.operation !== "subscription",
     "`@defer` directive not supported on subscription operations. Disable `@defer` by setting the `if` argument to `false`.",
   );
 

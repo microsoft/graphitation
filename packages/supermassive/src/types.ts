@@ -1,26 +1,21 @@
 import {
-  GraphQLEnumType,
   GraphQLError,
   GraphQLFormattedError,
-  GraphQLInputObjectType,
   GraphQLScalarType,
-  DocumentNode as UntypedDocumentNode,
-} from "graphql";
-import { Maybe } from "./jsutils/Maybe";
-import { PromiseOrValue } from "./jsutils/PromiseOrValue";
-import {
   DocumentNode,
   FragmentDefinitionNode,
   OperationDefinitionNode,
-  TypeNode,
-} from "./supermassive-ast";
+} from "graphql";
+import { Maybe } from "./jsutils/Maybe";
+import { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import { ObjMap } from "./jsutils/ObjMap";
 import { Path } from "./jsutils/Path";
 import { ExecutionHooks } from "./hooks/types";
 import { FieldGroup } from "./collectFields";
+import { SchemaFragmentDefinitions } from "./schema/definition";
 
 export type ScalarTypeResolver = GraphQLScalarType;
-export type EnumTypeResolver = GraphQLEnumType; // TODO Record<string, unknown>;
+export type EnumTypeResolver = Record<string, unknown>;
 export type FunctionFieldResolver<
   TSource,
   TContext,
@@ -66,28 +61,7 @@ export type ObjectTypeResolver<
   [key: string]: FieldResolver<TSource, TContext, TArgs>;
 };
 
-export type InterfaceTypeResolver<
-  TSource = unknown,
-  TContext = unknown,
-  TArgs = unknown,
-> = {
-  __implementedBy: string[];
-  [key: string]: FieldResolver<TSource, TContext, TArgs> | string[] | undefined;
-} & {
-  __resolveType?: TypeResolver<unknown, unknown>;
-};
-export type UnionTypeResolver = {
-  __resolveType?: TypeResolver<unknown, unknown>;
-  __types: string[];
-};
-
-export type UserInterfaceTypeResolver<
-  TSource = unknown,
-  TContext = unknown,
-  TArgs = unknown,
-> = {
-  [key: string]: FieldResolver<TSource, TContext, TArgs>;
-} & {
+export type UserInterfaceTypeResolver = {
   __resolveType?: TypeResolver<unknown, unknown>;
 };
 
@@ -95,27 +69,19 @@ export type UserUnionTypeResolver = {
   __resolveType?: TypeResolver<unknown, unknown>;
 };
 
-export type InputObjectTypeResolver = GraphQLInputObjectType;
-
 export type UserResolver<TSource, TContext> =
   | ObjectTypeResolver<TSource, TContext>
-  | UserInterfaceTypeResolver<TSource, TContext>
+  | UserInterfaceTypeResolver
   | UserUnionTypeResolver
   | ScalarTypeResolver
-  | EnumTypeResolver
-  | InputObjectTypeResolver;
+  | EnumTypeResolver;
 
-export type Resolver<TSource, TContext> =
-  | ObjectTypeResolver<TSource, TContext>
-  | InterfaceTypeResolver<TSource, TContext>
-  | UnionTypeResolver
-  | ScalarTypeResolver
-  | EnumTypeResolver
-  | InputObjectTypeResolver;
+// TODO: Keep only UserResolver
+export type Resolver<TSource, TContext> = UserResolver<TSource, TContext>;
 
-export type Resolvers<TSource = unknown, TContext = unknown> = Record<
-  string,
-  Resolver<TSource, TContext>
+export type Resolvers<TSource = unknown, TContext = unknown> = UserResolvers<
+  TSource,
+  TContext
 >;
 
 export type UserResolvers<TSource = unknown, TContext = unknown> = Record<
@@ -128,7 +94,6 @@ export interface ResolveInfo {
   fieldGroup: FieldGroup;
   returnTypeName: string;
   parentTypeName: string;
-  returnTypeNode: TypeNode;
   // readonly returnType: GraphQLOutputType;
   // readonly parentType: GraphQLObjectType;
   path: Path;
@@ -293,12 +258,12 @@ export interface CommonExecutionArgs {
 }
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
   document: DocumentNode;
-  schemaResolvers?: Resolvers;
+  schemaFragment?: SchemaFragmentDefinitions;
 };
 
 export type ExecutionWithSchemaArgs = CommonExecutionArgs & {
-  document: UntypedDocumentNode;
-  typeDefs: UntypedDocumentNode;
+  document: DocumentNode;
+  typeDefs: DocumentNode;
 };
 
 export function isIncrementalExecutionResult<
