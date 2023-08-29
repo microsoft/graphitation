@@ -6960,22 +6960,27 @@ graphql-ws@^5.4.1:
   resolved "https://registry.yarnpkg.com/graphql-ws/-/graphql-ws-5.5.0.tgz#79f10248d23d104369eaef93acb9f887276a2c42"
   integrity sha512-WQepPMGQQoqS2VsrI2I3RMLCVz3CW4/6ZqGV6ABDOwH4R62DzjxwMlwZbj6vhSI/7IM3/C911yITwgs77iO/hw==
 
-graphql@*, graphql@^15.0.0, graphql@^15.6.0, graphql@^15.6.1:
-  version "15.8.0"
-  resolved "https://registry.yarnpkg.com/graphql/-/graphql-15.8.0.tgz#33410e96b012fa3bdb1091cc99a94769db212b38"
-  integrity sha512-5gghUc24tP9HRznNpV2+FIoq3xKkj5dTQqf4v0CpdPbFVwFkWoxOM+o+2OC9ZSvjEMTjfmG9QT+gcvggTwW1zw==
+graphql@*:
+  version "16.8.0"
+  resolved "https://registry.npmjs.org/graphql/-/graphql-16.8.0.tgz#374478b7f27b2dc6153c8f42c1b80157f79d79d4"
+  integrity sha512-0oKGaR+y3qcS5mCu1vb7KG+a89vjn06C7Ihq/dDl3jA+A8B3TKomvi3CiEcVLJQGalbu8F52LxkOym7U5sSfbg==
+
+graphql@17.0.0-alpha.2:
+  version "17.0.0-alpha.2"
+  resolved "https://registry.npmjs.org/graphql/-/graphql-17.0.0-alpha.2.tgz#c8be4605f7beb47abb70f67fead4854aab22152d"
+  integrity sha512-aRAd/BQ5hSO0+l7x+sHBfJVUp2JUOjPTE/iwJ3BhtYNH/MC7n4gjlZbKvnBVFZZAczyMS3vezS4teEZivoqIzw==
 
 graphql@^14.5.3:
   version "14.7.0"
-  resolved "https://registry.yarnpkg.com/graphql/-/graphql-14.7.0.tgz#7fa79a80a69be4a31c27dda824dc04dac2035a72"
+  resolved "https://registry.npmjs.org/graphql/-/graphql-14.7.0.tgz#7fa79a80a69be4a31c27dda824dc04dac2035a72"
   integrity sha512-l0xWZpoPKpppFzMfvVyFmp9vLN7w/ZZJPefUicMCepfJeQ8sMcztloGYY9DfjVPo6tIUDzU5Hw3MUbIjj9AVVA==
   dependencies:
     iterall "^1.2.2"
 
-graphql@^17.0.0-alpha.2:
-  version "17.0.0-alpha.2.canary.pr.3791.e6d3ec58026d75b71b7b84c3da5f376ec7eeca94"
-  resolved "https://registry.yarnpkg.com/graphql/-/graphql-17.0.0-alpha.2.canary.pr.3791.e6d3ec58026d75b71b7b84c3da5f376ec7eeca94.tgz#ed0db92a3e947128f577553273c5de36051be17d"
-  integrity sha512-i51clZCG1Mc9i/bsXlsW6mYsDOrBLbDc5oRAw1Pl3QbN64V9DPRbF8SJhnTZ8aEvCNKsJpRAKf81VBd1thcXAg==
+graphql@^15.0.0, graphql@^15.6.0, graphql@^15.6.1:
+  version "15.8.0"
+  resolved "https://registry.npmjs.org/graphql/-/graphql-15.8.0.tgz#33410e96b012fa3bdb1091cc99a94769db212b38"
+  integrity sha512-5gghUc24tP9HRznNpV2+FIoq3xKkj5dTQqf4v0CpdPbFVwFkWoxOM+o+2OC9ZSvjEMTjfmG9QT+gcvggTwW1zw==
 
 handle-thing@^2.0.0:
   version "2.0.1"
