@@ -12,6 +12,7 @@ import {
   GraphQLError,
   GraphQLField,
   GraphQLInputObjectType,
+  GraphQLInputField,
   GraphQLOutputType,
   GraphQLScalarType,
   GraphQLSchema,
@@ -25,13 +26,10 @@ import {
   isUnionType,
   Kind,
   NameNode,
-  visit,
-} from "graphql";
-import {
-  makeReadableErrorPath,
   TypeInfo,
+  visit,
   visitWithTypeInfo,
-} from "./utilities";
+} from "graphql";
 import {
   CompositeTypeTuple,
   DirectiveDefinitionTuple,
@@ -59,10 +57,10 @@ import {
   typeNameFromReference,
   typeReferenceFromName,
 } from "../types/reference";
-import { GraphQLInputField } from "graphql/type/definition";
 import { invariant } from "../jsutils/invariant";
 import { Maybe } from "../jsutils/Maybe";
 import { isSpecifiedDirective } from "../types/directives";
+import { makeReadableErrorPath } from "./makeReadableErrorPath";
 
 export type AddMinimalViableSchemaToRequestDocumentOptions = {
   ignoredDirectives?: string[];

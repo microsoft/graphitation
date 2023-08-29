@@ -11,7 +11,7 @@ import {
   parse,
   print,
 } from "graphql";
-import { decodeSchema } from "../../utilities/decodeASTSchema";
+import { decodeSchema } from "../decodeASTSchema";
 
 const schema = buildASTSchema(
   parse(`

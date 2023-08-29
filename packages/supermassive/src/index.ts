@@ -66,7 +66,7 @@ export type {
   UnionTypeExtensionNode,
   EnumTypeExtensionNode,
   InputObjectTypeExtensionNode,
-} from "./supermassive-ast";
+} from "graphql";
 
 export type {
   BeforeFieldResolveHookArgs,

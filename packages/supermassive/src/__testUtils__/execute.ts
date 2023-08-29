@@ -12,7 +12,7 @@ import resolvers from "../benchmarks/swapi-schema/resolvers";
 import { ExecutionResult, UserResolvers } from "../types";
 import models from "../benchmarks/swapi-schema/models";
 import { executeWithoutSchema } from "../executeWithoutSchema";
-import { extractMinimalViableSchemaForRequestDocument } from "../supermassive-ast/addMinimalViableSchemaToRequestDocument";
+import { extractMinimalViableSchemaForRequestDocument } from "../utilities/addMinimalViableSchemaToRequestDocument";
 import {
   ExecutionArgs as GraphQLExecutionArgs,
   ExecutionResult as GraphQLExecutionResult,

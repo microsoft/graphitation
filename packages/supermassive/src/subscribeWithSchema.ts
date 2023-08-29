@@ -2,7 +2,7 @@ import { buildASTSchema } from "graphql";
 import { subscribeWithoutSchema } from "./index";
 import { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import { ExecutionWithSchemaArgs, ExecutionResult } from "./types";
-import { extractMinimalViableSchemaForRequestDocument } from "./supermassive-ast/addMinimalViableSchemaToRequestDocument";
+import { extractMinimalViableSchemaForRequestDocument } from "./utilities/addMinimalViableSchemaToRequestDocument";
 
 export function subscribeWithSchema({
   typeDefs,
