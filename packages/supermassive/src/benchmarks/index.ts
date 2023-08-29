@@ -5,18 +5,14 @@ import schema from "./swapi-schema";
 import resolvers from "./swapi-schema/resolvers";
 import models from "./swapi-schema/models";
 import {
-  // graphql,
-  // execute as graphqlExecute,
+  execute as graphqlExecute,
   parse,
-  isInputType,
-  experimentalExecuteIncrementally as graphqlExecute,
+  // experimentalExecuteIncrementally as graphqlExecute,
 } from "graphql";
 import { compileQuery, isCompiledQuery } from "graphql-jit";
 import { executeWithoutSchema as supermassiveExecute } from "../executeWithoutSchema";
-import { Resolvers, UserResolvers } from "../types";
-import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
-import { extractMinimalViableSchemaForRequestDocument } from "../supermassive-ast/addMinimalViableSchemaToRequestDocument";
-import { specifiedScalars } from "../types/definition";
+import { UserResolvers } from "../types";
+import { extractMinimalViableSchemaForRequestDocument } from "../utilities/addMinimalViableSchemaToRequestDocument";
 
 const query = fs.readFileSync(
   path.join(__dirname, "./fixtures/query1.graphql"),
@@ -55,27 +51,27 @@ queryRunningSuite.add("graphql-js - parsed queries", async () => {
     throw new Error("Stuff ain't executing");
   }
 });
-// queryRunningSuite.add("graphql-jit - uncompiled", async () => {
-//   const freshCompiledQuery = compileQuery(schema, parsedQuery);
-//   if (isCompiledQuery(freshCompiledQuery)) {
-//     const result = await freshCompiledQuery.query({}, { models }, {});
-//     if (result.errors || !result.data) {
-//       throw new Error("Stuff ain't executing");
-//     }
-//   } else {
-//     throw new Error("Wrong query");
-//   }
-// });
-// queryRunningSuite.add("graphql-jit - precompiled", async () => {
-//   if (isCompiledQuery(compiledQuery)) {
-//     const result = await compiledQuery.query({}, { models }, {});
-//     if (result.errors || !result.data) {
-//       throw new Error("Stuff ain't executing");
-//     }
-//   } else {
-//     throw new Error("Wrong query");
-//   }
-// });
+queryRunningSuite.add("graphql-jit - uncompiled", async () => {
+  const freshCompiledQuery = compileQuery(schema, parsedQuery);
+  if (isCompiledQuery(freshCompiledQuery)) {
+    const result = await freshCompiledQuery.query({}, { models }, {});
+    if (result.errors || !result.data) {
+      throw new Error("Stuff ain't executing");
+    }
+  } else {
+    throw new Error("Wrong query");
+  }
+});
+queryRunningSuite.add("graphql-jit - precompiled", async () => {
+  if (isCompiledQuery(compiledQuery)) {
+    const result = await compiledQuery.query({}, { models }, {});
+    if (result.errors || !result.data) {
+      throw new Error("Stuff ain't executing");
+    }
+  } else {
+    throw new Error("Wrong query");
+  }
+});
 queryRunningSuite.add("supermassive - runtime schemaless", async () => {
   const result = await supermassiveExecute({
     resolvers: resolvers as UserResolvers,
@@ -104,9 +100,9 @@ queryAnnotationSuite.add("supermassive", () => {
 });
 
 async function main() {
-  // await queryCompilingSuite.run();
-  // await queryParsingSuite.run();
-  // await queryAnnotationSuite.run();
+  await queryCompilingSuite.run();
+  await queryParsingSuite.run();
+  await queryAnnotationSuite.run();
   await queryRunningSuite.run();
 }
 

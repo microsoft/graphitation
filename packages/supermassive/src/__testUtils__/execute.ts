@@ -5,6 +5,9 @@ import {
   OperationDefinitionNode,
   OperationTypeNode,
   parse,
+  ExecutionArgs,
+  ExecutionArgs as GraphQLExecutionArgs,
+  ExecutionResult as GraphQLExecutionResult,
 } from "graphql";
 import { executeWithSchema } from "../executeWithSchema";
 import { typeDefs } from "../benchmarks/swapi-schema";
@@ -13,17 +16,22 @@ import { ExecutionResult, UserResolvers } from "../types";
 import models from "../benchmarks/swapi-schema/models";
 import { executeWithoutSchema } from "../executeWithoutSchema";
 import { extractMinimalViableSchemaForRequestDocument } from "../utilities/addMinimalViableSchemaToRequestDocument";
-import {
-  ExecutionArgs as GraphQLExecutionArgs,
-  ExecutionResult as GraphQLExecutionResult,
-} from "graphql/execution/execute";
+import {} from "graphql/execution/execute";
 import { PromiseOrValue } from "graphql/jsutils/PromiseOrValue";
 import { ObjMap } from "../jsutils/ObjMap";
 import { forAwaitEach, isAsyncIterable } from "iterall";
 
+type GraphQLResult<TData = ObjMap<unknown>, TExtensions = ObjMap<unknown>> =
+  | GraphQLExecutionResult<TData, TExtensions>
+  | AsyncGenerator<GraphQLExecutionResult<TData, TExtensions>, void, void>;
+
 export function createExecutionUtils(
-  graphqlExecute: any,
-  graphqlSubscribe: any,
+  graphqlExecute: (args: ExecutionArgs) => PromiseOrValue<ExecutionResult>,
+  graphqlSubscribe: (
+    args: ExecutionArgs,
+  ) => PromiseOrValue<
+    AsyncGenerator<ExecutionResult, void, void> | ExecutionResult
+  >,
 ) {
   async function compareResultsForExecuteWithSchema(
     schema: GraphQLSchema,
@@ -35,7 +43,7 @@ export function createExecutionUtils(
     const result = await drainExecution(
       await executeWithSchema({
         typeDefs,
-        resolvers: resolvers as UserResolvers<any, any>,
+        resolvers: resolvers as UserResolvers<unknown, unknown>,
         document,
         contextValue: {
           models,
@@ -115,15 +123,11 @@ export function createExecutionUtils(
     }
 
     if (operation.operation === OperationTypeNode.SUBSCRIPTION) {
-      return graphqlSubscribe(args);
+      return graphqlSubscribe(args) as GraphQLResult;
     } else {
-      return graphqlExecute(args);
+      return graphqlExecute(args) as GraphQLResult;
     }
   }
-
-  type GraphQLResult<TData = ObjMap<unknown>, TExtensions = ObjMap<unknown>> =
-    | GraphQLExecutionResult<TData, TExtensions>
-    | AsyncGenerator<GraphQLExecutionResult<TData, TExtensions>, void, void>;
 
   async function drainExecution(
     result: ExecutionResult | GraphQLResult,
