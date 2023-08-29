@@ -24,7 +24,7 @@
     "postinstall": "patch-package"
   },
   "devDependencies": {
-    "graphql": "17.0.0-alpha.2",
+    "graphql": "^15.0.0",
     "beachball": "^2.20.0",
     "lage": "^2.7.1",
     "patch-package": "^6.4.7",
