@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Tue, 27 Jun 2023 11:47:30 GMT and should not be manually modified.
+This log was last generated on Tue, 29 Aug 2023 15:06:36 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.0.0-alpha.3
+
+Tue, 29 Aug 2023 15:06:36 GMT
+
+### Changes
+
+- New type annotation strategy (vladimir.razuvaev@gmail.com)
 
 ## 3.0.0-alpha.1
 

@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "New type annotation strategy",
-  "packageName": "@graphitation/supermassive",
-  "email": "vladimir.razuvaev@gmail.com",
-  "dependentChangeType": "patch"
-}

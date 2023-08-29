@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Tue, 29 Aug 2023 15:06:36 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0-alpha.3",
+      "version": "3.0.0-alpha.3",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "91000a549906ef184a4efc30eeae245998965ea9",
+            "comment": "New type annotation strategy"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 27 Jun 2023 11:47:30 GMT",
       "tag": "@graphitation/supermassive_v3.0.0-alpha.1",
       "version": "3.0.0-alpha.1",
