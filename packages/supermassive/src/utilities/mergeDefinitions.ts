@@ -1,14 +1,65 @@
 import {
+  DirectiveDefinitionTuple,
+  DirectiveKeys,
   FieldDefinitionRecord,
   FieldKeys,
   InputObjectKeys,
   InputValueDefinitionRecord,
   InterfaceKeys,
   ObjectKeys,
+  SchemaFragmentDefinitions,
   TypeDefinitionsRecord,
   TypeKind,
-} from "../types/definition";
+} from "../schema/definition";
 import { inspect } from "../jsutils/inspect";
+
+export function mergeSchemaDefinitions(
+  target: SchemaFragmentDefinitions,
+  sources: SchemaFragmentDefinitions[],
+) {
+  if (!sources.length) {
+    return target;
+  }
+  for (const source of sources) {
+    if (!target.types) {
+      target.types = source.types;
+    } else if (source.types) {
+      mergeTypes(target.types, source.types);
+    }
+    if (!target.directives) {
+      target.directives = source.directives;
+    } else if (source.directives?.length) {
+      mergeDirectives(target.directives, source.directives);
+    }
+  }
+}
+
+export function mergeDirectives(
+  target: DirectiveDefinitionTuple[],
+  source: DirectiveDefinitionTuple[],
+) {
+  for (const sourceDirective of source) {
+    const targetDirective = target.find(
+      (directive) =>
+        directive[DirectiveKeys.name] === sourceDirective[DirectiveKeys.name],
+    );
+    if (!targetDirective) {
+      target.push(sourceDirective);
+      continue;
+    }
+    if (!sourceDirective[DirectiveKeys.arguments]) {
+      continue;
+    }
+    if (!targetDirective[DirectiveKeys.arguments]) {
+      targetDirective[DirectiveKeys.arguments] =
+        sourceDirective[DirectiveKeys.arguments];
+    }
+    mergeInputValues(
+      targetDirective[DirectiveKeys.arguments],
+      sourceDirective[DirectiveKeys.arguments],
+    );
+  }
+}
 
 /**
  * Adds missing definitions from source into target. Mutates target in place.

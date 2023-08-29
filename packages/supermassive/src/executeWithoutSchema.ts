@@ -52,7 +52,11 @@ import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
 import { GraphQLStreamDirective } from "./schema/directives";
 import { memoize3 } from "./jsutils/memoize3";
 import { SchemaFragment } from "./schema/fragment";
-import { FieldDefinition, TypeReference } from "./schema/definition";
+import {
+  FieldDefinition,
+  SchemaFragmentDefinitions,
+  TypeReference,
+} from "./schema/definition";
 import {
   inspectTypeReference,
   isListType,
@@ -60,6 +64,8 @@ import {
   typeNameFromReference,
   unwrap,
 } from "./schema/reference";
+import { getSchemaFragment } from "./utilities/getSchemaFragment";
+import { mergeSchemaDefinitions } from "./utilities/mergeDefinitions";
 
 /**
  * A memoized collection of relevant subfields with regard to the return
@@ -116,6 +122,10 @@ export interface ExecutionContext {
   fieldExecutionHooks?: ExecutionHooks;
   subsequentPayloads: Set<IncrementalDataRecord>;
 }
+
+type MergedSchemaFragment = SchemaFragmentDefinitions & {
+  __merged?: boolean;
+};
 
 /**
  * Implements the "Executing requests" section of the GraphQL specification.
@@ -174,7 +184,7 @@ function buildExecutionContext(
 ): Array<GraphQLError> | ExecutionContext {
   const {
     resolvers,
-    schemaFragment,
+    schemaFragment: explicitSchemaFragment,
     document,
     rootValue,
     contextValue,
@@ -191,6 +201,7 @@ function buildExecutionContext(
 
   let operation: OperationDefinitionNode | undefined;
   const fragments: ObjMap<FragmentDefinitionNode> = Object.create(null);
+
   for (const definition of document.definitions) {
     switch (definition.kind) {
       case Kind.OPERATION_DEFINITION:
@@ -218,6 +229,24 @@ function buildExecutionContext(
       return [new GraphQLError(`Unknown operation named "${operationName}".`)];
     }
     return [new GraphQLError("Must provide an operation.")];
+  }
+
+  let schemaFragment = explicitSchemaFragment;
+
+  if (!schemaFragment) {
+    schemaFragment = getSchemaFragment(operation);
+    if (schemaFragment && !(schemaFragment as MergedSchemaFragment).__merged) {
+      mergeSchemaDefinitions(
+        schemaFragment,
+        Object.values(fragments)
+          .map((fragmentDef) => getSchemaFragment(fragmentDef))
+          .filter((f): f is SchemaFragmentDefinitions => Boolean(f)),
+      );
+      (schemaFragment as MergedSchemaFragment).__merged = true;
+    }
+  }
+  if (!schemaFragment) {
+    return [new GraphQLError("Must provide schema fragment.")];
   }
 
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')

@@ -59,7 +59,11 @@ import {
 } from "../schema/reference";
 import { invariant } from "../jsutils/invariant";
 import { Maybe } from "../jsutils/Maybe";
-import { isSpecifiedDirective } from "../schema/directives";
+import {
+  isSpecifiedDirective,
+  SUPERMASSIVE_SCHEMA_DIRECTIVE_FRAGMENT_ARGUMENT_NAME,
+  SUPERMASSIVE_SCHEMA_DIRECTIVE_NAME,
+} from "../schema/directives";
 import { makeReadableErrorPath } from "./makeReadableErrorPath";
 
 export type AddMinimalViableSchemaToRequestDocumentOptions = {
@@ -107,13 +111,13 @@ function addMinimalViableSchemaToExecutableDefinitionNode<
   );
   const directive: DirectiveNode = {
     kind: Kind.DIRECTIVE,
-    name: nameNode("schema"),
-    arguments: schemaFragment.directives
-      ? [
-          argNode("types", schemaFragment.types),
-          argNode("directives", schemaFragment.directives),
-        ]
-      : [argNode("types", schemaFragment.types)],
+    name: nameNode(SUPERMASSIVE_SCHEMA_DIRECTIVE_NAME),
+    arguments: [
+      argNode(
+        SUPERMASSIVE_SCHEMA_DIRECTIVE_FRAGMENT_ARGUMENT_NAME,
+        schemaFragment,
+      ),
+    ],
   };
   return {
     ...node,

@@ -258,7 +258,7 @@ export interface CommonExecutionArgs {
 }
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
   document: DocumentNode;
-  schemaFragment: SchemaFragmentDefinitions; // FIXME: should be an array of fragments to be merged?
+  schemaFragment?: SchemaFragmentDefinitions;
 };
 
 export type ExecutionWithSchemaArgs = CommonExecutionArgs & {

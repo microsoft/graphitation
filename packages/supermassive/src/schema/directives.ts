@@ -71,6 +71,17 @@ export const specifiedDirectives: ReadonlyArray<DirectiveDefinitionTuple> =
     GraphQLStreamDirective,
   ]);
 
+export const SUPERMASSIVE_SCHEMA_DIRECTIVE_NAME = "schema";
+export const SUPERMASSIVE_SCHEMA_DIRECTIVE_FRAGMENT_ARGUMENT_NAME = "fragment";
+
+/**
+ * Used to conditionally stream list fields.
+ */
+export const SupermassiveSchemaDirective: DirectiveDefinitionTuple = [
+  SUPERMASSIVE_SCHEMA_DIRECTIVE_NAME,
+  { fragment: "String" }, // Essentially JSON
+];
+
 export function isSpecifiedDirective(
   directive: DirectiveName | DirectiveDefinitionTuple,
 ): boolean {

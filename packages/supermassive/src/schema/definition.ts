@@ -122,6 +122,6 @@ export type InterfaceImplementationsRecord = Record<TypeName, TypeName[]>;
 
 export type SchemaFragmentDefinitions = {
   types: TypeDefinitionsRecord;
-  implementations?: InterfaceImplementationsRecord; // TODO?
   directives?: DirectiveDefinitionTuple[];
+  // implementations?: InterfaceImplementationsRecord; // TODO?
 };
