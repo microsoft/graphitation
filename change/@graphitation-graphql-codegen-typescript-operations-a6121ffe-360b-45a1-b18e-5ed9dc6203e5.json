@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Backawrds compatibility changes reverted + added option to enable string unions instead of enums",
+  "packageName": "@graphitation/graphql-codegen-typescript-operations",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
