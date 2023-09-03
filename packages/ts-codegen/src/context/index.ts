@@ -51,7 +51,7 @@ export type TsCodegenContextOptions = {
   };
   legacyCompat: boolean;
   legacyNoModelsForObjects: boolean;
-
+  useStringUnionsInsteadOfEnums: boolean;
   modelScope: string | null;
 };
 
@@ -84,6 +84,7 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
   },
   legacyCompat: false,
   legacyNoModelsForObjects: false,
+  useStringUnionsInsteadOfEnums: false,
 
   modelScope: null,
 };
@@ -165,6 +166,10 @@ export class TsCodegenContext {
         markUsage === "RESOLVERS" ? true : false,
       );
     }
+  }
+
+  isUseStringUnionsInsteadOfEnumsEnabled(): boolean {
+    return this.options.useStringUnionsInsteadOfEnums;
   }
 
   getTypeReferenceForInputTypeFromTypeNode(
@@ -336,7 +341,6 @@ export class TsCodegenContext {
     }
 
     return factory.createTypeAliasDeclaration(
-      undefined,
       [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
       factory.createIdentifier(scalarName),
       undefined,
@@ -375,7 +379,6 @@ export class TsCodegenContext {
     return [
       addSyntheticLeadingComment(
         factory.createInterfaceDeclaration(
-          undefined,
           [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
           factory.createIdentifier("BaseModel"),
           undefined,

@@ -9,7 +9,6 @@ export function generateLegacyResolvers(
   imports.push(
     factory.createImportDeclaration(
       undefined,
-      undefined,
       factory.createImportClause(
         false,
         undefined,
@@ -21,7 +20,6 @@ export function generateLegacyResolvers(
 
   imports.push(
     factory.createImportDeclaration(
-      undefined,
       undefined,
       factory.createImportClause(
         false,
@@ -66,7 +64,6 @@ function createLegacyArgsNamespace(context: TsCodegenContext) {
   });
 
   return factory.createModuleDeclaration(
-    undefined,
     [
       factory.createModifier(ts.SyntaxKind.ExportKeyword),
       factory.createModifier(ts.SyntaxKind.DeclareKeyword),
@@ -86,12 +83,10 @@ function createLegacyResolverNamespace(
     if (type.kind === "OBJECT") {
       typeObjects.push(
         factory.createModuleDeclaration(
-          undefined,
           [factory.createToken(ts.SyntaxKind.ExportKeyword)],
           factory.createIdentifier(`${type.name}Resolvers`),
           factory.createModuleBlock([
             factory.createTypeAliasDeclaration(
-              undefined,
               [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
               factory.createIdentifier("Resolvers"),
               undefined,
@@ -112,7 +107,6 @@ function createLegacyResolverNamespace(
     } else if (type.kind === "UNION" || type.kind === "INTERFACE") {
       typeObjects.push(
         factory.createTypeAliasDeclaration(
-          undefined,
           [factory.createToken(ts.SyntaxKind.ExportKeyword)],
           factory.createIdentifier(`${type.name}TypeResolvers`),
           undefined,
@@ -151,7 +145,6 @@ function createFieldArgs(
   );
 
   return factory.createTypeAliasDeclaration(
-    undefined,
     [factory.createToken(ts.SyntaxKind.ExportKeyword)],
     factory.createIdentifier(typeName),
     undefined,
