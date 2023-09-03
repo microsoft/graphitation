@@ -24,6 +24,7 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
   statements.push(
     factory.createImportDeclaration(
       undefined,
+      undefined,
       factory.createImportClause(
         false,
         undefined,
@@ -34,6 +35,7 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
   );
   statements.push(
     factory.createImportDeclaration(
+      undefined,
       undefined,
       factory.createImportClause(
         false,
@@ -47,6 +49,7 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
   statements.push(
     factory.createExportDeclaration(
       undefined,
+      undefined,
       false,
       undefined,
       factory.createStringLiteral("./models.interface"),
@@ -56,6 +59,7 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
   if (context.hasEnums) {
     statements.push(
       factory.createExportDeclaration(
+        undefined,
         undefined,
         false,
         undefined,
@@ -68,6 +72,7 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
     statements.push(
       factory.createExportDeclaration(
         undefined,
+        undefined,
         false,
         undefined,
         factory.createStringLiteral("./inputs.interface"),
@@ -77,6 +82,7 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
 
   statements.push(
     factory.createInterfaceDeclaration(
+      undefined,
       [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
       factory.createIdentifier("Scalars"),
       undefined,
@@ -112,6 +118,7 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
 
   statements.push(
     factory.createInterfaceDeclaration(
+      undefined,
       [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
       factory.createIdentifier("Types"),
       undefined,

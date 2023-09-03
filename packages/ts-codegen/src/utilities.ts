@@ -107,12 +107,14 @@ export function getResolverParameters({
     factory.createParameterDeclaration(
       undefined,
       undefined,
+      undefined,
       factory.createIdentifier(parent.name),
       undefined,
       parent.type,
     ),
     args &&
       factory.createParameterDeclaration(
+        undefined,
         undefined,
         undefined,
         factory.createIdentifier(args.name),
@@ -122,11 +124,13 @@ export function getResolverParameters({
     factory.createParameterDeclaration(
       undefined,
       undefined,
+      undefined,
       factory.createIdentifier(context.name),
       undefined,
       context.type,
     ),
     factory.createParameterDeclaration(
+      undefined,
       undefined,
       undefined,
       factory.createIdentifier(resolveInfo.name),
@@ -143,11 +147,11 @@ export function getSubscriptionResolver(
 ): ts.TypeAliasDeclaration {
   const resolverParams = getResolverParameters(resolverParametersDefinitions);
   return factory.createTypeAliasDeclaration(
+    undefined,
     [factory.createToken(ts.SyntaxKind.ExportKeyword)],
     factory.createIdentifier(fieldName),
     [
       factory.createTypeParameterDeclaration(
-        undefined,
         factory.createIdentifier("SubscribeResult"),
         undefined,
         factory.createKeywordTypeNode(ts.SyntaxKind.NeverKeyword),
@@ -254,6 +258,7 @@ export function createNonNullableTemplate(): ts.Statement[] {
   return [
     factory.createTypeAliasDeclaration(
       undefined,
+      undefined,
       factory.createIdentifier("PickNullable"),
       [
         factory.createTypeParameterDeclaration(
@@ -265,7 +270,6 @@ export function createNonNullableTemplate(): ts.Statement[] {
       factory.createMappedTypeNode(
         undefined,
         factory.createTypeParameterDeclaration(
-          undefined,
           factory.createIdentifier("P"),
           factory.createTypeOperatorNode(
             ts.SyntaxKind.KeyOfKeyword,
@@ -310,10 +314,10 @@ export function createNonNullableTemplate(): ts.Statement[] {
     ),
     factory.createTypeAliasDeclaration(
       undefined,
+      undefined,
       factory.createIdentifier("PickNotNullable"),
       [
         factory.createTypeParameterDeclaration(
-          undefined,
           factory.createIdentifier("T"),
           undefined,
           undefined,
@@ -322,7 +326,6 @@ export function createNonNullableTemplate(): ts.Statement[] {
       factory.createMappedTypeNode(
         undefined,
         factory.createTypeParameterDeclaration(
-          undefined,
           factory.createIdentifier("P"),
           factory.createTypeOperatorNode(
             ts.SyntaxKind.KeyOfKeyword,
@@ -367,10 +370,10 @@ export function createNonNullableTemplate(): ts.Statement[] {
     ),
     factory.createTypeAliasDeclaration(
       undefined,
+      undefined,
       factory.createIdentifier("OptionalNullable"),
       [
         factory.createTypeParameterDeclaration(
-          undefined,
           factory.createIdentifier("T"),
           undefined,
           undefined,
@@ -380,7 +383,6 @@ export function createNonNullableTemplate(): ts.Statement[] {
         factory.createMappedTypeNode(
           undefined,
           factory.createTypeParameterDeclaration(
-            undefined,
             factory.createIdentifier("K"),
             factory.createTypeOperatorNode(
               ts.SyntaxKind.KeyOfKeyword,
@@ -418,7 +420,6 @@ export function createNonNullableTemplate(): ts.Statement[] {
         factory.createMappedTypeNode(
           undefined,
           factory.createTypeParameterDeclaration(
-            undefined,
             factory.createIdentifier("K"),
             factory.createTypeOperatorNode(
               ts.SyntaxKind.KeyOfKeyword,

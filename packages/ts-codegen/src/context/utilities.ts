@@ -8,6 +8,7 @@ export function createImportDeclaration(
 ) {
   return factory.createImportDeclaration(
     undefined,
+    undefined,
     factory.createImportClause(
       true,
       undefined,

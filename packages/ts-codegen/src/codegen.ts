@@ -17,7 +17,6 @@ export function generateTS(
     contextName,
     enumsImport,
     legacyCompat,
-    legacyEnumsCompatibility,
     legacyNoModelsForObjects,
     modelScope,
   }: {
@@ -27,7 +26,6 @@ export function generateTS(
     contextName?: string;
     enumsImport?: string | null;
     legacyCompat?: boolean;
-    legacyEnumsCompatibility?: boolean;
     legacyNoModelsForObjects?: boolean;
     modelScope?: string | null;
   },
@@ -42,7 +40,6 @@ export function generateTS(
           from: contextImport || null,
         },
         legacyCompat,
-        legacyEnumsCompatibility,
         enumsImport,
         legacyNoModelsForObjects,
         modelScope,

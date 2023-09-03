@@ -20,6 +20,7 @@ export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
   statements.push(
     factory.createImportDeclaration(
       undefined,
+      undefined,
       factory.createImportClause(
         false,
         undefined,
@@ -33,6 +34,7 @@ export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
     statements.push(
       factory.createImportDeclaration(
         undefined,
+        undefined,
         factory.createImportClause(
           false,
           undefined,
@@ -44,6 +46,7 @@ export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
 
     statements.push(
       factory.createExportDeclaration(
+        undefined,
         undefined,
         false,
         undefined,
@@ -99,6 +102,7 @@ function createObjectTypeResolvers(
     createResolverField(context, type, field),
   );
   const resolversObject = factory.createInterfaceDeclaration(
+    undefined,
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     factory.createIdentifier("Resolvers"),
     undefined,
@@ -118,6 +122,7 @@ function createObjectTypeResolvers(
   );
   members.unshift(resolversObject);
   return factory.createModuleDeclaration(
+    undefined,
     [
       factory.createModifier(ts.SyntaxKind.ExportKeyword),
       factory.createModifier(ts.SyntaxKind.DeclareKeyword),
@@ -180,12 +185,12 @@ function createResolverField(
     );
   }
   return factory.createTypeAliasDeclaration(
+    undefined,
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     factory.createIdentifier(toValidFieldName(field.name)),
     type.name === "Subscription"
       ? [
           factory.createTypeParameterDeclaration(
-            undefined,
             factory.createIdentifier("A"),
             undefined,
             factory.createLiteralTypeNode(factory.createNull()),
@@ -204,6 +209,7 @@ function createUnionTypeResolvers(
   type: UnionType,
 ): ts.ModuleDeclaration {
   const resolversObject = factory.createInterfaceDeclaration(
+    undefined,
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     factory.createIdentifier("Resolvers"),
     undefined,
@@ -219,6 +225,7 @@ function createUnionTypeResolvers(
     ],
   );
   return factory.createModuleDeclaration(
+    undefined,
     [
       factory.createModifier(ts.SyntaxKind.ExportKeyword),
       factory.createModifier(ts.SyntaxKind.DeclareKeyword),
@@ -227,6 +234,7 @@ function createUnionTypeResolvers(
     factory.createModuleBlock([
       resolversObject,
       factory.createTypeAliasDeclaration(
+        undefined,
         [factory.createToken(ts.SyntaxKind.ExportKeyword)],
         factory.createIdentifier("__resolveType"),
         undefined,
@@ -242,6 +250,7 @@ function createInterfaceTypeResolvers(
   type: InterfaceType,
 ): ts.ModuleDeclaration {
   const resolversObject = factory.createInterfaceDeclaration(
+    undefined,
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     factory.createIdentifier("Resolvers"),
     undefined,
@@ -257,6 +266,7 @@ function createInterfaceTypeResolvers(
     ],
   );
   return factory.createModuleDeclaration(
+    undefined,
     [
       factory.createModifier(ts.SyntaxKind.ExportKeyword),
       factory.createModifier(ts.SyntaxKind.DeclareKeyword),
@@ -265,6 +275,7 @@ function createInterfaceTypeResolvers(
     factory.createModuleBlock([
       resolversObject,
       factory.createTypeAliasDeclaration(
+        undefined,
         [factory.createToken(ts.SyntaxKind.ExportKeyword)],
         factory.createIdentifier("__resolveType"),
         undefined,

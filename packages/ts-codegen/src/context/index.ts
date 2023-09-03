@@ -51,7 +51,6 @@ export type TsCodegenContextOptions = {
   };
   legacyCompat: boolean;
   legacyNoModelsForObjects: boolean;
-  legacyEnumsCompatibility: boolean;
 
   modelScope: string | null;
 };
@@ -85,7 +84,6 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
   },
   legacyCompat: false,
   legacyNoModelsForObjects: false,
-  legacyEnumsCompatibility: false,
 
   modelScope: null,
 };
@@ -125,10 +123,6 @@ export class TsCodegenContext {
     this.hasInputs = false;
     this.hasEnums = Boolean(options.enumsImport);
     this.hasUsedEnumsInModels = false;
-  }
-
-  legacyEnumsCompatibility(): boolean {
-    return this.options.legacyEnumsCompatibility;
   }
 
   isLegacyCompatMode(): boolean {
@@ -342,6 +336,7 @@ export class TsCodegenContext {
     }
 
     return factory.createTypeAliasDeclaration(
+      undefined,
       [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
       factory.createIdentifier(scalarName),
       undefined,
@@ -380,6 +375,7 @@ export class TsCodegenContext {
     return [
       addSyntheticLeadingComment(
         factory.createInterfaceDeclaration(
+          undefined,
           [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
           factory.createIdentifier("BaseModel"),
           undefined,
@@ -412,19 +408,16 @@ export class TsCodegenContext {
       } else if (markUsage === "RESOLVERS") {
         this.usedEntitiesInResolvers.add(typeName);
       }
-      let modifiedTypeName = "";
+      let namespace = "";
       const type = this.typeNameToType.get(typeName);
 
       if (markUsage === "MODELS") {
         if (type && type.kind === "ENUM") {
           this.hasUsedEnumsInModels = true;
-          const namespacedTypeName = `Enums.${typeName}`;
-          modifiedTypeName = this.options.legacyEnumsCompatibility
-            ? namespacedTypeName + " | `${" + namespacedTypeName + "}`"
-            : namespacedTypeName;
+          namespace = "Enums";
         }
       } else if (markUsage === "RESOLVERS") {
-        modifiedTypeName = `Models.${typeName}`;
+        namespace = "Models";
       }
 
       if (this.typeNameToImports.has(typeName)) {
@@ -435,7 +428,7 @@ export class TsCodegenContext {
       } else {
         return new TypeLocation(
           null,
-          modifiedTypeName ? modifiedTypeName : typeName,
+          namespace ? `${namespace}.${typeName}` : typeName,
         );
       }
     }
