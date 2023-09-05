@@ -7,7 +7,6 @@ import {
   FragmentDefinitionNode,
   OperationDefinitionNode,
   OperationTypeDefinitionNode,
-  OperationTypeNode,
 } from "graphql";
 import {
   collectFields,
@@ -315,8 +314,9 @@ function executeOperation(
   const path = undefined;
   let result;
 
+  // Note: cannot use OperationTypeNode from graphql-js as it doesn't exist in 15.x
   switch (operation.operation) {
-    case OperationTypeNode.QUERY:
+    case "query":
       result = executeFields(
         exeContext,
         rootTypeName,
@@ -327,7 +327,7 @@ function executeOperation(
       );
       result = buildResponse(exeContext, result);
       break;
-    case OperationTypeNode.MUTATION:
+    case "mutation":
       result = executeFieldsSerially(
         exeContext,
         rootTypeName,
@@ -337,7 +337,7 @@ function executeOperation(
       );
       result = buildResponse(exeContext, result);
       break;
-    case OperationTypeNode.SUBSCRIPTION: {
+    case "subscription": {
       const resultOrStreamOrPromise = createSourceEventStream(exeContext);
       result = mapResultOrEventStreamOrPromise(
         resultOrStreamOrPromise,
@@ -346,7 +346,13 @@ function executeOperation(
         path,
         groupedFieldSet,
       );
+      break;
     }
+    default:
+      invariant(
+        false,
+        `Operation "${operation.operation}" is not a part of GraphQL spec`,
+      );
   }
 
   for (const patch of patches) {
@@ -1269,7 +1275,7 @@ function getStreamValues(
   );
 
   invariant(
-    exeContext.operation.operation !== OperationTypeNode.SUBSCRIPTION,
+    exeContext.operation.operation !== "subscription",
     "`@stream` directive not supported on subscription operations. Disable `@stream` by setting the `if` argument to `false`.",
   );
 
@@ -1725,12 +1731,17 @@ export function getOperationRootTypeName(
   operation: OperationDefinitionNode | OperationTypeDefinitionNode,
 ): string {
   switch (operation.operation) {
-    case OperationTypeNode.QUERY:
+    case "query":
       return "Query";
-    case OperationTypeNode.MUTATION:
+    case "mutation":
       return "Mutation";
-    case OperationTypeNode.SUBSCRIPTION:
+    case "subscription":
       return "Subscription";
+    default:
+      invariant(
+        false,
+        `Operation "${operation.operation}" is not a part of GraphQL spec`,
+      );
   }
 }
 
