@@ -43,6 +43,12 @@ import { typeNameFromReference } from "./reference";
 
 const specifiedScalarDefinition: ScalarTypeDefinitionTuple = [TypeKind.SCALAR];
 const typeNameMetaFieldDef: FieldDefinition = "String";
+const resolveTypeName: FunctionFieldResolver<unknown, unknown> = (
+  _source,
+  _args,
+  _context,
+  info,
+) => info.parentTypeName;
 const emptyObject = Object.freeze(Object.create(null));
 
 export class SchemaFragment {
@@ -298,6 +304,9 @@ export class SchemaFragment {
     typeName: TypeName,
     fieldName: string,
   ): FunctionFieldResolver<unknown, unknown> | undefined {
+    if (fieldName === "__typename") {
+      return resolveTypeName;
+    }
     // TODO: sanity check that this is an object type resolver
     const typeResolvers = this.resolvers[typeName] as
       | ObjectTypeResolver<unknown, unknown, unknown>
