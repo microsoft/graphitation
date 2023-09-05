@@ -2,7 +2,6 @@ import { GraphQLEnumType, GraphQLLeafType } from "graphql";
 import {
   DirectiveDefinitionTuple,
   DirectiveKeys,
-  SchemaFragmentDefinitions,
   EnumKeys,
   EnumTypeDefinitionTuple,
   FieldDefinition,
@@ -18,6 +17,7 @@ import {
   ObjectKeys,
   ObjectTypeDefinitionTuple,
   ScalarTypeDefinitionTuple,
+  SchemaFragmentDefinitions,
   TypeKind,
   TypeName,
   TypeReference,
@@ -239,9 +239,12 @@ export class SchemaFragment {
       return true;
     }
     const typeName = typeNameFromReference(typeRef);
+    const kind = this.definitions.types[typeName]?.[0];
     return (
-      this.definitions.types[typeName]?.[0] === TypeKind.INPUT ||
-      isSpecifiedScalarType(typeName)
+      isSpecifiedScalarType(typeName) ||
+      kind === TypeKind.ENUM ||
+      kind === TypeKind.INPUT ||
+      kind === TypeKind.SCALAR
     );
   }
 
