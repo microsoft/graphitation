@@ -31,7 +31,7 @@ export type ConversationMessagesArgs = {
   sort?: InputMaybe<Sort>;
 };
 
-export type Message = {
+export type Message = Node & {
   __typename?: "Message";
   id: Scalars["ID"];
   authorId: Scalars["String"];
@@ -81,11 +81,16 @@ export type PageInfo = {
 export type Query = {
   __typename?: "Query";
   conversation: Conversation;
+  message: Message;
   node?: Maybe<Node>;
 };
 
 export type QueryConversationArgs = {
   id: Scalars["String"];
+};
+
+export type QueryMessageArgs = {
+  messageId: Scalars["String"];
 };
 
 export type QueryNodeArgs = {
@@ -111,6 +116,19 @@ export type CacheTestFragment = { __typename?: "Conversation" } & Pick<
   Conversation,
   "id" | "title"
 >;
+
+export type CacheTestMessageFragment = { __typename?: "Message" } & Pick<
+  Message,
+  "id" | "text"
+>;
+
+export type CacheTestMessageQueryVariables = Exact<{
+  id: Scalars["String"];
+}>;
+
+export type CacheTestMessageQuery = { __typename?: "Query" } & {
+  message: { __typename?: "Message" } & Pick<Message, "id" | "text">;
+};
 
 export type CacheTestQueryVariables = Exact<{
   conversationId: Scalars["String"];
@@ -235,6 +253,26 @@ export const CacheTestFragment = ({
     },
   ],
 } as unknown) as DocumentNode<CacheTestFragment, unknown>;
+export const CacheTestMessageFragment = ({
+  kind: "Document",
+  definitions: [
+    {
+      kind: "FragmentDefinition",
+      name: { kind: "Name", value: "CacheTestMessageFragment" },
+      typeCondition: {
+        kind: "NamedType",
+        name: { kind: "Name", value: "Message" },
+      },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          { kind: "Field", name: { kind: "Name", value: "id" } },
+          { kind: "Field", name: { kind: "Name", value: "text" } },
+        ],
+      },
+    },
+  ],
+} as unknown) as DocumentNode<CacheTestMessageFragment, unknown>;
 export const ApolloClientIntegrationTestMessageFragment = ({
   kind: "Document",
   definitions: [
@@ -261,6 +299,58 @@ export const ApolloClientIntegrationTestMessageFragment = ({
 } as unknown) as DocumentNode<
   ApolloClientIntegrationTestMessageFragment,
   unknown
+>;
+export const CacheTestMessageQueryDocument = ({
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "CacheTestMessageQuery" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "id" } },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: { kind: "Name", value: "String" },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "message" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "messageId" },
+                value: {
+                  kind: "Variable",
+                  name: { kind: "Name", value: "id" },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "id" } },
+                { kind: "Field", name: { kind: "Name", value: "text" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown) as DocumentNode<
+  CacheTestMessageQuery,
+  CacheTestMessageQueryVariables
 >;
 export const CacheTestQueryDocument = ({
   kind: "Document",
@@ -788,6 +878,82 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
   ApolloClientIntegrationTestMessageCreatedSubscription,
   ApolloClientIntegrationTestMessageCreatedSubscriptionVariables
 >;
+(CacheTestMessageQueryDocument as any).__relay = (function () {
+  var v0 = [
+      {
+        defaultValue: null,
+        kind: "LocalArgument",
+        name: "id",
+      },
+    ],
+    v1 = [
+      {
+        alias: null,
+        args: [
+          {
+            kind: "Variable",
+            name: "messageId",
+            variableName: "id",
+          },
+        ],
+        concreteType: "Message",
+        kind: "LinkedField",
+        name: "message",
+        plural: false,
+        selections: [
+          {
+            alias: null,
+            args: null,
+            kind: "ScalarField",
+            name: "id",
+            storageKey: null,
+          },
+          {
+            alias: null,
+            args: null,
+            kind: "ScalarField",
+            name: "text",
+            storageKey: null,
+          },
+          {
+            alias: null,
+            args: null,
+            kind: "ScalarField",
+            name: "__typename",
+            storageKey: null,
+          },
+        ],
+        storageKey: null,
+      },
+    ];
+  return {
+    fragment: {
+      argumentDefinitions: v0 /*: any*/,
+      kind: "Fragment",
+      metadata: null,
+      name: "CacheTestMessageQuery",
+      selections: v1 /*: any*/,
+      type: "Query",
+      abstractKey: null,
+    },
+    kind: "Request",
+    operation: {
+      argumentDefinitions: v0 /*: any*/,
+      kind: "Operation",
+      name: "CacheTestMessageQuery",
+      selections: v1 /*: any*/,
+    },
+    params: {
+      cacheID: "93e521a727fe591c031511104268d32d",
+      metadata: {},
+      name: "CacheTestMessageQuery",
+      operationKind: "query",
+      text: null,
+    },
+  };
+})();
+(CacheTestMessageQueryDocument as any).__relay.hash =
+  "93e521a727fe591c031511104268d32d";
 (CacheTestQueryDocument as any).__relay = (function () {
   var v0 = [
       {
@@ -808,7 +974,14 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
       name: "id",
       storageKey: null,
     },
-    v2 = [
+    v2 = {
+      alias: null,
+      args: null,
+      kind: "ScalarField",
+      name: "__typename",
+      storageKey: null,
+    },
+    v3 = [
       {
         alias: null,
         args: [
@@ -831,6 +1004,7 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
             name: "title",
             storageKey: null,
           },
+          v2 /*: any*/,
           {
             condition: "includeNestedData",
             kind: "Condition",
@@ -888,12 +1062,15 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
                             name: "createdAt",
                             storageKey: null,
                           },
+                          v2 /*: any*/,
                         ],
                         storageKey: null,
                       },
+                      v2 /*: any*/,
                     ],
                     storageKey: null,
                   },
+                  v2 /*: any*/,
                 ],
                 storageKey: "messages(first:10)",
               },
@@ -909,7 +1086,7 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
       kind: "Fragment",
       metadata: null,
       name: "CacheTestQuery",
-      selections: v2 /*: any*/,
+      selections: v3 /*: any*/,
       type: "Query",
       abstractKey: null,
     },
@@ -918,10 +1095,10 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
       argumentDefinitions: v0 /*: any*/,
       kind: "Operation",
       name: "CacheTestQuery",
-      selections: v2 /*: any*/,
+      selections: v3 /*: any*/,
     },
     params: {
-      cacheID: "c705617444e60065fecf7ecda0ffd951",
+      cacheID: "5798e3e323d1f1cd5132ebc2754202f3",
       metadata: {},
       name: "CacheTestQuery",
       operationKind: "query",
@@ -930,7 +1107,7 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
   };
 })();
 (CacheTestQueryDocument as any).__relay.hash =
-  "c705617444e60065fecf7ecda0ffd951";
+  "5798e3e323d1f1cd5132ebc2754202f3";
 (ApolloClientIntegrationTestQueryDocument as any).__relay = (function () {
   var v0 = {
       defaultValue: null,
@@ -993,6 +1170,7 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
             name: "endCursor",
             storageKey: null,
           },
+          v3 /*: any*/,
         ],
         storageKey: null,
       },
@@ -1031,9 +1209,11 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
             ],
             storageKey: null,
           },
+          v3 /*: any*/,
         ],
         storageKey: null,
       },
+      v3 /*: any*/,
     ],
     v7 = [
       {
@@ -1124,7 +1304,7 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
       ],
     },
     params: {
-      cacheID: "0cf66fce12dd077e7a1754dc57607565",
+      cacheID: "346f76ab523d3fbc64255f0891256273",
       metadata: {
         connection: [
           {
@@ -1142,7 +1322,7 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
   };
 })();
 (ApolloClientIntegrationTestQueryDocument as any).__relay.hash =
-  "0cf66fce12dd077e7a1754dc57607565";
+  "346f76ab523d3fbc64255f0891256273";
 (ApolloClientIntegrationTestMutationDocument as any).__relay = (function () {
   var v0 = [
       {
@@ -1464,11 +1644,51 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = ({
       name: "title",
       storageKey: null,
     },
+    {
+      alias: null,
+      args: null,
+      kind: "ScalarField",
+      name: "__typename",
+      storageKey: null,
+    },
   ],
   type: "Conversation",
   abstractKey: null,
 };
-(CacheTestFragment as any).__relay.hash = "e0c167530d154a384aebedea5a08b577";
+(CacheTestFragment as any).__relay.hash = "2422c9a6443eb2bb444fe2aed19d30b1";
+(CacheTestMessageFragment as any).__relay = {
+  argumentDefinitions: [],
+  kind: "Fragment",
+  metadata: null,
+  name: "CacheTestMessageFragment",
+  selections: [
+    {
+      alias: null,
+      args: null,
+      kind: "ScalarField",
+      name: "id",
+      storageKey: null,
+    },
+    {
+      alias: null,
+      args: null,
+      kind: "ScalarField",
+      name: "text",
+      storageKey: null,
+    },
+    {
+      alias: null,
+      args: null,
+      kind: "ScalarField",
+      name: "__typename",
+      storageKey: null,
+    },
+  ],
+  type: "Message",
+  abstractKey: null,
+};
+(CacheTestMessageFragment as any).__relay.hash =
+  "35e09585ad08828cac27df4e00748495";
 (ApolloClientIntegrationTestMessageFragment as any).__relay = {
   argumentDefinitions: [],
   kind: "Fragment",

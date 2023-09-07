@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`key-fields concerning normalization with custom key-fields works with apollo 1`] = `
+exports[`Type Policies key-fields concerning normalization with custom key-fields works with apollo 1`] = `
 Object {
   "conversation": Object {
     "id": "42",
@@ -21,7 +21,7 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization with custom key-fields works with apollo 2`] = `
+exports[`Type Policies key-fields concerning normalization with custom key-fields works with apollo 2`] = `
 Object {
   "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}": Object {
     "__typename": "Conversation",
@@ -53,14 +53,18 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization with custom key-fields works with relayWithBuildtimeGeneratedIR 1`] = `
+exports[`Type Policies key-fields concerning normalization with custom key-fields works with relayWithBuildtimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "messages": Object {
+      "__typename": "MessagesConnection",
       "edges": Array [
         Object {
+          "__typename": "MessagesConnectionEdge",
           "node": Object {
+            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -74,7 +78,7 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization with custom key-fields works with relayWithBuildtimeGeneratedIR 2`] = `
+exports[`Type Policies key-fields concerning normalization with custom key-fields works with relayWithBuildtimeGeneratedIR 2`] = `
 Object {
   "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}": Object {
     "__id": "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}",
@@ -119,14 +123,18 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization with custom key-fields works with relayWithRuntimeGeneratedIR 1`] = `
+exports[`Type Policies key-fields concerning normalization with custom key-fields works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "messages": Object {
+      "__typename": "MessagesConnection",
       "edges": Array [
         Object {
+          "__typename": "MessagesConnectionEdge",
           "node": Object {
+            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -140,7 +148,7 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization with custom key-fields works with relayWithRuntimeGeneratedIR 2`] = `
+exports[`Type Policies key-fields concerning normalization with custom key-fields works with relayWithRuntimeGeneratedIR 2`] = `
 Object {
   "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}": Object {
     "__id": "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}",
@@ -185,7 +193,7 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization with default key-fields works with apollo 1`] = `
+exports[`Type Policies key-fields concerning normalization with default key-fields works with apollo 1`] = `
 Object {
   "conversation": Object {
     "id": "42",
@@ -206,7 +214,7 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization with default key-fields works with apollo 2`] = `
+exports[`Type Policies key-fields concerning normalization with default key-fields works with apollo 2`] = `
 Object {
   "Conversation:42": Object {
     "__typename": "Conversation",
@@ -238,14 +246,18 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization with default key-fields works with relayWithBuildtimeGeneratedIR 1`] = `
+exports[`Type Policies key-fields concerning normalization with default key-fields works with relayWithBuildtimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "messages": Object {
+      "__typename": "MessagesConnection",
       "edges": Array [
         Object {
+          "__typename": "MessagesConnectionEdge",
           "node": Object {
+            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -259,7 +271,7 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization with default key-fields works with relayWithBuildtimeGeneratedIR 2`] = `
+exports[`Type Policies key-fields concerning normalization with default key-fields works with relayWithBuildtimeGeneratedIR 2`] = `
 Object {
   "Conversation:42": Object {
     "__id": "Conversation:42",
@@ -304,14 +316,18 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization with default key-fields works with relayWithRuntimeGeneratedIR 1`] = `
+exports[`Type Policies key-fields concerning normalization with default key-fields works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "messages": Object {
+      "__typename": "MessagesConnection",
       "edges": Array [
         Object {
+          "__typename": "MessagesConnectionEdge",
           "node": Object {
+            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -325,7 +341,7 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization with default key-fields works with relayWithRuntimeGeneratedIR 2`] = `
+exports[`Type Policies key-fields concerning normalization with default key-fields works with relayWithRuntimeGeneratedIR 2`] = `
 Object {
   "Conversation:42": Object {
     "__id": "Conversation:42",
@@ -370,7 +386,7 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization without key-fields works with apollo 1`] = `
+exports[`Type Policies key-fields concerning normalization without key-fields works with apollo 1`] = `
 Object {
   "conversation": Object {
     "id": "42",
@@ -391,7 +407,7 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization without key-fields works with apollo 2`] = `
+exports[`Type Policies key-fields concerning normalization without key-fields works with apollo 2`] = `
 Object {
   "ROOT_QUERY": Object {
     "__typename": "Query",
@@ -417,14 +433,18 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization without key-fields works with relayWithBuildtimeGeneratedIR 1`] = `
+exports[`Type Policies key-fields concerning normalization without key-fields works with relayWithBuildtimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "messages": Object {
+      "__typename": "MessagesConnection",
       "edges": Array [
         Object {
+          "__typename": "MessagesConnectionEdge",
           "node": Object {
+            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -438,7 +458,7 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization without key-fields works with relayWithBuildtimeGeneratedIR 2`] = `
+exports[`Type Policies key-fields concerning normalization without key-fields works with relayWithBuildtimeGeneratedIR 2`] = `
 Object {
   "client:root": Object {
     "__id": "client:root",
@@ -483,14 +503,18 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization without key-fields works with relayWithRuntimeGeneratedIR 1`] = `
+exports[`Type Policies key-fields concerning normalization without key-fields works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "messages": Object {
+      "__typename": "MessagesConnection",
       "edges": Array [
         Object {
+          "__typename": "MessagesConnectionEdge",
           "node": Object {
+            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -504,7 +528,7 @@ Object {
 }
 `;
 
-exports[`key-fields concerning normalization without key-fields works with relayWithRuntimeGeneratedIR 2`] = `
+exports[`Type Policies key-fields concerning normalization without key-fields works with relayWithRuntimeGeneratedIR 2`] = `
 Object {
   "client:root": Object {
     "__id": "client:root",
@@ -543,6 +567,58 @@ Object {
     "__typename": "Message",
     "authorId": "author-42",
     "createdAt": "2020-01-01T00:00:00.000Z",
+    "id": "message-42",
+    "text": "Hello World",
+  },
+}
+`;
+
+exports[`Type Policies read functions / missing field handlers works with apollo 1`] = `
+Object {
+  "id": "message-42",
+  "text": "Hello World",
+}
+`;
+
+exports[`Type Policies read functions / missing field handlers works with apollo 2`] = `
+Object {
+  "message": Object {
+    "id": "message-42",
+    "text": "Hello World",
+  },
+}
+`;
+
+exports[`Type Policies read functions / missing field handlers works with relayWithBuildtimeGeneratedIR 1`] = `
+Object {
+  "__typename": "Message",
+  "id": "message-42",
+  "text": "Hello World",
+}
+`;
+
+exports[`Type Policies read functions / missing field handlers works with relayWithBuildtimeGeneratedIR 2`] = `
+Object {
+  "message": Object {
+    "__typename": "Message",
+    "id": "message-42",
+    "text": "Hello World",
+  },
+}
+`;
+
+exports[`Type Policies read functions / missing field handlers works with relayWithRuntimeGeneratedIR 1`] = `
+Object {
+  "__typename": "Message",
+  "id": "message-42",
+  "text": "Hello World",
+}
+`;
+
+exports[`Type Policies read functions / missing field handlers works with relayWithRuntimeGeneratedIR 2`] = `
+Object {
+  "message": Object {
+    "__typename": "Message",
     "id": "message-42",
     "text": "Hello World",
   },
@@ -647,6 +723,7 @@ Object {
 exports[`watch works with relayWithBuildtimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
   },
@@ -656,6 +733,7 @@ Object {
 exports[`watch works with relayWithBuildtimeGeneratedIR 2`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 2",
   },
@@ -665,6 +743,7 @@ Object {
 exports[`watch works with relayWithBuildtimeGeneratedIR 3`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
   },
@@ -674,6 +753,7 @@ Object {
 exports[`watch works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
   },
@@ -683,6 +763,7 @@ Object {
 exports[`watch works with relayWithRuntimeGeneratedIR 2`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 2",
   },
@@ -692,6 +773,7 @@ Object {
 exports[`watch works with relayWithRuntimeGeneratedIR 3`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
   },
@@ -714,6 +796,7 @@ Object {
 
 exports[`writeFragment/readFragment works with relayWithBuildtimeGeneratedIR 1`] = `
 Object {
+  "__typename": "Conversation",
   "id": "Conversation:42",
   "title": "Hello World",
 }
@@ -721,6 +804,7 @@ Object {
 
 exports[`writeFragment/readFragment works with relayWithBuildtimeGeneratedIR and optimistic data 1`] = `
 Object {
+  "__typename": "Conversation",
   "id": "Conversation:42",
   "title": "Hello World",
 }
@@ -728,6 +812,7 @@ Object {
 
 exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
+  "__typename": "Conversation",
   "id": "Conversation:42",
   "title": "Hello World",
 }
@@ -735,7 +820,31 @@ Object {
 
 exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR and optimistic data 1`] = `
 Object {
+  "__typename": "Conversation",
   "id": "Conversation:42",
+  "title": "Hello World",
+}
+`;
+
+exports[`writeFragment/readFragment works with writeQuery for apollo 1`] = `
+Object {
+  "id": "42",
+  "title": "Hello World",
+}
+`;
+
+exports[`writeFragment/readFragment works with writeQuery for relayWithBuildtimeGeneratedIR 1`] = `
+Object {
+  "__typename": "Conversation",
+  "id": "42",
+  "title": "Hello World",
+}
+`;
+
+exports[`writeFragment/readFragment works with writeQuery for relayWithRuntimeGeneratedIR 1`] = `
+Object {
+  "__typename": "Conversation",
+  "id": "42",
   "title": "Hello World",
 }
 `;
@@ -761,6 +870,7 @@ Object {
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithBuildtimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },
@@ -770,6 +880,7 @@ Object {
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithBuildtimeGeneratedIR 2`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },
@@ -779,6 +890,7 @@ Object {
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },
@@ -788,6 +900,7 @@ Object {
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithRuntimeGeneratedIR 2`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },
@@ -806,6 +919,7 @@ Object {
 exports[`writeQuery/readQuery works with relayWithBuildtimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },
@@ -815,6 +929,7 @@ Object {
 exports[`writeQuery/readQuery works with relayWithRuntimeGeneratedIR 1`] = `
 Object {
   "conversation": Object {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },

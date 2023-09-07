@@ -1,5 +1,6 @@
 type Query {
   conversation(id: String!): Conversation!
+  message(messageId: String!): Message!
   node(id: ID!): Node
 }
 
@@ -46,7 +47,7 @@ type MessagesConnectionEdge {
   node: Message!
 }
 
-type Message {
+type Message implements Node {
   id: ID!
   authorId: String!
   text: String!

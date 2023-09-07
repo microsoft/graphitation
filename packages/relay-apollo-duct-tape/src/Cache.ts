@@ -43,6 +43,7 @@ import {
   ROOT_ID,
   Environment,
   ConnectionHandler,
+  MissingFieldHandler,
 } from "relay-runtime";
 import { NormalizationFragmentSpread } from "relay-runtime/lib/util/NormalizationNode";
 import RelayRecordSource from "relay-runtime/lib/store/RelayRecordSource";
@@ -67,8 +68,9 @@ import {
   Transaction,
   TypePolicies,
   TypePolicy,
+  FieldPolicy,
 } from "@apollo/client";
-import { addTypenameToDocument } from "@apollo/client/utilities";
+import { StoreObject, addTypenameToDocument } from "@apollo/client/utilities";
 import { KeySpecifier } from "@apollo/client/cache/inmemory/policies";
 export { TypePolicies };
 
@@ -109,6 +111,10 @@ const handlerProvider: HandlerProvider = (handle) => {
   invariant(false, "No handler provided for `%s`.", handle);
 };
 
+export type EntityReadFunction = (
+  args: Record<string, any> | null,
+) => StoreObject;
+
 export class RelayApolloCache extends ApolloCache<RecordMap> {
   private store: Store;
   private usingExternalStore: boolean;
@@ -120,6 +126,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   private schema?: Schema;
   private typenameDocumentCache?: WeakMap<DocumentNode, DocumentNode>;
   private debugEnvironment?: Environment;
+  private missingFieldHandlers: MissingFieldHandler[];
 
   constructor(
     options: {
@@ -139,6 +146,9 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     // this.inTransation = false;
     this.transactionStack = [];
     this.typePolicies = options.typePolicies || {};
+    this.missingFieldHandlers = this.typePoliciesToMissingDocumentHandlers(
+      this.typePolicies,
+    );
     this.publishQueue = new RelayPublishQueue(
       this.store,
       handlerProvider,
@@ -320,8 +330,12 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     const fragment = getFragment(this.getTaggedNode(options.fragment));
     const id = options.id || ROOT_ID;
     this.writeWithRelayIR(getNodeQuery(fragment, id), {
+      ...options,
       result: { node: { ...options.data, id } },
-      variables: options.variables,
+      variables: {
+        ...options.variables,
+        id,
+      },
     });
     return undefined;
   }
@@ -337,10 +351,15 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     optimistic = !!options.optimistic,
   ): FragmentType | null {
     const fragment = getFragment(this.getTaggedNode(options.fragment));
+    const id = options.id || ROOT_ID;
     const queryResult = this.readWithRelayIR(
       getNodeQuery(fragment, options.id || ROOT_ID),
       {
         ...options,
+        variables: {
+          ...options.variables,
+          id,
+        },
         optimistic,
       },
     ) as any;
@@ -559,6 +578,15 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
       request,
       options.variables || {},
     );
+    const target = RelayRecordSource.create();
+    this.store.check(operation, {
+      handlers: this.missingFieldHandlers,
+      getTargetForActor: (_actor: any) => target,
+    } as any);
+    if (target.size() > 0) {
+      this.publishQueue.commitSource(target);
+      this.publishQueue.run();
+    }
     return this.store.lookup(operation.fragment, options.optimistic);
   }
 
@@ -626,6 +654,74 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
       fieldValue,
       typeName,
     );
+  }
+
+  private typePoliciesToMissingDocumentHandlers(
+    typePolicies: TypePolicies,
+  ): MissingFieldHandler[] {
+    let handlers: MissingFieldHandler[] = [
+      {
+        kind: "linked",
+        handle(field, record, argValues) {
+          if (field.name === "node") {
+            // console.log(field, record, argValues);
+          }
+          if (
+            record != null &&
+            record.__typename === ROOT_TYPE &&
+            field.name === "node" &&
+            argValues.hasOwnProperty("id")
+          ) {
+            return argValues.id;
+          }
+          return undefined;
+        },
+      },
+    ];
+    for (let [type, typePolicy] of Object.entries(typePolicies)) {
+      let typeName = type === "Query" ? ROOT_TYPE : type;
+      if (typePolicy.fields) {
+        for (let [fieldName, fieldPolicy] of Object.entries(
+          typePolicy.fields,
+        )) {
+          const readFunction =
+            fieldPolicy &&
+            (fieldPolicy as FieldPolicy<any> & {
+              readFunction?: EntityReadFunction;
+            }).readFunction;
+          if (readFunction) {
+            handlers.push(
+              this.createMissingFieldHandler(typeName, fieldName, readFunction),
+            );
+          }
+        }
+      }
+    }
+    return handlers;
+  }
+
+  private createMissingFieldHandler(
+    typeName: string,
+    fieldName: string,
+    readFunction: EntityReadFunction,
+  ): MissingFieldHandler {
+    const self = this;
+    return {
+      kind: "linked",
+      handle(field, record, argValues) {
+        if (
+          record != null &&
+          record.__typename === typeName &&
+          field.name === fieldName
+        ) {
+          const obj = readFunction(argValues);
+          if (obj) {
+            return self.getDataID(obj, obj.__typename);
+          }
+        }
+        return undefined;
+      },
+    };
   }
 }
 

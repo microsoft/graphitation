@@ -1,0 +1,6 @@
+query CacheTestMessageQuery($id: String!) {
+  message(messageId: $id) {
+    id
+    text
+  }
+}
