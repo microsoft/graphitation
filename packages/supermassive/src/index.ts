@@ -2,6 +2,16 @@ export { executeWithoutSchema } from "./executeWithoutSchema";
 export { executeWithSchema } from "./executeWithSchema";
 export { subscribeWithSchema } from "./subscribeWithSchema";
 export { subscribeWithoutSchema } from "./subscribeWithoutSchema";
+export { encodeASTSchema } from "./utilities/encodeASTSchema";
+export { mergeSchemaDefinitions } from "./utilities/mergeDefinitions";
+export { mergeResolvers } from "./utilities/mergeResolvers";
+export { annotateDocumentGraphQLTransform } from "./utilities/annotateDocumentGraphQLTransform";
+export {
+  addMinimalViableSchemaToRequestDocument,
+  extractMinimalViableSchemaForRequestDocument,
+} from "./utilities/addMinimalViableSchemaToRequestDocument";
+
+export type { SchemaFragmentDefinitions } from "./schema/definition";
 
 export type {
   ObjectTypeResolver,
@@ -13,6 +23,7 @@ export type {
   ResolveInfo,
   TotalExecutionResult,
   ExecutionResult,
+  SubscriptionExecutionResult,
   IncrementalExecutionResult,
 } from "./types";
 
