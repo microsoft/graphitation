@@ -511,33 +511,28 @@ function executeField(
   const schemaTypes = exeContext.schemaTypes;
   const fieldName = fieldGroup[0].name.value;
   const fieldDef = schemaTypes.getField(parentTypeName, fieldName);
-  if (fieldDef === undefined) {
-    return;
-  }
-
-  const returnTypeRef = schemaTypes.getTypeReference(fieldDef);
-  const resolveFn =
-    schemaTypes.getFieldResolver(parentTypeName, fieldName) ??
-    exeContext.fieldResolver;
 
   const info = buildResolveInfo(
     exeContext,
     fieldName,
     fieldGroup,
     parentTypeName,
-    typeNameFromReference(returnTypeRef),
+    /* returnType */ "", // assigned after field definition is loaded
     path,
   );
+
+  if (fieldDef === undefined) {
+    // TODO: load schema fragment containing this definition using fragment loader
+    return;
+  }
 
   return resolveAndCompleteField(
     exeContext,
     parentTypeName,
-    returnTypeRef,
     fieldDef,
     fieldGroup,
     info,
     path,
-    resolveFn,
     source,
     incrementalDataRecord,
   );
@@ -772,15 +767,23 @@ function handleFieldError(
 function resolveAndCompleteField(
   exeContext: ExecutionContext,
   parentTypeName: string,
-  returnTypeRef: TypeReference,
   fieldDefinition: FieldDefinition,
   fieldGroup: FieldGroup,
   info: ResolveInfo,
   path: Path,
-  resolveFn: FunctionFieldResolver<unknown, unknown>,
   source: unknown,
   incrementalDataRecord: IncrementalDataRecord | undefined,
 ): PromiseOrValue<unknown> {
+  const fieldName = fieldGroup[0].name.value;
+  const returnTypeRef =
+    exeContext.schemaTypes.getTypeReference(fieldDefinition);
+
+  const resolveFn: FunctionFieldResolver<unknown, unknown> =
+    exeContext.schemaTypes.getFieldResolver(parentTypeName, fieldName) ??
+    exeContext.fieldResolver;
+
+  info.returnTypeName = typeNameFromReference(returnTypeRef);
+
   const isDefaultResolverUsed = resolveFn === exeContext.fieldResolver;
   const hooks = exeContext.fieldExecutionHooks;
   //  the resolve function, regardless of if its result is normal or abrupt (error).
