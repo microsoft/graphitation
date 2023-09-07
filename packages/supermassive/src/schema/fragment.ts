@@ -1,4 +1,4 @@
-import { GraphQLEnumType, GraphQLLeafType } from "graphql";
+import { GraphQLEnumType, GraphQLLeafType, GraphQLScalarType } from "graphql";
 import {
   DirectiveDefinitionTuple,
   DirectiveKeys,
@@ -356,23 +356,20 @@ export class SchemaFragment {
 
     const typeDef = this.getLeafType(typeRef);
     if (!typeDef) {
-      // FIXME: Could be still in resolvers (i.e., add "found in resolvers, not found in schema" error?)
+      // TODO: Could be still in resolvers (i.e., add "found in resolvers, not found in schema" error?)
       return undefined;
     }
 
     if (typeDef[0] === TypeKind.SCALAR) {
-      if (SchemaFragment.scalarTypeResolvers[typeName]) {
-        return SchemaFragment.scalarTypeResolvers[typeName];
+      let scalarType = SchemaFragment.scalarTypeResolvers[typeName];
+      if (!scalarType) {
+        const tmp = this.resolvers[typeName];
+        scalarType = isScalarTypeResolver(tmp)
+          ? tmp
+          : new GraphQLScalarType({ name: typeName, description: "" });
+        SchemaFragment.scalarTypeResolvers[typeName] = scalarType;
       }
-      const resolver = this.resolvers[typeName];
-      const scalarResolver = isScalarTypeResolver(resolver)
-        ? resolver
-        : undefined;
-      if (scalarResolver) {
-        SchemaFragment.scalarTypeResolvers[typeName] = scalarResolver;
-        return scalarResolver;
-      }
-      return undefined;
+      return scalarType;
     }
     if (typeDef[0] === TypeKind.ENUM) {
       let enumType = SchemaFragment.enumTypeResolvers[typeName];
