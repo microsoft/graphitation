@@ -30,47 +30,72 @@ import {
   SchemaFragmentDefinitions,
   TypeKind,
   TypeReference,
-  TypeDefinitionsRecord,
+  TypeDefinitionTuple,
 } from "../schema/definition";
 import { typeReferenceFromNode } from "../schema/reference";
 import { valueFromASTUntyped } from "./valueFromASTUntyped";
 
 export function encodeASTSchema(
   schemaFragment: DocumentNode,
-): SchemaFragmentDefinitions & { extensions?: TypeDefinitionsRecord } {
-  const types = Object.create(null);
-  const extensions = Object.create(null);
-  const directives = [];
+): SchemaFragmentDefinitions[] {
+  const fragments: SchemaFragmentDefinitions[] = [{ types: {} }];
+  const add = addTypeDefinition.bind(null, fragments);
+
   for (const definition of schemaFragment.definitions) {
     if (definition.kind === "ObjectTypeDefinition") {
-      types[definition.name.value] = encodeObjectType(definition);
+      add(definition.name.value, encodeObjectType(definition));
     } else if (definition.kind === "InputObjectTypeDefinition") {
-      types[definition.name.value] = encodeInputObjectType(definition);
+      add(definition.name.value, encodeInputObjectType(definition));
     } else if (definition.kind === "EnumTypeDefinition") {
-      types[definition.name.value] = encodeEnumType(definition);
+      add(definition.name.value, encodeEnumType(definition));
     } else if (definition.kind === "UnionTypeDefinition") {
-      types[definition.name.value] = encodeUnionType(definition);
+      add(definition.name.value, encodeUnionType(definition));
     } else if (definition.kind === "InterfaceTypeDefinition") {
-      types[definition.name.value] = encodeInterfaceType(definition);
+      add(definition.name.value, encodeInterfaceType(definition));
     } else if (definition.kind === "ScalarTypeDefinition") {
-      types[definition.name.value] = encodeScalarType(definition);
+      add(definition.name.value, encodeScalarType(definition));
     } else if (definition.kind === "ObjectTypeExtension") {
-      extensions[definition.name.value] = encodeObjectType(definition);
+      add(definition.name.value, encodeObjectType(definition), true);
     } else if (definition.kind === "InputObjectTypeExtension") {
-      extensions[definition.name.value] = encodeInputObjectType(definition);
+      add(definition.name.value, encodeInputObjectType(definition), true);
     } else if (definition.kind === "EnumTypeExtension") {
-      extensions[definition.name.value] = encodeEnumType(definition);
+      add(definition.name.value, encodeEnumType(definition), true);
     } else if (definition.kind === "UnionTypeExtension") {
-      extensions[definition.name.value] = encodeUnionType(definition);
+      add(definition.name.value, encodeUnionType(definition), true);
     } else if (definition.kind === "InterfaceTypeExtension") {
-      extensions[definition.name.value] = encodeInterfaceType(definition);
+      add(definition.name.value, encodeInterfaceType(definition), true);
     } else if (definition.kind === "ScalarTypeExtension") {
-      extensions[definition.name.value] = encodeScalarType(definition);
+      add(definition.name.value, encodeScalarType(definition), true);
     } else if (definition.kind === "DirectiveDefinition") {
-      directives.push(encodeDirective(definition));
+      if (!fragments[0].directives) {
+        fragments[0].directives = [];
+      }
+      fragments[0].directives.push(encodeDirective(definition));
     }
   }
-  return { types, extensions, directives };
+  return fragments;
+}
+
+function addTypeDefinition(
+  fragments: SchemaFragmentDefinitions[],
+  typeName: string,
+  typeDef: TypeDefinitionTuple,
+  isExtension = false,
+) {
+  for (let i = 0; i < fragments.length; i++) {
+    if (i === 0 && isExtension) {
+      // Don't write extensions to the very first fragment (it is reserved for type definitions)
+      //   Note: 2nd+ type definition with the same name is treated as extension
+      continue;
+    }
+    const fragment = fragments[i];
+    if (!fragment.types[typeName]) {
+      fragment.types[typeName] = typeDef;
+      return;
+    }
+  }
+  const newFragment = { types: { [typeName]: typeDef } };
+  fragments.push(newFragment);
 }
 
 function encodeScalarType(
