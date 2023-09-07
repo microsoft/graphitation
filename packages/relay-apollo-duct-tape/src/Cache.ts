@@ -581,8 +581,8 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     const target = RelayRecordSource.create();
     this.store.check(operation, {
       handlers: this.missingFieldHandlers,
-      getTargetForActor: (_actor: any) => target,
-    } as any);
+      getTargetForActor: () => target,
+    });
     if (target.size() > 0) {
       this.publishQueue.commitSource(target);
       this.publishQueue.run();

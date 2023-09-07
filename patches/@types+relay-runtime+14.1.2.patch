@@ -252,7 +252,7 @@ index 8a05a11..997a272 100755
  
  /**
 diff --git a/node_modules/@types/relay-runtime/lib/store/RelayStoreTypes.d.ts b/node_modules/@types/relay-runtime/lib/store/RelayStoreTypes.d.ts
-index 8566ca5..b36ed5d 100755
+index 8566ca5..79a9afa 100755
 --- a/node_modules/@types/relay-runtime/lib/store/RelayStoreTypes.d.ts
 +++ b/node_modules/@types/relay-runtime/lib/store/RelayStoreTypes.d.ts
 @@ -90,7 +90,7 @@ export interface NormalizationSelector {
@@ -264,6 +264,15 @@ index 8566ca5..b36ed5d 100755
      readonly selector: SingularReaderSelector;
  }
  export type Snapshot = TypedSnapshot<SelectorData>;
+@@ -198,7 +198,7 @@ export interface MutableRecordSource extends RecordSource {
+ }
+ 
+ export interface CheckOptions {
+-    target: MutableRecordSource;
++    getTargetForActor: () => MutableRecordSource;
+     handlers: ReadonlyArray<MissingFieldHandler>;
+ }
+ 
 @@ -220,7 +220,7 @@ export interface Store {
      /**
       * Get a read-only view of the store's internal RecordSource.
