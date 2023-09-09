@@ -18,7 +18,7 @@ import {
 import {
   DirectiveDefinitionTuple,
   DirectiveKeys,
-  SchemaFragmentDefinitions,
+  SchemaDefinitions,
   EnumKeys,
   EnumTypeDefinitionTuple,
   FieldDefinition,
@@ -51,8 +51,8 @@ import { inspect } from "../jsutils/inspect";
 /**
  * Converts encoded schema to standard AST representation of the same schema
  */
-export function decodeSchema(
-  encodedSchemaFragments: SchemaFragmentDefinitions[],
+export function decodeASTSchema(
+  encodedSchemaFragments: SchemaDefinitions[],
 ): DocumentNode {
   if (encodedSchemaFragments.length !== 1) {
     // TODO:

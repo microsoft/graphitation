@@ -12,7 +12,7 @@ import { printPathArray } from "./jsutils/printPathArray";
 import { ExecutionContext } from "./executeWithoutSchema";
 import { DirectiveDefinitionTuple, FieldDefinition } from "./schema/definition";
 import { valueFromAST } from "./utilities/valueFromAST";
-import { SchemaFragment } from "./schema/fragment";
+import { PartialSchema } from "./schema/fragment";
 import { coerceInputValue } from "./utilities/coerceInputValue";
 import {
   inspectTypeReference,
@@ -36,7 +36,7 @@ type CoercedVariableValues =
  * @internal
  */
 export function getVariableValues(
-  schemaTypes: SchemaFragment,
+  schemaTypes: PartialSchema,
   varDefNodes: ReadonlyArray<VariableDefinitionNode>,
   inputs: { [variable: string]: unknown },
   options?: { maxErrors?: number },
@@ -69,7 +69,7 @@ export function getVariableValues(
 }
 
 function coerceVariableValues(
-  schemaTypes: SchemaFragment,
+  schemaTypes: PartialSchema,
   varDefNodes: ReadonlyArray<VariableDefinitionNode>,
   inputs: { [variable: string]: unknown },
   onError: (error: GraphQLError) => void,

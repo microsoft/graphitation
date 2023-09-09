@@ -3,7 +3,7 @@ import type { Maybe } from "../jsutils/Maybe";
 import type { ObjMap } from "../jsutils/ObjMap";
 
 import { TypeReference } from "../schema/definition";
-import { SchemaFragment } from "../schema/fragment";
+import { PartialSchema } from "../schema/fragment";
 import { ValueNode, Kind } from "graphql";
 import {
   inspectTypeReference,
@@ -35,7 +35,7 @@ import {
 export function valueFromAST(
   valueNode: Maybe<ValueNode>,
   typeRef: TypeReference,
-  schemaTypes: SchemaFragment,
+  schemaTypes: PartialSchema,
   variables?: Maybe<ObjMap<unknown>>,
 ): unknown {
   if (!valueNode) {

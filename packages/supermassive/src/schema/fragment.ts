@@ -17,7 +17,7 @@ import {
   ObjectKeys,
   ObjectTypeDefinitionTuple,
   ScalarTypeDefinitionTuple,
-  SchemaFragmentDefinitions,
+  SchemaDefinitions,
   TypeKind,
   TypeName,
   TypeReference,
@@ -51,7 +51,12 @@ const resolveTypeName: FunctionFieldResolver<unknown, unknown> = (
 ) => info.parentTypeName;
 const emptyObject = Object.freeze(Object.create(null));
 
-export class SchemaFragment {
+export type SchemaFragment = {
+  definitions: SchemaDefinitions;
+  resolvers: UserResolvers;
+};
+
+export class PartialSchema {
   static parseOptions = { noLocation: true };
 
   private static scalarTypeResolvers: Record<string, ScalarTypeResolver> =
@@ -62,7 +67,7 @@ export class SchemaFragment {
 
   // Lifecycle: one instance per GraphQL operation
   constructor(
-    private definitions: SchemaFragmentDefinitions,
+    private definitions: SchemaDefinitions,
     private resolvers: UserResolvers,
   ) {}
 
@@ -361,18 +366,18 @@ export class SchemaFragment {
     }
 
     if (typeDef[0] === TypeKind.SCALAR) {
-      let scalarType = SchemaFragment.scalarTypeResolvers[typeName];
+      let scalarType = PartialSchema.scalarTypeResolvers[typeName];
       if (!scalarType) {
         const tmp = this.resolvers[typeName];
         scalarType = isScalarTypeResolver(tmp)
           ? tmp
           : new GraphQLScalarType({ name: typeName, description: "" });
-        SchemaFragment.scalarTypeResolvers[typeName] = scalarType;
+        PartialSchema.scalarTypeResolvers[typeName] = scalarType;
       }
       return scalarType;
     }
     if (typeDef[0] === TypeKind.ENUM) {
-      let enumType = SchemaFragment.enumTypeResolvers[typeName];
+      let enumType = PartialSchema.enumTypeResolvers[typeName];
       if (!enumType) {
         const tmp = this.resolvers[typeName]; // Can only be graphql-tools map
         const customValues = isObjectLike(tmp) ? tmp : emptyObject;
@@ -388,7 +393,7 @@ export class SchemaFragment {
           name: typeName,
           values,
         });
-        SchemaFragment.enumTypeResolvers[typeName] = enumType;
+        PartialSchema.enumTypeResolvers[typeName] = enumType;
       }
       return enumType;
     }

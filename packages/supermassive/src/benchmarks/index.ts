@@ -12,7 +12,7 @@ import {
 import { compileQuery, isCompiledQuery } from "graphql-jit";
 import { executeWithoutSchema as supermassiveExecute } from "../executeWithoutSchema";
 import { UserResolvers } from "../types";
-import { extractMinimalViableSchemaForRequestDocument } from "../utilities/addMinimalViableSchemaToRequestDocument";
+import { extractMinimalViableSchemaForRequestDocument } from "../utilities/inlineTypeDefinitions";
 
 const query = fs.readFileSync(
   path.join(__dirname, "./fixtures/query1.graphql"),

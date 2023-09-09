@@ -50,10 +50,10 @@ import { isAsyncIterable } from "./jsutils/isAsyncIterable";
 import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
 import { GraphQLStreamDirective } from "./schema/directives";
 import { memoize3 } from "./jsutils/memoize3";
-import { SchemaFragment } from "./schema/fragment";
+import { PartialSchema } from "./schema/fragment";
 import {
   FieldDefinition,
-  SchemaFragmentDefinitions,
+  SchemaDefinitions,
   TypeReference,
 } from "./schema/definition";
 import {
@@ -63,7 +63,7 @@ import {
   typeNameFromReference,
   unwrap,
 } from "./schema/reference";
-import { getSchemaFragment } from "./utilities/getSchemaFragment";
+import { getSchemaDefinitions } from "./utilities/addMinimalViableSchemaToRequestDocument";
 import { mergeSchemaDefinitions } from "./utilities/mergeDefinitions";
 
 /**
@@ -107,7 +107,7 @@ const collectSubfields = memoize3(
  * and the fragments defined in the query document
  */
 export interface ExecutionContext {
-  schemaTypes: SchemaFragment;
+  schemaTypes: PartialSchema;
   fragments: ObjMap<FragmentDefinitionNode>;
   rootValue: unknown;
   contextValue: unknown;
@@ -122,7 +122,7 @@ export interface ExecutionContext {
   subsequentPayloads: Set<IncrementalDataRecord>;
 }
 
-type MergedSchemaFragment = SchemaFragmentDefinitions & {
+type MergedSchemaFragment = SchemaDefinitions & {
   __merged?: boolean;
 };
 
@@ -233,13 +233,13 @@ function buildExecutionContext(
   let schemaFragment = explicitSchemaFragment;
 
   if (!schemaFragment) {
-    schemaFragment = getSchemaFragment(operation);
+    schemaFragment = getSchemaDefinitions(operation);
     if (schemaFragment && !(schemaFragment as MergedSchemaFragment).__merged) {
       mergeSchemaDefinitions(
         schemaFragment,
         Object.values(fragments)
-          .map((fragmentDef) => getSchemaFragment(fragmentDef))
-          .filter((f): f is SchemaFragmentDefinitions => Boolean(f)),
+          .map((fragmentDef) => getSchemaDefinitions(fragmentDef))
+          .filter((f): f is SchemaDefinitions => Boolean(f)),
       );
       (schemaFragment as MergedSchemaFragment).__merged = true;
     }
@@ -250,7 +250,7 @@ function buildExecutionContext(
 
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
   const variableDefinitions = operation.variableDefinitions ?? [];
-  const schemaTypes = new SchemaFragment(schemaFragment, resolvers);
+  const schemaTypes = new PartialSchema(schemaFragment, resolvers);
 
   const coercedVariableValues = getVariableValues(
     schemaTypes,

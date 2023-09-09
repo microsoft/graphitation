@@ -17,7 +17,7 @@ import {
 import { AccumulatorMap } from "./jsutils/AccumulatorMap";
 import invariant from "invariant";
 import { ExecutionContext } from "./executeWithoutSchema";
-import { SchemaFragment } from "./schema/fragment";
+import { PartialSchema } from "./schema/fragment";
 
 export type FieldGroup = ReadonlyArray<FieldNode>;
 
@@ -248,7 +248,7 @@ function doesFragmentConditionMatch(
   fragment: FragmentDefinitionNode | InlineFragmentNode,
   typeName: string,
   // resolvers: Resolvers,
-  schemaFragment: SchemaFragment,
+  schemaFragment: PartialSchema,
 ): boolean {
   const typeConditionNode = fragment.typeCondition;
   if (!typeConditionNode) {

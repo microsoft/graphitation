@@ -27,7 +27,7 @@ import {
   ObjectTypeDefinitionTuple,
   ScalarTypeDefinitionTuple,
   UnionTypeDefinitionTuple,
-  SchemaFragmentDefinitions,
+  SchemaDefinitions,
   TypeKind,
   TypeReference,
   TypeDefinitionTuple,
@@ -37,8 +37,8 @@ import { valueFromASTUntyped } from "./valueFromASTUntyped";
 
 export function encodeASTSchema(
   schemaFragment: DocumentNode,
-): SchemaFragmentDefinitions[] {
-  const fragments: SchemaFragmentDefinitions[] = [{ types: {} }];
+): SchemaDefinitions[] {
+  const fragments: SchemaDefinitions[] = [{ types: {} }];
   const add = addTypeDefinition.bind(null, fragments);
 
   for (const definition of schemaFragment.definitions) {
@@ -77,7 +77,7 @@ export function encodeASTSchema(
 }
 
 function addTypeDefinition(
-  fragments: SchemaFragmentDefinitions[],
+  fragments: SchemaDefinitions[],
   typeName: string,
   typeDef: TypeDefinitionTuple,
   isExtension = false,

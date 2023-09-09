@@ -3,7 +3,7 @@ import { executeWithoutSchema, executeWithSchema } from "..";
 import schema, { typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
-import { extractMinimalViableSchemaForRequestDocument } from "../utilities/addMinimalViableSchemaToRequestDocument";
+import { extractMinimalViableSchemaForRequestDocument } from "../utilities/extractMinimalViableSchemaForRequestDocument";
 import {
   UserResolvers,
   TotalExecutionResult,

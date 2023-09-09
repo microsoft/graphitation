@@ -12,7 +12,7 @@ import { ObjMap } from "./jsutils/ObjMap";
 import { Path } from "./jsutils/Path";
 import { ExecutionHooks } from "./hooks/types";
 import { FieldGroup } from "./collectFields";
-import { SchemaFragmentDefinitions } from "./schema/definition";
+import { SchemaDefinitions } from "./schema/definition";
 
 export type ScalarTypeResolver = GraphQLScalarType;
 export type EnumTypeResolver = Record<string, unknown>;
@@ -258,7 +258,7 @@ export interface CommonExecutionArgs {
 }
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
   document: DocumentNode;
-  schemaFragment?: SchemaFragmentDefinitions;
+  schemaFragment?: SchemaDefinitions;
 };
 
 export type ExecutionWithSchemaArgs = CommonExecutionArgs & {

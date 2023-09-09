@@ -3,16 +3,19 @@ export { executeWithSchema } from "./executeWithSchema";
 export { subscribeWithSchema } from "./subscribeWithSchema";
 export { subscribeWithoutSchema } from "./subscribeWithoutSchema";
 export { encodeASTSchema } from "./utilities/encodeASTSchema";
+export { decodeASTSchema } from "./utilities/decodeASTSchema";
 export { mergeSchemaDefinitions } from "./utilities/mergeDefinitions";
 export { mergeResolvers } from "./utilities/mergeResolvers";
 export { annotateDocumentGraphQLTransform } from "./utilities/annotateDocumentGraphQLTransform";
 export {
   addMinimalViableSchemaToRequestDocument,
-  extractMinimalViableSchemaForRequestDocument,
+  addMinimalViableSchemaToExecutableDefinitionNode,
 } from "./utilities/addMinimalViableSchemaToRequestDocument";
+export { extractMinimalViableSchemaForRequestDocument } from "./utilities/extractMinimalViableSchemaForRequestDocument";
 
-export type { SchemaFragmentDefinitions } from "./schema/definition";
-
+export type { ExtractMinimalViableSchemaToRequestDocumentOptions } from "./utilities/extractMinimalViableSchemaForRequestDocument";
+export type { AddMinimalViableSchemaToRequestDocumentOptions } from "./utilities/addMinimalViableSchemaToRequestDocument";
+export type { SchemaDefinitions } from "./schema/definition";
 export type {
   ObjectTypeResolver,
   ScalarTypeResolver,

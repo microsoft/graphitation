@@ -7,15 +7,15 @@ import {
   InputValueDefinitionRecord,
   InterfaceKeys,
   ObjectKeys,
-  SchemaFragmentDefinitions,
+  SchemaDefinitions,
   TypeDefinitionsRecord,
   TypeKind,
 } from "../schema/definition";
 import { inspect } from "../jsutils/inspect";
 
 export function mergeSchemaDefinitions(
-  target: SchemaFragmentDefinitions,
-  sources: SchemaFragmentDefinitions[],
+  target: SchemaDefinitions,
+  sources: SchemaDefinitions[],
 ) {
   if (!sources.length) {
     return target;
