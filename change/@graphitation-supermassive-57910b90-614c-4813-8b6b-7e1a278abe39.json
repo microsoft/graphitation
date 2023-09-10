@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "Schema fragment loader",
-  "packageName": "@graphitation/supermassive",
-  "email": "vladimir.razuvaev@gmail.com",
-  "dependentChangeType": "patch"
-}

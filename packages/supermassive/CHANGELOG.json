@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Sun, 10 Sep 2023 20:58:53 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0-alpha.4",
+      "version": "3.0.0-alpha.4",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "bbf21059dce35b16ea1184eeb764d93b3dfe08f4",
+            "comment": "Schema fragment loader"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 29 Aug 2023 15:06:36 GMT",
       "tag": "@graphitation/supermassive_v3.0.0-alpha.3",
       "version": "3.0.0-alpha.3",

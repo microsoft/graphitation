@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Tue, 29 Aug 2023 15:06:36 GMT and should not be manually modified.
+This log was last generated on Sun, 10 Sep 2023 20:58:53 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.0.0-alpha.4
+
+Sun, 10 Sep 2023 20:58:53 GMT
+
+### Changes
+
+- Schema fragment loader (vladimir.razuvaev@gmail.com)
 
 ## 3.0.0-alpha.3
 
