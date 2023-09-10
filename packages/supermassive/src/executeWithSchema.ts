@@ -5,8 +5,7 @@ import { ExecutionResult, ExecutionWithSchemaArgs } from "./types";
 import { extractMinimalViableSchemaForRequestDocument } from "./utilities/extractMinimalViableSchemaForRequestDocument";
 
 export function executeWithSchema({
-  typeDefs,
-  resolvers,
+  schema,
   document,
   rootValue,
   contextValue,
@@ -16,15 +15,15 @@ export function executeWithSchema({
   typeResolver,
   fieldExecutionHooks,
 }: ExecutionWithSchemaArgs): PromiseOrValue<ExecutionResult> {
-  const schema = buildASTSchema(typeDefs);
-  const schemaFragment = extractMinimalViableSchemaForRequestDocument(
-    schema,
-    document,
-  );
-
+  const schemaFragment = {
+    ...schema,
+    definitions: extractMinimalViableSchemaForRequestDocument(
+      buildASTSchema(schema.definitions),
+      document,
+    ),
+  };
   return executeWithoutSchema({
     document,
-    resolvers,
     schemaFragment,
     rootValue,
     contextValue,

@@ -120,6 +120,12 @@ export const enum DirectiveKeys {
 export type TypeDefinitionsRecord = Record<TypeName, TypeDefinitionTuple>;
 export type InterfaceImplementationsRecord = Record<TypeName, TypeName[]>;
 
+export type OperationTypes = {
+  query?: TypeName;
+  mutation?: TypeName;
+  subscription?: TypeName;
+};
+
 export type SchemaDefinitions = {
   types: TypeDefinitionsRecord;
   directives?: DirectiveDefinitionTuple[];

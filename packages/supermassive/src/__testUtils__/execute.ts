@@ -41,9 +41,12 @@ export function createExecutionUtils(
     const document = parse(query);
     const result = await drainExecution(
       await executeWithSchema({
-        typeDefs,
-        resolvers: resolvers as UserResolvers<unknown, unknown>,
         document,
+        schema: {
+          schemaId: "test",
+          definitions: typeDefs,
+          resolvers: resolvers as UserResolvers<unknown, unknown>,
+        },
         contextValue: {
           models,
         },
@@ -76,11 +79,14 @@ export function createExecutionUtils(
         contextValue: {
           models,
         },
-        resolvers: resolvers as UserResolvers,
-        schemaFragment: extractMinimalViableSchemaForRequestDocument(
-          schema,
-          document,
-        ),
+        schemaFragment: {
+          schemaId: "test",
+          definitions: extractMinimalViableSchemaForRequestDocument(
+            schema,
+            document,
+          ),
+          resolvers: resolvers as UserResolvers,
+        },
         variableValues: variables,
       }),
     );

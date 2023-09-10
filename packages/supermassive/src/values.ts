@@ -161,7 +161,7 @@ export function getArgumentValues(
   def: FieldDefinition | DirectiveDefinitionTuple,
   node: FieldNode | DirectiveNode,
 ): { [argument: string]: unknown } {
-  const schemaTypes = exeContext.schemaTypes;
+  const schemaTypes = exeContext.partialSchema;
   const coercedValues: { [argument: string]: unknown } = {};
   const argumentDefs = schemaTypes.resolveDefinitionArguments(def);
   if (!argumentDefs) {
@@ -273,7 +273,7 @@ export function getDirectiveValues(
   directiveDef: DirectiveDefinitionTuple,
   node: { directives?: ReadonlyArray<DirectiveNode> },
 ): undefined | { [argument: string]: unknown } {
-  const schemaTypes = exeContext.schemaTypes;
+  const schemaTypes = exeContext.partialSchema;
   const name = schemaTypes.getDirectiveName(directiveDef);
 
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')

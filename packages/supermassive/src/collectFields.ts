@@ -124,7 +124,7 @@ function collectFieldsImpl(
           !doesFragmentConditionMatch(
             selection,
             runtimeTypeName,
-            exeContext.schemaTypes,
+            exeContext.partialSchema,
           )
         ) {
           continue;
@@ -176,7 +176,7 @@ function collectFieldsImpl(
           !doesFragmentConditionMatch(
             fragment,
             runtimeTypeName,
-            exeContext.schemaTypes,
+            exeContext.partialSchema,
           )
         ) {
           continue;

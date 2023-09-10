@@ -39,7 +39,8 @@ export function encodeASTSchema(
   schemaFragment: DocumentNode,
 ): SchemaDefinitions[] {
   const fragments: SchemaDefinitions[] = [{ types: {} }];
-  const add = addTypeDefinition.bind(null, fragments);
+  const add = (name: string, def: TypeDefinitionTuple, extension = false) =>
+    addTypeDefinition(fragments, name, def, extension);
 
   for (const definition of schemaFragment.definitions) {
     if (definition.kind === "ObjectTypeDefinition") {

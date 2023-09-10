@@ -42,11 +42,14 @@ describe.each([
     ) => {
       return executeWithoutSchema({
         document,
-        resolvers,
-        schemaFragment: extractMinimalViableSchemaForRequestDocument(
-          schema,
-          document,
-        ),
+        schemaFragment: {
+          schemaId: "test",
+          resolvers,
+          definitions: extractMinimalViableSchemaForRequestDocument(
+            schema,
+            document,
+          ),
+        },
         contextValue: {
           models,
         },
@@ -62,8 +65,11 @@ describe.each([
       hooks: ExecutionHooks,
     ) => {
       return executeWithSchema({
-        typeDefs,
-        resolvers,
+        schema: {
+          schemaId: "test",
+          definitions: typeDefs,
+          resolvers,
+        },
         document,
         contextValue: {
           models,

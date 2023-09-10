@@ -16,6 +16,7 @@ import {
   InterfaceTypeDefinitionTuple,
   ObjectKeys,
   ObjectTypeDefinitionTuple,
+  OperationTypes,
   ScalarTypeDefinitionTuple,
   SchemaDefinitions,
   TypeKind,
@@ -41,6 +42,31 @@ import {
 } from "./resolvers";
 import { typeNameFromReference } from "./reference";
 
+type SchemaId = string;
+
+export type SchemaFragment = {
+  schemaId: SchemaId;
+  definitions: SchemaDefinitions;
+  resolvers: UserResolvers;
+  operationTypes?: OperationTypes;
+};
+
+export type SchemaFragmentLoadByField = {
+  kind: "byField";
+  parentType: string;
+  fieldName: string;
+};
+
+export type SchemaFragmentLoadRequest = SchemaFragmentLoadByField;
+export type SchemaFragmentLoaderResult = {
+  mergedFragment: SchemaFragment;
+};
+
+export type SchemaFragmentLoader = (
+  currentFragment: SchemaFragment,
+  req: SchemaFragmentLoadRequest,
+) => SchemaFragmentLoaderResult;
+
 const specifiedScalarDefinition: ScalarTypeDefinitionTuple = [TypeKind.SCALAR];
 const typeNameMetaFieldDef: FieldDefinition = "String";
 const resolveTypeName: FunctionFieldResolver<unknown, unknown> = (
@@ -49,27 +75,47 @@ const resolveTypeName: FunctionFieldResolver<unknown, unknown> = (
   _context,
   info,
 ) => info.parentTypeName;
+const scalarTypeResolversBySchema = new Map<
+  SchemaId,
+  Map<TypeName, GraphQLScalarType>
+>();
+const enumTypeResolversBySchema = new Map<
+  SchemaId,
+  Map<TypeName, GraphQLEnumType>
+>();
 const emptyObject = Object.freeze(Object.create(null));
-
-export type SchemaFragment = {
-  definitions: SchemaDefinitions;
-  resolvers: UserResolvers;
-};
 
 export class PartialSchema {
   static parseOptions = { noLocation: true };
 
-  private static scalarTypeResolvers: Record<string, ScalarTypeResolver> =
-    Object.create(null);
+  private readonly schemaId: string;
+  private readonly definitions: SchemaDefinitions;
+  private readonly resolvers: UserResolvers;
+  private readonly operationTypes: OperationTypes | undefined;
 
-  private static enumTypeResolvers: Record<string, GraphQLEnumType> =
-    Object.create(null);
+  private scalarTypeResolvers: Map<TypeName, ScalarTypeResolver>;
+  private enumTypeResolvers: Map<TypeName, GraphQLEnumType>;
 
-  // Lifecycle: one instance per GraphQL operation
-  constructor(
-    private definitions: SchemaDefinitions,
-    private resolvers: UserResolvers,
-  ) {}
+  constructor(fragment: SchemaFragment) {
+    this.schemaId = fragment.schemaId;
+    this.definitions = fragment.definitions;
+    this.resolvers = fragment.resolvers;
+    this.operationTypes = fragment.operationTypes;
+
+    let scalarTypeResolvers = scalarTypeResolversBySchema.get(this.schemaId);
+    if (!scalarTypeResolvers) {
+      scalarTypeResolvers = new Map<TypeName, ScalarTypeResolver>();
+      scalarTypeResolversBySchema.set(this.schemaId, scalarTypeResolvers);
+    }
+    this.scalarTypeResolvers = scalarTypeResolvers;
+
+    let enumTypeResolvers = enumTypeResolversBySchema.get(this.schemaId);
+    if (!enumTypeResolvers) {
+      enumTypeResolvers = new Map<TypeName, GraphQLEnumType>();
+      enumTypeResolversBySchema.set(this.schemaId, enumTypeResolvers);
+    }
+    this.enumTypeResolvers = enumTypeResolvers;
+  }
 
   public getTypeReference(
     tupleOrRef: FieldDefinition | InputValueDefinition,
@@ -138,11 +184,11 @@ export class PartialSchema {
     if (!type) {
       return undefined;
     }
-    if (type[0] === TypeKind.INTERFACE) {
-      return type[InterfaceKeys.fields]?.[fieldName];
-    }
     if (type[0] === TypeKind.OBJECT) {
       return type[ObjectKeys.fields]?.[fieldName];
+    }
+    if (type[0] === TypeKind.INTERFACE) {
+      return type[InterfaceKeys.fields]?.[fieldName];
     }
     return undefined;
   }
@@ -152,11 +198,11 @@ export class PartialSchema {
     if (!type) {
       return undefined;
     }
-    if (type[0] === TypeKind.INTERFACE && type[InterfaceKeys.interfaces]) {
-      return this.findField(type[InterfaceKeys.interfaces], fieldName);
-    }
     if (type[0] === TypeKind.OBJECT && type[ObjectKeys.interfaces]) {
       return this.findField(type[ObjectKeys.interfaces], fieldName);
+    }
+    if (type[0] === TypeKind.INTERFACE && type[InterfaceKeys.interfaces]) {
+      return this.findField(type[InterfaceKeys.interfaces], fieldName);
     }
     return undefined;
   }
@@ -366,18 +412,18 @@ export class PartialSchema {
     }
 
     if (typeDef[0] === TypeKind.SCALAR) {
-      let scalarType = PartialSchema.scalarTypeResolvers[typeName];
+      let scalarType = this.scalarTypeResolvers.get(typeName);
       if (!scalarType) {
         const tmp = this.resolvers[typeName];
         scalarType = isScalarTypeResolver(tmp)
           ? tmp
           : new GraphQLScalarType({ name: typeName, description: "" });
-        PartialSchema.scalarTypeResolvers[typeName] = scalarType;
+        this.scalarTypeResolvers.set(typeName, scalarType);
       }
       return scalarType;
     }
     if (typeDef[0] === TypeKind.ENUM) {
-      let enumType = PartialSchema.enumTypeResolvers[typeName];
+      let enumType = this.enumTypeResolvers.get(typeName);
       if (!enumType) {
         const tmp = this.resolvers[typeName]; // Can only be graphql-tools map
         const customValues = isObjectLike(tmp) ? tmp : emptyObject;
@@ -393,7 +439,7 @@ export class PartialSchema {
           name: typeName,
           values,
         });
-        PartialSchema.enumTypeResolvers[typeName] = enumType;
+        this.enumTypeResolvers.set(typeName, enumType);
       }
       return enumType;
     }
