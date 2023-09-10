@@ -6,23 +6,14 @@ import { filmSDL } from "./fixtures/filmSDL";
 const schema = buildASTSchema(filmSDL.document);
 
 describe(extractMinimalViableSchemaForRequestDocument, () => {
-  function testHelper(
-    schema: GraphQLSchema,
-    doc: string,
-    options?: {
-      ignoredDirectives?: string[];
-    },
-  ) {
-    const encodedFragment = extractMinimalViableSchemaForRequestDocument(
-      schema,
-      parse(doc),
-      options,
-    );
-    return print(decodeASTSchema([encodedFragment]));
+  function testHelper(schema: GraphQLSchema, doc: string) {
+    const { definitions, unknownDirectives } =
+      extractMinimalViableSchemaForRequestDocument(schema, parse(doc));
+    return { unknownDirectives, sdl: print(decodeASTSchema([definitions])) };
   }
 
   it("extracts from operation", () => {
-    const mvs = testHelper(
+    const { sdl } = testHelper(
       schema,
       `query {
         film(id: 42) {
@@ -30,7 +21,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
         }
       }`,
     );
-    expect(mvs).toMatchInlineSnapshot(`
+    expect(sdl).toMatchInlineSnapshot(`
       "type Query {
         film(id: ID!): Film
       }
@@ -42,7 +33,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
   });
 
   it("extracts from a fragment", () => {
-    const mvs = testHelper(
+    const { sdl } = testHelper(
       schema,
       `fragment MyQuery on Query {
         film(id: 42) {
@@ -51,7 +42,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       }`,
     );
 
-    expect(mvs).toMatchInlineSnapshot(`
+    expect(sdl).toMatchInlineSnapshot(`
       "type Query {
         film(id: ID!): Film
       }
@@ -63,7 +54,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
   });
 
   it("extracts from inline fragment", () => {
-    const mvs = testHelper(
+    const { sdl } = testHelper(
       schema,
       `query {
         ... on Query {
@@ -74,7 +65,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       }`,
     );
 
-    expect(mvs).toMatchInlineSnapshot(`
+    expect(sdl).toMatchInlineSnapshot(`
       "type Query {
         allFilms: [Film!]!
       }
@@ -86,7 +77,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
   });
 
   it("extracts from an operation with fragments", () => {
-    const mvs = testHelper(
+    const { sdl } = testHelper(
       schema,
       `query {
         ... on Query {
@@ -100,7 +91,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       }`,
     );
 
-    expect(mvs).toMatchInlineSnapshot(`
+    expect(sdl).toMatchInlineSnapshot(`
       "type Query {
         film(id: ID!): Film
       }
@@ -112,7 +103,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
   });
 
   it("extracts from multiple nested fragments", () => {
-    const mvs = testHelper(
+    const { sdl } = testHelper(
       schema,
       `query {
         ... on Query {
@@ -135,7 +126,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       }`,
     );
 
-    expect(mvs).toMatchInlineSnapshot(`
+    expect(sdl).toMatchInlineSnapshot(`
       "type Query {
         film(id: ID!): Film
       }
@@ -149,7 +140,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
   describe("complex selections", () => {
     it("selects __typename on object", () => {
-      const mvs = testHelper(
+      const { sdl } = testHelper(
         schema,
         `query {
           film(id: 42) {
@@ -157,7 +148,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           }
         }`,
       );
-      expect(mvs).toMatchInlineSnapshot(`
+      expect(sdl).toMatchInlineSnapshot(`
         "type Query {
           film(id: ID!): Film
         }
@@ -167,7 +158,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("selects __typename on union", () => {
-      const mvs = testHelper(
+      const { sdl } = testHelper(
         schema,
         `query {
           screenable(id: 42) {
@@ -175,7 +166,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           }
         }`,
       );
-      expect(mvs).toMatchInlineSnapshot(`
+      expect(sdl).toMatchInlineSnapshot(`
         "type Query {
           screenable(id: ID!): Screenable
         }
@@ -185,7 +176,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("selects __typename only on interface", () => {
-      const mvs = testHelper(
+      const { sdl } = testHelper(
         schema,
         `query {
           node(id: 42) {
@@ -193,7 +184,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           }
         }`,
       );
-      expect(mvs).toMatchInlineSnapshot(`
+      expect(sdl).toMatchInlineSnapshot(`
         "type Query {
           node(id: ID!): Node
         }
@@ -203,7 +194,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("selects union in interface fragment spread", () => {
-      const mvs = testHelper(
+      const { sdl } = testHelper(
         schema,
         `query {
           node(id: 42) {
@@ -215,7 +206,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           }
         }`,
       );
-      expect(mvs).toMatchInlineSnapshot(`
+      expect(sdl).toMatchInlineSnapshot(`
         "type Query {
           node(id: ID!): Node
         }
@@ -234,7 +225,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       // Note: listing all implementations can be extremely expensive for shared interfaces
       //   instead, we use interface field definitions at runtime for object types
       // TODO: list all possible implementations as a part of encoded fragment
-      const mvs = testHelper(
+      const { sdl } = testHelper(
         schema,
         `query {
           node(id: 42) {
@@ -242,7 +233,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           }
         }`,
       );
-      expect(mvs).toMatchInlineSnapshot(`
+      expect(sdl).toMatchInlineSnapshot(`
         "type Query {
           node(id: ID!): Node
         }
@@ -254,7 +245,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("selects a mix of interface and specific object fields", () => {
-      const mvs = testHelper(
+      const { sdl } = testHelper(
         schema,
         `query {
           node(id: 42) {
@@ -265,7 +256,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           }
         }`,
       );
-      expect(mvs).toMatchInlineSnapshot(`
+      expect(sdl).toMatchInlineSnapshot(`
         "type Query {
           node(id: ID!): Node
         }
@@ -281,7 +272,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("selects interface fields on concrete types", () => {
-      const mvs = testHelper(
+      const { sdl } = testHelper(
         schema,
         `query {
           node(id: 42) {
@@ -295,7 +286,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           }
         }`,
       );
-      expect(mvs).toMatchInlineSnapshot(`
+      expect(sdl).toMatchInlineSnapshot(`
         "type Query {
           node(id: ID!): Node
         }
@@ -314,7 +305,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("selects union member fields", () => {
-      const mvs = testHelper(
+      const { sdl } = testHelper(
         schema,
         `query {
           screenable(id: 42) {
@@ -325,7 +316,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           }
         }`,
       );
-      expect(mvs).toMatchInlineSnapshot(`
+      expect(sdl).toMatchInlineSnapshot(`
         "type Query {
           screenable(id: ID!): Screenable
         }
@@ -340,7 +331,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("selects on union and interface", () => {
-      const mvs = testHelper(
+      const { sdl } = testHelper(
         schema,
         `query {
         screenable(id: 42) {
@@ -354,7 +345,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
         }
       }`,
       );
-      expect(mvs).toMatchInlineSnapshot(`
+      expect(sdl).toMatchInlineSnapshot(`
         "type Query {
           screenable(id: ID!): Screenable
         }
@@ -375,7 +366,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
   describe("complex arguments", () => {
     it("supports inputs and enums", () => {
-      const mvs = testHelper(
+      const { sdl } = testHelper(
         schema,
         `mutation Test($filmType: FilmType) {
           createFilm(
@@ -386,7 +377,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           }
         }`,
       );
-      expect(mvs).toMatchInlineSnapshot(`
+      expect(sdl).toMatchInlineSnapshot(`
         "type Mutation {
           createFilm(input: CreateFilmInput! = { title: "Default", filmType: GOOD }, enumInput: FilmType!): Film
         }
@@ -408,13 +399,13 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("omits optional arguments", () => {
-      const mvs = testHelper(
+      const { sdl } = testHelper(
         schema,
         `query {
           countFilms
         }`,
       );
-      expect(mvs).toMatchInlineSnapshot(`
+      expect(sdl).toMatchInlineSnapshot(`
         "type Query {
           countFilms: Int!
         }"
@@ -422,7 +413,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("adds optional arguments when referenced at least once", () => {
-      const mvs = testHelper(
+      const { sdl } = testHelper(
         schema,
         `query {
           countFilms
@@ -430,7 +421,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           countAllFilms: countFilms
         }`,
       );
-      expect(mvs).toMatchInlineSnapshot(`
+      expect(sdl).toMatchInlineSnapshot(`
         "type Query {
           countFilms(filter: FilmFilterInput): Int!
         }
@@ -447,7 +438,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("includes arguments with default values", () => {
-      const mvs = testHelper(
+      const { sdl } = testHelper(
         schema,
         `mutation Test($filmType: FilmType) {
           createFilm(enumInput: $filmType) {
@@ -455,7 +446,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           }
         }`,
       );
-      expect(mvs).toMatchInlineSnapshot(`
+      expect(sdl).toMatchInlineSnapshot(`
         "type Mutation {
           createFilm(input: CreateFilmInput! = { title: "Default", filmType: GOOD }, enumInput: FilmType!): Film
         }
@@ -477,13 +468,13 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     });
 
     it("supports enums inside input objects", () => {
-      const mvs = testHelper(
+      const { sdl } = testHelper(
         schema,
         `query ($input: FilmFilterInput! = { genre: COMEDY }) {
           countFilms(filter: $input)
         }`,
       );
-      expect(mvs).toMatchInlineSnapshot(`
+      expect(sdl).toMatchInlineSnapshot(`
         "type Query {
           countFilms(filter: FilmFilterInput): Int!
         }
@@ -502,7 +493,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
   describe("directives", () => {
     it("supports built-in directives", () => {
-      const mvs = testHelper(
+      const { sdl } = testHelper(
         schema,
         `query {
           film(id: 42)
@@ -518,7 +509,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           }
         }`,
       );
-      expect(mvs).toMatchInlineSnapshot(`
+      expect(sdl).toMatchInlineSnapshot(`
         "type Query {
           film(id: ID!): Film
         }
@@ -529,40 +520,22 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       `);
     });
 
-    it("errors on unknown directives", () => {
-      expect(() => {
-        testHelper(
-          schema,
-          `query {
-            film(id: 42) {
-              title @frobnirator(frobnarion: true)
-            }
-          }`,
-        );
-      }).toThrowError(
-        "Cannot find definition for directive: query.film.title @frobnirator",
+    it("returns unknown directives", () => {
+      const { unknownDirectives } = testHelper(
+        schema,
+        `query {
+          film(id: 42) {
+            title @frobnirator(frobnarion: true)
+          }
+        }`,
       );
-    });
 
-    it("does not error on ignored directives", () => {
-      expect(() => {
-        testHelper(
-          schema,
-          `query {
-              film(id: 42) {
-                title @frobnirator(frobnarion: true)
-              }
-            }
-          `,
-          {
-            ignoredDirectives: ["frobnirator"],
-          },
-        );
-      }).not.toThrow();
+      expect(unknownDirectives.length).toEqual(1);
+      expect(unknownDirectives[0].name.value).toEqual("frobnirator");
     });
 
     it("supports custom directives", () => {
-      const mvs = testHelper(
+      const { sdl } = testHelper(
         schema,
         `query @i18n(locale: "en_US") {
           film(id: 42) {
@@ -570,7 +543,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           }
         }`,
       );
-      expect(mvs).toMatchInlineSnapshot(`
+      expect(sdl).toMatchInlineSnapshot(`
         "type Query {
           film(id: ID!): Film
         }

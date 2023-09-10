@@ -1,27 +1,30 @@
-import { UserResolvers, Resolvers, Resolver } from "../types";
+import { Resolvers } from "../types";
 import { isObjectLike } from "../jsutils/isObjectLike";
 
-export function mergeResolvers<TSource, TContext>(
-  resolvers: UserResolvers<TSource, TContext>,
-  extractedResolvers: Resolvers<TSource, TContext>,
-): Resolvers<TSource, TContext> {
-  const fullResolvers = {
-    ...extractedResolvers,
-  } as Resolvers<TSource, TContext>;
-
-  Object.keys(resolvers).forEach((resolverKey: string) => {
-    if (isObjectLike(fullResolvers[resolverKey])) {
-      fullResolvers[resolverKey] = {
-        ...fullResolvers[resolverKey],
-        ...resolvers[resolverKey],
-      } as Resolver<unknown, unknown>;
+export function mergeResolvers(
+  accumulator: Resolvers,
+  resolvers: (Resolvers | Resolvers[])[],
+): Resolvers {
+  for (const entry of resolvers) {
+    if (Array.isArray(entry)) {
+      mergeResolvers(accumulator, entry);
     } else {
-      fullResolvers[resolverKey] = resolvers[resolverKey] as Resolver<
-        TSource,
-        TContext
-      >;
+      mergeResolversObjMap(accumulator, entry);
     }
-  });
+  }
+  return accumulator;
+}
 
-  return fullResolvers;
+function mergeResolversObjMap(accumulator: Resolvers, resolvers: Resolvers) {
+  for (const [typeName, typeResolver] of Object.entries(resolvers)) {
+    const fullTypeResolver = accumulator[typeName];
+    if (typeof fullTypeResolver === "undefined" && typeResolver) {
+      accumulator[typeName] = typeResolver;
+      return;
+    }
+    if (isObjectLike(fullTypeResolver) && isObjectLike(typeResolver)) {
+      Object.assign(accumulator[typeName], typeResolver);
+      return;
+    }
+  }
 }

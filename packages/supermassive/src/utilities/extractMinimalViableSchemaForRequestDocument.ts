@@ -59,17 +59,18 @@ import {
 import { invariant } from "../jsutils/invariant";
 import { Maybe } from "../jsutils/Maybe";
 
-export type ExtractMinimalViableSchemaToRequestDocumentOptions = {
-  ignoredDirectives?: string[];
+export type ExtractMinimalViableSchemaResult = {
+  definitions: SchemaDefinitions;
+  unknownDirectives: DirectiveNode[];
 };
 
 export function extractMinimalViableSchemaForRequestDocument(
   schema: GraphQLSchema,
   requestDocument: DocumentNode,
-  options?: ExtractMinimalViableSchemaToRequestDocumentOptions,
-): SchemaDefinitions {
+): ExtractMinimalViableSchemaResult {
   const types: TypeDefinitionsRecord = Object.create(null);
   const directives: DirectiveDefinitionTuple[] = [];
+  const unknownDirectives: DirectiveNode[] = [];
 
   const typeInfo = new TypeInfo(schema);
   visit(
@@ -95,24 +96,15 @@ export function extractMinimalViableSchemaForRequestDocument(
           addReferencedOutputType(schema, types, fieldDef);
         }
       },
-      Directive(node, _key, _parent, _path, ancestors) {
-        if (
-          isKnownDirective(node.name.value) ||
-          options?.ignoredDirectives?.includes(node.name.value)
-        ) {
+      Directive(node, _key, _parent, _path) {
+        if (isKnownDirective(node.name.value)) {
           return;
         }
         const directive = typeInfo.getDirective();
         if (!directive) {
-          const errorPath = makeReadableErrorPath(ancestors);
-
           // This happens whenever a directive is requested that hasn't been defined in schema
-          throw new GraphQLError(
-            `Cannot find definition for directive: ${errorPath.join(".")} @${
-              node.name.value
-            }`,
-            { nodes: node },
-          );
+          unknownDirectives.push(node);
+          return;
         }
         addDirective(directives, directive, node);
       },
@@ -134,7 +126,8 @@ export function extractMinimalViableSchemaForRequestDocument(
       },
     }),
   );
-  return directives.length ? { types, directives } : { types };
+  const definitions = directives.length ? { types, directives } : { types };
+  return { definitions, unknownDirectives };
 }
 
 function addReferencedOutputType(
