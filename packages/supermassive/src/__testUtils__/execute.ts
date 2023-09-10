@@ -73,6 +73,10 @@ export function createExecutionUtils(
   ) {
     expect.assertions(1);
     const document = parse(query);
+    const { definitions } = extractMinimalViableSchemaForRequestDocument(
+      schema,
+      document,
+    );
     const result = await drainExecution(
       await executeWithoutSchema({
         document,
@@ -81,10 +85,7 @@ export function createExecutionUtils(
         },
         schemaFragment: {
           schemaId: "test",
-          definitions: extractMinimalViableSchemaForRequestDocument(
-            schema,
-            document,
-          ),
+          definitions,
           resolvers: resolvers as UserResolvers,
         },
         variableValues: variables,

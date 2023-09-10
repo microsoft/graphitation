@@ -15,16 +15,16 @@ export function executeWithSchema({
   typeResolver,
   fieldExecutionHooks,
 }: ExecutionWithSchemaArgs): PromiseOrValue<ExecutionResult> {
-  const schemaFragment = {
-    ...schema,
-    definitions: extractMinimalViableSchemaForRequestDocument(
-      buildASTSchema(schema.definitions),
-      document,
-    ),
-  };
+  const { definitions } = extractMinimalViableSchemaForRequestDocument(
+    buildASTSchema(schema.definitions),
+    document,
+  );
   return executeWithoutSchema({
     document,
-    schemaFragment,
+    schemaFragment: {
+      ...schema,
+      definitions,
+    },
     rootValue,
     contextValue,
     variableValues,

@@ -270,21 +270,3 @@ export type ExecutionWithSchemaArgs = CommonExecutionArgs & {
     resolvers: UserResolvers;
   };
 };
-
-export function isIncrementalExecutionResult<
-  TData = ObjMap<unknown>,
-  TExtensions = ObjMap<unknown>,
->(
-  result: ExecutionResult<TData, TExtensions>,
-): result is IncrementalExecutionResult<TData, TExtensions> {
-  return "initialResult" in result;
-}
-
-export function isTotalExecutionResult<
-  TData = ObjMap<unknown>,
-  TExtensions = ObjMap<unknown>,
->(
-  result: ExecutionResult<TData, TExtensions>,
-): result is IncrementalExecutionResult<TData, TExtensions> {
-  return !("initialResult" in result);
-}

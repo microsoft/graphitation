@@ -38,6 +38,7 @@ import {
   IncrementalDeferResult,
   IncrementalResult,
   IncrementalStreamResult,
+  IncrementalExecutionResult,
 } from "./types";
 import {
   getArgumentValues,
@@ -2265,4 +2266,22 @@ class StreamItemsRecord {
   setIsCompletedAsyncIterator() {
     this.isCompletedAsyncIterator = true;
   }
+}
+
+export function isIncrementalExecutionResult<
+  TData = ObjMap<unknown>,
+  TExtensions = ObjMap<unknown>,
+>(
+  result: ExecutionResult<TData, TExtensions>,
+): result is IncrementalExecutionResult<TData, TExtensions> {
+  return "initialResult" in result;
+}
+
+export function isTotalExecutionResult<
+  TData = ObjMap<unknown>,
+  TExtensions = ObjMap<unknown>,
+>(
+  result: ExecutionResult<TData, TExtensions>,
+): result is IncrementalExecutionResult<TData, TExtensions> {
+  return !("initialResult" in result);
 }

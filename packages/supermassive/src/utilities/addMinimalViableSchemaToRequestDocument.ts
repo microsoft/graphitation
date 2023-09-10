@@ -11,16 +11,12 @@ import {
   SUPERMASSIVE_SCHEMA_DIRECTIVE_DEFINITIONS_ARGUMENT_NAME,
   SUPERMASSIVE_SCHEMA_DIRECTIVE_NAME,
 } from "../schema/directives";
-import {
-  extractMinimalViableSchemaForRequestDocument,
-  ExtractMinimalViableSchemaToRequestDocumentOptions,
-} from "./extractMinimalViableSchemaForRequestDocument";
+import { extractMinimalViableSchemaForRequestDocument } from "./extractMinimalViableSchemaForRequestDocument";
 import { SchemaDefinitions } from "../schema/definition";
 
-export type AddMinimalViableSchemaToRequestDocumentOptions =
-  ExtractMinimalViableSchemaToRequestDocumentOptions & {
-    addTo?: "DIRECTIVE" | "PROPERTY";
-  };
+export type AddMinimalViableSchemaToRequestDocumentOptions = {
+  addTo?: "DIRECTIVE" | "PROPERTY";
+};
 
 export function addMinimalViableSchemaToRequestDocument(
   schema: GraphQLSchema,
@@ -47,15 +43,14 @@ export function addMinimalViableSchemaToExecutableDefinitionNode(
   node: ExecutableDefinitionNode,
   options?: AddMinimalViableSchemaToRequestDocumentOptions,
 ) {
-  const schemaFragment = extractMinimalViableSchemaForRequestDocument(
-    schema,
-    { kind: Kind.DOCUMENT, definitions: [node] },
-    options,
-  );
+  const { definitions } = extractMinimalViableSchemaForRequestDocument(schema, {
+    kind: Kind.DOCUMENT,
+    definitions: [node],
+  });
 
   return options?.addTo === "PROPERTY"
-    ? addToExecutableDefinitionNodeProperty(schemaFragment, node)
-    : addToExecutableDefinitionNodeDirective(schemaFragment, node);
+    ? addToExecutableDefinitionNodeProperty(definitions, node)
+    : addToExecutableDefinitionNodeDirective(definitions, node);
 }
 
 export type ExecutableDefinitionNodeWithInlinedSchema =

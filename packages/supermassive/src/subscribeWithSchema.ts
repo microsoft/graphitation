@@ -14,16 +14,16 @@ export function subscribeWithSchema({
   fieldResolver,
   typeResolver,
 }: ExecutionWithSchemaArgs): PromiseOrValue<ExecutionResult> {
-  const schemaFragment = {
-    ...schema,
-    definitions: extractMinimalViableSchemaForRequestDocument(
-      buildASTSchema(schema.definitions),
-      document,
-    ),
-  };
+  const { definitions } = extractMinimalViableSchemaForRequestDocument(
+    buildASTSchema(schema.definitions),
+    document,
+  );
   return subscribeWithoutSchema({
     document,
-    schemaFragment,
+    schemaFragment: {
+      ...schema,
+      definitions,
+    },
     rootValue,
     contextValue,
     variableValues,

@@ -12,17 +12,10 @@ import { filmSDL } from "./fixtures/filmSDL";
 const schema = buildASTSchema(filmSDL.document);
 
 describe(addMinimalViableSchemaToRequestDocument, () => {
-  function testHelper(
-    schema: GraphQLSchema,
-    doc: string,
-    options?: {
-      ignoredDirectives?: string[];
-    },
-  ) {
+  function testHelper(schema: GraphQLSchema, doc: string) {
     const processedDoc = addMinimalViableSchemaToRequestDocument(
       schema,
       parse(doc),
-      options,
     );
     return {
       processedDoc,

@@ -1,14 +1,14 @@
 import { parse, DocumentNode } from "graphql";
-import { executeWithoutSchema, executeWithSchema } from "..";
+import {
+  executeWithoutSchema,
+  isTotalExecutionResult,
+} from "../executeWithoutSchema";
+import { executeWithSchema } from "../executeWithSchema";
 import schema, { typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
 import { extractMinimalViableSchemaForRequestDocument } from "../utilities/extractMinimalViableSchemaForRequestDocument";
-import {
-  UserResolvers,
-  TotalExecutionResult,
-  isTotalExecutionResult,
-} from "../types";
+import { UserResolvers, TotalExecutionResult } from "../types";
 import {
   AfterFieldCompleteHookArgs,
   AfterFieldResolveHookArgs,
@@ -40,15 +40,16 @@ describe.each([
       resolvers: UserResolvers,
       hooks: ExecutionHooks,
     ) => {
+      const { definitions } = extractMinimalViableSchemaForRequestDocument(
+        schema,
+        document,
+      );
       return executeWithoutSchema({
         document,
         schemaFragment: {
           schemaId: "test",
           resolvers,
-          definitions: extractMinimalViableSchemaForRequestDocument(
-            schema,
-            document,
-          ),
+          definitions,
         },
         contextValue: {
           models,
