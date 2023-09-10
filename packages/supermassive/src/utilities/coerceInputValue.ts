@@ -9,7 +9,7 @@ import { addPath, pathToArray } from "../jsutils/Path";
 import { printPathArray } from "../jsutils/printPathArray";
 import { suggestionList } from "../jsutils/suggestionList";
 import { TypeReference } from "../schema/definition";
-import { SchemaFragment } from "../schema/fragment";
+import { PartialSchema } from "../schema/fragment";
 import {
   inspectTypeReference,
   isListType,
@@ -29,7 +29,7 @@ type OnErrorCB = (
 export function coerceInputValue(
   inputValue: unknown,
   typeRef: TypeReference,
-  schemaTypes: SchemaFragment,
+  schemaTypes: PartialSchema,
   onError: OnErrorCB = defaultOnError,
 ): unknown {
   return coerceInputValueImpl(
@@ -57,7 +57,7 @@ function defaultOnError(
 function coerceInputValueImpl(
   inputValue: unknown,
   typeRef: TypeReference,
-  schemaTypes: SchemaFragment,
+  schemaTypes: PartialSchema,
   onError: OnErrorCB,
   path: Path | undefined,
 ): unknown {

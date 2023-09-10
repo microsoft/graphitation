@@ -5,29 +5,37 @@ import { parseValue } from "graphql";
 import { GraphQLScalarType } from "graphql";
 
 import { valueFromAST } from "../valueFromAST";
-import { SchemaFragment } from "../../schema/fragment";
+import { PartialSchema } from "../../schema/fragment";
 import {
-  SchemaFragmentDefinitions,
+  SchemaDefinitions,
   InputObjectTypeDefinitionTuple,
   TypeKind,
 } from "../../schema/definition";
 import { typeReferenceFromName as ref } from "../../schema/reference";
 import { invariant } from "../../jsutils/invariant";
+import { UserResolvers } from "../../types";
 
 describe("valueFromAST", () => {
+  function createTestSchema(
+    definitions: SchemaDefinitions = { types: {} },
+    resolvers: UserResolvers = {},
+  ) {
+    return new PartialSchema({ schemaId: "test", definitions, resolvers });
+  }
+
   function expectValueFrom(
     valueText: string | null,
     type: string,
-    fragment?: SchemaFragment,
+    schema?: PartialSchema,
     variables?: ObjMap<unknown>,
   ) {
-    const schemaFragment = fragment ?? new SchemaFragment({ types: {} }, {});
-
+    const partialSchema = schema ?? createTestSchema();
     const typeRef = ref(type);
     const ast = valueText !== null ? parseValue(valueText) : null;
-    const value = valueFromAST(ast, typeRef, schemaFragment, variables);
+    const value = valueFromAST(ast, typeRef, partialSchema, variables);
     return expect(value);
   }
+
   function createSchemaWithTestInput() {
     const TestInput: InputObjectTypeDefinitionTuple = [
       TypeKind.INPUT,
@@ -37,7 +45,7 @@ describe("valueFromAST", () => {
         requiredBool: ref("Boolean!"),
       },
     ];
-    return new SchemaFragment({ types: { TestInput } }, {});
+    return createTestSchema({ types: { TestInput } });
   }
 
   it("rejects empty input", () => {
@@ -91,14 +99,14 @@ describe("valueFromAST", () => {
         parseValue: identityFunc,
       }),
     };
-    const schema: SchemaFragmentDefinitions = {
+    const definitions: SchemaDefinitions = {
       types: {
         Passthrough: [TypeKind.SCALAR],
         ThrowScalar: [TypeKind.SCALAR],
         ReturnUndefined: [TypeKind.SCALAR],
       },
     };
-    const fragment = new SchemaFragment(schema, resolvers);
+    const fragment = createTestSchema(definitions, resolvers);
 
     expectValueFrom('"value"', "Passthrough", fragment).toEqual("value");
     expectValueFrom("value", "ThrowScalar", fragment).toEqual(undefined);
@@ -116,7 +124,7 @@ describe("valueFromAST", () => {
         NO_CUSTOM_VALUE: undefined,
       },
     };
-    const schema: SchemaFragmentDefinitions = {
+    const definitions: SchemaDefinitions = {
       types: {
         TestColor: [
           TypeKind.ENUM,
@@ -124,7 +132,7 @@ describe("valueFromAST", () => {
         ],
       },
     };
-    const fragment = new SchemaFragment(schema, resolvers);
+    const fragment = createTestSchema(definitions, resolvers);
 
     expectValueFrom("RED", "TestColor", fragment).toEqual(1);
     expectValueFrom("BLUE", "TestColor", fragment).toEqual(3);

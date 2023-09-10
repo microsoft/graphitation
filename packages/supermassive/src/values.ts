@@ -12,7 +12,7 @@ import { printPathArray } from "./jsutils/printPathArray";
 import { ExecutionContext } from "./executeWithoutSchema";
 import { DirectiveDefinitionTuple, FieldDefinition } from "./schema/definition";
 import { valueFromAST } from "./utilities/valueFromAST";
-import { SchemaFragment } from "./schema/fragment";
+import { PartialSchema } from "./schema/fragment";
 import { coerceInputValue } from "./utilities/coerceInputValue";
 import {
   inspectTypeReference,
@@ -36,7 +36,7 @@ type CoercedVariableValues =
  * @internal
  */
 export function getVariableValues(
-  schemaTypes: SchemaFragment,
+  schemaTypes: PartialSchema,
   varDefNodes: ReadonlyArray<VariableDefinitionNode>,
   inputs: { [variable: string]: unknown },
   options?: { maxErrors?: number },
@@ -69,7 +69,7 @@ export function getVariableValues(
 }
 
 function coerceVariableValues(
-  schemaTypes: SchemaFragment,
+  schemaTypes: PartialSchema,
   varDefNodes: ReadonlyArray<VariableDefinitionNode>,
   inputs: { [variable: string]: unknown },
   onError: (error: GraphQLError) => void,
@@ -161,7 +161,7 @@ export function getArgumentValues(
   def: FieldDefinition | DirectiveDefinitionTuple,
   node: FieldNode | DirectiveNode,
 ): { [argument: string]: unknown } {
-  const schemaTypes = exeContext.schemaTypes;
+  const schemaTypes = exeContext.partialSchema;
   const coercedValues: { [argument: string]: unknown } = {};
   const argumentDefs = schemaTypes.resolveDefinitionArguments(def);
   if (!argumentDefs) {
@@ -273,7 +273,7 @@ export function getDirectiveValues(
   directiveDef: DirectiveDefinitionTuple,
   node: { directives?: ReadonlyArray<DirectiveNode> },
 ): undefined | { [argument: string]: unknown } {
-  const schemaTypes = exeContext.schemaTypes;
+  const schemaTypes = exeContext.partialSchema;
   const name = schemaTypes.getDirectiveName(directiveDef);
 
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')

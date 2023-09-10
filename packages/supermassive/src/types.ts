@@ -12,7 +12,8 @@ import { ObjMap } from "./jsutils/ObjMap";
 import { Path } from "./jsutils/Path";
 import { ExecutionHooks } from "./hooks/types";
 import { FieldGroup } from "./collectFields";
-import { SchemaFragmentDefinitions } from "./schema/definition";
+import { SchemaFragment } from "./schema/fragment";
+import { SchemaFragmentLoader } from "./schema/fragment";
 
 export type ScalarTypeResolver = GraphQLScalarType;
 export type EnumTypeResolver = Record<string, unknown>;
@@ -245,7 +246,6 @@ export type FormattedIncrementalResult<
   | FormattedIncrementalStreamResult<TData, TExtensions>;
 
 export interface CommonExecutionArgs {
-  resolvers: UserResolvers;
   rootValue?: unknown;
   contextValue?: unknown;
   buildContextValue?: (contextValue?: unknown) => unknown;
@@ -258,28 +258,15 @@ export interface CommonExecutionArgs {
 }
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
   document: DocumentNode;
-  schemaFragment?: SchemaFragmentDefinitions;
+  schemaFragment: SchemaFragment;
+  schemaFragmentLoader?: SchemaFragmentLoader;
 };
 
 export type ExecutionWithSchemaArgs = CommonExecutionArgs & {
   document: DocumentNode;
-  typeDefs: DocumentNode;
+  schema: {
+    schemaId: string;
+    definitions: DocumentNode;
+    resolvers: UserResolvers;
+  };
 };
-
-export function isIncrementalExecutionResult<
-  TData = ObjMap<unknown>,
-  TExtensions = ObjMap<unknown>,
->(
-  result: ExecutionResult<TData, TExtensions>,
-): result is IncrementalExecutionResult<TData, TExtensions> {
-  return "initialResult" in result;
-}
-
-export function isTotalExecutionResult<
-  TData = ObjMap<unknown>,
-  TExtensions = ObjMap<unknown>,
->(
-  result: ExecutionResult<TData, TExtensions>,
-): result is IncrementalExecutionResult<TData, TExtensions> {
-  return !("initialResult" in result);
-}

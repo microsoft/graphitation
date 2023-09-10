@@ -7,29 +7,29 @@ import {
   InputValueDefinitionRecord,
   InterfaceKeys,
   ObjectKeys,
-  SchemaFragmentDefinitions,
+  SchemaDefinitions,
   TypeDefinitionsRecord,
   TypeKind,
 } from "../schema/definition";
 import { inspect } from "../jsutils/inspect";
 
 export function mergeSchemaDefinitions(
-  target: SchemaFragmentDefinitions,
-  sources: SchemaFragmentDefinitions[],
+  accumulator: SchemaDefinitions,
+  definitions: SchemaDefinitions[],
 ) {
-  if (!sources.length) {
-    return target;
+  if (!definitions.length) {
+    return accumulator;
   }
-  for (const source of sources) {
-    if (!target.types) {
-      target.types = source.types;
+  for (const source of definitions) {
+    if (!accumulator.types) {
+      accumulator.types = source.types;
     } else if (source.types) {
-      mergeTypes(target.types, source.types);
+      mergeTypes(accumulator.types, source.types);
     }
-    if (!target.directives) {
-      target.directives = source.directives;
+    if (!accumulator.directives) {
+      accumulator.directives = source.directives;
     } else if (source.directives?.length) {
-      mergeDirectives(target.directives, source.directives);
+      mergeDirectives(accumulator.directives, source.directives);
     }
   }
 }

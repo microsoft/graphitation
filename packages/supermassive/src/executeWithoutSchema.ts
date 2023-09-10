@@ -7,7 +7,6 @@ import {
   FragmentDefinitionNode,
   OperationDefinitionNode,
   OperationTypeDefinitionNode,
-  OperationTypeNode,
 } from "graphql";
 import {
   collectFields,
@@ -39,6 +38,7 @@ import {
   IncrementalDeferResult,
   IncrementalResult,
   IncrementalStreamResult,
+  IncrementalExecutionResult,
 } from "./types";
 import {
   getArgumentValues,
@@ -51,12 +51,12 @@ import { isAsyncIterable } from "./jsutils/isAsyncIterable";
 import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
 import { GraphQLStreamDirective } from "./schema/directives";
 import { memoize3 } from "./jsutils/memoize3";
-import { SchemaFragment } from "./schema/fragment";
 import {
-  FieldDefinition,
-  SchemaFragmentDefinitions,
-  TypeReference,
-} from "./schema/definition";
+  PartialSchema,
+  SchemaFragment,
+  SchemaFragmentLoader,
+} from "./schema/fragment";
+import { FieldDefinition, TypeReference } from "./schema/definition";
 import {
   inspectTypeReference,
   isListType,
@@ -64,8 +64,6 @@ import {
   typeNameFromReference,
   unwrap,
 } from "./schema/reference";
-import { getSchemaFragment } from "./utilities/getSchemaFragment";
-import { mergeSchemaDefinitions } from "./utilities/mergeDefinitions";
 
 /**
  * A memoized collection of relevant subfields with regard to the return
@@ -108,7 +106,9 @@ const collectSubfields = memoize3(
  * and the fragments defined in the query document
  */
 export interface ExecutionContext {
-  schemaTypes: SchemaFragment;
+  partialSchema: PartialSchema;
+  schemaFragment: SchemaFragment;
+  schemaFragmentLoader?: SchemaFragmentLoader;
   fragments: ObjMap<FragmentDefinitionNode>;
   rootValue: unknown;
   contextValue: unknown;
@@ -122,10 +122,6 @@ export interface ExecutionContext {
   fieldExecutionHooks?: ExecutionHooks;
   subsequentPayloads: Set<IncrementalDataRecord>;
 }
-
-type MergedSchemaFragment = SchemaFragmentDefinitions & {
-  __merged?: boolean;
-};
 
 /**
  * Implements the "Executing requests" section of the GraphQL specification.
@@ -145,7 +141,7 @@ export function executeWithoutSchema(
   const exeContext = buildExecutionContext(args);
 
   // Return early errors if execution context failed.
-  if (!("schemaTypes" in exeContext)) {
+  if (!("partialSchema" in exeContext)) {
     return { errors: exeContext };
   } else {
     return executeOperation(exeContext);
@@ -183,8 +179,9 @@ function buildExecutionContext(
   args: ExecutionWithoutSchemaArgs,
 ): Array<GraphQLError> | ExecutionContext {
   const {
-    resolvers,
-    schemaFragment: explicitSchemaFragment,
+    // resolvers,
+    schemaFragment,
+    schemaFragmentLoader,
     document,
     rootValue,
     contextValue,
@@ -231,30 +228,12 @@ function buildExecutionContext(
     return [new GraphQLError("Must provide an operation.")];
   }
 
-  let schemaFragment = explicitSchemaFragment;
-
-  if (!schemaFragment) {
-    schemaFragment = getSchemaFragment(operation);
-    if (schemaFragment && !(schemaFragment as MergedSchemaFragment).__merged) {
-      mergeSchemaDefinitions(
-        schemaFragment,
-        Object.values(fragments)
-          .map((fragmentDef) => getSchemaFragment(fragmentDef))
-          .filter((f): f is SchemaFragmentDefinitions => Boolean(f)),
-      );
-      (schemaFragment as MergedSchemaFragment).__merged = true;
-    }
-  }
-  if (!schemaFragment) {
-    return [new GraphQLError("Must provide schema fragment.")];
-  }
-
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
   const variableDefinitions = operation.variableDefinitions ?? [];
-  const schemaTypes = new SchemaFragment(schemaFragment, resolvers);
+  const partialSchema = new PartialSchema(schemaFragment);
 
   const coercedVariableValues = getVariableValues(
-    schemaTypes,
+    partialSchema,
     variableDefinitions,
     variableValues ?? {},
     { maxErrors: 50 },
@@ -264,15 +243,10 @@ function buildExecutionContext(
     return coercedVariableValues.errors;
   }
 
-  // const schemaTypes: Map<string, TypeDefinitionNode> = (
-  //   schemaFragment || []
-  // ).reduce((map, next) => {
-  //   map.set(next.name.value, next);
-  //   return map;
-  // }, new Map() as Map<string, TypeDefinitionNode>);
-
   return {
-    schemaTypes: schemaTypes,
+    partialSchema,
+    schemaFragment,
+    schemaFragmentLoader,
     fragments,
     rootValue,
     contextValue: buildContextValue
@@ -315,8 +289,9 @@ function executeOperation(
   const path = undefined;
   let result;
 
+  // Note: cannot use OperationTypeNode from graphql-js as it doesn't exist in 15.x
   switch (operation.operation) {
-    case OperationTypeNode.QUERY:
+    case "query":
       result = executeFields(
         exeContext,
         rootTypeName,
@@ -327,7 +302,7 @@ function executeOperation(
       );
       result = buildResponse(exeContext, result);
       break;
-    case OperationTypeNode.MUTATION:
+    case "mutation":
       result = executeFieldsSerially(
         exeContext,
         rootTypeName,
@@ -337,7 +312,7 @@ function executeOperation(
       );
       result = buildResponse(exeContext, result);
       break;
-    case OperationTypeNode.SUBSCRIPTION: {
+    case "subscription": {
       const resultOrStreamOrPromise = createSourceEventStream(exeContext);
       result = mapResultOrEventStreamOrPromise(
         resultOrStreamOrPromise,
@@ -346,7 +321,13 @@ function executeOperation(
         path,
         groupedFieldSet,
       );
+      break;
     }
+    default:
+      invariant(
+        false,
+        `Operation "${operation.operation}" is not a part of GraphQL spec`,
+      );
   }
 
   for (const patch of patches) {
@@ -502,39 +483,49 @@ function executeField(
   path: Path,
   incrementalDataRecord: IncrementalDataRecord | undefined,
 ): PromiseOrValue<unknown> {
-  const schemaTypes = exeContext.schemaTypes;
   const fieldName = fieldGroup[0].name.value;
-  const fieldDef = schemaTypes.getField(parentTypeName, fieldName);
-  if (fieldDef === undefined) {
-    return;
+  const fieldDef = exeContext.partialSchema.getField(parentTypeName, fieldName);
+
+  if (fieldDef !== undefined) {
+    return resolveAndCompleteField(
+      exeContext,
+      parentTypeName,
+      fieldDef,
+      fieldGroup,
+      path,
+      source,
+      incrementalDataRecord,
+    );
   }
-
-  const returnTypeRef = schemaTypes.getTypeReference(fieldDef);
-  const resolveFn =
-    schemaTypes.getFieldResolver(parentTypeName, fieldName) ??
-    exeContext.fieldResolver;
-
-  const info = buildResolveInfo(
-    exeContext,
-    fieldName,
-    fieldGroup,
-    parentTypeName,
-    typeNameFromReference(returnTypeRef),
-    path,
-  );
-
-  return resolveAndCompleteField(
-    exeContext,
-    parentTypeName,
-    returnTypeRef,
-    fieldDef,
-    fieldGroup,
-    info,
-    path,
-    resolveFn,
-    source,
-    incrementalDataRecord,
-  );
+  if (!exeContext.schemaFragmentLoader) {
+    return undefined;
+  }
+  return exeContext
+    .schemaFragmentLoader(exeContext.schemaFragment, exeContext.contextValue, {
+      kind: "byField",
+      parentTypeName,
+      fieldName,
+    })
+    .then(({ mergedFragment, mergedContextValue }) => {
+      exeContext.contextValue = mergedContextValue ?? exeContext.contextValue;
+      exeContext.schemaFragment = mergedFragment;
+      exeContext.partialSchema.updateSchemaFragment(mergedFragment);
+      const fieldDef = exeContext.partialSchema.getField(
+        parentTypeName,
+        fieldName,
+      );
+      return fieldDef !== undefined
+        ? resolveAndCompleteField(
+            exeContext,
+            parentTypeName,
+            fieldDef,
+            fieldGroup,
+            path,
+            source,
+            incrementalDataRecord,
+          )
+        : undefined;
+    });
 }
 
 /**
@@ -583,14 +574,14 @@ function createSourceEventStream(
 function executeSubscriptionImpl(
   exeContext: ExecutionContext,
 ): PromiseOrValue<AsyncIterable<unknown>> {
-  const { operation, rootValue, schemaTypes } = exeContext;
+  const { operation, rootValue, partialSchema } = exeContext;
   const rootTypeName = getOperationRootTypeName(operation);
   const { groupedFieldSet } = collectFields(exeContext, rootTypeName);
 
   const firstRootField = groupedFieldSet.entries().next().value;
   const [responseName, fieldGroup] = firstRootField;
   const fieldName = fieldGroup[0].name.value;
-  const fieldDef = schemaTypes.getField(rootTypeName, fieldName);
+  const fieldDef = partialSchema.getField(rootTypeName, fieldName);
 
   if (!fieldDef) {
     throw new GraphQLError(
@@ -599,9 +590,9 @@ function executeSubscriptionImpl(
     );
   }
 
-  const returnTypeRef = schemaTypes.getTypeReference(fieldDef);
+  const returnTypeRef = partialSchema.getTypeReference(fieldDef);
   const resolveFn =
-    schemaTypes.getSubscriptionFieldResolver(rootTypeName, fieldName) ??
+    partialSchema.getSubscriptionFieldResolver(rootTypeName, fieldName) ??
     exeContext.subscribeFieldResolver;
 
   const path = addPath(undefined, responseName, rootTypeName);
@@ -766,15 +757,29 @@ function handleFieldError(
 function resolveAndCompleteField(
   exeContext: ExecutionContext,
   parentTypeName: string,
-  returnTypeRef: TypeReference,
   fieldDefinition: FieldDefinition,
   fieldGroup: FieldGroup,
-  info: ResolveInfo,
   path: Path,
-  resolveFn: FunctionFieldResolver<unknown, unknown>,
   source: unknown,
   incrementalDataRecord: IncrementalDataRecord | undefined,
 ): PromiseOrValue<unknown> {
+  const fieldName = fieldGroup[0].name.value;
+  const returnTypeRef =
+    exeContext.partialSchema.getTypeReference(fieldDefinition);
+
+  const resolveFn: FunctionFieldResolver<unknown, unknown> =
+    exeContext.partialSchema.getFieldResolver(parentTypeName, fieldName) ??
+    exeContext.fieldResolver;
+
+  const info = buildResolveInfo(
+    exeContext,
+    fieldName,
+    fieldGroup,
+    parentTypeName,
+    typeNameFromReference(returnTypeRef),
+    path,
+  );
+
   const isDefaultResolverUsed = resolveFn === exeContext.fieldResolver;
   const hooks = exeContext.fieldExecutionHooks;
   //  the resolve function, regardless of if its result is normal or abrupt (error).
@@ -971,19 +976,19 @@ function completeValue(
     );
   }
 
-  const schemaTypes = exeContext.schemaTypes;
+  const partialSchema = exeContext.partialSchema;
   const returnTypeName = typeNameFromReference(returnTypeRef);
 
   // If field type is a leaf type, Scalar or Enum, serialize to a valid value,
   // returning null if serialization is not possible.
-  const leafType = schemaTypes.getLeafTypeResolver(returnTypeRef);
+  const leafType = partialSchema.getLeafTypeResolver(returnTypeRef);
   if (leafType) {
     return completeLeafValue(leafType, result);
   }
 
   // If field type is an abstract type, Interface or Union, determine the
   // runtime Object type and complete for that type.
-  if (schemaTypes.isAbstractType(returnTypeRef)) {
+  if (partialSchema.isAbstractType(returnTypeRef)) {
     return completeAbstractValue(
       exeContext,
       returnTypeName,
@@ -997,7 +1002,7 @@ function completeValue(
 
   // If field type is Object, execute and complete all sub-selections.
   // istanbul ignore else (See: 'https://github.com/graphql/graphql-js/issues/2618')
-  if (schemaTypes.isObjectType(returnTypeRef)) {
+  if (partialSchema.isObjectType(returnTypeRef)) {
     return completeObjectValue(
       exeContext,
       returnTypeName,
@@ -1269,7 +1274,7 @@ function getStreamValues(
   );
 
   invariant(
-    exeContext.operation.operation !== OperationTypeNode.SUBSCRIPTION,
+    exeContext.operation.operation !== "subscription",
     "`@stream` directive not supported on subscription operations. Disable `@stream` by setting the `if` argument to `false`.",
   );
 
@@ -1381,7 +1386,7 @@ function completeAbstractValue(
   incrementalDataRecord: IncrementalDataRecord | undefined,
 ): PromiseOrValue<ObjMap<unknown>> {
   const resolveTypeFn =
-    exeContext.schemaTypes.getAbstractTypeResolver(returnTypeName) ??
+    exeContext.partialSchema.getAbstractTypeResolver(returnTypeName) ??
     exeContext.typeResolver;
   const contextValue = exeContext.contextValue;
   const runtimeTypeName = resolveTypeFn(result, contextValue, info);
@@ -1447,8 +1452,8 @@ function ensureValidRuntimeType(
     );
   }
 
-  const schemaTypes = exeContext.schemaTypes;
-  const iface = schemaTypes.getInterfaceType(returnTypeName);
+  const partialSchema = exeContext.partialSchema;
+  const iface = partialSchema.getInterfaceType(returnTypeName);
   if (iface) {
     // Significant deviation from graphql-js:
     //   1. There is no guarantee that schema fragment contains definitions for all object types implementing
@@ -1460,8 +1465,8 @@ function ensureValidRuntimeType(
     //
     // The solution is to merge field definitions from interface into runtime object type at runtime.
     if (
-      schemaTypes.isDefined(runtimeTypeName) &&
-      !schemaTypes.isObjectType(runtimeTypeName)
+      partialSchema.isDefined(runtimeTypeName) &&
+      !partialSchema.isObjectType(runtimeTypeName)
     ) {
       throw new GraphQLError(
         `Abstract type "${returnTypeName}" was resolved to a non-object type "${runtimeTypeName}".`,
@@ -1473,30 +1478,30 @@ function ensureValidRuntimeType(
     //   For additional correctness validation we must expose all existing implementations in the app-wide
     //   shared fragment that is merged with operation-level fragment before execution.
     //   Then the following will work:
-    // if (!exeContext.schemaTypes.isSubType(returnTypeName, runtimeTypeName)) {
+    // if (!exeContext.partialSchema.isSubType(returnTypeName, runtimeTypeName)) {
     //   throw new GraphQLError(
     //     `Runtime Object type "${runtimeTypeName}" is not a possible type for "${returnTypeName}".`,
     //     { nodes: fieldGroup },
     //   );
     // }
-    schemaTypes.addInterfaceImplementation(returnTypeName, runtimeTypeName);
+    partialSchema.addInterfaceImplementation(returnTypeName, runtimeTypeName);
   } else {
     // Unions are as usual
-    if (!schemaTypes.isDefined(runtimeTypeName)) {
+    if (!partialSchema.isDefined(runtimeTypeName)) {
       throw new GraphQLError(
         `Abstract type "${returnTypeName}" was resolved to a type "${runtimeTypeName}" that does not exist inside the schema.`,
         { nodes: fieldGroup },
       );
     }
 
-    if (!schemaTypes.isObjectType(runtimeTypeName)) {
+    if (!partialSchema.isObjectType(runtimeTypeName)) {
       throw new GraphQLError(
         `Abstract type "${returnTypeName}" was resolved to a non-object type "${runtimeTypeName}".`,
         { nodes: fieldGroup },
       );
     }
 
-    if (!exeContext.schemaTypes.isSubType(returnTypeName, runtimeTypeName)) {
+    if (!exeContext.partialSchema.isSubType(returnTypeName, runtimeTypeName)) {
       throw new GraphQLError(
         `Runtime Object type "${runtimeTypeName}" is not a possible type for "${returnTypeName}".`,
         { nodes: fieldGroup },
@@ -1725,12 +1730,17 @@ export function getOperationRootTypeName(
   operation: OperationDefinitionNode | OperationTypeDefinitionNode,
 ): string {
   switch (operation.operation) {
-    case OperationTypeNode.QUERY:
+    case "query":
       return "Query";
-    case OperationTypeNode.MUTATION:
+    case "mutation":
       return "Mutation";
-    case OperationTypeNode.SUBSCRIPTION:
+    case "subscription":
       return "Subscription";
+    default:
+      invariant(
+        false,
+        `Operation "${operation.operation}" is not a part of GraphQL spec`,
+      );
   }
 }
 
@@ -2256,4 +2266,22 @@ class StreamItemsRecord {
   setIsCompletedAsyncIterator() {
     this.isCompletedAsyncIterator = true;
   }
+}
+
+export function isIncrementalExecutionResult<
+  TData = ObjMap<unknown>,
+  TExtensions = ObjMap<unknown>,
+>(
+  result: ExecutionResult<TData, TExtensions>,
+): result is IncrementalExecutionResult<TData, TExtensions> {
+  return "initialResult" in result;
+}
+
+export function isTotalExecutionResult<
+  TData = ObjMap<unknown>,
+  TExtensions = ObjMap<unknown>,
+>(
+  result: ExecutionResult<TData, TExtensions>,
+): result is IncrementalExecutionResult<TData, TExtensions> {
+  return !("initialResult" in result);
 }

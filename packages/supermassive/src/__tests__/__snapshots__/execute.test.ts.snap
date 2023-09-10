@@ -59,6 +59,7 @@ exports[`graphql-js snapshot check to ensure test stability Not passing arg valu
 exports[`graphql-js snapshot check to ensure test stability basic query 1`] = `
 {
   "data": {
+    "__typename": "Query",
     "person": {
       "gender": "male",
       "name": "Luke Skywalker",

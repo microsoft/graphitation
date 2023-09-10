@@ -15,11 +15,10 @@ import {
   ScalarTypeDefinitionNode,
   UnionTypeDefinitionNode,
 } from "graphql";
-
 import {
   DirectiveDefinitionTuple,
   DirectiveKeys,
-  SchemaFragmentDefinitions,
+  SchemaDefinitions,
   EnumKeys,
   EnumTypeDefinitionTuple,
   FieldDefinition,
@@ -52,11 +51,16 @@ import { inspect } from "../jsutils/inspect";
 /**
  * Converts encoded schema to standard AST representation of the same schema
  */
-export function decodeSchema(
-  encodedSchema: SchemaFragmentDefinitions,
+export function decodeASTSchema(
+  encodedSchemaFragments: SchemaDefinitions[],
 ): DocumentNode {
+  if (encodedSchemaFragments.length !== 1) {
+    // TODO:
+    throw new Error("decodeSchema does not support decoding extensions yet");
+  }
   const definitions = [];
-  const types = encodedSchema.types;
+  const types = encodedSchemaFragments[0].types;
+  const directives = encodedSchemaFragments[0].directives;
 
   for (const typeName in types) {
     const tuple = types[typeName];
@@ -82,7 +86,7 @@ export function decodeSchema(
     }
   }
 
-  for (const directive of encodedSchema.directives ?? []) {
+  for (const directive of directives ?? []) {
     definitions.push(decodeDirective(directive, types));
   }
 

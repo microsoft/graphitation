@@ -2,11 +2,10 @@ import { buildASTSchema } from "graphql";
 import { executeWithoutSchema } from "./index";
 import { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import { ExecutionResult, ExecutionWithSchemaArgs } from "./types";
-import { extractMinimalViableSchemaForRequestDocument } from "./utilities/addMinimalViableSchemaToRequestDocument";
+import { extractMinimalViableSchemaForRequestDocument } from "./utilities/extractMinimalViableSchemaForRequestDocument";
 
 export function executeWithSchema({
-  typeDefs,
-  resolvers,
+  schema,
   document,
   rootValue,
   contextValue,
@@ -16,16 +15,16 @@ export function executeWithSchema({
   typeResolver,
   fieldExecutionHooks,
 }: ExecutionWithSchemaArgs): PromiseOrValue<ExecutionResult> {
-  const schema = buildASTSchema(typeDefs);
-  const schemaFragment = extractMinimalViableSchemaForRequestDocument(
-    schema,
+  const { definitions } = extractMinimalViableSchemaForRequestDocument(
+    buildASTSchema(schema.definitions),
     document,
   );
-
   return executeWithoutSchema({
     document,
-    resolvers,
-    schemaFragment,
+    schemaFragment: {
+      ...schema,
+      definitions,
+    },
     rootValue,
     contextValue,
     variableValues,

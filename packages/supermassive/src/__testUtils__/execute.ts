@@ -15,8 +15,7 @@ import resolvers from "../benchmarks/swapi-schema/resolvers";
 import { ExecutionResult, UserResolvers } from "../types";
 import models from "../benchmarks/swapi-schema/models";
 import { executeWithoutSchema } from "../executeWithoutSchema";
-import { extractMinimalViableSchemaForRequestDocument } from "../utilities/addMinimalViableSchemaToRequestDocument";
-import {} from "graphql/execution/execute";
+import { extractMinimalViableSchemaForRequestDocument } from "../utilities/extractMinimalViableSchemaForRequestDocument";
 import { PromiseOrValue } from "graphql/jsutils/PromiseOrValue";
 import { ObjMap } from "../jsutils/ObjMap";
 import { forAwaitEach, isAsyncIterable } from "iterall";
@@ -42,9 +41,12 @@ export function createExecutionUtils(
     const document = parse(query);
     const result = await drainExecution(
       await executeWithSchema({
-        typeDefs,
-        resolvers: resolvers as UserResolvers<unknown, unknown>,
         document,
+        schema: {
+          schemaId: "test",
+          definitions: typeDefs,
+          resolvers: resolvers as UserResolvers<unknown, unknown>,
+        },
         contextValue: {
           models,
         },
@@ -71,17 +73,21 @@ export function createExecutionUtils(
   ) {
     expect.assertions(1);
     const document = parse(query);
+    const { definitions } = extractMinimalViableSchemaForRequestDocument(
+      schema,
+      document,
+    );
     const result = await drainExecution(
       await executeWithoutSchema({
         document,
         contextValue: {
           models,
         },
-        resolvers: resolvers as UserResolvers,
-        schemaFragment: extractMinimalViableSchemaForRequestDocument(
-          schema,
-          document,
-        ),
+        schemaFragment: {
+          schemaId: "test",
+          definitions,
+          resolvers: resolvers as UserResolvers,
+        },
         variableValues: variables,
       }),
     );

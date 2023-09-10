@@ -1,14 +1,14 @@
 import { parse, DocumentNode } from "graphql";
-import { executeWithoutSchema, executeWithSchema } from "..";
+import {
+  executeWithoutSchema,
+  isTotalExecutionResult,
+} from "../executeWithoutSchema";
+import { executeWithSchema } from "../executeWithSchema";
 import schema, { typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
-import { extractMinimalViableSchemaForRequestDocument } from "../utilities/addMinimalViableSchemaToRequestDocument";
-import {
-  UserResolvers,
-  TotalExecutionResult,
-  isTotalExecutionResult,
-} from "../types";
+import { extractMinimalViableSchemaForRequestDocument } from "../utilities/extractMinimalViableSchemaForRequestDocument";
+import { UserResolvers, TotalExecutionResult } from "../types";
 import {
   AfterFieldCompleteHookArgs,
   AfterFieldResolveHookArgs,
@@ -40,13 +40,17 @@ describe.each([
       resolvers: UserResolvers,
       hooks: ExecutionHooks,
     ) => {
+      const { definitions } = extractMinimalViableSchemaForRequestDocument(
+        schema,
+        document,
+      );
       return executeWithoutSchema({
         document,
-        resolvers,
-        schemaFragment: extractMinimalViableSchemaForRequestDocument(
-          schema,
-          document,
-        ),
+        schemaFragment: {
+          schemaId: "test",
+          resolvers,
+          definitions,
+        },
         contextValue: {
           models,
         },
@@ -62,8 +66,11 @@ describe.each([
       hooks: ExecutionHooks,
     ) => {
       return executeWithSchema({
-        typeDefs,
-        resolvers,
+        schema: {
+          schemaId: "test",
+          definitions: typeDefs,
+          resolvers,
+        },
         document,
         contextValue: {
           models,

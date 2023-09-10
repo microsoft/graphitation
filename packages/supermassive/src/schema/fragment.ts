@@ -1,8 +1,7 @@
-import { GraphQLEnumType, GraphQLLeafType } from "graphql";
+import { GraphQLEnumType, GraphQLLeafType, GraphQLScalarType } from "graphql";
 import {
   DirectiveDefinitionTuple,
   DirectiveKeys,
-  SchemaFragmentDefinitions,
   EnumKeys,
   EnumTypeDefinitionTuple,
   FieldDefinition,
@@ -17,7 +16,9 @@ import {
   InterfaceTypeDefinitionTuple,
   ObjectKeys,
   ObjectTypeDefinitionTuple,
+  OperationTypes,
   ScalarTypeDefinitionTuple,
+  SchemaDefinitions,
   TypeKind,
   TypeName,
   TypeReference,
@@ -41,24 +42,95 @@ import {
 } from "./resolvers";
 import { typeNameFromReference } from "./reference";
 
+type SchemaId = string;
+
+export type SchemaFragment = {
+  schemaId: SchemaId;
+  definitions: SchemaDefinitions;
+  resolvers: UserResolvers;
+  operationTypes?: OperationTypes;
+};
+
+export type SchemaFragmentLoadByField = {
+  kind: "byField";
+  parentTypeName: TypeName;
+  fieldName: string;
+};
+
+export type SchemaFragmentLoadRequest = SchemaFragmentLoadByField;
+export type SchemaFragmentLoaderResult = {
+  mergedFragment: SchemaFragment;
+  mergedContextValue?: unknown;
+};
+
+export type SchemaFragmentLoader = (
+  currentFragment: SchemaFragment,
+  currentContextValue: unknown,
+  req: SchemaFragmentLoadRequest,
+) => Promise<SchemaFragmentLoaderResult>;
+
 const specifiedScalarDefinition: ScalarTypeDefinitionTuple = [TypeKind.SCALAR];
 const typeNameMetaFieldDef: FieldDefinition = "String";
+const resolveTypeName: FunctionFieldResolver<unknown, unknown> = (
+  _source,
+  _args,
+  _context,
+  info,
+) => info.parentTypeName;
+const scalarTypeResolversBySchema = new Map<
+  SchemaId,
+  Map<TypeName, GraphQLScalarType>
+>();
+const enumTypeResolversBySchema = new Map<
+  SchemaId,
+  Map<TypeName, GraphQLEnumType>
+>();
 const emptyObject = Object.freeze(Object.create(null));
 
-export class SchemaFragment {
+export class PartialSchema {
   static parseOptions = { noLocation: true };
 
-  private static scalarTypeResolvers: Record<string, ScalarTypeResolver> =
-    Object.create(null);
+  private schemaId: string;
+  private definitions: SchemaDefinitions;
+  private resolvers: UserResolvers;
+  private operationTypes: OperationTypes | undefined;
 
-  private static enumTypeResolvers: Record<string, GraphQLEnumType> =
-    Object.create(null);
+  private scalarTypeResolvers: Map<TypeName, ScalarTypeResolver>;
+  private enumTypeResolvers: Map<TypeName, GraphQLEnumType>;
 
-  // Lifecycle: one instance per GraphQL operation
-  constructor(
-    private definitions: SchemaFragmentDefinitions,
-    private resolvers: UserResolvers,
-  ) {}
+  constructor(fragment: SchemaFragment) {
+    this.schemaId = fragment.schemaId;
+    this.definitions = fragment.definitions;
+    this.resolvers = fragment.resolvers;
+    this.operationTypes = fragment.operationTypes;
+
+    let scalarTypeResolvers = scalarTypeResolversBySchema.get(this.schemaId);
+    if (!scalarTypeResolvers) {
+      scalarTypeResolvers = new Map<TypeName, ScalarTypeResolver>();
+      scalarTypeResolversBySchema.set(this.schemaId, scalarTypeResolvers);
+    }
+    this.scalarTypeResolvers = scalarTypeResolvers;
+
+    let enumTypeResolvers = enumTypeResolversBySchema.get(this.schemaId);
+    if (!enumTypeResolvers) {
+      enumTypeResolvers = new Map<TypeName, GraphQLEnumType>();
+      enumTypeResolversBySchema.set(this.schemaId, enumTypeResolvers);
+    }
+    this.enumTypeResolvers = enumTypeResolvers;
+  }
+
+  public updateSchemaFragment(fragment: SchemaFragment) {
+    if (this.schemaId !== fragment.schemaId) {
+      throw new Error(
+        `Cannot use new schema fragment: old and new fragments describe different schemas:` +
+          ` ${this.schemaId} vs. ${fragment.schemaId}`,
+      );
+    }
+    this.schemaId = fragment.schemaId;
+    this.definitions = fragment.definitions;
+    this.resolvers = fragment.resolvers;
+    this.operationTypes = fragment.operationTypes;
+  }
 
   public getTypeReference(
     tupleOrRef: FieldDefinition | InputValueDefinition,
@@ -127,11 +199,11 @@ export class SchemaFragment {
     if (!type) {
       return undefined;
     }
-    if (type[0] === TypeKind.INTERFACE) {
-      return type[InterfaceKeys.fields]?.[fieldName];
-    }
     if (type[0] === TypeKind.OBJECT) {
       return type[ObjectKeys.fields]?.[fieldName];
+    }
+    if (type[0] === TypeKind.INTERFACE) {
+      return type[InterfaceKeys.fields]?.[fieldName];
     }
     return undefined;
   }
@@ -141,11 +213,11 @@ export class SchemaFragment {
     if (!type) {
       return undefined;
     }
-    if (type[0] === TypeKind.INTERFACE && type[InterfaceKeys.interfaces]) {
-      return this.findField(type[InterfaceKeys.interfaces], fieldName);
-    }
     if (type[0] === TypeKind.OBJECT && type[ObjectKeys.interfaces]) {
       return this.findField(type[ObjectKeys.interfaces], fieldName);
+    }
+    if (type[0] === TypeKind.INTERFACE && type[InterfaceKeys.interfaces]) {
+      return this.findField(type[InterfaceKeys.interfaces], fieldName);
     }
     return undefined;
   }
@@ -233,9 +305,12 @@ export class SchemaFragment {
       return true;
     }
     const typeName = typeNameFromReference(typeRef);
+    const kind = this.definitions.types[typeName]?.[0];
     return (
-      this.definitions.types[typeName]?.[0] === TypeKind.INPUT ||
-      isSpecifiedScalarType(typeName)
+      isSpecifiedScalarType(typeName) ||
+      kind === TypeKind.ENUM ||
+      kind === TypeKind.INPUT ||
+      kind === TypeKind.SCALAR
     );
   }
 
@@ -298,6 +373,9 @@ export class SchemaFragment {
     typeName: TypeName,
     fieldName: string,
   ): FunctionFieldResolver<unknown, unknown> | undefined {
+    if (fieldName === "__typename") {
+      return resolveTypeName;
+    }
     // TODO: sanity check that this is an object type resolver
     const typeResolvers = this.resolvers[typeName] as
       | ObjectTypeResolver<unknown, unknown, unknown>
@@ -344,26 +422,23 @@ export class SchemaFragment {
 
     const typeDef = this.getLeafType(typeRef);
     if (!typeDef) {
-      // FIXME: Could be still in resolvers (i.e., add "found in resolvers, not found in schema" error?)
+      // TODO: Could be still in resolvers (i.e., add "found in resolvers, not found in schema" error?)
       return undefined;
     }
 
     if (typeDef[0] === TypeKind.SCALAR) {
-      if (SchemaFragment.scalarTypeResolvers[typeName]) {
-        return SchemaFragment.scalarTypeResolvers[typeName];
+      let scalarType = this.scalarTypeResolvers.get(typeName);
+      if (!scalarType) {
+        const tmp = this.resolvers[typeName];
+        scalarType = isScalarTypeResolver(tmp)
+          ? tmp
+          : new GraphQLScalarType({ name: typeName, description: "" });
+        this.scalarTypeResolvers.set(typeName, scalarType);
       }
-      const resolver = this.resolvers[typeName];
-      const scalarResolver = isScalarTypeResolver(resolver)
-        ? resolver
-        : undefined;
-      if (scalarResolver) {
-        SchemaFragment.scalarTypeResolvers[typeName] = scalarResolver;
-        return scalarResolver;
-      }
-      return undefined;
+      return scalarType;
     }
     if (typeDef[0] === TypeKind.ENUM) {
-      let enumType = SchemaFragment.enumTypeResolvers[typeName];
+      let enumType = this.enumTypeResolvers.get(typeName);
       if (!enumType) {
         const tmp = this.resolvers[typeName]; // Can only be graphql-tools map
         const customValues = isObjectLike(tmp) ? tmp : emptyObject;
@@ -379,7 +454,7 @@ export class SchemaFragment {
           name: typeName,
           values,
         });
-        SchemaFragment.enumTypeResolvers[typeName] = enumType;
+        this.enumTypeResolvers.set(typeName, enumType);
       }
       return enumType;
     }

@@ -72,15 +72,27 @@ export const specifiedDirectives: ReadonlyArray<DirectiveDefinitionTuple> =
   ]);
 
 export const SUPERMASSIVE_SCHEMA_DIRECTIVE_NAME = "schema";
-export const SUPERMASSIVE_SCHEMA_DIRECTIVE_FRAGMENT_ARGUMENT_NAME = "fragment";
+export const SUPERMASSIVE_SCHEMA_DIRECTIVE_DEFINITIONS_ARGUMENT_NAME =
+  "definitions";
 
 /**
  * Used to conditionally stream list fields.
  */
 export const SupermassiveSchemaDirective: DirectiveDefinitionTuple = [
   SUPERMASSIVE_SCHEMA_DIRECTIVE_NAME,
-  { fragment: "String" }, // Essentially JSON
+  { [SUPERMASSIVE_SCHEMA_DIRECTIVE_DEFINITIONS_ARGUMENT_NAME]: "String!" }, // Essentially JSON
 ];
+
+export function isKnownDirective(
+  directive: DirectiveName | DirectiveDefinitionTuple,
+): boolean {
+  const name =
+    typeof directive === "string" ? directive : directive[DirectiveKeys.name];
+  return (
+    isSpecifiedDirective(directive) ||
+    name === SUPERMASSIVE_SCHEMA_DIRECTIVE_NAME
+  );
+}
 
 export function isSpecifiedDirective(
   directive: DirectiveName | DirectiveDefinitionTuple,

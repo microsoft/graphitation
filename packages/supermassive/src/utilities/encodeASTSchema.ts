@@ -9,6 +9,12 @@ import {
   ScalarTypeDefinitionNode,
   UnionTypeDefinitionNode,
   DocumentNode,
+  ObjectTypeExtensionNode,
+  InputObjectTypeExtensionNode,
+  InterfaceTypeExtensionNode,
+  UnionTypeExtensionNode,
+  EnumTypeExtensionNode,
+  ScalarTypeExtensionNode,
 } from "graphql";
 import {
   DirectiveDefinitionTuple,
@@ -21,50 +27,92 @@ import {
   ObjectTypeDefinitionTuple,
   ScalarTypeDefinitionTuple,
   UnionTypeDefinitionTuple,
-  SchemaFragmentDefinitions,
+  SchemaDefinitions,
   TypeKind,
   TypeReference,
+  TypeDefinitionTuple,
 } from "../schema/definition";
 import { typeReferenceFromNode } from "../schema/reference";
 import { valueFromASTUntyped } from "./valueFromASTUntyped";
 
 export function encodeASTSchema(
   schemaFragment: DocumentNode,
-): SchemaFragmentDefinitions {
-  const types = Object.create(null);
-  const directives = [];
+): SchemaDefinitions[] {
+  const fragments: SchemaDefinitions[] = [{ types: {} }];
+  const add = (name: string, def: TypeDefinitionTuple, extension = false) =>
+    addTypeDefinition(fragments, name, def, extension);
+
   for (const definition of schemaFragment.definitions) {
     if (definition.kind === "ObjectTypeDefinition") {
-      types[definition.name.value] = encodeObjectType(definition);
+      add(definition.name.value, encodeObjectType(definition));
     } else if (definition.kind === "InputObjectTypeDefinition") {
-      types[definition.name.value] = encodeInputObjectType(definition);
+      add(definition.name.value, encodeInputObjectType(definition));
     } else if (definition.kind === "EnumTypeDefinition") {
-      types[definition.name.value] = encodeEnumType(definition);
+      add(definition.name.value, encodeEnumType(definition));
     } else if (definition.kind === "UnionTypeDefinition") {
-      types[definition.name.value] = encodeUnionType(definition);
+      add(definition.name.value, encodeUnionType(definition));
     } else if (definition.kind === "InterfaceTypeDefinition") {
-      types[definition.name.value] = encodeInterfaceType(definition);
+      add(definition.name.value, encodeInterfaceType(definition));
     } else if (definition.kind === "ScalarTypeDefinition") {
-      types[definition.name.value] = encodeScalarType(definition);
+      add(definition.name.value, encodeScalarType(definition));
+    } else if (definition.kind === "ObjectTypeExtension") {
+      add(definition.name.value, encodeObjectType(definition), true);
+    } else if (definition.kind === "InputObjectTypeExtension") {
+      add(definition.name.value, encodeInputObjectType(definition), true);
+    } else if (definition.kind === "EnumTypeExtension") {
+      add(definition.name.value, encodeEnumType(definition), true);
+    } else if (definition.kind === "UnionTypeExtension") {
+      add(definition.name.value, encodeUnionType(definition), true);
+    } else if (definition.kind === "InterfaceTypeExtension") {
+      add(definition.name.value, encodeInterfaceType(definition), true);
+    } else if (definition.kind === "ScalarTypeExtension") {
+      add(definition.name.value, encodeScalarType(definition), true);
     } else if (definition.kind === "DirectiveDefinition") {
-      directives.push(encodeDirective(definition));
+      if (!fragments[0].directives) {
+        fragments[0].directives = [];
+      }
+      fragments[0].directives.push(encodeDirective(definition));
     }
   }
-  return !directives.length ? { types } : { types, directives };
+  return fragments;
+}
+
+function addTypeDefinition(
+  fragments: SchemaDefinitions[],
+  typeName: string,
+  typeDef: TypeDefinitionTuple,
+  isExtension = false,
+) {
+  for (let i = 0; i < fragments.length; i++) {
+    if (i === 0 && isExtension) {
+      // Don't write extensions to the very first fragment (it is reserved for type definitions)
+      //   Note: 2nd+ type definition with the same name is treated as extension
+      continue;
+    }
+    const fragment = fragments[i];
+    if (!fragment.types[typeName]) {
+      fragment.types[typeName] = typeDef;
+      return;
+    }
+  }
+  const newFragment = { types: { [typeName]: typeDef } };
+  fragments.push(newFragment);
 }
 
 function encodeScalarType(
-  _type: ScalarTypeDefinitionNode,
+  _type: ScalarTypeDefinitionNode | ScalarTypeExtensionNode,
 ): ScalarTypeDefinitionTuple {
   return [TypeKind.SCALAR];
 }
 
-function encodeEnumType(node: EnumTypeDefinitionNode): EnumTypeDefinitionTuple {
+function encodeEnumType(
+  node: EnumTypeDefinitionNode | EnumTypeExtensionNode,
+): EnumTypeDefinitionTuple {
   return [TypeKind.ENUM, (node.values ?? []).map((value) => value.name.value)];
 }
 
 function encodeObjectType(
-  node: ObjectTypeDefinitionNode,
+  node: ObjectTypeDefinitionNode | ObjectTypeExtensionNode,
 ): ObjectTypeDefinitionTuple {
   const fields = Object.create(null);
   for (const field of node.fields ?? []) {
@@ -81,7 +129,7 @@ function encodeObjectType(
 }
 
 function encodeInterfaceType(
-  node: InterfaceTypeDefinitionNode,
+  node: InterfaceTypeDefinitionNode | InterfaceTypeExtensionNode,
 ): InterfaceTypeDefinitionTuple {
   const fields = Object.create(null);
   for (const field of node.fields ?? []) {
@@ -98,13 +146,13 @@ function encodeInterfaceType(
 }
 
 function encodeUnionType(
-  node: UnionTypeDefinitionNode,
+  node: UnionTypeDefinitionNode | UnionTypeExtensionNode,
 ): UnionTypeDefinitionTuple {
   return [TypeKind.UNION, (node.types ?? []).map((type) => type.name.value)];
 }
 
 function encodeInputObjectType(
-  node: InputObjectTypeDefinitionNode,
+  node: InputObjectTypeDefinitionNode | InputObjectTypeExtensionNode,
 ): InputObjectTypeDefinitionTuple {
   const fields = Object.create(null);
   for (const field of node.fields ?? []) {

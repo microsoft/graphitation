@@ -2,5 +2,5 @@ module.exports = {
   preset: "ts-jest",
   rootDir: process.cwd(),
   roots: ["<rootDir>/src"],
-  testPathIgnorePatterns: ["node_modules", "__generated__"],
+  testPathIgnorePatterns: ["node_modules", "__generated__", "fixtures"],
 };

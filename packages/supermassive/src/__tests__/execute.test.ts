@@ -26,6 +26,7 @@ const testCases: Array<TestCase> = [
     name: "basic query",
     document: `
   {
+    __typename
     person(id: 1) {
       name
       gender
