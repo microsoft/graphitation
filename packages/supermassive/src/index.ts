@@ -1,10 +1,14 @@
-export { executeWithoutSchema } from "./executeWithoutSchema";
+export {
+  executeWithoutSchema,
+  isTotalExecutionResult,
+  isIncrementalExecutionResult,
+} from "./executeWithoutSchema";
 export { executeWithSchema } from "./executeWithSchema";
 export { subscribeWithSchema } from "./subscribeWithSchema";
 export { subscribeWithoutSchema } from "./subscribeWithoutSchema";
 export { encodeASTSchema } from "./utilities/encodeASTSchema";
 export { decodeASTSchema } from "./utilities/decodeASTSchema";
-export { mergeSchemaDefinitions } from "./utilities/mergeDefinitions";
+export { mergeSchemaDefinitions } from "./utilities/mergeSchemaDefinitions";
 export { mergeResolvers } from "./utilities/mergeResolvers";
 export { annotateDocumentGraphQLTransform } from "./utilities/annotateDocumentGraphQLTransform";
 export {
@@ -12,13 +16,60 @@ export {
   addMinimalViableSchemaToExecutableDefinitionNode,
 } from "./utilities/addMinimalViableSchemaToRequestDocument";
 export { extractMinimalViableSchemaForRequestDocument } from "./utilities/extractMinimalViableSchemaForRequestDocument";
+export { specifiedScalarResolvers } from "./schema/resolvers";
+export {
+  typeNameFromReference,
+  typeReferenceFromName,
+  typeReferenceFromNode,
+} from "./schema/reference";
 
-export type { ExtractMinimalViableSchemaToRequestDocumentOptions } from "./utilities/extractMinimalViableSchemaForRequestDocument";
+export type { ExtractMinimalViableSchemaResult } from "./utilities/extractMinimalViableSchemaForRequestDocument";
 export type {
   AddMinimalViableSchemaToRequestDocumentOptions,
   ExecutableDefinitionNodeWithInlinedSchema,
 } from "./utilities/addMinimalViableSchemaToRequestDocument";
-export type { SchemaDefinitions } from "./schema/definition";
+export type {
+  SchemaDefinitions,
+  OperationTypes,
+  TypeDefinitionsRecord,
+  TypeDefinitionTuple,
+  DirectiveKeys,
+  ObjectKeys,
+  DirectiveDefinitionTuple,
+  FieldKeys,
+  TypeKind,
+  InterfaceTypeDefinitionTuple,
+  ObjectTypeDefinitionTuple,
+  InterfaceKeys,
+  InputObjectKeys,
+  InputValueKeys,
+  TypeReference,
+  InputValueDefinition,
+  InputValueDefinitionRecord,
+  UnionTypeDefinitionTuple,
+  UnionKeys,
+  EnumTypeDefinitionTuple,
+  EnumKeys,
+  ScalarTypeDefinitionTuple,
+  InputObjectTypeDefinitionTuple,
+  FieldDefinition,
+  FieldDefinitionTuple,
+  CompositeTypeTuple,
+  FieldDefinitionRecord,
+  InputValueDefinitionTuple,
+  DirectiveTuple,
+  InterfaceImplementationsRecord,
+  SpecTypeIndex,
+} from "./schema/definition";
+
+export type {
+  SchemaFragment,
+  SchemaFragmentLoader,
+  SchemaFragmentLoaderResult,
+  SchemaFragmentLoadByField,
+  SchemaFragmentLoadRequest,
+} from "./schema/fragment";
+
 export type {
   ObjectTypeResolver,
   ScalarTypeResolver,
@@ -32,10 +83,6 @@ export type {
   SubscriptionExecutionResult,
   IncrementalExecutionResult,
 } from "./types";
-
-export { isTotalExecutionResult, isIncrementalExecutionResult } from "./types";
-
-// export { specifiedScalars } from "./types/definition";
 
 export type { PromiseOrValue } from "./jsutils/PromiseOrValue";
 
