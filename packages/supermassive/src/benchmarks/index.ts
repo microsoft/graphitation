@@ -12,7 +12,8 @@ import {
 import { compileQuery, isCompiledQuery } from "graphql-jit";
 import { executeWithoutSchema as supermassiveExecute } from "../executeWithoutSchema";
 import { UserResolvers } from "../types";
-import { extractMinimalViableSchemaForRequestDocument } from "../utilities/inlineTypeDefinitions";
+import { extractMinimalViableSchemaForRequestDocument } from "../utilities/extractMinimalViableSchemaForRequestDocument";
+import { SchemaFragment } from "../schema/fragment";
 
 const query = fs.readFileSync(
   path.join(__dirname, "./fixtures/query1.graphql"),
@@ -22,13 +23,18 @@ const query = fs.readFileSync(
 );
 
 const parsedQuery = parse(query);
-
 const compiledQuery = compileQuery(schema, parsedQuery);
 
-const schemaFragment = extractMinimalViableSchemaForRequestDocument(
+const { definitions } = extractMinimalViableSchemaForRequestDocument(
   schema,
   parsedQuery,
 );
+
+const schemaFragment: SchemaFragment = {
+  schemaId: "benchmark",
+  definitions,
+  resolvers: resolvers as UserResolvers,
+};
 
 const queryRunningSuite = new NiceBenchmark("Query Running");
 queryRunningSuite.add("graphql-js - string queries", async () => {
@@ -74,7 +80,6 @@ queryRunningSuite.add("graphql-jit - precompiled", async () => {
 });
 queryRunningSuite.add("supermassive - runtime schemaless", async () => {
   const result = await supermassiveExecute({
-    resolvers: resolvers as UserResolvers,
     schemaFragment,
     document: parsedQuery,
     contextValue: { models },
