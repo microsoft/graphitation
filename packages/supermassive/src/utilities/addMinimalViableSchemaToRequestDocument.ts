@@ -58,7 +58,7 @@ export function addMinimalViableSchemaToExecutableDefinitionNode(
     : addToExecutableDefinitionNodeDirective(schemaFragment, node);
 }
 
-export type ExecutableDefinitionNodeWithInlinedType =
+export type ExecutableDefinitionNodeWithInlinedSchema =
   ExecutableDefinitionNode & {
     __defs?: SchemaDefinitions;
   };
@@ -67,7 +67,7 @@ export type ExecutableDefinitionNodeWithInlinedType =
  * Adds directive with minimal viable schema to every individual executable node (operation, fragment)
  */
 function addToExecutableDefinitionNodeProperty<
-  T extends ExecutableDefinitionNodeWithInlinedType,
+  T extends ExecutableDefinitionNodeWithInlinedSchema,
 >(schemaFragment: SchemaDefinitions, node: T): T {
   if (node.__defs) {
     return node;
@@ -104,7 +104,7 @@ function addToExecutableDefinitionNodeDirective<
 }
 
 export function getSchemaDefinitions(
-  node: ExecutableDefinitionNodeWithInlinedType,
+  node: ExecutableDefinitionNodeWithInlinedSchema,
 ): SchemaDefinitions | undefined {
   if (node.__defs) {
     return node.__defs;

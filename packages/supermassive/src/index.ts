@@ -14,7 +14,10 @@ export {
 export { extractMinimalViableSchemaForRequestDocument } from "./utilities/extractMinimalViableSchemaForRequestDocument";
 
 export type { ExtractMinimalViableSchemaToRequestDocumentOptions } from "./utilities/extractMinimalViableSchemaForRequestDocument";
-export type { AddMinimalViableSchemaToRequestDocumentOptions } from "./utilities/addMinimalViableSchemaToRequestDocument";
+export type {
+  AddMinimalViableSchemaToRequestDocumentOptions,
+  ExecutableDefinitionNodeWithInlinedSchema,
+} from "./utilities/addMinimalViableSchemaToRequestDocument";
 export type { SchemaDefinitions } from "./schema/definition";
 export type {
   ObjectTypeResolver,

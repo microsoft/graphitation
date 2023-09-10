@@ -50,7 +50,11 @@ import { isAsyncIterable } from "./jsutils/isAsyncIterable";
 import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
 import { GraphQLStreamDirective } from "./schema/directives";
 import { memoize3 } from "./jsutils/memoize3";
-import { PartialSchema, SchemaFragmentLoader } from "./schema/fragment";
+import {
+  PartialSchema,
+  SchemaFragment,
+  SchemaFragmentLoader,
+} from "./schema/fragment";
 import { FieldDefinition, TypeReference } from "./schema/definition";
 import {
   inspectTypeReference,
@@ -102,6 +106,7 @@ const collectSubfields = memoize3(
  */
 export interface ExecutionContext {
   partialSchema: PartialSchema;
+  schemaFragment: SchemaFragment;
   schemaFragmentLoader?: SchemaFragmentLoader;
   fragments: ObjMap<FragmentDefinitionNode>;
   rootValue: unknown;
@@ -239,6 +244,7 @@ function buildExecutionContext(
 
   return {
     partialSchema,
+    schemaFragment,
     schemaFragmentLoader,
     fragments,
     rootValue,
@@ -476,24 +482,49 @@ function executeField(
   path: Path,
   incrementalDataRecord: IncrementalDataRecord | undefined,
 ): PromiseOrValue<unknown> {
-  const schema = exeContext.partialSchema;
   const fieldName = fieldGroup[0].name.value;
-  const fieldDef = schema.getField(parentTypeName, fieldName);
+  const fieldDef = exeContext.partialSchema.getField(parentTypeName, fieldName);
 
-  if (fieldDef === undefined) {
-    // TODO: load schema fragment containing this definition using fragment loader
-    return;
+  if (fieldDef !== undefined) {
+    return resolveAndCompleteField(
+      exeContext,
+      parentTypeName,
+      fieldDef,
+      fieldGroup,
+      path,
+      source,
+      incrementalDataRecord,
+    );
   }
-
-  return resolveAndCompleteField(
-    exeContext,
-    parentTypeName,
-    fieldDef,
-    fieldGroup,
-    path,
-    source,
-    incrementalDataRecord,
-  );
+  if (!exeContext.schemaFragmentLoader) {
+    return undefined;
+  }
+  return exeContext
+    .schemaFragmentLoader(exeContext.schemaFragment, exeContext.contextValue, {
+      kind: "byField",
+      parentTypeName,
+      fieldName,
+    })
+    .then(({ mergedFragment, mergedContextValue }) => {
+      exeContext.contextValue = mergedContextValue ?? exeContext.contextValue;
+      exeContext.schemaFragment = mergedFragment;
+      exeContext.partialSchema.updateSchemaFragment(mergedFragment);
+      const fieldDef = exeContext.partialSchema.getField(
+        parentTypeName,
+        fieldName,
+      );
+      return fieldDef !== undefined
+        ? resolveAndCompleteField(
+            exeContext,
+            parentTypeName,
+            fieldDef,
+            fieldGroup,
+            path,
+            source,
+            incrementalDataRecord,
+          )
+        : undefined;
+    });
 }
 
 /**

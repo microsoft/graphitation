@@ -6,7 +6,6 @@ import {
 } from "graphql";
 import { makeSchema } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
-
 import { createExecutionUtils } from "../__testUtils__/execute";
 
 const {

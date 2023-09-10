@@ -53,19 +53,21 @@ export type SchemaFragment = {
 
 export type SchemaFragmentLoadByField = {
   kind: "byField";
-  parentType: string;
+  parentTypeName: TypeName;
   fieldName: string;
 };
 
 export type SchemaFragmentLoadRequest = SchemaFragmentLoadByField;
 export type SchemaFragmentLoaderResult = {
   mergedFragment: SchemaFragment;
+  mergedContextValue?: unknown;
 };
 
 export type SchemaFragmentLoader = (
   currentFragment: SchemaFragment,
+  currentContextValue: unknown,
   req: SchemaFragmentLoadRequest,
-) => SchemaFragmentLoaderResult;
+) => Promise<SchemaFragmentLoaderResult>;
 
 const specifiedScalarDefinition: ScalarTypeDefinitionTuple = [TypeKind.SCALAR];
 const typeNameMetaFieldDef: FieldDefinition = "String";
@@ -88,10 +90,10 @@ const emptyObject = Object.freeze(Object.create(null));
 export class PartialSchema {
   static parseOptions = { noLocation: true };
 
-  private readonly schemaId: string;
-  private readonly definitions: SchemaDefinitions;
-  private readonly resolvers: UserResolvers;
-  private readonly operationTypes: OperationTypes | undefined;
+  private schemaId: string;
+  private definitions: SchemaDefinitions;
+  private resolvers: UserResolvers;
+  private operationTypes: OperationTypes | undefined;
 
   private scalarTypeResolvers: Map<TypeName, ScalarTypeResolver>;
   private enumTypeResolvers: Map<TypeName, GraphQLEnumType>;
@@ -115,6 +117,19 @@ export class PartialSchema {
       enumTypeResolversBySchema.set(this.schemaId, enumTypeResolvers);
     }
     this.enumTypeResolvers = enumTypeResolvers;
+  }
+
+  public updateSchemaFragment(fragment: SchemaFragment) {
+    if (this.schemaId !== fragment.schemaId) {
+      throw new Error(
+        `Cannot use new schema fragment: old and new fragments describe different schemas:` +
+          ` ${this.schemaId} vs. ${fragment.schemaId}`,
+      );
+    }
+    this.schemaId = fragment.schemaId;
+    this.definitions = fragment.definitions;
+    this.resolvers = fragment.resolvers;
+    this.operationTypes = fragment.operationTypes;
   }
 
   public getTypeReference(

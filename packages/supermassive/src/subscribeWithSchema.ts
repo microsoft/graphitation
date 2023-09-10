@@ -21,7 +21,6 @@ export function subscribeWithSchema({
       document,
     ),
   };
-
   return subscribeWithoutSchema({
     document,
     schemaFragment,
