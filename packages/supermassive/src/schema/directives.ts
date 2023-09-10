@@ -80,7 +80,7 @@ export const SUPERMASSIVE_SCHEMA_DIRECTIVE_DEFINITIONS_ARGUMENT_NAME =
  */
 export const SupermassiveSchemaDirective: DirectiveDefinitionTuple = [
   SUPERMASSIVE_SCHEMA_DIRECTIVE_NAME,
-  { fragment: "String" }, // Essentially JSON
+  { [SUPERMASSIVE_SCHEMA_DIRECTIVE_DEFINITIONS_ARGUMENT_NAME]: "String!" }, // Essentially JSON
 ];
 
 export function isKnownDirective(
