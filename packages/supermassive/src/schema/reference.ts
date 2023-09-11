@@ -107,7 +107,7 @@ export function typeReferenceFromName(name: string): TypeReference {
 
 export function inspectTypeReference(typeRef: TypeReference): string {
   return typeof typeRef === "number"
-    ? EncodedSpecTypes[typeRef] ?? "(UnknownType)"
+    ? EncodedSpecTypes[typeRef - 1] ?? "(UnknownType)"
     : typeRef;
 }
 
