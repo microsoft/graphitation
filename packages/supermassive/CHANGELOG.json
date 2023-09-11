@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Mon, 11 Sep 2023 12:06:07 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0-alpha.5",
+      "version": "3.0.0-alpha.5",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "4ea84c913970a82d962867faf8e3dd191caf869a",
+            "comment": "switch to 1-indexed ids for spec type references"
+          }
+        ]
+      }
+    },
+    {
       "date": "Sun, 10 Sep 2023 20:58:53 GMT",
       "tag": "@graphitation/supermassive_v3.0.0-alpha.4",
       "version": "3.0.0-alpha.4",
