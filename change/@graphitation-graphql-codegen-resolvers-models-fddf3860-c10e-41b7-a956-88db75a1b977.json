@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Add exports entry for types to package.json",
+  "packageName": "@graphitation/graphql-codegen-resolvers-models",
+  "email": "sverre.johansen@gmail.com",
+  "dependentChangeType": "patch"
+}
