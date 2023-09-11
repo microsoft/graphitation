@@ -20,11 +20,10 @@ function mergeResolversObjMap(accumulator: Resolvers, resolvers: Resolvers) {
     const fullTypeResolver = accumulator[typeName];
     if (typeof fullTypeResolver === "undefined" && typeResolver) {
       accumulator[typeName] = typeResolver;
-      return;
+      continue;
     }
     if (isObjectLike(fullTypeResolver) && isObjectLike(typeResolver)) {
       Object.assign(accumulator[typeName], typeResolver);
-      return;
     }
   }
 }
