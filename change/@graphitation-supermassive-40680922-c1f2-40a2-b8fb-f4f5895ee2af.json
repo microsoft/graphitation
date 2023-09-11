@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "fix mergeResolvers + more tests",
-  "packageName": "@graphitation/supermassive",
-  "email": "vladimir.razuvaev@gmail.com",
-  "dependentChangeType": "patch"
-}

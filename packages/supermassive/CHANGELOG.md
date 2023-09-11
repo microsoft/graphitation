@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Mon, 11 Sep 2023 12:06:07 GMT and should not be manually modified.
+This log was last generated on Mon, 11 Sep 2023 19:24:32 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.0.0-alpha.6
+
+Mon, 11 Sep 2023 19:24:32 GMT
+
+### Changes
+
+- fix mergeResolvers + more tests (vladimir.razuvaev@gmail.com)
 
 ## 3.0.0-alpha.5
 
