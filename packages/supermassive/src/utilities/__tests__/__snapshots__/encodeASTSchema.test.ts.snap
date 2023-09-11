@@ -7,25 +7,25 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
       [
         "skip",
         {
-          "if": 6,
+          "if": 7,
         },
       ],
       [
         "include",
         {
-          "if": 6,
+          "if": 7,
         },
       ],
       [
         "include2",
         {
-          "if": 6,
+          "if": 7,
         },
       ],
       [
         "myRepeatableDir",
         {
-          "name": 5,
+          "name": 6,
         },
       ],
     ],
@@ -91,10 +91,10 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
         3,
         {
           "four": [
-            0,
+            1,
             {
               "argument": [
-                0,
+                1,
                 "string",
               ],
             },
@@ -107,10 +107,10 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
         3,
         {
           "four": [
-            0,
+            1,
             {
               "argument": [
-                0,
+                1,
                 "string",
               ],
             },
@@ -149,10 +149,10 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
             },
           ],
           "five": [
-            0,
+            1,
             {
               "argument": [
-                10,
+                11,
                 [
                   "string",
                   "string",
@@ -161,10 +161,10 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
             },
           ],
           "four": [
-            0,
+            1,
             {
               "argument": [
-                0,
+                1,
                 "string",
               ],
             },
@@ -174,7 +174,7 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
             "Type",
             {
               "argument": [
-                2,
+                3,
                 null,
               ],
             },
@@ -191,10 +191,10 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
             },
           ],
           "three": [
-            2,
+            3,
             {
               "argument": "InputType",
-              "other": 0,
+              "other": 1,
             },
           ],
           "two": [
@@ -214,17 +214,17 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
         6,
         {
           "answer": [
-            2,
+            3,
             42,
           ],
-          "key": 5,
+          "key": 6,
         },
       ],
       "OneOfInputType": [
         6,
         {
-          "int": 2,
-          "string": 0,
+          "int": 3,
+          "string": 1,
         },
       ],
       "Site": [
@@ -291,7 +291,7 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
           "seven": [
             "Type",
             {
-              "argument": 10,
+              "argument": 11,
             },
           ],
         },
@@ -301,7 +301,7 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
         6,
         {
           "other": [
-            3,
+            4,
             12300,
           ],
         },
@@ -350,7 +350,7 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
       [
         "i18n",
         {
-          "locale": 0,
+          "locale": 1,
         },
       ],
     ],
@@ -359,7 +359,7 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
         6,
         {
           "enumField": "NodeType!",
-          "otherField": 5,
+          "otherField": 6,
         },
       ],
       "Alive": [
@@ -373,18 +373,18 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
         2,
         {
           "characters": "[Person]",
-          "created": 0,
-          "director": 0,
-          "edited": 0,
-          "episode_id": 2,
-          "id": 2,
-          "opening_crawl": 0,
+          "created": 1,
+          "director": 1,
+          "edited": 1,
+          "episode_id": 3,
+          "id": 3,
+          "opening_crawl": 1,
           "planets": "[Planet]",
-          "producer": 0,
-          "release_date": 0,
+          "producer": 1,
+          "release_date": 1,
           "species": "[Species]",
           "starships": "[Starship]",
-          "title": 5,
+          "title": 6,
           "vehicles": "[Vehicle]",
         },
         [
@@ -394,7 +394,7 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
       "Node": [
         3,
         {
-          "id": 2,
+          "id": 3,
         },
         [],
       ],
@@ -413,20 +413,20 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
       "Person": [
         2,
         {
-          "birth_year": 0,
-          "created": 0,
-          "edited": 0,
-          "eye_color": 0,
+          "birth_year": 1,
+          "created": 1,
+          "edited": 1,
+          "eye_color": 1,
           "films": "[Film]",
-          "gender": 0,
-          "hair_color": 0,
-          "height": 2,
+          "gender": 1,
+          "hair_color": 1,
+          "height": 3,
           "homeworld": "Planet",
-          "id": 2,
-          "image": 0,
-          "mass": 2,
-          "name": 0,
-          "skin_color": 0,
+          "id": 3,
+          "image": 1,
+          "mass": 3,
+          "name": 1,
+          "skin_color": 1,
           "starships": "[Starship]",
           "vehicles": "[Vehicle]",
         },
@@ -437,20 +437,20 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
       "Planet": [
         2,
         {
-          "climate": 0,
-          "created": 0,
-          "diameter": 2,
-          "edited": 0,
+          "climate": 1,
+          "created": 1,
+          "diameter": 3,
+          "edited": 1,
           "films": "[Film]",
-          "gravity": 0,
-          "id": 2,
-          "name": 0,
-          "orbital_period": 2,
-          "population": 2,
+          "gravity": 1,
+          "id": 3,
+          "name": 1,
+          "orbital_period": 3,
+          "population": 3,
           "residents": "[Person]",
-          "rotation_period": 2,
-          "surface_water": 0,
-          "terrain": 0,
+          "rotation_period": 3,
+          "surface_water": 1,
+          "terrain": 1,
         },
         [
           "Node",
@@ -460,7 +460,7 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
         2,
         {
           "advancedDefaultInput": [
-            0,
+            1,
             {
               "input": [
                 "AdvancedInput!",
@@ -480,47 +480,47 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
           "film": [
             "Film",
             {
-              "id": 7,
+              "id": 8,
             },
           ],
           "multiArger": [
-            0,
+            1,
             {
-              "a": 2,
-              "b": 0,
+              "a": 3,
+              "b": 1,
               "c": "AdvancedInput",
             },
           ],
           "node": [
             "Node",
             {
-              "id": 7,
+              "id": 8,
               "nodeType": "NodeType!",
             },
           ],
           "person": [
             "Person",
             {
-              "id": 7,
+              "id": 8,
             },
           ],
           "planet": [
             "Planet",
             {
-              "id": 7,
+              "id": 8,
             },
           ],
           "search": [
             "[SearchResult]",
             {
-              "search": 0,
+              "search": 1,
             },
           ],
           "searchFilmsByTitle": [
             "[Film]",
             {
               "search": [
-                5,
+                6,
                 "The Empire Strikes Back",
               ],
             },
@@ -528,55 +528,55 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
           "searchPeopleByName": [
             "[Person]",
             {
-              "search": 5,
+              "search": 6,
             },
           ],
           "searchPlanetsByName": [
             "[Planet]",
             {
-              "search": 5,
+              "search": 6,
             },
           ],
           "searchSpeciesByName": [
             "[Species]",
             {
-              "search": 5,
+              "search": 6,
             },
           ],
           "searchStarshipsByName": [
             "[Starship]",
             {
-              "search": 5,
+              "search": 6,
             },
           ],
           "searchTransportsByName": [
             "[Transport]",
             {
-              "search": 5,
+              "search": 6,
             },
           ],
           "searchVehiclesByName": [
             "[Vehicle]",
             {
-              "search": 5,
+              "search": 6,
             },
           ],
           "starship": [
             "Starship",
             {
-              "id": 7,
+              "id": 8,
             },
           ],
           "transport": [
             "Transport",
             {
-              "id": 7,
+              "id": 8,
             },
           ],
           "vehicle": [
             "Vehicle",
             {
-              "id": 7,
+              "id": 8,
             },
           ],
         },
@@ -597,20 +597,20 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
       "Species": [
         2,
         {
-          "average_height": 2,
-          "average_lifespan": 2,
-          "classification": 0,
-          "created": 0,
-          "designation": 0,
-          "edited": 0,
-          "eye_colors": 0,
-          "hair_colors": 0,
+          "average_height": 3,
+          "average_lifespan": 3,
+          "classification": 1,
+          "created": 1,
+          "designation": 1,
+          "edited": 1,
+          "eye_colors": 1,
+          "hair_colors": 1,
           "homeworld": "Planet",
-          "id": 2,
-          "language": 0,
-          "name": 0,
+          "id": 3,
+          "language": 1,
+          "name": 1,
           "people": "[Person]",
-          "skin_colors": 0,
+          "skin_colors": 1,
         },
         [
           "Node",
@@ -619,25 +619,25 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
       "Starship": [
         2,
         {
-          "MGLT": 2,
-          "cargo_capacity": 2,
-          "consumables": 0,
-          "cost_in_credits": 2,
-          "created": 0,
-          "crew": 0,
-          "edited": 0,
+          "MGLT": 3,
+          "cargo_capacity": 3,
+          "consumables": 1,
+          "cost_in_credits": 3,
+          "created": 1,
+          "crew": 1,
+          "edited": 1,
           "films": "[Film]",
-          "hyperdrive_rating": 3,
-          "id": 2,
-          "image": 0,
-          "length": 2,
-          "manufacturer": 0,
-          "max_atmosphering_speed": 2,
-          "model": 0,
-          "name": 0,
-          "passengers": 2,
+          "hyperdrive_rating": 4,
+          "id": 3,
+          "image": 1,
+          "length": 3,
+          "manufacturer": 1,
+          "max_atmosphering_speed": 3,
+          "model": 1,
+          "name": 1,
+          "passengers": 3,
           "pilots": "[Person]",
-          "starship_class": 0,
+          "starship_class": 1,
         },
         [
           "Node",
@@ -649,8 +649,8 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
           "emitPersons": [
             "Person",
             {
-              "limit": 7,
-              "throwError": 1,
+              "limit": 8,
+              "throwError": 2,
             },
           ],
         },
@@ -659,20 +659,20 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
       "Transport": [
         2,
         {
-          "cargo_capacity": 2,
-          "consumables": 0,
-          "cost_in_credits": 2,
-          "created": 0,
-          "crew": 0,
-          "edited": 0,
-          "id": 2,
-          "image": 0,
-          "length": 2,
-          "manufacturer": 0,
-          "max_atmosphering_speed": 2,
-          "model": 0,
-          "name": 0,
-          "passengers": 2,
+          "cargo_capacity": 3,
+          "consumables": 1,
+          "cost_in_credits": 3,
+          "created": 1,
+          "crew": 1,
+          "edited": 1,
+          "id": 3,
+          "image": 1,
+          "length": 3,
+          "manufacturer": 1,
+          "max_atmosphering_speed": 3,
+          "model": 1,
+          "name": 1,
+          "passengers": 3,
         },
         [
           "Node",
@@ -681,22 +681,22 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
       "Vehicle": [
         2,
         {
-          "cargo_capacity": 2,
-          "consumables": 0,
-          "cost_in_credits": 2,
-          "created": 0,
-          "crew": 2,
-          "edited": 0,
-          "id": 2,
-          "image": 0,
-          "length": 3,
-          "manufacturer": 0,
-          "max_atmosphering_speed": 2,
-          "model": 0,
-          "name": 0,
-          "passengers": 2,
+          "cargo_capacity": 3,
+          "consumables": 1,
+          "cost_in_credits": 3,
+          "created": 1,
+          "crew": 3,
+          "edited": 1,
+          "id": 3,
+          "image": 1,
+          "length": 4,
+          "manufacturer": 1,
+          "max_atmosphering_speed": 3,
+          "model": 1,
+          "name": 1,
+          "passengers": 3,
           "pilots": "[Person]",
-          "vehicle_class": 0,
+          "vehicle_class": 1,
         },
         [
           "Node",

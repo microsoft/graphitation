@@ -16,7 +16,7 @@ import { inspect } from "../jsutils/inspect";
 export function mergeSchemaDefinitions(
   accumulator: SchemaDefinitions,
   definitions: SchemaDefinitions[],
-) {
+): SchemaDefinitions {
   if (!definitions.length) {
     return accumulator;
   }
@@ -32,6 +32,7 @@ export function mergeSchemaDefinitions(
       mergeDirectives(accumulator.directives, source.directives);
     }
   }
+  return accumulator;
 }
 
 export function mergeDirectives(

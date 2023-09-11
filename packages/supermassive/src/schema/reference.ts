@@ -2,7 +2,7 @@ import { TypeReference } from "./definition";
 import { print, TypeNode } from "graphql";
 
 // Assumes strict reference format (i.e. no whitespaces, comments, etc)
-// (must be enforced at build-time)
+// Note: the actual type id is shifted by 1, so String=1, Boolean=2, etc. There is no type with id 0 for sanity.
 const EncodedSpecTypes = [
   "String",
   "Boolean",
@@ -79,9 +79,9 @@ export function unwrapAll(typeRef: TypeReference): TypeReference {
 }
 
 export function typeNameFromReference(typeRef: TypeReference): string {
-  if (typeof typeRef === "number" && EncodedSpecTypes[typeRef % NamedTypeMod]) {
+  if (typeof typeRef === "number") {
     // Fast path for spec types
-    return EncodedSpecTypes[typeRef % NamedTypeMod];
+    return typeNameFromSpecReference(typeRef);
   }
   const ref = decodeRef(typeRef);
   let startIndex = 0;
@@ -107,18 +107,18 @@ export function typeReferenceFromName(name: string): TypeReference {
 
 export function inspectTypeReference(typeRef: TypeReference): string {
   return typeof typeRef === "number"
-    ? EncodedSpecTypes[typeRef] ?? "(UnknownType)"
+    ? EncodedSpecTypes[typeRef - 1] ?? "(UnknownType)"
     : typeRef;
 }
 
 function decodeRef(typeRef: TypeReference): string {
   if (typeof typeRef === "number") {
-    const stringRef = EncodedSpecTypes[typeRef];
+    const stringRef = EncodedSpecTypes[typeRef - 1];
     if (!stringRef) {
-      const rangeEnd = EncodedSpecTypes.length - 1;
+      const rangeEnd = EncodedSpecTypes.length;
       throw new Error(
         `Unexpected type reference: ${typeRef} ` +
-          `(expecting string or numeric id in the range 0-${rangeEnd})`,
+          `(expecting string or numeric id in the range 1:${rangeEnd})`,
       );
     }
     return stringRef;
@@ -128,5 +128,9 @@ function decodeRef(typeRef: TypeReference): string {
 
 function encodeRef(typeRef: string): TypeReference {
   const index = EncodedSpecTypes.indexOf(typeRef);
-  return index === -1 ? typeRef : index;
+  return index === -1 ? typeRef : index + 1;
+}
+
+function typeNameFromSpecReference(typeRef: number): string {
+  return decodeRef(((typeRef - 1) % NamedTypeMod) + 1);
 }

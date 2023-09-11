@@ -1,0 +1,7 @@
+{
+  "type": "prerelease",
+  "comment": "switch to 1-indexed ids for spec type references",
+  "packageName": "@graphitation/supermassive",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}
