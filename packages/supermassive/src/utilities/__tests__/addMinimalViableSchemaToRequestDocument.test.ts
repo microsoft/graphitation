@@ -37,7 +37,7 @@ describe(addMinimalViableSchemaToRequestDocument, () => {
       }`,
     );
     expect(printedDoc).toMatchInlineSnapshot(`
-      "query @i18n(locale: "en_US") @schema(definitions: "{\\"types\\":{\\"Query\\":[2,{\\"film\\":[\\"Film\\",{\\"id\\":9}]}],\\"Film\\":[2,{},[\\"Node\\"]]},\\"directives\\":[[\\"i18n\\",{\\"locale\\":0}]]}") {
+      "query @i18n(locale: "en_US") @schema(definitions: "{\\"types\\":{\\"Query\\":[2,{\\"film\\":[\\"Film\\",{\\"id\\":10}]}],\\"Film\\":[2,{},[\\"Node\\"]]},\\"directives\\":[[\\"i18n\\",{\\"locale\\":1}]]}") {
         film(id: 42) {
           __typename
         }
@@ -53,7 +53,7 @@ describe(addMinimalViableSchemaToRequestDocument, () => {
       }`,
     );
     expect(printedDoc).toMatchInlineSnapshot(`
-      "fragment FilmFragment on Film @schema(definitions: "{\\"types\\":{\\"Film\\":[2,{\\"id\\":9},[\\"Node\\"]]}}") {
+      "fragment FilmFragment on Film @schema(definitions: "{\\"types\\":{\\"Film\\":[2,{\\"id\\":10},[\\"Node\\"]]}}") {
         id
       }"
     `);
@@ -80,7 +80,7 @@ describe(addMinimalViableSchemaToRequestDocument, () => {
       `,
     );
     expect(printedDoc).toMatchInlineSnapshot(`
-      "query @schema(definitions: "{\\"types\\":{\\"Query\\":[2,{\\"film\\":[\\"Film\\",{\\"id\\":9}]}],\\"Film\\":[2,{},[\\"Node\\"]]}}") {
+      "query @schema(definitions: "{\\"types\\":{\\"Query\\":[2,{\\"film\\":[\\"Film\\",{\\"id\\":10}]}],\\"Film\\":[2,{},[\\"Node\\"]]}}") {
         film(id: 42) {
           ...FilmFragment
         }
@@ -91,11 +91,11 @@ describe(addMinimalViableSchemaToRequestDocument, () => {
         ...FilmActors
       }
 
-      fragment FilmTitle on Film @schema(definitions: "{\\"types\\":{\\"Film\\":[2,{\\"title\\":[5,{\\"foo\\":[0,\\"Bar\\"]}]},[\\"Node\\"]]}}") {
+      fragment FilmTitle on Film @schema(definitions: "{\\"types\\":{\\"Film\\":[2,{\\"title\\":[6,{\\"foo\\":[1,\\"Bar\\"]}]},[\\"Node\\"]]}}") {
         title
       }
 
-      fragment FilmActors on Film @schema(definitions: "{\\"types\\":{\\"Film\\":[2,{\\"actors\\":15},[\\"Node\\"]]}}") {
+      fragment FilmActors on Film @schema(definitions: "{\\"types\\":{\\"Film\\":[2,{\\"actors\\":16},[\\"Node\\"]]}}") {
         actors
       }"
     `);
