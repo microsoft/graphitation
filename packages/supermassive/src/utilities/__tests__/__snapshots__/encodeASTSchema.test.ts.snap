@@ -53,7 +53,6 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
             },
           ],
         },
-        [],
       ],
       "AnnotatedObject": [
         2,
@@ -68,7 +67,6 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
             },
           ],
         },
-        [],
       ],
       "AnnotatedScalar": [
         1,
@@ -101,7 +99,6 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
           ],
           "one": "Type",
         },
-        [],
       ],
       "Baz": [
         3,
@@ -246,12 +243,10 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
       "UndefinedInterface": [
         3,
         {},
-        [],
       ],
       "UndefinedType": [
         2,
         {},
-        [],
       ],
       "UndefinedUnion": [
         4,
@@ -295,7 +290,6 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
             },
           ],
         },
-        [],
       ],
       "InputType": [
         6,
@@ -319,7 +313,6 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
       "Bar": [
         3,
         {},
-        [],
       ],
       "Feed": [
         4,
@@ -328,7 +321,6 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
       "Foo": [
         2,
         {},
-        [],
       ],
       "InputType": [
         6,
@@ -396,7 +388,6 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
         {
           "id": 3,
         },
-        [],
       ],
       "NodeType": [
         5,
@@ -580,7 +571,6 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
             },
           ],
         },
-        [],
       ],
       "SearchResult": [
         4,
@@ -654,7 +644,6 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
             },
           ],
         },
-        [],
       ],
       "Transport": [
         2,

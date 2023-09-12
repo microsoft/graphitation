@@ -29,31 +29,39 @@ import {
 } from "graphql";
 import {
   CompositeTypeTuple,
+  createEnumTypeDefinition,
+  createInputObjectTypeDefinition,
+  createInterfaceTypeDefinition,
+  createObjectTypeDefinition,
+  createScalarTypeDefinition,
+  createUnionTypeDefinition,
   DirectiveDefinitionTuple,
-  DirectiveKeys,
   EnumTypeDefinitionTuple,
   FieldDefinition,
-  FieldKeys,
-  InputObjectKeys,
+  getDirectiveDefinitionArgs,
+  getDirectiveName,
+  getFieldArgs,
+  getFields,
+  getFieldTypeReference,
+  getInputObjectFields,
+  getInputValueTypeReference,
   InputObjectTypeDefinitionTuple,
   InputValueDefinition,
   InputValueDefinitionRecord,
-  InputValueKeys,
-  InterfaceKeys,
   InterfaceTypeDefinitionTuple,
-  ObjectKeys,
+  isUnionTypeDefinition,
   ObjectTypeDefinitionTuple,
   ScalarTypeDefinitionTuple,
   SchemaDefinitions,
+  setDirectiveDefinitionArgs,
   TypeDefinitionsRecord,
-  TypeKind,
-  TypeReference,
 } from "../schema/definition";
 import { isKnownDirective } from "../schema/directives";
 import { makeReadableErrorPath } from "./makeReadableErrorPath";
 import {
   inspectTypeReference,
   typeNameFromReference,
+  TypeReference,
   typeReferenceFromName,
 } from "../schema/reference";
 import { invariant } from "../jsutils/invariant";
@@ -81,7 +89,10 @@ export function extractMinimalViableSchemaForRequestDocument(
         assertCompositeType(parentType, node, ancestors);
 
         const typeDef = addCompositeType(types, parentType);
-        if (typeDef[0] === TypeKind.UNION || node.name.value === "__typename") {
+        if (
+          isUnionTypeDefinition(typeDef) ||
+          node.name.value === "__typename"
+        ) {
           return;
         }
         const field = typeInfo.getFieldDef();
@@ -89,12 +100,8 @@ export function extractMinimalViableSchemaForRequestDocument(
         assertAllArgumentsAreDefined(field, node, ancestors);
 
         const fieldDef = addField(typeDef, field, node);
-        if (Array.isArray(fieldDef)) {
-          addReferencedOutputType(schema, types, fieldDef[FieldKeys.type]);
-          addReferencedInputTypes(schema, types, fieldDef[FieldKeys.arguments]);
-        } else {
-          addReferencedOutputType(schema, types, fieldDef);
-        }
+        addReferencedOutputType(schema, types, getFieldTypeReference(fieldDef));
+        addReferencedInputTypes(schema, types, getFieldArgs(fieldDef));
       },
       Directive(node, _key, _parent, _path) {
         if (isKnownDirective(node.name.value)) {
@@ -159,13 +166,13 @@ function addReferencedOutputType(
 function addReferencedInputTypes(
   schema: GraphQLSchema,
   types: TypeDefinitionsRecord,
-  inputValues: InputValueDefinitionRecord,
+  inputValues: InputValueDefinitionRecord | undefined,
 ): void {
+  if (!inputValues) {
+    return;
+  }
   for (const inputValueDef of Object.values(inputValues)) {
-    const typeRef = Array.isArray(inputValueDef)
-      ? inputValueDef[InputValueKeys.type]
-      : inputValueDef;
-
+    const typeRef = getInputValueTypeReference(inputValueDef);
     const name = typeNameFromReference(typeRef);
     const schemaType = schema.getType(name);
 
@@ -182,7 +189,7 @@ function addReferencedInputTypes(
       addReferencedInputTypes(
         schema,
         types,
-        inputObjectDef[InputObjectKeys.fields],
+        getInputObjectFields(inputObjectDef),
       );
     } else if (isEnumType(schemaType)) {
       types[name] = encodeEnumType(schemaType);
@@ -210,15 +217,11 @@ function addField(
   field: GraphQLField<unknown, unknown>,
   fieldNode: FieldNode,
 ): FieldDefinition {
-  const fields =
-    type[0] === TypeKind.OBJECT
-      ? type[ObjectKeys.fields]
-      : type[InterfaceKeys.fields];
+  const fields = getFields(type);
 
   const existingFieldDef: FieldDefinition = fields[field.name];
-  const previouslyAddedArgs = Array.isArray(existingFieldDef)
-    ? existingFieldDef[FieldKeys.arguments]
-    : Object.create(null);
+  const previouslyAddedArgs =
+    getFieldArgs(existingFieldDef) ?? Object.create(null);
 
   const nodeArgs = new Set(fieldNode.arguments?.map((arg) => arg.name.value));
 
@@ -239,13 +242,13 @@ function addDirective(
   node: DirectiveNode,
 ) {
   const name = directive.name;
-  let tuple = directives.find((d) => d[DirectiveKeys.name] === name);
+  let tuple = directives.find((d) => getDirectiveName(d) === name);
   if (!tuple) {
     tuple = [directive.name];
     directives.push(tuple);
   }
 
-  const previouslyAddedArgs = tuple[DirectiveKeys.arguments];
+  const previouslyAddedArgs = getDirectiveDefinitionArgs(tuple);
   const nodeArgs = new Set(node.arguments?.map((arg) => arg.name.value));
 
   const argsFilter = (argDef: GraphQLArgument) =>
@@ -257,18 +260,19 @@ function addDirective(
     );
   const [hasArgs, argsRecord] = encodeArguments(directive.args, argsFilter);
   if (hasArgs) {
-    tuple[DirectiveKeys.arguments] = argsRecord;
+    setDirectiveDefinitionArgs(tuple, argsRecord);
   }
   return tuple;
 }
 
 function encodeCompositeType(type: GraphQLCompositeType): CompositeTypeTuple {
   if (isUnionType(type)) {
-    return [TypeKind.UNION, type.getTypes().map((type) => type.name)];
+    return createUnionTypeDefinition(type.getTypes().map((type) => type.name));
   }
   const ifaces = type.getInterfaces().map((iface) => iface.name);
-  const typeKind = isObjectType(type) ? TypeKind.OBJECT : TypeKind.INTERFACE;
-  return ifaces.length ? [typeKind, {}, ifaces] : [typeKind, {}];
+  return isObjectType(type)
+    ? createObjectTypeDefinition({}, ifaces)
+    : createInterfaceTypeDefinition({}, ifaces);
 }
 
 function encodeInputObjectType(
@@ -278,7 +282,7 @@ function encodeInputObjectType(
   for (const [fieldName, field] of Object.entries(type.getFields())) {
     result[fieldName] = encodeInputField(field);
   }
-  return [TypeKind.INPUT, result];
+  return createInputObjectTypeDefinition(result);
 }
 
 function encodeInputField(field: GraphQLInputField): InputValueDefinition {
@@ -318,11 +322,11 @@ function encodeArguments(
 }
 
 function encodeEnumType(type: GraphQLEnumType): EnumTypeDefinitionTuple {
-  return [TypeKind.ENUM, type.getValues().map((v) => v.name)];
+  return createEnumTypeDefinition(type.getValues().map((v) => v.name));
 }
 
 function encodeScalarType(_type: GraphQLScalarType): ScalarTypeDefinitionTuple {
-  return [TypeKind.SCALAR];
+  return createScalarTypeDefinition();
 }
 
 function assertCompositeType(

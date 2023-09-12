@@ -1,15 +1,19 @@
 import {
   DirectiveDefinitionTuple,
-  DirectiveKeys,
   FieldDefinitionRecord,
-  FieldKeys,
-  InputObjectKeys,
+  getDirectiveDefinitionArgs,
+  getDirectiveName,
+  getFieldArgs,
+  getFields,
+  getInputObjectFields,
   InputValueDefinitionRecord,
-  InterfaceKeys,
-  ObjectKeys,
+  isInputObjectTypeDefinition,
+  isInterfaceTypeDefinition,
+  isObjectTypeDefinition,
   SchemaDefinitions,
+  setDirectiveDefinitionArgs,
+  setFieldArgs,
   TypeDefinitionsRecord,
-  TypeKind,
 } from "../schema/definition";
 import { inspect } from "../jsutils/inspect";
 
@@ -42,23 +46,22 @@ export function mergeDirectives(
   for (const sourceDirective of source) {
     const targetDirective = target.find(
       (directive) =>
-        directive[DirectiveKeys.name] === sourceDirective[DirectiveKeys.name],
+        getDirectiveName(directive) === getDirectiveName(sourceDirective),
     );
     if (!targetDirective) {
       target.push(sourceDirective);
       continue;
     }
-    if (!sourceDirective[DirectiveKeys.arguments]) {
+    const sourceArgs = getDirectiveDefinitionArgs(sourceDirective);
+    if (!sourceArgs) {
       continue;
     }
-    if (!targetDirective[DirectiveKeys.arguments]) {
-      targetDirective[DirectiveKeys.arguments] =
-        sourceDirective[DirectiveKeys.arguments];
+    const targetArgs = getDirectiveDefinitionArgs(targetDirective);
+    if (!targetArgs) {
+      setDirectiveDefinitionArgs(targetDirective, sourceArgs);
+      continue;
     }
-    mergeInputValues(
-      targetDirective[DirectiveKeys.arguments],
-      sourceDirective[DirectiveKeys.arguments],
-    );
+    mergeInputValues(targetArgs, sourceArgs);
   }
 }
 
@@ -75,26 +78,23 @@ export function mergeTypes(
       target[typeName] = sourceDef;
       continue;
     }
-    if (targetDef[0] === TypeKind.OBJECT && sourceDef[0] === TypeKind.OBJECT) {
-      mergeFields(targetDef[ObjectKeys.fields], sourceDef[ObjectKeys.fields]);
+    if (
+      (isObjectTypeDefinition(targetDef) &&
+        isObjectTypeDefinition(sourceDef)) ||
+      (isInterfaceTypeDefinition(targetDef) &&
+        isInterfaceTypeDefinition(sourceDef))
+    ) {
+      mergeFields(getFields(targetDef), getFields(sourceDef));
       // Note: not merging implemented interfaces - assuming they are fully defined by the first occurrence
       continue;
     }
     if (
-      targetDef[0] === TypeKind.INTERFACE &&
-      sourceDef[0] === TypeKind.INTERFACE
+      isInputObjectTypeDefinition(targetDef) &&
+      isInputObjectTypeDefinition(sourceDef)
     ) {
-      mergeFields(
-        targetDef[InterfaceKeys.fields],
-        sourceDef[InterfaceKeys.fields],
-      );
-      // Note: not merging implemented interfaces - assuming they are fully defined by the first occurrence
-      continue;
-    }
-    if (targetDef[0] === TypeKind.INPUT && sourceDef[0] === TypeKind.INPUT) {
       mergeInputValues(
-        targetDef[InputObjectKeys.fields],
-        sourceDef[InputObjectKeys.fields],
+        getInputObjectFields(targetDef),
+        getInputObjectFields(sourceDef),
       );
       continue;
     }
@@ -120,14 +120,10 @@ function mergeFields(
       target[fieldName] = sourceDef;
       continue;
     }
-    if (Array.isArray(sourceDef) && sourceDef[FieldKeys.arguments]) {
-      if (!targetDef[FieldKeys.arguments]) {
-        targetDef[FieldKeys.arguments] = {};
-      }
-      mergeInputValues(
-        targetDef[FieldKeys.arguments],
-        sourceDef[FieldKeys.arguments],
-      );
+    const sourceArgs = getFieldArgs(sourceDef);
+    if (sourceArgs) {
+      const targetArgs = getFieldArgs(targetDef) ?? setFieldArgs(targetDef, {});
+      mergeInputValues(targetArgs, sourceArgs);
     }
   }
 }

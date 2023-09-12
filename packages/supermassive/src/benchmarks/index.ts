@@ -11,9 +11,8 @@ import {
 } from "graphql";
 import { compileQuery, isCompiledQuery } from "graphql-jit";
 import { executeWithoutSchema as supermassiveExecute } from "../executeWithoutSchema";
-import { UserResolvers } from "../types";
+import { UserResolvers, SchemaFragment } from "../types";
 import { extractMinimalViableSchemaForRequestDocument } from "../utilities/extractMinimalViableSchemaForRequestDocument";
-import { SchemaFragment } from "../schema/fragment";
 
 const query = fs.readFileSync(
   path.join(__dirname, "./fixtures/query1.graphql"),

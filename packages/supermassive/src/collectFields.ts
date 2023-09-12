@@ -17,7 +17,8 @@ import {
 import { AccumulatorMap } from "./jsutils/AccumulatorMap";
 import invariant from "invariant";
 import { ExecutionContext } from "./executeWithoutSchema";
-import { PartialSchema } from "./schema/fragment";
+import { isAbstractType, isSubType } from "./schema/definition";
+import { SchemaFragment } from "./types";
 
 export type FieldGroup = ReadonlyArray<FieldNode>;
 
@@ -124,7 +125,7 @@ function collectFieldsImpl(
           !doesFragmentConditionMatch(
             selection,
             runtimeTypeName,
-            exeContext.partialSchema,
+            exeContext.schemaFragment,
           )
         ) {
           continue;
@@ -176,7 +177,7 @@ function collectFieldsImpl(
           !doesFragmentConditionMatch(
             fragment,
             runtimeTypeName,
-            exeContext.partialSchema,
+            exeContext.schemaFragment,
           )
         ) {
           continue;
@@ -247,8 +248,7 @@ function shouldIncludeNode(
 function doesFragmentConditionMatch(
   fragment: FragmentDefinitionNode | InlineFragmentNode,
   typeName: string,
-  // resolvers: Resolvers,
-  schemaFragment: PartialSchema,
+  { definitions }: SchemaFragment,
 ): boolean {
   const typeConditionNode = fragment.typeCondition;
   if (!typeConditionNode) {
@@ -260,8 +260,8 @@ function doesFragmentConditionMatch(
   if (conditionalTypeName === typeName) {
     return true;
   }
-  if (schemaFragment.isAbstractType(conditionalTypeName)) {
-    return schemaFragment.isSubType(conditionalTypeName, typeName);
+  if (isAbstractType(definitions, conditionalTypeName)) {
+    return isSubType(definitions, conditionalTypeName, typeName);
   }
   return false;
 }

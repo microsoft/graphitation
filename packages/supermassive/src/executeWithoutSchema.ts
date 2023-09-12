@@ -27,7 +27,7 @@ import { addPath, pathToArray } from "./jsutils/Path";
 import { promiseForObject } from "./jsutils/promiseForObject";
 import type { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import { promiseReduce } from "./jsutils/promiseReduce";
-import {
+import type {
   ExecutionWithoutSchemaArgs,
   FunctionFieldResolver,
   ResolveInfo,
@@ -39,6 +39,9 @@ import {
   IncrementalResult,
   IncrementalStreamResult,
   IncrementalExecutionResult,
+  SchemaFragment,
+  SchemaFragmentLoader,
+  SchemaFragmentRequest,
 } from "./types";
 import {
   getArgumentValues,
@@ -52,18 +55,16 @@ import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
 import { GraphQLStreamDirective } from "./schema/directives";
 import { memoize3 } from "./jsutils/memoize3";
 import {
-  PartialSchema,
-  SchemaFragment,
-  SchemaFragmentLoader,
-} from "./schema/fragment";
-import { FieldDefinition, TypeReference } from "./schema/definition";
-import {
   inspectTypeReference,
   isListType,
   isNonNullType,
   typeNameFromReference,
   unwrap,
 } from "./schema/reference";
+import type { TypeReference } from "./schema/reference";
+import type { FieldDefinition } from "./schema/definition";
+import * as Definitions from "./schema/definition";
+import * as Resolvers from "./schema/resolvers";
 
 /**
  * A memoized collection of relevant subfields with regard to the return
@@ -106,7 +107,6 @@ const collectSubfields = memoize3(
  * and the fragments defined in the query document
  */
 export interface ExecutionContext {
-  partialSchema: PartialSchema;
   schemaFragment: SchemaFragment;
   schemaFragmentLoader?: SchemaFragmentLoader;
   fragments: ObjMap<FragmentDefinitionNode>;
@@ -141,7 +141,7 @@ export function executeWithoutSchema(
   const exeContext = buildExecutionContext(args);
 
   // Return early errors if execution context failed.
-  if (!("partialSchema" in exeContext)) {
+  if (!("schemaFragment" in exeContext)) {
     return { errors: exeContext };
   } else {
     return executeOperation(exeContext);
@@ -179,7 +179,6 @@ function buildExecutionContext(
   args: ExecutionWithoutSchemaArgs,
 ): Array<GraphQLError> | ExecutionContext {
   const {
-    // resolvers,
     schemaFragment,
     schemaFragmentLoader,
     document,
@@ -230,10 +229,9 @@ function buildExecutionContext(
 
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
   const variableDefinitions = operation.variableDefinitions ?? [];
-  const partialSchema = new PartialSchema(schemaFragment);
 
   const coercedVariableValues = getVariableValues(
-    partialSchema,
+    schemaFragment,
     variableDefinitions,
     variableValues ?? {},
     { maxErrors: 50 },
@@ -244,7 +242,6 @@ function buildExecutionContext(
   }
 
   return {
-    partialSchema,
     schemaFragment,
     schemaFragmentLoader,
     fragments,
@@ -483,8 +480,13 @@ function executeField(
   path: Path,
   incrementalDataRecord: IncrementalDataRecord | undefined,
 ): PromiseOrValue<unknown> {
+  const schemaFragment = exeContext.schemaFragment;
   const fieldName = fieldGroup[0].name.value;
-  const fieldDef = exeContext.partialSchema.getField(parentTypeName, fieldName);
+  const fieldDef = Definitions.getField(
+    schemaFragment.definitions,
+    parentTypeName,
+    fieldName,
+  );
 
   if (fieldDef !== undefined) {
     return resolveAndCompleteField(
@@ -497,34 +499,58 @@ function executeField(
       incrementalDataRecord,
     );
   }
-  if (!exeContext.schemaFragmentLoader) {
+
+  const loading = requestSchemaFragment(exeContext, {
+    kind: "ReturnType",
+    parentTypeName,
+    fieldName,
+  });
+  if (!loading) {
     return undefined;
   }
-  return exeContext
-    .schemaFragmentLoader(exeContext.schemaFragment, exeContext.contextValue, {
-      kind: "byField",
+  return loading.then(() => {
+    const fieldDef = Definitions.getField(
+      exeContext.schemaFragment.definitions,
       parentTypeName,
       fieldName,
-    })
+    );
+    if (fieldDef !== undefined) {
+      return resolveAndCompleteField(
+        exeContext,
+        parentTypeName,
+        fieldDef,
+        fieldGroup,
+        path,
+        source,
+        incrementalDataRecord,
+      );
+    }
+    return undefined;
+  });
+}
+
+function requestSchemaFragment(
+  exeContext: ExecutionContext,
+  request: SchemaFragmentRequest,
+): PromiseOrValue<void> {
+  if (!exeContext.schemaFragmentLoader) {
+    return;
+  }
+  return exeContext
+    .schemaFragmentLoader(
+      exeContext.schemaFragment,
+      exeContext.contextValue,
+      request,
+    )
     .then(({ mergedFragment, mergedContextValue }) => {
+      if (exeContext.schemaFragment.schemaId !== mergedFragment.schemaId) {
+        throw new Error(
+          `Cannot use new schema fragment: old and new fragments describe different schemas:` +
+            ` ${exeContext.schemaFragment.schemaId} vs. ${mergedFragment.schemaId}`,
+        );
+      }
       exeContext.contextValue = mergedContextValue ?? exeContext.contextValue;
       exeContext.schemaFragment = mergedFragment;
-      exeContext.partialSchema.updateSchemaFragment(mergedFragment);
-      const fieldDef = exeContext.partialSchema.getField(
-        parentTypeName,
-        fieldName,
-      );
-      return fieldDef !== undefined
-        ? resolveAndCompleteField(
-            exeContext,
-            parentTypeName,
-            fieldDef,
-            fieldGroup,
-            path,
-            source,
-            incrementalDataRecord,
-          )
-        : undefined;
     });
 }
 
@@ -574,14 +600,18 @@ function createSourceEventStream(
 function executeSubscriptionImpl(
   exeContext: ExecutionContext,
 ): PromiseOrValue<AsyncIterable<unknown>> {
-  const { operation, rootValue, partialSchema } = exeContext;
+  const { operation, rootValue, schemaFragment } = exeContext;
   const rootTypeName = getOperationRootTypeName(operation);
   const { groupedFieldSet } = collectFields(exeContext, rootTypeName);
 
   const firstRootField = groupedFieldSet.entries().next().value;
   const [responseName, fieldGroup] = firstRootField;
   const fieldName = fieldGroup[0].name.value;
-  const fieldDef = partialSchema.getField(rootTypeName, fieldName);
+  const fieldDef = Definitions.getField(
+    schemaFragment.definitions,
+    rootTypeName,
+    fieldName,
+  );
 
   if (!fieldDef) {
     throw new GraphQLError(
@@ -590,10 +620,13 @@ function executeSubscriptionImpl(
     );
   }
 
-  const returnTypeRef = partialSchema.getTypeReference(fieldDef);
+  const returnTypeRef = Definitions.getFieldTypeReference(fieldDef);
   const resolveFn =
-    partialSchema.getSubscriptionFieldResolver(rootTypeName, fieldName) ??
-    exeContext.subscribeFieldResolver;
+    Resolvers.getSubscriptionFieldResolver(
+      schemaFragment,
+      rootTypeName,
+      fieldName,
+    ) ?? exeContext.subscribeFieldResolver;
 
   const path = addPath(undefined, responseName, rootTypeName);
   const info = buildResolveInfo(
@@ -764,12 +797,14 @@ function resolveAndCompleteField(
   incrementalDataRecord: IncrementalDataRecord | undefined,
 ): PromiseOrValue<unknown> {
   const fieldName = fieldGroup[0].name.value;
-  const returnTypeRef =
-    exeContext.partialSchema.getTypeReference(fieldDefinition);
+  const returnTypeRef = Definitions.getFieldTypeReference(fieldDefinition);
 
   const resolveFn: FunctionFieldResolver<unknown, unknown> =
-    exeContext.partialSchema.getFieldResolver(parentTypeName, fieldName) ??
-    exeContext.fieldResolver;
+    Resolvers.getFieldResolver(
+      exeContext.schemaFragment,
+      parentTypeName,
+      fieldName,
+    ) ?? exeContext.fieldResolver;
 
   const info = buildResolveInfo(
     exeContext,
@@ -976,19 +1011,19 @@ function completeValue(
     );
   }
 
-  const partialSchema = exeContext.partialSchema;
+  const { schemaFragment } = exeContext;
   const returnTypeName = typeNameFromReference(returnTypeRef);
 
   // If field type is a leaf type, Scalar or Enum, serialize to a valid value,
   // returning null if serialization is not possible.
-  const leafType = partialSchema.getLeafTypeResolver(returnTypeRef);
+  const leafType = Resolvers.getLeafTypeResolver(schemaFragment, returnTypeRef);
   if (leafType) {
     return completeLeafValue(leafType, result);
   }
 
   // If field type is an abstract type, Interface or Union, determine the
   // runtime Object type and complete for that type.
-  if (partialSchema.isAbstractType(returnTypeRef)) {
+  if (Definitions.isAbstractType(schemaFragment.definitions, returnTypeRef)) {
     return completeAbstractValue(
       exeContext,
       returnTypeName,
@@ -1002,7 +1037,7 @@ function completeValue(
 
   // If field type is Object, execute and complete all sub-selections.
   // istanbul ignore else (See: 'https://github.com/graphql/graphql-js/issues/2618')
-  if (partialSchema.isObjectType(returnTypeRef)) {
+  if (Definitions.isObjectType(schemaFragment.definitions, returnTypeRef)) {
     return completeObjectValue(
       exeContext,
       returnTypeName,
@@ -1385,16 +1420,15 @@ function completeAbstractValue(
   result: unknown,
   incrementalDataRecord: IncrementalDataRecord | undefined,
 ): PromiseOrValue<ObjMap<unknown>> {
+  const { schemaFragment } = exeContext;
   const resolveTypeFn =
-    exeContext.partialSchema.getAbstractTypeResolver(returnTypeName) ??
+    Resolvers.getAbstractTypeResolver(schemaFragment, returnTypeName) ??
     exeContext.typeResolver;
   const contextValue = exeContext.contextValue;
   const runtimeTypeName = resolveTypeFn(result, contextValue, info);
 
-  if (isPromise(runtimeTypeName)) {
-    return runtimeTypeName.then((resolvedRuntimeTypeName) =>
-      completeObjectValue(
-        exeContext,
+  const validatedRuntimeTypeName = isPromise(runtimeTypeName)
+    ? runtimeTypeName.then((resolvedRuntimeTypeName) =>
         ensureValidRuntimeType(
           resolvedRuntimeTypeName,
           exeContext,
@@ -1403,6 +1437,21 @@ function completeAbstractValue(
           info,
           result,
         ),
+      )
+    : ensureValidRuntimeType(
+        runtimeTypeName,
+        exeContext,
+        returnTypeName,
+        fieldGroup,
+        info,
+        result,
+      );
+
+  if (isPromise(validatedRuntimeTypeName)) {
+    return validatedRuntimeTypeName.then((resolvedRuntimeTypeName) =>
+      completeObjectValue(
+        exeContext,
+        resolvedRuntimeTypeName,
         fieldGroup,
         path,
         result,
@@ -1413,14 +1462,7 @@ function completeAbstractValue(
 
   return completeObjectValue(
     exeContext,
-    ensureValidRuntimeType(
-      runtimeTypeName,
-      exeContext,
-      returnTypeName,
-      fieldGroup,
-      info,
-      result,
-    ),
+    validatedRuntimeTypeName,
     fieldGroup,
     path,
     result,
@@ -1435,7 +1477,7 @@ function ensureValidRuntimeType(
   fieldGroup: FieldGroup,
   info: ResolveInfo,
   result: unknown,
-): string {
+): PromiseOrValue<string> {
   if (runtimeTypeName == null) {
     throw new GraphQLError(
       `Abstract type "${returnTypeName}" must resolve to an Object type at runtime for field "${info.parentTypeName}.${info.fieldName}".` +
@@ -1444,7 +1486,6 @@ function ensureValidRuntimeType(
       { nodes: fieldGroup },
     );
   }
-
   if (typeof runtimeTypeName !== "string") {
     throw new GraphQLError(
       `Abstract type "${returnTypeName}" must resolve to an Object type at runtime for field "${info.returnTypeName}.${info.fieldName}" with ` +
@@ -1452,64 +1493,95 @@ function ensureValidRuntimeType(
     );
   }
 
-  const partialSchema = exeContext.partialSchema;
-  const iface = partialSchema.getInterfaceType(returnTypeName);
+  // Presence of schema fragment loader triggers strict checks for interface types
+  // (assuming we can get full information about interface implementations on demand)
+  const strictInterfaceValidation = !!exeContext.schemaFragmentLoader;
+
+  const isDefinedType = Definitions.isDefined(
+    exeContext.schemaFragment.definitions,
+    runtimeTypeName,
+  );
+  const loading = !isDefinedType
+    ? requestSchemaFragment(exeContext, {
+        kind: "RuntimeType",
+        abstractTypeName: returnTypeName,
+        runtimeTypeName,
+      })
+    : undefined;
+  return loading
+    ? loading.then(() =>
+        ensureValidRuntimeTypeImpl(
+          runtimeTypeName,
+          exeContext,
+          returnTypeName,
+          fieldGroup,
+          strictInterfaceValidation,
+        ),
+      )
+    : ensureValidRuntimeTypeImpl(
+        runtimeTypeName,
+        exeContext,
+        returnTypeName,
+        fieldGroup,
+        strictInterfaceValidation,
+      );
+}
+
+function ensureValidRuntimeTypeImpl(
+  runtimeTypeName: string,
+  exeContext: ExecutionContext,
+  returnTypeName: string,
+  fieldGroup: FieldGroup,
+  strictInterfaceValidation: boolean,
+): string {
+  const definitions = exeContext.schemaFragment.definitions;
+
+  const union = Definitions.getUnionType(definitions, returnTypeName);
+  if (union || strictInterfaceValidation) {
+    // Standard graphql-js checks
+    if (!Definitions.isDefined(definitions, runtimeTypeName)) {
+      throw new GraphQLError(
+        `Abstract type "${returnTypeName}" was resolved to a type "${runtimeTypeName}" that does not exist inside the schema.`,
+        { nodes: fieldGroup },
+      );
+    }
+    if (!Definitions.isObjectType(definitions, runtimeTypeName)) {
+      throw new GraphQLError(
+        `Abstract type "${returnTypeName}" was resolved to a non-object type "${runtimeTypeName}".`,
+        { nodes: fieldGroup },
+      );
+    }
+    if (!Definitions.isSubType(definitions, returnTypeName, runtimeTypeName)) {
+      throw new GraphQLError(
+        `Runtime Object type "${runtimeTypeName}" is not a possible type for "${returnTypeName}".`,
+        { nodes: fieldGroup },
+      );
+    }
+    return runtimeTypeName;
+  }
+
+  const iface = Definitions.getInterfaceType(definitions, returnTypeName);
   if (iface) {
-    // Significant deviation from graphql-js:
-    //   1. There is no guarantee that schema fragment contains definitions for all object types implementing
-    //      given interface
-    //   2. Even if `runtimeTypeName` is present in the schema fragment, fields selected on interface type
-    //      won't be a part of its definition
-    // This is by design as it is too expensive to encode all implementations of the interface with all
-    // interface fields in every operation doing selection on interface type.
-    //
-    // The solution is to merge field definitions from interface into runtime object type at runtime.
+    // Loose interface validation mode, significant deviation from graphql-js:
+    //   Assuming runtimeTypeName is a valid implementation of returnTypeName.
     if (
-      partialSchema.isDefined(runtimeTypeName) &&
-      !partialSchema.isObjectType(runtimeTypeName)
+      Definitions.isDefined(definitions, runtimeTypeName) &&
+      !Definitions.isObjectType(definitions, runtimeTypeName)
     ) {
       throw new GraphQLError(
         `Abstract type "${returnTypeName}" was resolved to a non-object type "${runtimeTypeName}".`,
         { nodes: fieldGroup },
       );
     }
-
-    // TODO: today we _assume_ `returnTypeName` is a valid implementation of interface.
-    //   For additional correctness validation we must expose all existing implementations in the app-wide
-    //   shared fragment that is merged with operation-level fragment before execution.
-    //   Then the following will work:
-    // if (!exeContext.partialSchema.isSubType(returnTypeName, runtimeTypeName)) {
-    //   throw new GraphQLError(
-    //     `Runtime Object type "${runtimeTypeName}" is not a possible type for "${returnTypeName}".`,
-    //     { nodes: fieldGroup },
-    //   );
-    // }
-    partialSchema.addInterfaceImplementation(returnTypeName, runtimeTypeName);
-  } else {
-    // Unions are as usual
-    if (!partialSchema.isDefined(runtimeTypeName)) {
-      throw new GraphQLError(
-        `Abstract type "${returnTypeName}" was resolved to a type "${runtimeTypeName}" that does not exist inside the schema.`,
-        { nodes: fieldGroup },
-      );
-    }
-
-    if (!partialSchema.isObjectType(runtimeTypeName)) {
-      throw new GraphQLError(
-        `Abstract type "${returnTypeName}" was resolved to a non-object type "${runtimeTypeName}".`,
-        { nodes: fieldGroup },
-      );
-    }
-
-    if (!exeContext.partialSchema.isSubType(returnTypeName, runtimeTypeName)) {
-      throw new GraphQLError(
-        `Runtime Object type "${runtimeTypeName}" is not a possible type for "${returnTypeName}".`,
-        { nodes: fieldGroup },
-      );
-    }
+    Definitions.addInterfaceImplementation(
+      definitions,
+      returnTypeName,
+      runtimeTypeName,
+    );
+    return runtimeTypeName;
   }
 
-  return runtimeTypeName;
+  invariant(false, `${returnTypeName} is not an abstract type`);
 }
 
 /**

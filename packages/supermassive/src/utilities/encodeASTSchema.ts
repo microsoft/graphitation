@@ -28,11 +28,15 @@ import {
   ScalarTypeDefinitionTuple,
   UnionTypeDefinitionTuple,
   SchemaDefinitions,
-  TypeKind,
-  TypeReference,
   TypeDefinitionTuple,
+  createScalarTypeDefinition,
+  createEnumTypeDefinition,
+  createObjectTypeDefinition,
+  createInputObjectTypeDefinition,
+  createInterfaceTypeDefinition,
+  createUnionTypeDefinition,
 } from "../schema/definition";
-import { typeReferenceFromNode } from "../schema/reference";
+import { typeReferenceFromNode, TypeReference } from "../schema/reference";
 import { valueFromASTUntyped } from "./valueFromASTUntyped";
 
 export function encodeASTSchema(
@@ -102,13 +106,15 @@ function addTypeDefinition(
 function encodeScalarType(
   _type: ScalarTypeDefinitionNode | ScalarTypeExtensionNode,
 ): ScalarTypeDefinitionTuple {
-  return [TypeKind.SCALAR];
+  return createScalarTypeDefinition();
 }
 
 function encodeEnumType(
   node: EnumTypeDefinitionNode | EnumTypeExtensionNode,
 ): EnumTypeDefinitionTuple {
-  return [TypeKind.ENUM, (node.values ?? []).map((value) => value.name.value)];
+  return createEnumTypeDefinition(
+    (node.values ?? []).map((value) => value.name.value),
+  );
 }
 
 function encodeObjectType(
@@ -118,14 +124,10 @@ function encodeObjectType(
   for (const field of node.fields ?? []) {
     fields[field.name.value] = encodeField(field);
   }
-  if (!node.interfaces) {
-    return [TypeKind.OBJECT, fields];
-  }
-  return [
-    TypeKind.OBJECT,
+  return createObjectTypeDefinition(
     fields,
-    node.interfaces.map((iface) => iface.name.value),
-  ];
+    node.interfaces?.map((iface) => iface.name.value),
+  );
 }
 
 function encodeInterfaceType(
@@ -135,20 +137,18 @@ function encodeInterfaceType(
   for (const field of node.fields ?? []) {
     fields[field.name.value] = encodeField(field);
   }
-  if (!node.interfaces) {
-    return [TypeKind.INTERFACE, fields];
-  }
-  return [
-    TypeKind.INTERFACE,
+  return createInterfaceTypeDefinition(
     fields,
-    node.interfaces.map((iface) => iface.name.value),
-  ];
+    node.interfaces?.map((iface) => iface.name.value),
+  );
 }
 
 function encodeUnionType(
   node: UnionTypeDefinitionNode | UnionTypeExtensionNode,
 ): UnionTypeDefinitionTuple {
-  return [TypeKind.UNION, (node.types ?? []).map((type) => type.name.value)];
+  return createUnionTypeDefinition(
+    (node.types ?? []).map((type) => type.name.value),
+  );
 }
 
 function encodeInputObjectType(
@@ -158,7 +158,7 @@ function encodeInputObjectType(
   for (const field of node.fields ?? []) {
     fields[field.name.value] = encodeInputValue(field);
   }
-  return [TypeKind.INPUT, fields];
+  return createInputObjectTypeDefinition(fields);
 }
 
 function encodeField(
