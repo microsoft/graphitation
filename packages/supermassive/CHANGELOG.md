@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Mon, 11 Sep 2023 19:24:32 GMT and should not be manually modified.
+This log was last generated on Tue, 12 Sep 2023 23:58:31 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.0.0-alpha.7
+
+Tue, 12 Sep 2023 23:58:31 GMT
+
+### Changes
+
+- refactor: replace PartialSchema class with ES module functions (vladimir.razuvaev@gmail.com)
 
 ## 3.0.0-alpha.6
 

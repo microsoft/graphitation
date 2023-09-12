@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "refactor: replace PartialSchema class with ES module functions",
-  "packageName": "@graphitation/supermassive",
-  "email": "vladimir.razuvaev@gmail.com",
-  "dependentChangeType": "patch"
-}

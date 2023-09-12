@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Tue, 12 Sep 2023 23:58:31 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0-alpha.7",
+      "version": "3.0.0-alpha.7",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "84bc5479d3b0e3ef6dc658ae20b615add198af18",
+            "comment": "refactor: replace PartialSchema class with ES module functions"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 11 Sep 2023 19:24:32 GMT",
       "tag": "@graphitation/supermassive_v3.0.0-alpha.6",
       "version": "3.0.0-alpha.6",
