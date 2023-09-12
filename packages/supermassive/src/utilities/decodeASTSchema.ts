@@ -17,31 +17,41 @@ import {
 } from "graphql";
 import {
   DirectiveDefinitionTuple,
-  DirectiveKeys,
   SchemaDefinitions,
-  EnumKeys,
   EnumTypeDefinitionTuple,
   FieldDefinition,
-  FieldKeys,
-  InputObjectKeys,
   InputObjectTypeDefinitionTuple,
   InputValueDefinition,
-  InputValueKeys,
-  InterfaceKeys,
   InterfaceTypeDefinitionTuple,
-  ObjectKeys,
   ObjectTypeDefinitionTuple,
   TypeDefinitionsRecord,
-  TypeKind,
-  TypeReference,
-  UnionKeys,
   UnionTypeDefinitionTuple,
+  isScalarTypeDefinition,
+  isEnumTypeDefinition,
+  isObjectTypeDefinition,
+  isInterfaceTypeDefinition,
+  isUnionTypeDefinition,
+  isInputObjectTypeDefinition,
+  getEnumValues,
+  getObjectFields,
+  getObjectTypeInterfaces,
+  getFields,
+  getInterfaceTypeInterfaces,
+  getUnionTypeMembers,
+  getInputObjectFields,
+  getFieldTypeReference,
+  getFieldArgs,
+  getInputValueTypeReference,
+  getInputDefaultValue,
+  getDirectiveName,
+  getDirectiveDefinitionArgs,
 } from "../schema/definition";
 import {
   inspectTypeReference,
   isListType,
   isNonNullType,
   typeNameFromReference,
+  TypeReference,
   unwrap,
 } from "../schema/reference";
 import { invariant } from "../jsutils/invariant";
@@ -64,25 +74,18 @@ export function decodeASTSchema(
 
   for (const typeName in types) {
     const tuple = types[typeName];
-    switch (tuple[0]) {
-      case TypeKind.SCALAR:
-        definitions.push(decodeScalarType(typeName));
-        break;
-      case TypeKind.ENUM:
-        definitions.push(decodeEnumType(typeName, tuple));
-        break;
-      case TypeKind.OBJECT:
-        definitions.push(decodeObjectType(typeName, tuple, types));
-        break;
-      case TypeKind.INTERFACE:
-        definitions.push(decodeInterfaceType(typeName, tuple, types));
-        break;
-      case TypeKind.UNION:
-        definitions.push(decodeUnionType(typeName, tuple));
-        break;
-      case TypeKind.INPUT:
-        definitions.push(decodeInputObjectType(typeName, tuple, types));
-        break;
+    if (isScalarTypeDefinition(tuple)) {
+      definitions.push(decodeScalarType(typeName));
+    } else if (isEnumTypeDefinition(tuple)) {
+      definitions.push(decodeEnumType(typeName, tuple));
+    } else if (isObjectTypeDefinition(tuple)) {
+      definitions.push(decodeObjectType(typeName, tuple, types));
+    } else if (isInterfaceTypeDefinition(tuple)) {
+      definitions.push(decodeInterfaceType(typeName, tuple, types));
+    } else if (isUnionTypeDefinition(tuple)) {
+      definitions.push(decodeUnionType(typeName, tuple));
+    } else if (isInputObjectTypeDefinition(tuple)) {
+      definitions.push(decodeInputObjectType(typeName, tuple, types));
     }
   }
 
@@ -111,7 +114,7 @@ function decodeEnumType(
   return {
     kind: Kind.ENUM_TYPE_DEFINITION,
     name: nameNode(typeName),
-    values: tuple[EnumKeys.values].map((value) => ({
+    values: getEnumValues(tuple).map((value) => ({
       kind: Kind.ENUM_VALUE_DEFINITION,
       name: nameNode(value),
     })),
@@ -126,8 +129,8 @@ function decodeObjectType(
   return {
     kind: Kind.OBJECT_TYPE_DEFINITION,
     name: nameNode(typeName),
-    fields: decodeFields(tuple[ObjectKeys.fields], types),
-    interfaces: (tuple[ObjectKeys.interfaces] || []).map((name) => ({
+    fields: decodeFields(getObjectFields(tuple) ?? {}, types),
+    interfaces: getObjectTypeInterfaces(tuple).map((name) => ({
       kind: Kind.NAMED_TYPE,
       name: nameNode(name),
     })),
@@ -142,8 +145,8 @@ function decodeInterfaceType(
   return {
     kind: Kind.INTERFACE_TYPE_DEFINITION,
     name: nameNode(typeName),
-    fields: decodeFields(tuple[InterfaceKeys.fields], types),
-    interfaces: (tuple[InterfaceKeys.interfaces] || []).map((name) => ({
+    fields: decodeFields(getFields(tuple), types),
+    interfaces: getInterfaceTypeInterfaces(tuple).map((name) => ({
       kind: Kind.NAMED_TYPE,
       name: nameNode(name),
     })),
@@ -157,7 +160,7 @@ function decodeUnionType(
   return {
     kind: Kind.UNION_TYPE_DEFINITION,
     name: nameNode(typeName),
-    types: tuple[UnionKeys.types].map((name) => ({
+    types: getUnionTypeMembers(tuple).map((name) => ({
       kind: Kind.NAMED_TYPE,
       name: nameNode(name),
     })),
@@ -172,7 +175,7 @@ function decodeInputObjectType(
   return {
     kind: Kind.INPUT_OBJECT_TYPE_DEFINITION,
     name: nameNode(typeName),
-    fields: Object.entries(tuple[InputObjectKeys.fields]).map(([name, value]) =>
+    fields: Object.entries(getInputObjectFields(tuple)).map(([name, value]) =>
       decodeInputValue(name, value, types),
     ),
   };
@@ -183,17 +186,12 @@ function decodeFields(
   types: TypeDefinitionsRecord,
 ): FieldDefinitionNode[] {
   return Object.entries(fields).map(([name, value]) => {
-    const type = Array.isArray(value)
-      ? decodeTypeReference(value[FieldKeys.type])
-      : decodeTypeReference(value);
+    const type = decodeTypeReference(getFieldTypeReference(value));
     return {
       kind: Kind.FIELD_DEFINITION,
       name: nameNode(name),
       type,
-      arguments: decodeArguments(
-        Array.isArray(value) ? value[FieldKeys.arguments] ?? {} : {},
-        types,
-      ),
+      arguments: decodeArguments(getFieldArgs(value) ?? {}, types),
     };
   });
 }
@@ -203,18 +201,16 @@ function decodeInputValue(
   value: InputValueDefinition,
   types: TypeDefinitionsRecord,
 ): InputValueDefinitionNode {
-  const type = Array.isArray(value)
-    ? decodeTypeReference(value[InputValueKeys.type])
-    : decodeTypeReference(value);
-
+  const inputValueTypeRef = getInputValueTypeReference(value);
+  const type = decodeTypeReference(inputValueTypeRef);
   return {
     kind: Kind.INPUT_VALUE_DEFINITION,
     name: nameNode(name),
     type,
     defaultValue: Array.isArray(value)
       ? valueToConstValueNode(
-          value[InputValueKeys.defaultValue],
-          value[InputValueKeys.type],
+          getInputDefaultValue(value),
+          inputValueTypeRef,
           types,
         )
       : undefined,
@@ -254,17 +250,15 @@ function valueToConstValueNode(
   if (typeof jsValue === "object") {
     const typeDef = types[typeName];
     invariant(
-      Array.isArray(typeDef) && typeDef[0] === TypeKind.INPUT,
+      Array.isArray(typeDef) && isInputObjectTypeDefinition(typeDef),
       `Expecting input object type for ${typeName}, got ${typeDef?.[0]}`,
     );
-    const fields = typeDef[InputObjectKeys.fields];
+    const fields = getInputObjectFields(typeDef);
     return {
       kind: Kind.OBJECT,
       fields: Object.entries(jsValue).map(([name, value]) => {
         const fieldDef = fields[name];
-        const fieldTypeRef = Array.isArray(fieldDef)
-          ? fieldDef[FieldKeys.type]
-          : fieldDef;
+        const fieldTypeRef = getInputValueTypeReference(fieldDef);
         invariant(
           fieldTypeRef !== undefined,
           `Could not find field definition for ${typeName}.${name}`,
@@ -324,14 +318,12 @@ function decodeDirective(
   tuple: DirectiveDefinitionTuple,
   types: TypeDefinitionsRecord,
 ): DirectiveDefinitionNode {
-  const name = tuple[DirectiveKeys.name];
-  const args = tuple[DirectiveKeys.arguments]
-    ? decodeArguments(tuple[DirectiveKeys.arguments], types)
-    : [];
+  const name = getDirectiveName(tuple);
+  const args = getDirectiveDefinitionArgs(tuple);
   return {
     kind: Kind.DIRECTIVE_DEFINITION,
     name: nameNode(name),
-    arguments: args,
+    arguments: args ? decodeArguments(args, types) : [],
     // TODO? locations and repeatable are irrelevant for execution
     repeatable: false,
     locations: [],

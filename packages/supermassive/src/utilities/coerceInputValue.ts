@@ -8,14 +8,21 @@ import type { Path } from "../jsutils/Path";
 import { addPath, pathToArray } from "../jsutils/Path";
 import { printPathArray } from "../jsutils/printPathArray";
 import { suggestionList } from "../jsutils/suggestionList";
-import { TypeReference } from "../schema/definition";
-import { PartialSchema } from "../schema/fragment";
 import {
+  TypeReference,
   inspectTypeReference,
   isListType,
   isNonNullType,
   unwrap,
 } from "../schema/reference";
+import { SchemaFragment } from "../types";
+import {
+  getInputDefaultValue,
+  getInputObjectFields,
+  getInputObjectType,
+  getInputValueTypeReference,
+} from "../schema/definition";
+import { getLeafTypeResolver } from "../schema/resolvers";
 
 type OnErrorCB = (
   path: ReadonlyArray<string | number>,
@@ -29,13 +36,13 @@ type OnErrorCB = (
 export function coerceInputValue(
   inputValue: unknown,
   typeRef: TypeReference,
-  schemaTypes: PartialSchema,
+  schemaFragment: SchemaFragment,
   onError: OnErrorCB = defaultOnError,
 ): unknown {
   return coerceInputValueImpl(
     inputValue,
     typeRef,
-    schemaTypes,
+    schemaFragment,
     onError,
     undefined,
   );
@@ -57,7 +64,7 @@ function defaultOnError(
 function coerceInputValueImpl(
   inputValue: unknown,
   typeRef: TypeReference,
-  schemaTypes: PartialSchema,
+  schemaFragment: SchemaFragment,
   onError: OnErrorCB,
   path: Path | undefined,
 ): unknown {
@@ -66,7 +73,7 @@ function coerceInputValueImpl(
       return coerceInputValueImpl(
         inputValue,
         unwrap(typeRef),
-        schemaTypes,
+        schemaFragment,
         onError,
         path,
       );
@@ -96,7 +103,7 @@ function coerceInputValueImpl(
         return coerceInputValueImpl(
           itemValue,
           itemType,
-          schemaTypes,
+          schemaFragment,
           onError,
           itemPath,
         );
@@ -104,11 +111,14 @@ function coerceInputValueImpl(
     }
     // Lists accept a non-list value as a list of one.
     return [
-      coerceInputValueImpl(inputValue, itemType, schemaTypes, onError, path),
+      coerceInputValueImpl(inputValue, itemType, schemaFragment, onError, path),
     ];
   }
 
-  const inputObjectType = schemaTypes.getInputObjectType(typeRef);
+  const inputObjectType = getInputObjectType(
+    schemaFragment.definitions,
+    typeRef,
+  );
   if (inputObjectType) {
     const typeName = inspectTypeReference(typeRef);
     if (!isObjectLike(inputValue)) {
@@ -121,12 +131,12 @@ function coerceInputValueImpl(
     }
 
     const coercedValue: Record<string, unknown> = {};
-    const fieldDefs = schemaTypes.getInputObjectFields(inputObjectType);
+    const fieldDefs = getInputObjectFields(inputObjectType);
 
     for (const [fieldName, field] of Object.entries(fieldDefs)) {
       const fieldValue = inputValue[fieldName];
-      const defaultValue = schemaTypes.getInputDefaultValue(field);
-      const fieldTypeRef = schemaTypes.getTypeReference(field);
+      const defaultValue = getInputDefaultValue(field);
+      const fieldTypeRef = getInputValueTypeReference(field);
 
       if (fieldValue === undefined) {
         if (defaultValue !== undefined) {
@@ -147,7 +157,7 @@ function coerceInputValueImpl(
       coercedValue[fieldName] = coerceInputValueImpl(
         fieldValue,
         fieldTypeRef,
-        schemaTypes,
+        schemaFragment,
         onError,
         addPath(path, fieldName, typeName),
       );
@@ -170,7 +180,7 @@ function coerceInputValueImpl(
     return coercedValue;
   }
 
-  const leafType = schemaTypes.getLeafTypeResolver(typeRef);
+  const leafType = getLeafTypeResolver(schemaFragment, typeRef);
   if (leafType) {
     let parseResult;
 

@@ -2,8 +2,7 @@ import { invariant } from "../jsutils/invariant";
 import type { Maybe } from "../jsutils/Maybe";
 import type { ObjMap } from "../jsutils/ObjMap";
 
-import { TypeReference } from "../schema/definition";
-import { PartialSchema } from "../schema/fragment";
+import type { TypeReference } from "../schema/reference";
 import { ValueNode, Kind } from "graphql";
 import {
   inspectTypeReference,
@@ -11,6 +10,9 @@ import {
   isNonNullType,
   unwrap,
 } from "../schema/reference";
+import * as Definitions from "../schema/definition";
+import * as Resolvers from "../schema/resolvers";
+import { SchemaFragment } from "../types";
 
 /**
  * Produces a JavaScript value given a GraphQL Value AST.
@@ -35,7 +37,7 @@ import {
 export function valueFromAST(
   valueNode: Maybe<ValueNode>,
   typeRef: TypeReference,
-  schemaTypes: PartialSchema,
+  schemaFragment: SchemaFragment,
   variables?: Maybe<ObjMap<unknown>>,
 ): unknown {
   if (!valueNode) {
@@ -64,7 +66,7 @@ export function valueFromAST(
     if (valueNode.kind === Kind.NULL) {
       return; // Invalid: intentionally return no value.
     }
-    return valueFromAST(valueNode, unwrap(typeRef), schemaTypes, variables);
+    return valueFromAST(valueNode, unwrap(typeRef), schemaFragment, variables);
   }
 
   if (valueNode.kind === Kind.NULL) {
@@ -88,7 +90,7 @@ export function valueFromAST(
           const itemValue = valueFromAST(
             itemNode,
             itemTypeRef,
-            schemaTypes,
+            schemaFragment,
             variables,
           );
           if (itemValue === undefined) {
@@ -102,7 +104,7 @@ export function valueFromAST(
     const coercedValue = valueFromAST(
       valueNode,
       itemTypeRef,
-      schemaTypes,
+      schemaFragment,
       variables,
     );
     if (coercedValue === undefined) {
@@ -111,7 +113,9 @@ export function valueFromAST(
     return [coercedValue];
   }
 
-  const inputObjectType = schemaTypes.getInputObjectType(typeRef);
+  const defs = schemaFragment.definitions;
+
+  const inputObjectType = Definitions.getInputObjectType(defs, typeRef);
   if (inputObjectType) {
     if (valueNode.kind !== Kind.OBJECT) {
       return; // Invalid: intentionally return no value.
@@ -121,13 +125,13 @@ export function valueFromAST(
       valueNode.fields.map((field) => [field.name.value, field]),
     );
 
-    const fieldDefs = schemaTypes.getInputObjectFields(inputObjectType);
+    const fieldDefs = Definitions.getInputObjectFields(inputObjectType);
 
     for (const [name, field] of Object.entries(fieldDefs)) {
       const fieldNode = fieldNodes.get(name);
-      const fieldTypeRef = schemaTypes.getTypeReference(field);
+      const fieldTypeRef = Definitions.getInputValueTypeReference(field);
       if (fieldNode == null || isMissingVariable(fieldNode.value, variables)) {
-        const defaultValue = schemaTypes.getInputDefaultValue(field);
+        const defaultValue = Definitions.getInputDefaultValue(field);
         if (defaultValue !== undefined) {
           coercedObj[name] = defaultValue;
         } else if (isNonNullType(fieldTypeRef)) {
@@ -138,7 +142,7 @@ export function valueFromAST(
       const fieldValue = valueFromAST(
         fieldNode.value,
         fieldTypeRef,
-        schemaTypes,
+        schemaFragment,
         variables,
       );
       if (fieldValue === undefined) {
@@ -149,7 +153,7 @@ export function valueFromAST(
     return coercedObj;
   }
 
-  const leafType = schemaTypes.getLeafTypeResolver(typeRef);
+  const leafType = Resolvers.getLeafTypeResolver(schemaFragment, typeRef);
   if (leafType) {
     // Scalars and Enums fulfill parsing a literal value via parseLiteral().
     // Invalid values represent a failure to parse correctly, in which case

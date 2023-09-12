@@ -1,5 +1,8 @@
-import { TypeReference } from "./definition";
 import { print, TypeNode } from "graphql";
+
+export type TypeName = string; // name without wrappers, i.e. "MyType", but not "[MyType]"
+export type SpecTypeIndex = number;
+export type TypeReference = string | SpecTypeIndex; // e.g. "ComplexType" | "ComplexType!" | "[ComplexType!]" | 4 (i.e. "ID")
 
 // Assumes strict reference format (i.e. no whitespaces, comments, etc)
 // Note: the actual type id is shifted by 1, so String=1, Boolean=2, etc. There is no type with id 0 for sanity.

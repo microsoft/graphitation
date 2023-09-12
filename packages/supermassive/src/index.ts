@@ -21,6 +21,15 @@ export {
   typeNameFromReference,
   typeReferenceFromName,
   typeReferenceFromNode,
+  isNonNullType,
+  isListType,
+  unwrap,
+  unwrapAll,
+} from "./schema/reference";
+export type {
+  TypeReference,
+  TypeName,
+  SpecTypeIndex,
 } from "./schema/reference";
 
 export type { ExtractMinimalViableSchemaResult } from "./utilities/extractMinimalViableSchemaForRequestDocument";
@@ -33,23 +42,13 @@ export type {
   OperationTypes,
   TypeDefinitionsRecord,
   TypeDefinitionTuple,
-  DirectiveKeys,
-  ObjectKeys,
   DirectiveDefinitionTuple,
-  FieldKeys,
-  TypeKind,
   InterfaceTypeDefinitionTuple,
   ObjectTypeDefinitionTuple,
-  InterfaceKeys,
-  InputObjectKeys,
-  InputValueKeys,
-  TypeReference,
   InputValueDefinition,
   InputValueDefinitionRecord,
   UnionTypeDefinitionTuple,
-  UnionKeys,
   EnumTypeDefinitionTuple,
-  EnumKeys,
   ScalarTypeDefinitionTuple,
   InputObjectTypeDefinitionTuple,
   FieldDefinition,
@@ -59,16 +58,8 @@ export type {
   InputValueDefinitionTuple,
   DirectiveTuple,
   InterfaceImplementationsRecord,
-  SpecTypeIndex,
+  DirectiveName,
 } from "./schema/definition";
-
-export type {
-  SchemaFragment,
-  SchemaFragmentLoader,
-  SchemaFragmentLoaderResult,
-  SchemaFragmentLoadByField,
-  SchemaFragmentLoadRequest,
-} from "./schema/fragment";
 
 export type {
   ObjectTypeResolver,
@@ -82,6 +73,12 @@ export type {
   ExecutionResult,
   SubscriptionExecutionResult,
   IncrementalExecutionResult,
+  SchemaFragment,
+  SchemaFragmentLoader,
+  SchemaFragmentLoaderResult,
+  SchemaFragmentRequest,
+  SchemaFragmentForReturnTypeRequest,
+  SchemaFragmentForRuntimeTypeRequest,
 } from "./types";
 
 export type { PromiseOrValue } from "./jsutils/PromiseOrValue";

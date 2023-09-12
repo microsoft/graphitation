@@ -12,8 +12,8 @@ import { ObjMap } from "./jsutils/ObjMap";
 import { Path } from "./jsutils/Path";
 import { ExecutionHooks } from "./hooks/types";
 import { FieldGroup } from "./collectFields";
-import { SchemaFragment } from "./schema/fragment";
-import { SchemaFragmentLoader } from "./schema/fragment";
+import { OperationTypes, SchemaDefinitions } from "./schema/definition";
+import { TypeName } from "./schema/reference";
 
 export type ScalarTypeResolver = GraphQLScalarType;
 export type EnumTypeResolver = Record<string, unknown>;
@@ -270,3 +270,38 @@ export type ExecutionWithSchemaArgs = CommonExecutionArgs & {
     resolvers: UserResolvers;
   };
 };
+
+export type SchemaId = string;
+
+export type SchemaFragment = {
+  schemaId: SchemaId;
+  definitions: SchemaDefinitions;
+  resolvers: UserResolvers;
+  operationTypes?: OperationTypes;
+};
+
+export type SchemaFragmentForReturnTypeRequest = {
+  kind: "ReturnType";
+  parentTypeName: TypeName;
+  fieldName: string;
+};
+export type SchemaFragmentForRuntimeTypeRequest = {
+  kind: "RuntimeType";
+  abstractTypeName: TypeName;
+  runtimeTypeName: TypeName;
+};
+
+export type SchemaFragmentRequest =
+  | SchemaFragmentForReturnTypeRequest
+  | SchemaFragmentForRuntimeTypeRequest;
+
+export type SchemaFragmentLoaderResult = {
+  mergedFragment: SchemaFragment;
+  mergedContextValue?: unknown;
+};
+
+export type SchemaFragmentLoader = (
+  currentFragment: SchemaFragment,
+  currentContextValue: unknown,
+  req: SchemaFragmentRequest,
+) => Promise<SchemaFragmentLoaderResult>;
