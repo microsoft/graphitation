@@ -1,0 +1,7 @@
+{
+  "type": "prerelease",
+  "comment": "change signature of executeWithSchema and subscribeWithSchema functions",
+  "packageName": "@graphitation/supermassive",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}
