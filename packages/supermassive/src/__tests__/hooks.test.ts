@@ -66,11 +66,8 @@ describe.each([
       hooks: ExecutionHooks,
     ) => {
       return executeWithSchema({
-        schema: {
-          schemaId: "test",
-          definitions: typeDefs,
-          resolvers,
-        },
+        definitions: typeDefs,
+        resolvers,
         document,
         contextValue: {
           models,

@@ -5,8 +5,9 @@ import { ExecutionWithSchemaArgs, ExecutionResult } from "./types";
 import { extractMinimalViableSchemaForRequestDocument } from "./utilities/extractMinimalViableSchemaForRequestDocument";
 
 export function subscribeWithSchema({
-  schema,
   document,
+  definitions,
+  resolvers,
   rootValue,
   contextValue,
   variableValues,
@@ -14,15 +15,16 @@ export function subscribeWithSchema({
   fieldResolver,
   typeResolver,
 }: ExecutionWithSchemaArgs): PromiseOrValue<ExecutionResult> {
-  const { definitions } = extractMinimalViableSchemaForRequestDocument(
-    buildASTSchema(schema.definitions),
+  const extracted = extractMinimalViableSchemaForRequestDocument(
+    buildASTSchema(definitions),
     document,
   );
   return subscribeWithoutSchema({
     document,
     schemaFragment: {
-      ...schema,
-      definitions,
+      schemaId: "subscribeWithSchema",
+      definitions: extracted.definitions,
+      resolvers,
     },
     rootValue,
     contextValue,

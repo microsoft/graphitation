@@ -42,11 +42,8 @@ export function createExecutionUtils(
     const result = await drainExecution(
       await executeWithSchema({
         document,
-        schema: {
-          schemaId: "test",
-          definitions: typeDefs,
-          resolvers: resolvers as UserResolvers<unknown, unknown>,
-        },
+        definitions: typeDefs,
+        resolvers: resolvers as UserResolvers<unknown, unknown>,
         contextValue: {
           models,
         },
