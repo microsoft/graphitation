@@ -1,8 +1,16 @@
 # Change Log - supermassive-todomvc
 
-This log was last generated on Wed, 16 Aug 2023 06:31:21 GMT and should not be manually modified.
+This log was last generated on Thu, 14 Sep 2023 19:05:33 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.1-0
+
+Thu, 14 Sep 2023 19:05:33 GMT
+
+### Patches
+
+- Bump @graphitation/supermassive to v3.0.0-alpha.8
 
 ## 1.0.1-0
 

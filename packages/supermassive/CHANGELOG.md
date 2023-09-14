@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Tue, 12 Sep 2023 23:58:31 GMT and should not be manually modified.
+This log was last generated on Thu, 14 Sep 2023 19:05:33 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.0.0-alpha.8
+
+Thu, 14 Sep 2023 19:05:33 GMT
+
+### Changes
+
+- change signature of executeWithSchema and subscribeWithSchema functions (vladimir.razuvaev@gmail.com)
 
 ## 3.0.0-alpha.7
 

@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 14 Sep 2023 19:05:33 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0-alpha.8",
+      "version": "3.0.0-alpha.8",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "6c652275b365a790dbe43143f2033f877d0f64ff",
+            "comment": "change signature of executeWithSchema and subscribeWithSchema functions"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 12 Sep 2023 23:58:31 GMT",
       "tag": "@graphitation/supermassive_v3.0.0-alpha.7",
       "version": "3.0.0-alpha.7",
