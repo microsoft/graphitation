@@ -204,8 +204,9 @@ function buildExecutionContext(
         if (operationName == null) {
           if (operation !== undefined) {
             return [
-              new GraphQLError(
+              locatedError(
                 "Must provide operation name if query contains multiple operations.",
+                [],
               ),
             ];
           }
@@ -222,9 +223,9 @@ function buildExecutionContext(
 
   if (!operation) {
     if (operationName != null) {
-      return [new GraphQLError(`Unknown operation named "${operationName}".`)];
+      return [locatedError(`Unknown operation named "${operationName}".`, [])];
     }
-    return [new GraphQLError("Must provide an operation.")];
+    return [locatedError("Must provide an operation.", [])];
   }
 
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
@@ -615,9 +616,9 @@ function executeSubscriptionImpl(
   );
 
   if (!fieldDef) {
-    throw new GraphQLError(
+    throw locatedError(
       `The subscription field "${fieldName}" is not defined.`,
-      { nodes: fieldGroup },
+      fieldGroup,
     );
   }
 
@@ -675,9 +676,10 @@ function assertEventStream(result: unknown): AsyncIterable<unknown> {
 
   // Assert field returned an event stream, otherwise yield an error.
   if (!isAsyncIterable(result)) {
-    throw new GraphQLError(
+    throw locatedError(
       "Subscription field must return Async Iterable. " +
         `Received: ${inspect(result)}.`,
+      [],
     );
   }
 
@@ -1124,8 +1126,9 @@ function completeListValue(
   }
 
   if (!isIterableObject(result)) {
-    throw new GraphQLError(
+    throw locatedError(
       `Expected Iterable, but did not find one for field "${info.parentTypeName}.${info.fieldName}".`,
+      [],
     );
   }
 
@@ -1480,17 +1483,18 @@ function ensureValidRuntimeType(
   result: unknown,
 ): PromiseOrValue<string> {
   if (runtimeTypeName == null) {
-    throw new GraphQLError(
+    throw locatedError(
       `Abstract type "${returnTypeName}" must resolve to an Object type at runtime for field "${info.parentTypeName}.${info.fieldName}".` +
         ` Either the "${returnTypeName}" should provide a "__resolveType" resolver function` +
         ` or "${info.parentTypeName}.${info.fieldName}" should be an object with "__typename" property.`,
-      { nodes: fieldGroup },
+      fieldGroup,
     );
   }
   if (typeof runtimeTypeName !== "string") {
-    throw new GraphQLError(
+    throw locatedError(
       `Abstract type "${returnTypeName}" must resolve to an Object type at runtime for field "${info.returnTypeName}.${info.fieldName}" with ` +
         `value ${inspect(result)}, received "${inspect(runtimeTypeName)}".`,
+      [],
     );
   }
 
@@ -1541,21 +1545,21 @@ function ensureValidRuntimeTypeImpl(
   if (union || strictInterfaceValidation) {
     // Standard graphql-js checks
     if (!Definitions.isDefined(definitions, runtimeTypeName)) {
-      throw new GraphQLError(
+      throw locatedError(
         `Abstract type "${returnTypeName}" was resolved to a type "${runtimeTypeName}" that does not exist inside the schema.`,
-        { nodes: fieldGroup },
+        fieldGroup,
       );
     }
     if (!Definitions.isObjectType(definitions, runtimeTypeName)) {
-      throw new GraphQLError(
+      throw locatedError(
         `Abstract type "${returnTypeName}" was resolved to a non-object type "${runtimeTypeName}".`,
-        { nodes: fieldGroup },
+        fieldGroup,
       );
     }
     if (!Definitions.isSubType(definitions, returnTypeName, runtimeTypeName)) {
-      throw new GraphQLError(
+      throw locatedError(
         `Runtime Object type "${runtimeTypeName}" is not a possible type for "${returnTypeName}".`,
-        { nodes: fieldGroup },
+        fieldGroup,
       );
     }
     return runtimeTypeName;
@@ -1569,9 +1573,9 @@ function ensureValidRuntimeTypeImpl(
       Definitions.isDefined(definitions, runtimeTypeName) &&
       !Definitions.isObjectType(definitions, runtimeTypeName)
     ) {
-      throw new GraphQLError(
+      throw locatedError(
         `Abstract type "${returnTypeName}" was resolved to a non-object type "${runtimeTypeName}".`,
-        { nodes: fieldGroup },
+        fieldGroup,
       );
     }
     Definitions.addInterfaceImplementation(

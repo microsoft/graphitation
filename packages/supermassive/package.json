@@ -11,10 +11,11 @@
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
-    "test": "yarn graphql17 && monorepo-scripts test",
-    "types": "yarn graphql17 && monorepo-scripts types",
+    "test": "monorepo-scripts test",
+    "types": "monorepo-scripts types",
     "just": "monorepo-scripts",
     "graphql17": "node ./scripts/install-graphql-17.js",
+    "test17": "yarn graphql17 && yarn jest --config=../../scripts/config/jest.config.js --testMatch='**/*.graphql17.test.ts' --testPathIgnorePatterns='node_modules' --diagnostics=false",
     "benchmark": "ts-node -T ./src/benchmarks/index.ts"
   },
   "devDependencies": {

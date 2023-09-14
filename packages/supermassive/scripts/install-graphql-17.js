@@ -1,7 +1,6 @@
 /* eslint-disable */
-// Supermassive V3 requires graphql17 for tests (to ensure defer/stream compatibility)
-// But root-level monorepo resolution installs graphql15
-// This script installs graphql17 only for supermassive without affecting yarn.lock or package.json
+// Supermassive V3 requires graphql17 for defer/stream tests, and graphql15 for other tests
+// By default graphql15 is installed, this scripts installs graphql17 for local testing of defer/stream
 const fs = require("fs").promises;
 const path = require("path");
 const util = require("util");

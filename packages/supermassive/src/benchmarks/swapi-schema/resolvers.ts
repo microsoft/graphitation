@@ -1,10 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { GraphQLFieldResolver } from "graphql/type/definition";
 import { IExecutableSchemaDefinition } from "@graphql-tools/schema";
 import { createAsyncIterator, forAwaitEach, getAsyncIterator } from "iterall";
 import { mapAsyncIterator } from "../../utilities/mapAsyncIterator";
 
-const films: GraphQLFieldResolver<any, any, any, any> = (
+// Note: need this for graphql15-graphql17 cross-compatibility
+type GraphQLFieldResolver<T = any, U = any, I = any> = (
+  parent: T,
+  args: U,
+  context: I,
+  info: any,
+) => any;
+
+const films: GraphQLFieldResolver<any, any, any> = (
   parent,
   _args,
   { models },
@@ -25,7 +32,7 @@ const films: GraphQLFieldResolver<any, any, any, any> = (
   );
 };
 
-const starships: GraphQLFieldResolver<any, any, any, any> = (
+const starships: GraphQLFieldResolver<any, any, any> = (
   parent,
   _args,
   { models },
@@ -47,7 +54,7 @@ const starships: GraphQLFieldResolver<any, any, any, any> = (
   );
 };
 
-function people(key: string): GraphQLFieldResolver<any, any, any, any> {
+function people(key: string): GraphQLFieldResolver<any, any, any> {
   return (parent, _args, { models }) => {
     return models
       .getData("/people")
@@ -55,7 +62,7 @@ function people(key: string): GraphQLFieldResolver<any, any, any, any> {
   };
 }
 
-const vehicles: GraphQLFieldResolver<any, any, any, any> = (
+const vehicles: GraphQLFieldResolver<any, any, any> = (
   parent,
   _args,
   { models },
@@ -65,7 +72,7 @@ const vehicles: GraphQLFieldResolver<any, any, any, any> = (
     .filter(({ id }: { id: any }) => parent.vehicles.includes(id));
 };
 
-const planets: GraphQLFieldResolver<any, any, any, any> = (
+const planets: GraphQLFieldResolver<any, any, any> = (
   parent,
   _args,
   { models },
@@ -75,7 +82,7 @@ const planets: GraphQLFieldResolver<any, any, any, any> = (
     .filter(({ id }: { id: any }) => parent.planets.includes(id));
 };
 
-const species: GraphQLFieldResolver<any, any, any, any> = (
+const species: GraphQLFieldResolver<any, any, any> = (
   parent,
   _args,
   { models },
@@ -84,7 +91,7 @@ const species: GraphQLFieldResolver<any, any, any, any> = (
     .getData("/species")
     .filter(({ id }: { id: any }) => parent.species.includes(id));
 };
-const homeworld: GraphQLFieldResolver<any, any, any, any> = (
+const homeworld: GraphQLFieldResolver<any, any, any> = (
   parent,
   _args,
   { models },
@@ -94,7 +101,7 @@ const homeworld: GraphQLFieldResolver<any, any, any, any> = (
     .find((planet: any) => planet.id === parent.homeworld);
 };
 
-const person: GraphQLFieldResolver<any, any, any, any> = (
+const person: GraphQLFieldResolver<any, any, any> = (
   parent,
   { id },
   { models },
@@ -102,7 +109,7 @@ const person: GraphQLFieldResolver<any, any, any, any> = (
   return models.getData("/people").find((person: any) => person.id === id);
 };
 
-const planet: GraphQLFieldResolver<any, any, any, any> = (
+const planet: GraphQLFieldResolver<any, any, any> = (
   parent,
   { id },
   { models },
@@ -110,7 +117,7 @@ const planet: GraphQLFieldResolver<any, any, any, any> = (
   return models.getData("/planets").find((planet: any) => planet.id === id);
 };
 
-const film: GraphQLFieldResolver<any, any, any, any> = (
+const film: GraphQLFieldResolver<any, any, any> = (
   parent,
   { id },
   { models },
@@ -118,7 +125,7 @@ const film: GraphQLFieldResolver<any, any, any, any> = (
   return models.getData("/films").find((film: any) => film.id === id);
 };
 
-const starship: GraphQLFieldResolver<any, any, any, any> = (
+const starship: GraphQLFieldResolver<any, any, any> = (
   parent,
   { id },
   { models },
@@ -128,7 +135,7 @@ const starship: GraphQLFieldResolver<any, any, any, any> = (
     .find((starship: any) => starship.id === id);
 };
 
-const transport: GraphQLFieldResolver<any, any, any, any> = (
+const transport: GraphQLFieldResolver<any, any, any> = (
   parent,
   { id },
   { models },
@@ -138,7 +145,7 @@ const transport: GraphQLFieldResolver<any, any, any, any> = (
     .find((transport: any) => transport.id === id);
 };
 
-const vehicle: GraphQLFieldResolver<any, any, any, any> = (
+const vehicle: GraphQLFieldResolver<any, any, any> = (
   parent,
   { id },
   { models },
@@ -146,7 +153,7 @@ const vehicle: GraphQLFieldResolver<any, any, any, any> = (
   return models.getData("/vehicles").find((vehicle: any) => vehicle.id === id);
 };
 
-const searchPeopleByName: GraphQLFieldResolver<any, any, any, any> = (
+const searchPeopleByName: GraphQLFieldResolver<any, any, any> = (
   parent,
   { search },
   { models },
@@ -156,7 +163,7 @@ const searchPeopleByName: GraphQLFieldResolver<any, any, any, any> = (
     .filter((person: any) => new RegExp(search, "i").test(person.name));
 };
 
-const searchPlanetsByName: GraphQLFieldResolver<any, any, any, any> = (
+const searchPlanetsByName: GraphQLFieldResolver<any, any, any> = (
   parent,
   { search },
   { models },
@@ -166,7 +173,7 @@ const searchPlanetsByName: GraphQLFieldResolver<any, any, any, any> = (
     .filter((planet: any) => new RegExp(search, "i").test(planet.name));
 };
 
-const searchFilmsByTitle: GraphQLFieldResolver<any, any, any, any> = (
+const searchFilmsByTitle: GraphQLFieldResolver<any, any, any> = (
   parent,
   { search },
   { models },
@@ -176,7 +183,7 @@ const searchFilmsByTitle: GraphQLFieldResolver<any, any, any, any> = (
     .filter((film: any) => new RegExp(search, "i").test(film.title));
 };
 
-const searchSpeciesByName: GraphQLFieldResolver<any, any, any, any> = (
+const searchSpeciesByName: GraphQLFieldResolver<any, any, any> = (
   parent,
   { search },
   { models },
@@ -186,7 +193,7 @@ const searchSpeciesByName: GraphQLFieldResolver<any, any, any, any> = (
     .filter((species: any) => new RegExp(search, "i").test(species.name));
 };
 
-const searchStarshipsByName: GraphQLFieldResolver<any, any, any, any> = (
+const searchStarshipsByName: GraphQLFieldResolver<any, any, any> = (
   parent,
   { search },
   { models },
@@ -196,7 +203,7 @@ const searchStarshipsByName: GraphQLFieldResolver<any, any, any, any> = (
     .filter((starship: any) => new RegExp(search, "i").test(starship.name));
 };
 
-const searchVehiclesByName: GraphQLFieldResolver<any, any, any, any> = (
+const searchVehiclesByName: GraphQLFieldResolver<any, any, any> = (
   parent,
   { search },
   { models },
@@ -206,7 +213,7 @@ const searchVehiclesByName: GraphQLFieldResolver<any, any, any, any> = (
     .filter((vehicle: any) => new RegExp(search, "i").test(vehicle.name));
 };
 
-const emitPersons: GraphQLFieldResolver<any, any, any, any> = async function (
+const emitPersons: GraphQLFieldResolver<any, any, any> = async function (
   parent,
   { limit, throwError },
   { models },
@@ -224,7 +231,7 @@ const emitPersons: GraphQLFieldResolver<any, any, any, any> = async function (
   return createAsyncIterator(output);
 };
 
-const searchTransportsByName: GraphQLFieldResolver<any, any, any, any> = (
+const searchTransportsByName: GraphQLFieldResolver<any, any, any> = (
   parent,
   { search },
   { models },

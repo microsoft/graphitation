@@ -41,7 +41,8 @@ describe(addMinimalViableSchemaToRequestDocument, () => {
         film(id: 42) {
           __typename
         }
-      }"
+      }
+      "
     `);
   });
 
@@ -55,7 +56,8 @@ describe(addMinimalViableSchemaToRequestDocument, () => {
     expect(printedDoc).toMatchInlineSnapshot(`
       "fragment FilmFragment on Film @schema(definitions: "{\\"types\\":{\\"Film\\":[2,{\\"id\\":10},[\\"Node\\"]]}}") {
         id
-      }"
+      }
+      "
     `);
   });
 
@@ -97,7 +99,8 @@ describe(addMinimalViableSchemaToRequestDocument, () => {
 
       fragment FilmActors on Film @schema(definitions: "{\\"types\\":{\\"Film\\":[2,{\\"actors\\":16},[\\"Node\\"]]}}") {
         actors
-      }"
+      }
+      "
     `);
   });
 

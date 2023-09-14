@@ -3,7 +3,6 @@ import {
   GraphQLSchema,
   Kind,
   OperationDefinitionNode,
-  OperationTypeNode,
   parse,
   ExecutionArgs,
   ExecutionArgs as GraphQLExecutionArgs,
@@ -28,9 +27,7 @@ export function createExecutionUtils(
   graphqlExecute: (args: ExecutionArgs) => PromiseOrValue<ExecutionResult>,
   graphqlSubscribe: (
     args: ExecutionArgs,
-  ) => PromiseOrValue<
-    AsyncGenerator<ExecutionResult, void, void> | ExecutionResult
-  >,
+  ) => PromiseOrValue<AsyncIterableIterator<ExecutionResult> | ExecutionResult>,
 ) {
   async function compareResultsForExecuteWithSchema(
     schema: GraphQLSchema,
@@ -125,7 +122,7 @@ export function createExecutionUtils(
       throw new Error("Bad operation in test");
     }
 
-    if (operation.operation === OperationTypeNode.SUBSCRIPTION) {
+    if (operation.operation === "subscription") {
       return graphqlSubscribe(args) as GraphQLResult;
     } else {
       return graphqlExecute(args) as GraphQLResult;
