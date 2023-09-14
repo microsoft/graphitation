@@ -246,6 +246,7 @@ export type FormattedIncrementalResult<
   | FormattedIncrementalStreamResult<TData, TExtensions>;
 
 export interface CommonExecutionArgs {
+  document: DocumentNode;
   rootValue?: unknown;
   contextValue?: unknown;
   buildContextValue?: (contextValue?: unknown) => unknown;
@@ -257,18 +258,13 @@ export interface CommonExecutionArgs {
   fieldExecutionHooks?: ExecutionHooks;
 }
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
-  document: DocumentNode;
   schemaFragment: SchemaFragment;
   schemaFragmentLoader?: SchemaFragmentLoader;
 };
 
 export type ExecutionWithSchemaArgs = CommonExecutionArgs & {
-  document: DocumentNode;
-  schema: {
-    schemaId: string;
-    definitions: DocumentNode;
-    resolvers: UserResolvers;
-  };
+  definitions: DocumentNode;
+  resolvers: UserResolvers;
 };
 
 export type SchemaId = string;

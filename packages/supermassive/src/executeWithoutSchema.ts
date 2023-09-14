@@ -536,6 +536,7 @@ function requestSchemaFragment(
   if (!exeContext.schemaFragmentLoader) {
     return;
   }
+  const currentSchemaId = exeContext.schemaFragment.schemaId;
   return exeContext
     .schemaFragmentLoader(
       exeContext.schemaFragment,
@@ -543,10 +544,10 @@ function requestSchemaFragment(
       request,
     )
     .then(({ mergedFragment, mergedContextValue }) => {
-      if (exeContext.schemaFragment.schemaId !== mergedFragment.schemaId) {
+      if (currentSchemaId !== mergedFragment.schemaId) {
         throw new Error(
           `Cannot use new schema fragment: old and new fragments describe different schemas:` +
-            ` ${exeContext.schemaFragment.schemaId} vs. ${mergedFragment.schemaId}`,
+            ` ${currentSchemaId} vs. ${mergedFragment.schemaId}`,
         );
       }
       exeContext.contextValue = mergedContextValue ?? exeContext.contextValue;
