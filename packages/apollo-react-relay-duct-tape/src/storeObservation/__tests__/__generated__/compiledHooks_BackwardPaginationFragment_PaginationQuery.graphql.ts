@@ -420,3 +420,5 @@ return {
   }
 };
 })();
+
+export default documents;

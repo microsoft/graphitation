@@ -15,3 +15,7 @@ export type Todo_todoFragment$key = {
     readonly " $data"?: Todo_todoFragment$data | undefined;
     readonly " $fragmentRefs": FragmentRefs<"Todo_todoFragment">;
 };
+
+
+import { documents } from "./TodoRefetchQuery.graphql";
+export default documents;

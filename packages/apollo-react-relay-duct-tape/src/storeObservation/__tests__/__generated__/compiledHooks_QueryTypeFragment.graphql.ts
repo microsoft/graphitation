@@ -14,3 +14,7 @@ export type compiledHooks_QueryTypeFragment$key = {
     readonly " $data"?: compiledHooks_QueryTypeFragment$data | undefined;
     readonly " $fragmentRefs": FragmentRefs<"compiledHooks_QueryTypeFragment">;
 };
+
+
+import { documents } from "./compiledHooks_QueryTypeWatchNodeQuery.graphql";
+export default documents;

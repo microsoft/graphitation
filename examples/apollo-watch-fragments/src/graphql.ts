@@ -1,11 +1,18 @@
-import { ApolloClient, InMemoryCache } from "@apollo/client";
+import {
+  ApolloClient,
+  InMemoryCache,
+  defaultDataIdFromObject,
+} from "@apollo/client";
 import { SchemaLink } from "@apollo/client/link/schema";
 import { DB } from "./db";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { connectionFromArray } from "graphql-relay";
 
 import { Resolvers } from "./graphql/resolver-typings";
-import { typePoliciesWithDefaultApolloClientStoreKeys } from "@graphitation/apollo-react-relay-duct-tape";
+import {
+  getPossibleTypesAndDataIdFromNode,
+  typePoliciesWithGlobalObjectIdStoreKeys,
+} from "@graphitation/apollo-react-relay-duct-tape";
 const schemaSource: string = require("../data/schema.graphql");
 
 const TODOS_FIXTURE = `
@@ -78,9 +85,17 @@ const resolvers: Resolvers<Context> = {
           const todo = context.db.getTodo(parseInt(typeId, 10));
           return todo ? { __typename: "Todo", ...todo } : null;
         }
+        case "Me": {
+          return { __typename: "Me", id: "Me:1" };
+        }
       }
       return null;
     },
+    me: (_source, _args, context) => {
+      return { __typename: "Me", id: "Me:1" };
+    },
+  },
+  Me: {
     todos: async (_source, args, context, info) => {
       if (info.operation.name?.value === "TodoListPaginationQuery") {
         // Synthetically make pagination take some time, so we can show a
@@ -103,7 +118,7 @@ const resolvers: Resolvers<Context> = {
     changeTodoStatus: (_source, { input }, context, _info) => {
       const todo = context.db.setTodoStatus(
         parseInt(input.id.split(":")[1], 10),
-        input.isCompleted
+        input.isCompleted,
       );
       return { todo, todos: {} };
     },
@@ -133,16 +148,22 @@ export function createClient() {
         .map((description) => ({
           description,
           isCompleted: Math.random() < 0.5,
-        }))
+        })),
     ),
   };
+  const { possibleTypes, dataIdFromNode } =
+    getPossibleTypesAndDataIdFromNode(schema);
   return new ApolloClient({
     link: new SchemaLink({ schema, context }),
     cache: new InMemoryCache({
-      possibleTypes: {
-        Node: ["Todo", "TodosConnection"],
+      possibleTypes,
+      dataIdFromObject(responseObject, keyFieldsContext) {
+        return (
+          dataIdFromNode(responseObject, keyFieldsContext) ||
+          defaultDataIdFromObject(responseObject, keyFieldsContext)
+        );
       },
-      typePolicies: typePoliciesWithDefaultApolloClientStoreKeys,
+      typePolicies: typePoliciesWithGlobalObjectIdStoreKeys,
     }),
   });
 }

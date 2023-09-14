@@ -2,6 +2,51 @@
   "name": "@graphitation/apollo-react-relay-duct-tape-compiler",
   "entries": [
     {
+      "date": "Wed, 16 Aug 2023 06:31:21 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.2.3",
+      "version": "1.2.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "commit": "3962d767eb6ac9dbafe0255062c23c20fb63e5c5",
+            "comment": "Various PeopleApp fixes"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 25 Jul 2023 08:18:03 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.2.2",
+      "version": "1.2.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "commit": "751b49c95837e7d4d3add621e79598d14e8a587f",
+            "comment": "Re-export the right docs for a fragment"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Sat, 22 Jul 2023 07:35:09 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.2.1",
+      "version": "1.2.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "commit": "a6ac41623e4857191d9f86e45c522d35ee917c14",
+            "comment": "Backport compiler fixes from TMP"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 20 Jun 2023 11:38:47 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.2.0",
       "version": "1.2.0",

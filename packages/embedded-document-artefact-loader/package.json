@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/embedded-document-artefact-loader",
   "license": "MIT",
-  "version": "0.2.0",
+  "version": "0.6.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",
@@ -14,29 +14,41 @@
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts"
   },
+  "dependencies": {
+    "source-map-js": "^1.0.2"
+  },
+  "peerDependencies": {
+    "graphql": "*",
+    "ts-jest": "*"
+  },
   "devDependencies": {
     "@types/jest": "^26.0.22",
     "@types/loader-runner": "^2.2.4",
+    "graphql": "^15.0.0",
     "loader-runner": "^4.3.0",
-    "monorepo-scripts": "*"
+    "monorepo-scripts": "*",
+    "ts-jest": "^29.0.3",
+    "ts-loader": "^9.4.3"
   },
   "sideEffects": false,
   "access": "public",
   "exports": {
-    "jest": {
-      "import": "./lib/jest.ts"
+    "./ts-jest": {
+      "import": "./src/ts-jest.ts",
+      "require": "./src/ts-jest.ts"
     },
-    "webpack": {
-      "import": "./lib/webpack.ts"
+    "./webpack": {
+      "import": "./src/webpack.ts",
+      "require": "./src/webpack.ts"
     }
   },
   "publishConfig": {
     "exports": {
-      "jest": {
-        "import": "./lib/jest.mjs",
-        "require": "./lib/jest.js"
+      "./ts-jest": {
+        "import": "./lib/ts-jest.mjs",
+        "require": "./lib/ts-jest.js"
       },
-      "webpack": {
+      "./webpack": {
         "import": "./lib/webpack.mjs",
         "require": "./lib/webpack.js"
       }

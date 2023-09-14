@@ -12,3 +12,7 @@ export type TodoListFooter_todosFragment$key = {
     readonly " $data"?: TodoListFooter_todosFragment$data | undefined;
     readonly " $fragmentRefs": FragmentRefs<"TodoListFooter_todosFragment">;
 };
+
+
+import { documents } from "./TodoListFooter_todosWatchNodeQuery.graphql";
+export default documents;

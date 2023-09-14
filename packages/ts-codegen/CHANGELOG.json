@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Wed, 02 Aug 2023 12:50:20 GMT",
+      "tag": "@graphitation/ts-codegen_v2.6.0",
+      "version": "2.6.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "ea95aac89851fb20bae9a5f495bd6776c6607d87",
+            "comment": "enums in types are now string unions by default and added backwards compatibility flag + deprecation fixes"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 20 Jun 2023 11:38:47 GMT",
       "tag": "@graphitation/ts-codegen_v2.5.0",
       "version": "2.5.0",

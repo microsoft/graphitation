@@ -7,12 +7,14 @@ export type AppQueryVariables = {
     includeSomeOtherField: boolean;
 };
 export type AppQueryResponse = {
-    readonly todoStats: {
-        readonly id: string;
-        readonly totalCount: number;
-        readonly " $fragmentRefs": FragmentRefs<"TodoListFooter_todosFragment">;
+    readonly me: {
+        readonly todoStats: {
+            readonly id: string;
+            readonly totalCount: number;
+            readonly " $fragmentRefs": FragmentRefs<"TodoListFooter_todosFragment">;
+        };
+        readonly " $fragmentRefs": FragmentRefs<"TodoList_nodeFragment">;
     };
-    readonly " $fragmentRefs": FragmentRefs<"TodoList_queryFragment">;
 };
 export type AppQuery = {
     readonly response: AppQueryResponse;
@@ -22,12 +24,15 @@ export type AppQuery = {
 
 /*
 query AppQuery($includeSomeOtherField: Boolean!) {
-  todoStats: todos(first: 0) {
+  me {
+    todoStats: todos(first: 0) {
+      id
+      totalCount
+      ...TodoListFooter_todosFragment
+    }
+    ...TodoList_nodeFragment
     id
-    totalCount
-    ...TodoListFooter_todosFragment
   }
-  ...TodoList_queryFragment
 }
 
 fragment TodoListFooter_todosFragment on TodosConnection {
@@ -35,7 +40,8 @@ fragment TodoListFooter_todosFragment on TodosConnection {
   id
 }
 
-fragment TodoList_queryFragment on Query {
+fragment TodoList_nodeFragment on NodeWithTodos {
+  __typename
   todos(first: 5, after: "") @connection(key: "TodosList_todos") {
     edges {
       node {
@@ -52,6 +58,7 @@ fragment TodoList_queryFragment on Query {
     }
     id
   }
+  id
 }
 
 fragment Todo_todoFragment on Todo {
@@ -64,14 +71,19 @@ fragment Todo_todoFragment on Todo {
 
 /*
 query AppQuery($includeSomeOtherField: Boolean!) {
-  todoStats: todos(first: 0) {
+  me {
+    todoStats: todos(first: 0) {
+      id
+      totalCount
+      ... on Node {
+        __fragments @client
+      }
+    }
     id
-    totalCount
     ... on Node {
       __fragments @client
     }
   }
-  __fragments @client
 }
 */
 
@@ -105,74 +117,100 @@ v2 = [
 ],
 v3 = {
   "kind": "Name",
-  "value": "todoStats"
+  "value": "me"
 },
 v4 = {
   "kind": "Name",
-  "value": "todos"
+  "value": "todoStats"
 },
 v5 = {
   "kind": "Name",
+  "value": "todos"
+},
+v6 = {
+  "kind": "Name",
   "value": "first"
 },
-v6 = [
+v7 = [
   {
     "kind": "Argument",
-    "name": (v5/*: any*/),
+    "name": (v6/*: any*/),
     "value": {
       "kind": "IntValue",
       "value": "0"
     }
   }
 ],
-v7 = {
+v8 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
     "value": "id"
   }
 },
-v8 = {
+v9 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
     "value": "totalCount"
   }
 },
-v9 = {
+v10 = {
   "kind": "Name",
   "value": "TodoListFooter_todosFragment"
 },
-v10 = {
-  "kind": "Name",
-  "value": "TodoList_queryFragment"
-},
 v11 = {
+  "kind": "Name",
+  "value": "TodoList_nodeFragment"
+},
+v12 = {
+  "kind": "Field",
+  "name": {
+    "kind": "Name",
+    "value": "__typename"
+  }
+},
+v13 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
     "value": "isCompleted"
   }
 },
-v12 = {
+v14 = {
   "kind": "Name",
   "value": "Todo_todoFragment"
 },
-v13 = {
-  "kind": "Field",
-  "name": {
-    "kind": "Name",
-    "value": "__fragments"
-  },
-  "directives": [
-    {
-      "kind": "Directive",
-      "name": {
-        "kind": "Name",
-        "value": "client"
-      }
+v15 = {
+  "kind": "InlineFragment",
+  "typeCondition": {
+    "kind": "NamedType",
+    "name": {
+      "kind": "Name",
+      "value": "Node"
     }
-  ]
+  },
+  "selectionSet": {
+    "kind": "SelectionSet",
+    "selections": [
+      {
+        "kind": "Field",
+        "name": {
+          "kind": "Name",
+          "value": "__fragments"
+        },
+        "directives": [
+          {
+            "kind": "Directive",
+            "name": {
+              "kind": "Name",
+              "value": "client"
+            }
+          }
+        ]
+      }
+    ]
+  }
 };
 return {
   "executionQueryDocument": {
@@ -188,31 +226,41 @@ return {
           "selections": [
             {
               "kind": "Field",
-              "alias": (v3/*: any*/),
-              "name": (v4/*: any*/),
-              "arguments": (v6/*: any*/),
+              "name": (v3/*: any*/),
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
-                  (v7/*: any*/),
-                  (v8/*: any*/),
+                  {
+                    "kind": "Field",
+                    "alias": (v4/*: any*/),
+                    "name": (v5/*: any*/),
+                    "arguments": (v7/*: any*/),
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        (v8/*: any*/),
+                        (v9/*: any*/),
+                        {
+                          "kind": "FragmentSpread",
+                          "name": (v10/*: any*/)
+                        }
+                      ]
+                    }
+                  },
                   {
                     "kind": "FragmentSpread",
-                    "name": (v9/*: any*/)
-                  }
+                    "name": (v11/*: any*/)
+                  },
+                  (v8/*: any*/)
                 ]
               }
-            },
-            {
-              "kind": "FragmentSpread",
-              "name": (v10/*: any*/)
             }
           ]
         }
       },
       {
         "kind": "FragmentDefinition",
-        "name": (v9/*: any*/),
+        "name": (v10/*: any*/),
         "typeCondition": {
           "kind": "NamedType",
           "name": {
@@ -230,30 +278,31 @@ return {
                 "value": "uncompletedCount"
               }
             },
-            (v7/*: any*/)
+            (v8/*: any*/)
           ]
         }
       },
       {
         "kind": "FragmentDefinition",
-        "name": (v10/*: any*/),
+        "name": (v11/*: any*/),
         "typeCondition": {
           "kind": "NamedType",
           "name": {
             "kind": "Name",
-            "value": "Query"
+            "value": "NodeWithTodos"
           }
         },
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
+            (v12/*: any*/),
             {
               "kind": "Field",
-              "name": (v4/*: any*/),
+              "name": (v5/*: any*/),
               "arguments": [
                 {
                   "kind": "Argument",
-                  "name": (v5/*: any*/),
+                  "name": (v6/*: any*/),
                   "value": {
                     "kind": "IntValue",
                     "value": "5"
@@ -316,19 +365,13 @@ return {
                           "selectionSet": {
                             "kind": "SelectionSet",
                             "selections": [
-                              (v7/*: any*/),
-                              (v11/*: any*/),
+                              (v8/*: any*/),
+                              (v13/*: any*/),
                               {
                                 "kind": "FragmentSpread",
-                                "name": (v12/*: any*/)
+                                "name": (v14/*: any*/)
                               },
-                              {
-                                "kind": "Field",
-                                "name": {
-                                  "kind": "Name",
-                                  "value": "__typename"
-                                }
-                              }
+                              (v12/*: any*/)
                             ]
                           }
                         },
@@ -368,16 +411,17 @@ return {
                       ]
                     }
                   },
-                  (v7/*: any*/)
+                  (v8/*: any*/)
                 ]
               }
-            }
+            },
+            (v8/*: any*/)
           ]
         }
       },
       {
         "kind": "FragmentDefinition",
-        "name": (v12/*: any*/),
+        "name": (v14/*: any*/),
         "typeCondition": {
           "kind": "NamedType",
           "name": {
@@ -388,7 +432,7 @@ return {
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
-            (v7/*: any*/),
+            (v8/*: any*/),
             {
               "kind": "Field",
               "name": {
@@ -396,7 +440,7 @@ return {
                 "value": "description"
               }
             },
-            (v11/*: any*/),
+            (v13/*: any*/),
             {
               "kind": "Field",
               "name": {
@@ -441,34 +485,29 @@ return {
           "selections": [
             {
               "kind": "Field",
-              "alias": (v3/*: any*/),
-              "name": (v4/*: any*/),
-              "arguments": (v6/*: any*/),
+              "name": (v3/*: any*/),
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
-                  (v7/*: any*/),
-                  (v8/*: any*/),
                   {
-                    "kind": "InlineFragment",
-                    "typeCondition": {
-                      "kind": "NamedType",
-                      "name": {
-                        "kind": "Name",
-                        "value": "Node"
-                      }
-                    },
+                    "kind": "Field",
+                    "alias": (v4/*: any*/),
+                    "name": (v5/*: any*/),
+                    "arguments": (v7/*: any*/),
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
-                        (v13/*: any*/)
+                        (v8/*: any*/),
+                        (v9/*: any*/),
+                        (v15/*: any*/)
                       ]
                     }
-                  }
+                  },
+                  (v8/*: any*/),
+                  (v15/*: any*/)
                 ]
               }
-            },
-            (v13/*: any*/)
+            }
           ]
         }
       }
@@ -476,3 +515,5 @@ return {
   }
 };
 })();
+
+export default documents;

@@ -6,26 +6,27 @@ import {
 } from "@graphitation/apollo-react-relay-duct-tape";
 import { graphql } from "@graphitation/graphql-js-tag";
 
-import { TodoList_queryFragment$key } from "./__generated__/TodoList_queryFragment.graphql";
+import { TodoList_nodeFragment$key } from "./__generated__/TodoList_nodeFragment.graphql";
 import { Todo } from "./Todo";
 import { LoadingSpinner } from "./LoadingSpinner";
 
-const TodoList: React.FC<{ query: TodoList_queryFragment$key }> = ({
-  query: queryRef,
+const TodoList: React.FC<{ node: TodoList_nodeFragment$key }> = ({
+  node: nodeRef,
 }) => {
   const {
-    data: query,
+    data: node,
     hasNext,
     loadNext,
     isLoadingNext,
   } = usePaginationFragment(
     graphql`
-      fragment TodoList_queryFragment on Query
+      fragment TodoList_nodeFragment on NodeWithTodos
       @refetchable(queryName: "TodoListPaginationQuery")
       @argumentDefinitions(
         count: { type: "Int!", defaultValue: 5 }
         after: { type: "String!", defaultValue: "" }
       ) {
+        __typename
         todos(first: $count, after: $after)
           @connection(key: "TodosList_todos") {
           edges {
@@ -38,14 +39,14 @@ const TodoList: React.FC<{ query: TodoList_queryFragment$key }> = ({
         }
       }
     `,
-    queryRef
+    nodeRef,
   );
-  console.log("TodoList watch data:", query);
+  console.log("TodoList watch data:", node);
 
   /* <!-- List items should get the class `editing` when editing and `completed` when marked as completed --> */
   return (
     <ul className="todo-list">
-      {query.todos.edges.map(({ node: todo }) => {
+      {node.todos.edges.map(({ node: todo }) => {
         return (
           <li key={todo.id} className={todo.isCompleted ? "completed" : ""}>
             <Todo todo={todo} />
@@ -73,6 +74,6 @@ const TodoList: React.FC<{ query: TodoList_queryFragment$key }> = ({
 
 const MemoizedTodoList = React.memo(
   TodoList,
-  shallowCompareFragmentReferences("query")
+  shallowCompareFragmentReferences("node"),
 );
 export { MemoizedTodoList as TodoList };

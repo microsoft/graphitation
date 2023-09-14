@@ -14,7 +14,7 @@ export type compiledHooks_ForwardPaginationFragment = {
             };
         }>;
     };
-    readonly id: string;
+    readonly id?: string | undefined;
     readonly " $refType": "compiledHooks_ForwardPaginationFragment";
 };
 export type compiledHooks_ForwardPaginationFragment$data = compiledHooks_ForwardPaginationFragment;
@@ -22,3 +22,7 @@ export type compiledHooks_ForwardPaginationFragment$key = {
     readonly " $data"?: compiledHooks_ForwardPaginationFragment$data | undefined;
     readonly " $fragmentRefs": FragmentRefs<"compiledHooks_ForwardPaginationFragment">;
 };
+
+
+import { documents } from "./compiledHooks_ForwardPaginationFragment_PaginationQuery.graphql";
+export default documents;

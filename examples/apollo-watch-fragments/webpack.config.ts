@@ -1,7 +1,6 @@
 import * as path from "path";
 import * as webpack from "webpack";
 import "webpack-dev-server";
-import { createImportDocumentsTransform } from "@graphitation/apollo-react-relay-duct-tape-compiler";
 
 const config: webpack.Configuration = {
   mode: "development",
@@ -30,12 +29,11 @@ const config: webpack.Configuration = {
         test: /\.tsx?$/,
         loader: "ts-loader",
         exclude: /node_modules/,
-        options: {
-          transpileOnly: true,
-          getCustomTransformers: () => ({
-            before: [createImportDocumentsTransform()],
-          }),
-        },
+      },
+      {
+        test: /\.tsx?$/,
+        loader: "@graphitation/embedded-document-artefact-loader/webpack",
+        exclude: /node_modules/,
       },
     ],
   },

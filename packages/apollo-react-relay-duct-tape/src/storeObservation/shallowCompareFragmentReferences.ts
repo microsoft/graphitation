@@ -29,13 +29,13 @@ import invariant from "invariant";
  *   A comparator with parameters typed such that TS can verify the component
  *   passed to React.memo() has props that match.
  */
-export function shallowCompareFragmentReferences<K extends string>(
+export function shallowCompareFragmentReferences<
+  K extends string,
+  ComparatorParam extends { [key in K]: { " $fragmentRefs": unknown } },
+>(
   ...fragmentReferenceProps: K[]
-) {
-  return (
-    prevProps: Record<K, { id?: unknown }>,
-    nextProps: Record<K, { id?: unknown }>,
-  ) => {
+): (prevProps: ComparatorParam, nextProps: ComparatorParam) => boolean {
+  return (prevProps, nextProps) => {
     if (Object.is(prevProps, nextProps)) {
       return true;
     }
@@ -52,7 +52,10 @@ export function shallowCompareFragmentReferences<K extends string>(
       if (
         !Object.prototype.hasOwnProperty.call(nextProps, checkKey) ||
         fragmentReferenceProps.includes(checkKey)
-          ? !idsEqual(prevProps[checkKey], nextProps[checkKey])
+          ? !idsEqual(
+              prevProps[checkKey] as { id?: unknown },
+              nextProps[checkKey] as { id?: unknown },
+            )
           : !Object.is(prevProps[checkKey], nextProps[checkKey])
       ) {
         return false;

@@ -1,26 +1,11 @@
 import type { LoaderDefinitionFunction } from "webpack";
-import { SourceMapGenerator } from "source-map";
-
-function offsetToLineColumn(
-  str: string,
-  offset: number,
-): { line: number; column: number } {
-  let line = 1;
-  let column = 0;
-  for (let i = 0; i < offset; i++) {
-    if (str[i] === "\n") {
-      line++;
-      column = 0;
-    } else {
-      column++;
-    }
-  }
-  return { line, column };
-}
+import { SourceMapConsumer, SourceMapGenerator } from "source-map-js";
+import { transform } from "./transform";
+import { applySourceMap } from "./source-map-utils";
 
 const webpackLoader: LoaderDefinitionFunction = function (
   source,
-  _sourceMap,
+  inputSourceMap,
   _additionalData,
 ) {
   const callback = this.async();
@@ -33,42 +18,25 @@ const webpackLoader: LoaderDefinitionFunction = function (
     sourceMap.setSourceContent(this.resourcePath, source);
   }
 
-  const result = source.replace(
-    /graphql\s*`(?:[^`])*`/g,
-    (taggedTemplateExpression, offset: number) => {
-      const match = taggedTemplateExpression.match(
-        /(query|mutation|subscription|fragment)\s+\b(.+?)\b/,
-      );
-      if (match && match[2]) {
-        const generated = `require("./__generated__/${match[2]}.graphql").default`;
+  const transformed = transform(source, this.resourcePath, sourceMap);
 
-        if (sourceMap) {
-          const originalStart = offsetToLineColumn(source, offset);
-          sourceMap.addMapping({
-            original: originalStart,
-            generated: originalStart,
-            source: this.resourcePath,
-          });
-          sourceMap.addMapping({
-            original: offsetToLineColumn(
-              source,
-              offset + taggedTemplateExpression.length,
-            ),
-            generated: {
-              line: originalStart.line,
-              column: originalStart.column + generated.length,
-            },
-            source: this.resourcePath,
-          });
-        }
-
-        return generated;
-      }
-      return taggedTemplateExpression;
-    },
-  );
-
-  callback(null, result, sourceMap?.toString());
+  if (transformed && sourceMap && inputSourceMap) {
+    callback(
+      null,
+      transformed,
+      applySourceMap(
+        this.resourcePath,
+        inputSourceMap as string,
+        sourceMap.toString(),
+      ) as any, // SourceMapGenerator seems to satisfy the runtime needs, but it's unclear which properties it uses exactly
+    );
+  } else if (transformed && sourceMap) {
+    callback(null, transformed, sourceMap as any); // SourceMapGenerator seems to satisfy the runtime needs, but it's unclear which properties it uses exactly
+  } else if (transformed) {
+    callback(null, transformed);
+  } else {
+    callback(null, source);
+  }
 };
 
 export default webpackLoader;

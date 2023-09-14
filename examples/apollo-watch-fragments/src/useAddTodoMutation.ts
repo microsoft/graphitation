@@ -1,10 +1,8 @@
 import { useCallback } from "react";
-// import { useMutation } from "@graphitation/apollo-react-relay-duct-tape";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@graphitation/apollo-react-relay-duct-tape";
 import { graphql } from "@graphitation/graphql-js-tag";
 
-import { AppQuery } from "./App";
-import { useAddTodoMutationResponse } from "./__generated__/useAddTodoMutation.graphql";
+import { useAddTodoMutation } from "./__generated__/useAddTodoMutation.graphql";
 import invariant from "invariant";
 
 const mutation = graphql`
@@ -49,21 +47,7 @@ const mutation = graphql`
 // let tempID = 0;
 
 export function useAddTodoMutation() {
-  const [commit] = useMutation<useAddTodoMutationResponse>(mutation, {
-    update(cache, { data }) {
-      invariant(data?.addTodo, "Expected success result");
-      const connectionId = data.addTodo.todos.id;
-      const newTodoEdge = data.addTodo.todoEdge;
-      cache.modify({
-        id: `TodosConnection:${connectionId}`,
-        fields: {
-          edges(current) {
-            return [...current, newTodoEdge];
-          },
-        },
-      });
-    },
-  });
+  const [commit] = useMutation<useAddTodoMutation>(mutation);
   return useCallback(
     (description: string) => {
       return commit({
@@ -71,6 +55,19 @@ export function useAddTodoMutation() {
           input: {
             description,
           },
+        },
+        updater(cache, data) {
+          invariant(data?.addTodo, "Expected success result");
+          const connectionId = data.addTodo.todos.id;
+          const newTodoEdge = data.addTodo.todoEdge;
+          cache.modify({
+            id: `TodosConnection:${connectionId}`,
+            fields: {
+              edges(current) {
+                return [...current, newTodoEdge];
+              },
+            },
+          });
         },
         //   updater: (store: RecordSourceSelectorProxy) => {
         //     const payload = store.getRootField("addTodo");
@@ -115,6 +112,6 @@ export function useAddTodoMutation() {
         //   }
       });
     },
-    [commit]
+    [commit],
   );
 }

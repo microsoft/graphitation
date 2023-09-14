@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { ApolloCache, DataProxy, StoreValue } from "@apollo/client";
+import { ApolloCache, DataProxy } from "@apollo/client";
 import invariant from "invariant";
 import { useCompiledRefetchableFragment } from "./useCompiledRefetchableFragment";
 import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultApolloClient";
@@ -93,10 +93,12 @@ function useLoadMore({
               "usePaginationFragment(): Expected mainFragment metadata",
             );
             const cacheSelector: DataProxy.Fragment<unknown, object> = {
-              id: cache.identify({
-                __typename: mainFragment.typeCondition,
-                id: fragmentReference.id as StoreValue,
-              }),
+              // TODO: If we're dropping default Apollo Cache keys, we can probably just do the below
+              id: fragmentReference.id as string,
+              // id: cache.identify({
+              //   __typename: mainFragment.typeCondition,
+              //   id: fragmentReference.id as StoreValue,
+              // }),
               variables: previousVariables,
               fragmentName: mainFragment.name,
               // Create new document with operation filtered out.
