@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "graphql15 compatibility",
-  "packageName": "@graphitation/supermassive",
-  "email": "vladimir.razuvaev@gmail.com",
-  "dependentChangeType": "patch"
-}

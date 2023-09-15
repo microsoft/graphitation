@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Fri, 15 Sep 2023 00:43:00 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0-alpha.9",
+      "version": "3.0.0-alpha.9",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "3768aa59f09ff06310ebf5792ac8ed4a0d9468e7",
+            "comment": "graphql15 compatibility"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 14 Sep 2023 19:05:33 GMT",
       "tag": "@graphitation/supermassive_v3.0.0-alpha.8",
       "version": "3.0.0-alpha.8",
