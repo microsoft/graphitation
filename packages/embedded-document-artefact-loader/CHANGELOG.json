@@ -2,6 +2,21 @@
   "name": "@graphitation/embedded-document-artefact-loader",
   "entries": [
     {
+      "date": "Fri, 15 Sep 2023 22:22:30 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.6.3",
+      "version": "0.6.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "811a7ac7f39eda9f569e48a8e3dccd6dc1888167",
+            "comment": "Make jest loader work for async import"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 16 Aug 2023 06:31:21 GMT",
       "tag": "@graphitation/embedded-document-artefact-loader_v0.6.2",
       "version": "0.6.2",
