@@ -7,5 +7,6 @@ module.exports = {
     "__generated__",
     "__tests__/utils",
     "__tests__/fixtures",
+    "graphql17.test.ts$",
   ],
 };

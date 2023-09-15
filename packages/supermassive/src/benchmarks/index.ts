@@ -5,17 +5,14 @@ import schema from "./swapi-schema";
 import resolvers from "./swapi-schema/resolvers";
 import models from "./swapi-schema/models";
 import {
-  graphql,
   execute as graphqlExecute,
   parse,
-  isInputType,
+  // experimentalExecuteIncrementally as graphqlExecute,
 } from "graphql";
 import { compileQuery, isCompiledQuery } from "graphql-jit";
 import { executeWithoutSchema as supermassiveExecute } from "../executeWithoutSchema";
-import { addTypesToRequestDocument } from "@graphitation/supermassive-ast";
-import { Resolvers, UserResolvers } from "../types";
-import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
-import { specifiedScalars } from "../values";
+import { UserResolvers, SchemaFragment } from "../types";
+import { extractMinimalViableSchemaForRequestDocument } from "../utilities/extractMinimalViableSchemaForRequestDocument";
 
 const query = fs.readFileSync(
   path.join(__dirname, "./fixtures/query1.graphql"),
@@ -25,16 +22,24 @@ const query = fs.readFileSync(
 );
 
 const parsedQuery = parse(query);
-
 const compiledQuery = compileQuery(schema, parsedQuery);
 
-const typeAnnotatedQuery = addTypesToRequestDocument(schema, parsedQuery);
+const { definitions } = extractMinimalViableSchemaForRequestDocument(
+  schema,
+  parsedQuery,
+);
+
+const schemaFragment: SchemaFragment = {
+  schemaId: "benchmark",
+  definitions,
+  resolvers: resolvers as UserResolvers,
+};
 
 const queryRunningSuite = new NiceBenchmark("Query Running");
 queryRunningSuite.add("graphql-js - string queries", async () => {
-  const result = await graphql({
+  const result = await graphqlExecute({
     schema,
-    source: query,
+    document: parse(query),
     contextValue: { models },
   });
   if (result.errors || !result.data) {
@@ -73,24 +78,12 @@ queryRunningSuite.add("graphql-jit - precompiled", async () => {
   }
 });
 queryRunningSuite.add("supermassive - runtime schemaless", async () => {
-  let extractedResolvers: Resolvers = {};
-  const getTypeByName = (name: string) => {
-    const type = specifiedScalars[name] || extractedResolvers[name];
-    if (isInputType(type)) {
-      return type;
-    } else {
-      throw new Error("Invalid type");
-    }
-  };
-  extractedResolvers = extractImplicitTypes(parsedQuery, getTypeByName);
-
   const result = await supermassiveExecute({
-    resolvers: resolvers as UserResolvers,
-    schemaResolvers: extractedResolvers,
-    document: typeAnnotatedQuery,
+    schemaFragment,
+    document: parsedQuery,
     contextValue: { models },
   });
-  if (result.errors || !result.data) {
+  if ("data" in result && (result.errors || !result.data)) {
     throw new Error("Stuff ain't executing");
   }
 });
@@ -107,7 +100,7 @@ queryCompilingSuite.add("graphql-jit", async () => {
 
 const queryAnnotationSuite = new NiceBenchmark("Query annotation");
 queryAnnotationSuite.add("supermassive", () => {
-  addTypesToRequestDocument(schema, parsedQuery);
+  extractMinimalViableSchemaForRequestDocument(schema, parsedQuery);
 });
 
 async function main() {

@@ -2,6 +2,36 @@
   "name": "supermassive-todomvc",
   "entries": [
     {
+      "date": "Fri, 15 Sep 2023 00:43:00 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/supermassive to v3.0.0-alpha.9",
+            "commit": "3768aa59f09ff06310ebf5792ac8ed4a0d9468e7"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 14 Sep 2023 19:05:33 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/supermassive to v3.0.0-alpha.8",
+            "commit": "6c652275b365a790dbe43143f2033f877d0f64ff"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 16 Aug 2023 06:31:21 GMT",
       "tag": "supermassive-todomvc_v1.0.1-0",
       "version": "1.0.1-0",
@@ -105,6 +135,96 @@
             "package": "supermassive-todomvc",
             "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.0.6",
             "commit": "5953f0bf2cdb455fcb6d67119a69590b1c61be0a"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 12 Sep 2023 23:58:31 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/supermassive to v3.0.0-alpha.7",
+            "commit": "84bc5479d3b0e3ef6dc658ae20b615add198af18"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 11 Sep 2023 19:24:32 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/supermassive to v3.0.0-alpha.6",
+            "commit": "bfe5828436ee6d9c725adbad4cfaed2f5ec0e7d0"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 11 Sep 2023 12:06:07 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/supermassive to v3.0.0-alpha.5",
+            "commit": "4ea84c913970a82d962867faf8e3dd191caf869a"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Sun, 10 Sep 2023 20:58:53 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/supermassive to v3.0.0-alpha.4",
+            "commit": "bbf21059dce35b16ea1184eeb764d93b3dfe08f4"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 29 Aug 2023 15:06:36 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/supermassive to v3.0.0-alpha.3",
+            "commit": "91000a549906ef184a4efc30eeae245998965ea9"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 27 Jun 2023 11:47:30 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/supermassive to v3.0.0-alpha.1",
+            "commit": "df161b319c99c4e1b298870bfff4a03a602ea66a"
           }
         ]
       }

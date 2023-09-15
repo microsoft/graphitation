@@ -1,8 +1,72 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Tue, 20 Jun 2023 11:38:47 GMT and should not be manually modified.
+This log was last generated on Fri, 15 Sep 2023 00:43:00 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.0.0-alpha.9
+
+Fri, 15 Sep 2023 00:43:00 GMT
+
+### Changes
+
+- graphql15 compatibility (vladimir.razuvaev@gmail.com)
+
+## 3.0.0-alpha.8
+
+Thu, 14 Sep 2023 19:05:33 GMT
+
+### Changes
+
+- change signature of executeWithSchema and subscribeWithSchema functions (vladimir.razuvaev@gmail.com)
+
+## 3.0.0-alpha.7
+
+Tue, 12 Sep 2023 23:58:31 GMT
+
+### Changes
+
+- refactor: replace PartialSchema class with ES module functions (vladimir.razuvaev@gmail.com)
+
+## 3.0.0-alpha.6
+
+Mon, 11 Sep 2023 19:24:32 GMT
+
+### Changes
+
+- fix mergeResolvers + more tests (vladimir.razuvaev@gmail.com)
+
+## 3.0.0-alpha.5
+
+Mon, 11 Sep 2023 12:06:07 GMT
+
+### Changes
+
+- switch to 1-indexed ids for spec type references (vladimir.razuvaev@gmail.com)
+
+## 3.0.0-alpha.4
+
+Sun, 10 Sep 2023 20:58:53 GMT
+
+### Changes
+
+- Schema fragment loader (vladimir.razuvaev@gmail.com)
+
+## 3.0.0-alpha.3
+
+Tue, 29 Aug 2023 15:06:36 GMT
+
+### Changes
+
+- New type annotation strategy (vladimir.razuvaev@gmail.com)
+
+## 3.0.0-alpha.1
+
+Tue, 27 Jun 2023 11:47:30 GMT
+
+### Changes
+
+- Supermassive v3 alpha - defer and stream stuff (mnovikov@microsoft.com)
 
 ## 2.6.0
 

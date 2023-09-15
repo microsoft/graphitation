@@ -1,17 +1,13 @@
-import { isInputType, buildASTSchema } from "graphql";
-import {
-  addTypesToRequestDocument,
-  executeWithoutSchema,
-  extractImplicitTypes,
-  specifiedScalars,
-} from "./index";
+import { buildASTSchema } from "graphql";
+import { executeWithoutSchema } from "./index";
 import { PromiseOrValue } from "./jsutils/PromiseOrValue";
-import { Resolvers, ExecutionResult, ExecutionWithSchemaArgs } from "./types";
+import { ExecutionResult, ExecutionWithSchemaArgs } from "./types";
+import { extractMinimalViableSchemaForRequestDocument } from "./utilities/extractMinimalViableSchemaForRequestDocument";
 
 export function executeWithSchema({
-  typeDefs,
+  document,
+  definitions,
   resolvers,
-  document: rawDocument,
   rootValue,
   contextValue,
   variableValues,
@@ -20,23 +16,17 @@ export function executeWithSchema({
   typeResolver,
   fieldExecutionHooks,
 }: ExecutionWithSchemaArgs): PromiseOrValue<ExecutionResult> {
-  const schema = buildASTSchema(typeDefs);
-  let extractedResolvers: Resolvers = {};
-  const getTypeByName = (name: string) => {
-    const type = specifiedScalars[name] || extractedResolvers[name];
-    if (isInputType(type)) {
-      return type;
-    } else {
-      throw new Error("Invalid type");
-    }
-  };
-  extractedResolvers = extractImplicitTypes(typeDefs, getTypeByName);
-
-  const document = addTypesToRequestDocument(schema, rawDocument);
+  const extracted = extractMinimalViableSchemaForRequestDocument(
+    buildASTSchema(definitions),
+    document,
+  );
   return executeWithoutSchema({
     document,
-    resolvers,
-    schemaResolvers: extractedResolvers,
+    schemaFragment: {
+      schemaId: "executeWithSchema",
+      definitions: extracted.definitions,
+      resolvers,
+    },
     rootValue,
     contextValue,
     variableValues,
