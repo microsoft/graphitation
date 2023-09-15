@@ -18,7 +18,7 @@ describe("jest loader", () => {
 
   it("does not perform any extra source-map processing when there were no changes", async () => {
     const spy = jest.spyOn(SourceMapGenerator, "fromSourceMap");
-    await runJestTest("does nothing");
+    console.log(await runJestTest("does nothing"));
     expect(spy).not.toHaveBeenCalled();
   });
 });
