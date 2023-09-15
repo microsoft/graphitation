@@ -1,8 +1,20 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Fri, 15 Sep 2023 00:43:00 GMT and should not be manually modified.
+This log was last generated on Fri, 15 Sep 2023 16:06:32 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.0.0
+
+Fri, 15 Sep 2023 16:06:32 GMT
+
+### Major changes
+
+- - feat: execution with compact schema fragments
+- feat: schema fragment loading on demand
+- feat: new document annotation strategy
+- feat: experimental `@defer` and `@stream` support
+- (vladimir.razuvaev@gmail.com)
 
 ## 3.0.0-alpha.9
 

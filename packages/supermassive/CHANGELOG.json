@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Fri, 15 Sep 2023 16:06:32 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0",
+      "version": "3.0.0",
+      "comments": {
+        "major": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "f10783b13c01b720d639d66d398acf760bf8be41",
+            "comment": "- feat: execution with compact schema fragments\n- feat: schema fragment loading on demand\n- feat: new document annotation strategy\n- feat: experimental `@defer` and `@stream` support\n-"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 15 Sep 2023 00:43:00 GMT",
       "tag": "@graphitation/supermassive_v3.0.0-alpha.9",
       "version": "3.0.0-alpha.9",
