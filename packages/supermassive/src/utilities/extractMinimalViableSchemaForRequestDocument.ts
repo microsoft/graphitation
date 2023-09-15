@@ -7,7 +7,6 @@ import {
   GraphQLCompositeType,
   GraphQLDirective,
   GraphQLEnumType,
-  GraphQLError,
   GraphQLField,
   GraphQLInputField,
   GraphQLInputObjectType,
@@ -26,6 +25,7 @@ import {
   TypeInfo,
   visit,
   visitWithTypeInfo,
+  locatedError,
 } from "graphql";
 import {
   CompositeTypeTuple,
@@ -339,9 +339,7 @@ function assertCompositeType(
       node.kind === Kind.FIELD
         ? makeReadableErrorPath(ancestors).join(".") + "." + node.name.value
         : makeReadableErrorPath(ancestors).join(".");
-    throw new GraphQLError(`Cannot find type for: ${path}`, {
-      nodes: node,
-    });
+    throw locatedError(`Cannot find type for: ${path}`, [node]);
   }
 }
 
@@ -353,7 +351,7 @@ function assertExistingField(
   if (!field) {
     const path =
       makeReadableErrorPath(ancestors).join(".") + "." + node.name.value;
-    throw new GraphQLError(`Cannot find field: ${path}`, { nodes: node });
+    throw locatedError(`Cannot find field: ${path}`, [node]);
   }
 }
 
@@ -370,9 +368,7 @@ function assertAllArgumentsAreDefined(
         "." +
         node.name.value +
         `(${arg.name.value}: ...)`;
-      throw new GraphQLError(`Cannot find type for argument: ${path}`, {
-        nodes: arg,
-      });
+      throw locatedError(`Cannot find type for argument: ${path}`, [arg]);
     }
   }
 }

@@ -1,4 +1,4 @@
-import { GraphQLError } from "graphql";
+import { GraphQLError, locatedError } from "graphql";
 import { didYouMean } from "../jsutils/didYouMean";
 import { inspect } from "../jsutils/inspect";
 import { invariant } from "../jsutils/invariant";
@@ -81,10 +81,11 @@ function coerceInputValueImpl(
     onError(
       pathToArray(path),
       inputValue,
-      new GraphQLError(
+      locatedError(
         `Expected non-nullable type "${inspectTypeReference(
           typeRef,
         )}" not to be null.`,
+        [],
       ),
     );
     return;
@@ -125,7 +126,7 @@ function coerceInputValueImpl(
       onError(
         pathToArray(path),
         inputValue,
-        new GraphQLError(`Expected type "${typeRef}" to be an object.`),
+        locatedError(`Expected type "${typeRef}" to be an object.`, []),
       );
       return;
     }
@@ -146,8 +147,9 @@ function coerceInputValueImpl(
           onError(
             pathToArray(path),
             inputValue,
-            new GraphQLError(
+            locatedError(
               `Field "${fieldName}" of required type "${typeStr}" was not provided.`,
+              [],
             ),
           );
         }
@@ -170,9 +172,10 @@ function coerceInputValueImpl(
         onError(
           pathToArray(path),
           inputValue,
-          new GraphQLError(
+          locatedError(
             `Field "${fieldName}" is not defined by type "${typeName}".` +
               didYouMean(suggestions),
+            [],
           ),
         );
       }
@@ -197,11 +200,13 @@ function coerceInputValueImpl(
         onError(
           pathToArray(path),
           inputValue,
-          new GraphQLError(
+          locatedError(
             `Expected type "${typeName}". ` + (error as Error).message,
-            {
-              originalError: error as Error,
-            },
+            [],
+            // TODO:
+            // {
+            //   originalError: error as Error,
+            // },
           ),
         );
       }
@@ -211,12 +216,11 @@ function coerceInputValueImpl(
       onError(
         pathToArray(path),
         inputValue,
-        new GraphQLError(`Expected type "${inspectTypeReference(typeRef)}".`),
+        locatedError(`Expected type "${inspectTypeReference(typeRef)}".`, []),
       );
     }
     return parseResult;
   }
-  /* c8 ignore next 3 */
   // Not reachable, all possible types have been considered.
   invariant(false, "Unexpected input type: " + inspectTypeReference(typeRef));
 }

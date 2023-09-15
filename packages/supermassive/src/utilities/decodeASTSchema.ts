@@ -55,7 +55,7 @@ import {
   unwrap,
 } from "../schema/reference";
 import { invariant } from "../jsutils/invariant";
-import { ConstValueNode } from "graphql/language/ast";
+import { ValueNode as ConstValueNode } from "graphql/language/ast"; // TODO: use ConstValueNode in graphql@17
 import { inspect } from "../jsutils/inspect";
 
 /**
@@ -208,11 +208,11 @@ function decodeInputValue(
     name: nameNode(name),
     type,
     defaultValue: Array.isArray(value)
-      ? valueToConstValueNode(
+      ? (valueToConstValueNode(
           getInputDefaultValue(value),
           inputValueTypeRef,
           types,
-        )
+        ) as any) // Note: "any" is necessary here for graphql15/graphql17 cross-compatibility
       : undefined,
   };
 }

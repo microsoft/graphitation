@@ -28,7 +28,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
       type Film implements Node {
         title(foo: String = "Bar"): String!
-      }"
+      }
+      "
     `);
   });
 
@@ -49,7 +50,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
       type Film implements Node {
         title(foo: String = "Bar"): String!
-      }"
+      }
+      "
     `);
   });
 
@@ -72,7 +74,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
       type Film implements Node {
         title(foo: String = "Bar"): String!
-      }"
+      }
+      "
     `);
   });
 
@@ -98,7 +101,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
       type Film implements Node {
         title(foo: String = "Bar"): String!
-      }"
+      }
+      "
     `);
   });
 
@@ -134,7 +138,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       type Film implements Node {
         title(foo: String = "Bar"): String!
         actors: [String!]
-      }"
+      }
+      "
     `);
   });
 
@@ -153,7 +158,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           film(id: ID!): Film
         }
 
-        type Film implements Node"
+        type Film implements Node
+        "
       `);
     });
 
@@ -171,7 +177,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           screenable(id: ID!): Screenable
         }
 
-        union Screenable = Film | Series | Episode"
+        union Screenable = Film | Series | Episode
+        "
       `);
     });
 
@@ -189,7 +196,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           node(id: ID!): Node
         }
 
-        interface Node"
+        interface Node
+        "
       `);
     });
 
@@ -217,7 +225,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
         type Film implements Node {
           title(foo: String = "Bar"): String!
-        }"
+        }
+        "
       `);
     });
 
@@ -240,7 +249,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
         interface Node {
           id: ID!
-        }"
+        }
+        "
       `);
     });
 
@@ -267,7 +277,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
         type Film implements Node {
           title(foo: String = "Bar"): String!
-        }"
+        }
+        "
       `);
     });
 
@@ -300,7 +311,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
         type Series implements Node {
           id: ID!
           title: String!
-        }"
+        }
+        "
       `);
     });
 
@@ -326,7 +338,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
         type Film implements Node {
           id: ID!
           title(foo: String = "Bar"): String!
-        }"
+        }
+        "
       `);
     });
 
@@ -359,7 +372,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
         type Film implements Node {
           id: ID!
           title(foo: String = "Bar"): String!
-        }"
+        }
+        "
       `);
     });
   });
@@ -379,7 +393,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       );
       expect(sdl).toMatchInlineSnapshot(`
         "type Mutation {
-          createFilm(input: CreateFilmInput! = { title: "Default", filmType: GOOD }, enumInput: FilmType!): Film
+          createFilm(input: CreateFilmInput! = {title: "Default", filmType: GOOD}, enumInput: FilmType!): Film
         }
 
         type Film implements Node {
@@ -394,7 +408,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
         enum FilmType {
           GOOD
           BAD
-        }"
+        }
+        "
       `);
     });
 
@@ -408,7 +423,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       expect(sdl).toMatchInlineSnapshot(`
         "type Query {
           countFilms: Int!
-        }"
+        }
+        "
       `);
     });
 
@@ -433,7 +449,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
         enum FilmGenre {
           COMEDY
           DRAMA
-        }"
+        }
+        "
       `);
     });
 
@@ -448,7 +465,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       );
       expect(sdl).toMatchInlineSnapshot(`
         "type Mutation {
-          createFilm(input: CreateFilmInput! = { title: "Default", filmType: GOOD }, enumInput: FilmType!): Film
+          createFilm(input: CreateFilmInput! = {title: "Default", filmType: GOOD}, enumInput: FilmType!): Film
         }
 
         type Film implements Node {
@@ -463,7 +480,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
         enum FilmType {
           GOOD
           BAD
-        }"
+        }
+        "
       `);
     });
 
@@ -486,7 +504,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
         enum FilmGenre {
           COMEDY
           DRAMA
-        }"
+        }
+        "
       `);
     });
   });
@@ -516,7 +535,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
 
         type Film implements Node {
           title(foo: String = "Bar"): String!
-        }"
+        }
+        "
       `);
     });
 
@@ -552,7 +572,8 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           title(foo: String = "Bar"): String!
         }
 
-        directive @i18n(locale: String) on "
+        directive @i18n(locale: String) on 
+        "
       `);
     });
   });

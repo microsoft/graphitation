@@ -59,8 +59,9 @@ export function getVariableValues(
       inputs,
       (error) => {
         if (maxErrors != null && errors.length >= maxErrors) {
-          throw new GraphQLError(
+          throw locatedError(
             "Too many errors processing variables, error limit reached. Execution aborted.",
+            [],
           );
         }
         errors.push(error);
@@ -93,9 +94,9 @@ function coerceVariableValues(
       // validation, however is checked again here for safety.
       const varTypeStr = inspectTypeReference(varTypeReference);
       onError(
-        new GraphQLError(
+        locatedError(
           `Variable "$${varName}" expected value of type "${varTypeStr}" which cannot be used as an input type.`,
-          { nodes: varDefNode.type },
+          [varDefNode.type],
         ),
       );
       continue;
@@ -111,9 +112,9 @@ function coerceVariableValues(
       } else if (isNonNullType(varTypeReference)) {
         const varTypeStr = inspectTypeReference(varTypeReference);
         onError(
-          new GraphQLError(
+          locatedError(
             `Variable "$${varName}" of required type "${varTypeStr}" was not provided.`,
-            { nodes: varDefNode },
+            [varDefNode],
           ),
         );
       }
@@ -124,9 +125,9 @@ function coerceVariableValues(
     if (value === null && isNonNullType(varTypeReference)) {
       const varTypeStr = inspectTypeReference(varTypeReference);
       onError(
-        new GraphQLError(
+        locatedError(
           `Variable "$${varName}" of non-null type "${varTypeStr}" must not be null.`,
-          { nodes: varDefNode },
+          [varDefNode],
         ),
       );
       continue;
@@ -142,12 +143,7 @@ function coerceVariableValues(
         if (path.length > 0) {
           prefix += ` at "${varName}${printPathArray(path)}"`;
         }
-        onError(
-          new GraphQLError(prefix + "; " + error.message, {
-            nodes: varDefNode,
-            originalError: error.originalError,
-          }),
-        );
+        onError(locatedError(prefix + "; " + error.message, [varDefNode]));
       },
     );
   }
@@ -255,9 +251,9 @@ export function getArgumentValues(
       // Note: ValuesOfCorrectTypeRule validation should catch this before
       // execution. This is a runtime check to ensure execution does not
       // continue with an invalid argument value.
-      throw new GraphQLError(
+      throw locatedError(
         `Argument "${name}" has invalid value ${print(valueNode)}.`,
-        { nodes: valueNode },
+        [valueNode],
       );
     }
     coercedValues[name] = coercedValue;
