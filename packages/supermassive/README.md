@@ -25,9 +25,9 @@ Similarly, the GraphQL operations themselves, described using e.g. [GraphQL SDL]
 
 ## Implementation details and plans
 
-### Current
+### Execution with schema fragments
 
-Starting with version 3.0, supermassive expects a compact fragment of the schema alongside documents that are sent to it.
+Starting with version 3.0, supermassive expects a compact _fragment_ of the schema alongside executable documents.
 It doesn't require having a full schema, only a small fragment necessary for a specific operation.
 
 Schema fragment format is much more compact than the graphql-js AST. It is optimized for fast merging and serializing,
@@ -53,6 +53,15 @@ This strategy implies "schema map" to properly map operations or individual type
 
 Other strategies usually represent a variation of those two. E.g. a fragment per specific group of operations, group of modules,
 or mix of modules and operations. Supermassive is agnostic to your "fragmentizing" strategy.
+
+### Experimental feature: `@defer` and `@stream` support
+
+Current draft of GraphQL spec includes support for incremental result delivery via `@defer` and `@stream`
+directives. Supermassive provides an _experimental_ implementation for those directives and incremental delivery.
+However, APIs and response format _will_ change, expect breaking changes.
+
+> Note: see [this discussion](https://github.com/graphql/defer-stream-wg) of the new response format in the
+> defer and stream working group
 
 ### Possible future - pre-normalized executor
 
