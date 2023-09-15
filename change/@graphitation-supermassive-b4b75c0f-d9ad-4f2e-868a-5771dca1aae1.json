@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "- feat: execution with compact schema fragments\n- feat: schema fragment loading on demand\n- feat: new document annotation strategy\n- feat: experimental `@defer` and `@stream` support\n-",
+  "packageName": "@graphitation/supermassive",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}
