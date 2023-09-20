@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "Noop",
+  "packageName": "@graphitation/ts-transform-graphql-js-tag",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "none"
+}
