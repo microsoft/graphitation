@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Type Policies key-fields concerning normalization with custom key-fields works with apollo 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "id": "42",
-    "messages": Object {
-      "edges": Array [
-        Object {
-          "node": Object {
+    "messages": {
+      "edges": [
+        {
+          "node": {
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -22,48 +22,48 @@ Object {
 `;
 
 exports[`Type Policies key-fields concerning normalization with custom key-fields works with apollo 2`] = `
-Object {
-  "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}": Object {
+{
+  "Conversation:{"id":"42","title":"Hello World"}": {
     "__typename": "Conversation",
     "id": "42",
-    "messages({\\"first\\":10})": Object {
-      "edges": Array [
-        Object {
-          "node": Object {
-            "__ref": "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}",
+    "messages({"first":10})": {
+      "edges": [
+        {
+          "node": {
+            "__ref": "Message:{"authorId":"author-42","createdAt":"2020-01-01T00:00:00.000Z","id":"message-42"}",
           },
         },
       ],
     },
     "title": "Hello World",
   },
-  "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}": Object {
+  "Message:{"authorId":"author-42","createdAt":"2020-01-01T00:00:00.000Z","id":"message-42"}": {
     "__typename": "Message",
     "authorId": "author-42",
     "createdAt": "2020-01-01T00:00:00.000Z",
     "id": "message-42",
     "text": "Hello World",
   },
-  "ROOT_QUERY": Object {
+  "ROOT_QUERY": {
     "__typename": "Query",
-    "conversation({\\"id\\":\\"42\\"})": Object {
-      "__ref": "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}",
+    "conversation({"id":"42"})": {
+      "__ref": "Conversation:{"id":"42","title":"Hello World"}",
     },
   },
 }
 `;
 
 exports[`Type Policies key-fields concerning normalization with custom key-fields works with relayWithBuildtimeGeneratedIR 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
-    "messages": Object {
+    "messages": {
       "__typename": "MessagesConnection",
-      "edges": Array [
-        Object {
+      "edges": [
+        {
           "__typename": "MessagesConnectionEdge",
-          "node": Object {
+          "node": {
             "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
@@ -79,61 +79,61 @@ Object {
 `;
 
 exports[`Type Policies key-fields concerning normalization with custom key-fields works with relayWithBuildtimeGeneratedIR 2`] = `
-Object {
-  "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}": Object {
-    "__id": "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}",
+{
+  "Conversation:{"id":"42","title":"Hello World"}": {
+    "__id": "Conversation:{"id":"42","title":"Hello World"}",
     "__typename": "Conversation",
     "id": "42",
-    "messages(first:10)": Object {
-      "__ref": "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10)",
+    "messages(first:10)": {
+      "__ref": "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10)",
     },
     "title": "Hello World",
   },
-  "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}": Object {
-    "__id": "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}",
+  "Message:{"authorId":"author-42","createdAt":"2020-01-01T00:00:00.000Z","id":"message-42"}": {
+    "__id": "Message:{"authorId":"author-42","createdAt":"2020-01-01T00:00:00.000Z","id":"message-42"}",
     "__typename": "Message",
     "authorId": "author-42",
     "createdAt": "2020-01-01T00:00:00.000Z",
     "id": "message-42",
     "text": "Hello World",
   },
-  "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10)": Object {
-    "__id": "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10)",
+  "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10)": {
+    "__id": "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10)",
     "__typename": "MessagesConnection",
-    "edges": Object {
-      "__refs": Array [
-        "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10):edges:0",
+    "edges": {
+      "__refs": [
+        "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10):edges:0",
       ],
     },
   },
-  "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10):edges:0": Object {
-    "__id": "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10):edges:0",
+  "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10):edges:0": {
+    "__id": "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10):edges:0",
     "__typename": "MessagesConnectionEdge",
-    "node": Object {
-      "__ref": "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}",
+    "node": {
+      "__ref": "Message:{"authorId":"author-42","createdAt":"2020-01-01T00:00:00.000Z","id":"message-42"}",
     },
   },
-  "client:root": Object {
+  "client:root": {
     "__id": "client:root",
     "__typename": "__Root",
-    "conversation(id:\\"42\\")": Object {
-      "__ref": "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}",
+    "conversation(id:"42")": {
+      "__ref": "Conversation:{"id":"42","title":"Hello World"}",
     },
   },
 }
 `;
 
 exports[`Type Policies key-fields concerning normalization with custom key-fields works with relayWithRuntimeGeneratedIR 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
-    "messages": Object {
+    "messages": {
       "__typename": "MessagesConnection",
-      "edges": Array [
-        Object {
+      "edges": [
+        {
           "__typename": "MessagesConnectionEdge",
-          "node": Object {
+          "node": {
             "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
@@ -149,58 +149,58 @@ Object {
 `;
 
 exports[`Type Policies key-fields concerning normalization with custom key-fields works with relayWithRuntimeGeneratedIR 2`] = `
-Object {
-  "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}": Object {
-    "__id": "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}",
+{
+  "Conversation:{"id":"42","title":"Hello World"}": {
+    "__id": "Conversation:{"id":"42","title":"Hello World"}",
     "__typename": "Conversation",
     "id": "42",
-    "messages(first:10)": Object {
-      "__ref": "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10)",
+    "messages(first:10)": {
+      "__ref": "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10)",
     },
     "title": "Hello World",
   },
-  "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}": Object {
-    "__id": "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}",
+  "Message:{"authorId":"author-42","createdAt":"2020-01-01T00:00:00.000Z","id":"message-42"}": {
+    "__id": "Message:{"authorId":"author-42","createdAt":"2020-01-01T00:00:00.000Z","id":"message-42"}",
     "__typename": "Message",
     "authorId": "author-42",
     "createdAt": "2020-01-01T00:00:00.000Z",
     "id": "message-42",
     "text": "Hello World",
   },
-  "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10)": Object {
-    "__id": "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10)",
+  "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10)": {
+    "__id": "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10)",
     "__typename": "MessagesConnection",
-    "edges": Object {
-      "__refs": Array [
-        "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10):edges:0",
+    "edges": {
+      "__refs": [
+        "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10):edges:0",
       ],
     },
   },
-  "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10):edges:0": Object {
-    "__id": "client:Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}:messages(first:10):edges:0",
+  "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10):edges:0": {
+    "__id": "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10):edges:0",
     "__typename": "MessagesConnectionEdge",
-    "node": Object {
-      "__ref": "Message:{\\"authorId\\":\\"author-42\\",\\"createdAt\\":\\"2020-01-01T00:00:00.000Z\\",\\"id\\":\\"message-42\\"}",
+    "node": {
+      "__ref": "Message:{"authorId":"author-42","createdAt":"2020-01-01T00:00:00.000Z","id":"message-42"}",
     },
   },
-  "client:root": Object {
+  "client:root": {
     "__id": "client:root",
     "__typename": "__Root",
-    "conversation(id:\\"42\\")": Object {
-      "__ref": "Conversation:{\\"id\\":\\"42\\",\\"title\\":\\"Hello World\\"}",
+    "conversation(id:"42")": {
+      "__ref": "Conversation:{"id":"42","title":"Hello World"}",
     },
   },
 }
 `;
 
 exports[`Type Policies key-fields concerning normalization with default key-fields works with apollo 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "id": "42",
-    "messages": Object {
-      "edges": Array [
-        Object {
-          "node": Object {
+    "messages": {
+      "edges": [
+        {
+          "node": {
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -215,14 +215,14 @@ Object {
 `;
 
 exports[`Type Policies key-fields concerning normalization with default key-fields works with apollo 2`] = `
-Object {
-  "Conversation:42": Object {
+{
+  "Conversation:42": {
     "__typename": "Conversation",
     "id": "42",
-    "messages({\\"first\\":10})": Object {
-      "edges": Array [
-        Object {
-          "node": Object {
+    "messages({"first":10})": {
+      "edges": [
+        {
+          "node": {
             "__ref": "Message:message-42",
           },
         },
@@ -230,16 +230,16 @@ Object {
     },
     "title": "Hello World",
   },
-  "Message:message-42": Object {
+  "Message:message-42": {
     "__typename": "Message",
     "authorId": "author-42",
     "createdAt": "2020-01-01T00:00:00.000Z",
     "id": "message-42",
     "text": "Hello World",
   },
-  "ROOT_QUERY": Object {
+  "ROOT_QUERY": {
     "__typename": "Query",
-    "conversation({\\"id\\":\\"42\\"})": Object {
+    "conversation({"id":"42"})": {
       "__ref": "Conversation:42",
     },
   },
@@ -247,16 +247,16 @@ Object {
 `;
 
 exports[`Type Policies key-fields concerning normalization with default key-fields works with relayWithBuildtimeGeneratedIR 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
-    "messages": Object {
+    "messages": {
       "__typename": "MessagesConnection",
-      "edges": Array [
-        Object {
+      "edges": [
+        {
           "__typename": "MessagesConnectionEdge",
-          "node": Object {
+          "node": {
             "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
@@ -272,17 +272,17 @@ Object {
 `;
 
 exports[`Type Policies key-fields concerning normalization with default key-fields works with relayWithBuildtimeGeneratedIR 2`] = `
-Object {
-  "Conversation:42": Object {
+{
+  "Conversation:42": {
     "__id": "Conversation:42",
     "__typename": "Conversation",
     "id": "42",
-    "messages(first:10)": Object {
+    "messages(first:10)": {
       "__ref": "client:Conversation:42:messages(first:10)",
     },
     "title": "Hello World",
   },
-  "Message:message-42": Object {
+  "Message:message-42": {
     "__id": "Message:message-42",
     "__typename": "Message",
     "authorId": "author-42",
@@ -290,26 +290,26 @@ Object {
     "id": "message-42",
     "text": "Hello World",
   },
-  "client:Conversation:42:messages(first:10)": Object {
+  "client:Conversation:42:messages(first:10)": {
     "__id": "client:Conversation:42:messages(first:10)",
     "__typename": "MessagesConnection",
-    "edges": Object {
-      "__refs": Array [
+    "edges": {
+      "__refs": [
         "client:Conversation:42:messages(first:10):edges:0",
       ],
     },
   },
-  "client:Conversation:42:messages(first:10):edges:0": Object {
+  "client:Conversation:42:messages(first:10):edges:0": {
     "__id": "client:Conversation:42:messages(first:10):edges:0",
     "__typename": "MessagesConnectionEdge",
-    "node": Object {
+    "node": {
       "__ref": "Message:message-42",
     },
   },
-  "client:root": Object {
+  "client:root": {
     "__id": "client:root",
     "__typename": "__Root",
-    "conversation(id:\\"42\\")": Object {
+    "conversation(id:"42")": {
       "__ref": "Conversation:42",
     },
   },
@@ -317,16 +317,16 @@ Object {
 `;
 
 exports[`Type Policies key-fields concerning normalization with default key-fields works with relayWithRuntimeGeneratedIR 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
-    "messages": Object {
+    "messages": {
       "__typename": "MessagesConnection",
-      "edges": Array [
-        Object {
+      "edges": [
+        {
           "__typename": "MessagesConnectionEdge",
-          "node": Object {
+          "node": {
             "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
@@ -342,17 +342,17 @@ Object {
 `;
 
 exports[`Type Policies key-fields concerning normalization with default key-fields works with relayWithRuntimeGeneratedIR 2`] = `
-Object {
-  "Conversation:42": Object {
+{
+  "Conversation:42": {
     "__id": "Conversation:42",
     "__typename": "Conversation",
     "id": "42",
-    "messages(first:10)": Object {
+    "messages(first:10)": {
       "__ref": "client:Conversation:42:messages(first:10)",
     },
     "title": "Hello World",
   },
-  "Message:message-42": Object {
+  "Message:message-42": {
     "__id": "Message:message-42",
     "__typename": "Message",
     "authorId": "author-42",
@@ -360,26 +360,26 @@ Object {
     "id": "message-42",
     "text": "Hello World",
   },
-  "client:Conversation:42:messages(first:10)": Object {
+  "client:Conversation:42:messages(first:10)": {
     "__id": "client:Conversation:42:messages(first:10)",
     "__typename": "MessagesConnection",
-    "edges": Object {
-      "__refs": Array [
+    "edges": {
+      "__refs": [
         "client:Conversation:42:messages(first:10):edges:0",
       ],
     },
   },
-  "client:Conversation:42:messages(first:10):edges:0": Object {
+  "client:Conversation:42:messages(first:10):edges:0": {
     "__id": "client:Conversation:42:messages(first:10):edges:0",
     "__typename": "MessagesConnectionEdge",
-    "node": Object {
+    "node": {
       "__ref": "Message:message-42",
     },
   },
-  "client:root": Object {
+  "client:root": {
     "__id": "client:root",
     "__typename": "__Root",
-    "conversation(id:\\"42\\")": Object {
+    "conversation(id:"42")": {
       "__ref": "Conversation:42",
     },
   },
@@ -387,13 +387,13 @@ Object {
 `;
 
 exports[`Type Policies key-fields concerning normalization without key-fields works with apollo 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "id": "42",
-    "messages": Object {
-      "edges": Array [
-        Object {
-          "node": Object {
+    "messages": {
+      "edges": [
+        {
+          "node": {
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -408,16 +408,16 @@ Object {
 `;
 
 exports[`Type Policies key-fields concerning normalization without key-fields works with apollo 2`] = `
-Object {
-  "ROOT_QUERY": Object {
+{
+  "ROOT_QUERY": {
     "__typename": "Query",
-    "conversation({\\"id\\":\\"42\\"})": Object {
+    "conversation({"id":"42"})": {
       "__typename": "Conversation",
       "id": "42",
-      "messages({\\"first\\":10})": Object {
-        "edges": Array [
-          Object {
-            "node": Object {
+      "messages({"first":10})": {
+        "edges": [
+          {
+            "node": {
               "__typename": "Message",
               "authorId": "author-42",
               "createdAt": "2020-01-01T00:00:00.000Z",
@@ -434,16 +434,16 @@ Object {
 `;
 
 exports[`Type Policies key-fields concerning normalization without key-fields works with relayWithBuildtimeGeneratedIR 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
-    "messages": Object {
+    "messages": {
       "__typename": "MessagesConnection",
-      "edges": Array [
-        Object {
+      "edges": [
+        {
           "__typename": "MessagesConnectionEdge",
-          "node": Object {
+          "node": {
             "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
@@ -459,41 +459,41 @@ Object {
 `;
 
 exports[`Type Policies key-fields concerning normalization without key-fields works with relayWithBuildtimeGeneratedIR 2`] = `
-Object {
-  "client:root": Object {
+{
+  "client:root": {
     "__id": "client:root",
     "__typename": "__Root",
-    "conversation(id:\\"42\\")": Object {
-      "__ref": "client:root:conversation(id:\\"42\\")",
+    "conversation(id:"42")": {
+      "__ref": "client:root:conversation(id:"42")",
     },
   },
-  "client:root:conversation(id:\\"42\\")": Object {
-    "__id": "client:root:conversation(id:\\"42\\")",
+  "client:root:conversation(id:"42")": {
+    "__id": "client:root:conversation(id:"42")",
     "__typename": "Conversation",
     "id": "42",
-    "messages(first:10)": Object {
-      "__ref": "client:root:conversation(id:\\"42\\"):messages(first:10)",
+    "messages(first:10)": {
+      "__ref": "client:root:conversation(id:"42"):messages(first:10)",
     },
     "title": "Hello World",
   },
-  "client:root:conversation(id:\\"42\\"):messages(first:10)": Object {
-    "__id": "client:root:conversation(id:\\"42\\"):messages(first:10)",
+  "client:root:conversation(id:"42"):messages(first:10)": {
+    "__id": "client:root:conversation(id:"42"):messages(first:10)",
     "__typename": "MessagesConnection",
-    "edges": Object {
-      "__refs": Array [
-        "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0",
+    "edges": {
+      "__refs": [
+        "client:root:conversation(id:"42"):messages(first:10):edges:0",
       ],
     },
   },
-  "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0": Object {
-    "__id": "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0",
+  "client:root:conversation(id:"42"):messages(first:10):edges:0": {
+    "__id": "client:root:conversation(id:"42"):messages(first:10):edges:0",
     "__typename": "MessagesConnectionEdge",
-    "node": Object {
-      "__ref": "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0:node",
+    "node": {
+      "__ref": "client:root:conversation(id:"42"):messages(first:10):edges:0:node",
     },
   },
-  "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0:node": Object {
-    "__id": "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0:node",
+  "client:root:conversation(id:"42"):messages(first:10):edges:0:node": {
+    "__id": "client:root:conversation(id:"42"):messages(first:10):edges:0:node",
     "__typename": "Message",
     "authorId": "author-42",
     "createdAt": "2020-01-01T00:00:00.000Z",
@@ -504,16 +504,16 @@ Object {
 `;
 
 exports[`Type Policies key-fields concerning normalization without key-fields works with relayWithRuntimeGeneratedIR 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
-    "messages": Object {
+    "messages": {
       "__typename": "MessagesConnection",
-      "edges": Array [
-        Object {
+      "edges": [
+        {
           "__typename": "MessagesConnectionEdge",
-          "node": Object {
+          "node": {
             "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
@@ -529,41 +529,41 @@ Object {
 `;
 
 exports[`Type Policies key-fields concerning normalization without key-fields works with relayWithRuntimeGeneratedIR 2`] = `
-Object {
-  "client:root": Object {
+{
+  "client:root": {
     "__id": "client:root",
     "__typename": "__Root",
-    "conversation(id:\\"42\\")": Object {
-      "__ref": "client:root:conversation(id:\\"42\\")",
+    "conversation(id:"42")": {
+      "__ref": "client:root:conversation(id:"42")",
     },
   },
-  "client:root:conversation(id:\\"42\\")": Object {
-    "__id": "client:root:conversation(id:\\"42\\")",
+  "client:root:conversation(id:"42")": {
+    "__id": "client:root:conversation(id:"42")",
     "__typename": "Conversation",
     "id": "42",
-    "messages(first:10)": Object {
-      "__ref": "client:root:conversation(id:\\"42\\"):messages(first:10)",
+    "messages(first:10)": {
+      "__ref": "client:root:conversation(id:"42"):messages(first:10)",
     },
     "title": "Hello World",
   },
-  "client:root:conversation(id:\\"42\\"):messages(first:10)": Object {
-    "__id": "client:root:conversation(id:\\"42\\"):messages(first:10)",
+  "client:root:conversation(id:"42"):messages(first:10)": {
+    "__id": "client:root:conversation(id:"42"):messages(first:10)",
     "__typename": "MessagesConnection",
-    "edges": Object {
-      "__refs": Array [
-        "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0",
+    "edges": {
+      "__refs": [
+        "client:root:conversation(id:"42"):messages(first:10):edges:0",
       ],
     },
   },
-  "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0": Object {
-    "__id": "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0",
+  "client:root:conversation(id:"42"):messages(first:10):edges:0": {
+    "__id": "client:root:conversation(id:"42"):messages(first:10):edges:0",
     "__typename": "MessagesConnectionEdge",
-    "node": Object {
-      "__ref": "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0:node",
+    "node": {
+      "__ref": "client:root:conversation(id:"42"):messages(first:10):edges:0:node",
     },
   },
-  "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0:node": Object {
-    "__id": "client:root:conversation(id:\\"42\\"):messages(first:10):edges:0:node",
+  "client:root:conversation(id:"42"):messages(first:10):edges:0:node": {
+    "__id": "client:root:conversation(id:"42"):messages(first:10):edges:0:node",
     "__typename": "Message",
     "authorId": "author-42",
     "createdAt": "2020-01-01T00:00:00.000Z",
@@ -574,15 +574,15 @@ Object {
 `;
 
 exports[`Type Policies read functions / missing field handlers works with apollo 1`] = `
-Object {
+{
   "id": "message-42",
   "text": "Hello World",
 }
 `;
 
 exports[`Type Policies read functions / missing field handlers works with apollo 2`] = `
-Object {
-  "message": Object {
+{
+  "message": {
     "id": "message-42",
     "text": "Hello World",
   },
@@ -590,7 +590,7 @@ Object {
 `;
 
 exports[`Type Policies read functions / missing field handlers works with relayWithBuildtimeGeneratedIR 1`] = `
-Object {
+{
   "__typename": "Message",
   "id": "message-42",
   "text": "Hello World",
@@ -598,8 +598,8 @@ Object {
 `;
 
 exports[`Type Policies read functions / missing field handlers works with relayWithBuildtimeGeneratedIR 2`] = `
-Object {
-  "message": Object {
+{
+  "message": {
     "__typename": "Message",
     "id": "message-42",
     "text": "Hello World",
@@ -608,7 +608,7 @@ Object {
 `;
 
 exports[`Type Policies read functions / missing field handlers works with relayWithRuntimeGeneratedIR 1`] = `
-Object {
+{
   "__typename": "Message",
   "id": "message-42",
   "text": "Hello World",
@@ -616,8 +616,8 @@ Object {
 `;
 
 exports[`Type Policies read functions / missing field handlers works with relayWithRuntimeGeneratedIR 2`] = `
-Object {
-  "message": Object {
+{
+  "message": {
     "__typename": "Message",
     "id": "message-42",
     "text": "Hello World",
@@ -694,8 +694,8 @@ fragment CacheTestFragment on Conversation {
 `;
 
 exports[`watch works with apollo 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "id": "42",
     "title": "Hello World 1",
   },
@@ -703,8 +703,8 @@ Object {
 `;
 
 exports[`watch works with apollo 2`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "id": "42",
     "title": "Hello World 2",
   },
@@ -712,8 +712,8 @@ Object {
 `;
 
 exports[`watch works with apollo 3`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "id": "42",
     "title": "Hello World 1",
   },
@@ -721,8 +721,8 @@ Object {
 `;
 
 exports[`watch works with relayWithBuildtimeGeneratedIR 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
@@ -731,8 +731,8 @@ Object {
 `;
 
 exports[`watch works with relayWithBuildtimeGeneratedIR 2`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 2",
@@ -741,8 +741,8 @@ Object {
 `;
 
 exports[`watch works with relayWithBuildtimeGeneratedIR 3`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
@@ -751,8 +751,8 @@ Object {
 `;
 
 exports[`watch works with relayWithRuntimeGeneratedIR 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
@@ -761,8 +761,8 @@ Object {
 `;
 
 exports[`watch works with relayWithRuntimeGeneratedIR 2`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 2",
@@ -771,8 +771,8 @@ Object {
 `;
 
 exports[`watch works with relayWithRuntimeGeneratedIR 3`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
@@ -781,21 +781,21 @@ Object {
 `;
 
 exports[`writeFragment/readFragment works with apollo 1`] = `
-Object {
+{
   "id": "42",
   "title": "Hello World",
 }
 `;
 
 exports[`writeFragment/readFragment works with apollo and optimistic data 1`] = `
-Object {
+{
   "id": "42",
   "title": "Hello World",
 }
 `;
 
 exports[`writeFragment/readFragment works with relayWithBuildtimeGeneratedIR 1`] = `
-Object {
+{
   "__typename": "Conversation",
   "id": "Conversation:42",
   "title": "Hello World",
@@ -803,7 +803,7 @@ Object {
 `;
 
 exports[`writeFragment/readFragment works with relayWithBuildtimeGeneratedIR and optimistic data 1`] = `
-Object {
+{
   "__typename": "Conversation",
   "id": "Conversation:42",
   "title": "Hello World",
@@ -811,7 +811,7 @@ Object {
 `;
 
 exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR 1`] = `
-Object {
+{
   "__typename": "Conversation",
   "id": "Conversation:42",
   "title": "Hello World",
@@ -819,7 +819,7 @@ Object {
 `;
 
 exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR and optimistic data 1`] = `
-Object {
+{
   "__typename": "Conversation",
   "id": "Conversation:42",
   "title": "Hello World",
@@ -827,14 +827,14 @@ Object {
 `;
 
 exports[`writeFragment/readFragment works with writeQuery for apollo 1`] = `
-Object {
+{
   "id": "42",
   "title": "Hello World",
 }
 `;
 
 exports[`writeFragment/readFragment works with writeQuery for relayWithBuildtimeGeneratedIR 1`] = `
-Object {
+{
   "__typename": "Conversation",
   "id": "42",
   "title": "Hello World",
@@ -842,7 +842,7 @@ Object {
 `;
 
 exports[`writeFragment/readFragment works with writeQuery for relayWithRuntimeGeneratedIR 1`] = `
-Object {
+{
   "__typename": "Conversation",
   "id": "42",
   "title": "Hello World",
@@ -850,8 +850,8 @@ Object {
 `;
 
 exports[`writeQuery/readQuery concerning optimistic updates applies update with apollo 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "id": "42",
     "title": "Hello World",
   },
@@ -859,8 +859,8 @@ Object {
 `;
 
 exports[`writeQuery/readQuery concerning optimistic updates applies update with apollo 2`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "id": "42",
     "title": "Hello World",
   },
@@ -868,8 +868,8 @@ Object {
 `;
 
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithBuildtimeGeneratedIR 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
@@ -878,8 +878,8 @@ Object {
 `;
 
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithBuildtimeGeneratedIR 2`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
@@ -888,8 +888,8 @@ Object {
 `;
 
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithRuntimeGeneratedIR 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
@@ -898,8 +898,8 @@ Object {
 `;
 
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithRuntimeGeneratedIR 2`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
@@ -908,8 +908,8 @@ Object {
 `;
 
 exports[`writeQuery/readQuery works with apollo 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "id": "42",
     "title": "Hello World",
   },
@@ -917,8 +917,8 @@ Object {
 `;
 
 exports[`writeQuery/readQuery works with relayWithBuildtimeGeneratedIR 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
@@ -927,8 +927,8 @@ Object {
 `;
 
 exports[`writeQuery/readQuery works with relayWithRuntimeGeneratedIR 1`] = `
-Object {
-  "conversation": Object {
+{
+  "conversation": {
     "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",

@@ -340,9 +340,9 @@ export function createMockClient(
       }
     });
     cache = new InMemoryCache({
-      ...options?.inMemoryCacheConfig,
-      possibleTypes,
       addTypename: true,
+      possibleTypes,
+      ...options?.inMemoryCacheConfig,
     });
   }
 

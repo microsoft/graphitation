@@ -239,11 +239,7 @@ describe.each([
     backwardUsePaginationFragmentResult = [];
     componentOnQueryTypeResult = [];
     client = createMockClient(schema, {
-      cache: {
-        possibleTypes: {
-          Node: ["User"],
-          NodeWithPetAvatarAndConversations: ["User"],
-        },
+      inMemoryCacheConfig: {
         typePolicies,
         ...(typePolicies === typePoliciesWithDefaultApolloClientStoreKeys
           ? {}
