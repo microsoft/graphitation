@@ -1,11 +1,19 @@
-import { parse, execute as graphQLExecute } from "graphql";
-import { executeWithoutSchema, executeWithSchema } from "..";
-import schema, { typeDefs } from "../benchmarks/swapi-schema";
+import {
+  parse,
+  execute as graphQLExecute,
+  subscribe as graphQLSubscribe,
+  GraphQLSchema,
+} from "graphql";
+import { makeSchema } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
-import resolvers from "../benchmarks/swapi-schema/resolvers";
-import { addTypesToRequestDocument } from "@graphitation/supermassive-ast";
-import { UserResolvers } from "../types";
-import { resolvers as extractedResolvers } from "../benchmarks/swapi-schema/__generated__/schema";
+import { createExecutionUtils } from "../__testUtils__/execute";
+
+const {
+  compareResultsForExecuteWithSchema,
+  compareResultForExecuteWithoutSchemaWithMVSAnnotation,
+  drainExecution,
+  graphqlExecuteOrSubscribe,
+} = createExecutionUtils(graphQLExecute, graphQLSubscribe);
 
 interface TestCase {
   name: string;
@@ -18,6 +26,7 @@ const testCases: Array<TestCase> = [
     name: "basic query",
     document: `
   {
+    __typename
     person(id: 1) {
       name
       gender
@@ -118,9 +127,10 @@ const testCases: Array<TestCase> = [
       name
       gender
       birth_year
-      starships {
-        name
-      }
+      # TODO: separate field / arg for starships as async iterator (today it breaks with graphql-js >= 16)
+      # starships {
+      #  name
+      # }
     }  
     `,
   },
@@ -295,73 +305,112 @@ query Person($id: Int!) {
     }
     `,
   },
-];
-
-describe("executeWithSchema", () => {
-  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
-    await compareResultsForExecuteWithSchema(document, variables);
-  });
-});
-
-describe("executeWithoutSchema", () => {
-  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
-    await compareResultsForExecuteWithoutSchema(document, variables);
-  });
-});
-
-async function compareResultsForExecuteWithSchema(
-  query: string,
-  variables?: Record<string, unknown>,
-) {
-  expect.assertions(1);
-  const document = parse(query);
-  const result = await executeWithSchema({
-    typeDefs,
-    resolvers: resolvers as UserResolvers<any, any>,
-    document,
-    contextValue: {
-      models,
-    },
-    variableValues: variables,
-  });
-  const validResult = await graphQLExecute({
-    document,
-    contextValue: {
-      models,
-    },
-    schema,
-    variableValues: variables,
-  });
-  expect(result).toEqual(validResult);
-}
-
-async function compareResultsForExecuteWithoutSchema(
-  query: string,
-  variables: Record<string, unknown> = {},
-) {
-  expect.assertions(1);
-  const document = parse(query);
-  const result = await executeWithoutSchema({
-    document: addTypesToRequestDocument(schema, document),
-    contextValue: {
-      models,
-    },
-    resolvers: resolvers as UserResolvers,
-    schemaResolvers: extractedResolvers,
-    variableValues: variables,
-  });
-  const validResult = await graphQLExecute({
-    document,
-    contextValue: {
-      models,
-    },
-    schema,
-    variableValues: variables,
-  });
-  if (result.errors) {
-    for (const error of result.errors) {
-      console.error(error);
+  // errors
+  {
+    name: "errors and nulls",
+    document: `
+    {
+      person(id: 1) {
+        name
+        bubblingError
+        bubblingListError
+      }
+    }
+    `,
+  },
+  // subscription
+  {
+    name: "basic subscription with variables",
+    document: `
+  subscription emitPersons($limit: Int!) {
+    emitPersons(limit: $limit) {
+      name
+      gender
     }
   }
-  expect(result).toEqual(validResult);
-}
+ `,
+    variables: {
+      limit: 5,
+    },
+  },
+  {
+    name: "basic subscription with unused non-required variable",
+    document: `
+  subscription emitPersons($limit: Int!, $throwError: Boolean) {
+    emitPersons(limit: $limit, throwError: $throwError) {
+      name
+      gender
+    }
+  }
+ `,
+    variables: {
+      limit: 5,
+    },
+  },
+  {
+    name: "subscription throw an error",
+    document: `
+  subscription emitPersons($limit: Int!, $throwError: Boolean) {
+    emitPersons(limit: $limit, throwError: $throwError) {
+      name
+      gender
+    }
+  }
+ `,
+    variables: {
+      limit: 5,
+      throwError: true,
+    },
+  },
+];
+
+describe("graphql-js snapshot check to ensure test stability", () => {
+  let schema: GraphQLSchema;
+  beforeEach(() => {
+    jest.resetAllMocks();
+    schema = makeSchema();
+  });
+
+  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
+    expect.assertions(1);
+    const parsedDocument = parse(document);
+    const result = await drainExecution(
+      await graphqlExecuteOrSubscribe({
+        schema,
+        document: parsedDocument,
+        contextValue: {
+          models,
+        },
+        variableValues: variables,
+      }),
+    );
+    expect(result).toMatchSnapshot();
+  });
+});
+
+describe("executeWithSchema", () => {
+  let schema: GraphQLSchema;
+  beforeEach(() => {
+    jest.resetAllMocks();
+    schema = makeSchema();
+  });
+
+  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
+    await compareResultsForExecuteWithSchema(schema, document, variables);
+  });
+});
+
+describe("executeWithoutSchema - minimal viable schema annotation", () => {
+  let schema: GraphQLSchema;
+  beforeEach(() => {
+    jest.resetAllMocks();
+    schema = makeSchema();
+  });
+  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
+    await compareResultForExecuteWithoutSchemaWithMVSAnnotation(
+      schema,
+      document,
+      variables,
+    );
+  });
+});

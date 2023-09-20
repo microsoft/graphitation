@@ -1,16 +1,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { GraphQLFieldResolver } from "graphql/type/definition";
 import { IExecutableSchemaDefinition } from "@graphql-tools/schema";
-import { createAsyncIterator } from "iterall";
+import { createAsyncIterator, forAwaitEach, getAsyncIterator } from "iterall";
+import { mapAsyncIterator } from "../../utilities/mapAsyncIterator";
+
+// Note: need this for graphql15-graphql17 cross-compatibility
+type GraphQLFieldResolver<T = any, U = any, I = any> = (
+  parent: T,
+  args: U,
+  context: I,
+  info: any,
+) => any;
 
 const films: GraphQLFieldResolver<any, any, any> = (
   parent,
   _args,
   { models },
 ) => {
-  return models
-    .getData("/films")
-    .filter(({ id }: { id: any }) => parent.films.includes(id));
+  return mapAsyncIterator(
+    getAsyncIterator(
+      createAsyncIterator(
+        models
+          .getData("/films")
+          .filter(({ id }: { id: any }) => parent.films.includes(id)),
+      ),
+    ) as unknown as AsyncIterable<any>,
+    // this ensures it's a awaitable iterator
+    async (item) => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      return item;
+    },
+  );
 };
 
 const starships: GraphQLFieldResolver<any, any, any> = (
@@ -18,9 +37,21 @@ const starships: GraphQLFieldResolver<any, any, any> = (
   _args,
   { models },
 ) => {
-  return models
-    .getData("/starships")
-    .filter(({ id }: { id: any }) => parent.starships.includes(id));
+  return mapAsyncIterator(
+    getAsyncIterator(
+      createAsyncIterator(
+        models
+          .getData("/starships")
+          .filter(({ id }: { id: any }) => parent.starships.includes(id)),
+      ),
+    ) as unknown as AsyncIterable<any>,
+    // this ensures it's a awaitable iterator
+
+    async (item) => {
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      return item;
+    },
+  );
 };
 
 function people(key: string): GraphQLFieldResolver<any, any, any> {
@@ -71,7 +102,7 @@ const homeworld: GraphQLFieldResolver<any, any, any> = (
 };
 
 const person: GraphQLFieldResolver<any, any, any> = (
-  _parent,
+  parent,
   { id },
   { models },
 ) => {
@@ -79,7 +110,7 @@ const person: GraphQLFieldResolver<any, any, any> = (
 };
 
 const planet: GraphQLFieldResolver<any, any, any> = (
-  _parent,
+  parent,
   { id },
   { models },
 ) => {
@@ -87,7 +118,7 @@ const planet: GraphQLFieldResolver<any, any, any> = (
 };
 
 const film: GraphQLFieldResolver<any, any, any> = (
-  _parent,
+  parent,
   { id },
   { models },
 ) => {
@@ -95,7 +126,7 @@ const film: GraphQLFieldResolver<any, any, any> = (
 };
 
 const starship: GraphQLFieldResolver<any, any, any> = (
-  _parent,
+  parent,
   { id },
   { models },
 ) => {
@@ -105,7 +136,7 @@ const starship: GraphQLFieldResolver<any, any, any> = (
 };
 
 const transport: GraphQLFieldResolver<any, any, any> = (
-  _parent,
+  parent,
   { id },
   { models },
 ) => {
@@ -115,7 +146,7 @@ const transport: GraphQLFieldResolver<any, any, any> = (
 };
 
 const vehicle: GraphQLFieldResolver<any, any, any> = (
-  _parent,
+  parent,
   { id },
   { models },
 ) => {
@@ -123,7 +154,7 @@ const vehicle: GraphQLFieldResolver<any, any, any> = (
 };
 
 const searchPeopleByName: GraphQLFieldResolver<any, any, any> = (
-  _parent,
+  parent,
   { search },
   { models },
 ) => {
@@ -133,7 +164,7 @@ const searchPeopleByName: GraphQLFieldResolver<any, any, any> = (
 };
 
 const searchPlanetsByName: GraphQLFieldResolver<any, any, any> = (
-  _parent,
+  parent,
   { search },
   { models },
 ) => {
@@ -143,7 +174,7 @@ const searchPlanetsByName: GraphQLFieldResolver<any, any, any> = (
 };
 
 const searchFilmsByTitle: GraphQLFieldResolver<any, any, any> = (
-  _parent,
+  parent,
   { search },
   { models },
 ) => {
@@ -153,7 +184,7 @@ const searchFilmsByTitle: GraphQLFieldResolver<any, any, any> = (
 };
 
 const searchSpeciesByName: GraphQLFieldResolver<any, any, any> = (
-  _parent,
+  parent,
   { search },
   { models },
 ) => {
@@ -163,7 +194,7 @@ const searchSpeciesByName: GraphQLFieldResolver<any, any, any> = (
 };
 
 const searchStarshipsByName: GraphQLFieldResolver<any, any, any> = (
-  _parent,
+  parent,
   { search },
   { models },
 ) => {
@@ -173,7 +204,7 @@ const searchStarshipsByName: GraphQLFieldResolver<any, any, any> = (
 };
 
 const searchVehiclesByName: GraphQLFieldResolver<any, any, any> = (
-  _parent,
+  parent,
   { search },
   { models },
 ) => {
@@ -183,7 +214,7 @@ const searchVehiclesByName: GraphQLFieldResolver<any, any, any> = (
 };
 
 const emitPersons: GraphQLFieldResolver<any, any, any> = async function (
-  _parent,
+  parent,
   { limit, throwError },
   { models },
 ) {
@@ -201,7 +232,7 @@ const emitPersons: GraphQLFieldResolver<any, any, any> = async function (
 };
 
 const searchTransportsByName: GraphQLFieldResolver<any, any, any> = (
-  _parent,
+  parent,
   { search },
   { models },
 ) => {
@@ -352,6 +383,19 @@ const resolvers: IExecutableSchemaDefinition["resolvers"] = {
     mass: (pilot) => +pilot.mass,
     starships,
     homeworld,
+    films,
+    bubblingError: () => {
+      throw new Error("Bubbling!");
+    },
+    bubblingListError: () => {
+      return forAwaitEach([1, 2, 3], async (item) => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        if (item === 2) {
+          throw new Error("Bubbling in list!");
+        }
+        return item;
+      });
+    },
   },
   Vehicle: {
     cargo_capacity: (vehicle) => +vehicle.cargo_capacity,

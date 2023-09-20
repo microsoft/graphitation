@@ -2,6 +2,141 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Fri, 15 Sep 2023 16:06:32 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0",
+      "version": "3.0.0",
+      "comments": {
+        "major": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "f10783b13c01b720d639d66d398acf760bf8be41",
+            "comment": "- feat: execution with compact schema fragments\n- feat: schema fragment loading on demand\n- feat: new document annotation strategy\n- feat: experimental `@defer` and `@stream` support\n-"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Fri, 15 Sep 2023 00:43:00 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0-alpha.9",
+      "version": "3.0.0-alpha.9",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "3768aa59f09ff06310ebf5792ac8ed4a0d9468e7",
+            "comment": "graphql15 compatibility"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 14 Sep 2023 19:05:33 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0-alpha.8",
+      "version": "3.0.0-alpha.8",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "6c652275b365a790dbe43143f2033f877d0f64ff",
+            "comment": "change signature of executeWithSchema and subscribeWithSchema functions"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 12 Sep 2023 23:58:31 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0-alpha.7",
+      "version": "3.0.0-alpha.7",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "84bc5479d3b0e3ef6dc658ae20b615add198af18",
+            "comment": "refactor: replace PartialSchema class with ES module functions"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 11 Sep 2023 19:24:32 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0-alpha.6",
+      "version": "3.0.0-alpha.6",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "bfe5828436ee6d9c725adbad4cfaed2f5ec0e7d0",
+            "comment": "fix mergeResolvers + more tests"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 11 Sep 2023 12:06:07 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0-alpha.5",
+      "version": "3.0.0-alpha.5",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "4ea84c913970a82d962867faf8e3dd191caf869a",
+            "comment": "switch to 1-indexed ids for spec type references"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Sun, 10 Sep 2023 20:58:53 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0-alpha.4",
+      "version": "3.0.0-alpha.4",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "bbf21059dce35b16ea1184eeb764d93b3dfe08f4",
+            "comment": "Schema fragment loader"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 29 Aug 2023 15:06:36 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0-alpha.3",
+      "version": "3.0.0-alpha.3",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "91000a549906ef184a4efc30eeae245998965ea9",
+            "comment": "New type annotation strategy"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 27 Jun 2023 11:47:30 GMT",
+      "tag": "@graphitation/supermassive_v3.0.0-alpha.1",
+      "version": "3.0.0-alpha.1",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "df161b319c99c4e1b298870bfff4a03a602ea66a",
+            "comment": "Supermassive v3 alpha - defer and stream stuff"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 20 Jun 2023 11:38:47 GMT",
       "tag": "@graphitation/supermassive_v2.6.0",
       "version": "2.6.0",

@@ -1,8 +1,16 @@
 # Change Log - @graphitation/embedded-document-artefact-loader
 
-This log was last generated on Wed, 16 Aug 2023 06:31:21 GMT and should not be manually modified.
+This log was last generated on Fri, 15 Sep 2023 22:22:30 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.3
+
+Fri, 15 Sep 2023 22:22:30 GMT
+
+### Patches
+
+- Make jest loader work for async import (eloy.de.enige@gmail.com)
 
 ## 0.6.2
 

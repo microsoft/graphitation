@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/supermassive",
   "license": "MIT",
-  "version": "2.6.1",
+  "version": "3.0.0",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
@@ -11,23 +11,21 @@
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
-    "test": "yarn extract-schema && monorepo-scripts test",
-    "types": "yarn extract-schema && monorepo-scripts types",
+    "test": "monorepo-scripts test",
+    "types": "monorepo-scripts types",
     "just": "monorepo-scripts",
-    "extract-schema": "yarn build && ts-node --project tsconfig.json ./node_modules/.bin/supermassive extract-schema ./src/benchmarks/swapi-schema/schema.graphql",
+    "graphql17": "node ./scripts/install-graphql-17.js",
+    "test17": "yarn graphql17 && yarn jest --config=../../scripts/config/jest.config.js --testMatch='**/*.graphql17.test.ts' --testPathIgnorePatterns='node_modules' --diagnostics=false",
     "benchmark": "ts-node -T ./src/benchmarks/index.ts"
   },
   "devDependencies": {
-    "@graphitation/graphql-js-tag": "*",
-    "@graphitation/supermassive-extractors": "*",
     "@graphitation/cli": "*",
-    "@graphql-tools/schema": "^9.0.19",
     "@ts-morph/bootstrap": "^0.11.0",
     "@types/benchmark": "^2.1.0",
     "@types/jest": "^26.0.22",
     "@types/node-json-db": "^0.9.3",
     "benchmark": "^2.1.4",
-    "graphql-jit": "^0.5.1",
+    "graphql-jit": "^0.8.4",
     "iterall": "^1.3.0",
     "monorepo-scripts": "*",
     "node-json-db": "^1.3.0",
@@ -48,8 +46,8 @@
       }
     }
   },
-  "dependencies": {
-    "@graphitation/supermassive-ast": "*",
-    "graphql": "^15.6.1"
+  "dependencies": {},
+  "peerDependencies": {
+    "graphql": "^15.0.0 || ^16.0.0 || ^17.0.0"
   }
 }

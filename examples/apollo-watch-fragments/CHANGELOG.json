@@ -2,6 +2,21 @@
   "name": "apollo-watch-fragments",
   "entries": [
     {
+      "date": "Fri, 15 Sep 2023 22:22:30 GMT",
+      "tag": "apollo-watch-fragments_v0.1.0",
+      "version": "0.1.0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "apollo-watch-fragments",
+            "comment": "Bump @graphitation/embedded-document-artefact-loader to v0.6.3",
+            "commit": "6cf696da290cbc4a963b825abb5d7974d0a74839"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 16 Aug 2023 06:31:21 GMT",
       "tag": "apollo-watch-fragments_v0.1.0",
       "version": "0.1.0",

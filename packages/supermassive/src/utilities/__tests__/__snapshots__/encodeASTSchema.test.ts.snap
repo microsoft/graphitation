@@ -1,0 +1,697 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
+[
+  {
+    "directives": [
+      [
+        "skip",
+        {
+          "if": 7,
+        },
+      ],
+      [
+        "include",
+        {
+          "if": 7,
+        },
+      ],
+      [
+        "include2",
+        {
+          "if": 7,
+        },
+      ],
+      [
+        "myRepeatableDir",
+        {
+          "name": 6,
+        },
+      ],
+    ],
+    "types": {
+      "AnnotatedEnum": [
+        5,
+        [
+          "ANNOTATED_VALUE",
+          "OTHER_VALUE",
+        ],
+      ],
+      "AnnotatedInput": [
+        6,
+        {
+          "annotatedField": "Type",
+        },
+      ],
+      "AnnotatedInterface": [
+        3,
+        {
+          "annotatedField": [
+            "Type",
+            {
+              "arg": "Type",
+            },
+          ],
+        },
+      ],
+      "AnnotatedObject": [
+        2,
+        {
+          "annotatedField": [
+            "Type",
+            {
+              "arg": [
+                "Type",
+                "default",
+              ],
+            },
+          ],
+        },
+      ],
+      "AnnotatedScalar": [
+        1,
+      ],
+      "AnnotatedUnion": [
+        4,
+        [
+          "A",
+          "B",
+        ],
+      ],
+      "AnnotatedUnionTwo": [
+        4,
+        [
+          "A",
+          "B",
+        ],
+      ],
+      "Bar": [
+        3,
+        {
+          "four": [
+            1,
+            {
+              "argument": [
+                1,
+                "string",
+              ],
+            },
+          ],
+          "one": "Type",
+        },
+      ],
+      "Baz": [
+        3,
+        {
+          "four": [
+            1,
+            {
+              "argument": [
+                1,
+                "string",
+              ],
+            },
+          ],
+          "one": "Type",
+          "two": [
+            "Type",
+            {
+              "argument": "InputType!",
+            },
+          ],
+        },
+        [
+          "Bar",
+          "Two",
+        ],
+      ],
+      "CustomScalar": [
+        1,
+      ],
+      "Feed": [
+        4,
+        [
+          "Story",
+          "Article",
+          "Advert",
+        ],
+      ],
+      "Foo": [
+        2,
+        {
+          "eight": [
+            "Type",
+            {
+              "argument": "OneOfInputType",
+            },
+          ],
+          "five": [
+            1,
+            {
+              "argument": [
+                11,
+                [
+                  "string",
+                  "string",
+                ],
+              ],
+            },
+          ],
+          "four": [
+            1,
+            {
+              "argument": [
+                1,
+                "string",
+              ],
+            },
+          ],
+          "one": "Type",
+          "seven": [
+            "Type",
+            {
+              "argument": [
+                3,
+                null,
+              ],
+            },
+          ],
+          "six": [
+            "Type",
+            {
+              "argument": [
+                "InputType",
+                {
+                  "key": "value",
+                },
+              ],
+            },
+          ],
+          "three": [
+            3,
+            {
+              "argument": "InputType",
+              "other": 1,
+            },
+          ],
+          "two": [
+            "Type",
+            {
+              "argument": "InputType!",
+            },
+          ],
+        },
+        [
+          "Bar",
+          "Baz",
+          "Two",
+        ],
+      ],
+      "InputType": [
+        6,
+        {
+          "answer": [
+            3,
+            42,
+          ],
+          "key": 6,
+        },
+      ],
+      "OneOfInputType": [
+        6,
+        {
+          "int": 3,
+          "string": 1,
+        },
+      ],
+      "Site": [
+        5,
+        [
+          "DESKTOP",
+          "MOBILE",
+          "WEB",
+        ],
+      ],
+      "UndefinedEnum": [
+        5,
+        [],
+      ],
+      "UndefinedInput": [
+        6,
+        {},
+      ],
+      "UndefinedInterface": [
+        3,
+        {},
+      ],
+      "UndefinedType": [
+        2,
+        {},
+      ],
+      "UndefinedUnion": [
+        4,
+        [],
+      ],
+    },
+  },
+  {
+    "types": {
+      "Bar": [
+        3,
+        {
+          "two": [
+            "Type",
+            {
+              "argument": "InputType!",
+            },
+          ],
+        },
+        [
+          "Two",
+        ],
+      ],
+      "CustomScalar": [
+        1,
+      ],
+      "Feed": [
+        4,
+        [
+          "Photo",
+          "Video",
+        ],
+      ],
+      "Foo": [
+        2,
+        {
+          "seven": [
+            "Type",
+            {
+              "argument": 11,
+            },
+          ],
+        },
+      ],
+      "InputType": [
+        6,
+        {
+          "other": [
+            4,
+            12300,
+          ],
+        },
+      ],
+      "Site": [
+        5,
+        [
+          "VR",
+        ],
+      ],
+    },
+  },
+  {
+    "types": {
+      "Bar": [
+        3,
+        {},
+      ],
+      "Feed": [
+        4,
+        [],
+      ],
+      "Foo": [
+        2,
+        {},
+      ],
+      "InputType": [
+        6,
+        {},
+      ],
+      "Site": [
+        5,
+        [],
+      ],
+    },
+  },
+]
+`;
+
+exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
+[
+  {
+    "directives": [
+      [
+        "i18n",
+        {
+          "locale": 1,
+        },
+      ],
+    ],
+    "types": {
+      "AdvancedInput": [
+        6,
+        {
+          "enumField": "NodeType!",
+          "otherField": 6,
+        },
+      ],
+      "Alive": [
+        4,
+        [
+          "Person",
+          "Species",
+        ],
+      ],
+      "Film": [
+        2,
+        {
+          "characters": "[Person]",
+          "created": 1,
+          "director": 1,
+          "edited": 1,
+          "episode_id": 3,
+          "id": 3,
+          "opening_crawl": 1,
+          "planets": "[Planet]",
+          "producer": 1,
+          "release_date": 1,
+          "species": "[Species]",
+          "starships": "[Starship]",
+          "title": 6,
+          "vehicles": "[Vehicle]",
+        },
+        [
+          "Node",
+        ],
+      ],
+      "Node": [
+        3,
+        {
+          "id": 3,
+        },
+      ],
+      "NodeType": [
+        5,
+        [
+          "Person",
+          "Starship",
+          "Transport",
+          "Species",
+          "Vehicle",
+          "Planet",
+          "Film",
+        ],
+      ],
+      "Person": [
+        2,
+        {
+          "birth_year": 1,
+          "created": 1,
+          "edited": 1,
+          "eye_color": 1,
+          "films": "[Film]",
+          "gender": 1,
+          "hair_color": 1,
+          "height": 3,
+          "homeworld": "Planet",
+          "id": 3,
+          "image": 1,
+          "mass": 3,
+          "name": 1,
+          "skin_color": 1,
+          "starships": "[Starship]",
+          "vehicles": "[Vehicle]",
+        },
+        [
+          "Node",
+        ],
+      ],
+      "Planet": [
+        2,
+        {
+          "climate": 1,
+          "created": 1,
+          "diameter": 3,
+          "edited": 1,
+          "films": "[Film]",
+          "gravity": 1,
+          "id": 3,
+          "name": 1,
+          "orbital_period": 3,
+          "population": 3,
+          "residents": "[Person]",
+          "rotation_period": 3,
+          "surface_water": 1,
+          "terrain": 1,
+        },
+        [
+          "Node",
+        ],
+      ],
+      "Query": [
+        2,
+        {
+          "advancedDefaultInput": [
+            1,
+            {
+              "input": [
+                "AdvancedInput!",
+                {
+                  "enumField": "Transport",
+                  "otherField": "Foo",
+                },
+              ],
+            },
+          ],
+          "allFilms": "[Film]",
+          "allPeople": "[Person]",
+          "allPlanets": "[Planet]",
+          "allSpecies": "[Species]",
+          "allStarships": "[Starship]",
+          "allTransports": "[Transport]",
+          "film": [
+            "Film",
+            {
+              "id": 8,
+            },
+          ],
+          "multiArger": [
+            1,
+            {
+              "a": 3,
+              "b": 1,
+              "c": "AdvancedInput",
+            },
+          ],
+          "node": [
+            "Node",
+            {
+              "id": 8,
+              "nodeType": "NodeType!",
+            },
+          ],
+          "person": [
+            "Person",
+            {
+              "id": 8,
+            },
+          ],
+          "planet": [
+            "Planet",
+            {
+              "id": 8,
+            },
+          ],
+          "search": [
+            "[SearchResult]",
+            {
+              "search": 1,
+            },
+          ],
+          "searchFilmsByTitle": [
+            "[Film]",
+            {
+              "search": [
+                6,
+                "The Empire Strikes Back",
+              ],
+            },
+          ],
+          "searchPeopleByName": [
+            "[Person]",
+            {
+              "search": 6,
+            },
+          ],
+          "searchPlanetsByName": [
+            "[Planet]",
+            {
+              "search": 6,
+            },
+          ],
+          "searchSpeciesByName": [
+            "[Species]",
+            {
+              "search": 6,
+            },
+          ],
+          "searchStarshipsByName": [
+            "[Starship]",
+            {
+              "search": 6,
+            },
+          ],
+          "searchTransportsByName": [
+            "[Transport]",
+            {
+              "search": 6,
+            },
+          ],
+          "searchVehiclesByName": [
+            "[Vehicle]",
+            {
+              "search": 6,
+            },
+          ],
+          "starship": [
+            "Starship",
+            {
+              "id": 8,
+            },
+          ],
+          "transport": [
+            "Transport",
+            {
+              "id": 8,
+            },
+          ],
+          "vehicle": [
+            "Vehicle",
+            {
+              "id": 8,
+            },
+          ],
+        },
+      ],
+      "SearchResult": [
+        4,
+        [
+          "Person",
+          "Starship",
+          "Transport",
+          "Species",
+          "Vehicle",
+          "Planet",
+          "Film",
+        ],
+      ],
+      "Species": [
+        2,
+        {
+          "average_height": 3,
+          "average_lifespan": 3,
+          "classification": 1,
+          "created": 1,
+          "designation": 1,
+          "edited": 1,
+          "eye_colors": 1,
+          "hair_colors": 1,
+          "homeworld": "Planet",
+          "id": 3,
+          "language": 1,
+          "name": 1,
+          "people": "[Person]",
+          "skin_colors": 1,
+        },
+        [
+          "Node",
+        ],
+      ],
+      "Starship": [
+        2,
+        {
+          "MGLT": 3,
+          "cargo_capacity": 3,
+          "consumables": 1,
+          "cost_in_credits": 3,
+          "created": 1,
+          "crew": 1,
+          "edited": 1,
+          "films": "[Film]",
+          "hyperdrive_rating": 4,
+          "id": 3,
+          "image": 1,
+          "length": 3,
+          "manufacturer": 1,
+          "max_atmosphering_speed": 3,
+          "model": 1,
+          "name": 1,
+          "passengers": 3,
+          "pilots": "[Person]",
+          "starship_class": 1,
+        },
+        [
+          "Node",
+        ],
+      ],
+      "Subscription": [
+        2,
+        {
+          "emitPersons": [
+            "Person",
+            {
+              "limit": 8,
+              "throwError": 2,
+            },
+          ],
+        },
+      ],
+      "Transport": [
+        2,
+        {
+          "cargo_capacity": 3,
+          "consumables": 1,
+          "cost_in_credits": 3,
+          "created": 1,
+          "crew": 1,
+          "edited": 1,
+          "id": 3,
+          "image": 1,
+          "length": 3,
+          "manufacturer": 1,
+          "max_atmosphering_speed": 3,
+          "model": 1,
+          "name": 1,
+          "passengers": 3,
+        },
+        [
+          "Node",
+        ],
+      ],
+      "Vehicle": [
+        2,
+        {
+          "cargo_capacity": 3,
+          "consumables": 1,
+          "cost_in_credits": 3,
+          "created": 1,
+          "crew": 3,
+          "edited": 1,
+          "id": 3,
+          "image": 1,
+          "length": 4,
+          "manufacturer": 1,
+          "max_atmosphering_speed": 3,
+          "model": 1,
+          "name": 1,
+          "passengers": 3,
+          "pilots": "[Person]",
+          "vehicle_class": 1,
+        },
+        [
+          "Node",
+        ],
+      ],
+    },
+  },
+]
+`;
