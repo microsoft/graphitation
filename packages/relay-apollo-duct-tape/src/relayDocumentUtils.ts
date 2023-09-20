@@ -30,10 +30,10 @@ export function transformDocument(
   for (const node of nodes) {
     compilerContext = compilerContext.add(node);
   }
-  let operationCompilerContext = compilerContext.applyTransform(
+  const operationCompilerContext = compilerContext.applyTransform(
     InlineFragmentsTransform.transform,
   );
-  let fragmentCompilerContext = compilerContext.applyTransform(
+  const fragmentCompilerContext = compilerContext.applyTransform(
     FlattenTransform.transformWithOptions({
       isForCodegen: true,
     } as any),

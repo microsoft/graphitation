@@ -1,4 +1,4 @@
-import { concatAST, printSchema, Source, visit as visitAST } from "graphql";
+import { printSchema, Source, visit as visitAST } from "graphql";
 import { create as createRelaySchema } from "relay-compiler/lib/core/Schema";
 import { transform as transformToIR } from "relay-compiler/lib/core/RelayParser";
 import * as IRTransformer from "relay-compiler/lib/core/IRTransformer";
@@ -73,7 +73,7 @@ const ConnectionFilterPluralizationTransform: IRTransform = (context) =>
 export const plugin: PluginFunction<
   RawClientSideBasePluginConfig,
   Types.ComplexPluginOutput
-> = async (schema, documents, config, info) => {
+> = async (schema, documents, config, _info) => {
   if (!SchemaCache.has(schema)) {
     SchemaCache.set(
       schema,
@@ -187,9 +187,11 @@ function collectIRNodes(
   documents.forEach((doc) => {
     invariant(doc.document, "Expected document to be parsed");
     const docWithTypenames = addTypename(doc.document);
-    (docWithTypenames.definitions as Array<
-      OperationDefinitionNode | FragmentDefinitionNode
-    >).forEach((definition) => {
+    (
+      docWithTypenames.definitions as Array<
+        OperationDefinitionNode | FragmentDefinitionNode
+      >
+    ).forEach((definition) => {
       if (definition.kind === "OperationDefinition") {
         addNode(operationNodes, definition, doc.location);
       } else {

@@ -87,6 +87,7 @@ import type { DocumentNode, DefinitionNode } from "graphql";
 import { HandlerProvider } from "relay-runtime/lib/handlers/RelayDefaultHandlerProvider";
 
 declare global {
+  // eslint-disable-next-line no-var
   var __RELAY_DEVTOOLS_HOOK__:
     | undefined
     | {
@@ -159,10 +160,10 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
       options.resultCaching ?? true
         ? options.resultCacheMaxSize === undefined
           ? new Map()
-          : ((new LRUCache<string, [Snapshot, Disposable]>({
+          : (new LRUCache<string, [Snapshot, Disposable]>({
               max: options.resultCacheMaxSize,
               dispose: this.disposeMemoizedSnapshot.bind(this),
-            }) as unknown) as Map<string, [Snapshot, Disposable]>) // TODO: Define actual default
+            }) as unknown as Map<string, [Snapshot, Disposable]>) // TODO: Define actual default
         : undefined;
 
     this.getDataID = this.getDataID.bind(this);
@@ -253,7 +254,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     if (snapshot.isMissingData && !options.returnPartialData) {
       return null;
     }
-    return (snapshot.data as unknown) as TData;
+    return snapshot.data as unknown as TData;
   }
 
   write<TData = any, TVariables = any>(
@@ -379,7 +380,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     if (snapshot.isMissingData && !options.returnPartialData) {
       return null;
     }
-    return (snapshot.data as unknown) as FragmentType;
+    return snapshot.data as unknown as FragmentType;
   }
 
   // NOTE: Apollo Client's QueryManager uses this internally to keep track of
@@ -397,14 +398,14 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
    * NOTE: This version will never return missing field errors.
    */
   diff<TData = any, TVariables = any>(
-    options: ApolloCacheTypes.DiffOptions,
+    options: ApolloCacheTypes.DiffOptions<TData, TVariables>,
   ): ApolloCacheTypes.DiffResult<TData> {
     const snapshot = this.getSnapshot(
       getRequest(this.getTaggedNode(options.query)),
       options,
     );
     return {
-      result: (snapshot.data as unknown) as TData,
+      result: snapshot.data as unknown as TData,
       complete: !snapshot.isMissingData,
     };
   }
@@ -436,13 +437,13 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     const disposable = this.store.subscribe(lastSnapshot, (nextSnapshot) => {
       options.callback(
         {
-          result: (nextSnapshot.data as unknown) as TData,
+          result: nextSnapshot.data as unknown as TData,
           complete: !nextSnapshot.isMissingData,
         },
         lastSnapshot.data === undefined || lastSnapshot.isMissingData
           ? undefined
           : {
-              result: (lastSnapshot.data as unknown) as TData,
+              result: lastSnapshot.data as unknown as TData,
               complete: !lastSnapshot.isMissingData,
             },
       );
@@ -514,7 +515,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
    * Serialization
    ***************************************************************************/
 
-  extract(optimistic: boolean = false): RecordMap {
+  extract(optimistic = false): RecordMap {
     return this.store.getSource(optimistic).toJSON();
   }
 
@@ -542,11 +543,11 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
    ***************************************************************************/
 
   // https://github.com/facebook/relay/issues/233#issuecomment-1054489769
-  reset(options?: ApolloCacheTypes.ResetOptions): Promise<void> {
+  reset(_options?: ApolloCacheTypes.ResetOptions): Promise<void> {
     throw new Error("Method not implemented.");
   }
 
-  evict(options: ApolloCacheTypes.EvictOptions): boolean {
+  evict(_options: ApolloCacheTypes.EvictOptions): boolean {
     throw new Error("Method not implemented.");
   }
 
@@ -659,7 +660,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   private typePoliciesToMissingDocumentHandlers(
     typePolicies: TypePolicies,
   ): MissingFieldHandler[] {
-    let handlers: MissingFieldHandler[] = [
+    const handlers: MissingFieldHandler[] = [
       {
         kind: "linked",
         handle(field, record, argValues) {
@@ -678,17 +679,19 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
         },
       },
     ];
-    for (let [type, typePolicy] of Object.entries(typePolicies)) {
-      let typeName = type === "Query" ? ROOT_TYPE : type;
+    for (const [type, typePolicy] of Object.entries(typePolicies)) {
+      const typeName = type === "Query" ? ROOT_TYPE : type;
       if (typePolicy.fields) {
-        for (let [fieldName, fieldPolicy] of Object.entries(
+        for (const [fieldName, fieldPolicy] of Object.entries(
           typePolicy.fields,
         )) {
           const readFunction =
             fieldPolicy &&
-            (fieldPolicy as FieldPolicy<any> & {
-              readFunction?: EntityReadFunction;
-            }).readFunction;
+            (
+              fieldPolicy as FieldPolicy<any> & {
+                readFunction?: EntityReadFunction;
+              }
+            ).readFunction;
           if (readFunction) {
             handlers.push(
               this.createMissingFieldHandler(typeName, fieldName, readFunction),
@@ -705,10 +708,9 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     fieldName: string,
     readFunction: EntityReadFunction,
   ): MissingFieldHandler {
-    const self = this;
     return {
       kind: "linked",
-      handle(field, record, argValues) {
+      handle: (field, record, argValues) => {
         if (
           record != null &&
           record.__typename === typeName &&
@@ -716,7 +718,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
         ) {
           const obj = readFunction(argValues);
           if (obj) {
-            return self.getDataID(obj, obj.__typename);
+            return this.getDataID(obj, obj.__typename);
           }
         }
         return undefined;
@@ -838,7 +840,7 @@ function getNodeQuery(
   fragment: ReaderFragment,
   id: string,
 ): ConcreteRequest & { hash: string } {
-  var v0 = [
+  const v0 = [
       {
         defaultValue: null,
         kind: "LocalArgument",

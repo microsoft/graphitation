@@ -348,7 +348,7 @@ describe("batch", () => {
       query: QueryDocument,
       variables: { conversationId: "42" },
       optimistic: false,
-      callback: (diff, lastDiff) => {
+      callback: (_diff, _lastDiff) => {
         count++;
       },
     });

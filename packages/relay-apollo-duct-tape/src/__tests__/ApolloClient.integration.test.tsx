@@ -33,12 +33,14 @@ const schema = buildSchema(
 
 const TestComponent: React.FC = () => {
   useSubscription(TestConversationUpdatedSubscription);
-  const { data: props, error, subscribeToMore, fetchMore } = useQuery(
-    ApolloClientIntegrationTestQuery,
-    {
-      variables: { id: "42" },
-    },
-  );
+  const {
+    data: props,
+    error,
+    subscribeToMore,
+    fetchMore,
+  } = useQuery(ApolloClientIntegrationTestQuery, {
+    variables: { id: "42" },
+  });
   if (props) {
     subscribeToMore({
       document: TestMessageCreatedSubscription,
