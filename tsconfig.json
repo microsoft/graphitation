@@ -7,6 +7,10 @@
     "declarationMap": true,
     "strict": true,
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "paths": {
+      "@graphql-tools/utils": ["./node_modules/@graphql-tools/utils"],
+      "graphql": ["./node_modules/graphql"]
+    }
   }
 }

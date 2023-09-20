@@ -22,8 +22,9 @@ export class GraphiQLPublisher {
   private attachMethodsToPublisher() {
     this.apolloPublisher.provide(
       "graphiql",
-      (activeClientId, graphQLParams) => {
+      (activeClientId: string, graphQLParams: any) => {
         const client = this.apolloClients[activeClientId];
+
         return client.query({
           query: parse(graphQLParams.query),
           variables: graphQLParams.variables,

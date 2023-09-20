@@ -26,7 +26,10 @@ import {
 
 import { hooksTestQuery } from "./__generated__/hooksTestQuery.graphql";
 import { hooksTestSubscription } from "./__generated__/hooksTestSubscription.graphql";
-import { hooksTestFragment$key } from "./__generated__/hooksTestFragment.graphql";
+import {
+  hooksTestFragment,
+  hooksTestFragment$key,
+} from "./__generated__/hooksTestFragment.graphql";
 import { hooksTestMutation as hooksTestMutation$key } from "./__generated__/hooksTestMutation.graphql";
 import { getOperationName } from "@apollo/client/utilities";
 
@@ -58,7 +61,7 @@ const FragmentComponent: React.FC<{ user: hooksTestFragment$key }> = (
  */
 
 const query = graphql`
-  query hooksTestQuery($id: ID!) {
+  query hooksTestQuery($id: Int!) {
     user(id: $id) {
       ...hooksTestFragment
     }
@@ -67,9 +70,13 @@ const query = graphql`
 `;
 
 const QueryComponent: React.FC = () => {
-  const { data, error } = useLazyLoadQuery<hooksTestQuery>(query, {
-    id: "some-user-id",
-  });
+  const { data, error } = useLazyLoadQuery<hooksTestQuery>(
+    query,
+    {
+      id: 42,
+    },
+    { context: { callerInfo: "query-component" } },
+  );
   if (error) {
     return <div id="error">{error.message}</div>;
   } else if (data) {
@@ -120,6 +127,7 @@ const SubscriptionComponent: React.FC<SubjectProps> = ({
   useSubscription<hooksTestSubscription>({
     subscription,
     variables: { id: "some-user-id" },
+    context: { callerInfo: "subscription-component" },
     onNext,
     onError: onError || undefined,
   });
@@ -129,13 +137,14 @@ const SubscriptionComponent: React.FC<SubjectProps> = ({
 const MutationComponent: React.FC<{
   variables: any;
   optimisticResponse: any;
+  context?: any;
 }> = (props) => {
-  const { variables, optimisticResponse } = props;
+  const { variables, optimisticResponse, context } = props;
   const [commit, isInFlight] = useMutation<hooksTestMutation$key>(mutation);
   const [result, setResult] = React.useState<any>(null);
   React.useEffect(() => {
     (async function () {
-      const result = await commit({ variables, optimisticResponse });
+      const result = await commit({ variables, optimisticResponse, context });
       setResult(result);
     })();
   }, [variables, optimisticResponse]);
@@ -155,12 +164,12 @@ const MutationComponent: React.FC<{
 let client: ApolloMockClient;
 
 beforeEach(() => {
-  client = createMockClient(schema);
+  client = createMockClient(schema, { cache: { addTypename: false } });
 });
 
 describe(useLazyLoadQuery, () => {
   it("uses Apollo's useQuery hook", async () => {
-    let tree: ReactTestRenderer;
+    let tree: ReactTestRenderer | undefined;
     act(() => {
       tree = createTestRenderer(
         <ApolloProvider client={client}>
@@ -170,14 +179,18 @@ describe(useLazyLoadQuery, () => {
     });
 
     const operation = client.mock.getMostRecentOperation();
-    expect(getOperationName(operation.request.node)).toBe("hooksTestQuery");
-    expect(operation.request.variables).toEqual({ id: "some-user-id" });
+    expect(operation.request.node).toBe(query);
+    expect(operation.request.variables).toEqual({ id: 42 });
+    expect(operation.request.context).toHaveProperty(
+      "callerInfo",
+      "query-component",
+    );
 
     await act(() =>
       client.mock.resolve(operation, MockPayloadGenerator.generate(operation)),
     );
 
-    expect(tree!.root.findByType("div").props).toMatchObject({
+    expect(tree?.root.findByType("div").props).toMatchObject({
       id: "User",
       children: `<mock-value-for-field-"name">`,
     });
@@ -196,11 +209,22 @@ describe(useFragment, () => {
     expectType<string>(user.id);
     expectType<string>(user.name);
   });
+
+  it("returns a union of the opaque data's type and undefined when fragmentRef is either a key or undefined", () => {
+    const fragmentRef: hooksTestFragment$key | undefined = undefined;
+    const user = useFragment(fragment, fragmentRef);
+    expectType<hooksTestFragment | undefined>(user);
+  });
+
+  it("returns undefined when fragmentRef is undefined", () => {
+    const user = useFragment(fragment, undefined);
+    expectType<undefined>(user);
+  });
 });
 
 describe(useSubscription, () => {
   it("uses Apollo's useSubscription hook and updates the store", async () => {
-    let tree: ReactTestRenderer;
+    let tree: ReactTestRenderer | undefined;
     act(() => {
       tree = createTestRenderer(
         <ApolloProvider client={client}>
@@ -211,10 +235,8 @@ describe(useSubscription, () => {
       );
     });
 
-    const [
-      subscriptionOperation,
-      queryOperation,
-    ] = client.mock.getAllOperations();
+    const [subscriptionOperation, queryOperation] =
+      client.mock.getAllOperations();
 
     expect(getOperationName(subscriptionOperation.request.node)).toBe(
       "hooksTestSubscription",
@@ -222,6 +244,10 @@ describe(useSubscription, () => {
     expect(subscriptionOperation.request.variables).toEqual({
       id: "some-user-id",
     });
+    expect(subscriptionOperation.request.context).toHaveProperty(
+      "callerInfo",
+      "subscription-component",
+    );
 
     // First resolve query...
     await act(() =>
@@ -238,7 +264,7 @@ describe(useSubscription, () => {
       ),
     );
     // ...and verify
-    expect(tree!.root.findByType("div").props.children).toEqual(
+    expect(tree?.root.findByType("div").props.children).toEqual(
       "user-name-from-query",
     );
 
@@ -257,7 +283,7 @@ describe(useSubscription, () => {
       ),
     );
     // ...and verify
-    expect(tree!.root.findByType("div").props.children).toEqual(
+    expect(tree?.root.findByType("div").props.children).toEqual(
       "user-name-from-subscription",
     );
   });
@@ -333,12 +359,12 @@ describe(useSubscription, () => {
 
 describe("useMutation", () => {
   it("uses Apollo's useMutation hook", async () => {
-    let tree: ReactTestRenderer;
-    tree = createTestRenderer(
+    const tree = createTestRenderer(
       <ApolloProvider client={client}>
         <MutationComponent
           variables={{ name: "foo", id: "1" }}
           optimisticResponse={null}
+          context={{ callerInfo: "mutation-component" }}
         />
       </ApolloProvider>,
     );
@@ -360,6 +386,7 @@ describe("useMutation", () => {
                 name: '&lt;mock-value-for-field-"name"&gt;',
               },
             }}
+            context={{ callerInfo: "mutation-component" }}
           />
         </ApolloProvider>,
       );
@@ -389,5 +416,9 @@ describe("useMutation", () => {
       name: "foo",
       id: "1",
     });
+    expect(mutationOperation.request.context).toHaveProperty(
+      "callerInfo",
+      "mutation-component",
+    );
   });
 });

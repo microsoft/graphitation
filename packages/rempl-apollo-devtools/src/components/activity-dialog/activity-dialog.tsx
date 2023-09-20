@@ -1,10 +1,11 @@
 import React, { createRef, useEffect } from "react";
 import { dialogStyles } from "./activity-dialog.styles";
-import { Text, Headline, Button } from "@fluentui/react-components";
+import { Text, Button, Title1 } from "@fluentui/react-components";
 import { Dismiss20Regular } from "@fluentui/react-icons";
+import { RecentActivityRaw, WatchedQuery, Mutation } from "../../types";
 
 interface ActivityDialogProps {
-  value: any;
+  value: { isMutation: boolean; __activity_type: string } & RecentActivityRaw;
   onClose: () => void;
 }
 
@@ -26,9 +27,9 @@ export const ActivityDialog = React.memo(
           }}
         >
           <div className={classes.header}>
-            <Headline>{`${value.data?.name} (${
+            <Title1>{`${value.data?.name} (${
               value.isMutation ? "Mutation" : "Watched Query"
-            })`}</Headline>
+            })`}</Title1>
             <Button
               appearance="transparent"
               ref={closeIcon}
@@ -49,8 +50,8 @@ export const ActivityDialog = React.memo(
                   <code>
                     <p>
                       {value.isMutation
-                        ? value.data?.mutationString
-                        : value.data?.queryString}
+                        ? (value.data as Mutation)?.mutationString
+                        : (value.data as WatchedQuery)?.queryString}
                     </p>
                   </code>
                 </pre>
@@ -78,13 +79,37 @@ export const ActivityDialog = React.memo(
                 </div>
               </div>
             )}
-            {!value.isMutation && (
+            {!value.isMutation && (value.data as WatchedQuery)?.cachedData && (
               <div>
-                <Text weight="semibold">Cache Data</Text>
+                <Text weight="semibold">Latest data from the cache</Text>
                 <div className={classes.codeBox}>
                   <pre>
                     <code>
-                      <p>{JSON.stringify(value.data?.cacheData, null, 2)}</p>
+                      <p>
+                        {JSON.stringify(
+                          (value.data as WatchedQuery)?.cachedData,
+                          null,
+                          2,
+                        )}
+                      </p>
+                    </code>
+                  </pre>
+                </div>
+              </div>
+            )}
+            {!value.isMutation && (value.data as WatchedQuery)?.networkData && (
+              <div>
+                <Text weight="semibold">Network Data</Text>
+                <div className={classes.codeBox}>
+                  <pre>
+                    <code>
+                      <p>
+                        {JSON.stringify(
+                          (value.data as WatchedQuery)?.networkData,
+                          null,
+                          2,
+                        )}
+                      </p>
                     </code>
                   </pre>
                 </div>

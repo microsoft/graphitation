@@ -1,0 +1,45 @@
+{
+  "name": "@graphitation/graphql-codegen-typescript-operations",
+  "license": "MIT",
+  "version": "1.3.0",
+  "main": "./src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/graphitation.git",
+    "directory": "packages/graphql-codegen-typescript-operations"
+  },
+  "scripts": {
+    "build": "monorepo-scripts build",
+    "lint": "monorepo-scripts lint",
+    "test": "monorepo-scripts test",
+    "types": "monorepo-scripts types",
+    "just": "monorepo-scripts"
+  },
+  "dependencies": {
+    "@graphql-codegen/plugin-helpers": "^1.18.2",
+    "@graphql-codegen/typescript": "^1.18.1",
+    "@graphql-codegen/visitor-plugin-common": "^1.17.22",
+    "auto-bind": "~4.0.0",
+    "tslib": "~2.0.1"
+  },
+  "devDependencies": {
+    "@graphql-codegen/testing": "1.17.7",
+    "@graphql-codegen/typescript": "^1.18.1"
+  },
+  "peerDependencies": {
+    "graphql": "^15.0.0"
+  },
+  "sideEffects": false,
+  "access": "public",
+  "publishConfig": {
+    "main": "./lib/index",
+    "types": "./lib/index.d.ts",
+    "module": "./lib/index.mjs",
+    "exports": {
+      ".": {
+        "import": "./lib/index.mjs",
+        "require": "./lib/index.js"
+      }
+    }
+  }
+}

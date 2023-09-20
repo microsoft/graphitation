@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ReactRelayTestMocker with Containers Basic Resolve/Reject Operations should resolve query 1`] = `"My id <mock-id-1> and name is <mock-value-for-field-\\"name\\">"`;
+exports[`ReactRelayTestMocker with Containers Basic Resolve/Reject Operations should resolve query 1`] = `"My id <mock-id-1> and name is <mock-value-for-field-"name">"`;
 
 exports[`ReactRelayTestMocker with Containers Multiple Query Renderers should resolve both queries 1`] = `
-Array [
+[
   <div
     id="user"
   >

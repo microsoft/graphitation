@@ -2,27 +2,24 @@ import React, { useState, useEffect } from "react";
 import { ApolloGlobalOperations } from "../../types";
 import { remplSubscriber } from "../rempl";
 
-export const ApolloGlobalOperationsContext = React.createContext<ApolloGlobalOperations>(
-  {
+export const ApolloGlobalOperationsContext =
+  React.createContext<ApolloGlobalOperations>({
     globalQueries: [],
     globalMutations: [],
     globalSubscriptions: [],
-  },
-);
+  });
 
 export const ApolloGlobalOperationsWrapper = ({
   children,
 }: {
   children: JSX.Element;
 }) => {
-  const [
-    apolloGlobalOperations,
-    setApolloGlobalOperations,
-  ] = useState<ApolloGlobalOperations>({
-    globalQueries: [],
-    globalMutations: [],
-    globalSubscriptions: [],
-  });
+  const [apolloGlobalOperations, setApolloGlobalOperations] =
+    useState<ApolloGlobalOperations>({
+      globalQueries: [],
+      globalMutations: [],
+      globalSubscriptions: [],
+    });
 
   useEffect(
     () =>

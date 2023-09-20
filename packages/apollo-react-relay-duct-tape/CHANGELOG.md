@@ -1,8 +1,165 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Mon, 20 Jun 2022 17:49:35 GMT and should not be manually modified.
+This log was last generated on Wed, 16 Aug 2023 06:31:20 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.10
+
+Wed, 16 Aug 2023 06:31:20 GMT
+
+### Patches
+
+- Various PeopleApp fixes (eloy.de.enige@gmail.com)
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.2.3
+
+## 1.0.9
+
+Tue, 25 Jul 2023 08:18:03 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.2.2
+
+## 1.0.8
+
+Sat, 22 Jul 2023 07:35:09 GMT
+
+### Patches
+
+- Fix type-checking (eloy.de.enige@gmail.com)
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.2.1
+
+## 1.0.7
+
+Thu, 13 Jul 2023 01:43:35 GMT
+
+### Patches
+
+- [duct-tape] Fix order of useFragment overloads to properly support variations (eloy.de.enige@gmail.com)
+
+## 1.0.6
+
+Tue, 11 Jul 2023 23:53:57 GMT
+
+### Patches
+
+- Allow for smoother migration path (eloy.de.enige@gmail.com)
+
+## 1.0.5
+
+Tue, 20 Jun 2023 12:24:10 GMT
+
+### Patches
+
+- Pin apollo to TMP version (mnovikov@microsoft.com)
+- Bump @graphitation/apollo-mock-client to v0.11.1
+
+## 1.0.4
+
+Tue, 20 Jun 2023 11:38:47 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.2.0
+
+## 1.0.3
+
+Mon, 19 Jun 2023 12:22:22 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.1.0
+
+## 1.0.2
+
+Mon, 12 Jun 2023 12:50:51 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.0.0
+
+## 1.0.1
+
+Mon, 22 May 2023 13:58:50 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.0.0-alpha.2
+
+### Changes
+
+- Remove test files (eloy.de.enige@gmail.com)
+
+## 1.0.1-alpha.8
+
+Mon, 22 May 2023 13:07:26 GMT
+
+### Changes
+
+- Testing release (eloy.de.enige@gmail.com)
+
+## 0.9.0
+
+Thu, 20 Apr 2023 14:11:58 GMT
+
+### Minor changes
+
+- support context in duct tape hooks (52814187+ira-kaundal@users.noreply.github.com)
+- Bump @graphitation/apollo-mock-client to v0.11.0
+
+## 0.8.3
+
+Tue, 18 Apr 2023 13:36:20 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-mock-client to v0.10.17
+- Bump @graphitation/graphql-js-operation-payload-generator to v0.12.2
+
+## 0.8.2
+
+Mon, 13 Mar 2023 14:00:55 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-mock-client to v0.10.16
+- Bump @graphitation/graphql-js-operation-payload-generator to v0.12.1
+
+## 0.8.1
+
+Thu, 24 Nov 2022 15:24:56 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-mock-client to v0.10.15
+- Bump @graphitation/graphql-js-operation-payload-generator to v0.12.0
+
+## 0.8.0
+
+Tue, 18 Oct 2022 12:19:27 GMT
+
+### Minor changes
+
+- Add errorPolicy ignore to useSubscription (mnovikov@microsoft.com)
+
+## 0.7.16
+
+Fri, 16 Sep 2022 15:55:23 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-mock-client to v0.10.14
+- Bump @graphitation/graphql-js-operation-payload-generator to v0.11.0
+
+## 0.7.15
+
+Sun, 31 Jul 2022 07:56:27 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-mock-client to v0.10.13
+- Bump @graphitation/graphql-js-operation-payload-generator to v0.10.6
 
 ## 0.7.14
 

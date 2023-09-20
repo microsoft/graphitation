@@ -9,9 +9,10 @@ export const WatchedQueries = ({ queries }: { queries: WatchedQuery[] }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selected, setSelected] = useState<number>(0);
   const globalOperations = useContext(ApolloGlobalOperationsContext);
-  const globalQueries = useMemo(() => new Set(globalOperations.globalQueries), [
-    globalOperations,
-  ]);
+  const globalQueries = useMemo(
+    () => new Set(globalOperations.globalQueries),
+    [globalOperations],
+  );
   const classes = watchedQueriesStyles();
 
   if (!queries.length) {

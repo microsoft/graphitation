@@ -1,5 +1,5 @@
 import { ApolloClient, NormalizedCacheObject } from "@apollo/client";
-import { RemplWrapper } from "../rempl-wrapper";
+import { RemplWrapper, browserWindow } from "../rempl-wrapper";
 import {
   CacheDuplicates,
   ClientObject,
@@ -25,7 +25,7 @@ export class ApolloCacheDuplicatesPublisher {
     );
     this.apolloPublisher = remplWrapper.publisher;
     this.attachMethodsToPublisher();
-    this.apolloKeyFields = window.__APOLLO_KEY_FIELDS__ || {};
+    this.apolloKeyFields = browserWindow.__APOLLO_KEY_FIELDS__ || {};
   }
 
   private cacheDuplicatesHandler({ activeClient }: WrapperCallbackParams) {
@@ -60,9 +60,8 @@ export class ApolloCacheDuplicatesPublisher {
       return;
     }
 
-    const serializedCacheDuplicatesObject = this.serializeCacheDuplicatesObjects(
-      this.client,
-    );
+    const serializedCacheDuplicatesObject =
+      this.serializeCacheDuplicatesObjects(this.client);
     this.publishCacheDuplicates(serializedCacheDuplicatesObject);
   }
 

@@ -2,10 +2,10 @@
 
 exports[` 1`] = `
 "> 1 | query { hasId { name } }
-    |               ^^^^^^^ The key-field \\"id\\" must be selected for proper Apollo Client store denormalisation purposes."
+    |               ^^^^^^^ The key-field "id" must be selected for proper Apollo Client store denormalisation purposes."
 `;
 
 exports[` 2`] = `
 "> 1 | query { keyField { id name } }
-    |                  ^^^^^^^^^^ The key-field \\"objectId\\" must be selected for proper Apollo Client store denormalisation purposes."
+    |                  ^^^^^^^^^^ The key-field "objectId" must be selected for proper Apollo Client store denormalisation purposes."
 `;

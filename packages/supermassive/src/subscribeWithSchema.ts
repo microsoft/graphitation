@@ -1,44 +1,31 @@
-import { isInputType, buildASTSchema } from "graphql";
-import {
-  addTypesToRequestDocument,
-  subscribeWithoutSchema,
-  extractImplicitTypes,
-  specifiedScalars,
-} from "./index";
+import { buildASTSchema } from "graphql";
+import { subscribeWithoutSchema } from "./index";
 import { PromiseOrValue } from "./jsutils/PromiseOrValue";
-import { Resolvers, ExecutionResult, ExecutionWithSchemaArgs } from "./types";
+import { ExecutionWithSchemaArgs, ExecutionResult } from "./types";
+import { extractMinimalViableSchemaForRequestDocument } from "./utilities/extractMinimalViableSchemaForRequestDocument";
 
 export function subscribeWithSchema({
-  typeDefs,
+  document,
+  definitions,
   resolvers,
-  document: rawDocument,
   rootValue,
   contextValue,
   variableValues,
   operationName,
   fieldResolver,
   typeResolver,
-}: ExecutionWithSchemaArgs): Promise<
-  AsyncGenerator<ExecutionResult, void, void> | ExecutionResult
-> {
-  const schema = buildASTSchema(typeDefs);
-  let extractedResolvers: Resolvers = {};
-  const getTypeByName = (name: string) => {
-    const type = specifiedScalars[name] || extractedResolvers[name];
-    if (isInputType(type)) {
-      return type;
-    } else {
-      throw new Error("Invalid type");
-    }
-  };
-  extractedResolvers = extractImplicitTypes(typeDefs, getTypeByName);
-
-  const document = addTypesToRequestDocument(schema, rawDocument);
-
+}: ExecutionWithSchemaArgs): PromiseOrValue<ExecutionResult> {
+  const extracted = extractMinimalViableSchemaForRequestDocument(
+    buildASTSchema(definitions),
+    document,
+  );
   return subscribeWithoutSchema({
     document,
-    resolvers,
-    schemaResolvers: extractedResolvers,
+    schemaFragment: {
+      schemaId: "subscribeWithSchema",
+      definitions: extracted.definitions,
+      resolvers,
+    },
     rootValue,
     contextValue,
     variableValues,

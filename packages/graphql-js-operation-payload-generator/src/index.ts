@@ -1,4 +1,5 @@
 import {
+  GraphQLObjectType,
   executeSync,
   getNamedType,
   getNullableType,
@@ -24,7 +25,6 @@ import type {
   SelectionSetNode,
 } from "graphql";
 import { pathToArray } from "graphql/jsutils/Path";
-import type { Path } from "graphql/jsutils/Path";
 import {
   DefaultMockResolvers,
   createValueResolver,
@@ -38,17 +38,18 @@ import type {
   ValueResolver,
 } from "./vendor/RelayMockPayloadGenerator";
 import invariant from "invariant";
+import deepmerge from "deepmerge";
 
 export type { MockResolvers };
 
 export interface RequestDescriptor<Node = DocumentNode> {
   readonly node: Node;
-  readonly variables: Record<string, any>;
+  readonly variables: Record<string, unknown>;
 }
 
 export interface OperationDescriptor<
   Schema = GraphQLSchema,
-  Node = DocumentNode
+  Node = DocumentNode,
 > {
   readonly schema: Schema;
   readonly request: RequestDescriptor<Node>;
@@ -62,10 +63,13 @@ const TYPENAME_KEY = "__typename";
 
 export function generate<TypeMap extends DefaultMockResolvers>(
   operation: OperationDescriptor,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mockResolvers: MockResolvers<TypeMap> = DEFAULT_MOCK_RESOLVERS as any, // FIXME: Why does TS not accept this?
+  enableDefer: undefined | false = false,
+  generateId?: () => number,
 ): { data: MockData } {
   mockResolvers = { ...DEFAULT_MOCK_RESOLVERS, ...mockResolvers };
-  const resolveValue = createValueResolver(mockResolvers);
+  const resolveValue = createValueResolver(mockResolvers, generateId);
 
   // RelayMockPayloadGenerator will execute documents that have optional
   // boolean variables that are not passed by the user, but are required
@@ -74,7 +78,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
   //
   // TODO: Is this a bug in RelayMockPayloadGenerator?
   const undefinedBooleanVariables: string[] = [];
-  getOperationAST(operation.request.node)!.variableDefinitions?.forEach(
+  getOperationAST(operation.request.node)?.variableDefinitions?.forEach(
     (variableDefinition) => {
       if (
         variableDefinition.type.kind === "NamedType" &&
@@ -87,18 +91,32 @@ export function generate<TypeMap extends DefaultMockResolvers>(
     },
   );
 
-  const document =
-    undefinedBooleanVariables.length === 0
-      ? operation.request.node
-      : rewriteConditionals(operation.request.node, undefinedBooleanVariables);
-
-  const abstractTypeSelections: Path[] = [];
+  let document = operation.request.node;
+  if (undefinedBooleanVariables.length > 0) {
+    document = rewriteConditionals(document, undefinedBooleanVariables);
+  }
+  if (enableDefer) {
+    throw new Error(
+      "Enabling @defer in payload generation is not supported at this time.",
+    );
+  } else {
+    document = removeDeferAndStream(document);
+  }
 
   const result = executeSync({
     schema: operation.schema,
     document: document,
     variableValues: operation.request.variables,
-    rootValue: {},
+    rootValue: mockCompositeType(
+      mockResolvers,
+      getRootType(operation) as GraphQLObjectType,
+      null,
+      resolveValue,
+      null,
+      null,
+      {},
+      operation,
+    ),
     fieldResolver: (source: InternalMockData, args, _context, info) => {
       // FIXME: This should not assume a single selection
       const fieldNode: FieldNode = info.fieldNodes[0];
@@ -114,23 +132,23 @@ export function generate<TypeMap extends DefaultMockResolvers>(
       if (isCompositeType(namedReturnType)) {
         // TODO: This 'is list' logic is also done by the value resolver,
         // so probably need to refactor this code to actually leverage that.
-        const generateValue = (userValue?: {}) => {
+        const generateValue = (userValue?: { __typename?: string }) => {
           // Explicit null value
           if (userValue === null) {
             return null;
           }
           const result = {
-            ...userValue,
             ...mockCompositeType(
               mockResolvers,
               namedReturnType,
+              userValue?.[TYPENAME_KEY] || null,
               resolveValue,
               fieldNode,
               info,
               args,
               operation,
-              abstractTypeSelections,
             ),
+            ...userValue,
           };
           return result;
         };
@@ -138,10 +156,10 @@ export function generate<TypeMap extends DefaultMockResolvers>(
           const value = source[selectionName];
           const result = Array.isArray(value)
             ? value.map(generateValue)
-            : [generateValue(value as {})];
+            : [generateValue(value as object)];
           return result;
         } else {
-          return generateValue(source[selectionName] as {} | undefined);
+          return generateValue(source[selectionName] as object | undefined);
         }
       } else if (isScalarType(namedReturnType)) {
         if (source[selectionName] !== undefined) {
@@ -159,10 +177,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
         return result;
       } else if (isEnumType(namedReturnType)) {
         if (source[selectionName] !== undefined) {
-          const value = source[selectionName];
-          return Array.isArray(value)
-            ? value.map((e) => String(e).toUpperCase())
-            : String(value).toUpperCase();
+          return source[selectionName];
         }
         const enumValues = namedReturnType.getValues().map((e) => e.name);
         return isList ? enumValues : enumValues[0];
@@ -172,55 +187,62 @@ export function generate<TypeMap extends DefaultMockResolvers>(
     },
   });
   if (result.errors) {
+    if (result.errors.length === 1) {
+      throw result.errors[0].originalError;
+    }
     throw new Error(`RelayMockPayloadGenerator: ${result.errors.join(", ")}`);
   }
   invariant(result?.data, "Expected to generate a payload");
-
-  // Replace typenames of abstract type selections that had no concrete selection
-  // with the default mock typename.
-  abstractTypeSelections.forEach((pathInstance) => {
-    const path = pathToArray(pathInstance);
-    const object = path.reduce((prev, key) => prev[key], result.data!);
-    object.__typename = DEFAULT_MOCK_TYPENAME;
-  });
-
   return result as { data: MockData };
 }
 
 function mockCompositeType(
   mockResolvers: MockResolvers | null,
   namedReturnType: GraphQLNamedType,
+  userSpecifiedTypename: string | null,
   resolveValue: ValueResolver,
-  fieldNode: FieldNode,
-  info: GraphQLResolveInfo,
-  args: { [argName: string]: any },
+  fieldNode: FieldNode | null,
+  info: GraphQLResolveInfo | null,
+  args: { [argName: string]: unknown },
   operation: OperationDescriptor<GraphQLSchema, DocumentNode>,
-  abstractTypeSelections: Path[],
 ) {
   // Get the concrete type selection, concrete type on an abstract type
   // selection, or the abstract type selection.
   let typename = namedReturnType.name;
   let abstractTypeSelectionOnly = false;
-  if (isAbstractType(namedReturnType)) {
+  const abstractType = isAbstractType(namedReturnType);
+
+  if (abstractType) {
+    invariant(info, "Expected info to be defined");
     const possibleTypeNames = info.fieldNodes.reduce<string[]>(
       (acc, fieldNode) => [
         ...acc,
         ...getPossibleConcreteTypeNamesFromAbstractTypeSelections(
           operation.schema,
-          fieldNode.selectionSet!,
+          fieldNode.selectionSet as SelectionSetNode,
           info.fragments,
         ),
       ],
       [],
     );
     if (possibleTypeNames?.length) {
-      typename = possibleTypeNames[0];
+      if (userSpecifiedTypename) {
+        if (!possibleTypeNames.includes(userSpecifiedTypename)) {
+          throw new Error(
+            "Expected user-specified typename to be one of " +
+              possibleTypeNames.join(", "),
+          );
+        }
+        typename = userSpecifiedTypename;
+      } else {
+        typename = possibleTypeNames[0];
+      }
     } else {
       abstractTypeSelectionOnly = true;
     }
   }
 
-  const result: InternalMockData = {
+  let result: InternalMockData = {
     ...getDefaultValues(
       mockResolvers,
       // If a mock resolver is provided for the abstract type, use it.
@@ -233,8 +255,30 @@ function mockCompositeType(
       args,
     ),
   };
+  if (
+    abstractType &&
+    result.__typename &&
+    mockResolvers &&
+    mockResolvers[namedReturnType.name] &&
+    mockResolvers[result.__typename]
+  ) {
+    // If a mock resolver is provided for both an abstract and a concrete type
+    // (for the typename possibly returned by the abstract type mock), merge
+    // the results.
+    result = deepmerge(
+      result,
+      getDefaultValues(
+        mockResolvers,
+        result.__typename,
+        resolveValue,
+        fieldNode,
+        info,
+        args,
+      ) as InternalMockData,
+    );
+  }
 
-  if (isAbstractType(namedReturnType) && !result[TYPENAME_KEY]) {
+  if (abstractType && !result[TYPENAME_KEY]) {
     if (abstractTypeSelectionOnly) {
       // When no concrete type selection exists, it means only interface
       // fields are selected, so we can just use the first possible type.
@@ -242,16 +286,15 @@ function mockCompositeType(
       // We keep a reference to the path so we can rewrite the __typename
       // field in the output after execution to reflect that this not a
       // selection on a concrete type.
-      const possibleType = operation.schema.getPossibleTypes(
-        namedReturnType,
-      )[0];
+      const possibleType =
+        operation.schema.getPossibleTypes(namedReturnType)[0];
       invariant(
         possibleType,
         "Expected interface %s to be implemented by at least one concrete type",
         namedReturnType.name,
       );
       typename = possibleType.name;
-      abstractTypeSelections.push(info.path);
+      invariant(info, "Expected info to be defined");
     }
     result.__typename = typename;
     result.__abstractType = namedReturnType;
@@ -264,19 +307,19 @@ function getDefaultValues(
   mockResolvers: MockResolvers | null,
   typename: string,
   resolveValue: ValueResolver,
-  fieldNode: FieldNode,
-  info: GraphQLResolveInfo,
-  args: { [argName: string]: any },
+  fieldNode: FieldNode | null,
+  info: GraphQLResolveInfo | null,
+  args: { [argName: string]: unknown },
 ) {
   const defaultValues =
-    mockResolvers![typename] &&
+    mockResolvers?.[typename] &&
     (resolveValue(
       typename,
       {
-        parentType: null,
-        name: fieldNode.name.value,
-        alias: fieldNode.alias?.value || null,
-        path: pathToArray(info.path).filter(isString),
+        parentType: info ? info.parentType.name : null,
+        name: fieldNode?.name.value || "",
+        alias: fieldNode?.alias?.value || null,
+        path: info ? pathToArray(info.path).filter(isString) : [],
         args: args,
       },
       // FIXME: This is disabled here because we're currently doing this work
@@ -291,7 +334,7 @@ function getDefaultValues(
   return defaultValues;
 }
 
-function isString(value: any): value is string {
+function isString(value: unknown): value is string {
   return typeof value === "string";
 }
 
@@ -345,7 +388,7 @@ function getFragmentSelection(
 
 function mockScalar(
   fieldNode: FieldNode,
-  args: { [argName: string]: any },
+  args: { [argName: string]: unknown },
   type: GraphQLScalarType,
   info: GraphQLResolveInfo,
   parentType: GraphQLCompositeType,
@@ -413,4 +456,30 @@ function rewriteConditionals(
       }
     },
   });
+}
+
+function removeDeferAndStream(doc: DocumentNode): DocumentNode {
+  return visit(doc, {
+    Directive: (node) => {
+      if (node.name.value === "defer" || node.name.value === "stream") {
+        return null;
+      }
+      return;
+    },
+  });
+}
+
+function getRootType(
+  operation: OperationDescriptor,
+): GraphQLObjectType | undefined | null {
+  const rootType = getOperationAST(operation.request.node);
+  invariant(rootType, "Expected operation to have a root type");
+  switch (rootType.operation) {
+    case "query":
+      return operation.schema.getQueryType();
+    case "mutation":
+      return operation.schema.getMutationType();
+    case "subscription":
+      return operation.schema.getSubscriptionType();
+  }
 }

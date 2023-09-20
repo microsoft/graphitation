@@ -1,8 +1,9 @@
-import { makeExecutableSchema } from "@graphql-tools/schema";
-import { parse } from "graphql";
+import { GraphQLSchema, parse } from "graphql";
 import { join } from "path";
 import { readFileSync } from "fs";
 import resolvers from "./resolvers";
+import { makeExecutableSchema } from "./makeExecutableSchema";
+import { Resolvers } from "../../types";
 
 export const typeDefs = parse(
   readFileSync(join(__dirname, "./schema.graphql"), {
@@ -10,7 +11,15 @@ export const typeDefs = parse(
   }),
 );
 
-export default makeExecutableSchema({
+const schema = makeExecutableSchema({
   typeDefs,
-  resolvers,
+  resolvers: resolvers as Resolvers<unknown, unknown>,
 });
+
+export default schema;
+
+export const makeSchema: () => GraphQLSchema = () =>
+  makeExecutableSchema({
+    typeDefs,
+    resolvers: resolvers as Resolvers<unknown, unknown>,
+  });

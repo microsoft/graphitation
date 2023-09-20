@@ -11,13 +11,14 @@ import {
 } from "./contexts/apollo-cache-context";
 import { Menu } from "../components";
 import RecentActivityContainer from "./apollo-recent-activity/recent-activity-container";
+import { OperationsTrackerContainer } from "./apollo-operations-tracker";
 import { ApolloGlobalOperationsContext } from "./contexts/apollo-global-operations-context";
 import { ApolloGlobalOperations } from "../types";
 
 function getCacheDataCount(cacheContextData: ApolloCacheContextType) {
-  if (!cacheContextData?.cacheObjects) return 0;
+  if (!cacheContextData?.cache) return 0;
 
-  return Object.keys(cacheContextData.cacheObjects.cache).length;
+  return Object.keys(cacheContextData.cache).length;
 }
 
 function hideGlobalOperations(globalOperations: ApolloGlobalOperations) {
@@ -29,12 +30,8 @@ function hideGlobalOperations(globalOperations: ApolloGlobalOperations) {
 }
 
 const Router = React.memo(() => {
-  const {
-    mutationsCount,
-    queriesCount,
-    mutationsHaveError,
-    queriesHaveError,
-  } = useContext(ApolloTrackerMetadataContext);
+  const { mutationsCount, queriesCount, mutationsHaveError, queriesHaveError } =
+    useContext(ApolloTrackerMetadataContext);
   const cacheData = useContext(ApolloCacheContext);
   const globalOperations = useContext(ApolloGlobalOperationsContext);
 
@@ -61,6 +58,9 @@ const Router = React.memo(() => {
           </Route>
           <Route path="/activity">
             <RecentActivityContainer />
+          </Route>
+          <Route path="/operations-tracker">
+            <OperationsTrackerContainer />
           </Route>
           <Route path="/graphiql">
             <GraphiQLRenderer />

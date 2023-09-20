@@ -1,6 +1,9 @@
 node_modules
 lib
+dist
 .tsbuildinfo
+dist
+examples/apollo-watch-fragments/public/bundle.js
 
 # This is purely pre-cautionary; when linting becomes slow, delete this eslintcache entry
 .eslintcache
@@ -8,3 +11,4 @@ lib
 *.tgz
 
 examples/supermassive-todomvc/**/*.d.ts*
+relay-preload-hooks.ts

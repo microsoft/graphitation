@@ -1,0 +1,141 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`compiledHooks with strict Global Object Id spec type-policies useCompiledLazyLoadQuery once loaded does re-render when a field that was selected in the watch query is updated in the store 1`] = `
+{
+  "__fragments": {
+    "avatarSize": 21,
+    "messagesBackwardCount": 1,
+    "messagesBeforeCursor": "",
+    "userId": 42,
+  },
+  "user": {
+    "__fragments": {
+      "avatarSize": 21,
+      "messagesBackwardCount": 1,
+      "messagesBeforeCursor": "",
+      "userId": 42,
+    },
+    "__typename": "User",
+    "id": "42",
+    "name": "Satya",
+  },
+}
+`;
+
+exports[`compiledHooks with strict Global Object Id spec type-policies useCompiledLazyLoadQuery once loaded fetches new data when variables change 1`] = `
+{
+  "__typename": "User",
+  "avatarUrl({"size":21})": "<mock-value-for-field-"avatarUrl">",
+  "conversations:compiledHooks_user_conversations": {
+    "__typename": "ConversationsConnection",
+    "edges": [
+      {
+        "__typename": "ConversationsConnectionEdge",
+        "cursor": "<mock-value-for-field-"cursor">",
+        "node": {
+          "__ref": "<Conversation-mock-id-2>",
+        },
+      },
+    ],
+    "pageInfo": {
+      "__typename": "PageInfo",
+      "endCursor": "<mock-value-for-field-"endCursor">",
+      "hasNextPage": false,
+    },
+  },
+  "id": "21",
+  "name": "<mock-value-for-field-"name">",
+  "petName": "<mock-value-for-field-"petName">",
+}
+`;
+
+exports[`compiledHooks with strict Global Object Id spec type-policies useCompiledLazyLoadQuery once loaded loads all data of the execution query into the store 1`] = `
+{
+  "42": {
+    "__typename": "User",
+    "avatarUrl({"size":21})": "<mock-value-for-field-"avatarUrl">",
+    "conversations:compiledHooks_user_conversations": {
+      "__typename": "ConversationsConnection",
+      "edges": [
+        {
+          "__typename": "ConversationsConnectionEdge",
+          "cursor": "<mock-value-for-field-"cursor">",
+          "node": {
+            "__ref": "first-paged-conversation",
+          },
+        },
+      ],
+      "pageInfo": {
+        "__typename": "PageInfo",
+        "endCursor": "<mock-value-for-field-"endCursor">",
+        "hasNextPage": false,
+      },
+    },
+    "id": "42",
+    "name": "<mock-value-for-field-"name">",
+    "petName": "<mock-value-for-field-"petName">",
+  },
+  "<mock-value-for-field-"id">": {
+    "__typename": "NonNode",
+    "id": "<mock-value-for-field-"id">",
+  },
+  "ROOT_QUERY": {
+    "__typename": "Query",
+    "nonNode": {
+      "__ref": "<mock-value-for-field-"id">",
+    },
+    "user({"id":42})": {
+      "__ref": "42",
+    },
+  },
+  "first-paged-conversation": {
+    "__typename": "Conversation",
+    "id": "first-paged-conversation",
+    "messages:compiledHooks_conversation_messages": {
+      "__typename": "ConversationMessagesConnection",
+      "edges": [
+        {
+          "__typename": "ConversationMessagesConnectionEdge",
+          "cursor": "<mock-value-for-field-"cursor">",
+          "node": {
+            "__ref": "first-paged-message",
+          },
+        },
+      ],
+      "pageInfo": {
+        "__typename": "PageInfo",
+        "hasPreviousPage": false,
+        "startCursor": "<mock-value-for-field-"startCursor">",
+      },
+    },
+    "title": "<mock-value-for-field-"title">",
+  },
+  "first-paged-message": {
+    "__typename": "Message",
+    "id": "first-paged-message",
+    "text": "<mock-value-for-field-"text">",
+  },
+}
+`;
+
+exports[`compiledHooks with strict Global Object Id spec type-policies useCompiledLazyLoadQuery once loaded only returns the fields selected in the watch query to the component 1`] = `
+{
+  "__fragments": {
+    "avatarSize": 21,
+    "messagesBackwardCount": 1,
+    "messagesBeforeCursor": "",
+    "userId": 42,
+  },
+  "user": {
+    "__fragments": {
+      "avatarSize": 21,
+      "messagesBackwardCount": 1,
+      "messagesBeforeCursor": "",
+      "userId": 42,
+    },
+    "__typename": "User",
+    "id": "42",
+    "name": "<mock-value-for-field-"name">",
+  },
+}
+`;

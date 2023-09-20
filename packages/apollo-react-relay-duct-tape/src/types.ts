@@ -1,12 +1,42 @@
+import type { DocumentNode } from "graphql";
+
 export interface Variables {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [name: string]: any;
+}
+
+export interface Context {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [name: string]: any;
 }
 
 export interface OperationType {
   readonly variables: Variables;
+  readonly context?: Context;
   readonly response: unknown;
   readonly rawResponse?: unknown;
 }
+
+export type GraphQLTaggedNode =
+  | {
+      __brand: "GraphQLTaggedNode";
+    }
+  | (DocumentNode & {
+      watchQueryDocument?: never;
+      executionQueryDocument?: DocumentNode;
+      __brand?: never;
+    })
+  | {
+      watchQueryDocument: DocumentNode;
+      executionQueryDocument?: DocumentNode;
+      __brand?: never;
+    };
+
+export type FetchPolicy =
+  | "store-or-network"
+  | "store-and-network"
+  | "network-only"
+  | "store-only";
 
 /**
  * relay-compiler-language-typescript support for fragment references
@@ -43,7 +73,7 @@ export type KeyType<TData = unknown> = Readonly<{
 
 export type KeyTypeData<
   TKey extends KeyType<TData>,
-  TData = unknown
+  TData = unknown,
 > = Required<TKey>[" $data"];
 
 export type ArrayKeyType<TData = unknown> = ReadonlyArray<KeyType<
@@ -51,5 +81,5 @@ export type ArrayKeyType<TData = unknown> = ReadonlyArray<KeyType<
 > | null>;
 export type ArrayKeyTypeData<
   TKey extends ArrayKeyType<TData>,
-  TData = unknown
+  TData = unknown,
 > = KeyTypeData<NonNullable<TKey[number]>>;

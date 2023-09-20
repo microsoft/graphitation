@@ -3,30 +3,34 @@
   "private": true,
   "workspaces": {
     "packages": [
+      "examples/*",
       "packages/*",
       "scripts"
     ]
   },
   "scripts": {
     "clean": "git clean -fdx -e node_modules",
-    "build-only": "lage build",
-    "build": "lage build && lage types",
-    "types": "lage types",
-    "test": "lage test",
-    "lint": "lage lint",
+    "build-only": "lage build --continue",
+    "build": "yarn build-only && yarn types",
+    "types": "lage types --continue",
+    "test": "lage test --continue",
+    "lint": "lage lint --continue",
     "lage": "lage",
     "ci": "yarn lage build types test lint && yarn checkchange",
     "beachball": "beachball -b origin/alloy/relay-apollo-duct-tape",
     "change": "yarn beachball change",
     "checkchange": "yarn beachball check",
-    "release": "yarn beachball publish",
+    "release": "yarn beachball publish -t next",
     "postinstall": "patch-package"
   },
   "devDependencies": {
+    "graphql": "^15.0.0",
     "beachball": "^2.20.0",
-    "lage": "0.29.1",
+    "lage": "^2.7.1",
     "patch-package": "^6.4.7",
-    "prettier": "^2.2.1"
+    "prettier": "^2.8.7",
+    "ts-jest": "^29.0.5",
+    "@graphql-eslint/eslint-plugin": "^3.7.0"
   },
   "resolutions": {
     "@types/relay-runtime": "^14.1.2",

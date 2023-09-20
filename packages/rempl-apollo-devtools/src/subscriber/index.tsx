@@ -9,12 +9,13 @@ declare global {
   interface Window {
     REMPL_GRAPHQL_DEVTOOLS_RECENT_ACTIVITIES?: RecentActivities[];
     REMPL_APOLLO_TRACKER_METADATA?: ApolloTrackerMetadata;
+    GRAPHIQL_STORAGE: { [key: string]: string | null };
   }
 }
 
 const style = document.createElement("style");
 document.body.appendChild(style);
-style.innerHTML = __GLOBAL_CSS__ + __GRAPHIQL_CSS__;
+style.innerText = __GLOBAL_CSS__ + __GRAPHIQL_CSS__;
 
 const rootEl = document.createElement("div");
 rootEl.style.height = "100%";

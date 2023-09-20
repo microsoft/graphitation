@@ -5,14 +5,10 @@ import {
 } from "@graphql-eslint/eslint-plugin";
 import { OperationDefinitionNode, FragmentDefinitionNode } from "graphql";
 import { RuleFixer } from "@typescript-eslint/utils/dist/ts-eslint";
-import { Kind } from "graphql";
-import { relative } from "path";
 import { checkDirForPkg } from "./utils";
 import path from "path";
 import camelCase from "lodash.camelcase";
-import kebabCase from "lodash.kebabcase";
 
-const RULE_NAME = "operation-naming-convention";
 const OPERATIONS = ["query", "mutation", "subscription"];
 
 export const MISSING_OPERATION_NAME_ERROR_MESSAGE = `Filename should end with the operation name (query/mutation/subscription) e.g. foo-query.graphql`;
@@ -56,29 +52,33 @@ export function reportError(
 ) {
   const newNode = {
     ...node,
-    loc: {
-      start: {
-        line: node.loc.start.line,
-        column: node.loc.start.column - 1,
-      },
-      end: {
-        line: node.loc.end.line,
-        column: node.loc.end.column - 1,
-      },
-    },
+    loc: node.loc
+      ? {
+          start: {
+            line: node.loc.start.line,
+            column: node.loc.start.column - 1,
+          },
+          end: {
+            line: node.loc.end.line,
+            column: node.loc.end.column - 1,
+          },
+        }
+      : undefined,
   };
 
   const fix = (fixer: RuleFixer) => {
     if (!expectedName) {
       return;
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return fixer.replaceText(node.name as any, expectedName);
   };
 
   context.report({
     node: newNode,
     message,
-    fix: expectedName ? fix : undefined,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fix: expectedName ? (fix as any) : undefined,
   });
 }
 
@@ -86,9 +86,11 @@ const rule: GraphQLESLintRule = {
   meta: {
     type: "problem",
     fixable: "code",
+    schema: undefined,
     docs: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...({ description: `Enforce descriptive operation names` } as any), // FIXME: Why can we not pass this prop?
       category: "Operations",
-      description: `Enforce descriptive operation names`,
       requiresSiblings: true,
 
       examples: [

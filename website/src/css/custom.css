@@ -4,15 +4,24 @@
  * work well for content-centric websites.
  */
 
-/* You can override the default Infima variables here. */
+/**
+ * These are our logo's primary colors according to this tool: https://www.imgonline.com.ua/eng/get-dominant-colors-result.php
+ *
+ * - #7103e0 <- this is the one we use right now
+ * - #5d039d
+ * - #a569ca
+ * - #f9530c
+ *
+ * I then used this tool to create a set of shades: https://uicolors.app/create
+ */
 :root {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: rgb(33, 175, 144);
-  --ifm-color-primary-darker: rgb(31, 165, 136);
-  --ifm-color-primary-darkest: rgb(26, 136, 112);
-  --ifm-color-primary-light: rgb(70, 203, 174);
-  --ifm-color-primary-lighter: rgb(102, 212, 189);
-  --ifm-color-primary-lightest: rgb(146, 224, 208);
+  --ifm-color-primary: #8b16ff;
+  --ifm-color-primary-dark: #8004fd;
+  --ifm-color-primary-darker: #7103e0;
+  --ifm-color-primary-darkest: #5905ad;
+  --ifm-color-primary-light: #943dff;
+  --ifm-color-primary-lighter: #ab75ff;
+  --ifm-color-primary-lightest: #c5a6ff;
   --ifm-code-font-size: 95%;
 }
 
@@ -23,6 +32,6 @@
   padding: 0 var(--ifm-pre-padding);
 }
 
-html[data-theme='dark'] .docusaurus-highlight-code-line {
+html[data-theme="dark"] .docusaurus-highlight-code-line {
   background-color: rgba(0, 0, 0, 0.3);
 }

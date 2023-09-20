@@ -25,39 +25,45 @@ export const ApolloCacheItems = React.memo(
       setDetailsValue(undefined);
     };
 
-    const buildApolloCacheItems = (
-      removeCacheItem: (key: string) => void,
-      setDetailsValue: (value: CacheObjectWithSize) => void,
-    ) => (item: CacheObjectWithSize, index: number) => (
-      <div className={classes.itemContainer} key={`${item.key}-${index}`}>
-        <div className={classes.keyColumn}>{item.key}</div>
-        <div>{item.valueSize} B</div>
-        <div>
-          <Button
-            title="Show details"
-            className={mergeClasses(
-              classes.actionButton,
-              classes.detailsButton,
-            )}
-            onClick={() => {
-              setDetailsValue(item);
-            }}
-          >
-            <Open20Filled />
-          </Button>
-          <Button
-            title="Remove item"
-            className={mergeClasses(classes.actionButton, classes.removeButton)}
-            onClick={(e) => {
-              removeCacheItem(item.key);
-              e.stopPropagation();
-            }}
-          >
-            <Delete20Regular />
-          </Button>
-        </div>
-      </div>
-    );
+    const buildApolloCacheItems =
+      (
+        removeCacheItem: (key: string) => void,
+        setDetailsValue: (value: CacheObjectWithSize) => void,
+      ) =>
+      (item: CacheObjectWithSize, index: number) =>
+        (
+          <div className={classes.itemContainer} key={`${item.key}-${index}`}>
+            <div className={classes.keyColumn}>{item.key}</div>
+            <div>{item.valueSize} B</div>
+            <div>
+              <Button
+                title="Show details"
+                className={mergeClasses(
+                  classes.actionButton,
+                  classes.detailsButton,
+                )}
+                onClick={() => {
+                  setDetailsValue(item);
+                }}
+              >
+                <Open20Filled />
+              </Button>
+              <Button
+                title="Remove item"
+                className={mergeClasses(
+                  classes.actionButton,
+                  classes.removeButton,
+                )}
+                onClick={(e) => {
+                  removeCacheItem(item.key);
+                  e.stopPropagation();
+                }}
+              >
+                <Delete20Regular />
+              </Button>
+            </div>
+          </div>
+        );
 
     return (
       <div className={classes.root}>

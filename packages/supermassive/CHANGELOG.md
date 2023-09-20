@@ -1,8 +1,236 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Fri, 24 Jun 2022 11:59:47 GMT and should not be manually modified.
+This log was last generated on Fri, 15 Sep 2023 16:06:32 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.0.0
+
+Fri, 15 Sep 2023 16:06:32 GMT
+
+### Major changes
+
+- - feat: execution with compact schema fragments
+- feat: schema fragment loading on demand
+- feat: new document annotation strategy
+- feat: experimental `@defer` and `@stream` support
+- (vladimir.razuvaev@gmail.com)
+
+## 3.0.0-alpha.9
+
+Fri, 15 Sep 2023 00:43:00 GMT
+
+### Changes
+
+- graphql15 compatibility (vladimir.razuvaev@gmail.com)
+
+## 3.0.0-alpha.8
+
+Thu, 14 Sep 2023 19:05:33 GMT
+
+### Changes
+
+- change signature of executeWithSchema and subscribeWithSchema functions (vladimir.razuvaev@gmail.com)
+
+## 3.0.0-alpha.7
+
+Tue, 12 Sep 2023 23:58:31 GMT
+
+### Changes
+
+- refactor: replace PartialSchema class with ES module functions (vladimir.razuvaev@gmail.com)
+
+## 3.0.0-alpha.6
+
+Mon, 11 Sep 2023 19:24:32 GMT
+
+### Changes
+
+- fix mergeResolvers + more tests (vladimir.razuvaev@gmail.com)
+
+## 3.0.0-alpha.5
+
+Mon, 11 Sep 2023 12:06:07 GMT
+
+### Changes
+
+- switch to 1-indexed ids for spec type references (vladimir.razuvaev@gmail.com)
+
+## 3.0.0-alpha.4
+
+Sun, 10 Sep 2023 20:58:53 GMT
+
+### Changes
+
+- Schema fragment loader (vladimir.razuvaev@gmail.com)
+
+## 3.0.0-alpha.3
+
+Tue, 29 Aug 2023 15:06:36 GMT
+
+### Changes
+
+- New type annotation strategy (vladimir.razuvaev@gmail.com)
+
+## 3.0.0-alpha.1
+
+Tue, 27 Jun 2023 11:47:30 GMT
+
+### Changes
+
+- Supermassive v3 alpha - defer and stream stuff (mnovikov@microsoft.com)
+
+## 2.6.0
+
+Tue, 20 Jun 2023 11:38:47 GMT
+
+### Minor changes
+
+- Bump TS version in dev, move TS to peerDep (mnovikov@microsoft.com)
+
+## 2.5.0
+
+Mon, 19 Jun 2023 12:22:22 GMT
+
+### Minor changes
+
+- Separate ast annotator from supermassive (mnovikov@microsoft.com)
+
+## 2.4.8
+
+Mon, 12 Jun 2023 12:50:51 GMT
+
+### Patches
+
+- fix: use 'isObjectLike' in mergeResolvers due to failure when resolvers entry is esModule (sergeystoyan@microsoft.com)
+
+## 2.4.7
+
+Wed, 07 Jun 2023 08:48:18 GMT
+
+### Patches
+
+- Fix type export (mnovikov@microsoft.com)
+
+## 2.4.6
+
+Tue, 30 May 2023 15:52:16 GMT
+
+### Patches
+
+- Fix supermassive not supporting unpassed default arguments (mnovikov@microsoft.com)
+
+## 2.4.2
+
+Tue, 02 May 2023 10:22:49 GMT
+
+### Patches
+
+- [SUPERMASSIVE] fix invalid behavior in execution hooks error handling (sergeystoyan@microsoft.com)
+
+## 2.4.0
+
+Tue, 04 Apr 2023 10:29:16 GMT
+
+### Minor changes
+
+- Make execution argument `schemaResolvers` optional (vladimir.razuvaev@gmail.com)
+
+## 2.3.0
+
+Thu, 30 Mar 2023 08:30:21 GMT
+
+### Minor changes
+
+- [SUPERMASSIVE] Initial execution hooks implementation (sergeystoyan@microsoft.com)
+
+## 2.1.0
+
+Wed, 01 Mar 2023 10:48:32 GMT
+
+### Minor changes
+
+- New CLI (mnovikov@microsoft.com)
+
+## 2.0.0
+
+Mon, 21 Nov 2022 14:12:11 GMT
+
+### Major changes
+
+- Supermassive split into multiple packages (jakubvejr@microsoft.com)
+
+## 1.1.7
+
+Thu, 27 Oct 2022 12:54:10 GMT
+
+### Patches
+
+- contextPath relative to CWD and resolvers return readonly array (jakubvejr@microsoft.com)
+
+## 1.1.6
+
+Tue, 25 Oct 2022 10:26:19 GMT
+
+### Patches
+
+- Better error message (mnovikov@microsoft.com)
+
+## 1.1.5
+
+Mon, 24 Oct 2022 14:54:38 GMT
+
+### Patches
+
+- Codegen - subscription type fix, type fields are readonly and contextPath is relative to inputFile (jakubvejr@microsoft.com)
+
+## 1.1.4
+
+Mon, 17 Oct 2022 11:49:33 GMT
+
+### Patches
+
+- codegen: HOTFIX context folder mjs (jakubvejr@microsoft.com)
+
+## 1.1.3
+
+Fri, 14 Oct 2022 15:01:42 GMT
+
+### Patches
+
+- Hotfix: codegen imports fixed (jakubvejr@microsoft.com)
+
+## 1.1.2
+
+Wed, 12 Oct 2022 13:52:36 GMT
+
+### Patches
+
+- Hotfix: codegen subscription fixed (jakubvejr@microsoft.com)
+
+## 1.1.1
+
+Wed, 05 Oct 2022 16:48:48 GMT
+
+### Patches
+
+- Hotfix: typescript codegen fixes (models and models file path) (jakubvejr@microsoft.com)
+
+## 1.1.0
+
+Fri, 30 Sep 2022 08:56:18 GMT
+
+### Minor changes
+
+- Version bump (jakubvejr@microsoft.com)
+
+## 1.0.0
+
+Wed, 20 Jul 2022 16:31:59 GMT
+
+### Major changes
+
+- extractImplicitTypesToTypescript exported separately from supermassive (jakubvejr@microsoft.com)
 
 ## 0.8.5
 

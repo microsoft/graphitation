@@ -1,18 +1,8 @@
-```diff
-@@                                     888      d8b 888             888    d8b                     @@
-@@                                     888      Y8P 888             888    Y8P                     @@
-@@                                     888          888             888                            @@
-@@    .d88b.  888d888 8888b.  88888b.  88888b.  888 888888  8888b.  888888 888  .d88b.  88888b.    @@
-@@   d88P"88b 888P"      "88b 888 "88b 888 "88b 888 888        "88b 888    888 d88""88b 888 "88b   @@
-@@   888  888 888    .d888888 888  888 888  888 888 888    .d888888 888    888 888  888 888  888   @@
-@@   Y88b 888 888    888  888 888 d88P 888  888 888 Y88b.  888  888 Y88b.  888 Y88..88P 888  888   @@
-@@    "Y88888 888    "Y888888 88888P"  888  888 888  "Y888 "Y888888  "Y888 888  "Y88P"  888  888   @@
-@@        888                 888                                                                  @@
-@@   Y8b d88P                 888                                                                  @@
-@@    "Y88P"                  888                                                                  @@
-```
+<p align="center">
+  <img width="100" src="./website/static/img/graphitation-logo.png">
+</p>
 
-# Project
+# Graphitation
 
 GraphQL tooling & runtime support needed for MS Teams and beyond
 
@@ -20,12 +10,16 @@ GraphQL tooling & runtime support needed for MS Teams and beyond
 
 - [@graphitation/apollo-mock-client](./packages/apollo-mock-client): An Apollo Client that allows mocking of payloads in response to operations, rather than having to provide them all upfront.
 - [@graphitation/apollo-react-relay-duct-tape](./packages/apollo-react-relay-duct-tape): A compatibility wrapper that provides the react-relay API on top of Apollo Client.
+- [@graphitation/graphitation-cli](./packages/graphitation-cli): binaries for the codegen and extractors.
+- [@graphitation/graphql-codegen](./packages/graphql-codegen): generates resolver types and models.
+- [@graphitation/graphql-codegen-supermassive-schema-extraction-plugin](./packages/graphql-codegen-supermassive-schema-extraction-plugin): GraphQL codegen supermassive schema extraction.
 - [@graphitation/graphql-js-operation-payload-generator](./packages/graphql-js-operation-payload-generator): Generates a payload for a given GraphQL operation expressed in graphql-js AST and a GraphQL Schema.
 - [@graphitation/graphql-js-tag](./packages): A simple graphql-js AST based `graphql` tagged template function.
-- [@graphitation/graphql-eslint-rules](./packages/graphql-eslint-rules): Graphql eslint rules 
-- [@graphitation/rempl-apollo-devtools](./packages/apollo-devtools): Rempl apollo devtools 
+- [@graphitation/graphql-eslint-rules](./packages/graphql-eslint-rules): Graphql eslint rules
+- [@graphitation/rempl-apollo-devtools](./packages/apollo-devtools): Rempl apollo devtools
 - [@graphitation/supermassive](./packages/supermassive): Supermassive is a lightweight schema-less GraphQL executor and query build-time compiler
-- [relay-compiler-language-graphitation](./packages/relay-compiler-language-graphitation): A relay-compiler plugin that wraps [the TypeScript plugin](https://github.com/relay-tools/relay-compiler-language-typescript) and augments it slightly for [@graphitation/apollo-react-relay-duct-tape](./packages/apollo-react-relay-duct-tape)'s needs.
+- [@graphitation/supermassive-extractors](./packages/supermassive-extractors): extracts implicit resolvers
+- [@graphitation/apollo-react-relay-duct-tape-compiler](./packages/apollo-react-relay-duct-tape-compiler): The build tools to cater to @graphitation/apollo-react-relay-duct-tape's needs.
 
 ## Contributing
 

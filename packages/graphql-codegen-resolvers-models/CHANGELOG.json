@@ -1,0 +1,125 @@
+{
+  "name": "@graphitation/graphql-codegen-resolvers-models",
+  "entries": [
+    {
+      "date": "Wed, 02 Aug 2023 12:50:20 GMT",
+      "tag": "@graphitation/graphql-codegen-resolvers-models_v1.2.0",
+      "version": "1.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-codegen-resolvers-models",
+            "commit": "ea95aac89851fb20bae9a5f495bd6776c6607d87",
+            "comment": "enums in types are now string unions by default and added backwards compatibility flag + deprecation fixes"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 20 Jun 2023 11:38:47 GMT",
+      "tag": "@graphitation/graphql-codegen-resolvers-models_v1.1.0",
+      "version": "1.1.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-codegen-resolvers-models",
+            "commit": "76002f5737ad48c800f114bc47eb15e5e6c4653e",
+            "comment": "Bump TS version in dev, move TS to peerDep"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 07 Jun 2023 14:13:33 GMT",
+      "tag": "@graphitation/graphql-codegen-resolvers-models_v1.0.1",
+      "version": "1.0.1",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-codegen-resolvers-models",
+            "commit": "not available",
+            "comment": "Fix all new lint issues"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 07 Jun 2023 14:07:35 GMT",
+      "tag": "@graphitation/graphql-codegen-resolvers-models_v1.0.1",
+      "version": "1.0.1",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-codegen-resolvers-models",
+            "commit": "5219d8efa17a1286fd664b52ecc95c0535359efb",
+            "comment": "Fix all new lint issues"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 07 Jun 2023 08:48:18 GMT",
+      "tag": "@graphitation/graphql-codegen-resolvers-models_v1.0.1",
+      "version": "1.0.1",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-codegen-resolvers-models",
+            "commit": "774440b8fa15ecb500765c0aae65ea71bead547d",
+            "comment": "Massive repository janitor work"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 03 Apr 2023 14:51:35 GMT",
+      "tag": "@graphitation/graphql-codegen-resolvers-models_v1.0.1",
+      "version": "1.0.1",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-codegen-resolvers-models",
+            "commit": "3cd00dd6254a9b7d9dfe615d9d35dba4c0b108c7",
+            "comment": "Upgrade prettier"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 22 Nov 2022 18:01:10 GMT",
+      "tag": "@graphitation/graphql-codegen-resolvers-models_v1.0.1",
+      "version": "1.0.1",
+      "comments": {
+        "none": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-codegen-resolvers-models",
+            "commit": "1629c04c11908d1c35366d4d3da530e6b8919f69",
+            "comment": "jest update"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 16 Aug 2022 08:40:04 GMT",
+      "tag": "@graphitation/graphql-codegen-resolvers-models_v1.0.1",
+      "version": "1.0.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-codegen-resolvers-models",
+            "commit": "d8827eb215de2b7a0031d22e5eaae88077b20fa3",
+            "comment": "graphql-codegen-resolvers-models added"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -6,7 +6,7 @@ import {
 import ts from "typescript";
 import { GraphQLSchema } from "graphql";
 import { printSchema, parse } from "graphql";
-import { extractImplicitTypesToTypescript } from "@graphitation/supermassive";
+import { extractImplicitTypesToTypescript } from "@graphitation/supermassive-extractors";
 import { extname } from "path";
 import { RawClientSideBasePluginConfig } from "@graphql-codegen/visitor-plugin-common";
 

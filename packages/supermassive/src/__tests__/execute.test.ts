@@ -1,14 +1,19 @@
-import { parse, execute as graphQLExecute, isInputType } from "graphql";
-import { executeWithoutSchema, executeWithSchema } from "..";
-import schema, { typeDefs } from "../benchmarks/swapi-schema";
+import {
+  parse,
+  execute as graphQLExecute,
+  subscribe as graphQLSubscribe,
+  GraphQLSchema,
+} from "graphql";
+import { makeSchema } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
-import resolvers from "../benchmarks/swapi-schema/resolvers";
-import { addTypesToRequestDocument } from "../ast/addTypesToRequestDocument";
-import { extractImplicitTypes } from "../extractImplicitTypesRuntime";
-import { Resolvers, Resolver, UserResolvers } from "../types";
-import { specifiedScalars } from "../values";
-import { mergeResolvers } from "../utilities/mergeResolvers";
-import { resolvers as extractedResolvers } from "../benchmarks/swapi-schema/__generated__/schema";
+import { createExecutionUtils } from "../__testUtils__/execute";
+
+const {
+  compareResultsForExecuteWithSchema,
+  compareResultForExecuteWithoutSchemaWithMVSAnnotation,
+  drainExecution,
+  graphqlExecuteOrSubscribe,
+} = createExecutionUtils(graphQLExecute, graphQLSubscribe);
 
 interface TestCase {
   name: string;
@@ -21,6 +26,7 @@ const testCases: Array<TestCase> = [
     name: "basic query",
     document: `
   {
+    __typename
     person(id: 1) {
       name
       gender
@@ -121,9 +127,10 @@ const testCases: Array<TestCase> = [
       name
       gender
       birth_year
-      starships {
-        name
-      }
+      # TODO: separate field / arg for starships as async iterator (today it breaks with graphql-js >= 16)
+      # starships {
+      #  name
+      # }
     }  
     `,
   },
@@ -250,74 +257,160 @@ query Person($id: Int!) {
     }
     `,
   },
+  {
+    name: "Default value in variables",
+    document: `
+    query ($title: String! = "The Empire Strikes Back") {
+      searchFilmsByTitle(search: $title) {
+        title
+      }
+    }`,
+  },
+  {
+    name: "Default value",
+    document: `
+    {
+      searchFilmsByTitle {
+        title
+      }
+    }`,
+  },
+  {
+    name: "Advanced Default value in variables",
+    document: `
+    query ($input: AdvancedInput! = { enumField: Film, otherField: "The Empire Strikes Back" }) {
+      advancedDefaultInput(input: $input)
+    }`,
+  },
+  {
+    name: "Advanced Default value",
+    document: `
+    {
+      advancedDefaultInput
+    }`,
+  },
+  {
+    name: "Not passing arg value vs passing arg value",
+    document: `
+    {
+      multiArger
+    }
+    `,
+  },
+  {
+    name: "Not passing arg value vs passing arg value",
+    document: `
+    {
+      multiArger(a:null)
+    }
+    `,
+  },
+  // errors
+  {
+    name: "errors and nulls",
+    document: `
+    {
+      person(id: 1) {
+        name
+        bubblingError
+        bubblingListError
+      }
+    }
+    `,
+  },
+  // subscription
+  {
+    name: "basic subscription with variables",
+    document: `
+  subscription emitPersons($limit: Int!) {
+    emitPersons(limit: $limit) {
+      name
+      gender
+    }
+  }
+ `,
+    variables: {
+      limit: 5,
+    },
+  },
+  {
+    name: "basic subscription with unused non-required variable",
+    document: `
+  subscription emitPersons($limit: Int!, $throwError: Boolean) {
+    emitPersons(limit: $limit, throwError: $throwError) {
+      name
+      gender
+    }
+  }
+ `,
+    variables: {
+      limit: 5,
+    },
+  },
+  {
+    name: "subscription throw an error",
+    document: `
+  subscription emitPersons($limit: Int!, $throwError: Boolean) {
+    emitPersons(limit: $limit, throwError: $throwError) {
+      name
+      gender
+    }
+  }
+ `,
+    variables: {
+      limit: 5,
+      throwError: true,
+    },
+  },
 ];
 
+describe("graphql-js snapshot check to ensure test stability", () => {
+  let schema: GraphQLSchema;
+  beforeEach(() => {
+    jest.resetAllMocks();
+    schema = makeSchema();
+  });
+
+  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
+    expect.assertions(1);
+    const parsedDocument = parse(document);
+    const result = await drainExecution(
+      await graphqlExecuteOrSubscribe({
+        schema,
+        document: parsedDocument,
+        contextValue: {
+          models,
+        },
+        variableValues: variables,
+      }),
+    );
+    expect(result).toMatchSnapshot();
+  });
+});
+
 describe("executeWithSchema", () => {
-  test.each(testCases)(
-    "$name",
-    async ({ name, document, variables }: TestCase) => {
-      await compareResultsForExecuteWithSchema(document, variables);
-    },
-  );
+  let schema: GraphQLSchema;
+  beforeEach(() => {
+    jest.resetAllMocks();
+    schema = makeSchema();
+  });
+
+  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
+    await compareResultsForExecuteWithSchema(schema, document, variables);
+  });
 });
 
-describe("executeWithoutSchema", () => {
-  test.each(testCases)(
-    "$name",
-    async ({ name, document, variables }: TestCase) => {
-      await compareResultsForExecuteWithoutSchema(document, variables);
-    },
-  );
+describe("executeWithoutSchema - minimal viable schema annotation", () => {
+  let schema: GraphQLSchema;
+  beforeEach(() => {
+    jest.resetAllMocks();
+    schema = makeSchema();
+  });
+  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
+    await compareResultForExecuteWithoutSchemaWithMVSAnnotation(
+      schema,
+      document,
+      variables,
+    );
+  });
 });
-
-async function compareResultsForExecuteWithSchema(
-  query: string,
-  variables?: Record<string, unknown>,
-) {
-  expect.assertions(1);
-  const document = parse(query);
-  const result = await executeWithSchema({
-    typeDefs,
-    resolvers: resolvers as UserResolvers<any, any>,
-    document,
-    contextValue: {
-      models,
-    },
-    variableValues: variables,
-  });
-  const validResult = await graphQLExecute({
-    document,
-    contextValue: {
-      models,
-    },
-    schema,
-    variableValues: variables,
-  });
-  expect(result).toEqual(validResult);
-}
-
-async function compareResultsForExecuteWithoutSchema(
-  query: string,
-  variables: Record<string, unknown> = {},
-) {
-  expect.assertions(1);
-  const document = parse(query);
-  const result = await executeWithoutSchema({
-    document: addTypesToRequestDocument(schema, document),
-    contextValue: {
-      models,
-    },
-    resolvers: resolvers as UserResolvers,
-    schemaResolvers: extractedResolvers,
-    variableValues: variables,
-  });
-  const validResult = await graphQLExecute({
-    document,
-    contextValue: {
-      models,
-    },
-    schema,
-    variableValues: variables,
-  });
-  expect(result).toEqual(validResult);
-}

@@ -9,19 +9,16 @@ export const defaultMetadata = {
   mutationsHaveError: false,
 };
 
-export const ApolloTrackerMetadataContext = React.createContext<ApolloTrackerMetadata>(
-  defaultMetadata,
-);
+export const ApolloTrackerMetadataContext =
+  React.createContext<ApolloTrackerMetadata>(defaultMetadata);
 
 export const ApolloClientMetadataWrapper = ({
   children,
 }: {
   children: JSX.Element;
 }) => {
-  const [
-    apolloTrackerMetadata,
-    setApolloTrackerMetadata,
-  ] = useState<ApolloTrackerMetadata>(defaultMetadata);
+  const [apolloTrackerMetadata, setApolloTrackerMetadata] =
+    useState<ApolloTrackerMetadata>(defaultMetadata);
 
   useEffect(() => {
     const unsubscribeMetadata = remplSubscriber
@@ -71,7 +68,6 @@ export const ApolloClientMetadataWrapper = ({
     };
   }, []);
 
-  console.log(apolloTrackerMetadata);
   return (
     <ApolloTrackerMetadataContext.Provider value={apolloTrackerMetadata}>
       {children}

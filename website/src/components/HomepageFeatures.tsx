@@ -1,49 +1,45 @@
-import React from 'react';
-import clsx from 'clsx';
-import styles from './HomepageFeatures.module.css';
+import React from "react";
+import clsx from "clsx";
+import styles from "./HomepageFeatures.module.css";
+import Link from "@docusaurus/Link";
 
 type FeatureItem = {
-  title: string;
+  title: string | JSX.Element;
   image: string;
   description: JSX.Element;
 };
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
-    image: '/img/undraw_docusaurus_mountain.svg',
+    title: <Link to="docs/learn-graphql/intro">Learn GraphQL</Link>,
+    image: "img/graphql-logo-rhodamine.png",
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Comprehensive documentation for learning GraphQL, following all
+        best-practices.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
-    image: '/img/undraw_docusaurus_tree.svg',
-    description: (
-      <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
-      </>
+    title: (
+      <Link to="docs/packages/apollo-react-relay-duct-tape/intro">
+        Packages
+      </Link>
     ),
-  },
-  {
-    title: 'Powered by React',
-    image: '/img/undraw_docusaurus_react.svg',
+    image: "img/graphitation-logo.png",
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Graphitation is a monorepo that contains various NPM packages that we
+        use in MS Teams and other M365 projects. All of these are available as
+        Open-Source Software.
       </>
     ),
   },
 ];
 
-function Feature({title, image, description}: FeatureItem) {
+function Feature({ title, image, description }: FeatureItem) {
   return (
-    <div className={clsx('col col--4')}>
+    <div className={clsx("col col--6")}>
       <div className="text--center">
         <img className={styles.featureSvg} alt={title} src={image} />
       </div>

@@ -28,6 +28,9 @@ export const dialogStyles = makeStyles({
     display: "flex",
     justifyContent: "space-between",
   },
+  name: {
+    wordBreak: "break-all",
+  },
   closeButton: {
     marginLeft: "10px",
     cursor: "pointer",

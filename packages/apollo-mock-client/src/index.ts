@@ -18,12 +18,15 @@ import invariant from "invariant";
 
 export interface RequestDescriptor<Node = DocumentNode> {
   readonly node: Node;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly variables: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly context?: Record<string, any>;
 }
 
 export interface OperationDescriptor<
   Schema = GraphQLSchema,
-  Node = DocumentNode
+  Node = DocumentNode,
 > {
   readonly schema: Schema;
   readonly request: RequestDescriptor<Node>;
@@ -166,6 +169,7 @@ class MockLink extends ApolloLink {
           request: {
             node: operation.query,
             variables: operation.variables || {},
+            context: operation.getContext(),
           },
         },
         observer,

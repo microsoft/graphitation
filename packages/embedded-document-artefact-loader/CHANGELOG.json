@@ -1,0 +1,125 @@
+{
+  "name": "@graphitation/embedded-document-artefact-loader",
+  "entries": [
+    {
+      "date": "Fri, 15 Sep 2023 22:22:30 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.6.3",
+      "version": "0.6.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "811a7ac7f39eda9f569e48a8e3dccd6dc1888167",
+            "comment": "Make jest loader work for async import"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 16 Aug 2023 06:31:21 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.6.2",
+      "version": "0.6.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "3962d767eb6ac9dbafe0255062c23c20fb63e5c5",
+            "comment": "Various PeopleApp fixes"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 25 Jul 2023 08:18:03 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.6.1",
+      "version": "0.6.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "751b49c95837e7d4d3add621e79598d14e8a587f",
+            "comment": "Keep loader agnostic to duct-tape specifics and handle refetchable outside of it"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Sat, 22 Jul 2023 07:35:09 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.6.0",
+      "version": "0.6.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "a6ac41623e4857191d9f86e45c522d35ee917c14",
+            "comment": "Use @refetchable(queryName) as artefact filename"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Fri, 21 Jul 2023 06:18:50 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.5.0",
+      "version": "0.5.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "13ac619ad0b720af81197a56bb7c0b9b830ef142",
+            "comment": "Webpack and jest now have line source-map support, but coluns are still lacking"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Fri, 14 Jul 2023 16:21:39 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.4.0",
+      "version": "0.4.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "21c7669167b83a8f089b758c69dbefe84e748a3d",
+            "comment": "Rename jest loader to reflect it wrapping ts-jest"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Fri, 14 Jul 2023 01:21:51 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.3.0",
+      "version": "0.3.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "8cd6e846c55326a977dea1b5eb2b0b469d03db3f",
+            "comment": "Adds jest loader"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 19 Jun 2023 22:17:53 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.2.0",
+      "version": "0.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "7be3f886f3a697a981a07e94f1fc28fdd66f227f",
+            "comment": "Emit source-map for single and multi-line docs"
+          }
+        ]
+      }
+    }
+  ]
+}

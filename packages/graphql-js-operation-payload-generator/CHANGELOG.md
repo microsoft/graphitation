@@ -1,8 +1,48 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-This log was last generated on Mon, 20 Jun 2022 17:49:35 GMT and should not be manually modified.
+This log was last generated on Tue, 18 Apr 2023 13:36:20 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.12.2
+
+Tue, 18 Apr 2023 13:36:20 GMT
+
+### Patches
+
+- Add missing dependencies (scheruiyot@microsoft.com)
+
+## 0.12.1
+
+Mon, 13 Mar 2023 14:00:55 GMT
+
+### Patches
+
+- Bump @graphitation/graphql-codegen-typescript-typemap-plugin to v0.1.5
+
+## 0.12.0
+
+Thu, 24 Nov 2022 15:24:56 GMT
+
+### Minor changes
+
+- Incorporate TMP patches (eloy.de.enige@gmail.com)
+
+## 0.11.0
+
+Fri, 16 Sep 2022 15:55:23 GMT
+
+### Minor changes
+
+- [mock-payload-generator] Merge data from abstract and concrete types (eloy.de.enige@gmail.com)
+
+## 0.10.6
+
+Sun, 31 Jul 2022 07:56:27 GMT
+
+### Patches
+
+- [payload-generator] Emit different concrete types on abstract list (eloy.de.enige@gmail.com)
 
 ## 0.10.5
 

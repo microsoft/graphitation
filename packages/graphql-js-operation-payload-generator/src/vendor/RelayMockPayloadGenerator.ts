@@ -35,7 +35,7 @@ export type DefaultMockResolvers = Partial<{
 }>;
 
 export declare type MockResolvers<
-  TypeMap extends DefaultMockResolvers = DefaultMockResolvers
+  TypeMap extends DefaultMockResolvers = DefaultMockResolvers,
 > = {
   [K in keyof TypeMap]?: MockResolver<TypeMap[K]>;
 };
@@ -85,7 +85,7 @@ function valueResolver(
   mockResolvers: MockResolvers | null,
   typeName: string | null,
   context: MockResolverContext,
-  plural: boolean = false,
+  plural = false,
   defaultValue?: unknown,
 ): unknown {
   const generateValue = (possibleDefaultValue: unknown) => {
@@ -101,7 +101,7 @@ function valueResolver(
       mockValue =
         possibleDefaultValue ??
         (typeName === "ID"
-          ? DEFAULT_MOCK_RESOLVERS.ID!(context, generateId)
+          ? DEFAULT_MOCK_RESOLVERS.ID?.(context, generateId)
           : `<mock-value-for-field-"${
               context.alias ?? context.name ?? "undefined"
             }">`);
@@ -119,8 +119,8 @@ function valueResolver(
 
 export function createValueResolver(
   mockResolvers: MockResolvers | null,
+  generateId: () => number = createIdGenerator(),
 ): ValueResolver {
-  const generateId = createIdGenerator();
   return valueResolver.bind(null, generateId, mockResolvers);
 }
 

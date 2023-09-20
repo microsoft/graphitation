@@ -1,0 +1,44 @@
+{
+  "name": "@graphitation/graphql-codegen-resolvers-models",
+  "license": "MIT",
+  "version": "1.2.0",
+  "main": "./src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/graphitation.git",
+    "directory": "packages/graphql-codegen-resolvers-models"
+  },
+  "scripts": {
+    "build": "monorepo-scripts build",
+    "lint": "monorepo-scripts lint",
+    "types": "monorepo-scripts types",
+    "test": "monorepo-scripts test",
+    "just": "monorepo-scripts"
+  },
+  "devDependencies": {
+    "@graphql-codegen/plugin-helpers": "^1.18.2",
+    "@graphql-codegen/visitor-plugin-common": "^1.17.20",
+    "@types/jest": "^26.0.22",
+    "typescript": "^4.9.5",
+    "monorepo-scripts": "*"
+  },
+  "peerDependencies": {
+    "@graphql-codegen/plugin-helpers": ">= 1.18.0 < 2",
+    "@graphql-codegen/visitor-plugin-common": ">= ^1.17.0 < 2",
+    "typescript": "^4.3.5"
+  },
+  "dependencies": {},
+  "sideEffects": false,
+  "access": "public",
+  "publishConfig": {
+    "main": "./lib/index",
+    "types": "./lib/index.d.ts",
+    "module": "./lib/index.mjs",
+    "exports": {
+      ".": {
+        "import": "./lib/index.mjs",
+        "require": "./lib/index.js"
+      }
+    }
+  }
+}

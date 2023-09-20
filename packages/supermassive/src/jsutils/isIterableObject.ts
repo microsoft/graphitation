@@ -15,6 +15,7 @@
  * isIterableObject({ length: 1, 0: 'Alpha' }) // false
  */
 export function isIterableObject(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   maybeIterable: any,
 ): maybeIterable is Iterable<unknown> {
   return (

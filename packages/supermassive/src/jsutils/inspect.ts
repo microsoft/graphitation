@@ -54,6 +54,7 @@ function formatObjectValue(
   return formatObject(value, seenValues);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isJSONable(value: any): value is { toJSON: () => unknown } {
   return typeof value.toJSON === "function";
 }

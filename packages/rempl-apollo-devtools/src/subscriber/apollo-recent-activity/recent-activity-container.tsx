@@ -6,14 +6,28 @@ import { useStyles } from "./recent-activity.styles";
 import { RecentActivity } from "./recent-activity";
 import { Search } from "../../components";
 import { Info20Regular } from "@fluentui/react-icons";
+import { Checkbox } from "@fluentui/react-checkbox";
 
 function filterActivities(
   recentActivities: RecentActivities[],
   searchKey: string,
+  showCache: boolean,
+  showOperations: boolean,
 ): RecentActivities[] {
-  if (!searchKey?.trim()) return recentActivities;
+  const filtredActivities = recentActivities.map(
+    ({ queries, mutations, cache, timestamp }) => {
+      return {
+        timestamp,
+        cache: showCache ? cache : [],
+        queries: showOperations ? queries : [],
+        mutations: showOperations ? mutations : [],
+      };
+    },
+  );
 
-  return recentActivities.map(({ queries, mutations, timestamp }) => {
+  if (!searchKey?.trim()) return filtredActivities;
+
+  return filtredActivities.map(({ queries, mutations, cache, timestamp }) => {
     const filteredQueries = queries.filter(({ data: { name } }) =>
       name.toLowerCase().includes(searchKey.toLowerCase()),
     );
@@ -22,8 +36,13 @@ function filterActivities(
       name.toLowerCase().includes(searchKey.toLowerCase()),
     );
 
+    const filteredCache = cache.filter(({ data: { __activity_key } }) =>
+      __activity_key.toLowerCase().includes(searchKey.toLowerCase()),
+    );
+
     return {
       timestamp,
+      cache: filteredCache,
       queries: filteredQueries,
       mutations: filteredMutations,
     };
@@ -34,12 +53,14 @@ export const RecentActivityContainer = React.memo(() => {
   const [recentActivities, setRecentActivities] = useState<RecentActivities[]>(
     [],
   );
-  const [recordRecentActivity, setRecordRecentActivity] = useState<boolean>(
-    false,
-  );
+
+  const [recordRecentActivity, setRecordRecentActivity] =
+    useState<boolean>(false);
 
   const [openDescription, setOpenDescription] = useState<boolean>(false);
   const [searchKey, setSearchKey] = React.useState("");
+  const [showCache, setShowCache] = React.useState(true);
+  const [showOperations, setShowOperations] = React.useState(true);
   const classes = useStyles();
 
   useEffect(() => {
@@ -57,7 +78,7 @@ export const RecentActivityContainer = React.memo(() => {
 
     return () => {
       remplSubscriber.callRemote("recordRecentActivity", {
-        shouldRecord: true,
+        shouldRecord: false,
       });
       unsubscribe();
     };
@@ -96,8 +117,18 @@ export const RecentActivityContainer = React.memo(() => {
             <Button onClick={toggleRecordRecentChanges}>
               {recordRecentActivity
                 ? "Stop recording"
-                : "Recording recent activity"}
+                : "Record recent activity"}
             </Button>
+            <Checkbox
+              onChange={() => setShowCache((checked) => !checked)}
+              checked={showCache}
+              label="Cache"
+            />
+            <Checkbox
+              onChange={() => setShowOperations((checked) => !checked)}
+              checked={showOperations}
+              label="Operations"
+            />
           </div>
           <div className={classes.searchContainer}>
             <Search
@@ -114,11 +145,16 @@ export const RecentActivityContainer = React.memo(() => {
             openDescription && classes.openDescription,
           )}
         >
-          Monitor recently fired mutations and recently activated/deactivated
-          queries.
+          [EXPERIMENTAL FEATURE - Results may not be 100% accurate] It monitors
+          changes in cache, fired mutations and activated/deactivated queries.
         </div>
         <RecentActivity
-          activity={filterActivities(recentActivities, searchKey)}
+          activity={filterActivities(
+            recentActivities,
+            searchKey,
+            showCache,
+            showOperations,
+          )}
         />
       </div>
     </div>

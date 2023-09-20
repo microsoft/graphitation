@@ -1,29 +1,61 @@
-import { GraphQLFieldResolver } from "graphql/type/definition";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IExecutableSchemaDefinition } from "@graphql-tools/schema";
-import { createAsyncIterator } from "iterall";
+import { createAsyncIterator, forAwaitEach, getAsyncIterator } from "iterall";
+import { mapAsyncIterator } from "../../utilities/mapAsyncIterator";
+
+// Note: need this for graphql15-graphql17 cross-compatibility
+type GraphQLFieldResolver<T = any, U = any, I = any> = (
+  parent: T,
+  args: U,
+  context: I,
+  info: any,
+) => any;
 
 const films: GraphQLFieldResolver<any, any, any> = (
   parent,
-  args,
+  _args,
   { models },
 ) => {
-  return models
-    .getData("/films")
-    .filter(({ id }: { id: any }) => parent.films.includes(id));
+  return mapAsyncIterator(
+    getAsyncIterator(
+      createAsyncIterator(
+        models
+          .getData("/films")
+          .filter(({ id }: { id: any }) => parent.films.includes(id)),
+      ),
+    ) as unknown as AsyncIterable<any>,
+    // this ensures it's a awaitable iterator
+    async (item) => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      return item;
+    },
+  );
 };
 
 const starships: GraphQLFieldResolver<any, any, any> = (
   parent,
-  { id },
+  _args,
   { models },
 ) => {
-  return models
-    .getData("/starships")
-    .filter(({ id }: { id: any }) => parent.starships.includes(id));
+  return mapAsyncIterator(
+    getAsyncIterator(
+      createAsyncIterator(
+        models
+          .getData("/starships")
+          .filter(({ id }: { id: any }) => parent.starships.includes(id)),
+      ),
+    ) as unknown as AsyncIterable<any>,
+    // this ensures it's a awaitable iterator
+
+    async (item) => {
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      return item;
+    },
+  );
 };
 
 function people(key: string): GraphQLFieldResolver<any, any, any> {
-  return (parent, args, { models }) => {
+  return (parent, _args, { models }) => {
     return models
       .getData("/people")
       .filter(({ id }: { id: any }) => parent[key].includes(id));
@@ -32,7 +64,7 @@ function people(key: string): GraphQLFieldResolver<any, any, any> {
 
 const vehicles: GraphQLFieldResolver<any, any, any> = (
   parent,
-  args,
+  _args,
   { models },
 ) => {
   return models
@@ -40,19 +72,9 @@ const vehicles: GraphQLFieldResolver<any, any, any> = (
     .filter(({ id }: { id: any }) => parent.vehicles.includes(id));
 };
 
-const transports: GraphQLFieldResolver<any, any, any> = (
-  parent,
-  args,
-  { models },
-) => {
-  return models
-    .getData("/transport")
-    .filter(({ id }: { id: any }) => parent.starships.includes(id));
-};
-
 const planets: GraphQLFieldResolver<any, any, any> = (
   parent,
-  args,
+  _args,
   { models },
 ) => {
   return models
@@ -62,7 +84,7 @@ const planets: GraphQLFieldResolver<any, any, any> = (
 
 const species: GraphQLFieldResolver<any, any, any> = (
   parent,
-  args,
+  _args,
   { models },
 ) => {
   return models
@@ -71,7 +93,7 @@ const species: GraphQLFieldResolver<any, any, any> = (
 };
 const homeworld: GraphQLFieldResolver<any, any, any> = (
   parent,
-  args,
+  _args,
   { models },
 ) => {
   return models
@@ -313,23 +335,29 @@ const resolvers: IExecutableSchemaDefinition["resolvers"] = {
     searchPlanetsByName,
     searchFilmsByTitle,
 
-    allStarships(parent, args, { models }) {
+    allStarships(_parent, _args, { models }) {
       return models.getData("/starships");
     },
-    allFilms(parent, args, { models }) {
+    allFilms(_parent, _args, { models }) {
       return models.getData("/films");
     },
-    allPeople(parent, args, { models }) {
+    allPeople(_parent, _args, { models }) {
       return models.getData("/people");
     },
-    allPlanets(parent, args, { models }) {
+    allPlanets(_parent, _args, { models }) {
       return models.getData("/planets");
     },
-    allSpecies(parent, args, { models }) {
+    allSpecies(_parent, _args, { models }) {
       return models.getData("/species");
     },
-    allTransports(parent, args, { models }) {
+    allTransports(_parent, _args, { models }) {
       return models.getData("/transport");
+    },
+    advancedDefaultInput(_parent, args) {
+      return JSON.stringify(args);
+    },
+    multiArger(_parent, args) {
+      return JSON.stringify(args);
     },
   },
   Film: {
@@ -355,6 +383,19 @@ const resolvers: IExecutableSchemaDefinition["resolvers"] = {
     mass: (pilot) => +pilot.mass,
     starships,
     homeworld,
+    films,
+    bubblingError: () => {
+      throw new Error("Bubbling!");
+    },
+    bubblingListError: () => {
+      return forAwaitEach([1, 2, 3], async (item) => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        if (item === 2) {
+          throw new Error("Bubbling in list!");
+        }
+        return item;
+      });
+    },
   },
   Vehicle: {
     cargo_capacity: (vehicle) => +vehicle.cargo_capacity,

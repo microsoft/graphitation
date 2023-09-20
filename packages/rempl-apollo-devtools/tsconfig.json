@@ -4,10 +4,9 @@
     "composite": true,
     "tsBuildInfoFile": ".tsbuildinfo",
     "rootDir": "src",
-    "skipLibCheck": true,
     "jsx": "react",
     "outDir": "lib"
   },
-  "include": ["src", "./rempl.d.ts"],
+  "include": ["src"],
   "references": []
 }

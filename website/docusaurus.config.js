@@ -17,6 +17,11 @@ const config = {
   projectName: "graphitation",
   trailingSlash: false,
 
+  markdown: {
+    mermaid: true,
+  },
+  themes: ["@docusaurus/theme-mermaid"],
+
   presets: [
     [
       "classic",
@@ -45,15 +50,21 @@ const config = {
       navbar: {
         title: "graphitation",
         logo: {
-          alt: "My Site Logo",
-          src: "img/logo.svg",
+          alt: "Graphitation Logo",
+          src: "img/graphitation-logo.png",
         },
         items: [
           {
             type: "doc",
-            docId: "apollo-react-relay-duct-tape/intro",
+            docId: "learn-graphql/intro",
             position: "left",
-            label: "Apollo React/Relay Duct-Tape",
+            label: "Learn GraphQL",
+          },
+          {
+            type: "doc",
+            docId: "packages/apollo-react-relay-duct-tape/intro",
+            position: "left",
+            label: "Packages",
           },
           {
             href: "https://github.com/microsoft/graphitation",
@@ -65,15 +76,15 @@ const config = {
       footer: {
         style: "dark",
         links: [
-          {
-            title: "Docs",
-            items: [
-              {
-                label: "Apollo React/Relay Duct-Tape",
-                to: "/docs/apollo-react-relay-duct-tape/intro",
-              },
-            ],
-          },
+          // {
+          //   title: "Docs",
+          //   items: [
+          //     {
+          //       label: "Apollo React/Relay Duct-Tape",
+          //       to: "/docs/apollo-react-relay-duct-tape/intro",
+          //     },
+          //   ],
+          // },
           {
             title: "Community",
             items: [
@@ -91,8 +102,7 @@ const config = {
               // },
               {
                 label: "Teams",
-                href:
-                  "https://teams.microsoft.com/l/channel/19%3a487e60012b034c9e91db26c1fc0906d1%40thread.tacv2/GraphQL%2520(IDataClient)?groupId=505d3b35-052e-4bb7-a1f4-d1cdaec5f6a7&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47",
+                href: "https://teams.microsoft.com/l/channel/19%3a487e60012b034c9e91db26c1fc0906d1%40thread.tacv2/GraphQL%2520(IDataClient)?groupId=505d3b35-052e-4bb7-a1f4-d1cdaec5f6a7&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47",
               },
             ],
           },

@@ -5,11 +5,17 @@
     "tsBuildInfoFile": ".tsbuildinfo",
     "rootDir": "src",
     "outDir": "lib",
-    "jsx": "react"
+    "jsx": "react",
+    "skipLibCheck": true,
+    "paths": {
+      "@graphql-tools/schema": ["./node_modules/@graphql-tools/schema"],
+      "graphql": ["./node_modules/graphql"]
+    }
   },
   "include": ["src"],
-  "references": [],
+  "exclude": ["**/*.graphql17.test.ts"],
   "ts-node": {
+    "transpileOnly": true,
     "compilerOptions": {
       "module": "CommonJS"
     }

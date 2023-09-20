@@ -85,7 +85,6 @@ function getVisitor(
             templateLiteralName = node.importClause.name.text;
             if (node.importClause.namedBindings) {
               return ts.factory.createImportDeclaration(
-                node.decorators,
                 node.modifiers,
                 ts.factory.updateImportClause(
                   node.importClause,
@@ -94,6 +93,7 @@ function getVisitor(
                   node.importClause.namedBindings,
                 ),
                 node.moduleSpecifier,
+                node.assertClause,
               );
             } else {
               return undefined;
@@ -121,18 +121,22 @@ function getVisitor(
             }
           }
           if (newImportSpecifiers.length || node.importClause.name) {
-            const result = ts.factory.createImportDeclaration(
-              node.decorators,
+            const result = ts.factory.updateImportDeclaration(
+              node,
               node.modifiers,
               ts.factory.updateImportClause(
                 node.importClause,
                 node.importClause.isTypeOnly,
                 node.importClause.name,
-                newImportSpecifiers.length
-                  ? ts.factory.createNamedImports(newImportSpecifiers)
+                node.importClause.namedBindings && newImportSpecifiers.length
+                  ? ts.factory.updateNamedImports(
+                      node.importClause.namedBindings,
+                      newImportSpecifiers,
+                    )
                   : undefined,
               ),
               node.moduleSpecifier,
+              node.assertClause,
             );
             return result;
           } else {
@@ -155,9 +159,8 @@ function getVisitor(
       ) {
         let source = template.getText().slice(1, -1);
 
-        let interpolations: Array<
-          ts.Identifier | ts.PropertyAccessExpression
-        > = [];
+        let interpolations: Array<ts.Identifier | ts.PropertyAccessExpression> =
+          [];
         // `gql` tag with fragment interpolation
         if (isTemplateExpression) {
           interpolations = collectTemplateInterpolations(template, context);
@@ -166,7 +169,7 @@ function getVisitor(
           source = source.replace(/\$\{(.*)\}/g, "");
         }
 
-        let definitions = getDefinitions(
+        const definitions = getDefinitions(
           source,
           transformerContext.transformer,
         );

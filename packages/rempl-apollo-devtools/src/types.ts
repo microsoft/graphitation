@@ -3,6 +3,7 @@ import {
   ApolloClient,
   StoreObject,
 } from "@apollo/client";
+import { IDataView } from "apollo-inspector";
 import { createPublisher } from "rempl";
 
 export type Publisher = ReturnType<typeof createPublisher>;
@@ -30,30 +31,29 @@ declare global {
     __APOLLO_CLIENTS__: ClientObject[];
     __APOLLO_GLOBAL_OPERATIONS__: ApolloGlobalOperations;
     __APOLLO_KEY_FIELDS__: ApolloKeyFields;
+    __REMPL_APOLLO_DEVTOOLS_URL__?: string;
   }
 }
 
 export type RecentActivity<Data> = {
   id: string;
   change: string;
+  type: string;
   data: Data;
 };
-
+export type CacheStoreObject = { __activity_key: string } & StoreObject;
 export type RecentActivities = {
   queries: RecentActivity<WatchedQuery>[];
   mutations: RecentActivity<Mutation>[];
+  cache: RecentActivity<CacheStoreObject>[];
   timestamp: number;
 };
 
 export type RecentActivityRaw = {
   id: string;
   change: string;
-  data: unknown;
-};
-
-export type ClientCacheObject = {
-  cache: NormalizedCacheObject;
-  recentCache: NormalizedCacheObject;
+  type: string;
+  data: WatchedQuery | Mutation | CacheStoreObject;
 };
 
 export type CacheDuplicates = {
@@ -71,6 +71,13 @@ export type ApolloTrackerMetadata = {
   queriesCount: number;
   queriesHaveError: boolean;
   mutationsHaveError: boolean;
+};
+
+export type ApolloOperationsTracker = {
+  data: IDataView | undefined;
+  setApolloOperationsData:
+    | React.Dispatch<React.SetStateAction<IDataView | null>>
+    | undefined;
 };
 
 export type ClientRecentCacheObject = NormalizedCacheObject;
@@ -93,13 +100,27 @@ interface Query {
   errorMessage?: string;
 }
 
+export enum TabHeaders {
+  AllOperationsView,
+  OperationsView,
+  VerboseOperationView,
+  AffectedQueriesView,
+}
+
 export type WatchedQuery = Query & {
   typename: "WatchedQuery";
   queryString: string;
-  cachedData: Record<string, unknown>;
+  cachedData?: Record<string, unknown>;
+  networkData?: Record<string, unknown>;
 };
 
 export type Mutation = Query & {
   typename: "Mutation";
   mutationString: string;
 };
+
+export enum ResultsFrom {
+  CACHE = "CACHE",
+  NETWORK = "NETWORK",
+  UNKNOWN = "UNKNOWN",
+}

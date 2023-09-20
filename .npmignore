@@ -1,4 +1,6 @@
 !lib
+!dist
+rempl-apollo-devtools/lib
 src
 *.test.*
 **/__tests__/
@@ -6,3 +8,4 @@ src
 tsconfig.json
 .tsbuildinfo
 CHANGELOG.json
+supermassive/lib/benchmarks

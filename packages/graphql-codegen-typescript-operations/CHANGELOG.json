@@ -1,0 +1,125 @@
+{
+  "name": "@graphitation/graphql-codegen-typescript-operations",
+  "entries": [
+    {
+      "date": "Thu, 03 Aug 2023 09:39:38 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.3.0",
+      "version": "1.3.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "7d8afdbd90b79586a4461a2669263a31db6a2f6d",
+            "comment": "GraphQL codegen enums + string unions patch"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 07 Jun 2023 14:42:08 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.2.0",
+      "version": "1.2.0",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "be90cd060911466429f83a3f47b61b749c621cc1",
+            "comment": "Merging into main"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 07 Jun 2023 14:13:33 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.2.0",
+      "version": "1.2.0",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "not available",
+            "comment": "Fix all new lint issues"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 07 Jun 2023 14:07:35 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.2.0",
+      "version": "1.2.0",
+      "comments": {
+        "none": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "5219d8efa17a1286fd664b52ecc95c0535359efb",
+            "comment": "Fix all new lint issues"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 07 Jun 2023 08:48:18 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.2.0",
+      "version": "1.2.0",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "774440b8fa15ecb500765c0aae65ea71bead547d",
+            "comment": "Massive repository janitor work"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 11 Apr 2023 18:23:24 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.2.0",
+      "version": "1.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "0bdd73df567778237fadcce4e03a824edb3da8f5",
+            "comment": "Typescript operations plugin exports nested enums"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 03 Apr 2023 14:51:35 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.1.0",
+      "version": "1.1.0",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "3cd00dd6254a9b7d9dfe615d9d35dba4c0b108c7",
+            "comment": "Upgrade prettier"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 22 Mar 2023 15:02:57 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.1.0",
+      "version": "1.1.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "6a938d60307bd8db33ce5135a5cbb736f781b826",
+            "comment": "graphql-codegen typescript operations plugin forked"
+          }
+        ]
+      }
+    }
+  ]
+}
