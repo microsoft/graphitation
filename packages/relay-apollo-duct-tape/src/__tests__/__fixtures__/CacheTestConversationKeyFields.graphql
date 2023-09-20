@@ -1,0 +1,6 @@
+query CacheTestConversationKeyFields($id: String!, $callerInfo: String) {
+  conversationWithGarbage(id: $id, callerInfo: $callerInfo) {
+    id
+    title
+  }
+}

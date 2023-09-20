@@ -18,6 +18,7 @@
     "@graphitation/supermassive-ast": "*",
     "@graphql-codegen/plugin-helpers": "^1.18.2",
     "@graphql-codegen/visitor-plugin-common": "^1.17.20",
+    "@graphitation/supermassive": "*",
     "@types/jest": "^26.0.22",
     "graphql-tag": "^2.11.0",
     "@graphql-tools/optimize": "^1.0.1",
@@ -28,7 +29,8 @@
     "@graphql-codegen/visitor-plugin-common": ">= ^1.17.0 < 2",
     "graphql-tag": ">= 2.11.0 < 3",
     "@graphql-tools/optimize": "^1.0.1",
-    "@graphitation/supermassive-ast": "^2.0.0"
+    "@graphitation/supermassive-ast": "^2.0.0",
+    "@graphitation/supermassive": "^3.0.0"
   },
   "sideEffects": false,
   "access": "public",

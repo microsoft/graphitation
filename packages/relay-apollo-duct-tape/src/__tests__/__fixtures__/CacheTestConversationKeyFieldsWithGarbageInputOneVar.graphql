@@ -1,0 +1,9 @@
+query CacheTestConversationKeyFieldsWithGarbageInputOneVar(
+  $filter: ConversationFilter
+  $moreCallerInfo: String
+) {
+  conversationWithNested(input: $filter, moreCallerInfo: $moreCallerInfo) {
+    id
+    title
+  }
+}

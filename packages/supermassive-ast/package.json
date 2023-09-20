@@ -2,7 +2,7 @@
   "name": "@graphitation/supermassive-ast",
   "license": "MIT",
   "version": "2.0.0",
-  "main": "./src/index.ts",
+  "main": "./lib/index",
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",
@@ -23,7 +23,8 @@
     "graphql": "^15.6.1",
     "@types/jest": "^26.0.22",
     "monorepo-scripts": "*",
-    "ts-node": "^10.4.0"
+    "ts-node": "^10.4.0",
+    "@graphitation/supermassive": "^3.0.0"
   },
   "sideEffects": false,
   "access": "public",

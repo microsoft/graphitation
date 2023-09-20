@@ -23,6 +23,7 @@ import {
   ASTNode,
 } from "graphql";
 import { addTypesToRequestDocument } from "@graphitation/supermassive-ast";
+import { addMinimalViableSchemaToRequestDocument } from "@graphitation/supermassive";
 import { optimizeDocumentNode } from "@graphql-tools/optimize";
 import gqlTag from "graphql-tag";
 
@@ -90,10 +91,14 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
     node: FragmentDefinitionNode | OperationDefinitionNode,
     annotate = false,
   ): string {
-    const supermassiveNode = addTypesToRequestDocument(this._schema, {
-      kind: Kind.DOCUMENT,
-      definitions: [addTypename(node)],
-    }).definitions[0] as FragmentDefinitionNode | OperationDefinitionNode;
+    const supermassiveNode = addMinimalViableSchemaToRequestDocument(
+      this._schema,
+      {
+        kind: Kind.DOCUMENT,
+        definitions: [node],
+      },
+      { addTo: "PROPERTY" },
+    ).definitions[0] as FragmentDefinitionNode | OperationDefinitionNode;
 
     const fragments = this._transformFragments(supermassiveNode);
 
@@ -130,10 +135,14 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
           ...gqlObj.definitions.map((t) =>
             JSON.stringify(
               annotate
-                ? addTypesToRequestDocument(this._schema, {
-                    kind: Kind.DOCUMENT,
-                    definitions: [t],
-                  }).definitions[0]
+                ? addMinimalViableSchemaToRequestDocument(
+                    this._schema,
+                    {
+                      kind: Kind.DOCUMENT,
+                      definitions: [t],
+                    },
+                    { addTo: "PROPERTY" },
+                  ).definitions[0]
                 : t,
             ),
           ),
@@ -161,10 +170,14 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
       ...document,
       definitions: document.definitions.map(
         (t) =>
-          addTypesToRequestDocument(this._schema, {
-            kind: Kind.DOCUMENT,
-            definitions: [t],
-          }).definitions[0],
+          addMinimalViableSchemaToRequestDocument(
+            this._schema,
+            {
+              kind: Kind.DOCUMENT,
+              definitions: [t],
+            },
+            { addTo: "PROPERTY" },
+          ).definitions[0],
       ),
     } as DocumentNode;
   }

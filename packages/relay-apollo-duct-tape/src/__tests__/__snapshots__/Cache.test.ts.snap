@@ -126,15 +126,11 @@ exports[`Type Policies key-fields concerning normalization with custom key-field
 exports[`Type Policies key-fields concerning normalization with custom key-fields works with relayWithRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
-    "__typename": "Conversation",
     "id": "42",
     "messages": {
-      "__typename": "MessagesConnection",
       "edges": [
         {
-          "__typename": "MessagesConnectionEdge",
           "node": {
-            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -149,6 +145,72 @@ exports[`Type Policies key-fields concerning normalization with custom key-field
 `;
 
 exports[`Type Policies key-fields concerning normalization with custom key-fields works with relayWithRuntimeGeneratedIR 2`] = `
+{
+  "Conversation:{"id":"42","title":"Hello World"}": {
+    "__id": "Conversation:{"id":"42","title":"Hello World"}",
+    "__typename": "Conversation",
+    "id": "42",
+    "messages(first:10)": {
+      "__ref": "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10)",
+    },
+    "title": "Hello World",
+  },
+  "Message:{"authorId":"author-42","createdAt":"2020-01-01T00:00:00.000Z","id":"message-42"}": {
+    "__id": "Message:{"authorId":"author-42","createdAt":"2020-01-01T00:00:00.000Z","id":"message-42"}",
+    "__typename": "Message",
+    "authorId": "author-42",
+    "createdAt": "2020-01-01T00:00:00.000Z",
+    "id": "message-42",
+    "text": "Hello World",
+  },
+  "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10)": {
+    "__id": "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10)",
+    "__typename": "MessagesConnection",
+    "edges": {
+      "__refs": [
+        "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10):edges:0",
+      ],
+    },
+  },
+  "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10):edges:0": {
+    "__id": "client:Conversation:{"id":"42","title":"Hello World"}:messages(first:10):edges:0",
+    "__typename": "MessagesConnectionEdge",
+    "node": {
+      "__ref": "Message:{"authorId":"author-42","createdAt":"2020-01-01T00:00:00.000Z","id":"message-42"}",
+    },
+  },
+  "client:root": {
+    "__id": "client:root",
+    "__typename": "__Root",
+    "conversation(id:"42")": {
+      "__ref": "Conversation:{"id":"42","title":"Hello World"}",
+    },
+  },
+}
+`;
+
+exports[`Type Policies key-fields concerning normalization with custom key-fields works with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
+{
+  "conversation": {
+    "id": "42",
+    "messages": {
+      "edges": [
+        {
+          "node": {
+            "authorId": "author-42",
+            "createdAt": "2020-01-01T00:00:00.000Z",
+            "id": "message-42",
+            "text": "Hello World",
+          },
+        },
+      ],
+    },
+    "title": "Hello World",
+  },
+}
+`;
+
+exports[`Type Policies key-fields concerning normalization with custom key-fields works with relayWithSupermassiveRuntimeGeneratedIR 2`] = `
 {
   "Conversation:{"id":"42","title":"Hello World"}": {
     "__id": "Conversation:{"id":"42","title":"Hello World"}",
@@ -319,15 +381,11 @@ exports[`Type Policies key-fields concerning normalization with default key-fiel
 exports[`Type Policies key-fields concerning normalization with default key-fields works with relayWithRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
-    "__typename": "Conversation",
     "id": "42",
     "messages": {
-      "__typename": "MessagesConnection",
       "edges": [
         {
-          "__typename": "MessagesConnectionEdge",
           "node": {
-            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -342,6 +400,72 @@ exports[`Type Policies key-fields concerning normalization with default key-fiel
 `;
 
 exports[`Type Policies key-fields concerning normalization with default key-fields works with relayWithRuntimeGeneratedIR 2`] = `
+{
+  "Conversation:42": {
+    "__id": "Conversation:42",
+    "__typename": "Conversation",
+    "id": "42",
+    "messages(first:10)": {
+      "__ref": "client:Conversation:42:messages(first:10)",
+    },
+    "title": "Hello World",
+  },
+  "Message:message-42": {
+    "__id": "Message:message-42",
+    "__typename": "Message",
+    "authorId": "author-42",
+    "createdAt": "2020-01-01T00:00:00.000Z",
+    "id": "message-42",
+    "text": "Hello World",
+  },
+  "client:Conversation:42:messages(first:10)": {
+    "__id": "client:Conversation:42:messages(first:10)",
+    "__typename": "MessagesConnection",
+    "edges": {
+      "__refs": [
+        "client:Conversation:42:messages(first:10):edges:0",
+      ],
+    },
+  },
+  "client:Conversation:42:messages(first:10):edges:0": {
+    "__id": "client:Conversation:42:messages(first:10):edges:0",
+    "__typename": "MessagesConnectionEdge",
+    "node": {
+      "__ref": "Message:message-42",
+    },
+  },
+  "client:root": {
+    "__id": "client:root",
+    "__typename": "__Root",
+    "conversation(id:"42")": {
+      "__ref": "Conversation:42",
+    },
+  },
+}
+`;
+
+exports[`Type Policies key-fields concerning normalization with default key-fields works with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
+{
+  "conversation": {
+    "id": "42",
+    "messages": {
+      "edges": [
+        {
+          "node": {
+            "authorId": "author-42",
+            "createdAt": "2020-01-01T00:00:00.000Z",
+            "id": "message-42",
+            "text": "Hello World",
+          },
+        },
+      ],
+    },
+    "title": "Hello World",
+  },
+}
+`;
+
+exports[`Type Policies key-fields concerning normalization with default key-fields works with relayWithSupermassiveRuntimeGeneratedIR 2`] = `
 {
   "Conversation:42": {
     "__id": "Conversation:42",
@@ -506,15 +630,11 @@ exports[`Type Policies key-fields concerning normalization without key-fields wo
 exports[`Type Policies key-fields concerning normalization without key-fields works with relayWithRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
-    "__typename": "Conversation",
     "id": "42",
     "messages": {
-      "__typename": "MessagesConnection",
       "edges": [
         {
-          "__typename": "MessagesConnectionEdge",
           "node": {
-            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -573,6 +693,271 @@ exports[`Type Policies key-fields concerning normalization without key-fields wo
 }
 `;
 
+exports[`Type Policies key-fields concerning normalization without key-fields works with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
+{
+  "conversation": {
+    "id": "42",
+    "messages": {
+      "edges": [
+        {
+          "node": {
+            "authorId": "author-42",
+            "createdAt": "2020-01-01T00:00:00.000Z",
+            "id": "message-42",
+            "text": "Hello World",
+          },
+        },
+      ],
+    },
+    "title": "Hello World",
+  },
+}
+`;
+
+exports[`Type Policies key-fields concerning normalization without key-fields works with relayWithSupermassiveRuntimeGeneratedIR 2`] = `
+{
+  "client:root": {
+    "__id": "client:root",
+    "__typename": "__Root",
+    "conversation(id:"42")": {
+      "__ref": "client:root:conversation(id:"42")",
+    },
+  },
+  "client:root:conversation(id:"42")": {
+    "__id": "client:root:conversation(id:"42")",
+    "__typename": "Conversation",
+    "id": "42",
+    "messages(first:10)": {
+      "__ref": "client:root:conversation(id:"42"):messages(first:10)",
+    },
+    "title": "Hello World",
+  },
+  "client:root:conversation(id:"42"):messages(first:10)": {
+    "__id": "client:root:conversation(id:"42"):messages(first:10)",
+    "__typename": "MessagesConnection",
+    "edges": {
+      "__refs": [
+        "client:root:conversation(id:"42"):messages(first:10):edges:0",
+      ],
+    },
+  },
+  "client:root:conversation(id:"42"):messages(first:10):edges:0": {
+    "__id": "client:root:conversation(id:"42"):messages(first:10):edges:0",
+    "__typename": "MessagesConnectionEdge",
+    "node": {
+      "__ref": "client:root:conversation(id:"42"):messages(first:10):edges:0:node",
+    },
+  },
+  "client:root:conversation(id:"42"):messages(first:10):edges:0:node": {
+    "__id": "client:root:conversation(id:"42"):messages(first:10):edges:0:node",
+    "__typename": "Message",
+    "authorId": "author-42",
+    "createdAt": "2020-01-01T00:00:00.000Z",
+    "id": "message-42",
+    "text": "Hello World",
+  },
+}
+`;
+
+exports[`Type Policies keyArgs connection-like with apollo 1`] = `
+{
+  "conversation": {
+    "id": "42",
+    "messagesWithExtraField": {
+      "edges": [
+        {
+          "node": {
+            "id": "message-42",
+          },
+        },
+      ],
+    },
+    "title": "no-caller-info",
+  },
+}
+`;
+
+exports[`Type Policies keyArgs connection-like with apollo 2`] = `
+{
+  "conversation": {
+    "id": "42",
+    "messagesWithExtraField": {
+      "edges": [
+        {
+          "node": {
+            "id": "message-42",
+          },
+        },
+        {
+          "node": {
+            "id": "message-43",
+          },
+        },
+      ],
+    },
+    "title": "caller-info",
+  },
+}
+`;
+
+exports[`Type Policies keyArgs connection-like with relayWithBuildtimeGeneratedIR 1`] = `null`;
+
+exports[`Type Policies keyArgs connection-like with relayWithRuntimeGeneratedIR 1`] = `
+{
+  "conversation": {
+    "id": "42",
+    "messagesWithExtraField": {
+      "edges": [
+        {
+          "node": {
+            "id": "message-42",
+          },
+        },
+      ],
+    },
+    "title": "no-caller-info",
+  },
+}
+`;
+
+exports[`Type Policies keyArgs connection-like with relayWithRuntimeGeneratedIR 2`] = `
+{
+  "conversation": {
+    "id": "42",
+    "messagesWithExtraField": {
+      "edges": [
+        {
+          "node": {
+            "id": "message-42",
+          },
+        },
+        {
+          "node": {
+            "id": "message-43",
+          },
+        },
+      ],
+    },
+    "title": "caller-info",
+  },
+}
+`;
+
+exports[`Type Policies keyArgs connection-like with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
+{
+  "conversation": {
+    "id": "42",
+    "messagesWithExtraField": {
+      "edges": [
+        {
+          "node": {
+            "id": "message-42",
+          },
+        },
+      ],
+    },
+    "title": "no-caller-info",
+  },
+}
+`;
+
+exports[`Type Policies keyArgs connection-like with relayWithSupermassiveRuntimeGeneratedIR 2`] = `
+{
+  "conversation": {
+    "id": "42",
+    "messagesWithExtraField": {
+      "edges": [
+        {
+          "node": {
+            "id": "message-42",
+          },
+        },
+        {
+          "node": {
+            "id": "message-43",
+          },
+        },
+      ],
+    },
+    "title": "caller-info",
+  },
+}
+`;
+
+exports[`Type Policies keyArgs plain keyArg with apollo 1`] = `
+{
+  "conversationWithGarbage": {
+    "id": "42",
+    "title": "no-caller-info",
+  },
+}
+`;
+
+exports[`Type Policies keyArgs plain keyArg with apollo 2`] = `
+{
+  "conversationWithGarbage": {
+    "id": "42",
+    "title": "caller-info",
+  },
+}
+`;
+
+exports[`Type Policies keyArgs plain keyArg with relayWithBuildtimeGeneratedIR 1`] = `
+{
+  "conversationWithGarbage": {
+    "__typename": "Conversation",
+    "id": "42",
+    "title": "no-caller-info",
+  },
+}
+`;
+
+exports[`Type Policies keyArgs plain keyArg with relayWithBuildtimeGeneratedIR 2`] = `
+{
+  "conversationWithGarbage": {
+    "__typename": "Conversation",
+    "id": "42",
+    "title": "caller-info",
+  },
+}
+`;
+
+exports[`Type Policies keyArgs plain keyArg with relayWithRuntimeGeneratedIR 1`] = `
+{
+  "conversationWithGarbage": {
+    "id": "42",
+    "title": "no-caller-info",
+  },
+}
+`;
+
+exports[`Type Policies keyArgs plain keyArg with relayWithRuntimeGeneratedIR 2`] = `
+{
+  "conversationWithGarbage": {
+    "id": "42",
+    "title": "caller-info",
+  },
+}
+`;
+
+exports[`Type Policies keyArgs plain keyArg with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
+{
+  "conversationWithGarbage": {
+    "id": "42",
+    "title": "no-caller-info",
+  },
+}
+`;
+
+exports[`Type Policies keyArgs plain keyArg with relayWithSupermassiveRuntimeGeneratedIR 2`] = `
+{
+  "conversationWithGarbage": {
+    "id": "42",
+    "title": "caller-info",
+  },
+}
+`;
+
 exports[`Type Policies read functions / missing field handlers works with apollo 1`] = `
 {
   "id": "message-42",
@@ -609,7 +994,6 @@ exports[`Type Policies read functions / missing field handlers works with relayW
 
 exports[`Type Policies read functions / missing field handlers works with relayWithRuntimeGeneratedIR 1`] = `
 {
-  "__typename": "Message",
   "id": "message-42",
   "text": "Hello World",
 }
@@ -618,7 +1002,22 @@ exports[`Type Policies read functions / missing field handlers works with relayW
 exports[`Type Policies read functions / missing field handlers works with relayWithRuntimeGeneratedIR 2`] = `
 {
   "message": {
-    "__typename": "Message",
+    "id": "message-42",
+    "text": "Hello World",
+  },
+}
+`;
+
+exports[`Type Policies read functions / missing field handlers works with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
+{
+  "id": "message-42",
+  "text": "Hello World",
+}
+`;
+
+exports[`Type Policies read functions / missing field handlers works with relayWithSupermassiveRuntimeGeneratedIR 2`] = `
+{
+  "message": {
     "id": "message-42",
     "text": "Hello World",
   },
@@ -672,23 +1071,17 @@ exports[`transformDocument adds __typename to documents with relayWithRuntimeGen
             authorId
             text
             createdAt
-            __typename
           }
-          __typename
         }
-        __typename
       }
-      __typename
     }
     ...CacheTestFragment
-    __typename
   }
 }
 
 fragment CacheTestFragment on Conversation {
   id
   title
-  __typename
 }
 "
 `;
@@ -753,7 +1146,6 @@ exports[`watch works with relayWithBuildtimeGeneratedIR 3`] = `
 exports[`watch works with relayWithRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
-    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
   },
@@ -763,7 +1155,6 @@ exports[`watch works with relayWithRuntimeGeneratedIR 1`] = `
 exports[`watch works with relayWithRuntimeGeneratedIR 2`] = `
 {
   "conversation": {
-    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 2",
   },
@@ -773,7 +1164,33 @@ exports[`watch works with relayWithRuntimeGeneratedIR 2`] = `
 exports[`watch works with relayWithRuntimeGeneratedIR 3`] = `
 {
   "conversation": {
-    "__typename": "Conversation",
+    "id": "42",
+    "title": "Hello World 1",
+  },
+}
+`;
+
+exports[`watch works with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
+{
+  "conversation": {
+    "id": "42",
+    "title": "Hello World 1",
+  },
+}
+`;
+
+exports[`watch works with relayWithSupermassiveRuntimeGeneratedIR 2`] = `
+{
+  "conversation": {
+    "id": "42",
+    "title": "Hello World 2",
+  },
+}
+`;
+
+exports[`watch works with relayWithSupermassiveRuntimeGeneratedIR 3`] = `
+{
+  "conversation": {
     "id": "42",
     "title": "Hello World 1",
   },
@@ -812,7 +1229,6 @@ exports[`writeFragment/readFragment works with relayWithBuildtimeGeneratedIR and
 
 exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR 1`] = `
 {
-  "__typename": "Conversation",
   "id": "Conversation:42",
   "title": "Hello World",
 }
@@ -820,7 +1236,20 @@ exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR 1`] =
 
 exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR and optimistic data 1`] = `
 {
-  "__typename": "Conversation",
+  "id": "Conversation:42",
+  "title": "Hello World",
+}
+`;
+
+exports[`writeFragment/readFragment works with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
+{
+  "id": "Conversation:42",
+  "title": "Hello World",
+}
+`;
+
+exports[`writeFragment/readFragment works with relayWithSupermassiveRuntimeGeneratedIR and optimistic data 1`] = `
+{
   "id": "Conversation:42",
   "title": "Hello World",
 }
@@ -843,7 +1272,13 @@ exports[`writeFragment/readFragment works with writeQuery for relayWithBuildtime
 
 exports[`writeFragment/readFragment works with writeQuery for relayWithRuntimeGeneratedIR 1`] = `
 {
-  "__typename": "Conversation",
+  "id": "42",
+  "title": "Hello World",
+}
+`;
+
+exports[`writeFragment/readFragment works with writeQuery for relayWithSupermassiveRuntimeGeneratedIR 1`] = `
+{
   "id": "42",
   "title": "Hello World",
 }
@@ -890,7 +1325,6 @@ exports[`writeQuery/readQuery concerning optimistic updates applies update with 
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
-    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },
@@ -900,7 +1334,24 @@ exports[`writeQuery/readQuery concerning optimistic updates applies update with 
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithRuntimeGeneratedIR 2`] = `
 {
   "conversation": {
-    "__typename": "Conversation",
+    "id": "42",
+    "title": "Hello World",
+  },
+}
+`;
+
+exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
+{
+  "conversation": {
+    "id": "42",
+    "title": "Hello World",
+  },
+}
+`;
+
+exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithSupermassiveRuntimeGeneratedIR 2`] = `
+{
+  "conversation": {
     "id": "42",
     "title": "Hello World",
   },
@@ -929,7 +1380,15 @@ exports[`writeQuery/readQuery works with relayWithBuildtimeGeneratedIR 1`] = `
 exports[`writeQuery/readQuery works with relayWithRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
-    "__typename": "Conversation",
+    "id": "42",
+    "title": "Hello World",
+  },
+}
+`;
+
+exports[`writeQuery/readQuery works with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
+{
+  "conversation": {
     "id": "42",
     "title": "Hello World",
   },

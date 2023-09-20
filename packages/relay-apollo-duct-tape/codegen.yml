@@ -7,8 +7,8 @@ generates:
   ./src/__generated__/operations.ts:
     plugins:
       - typescript
-      - typescript-operations
-      - typed-document-node
+      - "@graphitation/graphql-codegen-typescript-operations"
+      - "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin"
       - "@graphitation/graphql-codegen-relay-ir-plugin"
     config:
       omitOperationSuffix: true

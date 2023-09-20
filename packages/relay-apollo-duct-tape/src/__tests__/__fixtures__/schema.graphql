@@ -2,6 +2,11 @@ type Query {
   conversation(id: String!): Conversation!
   message(messageId: String!): Message!
   node(id: ID!): Node
+  conversationWithGarbage(id: String!, callerInfo: String): Conversation!
+  conversationWithNested(
+    input: ConversationFilter
+    moreCallerInfo: String
+  ): Conversation!
 }
 
 type Mutation {
@@ -23,6 +28,12 @@ type Conversation implements Node {
   title: String!
   hasUnreadMessages: Boolean!
   messages(first: Int!, after: String, sort: Sort): MessagesConnection!
+  messagesWithExtraField(
+    first: Int!
+    after: String
+    sort: Sort
+    callerInfo: String
+  ): MessagesConnection!
 }
 
 enum Sort {
@@ -53,3 +64,16 @@ type Message implements Node {
   text: String!
   createdAt: String!
 }
+
+input ConversationFilter {
+  id: String!
+  callerInfo: String
+}
+
+directive @connection(
+  key: String!
+  filter: [String]
+  filters: [String]
+  handler: String
+  dynamicKey_UNSTABLE: String
+) on FIELD

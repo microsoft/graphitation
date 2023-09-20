@@ -4,6 +4,7 @@ import { create as createSchema } from "./vendor/relay-compiler/lib/core/Schema"
 import * as FlattenTransform from "./vendor/relay-compiler/lib/transforms/FlattenTransform";
 import * as InlineFragmentsTransform from "./vendor/relay-compiler/lib/transforms/InlineFragmentsTransform";
 import { generate as generateIRDocument } from "./vendor/relay-compiler/lib/codegen/RelayCodeGenerator";
+import { SchemaDefinitions, decodeASTSchema } from "@graphitation/supermassive";
 
 import { Source, print as printGraphQLJS } from "graphql";
 import hash from "@emotion/hash";
@@ -11,6 +12,23 @@ import hash from "@emotion/hash";
 import type { DefinitionNode, DocumentNode } from "graphql";
 import type { Schema } from "./vendor/relay-compiler/lib/core/Schema";
 import type { Request } from "relay-compiler/lib/core/IR";
+import { keyArgsTransform } from "./keyArgsTransform";
+import { TypePolicies } from "@apollo/client";
+
+export function transformDocumentWithSupermassiveMVS(
+  document: DocumentNode,
+  addHash: boolean,
+  typePolicies: TypePolicies,
+) {
+  const defs: SchemaDefinitions[] = [
+    document.definitions && (document.definitions[0] as any).__defs,
+  ];
+  if (!defs) {
+    return null;
+  }
+  const schema = transformSchema(decodeASTSchema(defs));
+  return transformDocument(schema, document, addHash, typePolicies);
+}
 
 // TODO: Hash input document instead, which means memoization can skip
 //       actually applying this transform.
@@ -18,6 +36,7 @@ export function transformDocument(
   schema: Schema,
   document: DocumentNode,
   addHash: boolean,
+  typePolicies: TypePolicies,
 ) {
   const nodes = transformToIR(
     schema,
@@ -30,14 +49,17 @@ export function transformDocument(
   for (const node of nodes) {
     compilerContext = compilerContext.add(node);
   }
-  const operationCompilerContext = compilerContext.applyTransform(
-    InlineFragmentsTransform.transform,
-  );
-  const fragmentCompilerContext = compilerContext.applyTransform(
-    FlattenTransform.transformWithOptions({
-      isForCodegen: true,
-    } as any),
-  );
+  const operationCompilerContext = compilerContext
+    .applyTransform(InlineFragmentsTransform.transform)
+    .applyTransform(keyArgsTransform(typePolicies));
+  const fragmentCompilerContext = compilerContext
+    .applyTransform(
+      FlattenTransform.transformWithOptions({
+        isForCodegen: true,
+      } as any),
+    )
+    .applyTransform(keyArgsTransform(typePolicies));
+
   const res: any[] = [];
   operationCompilerContext.forEachDocument((node) => {
     if (node.kind === "Root") {

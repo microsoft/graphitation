@@ -70,7 +70,7 @@ import {
   TypePolicy,
   FieldPolicy,
 } from "@apollo/client";
-import { StoreObject, addTypenameToDocument } from "@apollo/client/utilities";
+import { StoreObject } from "@apollo/client/utilities";
 import { KeySpecifier } from "@apollo/client/cache/inmemory/policies";
 export { TypePolicies };
 
@@ -80,7 +80,11 @@ import invariant from "invariant";
 //       and annoyingly that's hard to configure with ts-jest. Figure
 //       out why we're using quick-lru there.
 import LRUCache from "lru-cache";
-import { transformDocument, transformSchema } from "./relayDocumentUtils";
+import {
+  transformDocument,
+  transformDocumentWithSupermassiveMVS,
+  transformSchema,
+} from "./relayDocumentUtils";
 
 import type { Schema } from "./vendor/relay-compiler/lib/core/Schema";
 import type { DocumentNode, DefinitionNode } from "graphql";
@@ -128,6 +132,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   private typenameDocumentCache?: WeakMap<DocumentNode, DocumentNode>;
   private debugEnvironment?: Environment;
   private missingFieldHandlers: MissingFieldHandler[];
+  private useSupermassiveDefs: boolean;
 
   constructor(
     options: {
@@ -139,6 +144,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
        * Specify this if Relay IR needs to be generated at runtime.
        */
       schema?: DocumentNode;
+      useSupermassiveDefs?: boolean;
     } = {},
   ) {
     super();
@@ -171,6 +177,8 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     if (options.schema) {
       this.typenameDocumentCache = new WeakMap();
     }
+
+    this.useSupermassiveDefs = !!options.useSupermassiveDefs;
 
     const devToolsHook = globalThis.__RELAY_DEVTOOLS_HOOK__;
     if (devToolsHook) {
@@ -206,12 +214,12 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
         // this means that even identical dupes will be replaced with new objects and we
         // won't be able to easily dedupe afterwards. RelayParser needs this deduped, so
         // we do this now.
-        result = addTypenameToDocument({
+        result = {
           ...document,
           definitions: (document.definitions as DefinitionNode[]).filter(
             uniqueFilter,
           ),
-        });
+        };
         this.typenameDocumentCache!.set(document, result);
         // If someone calls transformDocument and then mistakenly passes the
         // result back into an API that also calls transformDocument, make sure
@@ -557,13 +565,20 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
 
   private getTaggedNode(document: DocumentNode & { __relay?: any }) {
     const taggedNode =
-      document.__relay ||
+      (this.useSupermassiveDefs &&
+        transformDocumentWithSupermassiveMVS(
+          this.transformDocument(document),
+          !!this.pessimism,
+          this.typePolicies,
+        )) ||
       (this.schema &&
         transformDocument(
           this.schema,
           this.transformDocument(document),
           !!this.pessimism,
-        ));
+          this.typePolicies,
+        )) ||
+      document.__relay;
     invariant(
       taggedNode,
       "RelayApolloCache: Expected document to contain Relay IR.",
@@ -697,6 +712,20 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
               this.createMissingFieldHandler(typeName, fieldName, readFunction),
             );
           }
+          // if (fieldPolicy && (fieldPolicy as FieldPolicy<any>).keyArgs) {
+          //   handlers.push({
+          //     kind: "linked",
+          //     handle(field, record, argValues) {
+          //       if (
+          //         record != null &&
+          //         record.__typename === typeName &&
+          //         field.name === fieldName
+          //       ) {
+          //       }
+          //       return undefined;
+          //     },
+          //   });
+          // }
         }
       }
     }

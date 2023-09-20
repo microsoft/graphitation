@@ -26,14 +26,15 @@
     "relay-runtime": "^14.0.0"
   },
   "peerDependencies": {
-    "@apollo/client": "^3.6.9",
+    "@apollo/client": "3.6.9",
     "@graphitation/graphql-codegen-relay-ir-plugin": "^1.2.5"
   },
   "devDependencies": {
-    "@apollo/client": "^3.6.9",
+    "@apollo/client": "3.6.9",
     "@graphitation/graphql-codegen-relay-ir-plugin": "^1.2.5",
-    "@graphql-codegen/typescript-operations": "^1.17.12",
-    "@graphql-codegen/typed-document-node": "^1.18.1",
+    "@graphitation/graphql-codegen-typescript-operations": "^1.2.0",
+    "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin": "^0.5.0",
+    "@graphitation/supermassive": "^3.0.0",
     "@graphql-codegen/cli": "1.19.4",
     "@types/jest": "^26.0.22",
     "@types/react-relay": "^14.1.1",

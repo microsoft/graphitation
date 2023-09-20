@@ -4,14 +4,20 @@ import {
   Kind,
   OperationDefinitionNode,
 } from "graphql";
-import { addTypesToRequestDocument } from "./addTypesToRequestDocument";
+import { addMinimalViableSchemaToRequestDocument } from "@graphitation/supermassive";
 
 export const annotateDocumentGraphQLTransform = (schema: GraphQLSchema) => {
   return (node: FragmentDefinitionNode | OperationDefinitionNode) => {
-    const document = addTypesToRequestDocument(schema, {
-      kind: Kind.DOCUMENT,
-      definitions: [node],
-    });
+    const document = addMinimalViableSchemaToRequestDocument(
+      schema,
+      {
+        kind: Kind.DOCUMENT,
+        definitions: [node],
+      },
+      {
+        addTo: "PROPERTY",
+      },
+    );
     return document.definitions[0];
   };
 };
