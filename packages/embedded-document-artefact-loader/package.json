@@ -46,11 +46,13 @@
     "exports": {
       "./ts-jest": {
         "import": "./lib/ts-jest.mjs",
-        "require": "./lib/ts-jest.js"
+        "require": "./lib/ts-jest.js",
+        "types": "./lib/ts-jest.d.ts"
       },
       "./webpack": {
         "import": "./lib/webpack.mjs",
-        "require": "./lib/webpack.js"
+        "require": "./lib/webpack.js",
+        "types": "./lib/webpack.d.ts"
       }
     }
   }
