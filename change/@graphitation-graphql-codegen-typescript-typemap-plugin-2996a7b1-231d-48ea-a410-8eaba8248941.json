@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Add exports entry for types to package.json",
-  "packageName": "@graphitation/graphql-codegen-typescript-typemap-plugin",
-  "email": "sverre.johansen@gmail.com",
-  "dependentChangeType": "patch"
-}

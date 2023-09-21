@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive-ast",
   "entries": [
     {
+      "date": "Thu, 21 Sep 2023 06:28:45 GMT",
+      "tag": "@graphitation/supermassive-ast_v2.0.1",
+      "version": "2.0.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "sverre.johansen@gmail.com",
+            "package": "@graphitation/supermassive-ast",
+            "commit": "9faf12099c9af82b4e353e84fcee78e0659fb919",
+            "comment": "Add exports entry for types to package.json"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 19 Jun 2023 12:22:22 GMT",
       "tag": "@graphitation/supermassive-ast_v2.0.0",
       "version": "2.0.0",

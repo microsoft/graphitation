@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-typescript-operations",
   "entries": [
     {
+      "date": "Thu, 21 Sep 2023 06:28:45 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.3.1",
+      "version": "1.3.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "sverre.johansen@gmail.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "9faf12099c9af82b4e353e84fcee78e0659fb919",
+            "comment": "Add exports entry for types to package.json"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 03 Aug 2023 09:39:38 GMT",
       "tag": "@graphitation/graphql-codegen-typescript-operations_v1.3.0",
       "version": "1.3.0",

@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-This log was last generated on Wed, 02 Aug 2023 12:50:20 GMT and should not be manually modified.
+This log was last generated on Thu, 21 Sep 2023 06:28:45 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.7.1
+
+Thu, 21 Sep 2023 06:28:45 GMT
+
+### Patches
+
+- Bump @graphitation/supermassive-extractors to v2.2.1
+- Bump @graphitation/ts-codegen to v2.6.1
 
 ## 1.7.0
 

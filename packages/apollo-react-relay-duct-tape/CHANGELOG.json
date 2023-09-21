@@ -2,6 +2,45 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Thu, 21 Sep 2023 06:28:45 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v1.0.11",
+      "version": "1.0.11",
+      "comments": {
+        "patch": [
+          {
+            "author": "sverre.johansen@gmail.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "9faf12099c9af82b4e353e84fcee78e0659fb919",
+            "comment": "Add exports entry for types to package.json"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "comment": "Bump @graphitation/apollo-mock-client to v0.11.2",
+            "commit": "f9d5d849e26f5062a064880c4e0e9706ba6e811b"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "comment": "Bump @graphitation/graphql-js-operation-payload-generator to v0.12.3",
+            "commit": "f9d5d849e26f5062a064880c4e0e9706ba6e811b"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "comment": "Bump @graphitation/graphql-js-tag to v0.9.1",
+            "commit": "f9d5d849e26f5062a064880c4e0e9706ba6e811b"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.2.4",
+            "commit": "f9d5d849e26f5062a064880c4e0e9706ba6e811b"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 16 Aug 2023 06:31:20 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v1.0.10",
       "version": "1.0.10",
