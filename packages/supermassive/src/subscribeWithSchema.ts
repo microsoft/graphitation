@@ -1,8 +1,8 @@
+import { extractMinimalViableSchemaForRequestDocument } from "@graphitation/supermassive-ast";
+import type { PromiseOrValue } from "@graphitation/supermassive-common";
 import { buildASTSchema } from "graphql";
 import { subscribeWithoutSchema } from "./index";
-import { PromiseOrValue } from "./jsutils/PromiseOrValue";
-import { ExecutionWithSchemaArgs, ExecutionResult } from "./types";
-import { extractMinimalViableSchemaForRequestDocument } from "./utilities/extractMinimalViableSchemaForRequestDocument";
+import { ExecutionResult, ExecutionWithSchemaArgs } from "./types";
 
 export function subscribeWithSchema({
   document,

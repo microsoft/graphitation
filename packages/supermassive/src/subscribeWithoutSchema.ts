@@ -1,7 +1,6 @@
+import type { PromiseOrValue } from "@graphitation/supermassive-common";
 import { executeWithoutSchema } from "./executeWithoutSchema";
-
-import { ExecutionWithoutSchemaArgs, ExecutionResult } from "./types";
-import type { PromiseOrValue } from "./jsutils/PromiseOrValue";
+import type { ExecutionResult, ExecutionWithoutSchemaArgs } from "./types";
 
 /**
  * Implements the "Subscribe" algorithm described in the GraphQL specification.

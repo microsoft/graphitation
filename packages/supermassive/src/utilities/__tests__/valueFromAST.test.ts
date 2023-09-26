@@ -1,20 +1,20 @@
-import { identityFunc } from "../../jsutils/identityFunc";
-import type { ObjMap } from "../../jsutils/ObjMap";
+import { GraphQLScalarType, parseValue } from "graphql";
 
-import { parseValue } from "graphql";
-import { GraphQLScalarType } from "graphql";
-
-import { valueFromAST } from "../valueFromAST";
 import {
-  SchemaDefinitions,
   InputObjectTypeDefinitionTuple,
+  SchemaDefinitions,
+  createEnumTypeDefinition,
   createInputObjectTypeDefinition,
   createScalarTypeDefinition,
-  createEnumTypeDefinition,
-} from "../../schema/definition";
-import { typeReferenceFromName as ref } from "../../schema/reference";
-import { invariant } from "../../jsutils/invariant";
+  typeReferenceFromName as ref,
+} from "@graphitation/supermassive-ast";
+import {
+  identityFunc,
+  invariant,
+  type ObjMap,
+} from "@graphitation/supermassive-common";
 import { SchemaFragment, UserResolvers } from "../../types";
+import { valueFromAST } from "../valueFromAST";
 
 describe("valueFromAST", () => {
   function createTestSchemaFragment(

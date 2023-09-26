@@ -8,7 +8,7 @@ import {
   AddMinimalViableSchemaToRequestDocumentOptions,
 } from "./addMinimalViableSchemaToRequestDocument";
 
-export const annotateDocumentGraphQLTransform = (
+export const annotateDocumentWithMininimalViableSchemaGraphQLTransform = (
   schema: GraphQLSchema,
   options?: AddMinimalViableSchemaToRequestDocumentOptions,
 ) => {

@@ -36,6 +36,7 @@ import {
   createScalarTypeDefinition,
   createUnionTypeDefinition,
   DirectiveDefinitionTuple,
+  encodeDirectiveLocation,
   EnumTypeDefinitionTuple,
   FieldDefinition,
   getDirectiveDefinitionArgs,
@@ -55,17 +56,19 @@ import {
   SchemaDefinitions,
   setDirectiveDefinitionArgs,
   TypeDefinitionsRecord,
-} from "../schema/definition";
+} from "./definition";
 import { isKnownDirective } from "../schema/directives";
-import { makeReadableErrorPath } from "./makeReadableErrorPath";
 import {
   inspectTypeReference,
   typeNameFromReference,
   TypeReference,
   typeReferenceFromName,
-} from "../schema/reference";
-import { invariant } from "../jsutils/invariant";
-import { Maybe } from "../jsutils/Maybe";
+} from "./reference";
+import {
+  invariant,
+  makeReadableErrorPath,
+  type Maybe,
+} from "@graphitation/supermassive-common";
 
 export type ExtractMinimalViableSchemaResult = {
   definitions: SchemaDefinitions;
@@ -244,7 +247,11 @@ function addDirective(
   const name = directive.name;
   let tuple = directives.find((d) => getDirectiveName(d) === name);
   if (!tuple) {
-    tuple = [directive.name];
+    tuple = [
+      directive.name,
+      {},
+      directive.locations.map(encodeDirectiveLocation),
+    ];
     directives.push(tuple);
   }
 

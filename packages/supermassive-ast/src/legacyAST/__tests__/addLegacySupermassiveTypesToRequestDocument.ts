@@ -1,12 +1,13 @@
-import {
-  addTypesToRequestDocument,
-  FieldNode,
-  OperationDefinitionNode,
-} from "../addTypesToRequestDocument";
+import { addLegacySupermassiveTypesToRequestDocument } from "../addLegacySupermassiveTypesToRequestDocument";
 
 import { graphql } from "@graphitation/graphql-js-tag";
 import { buildASTSchema } from "graphql";
-import { FragmentDefinitionNode, InlineFragmentNode } from "../TypedAST";
+import {
+  FragmentDefinitionNode,
+  InlineFragmentNode,
+  FieldNode,
+  OperationDefinitionNode,
+} from "../LegacyTypedAST";
 
 const schema = buildASTSchema(graphql`
   type Query {
@@ -37,10 +38,10 @@ const schema = buildASTSchema(graphql`
   }
 `);
 
-describe(addTypesToRequestDocument, () => {
+describe(addLegacySupermassiveTypesToRequestDocument, () => {
   describe("concerning field selections", () => {
     it("adds a named type node", () => {
-      const document = addTypesToRequestDocument(
+      const document = addLegacySupermassiveTypesToRequestDocument(
         schema,
         graphql`
           query {
@@ -66,7 +67,7 @@ describe(addTypesToRequestDocument, () => {
     });
 
     it("adds a non-null type node", () => {
-      const document = addTypesToRequestDocument(
+      const document = addLegacySupermassiveTypesToRequestDocument(
         schema,
         graphql`
           fragment FilmFragment on Film {
@@ -93,7 +94,7 @@ describe(addTypesToRequestDocument, () => {
     });
 
     it("adds a list type node", () => {
-      const document = addTypesToRequestDocument(
+      const document = addLegacySupermassiveTypesToRequestDocument(
         schema,
         graphql`
           query {
@@ -127,7 +128,7 @@ describe(addTypesToRequestDocument, () => {
     });
 
     it("adds a list type with non-null type node", () => {
-      const document = addTypesToRequestDocument(
+      const document = addLegacySupermassiveTypesToRequestDocument(
         schema,
         graphql`
           fragment FilmFragment on Film {
@@ -159,7 +160,7 @@ describe(addTypesToRequestDocument, () => {
 
   describe("concerning field arguments", () => {
     it("adds a scalar type node", () => {
-      const document = addTypesToRequestDocument(
+      const document = addLegacySupermassiveTypesToRequestDocument(
         schema,
         graphql`
           query {
@@ -189,7 +190,7 @@ describe(addTypesToRequestDocument, () => {
     });
 
     it("adds an input object type node", () => {
-      const document = addTypesToRequestDocument(
+      const document = addLegacySupermassiveTypesToRequestDocument(
         schema,
         graphql`
           mutation Test($filmType: FilmType) {
@@ -252,7 +253,7 @@ describe(addTypesToRequestDocument, () => {
     });
 
     it("adds missing types with default values", () => {
-      const document = addTypesToRequestDocument(
+      const document = addLegacySupermassiveTypesToRequestDocument(
         schema,
         graphql`
           mutation {
@@ -296,7 +297,7 @@ describe(addTypesToRequestDocument, () => {
 
     it("errors nicely for unknown fields", () => {
       expect(() => {
-        addTypesToRequestDocument(
+        addLegacySupermassiveTypesToRequestDocument(
           schema,
           graphql`
             query filmQuery {
@@ -312,7 +313,7 @@ describe(addTypesToRequestDocument, () => {
       );
 
       expect(() => {
-        addTypesToRequestDocument(
+        addLegacySupermassiveTypesToRequestDocument(
           schema,
           graphql`
             query {
@@ -326,7 +327,7 @@ describe(addTypesToRequestDocument, () => {
       }).toThrowError("Cannot find type for field: query.film.format");
 
       expect(() => {
-        addTypesToRequestDocument(
+        addLegacySupermassiveTypesToRequestDocument(
           schema,
           graphql`
             query {

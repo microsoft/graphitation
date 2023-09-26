@@ -1,21 +1,21 @@
-import { parse, DocumentNode } from "graphql";
+import { extractMinimalViableSchemaForRequestDocument } from "@graphitation/supermassive-ast";
+import { pathToArray } from "@graphitation/supermassive-common";
+import { DocumentNode, parse } from "graphql";
+import schema, { typeDefs } from "../benchmarks/swapi-schema";
+import models from "../benchmarks/swapi-schema/models";
+import resolvers from "../benchmarks/swapi-schema/resolvers";
+import { executeWithSchema } from "../executeWithSchema";
 import {
   executeWithoutSchema,
   isTotalExecutionResult,
 } from "../executeWithoutSchema";
-import { executeWithSchema } from "../executeWithSchema";
-import schema, { typeDefs } from "../benchmarks/swapi-schema";
-import models from "../benchmarks/swapi-schema/models";
-import resolvers from "../benchmarks/swapi-schema/resolvers";
-import { extractMinimalViableSchemaForRequestDocument } from "../utilities/extractMinimalViableSchemaForRequestDocument";
-import { UserResolvers, TotalExecutionResult } from "../types";
 import {
   AfterFieldCompleteHookArgs,
   AfterFieldResolveHookArgs,
   BeforeFieldResolveHookArgs,
   ExecutionHooks,
 } from "../hooks/types";
-import { pathToArray } from "../jsutils/Path";
+import { TotalExecutionResult, UserResolvers } from "../types";
 
 interface TestCase {
   name: string;

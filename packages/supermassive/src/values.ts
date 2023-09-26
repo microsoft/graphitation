@@ -1,33 +1,30 @@
 import {
-  GraphQLError,
-  Kind,
-  print,
-  locatedError,
-  DirectiveNode,
-  FieldNode,
-  VariableDefinitionNode,
-} from "graphql";
-import { inspect } from "./jsutils/inspect";
-import { printPathArray } from "./jsutils/printPathArray";
-import { ExecutionContext } from "./executeWithoutSchema";
-import {
   DirectiveDefinitionTuple,
   FieldDefinition,
   getDefinitionArguments,
   getDirectiveName,
   getInputDefaultValue,
   getInputValueTypeReference,
+  inspectTypeReference,
   isDefined,
   isInputType,
-} from "./schema/definition";
-import { valueFromAST } from "./utilities/valueFromAST";
-import { coerceInputValue } from "./utilities/coerceInputValue";
-import {
-  inspectTypeReference,
   isNonNullType,
   typeReferenceFromNode,
-} from "./schema/reference";
+} from "@graphitation/supermassive-ast";
+import { inspect, printPathArray } from "@graphitation/supermassive-common";
+import {
+  DirectiveNode,
+  FieldNode,
+  GraphQLError,
+  Kind,
+  VariableDefinitionNode,
+  locatedError,
+  print,
+} from "graphql";
+import { ExecutionContext } from "./executeWithoutSchema";
 import type { SchemaFragment } from "./types";
+import { coerceInputValue } from "./utilities/coerceInputValue";
+import { valueFromAST } from "./utilities/valueFromAST";
 
 type CoercedVariableValues =
   | { errors: Array<GraphQLError>; coerced?: never }

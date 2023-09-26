@@ -1,18 +1,14 @@
+import { extractMinimalViableSchemaForRequestDocument } from "@graphitation/supermassive-ast";
 import fs from "fs";
+import { execute as graphqlExecute, parse } from "graphql";
+import { compileQuery, isCompiledQuery } from "graphql-jit";
 import path from "path";
+import { executeWithoutSchema as supermassiveExecute } from "../executeWithoutSchema";
+import { SchemaFragment, UserResolvers } from "../types";
 import NiceBenchmark from "./nice-benchmark";
 import schema from "./swapi-schema";
-import resolvers from "./swapi-schema/resolvers";
 import models from "./swapi-schema/models";
-import {
-  execute as graphqlExecute,
-  parse,
-  // experimentalExecuteIncrementally as graphqlExecute,
-} from "graphql";
-import { compileQuery, isCompiledQuery } from "graphql-jit";
-import { executeWithoutSchema as supermassiveExecute } from "../executeWithoutSchema";
-import { UserResolvers, SchemaFragment } from "../types";
-import { extractMinimalViableSchemaForRequestDocument } from "../utilities/extractMinimalViableSchemaForRequestDocument";
+import resolvers from "./swapi-schema/resolvers";
 
 const query = fs.readFileSync(
   path.join(__dirname, "./fixtures/query1.graphql"),

@@ -13,10 +13,9 @@ import {
 } from "graphql";
 
 import * as TypelessAST from "graphql/language/ast";
-import * as TypedAST from "./TypedAST";
-export * from "./TypedAST";
+import * as TypedAST from "./LegacyTypedAST";
 
-export function addTypesToRequestDocument(
+export function addLegacySupermassiveTypesToRequestDocument(
   schema: GraphQLSchema,
   document: TypelessAST.DocumentNode,
 ): TypedAST.DocumentNode {

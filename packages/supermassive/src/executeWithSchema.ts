@@ -1,8 +1,8 @@
+import { extractMinimalViableSchemaForRequestDocument } from "@graphitation/supermassive-ast";
+import type { PromiseOrValue } from "@graphitation/supermassive-common";
 import { buildASTSchema } from "graphql";
 import { executeWithoutSchema } from "./index";
-import { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import { ExecutionResult, ExecutionWithSchemaArgs } from "./types";
-import { extractMinimalViableSchemaForRequestDocument } from "./utilities/extractMinimalViableSchemaForRequestDocument";
 
 export function executeWithSchema({
   document,

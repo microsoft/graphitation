@@ -1,23 +1,23 @@
+import { extractMinimalViableSchemaForRequestDocument } from "@graphitation/supermassive-ast";
+import { ObjMap } from "@graphitation/supermassive-common";
 import {
   DocumentNode,
+  ExecutionArgs,
+  ExecutionArgs as GraphQLExecutionArgs,
+  ExecutionResult as GraphQLExecutionResult,
   GraphQLSchema,
   Kind,
   OperationDefinitionNode,
   parse,
-  ExecutionArgs,
-  ExecutionArgs as GraphQLExecutionArgs,
-  ExecutionResult as GraphQLExecutionResult,
 } from "graphql";
-import { executeWithSchema } from "../executeWithSchema";
-import { typeDefs } from "../benchmarks/swapi-schema";
-import resolvers from "../benchmarks/swapi-schema/resolvers";
-import { ExecutionResult, UserResolvers } from "../types";
-import models from "../benchmarks/swapi-schema/models";
-import { executeWithoutSchema } from "../executeWithoutSchema";
-import { extractMinimalViableSchemaForRequestDocument } from "../utilities/extractMinimalViableSchemaForRequestDocument";
 import { PromiseOrValue } from "graphql/jsutils/PromiseOrValue";
-import { ObjMap } from "../jsutils/ObjMap";
 import { forAwaitEach, isAsyncIterable } from "iterall";
+import { typeDefs } from "../benchmarks/swapi-schema";
+import models from "../benchmarks/swapi-schema/models";
+import resolvers from "../benchmarks/swapi-schema/resolvers";
+import { executeWithSchema } from "../executeWithSchema";
+import { executeWithoutSchema } from "../executeWithoutSchema";
+import { ExecutionResult, UserResolvers } from "../types";
 
 type GraphQLResult<TData = ObjMap<unknown>, TExtensions = ObjMap<unknown>> =
   | GraphQLExecutionResult<TData, TExtensions>

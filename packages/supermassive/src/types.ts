@@ -1,19 +1,24 @@
 import {
+  OperationTypes,
+  SchemaDefinitions,
+  TypeName,
+} from "@graphitation/supermassive-ast";
+import {
+  Maybe,
+  ObjMap,
+  Path,
+  PromiseOrValue,
+} from "@graphitation/supermassive-common";
+import {
+  DocumentNode,
+  FragmentDefinitionNode,
   GraphQLError,
   GraphQLFormattedError,
   GraphQLScalarType,
-  DocumentNode,
-  FragmentDefinitionNode,
   OperationDefinitionNode,
 } from "graphql";
-import { Maybe } from "./jsutils/Maybe";
-import { PromiseOrValue } from "./jsutils/PromiseOrValue";
-import { ObjMap } from "./jsutils/ObjMap";
-import { Path } from "./jsutils/Path";
-import { ExecutionHooks } from "./hooks/types";
 import { FieldGroup } from "./collectFields";
-import { OperationTypes, SchemaDefinitions } from "./schema/definition";
-import { TypeName } from "./schema/reference";
+import { ExecutionHooks } from "./hooks/types";
 
 export type ScalarTypeResolver = GraphQLScalarType;
 export type EnumTypeResolver = Record<string, unknown>;

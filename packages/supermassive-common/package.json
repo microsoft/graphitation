@@ -1,31 +1,28 @@
 {
-  "name": "@graphitation/supermassive-ast",
+  "name": "@graphitation/supermassive-common",
   "license": "MIT",
-  "version": "2.0.1",
+  "version": "0.1.0",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",
-    "directory": "packages/supermassive-ast"
+    "directory": "packages/supermassive-common"
   },
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
-    "test": "monorepo-scripts test",
+    "test": "monorepo-scripts test --passWithNoTests",
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts"
   },
-  "dependencies": {
-    "@graphitation/supermassive-common": "^0.1.0"
-  },
+  "dependencies": {},
   "peerDependencies": {
     "graphql": "^15.0.0 || ^16.0.0 || ^17.0.0"
   },
   "devDependencies": {
     "graphql": "^15.6.1",
     "@types/jest": "^26.0.22",
-    "monorepo-scripts": "*",
-    "ts-node": "^10.4.0"
+    "monorepo-scripts": "*"
   },
   "sideEffects": false,
   "access": "public",

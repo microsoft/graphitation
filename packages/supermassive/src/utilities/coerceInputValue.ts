@@ -1,28 +1,29 @@
-import { GraphQLError, locatedError } from "graphql";
-import { didYouMean } from "../jsutils/didYouMean";
-import { inspect } from "../jsutils/inspect";
-import { invariant } from "../jsutils/invariant";
-import { isIterableObject } from "../jsutils/isIterableObject";
-import { isObjectLike } from "../jsutils/isObjectLike";
-import type { Path } from "../jsutils/Path";
-import { addPath, pathToArray } from "../jsutils/Path";
-import { printPathArray } from "../jsutils/printPathArray";
-import { suggestionList } from "../jsutils/suggestionList";
 import {
   TypeReference,
-  inspectTypeReference,
-  isListType,
-  isNonNullType,
-  unwrap,
-} from "../schema/reference";
-import { SchemaFragment } from "../types";
-import {
   getInputDefaultValue,
   getInputObjectFields,
   getInputObjectType,
   getInputValueTypeReference,
-} from "../schema/definition";
-import { getLeafTypeResolver } from "../schema/resolvers";
+  inspectTypeReference,
+  isListType,
+  isNonNullType,
+  unwrap,
+} from "@graphitation/supermassive-ast";
+import type { Path } from "@graphitation/supermassive-common";
+import {
+  addPath,
+  didYouMean,
+  inspect,
+  invariant,
+  isIterableObject,
+  isObjectLike,
+  pathToArray,
+  printPathArray,
+  suggestionList,
+} from "@graphitation/supermassive-common";
+import { GraphQLError, locatedError } from "graphql";
+import { SchemaFragment } from "../types";
+import { getLeafTypeResolver } from "../utilities/resolvers";
 
 type OnErrorCB = (
   path: ReadonlyArray<string | number>,

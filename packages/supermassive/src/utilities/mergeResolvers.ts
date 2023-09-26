@@ -1,5 +1,5 @@
 import { Resolvers } from "../types";
-import { isObjectLike } from "../jsutils/isObjectLike";
+import { isObjectLike } from "@graphitation/supermassive-common";
 
 export function mergeResolvers(
   accumulator: Resolvers,

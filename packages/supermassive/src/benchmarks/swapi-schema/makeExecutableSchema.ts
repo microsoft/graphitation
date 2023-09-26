@@ -4,6 +4,7 @@
  * MIT license https://github.com/ardatan/graphql-tools/blob/820b4d3e052a8fb08b96a9d45456355a7affc168/LICENSE
  */
 
+import type { Maybe } from "@graphitation/supermassive-common";
 import {
   DocumentNode,
   EnumValueDefinitionNode,
@@ -56,7 +57,6 @@ import {
   isUnionType,
 } from "graphql";
 import { Resolvers } from "../../types";
-import { Maybe } from "../../jsutils/Maybe";
 
 export const makeExecutableSchema = <TSource, TContext>({
   typeDefs,

@@ -18,6 +18,13 @@
     "test17": "yarn graphql17 && yarn jest --config=../../scripts/config/jest.config.js --testMatch='**/*.graphql17.test.ts' --testPathIgnorePatterns='node_modules' --diagnostics=false",
     "benchmark": "ts-node -T ./src/benchmarks/index.ts"
   },
+  "dependencies": {
+    "@graphitation/supermassive-common": "^0.1.0",
+    "@graphitation/supermassive-ast": "^2.0.1"
+  },
+  "peerDependencies": {
+    "graphql": "^15.0.0 || ^16.0.0 || ^17.0.0"
+  },
   "devDependencies": {
     "@graphitation/cli": "*",
     "@ts-morph/bootstrap": "^0.11.0",
@@ -45,9 +52,5 @@
         "types": "./lib/index.d.ts"
       }
     }
-  },
-  "dependencies": {},
-  "peerDependencies": {
-    "graphql": "^15.0.0 || ^16.0.0 || ^17.0.0"
   }
 }

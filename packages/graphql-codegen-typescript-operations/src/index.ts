@@ -14,7 +14,7 @@ import {
 } from "@graphql-codegen/visitor-plugin-common";
 import { TypeScriptDocumentsPluginConfig } from "./config";
 
-export { TypeScriptDocumentsPluginConfig } from "./config";
+export type { TypeScriptDocumentsPluginConfig } from "./config";
 
 export const plugin: PluginFunction<
   TypeScriptDocumentsPluginConfig,

@@ -45,7 +45,7 @@ import {
   getInputDefaultValue,
   getDirectiveName,
   getDirectiveDefinitionArgs,
-} from "../schema/definition";
+} from "./definition";
 import {
   inspectTypeReference,
   isListType,
@@ -54,9 +54,9 @@ import {
   TypeReference,
   unwrap,
 } from "../schema/reference";
-import { invariant } from "../jsutils/invariant";
+import { invariant } from "@graphitation/supermassive-common";
 import { ValueNode as ConstValueNode } from "graphql/language/ast"; // TODO: use ConstValueNode in graphql@17
-import { inspect } from "../jsutils/inspect";
+import { inspect } from "@graphitation/supermassive-common";
 
 /**
  * Converts encoded schema to standard AST representation of the same schema

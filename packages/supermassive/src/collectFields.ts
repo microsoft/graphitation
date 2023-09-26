@@ -1,24 +1,24 @@
 import {
-  Kind,
+  GraphQLDeferDirective,
+  GraphQLIncludeDirective,
+  GraphQLSkipDirective,
+  isAbstractType,
+  isSubType,
+} from "@graphitation/supermassive-ast";
+import { AccumulatorMap } from "@graphitation/supermassive-common";
+import {
   FieldNode,
   FragmentDefinitionNode,
   FragmentSpreadNode,
   InlineFragmentNode,
+  Kind,
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
-import { getDirectiveValues } from "./values";
-import {
-  GraphQLSkipDirective,
-  GraphQLIncludeDirective,
-  GraphQLDeferDirective,
-} from "./schema/directives";
-
-import { AccumulatorMap } from "./jsutils/AccumulatorMap";
 import invariant from "invariant";
 import { ExecutionContext } from "./executeWithoutSchema";
-import { isAbstractType, isSubType } from "./schema/definition";
 import { SchemaFragment } from "./types";
+import { getDirectiveValues } from "./values";
 
 export type FieldGroup = ReadonlyArray<FieldNode>;
 

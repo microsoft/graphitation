@@ -1,4 +1,4 @@
-import { gql } from "../../../__testUtils__/gql";
+import { gql } from "@graphitation/supermassive-common";
 
 export const filmSDL = gql`
   type Query {

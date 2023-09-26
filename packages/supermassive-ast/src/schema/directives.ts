@@ -1,6 +1,8 @@
+import { DirectiveLocation } from "graphql";
 import {
   DirectiveDefinitionTuple,
   DirectiveName,
+  encodeDirectiveLocation,
   getDirectiveName,
 } from "./definition";
 
@@ -10,6 +12,11 @@ import {
 export const GraphQLIncludeDirective: DirectiveDefinitionTuple = [
   "include",
   { if: "Boolean!" },
+  [
+    DirectiveLocation.FIELD,
+    DirectiveLocation.FRAGMENT_SPREAD,
+    DirectiveLocation.INLINE_FRAGMENT,
+  ].map(encodeDirectiveLocation),
   // TODO: locations for all directives (maybe not - they are irrelevant for runtime)?
 ];
 
@@ -19,6 +26,11 @@ export const GraphQLIncludeDirective: DirectiveDefinitionTuple = [
 export const GraphQLSkipDirective: DirectiveDefinitionTuple = [
   "skip",
   { if: "Boolean!" },
+  [
+    DirectiveLocation.FIELD,
+    DirectiveLocation.FRAGMENT_SPREAD,
+    DirectiveLocation.INLINE_FRAGMENT,
+  ].map(encodeDirectiveLocation),
 ];
 
 /**
@@ -32,6 +44,7 @@ export const DEFAULT_DEPRECATION_REASON = "No longer supported";
 export const GraphQLDeprecatedDirective: DirectiveDefinitionTuple = [
   "deprecated",
   { reason: ["String", DEFAULT_DEPRECATION_REASON] },
+  [DirectiveLocation.FIELD_DEFINITION].map(encodeDirectiveLocation),
 ];
 
 /**
@@ -40,6 +53,7 @@ export const GraphQLDeprecatedDirective: DirectiveDefinitionTuple = [
 export const GraphQLSpecifiedByDirective: DirectiveDefinitionTuple = [
   "specifiedBy",
   { url: "String!" },
+  [DirectiveLocation.INPUT_OBJECT].map(encodeDirectiveLocation),
 ];
 
 /**
@@ -48,6 +62,9 @@ export const GraphQLSpecifiedByDirective: DirectiveDefinitionTuple = [
 export const GraphQLDeferDirective: DirectiveDefinitionTuple = [
   "defer",
   { if: ["Boolean!", true], label: "String" },
+  [DirectiveLocation.FRAGMENT_SPREAD, DirectiveLocation.INLINE_FRAGMENT].map(
+    encodeDirectiveLocation,
+  ),
 ];
 
 /**
@@ -56,6 +73,7 @@ export const GraphQLDeferDirective: DirectiveDefinitionTuple = [
 export const GraphQLStreamDirective: DirectiveDefinitionTuple = [
   "stream",
   { if: ["Boolean!", true], label: "String", initialCount: ["Int", 0] },
+  [DirectiveLocation.FIELD].map(encodeDirectiveLocation),
 ];
 
 /**
@@ -81,6 +99,11 @@ export const SUPERMASSIVE_SCHEMA_DIRECTIVE_DEFINITIONS_ARGUMENT_NAME =
 export const SupermassiveSchemaDirective: DirectiveDefinitionTuple = [
   SUPERMASSIVE_SCHEMA_DIRECTIVE_NAME,
   { [SUPERMASSIVE_SCHEMA_DIRECTIVE_DEFINITIONS_ARGUMENT_NAME]: "String!" }, // Essentially JSON
+  [
+    DirectiveLocation.QUERY,
+    DirectiveLocation.MUTATION,
+    DirectiveLocation.SUBSCRIPTION,
+  ].map(encodeDirectiveLocation),
 ];
 
 export function isKnownDirective(

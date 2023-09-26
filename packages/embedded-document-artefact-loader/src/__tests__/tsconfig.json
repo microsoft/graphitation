@@ -1,4 +1,7 @@
 {
   "baseUrl": ".",
+  "compilerOptions": {
+    "isolatedModules": false
+  },
   "files": ["fixture.ts"]
 }

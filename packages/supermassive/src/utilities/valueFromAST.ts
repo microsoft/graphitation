@@ -1,17 +1,20 @@
-import { invariant } from "../jsutils/invariant";
-import type { Maybe } from "../jsutils/Maybe";
-import type { ObjMap } from "../jsutils/ObjMap";
+import { invariant } from "@graphitation/supermassive-common";
+import type { Maybe } from "@graphitation/supermassive-common";
+import type { ObjMap } from "@graphitation/supermassive-common";
 
-import type { TypeReference } from "../schema/reference";
 import { ValueNode, Kind } from "graphql";
 import {
+  type TypeReference,
   inspectTypeReference,
   isListType,
   isNonNullType,
   unwrap,
-} from "../schema/reference";
-import * as Definitions from "../schema/definition";
-import * as Resolvers from "../schema/resolvers";
+  getInputObjectType,
+  getInputObjectFields,
+  getInputDefaultValue,
+  getInputValueTypeReference,
+} from "@graphitation/supermassive-ast";
+import * as Resolvers from "./resolvers";
 import { SchemaFragment } from "../types";
 
 /**
@@ -115,7 +118,7 @@ export function valueFromAST(
 
   const defs = schemaFragment.definitions;
 
-  const inputObjectType = Definitions.getInputObjectType(defs, typeRef);
+  const inputObjectType = getInputObjectType(defs, typeRef);
   if (inputObjectType) {
     if (valueNode.kind !== Kind.OBJECT) {
       return; // Invalid: intentionally return no value.
@@ -125,13 +128,13 @@ export function valueFromAST(
       valueNode.fields.map((field) => [field.name.value, field]),
     );
 
-    const fieldDefs = Definitions.getInputObjectFields(inputObjectType);
+    const fieldDefs = getInputObjectFields(inputObjectType);
 
     for (const [name, field] of Object.entries(fieldDefs)) {
       const fieldNode = fieldNodes.get(name);
-      const fieldTypeRef = Definitions.getInputValueTypeReference(field);
+      const fieldTypeRef = getInputValueTypeReference(field);
       if (fieldNode == null || isMissingVariable(fieldNode.value, variables)) {
-        const defaultValue = Definitions.getInputDefaultValue(field);
+        const defaultValue = getInputDefaultValue(field);
         if (defaultValue !== undefined) {
           coercedObj[name] = defaultValue;
         } else if (isNonNullType(fieldTypeRef)) {

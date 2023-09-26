@@ -10,24 +10,22 @@ import {
   TypeResolver,
 } from "../types";
 import {
-  GraphQLBoolean,
   GraphQLEnumType,
-  GraphQLFloat,
-  GraphQLID,
-  GraphQLInt,
   GraphQLLeafType,
   GraphQLScalarType,
-  GraphQLString,
   isScalarType,
 } from "graphql";
-import { TypeName, typeNameFromReference, TypeReference } from "./reference";
 import {
+  TypeName,
+  typeNameFromReference,
+  TypeReference,
   getEnumValues,
   getLeafType,
   isEnumTypeDefinition,
   isScalarTypeDefinition,
-} from "./definition";
-import { isObjectLike } from "../jsutils/isObjectLike";
+  specifiedScalarResolvers,
+} from "@graphitation/supermassive-ast";
+import { isObjectLike } from "@graphitation/supermassive-common";
 
 const resolveTypeName: FunctionFieldResolver<unknown, unknown> = (
   _source,
@@ -37,18 +35,6 @@ const resolveTypeName: FunctionFieldResolver<unknown, unknown> = (
 ) => info.parentTypeName;
 
 const emptyObject = Object.freeze(Object.create(null));
-
-export const specifiedScalarResolvers: { [key: string]: ScalarTypeResolver } = {
-  ID: GraphQLID,
-  String: GraphQLString,
-  Int: GraphQLInt,
-  Float: GraphQLFloat,
-  Boolean: GraphQLBoolean,
-};
-
-export function isSpecifiedScalarType(typeName: string): boolean {
-  return !!specifiedScalarResolvers[typeName];
-}
 
 export function isInterfaceTypeResolver(
   resolver: Resolver<unknown, unknown>,

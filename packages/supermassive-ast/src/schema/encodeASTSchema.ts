@@ -1,20 +1,22 @@
+import { valueFromASTUntyped } from "@graphitation/supermassive-common";
 import {
   DirectiveDefinitionNode,
+  DirectiveLocationEnum,
+  DocumentNode,
   EnumTypeDefinitionNode,
+  EnumTypeExtensionNode,
   FieldDefinitionNode,
   InputObjectTypeDefinitionNode,
+  InputObjectTypeExtensionNode,
   InputValueDefinitionNode,
   InterfaceTypeDefinitionNode,
-  ObjectTypeDefinitionNode,
-  ScalarTypeDefinitionNode,
-  UnionTypeDefinitionNode,
-  DocumentNode,
-  ObjectTypeExtensionNode,
-  InputObjectTypeExtensionNode,
   InterfaceTypeExtensionNode,
-  UnionTypeExtensionNode,
-  EnumTypeExtensionNode,
+  ObjectTypeDefinitionNode,
+  ObjectTypeExtensionNode,
+  ScalarTypeDefinitionNode,
   ScalarTypeExtensionNode,
+  UnionTypeDefinitionNode,
+  UnionTypeExtensionNode,
 } from "graphql";
 import {
   DirectiveDefinitionTuple,
@@ -26,18 +28,18 @@ import {
   InterfaceTypeDefinitionTuple,
   ObjectTypeDefinitionTuple,
   ScalarTypeDefinitionTuple,
-  UnionTypeDefinitionTuple,
   SchemaDefinitions,
   TypeDefinitionTuple,
-  createScalarTypeDefinition,
+  UnionTypeDefinitionTuple,
   createEnumTypeDefinition,
-  createObjectTypeDefinition,
   createInputObjectTypeDefinition,
   createInterfaceTypeDefinition,
+  createObjectTypeDefinition,
+  createScalarTypeDefinition,
   createUnionTypeDefinition,
-} from "../schema/definition";
-import { typeReferenceFromNode, TypeReference } from "../schema/reference";
-import { valueFromASTUntyped } from "./valueFromASTUntyped";
+  encodeDirectiveLocation,
+} from "./definition";
+import { TypeReference, typeReferenceFromNode } from "./reference";
 
 export function encodeASTSchema(
   schemaFragment: DocumentNode,
@@ -194,7 +196,11 @@ function encodeInputValue(
 function encodeDirective(
   node: DirectiveDefinitionNode,
 ): DirectiveDefinitionTuple {
-  return !node.arguments?.length
-    ? [node.name.value]
-    : [node.name.value, encodeArguments(node)];
+  return [
+    node.name.value,
+    node.arguments ? encodeArguments(node) : {},
+    node.locations.map((node) =>
+      encodeDirectiveLocation(node.value as DirectiveLocationEnum),
+    ),
+  ];
 }

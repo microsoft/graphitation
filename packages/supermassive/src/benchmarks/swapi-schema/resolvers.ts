@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { mapAsyncIterator } from "@graphitation/supermassive-common";
 import { IExecutableSchemaDefinition } from "@graphql-tools/schema";
 import { createAsyncIterator, forAwaitEach, getAsyncIterator } from "iterall";
-import { mapAsyncIterator } from "../../utilities/mapAsyncIterator";
 
 // Note: need this for graphql15-graphql17 cross-compatibility
 type GraphQLFieldResolver<T = any, U = any, I = any> = (

@@ -14,8 +14,8 @@ import {
   setDirectiveDefinitionArgs,
   setFieldArgs,
   TypeDefinitionsRecord,
-} from "../schema/definition";
-import { inspect } from "../jsutils/inspect";
+} from "@graphitation/supermassive-ast";
+import { inspect } from "@graphitation/supermassive-common";
 
 export function mergeSchemaDefinitions(
   accumulator: SchemaDefinitions,

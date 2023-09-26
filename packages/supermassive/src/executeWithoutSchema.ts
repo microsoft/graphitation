@@ -1,70 +1,77 @@
-import {
-  GraphQLError,
-  GraphQLLeafType,
-  Kind,
-  locatedError,
-  DocumentNode,
-  FragmentDefinitionNode,
-  OperationDefinitionNode,
-  OperationTypeDefinitionNode,
-} from "graphql";
-import {
-  collectFields,
-  collectSubfields as _collectSubfields,
-  FieldGroup,
-  GroupedFieldSet,
-} from "./collectFields";
-import { devAssert } from "./jsutils/devAssert";
-import { inspect } from "./jsutils/inspect";
-import { invariant } from "./jsutils/invariant";
-import { isIterableObject } from "./jsutils/isIterableObject";
-import { isObjectLike } from "./jsutils/isObjectLike";
-import { isPromise } from "./jsutils/isPromise";
-import type { Maybe } from "./jsutils/Maybe";
-import type { ObjMap } from "./jsutils/ObjMap";
-import type { Path } from "./jsutils/Path";
-import { addPath, pathToArray } from "./jsutils/Path";
-import { promiseForObject } from "./jsutils/promiseForObject";
-import type { PromiseOrValue } from "./jsutils/PromiseOrValue";
-import { promiseReduce } from "./jsutils/promiseReduce";
 import type {
-  ExecutionWithoutSchemaArgs,
-  FunctionFieldResolver,
-  ResolveInfo,
-  TypeResolver,
-  ExecutionResult,
-  TotalExecutionResult,
-  SubsequentIncrementalExecutionResult,
-  IncrementalDeferResult,
-  IncrementalResult,
-  IncrementalStreamResult,
-  IncrementalExecutionResult,
-  SchemaFragment,
-  SchemaFragmentLoader,
-  SchemaFragmentRequest,
-} from "./types";
+  FieldDefinition,
+  TypeReference,
+} from "@graphitation/supermassive-ast";
+import * as Definitions from "@graphitation/supermassive-ast";
 import {
-  getArgumentValues,
-  getVariableValues,
-  getDirectiveValues,
-} from "./values";
-import { ExecutionHooks } from "./hooks/types";
-import { arraysAreEqual } from "./utilities/array";
-import { isAsyncIterable } from "./jsutils/isAsyncIterable";
-import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
-import { GraphQLStreamDirective } from "./schema/directives";
-import { memoize3 } from "./jsutils/memoize3";
-import {
+  GraphQLStreamDirective,
   inspectTypeReference,
   isListType,
   isNonNullType,
   typeNameFromReference,
   unwrap,
-} from "./schema/reference";
-import type { TypeReference } from "./schema/reference";
-import type { FieldDefinition } from "./schema/definition";
-import * as Definitions from "./schema/definition";
-import * as Resolvers from "./schema/resolvers";
+} from "@graphitation/supermassive-ast";
+import type {
+  Maybe,
+  ObjMap,
+  Path,
+  PromiseOrValue,
+} from "@graphitation/supermassive-common";
+import {
+  addPath,
+  arraysAreEqual,
+  devAssert,
+  inspect,
+  invariant,
+  isAsyncIterable,
+  isIterableObject,
+  isObjectLike,
+  isPromise,
+  mapAsyncIterator,
+  memoize3,
+  pathToArray,
+  promiseForObject,
+  promiseReduce,
+} from "@graphitation/supermassive-common";
+import {
+  DocumentNode,
+  FragmentDefinitionNode,
+  GraphQLError,
+  GraphQLLeafType,
+  Kind,
+  OperationDefinitionNode,
+  OperationTypeDefinitionNode,
+  locatedError,
+} from "graphql";
+import {
+  FieldGroup,
+  GroupedFieldSet,
+  collectSubfields as _collectSubfields,
+  collectFields,
+} from "./collectFields";
+import { ExecutionHooks } from "./hooks/types";
+import type {
+  ExecutionResult,
+  ExecutionWithoutSchemaArgs,
+  FunctionFieldResolver,
+  IncrementalDeferResult,
+  IncrementalExecutionResult,
+  IncrementalResult,
+  IncrementalStreamResult,
+  ResolveInfo,
+  SchemaFragment,
+  SchemaFragmentLoader,
+  SchemaFragmentRequest,
+  SubsequentIncrementalExecutionResult,
+  TotalExecutionResult,
+  TypeResolver,
+} from "./types";
+import * as Resolvers from "./utilities/resolvers";
+import {
+  getArgumentValues,
+  getDirectiveValues,
+  getVariableValues,
+} from "./values";
 
 /**
  * A memoized collection of relevant subfields with regard to the return
