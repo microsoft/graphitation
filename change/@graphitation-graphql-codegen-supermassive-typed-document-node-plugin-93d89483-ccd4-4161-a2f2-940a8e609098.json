@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Support supermassive v3 annotations",
+  "packageName": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
