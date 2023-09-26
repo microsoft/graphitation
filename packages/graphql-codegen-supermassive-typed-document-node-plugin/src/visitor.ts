@@ -20,15 +20,22 @@ import {
   Kind,
   OperationDefinitionNode,
 } from "graphql";
-import { addTypesToRequestDocument } from "@graphitation/supermassive-ast";
+import {
+  addSupermassiveLegacyTypesToRequestDocument,
+  addMinimalViableSchemaToRequestDocument,
+} from "@graphitation/supermassive";
 import { optimizeDocumentNode } from "@graphql-tools/optimize";
 import gqlTag from "graphql-tag";
 
+export type SupermassiveOutputType = "V3" | "V2" | "BOTH";
+
 type RawClientSidePluginConfig = RawClientSideBasePluginConfig & {
   supermassiveDocumentNodeConditional?: string;
+  supermassiveDocumentNodeOutputType?: SupermassiveOutputType;
 };
 type ClientSidePluginConfig = ClientSideBasePluginConfig & {
   supermassiveDocumentNodeConditional?: string;
+  supermassiveDocumentNodeOutputType?: SupermassiveOutputType;
 };
 
 export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
@@ -53,6 +60,8 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
       {
         supermassiveDocumentNodeConditional:
           rawConfig.supermassiveDocumentNodeConditional,
+        supermassiveDocumentNodeOutputType:
+          rawConfig.supermassiveDocumentNodeOutputType || "V3",
       },
       documents,
     );
@@ -88,7 +97,7 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
     node: FragmentDefinitionNode | OperationDefinitionNode,
     annotate = false,
   ): string {
-    const supermassiveNode = addTypesToRequestDocument(this._schema, {
+    const supermassiveNode = this.addTypesToRequestDocument(this._schema, {
       kind: Kind.DOCUMENT,
       definitions: [node],
     }).definitions[0] as FragmentDefinitionNode | OperationDefinitionNode;
@@ -128,7 +137,7 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
           ...gqlObj.definitions.map((t) =>
             JSON.stringify(
               annotate
-                ? addTypesToRequestDocument(this._schema, {
+                ? this.addTypesToRequestDocument(this._schema, {
                     kind: Kind.DOCUMENT,
                     definitions: [t],
                   }).definitions[0]
@@ -159,7 +168,7 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
       ...document,
       definitions: document.definitions.map(
         (t) =>
-          addTypesToRequestDocument(this._schema, {
+          this.addTypesToRequestDocument(this._schema, {
             kind: Kind.DOCUMENT,
             definitions: [t],
           }).definitions[0],
@@ -180,5 +189,35 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
     }
 
     return super.getDocumentNodeSignature(resultType, variablesTypes, node);
+  }
+
+  private addTypesToRequestDocument(
+    schema: GraphQLSchema,
+    document: DocumentNode,
+  ) {
+    let finalDocument = document;
+    if (
+      this.config.supermassiveDocumentNodeOutputType === "V3" ||
+      this.config.supermassiveDocumentNodeOutputType === "BOTH"
+    ) {
+      finalDocument = addMinimalViableSchemaToRequestDocument(
+        schema,
+        document,
+        {
+          addTo: "PROPERTY",
+        },
+      );
+    }
+
+    if (
+      this.config.supermassiveDocumentNodeOutputType === "V2" ||
+      this.config.supermassiveDocumentNodeOutputType === "BOTH"
+    ) {
+      finalDocument = addSupermassiveLegacyTypesToRequestDocument(
+        schema,
+        document,
+      ) as unknown as DocumentNode;
+    }
+    return finalDocument;
   }
 }

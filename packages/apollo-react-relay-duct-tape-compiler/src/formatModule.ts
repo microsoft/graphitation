@@ -8,16 +8,19 @@ import { buildSchema, Source } from "graphql";
 import { readFileSync } from "fs";
 import dedupeJSONStringify from "relay-compiler/lib/util/dedupeJSONStringify";
 
-import type { DocumentNode } from "graphql";
+import type { DocumentNode, GraphQLSchema } from "graphql";
 import type { FormatModule } from "relay-compiler/lib/language/RelayLanguagePluginInterface";
 import type { CompiledArtefactModule } from "./types";
 import { Fragment } from "relay-compiler";
+
+export type SupermassiveOutputType = "V3" | "V2" | "BOTH";
 
 export interface FormatModuleOptions {
   emitDocuments: boolean;
   emitNarrowObservables: boolean;
   emitQueryDebugComments: boolean;
   emitSupermassiveDocuments: boolean;
+  supermassiveDocumentNodeOutputType: SupermassiveOutputType;
   schema: string;
 }
 
@@ -35,13 +38,17 @@ export async function formatModuleFactory(
         )
       : null;
 
-  let addTypesToRequestDocument:
+  let addSupermassiveLegacyTypesToRequestDocument:
     | undefined
-    | typeof import("@graphitation/supermassive-ast").addTypesToRequestDocument;
+    | typeof import("@graphitation/supermassive").addSupermassiveLegacyTypesToRequestDocument;
+  let addMinimalViableSchemaToRequestDocument:
+    | undefined
+    | typeof import("@graphitation/supermassive").addMinimalViableSchemaToRequestDocument;
   if (options.emitSupermassiveDocuments) {
-    ({ addTypesToRequestDocument } = await import(
-      "@graphitation/supermassive-ast"
-    ));
+    ({
+      addSupermassiveLegacyTypesToRequestDocument,
+      addMinimalViableSchemaToRequestDocument,
+    } = await import("@graphitation/supermassive"));
   }
 
   function generateExports(
@@ -70,11 +77,14 @@ export async function formatModuleFactory(
       exports.metadata = extractMetadataTransform(exports.watchQueryDocument);
     }
 
-    if (addTypesToRequestDocument && exports.executionQueryDocument) {
+    if (options.emitSupermassiveDocuments && exports.executionQueryDocument) {
       invariant(schema, "Expected a schema instance");
       exports.executionQueryDocument = addTypesToRequestDocument(
         schema,
         exports.executionQueryDocument,
+        options.supermassiveDocumentNodeOutputType,
+        addMinimalViableSchemaToRequestDocument,
+        addSupermassiveLegacyTypesToRequestDocument,
       ) as DocumentNode;
     }
 
@@ -142,4 +152,34 @@ function printExports(exports: CompiledArtefactModule) {
   return `export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = ${dedupeJSONStringify(
     exports,
   )};\n\nexport default documents;`;
+}
+
+function addTypesToRequestDocument(
+  schema: GraphQLSchema,
+  document: DocumentNode,
+  supermassiveDocumentNodeOutputType: SupermassiveOutputType,
+  addMinimalViableSchemaToRequestDocument: any,
+  addSupermassiveLegacyTypesToRequestDocument: any,
+) {
+  let finalDocument = document;
+  if (
+    supermassiveDocumentNodeOutputType === "V3" ||
+    supermassiveDocumentNodeOutputType === "BOTH"
+  ) {
+    finalDocument = addMinimalViableSchemaToRequestDocument(schema, document, {
+      addTo: "DIRECTIVE",
+    });
+  }
+
+  if (
+    supermassiveDocumentNodeOutputType === "V2" ||
+    supermassiveDocumentNodeOutputType === "BOTH" ||
+    !supermassiveDocumentNodeOutputType
+  ) {
+    finalDocument = addSupermassiveLegacyTypesToRequestDocument(
+      schema,
+      document,
+    ) as unknown as DocumentNode;
+  }
+  return finalDocument;
 }

@@ -105,6 +105,23 @@ async function main() {
         default: false,
         type: "boolean",
       },
+      supermassiveDocumentNodeOutputType: {
+        demandOption: false,
+        default: "V2",
+        type: "string",
+        coerce: (value) => {
+          switch (value) {
+            case "V2":
+              return "V2";
+            case "V3":
+              return "V3";
+            case "BOTH":
+              return "BOTH";
+            default:
+              return "V2";
+          }
+        },
+      },
     })
     .help().argv;
 

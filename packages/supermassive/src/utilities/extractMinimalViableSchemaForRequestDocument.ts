@@ -36,6 +36,7 @@ import {
   createScalarTypeDefinition,
   createUnionTypeDefinition,
   DirectiveDefinitionTuple,
+  encodeDirectiveLocation,
   EnumTypeDefinitionTuple,
   FieldDefinition,
   getDirectiveDefinitionArgs,
@@ -244,7 +245,11 @@ function addDirective(
   const name = directive.name;
   let tuple = directives.find((d) => getDirectiveName(d) === name);
   if (!tuple) {
-    tuple = [directive.name];
+    tuple = [
+      directive.name,
+      {},
+      directive.locations.map(encodeDirectiveLocation),
+    ];
     directives.push(tuple);
   }
 

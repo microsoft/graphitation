@@ -1,3 +1,7 @@
+import {
+  DirectiveLocation as GraphQLDirectiveLocation,
+  DirectiveLocationEnum,
+} from "graphql";
 import { isSpecifiedScalarType } from "./resolvers";
 import { TypeName, TypeReference, typeNameFromReference } from "./reference";
 
@@ -103,18 +107,67 @@ const enum InputValueKeys {
 export type InputValueDefinition = TypeReference | InputValueDefinitionTuple;
 export type InputValueDefinitionRecord = Record<string, InputValueDefinition>;
 
+const DirectiveLocation = {
+  QUERY: 0,
+  MUTATION: 1,
+  SUBSCRIPTION: 2,
+  FIELD: 3,
+  FRAGMENT_DEFINITION: 4,
+  FRAGMENT_SPREAD: 5,
+  INLINE_FRAGMENT: 6,
+  VARIABLE_DEFINITION: 7,
+  /** Type System Definitions */
+  SCHEMA: 8,
+  SCALAR: 9,
+  OBJECT: 10,
+  FIELD_DEFINITION: 11,
+  ARGUMENT_DEFINITION: 12,
+  INTERFACE: 13,
+  UNION: 14,
+  ENUM: 15,
+  ENUM_VALUE: 16,
+  INPUT_OBJECT: 17,
+  INPUT_FIELD_DEFINITION: 18,
+} as const;
+type DirectiveLocation =
+  (typeof DirectiveLocation)[keyof typeof DirectiveLocation];
+const DirectiveLocationToGraphQL = {
+  0: GraphQLDirectiveLocation.QUERY,
+  1: GraphQLDirectiveLocation.MUTATION,
+  2: GraphQLDirectiveLocation.SUBSCRIPTION,
+  3: GraphQLDirectiveLocation.FIELD,
+  4: GraphQLDirectiveLocation.FRAGMENT_DEFINITION,
+  5: GraphQLDirectiveLocation.FRAGMENT_SPREAD,
+  6: GraphQLDirectiveLocation.INLINE_FRAGMENT,
+  7: GraphQLDirectiveLocation.VARIABLE_DEFINITION,
+  /** Type System Definitions */
+  8: GraphQLDirectiveLocation.SCHEMA,
+  9: GraphQLDirectiveLocation.SCALAR,
+  10: GraphQLDirectiveLocation.OBJECT,
+  11: GraphQLDirectiveLocation.FIELD_DEFINITION,
+  12: GraphQLDirectiveLocation.ARGUMENT_DEFINITION,
+  13: GraphQLDirectiveLocation.INTERFACE,
+  14: GraphQLDirectiveLocation.UNION,
+  15: GraphQLDirectiveLocation.ENUM,
+  16: GraphQLDirectiveLocation.ENUM_VALUE,
+  17: GraphQLDirectiveLocation.INPUT_OBJECT,
+  18: GraphQLDirectiveLocation.INPUT_FIELD_DEFINITION,
+} as const;
+
 export type DirectiveName = string;
 export type DirectiveTuple = [
   name: DirectiveName,
-  arguments?: Record<string, unknown>, // JS values (cannot be a variable inside schema definition, so it is fine)
+  arguments: Record<string, unknown>, // JS values (cannot be a variable inside schema definition, so it is fine)
 ];
 export type DirectiveDefinitionTuple = [
   name: DirectiveName,
-  arguments?: InputValueDefinitionRecord,
+  arguments: InputValueDefinitionRecord,
+  locations: DirectiveLocation[],
 ];
 const enum DirectiveKeys {
   name = 0,
   arguments = 1,
+  locations = 2,
 }
 
 export type TypeDefinitionsRecord = Record<TypeName, TypeDefinitionTuple>;
@@ -370,6 +423,23 @@ export function isSubType(
 
 export function getDirectiveName(tuple: DirectiveDefinitionTuple): string {
   return tuple[DirectiveKeys.name];
+}
+
+export function getDirectiveLocations(
+  tuple: DirectiveDefinitionTuple,
+): DirectiveLocation[] {
+  return tuple[DirectiveKeys.locations];
+}
+
+export function encodeDirectiveLocation(
+  location: DirectiveLocationEnum,
+): DirectiveLocation {
+  return DirectiveLocation[location];
+}
+export function decodeDirectiveLocation(
+  location: DirectiveLocation,
+): DirectiveLocationEnum {
+  return DirectiveLocationToGraphQL[location];
 }
 
 export function isObjectTypeDefinition(
