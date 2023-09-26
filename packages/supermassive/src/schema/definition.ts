@@ -108,50 +108,50 @@ export type InputValueDefinition = TypeReference | InputValueDefinitionTuple;
 export type InputValueDefinitionRecord = Record<string, InputValueDefinition>;
 
 const DirectiveLocation = {
-  QUERY: 0,
-  MUTATION: 1,
-  SUBSCRIPTION: 2,
-  FIELD: 3,
-  FRAGMENT_DEFINITION: 4,
-  FRAGMENT_SPREAD: 5,
-  INLINE_FRAGMENT: 6,
-  VARIABLE_DEFINITION: 7,
+  QUERY: 1,
+  MUTATION: 2,
+  SUBSCRIPTION: 3,
+  FIELD: 4,
+  FRAGMENT_DEFINITION: 5,
+  FRAGMENT_SPREAD: 6,
+  INLINE_FRAGMENT: 7,
+  VARIABLE_DEFINITION: 8,
   /** Type System Definitions */
-  SCHEMA: 8,
-  SCALAR: 9,
-  OBJECT: 10,
-  FIELD_DEFINITION: 11,
-  ARGUMENT_DEFINITION: 12,
-  INTERFACE: 13,
-  UNION: 14,
-  ENUM: 15,
-  ENUM_VALUE: 16,
-  INPUT_OBJECT: 17,
-  INPUT_FIELD_DEFINITION: 18,
+  SCHEMA: 9,
+  SCALAR: 10,
+  OBJECT: 11,
+  FIELD_DEFINITION: 12,
+  ARGUMENT_DEFINITION: 13,
+  INTERFACE: 14,
+  UNION: 15,
+  ENUM: 16,
+  ENUM_VALUE: 17,
+  INPUT_OBJECT: 18,
+  INPUT_FIELD_DEFINITION: 19,
 } as const;
 type DirectiveLocation =
   (typeof DirectiveLocation)[keyof typeof DirectiveLocation];
 const DirectiveLocationToGraphQL = {
-  0: GraphQLDirectiveLocation.QUERY,
-  1: GraphQLDirectiveLocation.MUTATION,
-  2: GraphQLDirectiveLocation.SUBSCRIPTION,
-  3: GraphQLDirectiveLocation.FIELD,
-  4: GraphQLDirectiveLocation.FRAGMENT_DEFINITION,
-  5: GraphQLDirectiveLocation.FRAGMENT_SPREAD,
-  6: GraphQLDirectiveLocation.INLINE_FRAGMENT,
-  7: GraphQLDirectiveLocation.VARIABLE_DEFINITION,
+  1: GraphQLDirectiveLocation.QUERY,
+  2: GraphQLDirectiveLocation.MUTATION,
+  3: GraphQLDirectiveLocation.SUBSCRIPTION,
+  4: GraphQLDirectiveLocation.FIELD,
+  5: GraphQLDirectiveLocation.FRAGMENT_DEFINITION,
+  6: GraphQLDirectiveLocation.FRAGMENT_SPREAD,
+  7: GraphQLDirectiveLocation.INLINE_FRAGMENT,
+  8: GraphQLDirectiveLocation.VARIABLE_DEFINITION,
   /** Type System Definitions */
-  8: GraphQLDirectiveLocation.SCHEMA,
-  9: GraphQLDirectiveLocation.SCALAR,
-  10: GraphQLDirectiveLocation.OBJECT,
-  11: GraphQLDirectiveLocation.FIELD_DEFINITION,
-  12: GraphQLDirectiveLocation.ARGUMENT_DEFINITION,
-  13: GraphQLDirectiveLocation.INTERFACE,
-  14: GraphQLDirectiveLocation.UNION,
-  15: GraphQLDirectiveLocation.ENUM,
-  16: GraphQLDirectiveLocation.ENUM_VALUE,
-  17: GraphQLDirectiveLocation.INPUT_OBJECT,
-  18: GraphQLDirectiveLocation.INPUT_FIELD_DEFINITION,
+  9: GraphQLDirectiveLocation.SCHEMA,
+  10: GraphQLDirectiveLocation.SCALAR,
+  11: GraphQLDirectiveLocation.OBJECT,
+  12: GraphQLDirectiveLocation.FIELD_DEFINITION,
+  13: GraphQLDirectiveLocation.ARGUMENT_DEFINITION,
+  14: GraphQLDirectiveLocation.INTERFACE,
+  15: GraphQLDirectiveLocation.UNION,
+  16: GraphQLDirectiveLocation.ENUM,
+  17: GraphQLDirectiveLocation.ENUM_VALUE,
+  18: GraphQLDirectiveLocation.INPUT_OBJECT,
+  19: GraphQLDirectiveLocation.INPUT_FIELD_DEFINITION,
 } as const;
 
 export type DirectiveName = string;
@@ -161,13 +161,13 @@ export type DirectiveTuple = [
 ];
 export type DirectiveDefinitionTuple = [
   name: DirectiveName,
-  arguments: InputValueDefinitionRecord,
   locations: DirectiveLocation[],
+  arguments?: InputValueDefinitionRecord,
 ];
 const enum DirectiveKeys {
   name = 0,
-  arguments = 1,
-  locations = 2,
+  locations = 1,
+  arguments = 2,
 }
 
 export type TypeDefinitionsRecord = Record<TypeName, TypeDefinitionTuple>;
@@ -602,9 +602,14 @@ export function getUnionTypeMembers(
   return tuple[UnionKeys.types];
 }
 
-export function getDefinitionArguments(
-  def: FieldDefinition | DirectiveDefinitionTuple,
+export function getFieldArguments(
+  def: FieldDefinition,
 ): InputValueDefinitionRecord | undefined {
-  // Note: both FieldDefinition and DirectiveDefinition store arguments at the same position
   return Array.isArray(def) ? def[FieldKeys.arguments] : undefined;
+}
+
+export function getDirectiveArguments(
+  def: DirectiveDefinitionTuple,
+): InputValueDefinitionRecord | undefined {
+  return Array.isArray(def) ? def[DirectiveKeys.arguments] : undefined;
 }

@@ -37,7 +37,7 @@ describe(addMinimalViableSchemaToRequestDocument, () => {
       }`,
     );
     expect(printedDoc).toMatchInlineSnapshot(`
-      "query @i18n(locale: "en_US") @schema(definitions: "{\\"types\\":{\\"Query\\":[2,{\\"film\\":[\\"Film\\",{\\"id\\":10}]}],\\"Film\\":[2,{},[\\"Node\\"]]},\\"directives\\":[[\\"i18n\\",{\\"locale\\":1},[0]]]}") {
+      "query @i18n(locale: "en_US") @schema(definitions: "{\\"types\\":{\\"Query\\":[2,{\\"film\\":[\\"Film\\",{\\"id\\":10}]}],\\"Film\\":[2,{},[\\"Node\\"]]},\\"directives\\":[[\\"i18n\\",[1],{\\"locale\\":1}]]}") {
         film(id: 42) {
           __typename
         }

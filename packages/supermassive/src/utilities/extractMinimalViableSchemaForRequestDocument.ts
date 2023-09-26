@@ -245,11 +245,7 @@ function addDirective(
   const name = directive.name;
   let tuple = directives.find((d) => getDirectiveName(d) === name);
   if (!tuple) {
-    tuple = [
-      directive.name,
-      {},
-      directive.locations.map(encodeDirectiveLocation),
-    ];
+    tuple = [directive.name, directive.locations.map(encodeDirectiveLocation)];
     directives.push(tuple);
   }
 

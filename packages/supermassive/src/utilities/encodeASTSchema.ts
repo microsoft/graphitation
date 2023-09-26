@@ -196,11 +196,20 @@ function encodeInputValue(
 function encodeDirective(
   node: DirectiveDefinitionNode,
 ): DirectiveDefinitionTuple {
-  return [
-    node.name.value,
-    node.arguments ? encodeArguments(node) : {},
-    node.locations.map((node) =>
-      encodeDirectiveLocation(node.value as DirectiveLocationEnum),
-    ),
-  ];
+  if (node.arguments?.length) {
+    return [
+      node.name.value,
+      node.locations.map((node) =>
+        encodeDirectiveLocation(node.value as DirectiveLocationEnum),
+      ),
+      encodeArguments(node),
+    ];
+  } else {
+    return [
+      node.name.value,
+      node.locations.map((node) =>
+        encodeDirectiveLocation(node.value as DirectiveLocationEnum),
+      ),
+    ];
+  }
 }

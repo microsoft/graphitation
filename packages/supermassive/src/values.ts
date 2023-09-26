@@ -13,12 +13,13 @@ import { ExecutionContext } from "./executeWithoutSchema";
 import {
   DirectiveDefinitionTuple,
   FieldDefinition,
-  getDefinitionArguments,
+  getFieldArguments,
   getDirectiveName,
   getInputDefaultValue,
   getInputValueTypeReference,
   isDefined,
   isInputType,
+  getDirectiveArguments,
 } from "./schema/definition";
 import { valueFromAST } from "./utilities/valueFromAST";
 import { coerceInputValue } from "./utilities/coerceInputValue";
@@ -168,7 +169,10 @@ export function getArgumentValues(
 ): { [argument: string]: unknown } {
   const definitions = exeContext.schemaFragment.definitions;
   const coercedValues: { [argument: string]: unknown } = {};
-  const argumentDefs = getDefinitionArguments(def);
+  const argumentDefs =
+    node.kind === Kind.FIELD
+      ? getFieldArguments(def as FieldDefinition)
+      : getDirectiveArguments(def as DirectiveDefinitionTuple);
   if (!argumentDefs) {
     return coercedValues;
   }
