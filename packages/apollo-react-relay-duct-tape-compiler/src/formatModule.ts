@@ -167,7 +167,7 @@ function addTypesToRequestDocument(
     supermassiveDocumentNodeOutputType === "BOTH"
   ) {
     finalDocument = addMinimalViableSchemaToRequestDocument(schema, document, {
-      addTo: "DIRECTIVE",
+      addTo: "PROPERTY",
     });
   }
 

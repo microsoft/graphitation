@@ -284,28 +284,19 @@ describe("formatModule", () => {
                   }
                 ]
               },
-              "directives": [
-                {
-                  "kind": "Directive",
-                  "name": {
-                    "kind": "Name",
-                    "value": "schema"
-                  },
-                  "arguments": [
+              "__defs": {
+                "types": {
+                  "Message": [
+                    2,
                     {
-                      "kind": "Argument",
-                      "name": {
-                        "kind": "Name",
-                        "value": "definitions"
-                      },
-                      "value": {
-                        "kind": "StringValue",
-                        "value": "{\\"types\\":{\\"Message\\":[2,{\\"id\\":10},[\\"Node\\"]]}}"
-                      }
-                    }
+                      "id": 10
+                    },
+                    [
+                      "Node"
+                    ]
                   ]
                 }
-              ]
+              }
             }
           ]
         }

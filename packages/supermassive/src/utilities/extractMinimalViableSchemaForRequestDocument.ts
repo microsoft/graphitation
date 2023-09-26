@@ -77,7 +77,7 @@ export function extractMinimalViableSchemaForRequestDocument(
   schema: GraphQLSchema,
   requestDocument: DocumentNode,
 ): ExtractMinimalViableSchemaResult {
-  const types: TypeDefinitionsRecord = Object.create(null);
+  const types: TypeDefinitionsRecord = {};
   const directives: DirectiveDefinitionTuple[] = [];
   const unknownDirectives: DirectiveNode[] = [];
 
