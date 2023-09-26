@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Update dependency to use new major version of supermassive-ast package",
+  "packageName": "@graphitation/graphql-codegen-typescript-operations",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}

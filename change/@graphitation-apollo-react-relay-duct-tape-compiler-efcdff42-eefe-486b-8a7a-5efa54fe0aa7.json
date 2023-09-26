@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Update dependency to use new major of supermassive-ast package",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape-compiler",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}

@@ -1,0 +1,10 @@
+{
+  "type": "major",
+  "comment": {
+    "title": "",
+    "value": ""
+  },
+  "packageName": "@graphitation/supermassive-common",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}

@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "Move tools and schema stuff to a separate package",
+  "packageName": "@graphitation/supermassive-ast",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
