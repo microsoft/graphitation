@@ -166,9 +166,13 @@ function addTypesToRequestDocument(
     supermassiveDocumentNodeOutputType === "V3" ||
     supermassiveDocumentNodeOutputType === "BOTH"
   ) {
-    finalDocument = addMinimalViableSchemaToRequestDocument(schema, document, {
-      addTo: "PROPERTY",
-    });
+    finalDocument = addMinimalViableSchemaToRequestDocument(
+      schema,
+      finalDocument,
+      {
+        addTo: "PROPERTY",
+      },
+    );
   }
 
   if (
@@ -178,7 +182,7 @@ function addTypesToRequestDocument(
   ) {
     finalDocument = addSupermassiveLegacyTypesToRequestDocument(
       schema,
-      document,
+      finalDocument,
     ) as unknown as DocumentNode;
   }
   return finalDocument;
