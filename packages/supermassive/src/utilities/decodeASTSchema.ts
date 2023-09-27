@@ -331,7 +331,7 @@ function decodeDirective(
       kind: Kind.NAME,
       value: decodeDirectiveLocation(loc),
     })),
-    // TODO? locations and repeatable are irrelevant for execution
+    // TODO? repeatable are irrelevant for execution
     repeatable: false,
   };
 }
