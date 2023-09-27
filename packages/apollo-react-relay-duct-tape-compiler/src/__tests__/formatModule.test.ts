@@ -219,6 +219,93 @@ describe("formatModule", () => {
     `);
   });
 
+  it("adds supermassive MVS to the execution doc", async () => {
+    expect(
+      await formatModule(
+        {
+          emitDocuments: true,
+          emitSupermassiveDocuments: true,
+          emitNarrowObservables: false,
+          supermassiveDocumentNodeOutputType: "V3",
+        },
+        {
+          definition: {
+            kind: "Request",
+          } as Request,
+          typeText: `
+            export type MessageComponent_message = {
+              id: string;
+            };
+          `,
+          docText: `
+            fragment MessageComponent_message on Message {
+              id
+            }
+          `,
+        },
+      ),
+    ).toMatchInlineSnapshot(`
+      "/* tslint:disable */
+      /* eslint-disable */
+      // @ts-nocheck
+
+
+                  export type MessageComponent_message = {
+                    id: string;
+                  };
+                
+
+      export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = {
+        "executionQueryDocument": {
+          "kind": "Document",
+          "definitions": [
+            {
+              "kind": "FragmentDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "MessageComponent_message"
+              },
+              "typeCondition": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Message"
+                }
+              },
+              "selectionSet": {
+                "kind": "SelectionSet",
+                "selections": [
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "id"
+                    }
+                  }
+                ]
+              },
+              "__defs": {
+                "types": {
+                  "Message": [
+                    2,
+                    {
+                      "id": 10
+                    },
+                    [
+                      "Node"
+                    ]
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      };
+
+      export default documents;"
+    `);
+  });
+
   it("also prints the watch query doc when emitting narrow observables", async () => {
     expect(
       await formatModule(

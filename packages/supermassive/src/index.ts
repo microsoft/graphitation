@@ -1,140 +1,144 @@
+export { executeWithSchema } from "./executeWithSchema";
 export {
   executeWithoutSchema,
-  isTotalExecutionResult,
   isIncrementalExecutionResult,
+  isTotalExecutionResult,
 } from "./executeWithoutSchema";
-export { executeWithSchema } from "./executeWithSchema";
-export { subscribeWithSchema } from "./subscribeWithSchema";
-export { subscribeWithoutSchema } from "./subscribeWithoutSchema";
-export { encodeASTSchema } from "./utilities/encodeASTSchema";
-export { decodeASTSchema } from "./utilities/decodeASTSchema";
-export { mergeSchemaDefinitions } from "./utilities/mergeSchemaDefinitions";
-export { mergeResolvers } from "./utilities/mergeResolvers";
-export { annotateDocumentGraphQLTransform } from "./utilities/annotateDocumentGraphQLTransform";
 export {
-  addMinimalViableSchemaToRequestDocument,
-  addMinimalViableSchemaToExecutableDefinitionNode,
-} from "./utilities/addMinimalViableSchemaToRequestDocument";
-export { extractMinimalViableSchemaForRequestDocument } from "./utilities/extractMinimalViableSchemaForRequestDocument";
-export { specifiedScalarResolvers } from "./schema/resolvers";
-export {
+  isListType,
+  isNonNullType,
   typeNameFromReference,
   typeReferenceFromName,
   typeReferenceFromNode,
-  isNonNullType,
-  isListType,
   unwrap,
   unwrapAll,
 } from "./schema/reference";
 export type {
-  TypeReference,
-  TypeName,
   SpecTypeIndex,
+  TypeName,
+  TypeReference,
 } from "./schema/reference";
+export { specifiedScalarResolvers } from "./schema/resolvers";
+export { subscribeWithSchema } from "./subscribeWithSchema";
+export { subscribeWithoutSchema } from "./subscribeWithoutSchema";
+export {
+  addMinimalViableSchemaToExecutableDefinitionNode,
+  addMinimalViableSchemaToRequestDocument,
+} from "./utilities/addMinimalViableSchemaToRequestDocument";
+export { annotateDocumentGraphQLTransform } from "./utilities/annotateDocumentGraphQLTransform";
+export { decodeASTSchema } from "./utilities/decodeASTSchema";
+export { encodeASTSchema } from "./utilities/encodeASTSchema";
+export { extractMinimalViableSchemaForRequestDocument } from "./utilities/extractMinimalViableSchemaForRequestDocument";
+export { mergeResolvers } from "./utilities/mergeResolvers";
+export { mergeSchemaDefinitions } from "./utilities/mergeSchemaDefinitions";
 
-export type { ExtractMinimalViableSchemaResult } from "./utilities/extractMinimalViableSchemaForRequestDocument";
+export type {
+  CompositeTypeTuple,
+  DirectiveDefinitionTuple,
+  DirectiveName,
+  DirectiveTuple,
+  EnumTypeDefinitionTuple,
+  FieldDefinition,
+  FieldDefinitionRecord,
+  FieldDefinitionTuple,
+  InputObjectTypeDefinitionTuple,
+  InputValueDefinition,
+  InputValueDefinitionRecord,
+  InputValueDefinitionTuple,
+  InterfaceImplementationsRecord,
+  InterfaceTypeDefinitionTuple,
+  ObjectTypeDefinitionTuple,
+  OperationTypes,
+  ScalarTypeDefinitionTuple,
+  SchemaDefinitions,
+  TypeDefinitionTuple,
+  TypeDefinitionsRecord,
+  UnionTypeDefinitionTuple,
+} from "./schema/definition";
 export type {
   AddMinimalViableSchemaToRequestDocumentOptions,
   ExecutableDefinitionNodeWithInlinedSchema,
 } from "./utilities/addMinimalViableSchemaToRequestDocument";
-export type {
-  SchemaDefinitions,
-  OperationTypes,
-  TypeDefinitionsRecord,
-  TypeDefinitionTuple,
-  DirectiveDefinitionTuple,
-  InterfaceTypeDefinitionTuple,
-  ObjectTypeDefinitionTuple,
-  InputValueDefinition,
-  InputValueDefinitionRecord,
-  UnionTypeDefinitionTuple,
-  EnumTypeDefinitionTuple,
-  ScalarTypeDefinitionTuple,
-  InputObjectTypeDefinitionTuple,
-  FieldDefinition,
-  FieldDefinitionTuple,
-  CompositeTypeTuple,
-  FieldDefinitionRecord,
-  InputValueDefinitionTuple,
-  DirectiveTuple,
-  InterfaceImplementationsRecord,
-  DirectiveName,
-} from "./schema/definition";
+export type { ExtractMinimalViableSchemaResult } from "./utilities/extractMinimalViableSchemaForRequestDocument";
 
 export type {
-  ObjectTypeResolver,
-  ScalarTypeResolver,
   EnumTypeResolver,
-  FunctionFieldResolver,
-  Resolvers,
-  UserResolvers,
-  ResolveInfo,
-  TotalExecutionResult,
   ExecutionResult,
-  SubscriptionExecutionResult,
+  FunctionFieldResolver,
   IncrementalExecutionResult,
+  ObjectTypeResolver,
+  ResolveInfo,
+  Resolvers,
+  ScalarTypeResolver,
   SchemaFragment,
+  SchemaFragmentForReturnTypeRequest,
+  SchemaFragmentForRuntimeTypeRequest,
   SchemaFragmentLoader,
   SchemaFragmentLoaderResult,
   SchemaFragmentRequest,
-  SchemaFragmentForReturnTypeRequest,
-  SchemaFragmentForRuntimeTypeRequest,
+  SubscriptionExecutionResult,
+  TotalExecutionResult,
+  UserResolvers,
 } from "./types";
 
 export type { PromiseOrValue } from "./jsutils/PromiseOrValue";
 
 export type {
-  NameNode,
-  DocumentNode,
-  OperationDefinitionNode,
-  VariableDefinitionNode,
-  VariableNode,
-  SelectionSetNode,
-  FieldNode,
   ArgumentNode,
+  BooleanValueNode,
+  DirectiveDefinitionNode,
+  DirectiveNode,
+  DocumentNode,
+  EnumTypeDefinitionNode,
+  EnumTypeExtensionNode,
+  EnumValueDefinitionNode,
+  EnumValueNode,
+  FieldDefinitionNode,
+  FieldNode,
+  FloatValueNode,
+  FragmentDefinitionNode,
   FragmentSpreadNode,
   InlineFragmentNode,
-  FragmentDefinitionNode,
+  InputObjectTypeDefinitionNode,
+  InputObjectTypeExtensionNode,
+  InputValueDefinitionNode,
   IntValueNode,
-  FloatValueNode,
-  StringValueNode,
-  BooleanValueNode,
-  NullValueNode,
-  EnumValueNode,
-  ListValueNode,
-  ObjectValueNode,
-  ObjectFieldNode,
-  DirectiveNode,
-  NamedTypeNode,
+  InterfaceTypeDefinitionNode,
+  InterfaceTypeExtensionNode,
   ListTypeNode,
+  ListValueNode,
+  NameNode,
+  NamedTypeNode,
   NonNullTypeNode,
-  SchemaDefinitionNode,
+  NullValueNode,
+  ObjectFieldNode,
+  ObjectTypeDefinitionNode,
+  ObjectTypeExtensionNode,
+  ObjectValueNode,
+  OperationDefinitionNode,
   OperationTypeDefinitionNode,
   ScalarTypeDefinitionNode,
-  ObjectTypeDefinitionNode,
-  FieldDefinitionNode,
-  InputValueDefinitionNode,
-  InterfaceTypeDefinitionNode,
-  UnionTypeDefinitionNode,
-  EnumTypeDefinitionNode,
-  EnumValueDefinitionNode,
-  InputObjectTypeDefinitionNode,
-  DirectiveDefinitionNode,
-  SchemaExtensionNode,
   ScalarTypeExtensionNode,
-  ObjectTypeExtensionNode,
-  InterfaceTypeExtensionNode,
+  SchemaDefinitionNode,
+  SchemaExtensionNode,
+  SelectionSetNode,
+  StringValueNode,
+  UnionTypeDefinitionNode,
   UnionTypeExtensionNode,
-  EnumTypeExtensionNode,
-  InputObjectTypeExtensionNode,
+  VariableDefinitionNode,
+  VariableNode,
 } from "graphql";
 
 export type {
-  BeforeFieldResolveHookArgs,
-  AfterFieldResolveHookArgs,
-  AfterFieldCompleteHookArgs,
-  BeforeFieldResolveHook,
-  AfterFieldResolveHook,
   AfterFieldCompleteHook,
+  AfterFieldCompleteHookArgs,
+  AfterFieldResolveHook,
+  AfterFieldResolveHookArgs,
+  BeforeFieldResolveHook,
+  BeforeFieldResolveHookArgs,
   ExecutionHooks,
 } from "./hooks/types";
+
+export * as LegacyTypedAST from "./legacyAST/TypedAST";
+export { addTypesToRequestDocument as addSupermassiveLegacyTypesToRequestDocument } from "./legacyAST/addTypesToRequestDocument";
+export { annotateDocumentGraphQLTransform as annotateDocumentWithSupermassiveLegacyTypesGraphQLTransform } from "./legacyAST/annotateDocumentGraphQLTransform";

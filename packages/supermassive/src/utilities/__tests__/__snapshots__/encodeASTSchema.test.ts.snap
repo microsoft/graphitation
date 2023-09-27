@@ -6,24 +6,43 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
     "directives": [
       [
         "skip",
+        [
+          4,
+          6,
+          7,
+        ],
         {
           "if": 7,
         },
       ],
       [
         "include",
+        [
+          4,
+          6,
+          7,
+        ],
         {
           "if": 7,
         },
       ],
       [
         "include2",
+        [
+          4,
+          6,
+          7,
+        ],
         {
           "if": 7,
         },
       ],
       [
         "myRepeatableDir",
+        [
+          11,
+          14,
+        ],
         {
           "name": 6,
         },
@@ -341,6 +360,9 @@ exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
     "directives": [
       [
         "i18n",
+        [
+          1,
+        ],
         {
           "locale": 1,
         },

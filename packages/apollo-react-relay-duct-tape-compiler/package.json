@@ -41,7 +41,7 @@
   },
   "peerDependencies": {
     "graphql": "^15.0.0",
-    "@graphitation/supermassive-ast": "^2.0.1",
+    "@graphitation/supermassive": "^3.0.1",
     "typescript": "^4.3.5"
   },
   "publishConfig": {

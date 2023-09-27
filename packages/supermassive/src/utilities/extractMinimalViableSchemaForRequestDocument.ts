@@ -36,6 +36,7 @@ import {
   createScalarTypeDefinition,
   createUnionTypeDefinition,
   DirectiveDefinitionTuple,
+  encodeDirectiveLocation,
   EnumTypeDefinitionTuple,
   FieldDefinition,
   getDirectiveDefinitionArgs,
@@ -76,7 +77,7 @@ export function extractMinimalViableSchemaForRequestDocument(
   schema: GraphQLSchema,
   requestDocument: DocumentNode,
 ): ExtractMinimalViableSchemaResult {
-  const types: TypeDefinitionsRecord = Object.create(null);
+  const types: TypeDefinitionsRecord = {};
   const directives: DirectiveDefinitionTuple[] = [];
   const unknownDirectives: DirectiveNode[] = [];
 
@@ -244,7 +245,7 @@ function addDirective(
   const name = directive.name;
   let tuple = directives.find((d) => getDirectiveName(d) === name);
   if (!tuple) {
-    tuple = [directive.name];
+    tuple = [directive.name, directive.locations.map(encodeDirectiveLocation)];
     directives.push(tuple);
   }
 

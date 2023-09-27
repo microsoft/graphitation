@@ -15,6 +15,7 @@ import {
   UnionTypeExtensionNode,
   EnumTypeExtensionNode,
   ScalarTypeExtensionNode,
+  DirectiveLocationEnum,
 } from "graphql";
 import {
   DirectiveDefinitionTuple,
@@ -35,6 +36,7 @@ import {
   createInputObjectTypeDefinition,
   createInterfaceTypeDefinition,
   createUnionTypeDefinition,
+  encodeDirectiveLocation,
 } from "../schema/definition";
 import { typeReferenceFromNode, TypeReference } from "../schema/reference";
 import { valueFromASTUntyped } from "./valueFromASTUntyped";
@@ -194,7 +196,20 @@ function encodeInputValue(
 function encodeDirective(
   node: DirectiveDefinitionNode,
 ): DirectiveDefinitionTuple {
-  return !node.arguments?.length
-    ? [node.name.value]
-    : [node.name.value, encodeArguments(node)];
+  if (node.arguments?.length) {
+    return [
+      node.name.value,
+      node.locations.map((node) =>
+        encodeDirectiveLocation(node.value as DirectiveLocationEnum),
+      ),
+      encodeArguments(node),
+    ];
+  } else {
+    return [
+      node.name.value,
+      node.locations.map((node) =>
+        encodeDirectiveLocation(node.value as DirectiveLocationEnum),
+      ),
+    ];
+  }
 }
