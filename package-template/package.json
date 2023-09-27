@@ -27,12 +27,13 @@
   "access": "public",
   "publishConfig": {
     "main": "./lib/index",
-    "types": "./lib/index.d.ts",
+
     "module": "./lib/index.mjs",
     "exports": {
       ".": {
         "import": "./lib/index.mjs",
-        "require": "./lib/index.js"
+        "require": "./lib/index.js",
+				"types": "./lib/index.d.ts"
       }
     },
     "bin": {

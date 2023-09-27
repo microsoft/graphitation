@@ -2,6 +2,27 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Thu, 21 Sep 2023 06:28:45 GMT",
+      "tag": "@graphitation/cli_v1.7.1",
+      "version": "1.7.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/supermassive-extractors to v2.2.1",
+            "commit": "f9d5d849e26f5062a064880c4e0e9706ba6e811b"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.6.1",
+            "commit": "f9d5d849e26f5062a064880c4e0e9706ba6e811b"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 02 Aug 2023 12:50:20 GMT",
       "tag": "@graphitation/cli_v1.7.0",
       "version": "1.7.0",

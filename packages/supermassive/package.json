@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/supermassive",
   "license": "MIT",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
@@ -41,7 +41,8 @@
     "exports": {
       ".": {
         "import": "./lib/index.mjs",
-        "require": "./lib/index.js"
+        "require": "./lib/index.js",
+        "types": "./lib/index.d.ts"
       }
     }
   },

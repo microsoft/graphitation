@@ -1,8 +1,35 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape-compiler
 
-This log was last generated on Wed, 16 Aug 2023 06:31:21 GMT and should not be manually modified.
+This log was last generated on Wed, 27 Sep 2023 14:33:57 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.3.1
+
+Wed, 27 Sep 2023 14:33:57 GMT
+
+### Patches
+
+- Fix transforms to actually do both v3 and v2 (mnovikov@microsoft.com)
+
+## 1.3.0
+
+Wed, 27 Sep 2023 08:50:33 GMT
+
+### Minor changes
+
+- Support supermassive v3 annotations (mnovikov@microsoft.com)
+- Bump @graphitation/supermassive to v3.1.0
+
+## 1.2.4
+
+Thu, 21 Sep 2023 06:28:45 GMT
+
+### Patches
+
+- Add exports entry for types to package.json (sverre.johansen@gmail.com)
+- Bump @graphitation/graphql-js-tag to v0.9.1
+- Bump @graphitation/supermassive-ast to v2.0.1
 
 ## 1.2.3
 

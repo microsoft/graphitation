@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/graphql-codegen-resolvers-models",
   "license": "MIT",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
@@ -37,7 +37,8 @@
     "exports": {
       ".": {
         "import": "./lib/index.mjs",
-        "require": "./lib/index.js"
+        "require": "./lib/index.js",
+        "types": "./lib/index.d.ts"
       }
     }
   }

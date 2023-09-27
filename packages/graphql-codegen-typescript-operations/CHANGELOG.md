@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-typescript-operations
 
-This log was last generated on Thu, 03 Aug 2023 09:39:38 GMT and should not be manually modified.
+This log was last generated on Thu, 21 Sep 2023 06:28:45 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.3.1
+
+Thu, 21 Sep 2023 06:28:45 GMT
+
+### Patches
+
+- Add exports entry for types to package.json (sverre.johansen@gmail.com)
 
 ## 1.3.0
 

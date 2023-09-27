@@ -22,16 +22,22 @@ import {
   visit as visitAST,
   ASTNode,
 } from "graphql";
-import { addTypesToRequestDocument } from "@graphitation/supermassive-ast";
-import { addMinimalViableSchemaToRequestDocument } from "@graphitation/supermassive";
+import {
+  addSupermassiveLegacyTypesToRequestDocument,
+  addMinimalViableSchemaToRequestDocument,
+} from "@graphitation/supermassive";
 import { optimizeDocumentNode } from "@graphql-tools/optimize";
 import gqlTag from "graphql-tag";
 
+export type SupermassiveOutputType = "V3" | "V2" | "BOTH";
+
 type RawClientSidePluginConfig = RawClientSideBasePluginConfig & {
   supermassiveDocumentNodeConditional?: string;
+  supermassiveDocumentNodeOutputType?: SupermassiveOutputType;
 };
 type ClientSidePluginConfig = ClientSideBasePluginConfig & {
   supermassiveDocumentNodeConditional?: string;
+  supermassiveDocumentNodeOutputType?: SupermassiveOutputType;
 };
 
 export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
@@ -56,6 +62,8 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
       {
         supermassiveDocumentNodeConditional:
           rawConfig.supermassiveDocumentNodeConditional,
+        supermassiveDocumentNodeOutputType:
+          rawConfig.supermassiveDocumentNodeOutputType || "V3",
       },
       documents,
     );
@@ -91,14 +99,10 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
     node: FragmentDefinitionNode | OperationDefinitionNode,
     annotate = false,
   ): string {
-    const supermassiveNode = addMinimalViableSchemaToRequestDocument(
-      this._schema,
-      {
-        kind: Kind.DOCUMENT,
-        definitions: [node],
-      },
-      { addTo: "PROPERTY" },
-    ).definitions[0] as FragmentDefinitionNode | OperationDefinitionNode;
+    const supermassiveNode = this.addTypesToRequestDocument(this._schema, {
+      kind: Kind.DOCUMENT,
+      definitions: [node],
+    }).definitions[0] as FragmentDefinitionNode | OperationDefinitionNode;
 
     const fragments = this._transformFragments(supermassiveNode);
 
@@ -135,14 +139,10 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
           ...gqlObj.definitions.map((t) =>
             JSON.stringify(
               annotate
-                ? addMinimalViableSchemaToRequestDocument(
-                    this._schema,
-                    {
-                      kind: Kind.DOCUMENT,
-                      definitions: [t],
-                    },
-                    { addTo: "PROPERTY" },
-                  ).definitions[0]
+                ? this.addTypesToRequestDocument(this._schema, {
+                    kind: Kind.DOCUMENT,
+                    definitions: [t],
+                  }).definitions[0]
                 : t,
             ),
           ),
@@ -170,14 +170,10 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
       ...document,
       definitions: document.definitions.map(
         (t) =>
-          addMinimalViableSchemaToRequestDocument(
-            this._schema,
-            {
-              kind: Kind.DOCUMENT,
-              definitions: [t],
-            },
-            { addTo: "PROPERTY" },
-          ).definitions[0],
+          this.addTypesToRequestDocument(this._schema, {
+            kind: Kind.DOCUMENT,
+            definitions: [t],
+          }).definitions[0],
       ),
     } as DocumentNode;
   }
@@ -195,6 +191,36 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
     }
 
     return super.getDocumentNodeSignature(resultType, variablesTypes, node);
+  }
+
+  private addTypesToRequestDocument(
+    schema: GraphQLSchema,
+    document: DocumentNode,
+  ) {
+    let finalDocument = document;
+    if (
+      this.config.supermassiveDocumentNodeOutputType === "V3" ||
+      this.config.supermassiveDocumentNodeOutputType === "BOTH"
+    ) {
+      finalDocument = addMinimalViableSchemaToRequestDocument(
+        schema,
+        finalDocument,
+        {
+          addTo: "PROPERTY",
+        },
+      );
+    }
+
+    if (
+      this.config.supermassiveDocumentNodeOutputType === "V2" ||
+      this.config.supermassiveDocumentNodeOutputType === "BOTH"
+    ) {
+      finalDocument = addSupermassiveLegacyTypesToRequestDocument(
+        schema,
+        finalDocument,
+      ) as unknown as DocumentNode;
+    }
+    return finalDocument;
   }
 }
 

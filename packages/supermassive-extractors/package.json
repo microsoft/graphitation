@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/supermassive-extractors",
   "license": "MIT",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
@@ -29,7 +29,8 @@
     "exports": {
       ".": {
         "import": "./lib/index.mjs",
-        "require": "./lib/index.js"
+        "require": "./lib/index.js",
+        "types": "./lib/index.d.ts"
       }
     }
   },

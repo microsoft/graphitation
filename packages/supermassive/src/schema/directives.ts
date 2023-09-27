@@ -1,6 +1,8 @@
+import { DirectiveLocation } from "graphql";
 import {
   DirectiveDefinitionTuple,
   DirectiveName,
+  encodeDirectiveLocation,
   getDirectiveName,
 } from "./definition";
 
@@ -9,8 +11,12 @@ import {
  */
 export const GraphQLIncludeDirective: DirectiveDefinitionTuple = [
   "include",
+  [
+    DirectiveLocation.FIELD,
+    DirectiveLocation.FRAGMENT_SPREAD,
+    DirectiveLocation.INLINE_FRAGMENT,
+  ].map(encodeDirectiveLocation),
   { if: "Boolean!" },
-  // TODO: locations for all directives (maybe not - they are irrelevant for runtime)?
 ];
 
 /**
@@ -18,6 +24,11 @@ export const GraphQLIncludeDirective: DirectiveDefinitionTuple = [
  */
 export const GraphQLSkipDirective: DirectiveDefinitionTuple = [
   "skip",
+  [
+    DirectiveLocation.FIELD,
+    DirectiveLocation.FRAGMENT_SPREAD,
+    DirectiveLocation.INLINE_FRAGMENT,
+  ].map(encodeDirectiveLocation),
   { if: "Boolean!" },
 ];
 
@@ -25,12 +36,12 @@ export const GraphQLSkipDirective: DirectiveDefinitionTuple = [
  * Constant string used for default reason for a deprecation.
  */
 export const DEFAULT_DEPRECATION_REASON = "No longer supported";
-
 /**
  * Used to declare element of a GraphQL schema as deprecated.
  */
 export const GraphQLDeprecatedDirective: DirectiveDefinitionTuple = [
   "deprecated",
+  [DirectiveLocation.FIELD_DEFINITION].map(encodeDirectiveLocation),
   { reason: ["String", DEFAULT_DEPRECATION_REASON] },
 ];
 
@@ -39,6 +50,7 @@ export const GraphQLDeprecatedDirective: DirectiveDefinitionTuple = [
  */
 export const GraphQLSpecifiedByDirective: DirectiveDefinitionTuple = [
   "specifiedBy",
+  [DirectiveLocation.INPUT_OBJECT].map(encodeDirectiveLocation),
   { url: "String!" },
 ];
 
@@ -47,6 +59,9 @@ export const GraphQLSpecifiedByDirective: DirectiveDefinitionTuple = [
  */
 export const GraphQLDeferDirective: DirectiveDefinitionTuple = [
   "defer",
+  [DirectiveLocation.FRAGMENT_SPREAD, DirectiveLocation.INLINE_FRAGMENT].map(
+    encodeDirectiveLocation,
+  ),
   { if: ["Boolean!", true], label: "String" },
 ];
 
@@ -55,6 +70,7 @@ export const GraphQLDeferDirective: DirectiveDefinitionTuple = [
  */
 export const GraphQLStreamDirective: DirectiveDefinitionTuple = [
   "stream",
+  [DirectiveLocation.FIELD].map(encodeDirectiveLocation),
   { if: ["Boolean!", true], label: "String", initialCount: ["Int", 0] },
 ];
 
@@ -70,16 +86,19 @@ export const specifiedDirectives: ReadonlyArray<DirectiveDefinitionTuple> =
     GraphQLDeferDirective,
     GraphQLStreamDirective,
   ]);
-
 export const SUPERMASSIVE_SCHEMA_DIRECTIVE_NAME = "schema";
 export const SUPERMASSIVE_SCHEMA_DIRECTIVE_DEFINITIONS_ARGUMENT_NAME =
   "definitions";
-
 /**
  * Used to conditionally stream list fields.
  */
 export const SupermassiveSchemaDirective: DirectiveDefinitionTuple = [
   SUPERMASSIVE_SCHEMA_DIRECTIVE_NAME,
+  [
+    DirectiveLocation.QUERY,
+    DirectiveLocation.MUTATION,
+    DirectiveLocation.SUBSCRIPTION,
+  ].map(encodeDirectiveLocation),
   { [SUPERMASSIVE_SCHEMA_DIRECTIVE_DEFINITIONS_ARGUMENT_NAME]: "String!" }, // Essentially JSON
 ];
 
@@ -93,7 +112,6 @@ export function isKnownDirective(
     name === SUPERMASSIVE_SCHEMA_DIRECTIVE_NAME
   );
 }
-
 export function isSpecifiedDirective(
   directive: DirectiveName | DirectiveDefinitionTuple,
 ): boolean {

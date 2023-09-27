@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-transform-graphql-js-tag
 
-This log was last generated on Tue, 20 Jun 2023 11:38:47 GMT and should not be manually modified.
+This log was last generated on Thu, 21 Sep 2023 06:28:45 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.1.1
+
+Thu, 21 Sep 2023 06:28:45 GMT
+
+### Patches
+
+- Add exports entry for types to package.json (sverre.johansen@gmail.com)
 
 ## 1.1.0
 
