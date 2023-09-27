@@ -70,7 +70,7 @@ import {
   TypePolicy,
   FieldPolicy,
 } from "@apollo/client";
-import { StoreObject } from "@apollo/client/utilities";
+import { StoreObject, addTypenameToDocument } from "@apollo/client/utilities";
 import { KeySpecifier } from "@apollo/client/cache/inmemory/policies";
 export { TypePolicies };
 
@@ -87,7 +87,7 @@ import {
 } from "./relayDocumentUtils";
 
 import type { Schema } from "./vendor/relay-compiler/lib/core/Schema";
-import type { DocumentNode, DefinitionNode } from "graphql";
+import type { DocumentNode } from "graphql";
 import { HandlerProvider } from "relay-runtime/lib/handlers/RelayDefaultHandlerProvider";
 
 declare global {
@@ -120,6 +120,11 @@ export type EntityReadFunction = (
   args: Record<string, any> | null,
 ) => StoreObject;
 
+export type RelayApolloCacheMode =
+  | "RUNTIME_SCHEMA"
+  | "RUNTIME_SUPERMASSIVE"
+  | "BUILDTIME";
+
 export class RelayApolloCache extends ApolloCache<RecordMap> {
   private store: Store;
   private usingExternalStore: boolean;
@@ -129,10 +134,13 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   private typePolicies: TypePolicies;
   private pessimism?: Map<string, [Snapshot, Disposable]>;
   private schema?: Schema;
-  private typenameDocumentCache?: WeakMap<DocumentNode, DocumentNode>;
+  private transformedDocumentCache: WeakMap<
+    DocumentNode,
+    DocumentNode & { __relay?: any }
+  >;
   private debugEnvironment?: Environment;
   private missingFieldHandlers: MissingFieldHandler[];
-  private useSupermassiveDefs: boolean;
+  private mode: RelayApolloCacheMode;
 
   constructor(
     options: {
@@ -144,7 +152,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
        * Specify this if Relay IR needs to be generated at runtime.
        */
       schema?: DocumentNode;
-      useSupermassiveDefs?: boolean;
+      mode?: RelayApolloCacheMode;
     } = {},
   ) {
     super();
@@ -174,11 +182,10 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
 
     this.getDataID = this.getDataID.bind(this);
     this.schema = options.schema && transformSchema(options.schema);
-    if (options.schema) {
-      this.typenameDocumentCache = new WeakMap();
-    }
+    this.transformedDocumentCache = new WeakMap();
 
-    this.useSupermassiveDefs = !!options.useSupermassiveDefs;
+    this.mode =
+      options.mode || (this.schema && "RUNTIME_SCHEMA") || "BUILDTIME";
 
     const devToolsHook = globalThis.__RELAY_DEVTOOLS_HOOK__;
     if (devToolsHook) {
@@ -204,31 +211,42 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
 
   // We need to filter duplicate entries out in relayTransformDocuments, so ensure results here
   // always return the same object.
-  transformDocument(document: DocumentNode): DocumentNode {
-    if (this.schema) {
-      let result = this.typenameDocumentCache!.get(document);
-      if (!result) {
-        // TODO: Add test with multiple references to the same fragment
-        //
-        // addTypenameToDocument will create new objects for each definition in the list,
-        // this means that even identical dupes will be replaced with new objects and we
-        // won't be able to easily dedupe afterwards. RelayParser needs this deduped, so
-        // we do this now.
-        result = {
-          ...document,
-          definitions: (document.definitions as DefinitionNode[]).filter(
-            uniqueFilter,
-          ),
-        };
-        this.typenameDocumentCache!.set(document, result);
-        // If someone calls transformDocument and then mistakenly passes the
-        // result back into an API that also calls transformDocument, make sure
-        // we don't keep creating new query documents.
-        this.typenameDocumentCache!.set(result, result);
+  transformDocument(document: DocumentNode): DocumentNode & { __relay?: any } {
+    let result = this.transformedDocumentCache.get(document);
+    if (!result) {
+      if (this.schema) {
+        result = addTypenameToDocument(document);
+      } else {
+        result = document;
       }
-      return result;
+      let taggedNode;
+      if (this.mode === "BUILDTIME" && (result as any).__relay) {
+        taggedNode = result.__relay;
+        // taggedNode = transformRelayIRForTypePolicies(
+        // result,
+        // true,
+        // this.typePolicies,
+        // );
+      } else if (this.mode === "RUNTIME_SCHEMA" && this.schema) {
+        taggedNode = transformDocument(
+          this.schema,
+          result,
+          true,
+          this.typePolicies,
+        );
+      } else if (this.mode === "RUNTIME_SUPERMASSIVE") {
+        taggedNode = transformDocumentWithSupermassiveMVS(
+          result,
+          true,
+          this.typePolicies,
+        );
+      }
+      (result as any).__relay = taggedNode;
+
+      this.transformedDocumentCache.set(document, result);
+      this.transformedDocumentCache.set(result, result);
     }
-    return document;
+    return result;
   }
 
   /****************************************************************************
@@ -564,21 +582,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
    ***************************************************************************/
 
   private getTaggedNode(document: DocumentNode & { __relay?: any }) {
-    const taggedNode =
-      (this.useSupermassiveDefs &&
-        transformDocumentWithSupermassiveMVS(
-          this.transformDocument(document),
-          !!this.pessimism,
-          this.typePolicies,
-        )) ||
-      (this.schema &&
-        transformDocument(
-          this.schema,
-          this.transformDocument(document),
-          !!this.pessimism,
-          this.typePolicies,
-        )) ||
-      document.__relay;
+    const taggedNode = this.transformDocument(document).__relay;
     invariant(
       taggedNode,
       "RelayApolloCache: Expected document to contain Relay IR.",

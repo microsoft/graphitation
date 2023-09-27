@@ -13,7 +13,7 @@ query CacheTestConversationKeyFieldsWithConnectionLike(
       after: $after
       sort: $sort
       callerInfo: $callerInfo
-    ) {
+    ) @keyArgs(args: ["sort"]) {
       edges {
         node {
           id

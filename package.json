@@ -6,11 +6,6 @@
       "examples/*",
       "packages/*",
       "scripts"
-    ],
-    "nohoist": [
-      "**/relay-apollo-duct-tape/@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
-      "**/relay-apollo-duct-tape/@graphitation/graphql-codegen-typescript-operations",
-      "**/relay-apollo-duct-tape/@graphitation/supermassive"
     ]
   },
   "scripts": {

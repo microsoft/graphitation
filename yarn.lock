@@ -1834,11 +1834,6 @@
   version "0.0.0"
   uid ""
 
-"@graphitation/graphql-codegen-supermassive-typed-document-node-plugin@^0.5.0":
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/@graphitation/graphql-codegen-supermassive-typed-document-node-plugin/-/graphql-codegen-supermassive-typed-document-node-plugin-0.5.1.tgz#932e6254d56dc574a84ec8f0190f9393bfb2db86"
-  integrity sha512-HA6injJaJ/PPQVDnHp4JBeSeSczMC7uDXRP/MOzgDN+m4BeGTOkzQAjSht4HVFV43gOIx113WiIM58HIdk66oQ==
-
 "@graphitation/supermassive-ast@*":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@graphitation/supermassive-ast/-/supermassive-ast-2.0.0.tgz#d49155c6b7213811d99b8609d496d6c460a4d1e2"

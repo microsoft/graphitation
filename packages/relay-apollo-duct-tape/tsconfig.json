@@ -10,7 +10,7 @@
   },
   "include": ["src"],
   "references": [
-    { "path": "../graphql-codegen-relay-ir-plugin" },
+    // { "path": "../graphql-codegen-relay-ir-plugin" },
     { "path": "../graphql-codegen-supermassive-typed-document-node-plugin" },
     { "path": "../graphql-codegen-typescript-operations" }
   ]

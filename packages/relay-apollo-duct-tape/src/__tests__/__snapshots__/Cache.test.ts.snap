@@ -3,11 +3,13 @@
 exports[`Type Policies key-fields concerning normalization with custom key-fields works with apollo 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "messages": {
       "edges": [
         {
           "node": {
+            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -126,11 +128,15 @@ exports[`Type Policies key-fields concerning normalization with custom key-field
 exports[`Type Policies key-fields concerning normalization with custom key-fields works with relayWithRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "messages": {
+      "__typename": "MessagesConnection",
       "edges": [
         {
+          "__typename": "MessagesConnectionEdge",
           "node": {
+            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -192,11 +198,15 @@ exports[`Type Policies key-fields concerning normalization with custom key-field
 exports[`Type Policies key-fields concerning normalization with custom key-fields works with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "messages": {
+      "__typename": "MessagesConnection",
       "edges": [
         {
+          "__typename": "MessagesConnectionEdge",
           "node": {
+            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -258,11 +268,13 @@ exports[`Type Policies key-fields concerning normalization with custom key-field
 exports[`Type Policies key-fields concerning normalization with default key-fields works with apollo 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "messages": {
       "edges": [
         {
           "node": {
+            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -381,11 +393,15 @@ exports[`Type Policies key-fields concerning normalization with default key-fiel
 exports[`Type Policies key-fields concerning normalization with default key-fields works with relayWithRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "messages": {
+      "__typename": "MessagesConnection",
       "edges": [
         {
+          "__typename": "MessagesConnectionEdge",
           "node": {
+            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -447,11 +463,15 @@ exports[`Type Policies key-fields concerning normalization with default key-fiel
 exports[`Type Policies key-fields concerning normalization with default key-fields works with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "messages": {
+      "__typename": "MessagesConnection",
       "edges": [
         {
+          "__typename": "MessagesConnectionEdge",
           "node": {
+            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -513,11 +533,13 @@ exports[`Type Policies key-fields concerning normalization with default key-fiel
 exports[`Type Policies key-fields concerning normalization without key-fields works with apollo 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "messages": {
       "edges": [
         {
           "node": {
+            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -630,11 +652,15 @@ exports[`Type Policies key-fields concerning normalization without key-fields wo
 exports[`Type Policies key-fields concerning normalization without key-fields works with relayWithRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "messages": {
+      "__typename": "MessagesConnection",
       "edges": [
         {
+          "__typename": "MessagesConnectionEdge",
           "node": {
+            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -696,11 +722,15 @@ exports[`Type Policies key-fields concerning normalization without key-fields wo
 exports[`Type Policies key-fields concerning normalization without key-fields works with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "messages": {
+      "__typename": "MessagesConnection",
       "edges": [
         {
+          "__typename": "MessagesConnectionEdge",
           "node": {
+            "__typename": "Message",
             "authorId": "author-42",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "id": "message-42",
@@ -762,11 +792,13 @@ exports[`Type Policies key-fields concerning normalization without key-fields wo
 exports[`Type Policies keyArgs connection-like with apollo 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "messagesWithExtraField": {
       "edges": [
         {
           "node": {
+            "__typename": "Message",
             "id": "message-42",
           },
         },
@@ -780,16 +812,19 @@ exports[`Type Policies keyArgs connection-like with apollo 1`] = `
 exports[`Type Policies keyArgs connection-like with apollo 2`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "messagesWithExtraField": {
       "edges": [
         {
           "node": {
+            "__typename": "Message",
             "id": "message-42",
           },
         },
         {
           "node": {
+            "__typename": "Message",
             "id": "message-43",
           },
         },
@@ -803,11 +838,15 @@ exports[`Type Policies keyArgs connection-like with apollo 2`] = `
 exports[`Type Policies keyArgs connection-like with relayWithRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "messagesWithExtraField": {
+      "__typename": "MessagesConnection",
       "edges": [
         {
+          "__typename": "MessagesConnectionEdge",
           "node": {
+            "__typename": "Message",
             "id": "message-42",
           },
         },
@@ -821,16 +860,22 @@ exports[`Type Policies keyArgs connection-like with relayWithRuntimeGeneratedIR 
 exports[`Type Policies keyArgs connection-like with relayWithRuntimeGeneratedIR 2`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "messagesWithExtraField": {
+      "__typename": "MessagesConnection",
       "edges": [
         {
+          "__typename": "MessagesConnectionEdge",
           "node": {
+            "__typename": "Message",
             "id": "message-42",
           },
         },
         {
+          "__typename": "MessagesConnectionEdge",
           "node": {
+            "__typename": "Message",
             "id": "message-43",
           },
         },
@@ -844,11 +889,15 @@ exports[`Type Policies keyArgs connection-like with relayWithRuntimeGeneratedIR 
 exports[`Type Policies keyArgs connection-like with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "messagesWithExtraField": {
+      "__typename": "MessagesConnection",
       "edges": [
         {
+          "__typename": "MessagesConnectionEdge",
           "node": {
+            "__typename": "Message",
             "id": "message-42",
           },
         },
@@ -862,16 +911,22 @@ exports[`Type Policies keyArgs connection-like with relayWithSupermassiveRuntime
 exports[`Type Policies keyArgs connection-like with relayWithSupermassiveRuntimeGeneratedIR 2`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "messagesWithExtraField": {
+      "__typename": "MessagesConnection",
       "edges": [
         {
+          "__typename": "MessagesConnectionEdge",
           "node": {
+            "__typename": "Message",
             "id": "message-42",
           },
         },
         {
+          "__typename": "MessagesConnectionEdge",
           "node": {
+            "__typename": "Message",
             "id": "message-43",
           },
         },
@@ -885,6 +940,7 @@ exports[`Type Policies keyArgs connection-like with relayWithSupermassiveRuntime
 exports[`Type Policies keyArgs plain keyArg with apollo 1`] = `
 {
   "conversationWithGarbage": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "no-caller-info",
   },
@@ -894,6 +950,7 @@ exports[`Type Policies keyArgs plain keyArg with apollo 1`] = `
 exports[`Type Policies keyArgs plain keyArg with apollo 2`] = `
 {
   "conversationWithGarbage": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "caller-info",
   },
@@ -903,6 +960,7 @@ exports[`Type Policies keyArgs plain keyArg with apollo 2`] = `
 exports[`Type Policies keyArgs plain keyArg with relayWithRuntimeGeneratedIR 1`] = `
 {
   "conversationWithGarbage": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "no-caller-info",
   },
@@ -912,6 +970,7 @@ exports[`Type Policies keyArgs plain keyArg with relayWithRuntimeGeneratedIR 1`]
 exports[`Type Policies keyArgs plain keyArg with relayWithRuntimeGeneratedIR 2`] = `
 {
   "conversationWithGarbage": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "caller-info",
   },
@@ -921,6 +980,7 @@ exports[`Type Policies keyArgs plain keyArg with relayWithRuntimeGeneratedIR 2`]
 exports[`Type Policies keyArgs plain keyArg with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
 {
   "conversationWithGarbage": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "no-caller-info",
   },
@@ -930,6 +990,7 @@ exports[`Type Policies keyArgs plain keyArg with relayWithSupermassiveRuntimeGen
 exports[`Type Policies keyArgs plain keyArg with relayWithSupermassiveRuntimeGeneratedIR 2`] = `
 {
   "conversationWithGarbage": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "caller-info",
   },
@@ -938,6 +999,7 @@ exports[`Type Policies keyArgs plain keyArg with relayWithSupermassiveRuntimeGen
 
 exports[`Type Policies read functions / missing field handlers works with apollo 1`] = `
 {
+  "__typename": "Message",
   "id": "message-42",
   "text": "Hello World",
 }
@@ -946,6 +1008,7 @@ exports[`Type Policies read functions / missing field handlers works with apollo
 exports[`Type Policies read functions / missing field handlers works with apollo 2`] = `
 {
   "message": {
+    "__typename": "Message",
     "id": "message-42",
     "text": "Hello World",
   },
@@ -972,6 +1035,7 @@ exports[`Type Policies read functions / missing field handlers works with relayW
 
 exports[`Type Policies read functions / missing field handlers works with relayWithRuntimeGeneratedIR 1`] = `
 {
+  "__typename": "Message",
   "id": "message-42",
   "text": "Hello World",
 }
@@ -980,6 +1044,7 @@ exports[`Type Policies read functions / missing field handlers works with relayW
 exports[`Type Policies read functions / missing field handlers works with relayWithRuntimeGeneratedIR 2`] = `
 {
   "message": {
+    "__typename": "Message",
     "id": "message-42",
     "text": "Hello World",
   },
@@ -988,6 +1053,7 @@ exports[`Type Policies read functions / missing field handlers works with relayW
 
 exports[`Type Policies read functions / missing field handlers works with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
 {
+  "__typename": "Message",
   "id": "message-42",
   "text": "Hello World",
 }
@@ -996,77 +1062,17 @@ exports[`Type Policies read functions / missing field handlers works with relayW
 exports[`Type Policies read functions / missing field handlers works with relayWithSupermassiveRuntimeGeneratedIR 2`] = `
 {
   "message": {
+    "__typename": "Message",
     "id": "message-42",
     "text": "Hello World",
   },
 }
 `;
 
-exports[`transformDocument adds __typename to documents with apollo 1`] = `
-"query CacheTestQuery($conversationId: String!, $includeNestedData: Boolean = false) {
-  conversation(id: $conversationId) {
-    id
-    title
-    ... on Conversation @include(if: $includeNestedData) {
-      messages(first: 10) {
-        edges {
-          node {
-            id
-            authorId
-            text
-            createdAt
-            __typename
-          }
-          __typename
-        }
-        __typename
-      }
-      __typename
-    }
-    ...CacheTestFragment
-    __typename
-  }
-}
-
-fragment CacheTestFragment on Conversation {
-  id
-  title
-  __typename
-}
-"
-`;
-
-exports[`transformDocument adds __typename to documents with relayWithRuntimeGeneratedIR 1`] = `
-"query CacheTestQuery($conversationId: String!, $includeNestedData: Boolean = false) {
-  conversation(id: $conversationId) {
-    id
-    title
-    ... on Conversation @include(if: $includeNestedData) {
-      messages(first: 10) {
-        edges {
-          node {
-            id
-            authorId
-            text
-            createdAt
-          }
-        }
-      }
-    }
-    ...CacheTestFragment
-  }
-}
-
-fragment CacheTestFragment on Conversation {
-  id
-  title
-}
-"
-`;
-
 exports[`watch works with apollo 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
   },
@@ -1076,6 +1082,7 @@ exports[`watch works with apollo 1`] = `
 exports[`watch works with apollo 2`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 2",
   },
@@ -1085,6 +1092,7 @@ exports[`watch works with apollo 2`] = `
 exports[`watch works with apollo 3`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
   },
@@ -1124,6 +1132,7 @@ exports[`watch works with relayWithBuildtimeGeneratedIR 3`] = `
 exports[`watch works with relayWithRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
   },
@@ -1133,6 +1142,7 @@ exports[`watch works with relayWithRuntimeGeneratedIR 1`] = `
 exports[`watch works with relayWithRuntimeGeneratedIR 2`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 2",
   },
@@ -1142,6 +1152,7 @@ exports[`watch works with relayWithRuntimeGeneratedIR 2`] = `
 exports[`watch works with relayWithRuntimeGeneratedIR 3`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
   },
@@ -1151,6 +1162,7 @@ exports[`watch works with relayWithRuntimeGeneratedIR 3`] = `
 exports[`watch works with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
   },
@@ -1160,6 +1172,7 @@ exports[`watch works with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
 exports[`watch works with relayWithSupermassiveRuntimeGeneratedIR 2`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 2",
   },
@@ -1169,6 +1182,7 @@ exports[`watch works with relayWithSupermassiveRuntimeGeneratedIR 2`] = `
 exports[`watch works with relayWithSupermassiveRuntimeGeneratedIR 3`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World 1",
   },
@@ -1177,6 +1191,7 @@ exports[`watch works with relayWithSupermassiveRuntimeGeneratedIR 3`] = `
 
 exports[`writeFragment/readFragment works with apollo 1`] = `
 {
+  "__typename": "Conversation",
   "id": "42",
   "title": "Hello World",
 }
@@ -1184,6 +1199,7 @@ exports[`writeFragment/readFragment works with apollo 1`] = `
 
 exports[`writeFragment/readFragment works with apollo and optimistic data 1`] = `
 {
+  "__typename": "Conversation",
   "id": "42",
   "title": "Hello World",
 }
@@ -1207,6 +1223,7 @@ exports[`writeFragment/readFragment works with relayWithBuildtimeGeneratedIR and
 
 exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR 1`] = `
 {
+  "__typename": "Conversation",
   "id": "Conversation:42",
   "title": "Hello World",
 }
@@ -1214,6 +1231,7 @@ exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR 1`] =
 
 exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR and optimistic data 1`] = `
 {
+  "__typename": "Conversation",
   "id": "Conversation:42",
   "title": "Hello World",
 }
@@ -1221,6 +1239,7 @@ exports[`writeFragment/readFragment works with relayWithRuntimeGeneratedIR and o
 
 exports[`writeFragment/readFragment works with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
 {
+  "__typename": "Conversation",
   "id": "Conversation:42",
   "title": "Hello World",
 }
@@ -1228,6 +1247,7 @@ exports[`writeFragment/readFragment works with relayWithSupermassiveRuntimeGener
 
 exports[`writeFragment/readFragment works with relayWithSupermassiveRuntimeGeneratedIR and optimistic data 1`] = `
 {
+  "__typename": "Conversation",
   "id": "Conversation:42",
   "title": "Hello World",
 }
@@ -1235,6 +1255,7 @@ exports[`writeFragment/readFragment works with relayWithSupermassiveRuntimeGener
 
 exports[`writeFragment/readFragment works with writeQuery for apollo 1`] = `
 {
+  "__typename": "Conversation",
   "id": "42",
   "title": "Hello World",
 }
@@ -1250,6 +1271,7 @@ exports[`writeFragment/readFragment works with writeQuery for relayWithBuildtime
 
 exports[`writeFragment/readFragment works with writeQuery for relayWithRuntimeGeneratedIR 1`] = `
 {
+  "__typename": "Conversation",
   "id": "42",
   "title": "Hello World",
 }
@@ -1257,6 +1279,7 @@ exports[`writeFragment/readFragment works with writeQuery for relayWithRuntimeGe
 
 exports[`writeFragment/readFragment works with writeQuery for relayWithSupermassiveRuntimeGeneratedIR 1`] = `
 {
+  "__typename": "Conversation",
   "id": "42",
   "title": "Hello World",
 }
@@ -1265,6 +1288,7 @@ exports[`writeFragment/readFragment works with writeQuery for relayWithSupermass
 exports[`writeQuery/readQuery concerning optimistic updates applies update with apollo 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },
@@ -1274,6 +1298,7 @@ exports[`writeQuery/readQuery concerning optimistic updates applies update with 
 exports[`writeQuery/readQuery concerning optimistic updates applies update with apollo 2`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },
@@ -1303,6 +1328,7 @@ exports[`writeQuery/readQuery concerning optimistic updates applies update with 
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },
@@ -1312,6 +1338,7 @@ exports[`writeQuery/readQuery concerning optimistic updates applies update with 
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithRuntimeGeneratedIR 2`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },
@@ -1321,6 +1348,7 @@ exports[`writeQuery/readQuery concerning optimistic updates applies update with 
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },
@@ -1330,6 +1358,7 @@ exports[`writeQuery/readQuery concerning optimistic updates applies update with 
 exports[`writeQuery/readQuery concerning optimistic updates applies update with relayWithSupermassiveRuntimeGeneratedIR 2`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },
@@ -1339,6 +1368,7 @@ exports[`writeQuery/readQuery concerning optimistic updates applies update with 
 exports[`writeQuery/readQuery works with apollo 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },
@@ -1358,6 +1388,7 @@ exports[`writeQuery/readQuery works with relayWithBuildtimeGeneratedIR 1`] = `
 exports[`writeQuery/readQuery works with relayWithRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },
@@ -1367,6 +1398,7 @@ exports[`writeQuery/readQuery works with relayWithRuntimeGeneratedIR 1`] = `
 exports[`writeQuery/readQuery works with relayWithSupermassiveRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
+    "__typename": "Conversation",
     "id": "42",
     "title": "Hello World",
   },

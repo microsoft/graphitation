@@ -37,12 +37,23 @@ const SCHEMA_EXTENSIONS = `
 // Inline all fragments, including for ReaderFragments, but do not remove them.
 const PluginIRTransforms = {
   ...RelayIRTransforms,
+  relayPrintTransforms: RelayIRTransforms.printTransforms.filter(
+    (transform) => {
+      transform.name !== "filterDirectivesTransform";
+    },
+  ),
   fragmentTransforms: [
     InlineFragmentsTransform.transform,
     ...RelayIRTransforms.fragmentTransforms,
   ],
   codegenTransforms: RelayIRTransforms.codegenTransforms
-    .filter((transform) => transform.name !== "generateTypeNameTransform")
+    .filter((transform) => {
+      console.log(transform.name);
+      return (
+        transform.name !== "generateTypeNameTransform" &&
+        transform.name !== "filterDirectivesTransform"
+      );
+    })
     .map((transform) =>
       // FIXME: This isn't actually removing the transform, but unsure what the
       //        ramifications are of removing this now.
@@ -103,6 +114,8 @@ export const plugin: PluginFunction<
         { ...node, params: { ...node.params, text: null } }
       : node,
   );
+
+  console.log(JSON.stringify(generatedNodes, null, 2));
 
   return {
     content: generatedNodes

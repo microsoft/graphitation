@@ -29,7 +29,7 @@ type Conversation implements Node {
   hasUnreadMessages: Boolean!
   messages(first: Int!, after: String, sort: Sort): MessagesConnection!
   messagesWithExtraField(
-    first: Int!
+    first: Int
     after: String
     sort: Sort
     callerInfo: String
@@ -77,3 +77,5 @@ directive @connection(
   handler: String
   dynamicKey_UNSTABLE: String
 ) on FIELD
+
+directive @keyArgs(args: [String!]!) on FIELD

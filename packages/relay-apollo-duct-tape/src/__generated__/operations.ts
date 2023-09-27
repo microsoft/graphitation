@@ -1,5 +1,6 @@
 import { TypedDocumentNode as DocumentNode } from "@graphql-typed-document-node/core";
 export type Maybe<T> = T | null;
+export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = {
   [K in keyof T]: T[K];
 };
@@ -29,20 +30,20 @@ export type Conversation = Node & {
 
 export type ConversationMessagesArgs = {
   first: Scalars["Int"];
-  after?: Maybe<Scalars["String"]>;
-  sort?: Maybe<Sort>;
+  after?: InputMaybe<Scalars["String"]>;
+  sort?: InputMaybe<Sort>;
 };
 
 export type ConversationMessagesWithExtraFieldArgs = {
-  first?: Maybe<Scalars["Int"]>;
-  after?: Maybe<Scalars["String"]>;
-  sort?: Maybe<Sort>;
-  callerInfo?: Maybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  after?: InputMaybe<Scalars["String"]>;
+  sort?: InputMaybe<Sort>;
+  callerInfo?: InputMaybe<Scalars["String"]>;
 };
 
 export type ConversationFilter = {
   id: Scalars["String"];
-  callerInfo?: Maybe<Scalars["String"]>;
+  callerInfo?: InputMaybe<Scalars["String"]>;
 };
 
 export type Message = Node & {
@@ -115,12 +116,12 @@ export type QueryNodeArgs = {
 
 export type QueryConversationWithGarbageArgs = {
   id: Scalars["String"];
-  callerInfo?: Maybe<Scalars["String"]>;
+  callerInfo?: InputMaybe<Scalars["String"]>;
 };
 
 export type QueryConversationWithNestedArgs = {
-  input?: Maybe<ConversationFilter>;
-  moreCallerInfo?: Maybe<Scalars["String"]>;
+  input?: InputMaybe<ConversationFilter>;
+  moreCallerInfo?: InputMaybe<Scalars["String"]>;
 };
 
 export enum Sort {
@@ -339,8 +340,27 @@ export const CacheTestFragment = {
       selectionSet: {
         kind: "SelectionSet",
         selections: [
-          { kind: "Field", name: { kind: "Name", value: "id" } },
-          { kind: "Field", name: { kind: "Name", value: "title" } },
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "id" },
+            __type: {
+              kind: "NonNullType",
+              type: { kind: "NamedType", name: { kind: "Name", value: "ID" } },
+            },
+            arguments: [],
+          },
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "title" },
+            __type: {
+              kind: "NonNullType",
+              type: {
+                kind: "NamedType",
+                name: { kind: "Name", value: "String" },
+              },
+            },
+            arguments: [],
+          },
         ],
       },
       __defs: { types: { Conversation: [2, { id: 10, title: 6 }, ["Node"]] } },
@@ -360,8 +380,27 @@ export const CacheTestMessageFragment = {
       selectionSet: {
         kind: "SelectionSet",
         selections: [
-          { kind: "Field", name: { kind: "Name", value: "id" } },
-          { kind: "Field", name: { kind: "Name", value: "text" } },
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "id" },
+            __type: {
+              kind: "NonNullType",
+              type: { kind: "NamedType", name: { kind: "Name", value: "ID" } },
+            },
+            arguments: [],
+          },
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "text" },
+            __type: {
+              kind: "NonNullType",
+              type: {
+                kind: "NamedType",
+                name: { kind: "Name", value: "String" },
+              },
+            },
+            arguments: [],
+          },
         ],
       },
       __defs: { types: { Message: [2, { id: 10, text: 6 }, ["Node"]] } },
@@ -384,9 +423,39 @@ export const ApolloClientIntegrationTestMessageFragment = {
       selectionSet: {
         kind: "SelectionSet",
         selections: [
-          { kind: "Field", name: { kind: "Name", value: "__typename" } },
-          { kind: "Field", name: { kind: "Name", value: "id" } },
-          { kind: "Field", name: { kind: "Name", value: "text" } },
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "__typename" },
+            __type: {
+              kind: "NonNullType",
+              type: {
+                kind: "NamedType",
+                name: { kind: "Name", value: "String" },
+              },
+            },
+            arguments: [],
+          },
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "id" },
+            __type: {
+              kind: "NonNullType",
+              type: { kind: "NamedType", name: { kind: "Name", value: "ID" } },
+            },
+            arguments: [],
+          },
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "text" },
+            __type: {
+              kind: "NonNullType",
+              type: {
+                kind: "NamedType",
+                name: { kind: "Name", value: "String" },
+              },
+            },
+            arguments: [],
+          },
         ],
       },
       __defs: { types: { Message: [2, { id: 10, text: 6 }, ["Node"]] } },
@@ -438,6 +507,13 @@ export const CacheTestConversationKeyFieldsDocument = {
                   kind: "Variable",
                   name: { kind: "Name", value: "id" },
                 },
+                __type: {
+                  kind: "NonNullType",
+                  type: {
+                    kind: "NamedType",
+                    name: { kind: "Name", value: "String" },
+                  },
+                },
               },
               {
                 kind: "Argument",
@@ -446,14 +522,78 @@ export const CacheTestConversationKeyFieldsDocument = {
                   kind: "Variable",
                   name: { kind: "Name", value: "callerInfo" },
                 },
+                __type: {
+                  kind: "NamedType",
+                  name: { kind: "Name", value: "String" },
+                },
+              },
+            ],
+            directives: [
+              {
+                kind: "Directive",
+                name: { kind: "Name", value: "keyArgs" },
+                arguments: [
+                  {
+                    kind: "Argument",
+                    name: { kind: "Name", value: "args" },
+                    value: {
+                      kind: "ListValue",
+                      values: [
+                        { kind: "StringValue", value: "id", block: false },
+                      ],
+                    },
+                    __type: {
+                      kind: "NonNullType",
+                      type: {
+                        kind: "ListType",
+                        type: {
+                          kind: "NonNullType",
+                          type: {
+                            kind: "NamedType",
+                            name: { kind: "Name", value: "String" },
+                          },
+                        },
+                      },
+                    },
+                  },
+                ],
               },
             ],
             selectionSet: {
               kind: "SelectionSet",
               selections: [
-                { kind: "Field", name: { kind: "Name", value: "id" } },
-                { kind: "Field", name: { kind: "Name", value: "title" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "id" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "ID" },
+                    },
+                  },
+                  arguments: [],
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "title" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "String" },
+                    },
+                  },
+                  arguments: [],
+                },
               ],
+            },
+            __type: {
+              kind: "NonNullType",
+              type: {
+                kind: "NamedType",
+                name: { kind: "Name", value: "Conversation" },
+              },
             },
           },
         ],
@@ -471,6 +611,7 @@ export const CacheTestConversationKeyFieldsDocument = {
           ],
           Conversation: [2, { id: 10, title: 6 }, ["Node"]],
         },
+        directives: [["keyArgs", ["FIELD"], { args: 26 }]],
       },
     },
   ],
@@ -506,10 +647,7 @@ export const CacheTestConversationKeyFieldsWithConnectionLikeDocument = {
             kind: "Variable",
             name: { kind: "Name", value: "first" },
           },
-          type: {
-            kind: "NonNullType",
-            type: { kind: "NamedType", name: { kind: "Name", value: "Int" } },
-          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "Int" } },
         },
         {
           kind: "VariableDefinition",
@@ -547,13 +685,42 @@ export const CacheTestConversationKeyFieldsWithConnectionLikeDocument = {
                   kind: "Variable",
                   name: { kind: "Name", value: "id" },
                 },
+                __type: {
+                  kind: "NonNullType",
+                  type: {
+                    kind: "NamedType",
+                    name: { kind: "Name", value: "String" },
+                  },
+                },
               },
             ],
             selectionSet: {
               kind: "SelectionSet",
               selections: [
-                { kind: "Field", name: { kind: "Name", value: "id" } },
-                { kind: "Field", name: { kind: "Name", value: "title" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "id" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "ID" },
+                    },
+                  },
+                  arguments: [],
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "title" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "String" },
+                    },
+                  },
+                  arguments: [],
+                },
                 {
                   kind: "Field",
                   name: { kind: "Name", value: "messagesWithExtraField" },
@@ -565,6 +732,10 @@ export const CacheTestConversationKeyFieldsWithConnectionLikeDocument = {
                         kind: "Variable",
                         name: { kind: "Name", value: "first" },
                       },
+                      __type: {
+                        kind: "NamedType",
+                        name: { kind: "Name", value: "Int" },
+                      },
                     },
                     {
                       kind: "Argument",
@@ -572,6 +743,10 @@ export const CacheTestConversationKeyFieldsWithConnectionLikeDocument = {
                       value: {
                         kind: "Variable",
                         name: { kind: "Name", value: "after" },
+                      },
+                      __type: {
+                        kind: "NamedType",
+                        name: { kind: "Name", value: "String" },
                       },
                     },
                     {
@@ -581,6 +756,10 @@ export const CacheTestConversationKeyFieldsWithConnectionLikeDocument = {
                         kind: "Variable",
                         name: { kind: "Name", value: "sort" },
                       },
+                      __type: {
+                        kind: "NamedType",
+                        name: { kind: "Name", value: "Sort" },
+                      },
                     },
                     {
                       kind: "Argument",
@@ -589,6 +768,45 @@ export const CacheTestConversationKeyFieldsWithConnectionLikeDocument = {
                         kind: "Variable",
                         name: { kind: "Name", value: "callerInfo" },
                       },
+                      __type: {
+                        kind: "NamedType",
+                        name: { kind: "Name", value: "String" },
+                      },
+                    },
+                  ],
+                  directives: [
+                    {
+                      kind: "Directive",
+                      name: { kind: "Name", value: "keyArgs" },
+                      arguments: [
+                        {
+                          kind: "Argument",
+                          name: { kind: "Name", value: "args" },
+                          value: {
+                            kind: "ListValue",
+                            values: [
+                              {
+                                kind: "StringValue",
+                                value: "sort",
+                                block: false,
+                              },
+                            ],
+                          },
+                          __type: {
+                            kind: "NonNullType",
+                            type: {
+                              kind: "ListType",
+                              type: {
+                                kind: "NonNullType",
+                                type: {
+                                  kind: "NamedType",
+                                  name: { kind: "Name", value: "String" },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      ],
                     },
                   ],
                   selectionSet: {
@@ -609,17 +827,64 @@ export const CacheTestConversationKeyFieldsWithConnectionLikeDocument = {
                                   {
                                     kind: "Field",
                                     name: { kind: "Name", value: "id" },
+                                    __type: {
+                                      kind: "NonNullType",
+                                      type: {
+                                        kind: "NamedType",
+                                        name: { kind: "Name", value: "ID" },
+                                      },
+                                    },
+                                    arguments: [],
                                   },
                                 ],
                               },
+                              __type: {
+                                kind: "NonNullType",
+                                type: {
+                                  kind: "NamedType",
+                                  name: { kind: "Name", value: "Message" },
+                                },
+                              },
+                              arguments: [],
                             },
                           ],
                         },
+                        __type: {
+                          kind: "NonNullType",
+                          type: {
+                            kind: "ListType",
+                            type: {
+                              kind: "NonNullType",
+                              type: {
+                                kind: "NamedType",
+                                name: {
+                                  kind: "Name",
+                                  value: "MessagesConnectionEdge",
+                                },
+                              },
+                            },
+                          },
+                        },
+                        arguments: [],
                       },
                     ],
                   },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "MessagesConnection" },
+                    },
+                  },
                 },
               ],
+            },
+            __type: {
+              kind: "NonNullType",
+              type: {
+                kind: "NamedType",
+                name: { kind: "Name", value: "Conversation" },
+              },
             },
           },
         ],
@@ -634,7 +899,7 @@ export const CacheTestConversationKeyFieldsWithConnectionLikeDocument = {
               title: 6,
               messagesWithExtraField: [
                 "MessagesConnection!",
-                { first: 8, after: 1, sort: "Sort", callerInfo: 1 },
+                { first: 3, after: 1, sort: "Sort", callerInfo: 1 },
               ],
             },
             ["Node"],
@@ -644,6 +909,7 @@ export const CacheTestConversationKeyFieldsWithConnectionLikeDocument = {
           MessagesConnectionEdge: [2, { node: "Message!" }],
           Message: [2, { id: 10 }, ["Node"]],
         },
+        directives: [["keyArgs", ["FIELD"], { args: 26 }]],
       },
     },
   ],
@@ -721,6 +987,10 @@ export const CacheTestConversationKeyFieldsWithGarbageInputDocument = {
                     },
                   ],
                 },
+                __type: {
+                  kind: "NamedType",
+                  name: { kind: "Name", value: "ConversationFilter" },
+                },
               },
               {
                 kind: "Argument",
@@ -729,14 +999,78 @@ export const CacheTestConversationKeyFieldsWithGarbageInputDocument = {
                   kind: "Variable",
                   name: { kind: "Name", value: "moreCallerInfo" },
                 },
+                __type: {
+                  kind: "NamedType",
+                  name: { kind: "Name", value: "String" },
+                },
+              },
+            ],
+            directives: [
+              {
+                kind: "Directive",
+                name: { kind: "Name", value: "keyArgs" },
+                arguments: [
+                  {
+                    kind: "Argument",
+                    name: { kind: "Name", value: "args" },
+                    value: {
+                      kind: "ListValue",
+                      values: [
+                        { kind: "StringValue", value: "input", block: false },
+                      ],
+                    },
+                    __type: {
+                      kind: "NonNullType",
+                      type: {
+                        kind: "ListType",
+                        type: {
+                          kind: "NonNullType",
+                          type: {
+                            kind: "NamedType",
+                            name: { kind: "Name", value: "String" },
+                          },
+                        },
+                      },
+                    },
+                  },
+                ],
               },
             ],
             selectionSet: {
               kind: "SelectionSet",
               selections: [
-                { kind: "Field", name: { kind: "Name", value: "id" } },
-                { kind: "Field", name: { kind: "Name", value: "title" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "id" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "ID" },
+                    },
+                  },
+                  arguments: [],
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "title" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "String" },
+                    },
+                  },
+                  arguments: [],
+                },
               ],
+            },
+            __type: {
+              kind: "NonNullType",
+              type: {
+                kind: "NamedType",
+                name: { kind: "Name", value: "Conversation" },
+              },
             },
           },
         ],
@@ -755,6 +1089,7 @@ export const CacheTestConversationKeyFieldsWithGarbageInputDocument = {
           Conversation: [2, { id: 10, title: 6 }, ["Node"]],
           ConversationFilter: [6, { id: 6, callerInfo: 1 }],
         },
+        directives: [["keyArgs", { args: 26 }, ["FIELD"]]],
       },
     },
   ],
@@ -807,6 +1142,10 @@ export const CacheTestConversationKeyFieldsWithGarbageInputOneVarDocument = {
                   kind: "Variable",
                   name: { kind: "Name", value: "filter" },
                 },
+                __type: {
+                  kind: "NamedType",
+                  name: { kind: "Name", value: "ConversationFilter" },
+                },
               },
               {
                 kind: "Argument",
@@ -815,14 +1154,78 @@ export const CacheTestConversationKeyFieldsWithGarbageInputOneVarDocument = {
                   kind: "Variable",
                   name: { kind: "Name", value: "moreCallerInfo" },
                 },
+                __type: {
+                  kind: "NamedType",
+                  name: { kind: "Name", value: "String" },
+                },
+              },
+            ],
+            directives: [
+              {
+                kind: "Directive",
+                name: { kind: "Name", value: "keyArgs" },
+                arguments: [
+                  {
+                    kind: "Argument",
+                    name: { kind: "Name", value: "args" },
+                    value: {
+                      kind: "ListValue",
+                      values: [
+                        { kind: "StringValue", value: "input", block: false },
+                      ],
+                    },
+                    __type: {
+                      kind: "NonNullType",
+                      type: {
+                        kind: "ListType",
+                        type: {
+                          kind: "NonNullType",
+                          type: {
+                            kind: "NamedType",
+                            name: { kind: "Name", value: "String" },
+                          },
+                        },
+                      },
+                    },
+                  },
+                ],
               },
             ],
             selectionSet: {
               kind: "SelectionSet",
               selections: [
-                { kind: "Field", name: { kind: "Name", value: "id" } },
-                { kind: "Field", name: { kind: "Name", value: "title" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "id" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "ID" },
+                    },
+                  },
+                  arguments: [],
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "title" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "String" },
+                    },
+                  },
+                  arguments: [],
+                },
               ],
+            },
+            __type: {
+              kind: "NonNullType",
+              type: {
+                kind: "NamedType",
+                name: { kind: "Name", value: "Conversation" },
+              },
             },
           },
         ],
@@ -841,6 +1244,7 @@ export const CacheTestConversationKeyFieldsWithGarbageInputOneVarDocument = {
           Conversation: [2, { id: 10, title: 6 }, ["Node"]],
           ConversationFilter: [6, { id: 6, callerInfo: 1 }],
         },
+        directives: [["keyArgs", { args: 26 }, ["FIELD"]]],
       },
     },
   ],
@@ -882,14 +1286,50 @@ export const CacheTestMessageQueryDocument = {
                   kind: "Variable",
                   name: { kind: "Name", value: "id" },
                 },
+                __type: {
+                  kind: "NonNullType",
+                  type: {
+                    kind: "NamedType",
+                    name: { kind: "Name", value: "String" },
+                  },
+                },
               },
             ],
             selectionSet: {
               kind: "SelectionSet",
               selections: [
-                { kind: "Field", name: { kind: "Name", value: "id" } },
-                { kind: "Field", name: { kind: "Name", value: "text" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "id" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "ID" },
+                    },
+                  },
+                  arguments: [],
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "text" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "String" },
+                    },
+                  },
+                  arguments: [],
+                },
               ],
+            },
+            __type: {
+              kind: "NonNullType",
+              type: {
+                kind: "NamedType",
+                name: { kind: "Name", value: "Message" },
+              },
             },
           },
         ],
@@ -952,13 +1392,42 @@ export const CacheTestQueryDocument = {
                   kind: "Variable",
                   name: { kind: "Name", value: "conversationId" },
                 },
+                __type: {
+                  kind: "NonNullType",
+                  type: {
+                    kind: "NamedType",
+                    name: { kind: "Name", value: "String" },
+                  },
+                },
               },
             ],
             selectionSet: {
               kind: "SelectionSet",
               selections: [
-                { kind: "Field", name: { kind: "Name", value: "id" } },
-                { kind: "Field", name: { kind: "Name", value: "title" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "id" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "ID" },
+                    },
+                  },
+                  arguments: [],
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "title" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "String" },
+                    },
+                  },
+                  arguments: [],
+                },
                 {
                   kind: "InlineFragment",
                   typeCondition: {
@@ -977,6 +1446,13 @@ export const CacheTestQueryDocument = {
                             kind: "Variable",
                             name: { kind: "Name", value: "includeNestedData" },
                           },
+                          __type: {
+                            kind: "NonNullType",
+                            type: {
+                              kind: "NamedType",
+                              name: { kind: "Name", value: "Boolean" },
+                            },
+                          },
                         },
                       ],
                     },
@@ -992,6 +1468,13 @@ export const CacheTestQueryDocument = {
                             kind: "Argument",
                             name: { kind: "Name", value: "first" },
                             value: { kind: "IntValue", value: "10" },
+                            __type: {
+                              kind: "NonNullType",
+                              type: {
+                                kind: "NamedType",
+                                name: { kind: "Name", value: "Int" },
+                              },
+                            },
                           },
                         ],
                         selectionSet: {
@@ -1012,6 +1495,17 @@ export const CacheTestQueryDocument = {
                                         {
                                           kind: "Field",
                                           name: { kind: "Name", value: "id" },
+                                          __type: {
+                                            kind: "NonNullType",
+                                            type: {
+                                              kind: "NamedType",
+                                              name: {
+                                                kind: "Name",
+                                                value: "ID",
+                                              },
+                                            },
+                                          },
+                                          arguments: [],
                                         },
                                         {
                                           kind: "Field",
@@ -1019,10 +1513,32 @@ export const CacheTestQueryDocument = {
                                             kind: "Name",
                                             value: "authorId",
                                           },
+                                          __type: {
+                                            kind: "NonNullType",
+                                            type: {
+                                              kind: "NamedType",
+                                              name: {
+                                                kind: "Name",
+                                                value: "String",
+                                              },
+                                            },
+                                          },
+                                          arguments: [],
                                         },
                                         {
                                           kind: "Field",
                                           name: { kind: "Name", value: "text" },
+                                          __type: {
+                                            kind: "NonNullType",
+                                            type: {
+                                              kind: "NamedType",
+                                              name: {
+                                                kind: "Name",
+                                                value: "String",
+                                              },
+                                            },
+                                          },
+                                          arguments: [],
                                         },
                                         {
                                           kind: "Field",
@@ -1030,14 +1546,60 @@ export const CacheTestQueryDocument = {
                                             kind: "Name",
                                             value: "createdAt",
                                           },
+                                          __type: {
+                                            kind: "NonNullType",
+                                            type: {
+                                              kind: "NamedType",
+                                              name: {
+                                                kind: "Name",
+                                                value: "String",
+                                              },
+                                            },
+                                          },
+                                          arguments: [],
                                         },
                                       ],
                                     },
+                                    __type: {
+                                      kind: "NonNullType",
+                                      type: {
+                                        kind: "NamedType",
+                                        name: {
+                                          kind: "Name",
+                                          value: "Message",
+                                        },
+                                      },
+                                    },
+                                    arguments: [],
                                   },
                                 ],
                               },
+                              __type: {
+                                kind: "NonNullType",
+                                type: {
+                                  kind: "ListType",
+                                  type: {
+                                    kind: "NonNullType",
+                                    type: {
+                                      kind: "NamedType",
+                                      name: {
+                                        kind: "Name",
+                                        value: "MessagesConnectionEdge",
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                              arguments: [],
                             },
                           ],
+                        },
+                        __type: {
+                          kind: "NonNullType",
+                          type: {
+                            kind: "NamedType",
+                            name: { kind: "Name", value: "MessagesConnection" },
+                          },
                         },
                       },
                     ],
@@ -1048,6 +1610,13 @@ export const CacheTestQueryDocument = {
                   name: { kind: "Name", value: "CacheTestFragment" },
                 },
               ],
+            },
+            __type: {
+              kind: "NonNullType",
+              type: {
+                kind: "NamedType",
+                name: { kind: "Name", value: "Conversation" },
+              },
             },
           },
         ],
@@ -1119,14 +1688,54 @@ export const ApolloClientIntegrationTestQueryDocument = {
                   kind: "Variable",
                   name: { kind: "Name", value: "id" },
                 },
+                __type: {
+                  kind: "NonNullType",
+                  type: {
+                    kind: "NamedType",
+                    name: { kind: "Name", value: "String" },
+                  },
+                },
               },
             ],
             selectionSet: {
               kind: "SelectionSet",
               selections: [
-                { kind: "Field", name: { kind: "Name", value: "__typename" } },
-                { kind: "Field", name: { kind: "Name", value: "id" } },
-                { kind: "Field", name: { kind: "Name", value: "title" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "__typename" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "String" },
+                    },
+                  },
+                  arguments: [],
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "id" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "ID" },
+                    },
+                  },
+                  arguments: [],
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "title" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "String" },
+                    },
+                  },
+                  arguments: [],
+                },
                 {
                   kind: "Field",
                   name: { kind: "Name", value: "messages" },
@@ -1135,6 +1744,13 @@ export const ApolloClientIntegrationTestQueryDocument = {
                       kind: "Argument",
                       name: { kind: "Name", value: "first" },
                       value: { kind: "IntValue", value: "10" },
+                      __type: {
+                        kind: "NonNullType",
+                        type: {
+                          kind: "NamedType",
+                          name: { kind: "Name", value: "Int" },
+                        },
+                      },
                     },
                     {
                       kind: "Argument",
@@ -1142,6 +1758,10 @@ export const ApolloClientIntegrationTestQueryDocument = {
                       value: {
                         kind: "Variable",
                         name: { kind: "Name", value: "cursor" },
+                      },
+                      __type: {
+                        kind: "NamedType",
+                        name: { kind: "Name", value: "String" },
                       },
                     },
                   ],
@@ -1157,6 +1777,13 @@ export const ApolloClientIntegrationTestQueryDocument = {
                             kind: "StringValue",
                             value: "IntegrationTest_messages",
                             block: false,
+                          },
+                          __type: {
+                            kind: "NonNullType",
+                            type: {
+                              kind: "NamedType",
+                              name: { kind: "Name", value: "String" },
+                            },
                           },
                         },
                       ],
@@ -1174,13 +1801,28 @@ export const ApolloClientIntegrationTestQueryDocument = {
                             {
                               kind: "Field",
                               name: { kind: "Name", value: "hasNextPage" },
+                              __type: {
+                                kind: "NamedType",
+                                name: { kind: "Name", value: "Boolean" },
+                              },
+                              arguments: [],
                             },
                             {
                               kind: "Field",
                               name: { kind: "Name", value: "endCursor" },
+                              __type: {
+                                kind: "NamedType",
+                                name: { kind: "Name", value: "String" },
+                              },
+                              arguments: [],
                             },
                           ],
                         },
+                        __type: {
+                          kind: "NamedType",
+                          name: { kind: "Name", value: "PageInfo" },
+                        },
+                        arguments: [],
                       },
                       {
                         kind: "Field",
@@ -1191,6 +1833,11 @@ export const ApolloClientIntegrationTestQueryDocument = {
                             {
                               kind: "Field",
                               name: { kind: "Name", value: "cursor" },
+                              __type: {
+                                kind: "NamedType",
+                                name: { kind: "Name", value: "String" },
+                              },
+                              arguments: [],
                             },
                             {
                               kind: "Field",
@@ -1208,14 +1855,53 @@ export const ApolloClientIntegrationTestQueryDocument = {
                                   },
                                 ],
                               },
+                              __type: {
+                                kind: "NonNullType",
+                                type: {
+                                  kind: "NamedType",
+                                  name: { kind: "Name", value: "Message" },
+                                },
+                              },
+                              arguments: [],
                             },
                           ],
                         },
+                        __type: {
+                          kind: "NonNullType",
+                          type: {
+                            kind: "ListType",
+                            type: {
+                              kind: "NonNullType",
+                              type: {
+                                kind: "NamedType",
+                                name: {
+                                  kind: "Name",
+                                  value: "MessagesConnectionEdge",
+                                },
+                              },
+                            },
+                          },
+                        },
+                        arguments: [],
                       },
                     ],
                   },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "MessagesConnection" },
+                    },
+                  },
                 },
               ],
+            },
+            __type: {
+              kind: "NonNullType",
+              type: {
+                kind: "NamedType",
+                name: { kind: "Name", value: "Conversation" },
+              },
             },
           },
         ],
@@ -1240,7 +1926,7 @@ export const ApolloClientIntegrationTestQueryDocument = {
           MessagesConnectionEdge: [2, { cursor: 1, node: "Message!" }],
           Message: [2, {}, ["Node"]],
         },
-        directives: [["connection", { key: 6 }]],
+        directives: [["connection", { key: 6 }, ["FIELD"]]],
       },
     },
     ...ApolloClientIntegrationTestMessageFragment.definitions,
@@ -1297,6 +1983,13 @@ export const ApolloClientIntegrationTestMutationDocument = {
                   kind: "Variable",
                   name: { kind: "Name", value: "id" },
                 },
+                __type: {
+                  kind: "NonNullType",
+                  type: {
+                    kind: "NamedType",
+                    name: { kind: "Name", value: "String" },
+                  },
+                },
               },
               {
                 kind: "Argument",
@@ -1305,15 +1998,62 @@ export const ApolloClientIntegrationTestMutationDocument = {
                   kind: "Variable",
                   name: { kind: "Name", value: "title" },
                 },
+                __type: {
+                  kind: "NonNullType",
+                  type: {
+                    kind: "NamedType",
+                    name: { kind: "Name", value: "String" },
+                  },
+                },
               },
             ],
             selectionSet: {
               kind: "SelectionSet",
               selections: [
-                { kind: "Field", name: { kind: "Name", value: "__typename" } },
-                { kind: "Field", name: { kind: "Name", value: "id" } },
-                { kind: "Field", name: { kind: "Name", value: "title" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "__typename" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "String" },
+                    },
+                  },
+                  arguments: [],
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "id" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "ID" },
+                    },
+                  },
+                  arguments: [],
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "title" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "String" },
+                    },
+                  },
+                  arguments: [],
+                },
               ],
+            },
+            __type: {
+              kind: "NonNullType",
+              type: {
+                kind: "NamedType",
+                name: { kind: "Name", value: "Conversation" },
+              },
             },
           },
         ],
@@ -1373,15 +2113,62 @@ export const ApolloClientIntegrationTestCreateMessageMutationDocument = {
                   kind: "Variable",
                   name: { kind: "Name", value: "conversationId" },
                 },
+                __type: {
+                  kind: "NonNullType",
+                  type: {
+                    kind: "NamedType",
+                    name: { kind: "Name", value: "String" },
+                  },
+                },
               },
             ],
             selectionSet: {
               kind: "SelectionSet",
               selections: [
-                { kind: "Field", name: { kind: "Name", value: "__typename" } },
-                { kind: "Field", name: { kind: "Name", value: "id" } },
-                { kind: "Field", name: { kind: "Name", value: "text" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "__typename" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "String" },
+                    },
+                  },
+                  arguments: [],
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "id" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "ID" },
+                    },
+                  },
+                  arguments: [],
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "text" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "String" },
+                    },
+                  },
+                  arguments: [],
+                },
               ],
+            },
+            __type: {
+              kind: "NonNullType",
+              type: {
+                kind: "NamedType",
+                name: { kind: "Name", value: "Message" },
+              },
             },
           },
         ],
@@ -1421,11 +2208,49 @@ export const ApolloClientIntegrationTestConversationUpdatedSubscriptionDocument 
                   {
                     kind: "Field",
                     name: { kind: "Name", value: "__typename" },
+                    __type: {
+                      kind: "NonNullType",
+                      type: {
+                        kind: "NamedType",
+                        name: { kind: "Name", value: "String" },
+                      },
+                    },
+                    arguments: [],
                   },
-                  { kind: "Field", name: { kind: "Name", value: "id" } },
-                  { kind: "Field", name: { kind: "Name", value: "title" } },
+                  {
+                    kind: "Field",
+                    name: { kind: "Name", value: "id" },
+                    __type: {
+                      kind: "NonNullType",
+                      type: {
+                        kind: "NamedType",
+                        name: { kind: "Name", value: "ID" },
+                      },
+                    },
+                    arguments: [],
+                  },
+                  {
+                    kind: "Field",
+                    name: { kind: "Name", value: "title" },
+                    __type: {
+                      kind: "NonNullType",
+                      type: {
+                        kind: "NamedType",
+                        name: { kind: "Name", value: "String" },
+                      },
+                    },
+                    arguments: [],
+                  },
                 ],
               },
+              __type: {
+                kind: "NonNullType",
+                type: {
+                  kind: "NamedType",
+                  name: { kind: "Name", value: "Conversation" },
+                },
+              },
+              arguments: [],
             },
           ],
         },
@@ -1481,15 +2306,62 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = {
                   kind: "Variable",
                   name: { kind: "Name", value: "conversationId" },
                 },
+                __type: {
+                  kind: "NonNullType",
+                  type: {
+                    kind: "NamedType",
+                    name: { kind: "Name", value: "String" },
+                  },
+                },
               },
             ],
             selectionSet: {
               kind: "SelectionSet",
               selections: [
-                { kind: "Field", name: { kind: "Name", value: "__typename" } },
-                { kind: "Field", name: { kind: "Name", value: "id" } },
-                { kind: "Field", name: { kind: "Name", value: "text" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "__typename" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "String" },
+                    },
+                  },
+                  arguments: [],
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "id" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "ID" },
+                    },
+                  },
+                  arguments: [],
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "text" },
+                  __type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: { kind: "Name", value: "String" },
+                    },
+                  },
+                  arguments: [],
+                },
               ],
+            },
+            __type: {
+              kind: "NonNullType",
+              type: {
+                kind: "NamedType",
+                name: { kind: "Name", value: "Message" },
+              },
             },
           },
         ],
@@ -1583,7 +2455,7 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = {
       selections: v2 /*: any*/,
     },
     params: {
-      cacheID: "0f35d9af8f2c193d715353d2490f5e47",
+      cacheID: "6b1ed36aae40e21f47e4e8eaf86ea466",
       metadata: {},
       name: "CacheTestConversationKeyFields",
       operationKind: "query",
@@ -1592,7 +2464,7 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = {
   };
 })();
 (CacheTestConversationKeyFieldsDocument as any).__relay.hash =
-  "0f35d9af8f2c193d715353d2490f5e47";
+  "6b1ed36aae40e21f47e4e8eaf86ea466";
 (CacheTestConversationKeyFieldsWithConnectionLikeDocument as any).__relay =
   (function () {
     var v0 = {
@@ -1747,7 +2619,7 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = {
         selections: v7 /*: any*/,
       },
       params: {
-        cacheID: "f40487670d51d53f75cce390a0c0ec81",
+        cacheID: "29e4dfb554ffb49606a45ebda4868be6",
         metadata: {},
         name: "CacheTestConversationKeyFieldsWithConnectionLike",
         operationKind: "query",
@@ -1756,7 +2628,7 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = {
     };
   })();
 (CacheTestConversationKeyFieldsWithConnectionLikeDocument as any).__relay.hash =
-  "f40487670d51d53f75cce390a0c0ec81";
+  "29e4dfb554ffb49606a45ebda4868be6";
 (CacheTestConversationKeyFieldsWithGarbageInputDocument as any).__relay =
   (function () {
     var v0 = {
@@ -1848,7 +2720,7 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = {
         selections: v3 /*: any*/,
       },
       params: {
-        cacheID: "714ff55dc670e49b6cc45ddcc3b70e52",
+        cacheID: "47ba4d53f15eaecfdcecc14e8d36a0b9",
         metadata: {},
         name: "CacheTestConversationKeyFieldsWithGarbageInput",
         operationKind: "query",
@@ -1857,7 +2729,7 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = {
     };
   })();
 (CacheTestConversationKeyFieldsWithGarbageInputDocument as any).__relay.hash =
-  "714ff55dc670e49b6cc45ddcc3b70e52";
+  "47ba4d53f15eaecfdcecc14e8d36a0b9";
 (CacheTestConversationKeyFieldsWithGarbageInputOneVarDocument as any).__relay =
   (function () {
     var v0 = [
@@ -1935,7 +2807,7 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = {
         selections: v1 /*: any*/,
       },
       params: {
-        cacheID: "934a4a865d1a89ab05f45810c8c7de39",
+        cacheID: "7b67aab0a234143a63a7e02adcf3bfb0",
         metadata: {},
         name: "CacheTestConversationKeyFieldsWithGarbageInputOneVar",
         operationKind: "query",
@@ -1945,7 +2817,7 @@ export const ApolloClientIntegrationTestMessageCreatedSubscriptionDocument = {
   })();
 (
   CacheTestConversationKeyFieldsWithGarbageInputOneVarDocument as any
-).__relay.hash = "934a4a865d1a89ab05f45810c8c7de39";
+).__relay.hash = "7b67aab0a234143a63a7e02adcf3bfb0";
 (CacheTestMessageQueryDocument as any).__relay = (function () {
   var v0 = [
       {
