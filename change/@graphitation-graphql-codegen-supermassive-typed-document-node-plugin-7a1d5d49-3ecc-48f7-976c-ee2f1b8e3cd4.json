@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Fix transforms to actually do both v3 and v2",
+  "packageName": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}

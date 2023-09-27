@@ -202,7 +202,7 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
     ) {
       finalDocument = addMinimalViableSchemaToRequestDocument(
         schema,
-        document,
+        finalDocument,
         {
           addTo: "PROPERTY",
         },
@@ -215,7 +215,7 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
     ) {
       finalDocument = addSupermassiveLegacyTypesToRequestDocument(
         schema,
-        document,
+        finalDocument,
       ) as unknown as DocumentNode;
     }
     return finalDocument;
