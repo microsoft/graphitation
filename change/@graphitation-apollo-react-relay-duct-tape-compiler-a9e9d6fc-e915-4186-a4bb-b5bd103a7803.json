@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Fix transforms to actually do both v3 and v2",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape-compiler",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}
