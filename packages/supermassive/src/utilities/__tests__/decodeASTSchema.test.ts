@@ -3,6 +3,7 @@ import { decodeASTSchema } from "../decodeASTSchema";
 import { encodeASTSchema } from "../encodeASTSchema";
 import { kitchenSinkSDL } from "./fixtures/kitchenSinkSDL";
 import { swapiSDL } from "./fixtures/swapiSDL";
+import { mergeSchemaDefinitions } from "../mergeSchemaDefinitions";
 
 describe(encodeASTSchema, () => {
   test("correctly encodes swapi AST schema", () => {
@@ -11,14 +12,20 @@ describe(encodeASTSchema, () => {
     const decoded = decodeASTSchema(encoded);
 
     expect(decoded).toEqual(doc);
+    expect(encodeASTSchema(decoded)).toEqual(encoded);
     expect(decoded).toMatchSnapshot();
   });
 
-  test.skip("correctly encodes kitchen sink AST schema", () => {
+  test("correctly encodes kitchen sink AST schema", () => {
     const doc = cleanUpDocument(kitchenSinkSDL.document);
-    const encoded = encodeASTSchema(doc);
+    const encoded = [
+      mergeSchemaDefinitions(
+        { types: {}, directives: [] },
+        encodeASTSchema(doc),
+      ),
+    ];
     const decoded = decodeASTSchema(encoded);
-    expect(decoded).toMatchObject(doc);
+    expect(encodeASTSchema(decoded)).toEqual(encoded);
     expect(decoded).toMatchSnapshot();
   });
 });

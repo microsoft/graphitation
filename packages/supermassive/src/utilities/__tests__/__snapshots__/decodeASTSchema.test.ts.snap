@@ -1,5 +1,1091 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
+{
+  "definitions": [
+    {
+      "fields": [
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "one",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "InputType",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "two",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "InputType",
+                },
+              },
+            },
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "other",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "three",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": {
+                "kind": "StringValue",
+                "value": "string",
+              },
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "four",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": {
+                "kind": "ListValue",
+                "values": [
+                  {
+                    "kind": "StringValue",
+                    "value": "string",
+                  },
+                  {
+                    "kind": "StringValue",
+                    "value": "string",
+                  },
+                ],
+              },
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "ListType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "five",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": {
+                "fields": [
+                  {
+                    "kind": "ObjectField",
+                    "name": {
+                      "kind": "Name",
+                      "value": "key",
+                    },
+                    "value": {
+                      "kind": "StringValue",
+                      "value": "value",
+                    },
+                  },
+                ],
+                "kind": "ObjectValue",
+              },
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "InputType",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "six",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": {
+                "kind": "NullValue",
+              },
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Int",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "seven",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "OneOfInputType",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "eight",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+      ],
+      "interfaces": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Bar",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Baz",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Two",
+          },
+        },
+      ],
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Foo",
+      },
+    },
+    {
+      "fields": [
+        {
+          "arguments": [
+            {
+              "defaultValue": {
+                "kind": "EnumValue",
+                "value": "default",
+              },
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "arg",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Type",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "annotatedField",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+      ],
+      "interfaces": [],
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "AnnotatedObject",
+      },
+    },
+    {
+      "fields": [],
+      "interfaces": [],
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "UndefinedType",
+      },
+    },
+    {
+      "fields": [
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "one",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": {
+                "kind": "StringValue",
+                "value": "string",
+              },
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "four",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "InputType",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "two",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+      ],
+      "interfaces": [],
+      "kind": "InterfaceTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Bar",
+      },
+    },
+    {
+      "fields": [
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "arg",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Type",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "annotatedField",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+      ],
+      "interfaces": [],
+      "kind": "InterfaceTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "AnnotatedInterface",
+      },
+    },
+    {
+      "fields": [],
+      "interfaces": [],
+      "kind": "InterfaceTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "UndefinedInterface",
+      },
+    },
+    {
+      "fields": [
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "one",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "InputType",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "two",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": {
+                "kind": "StringValue",
+                "value": "string",
+              },
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "four",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+      ],
+      "interfaces": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Bar",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Two",
+          },
+        },
+      ],
+      "kind": "InterfaceTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Baz",
+      },
+    },
+    {
+      "kind": "UnionTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Feed",
+      },
+      "types": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Story",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Article",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Advert",
+          },
+        },
+      ],
+    },
+    {
+      "kind": "UnionTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "AnnotatedUnion",
+      },
+      "types": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "A",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "B",
+          },
+        },
+      ],
+    },
+    {
+      "kind": "UnionTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "AnnotatedUnionTwo",
+      },
+      "types": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "A",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "B",
+          },
+        },
+      ],
+    },
+    {
+      "kind": "UnionTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "UndefinedUnion",
+      },
+      "types": [],
+    },
+    {
+      "kind": "ScalarTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "CustomScalar",
+      },
+    },
+    {
+      "kind": "ScalarTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "AnnotatedScalar",
+      },
+    },
+    {
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Site",
+      },
+      "values": [
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "DESKTOP",
+          },
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "MOBILE",
+          },
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "WEB",
+          },
+        },
+      ],
+    },
+    {
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "AnnotatedEnum",
+      },
+      "values": [
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "ANNOTATED_VALUE",
+          },
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "OTHER_VALUE",
+          },
+        },
+      ],
+    },
+    {
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "UndefinedEnum",
+      },
+      "values": [],
+    },
+    {
+      "fields": [
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "key",
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String",
+              },
+            },
+          },
+        },
+        {
+          "defaultValue": {
+            "kind": "IntValue",
+            "value": "42",
+          },
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "answer",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "defaultValue": {
+            "kind": "IntValue",
+            "value": "12300",
+          },
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "other",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Float",
+            },
+          },
+        },
+      ],
+      "kind": "InputObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "InputType",
+      },
+    },
+    {
+      "fields": [
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "string",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "int",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+      ],
+      "kind": "InputObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "OneOfInputType",
+      },
+    },
+    {
+      "fields": [
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "annotatedField",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+      ],
+      "kind": "InputObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "AnnotatedInput",
+      },
+    },
+    {
+      "fields": [],
+      "kind": "InputObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "UndefinedInput",
+      },
+    },
+    {
+      "arguments": [
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "if",
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean",
+              },
+            },
+          },
+        },
+      ],
+      "kind": "DirectiveDefinition",
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "FIELD",
+        },
+        {
+          "kind": "Name",
+          "value": "FRAGMENT_SPREAD",
+        },
+        {
+          "kind": "Name",
+          "value": "INLINE_FRAGMENT",
+        },
+      ],
+      "name": {
+        "kind": "Name",
+        "value": "skip",
+      },
+      "repeatable": false,
+    },
+    {
+      "arguments": [
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "if",
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean",
+              },
+            },
+          },
+        },
+      ],
+      "kind": "DirectiveDefinition",
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "FIELD",
+        },
+        {
+          "kind": "Name",
+          "value": "FRAGMENT_SPREAD",
+        },
+        {
+          "kind": "Name",
+          "value": "INLINE_FRAGMENT",
+        },
+      ],
+      "name": {
+        "kind": "Name",
+        "value": "include",
+      },
+      "repeatable": false,
+    },
+    {
+      "arguments": [
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "if",
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean",
+              },
+            },
+          },
+        },
+      ],
+      "kind": "DirectiveDefinition",
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "FIELD",
+        },
+        {
+          "kind": "Name",
+          "value": "FRAGMENT_SPREAD",
+        },
+        {
+          "kind": "Name",
+          "value": "INLINE_FRAGMENT",
+        },
+      ],
+      "name": {
+        "kind": "Name",
+        "value": "include2",
+      },
+      "repeatable": false,
+    },
+    {
+      "arguments": [
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "name",
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String",
+              },
+            },
+          },
+        },
+      ],
+      "kind": "DirectiveDefinition",
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "OBJECT",
+        },
+        {
+          "kind": "Name",
+          "value": "INTERFACE",
+        },
+      ],
+      "name": {
+        "kind": "Name",
+        "value": "myRepeatableDir",
+      },
+      "repeatable": false,
+    },
+  ],
+  "kind": "Document",
+}
+`;
+
 exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
 {
   "definitions": [
