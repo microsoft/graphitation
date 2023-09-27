@@ -4,7 +4,11 @@ import { create as createSchema } from "./vendor/relay-compiler/lib/core/Schema"
 import * as FlattenTransform from "./vendor/relay-compiler/lib/transforms/FlattenTransform";
 import * as InlineFragmentsTransform from "./vendor/relay-compiler/lib/transforms/InlineFragmentsTransform";
 import { generate as generateIRDocument } from "./vendor/relay-compiler/lib/codegen/RelayCodeGenerator";
-import { SchemaDefinitions, decodeASTSchema } from "@graphitation/supermassive";
+import {
+  SchemaDefinitions,
+  decodeASTSchema,
+  mergeSchemaDefinitions,
+} from "@graphitation/supermassive";
 
 import { Source, print as printGraphQLJS } from "graphql";
 import hash from "@emotion/hash";
@@ -20,13 +24,18 @@ export function transformDocumentWithSupermassiveMVS(
   addHash: boolean,
   typePolicies: TypePolicies,
 ) {
-  const defs: SchemaDefinitions[] = [
-    document.definitions && (document.definitions[0] as any).__defs,
-  ];
+  const defs: SchemaDefinitions[] =
+    document.definitions &&
+    document.definitions.map((node) => (node as any).__defs).filter((x) => !!x);
+
   if (!defs) {
     return null;
   }
-  const schema = transformSchema(decodeASTSchema(defs));
+  const schema = transformSchema(
+    decodeASTSchema([
+      mergeSchemaDefinitions({ types: {}, directives: [] }, defs),
+    ]),
+  );
   return transformDocument(schema, document, addHash, typePolicies);
 }
 
