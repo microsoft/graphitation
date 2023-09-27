@@ -1,0 +1,3961 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
+{
+  "definitions": [
+    {
+      "fields": [
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "one",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "InputType",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "two",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "InputType",
+                },
+              },
+            },
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "other",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "three",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": {
+                "kind": "StringValue",
+                "value": "string",
+              },
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "four",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": {
+                "kind": "ListValue",
+                "values": [
+                  {
+                    "kind": "StringValue",
+                    "value": "string",
+                  },
+                  {
+                    "kind": "StringValue",
+                    "value": "string",
+                  },
+                ],
+              },
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "ListType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "five",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": {
+                "fields": [
+                  {
+                    "kind": "ObjectField",
+                    "name": {
+                      "kind": "Name",
+                      "value": "key",
+                    },
+                    "value": {
+                      "kind": "StringValue",
+                      "value": "value",
+                    },
+                  },
+                ],
+                "kind": "ObjectValue",
+              },
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "InputType",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "six",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": {
+                "kind": "NullValue",
+              },
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Int",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "seven",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "OneOfInputType",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "eight",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+      ],
+      "interfaces": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Bar",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Baz",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Two",
+          },
+        },
+      ],
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Foo",
+      },
+    },
+    {
+      "fields": [
+        {
+          "arguments": [
+            {
+              "defaultValue": {
+                "kind": "EnumValue",
+                "value": "default",
+              },
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "arg",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Type",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "annotatedField",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+      ],
+      "interfaces": [],
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "AnnotatedObject",
+      },
+    },
+    {
+      "fields": [],
+      "interfaces": [],
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "UndefinedType",
+      },
+    },
+    {
+      "fields": [
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "one",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": {
+                "kind": "StringValue",
+                "value": "string",
+              },
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "four",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "InputType",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "two",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+      ],
+      "interfaces": [],
+      "kind": "InterfaceTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Bar",
+      },
+    },
+    {
+      "fields": [
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "arg",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Type",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "annotatedField",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+      ],
+      "interfaces": [],
+      "kind": "InterfaceTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "AnnotatedInterface",
+      },
+    },
+    {
+      "fields": [],
+      "interfaces": [],
+      "kind": "InterfaceTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "UndefinedInterface",
+      },
+    },
+    {
+      "fields": [
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "one",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "InputType",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "two",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": {
+                "kind": "StringValue",
+                "value": "string",
+              },
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "argument",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "four",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+      ],
+      "interfaces": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Bar",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Two",
+          },
+        },
+      ],
+      "kind": "InterfaceTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Baz",
+      },
+    },
+    {
+      "kind": "UnionTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Feed",
+      },
+      "types": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Story",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Article",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Advert",
+          },
+        },
+      ],
+    },
+    {
+      "kind": "UnionTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "AnnotatedUnion",
+      },
+      "types": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "A",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "B",
+          },
+        },
+      ],
+    },
+    {
+      "kind": "UnionTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "AnnotatedUnionTwo",
+      },
+      "types": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "A",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "B",
+          },
+        },
+      ],
+    },
+    {
+      "kind": "UnionTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "UndefinedUnion",
+      },
+      "types": [],
+    },
+    {
+      "kind": "ScalarTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "CustomScalar",
+      },
+    },
+    {
+      "kind": "ScalarTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "AnnotatedScalar",
+      },
+    },
+    {
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Site",
+      },
+      "values": [
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "DESKTOP",
+          },
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "MOBILE",
+          },
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "WEB",
+          },
+        },
+      ],
+    },
+    {
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "AnnotatedEnum",
+      },
+      "values": [
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "ANNOTATED_VALUE",
+          },
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "OTHER_VALUE",
+          },
+        },
+      ],
+    },
+    {
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "UndefinedEnum",
+      },
+      "values": [],
+    },
+    {
+      "fields": [
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "key",
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String",
+              },
+            },
+          },
+        },
+        {
+          "defaultValue": {
+            "kind": "IntValue",
+            "value": "42",
+          },
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "answer",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "defaultValue": {
+            "kind": "IntValue",
+            "value": "12300",
+          },
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "other",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Float",
+            },
+          },
+        },
+      ],
+      "kind": "InputObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "InputType",
+      },
+    },
+    {
+      "fields": [
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "string",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "int",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+      ],
+      "kind": "InputObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "OneOfInputType",
+      },
+    },
+    {
+      "fields": [
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "annotatedField",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Type",
+            },
+          },
+        },
+      ],
+      "kind": "InputObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "AnnotatedInput",
+      },
+    },
+    {
+      "fields": [],
+      "kind": "InputObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "UndefinedInput",
+      },
+    },
+    {
+      "arguments": [
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "if",
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean",
+              },
+            },
+          },
+        },
+      ],
+      "kind": "DirectiveDefinition",
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "FIELD",
+        },
+        {
+          "kind": "Name",
+          "value": "FRAGMENT_SPREAD",
+        },
+        {
+          "kind": "Name",
+          "value": "INLINE_FRAGMENT",
+        },
+      ],
+      "name": {
+        "kind": "Name",
+        "value": "skip",
+      },
+      "repeatable": false,
+    },
+    {
+      "arguments": [
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "if",
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean",
+              },
+            },
+          },
+        },
+      ],
+      "kind": "DirectiveDefinition",
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "FIELD",
+        },
+        {
+          "kind": "Name",
+          "value": "FRAGMENT_SPREAD",
+        },
+        {
+          "kind": "Name",
+          "value": "INLINE_FRAGMENT",
+        },
+      ],
+      "name": {
+        "kind": "Name",
+        "value": "include",
+      },
+      "repeatable": false,
+    },
+    {
+      "arguments": [
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "if",
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean",
+              },
+            },
+          },
+        },
+      ],
+      "kind": "DirectiveDefinition",
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "FIELD",
+        },
+        {
+          "kind": "Name",
+          "value": "FRAGMENT_SPREAD",
+        },
+        {
+          "kind": "Name",
+          "value": "INLINE_FRAGMENT",
+        },
+      ],
+      "name": {
+        "kind": "Name",
+        "value": "include2",
+      },
+      "repeatable": false,
+    },
+    {
+      "arguments": [
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "name",
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String",
+              },
+            },
+          },
+        },
+      ],
+      "kind": "DirectiveDefinition",
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "OBJECT",
+        },
+        {
+          "kind": "Name",
+          "value": "INTERFACE",
+        },
+      ],
+      "name": {
+        "kind": "Name",
+        "value": "myRepeatableDir",
+      },
+      "repeatable": false,
+    },
+  ],
+  "kind": "Document",
+}
+`;
+
+exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
+{
+  "definitions": [
+    {
+      "kind": "UnionTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "SearchResult",
+      },
+      "types": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Person",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Starship",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Transport",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Species",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Vehicle",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Planet",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Film",
+          },
+        },
+      ],
+    },
+    {
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "NodeType",
+      },
+      "values": [
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "Person",
+          },
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "Starship",
+          },
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "Transport",
+          },
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "Species",
+          },
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "Vehicle",
+          },
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "Planet",
+          },
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "Film",
+          },
+        },
+      ],
+    },
+    {
+      "fields": [
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "limit",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Int",
+                  },
+                },
+              },
+            },
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "throwError",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Boolean",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "emitPersons",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Person",
+            },
+          },
+        },
+      ],
+      "interfaces": [],
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Subscription",
+      },
+    },
+    {
+      "fields": [
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "nodeType",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "NodeType",
+                  },
+                },
+              },
+            },
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "id",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Int",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "node",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Node",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "search",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "search",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "SearchResult",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "id",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Int",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "person",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Person",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "id",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Int",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "planet",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Planet",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "id",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Int",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "film",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Film",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "id",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Int",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "transport",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Transport",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "id",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Int",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "starship",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Starship",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "id",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Int",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "vehicle",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Vehicle",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "search",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "searchPeopleByName",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Person",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "search",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "searchStarshipsByName",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Starship",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "search",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "searchTransportsByName",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Transport",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "search",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "searchSpeciesByName",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Species",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "search",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "searchVehiclesByName",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Vehicle",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "search",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "searchPlanetsByName",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Planet",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": {
+                "kind": "StringValue",
+                "value": "The Empire Strikes Back",
+              },
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "search",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "searchFilmsByTitle",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Film",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "allFilms",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Film",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "allStarships",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Starship",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "allPeople",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Person",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "allPlanets",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Planet",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "allSpecies",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Species",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "allTransports",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Transport",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": {
+                "fields": [
+                  {
+                    "kind": "ObjectField",
+                    "name": {
+                      "kind": "Name",
+                      "value": "enumField",
+                    },
+                    "value": {
+                      "kind": "EnumValue",
+                      "value": "Transport",
+                    },
+                  },
+                  {
+                    "kind": "ObjectField",
+                    "name": {
+                      "kind": "Name",
+                      "value": "otherField",
+                    },
+                    "value": {
+                      "kind": "StringValue",
+                      "value": "Foo",
+                    },
+                  },
+                ],
+                "kind": "ObjectValue",
+              },
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "input",
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "AdvancedInput",
+                  },
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "advancedDefaultInput",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "a",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Int",
+                },
+              },
+            },
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "b",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String",
+                },
+              },
+            },
+            {
+              "defaultValue": undefined,
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "c",
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "AdvancedInput",
+                },
+              },
+            },
+          ],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "multiArger",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+      ],
+      "interfaces": [],
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Query",
+      },
+    },
+    {
+      "fields": [
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+      ],
+      "interfaces": [],
+      "kind": "InterfaceTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Node",
+      },
+    },
+    {
+      "kind": "UnionTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Alive",
+      },
+      "types": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Person",
+          },
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Species",
+          },
+        },
+      ],
+    },
+    {
+      "fields": [
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title",
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "starships",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Starship",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "edited",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "vehicles",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Vehicle",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "planets",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Planet",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "producer",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "created",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "episode_id",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "director",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "release_date",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "opening_crawl",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "characters",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Person",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "species",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Species",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+      ],
+      "interfaces": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Node",
+          },
+        },
+      ],
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Film",
+      },
+    },
+    {
+      "fields": [
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "name",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "vehicle_class",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "pilots",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Person",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "edited",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "consumables",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "created",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "model",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "manufacturer",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "image",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "cargo_capacity",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "passengers",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "max_atmosphering_speed",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "crew",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "length",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Float",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "cost_in_credits",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+      ],
+      "interfaces": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Node",
+          },
+        },
+      ],
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Vehicle",
+      },
+    },
+    {
+      "fields": [
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "edited",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "name",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "created",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "gender",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "skin_color",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "hair_color",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "height",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "eye_color",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "mass",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "homeworld",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Planet",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "birth_year",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "image",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "vehicles",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Vehicle",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "starships",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Starship",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "films",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Film",
+              },
+            },
+          },
+        },
+      ],
+      "interfaces": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Node",
+          },
+        },
+      ],
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Person",
+      },
+    },
+    {
+      "fields": [
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "films",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Film",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "pilots",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Person",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "MGLT",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "starship_class",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "hyperdrive_rating",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Float",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "edited",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "consumables",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "name",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "created",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "cargo_capacity",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "passengers",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "max_atmosphering_speed",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "crew",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "length",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "model",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "cost_in_credits",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "manufacturer",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "image",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+      ],
+      "interfaces": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Node",
+          },
+        },
+      ],
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Starship",
+      },
+    },
+    {
+      "fields": [
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "edited",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "climate",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "surface_water",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "name",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "diameter",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "rotation_period",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "created",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "terrain",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "gravity",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "orbital_period",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "population",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "residents",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Person",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "films",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Film",
+              },
+            },
+          },
+        },
+      ],
+      "interfaces": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Node",
+          },
+        },
+      ],
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Planet",
+      },
+    },
+    {
+      "fields": [
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "edited",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "classification",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "name",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "designation",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "created",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "eye_colors",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "people",
+          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Person",
+              },
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "skin_colors",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "language",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "hair_colors",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "homeworld",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Planet",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "average_lifespan",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "average_height",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+      ],
+      "interfaces": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Node",
+          },
+        },
+      ],
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Species",
+      },
+    },
+    {
+      "fields": [
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "edited",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "consumables",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "name",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "created",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "cargo_capacity",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "passengers",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "max_atmosphering_speed",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "crew",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "length",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "model",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "cost_in_credits",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "manufacturer",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "image",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+        {
+          "arguments": [],
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int",
+            },
+          },
+        },
+      ],
+      "interfaces": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Node",
+          },
+        },
+      ],
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Transport",
+      },
+    },
+    {
+      "fields": [
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "enumField",
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "NodeType",
+              },
+            },
+          },
+        },
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "otherField",
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String",
+              },
+            },
+          },
+        },
+      ],
+      "kind": "InputObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "AdvancedInput",
+      },
+    },
+    {
+      "arguments": [
+        {
+          "defaultValue": undefined,
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "locale",
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String",
+            },
+          },
+        },
+      ],
+      "kind": "DirectiveDefinition",
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "QUERY",
+        },
+      ],
+      "name": {
+        "kind": "Name",
+        "value": "i18n",
+      },
+      "repeatable": false,
+    },
+  ],
+  "kind": "Document",
+}
+`;
