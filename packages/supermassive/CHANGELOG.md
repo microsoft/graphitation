@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Thu, 21 Sep 2023 06:28:45 GMT and should not be manually modified.
+This log was last generated on Wed, 27 Sep 2023 08:50:33 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.1.0
+
+Wed, 27 Sep 2023 08:50:33 GMT
+
+### Minor changes
+
+- Add supermassive v3 annotations (mnovikov@microsoft.com)
 
 ## 3.0.1
 

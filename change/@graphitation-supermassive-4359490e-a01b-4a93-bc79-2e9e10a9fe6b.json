@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Add supermassive v3 annotations",
-  "packageName": "@graphitation/supermassive",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

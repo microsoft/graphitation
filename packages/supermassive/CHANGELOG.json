@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Wed, 27 Sep 2023 08:50:33 GMT",
+      "tag": "@graphitation/supermassive_v3.1.0",
+      "version": "3.1.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "04e7dffa35275ac932a722bc9e77adbafa3a299f",
+            "comment": "Add supermassive v3 annotations"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 21 Sep 2023 06:28:45 GMT",
       "tag": "@graphitation/supermassive_v3.0.1",
       "version": "3.0.1",
