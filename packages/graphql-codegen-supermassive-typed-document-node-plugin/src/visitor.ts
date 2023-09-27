@@ -19,8 +19,6 @@ import {
   print,
   Kind,
   OperationDefinitionNode,
-  visit as visitAST,
-  ASTNode,
 } from "graphql";
 import {
   addSupermassiveLegacyTypesToRequestDocument,
@@ -222,50 +220,4 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
     }
     return finalDocument;
   }
-}
-
-function addTypename(
-  document: OperationDefinitionNode | FragmentDefinitionNode,
-): OperationDefinitionNode | FragmentDefinitionNode {
-  return visitAST(document, {
-    SelectionSet: {
-      leave(node, _, parent) {
-        if (
-          parent &&
-          !Array.isArray(parent) &&
-          (parent as ASTNode).kind === "OperationDefinition"
-        ) {
-          return;
-        }
-        const { selections } = node;
-        if (!selections) {
-          return;
-        }
-        // Check if there already is an unaliased __typename selection
-        if (
-          selections.some(
-            (selection) =>
-              selection.kind === "Field" &&
-              selection.name.value === "__typename" &&
-              selection.alias === undefined,
-          )
-        ) {
-          return;
-        }
-        return {
-          ...node,
-          selections: [
-            ...selections,
-            {
-              kind: "Field",
-              name: {
-                kind: "Name",
-                value: "__typename",
-              },
-            },
-          ],
-        };
-      },
-    },
-  });
 }
