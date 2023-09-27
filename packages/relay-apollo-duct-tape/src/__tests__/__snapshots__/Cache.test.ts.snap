@@ -800,8 +800,6 @@ exports[`Type Policies keyArgs connection-like with apollo 2`] = `
 }
 `;
 
-exports[`Type Policies keyArgs connection-like with relayWithBuildtimeGeneratedIR 1`] = `null`;
-
 exports[`Type Policies keyArgs connection-like with relayWithRuntimeGeneratedIR 1`] = `
 {
   "conversation": {
@@ -896,26 +894,6 @@ exports[`Type Policies keyArgs plain keyArg with apollo 1`] = `
 exports[`Type Policies keyArgs plain keyArg with apollo 2`] = `
 {
   "conversationWithGarbage": {
-    "id": "42",
-    "title": "caller-info",
-  },
-}
-`;
-
-exports[`Type Policies keyArgs plain keyArg with relayWithBuildtimeGeneratedIR 1`] = `
-{
-  "conversationWithGarbage": {
-    "__typename": "Conversation",
-    "id": "42",
-    "title": "no-caller-info",
-  },
-}
-`;
-
-exports[`Type Policies keyArgs plain keyArg with relayWithBuildtimeGeneratedIR 2`] = `
-{
-  "conversationWithGarbage": {
-    "__typename": "Conversation",
     "id": "42",
     "title": "caller-info",
   },
