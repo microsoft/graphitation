@@ -5,6 +5,7 @@ import {
   DocumentNode,
   FragmentDefinitionNode,
   OperationDefinitionNode,
+  Kind,
 } from "graphql";
 import { Maybe } from "./jsutils/Maybe";
 import { PromiseOrValue } from "./jsutils/PromiseOrValue";
@@ -301,3 +302,16 @@ export type SchemaFragmentLoader = (
   currentContextValue: unknown,
   req: SchemaFragmentRequest,
 ) => Promise<SchemaFragmentLoaderResult>;
+
+export type DocumentWithMinimalViableSchema = {
+  readonly kind: "DOCUMENT";
+  readonly loc?: Location;
+  readonly definitions: DefinitionNodeWithMinimalViableSchema[];
+};
+
+export type DefinitionNodeWithMinimalViableSchema = (
+  | OperationDefinitionNode
+  | FragmentDefinitionNode
+) & {
+  readonly __defs: SchemaDefinitions;
+};

@@ -1,6 +1,6 @@
 {
-  "type": "patch",
-  "comment": "Actually decode locations",
+  "type": "minor",
+  "comment": "Add more utility functtions, fix decode locations",
   "packageName": "@graphitation/supermassive",
   "email": "mnovikov@microsoft.com",
   "dependentChangeType": "patch"
