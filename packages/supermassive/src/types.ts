@@ -303,7 +303,7 @@ export type SchemaFragmentLoader = (
 ) => Promise<SchemaFragmentLoaderResult>;
 
 export type DocumentWithMinimalViableSchema = {
-  readonly kind: "DOCUMENT";
+  readonly kind: "Document";
   readonly loc?: Location;
   readonly definitions: DefinitionNodeWithMinimalViableSchema[];
 };
