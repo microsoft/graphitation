@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Actually decode locations",
-  "packageName": "@graphitation/supermassive",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}
