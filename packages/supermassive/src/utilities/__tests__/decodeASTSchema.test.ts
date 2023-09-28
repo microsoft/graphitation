@@ -1,4 +1,4 @@
-import { DocumentNode, visit } from "graphql";
+import { DocumentNode, visit, print } from "graphql";
 import { decodeASTSchema } from "../decodeASTSchema";
 import { encodeASTSchema } from "../encodeASTSchema";
 import { kitchenSinkSDL } from "./fixtures/kitchenSinkSDL";
@@ -13,7 +13,7 @@ describe(encodeASTSchema, () => {
 
     expect(decoded).toEqual(doc);
     expect(encodeASTSchema(decoded)).toEqual(encoded);
-    expect(decoded).toMatchSnapshot();
+    expect(print(decoded)).toMatchSnapshot();
   });
 
   test("correctly encodes kitchen sink AST schema", () => {
@@ -26,7 +26,7 @@ describe(encodeASTSchema, () => {
     ];
     const decoded = decodeASTSchema(encoded);
     expect(encodeASTSchema(decoded)).toEqual(encoded);
-    expect(decoded).toMatchSnapshot();
+    expect(print(decoded)).toMatchSnapshot();
   });
 });
 
