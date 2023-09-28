@@ -5,7 +5,6 @@ import {
   DocumentNode,
   FragmentDefinitionNode,
   OperationDefinitionNode,
-  Kind,
 } from "graphql";
 import { Maybe } from "./jsutils/Maybe";
 import { PromiseOrValue } from "./jsutils/PromiseOrValue";
