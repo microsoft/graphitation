@@ -572,7 +572,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           title(foo: String = "Bar"): String!
         }
 
-        directive @i18n(locale: String) on 
+        directive @i18n(locale: String) on QUERY
         "
       `);
     });

@@ -45,6 +45,8 @@ import {
   getInputDefaultValue,
   getDirectiveName,
   getDirectiveDefinitionArgs,
+  getDirectiveLocations,
+  decodeDirectiveLocation,
 } from "../schema/definition";
 import {
   inspectTypeReference,
@@ -320,12 +322,16 @@ function decodeDirective(
 ): DirectiveDefinitionNode {
   const name = getDirectiveName(tuple);
   const args = getDirectiveDefinitionArgs(tuple);
+  const locations = getDirectiveLocations(tuple);
   return {
     kind: Kind.DIRECTIVE_DEFINITION,
     name: nameNode(name),
     arguments: args ? decodeArguments(args, types) : [],
-    // TODO? locations and repeatable are irrelevant for execution
+    locations: locations.map((loc) => ({
+      kind: Kind.NAME,
+      value: decodeDirectiveLocation(loc),
+    })),
+    // TODO? repeatable are irrelevant for execution
     repeatable: false,
-    locations: [],
   };
 }
