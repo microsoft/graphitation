@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 28 Sep 2023 12:04:15 GMT",
+      "tag": "@graphitation/supermassive_v3.2.0",
+      "version": "3.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "4057f73463bbbba623a601313e53bf54f125d23e",
+            "comment": "Add more utility functtions, fix decode locations"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 27 Sep 2023 08:50:33 GMT",
       "tag": "@graphitation/supermassive_v3.1.0",
       "version": "3.1.0",
