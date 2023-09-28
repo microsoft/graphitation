@@ -17,6 +17,10 @@ import {
 } from "../schema/definition";
 import { inspect } from "../jsutils/inspect";
 
+export function createSchemaDefinitions(definitions: SchemaDefinitions[]) {
+  return mergeSchemaDefinitions({ types: {}, directives: [] }, definitions);
+}
+
 export function mergeSchemaDefinitions(
   accumulator: SchemaDefinitions,
   definitions: SchemaDefinitions[],

@@ -30,7 +30,11 @@ export { decodeASTSchema } from "./utilities/decodeASTSchema";
 export { encodeASTSchema } from "./utilities/encodeASTSchema";
 export { extractMinimalViableSchemaForRequestDocument } from "./utilities/extractMinimalViableSchemaForRequestDocument";
 export { mergeResolvers } from "./utilities/mergeResolvers";
-export { mergeSchemaDefinitions } from "./utilities/mergeSchemaDefinitions";
+export {
+  createSchemaDefinitions,
+  mergeSchemaDefinitions,
+} from "./utilities/mergeSchemaDefinitions";
+export { schemaFragmentFromMinimalViableSchemaDocument } from "./utilities/schemaFragmentFromMinimalViableSchemaDocument";
 
 export type {
   CompositeTypeTuple,
@@ -79,6 +83,8 @@ export type {
   SubscriptionExecutionResult,
   TotalExecutionResult,
   UserResolvers,
+  DocumentWithMinimalViableSchema,
+  DefinitionNodeWithMinimalViableSchema,
 } from "./types";
 
 export type { PromiseOrValue } from "./jsutils/PromiseOrValue";

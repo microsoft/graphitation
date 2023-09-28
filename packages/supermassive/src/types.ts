@@ -301,3 +301,16 @@ export type SchemaFragmentLoader = (
   currentContextValue: unknown,
   req: SchemaFragmentRequest,
 ) => Promise<SchemaFragmentLoaderResult>;
+
+export type DocumentWithMinimalViableSchema = {
+  readonly kind: "Document";
+  readonly loc?: Location;
+  readonly definitions: DefinitionNodeWithMinimalViableSchema[];
+};
+
+export type DefinitionNodeWithMinimalViableSchema = (
+  | OperationDefinitionNode
+  | FragmentDefinitionNode
+) & {
+  readonly __defs: SchemaDefinitions;
+};
