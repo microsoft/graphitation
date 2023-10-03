@@ -41,20 +41,15 @@ fragment TodoListFooter_todosFragment on TodosConnection {
 }
 
 fragment TodoList_nodeFragment on NodeWithTodos {
+  __isNodeWithTodos: __typename
   __typename
-  todos(first: 5, after: "") @connection(key: "TodosList_todos") {
+  todos(first: 5, after: "") {
     edges {
       node {
         id
         isCompleted
         ...Todo_todoFragment
-        __typename
       }
-      cursor
-    }
-    pageInfo {
-      endCursor
-      hasNextPage
     }
     id
   }
@@ -164,11 +159,8 @@ v11 = {
   "value": "TodoList_nodeFragment"
 },
 v12 = {
-  "kind": "Field",
-  "name": {
-    "kind": "Name",
-    "value": "__typename"
-  }
+  "kind": "Name",
+  "value": "__typename"
 },
 v13 = {
   "kind": "Field",
@@ -295,7 +287,18 @@ return {
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
-            (v12/*: any*/),
+            {
+              "kind": "Field",
+              "alias": {
+                "kind": "Name",
+                "value": "__isNodeWithTodos"
+              },
+              "name": (v12/*: any*/)
+            },
+            {
+              "kind": "Field",
+              "name": (v12/*: any*/)
+            },
             {
               "kind": "Field",
               "name": (v5/*: any*/),
@@ -319,29 +322,6 @@ return {
                     "value": "",
                     "block": false
                   }
-                }
-              ],
-              "directives": [
-                {
-                  "kind": "Directive",
-                  "name": {
-                    "kind": "Name",
-                    "value": "connection"
-                  },
-                  "arguments": [
-                    {
-                      "kind": "Argument",
-                      "name": {
-                        "kind": "Name",
-                        "value": "key"
-                      },
-                      "value": {
-                        "kind": "StringValue",
-                        "value": "TodosList_todos",
-                        "block": false
-                      }
-                    }
-                  ]
                 }
               ],
               "selectionSet": {
@@ -370,42 +350,8 @@ return {
                               {
                                 "kind": "FragmentSpread",
                                 "name": (v14/*: any*/)
-                              },
-                              (v12/*: any*/)
+                              }
                             ]
-                          }
-                        },
-                        {
-                          "kind": "Field",
-                          "name": {
-                            "kind": "Name",
-                            "value": "cursor"
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "kind": "Field",
-                    "name": {
-                      "kind": "Name",
-                      "value": "pageInfo"
-                    },
-                    "selectionSet": {
-                      "kind": "SelectionSet",
-                      "selections": [
-                        {
-                          "kind": "Field",
-                          "name": {
-                            "kind": "Name",
-                            "value": "endCursor"
-                          }
-                        },
-                        {
-                          "kind": "Field",
-                          "name": {
-                            "kind": "Name",
-                            "value": "hasNextPage"
                           }
                         }
                       ]

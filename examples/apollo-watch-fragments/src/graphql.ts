@@ -153,6 +153,7 @@ export function createClient() {
   };
   const { possibleTypes, dataIdFromNode } =
     getPossibleTypesAndDataIdFromNode(schema);
+  console.log(">>", possibleTypes);
   return new ApolloClient({
     link: new SchemaLink({ schema, context }),
     cache: new InMemoryCache({

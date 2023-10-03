@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { graphql } from "@graphitation/graphql-js-tag";
 import { useLazyLoadQuery } from "@graphitation/apollo-react-relay-duct-tape";
 
@@ -11,6 +11,7 @@ import { AppQuery as AppQueryType } from "./__generated__/AppQuery.graphql";
 
 const App: React.FC = () => {
   const addTodo = useAddTodoMutation();
+  const [variables, setVariables] = useState({ includeSomeOtherField: false });
 
   const result = useLazyLoadQuery<AppQueryType>(
     graphql`
@@ -25,8 +26,14 @@ const App: React.FC = () => {
         }
       }
     `,
-    { includeSomeOtherField: false },
+    variables,
   );
+
+  const refetch = () => {
+    setVariables((prev) => ({
+      includeSomeOtherField: !prev.includeSomeOtherField,
+    }));
+  };
   if (result.error) {
     throw result.error;
   } else if (!result.data) {
@@ -47,7 +54,7 @@ const App: React.FC = () => {
       <section className="main">
         <input id="toggle-all" className="toggle-all" type="checkbox" />
         <label htmlFor="toggle-all">Mark all as complete</label>
-        <TodoList node={result.data.me} />
+        <TodoList node={result.data.me} refetch={refetch} />
       </section>
       {result.data.me.todoStats.totalCount > 0 && (
         <TodoListFooter todos={result.data.me.todoStats} />

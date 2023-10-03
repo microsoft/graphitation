@@ -17,5 +17,5 @@ export type Todo_todoFragment$key = {
 };
 
 
-import { documents } from "./TodoRefetchQuery.graphql";
+import { documents } from "./Todo_todoWatchNodeQuery.graphql";
 export default documents;
