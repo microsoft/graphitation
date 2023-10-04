@@ -132,9 +132,9 @@ const generateVariableDefinitions = (config: RawClientSideBasePluginConfig) => {
     return [
       `(${variable} as any).__relay = ${json};`,
       `(${variable} as any).__relay.hash = "${
-        isConcreteRequest(node) && node.params.cacheID
+        isConcreteRequest(node) && (node.params as any).cacheID
           ? // For a ConcreteRequest we can re-use the cacheID and avoid some overhead
-            node.params.cacheID
+            (node.params as any).cacheID
           : // For a ReaderFragment we need to generate a hash ourselves
             crypto.createHash("md5").update(json, "utf8").digest("hex")
       }";`,

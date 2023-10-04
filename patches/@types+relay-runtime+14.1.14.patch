@@ -1,5 +1,5 @@
 diff --git a/node_modules/@types/relay-runtime/index.d.ts b/node_modules/@types/relay-runtime/index.d.ts
-index f165121..d9c18ec 100644
+index f165121..8dad92f 100644
 --- a/node_modules/@types/relay-runtime/index.d.ts
 +++ b/node_modules/@types/relay-runtime/index.d.ts
 @@ -154,9 +154,10 @@ export { RelayObservable as Observable } from "./lib/network/RelayObservable";
@@ -10,21 +10,26 @@ index f165121..d9c18ec 100644
  export { default as Store } from "./lib/store/RelayModernStore";
 -export { RelayRecordSource as RecordSource } from "./lib/store/RelayRecordSource";
 +import * as RecordSource from './lib/store/RelayRecordSource';
-+import { RelayModernRecord as Record } from './lib/store/RelayModernRecord';
-+export { RecordSource };
++import * as Record from './lib/store/RelayModernRecord';
++export { RecordSource, Record };
  
  export { createFragmentSpecResolver } from "./lib/store/createFragmentSpecResolver";
  export { readInlineData } from "./lib/store/readInlineData";
 diff --git a/node_modules/@types/relay-runtime/lib/store/RelayModernRecord.d.ts b/node_modules/@types/relay-runtime/lib/store/RelayModernRecord.d.ts
-index 8bf74aa..281fe00 100644
+index 8bf74aa..43a731e 100644
 --- a/node_modules/@types/relay-runtime/lib/store/RelayModernRecord.d.ts
 +++ b/node_modules/@types/relay-runtime/lib/store/RelayModernRecord.d.ts
-@@ -5,7 +5,7 @@ export class RelayModernRecord {
+@@ -1,11 +1,11 @@
+ import { DataID } from "../util/RelayRuntimeTypes";
+ import { Record } from "./RelayStoreTypes";
+ 
+-export class RelayModernRecord {
++// export class RelayModernRecord {
      /**
       * Clone a record.
       */
 -    clone(record: Record): Record;
-+    static clone(record: Record): Record;
++    export function clone(record: Record): Record;
  
      /**
       * Copies all fields from `source` to `sink`, excluding `__id` and `__typename`.
@@ -33,45 +38,45 @@ index 8bf74aa..281fe00 100644
       * copied on write.
       */
 -    copyFields(source: Record, sink: Record): void;
-+    static copyFields(source: Record, sink: Record): void;
++    export function copyFields(source: Record, sink: Record): void;
  
      /**
       * Create a new record.
       */
 -    create(dataID: DataID, typeName: string): Record;
-+    static create(dataID: DataID, typeName: string): Record;
++    export function create(dataID: DataID, typeName: string): Record;
  
      /**
       * Get the record's `id` if available or the client-generated identifier.
       */
 -    getDataID(record: Record): DataID;
-+    static getDataID(record: Record): DataID;
++    export function getDataID(record: Record): DataID;
  
      /**
       * Get the concrete type of the record.
       */
 -    getType(record: Record): string;
-+    static getType(record: Record): string;
++    export function getType(record: Record): string;
  
      /**
       * Get a scalar (non-link) field value.
       */
 -    getValue(record: Record, storageKey: string): unknown;
-+    static getValue(record: Record, storageKey: string): unknown;
++    export function getValue(record: Record, storageKey: string): unknown;
  
      /**
       * Get the value of a field as a reference to another record. Throws if the
       * field has a different type.
       */
 -    getLinkedRecordID(record: Record, storageKey: string): DataID | null;
-+    static getLinkedRecordID(record: Record, storageKey: string): DataID | null;
++    export function getLinkedRecordID(record: Record, storageKey: string): DataID | null;
  
      /**
       * Get the value of a field as a list of references to other records. Throws if
       * the field has a different type.
       */
 -    getLinkedRecordIDs(record: Record, storageKey: string): DataID[] | null;
-+    static getLinkedRecordIDs(record: Record, storageKey: string): DataID[] | null;
++    export function getLinkedRecordIDs(record: Record, storageKey: string): DataID[] | null;
  
      /**
       * Compares the fields of a previous and new record, returning either the
@@ -79,40 +84,41 @@ index 8bf74aa..281fe00 100644
       * if any fields have changed.
       */
 -    update(prevRecord: Record, nextRecord: Record): Record;
-+    static update(prevRecord: Record, nextRecord: Record): Record;
++    export function update(prevRecord: Record, nextRecord: Record): Record;
  
      /**
       * Returns a new record with the contents of the given records. Fields in the
       * second record will overwrite identical fields in the first record.
       */
 -    merge(record1: Record, record2: Record): Record;
-+    static merge(record1: Record, record2: Record): Record;
++    export function merge(record1: Record, record2: Record): Record;
  
      /**
       * Prevent modifications to the record. Attempts to call `set*` functions on a
       * frozen record will fatal at runtime.
       */
 -    freeze(record: Record): void;
-+    static freeze(record: Record): void;
++    export function freeze(record: Record): void;
  
      /**
       * Set the value of a storageKey to a scalar.
       */
 -    setValue(record: Record, storageKey: string, value: any): void;
-+    static setValue(record: Record, storageKey: string, value: any): void;
++    export function setValue(record: Record, storageKey: string, value: any): void;
  
      /**
       * Set the value of a field to a reference to another record.
       */
 -    setLinkedRecordID(record: Record, storageKey: string, linkedID: DataID): void;
-+    static setLinkedRecordID(record: Record, storageKey: string, linkedID: DataID): void;
++    export function setLinkedRecordID(record: Record, storageKey: string, linkedID: DataID): void;
  
      /**
       * Set the value of a field to a list of references other records.
       */
 -    setLinkedRecordIDs(record: Record, storageKey: string, linkedIDs: DataID[] | null): void;
-+    static setLinkedRecordIDs(record: Record, storageKey: string, linkedIDs: DataID[] | null): void;
- }
+-}
++    export function setLinkedRecordIDs(record: Record, storageKey: string, linkedIDs: DataID[] | null): void;
++// }
 diff --git a/node_modules/@types/relay-runtime/lib/store/RelayPublishQueue.d.ts b/node_modules/@types/relay-runtime/lib/store/RelayPublishQueue.d.ts
 new file mode 100644
 index 0000000..e4b515d
