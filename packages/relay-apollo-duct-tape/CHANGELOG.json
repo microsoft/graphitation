@@ -2,6 +2,27 @@
   "name": "@graphitation/relay-apollo-duct-tape",
   "entries": [
     {
+      "date": "Wed, 04 Oct 2023 13:51:41 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.5.1",
+      "version": "0.5.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "c9c50e4c6bfb1bc50376cd5228b5ad8fe9cc2274",
+            "comment": "Keep adding typename"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "comment": "Bump @graphitation/supermassive to v3.2.0",
+            "commit": "c9c50e4c6bfb1bc50376cd5228b5ad8fe9cc2274"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 04 Oct 2023 10:42:36 GMT",
       "tag": "@graphitation/relay-apollo-duct-tape_v0.5.0",
       "version": "0.5.0",
