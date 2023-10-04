@@ -19,7 +19,7 @@ import RelayRecordSource from "relay-runtime/lib/store/RelayRecordSource";
 
 import fs from "fs";
 import path from "path";
-import { parse, print as printGraphQL } from "graphql";
+import { parse } from "graphql";
 
 const schema = parse(
   fs.readFileSync(
