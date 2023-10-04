@@ -683,12 +683,9 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
       {
         kind: "linked",
         handle(field, record, argValues) {
-          if (field.name === "node") {
-            // console.log(field, record, argValues);
-          }
           if (
             record != null &&
-            record.__typename === ROOT_TYPE &&
+            record.getType() === ROOT_TYPE &&
             field.name === "node" &&
             argValues.hasOwnProperty("id")
           ) {
@@ -716,20 +713,6 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
               this.createMissingFieldHandler(typeName, fieldName, readFunction),
             );
           }
-          // if (fieldPolicy && (fieldPolicy as FieldPolicy<any>).keyArgs) {
-          //   handlers.push({
-          //     kind: "linked",
-          //     handle(field, record, argValues) {
-          //       if (
-          //         record != null &&
-          //         record.__typename === typeName &&
-          //         field.name === fieldName
-          //       ) {
-          //       }
-          //       return undefined;
-          //     },
-          //   });
-          // }
         }
       }
     }
@@ -746,7 +729,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
       handle: (field, record, argValues) => {
         if (
           record != null &&
-          record.__typename === typeName &&
+          record.getType() === typeName &&
           field.name === fieldName
         ) {
           const obj = readFunction(argValues);
@@ -955,7 +938,6 @@ function getNodeQuery(
       ],
     },
     params: {
-      cacheID: null,
       // cacheID: "90613d3754cd5400b0b29433387dbb42", // TODO: What does this do specifically?
       id: id, // TODO: Is this actually the id value?
       metadata: {},
