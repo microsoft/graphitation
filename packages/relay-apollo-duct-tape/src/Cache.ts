@@ -218,11 +218,6 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
       let taggedNode;
       if (this.mode === "BUILDTIME" && (result as any).__relay) {
         taggedNode = result.__relay;
-        // taggedNode = transformRelayIRForTypePolicies(
-        // result,
-        // true,
-        // this.typePolicies,
-        // );
       } else if (this.mode === "RUNTIME_SCHEMA" && this.schema) {
         taggedNode = transformDocument(
           this.schema,
