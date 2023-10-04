@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Keep adding typename",
+  "packageName": "@graphitation/relay-apollo-duct-tape",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
