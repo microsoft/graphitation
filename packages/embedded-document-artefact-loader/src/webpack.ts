@@ -33,9 +33,9 @@ const webpackLoader: LoaderDefinitionFunction = function (
   } else if (transformed && sourceMap) {
     callback(null, transformed, sourceMap as any); // SourceMapGenerator seems to satisfy the runtime needs, but it's unclear which properties it uses exactly
   } else if (transformed) {
-    callback(null, transformed);
+    callback(null, transformed, inputSourceMap);
   } else {
-    callback(null, source);
+    callback(null, source, inputSourceMap);
   }
 };
 

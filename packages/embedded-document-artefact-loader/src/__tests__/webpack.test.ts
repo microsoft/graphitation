@@ -310,5 +310,16 @@ describe("webpackLoader", () => {
         `"require("./__generated__/SomeComponentQuery.graphql").default"`,
       );
     });
+
+    it("returns the input source-map when no code is transformed", async () => {
+      const source = `
+        import { graphql } from "@nova/react";
+        console.log()
+      `;
+
+      const result = await runLoader(source, { compileTS: true });
+      const sourceMap = result.result![1];
+      expect(sourceMap).toMatchSnapshot();
+    });
   });
 });
