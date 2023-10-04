@@ -87,7 +87,7 @@ import {
 } from "./relayDocumentUtils";
 
 import type { Schema } from "./vendor/relay-compiler/lib/core/Schema";
-import type { DocumentNode } from "graphql";
+import type { DefinitionNode, DocumentNode } from "graphql";
 import { HandlerProvider } from "relay-runtime/lib/handlers/RelayDefaultHandlerProvider";
 
 declare global {
@@ -215,6 +215,12 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     let result = this.transformedDocumentCache.get(document);
     if (!result) {
       result = addTypenameToDocument(document);
+      result = {
+        ...document,
+        definitions: (document.definitions as DefinitionNode[]).filter(
+          uniqueFilter,
+        ),
+      };
       let taggedNode;
       if (this.mode === "BUILDTIME" && (result as any).__relay) {
         taggedNode = result.__relay;
@@ -941,6 +947,6 @@ function getNodeQuery(
   };
 }
 
-// function uniqueFilter<T>(value: T, index: number, array: T[]) {
-//   return array.indexOf(value) === index;
-// }
+function uniqueFilter<T>(value: T, index: number, array: T[]) {
+  return array.indexOf(value) === index;
+}
