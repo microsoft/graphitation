@@ -2,6 +2,21 @@
   "name": "@graphitation/embedded-document-artefact-loader",
   "entries": [
     {
+      "date": "Wed, 04 Oct 2023 06:06:12 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.6.5",
+      "version": "0.6.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "d4c92267bb883bdca0675a43cb10f87f4e590a9d",
+            "comment": "[loader] Pass on source-map when not transforming"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 21 Sep 2023 06:28:45 GMT",
       "tag": "@graphitation/embedded-document-artefact-loader_v0.6.4",
       "version": "0.6.4",

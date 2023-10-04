@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "[loader] Pass on source-map when not transforming",
-  "packageName": "@graphitation/embedded-document-artefact-loader",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}
