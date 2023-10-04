@@ -214,11 +214,7 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
   transformDocument(document: DocumentNode): DocumentNode & { __relay?: any } {
     let result = this.transformedDocumentCache.get(document);
     if (!result) {
-      if (this.schema) {
-        result = addTypenameToDocument(document);
-      } else {
-        result = document;
-      }
+      result = addTypenameToDocument(document);
       let taggedNode;
       if (this.mode === "BUILDTIME" && (result as any).__relay) {
         taggedNode = result.__relay;
