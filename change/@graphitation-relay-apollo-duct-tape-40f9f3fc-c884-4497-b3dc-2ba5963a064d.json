@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Wrong doc to spread :/",
-  "packageName": "@graphitation/relay-apollo-duct-tape",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

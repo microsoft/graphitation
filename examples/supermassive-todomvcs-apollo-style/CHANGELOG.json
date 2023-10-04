@@ -2,6 +2,39 @@
   "name": "supermassive-todomvc-apollo-style",
   "entries": [
     {
+      "date": "Wed, 04 Oct 2023 14:49:50 GMT",
+      "tag": "supermassive-todomvc-apollo-style_v1.0.0",
+      "version": "1.0.0",
+      "comments": {
+        "undefined": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc-apollo-style",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.0.14",
+            "commit": "3e06badb76f78b85df97be32f596710627098870"
+          },
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc-apollo-style",
+            "comment": "Bump @graphitation/graphql-js-tag to v0.9.1",
+            "commit": "3e06badb76f78b85df97be32f596710627098870"
+          },
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc-apollo-style",
+            "comment": "Bump @graphitation/supermassive to v3.2.0",
+            "commit": "3e06badb76f78b85df97be32f596710627098870"
+          },
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc-apollo-style",
+            "comment": "Bump @graphitation/ts-transform-graphql-js-tag to v1.1.1",
+            "commit": "3e06badb76f78b85df97be32f596710627098870"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 04 Oct 2023 13:51:41 GMT",
       "tag": "supermassive-todomvc-apollo-style_v1.0.0",
       "version": "1.0.0",
