@@ -3,5 +3,5 @@
   "comment": "Alpha work progress",
   "packageName": "@graphitation/relay-apollo-duct-tape",
   "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
+  "dependentChangeType": "none"
 }
