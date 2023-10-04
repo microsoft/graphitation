@@ -1,8 +1,17 @@
 # Change Log - @graphitation/relay-apollo-duct-tape
 
-This log was last generated on Thu, 07 Sep 2023 13:06:12 GMT and should not be manually modified.
+This log was last generated on Wed, 04 Oct 2023 10:42:36 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.5.0
+
+Wed, 04 Oct 2023 10:42:36 GMT
+
+### Minor changes
+
+- Alpha work progress (mnovikov@microsoft.com)
+- Bump @graphitation/supermassive to v3.2.0
 
 ## 0.4.11
 

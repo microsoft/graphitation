@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Alpha work progress",
-  "packageName": "@graphitation/graphql-codegen-relay-ir-plugin",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "none"
-}
