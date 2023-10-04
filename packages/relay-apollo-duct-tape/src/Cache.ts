@@ -216,8 +216,8 @@ export class RelayApolloCache extends ApolloCache<RecordMap> {
     if (!result) {
       result = addTypenameToDocument(document);
       result = {
-        ...document,
-        definitions: (document.definitions as DefinitionNode[]).filter(
+        ...result,
+        definitions: (result.definitions as DefinitionNode[]).filter(
           uniqueFilter,
         ),
       };
