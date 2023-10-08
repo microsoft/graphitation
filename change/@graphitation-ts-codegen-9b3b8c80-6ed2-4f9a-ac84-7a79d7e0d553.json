@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Backawrds compatibility changes reverted + added option to enable string unions instead of enums",
-  "packageName": "@graphitation/ts-codegen",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}

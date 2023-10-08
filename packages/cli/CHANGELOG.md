@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-This log was last generated on Thu, 21 Sep 2023 06:28:45 GMT and should not be manually modified.
+This log was last generated on Sun, 08 Oct 2023 15:21:54 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.8.0
+
+Sun, 08 Oct 2023 15:21:54 GMT
+
+### Minor changes
+
+- Backawrds compatibility changes reverted + added option to enable string unions instead of enums (jakubvejr@microsoft.com)
+- Bump @graphitation/ts-codegen to v2.7.0
 
 ## 1.7.1
 
