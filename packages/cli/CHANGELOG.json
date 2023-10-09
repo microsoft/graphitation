@@ -2,6 +2,27 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Sun, 08 Oct 2023 15:21:54 GMT",
+      "tag": "@graphitation/cli_v1.8.0",
+      "version": "1.8.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "46a9cc74ef4ae5317064102602cc1c6a804b102f",
+            "comment": "Backawrds compatibility changes reverted + added option to enable string unions instead of enums"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.7.0",
+            "commit": "46a9cc74ef4ae5317064102602cc1c6a804b102f"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 21 Sep 2023 06:28:45 GMT",
       "tag": "@graphitation/cli_v1.7.1",
       "version": "1.7.1",

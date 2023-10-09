@@ -15,7 +15,7 @@ type GenerateInterfacesOptions = {
   enumsImport?: string;
   legacy?: boolean;
   legacyModels?: boolean;
-  legacyEnumsCompatibility?: boolean;
+  useStringUnionsInsteadOfEnums?: boolean;
   scope?: string;
 };
 
@@ -50,8 +50,8 @@ export function supermassive(): Command {
     .option("-l, --legacy", "generate legacy types")
     .option("--legacy-models", "do not use models for object types")
     .option(
-      "--legacy-enums-compatibility",
-      "When this flag is set, then enums are generated using typescript 'Enum' keyword, which is then used in fields along side with string unions. If this flag is not set, then enums are generated as string unions.",
+      "--useStringUnionsInsteadOfEnums",
+      "When this flag is set, then enums are replaced by string unions.",
     )
     .option("--scope [scope]", "generate models only for scope")
     .description("generate interfaces and models")
@@ -127,7 +127,7 @@ async function generateInterfaces(
       enumsImport: getContextPath(outputPath, options.enumsImport) || null,
       legacyCompat: !!options.legacy,
       legacyNoModelsForObjects: !!options.legacyModels,
-      legacyEnumsCompatibility: !!options.legacyEnumsCompatibility,
+      useStringUnionsInsteadOfEnums: !!options.useStringUnionsInsteadOfEnums,
       modelScope: options.scope || null,
     });
 
