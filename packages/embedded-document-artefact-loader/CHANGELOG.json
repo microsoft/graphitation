@@ -2,6 +2,21 @@
   "name": "@graphitation/embedded-document-artefact-loader",
   "entries": [
     {
+      "date": "Mon, 09 Oct 2023 20:58:06 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.6.6",
+      "version": "0.6.6",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "e2472f80d5f2aa6ce56f22ce724e393c6ade9299",
+            "comment": "[loader] Never return a generator, use JSON where possible"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 04 Oct 2023 06:06:12 GMT",
       "tag": "@graphitation/embedded-document-artefact-loader_v0.6.5",
       "version": "0.6.5",

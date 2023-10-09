@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "[loader] Never return a generator, use JSON where possible",
-  "packageName": "@graphitation/embedded-document-artefact-loader",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}

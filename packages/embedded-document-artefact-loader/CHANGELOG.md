@@ -1,8 +1,16 @@
 # Change Log - @graphitation/embedded-document-artefact-loader
 
-This log was last generated on Wed, 04 Oct 2023 06:06:12 GMT and should not be manually modified.
+This log was last generated on Mon, 09 Oct 2023 20:58:06 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.6
+
+Mon, 09 Oct 2023 20:58:06 GMT
+
+### Patches
+
+- [loader] Never return a generator, use JSON where possible (eloy.de.enige@gmail.com)
 
 ## 0.6.5
 
