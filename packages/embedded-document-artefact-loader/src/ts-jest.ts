@@ -79,7 +79,7 @@ function extractAndApplySourceMap(
     //       ourselves rather than letting jest do the work.
     tsResult = {
       code: tsResultCode,
-      map: applySourceMap(sourcePath, sourceMap.toString(), tsResultMap) as any, // SourceMapGenerator seems to satisfy the runtime needs, but it's unclear which properties it uses exactly
+      map: applySourceMap(sourcePath, sourceMap.toJSON(), tsResultMap) as any, // SourceMapGenerator seems to satisfy the runtime needs, but it's unclear which properties it uses exactly
     };
   }
   return tsResult;

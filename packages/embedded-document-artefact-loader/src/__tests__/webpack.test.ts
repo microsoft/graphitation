@@ -197,7 +197,7 @@ describe("webpackLoader", () => {
       const result = await runLoader(source);
       const transpiled = result.result![0]?.toString();
       const sourceMap = result.result![1];
-      const consumer = new SourceMapConsumer(sourceMap!.toString() as any);
+      const consumer = new SourceMapConsumer(sourceMap! as any);
 
       expect(
         getGeneratedCodeForOriginalRange(
@@ -225,7 +225,7 @@ describe("webpackLoader", () => {
       const result = await runLoader(source);
       const transpiled = result.result![0]?.toString();
       const sourceMap = result.result![1];
-      const consumer = new SourceMapConsumer(sourceMap!.toString() as any);
+      const consumer = new SourceMapConsumer(sourceMap! as any);
 
       // fs.writeFileSync(__dirname + "/tmp/test.out", transpiled!);
       // fs.writeFileSync(__dirname + "/tmp/test.map", sourceMap!);
@@ -256,7 +256,7 @@ describe("webpackLoader", () => {
       const result = await runLoader(source);
       const transpiled = result.result![0]?.toString();
       const sourceMap = result.result![1];
-      const consumer = new SourceMapConsumer(sourceMap!.toString() as any);
+      const consumer = new SourceMapConsumer(sourceMap! as any);
 
       expect(
         consumer.generatedPositionFor({
@@ -297,7 +297,7 @@ describe("webpackLoader", () => {
       const result = await runLoader(source, { compileTS: true });
       const transpiled = result.result![0]?.toString();
       const sourceMap = result.result![1];
-      const consumer = new SourceMapConsumer(sourceMap!.toString() as any);
+      const consumer = new SourceMapConsumer(sourceMap! as any);
 
       expect(
         getGeneratedCodeForOriginalRange(
