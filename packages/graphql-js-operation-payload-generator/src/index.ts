@@ -188,7 +188,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
   });
   if (result.errors) {
     if (result.errors.length === 1) {
-      throw result.errors[0].originalError;
+      throw result.errors[0].originalError || result.errors[0];
     }
     throw new Error(`RelayMockPayloadGenerator: ${result.errors.join(", ")}`);
   }
