@@ -1924,6 +1924,26 @@ test("different concrete types on an abstract list", () => {
   );
 });
 
+test("consider all possible types when given user specified typename", () => {
+  testGeneratedData(
+    graphql`
+      query RelayMockPayloadGeneratorTestConsiderAllConcreteTypesQuery {
+        node(id: "1") {
+          __typename
+          ... on User {
+            id
+          }
+        }
+      }
+    `,
+    {
+      Query: () => ({
+        node: { __typename: "Page" } as Partial<TypeMap["Node"]>,
+      }),
+    },
+  );
+});
+
 test("merges data from concrete type mock with abstract type mock", () => {
   testGeneratedData(
     graphql`
