@@ -2,7 +2,7 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "description": "Generates a payload for a given GraphQL operation expressed in graphql-js AST and a GraphQL Schema.",
   "license": "MIT",
-  "version": "0.12.3",
+  "version": "0.12.4",
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",
