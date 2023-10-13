@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-This log was last generated on Fri, 13 Oct 2023 05:52:19 GMT and should not be manually modified.
+This log was last generated on Fri, 13 Oct 2023 08:43:43 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.12.5
+
+Fri, 13 Oct 2023 08:43:43 GMT
+
+### Patches
+
+- [oayload generator] Fix execution error reporting when error comes from executor (eloy.de.enige@gmail.com)
 
 ## 0.12.4
 

@@ -2,6 +2,21 @@
   "name": "apollo-watch-fragments",
   "entries": [
     {
+      "date": "Fri, 13 Oct 2023 08:43:43 GMT",
+      "tag": "apollo-watch-fragments_v0.1.0",
+      "version": "0.1.0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "apollo-watch-fragments",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.0.17",
+            "commit": "a893f4c7a4cfed2df8ef997b3f8acbfe29d12d2b"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 13 Oct 2023 05:52:19 GMT",
       "tag": "apollo-watch-fragments_v0.1.0",
       "version": "0.1.0",

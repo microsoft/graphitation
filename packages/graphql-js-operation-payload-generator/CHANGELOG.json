@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Fri, 13 Oct 2023 08:43:43 GMT",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.12.5",
+      "version": "0.12.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "commit": "11d32118cde1d5a2cd97da5b620528fe5af10dde",
+            "comment": "[oayload generator] Fix execution error reporting when error comes from executor"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 13 Oct 2023 05:52:19 GMT",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.12.4",
       "version": "0.12.4",
