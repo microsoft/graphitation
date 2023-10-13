@@ -59,6 +59,27 @@ fragment RelayMockPayloadGeneratorTest11Fragment on Viewer {
 }
 `;
 
+exports[`consider all possible types when given user specified typename 1`] = `
+~~~~~~~~~~ INPUT ~~~~~~~~~~
+query RelayMockPayloadGeneratorTestConsiderAllConcreteTypesQuery {
+  node(id: "1") {
+    __typename
+    ... on User {
+      id
+    }
+  }
+}
+
+~~~~~~~~~~ OUTPUT ~~~~~~~~~~
+{
+  "data": {
+    "node": {
+      "__typename": "Page"
+    }
+  }
+}
+`;
+
 exports[`deeply merges fragment data 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
 query RelayMockPayloadGeneratorTestDeepMergeQuery {
