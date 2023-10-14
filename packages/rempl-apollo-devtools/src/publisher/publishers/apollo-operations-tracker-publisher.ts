@@ -90,7 +90,9 @@ export class ApolloOperationsTrackerPublisher {
             const copiedData = JSON.stringify(data.data.operations);
             window.navigator.clipboard.writeText(copiedData);
           }
-        } catch {}
+        } catch {
+          /* empty */
+        }
       },
     );
 
