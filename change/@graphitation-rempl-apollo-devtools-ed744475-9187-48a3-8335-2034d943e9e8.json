@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Integrate Apollo inspector UI",
-  "packageName": "@graphitation/rempl-apollo-devtools",
-  "email": "jpsahoo14@gmail.com",
-  "dependentChangeType": "patch"
-}

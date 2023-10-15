@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/rempl-apollo-devtools",
   "license": "MIT",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "./dist/apollo-devtools.js",
   "repository": {
     "type": "git",
