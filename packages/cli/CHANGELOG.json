@@ -2,6 +2,27 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Mon, 16 Oct 2023 09:30:34 GMT",
+      "tag": "@graphitation/cli_v1.9.0",
+      "version": "1.9.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "e625670ef9da0a6877c5e143b12ae5a76d7befb9",
+            "comment": "ts-codegen can generate only enum files"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.8.0",
+            "commit": "e625670ef9da0a6877c5e143b12ae5a76d7befb9"
+          }
+        ]
+      }
+    },
+    {
       "date": "Sun, 08 Oct 2023 15:21:54 GMT",
       "tag": "@graphitation/cli_v1.8.0",
       "version": "1.8.0",

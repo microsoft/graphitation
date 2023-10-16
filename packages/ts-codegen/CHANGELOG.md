@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-This log was last generated on Sun, 08 Oct 2023 15:21:54 GMT and should not be manually modified.
+This log was last generated on Mon, 16 Oct 2023 09:30:34 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.8.0
+
+Mon, 16 Oct 2023 09:30:34 GMT
+
+### Minor changes
+
+- ts-codegen can generate only enum files (jakubvejr@microsoft.com)
 
 ## 2.7.0
 

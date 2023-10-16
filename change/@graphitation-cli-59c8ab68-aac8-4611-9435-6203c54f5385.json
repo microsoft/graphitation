@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "ts-codegen can generate only enum files",
-  "packageName": "@graphitation/cli",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
