@@ -52,6 +52,7 @@ export type TsCodegenContextOptions = {
   legacyCompat: boolean;
   legacyNoModelsForObjects: boolean;
   useStringUnionsInsteadOfEnums: boolean;
+  enumNamesToMigrate: string[] | null;
   modelScope: string | null;
 };
 
@@ -83,6 +84,7 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
     from: "@graphitation/supermassive",
   },
   legacyCompat: false,
+  enumNamesToMigrate: null,
   legacyNoModelsForObjects: false,
   useStringUnionsInsteadOfEnums: false,
 
@@ -145,6 +147,14 @@ export class TsCodegenContext {
 
   getAllTypes(): Array<Type> {
     return this.allTypes;
+  }
+
+  shouldMigrateEnum(enumName: string) {
+    if (!this.options.enumNamesToMigrate) {
+      return true;
+    }
+
+    return this.options.enumNamesToMigrate.includes(enumName);
   }
 
   getTypeReferenceFromTypeNode(

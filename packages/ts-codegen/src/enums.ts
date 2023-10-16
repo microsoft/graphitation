@@ -50,7 +50,10 @@ function createEnumTypeModel(
   context: TsCodegenContext,
   type: EnumType,
 ): ts.EnumDeclaration | ts.TypeAliasDeclaration {
-  if (context.isUseStringUnionsInsteadOfEnumsEnabled()) {
+  if (
+    context.isUseStringUnionsInsteadOfEnumsEnabled() &&
+    context.shouldMigrateEnum(type.name)
+  ) {
     return factory.createTypeAliasDeclaration(
       [factory.createToken(ts.SyntaxKind.ExportKeyword)],
       factory.createIdentifier(type.name),

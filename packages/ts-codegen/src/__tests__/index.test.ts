@@ -1876,6 +1876,94 @@ describe(generateTS, () => {
     expect(legacyTypes).toMatchInlineSnapshot(`undefined`);
   });
 
+  it("generateTS with string unions instead of enums, but only Enums specified in enumNamesToMigrate will be migrated", () => {
+    const { models, resolvers, legacyTypes, enums, inputs } = runGenerateTest(
+      graphql`
+        interface Node {
+          id: ID!
+        }
+
+        enum Type {
+          type1
+          type2
+        }
+
+        enum TypeToMigrate {
+          type1
+          type2
+        }
+
+        type User implements Node {
+          id: ID!
+          userType: Type!
+        }
+
+        extend type Query {
+          user(id: ID!): User!
+        }
+      `,
+      {
+        useStringUnionsInsteadOfEnums: true,
+        enumNamesToMigrate: ["TypeToMigrate"],
+      },
+    );
+    expect(enums).toMatchInlineSnapshot(`
+      "export enum Type {
+          type1 = "type1",
+          type2 = "type2"
+      }
+      export type TypeToMigrate = "type1" | "type2";
+      "
+    `);
+    expect(inputs).toMatchInlineSnapshot(`undefined`);
+    expect(models).toMatchInlineSnapshot(`
+      "import * as Enums from "./enums.interface";
+      export * from "./enums.interface";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          readonly __typename?: string;
+      }
+      export interface Node extends BaseModel {
+          readonly __typename?: string;
+      }
+      export interface User extends BaseModel, Node {
+          readonly __typename?: "User";
+          readonly id: string;
+          readonly userType: Enums.Type;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import * as Models from "./models.interface";
+      export declare namespace Node {
+          export interface Resolvers {
+              readonly __resolveType?: __resolveType;
+          }
+          export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
+      }
+      export declare namespace User {
+          export interface Resolvers {
+              readonly id?: id;
+              readonly userType?: userType;
+          }
+          export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type userType = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Type>;
+      }
+      export declare namespace Query {
+          export interface Resolvers {
+              readonly user?: user;
+          }
+          export type user = (model: unknown, args: {
+              readonly id: string;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
+      }
+      "
+    `);
+    expect(legacyTypes).toMatchInlineSnapshot(`undefined`);
+  });
+
   it("legacy interfaces", () => {
     const { models, resolvers, enums, inputs } = runGenerateTest(
       graphql`
@@ -2096,6 +2184,7 @@ function runGenerateTest(
     legacyNoModelsForObjects?: boolean;
     legacyEnumsCompatibility?: boolean;
     useStringUnionsInsteadOfEnums?: boolean;
+    enumNamesToMigrate?: string[];
     modelScope?: string;
   } = {},
 ): {
@@ -2108,6 +2197,7 @@ function runGenerateTest(
   legacyNoModelsForObjects?: boolean;
   legacyEnumsCompatibility?: boolean;
   useStringUnionsInsteadOfEnums?: boolean;
+  enumNamesToMigrate?: string[];
   modelScope?: string;
 } {
   const fullOptions: {
@@ -2119,6 +2209,7 @@ function runGenerateTest(
     legacyEnumsCompatibility?: boolean;
     legacyNoModelsForObjects?: boolean;
     useStringUnionsInsteadOfEnums?: boolean;
+    enumNamesToMigrate?: string[];
   } = {
     outputPath: "__generated__",
     documentPath: "./typedef.graphql",

@@ -16,6 +16,7 @@ type GenerateInterfacesOptions = {
   legacy?: boolean;
   legacyModels?: boolean;
   useStringUnionsInsteadOfEnums?: boolean;
+  enumMigrationJsonFile?: string;
   generateOnlyEnums?: boolean;
   scope?: string;
 };
@@ -56,6 +57,10 @@ export function supermassive(): Command {
     )
     .option("--generate-only-enums", "Generate only enum file")
     .option("--scope [scope]", "generate models only for scope")
+    .option(
+      "--enum-migration-json-file [enumMigrationJsonFile]",
+      "File containing array of enum names, which should be migrated to string unions",
+    )
     .description("generate interfaces and models")
     .action(
       async (inputs: Array<string>, options: GenerateInterfacesOptions) => {
@@ -120,6 +125,23 @@ async function generateInterfaces(
       path.dirname(fullPath),
       options.outputDir ? options.outputDir : "__generated__",
     );
+    let enumNamesToMigrate;
+    if (options.enumMigrationJsonFile) {
+      const content = JSON.parse(
+        await fs.readFile(
+          path.join(process.cwd(), options.enumMigrationJsonFile),
+          {
+            encoding: "utf-8",
+          },
+        ),
+      );
+
+      if (!Array.isArray(content)) {
+        throw new Error("enumMigrationJsonFile doesn't contain an array");
+      }
+
+      enumNamesToMigrate = content;
+    }
 
     const result = generateTS(document, {
       outputPath,
@@ -131,6 +153,7 @@ async function generateInterfaces(
       legacyNoModelsForObjects: !!options.legacyModels,
       useStringUnionsInsteadOfEnums: !!options.useStringUnionsInsteadOfEnums,
       generateOnlyEnums: !!options.generateOnlyEnums,
+      enumNamesToMigrate,
       modelScope: options.scope || null,
     });
 
