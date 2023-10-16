@@ -16,6 +16,7 @@ type GenerateInterfacesOptions = {
   legacy?: boolean;
   legacyModels?: boolean;
   useStringUnionsInsteadOfEnums?: boolean;
+  generateOnlyEnums?: boolean;
   scope?: string;
 };
 
@@ -50,9 +51,10 @@ export function supermassive(): Command {
     .option("-l, --legacy", "generate legacy types")
     .option("--legacy-models", "do not use models for object types")
     .option(
-      "--useStringUnionsInsteadOfEnums",
+      "--use-string-unions-instead-of-enums",
       "When this flag is set, then enums are replaced by string unions.",
     )
+    .option("--generate-only-enums", "Generate only enum file")
     .option("--scope [scope]", "generate models only for scope")
     .description("generate interfaces and models")
     .action(
@@ -128,6 +130,7 @@ async function generateInterfaces(
       legacyCompat: !!options.legacy,
       legacyNoModelsForObjects: !!options.legacyModels,
       useStringUnionsInsteadOfEnums: !!options.useStringUnionsInsteadOfEnums,
+      generateOnlyEnums: !!options.generateOnlyEnums,
       modelScope: options.scope || null,
     });
 
