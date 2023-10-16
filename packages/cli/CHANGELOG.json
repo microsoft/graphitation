@@ -2,6 +2,27 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Mon, 16 Oct 2023 10:17:21 GMT",
+      "tag": "@graphitation/cli_v1.10.0",
+      "version": "1.10.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "241dbf84bb909e6f7b48509c6a3ed900f66bd104",
+            "comment": "Added possibility to migrate just specified enums to string unions"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.9.0",
+            "commit": "241dbf84bb909e6f7b48509c6a3ed900f66bd104"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 16 Oct 2023 09:30:34 GMT",
       "tag": "@graphitation/cli_v1.9.0",
       "version": "1.9.0",

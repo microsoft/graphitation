@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Added possibility to migrate just specified enums to string unions",
-  "packageName": "@graphitation/cli",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
