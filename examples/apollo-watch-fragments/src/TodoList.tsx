@@ -16,14 +16,10 @@ const TodoList: React.FC<{ node: TodoList_nodeFragment$key, refetch: () => void 
 }) => {
   const node = useFragment(
     graphql`
-      fragment TodoList_nodeFragment on NodeWithTodos
-      @argumentDefinitions(
-        first: { type: "Int!", defaultValue: 5 }
-        after: { type: "String!", defaultValue: "" }
-      ) {
+      fragment TodoList_nodeFragment on NodeWithTodos {
         __typename
         id
-        todos(first: $first, after: $after) {
+        todos(first: 5, after: $after) {
           edges {
             node {
               id

@@ -9,10 +9,10 @@ export const fragmentReferencesFieldPolicy: FieldReadFunction = (
   }
 
   if (variables.__fragments === undefined) {
-    if (variables.id) {
-      return { id: variables.id };
-    }
-    return {};
+    // if (variables.id) {
+    //   return { id: variables.id };
+    // }
+    return variables;
   }
 
   return variables.__fragments;

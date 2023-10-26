@@ -3,10 +3,10 @@
 // @ts-nocheck
 
 /*
-query TodoList_nodeWatchNodeQuery($after: String! = "", $first: Int! = 5, $id: ID!) {
+query TodoList_nodeWatchNodeQuery($after: String, $id: ID!) {
   node(id: $id) {
     __typename
-    ...TodoList_nodeFragment_2HEEH6
+    ...TodoList_nodeFragment
     id
     ... on Node {
       __fragments @client
@@ -14,11 +14,11 @@ query TodoList_nodeWatchNodeQuery($after: String! = "", $first: Int! = 5, $id: I
   }
 }
 
-fragment TodoList_nodeFragment_2HEEH6 on NodeWithTodos {
+fragment TodoList_nodeFragment on NodeWithTodos {
   __isNodeWithTodos: __typename
   __typename
   id
-  todos(first: $first, after: $after) {
+  todos(first: 5, after: $after) {
     edges {
       node {
         id
@@ -44,7 +44,7 @@ v1 = {
 },
 v2 = {
   "kind": "Name",
-  "value": "first"
+  "value": "id"
 },
 v3 = {
   "kind": "Variable",
@@ -52,33 +52,25 @@ v3 = {
 },
 v4 = {
   "kind": "Name",
-  "value": "id"
-},
-v5 = {
-  "kind": "Variable",
-  "name": (v4/*: any*/)
-},
-v6 = {
-  "kind": "Name",
   "value": "node"
 },
-v7 = {
+v5 = {
   "kind": "Name",
   "value": "__typename"
 },
+v6 = {
+  "kind": "Field",
+  "name": (v5/*: any*/)
+},
+v7 = {
+  "kind": "Name",
+  "value": "TodoList_nodeFragment"
+},
 v8 = {
   "kind": "Field",
-  "name": (v7/*: any*/)
+  "name": (v2/*: any*/)
 },
 v9 = {
-  "kind": "Name",
-  "value": "TodoList_nodeFragment_2HEEH6"
-},
-v10 = {
-  "kind": "Field",
-  "name": (v4/*: any*/)
-},
-v11 = {
   "kind": "InlineFragment",
   "typeCondition": {
     "kind": "NamedType",
@@ -125,42 +117,16 @@ return {
             "kind": "VariableDefinition",
             "variable": (v1/*: any*/),
             "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "String"
-                }
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
               }
-            },
-            "defaultValue": {
-              "kind": "StringValue",
-              "value": "",
-              "block": false
             }
           },
           {
             "kind": "VariableDefinition",
             "variable": (v3/*: any*/),
-            "type": {
-              "kind": "NonNullType",
-              "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Int"
-                }
-              }
-            },
-            "defaultValue": {
-              "kind": "IntValue",
-              "value": "5"
-            }
-          },
-          {
-            "kind": "VariableDefinition",
-            "variable": (v5/*: any*/),
             "type": {
               "kind": "NonNullType",
               "type": {
@@ -178,24 +144,24 @@ return {
           "selections": [
             {
               "kind": "Field",
-              "name": (v6/*: any*/),
+              "name": (v4/*: any*/),
               "arguments": [
                 {
                   "kind": "Argument",
-                  "name": (v4/*: any*/),
-                  "value": (v5/*: any*/)
+                  "name": (v2/*: any*/),
+                  "value": (v3/*: any*/)
                 }
               ],
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
-                  (v8/*: any*/),
+                  (v6/*: any*/),
                   {
                     "kind": "FragmentSpread",
-                    "name": (v9/*: any*/)
+                    "name": (v7/*: any*/)
                   },
-                  (v10/*: any*/),
-                  (v11/*: any*/)
+                  (v8/*: any*/),
+                  (v9/*: any*/)
                 ]
               }
             }
@@ -204,7 +170,7 @@ return {
       },
       {
         "kind": "FragmentDefinition",
-        "name": (v9/*: any*/),
+        "name": (v7/*: any*/),
         "typeCondition": {
           "kind": "NamedType",
           "name": {
@@ -221,10 +187,10 @@ return {
                 "kind": "Name",
                 "value": "__isNodeWithTodos"
               },
-              "name": (v7/*: any*/)
+              "name": (v5/*: any*/)
             },
+            (v6/*: any*/),
             (v8/*: any*/),
-            (v10/*: any*/),
             {
               "kind": "Field",
               "name": {
@@ -234,8 +200,14 @@ return {
               "arguments": [
                 {
                   "kind": "Argument",
-                  "name": (v2/*: any*/),
-                  "value": (v3/*: any*/)
+                  "name": {
+                    "kind": "Name",
+                    "value": "first"
+                  },
+                  "value": {
+                    "kind": "IntValue",
+                    "value": "5"
+                  }
                 },
                 {
                   "kind": "Argument",
@@ -257,11 +229,11 @@ return {
                       "selections": [
                         {
                           "kind": "Field",
-                          "name": (v6/*: any*/),
+                          "name": (v4/*: any*/),
                           "selectionSet": {
                             "kind": "SelectionSet",
                             "selections": [
-                              (v10/*: any*/),
+                              (v8/*: any*/),
                               {
                                 "kind": "Field",
                                 "name": {
@@ -269,14 +241,14 @@ return {
                                   "value": "isCompleted"
                                 }
                               },
-                              (v11/*: any*/)
+                              (v9/*: any*/)
                             ]
                           }
                         }
                       ]
                     }
                   },
-                  (v10/*: any*/)
+                  (v8/*: any*/)
                 ]
               }
             }
@@ -288,7 +260,7 @@ return {
   "metadata": {
     "rootSelection": "node",
     "mainFragment": {
-      "name": "TodoList_nodeFragment_2HEEH6",
+      "name": "TodoList_nodeFragment",
       "typeCondition": "NodeWithTodos"
     }
   }
