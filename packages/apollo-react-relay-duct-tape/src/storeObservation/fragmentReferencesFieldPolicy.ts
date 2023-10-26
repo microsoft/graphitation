@@ -4,9 +4,16 @@ export const fragmentReferencesFieldPolicy: FieldReadFunction = (
   _existingCacheData,
   { variables },
 ) => {
-  return !variables
-    ? null
-    : variables.__fragments === undefined
-    ? variables
-    : variables.__fragments;
+  if (!variables) {
+    return null;
+  }
+
+  if (variables.__fragments === undefined) {
+    if (variables.id) {
+      return { id: variables.id };
+    }
+    return {};
+  }
+
+  return variables.__fragments;
 };

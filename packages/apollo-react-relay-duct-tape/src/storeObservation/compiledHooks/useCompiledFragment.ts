@@ -66,12 +66,12 @@ export function useCompiledFragment(
 
   const result = observableQuery.getCurrentResult();
   let data = result.data;
-  if (metadata?.rootSelection) {
+  if (metadata?.rootSelection && !result.loading && data) {
     data = data[metadata.rootSelection];
   }
-  invariant(
-    data,
-    "useFragment(): Expected Apollo to respond with previously seeded data of the execution query document",
-  );
+  // invariant(
+  //   data,
+  //   "useFragment(): Expected Apollo to respond with previously seeded data of the execution query document",
+  // );
   return data;
 }

@@ -7,7 +7,7 @@ export type Todo_todoFragment = {
     readonly id: string;
     readonly description: string;
     readonly isCompleted: boolean;
-    readonly someOtherField?: string | undefined;
+    readonly someOtherField: string;
     readonly " $refType": "Todo_todoFragment";
 };
 export type Todo_todoFragment$data = Todo_todoFragment;
@@ -17,5 +17,5 @@ export type Todo_todoFragment$key = {
 };
 
 
-import { documents } from "./TodoRefetchQuery.graphql";
+import { documents } from "./Todo_todoWatchNodeQuery.graphql";
 export default documents;

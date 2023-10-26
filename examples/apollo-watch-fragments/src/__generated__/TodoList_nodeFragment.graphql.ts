@@ -5,6 +5,7 @@
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type TodoList_nodeFragment = {
     readonly __typename: string;
+    readonly id: string;
     readonly todos: {
         readonly edges: ReadonlyArray<{
             readonly node: {
@@ -14,7 +15,6 @@ export type TodoList_nodeFragment = {
             };
         }>;
     };
-    readonly id: string;
     readonly " $refType": "TodoList_nodeFragment";
 };
 export type TodoList_nodeFragment$data = TodoList_nodeFragment;
@@ -24,5 +24,5 @@ export type TodoList_nodeFragment$key = {
 };
 
 
-import { documents } from "./TodoListPaginationQuery.graphql";
+import { documents } from "./TodoList_nodeWatchNodeQuery.graphql";
 export default documents;
