@@ -121,6 +121,11 @@ export function transform(
     },
   );
 
+  // Quick bail out if we didn't make any changes. This avoids any unnecessary work towards SourceMaps generation.
+  if (!anyChanges) {
+    return undefined;
+  }
+
   if (sourceMap) {
     addNewLineMappings(
       lastChunkOffset,
@@ -132,7 +137,7 @@ export function transform(
     );
   }
 
-  return anyChanges ? result : undefined;
+  return result;
 }
 
 function offsetToLineColumn(
