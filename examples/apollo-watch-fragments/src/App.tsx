@@ -11,8 +11,12 @@ import { AppQuery as AppQueryType } from "./__generated__/AppQuery.graphql";
 
 const App: React.FC = () => {
   const addTodo = useAddTodoMutation();
+  // In People App, because we weren't able to use refetchable / pagination hook, we kept our variables
+  // in a state and passed to the query. In this example, we're trying to reproduce it, but using after
+  // variable (just an example, we could use any other variable)
   const [variables, setVariables] = React.useState({ after: "" });
 
+  // Simplified the query to have only after variable (ignored includeSomeOtherField to keep it simple)
   const result = useLazyLoadQuery<AppQueryType>(
     graphql`
       query AppQuery($after: String) {
@@ -29,6 +33,8 @@ const App: React.FC = () => {
     variables,
   );
 
+  // This is a simplified version of how we're refetching data now. In our code, we raise an event  
+  // that is caught on the host app side and it changes the variables (in our case, sortBy or filterBy)
   const refetch = () => {
     setVariables((prev) => ({
       after: prev.after + "1",
