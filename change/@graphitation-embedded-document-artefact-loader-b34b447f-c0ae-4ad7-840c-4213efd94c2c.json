@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "No behavior change, just makes the loader only do work when there are graphql tags",
-  "packageName": "@graphitation/embedded-document-artefact-loader",
-  "email": "kchau@microsoft.com",
-  "dependentChangeType": "patch"
-}
