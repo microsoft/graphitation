@@ -15,7 +15,9 @@ type GenerateInterfacesOptions = {
   enumsImport?: string;
   legacy?: boolean;
   legacyModels?: boolean;
-  legacyEnumsCompatibility?: boolean;
+  useStringUnionsInsteadOfEnums?: boolean;
+  enumMigrationJsonFile?: string;
+  generateOnlyEnums?: boolean;
   scope?: string;
 };
 
@@ -50,10 +52,15 @@ export function supermassive(): Command {
     .option("-l, --legacy", "generate legacy types")
     .option("--legacy-models", "do not use models for object types")
     .option(
-      "--legacy-enums-compatibility",
-      "When this flag is set, then enums are generated using typescript 'Enum' keyword, which is then used in fields along side with string unions. If this flag is not set, then enums are generated as string unions.",
+      "--use-string-unions-instead-of-enums",
+      "When this flag is set, then enums are replaced by string unions.",
     )
+    .option("--generate-only-enums", "Generate only enum file")
     .option("--scope [scope]", "generate models only for scope")
+    .option(
+      "--enum-migration-json-file [enumMigrationJsonFile]",
+      "File containing array of enum names, which should be migrated to string unions",
+    )
     .description("generate interfaces and models")
     .action(
       async (inputs: Array<string>, options: GenerateInterfacesOptions) => {
@@ -118,6 +125,23 @@ async function generateInterfaces(
       path.dirname(fullPath),
       options.outputDir ? options.outputDir : "__generated__",
     );
+    let enumNamesToMigrate;
+    if (options.enumMigrationJsonFile) {
+      const content = JSON.parse(
+        await fs.readFile(
+          path.join(process.cwd(), options.enumMigrationJsonFile),
+          {
+            encoding: "utf-8",
+          },
+        ),
+      );
+
+      if (!Array.isArray(content)) {
+        throw new Error("enumMigrationJsonFile doesn't contain an array");
+      }
+
+      enumNamesToMigrate = content;
+    }
 
     const result = generateTS(document, {
       outputPath,
@@ -127,7 +151,9 @@ async function generateInterfaces(
       enumsImport: getContextPath(outputPath, options.enumsImport) || null,
       legacyCompat: !!options.legacy,
       legacyNoModelsForObjects: !!options.legacyModels,
-      legacyEnumsCompatibility: !!options.legacyEnumsCompatibility,
+      useStringUnionsInsteadOfEnums: !!options.useStringUnionsInsteadOfEnums,
+      generateOnlyEnums: !!options.generateOnlyEnums,
+      enumNamesToMigrate,
       modelScope: options.scope || null,
     });
 

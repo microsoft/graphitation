@@ -2,6 +2,117 @@
   "name": "supermassive-todomvc",
   "entries": [
     {
+      "date": "Mon, 16 Oct 2023 10:17:21 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.0.19",
+            "commit": "241dbf84bb909e6f7b48509c6a3ed900f66bd104"
+          },
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.3.5",
+            "commit": "241dbf84bb909e6f7b48509c6a3ed900f66bd104"
+          },
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/supermassive to v3.2.3",
+            "commit": "241dbf84bb909e6f7b48509c6a3ed900f66bd104"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 16 Oct 2023 09:30:34 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.0.18",
+            "commit": "e625670ef9da0a6877c5e143b12ae5a76d7befb9"
+          },
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.3.4",
+            "commit": "e625670ef9da0a6877c5e143b12ae5a76d7befb9"
+          },
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/supermassive to v3.2.2",
+            "commit": "e625670ef9da0a6877c5e143b12ae5a76d7befb9"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Fri, 13 Oct 2023 08:43:43 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.0.17",
+            "commit": "a893f4c7a4cfed2df8ef997b3f8acbfe29d12d2b"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Fri, 13 Oct 2023 05:52:19 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.0.16",
+            "commit": "37862379727edeaf2dc68bd131d086abba6952ad"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Sun, 08 Oct 2023 15:21:54 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.0.15",
+            "commit": "46a9cc74ef4ae5317064102602cc1c6a804b102f"
+          },
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.3.3",
+            "commit": "46a9cc74ef4ae5317064102602cc1c6a804b102f"
+          },
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/supermassive to v3.2.1",
+            "commit": "46a9cc74ef4ae5317064102602cc1c6a804b102f"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 28 Sep 2023 12:04:15 GMT",
       "tag": "supermassive-todomvc_v1.0.1-0",
       "version": "1.0.1-0",

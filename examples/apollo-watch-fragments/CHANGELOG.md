@@ -1,8 +1,78 @@
 # Change Log - apollo-watch-fragments
 
-This log was last generated on Wed, 04 Oct 2023 06:06:13 GMT and should not be manually modified.
+This log was last generated on Tue, 31 Oct 2023 00:45:05 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.1.0
+
+Tue, 31 Oct 2023 00:45:05 GMT
+
+### Patches
+
+- Bump @graphitation/embedded-document-artefact-loader to v0.6.8
+
+## 0.1.0
+
+Mon, 16 Oct 2023 10:17:21 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape to v1.0.19
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.3.5
+- Bump @graphitation/supermassive to v3.2.3
+
+## 0.1.0
+
+Mon, 16 Oct 2023 09:30:34 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape to v1.0.18
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.3.4
+- Bump @graphitation/supermassive to v3.2.2
+
+## 0.1.0
+
+Fri, 13 Oct 2023 08:43:43 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape to v1.0.17
+
+## 0.1.0
+
+Fri, 13 Oct 2023 05:52:19 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape to v1.0.16
+
+## 0.1.0
+
+Mon, 09 Oct 2023 22:53:02 GMT
+
+### Patches
+
+- Bump @graphitation/embedded-document-artefact-loader to v0.6.7
+
+## 0.1.0
+
+Mon, 09 Oct 2023 20:58:06 GMT
+
+### Patches
+
+- Bump @graphitation/embedded-document-artefact-loader to v0.6.6
+
+## 0.1.0
+
+Sun, 08 Oct 2023 15:21:54 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape to v1.0.15
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.3.3
+- Bump @graphitation/supermassive to v3.2.1
 
 ## 0.1.0
 

@@ -70,16 +70,16 @@ function extractAndApplySourceMap(
   sourcePath: string,
 ) {
   if (sourceMap && transformed) {
+    // TODO: Determine why ts-jest insists on using inline source-maps
+    //       and/or if it's cheaper to inline the source-map again
+    //       ourselves rather than letting jest do the work.
     const [tsResultCode, tsResultMap] = extractInlineSourceMap(tsResult.code);
     if (tsResultMap === undefined) {
       throw new Error("Expected inline source-map");
     }
-    // TODO: Determine why ts-jest insists on using inline source-maps
-    //       and/or if it's cheaper to inline the source-map again
-    //       ourselves rather than letting jest do the work.
     tsResult = {
       code: tsResultCode,
-      map: applySourceMap(sourcePath, sourceMap.toString(), tsResultMap) as any, // SourceMapGenerator seems to satisfy the runtime needs, but it's unclear which properties it uses exactly
+      map: applySourceMap(sourcePath, sourceMap.toJSON(), tsResultMap).toJSON(),
     };
   }
   return tsResult;

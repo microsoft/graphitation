@@ -20,7 +20,7 @@
     "beachball": "beachball -b origin/alloy/relay-apollo-duct-tape",
     "change": "yarn beachball change",
     "checkchange": "yarn beachball check",
-    "release": "yarn beachball publish -t next",
+    "release": "yarn beachball publish -t latest",
     "postinstall": "patch-package"
   },
   "devDependencies": {

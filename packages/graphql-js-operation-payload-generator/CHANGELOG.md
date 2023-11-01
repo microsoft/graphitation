@@ -1,8 +1,24 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-This log was last generated on Thu, 21 Sep 2023 06:28:45 GMT and should not be manually modified.
+This log was last generated on Fri, 13 Oct 2023 08:43:43 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.12.5
+
+Fri, 13 Oct 2023 08:43:43 GMT
+
+### Patches
+
+- [oayload generator] Fix execution error reporting when error comes from executor (eloy.de.enige@gmail.com)
+
+## 0.12.4
+
+Fri, 13 Oct 2023 05:52:19 GMT
+
+### Patches
+
+- [payload generator] Simply assume an explicit typename is valid (eloy.de.enige@gmail.com)
 
 ## 0.12.3
 

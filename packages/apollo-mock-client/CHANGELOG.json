@@ -2,6 +2,36 @@
   "name": "@graphitation/apollo-mock-client",
   "entries": [
     {
+      "date": "Fri, 13 Oct 2023 08:43:43 GMT",
+      "tag": "@graphitation/apollo-mock-client_v0.11.4",
+      "version": "0.11.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-mock-client",
+            "comment": "Bump @graphitation/graphql-js-operation-payload-generator to v0.12.5",
+            "commit": "a893f4c7a4cfed2df8ef997b3f8acbfe29d12d2b"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Fri, 13 Oct 2023 05:52:19 GMT",
+      "tag": "@graphitation/apollo-mock-client_v0.11.3",
+      "version": "0.11.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-mock-client",
+            "comment": "Bump @graphitation/graphql-js-operation-payload-generator to v0.12.4",
+            "commit": "37862379727edeaf2dc68bd131d086abba6952ad"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 21 Sep 2023 06:28:45 GMT",
       "tag": "@graphitation/apollo-mock-client_v0.11.2",
       "version": "0.11.2",

@@ -1,5 +1,5 @@
 import { SourceMapGenerator } from "source-map-js";
-import { parse } from "graphql";
+import { Source, parse } from "graphql";
 
 export function transform(
   source: string,
@@ -26,12 +26,41 @@ export function transform(
   const result = source.replace(
     /graphql\s*`((?:[^`])*)`/g,
     (taggedTemplateExpression: string, sdl: string, offset: number) => {
-      // In the absence of parsing the full JS/TS file, we may run into false
-      // positives. We detect this by attempting to parse the tagged template
-      // expression. If it fails, we assume it is not a [valid] graphql tag.
+      let documentName: string | undefined;
       try {
-        parse(sdl, { noLocation: true });
+        // In the absence of parsing the full JS/TS file, we may run into false
+        // positives. We detect this by attempting to parse the tagged template
+        // expression. If it fails, we assume it is not a [valid] graphql tag.
+        const location = offsetToLineColumn(source, offset); // TODO: This needs a test
+        const ast = parse(
+          new Source(sdl, sourcePath, {
+            line: location.line,
+            column: location.column + 1,
+          }),
+        );
+        // Additionally, we perform some basic validation to ensure that the doc
+        // matches the expected format.
+        if (ast.definitions.length !== 1) {
+          throw new Error(
+            "Expected exactly one definition in GraphQL document",
+          );
+        }
+        const document = ast.definitions[0];
+        if (
+          document.kind !== "OperationDefinition" &&
+          document.kind !== "FragmentDefinition"
+        ) {
+          throw new Error(
+            "Expected GraphQL document to contain an operation or fragment definition",
+          );
+        }
+        documentName = document.name?.value;
+        if (!documentName) {
+          throw new Error("Expected GraphQL definition to have a name");
+        }
       } catch {
+        // TODO: callback to report error with location of document, except for the
+        //       case where we extracted a non-expression with our regex.
         return taggedTemplateExpression;
       }
 
@@ -50,54 +79,52 @@ export function transform(
 
       lastChunkOffset = offset + taggedTemplateExpression.length;
 
-      const match = sdl.match(
-        /(query|mutation|subscription|fragment)\s+\b(.+?)\b/,
-      );
-      if (match && match[2]) {
-        const generated = `require("./__generated__/${match[2]}.graphql").default`;
+      const generated = `require("./__generated__/${documentName}.graphql").default`;
 
-        if (sourceMap) {
-          const originalStart = offsetToLineColumn(source, offset);
+      if (sourceMap) {
+        const originalStart = offsetToLineColumn(source, offset);
+        sourceMap.addMapping({
+          original: originalStart,
+          generated: {
+            line: originalStart.line - lineDelta,
+            column: originalStart.column,
+          },
+          source: sourcePath,
+        });
+
+        const originalEndOffset = offset + taggedTemplateExpression.length;
+        forEachNewLine(offset, originalEndOffset, source, (offset) => {
+          const lineStart = offsetToLineColumn(source, offset);
           sourceMap.addMapping({
-            original: originalStart,
+            original: lineStart,
             generated: {
               line: originalStart.line - lineDelta,
               column: originalStart.column,
             },
             source: sourcePath,
           });
+        });
 
-          const originalEndOffset = offset + taggedTemplateExpression.length;
-          forEachNewLine(offset, originalEndOffset, source, (offset) => {
-            const lineStart = offsetToLineColumn(source, offset);
-            sourceMap.addMapping({
-              original: lineStart,
-              generated: {
-                line: originalStart.line - lineDelta,
-                column: originalStart.column,
-              },
-              source: sourcePath,
-            });
-          });
+        sourceMap.addMapping({
+          original: offsetToLineColumn(source, originalEndOffset),
+          generated: {
+            line: originalStart.line - lineDelta,
+            column: originalStart.column + generated.length,
+          },
+          source: sourcePath,
+        });
 
-          sourceMap.addMapping({
-            original: offsetToLineColumn(source, originalEndOffset),
-            generated: {
-              line: originalStart.line - lineDelta,
-              column: originalStart.column + generated.length,
-            },
-            source: sourcePath,
-          });
-
-          lineDelta += taggedTemplateExpression.split("\n").length - 1;
-        }
-
-        return generated;
+        lineDelta += taggedTemplateExpression.split("\n").length - 1;
       }
 
-      return taggedTemplateExpression;
+      return generated;
     },
   );
+
+  // Quick bail out if we didn't make any changes. This avoids any unnecessary work towards SourceMaps generation.
+  if (!anyChanges) {
+    return undefined;
+  }
 
   if (sourceMap) {
     addNewLineMappings(
@@ -110,7 +137,7 @@ export function transform(
     );
   }
 
-  return anyChanges ? result : undefined;
+  return result;
 }
 
 function offsetToLineColumn(

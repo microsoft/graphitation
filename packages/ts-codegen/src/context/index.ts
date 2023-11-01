@@ -51,8 +51,8 @@ export type TsCodegenContextOptions = {
   };
   legacyCompat: boolean;
   legacyNoModelsForObjects: boolean;
-  legacyEnumsCompatibility: boolean;
-
+  useStringUnionsInsteadOfEnums: boolean;
+  enumNamesToMigrate: string[] | null;
   modelScope: string | null;
 };
 
@@ -84,8 +84,9 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
     from: "@graphitation/supermassive",
   },
   legacyCompat: false,
+  enumNamesToMigrate: null,
   legacyNoModelsForObjects: false,
-  legacyEnumsCompatibility: false,
+  useStringUnionsInsteadOfEnums: false,
 
   modelScope: null,
 };
@@ -127,10 +128,6 @@ export class TsCodegenContext {
     this.hasUsedEnumsInModels = false;
   }
 
-  legacyEnumsCompatibility(): boolean {
-    return this.options.legacyEnumsCompatibility;
-  }
-
   isLegacyCompatMode(): boolean {
     return this.options.legacyCompat;
   }
@@ -152,6 +149,14 @@ export class TsCodegenContext {
     return this.allTypes;
   }
 
+  shouldMigrateEnum(enumName: string) {
+    if (!this.options.enumNamesToMigrate) {
+      return true;
+    }
+
+    return this.options.enumNamesToMigrate.includes(enumName);
+  }
+
   getTypeReferenceFromTypeNode(
     node: TypeNode,
     markUsage?: "MODELS" | "RESOLVERS",
@@ -171,6 +176,10 @@ export class TsCodegenContext {
         markUsage === "RESOLVERS" ? true : false,
       );
     }
+  }
+
+  isUseStringUnionsInsteadOfEnumsEnabled(): boolean {
+    return this.options.useStringUnionsInsteadOfEnums;
   }
 
   getTypeReferenceForInputTypeFromTypeNode(
@@ -412,19 +421,16 @@ export class TsCodegenContext {
       } else if (markUsage === "RESOLVERS") {
         this.usedEntitiesInResolvers.add(typeName);
       }
-      let modifiedTypeName = "";
+      let namespace = "";
       const type = this.typeNameToType.get(typeName);
 
       if (markUsage === "MODELS") {
         if (type && type.kind === "ENUM") {
           this.hasUsedEnumsInModels = true;
-          const namespacedTypeName = `Enums.${typeName}`;
-          modifiedTypeName = this.options.legacyEnumsCompatibility
-            ? namespacedTypeName + " | `${" + namespacedTypeName + "}`"
-            : namespacedTypeName;
+          namespace = "Enums";
         }
       } else if (markUsage === "RESOLVERS") {
-        modifiedTypeName = `Models.${typeName}`;
+        namespace = "Models";
       }
 
       if (this.typeNameToImports.has(typeName)) {
@@ -435,7 +441,7 @@ export class TsCodegenContext {
       } else {
         return new TypeLocation(
           null,
-          modifiedTypeName ? modifiedTypeName : typeName,
+          namespace ? `${namespace}.${typeName}` : typeName,
         );
       }
     }

@@ -1,8 +1,32 @@
 # Change Log - @graphitation/embedded-document-artefact-loader
 
-This log was last generated on Wed, 04 Oct 2023 06:06:12 GMT and should not be manually modified.
+This log was last generated on Tue, 31 Oct 2023 00:45:05 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.8
+
+Tue, 31 Oct 2023 00:45:05 GMT
+
+### Patches
+
+- No behavior change, just makes the loader only do work when there are graphql tags (kchau@microsoft.com)
+
+## 0.6.7
+
+Mon, 09 Oct 2023 22:53:02 GMT
+
+### Patches
+
+- Return pure JS object instead of generator (eloy.de.enige@gmail.com)
+
+## 0.6.6
+
+Mon, 09 Oct 2023 20:58:06 GMT
+
+### Patches
+
+- [loader] Never return a generator, use JSON where possible (eloy.de.enige@gmail.com)
 
 ## 0.6.5
 

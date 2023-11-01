@@ -188,7 +188,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
   });
   if (result.errors) {
     if (result.errors.length === 1) {
-      throw result.errors[0].originalError;
+      throw result.errors[0].originalError || result.errors[0];
     }
     throw new Error(`RelayMockPayloadGenerator: ${result.errors.join(", ")}`);
   }
@@ -208,7 +208,7 @@ function mockCompositeType(
 ) {
   // Get the concrete type selection, concrete type on an abstract type
   // selection, or the abstract type selection.
-  let typename = namedReturnType.name;
+  let typename = userSpecifiedTypename || namedReturnType.name;
   let abstractTypeSelectionOnly = false;
   const abstractType = isAbstractType(namedReturnType);
 
@@ -226,17 +226,7 @@ function mockCompositeType(
       [],
     );
     if (possibleTypeNames?.length) {
-      if (userSpecifiedTypename) {
-        if (!possibleTypeNames.includes(userSpecifiedTypename)) {
-          throw new Error(
-            "Expected user-specified typename to be one of " +
-              possibleTypeNames.join(", "),
-          );
-        }
-        typename = userSpecifiedTypename;
-      } else {
-        typename = possibleTypeNames[0];
-      }
+      typename = possibleTypeNames[0];
     } else {
       abstractTypeSelectionOnly = true;
     }

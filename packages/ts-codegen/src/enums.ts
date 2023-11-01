@@ -50,26 +50,26 @@ function createEnumTypeModel(
   context: TsCodegenContext,
   type: EnumType,
 ): ts.EnumDeclaration | ts.TypeAliasDeclaration {
-  if (context.legacyEnumsCompatibility()) {
-    return factory.createEnumDeclaration(
-      [
-        factory.createModifier(ts.SyntaxKind.ExportKeyword),
-        // factory.createModifier(ts.SyntaxKind.ConstKeyword),
-      ],
-      type.name,
-      type.values.map((name) =>
-        factory.createEnumMember(name, factory.createStringLiteral(name)),
+  if (
+    context.isUseStringUnionsInsteadOfEnumsEnabled() &&
+    context.shouldMigrateEnum(type.name)
+  ) {
+    return factory.createTypeAliasDeclaration(
+      [factory.createToken(ts.SyntaxKind.ExportKeyword)],
+      factory.createIdentifier(type.name),
+      undefined,
+      factory.createUnionTypeNode(
+        type.values.map((name) =>
+          factory.createLiteralTypeNode(factory.createStringLiteral(name)),
+        ),
       ),
     );
   }
-  return factory.createTypeAliasDeclaration(
-    [factory.createToken(ts.SyntaxKind.ExportKeyword)],
-    factory.createIdentifier(type.name),
-    undefined,
-    factory.createUnionTypeNode(
-      type.values.map((name) =>
-        factory.createLiteralTypeNode(factory.createStringLiteral(name)),
-      ),
+  return factory.createEnumDeclaration(
+    [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+    type.name,
+    type.values.map((name) =>
+      factory.createEnumMember(name, factory.createStringLiteral(name)),
     ),
   );
 }

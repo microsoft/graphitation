@@ -2,6 +2,51 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Mon, 16 Oct 2023 10:17:21 GMT",
+      "tag": "@graphitation/ts-codegen_v2.9.0",
+      "version": "2.9.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "241dbf84bb909e6f7b48509c6a3ed900f66bd104",
+            "comment": "Added possibility to migrate just specified enums to string unions"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 16 Oct 2023 09:30:34 GMT",
+      "tag": "@graphitation/ts-codegen_v2.8.0",
+      "version": "2.8.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "e625670ef9da0a6877c5e143b12ae5a76d7befb9",
+            "comment": "ts-codegen can generate only enum files"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Sun, 08 Oct 2023 15:21:54 GMT",
+      "tag": "@graphitation/ts-codegen_v2.7.0",
+      "version": "2.7.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "46a9cc74ef4ae5317064102602cc1c6a804b102f",
+            "comment": "Backawrds compatibility changes reverted + added option to enable string unions instead of enums"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 21 Sep 2023 06:28:45 GMT",
       "tag": "@graphitation/ts-codegen_v2.6.1",
       "version": "2.6.1",

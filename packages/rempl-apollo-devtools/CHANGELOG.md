@@ -1,8 +1,16 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-This log was last generated on Tue, 20 Jun 2023 12:24:10 GMT and should not be manually modified.
+This log was last generated on Sun, 15 Oct 2023 19:44:35 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.3
+
+Sun, 15 Oct 2023 19:44:35 GMT
+
+### Patches
+
+- Integrate Apollo inspector UI (jpsahoo14@gmail.com)
 
 ## 1.0.1
 

@@ -17,9 +17,11 @@ export function generateTS(
     contextName,
     enumsImport,
     legacyCompat,
-    legacyEnumsCompatibility,
+    useStringUnionsInsteadOfEnums,
     legacyNoModelsForObjects,
     modelScope,
+    generateOnlyEnums,
+    enumNamesToMigrate,
   }: {
     outputPath: string;
     documentPath: string;
@@ -27,9 +29,11 @@ export function generateTS(
     contextName?: string;
     enumsImport?: string | null;
     legacyCompat?: boolean;
-    legacyEnumsCompatibility?: boolean;
+    useStringUnionsInsteadOfEnums?: boolean;
     legacyNoModelsForObjects?: boolean;
     modelScope?: string | null;
+    generateOnlyEnums?: boolean;
+    enumNamesToMigrate?: string[];
   },
 ): {
   files: ts.SourceFile[];
@@ -42,27 +46,32 @@ export function generateTS(
           from: contextImport || null,
         },
         legacyCompat,
-        legacyEnumsCompatibility,
+        useStringUnionsInsteadOfEnums,
         enumsImport,
         legacyNoModelsForObjects,
         modelScope,
+        enumNamesToMigrate,
       },
       document,
       outputPath,
       documentPath,
     );
     const result: ts.SourceFile[] = [];
-    result.push(generateModels(context));
-    result.push(generateResolvers(context));
+
     if (context.hasEnums) {
       result.push(generateEnums(context));
     }
-    if (context.hasInputs) {
-      result.push(generateInputs(context));
-    }
-    if (legacyCompat) {
-      result.push(generateLegacyTypes(context));
-      result.push(generateLegacyResolvers(context));
+
+    if (!generateOnlyEnums) {
+      result.push(generateModels(context));
+      result.push(generateResolvers(context));
+      if (context.hasInputs) {
+        result.push(generateInputs(context));
+      }
+      if (legacyCompat) {
+        result.push(generateLegacyTypes(context));
+        result.push(generateLegacyResolvers(context));
+      }
     }
     return { files: result };
   } catch (e) {

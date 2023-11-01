@@ -2,6 +2,51 @@
   "name": "@graphitation/apollo-react-relay-duct-tape-compiler",
   "entries": [
     {
+      "date": "Mon, 16 Oct 2023 10:17:21 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.3.5",
+      "version": "1.3.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "comment": "Bump @graphitation/supermassive to v3.2.3",
+            "commit": "241dbf84bb909e6f7b48509c6a3ed900f66bd104"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 16 Oct 2023 09:30:34 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.3.4",
+      "version": "1.3.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "comment": "Bump @graphitation/supermassive to v3.2.2",
+            "commit": "e625670ef9da0a6877c5e143b12ae5a76d7befb9"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Sun, 08 Oct 2023 15:21:54 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.3.3",
+      "version": "1.3.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "comment": "Bump @graphitation/supermassive to v3.2.1",
+            "commit": "46a9cc74ef4ae5317064102602cc1c6a804b102f"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 28 Sep 2023 12:04:15 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.3.2",
       "version": "1.3.2",

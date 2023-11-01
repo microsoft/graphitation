@@ -1,8 +1,32 @@
 # Change Log - @graphitation/ts-codegen
 
-This log was last generated on Thu, 21 Sep 2023 06:28:45 GMT and should not be manually modified.
+This log was last generated on Mon, 16 Oct 2023 10:17:21 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.9.0
+
+Mon, 16 Oct 2023 10:17:21 GMT
+
+### Minor changes
+
+- Added possibility to migrate just specified enums to string unions (jakubvejr@microsoft.com)
+
+## 2.8.0
+
+Mon, 16 Oct 2023 09:30:34 GMT
+
+### Minor changes
+
+- ts-codegen can generate only enum files (jakubvejr@microsoft.com)
+
+## 2.7.0
+
+Sun, 08 Oct 2023 15:21:54 GMT
+
+### Minor changes
+
+- Backawrds compatibility changes reverted + added option to enable string unions instead of enums (jakubvejr@microsoft.com)
 
 ## 2.6.1
 
