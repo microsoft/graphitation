@@ -32,15 +32,16 @@ const useSubscribeToPublisher = ({
   setClientObjects: React.Dispatch<React.SetStateAction<string[]>>;
 }) => {
   React.useEffect(() => {
-    remplSubscriber.callRemote("getApolloClientsIds");
     const unsubscribe = remplSubscriber
       .ns("apollo-operations-tracker")
       .subscribe((data: IDataView) => {
         if (Array.isArray(data)) {
           setClientObjects(data);
-          unsubscribe();
         }
       });
+    remplSubscriber.callRemote("getApolloClientsIds");
+
+    return () => unsubscribe();
   }, [setClientObjects]);
 };
 
@@ -80,6 +81,7 @@ const useOnRecordStop = (
     remplSubscriber.callRemote("stopOperationsTracker", {});
   }, []);
 
+let previousData: any = null;
 const useOnRecordStart = (
   unsubscribeRef: React.MutableRefObject<UnsubscribeFn | undefined>,
   clientObjects: string[],
@@ -93,17 +95,59 @@ const useOnRecordStart = (
         if (unsubscribeRef.current) {
           unsubscribeRef.current();
         }
-        let skipValue = true;
         unsubscribeRef.current = remplSubscriber
           .ns("apollo-operations-tracker")
           .subscribe((data: IDataView) => {
-            if (!Array.isArray(data) && !skipValue) {
-              observer.next(data);
-            } else {
-              skipValue = false;
+            if (!Array.isArray(data)) {
+              if (doesDiffExist(previousData, data)) {
+                observer.next(data);
+              }
+              previousData = data;
             }
           });
       });
     },
     [clientObjects],
   );
+
+/**
+ * Utility to compare if the previous list is same as current list of operations.
+ * Its needed, as rempl subscriber keeps sending the previous sent data, every
+ * 1 second, which is unnecessary
+ * @param prevData
+ * @param currentData
+ * @returns
+ */
+const doesDiffExist = (
+  prevData: IDataView | undefined,
+  currentData: IDataView | undefined,
+): boolean => {
+  try {
+    if (
+      (prevData?.verboseOperations && prevData?.verboseOperations.length) ===
+      (currentData?.verboseOperations && currentData?.verboseOperations.length)
+    ) {
+      let foundDifference = false;
+      const prevDataMap = new Map();
+      prevData?.verboseOperations?.forEach((operation) => {
+        prevDataMap.set(operation.id, operation.changeSetVersion);
+      });
+
+      currentData?.verboseOperations?.forEach((operation) => {
+        if (
+          prevDataMap.has(operation.id) &&
+          prevDataMap.get(operation.id) === operation.changeSetVersion
+        ) {
+        } else {
+          foundDifference = true;
+          return true;
+        }
+      });
+      return foundDifference;
+    } else {
+      return true;
+    }
+  } catch (error) {
+    return true;
+  }
+};
