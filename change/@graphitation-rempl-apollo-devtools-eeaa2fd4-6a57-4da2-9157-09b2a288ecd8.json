@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Avoid multiple re-rendering",
+  "packageName": "@graphitation/rempl-apollo-devtools",
+  "email": "jpsahoo14@gmail.com",
+  "dependentChangeType": "patch"
+}
