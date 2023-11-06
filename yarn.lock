@@ -4227,22 +4227,22 @@ anymatch@^3.0.3, anymatch@~3.1.2:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
-apollo-inspector-ui@^0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/apollo-inspector-ui/-/apollo-inspector-ui-0.0.3.tgz#2122438468df5025470656def71bf2da9a079c87"
-  integrity sha512-DGv0gwyX2cVeOScuyg3IhpNidE+rM73ZVdjU/fW/4qzrpIOppEtan0Qtte8NugiCVHnht8faz0L1i1mJT2Ytjw==
+apollo-inspector-ui@^0.0.5:
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/apollo-inspector-ui/-/apollo-inspector-ui-0.0.5.tgz#e8d694d1e23e184d4309ce5ad717a11840ab390d"
+  integrity sha512-OQHFzLqpqVYMW9AiS+tdTa+hJMMGkn7+3qkCtJXTNCTDadP4xLVx4i50AJtIg+3+qpyy6a9LMbnL6+6HXd5nUg==
   dependencies:
-    apollo-inspector "1.17.1"
+    apollo-inspector "1.17.3"
     graphql "16.8.1"
     immer "^10.0.1"
     lodash-es "^4.17.21"
     rxjs "^7.8.1"
     zustand "^4.3.7"
 
-apollo-inspector@1.17.1, apollo-inspector@^1.17.1:
-  version "1.17.1"
-  resolved "https://registry.yarnpkg.com/apollo-inspector/-/apollo-inspector-1.17.1.tgz#ca81fbc7027c4a2542698a1162121d8b32d658bc"
-  integrity sha512-oZMe8vZOo1Cz/ogWba4BtIkZHAbM7CxnKw5VUGY73TtQdXoVfGo+yufkOgbuVWIJ5+burCUJj+J1Pr9aoos2hg==
+apollo-inspector@1.17.3, apollo-inspector@^1.17.3:
+  version "1.17.3"
+  resolved "https://registry.yarnpkg.com/apollo-inspector/-/apollo-inspector-1.17.3.tgz#c600ef66cd73f473099540abaeccf2e0da70304d"
+  integrity sha512-zAMoMhI98E99ob+0JAjU1zuXAN3AxDT62Vg5sLTJnqK+os+GujTftxxgVHkZs0+RGVd36eqznVojFqodS9J3Sg==
   dependencies:
     "@swc/helpers" "^0.4.14"
     "@types/node" "^18.11.17"
