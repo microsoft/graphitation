@@ -138,6 +138,7 @@ const doesDiffExist = (
           prevDataMap.has(operation.id) &&
           prevDataMap.get(operation.id) === operation.changeSetVersion
         ) {
+          /** empty */
         } else {
           foundDifference = true;
           return true;
