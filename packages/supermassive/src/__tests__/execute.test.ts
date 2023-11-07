@@ -419,7 +419,7 @@ describe("executeWithoutSchema - minimal viable schema annotation", () => {
 });
 
 describe("executeWithoutSchema - regression tests", () => {
-  test("Supports fieldNodes (gql 16+) in addition to fieldGroup (gql 17+) in ResolveInfo for backwards compatibility", async () => {
+  test("Supports fieldNodes in ResolveInfo for backwards compatibility", async () => {
     let infoAtCallTime: ResolveInfo | undefined;
 
     const resolvers = {
@@ -440,6 +440,5 @@ describe("executeWithoutSchema - regression tests", () => {
     expect(infoAtCallTime?.fieldNodes?.length).toEqual(2);
     expect(infoAtCallTime?.fieldNodes[0].name.value).toEqual("foo");
     expect(infoAtCallTime?.fieldNodes[1].name.value).toEqual("foo");
-    expect(infoAtCallTime?.fieldNodes).toBe(infoAtCallTime?.fieldGroup);
   });
 });

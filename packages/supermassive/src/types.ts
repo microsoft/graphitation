@@ -92,7 +92,7 @@ export type UserResolvers<TSource = unknown, TContext = unknown> = Record<
 
 export interface ResolveInfo {
   fieldName: string;
-  fieldGroup: FieldGroup;
+  fieldNodes: FieldGroup;
   returnTypeName: string;
   parentTypeName: string;
   // readonly returnType: GraphQLOutputType;
@@ -103,7 +103,6 @@ export interface ResolveInfo {
   rootValue: unknown;
   operation: OperationDefinitionNode;
   variableValues: { [variable: string]: unknown };
-  fieldNodes: FieldGroup;
 }
 
 export type ExecutionResult<
