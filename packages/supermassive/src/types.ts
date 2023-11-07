@@ -103,8 +103,6 @@ export interface ResolveInfo {
   rootValue: unknown;
   operation: OperationDefinitionNode;
   variableValues: { [variable: string]: unknown };
-
-  // Backwards-compat with graphql 16+ (17+ should use fieldGroup):
   fieldNodes: FieldGroup;
 }
 
