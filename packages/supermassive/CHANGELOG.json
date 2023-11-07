@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Tue, 07 Nov 2023 14:42:59 GMT",
+      "tag": "@graphitation/supermassive_v3.2.4",
+      "version": "3.2.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "bee769cc11e7519875e1cb8e63c66278a19fa9c0",
+            "comment": "Fix unintentional breaking change in supermassive v3"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 28 Sep 2023 12:04:15 GMT",
       "tag": "@graphitation/supermassive_v3.2.0",
       "version": "3.2.0",
