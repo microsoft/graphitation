@@ -764,8 +764,6 @@ export function buildResolveInfo(
     rootValue: exeContext.rootValue,
     operation: exeContext.operation,
     variableValues: exeContext.variableValues,
-
-    // Backwards-compat with graphql 16+ (17+ should use fieldGroup):
     fieldNodes: fieldGroup,
   };
 }
