@@ -756,7 +756,7 @@ export function buildResolveInfo(
   // information about the current execution state.
   return {
     fieldName: fieldName,
-    fieldGroup,
+    fieldNodes: fieldGroup,
     returnTypeName,
     parentTypeName,
     path,

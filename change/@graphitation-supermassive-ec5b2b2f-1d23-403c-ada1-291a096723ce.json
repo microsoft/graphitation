@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Fix unintentional breaking change in supermassive v3",
+  "packageName": "@graphitation/supermassive",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}
