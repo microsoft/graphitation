@@ -31,7 +31,7 @@
     "@types/react-router": "^5.1.18",
     "@types/react": "^17.0.2",
     "@types/uuid": "^8.3.4",
-    "apollo-inspector-ui": "^0.0.5",
+    "apollo-inspector-ui": "^0.0.6",
     "apollo-inspector": "^1.17.3",
     "graphiql": "^2.0.9",
     "graphql": "^15.6.1",
