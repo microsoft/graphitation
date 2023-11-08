@@ -4227,10 +4227,10 @@ anymatch@^3.0.3, anymatch@~3.1.2:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
-apollo-inspector-ui@^0.0.5:
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/apollo-inspector-ui/-/apollo-inspector-ui-0.0.5.tgz#e8d694d1e23e184d4309ce5ad717a11840ab390d"
-  integrity sha512-OQHFzLqpqVYMW9AiS+tdTa+hJMMGkn7+3qkCtJXTNCTDadP4xLVx4i50AJtIg+3+qpyy6a9LMbnL6+6HXd5nUg==
+apollo-inspector-ui@^0.0.6:
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/apollo-inspector-ui/-/apollo-inspector-ui-0.0.6.tgz#0cf977e0f6b49d8d604ac1c982026feaa8066908"
+  integrity sha512-ARrnnefcsdkgZ8t7yvxvByxGzGtIfBvrrEZZz0SXcRR+JLCd4geu7Ux4pu3YlaeTpAKKnWCmxFgV2mt0iuNV5Q==
   dependencies:
     apollo-inspector "1.17.3"
     graphql "16.8.1"
