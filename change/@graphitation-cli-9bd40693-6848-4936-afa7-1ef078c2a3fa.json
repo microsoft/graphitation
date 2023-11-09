@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "added parameter to specify GraphQL enums which should remain Typescript enums",
-  "packageName": "@graphitation/cli",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
