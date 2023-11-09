@@ -1888,7 +1888,7 @@ describe(generateTS, () => {
           type2
         }
 
-        enum TypeToMigrate {
+        enum EnumToMigrate {
           type1
           type2
         }
@@ -1904,7 +1904,7 @@ describe(generateTS, () => {
       `,
       {
         useStringUnionsInsteadOfEnums: true,
-        enumNamesToMigrate: ["TypeToMigrate"],
+        enumNamesToMigrate: ["EnumToMigrate"],
       },
     );
     expect(enums).toMatchInlineSnapshot(`
@@ -1912,7 +1912,7 @@ describe(generateTS, () => {
           type1 = "type1",
           type2 = "type2"
       }
-      export type TypeToMigrate = "type1" | "type2";
+      export type EnumToMigrate = "type1" | "type2";
       "
     `);
     expect(inputs).toMatchInlineSnapshot(`undefined`);
@@ -1976,7 +1976,7 @@ describe(generateTS, () => {
           type2
         }
 
-        enum TypeToKeep {
+        enum EnumToKeep {
           type1
           type2
         }
@@ -1992,12 +1992,12 @@ describe(generateTS, () => {
       `,
       {
         useStringUnionsInsteadOfEnums: true,
-        enumNamesToKeep: ["TypeToKeep"],
+        enumNamesToKeep: ["EnumToKeep"],
       },
     );
     expect(enums).toMatchInlineSnapshot(`
       "export type Type = "type1" | "type2";
-      export enum TypeToKeep {
+      export enum EnumToKeep {
           type1 = "type1",
           type2 = "type2"
       }
