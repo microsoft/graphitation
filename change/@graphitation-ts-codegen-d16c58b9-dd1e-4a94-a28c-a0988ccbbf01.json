@@ -1,6 +1,6 @@
 {
   "type": "minor",
-  "comment": "[TS-CODEGEN] added parameter to specify GraphQL enums which should remain Typescript enums",
+  "comment": "added parameter to specify GraphQL enums which should remain Typescript enums",
   "packageName": "@graphitation/ts-codegen",
   "email": "jakubvejr@microsoft.com",
   "dependentChangeType": "patch"
