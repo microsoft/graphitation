@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Performance update",
-  "packageName": "@graphitation/rempl-apollo-devtools",
-  "email": "jpsahoo14@gmail.com",
-  "dependentChangeType": "patch"
-}
