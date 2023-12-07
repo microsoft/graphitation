@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { Transformer } from "../transformerTestUtils";
-import { getTransformer } from "../index";
+import { getRelayTransformer, getTransformer } from "../index";
 
 describe("transformer tests", () => {
   it("should convert simple queries", () => {
@@ -261,6 +261,63 @@ describe("transformer tests", () => {
         export const query = { kind: "Document", definitions: [{ kind: "OperationDefinition", operation: "query", name: { kind: "Name", value: "Foo", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "foo", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
         "
       `);
+    });
+  });
+
+  describe("relay transform mode", () => {
+    it("should convert queries", () => {
+      expect.assertions(1);
+      const transformer = new Transformer()
+        .addTransformer((_program: ts.Program) => getRelayTransformer({}))
+        .addMock({
+          name: "relay-runtime",
+          content: `export type ConcreteRequest = any; export type Query = any;`,
+        })
+        .setFilePath("/index.tsx");
+
+      const actual = transformer.transform(`
+    import { ConcreteRequest, Query } from 'relay-runtime';
+
+    const node: ConcreteRequest = (function(){
+      return {
+        "fragment": {},
+        "kind": "Request",
+        "operation": {},
+        "params": {
+          "cacheID": "d40e68211358413fd00f0d3e3a480fda",
+          "id": null,
+          "metadata": {},
+          "name": "useSimpleCollabConversationFolderNameValidationQuery",
+          "operationKind": "query",
+          "text": "query Foo { foo }"
+        }
+      };
+      })();
+      
+      (node as any).hash = "7b70df8117cf21bf42464a3c9e910ebd";
+      
+      export default node;
+    `);
+      expect(actual).toMatchInlineSnapshot(`
+      "const node = (function () {
+          return {
+              "fragment": {},
+              "kind": "Request",
+              "operation": {},
+              "params": {
+                  "cacheID": "d40e68211358413fd00f0d3e3a480fda",
+                  "id": null,
+                  "metadata": {},
+                  "name": "useSimpleCollabConversationFolderNameValidationQuery",
+                  "operationKind": "query",
+                  "text": { kind: "Document", definitions: [{ kind: "OperationDefinition", operation: "query", name: { kind: "Name", value: "Foo", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "foo", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) }
+              }
+          };
+      })();
+      node.hash = "7b70df8117cf21bf42464a3c9e910ebd";
+      export default node;
+      "
+    `);
     });
   });
 });
