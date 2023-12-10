@@ -206,10 +206,6 @@ function getRelayVisitor(
     if (ts.isObjectLiteralExpression(node)) {
       if (
         node.properties.findIndex((p) => {
-          console.log(
-            (p.name as any).text,
-            ((p as any).initializer as any).text,
-          );
           return (
             ts.isPropertyAssignment(p) &&
             ts.isStringLiteral(p.name) &&
@@ -226,7 +222,6 @@ function getRelayVisitor(
             p.name.text === "params",
         );
         if (params && ts.isPropertyAssignment(params)) {
-          console.log(params);
           const paramsObject = params.initializer;
           if (ts.isObjectLiteralExpression(paramsObject)) {
             const text = paramsObject.properties.find(
@@ -235,7 +230,6 @@ function getRelayVisitor(
                 ts.isStringLiteral(p.name) &&
                 p.name.text === "text",
             );
-            console.log(text);
             if (
               text &&
               ts.isPropertyAssignment(text) &&
@@ -267,7 +261,6 @@ function getRelayVisitor(
                 params.name,
                 newParamsObject,
               );
-              console.log(newParams);
               return ts.factory.updateObjectLiteralExpression(
                 node,
                 node.properties
