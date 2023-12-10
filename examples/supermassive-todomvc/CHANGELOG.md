@@ -1,8 +1,16 @@
 # Change Log - supermassive-todomvc
 
-This log was last generated on Thu, 09 Nov 2023 13:12:42 GMT and should not be manually modified.
+This log was last generated on Sun, 10 Dec 2023 07:22:00 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.1-0
+
+Sun, 10 Dec 2023 07:22:00 GMT
+
+### Patches
+
+- Bump @graphitation/ts-transform-graphql-js-tag to v1.2.0
 
 ## 1.0.1-0
 

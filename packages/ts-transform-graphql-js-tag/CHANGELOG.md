@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-transform-graphql-js-tag
 
-This log was last generated on Thu, 21 Sep 2023 06:28:45 GMT and should not be manually modified.
+This log was last generated on Sun, 10 Dec 2023 07:22:00 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.2.0
+
+Sun, 10 Dec 2023 07:22:00 GMT
+
+### Minor changes
+
+- Add relay artefact support (eloy.de.enige@gmail.com)
 
 ## 1.1.1
 

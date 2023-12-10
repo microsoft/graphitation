@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-transform-graphql-js-tag",
   "entries": [
     {
+      "date": "Sun, 10 Dec 2023 07:22:00 GMT",
+      "tag": "@graphitation/ts-transform-graphql-js-tag_v1.2.0",
+      "version": "1.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/ts-transform-graphql-js-tag",
+            "commit": "5aa7cc4cebb5555f206b6343b303fe1e5a6f75f8",
+            "comment": "Add relay artefact support"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 21 Sep 2023 06:28:45 GMT",
       "tag": "@graphitation/ts-transform-graphql-js-tag_v1.1.1",
       "version": "1.1.1",
