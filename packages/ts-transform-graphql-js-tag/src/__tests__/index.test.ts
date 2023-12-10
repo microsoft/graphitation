@@ -63,6 +63,37 @@ describe("transformer tests", () => {
     `);
   });
 
+  it("should use multiple documents", () => {
+    expect.assertions(1);
+    const transformer = new Transformer()
+      .addTransformer((_program: ts.Program) => getTransformer({}))
+      .addMock({
+        name: "@graphitation/graphql-js-tag",
+        content: `export const graphql:any = () => {}`,
+      })
+      .setFilePath("/index.tsx");
+
+    const actual = transformer.transform(`
+      import { graphql } from "@graphitation/graphql-js-tag"
+
+      const documents = graphql\`
+        fragment FooFragment on Foo {
+          bar
+        }
+
+        query Foo {
+          foo
+          ...FooFragment
+        }
+      \`
+    `);
+    expect(actual).toMatchInlineSnapshot(`
+      "const documents = { kind: "Document", definitions: [{ kind: "FragmentDefinition", name: { kind: "Name", value: "FooFragment", loc: undefined }, typeCondition: { kind: "NamedType", name: { kind: "Name", value: "Foo", loc: undefined }, loc: undefined }, directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "bar", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }, { kind: "OperationDefinition", operation: "query", name: { kind: "Name", value: "Foo", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "foo", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }, { kind: "FragmentSpread", name: { kind: "Name", value: "FooFragment", loc: undefined }, directives: [], loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
+      export {};
+      "
+    `);
+  });
+
   it("should apply transformer", () => {
     expect.assertions(1);
     const transformer = new Transformer()
@@ -299,25 +330,25 @@ describe("transformer tests", () => {
       export default node;
     `);
       expect(actual).toMatchInlineSnapshot(`
-      "const node = (function () {
-          return {
-              "fragment": {},
-              "kind": "Request",
-              "operation": {},
-              "params": {
-                  "cacheID": "d40e68211358413fd00f0d3e3a480fda",
-                  "id": null,
-                  "metadata": {},
-                  "name": "useSimpleCollabConversationFolderNameValidationQuery",
-                  "operationKind": "query",
-                  "text": { kind: "Document", definitions: [{ kind: "OperationDefinition", operation: "query", name: { kind: "Name", value: "Foo", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "foo", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) }
-              }
-          };
-      })();
-      node.hash = "7b70df8117cf21bf42464a3c9e910ebd";
-      export default node;
-      "
-    `);
+              "const node = (function () {
+                  return {
+                      "fragment": {},
+                      "kind": "Request",
+                      "operation": {},
+                      "params": {
+                          "cacheID": "d40e68211358413fd00f0d3e3a480fda",
+                          "id": null,
+                          "metadata": {},
+                          "name": "useSimpleCollabConversationFolderNameValidationQuery",
+                          "operationKind": "query",
+                          "text": { kind: "Document", definitions: [{ kind: "OperationDefinition", operation: "query", name: { kind: "Name", value: "Foo", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "foo", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) }
+                      }
+                  };
+              })();
+              node.hash = "7b70df8117cf21bf42464a3c9e910ebd";
+              export default node;
+              "
+          `);
     });
   });
 });

@@ -337,14 +337,10 @@ function getDefinitions(
   const definitions = [];
 
   for (const definition of queryDocument.definitions) {
-    if (definition.kind === Kind.OPERATION_DEFINITION) {
-      if (queryDocument.definitions.length > 1) {
-        throw new Error(
-          `If a GraphQL query document contains multiple operations, each operation must be named.\n${source}`,
-        );
-      }
-      definitions.push(transformer ? transformer(definition) : definition);
-    } else if (definition.kind === Kind.FRAGMENT_DEFINITION) {
+    if (
+      definition.kind === Kind.OPERATION_DEFINITION ||
+      definition.kind === Kind.FRAGMENT_DEFINITION
+    ) {
       definitions.push(transformer ? transformer(definition) : definition);
     }
   }
