@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Fix type assertion for isTotalExecutionResult",
+  "packageName": "@graphitation/supermassive",
+  "email": "mark@thedutchies.com",
+  "dependentChangeType": "patch"
+}
