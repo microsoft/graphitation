@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Tue, 12 Dec 2023 13:48:37 GMT",
+      "tag": "@graphitation/supermassive_v3.2.6",
+      "version": "3.2.6",
+      "comments": {
+        "patch": [
+          {
+            "author": "mark@thedutchies.com",
+            "package": "@graphitation/supermassive",
+            "commit": "0edb7032410edb3fba29a6a87b189a27459d7f3c",
+            "comment": "Add invariant as a dependency"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 07 Nov 2023 14:42:59 GMT",
       "tag": "@graphitation/supermassive_v3.2.4",
       "version": "3.2.4",
