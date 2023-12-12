@@ -23,6 +23,7 @@
     "@ts-morph/bootstrap": "^0.11.0",
     "@types/benchmark": "^2.1.0",
     "@types/jest": "^26.0.22",
+    "@types/invariant": "^2.2.34",
     "@types/node-json-db": "^0.9.3",
     "benchmark": "^2.1.4",
     "graphql-jit": "^0.8.4",
@@ -46,7 +47,9 @@
       }
     }
   },
-  "dependencies": {},
+  "dependencies": {
+    "invariant": "^2.2.4"
+  },
   "peerDependencies": {
     "graphql": "^15.0.0 || ^16.0.0 || ^17.0.0"
   }
