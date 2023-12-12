@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Tue, 12 Dec 2023 13:48:37 GMT and should not be manually modified.
+This log was last generated on Tue, 12 Dec 2023 17:37:29 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.2.7
+
+Tue, 12 Dec 2023 17:37:29 GMT
+
+### Patches
+
+- Fix type assertion for isTotalExecutionResult (mark@thedutchies.com)
 
 ## 3.2.6
 

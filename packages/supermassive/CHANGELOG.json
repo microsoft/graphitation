@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Tue, 12 Dec 2023 17:37:29 GMT",
+      "tag": "@graphitation/supermassive_v3.2.7",
+      "version": "3.2.7",
+      "comments": {
+        "patch": [
+          {
+            "author": "mark@thedutchies.com",
+            "package": "@graphitation/supermassive",
+            "commit": "20a0556c23be4a1e70219953dbe2c8a0ef11fe3d",
+            "comment": "Fix type assertion for isTotalExecutionResult"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 12 Dec 2023 13:48:37 GMT",
       "tag": "@graphitation/supermassive_v3.2.6",
       "version": "3.2.6",
