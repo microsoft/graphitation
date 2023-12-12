@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Add invariant as a dependency",
-  "packageName": "@graphitation/supermassive",
-  "email": "mark@thedutchies.com",
-  "dependentChangeType": "patch"
-}

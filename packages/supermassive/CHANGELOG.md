@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Tue, 07 Nov 2023 14:42:59 GMT and should not be manually modified.
+This log was last generated on Tue, 12 Dec 2023 13:48:37 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.2.6
+
+Tue, 12 Dec 2023 13:48:37 GMT
+
+### Patches
+
+- Add invariant as a dependency (mark@thedutchies.com)
 
 ## 3.2.4
 
