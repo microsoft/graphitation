@@ -3,10 +3,12 @@ import {
   PluginValidateFn,
   PluginFunction,
 } from "@graphql-codegen/plugin-helpers";
-import ts from "typescript";
 import { GraphQLSchema } from "graphql";
 import { printSchema, parse } from "graphql";
-import { extractImplicitTypesToTypescript } from "@graphitation/supermassive-extractors";
+import {
+  encodeASTSchema,
+  mergeSchemaDefinitions,
+} from "@graphitation/supermassive";
 import { extname } from "path";
 import { RawClientSideBasePluginConfig } from "@graphql-codegen/visitor-plugin-common";
 
@@ -15,13 +17,13 @@ type PluginConfig = RawClientSideBasePluginConfig & {
 };
 
 export const plugin: PluginFunction<PluginConfig> = (schema: GraphQLSchema) => {
-  const tsContents: ts.SourceFile = extractImplicitTypesToTypescript(
-    parse(printSchema(schema)),
+  const schemaAST = parse(printSchema(schema));
+  const typeDefs = mergeSchemaDefinitions(
+    { types: {} },
+    encodeASTSchema(schemaAST),
   );
 
-  const printer = ts.createPrinter();
-
-  return printer.printNode(ts.EmitHint.SourceFile, tsContents, tsContents);
+  return `export default JSON.parse('${JSON.stringify(typeDefs)}')`;
 };
 
 export const validate: PluginValidateFn<PluginConfig> = async (
@@ -32,7 +34,7 @@ export const validate: PluginValidateFn<PluginConfig> = async (
 ) => {
   if (extname(outputFile) !== ".ts" && extname(outputFile) !== ".tsx") {
     throw new Error(
-      `Plugin "supermassive-typed-document-node" requires extension to be ".ts" or ".tsx"!`,
+      `Plugin "graphql-codegen-supermassive-schema-extraction-plugin" requires extension to be ".ts" or ".tsx"!`,
     );
   }
 };
