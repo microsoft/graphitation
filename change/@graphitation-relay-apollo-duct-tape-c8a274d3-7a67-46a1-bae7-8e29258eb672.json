@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "New version",
-  "packageName": "@graphitation/relay-apollo-duct-tape",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "none"
-}
