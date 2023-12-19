@@ -1,5 +1,7 @@
 # Custom GraphQL codegen plugins
 
-## supermassive-typed-document-node
+## graphql-codegen-supermassive-schema-extraction-plugin
 
-Do the same stuff as the original typed-document-node plugin except it extends GraphQL AST data to match Supermassive AST
+Encodes type definitions into compact schema format of Supermassive V3.
+
+Output file contains JSON, which is faster than JS literal: https://v8.dev/blog/cost-of-javascript-2019#json

@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "Update graphql-codegen-supermassive-schema-extraction-plugin for usage with supermassive v3",
+  "packageName": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}
