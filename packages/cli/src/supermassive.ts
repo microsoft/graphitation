@@ -17,6 +17,7 @@ type GenerateInterfacesOptions = {
   legacyModels?: boolean;
   useStringUnionsInsteadOfEnums?: boolean;
   enumMigrationJsonFile?: string;
+  enumMigrationExceptionsJsonFile?: string;
   generateOnlyEnums?: boolean;
   scope?: string;
 };
@@ -60,6 +61,10 @@ export function supermassive(): Command {
     .option(
       "--enum-migration-json-file [enumMigrationJsonFile]",
       "File containing array of enum names, which should be migrated to string unions",
+    )
+    .option(
+      "--enum-migration-exceptions-json-file [enumMigrationExceptionsJsonFile]",
+      "File containing array of enum names, which should remain typescript enums",
     )
     .description("generate interfaces and models")
     .action(
@@ -126,6 +131,7 @@ async function generateInterfaces(
       options.outputDir ? options.outputDir : "__generated__",
     );
     let enumNamesToMigrate;
+    let enumNamesToKeep;
     if (options.enumMigrationJsonFile) {
       const content = JSON.parse(
         await fs.readFile(
@@ -143,6 +149,25 @@ async function generateInterfaces(
       enumNamesToMigrate = content;
     }
 
+    if (options.enumMigrationExceptionsJsonFile) {
+      const content = JSON.parse(
+        await fs.readFile(
+          path.join(process.cwd(), options.enumMigrationExceptionsJsonFile),
+          {
+            encoding: "utf-8",
+          },
+        ),
+      );
+
+      if (!Array.isArray(content)) {
+        throw new Error(
+          "enumMigrationExceptionsJsonFile doesn't contain an array",
+        );
+      }
+
+      enumNamesToKeep = content;
+    }
+
     const result = generateTS(document, {
       outputPath,
       documentPath: fullPath,
@@ -154,6 +179,7 @@ async function generateInterfaces(
       useStringUnionsInsteadOfEnums: !!options.useStringUnionsInsteadOfEnums,
       generateOnlyEnums: !!options.generateOnlyEnums,
       enumNamesToMigrate,
+      enumNamesToKeep,
       modelScope: options.scope || null,
     });
 

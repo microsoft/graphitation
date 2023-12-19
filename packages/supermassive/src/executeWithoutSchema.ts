@@ -756,7 +756,7 @@ export function buildResolveInfo(
   // information about the current execution state.
   return {
     fieldName: fieldName,
-    fieldGroup,
+    fieldNodes: fieldGroup,
     returnTypeName,
     parentTypeName,
     path,
@@ -2359,6 +2359,6 @@ export function isTotalExecutionResult<
   TExtensions = ObjMap<unknown>,
 >(
   result: ExecutionResult<TData, TExtensions>,
-): result is IncrementalExecutionResult<TData, TExtensions> {
+): result is TotalExecutionResult<TData, TExtensions> {
   return !("initialResult" in result);
 }

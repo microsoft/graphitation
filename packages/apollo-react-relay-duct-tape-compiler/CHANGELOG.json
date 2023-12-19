@@ -2,6 +2,66 @@
   "name": "@graphitation/apollo-react-relay-duct-tape-compiler",
   "entries": [
     {
+      "date": "Tue, 12 Dec 2023 17:37:30 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.3.9",
+      "version": "1.3.9",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "comment": "Bump @graphitation/supermassive to v3.2.7",
+            "commit": "20a0556c23be4a1e70219953dbe2c8a0ef11fe3d"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 12 Dec 2023 13:48:37 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.3.8",
+      "version": "1.3.8",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "comment": "Bump @graphitation/supermassive to v3.2.6",
+            "commit": "0edb7032410edb3fba29a6a87b189a27459d7f3c"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 09 Nov 2023 13:12:42 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.3.7",
+      "version": "1.3.7",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "comment": "Bump @graphitation/supermassive to v3.2.5",
+            "commit": "6a14a2e59145c35e73c216e530616cd8b19fe7e8"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 07 Nov 2023 14:42:59 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.3.6",
+      "version": "1.3.6",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "comment": "Bump @graphitation/supermassive to v3.2.4",
+            "commit": "bee769cc11e7519875e1cb8e63c66278a19fa9c0"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 16 Oct 2023 10:17:21 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.3.5",
       "version": "1.3.5",

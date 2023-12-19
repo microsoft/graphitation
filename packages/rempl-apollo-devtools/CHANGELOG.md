@@ -1,8 +1,24 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-This log was last generated on Mon, 06 Nov 2023 07:55:57 GMT and should not be manually modified.
+This log was last generated on Tue, 14 Nov 2023 10:29:53 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.6
+
+Tue, 14 Nov 2023 10:29:53 GMT
+
+### Patches
+
+- Performance update (jpsahoo14@gmail.com)
+
+## 1.0.5
+
+Wed, 08 Nov 2023 09:54:29 GMT
+
+### Patches
+
+- update (jpsahoo14@gmail.com)
 
 ## 1.0.4
 

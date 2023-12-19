@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-This log was last generated on Mon, 16 Oct 2023 10:17:21 GMT and should not be manually modified.
+This log was last generated on Thu, 09 Nov 2023 13:12:42 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 2.10.0
+
+Thu, 09 Nov 2023 13:12:42 GMT
+
+### Minor changes
+
+- added parameter to specify GraphQL enums which should remain Typescript enums (jakubvejr@microsoft.com)
 
 ## 2.9.0
 
