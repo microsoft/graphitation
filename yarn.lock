@@ -4866,22 +4866,22 @@ apollo-codegen@^0.19.1:
     source-map-support "^0.5.0"
     yargs "^10.0.3"
 
-apollo-inspector-ui@^0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/apollo-inspector-ui/-/apollo-inspector-ui-0.0.3.tgz#2122438468df5025470656def71bf2da9a079c87"
-  integrity sha512-DGv0gwyX2cVeOScuyg3IhpNidE+rM73ZVdjU/fW/4qzrpIOppEtan0Qtte8NugiCVHnht8faz0L1i1mJT2Ytjw==
+apollo-inspector-ui@^0.0.8:
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/apollo-inspector-ui/-/apollo-inspector-ui-0.0.8.tgz#50164c22de15861538bb831fa85684223da5140c"
+  integrity sha512-wcEC1bRm+toNZ+BUfdvZYYpqhQDld9OPoZVUCDxcZoLopTm6p6/4ZohDCgc17vazkckxMejPsLfYjDQXrYhJnA==
   dependencies:
-    apollo-inspector "1.17.1"
+    apollo-inspector "1.17.6"
     graphql "16.8.1"
     immer "^10.0.1"
     lodash-es "^4.17.21"
     rxjs "^7.8.1"
     zustand "^4.3.7"
 
-apollo-inspector@1.17.1, apollo-inspector@^1.17.1:
-  version "1.17.1"
-  resolved "https://registry.yarnpkg.com/apollo-inspector/-/apollo-inspector-1.17.1.tgz#ca81fbc7027c4a2542698a1162121d8b32d658bc"
-  integrity sha512-oZMe8vZOo1Cz/ogWba4BtIkZHAbM7CxnKw5VUGY73TtQdXoVfGo+yufkOgbuVWIJ5+burCUJj+J1Pr9aoos2hg==
+apollo-inspector@1.17.6, apollo-inspector@^1.17.6:
+  version "1.17.6"
+  resolved "https://registry.yarnpkg.com/apollo-inspector/-/apollo-inspector-1.17.6.tgz#fae6a984a00f6b9a7b73804348e9d8df8132e2ca"
+  integrity sha512-JHjXzHeI0oP/0Ian5r3Q/jPry8VMqz0x8Z+MFc6ekDBLrDcSnERxxffslMdpKhU6MrgW+0lvWH0Uzjs310Zhrw==
   dependencies:
     "@swc/helpers" "^0.4.14"
     "@types/node" "^18.11.17"

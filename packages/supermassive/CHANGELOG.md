@@ -1,8 +1,32 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Thu, 28 Sep 2023 12:04:15 GMT and should not be manually modified.
+This log was last generated on Tue, 12 Dec 2023 17:37:29 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.2.7
+
+Tue, 12 Dec 2023 17:37:29 GMT
+
+### Patches
+
+- Fix type assertion for isTotalExecutionResult (mark@thedutchies.com)
+
+## 3.2.6
+
+Tue, 12 Dec 2023 13:48:37 GMT
+
+### Patches
+
+- Add invariant as a dependency (mark@thedutchies.com)
+
+## 3.2.4
+
+Tue, 07 Nov 2023 14:42:59 GMT
+
+### Patches
+
+- Fix unintentional breaking change in supermassive v3 (vladimir.razuvaev@gmail.com)
 
 ## 3.2.0
 
