@@ -23,7 +23,8 @@ export const plugin: PluginFunction<PluginConfig> = (schema: GraphQLSchema) => {
     encodeASTSchema(schemaAST),
   );
 
-  return `export default JSON.parse('${JSON.stringify(typeDefs)}')`;
+  return `export const definitions = JSON.parse('${JSON.stringify(typeDefs)}');
+`;
 };
 
 export const validate: PluginValidateFn<PluginConfig> = async (
