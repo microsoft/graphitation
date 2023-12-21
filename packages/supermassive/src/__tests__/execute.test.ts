@@ -365,6 +365,26 @@ query Person($id: Int!) {
       throwError: true,
     },
   },
+  {
+    name: "non-null query return null",
+    document: `query { nonNullWithNull }`,
+  },
+  {
+    name: "non-null subscription return null",
+    document: `subscription { nonNullWithNull }`,
+  },
+  {
+    name: "non-null query throw an error",
+    document: `query { nonNullWithError }`,
+  },
+  {
+    name: "non-null subscription throw in subscribe",
+    document: `subscription { nonNullWithError }`,
+  },
+  {
+    name: "non-null subscription throw in resolve",
+    document: `subscription { nonNullWithErrorEvent }`,
+  },
 ];
 
 describe("graphql-js snapshot check to ensure test stability", () => {
