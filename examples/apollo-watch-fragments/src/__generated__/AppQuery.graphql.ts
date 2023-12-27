@@ -41,8 +41,9 @@ fragment TodoListFooter_todosFragment on TodosConnection {
 }
 
 fragment TodoList_nodeFragment on NodeWithTodos {
+  __isNodeWithTodos: __typename
   __typename
-  todos(first: 5, after: "") @connection(key: "TodosList_todos") {
+  todos(first: 5, after: "") @connection(key: "TodosList_todos", filter: ["sortByOrder"]) {
     edges {
       node {
         id
@@ -164,24 +165,25 @@ v11 = {
   "value": "TodoList_nodeFragment"
 },
 v12 = {
-  "kind": "Field",
-  "name": {
-    "kind": "Name",
-    "value": "__typename"
-  }
+  "kind": "Name",
+  "value": "__typename"
 },
 v13 = {
+  "kind": "Field",
+  "name": (v12/*: any*/)
+},
+v14 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
     "value": "isCompleted"
   }
 },
-v14 = {
+v15 = {
   "kind": "Name",
   "value": "Todo_todoFragment"
 },
-v15 = {
+v16 = {
   "kind": "InlineFragment",
   "typeCondition": {
     "kind": "NamedType",
@@ -295,7 +297,15 @@ return {
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
-            (v12/*: any*/),
+            {
+              "kind": "Field",
+              "alias": {
+                "kind": "Name",
+                "value": "__isNodeWithTodos"
+              },
+              "name": (v12/*: any*/)
+            },
+            (v13/*: any*/),
             {
               "kind": "Field",
               "name": (v5/*: any*/),
@@ -340,6 +350,23 @@ return {
                         "value": "TodosList_todos",
                         "block": false
                       }
+                    },
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "filter"
+                      },
+                      "value": {
+                        "kind": "ListValue",
+                        "values": [
+                          {
+                            "kind": "StringValue",
+                            "value": "sortByOrder",
+                            "block": false
+                          }
+                        ]
+                      }
                     }
                   ]
                 }
@@ -366,12 +393,12 @@ return {
                             "kind": "SelectionSet",
                             "selections": [
                               (v8/*: any*/),
-                              (v13/*: any*/),
+                              (v14/*: any*/),
                               {
                                 "kind": "FragmentSpread",
-                                "name": (v14/*: any*/)
+                                "name": (v15/*: any*/)
                               },
-                              (v12/*: any*/)
+                              (v13/*: any*/)
                             ]
                           }
                         },
@@ -421,7 +448,7 @@ return {
       },
       {
         "kind": "FragmentDefinition",
-        "name": (v14/*: any*/),
+        "name": (v15/*: any*/),
         "typeCondition": {
           "kind": "NamedType",
           "name": {
@@ -440,7 +467,7 @@ return {
                 "value": "description"
               }
             },
-            (v13/*: any*/),
+            (v14/*: any*/),
             {
               "kind": "Field",
               "name": {
@@ -499,12 +526,12 @@ return {
                       "selections": [
                         (v8/*: any*/),
                         (v9/*: any*/),
-                        (v15/*: any*/)
+                        (v16/*: any*/)
                       ]
                     }
                   },
                   (v8/*: any*/),
-                  (v15/*: any*/)
+                  (v16/*: any*/)
                 ]
               }
             }

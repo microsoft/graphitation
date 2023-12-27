@@ -46,6 +46,7 @@ export type Me = Node & NodeWithTodos & {
 export type MeTodosArgs = {
   after?: Maybe<Scalars['String']>;
   first: Scalars['Int'];
+  sortByOrder?: Maybe<Scalars['String']>;
 };
 
 export type Mutation = {
@@ -77,6 +78,7 @@ export type NodeWithTodos = {
 export type NodeWithTodosTodosArgs = {
   after?: Maybe<Scalars['String']>;
   first: Scalars['Int'];
+  sortByOrder?: Maybe<Scalars['String']>;
 };
 
 export type PageInfo = {

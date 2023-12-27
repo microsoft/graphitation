@@ -102,7 +102,13 @@ const resolvers: Resolvers<Context> = {
         // loading indicator.
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
-      return connectionFromArray(context.db.getTodos(), args);
+      const todos = [...context.db.getTodos()].sort((a, b) => {
+        if (args.sortByOrder === "DESC") {
+          return b.description.localeCompare(a.description);
+        }
+        return a.description.localeCompare(b.description);
+      });
+      return connectionFromArray(todos, args);
     },
   },
   Mutation: {
