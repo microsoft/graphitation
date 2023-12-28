@@ -6,10 +6,7 @@ import { isEqual } from "lodash";
 import { convertFetchPolicy } from "../../convertFetchPolicy";
 import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultApolloClient";
 
-import type {
-  CompiledArtefactModule,
-  Metadata,
-} from "@graphitation/apollo-react-relay-duct-tape-compiler";
+import type { CompiledArtefactModule } from "@graphitation/apollo-react-relay-duct-tape-compiler";
 import type { FragmentReference } from "./types";
 import type { FetchPolicy } from "../../types";
 
@@ -75,15 +72,6 @@ export function useCompiledRefetchableFragment(
     fragmentReferenceWithOwnVariables,
   );
 
-  // If fragmentReferenceWithOwnVariables is updated after refetch is defined, refetch won't see the updated
-  // state value because of the closure. This mutable ref object can be changed to store a new value,
-  // and this updated value will be visible to all closures, including refetch function.
-  const fragmentReferenceWithOwnVariablesRef = useRef(fragmentReference);
-  useEffect(() => {
-    fragmentReferenceWithOwnVariablesRef.current =
-      fragmentReferenceWithOwnVariables;
-  }, [fragmentReferenceWithOwnVariables]);
-
   const disposable = useRef<Disposable>();
   useEffect(
     () => () => {
@@ -98,7 +86,7 @@ export function useCompiledRefetchableFragment(
   const refetch = useCallback<RefetchFn>(
     (variablesSubset, options?: PrivateRefetchOptions) => {
       const variables = {
-        ...fragmentReferenceWithOwnVariablesRef.current.__fragments,
+        ...fragmentReference.__fragments,
         ...variablesSubset,
         id: fragmentReference.id,
       };
@@ -122,11 +110,7 @@ export function useCompiledRefetchableFragment(
                 options?.onCompleted?.(error || null);
               }
               if (!error) {
-                const { id: _, ...variablesWithoutId } = variables;
-                const variablesToPropagate = excludePaginationSpecificVariables(
-                  variablesWithoutId,
-                  metadata,
-                );
+                const { id: _, ...variablesToPropagate } = variables;
                 const nextVariables = {
                   ...fragmentReference.__fragments,
                   ...variablesToPropagate,
@@ -170,40 +154,8 @@ export function useCompiledRefetchableFragment(
       executionQueryDocument,
       fragmentReference.id,
       fragmentReference.__fragments,
-      fragmentReferenceWithOwnVariablesRef.current.__fragments,
-      metadata,
     ],
   );
 
   return [data, refetch];
 }
-
-const excludePaginationSpecificVariables = (
-  variables = {},
-  metadata?: Metadata,
-) => {
-  if (!metadata?.connection) {
-    return variables;
-  }
-  const {
-    forwardCountVariable,
-    forwardCursorVariable,
-    backwardCountVariable,
-    backwardCursorVariable,
-  } = metadata.connection;
-  const rest: { [key: string]: unknown } = { ...variables };
-  if (forwardCountVariable && rest[forwardCountVariable] !== undefined) {
-    delete rest[forwardCountVariable];
-  }
-  if (forwardCursorVariable && rest[forwardCursorVariable] !== undefined) {
-    delete rest[forwardCursorVariable];
-  }
-  if (backwardCountVariable && rest[backwardCountVariable] !== undefined) {
-    delete rest[backwardCountVariable];
-  }
-  if (backwardCursorVariable && rest[backwardCursorVariable] !== undefined) {
-    delete rest[backwardCursorVariable];
-  }
-
-  return rest;
-};
