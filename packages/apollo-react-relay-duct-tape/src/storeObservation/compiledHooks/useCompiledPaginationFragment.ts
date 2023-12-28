@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { ApolloCache, DataProxy } from "@apollo/client";
 import invariant from "invariant";
 import { useCompiledRefetchableFragment } from "./useCompiledRefetchableFragment";
@@ -16,6 +16,7 @@ import type {
   Metadata,
 } from "@graphitation/apollo-react-relay-duct-tape-compiler";
 import type { DocumentNode } from "graphql";
+import { Variables } from "../../types";
 
 export type PaginationFn = (
   count: number,
@@ -25,6 +26,7 @@ export type PaginationFn = (
 interface PaginationParams {
   fragmentReference: FragmentReference;
   refetch: RefetchFn;
+  refetchVariables: Partial<Variables>;
   metadata: Metadata;
   executionQueryDocument: DocumentNode;
   cache: ApolloCache<unknown>;
@@ -38,6 +40,7 @@ interface PaginationParams {
 function useLoadMore({
   fragmentReference,
   refetch,
+  refetchVariables,
   metadata,
   executionQueryDocument,
   cache,
@@ -64,6 +67,7 @@ function useLoadMore({
       );
       const previousVariables = {
         ...metadata.connection?.filterVariableDefaults,
+        ...refetchVariables,
         ...fragmentReference.__fragments,
         id: fragmentReference.id,
       };
@@ -148,6 +152,7 @@ function useLoadMore({
       fragmentReference.id,
       fragmentReference.__fragments,
       refetch,
+      refetchVariables,
       metadata,
       executionQueryDocument,
       cache,
@@ -247,9 +252,20 @@ export function useCompiledPaginationFragment(
     documents,
     fragmentReference,
   );
+
+  const refetchVariables = useRef({});
+  const refetchPagination = useCallback<RefetchFn>(
+    (variables: Partial<Variables>, options?: RefetchOptions) => {
+      refetchVariables.current = variables;
+      return refetch(variables, options);
+    },
+    [],
+  );
+
   const commonPaginationParams = {
     fragmentReference,
-    refetch,
+    refetch: refetchPagination,
+    refetchVariables: refetchVariables.current,
     metadata,
     executionQueryDocument,
     cache: useOverridenOrDefaultApolloClient().cache,
@@ -272,7 +288,7 @@ export function useCompiledPaginationFragment(
   });
   return {
     data,
-    refetch,
+    refetch: refetchPagination,
     hasNext: !!pageInfo?.hasNextPage,
     hasPrevious: !!pageInfo?.hasPreviousPage,
     isLoadingNext,
