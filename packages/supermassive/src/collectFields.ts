@@ -6,6 +6,7 @@ import {
   InlineFragmentNode,
   SelectionNode,
   SelectionSetNode,
+  OperationDefinitionNode,
 } from "graphql";
 import { getDirectiveValues } from "./values";
 import {
@@ -19,19 +20,31 @@ import invariant from "invariant";
 import { ExecutionContext } from "./executeWithoutSchema";
 import { isAbstractType, isSubType } from "./schema/definition";
 import { SchemaFragment } from "./types";
+import { ObjMap } from "./jsutils/ObjMap";
+import { Maybe } from "./jsutils/Maybe";
+import { FieldGroup } from "./buildFieldPlan";
 
-export type FieldGroup = ReadonlyArray<FieldNode>;
+export interface DeferUsage {
+  label: string | undefined;
+  parentDeferUsage: DeferUsage | undefined;
+}
+
+export interface StreamUsage {
+  label: string | undefined;
+  initialCount: number;
+  fieldGroup: FieldGroup;
+}
+
+export interface FieldDetails {
+  node: FieldNode;
+  deferUsage: DeferUsage | undefined;
+}
 
 export type GroupedFieldSet = Map<string, FieldGroup>;
 
 export interface PatchFields {
   label: string | undefined;
   groupedFieldSet: GroupedFieldSet;
-}
-
-export interface FieldsAndPatches {
-  groupedFieldSet: GroupedFieldSet;
-  patches: Array<PatchFields>;
 }
 
 /**
@@ -46,19 +59,31 @@ export interface FieldsAndPatches {
 export function collectFields(
   exeContext: ExecutionContext,
   runtimeTypeName: string,
-): FieldsAndPatches {
-  const { operation } = exeContext;
-  const groupedFieldSet = new AccumulatorMap<string, FieldNode>();
-  const patches: Array<PatchFields> = [];
-  collectFieldsImpl(
-    exeContext,
+): Map<string, ReadonlyArray<FieldDetails>> {
+  const groupedFieldSet = new AccumulatorMap<string, FieldDetails>();
+  const context: CollectFieldsContext = {
+    schemaFragment: exeContext.schemaFragment,
+    fragments: exeContext.fragments,
+    variableValues: exeContext.variableValues,
     runtimeTypeName,
-    operation.selectionSet,
+    operation: exeContext.operation,
+    visitedFragmentNames: new Set(),
+  };
+  collectFieldsImpl(
+    context,
+    exeContext.operation.selectionSet,
     groupedFieldSet,
-    patches,
-    new Set(),
   );
-  return { groupedFieldSet, patches };
+  return groupedFieldSet;
+}
+
+interface CollectFieldsContext {
+  schemaFragment: SchemaFragment;
+  fragments: ObjMap<FragmentDefinitionNode>;
+  variableValues: { [variable: string]: unknown };
+  operation: OperationDefinitionNode;
+  runtimeTypeName: string;
+  visitedFragmentNames: Set<string>;
 }
 
 /**
@@ -73,144 +98,134 @@ export function collectFields(
  */
 // eslint-disable-next-line max-params
 export function collectSubfields(
-  exeContext: ExecutionContext,
+  schemaFragment: SchemaFragment,
+  fragments: ObjMap<FragmentDefinitionNode>,
+  variableValues: { [variable: string]: unknown },
+  operation: OperationDefinitionNode,
   returnTypeName: string,
-  fieldGroup: FieldGroup,
-): FieldsAndPatches {
-  const subGroupedFieldSet = new AccumulatorMap<string, FieldNode>();
-  const visitedFragmentNames = new Set<string>();
-
-  const subPatches: Array<PatchFields> = [];
-  const subFieldsAndPatches = {
-    groupedFieldSet: subGroupedFieldSet,
-    patches: subPatches,
+  fieldDetails: ReadonlyArray<FieldDetails>,
+): Map<string, ReadonlyArray<FieldDetails>> {
+  const context: CollectFieldsContext = {
+    schemaFragment,
+    fragments,
+    variableValues,
+    runtimeTypeName: returnTypeName,
+    operation,
+    visitedFragmentNames: new Set(),
   };
+  const subGroupedFieldSet = new AccumulatorMap<string, FieldDetails>();
 
-  for (const node of fieldGroup) {
+  for (const fieldDetail of fieldDetails) {
+    const node = fieldDetail.node;
     if (node.selectionSet) {
       collectFieldsImpl(
-        exeContext,
-        returnTypeName,
+        context,
         node.selectionSet,
         subGroupedFieldSet,
-        subPatches,
-        visitedFragmentNames,
+        fieldDetail.deferUsage,
       );
     }
   }
-  return subFieldsAndPatches;
+
+  return subGroupedFieldSet;
 }
 
 // eslint-disable-next-line max-params
 function collectFieldsImpl(
-  exeContext: ExecutionContext,
-  runtimeTypeName: string,
+  context: CollectFieldsContext,
   selectionSet: SelectionSetNode,
-  groupedFieldSet: AccumulatorMap<string, FieldNode>,
-  patches: Array<PatchFields>,
-  visitedFragmentNames: Set<string>,
+  groupedFieldSet: AccumulatorMap<string, FieldDetails>,
+  parentDeferUsage?: DeferUsage,
+  deferUsage?: DeferUsage,
 ): void {
+  const {
+    schemaFragment,
+    fragments,
+    variableValues,
+    runtimeTypeName,
+    operation,
+    visitedFragmentNames,
+  } = context;
+
   for (const selection of selectionSet.selections) {
     switch (selection.kind) {
       case Kind.FIELD: {
-        if (!shouldIncludeNode(exeContext, selection)) {
+        if (!shouldIncludeNode(schemaFragment, variableValues, selection)) {
           continue;
         }
-        groupedFieldSet.add(getFieldEntryKey(selection), selection);
+        groupedFieldSet.add(getFieldEntryKey(selection), {
+          node: selection,
+          deferUsage: deferUsage ?? parentDeferUsage,
+        });
         break;
       }
       case Kind.INLINE_FRAGMENT: {
         if (
-          !shouldIncludeNode(exeContext, selection) ||
+          !shouldIncludeNode(schemaFragment, variableValues, selection) ||
           !doesFragmentConditionMatch(
             selection,
             runtimeTypeName,
-            exeContext.schemaFragment,
+            schemaFragment,
           )
         ) {
           continue;
         }
 
-        const defer = getDeferValues(exeContext, selection);
+        const newDeferUsage = getDeferUsage(
+          schemaFragment,
+          operation,
+          variableValues,
+          selection,
+          parentDeferUsage,
+        );
 
-        if (defer) {
-          const patchFields = new AccumulatorMap<string, FieldNode>();
-          collectFieldsImpl(
-            exeContext,
-            runtimeTypeName,
-            selection.selectionSet,
-            patchFields,
-            patches,
-            visitedFragmentNames,
-          );
-          patches.push({
-            label: defer.label,
-            groupedFieldSet: patchFields,
-          });
-        } else {
-          collectFieldsImpl(
-            exeContext,
-            runtimeTypeName,
-            selection.selectionSet,
-            groupedFieldSet,
-            patches,
-            visitedFragmentNames,
-          );
-        }
+        collectFieldsImpl(
+          context,
+          selection.selectionSet,
+          groupedFieldSet,
+          parentDeferUsage,
+          newDeferUsage ?? deferUsage,
+        );
+
         break;
       }
       case Kind.FRAGMENT_SPREAD: {
         const fragName = selection.name.value;
 
-        if (!shouldIncludeNode(exeContext, selection)) {
-          continue;
-        }
+        const newDeferUsage = getDeferUsage(
+          schemaFragment,
+          operation,
+          variableValues,
+          selection,
+          parentDeferUsage,
+        );
 
-        const defer = getDeferValues(exeContext, selection);
-        if (visitedFragmentNames.has(fragName) && !defer) {
-          continue;
-        }
-
-        const fragment = exeContext.fragments[fragName];
         if (
-          fragment == null ||
-          !doesFragmentConditionMatch(
-            fragment,
-            runtimeTypeName,
-            exeContext.schemaFragment,
-          )
+          !newDeferUsage &&
+          (visitedFragmentNames.has(fragName) ||
+            !shouldIncludeNode(schemaFragment, variableValues, selection))
         ) {
           continue;
         }
 
-        if (!defer) {
+        const fragment = fragments[fragName];
+        if (
+          fragment == null ||
+          !doesFragmentConditionMatch(fragment, runtimeTypeName, schemaFragment)
+        ) {
+          continue;
+        }
+        if (!newDeferUsage) {
           visitedFragmentNames.add(fragName);
         }
 
-        if (defer) {
-          const patchFields = new AccumulatorMap<string, FieldNode>();
-          collectFieldsImpl(
-            exeContext,
-            runtimeTypeName,
-            fragment.selectionSet,
-            patchFields,
-            patches,
-            visitedFragmentNames,
-          );
-          patches.push({
-            label: defer.label,
-            groupedFieldSet: patchFields,
-          });
-        } else {
-          collectFieldsImpl(
-            exeContext,
-            runtimeTypeName,
-            fragment.selectionSet,
-            groupedFieldSet,
-            patches,
-            visitedFragmentNames,
-          );
-        }
+        collectFieldsImpl(
+          context,
+          fragment.selectionSet,
+          groupedFieldSet,
+          parentDeferUsage,
+          newDeferUsage ?? deferUsage,
+        );
         break;
       }
     }
@@ -222,19 +237,30 @@ function collectFieldsImpl(
  * directives, where @skip has higher precedence than @include.
  */
 function shouldIncludeNode(
-  exeContext: ExecutionContext,
+  schemaFragment: SchemaFragment,
+  variableValues: Maybe<ObjMap<unknown>>,
   node: SelectionNode,
 ): boolean {
   if (!node.directives?.length) {
     return true;
   }
 
-  const skip = getDirectiveValues(exeContext, GraphQLSkipDirective, node);
+  const skip = getDirectiveValues(
+    schemaFragment,
+    GraphQLSkipDirective,
+    node,
+    variableValues,
+  );
   if (skip?.if === true) {
     return false;
   }
 
-  const include = getDirectiveValues(exeContext, GraphQLIncludeDirective, node);
+  const include = getDirectiveValues(
+    schemaFragment,
+    GraphQLIncludeDirective,
+    node,
+    variableValues,
+  );
   if (include?.if === false) {
     return false;
   }
@@ -278,11 +304,19 @@ function getFieldEntryKey(node: FieldNode): string {
  * deferred based on the experimental flag, defer directive present and
  * not disabled by the "if" argument.
  */
-function getDeferValues(
-  exeContext: ExecutionContext,
+function getDeferUsage(
+  schemaFragment: SchemaFragment,
+  operation: OperationDefinitionNode,
+  variableValues: { [variable: string]: unknown },
   node: FragmentSpreadNode | InlineFragmentNode,
-): undefined | { label: string | undefined } {
-  const defer = getDirectiveValues(exeContext, GraphQLDeferDirective, node);
+  parentDeferUsage: DeferUsage | undefined,
+): DeferUsage | undefined {
+  const defer = getDirectiveValues(
+    schemaFragment,
+    GraphQLDeferDirective,
+    node,
+    variableValues,
+  );
 
   if (!defer) {
     return;
@@ -293,11 +327,12 @@ function getDeferValues(
   }
 
   invariant(
-    exeContext.operation.operation !== "subscription",
+    operation.operation !== "subscription",
     "`@defer` directive not supported on subscription operations. Disable `@defer` by setting the `if` argument to `false`.",
   );
 
   return {
     label: typeof defer.label === "string" ? defer.label : undefined,
+    parentDeferUsage,
   };
 }
