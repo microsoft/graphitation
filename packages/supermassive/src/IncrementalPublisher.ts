@@ -8,7 +8,6 @@ import { promiseWithResolvers } from "./jsutils/promiseWithResolvers";
 import type { GroupedFieldSet } from "./buildFieldPlan";
 import {
   CompletedResult,
-  ExecutionResult,
   IncrementalDeferResult,
   IncrementalResult,
   IncrementalStreamResult,

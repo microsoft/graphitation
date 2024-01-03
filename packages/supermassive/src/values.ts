@@ -9,7 +9,6 @@ import {
 } from "graphql";
 import { inspect } from "./jsutils/inspect";
 import { printPathArray } from "./jsutils/printPathArray";
-import { ExecutionContext } from "./executeWithoutSchema";
 import {
   DirectiveDefinitionTuple,
   FieldDefinition,
