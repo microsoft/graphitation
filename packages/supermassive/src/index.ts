@@ -69,7 +69,7 @@ export type {
   EnumTypeResolver,
   ExecutionResult,
   FunctionFieldResolver,
-  IncrementalExecutionResult,
+  IncrementalExecutionResults,
   ObjectTypeResolver,
   ResolveInfo,
   Resolvers,

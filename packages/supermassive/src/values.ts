@@ -9,7 +9,6 @@ import {
 } from "graphql";
 import { inspect } from "./jsutils/inspect";
 import { printPathArray } from "./jsutils/printPathArray";
-import { ExecutionContext } from "./executeWithoutSchema";
 import {
   DirectiveDefinitionTuple,
   FieldDefinition,
@@ -29,6 +28,8 @@ import {
   typeReferenceFromNode,
 } from "./schema/reference";
 import type { SchemaFragment } from "./types";
+import { Maybe } from "./jsutils/Maybe";
+import { ObjMap } from "./jsutils/ObjMap";
 
 type CoercedVariableValues =
   | { errors: Array<GraphQLError>; coerced?: never }
@@ -163,11 +164,12 @@ function coerceVariableValues(
  * @internal
  */
 export function getArgumentValues(
-  exeContext: ExecutionContext,
+  schemaFragment: SchemaFragment,
   def: FieldDefinition | DirectiveDefinitionTuple,
   node: FieldNode | DirectiveNode,
+  variableValues?: Maybe<ObjMap<unknown>>,
 ): { [argument: string]: unknown } {
-  const definitions = exeContext.schemaFragment.definitions;
+  const definitions = schemaFragment.definitions;
   const coercedValues: { [argument: string]: unknown } = {};
   const argumentDefs =
     node.kind === Kind.FIELD
@@ -219,8 +221,8 @@ export function getArgumentValues(
     if (valueNode.kind === Kind.VARIABLE) {
       const variableName = valueNode.name.value;
       if (
-        exeContext.variableValues == null ||
-        !hasOwnProperty(exeContext.variableValues, variableName)
+        variableValues == null ||
+        !hasOwnProperty(variableValues, variableName)
       ) {
         if (defaultValue !== undefined) {
           coercedValues[name] = defaultValue;
@@ -234,7 +236,7 @@ export function getArgumentValues(
         }
         continue;
       }
-      isNull = exeContext.variableValues[variableName] == null;
+      isNull = variableValues[variableName] == null;
     }
 
     if (isNull && isNonNullType(argumentTypeRef)) {
@@ -248,8 +250,8 @@ export function getArgumentValues(
     const coercedValue = valueFromAST(
       valueNode,
       argumentTypeRef,
-      exeContext.schemaFragment,
-      exeContext.variableValues,
+      schemaFragment,
+      variableValues,
     );
     if (coercedValue === undefined) {
       // Note: ValuesOfCorrectTypeRule validation should catch this before
@@ -278,9 +280,10 @@ export function getArgumentValues(
  * Object prototype.
  */
 export function getDirectiveValues(
-  exeContext: ExecutionContext,
+  schemaFragment: SchemaFragment,
   directiveDef: DirectiveDefinitionTuple,
   node: { directives?: ReadonlyArray<DirectiveNode> },
+  variableValues?: Maybe<ObjMap<unknown>>,
 ): undefined | { [argument: string]: unknown } {
   const name = getDirectiveName(directiveDef);
 
@@ -290,7 +293,12 @@ export function getDirectiveValues(
   );
 
   if (directiveNode) {
-    return getArgumentValues(exeContext, directiveDef, directiveNode);
+    return getArgumentValues(
+      schemaFragment,
+      directiveDef,
+      directiveNode,
+      variableValues,
+    );
   }
 }
 

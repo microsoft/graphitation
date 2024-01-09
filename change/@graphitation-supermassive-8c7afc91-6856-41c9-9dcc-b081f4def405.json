@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Moved to newer stream/defer implementation",
+  "packageName": "@graphitation/supermassive",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}

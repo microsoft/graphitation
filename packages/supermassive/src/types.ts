@@ -5,13 +5,13 @@ import {
   DocumentNode,
   FragmentDefinitionNode,
   OperationDefinitionNode,
+  FieldNode,
 } from "graphql";
 import { Maybe } from "./jsutils/Maybe";
 import { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import { ObjMap } from "./jsutils/ObjMap";
 import { Path } from "./jsutils/Path";
 import { ExecutionHooks } from "./hooks/types";
-import { FieldGroup } from "./collectFields";
 import { OperationTypes, SchemaDefinitions } from "./schema/definition";
 import { TypeName } from "./schema/reference";
 
@@ -92,7 +92,7 @@ export type UserResolvers<TSource = unknown, TContext = unknown> = Record<
 
 export interface ResolveInfo {
   fieldName: string;
-  fieldNodes: FieldGroup;
+  fieldNodes: ReadonlyArray<FieldNode>;
   returnTypeName: string;
   parentTypeName: string;
   // readonly returnType: GraphQLOutputType;
@@ -105,13 +105,29 @@ export interface ResolveInfo {
   variableValues: { [variable: string]: unknown };
 }
 
-export type ExecutionResult<
-  TData = ObjMap<unknown>,
+export interface IncrementalUpdate<
+  TData = unknown,
   TExtensions = ObjMap<unknown>,
-> =
+> {
+  pending: ReadonlyArray<PendingResult>;
+  incremental: ReadonlyArray<IncrementalResult<TData, TExtensions>>;
+  completed: ReadonlyArray<CompletedResult>;
+}
+
+export type ExecutionResult<TData = unknown, TExtensions = ObjMap<unknown>> =
   | TotalExecutionResult<TData, TExtensions>
   | SubscriptionExecutionResult<TData, TExtensions>
-  | IncrementalExecutionResult<TData, TExtensions>;
+  | IncrementalExecutionResults<TData, TExtensions>;
+
+/**
+ * The result of GraphQL execution.
+ *
+ *   - `errors` is included when any errors occurred as a non-empty array.
+ *   - `data` is the result of a successful execution of the query.
+ *   - `hasNext` is true if a future payload is expected.
+ *   - `extensions` is reserved for adding non-standard properties.
+ *   - `incremental` is a list of the results from defer/stream directives.
+ */
 
 /**
  * The result of GraphQL execution.
@@ -136,7 +152,7 @@ export type SubscriptionExecutionResult<
   TExtensions = ObjMap<unknown>,
 > = AsyncGenerator<TotalExecutionResult<TData, TExtensions>>;
 
-export interface FormattedTotalExecutionResult<
+export interface FormattedExecutionResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
 > {
@@ -145,8 +161,8 @@ export interface FormattedTotalExecutionResult<
   extensions?: TExtensions;
 }
 
-export interface IncrementalExecutionResult<
-  TData = ObjMap<unknown>,
+export interface IncrementalExecutionResults<
+  TData = unknown,
   TExtensions = ObjMap<unknown>,
 > {
   initialResult: InitialIncrementalExecutionResult<TData, TExtensions>;
@@ -161,52 +177,61 @@ export interface InitialIncrementalExecutionResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
 > extends TotalExecutionResult<TData, TExtensions> {
-  hasNext: boolean;
-  incremental?: ReadonlyArray<IncrementalResult<TData, TExtensions>>;
+  data: TData;
+  pending: ReadonlyArray<PendingResult>;
+  hasNext: true;
   extensions?: TExtensions;
 }
 
 export interface FormattedInitialIncrementalExecutionResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
-> extends FormattedTotalExecutionResult<TData, TExtensions> {
+> extends FormattedExecutionResult<TData, TExtensions> {
+  data: TData;
+  pending: ReadonlyArray<PendingResult>;
   hasNext: boolean;
-  incremental?: ReadonlyArray<FormattedIncrementalResult<TData, TExtensions>>;
   extensions?: TExtensions;
 }
 
 export interface SubsequentIncrementalExecutionResult<
-  TData = ObjMap<unknown>,
+  TData = unknown,
   TExtensions = ObjMap<unknown>,
-> {
+> extends Partial<IncrementalUpdate<TData, TExtensions>> {
   hasNext: boolean;
-  incremental?: ReadonlyArray<IncrementalResult<TData, TExtensions>>;
   extensions?: TExtensions;
 }
 
 export interface FormattedSubsequentIncrementalExecutionResult<
-  TData = ObjMap<unknown>,
+  TData = unknown,
   TExtensions = ObjMap<unknown>,
 > {
   hasNext: boolean;
+  pending?: ReadonlyArray<PendingResult>;
   incremental?: ReadonlyArray<FormattedIncrementalResult<TData, TExtensions>>;
+  completed?: ReadonlyArray<FormattedCompletedResult>;
   extensions?: TExtensions;
 }
 
 export interface IncrementalDeferResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
-> extends TotalExecutionResult<TData, TExtensions> {
-  path?: ReadonlyArray<string | number>;
-  label?: string;
+> {
+  errors?: ReadonlyArray<GraphQLError>;
+  data: TData;
+  id: string;
+  subPath?: ReadonlyArray<string | number>;
+  extensions?: TExtensions;
 }
 
 export interface FormattedIncrementalDeferResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
-> extends FormattedTotalExecutionResult<TData, TExtensions> {
-  path?: ReadonlyArray<string | number>;
-  label?: string;
+> {
+  errors?: ReadonlyArray<GraphQLFormattedError>;
+  data: TData;
+  id: string;
+  subPath?: ReadonlyArray<string | number>;
+  extensions?: TExtensions;
 }
 
 export interface IncrementalStreamResult<
@@ -214,9 +239,9 @@ export interface IncrementalStreamResult<
   TExtensions = ObjMap<unknown>,
 > {
   errors?: ReadonlyArray<GraphQLError>;
-  items?: TData | null;
-  path?: ReadonlyArray<string | number>;
-  label?: string;
+  items: TData;
+  id: string;
+  subPath?: ReadonlyArray<string | number>;
   extensions?: TExtensions;
 }
 
@@ -225,25 +250,39 @@ export interface FormattedIncrementalStreamResult<
   TExtensions = ObjMap<unknown>,
 > {
   errors?: ReadonlyArray<GraphQLFormattedError>;
-  items?: TData | null;
-  path?: ReadonlyArray<string | number>;
-  label?: string;
+  items: TData;
+  id: string;
+  subPath?: ReadonlyArray<string | number>;
   extensions?: TExtensions;
 }
 
-export type IncrementalResult<
-  TData = ObjMap<unknown>,
-  TExtensions = ObjMap<unknown>,
-> =
+export type IncrementalResult<TData = unknown, TExtensions = ObjMap<unknown>> =
   | IncrementalDeferResult<TData, TExtensions>
   | IncrementalStreamResult<TData, TExtensions>;
 
 export type FormattedIncrementalResult<
-  TData = ObjMap<unknown>,
+  TData = unknown,
   TExtensions = ObjMap<unknown>,
 > =
   | FormattedIncrementalDeferResult<TData, TExtensions>
   | FormattedIncrementalStreamResult<TData, TExtensions>;
+
+export interface PendingResult {
+  id: string;
+  path: ReadonlyArray<string | number>;
+  label?: string;
+}
+
+export interface CompletedResult {
+  id: string;
+  errors?: ReadonlyArray<GraphQLError>;
+}
+
+export interface FormattedCompletedResult {
+  path: ReadonlyArray<string | number>;
+  label?: string;
+  errors?: ReadonlyArray<GraphQLError>;
+}
 
 export interface CommonExecutionArgs {
   document: DocumentNode;
