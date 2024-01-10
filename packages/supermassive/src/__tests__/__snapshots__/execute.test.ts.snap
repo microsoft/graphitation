@@ -245,54 +245,6 @@ exports[`graphql-js snapshot check to ensure test stability interface in union f
 }
 `;
 
-exports[`graphql-js snapshot check to ensure test stability non-null query return null 1`] = `
-{
-  "data": null,
-  "errors": [
-    [GraphQLError: Cannot return null for non-nullable field Query.nonNullWithNull.],
-  ],
-}
-`;
-
-exports[`graphql-js snapshot check to ensure test stability non-null query throw an error 1`] = `
-{
-  "data": null,
-  "errors": [
-    [GraphQLError: Query error],
-  ],
-}
-`;
-
-exports[`graphql-js snapshot check to ensure test stability non-null subscription return null 1`] = `
-[
-  {
-    "data": null,
-    "errors": [
-      [GraphQLError: Cannot return null for non-nullable field Subscription.nonNullWithNull.],
-    ],
-  },
-]
-`;
-
-exports[`graphql-js snapshot check to ensure test stability non-null subscription throw in resolve 1`] = `
-[
-  {
-    "data": null,
-    "errors": [
-      [GraphQLError: Subscription event error],
-    ],
-  },
-]
-`;
-
-exports[`graphql-js snapshot check to ensure test stability non-null subscription throw in subscribe 1`] = `
-{
-  "errors": [
-    [GraphQLError: Subscribe error],
-  ],
-}
-`;
-
 exports[`graphql-js snapshot check to ensure test stability query with interfaces 1`] = `
 {
   "data": {
@@ -361,6 +313,14 @@ exports[`graphql-js snapshot check to ensure test stability skip directive TRUE 
       "name": "Luke Skywalker",
     },
   },
+}
+`;
+
+exports[`graphql-js snapshot check to ensure test stability subscription throw an error 1`] = `
+{
+  "errors": [
+    [GraphQLError: error],
+  ],
 }
 `;
 

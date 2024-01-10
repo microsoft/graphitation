@@ -30,9 +30,6 @@ enum NodeType {
 
 type Subscription {
   emitPersons(limit: Int!, throwError: Boolean): Person
-  nonNullWithError: String!
-  nonNullWithErrorEvent: String!
-  nonNullWithNull: String!
 }
 
 type Query {
@@ -65,8 +62,6 @@ type Query {
     input: AdvancedInput! = { enumField: Transport, otherField: "Foo" }
   ): String
   multiArger(a: Int, b: String, c: AdvancedInput): String
-  nonNullWithError: String!
-  nonNullWithNull: String!
 }
 
 interface Node {

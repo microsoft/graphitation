@@ -251,25 +251,6 @@ const resolvers: IExecutableSchemaDefinition["resolvers"] = {
     emitPersons: {
       subscribe: emitPersons,
     },
-    nonNullWithError: {
-      subscribe() {
-        throw new Error("Subscribe error");
-      },
-    },
-    nonNullWithErrorEvent: {
-      subscribe() {
-        return createAsyncIterator(["foo"]);
-      },
-      resolve() {
-        throw new Error("Subscription event error");
-      },
-    },
-    nonNullWithNull: {
-      subscribe() {
-        return createAsyncIterator(["foo"]);
-      },
-      resolve() {},
-    },
   },
   Query: {
     search(parent, { search }, { models }, info) {
@@ -378,10 +359,6 @@ const resolvers: IExecutableSchemaDefinition["resolvers"] = {
     multiArger(_parent, args) {
       return JSON.stringify(args);
     },
-    nonNullWithError() {
-      throw new Error("Query error");
-    },
-    nonNullWithNull() {},
   },
   Film: {
     starships,
