@@ -350,22 +350,21 @@ query Person($id: Int!) {
       limit: 5,
     },
   },
-  // TODO: results in data: null in current implementation, alongside error
-  //   {
-  //     name: "subscription throw an error",
-  //     document: `
-  //   subscription emitPersons($limit: Int!, $throwError: Boolean) {
-  //     emitPersons(limit: $limit, throwError: $throwError) {
-  //       name
-  //       gender
-  //     }
-  //   }
-  //  `,
-  //     variables: {
-  //       limit: 5,
-  //       throwError: true,
-  //     },
-  //   },
+  {
+    name: "subscription throw an error",
+    document: `
+  subscription emitPersons($limit: Int!, $throwError: Boolean) {
+    emitPersons(limit: $limit, throwError: $throwError) {
+      name
+      gender
+    }
+  }
+ `,
+    variables: {
+      limit: 5,
+      throwError: true,
+    },
+  },
   {
     name: "non-null query return null",
     document: `query { nonNullWithNull }`,
