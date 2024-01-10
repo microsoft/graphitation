@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Revert new executor and fix errors again",
-  "packageName": "@graphitation/supermassive",
-  "email": "mnovikov@microsoft.com",
-  "dependentChangeType": "patch"
-}

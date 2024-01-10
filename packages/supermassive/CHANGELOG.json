@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Wed, 10 Jan 2024 12:26:58 GMT",
+      "tag": "@graphitation/supermassive_v3.4.0",
+      "version": "3.4.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "af3d0c6720a87fb1fc8c58847e7153fdb68bcec3",
+            "comment": "Revert new executor and fix errors again"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 09 Jan 2024 09:30:02 GMT",
       "tag": "@graphitation/supermassive_v3.3.0",
       "version": "3.3.0",
