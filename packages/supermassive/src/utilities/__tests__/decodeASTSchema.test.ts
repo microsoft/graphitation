@@ -4,8 +4,9 @@ import { encodeASTSchema } from "../encodeASTSchema";
 import { kitchenSinkSDL } from "./fixtures/kitchenSinkSDL";
 import { swapiSDL } from "./fixtures/swapiSDL";
 import { mergeSchemaDefinitions } from "../mergeSchemaDefinitions";
+import { schemaWithBooleanParameter } from "./fixtures/schemaWithBooleanParameter";
 
-describe(encodeASTSchema, () => {
+describe(decodeASTSchema, () => {
   test("correctly encodes swapi AST schema", () => {
     const doc = cleanUpDocument(swapiSDL.document);
     const encoded = encodeASTSchema(doc);
@@ -25,6 +26,16 @@ describe(encodeASTSchema, () => {
       ),
     ];
     const decoded = decodeASTSchema(encoded);
+    expect(encodeASTSchema(decoded)).toEqual(encoded);
+    expect(print(decoded)).toMatchSnapshot();
+  });
+
+  test("correctly encodes a schema with a Boolean parameter", () => {
+    const doc = cleanUpDocument(schemaWithBooleanParameter.document);
+    const encoded = encodeASTSchema(doc);
+    const decoded = decodeASTSchema(encoded);
+
+    expect(decoded).toEqual(doc);
     expect(encodeASTSchema(decoded)).toEqual(encoded);
     expect(print(decoded)).toMatchSnapshot();
   });

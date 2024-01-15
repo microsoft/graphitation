@@ -1,6 +1,18 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
+exports[`decodeASTSchema correctly encodes a schema with a Boolean parameter 1`] = `
+"type Query {
+  person(id: Int!): Person
+}
+
+type Person {
+  name: String!
+  phones(includeDefault: Boolean = true): [String!]!
+}
+"
+`;
+
+exports[`decodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
 "type Foo implements Bar & Baz & Two {
   one: Type
   two(argument: InputType!): Type
@@ -88,7 +100,7 @@ directive @myRepeatableDir(name: String!) on OBJECT | INTERFACE
 "
 `;
 
-exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
+exports[`decodeASTSchema correctly encodes swapi AST schema 1`] = `
 "union SearchResult = Person | Starship | Transport | Species | Vehicle | Planet | Film
 
 enum NodeType {

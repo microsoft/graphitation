@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Properly decode boolean in schema",
+  "packageName": "@graphitation/supermassive",
+  "email": "mark@thedutchies.com",
+  "dependentChangeType": "patch"
+}
