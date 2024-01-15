@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "export string unions as types",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}

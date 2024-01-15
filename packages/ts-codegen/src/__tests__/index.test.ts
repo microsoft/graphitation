@@ -2143,6 +2143,40 @@ describe(generateTS, () => {
     `);
   });
 
+  it("legacy import string unions", () => {
+    const { models, resolvers, enums, inputs } = runGenerateTest(
+      graphql`
+        enum Foo {
+          Bar
+          Braz
+        }
+      `,
+      {
+        enumsImport: "common-enums",
+        useStringUnionsInsteadOfEnums: true,
+      },
+    );
+
+    expect(enums).toMatchInlineSnapshot(`
+      "export type { Foo } from "common-enums";
+      "
+    `);
+    expect(inputs).toMatchInlineSnapshot(`undefined`);
+    expect(models).toMatchInlineSnapshot(`
+      "export * from "./enums.interface";
+      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          readonly __typename?: string;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import * as Models from "./models.interface";
+      "
+    `);
+  });
   it("legacy import enums", () => {
     const { models, resolvers, enums, inputs } = runGenerateTest(
       graphql`
