@@ -59,6 +59,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
         ),
         immutableTypes: getConfigValue(config.immutableTypes, false),
         nonOptionalTypename: getConfigValue(config.nonOptionalTypename, false),
+        isTypeOnly: getConfigValue(config.isTypeOnly, false),
       } as TypeScriptDocumentsParsedConfig,
       schema,
     );
