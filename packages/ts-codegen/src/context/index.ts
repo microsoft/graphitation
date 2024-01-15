@@ -189,7 +189,7 @@ export class TsCodegenContext {
   }
 
   isUseStringUnionsInsteadOfEnumsEnabled(): boolean {
-    return this.options.useStringUnionsInsteadOfEnums;
+    return Boolean(this.options.useStringUnionsInsteadOfEnums);
   }
 
   getTypeReferenceForInputTypeFromTypeNode(

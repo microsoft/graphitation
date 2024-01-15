@@ -10,9 +10,13 @@ export function generateEnums(context: TsCodegenContext): ts.SourceFile {
         .getAllTypes()
         .map((type) => {
           if (type.kind === "ENUM") {
+            const isStringUnion =
+              context.isUseStringUnionsInsteadOfEnumsEnabled() &&
+              context.shouldMigrateEnum(type.name);
+
             return factory.createExportDeclaration(
               undefined,
-              false,
+              isStringUnion,
               factory.createNamedExports([
                 factory.createExportSpecifier(
                   false,
