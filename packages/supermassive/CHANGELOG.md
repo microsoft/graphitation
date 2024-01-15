@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Wed, 10 Jan 2024 12:26:58 GMT and should not be manually modified.
+This log was last generated on Mon, 15 Jan 2024 17:31:26 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.4.1
+
+Mon, 15 Jan 2024 17:31:26 GMT
+
+### Patches
+
+- Properly decode boolean in schema (mark@thedutchies.com)
 
 ## 3.4.0
 
