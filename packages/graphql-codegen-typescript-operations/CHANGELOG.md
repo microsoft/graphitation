@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-typescript-operations
 
-This log was last generated on Sun, 08 Oct 2023 15:21:54 GMT and should not be manually modified.
+This log was last generated on Mon, 15 Jan 2024 17:55:46 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.5.0
+
+Mon, 15 Jan 2024 17:55:46 GMT
+
+### Minor changes
+
+- export string unions as types (jakubvejr@microsoft.com)
 
 ## 1.4.0
 
