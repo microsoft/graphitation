@@ -1,8 +1,32 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Tue, 12 Dec 2023 17:37:29 GMT and should not be manually modified.
+This log was last generated on Mon, 15 Jan 2024 17:31:26 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.4.1
+
+Mon, 15 Jan 2024 17:31:26 GMT
+
+### Patches
+
+- Properly decode boolean in schema (mark@thedutchies.com)
+
+## 3.4.0
+
+Wed, 10 Jan 2024 12:26:58 GMT
+
+### Minor changes
+
+- Revert new executor and fix errors again (mnovikov@microsoft.com)
+
+## 3.3.0
+
+Tue, 09 Jan 2024 09:30:02 GMT
+
+### Minor changes
+
+- Moved to newer stream/defer implementation (mnovikov@microsoft.com)
 
 ## 3.2.7
 

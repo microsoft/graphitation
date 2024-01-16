@@ -14,7 +14,7 @@ fragment PersonFields on Person {
   name
   gender
   birth_year
-  starships {
+  vehicles {
     name
   }
 }

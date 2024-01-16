@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-typescript-operations",
   "entries": [
     {
+      "date": "Mon, 15 Jan 2024 17:55:46 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.5.0",
+      "version": "1.5.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "a31c4ba75317ed79a64f869a9b85914666753b23",
+            "comment": "export string unions as types"
+          }
+        ]
+      }
+    },
+    {
       "date": "Sun, 08 Oct 2023 15:21:54 GMT",
       "tag": "@graphitation/graphql-codegen-typescript-operations_v1.4.0",
       "version": "1.4.0",
