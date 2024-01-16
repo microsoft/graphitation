@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Added missing dependencies to yargs",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape-compiler",
+  "email": "sverre.johansen@gmail.com",
+  "dependentChangeType": "patch"
+}
