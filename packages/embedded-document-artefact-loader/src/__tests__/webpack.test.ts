@@ -168,6 +168,19 @@ describe("webpackLoader", () => {
         );
       `,
     },
+    {
+      name: "trailing interpolations",
+      source: `
+        import { graphql } from "@nova/react";
+        const doc = graphql\`
+          query SomeComponentQuery($id: ID!) {
+            helloWorld
+            \$\{Trailing_Interpolation\}
+          }
+        \`;
+        console.log()
+      `,
+    },
   ])("works with $name", async ({ source }) => {
     const result = await runLoader(source);
     expect(result.result![0]).toMatchSnapshot();
