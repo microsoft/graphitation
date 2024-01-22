@@ -334,5 +334,37 @@ describe("webpackLoader", () => {
       const sourceMap = result.result![1];
       expect(sourceMap).toMatchSnapshot();
     });
+
+    it("emits source-map for tagged template with trailing interpolations", async () => {
+      const source = `
+        import { graphql } from "@nova/react";
+        const doc = graphql\`
+          query SomeComponentQuery($id: ID!) {
+            helloWorld
+            \$\{Trailing_Interpolation\}
+          }
+        \`;
+        console.log()
+      `;
+
+      const result = await runLoader(source);
+      const transpiled = result.result![0]?.toString();
+      const sourceMap = result.result![1];
+      const consumer = new SourceMapConsumer(sourceMap! as any);
+
+      // fs.writeFileSync(__dirname + "/tmp/test.out", transpiled!);
+      // fs.writeFileSync(__dirname + "/tmp/test.map", sourceMap!);
+
+      expect(
+        getGeneratedCodeForOriginalRange(
+          { line: 3, column: 20 },
+          { line: 8, column: 9 },
+          consumer,
+          transpiled!,
+        ),
+      ).toMatchInlineSnapshot(
+        `"require("./__generated__/SomeComponentQuery.graphql").default"`,
+      );
+    });
   });
 });
