@@ -144,7 +144,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
         this.config.enumValues,
         true,
         this.config.inlineCommonTypes,
-        this.setIsMaybeUsed,
+        this.setIsMaybeUsed.bind(this),
       ),
     );
     this._declarationBlockConfig = {

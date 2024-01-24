@@ -19,7 +19,7 @@ export class TypeScriptOperationVariablesToObject extends TSOperationVariablesTo
     _enumNames: string[] = [],
     _enumPrefix = true,
     _enumValues: ParsedEnumValuesMap = {},
-    _applyCoercion: Boolean = false,
+    _applyCoercion = false,
     protected inlineCommonTypes = false,
     protected setIsMaybeUsed: () => void,
   ) {
