@@ -143,11 +143,17 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
         this.config.enumPrefix,
         this.config.enumValues,
         true,
+        this.config.inlineCommonTypes,
+        this.setIsMaybeUsed.bind(this),
       ),
     );
     this._declarationBlockConfig = {
       ignoreExport: this.config.noExport,
     };
+  }
+
+  public setIsMaybeUsed() {
+    this.isMaybeUsed = true;
   }
 
   public getImports(): Array<string> {
