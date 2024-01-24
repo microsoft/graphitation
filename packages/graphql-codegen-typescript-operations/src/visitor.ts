@@ -45,8 +45,8 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
   TypeScriptDocumentsParsedConfig
 > {
   private usedTypes: Set<string>;
-  private isMaybeUsed: boolean = false;
-  private isExactUsed: boolean = false;
+  private isMaybeUsed = false;
+  private isExactUsed = false;
 
   constructor(
     schema: GraphQLSchema,
