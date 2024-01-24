@@ -26,7 +26,7 @@ export type PaginationFn = (
 interface PaginationParams {
   fragmentReference: FragmentReference;
   refetch: RefetchFn;
-  refetchVariables: Partial<Variables>;
+  latestVariablesUsedByStandaloneRefetch: Partial<Variables>;
   metadata: Metadata;
   executionQueryDocument: DocumentNode;
   cache: ApolloCache<unknown>;
@@ -40,7 +40,7 @@ interface PaginationParams {
 function useLoadMore({
   fragmentReference,
   refetch,
-  refetchVariables,
+  latestVariablesUsedByStandaloneRefetch,
   metadata,
   executionQueryDocument,
   cache,
@@ -67,7 +67,7 @@ function useLoadMore({
       );
       const previousVariables = {
         ...metadata.connection?.filterVariableDefaults,
-        ...refetchVariables,
+        ...latestVariablesUsedByStandaloneRefetch,
         ...fragmentReference.__fragments,
         id: fragmentReference.id,
       };
@@ -152,7 +152,7 @@ function useLoadMore({
       fragmentReference.id,
       fragmentReference.__fragments,
       refetch,
-      refetchVariables,
+      latestVariablesUsedByStandaloneRefetch,
       metadata,
       executionQueryDocument,
       cache,
@@ -253,10 +253,13 @@ export function useCompiledPaginationFragment(
     fragmentReference,
   );
 
-  const refetchVariables = useRef({});
-  const refetchPagination = useCallback<RefetchFn>(
+  // Consumers might want to not only use loadNext/loadPrevious with pagination fragment but also standalone refetch,
+  // for example to change the variables that decide on connection filtering. To make sure that loadNext/loadPrevious
+  // respects the variables used by standalone refetch, we store them in a ref and pass them to useLoadMore.
+  const latestVariablesUsedByStandaloneRefetch = useRef({});
+  const storeVariablesAndRefetch = useCallback<RefetchFn>(
     (variables: Partial<Variables>, options?: RefetchOptions) => {
-      refetchVariables.current = variables;
+      latestVariablesUsedByStandaloneRefetch.current = variables;
       return refetch(variables, options);
     },
     [],
@@ -264,8 +267,9 @@ export function useCompiledPaginationFragment(
 
   const commonPaginationParams = {
     fragmentReference,
-    refetch: refetchPagination,
-    refetchVariables: refetchVariables.current,
+    refetch,
+    latestVariablesUsedByStandaloneRefetch:
+      latestVariablesUsedByStandaloneRefetch.current,
     metadata,
     executionQueryDocument,
     cache: useOverridenOrDefaultApolloClient().cache,
@@ -288,7 +292,7 @@ export function useCompiledPaginationFragment(
   });
   return {
     data,
-    refetch: refetchPagination,
+    refetch: storeVariablesAndRefetch,
     hasNext: !!pageInfo?.hasNextPage,
     hasPrevious: !!pageInfo?.hasPreviousPage,
     isLoadingNext,
