@@ -1,6 +1,6 @@
 import { TypeScriptOperationVariablesToObject as TSOperationVariablesToObject } from "@graphql-codegen/typescript";
 
-const BASIC_SCALARS = ["ID", "Int", "Float", "String", "Boolean"];
+const BASIC_TYPE = ["string", "number", "boolean", "any"];
 export class TypeScriptOperationVariablesToObject extends TSOperationVariablesToObject {
   protected formatTypeString(
     fieldType: string,
@@ -9,8 +9,9 @@ export class TypeScriptOperationVariablesToObject extends TSOperationVariablesTo
   ): string {
     return fieldType;
   }
+
   protected getScalar(name: string): string {
-    if (BASIC_SCALARS.includes(name)) {
+    if (BASIC_TYPE.includes(this._scalars[name])) {
       return this._scalars[name];
     }
 
