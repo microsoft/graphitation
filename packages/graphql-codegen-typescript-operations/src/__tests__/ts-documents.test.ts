@@ -2381,7 +2381,7 @@ describe("TypeScript Operations Plugin", () => {
 
       expect(content).toBeSimilarStringTo(
         `export type MeQueryVariables = Exact<{
-          repoFullName: Scalars['String'];
+          repoFullName: string;
         }>;`,
       );
       expect(content).toBeSimilarStringTo(`
@@ -2759,14 +2759,14 @@ describe("TypeScript Operations Plugin", () => {
 
       expect(content).toBeSimilarStringTo(
         `export type TestQueryQueryVariables = Exact<{
-          username?: Maybe<Scalars['String']>;
-          email?: Maybe<Scalars['String']>;
-          password: Scalars['String'];
+          username?: Maybe<string>;
+          email?: Maybe<string>;
+          password: string;
           input?: Maybe<InputType>;
           mandatoryInput: InputType;
-          testArray?: Maybe<Array<Maybe<Scalars['String']>> | Maybe<Scalars['String']>>;
-          requireString: Array<Maybe<Scalars['String']>> | Maybe<Scalars['String']>;
-          innerRequired: Array<Scalars['String']> | Scalars['String'];
+          testArray?: Maybe<Array<Maybe<string>> | Maybe<string>>;
+          requireString: Array<Maybe<string>> | Maybe<string>;
+          innerRequired: Array<string> | string;
         }>;`,
       );
       await validate(content, config);
@@ -2790,7 +2790,7 @@ describe("TypeScript Operations Plugin", () => {
 
       expect(content).toBeSimilarStringTo(
         `export type TestQueryQueryVariables = Exact<{
-          test?: Maybe<Scalars['DateTime']>;
+          test?: Maybe<any>;
         }>;`,
       );
       await validate(content, config);
@@ -3151,7 +3151,7 @@ describe("TypeScript Operations Plugin", () => {
 
       expect(content).toBeSimilarStringTo(`
         export type UsersQueryVariables = Exact<{
-          reverse?: Maybe<Scalars['Boolean']>;
+          reverse?: Maybe<boolean>;
         }>;
       `);
     });
@@ -5050,9 +5050,9 @@ function test(q: GetEntityBrandDataQuery): void {
 
       expect(content).toBeSimilarStringTo(`
       export type UserQueryVariables = Exact<{
-        testArray?: Maybe<Array<Maybe<Scalars['String']>> | Maybe<Scalars['String']>>;
-        requireString: Array<Maybe<Scalars['String']>> | Maybe<Scalars['String']>;
-        innerRequired: Array<Scalars['String']> | Scalars['String'];
+        testArray?: Maybe<Array<Maybe<string>> | Maybe<string>>;
+        requireString: Array<Maybe<string>> | Maybe<string>;
+        innerRequired: Array<string> | string;
       }>;`);
       await validate(content, config);
     });
@@ -5153,7 +5153,7 @@ function test(q: GetEntityBrandDataQuery): void {
 
       expect(content).toBeSimilarStringTo(`
       export type UserQueryVariables = Exact<{
-        showAddress: Scalars['Boolean'];
+        showAddress: boolean;
       }>;
 
       
@@ -5202,8 +5202,8 @@ function test(q: GetEntityBrandDataQuery): void {
 
     //   expect(content).toBeSimilarStringTo(`
     //   export type UserQueryVariables = Exact<{
-    //     showAddress: Scalars['Boolean'];
-    //     showName: Scalars['Boolean'];
+    //     showAddress: boolean;
+    //     showName: boolean;
     //   }>;
 
     //   export type UserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, name?: Maybe<string>, address?: Maybe<{ __typename?: 'Address', city: string}> } };`);
@@ -5241,7 +5241,7 @@ function test(q: GetEntityBrandDataQuery): void {
 
       expect(content).toBeSimilarStringTo(`
       export type UserQueryVariables = Exact<{
-        showName: Scalars['Boolean'];
+        showName: boolean;
       }>;
   
       
