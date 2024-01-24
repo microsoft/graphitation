@@ -45,8 +45,8 @@ export class TypeScriptOperationVariablesToObject extends TSOperationVariablesTo
   }
 
   protected wrapMaybe(type?: string) {
-    this.isMaybeUsed = true;
     if (this.inlineCommonTypes) {
+      this.setIsMaybeUsed();
       return `Maybe${type ? `<${type}>` : ""}`;
     }
 
