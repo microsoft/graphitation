@@ -53,6 +53,7 @@ export type TsCodegenContextOptions = {
   legacyNoModelsForObjects: boolean;
   useStringUnionsInsteadOfEnums: boolean;
   enumNamesToMigrate: string[] | null;
+  enumNamesToKeep: string[] | null;
   modelScope: string | null;
 };
 
@@ -85,6 +86,7 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
   },
   legacyCompat: false,
   enumNamesToMigrate: null,
+  enumNamesToKeep: null,
   legacyNoModelsForObjects: false,
   useStringUnionsInsteadOfEnums: false,
 
@@ -150,11 +152,19 @@ export class TsCodegenContext {
   }
 
   shouldMigrateEnum(enumName: string) {
-    if (!this.options.enumNamesToMigrate) {
+    if (!this.options.enumNamesToKeep && !this.options.enumNamesToMigrate) {
       return true;
     }
 
-    return this.options.enumNamesToMigrate.includes(enumName);
+    if (this.options.enumNamesToKeep) {
+      return !this.options.enumNamesToKeep.includes(enumName);
+    }
+
+    if (this.options.enumNamesToMigrate) {
+      return this.options.enumNamesToMigrate.includes(enumName);
+    }
+
+    return true;
   }
 
   getTypeReferenceFromTypeNode(
@@ -179,7 +189,7 @@ export class TsCodegenContext {
   }
 
   isUseStringUnionsInsteadOfEnumsEnabled(): boolean {
-    return this.options.useStringUnionsInsteadOfEnums;
+    return Boolean(this.options.useStringUnionsInsteadOfEnums);
   }
 
   getTypeReferenceForInputTypeFromTypeNode(

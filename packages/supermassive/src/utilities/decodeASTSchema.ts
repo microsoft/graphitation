@@ -237,6 +237,9 @@ function valueToConstValueNode(
   if (Number.isInteger(jsValue)) {
     return { kind: Kind.INT, value: String(jsValue) };
   }
+  if (typeof jsValue === "boolean") {
+    return { kind: Kind.BOOLEAN, value: jsValue };
+  }
   if (typeof jsValue === "number") {
     return { kind: Kind.FLOAT, value: String(jsValue) };
   }

@@ -2,6 +2,96 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Mon, 15 Jan 2024 17:31:26 GMT",
+      "tag": "@graphitation/supermassive_v3.4.1",
+      "version": "3.4.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "mark@thedutchies.com",
+            "package": "@graphitation/supermassive",
+            "commit": "8b86af007e5cc7f6ea4eb2384944fc893add3900",
+            "comment": "Properly decode boolean in schema"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 10 Jan 2024 12:26:58 GMT",
+      "tag": "@graphitation/supermassive_v3.4.0",
+      "version": "3.4.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "af3d0c6720a87fb1fc8c58847e7153fdb68bcec3",
+            "comment": "Revert new executor and fix errors again"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 09 Jan 2024 09:30:02 GMT",
+      "tag": "@graphitation/supermassive_v3.3.0",
+      "version": "3.3.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "787041fce5a1862cfc186ca489d3213f9b378dbf",
+            "comment": "Moved to newer stream/defer implementation"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 12 Dec 2023 17:37:29 GMT",
+      "tag": "@graphitation/supermassive_v3.2.7",
+      "version": "3.2.7",
+      "comments": {
+        "patch": [
+          {
+            "author": "mark@thedutchies.com",
+            "package": "@graphitation/supermassive",
+            "commit": "20a0556c23be4a1e70219953dbe2c8a0ef11fe3d",
+            "comment": "Fix type assertion for isTotalExecutionResult"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 12 Dec 2023 13:48:37 GMT",
+      "tag": "@graphitation/supermassive_v3.2.6",
+      "version": "3.2.6",
+      "comments": {
+        "patch": [
+          {
+            "author": "mark@thedutchies.com",
+            "package": "@graphitation/supermassive",
+            "commit": "0edb7032410edb3fba29a6a87b189a27459d7f3c",
+            "comment": "Add invariant as a dependency"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 07 Nov 2023 14:42:59 GMT",
+      "tag": "@graphitation/supermassive_v3.2.4",
+      "version": "3.2.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "bee769cc11e7519875e1cb8e63c66278a19fa9c0",
+            "comment": "Fix unintentional breaking change in supermassive v3"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 28 Sep 2023 12:04:15 GMT",
       "tag": "@graphitation/supermassive_v3.2.0",
       "version": "3.2.0",

@@ -28,7 +28,7 @@ steps:
   - task: AssetRetention@3
     displayName: 🧭 Arrow Retention
     inputs:
-      ArrowServiceConnection: "Arrow_domoreexp_Teamspace_PROD"
+      ArrowServiceConnection: "Arrow_Domoreexpgithub_PROD"
       AssetGroupName: "$(System.TeamProject)_$(Build.DefinitionName)"
       AssetNumber: "$(Build.BuildId)"
       IsShipped: false

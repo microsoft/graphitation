@@ -22,6 +22,7 @@ export function generateTS(
     modelScope,
     generateOnlyEnums,
     enumNamesToMigrate,
+    enumNamesToKeep,
   }: {
     outputPath: string;
     documentPath: string;
@@ -34,6 +35,7 @@ export function generateTS(
     modelScope?: string | null;
     generateOnlyEnums?: boolean;
     enumNamesToMigrate?: string[];
+    enumNamesToKeep?: string[];
   },
 ): {
   files: ts.SourceFile[];
@@ -51,6 +53,7 @@ export function generateTS(
         legacyNoModelsForObjects,
         modelScope,
         enumNamesToMigrate,
+        enumNamesToKeep,
       },
       document,
       outputPath,

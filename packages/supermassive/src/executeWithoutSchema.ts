@@ -280,67 +280,75 @@ function buildPerEventExecutionContext(
 function executeOperation(
   exeContext: ExecutionContext,
 ): PromiseOrValue<ExecutionResult> {
-  const { operation, rootValue } = exeContext;
-  const rootTypeName = getOperationRootTypeName(operation);
+  try {
+    const { operation, rootValue } = exeContext;
+    const rootTypeName = getOperationRootTypeName(operation);
 
-  const { groupedFieldSet, patches } = collectFields(exeContext, rootTypeName);
-  const path = undefined;
-  let result;
-
-  // Note: cannot use OperationTypeNode from graphql-js as it doesn't exist in 15.x
-  switch (operation.operation) {
-    case "query":
-      result = executeFields(
-        exeContext,
-        rootTypeName,
-        rootValue,
-        path,
-        groupedFieldSet,
-        undefined,
-      );
-      result = buildResponse(exeContext, result);
-      break;
-    case "mutation":
-      result = executeFieldsSerially(
-        exeContext,
-        rootTypeName,
-        rootValue,
-        path,
-        groupedFieldSet,
-      );
-      result = buildResponse(exeContext, result);
-      break;
-    case "subscription": {
-      const resultOrStreamOrPromise = createSourceEventStream(exeContext);
-      result = mapResultOrEventStreamOrPromise(
-        resultOrStreamOrPromise,
-        exeContext,
-        rootTypeName,
-        path,
-        groupedFieldSet,
-      );
-      break;
-    }
-    default:
-      invariant(
-        false,
-        `Operation "${operation.operation}" is not a part of GraphQL spec`,
-      );
-  }
-
-  for (const patch of patches) {
-    const { label, groupedFieldSet: patchGroupedFieldSet } = patch;
-    executeDeferredFragment(
+    const { groupedFieldSet, patches } = collectFields(
       exeContext,
       rootTypeName,
-      rootValue,
-      patchGroupedFieldSet,
-      label,
-      path,
     );
-  }
+    const path = undefined;
+    let result;
 
-  return result;
+    // Note: cannot use OperationTypeNode from graphql-js as it doesn't exist in 15.x
+    switch (operation.operation) {
+      case "query":
+        result = executeFields(
+          exeContext,
+          rootTypeName,
+          rootValue,
+          path,
+          groupedFieldSet,
+          undefined,
+        );
+        result = buildResponse(exeContext, result);
+        break;
+      case "mutation":
+        result = executeFieldsSerially(
+          exeContext,
+          rootTypeName,
+          rootValue,
+          path,
+          groupedFieldSet,
+        );
+        result = buildResponse(exeContext, result);
+        break;
+      case "subscription": {
+        const resultOrStreamOrPromise = createSourceEventStream(exeContext);
+        result = mapResultOrEventStreamOrPromise(
+          resultOrStreamOrPromise,
+          exeContext,
+          rootTypeName,
+          path,
+          groupedFieldSet,
+        );
+        break;
+      }
+      default:
+        invariant(
+          false,
+          `Operation "${operation.operation}" is not a part of GraphQL spec`,
+        );
+    }
+
+    for (const patch of patches) {
+      const { label, groupedFieldSet: patchGroupedFieldSet } = patch;
+      executeDeferredFragment(
+        exeContext,
+        rootTypeName,
+        rootValue,
+        patchGroupedFieldSet,
+        label,
+        path,
+      );
+    }
+
+    return result;
+  } catch (error) {
+    exeContext.errors.push(error as GraphQLError);
+    return buildResponse(exeContext, null);
+  }
 }
 
 /**
@@ -724,16 +732,21 @@ function mapResultOrEventStreamOrPromise(
           exeContext,
           payload,
         );
-        const data = executeFields(
-          exeContext,
-          parentTypeName,
-          payload,
-          path,
-          groupedFieldSet,
-          undefined,
-        );
-        // This is typechecked in collect values
-        return buildResponse(perEventContext, data) as TotalExecutionResult;
+        try {
+          const data = executeFields(
+            exeContext,
+            parentTypeName,
+            payload,
+            path,
+            groupedFieldSet,
+            undefined,
+          );
+          // This is typechecked in collect values
+          return buildResponse(perEventContext, data) as TotalExecutionResult;
+        } catch (error) {
+          perEventContext.errors.push(error as GraphQLError);
+          return buildResponse(perEventContext, null) as TotalExecutionResult;
+        }
       };
 
       return mapAsyncIterator(resultOrStreamOrPromise, mapSourceToResponse);
@@ -756,7 +769,7 @@ export function buildResolveInfo(
   // information about the current execution state.
   return {
     fieldName: fieldName,
-    fieldGroup,
+    fieldNodes: fieldGroup,
     returnTypeName,
     parentTypeName,
     path,
@@ -2359,6 +2372,6 @@ export function isTotalExecutionResult<
   TExtensions = ObjMap<unknown>,
 >(
   result: ExecutionResult<TData, TExtensions>,
-): result is IncrementalExecutionResult<TData, TExtensions> {
+): result is TotalExecutionResult<TData, TExtensions> {
   return !("initialResult" in result);
 }

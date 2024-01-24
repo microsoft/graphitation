@@ -37,6 +37,7 @@ export interface TypeScriptDocumentsParsedConfig extends ParsedDocumentsConfig {
   immutableTypes: boolean;
   baseTypesPath: string;
   noExport: boolean;
+  isTypeOnly: boolean;
 }
 export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
   TypeScriptDocumentsPluginConfig,
@@ -58,6 +59,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
         ),
         immutableTypes: getConfigValue(config.immutableTypes, false),
         nonOptionalTypename: getConfigValue(config.nonOptionalTypename, false),
+        isTypeOnly: getConfigValue(config.isTypeOnly, false),
       } as TypeScriptDocumentsParsedConfig,
       schema,
     );
@@ -149,9 +151,9 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
           )
           .concat(
             this.config.baseTypesPath && this.usedTypes.size
-              ? `export {${Array.from(this.usedTypes).join(",")}} from "${
-                  this.config.baseTypesPath
-                }"`
+              ? `export ${this.config.isTypeOnly ? "type " : ""}{${Array.from(
+                  this.usedTypes,
+                ).join(",")}} from "${this.config.baseTypesPath}"`
               : "",
           )
       : [];

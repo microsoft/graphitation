@@ -1,8 +1,16 @@
 # Change Log - @graphitation/embedded-document-artefact-loader
 
-This log was last generated on Mon, 09 Oct 2023 22:53:02 GMT and should not be manually modified.
+This log was last generated on Tue, 31 Oct 2023 00:45:05 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.8
+
+Tue, 31 Oct 2023 00:45:05 GMT
+
+### Patches
+
+- No behavior change, just makes the loader only do work when there are graphql tags (kchau@microsoft.com)
 
 ## 0.6.7
 

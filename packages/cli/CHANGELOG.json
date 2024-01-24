@@ -2,6 +2,42 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Mon, 15 Jan 2024 17:55:46 GMT",
+      "tag": "@graphitation/cli_v1.11.1",
+      "version": "1.11.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.11.0",
+            "commit": "a31c4ba75317ed79a64f869a9b85914666753b23"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 09 Nov 2023 13:12:42 GMT",
+      "tag": "@graphitation/cli_v1.11.0",
+      "version": "1.11.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "6a14a2e59145c35e73c216e530616cd8b19fe7e8",
+            "comment": "added parameter to specify GraphQL enums which should remain Typescript enums"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.10.0",
+            "commit": "6a14a2e59145c35e73c216e530616cd8b19fe7e8"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 16 Oct 2023 10:17:21 GMT",
       "tag": "@graphitation/cli_v1.10.0",
       "version": "1.10.0",

@@ -39,6 +39,19 @@ export function getTransformer(
   };
 }
 
+export function getRelayTransformer(
+  options: Partial<GraphQLTagTransformOptions>,
+) {
+  const transformerContext = createTransformerContext(options);
+  return (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
+    return (sourceFile: ts.SourceFile) =>
+      ts.visitNode(
+        sourceFile,
+        getRelayVisitor(transformerContext, context, sourceFile),
+      );
+  };
+}
+
 export function createTransformerContext(
   options: GraphQLTagTransformOptions,
 ): GraphQLTagTransformContext {
@@ -184,6 +197,102 @@ function getVisitor(
   return visitor;
 }
 
+function getRelayVisitor(
+  transformerContext: GraphQLTagTransformContext,
+  context: ts.TransformationContext,
+  _sourceFile: ts.SourceFile,
+) {
+  const nodeVisitor: ts.Visitor = (node: ts.Node): ts.VisitResult<ts.Node> => {
+    if (ts.isObjectLiteralExpression(node)) {
+      if (
+        node.properties.findIndex((p) => {
+          return (
+            ts.isPropertyAssignment(p) &&
+            ts.isStringLiteral(p.name) &&
+            p.name.text === "kind" &&
+            ts.isStringLiteral(p.initializer) &&
+            p.initializer.text === "Request"
+          );
+        }) !== -1
+      ) {
+        const params = node.properties.find(
+          (p) =>
+            ts.isPropertyAssignment(p) &&
+            ts.isStringLiteral(p.name) &&
+            p.name.text === "params",
+        );
+        if (params && ts.isPropertyAssignment(params)) {
+          const paramsObject = params.initializer;
+          if (ts.isObjectLiteralExpression(paramsObject)) {
+            const text = paramsObject.properties.find(
+              (p) =>
+                ts.isPropertyAssignment(p) &&
+                ts.isStringLiteral(p.name) &&
+                p.name.text === "text",
+            );
+            if (
+              text &&
+              ts.isPropertyAssignment(text) &&
+              ts.isStringLiteral(text.initializer)
+            ) {
+              const definitions = getDefinitions(
+                text.initializer.text,
+                transformerContext.transformer,
+              );
+
+              const newText = ts.factory.updatePropertyAssignment(
+                text,
+                text.name,
+                createDocument(definitions, []),
+              );
+              const newParamsObject = ts.factory.updateObjectLiteralExpression(
+                paramsObject,
+                paramsObject.properties
+                  .filter(
+                    (p) =>
+                      !ts.isPropertyAssignment(p) ||
+                      !ts.isStringLiteral(p.name) ||
+                      p.name.text !== "text",
+                  )
+                  .concat([newText]),
+              );
+              const newParams = ts.factory.updatePropertyAssignment(
+                params,
+                params.name,
+                newParamsObject,
+              );
+              return ts.factory.updateObjectLiteralExpression(
+                node,
+                node.properties
+                  .filter(
+                    (p) =>
+                      !ts.isPropertyAssignment(p) ||
+                      !ts.isStringLiteral(p.name) ||
+                      p.name.text !== "params",
+                  )
+                  .concat([newParams]),
+              );
+            }
+          }
+        }
+      }
+    }
+
+    return ts.visitEachChild(node, nodeVisitor, context);
+  };
+  const visitor: ts.Visitor = (node: ts.Node): ts.VisitResult<ts.Node> => {
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.name.text === "node"
+    ) {
+      return ts.visitEachChild(node, nodeVisitor, context);
+    }
+    return ts.visitEachChild(node, visitor, context);
+  };
+  return visitor;
+}
+
 function collectTemplateInterpolations(
   node: ts.Node,
   context: ts.TransformationContext,
@@ -228,14 +337,10 @@ function getDefinitions(
   const definitions = [];
 
   for (const definition of queryDocument.definitions) {
-    if (definition.kind === Kind.OPERATION_DEFINITION) {
-      if (queryDocument.definitions.length > 1) {
-        throw new Error(
-          `If a GraphQL query document contains multiple operations, each operation must be named.\n${source}`,
-        );
-      }
-      definitions.push(transformer ? transformer(definition) : definition);
-    } else if (definition.kind === Kind.FRAGMENT_DEFINITION) {
+    if (
+      definition.kind === Kind.OPERATION_DEFINITION ||
+      definition.kind === Kind.FRAGMENT_DEFINITION
+    ) {
       definitions.push(transformer ? transformer(definition) : definition);
     }
   }

@@ -1,8 +1,80 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Mon, 16 Oct 2023 10:17:21 GMT and should not be manually modified.
+This log was last generated on Tue, 16 Jan 2024 04:23:53 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.28
+
+Tue, 16 Jan 2024 04:23:53 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.4.0
+
+## 1.0.27
+
+Mon, 15 Jan 2024 17:55:46 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.3.13
+
+## 1.0.26
+
+Mon, 15 Jan 2024 17:31:26 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.3.12
+
+## 1.0.25
+
+Wed, 10 Jan 2024 12:26:58 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.3.11
+
+## 1.0.24
+
+Tue, 09 Jan 2024 09:30:02 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.3.10
+
+## 1.0.23
+
+Tue, 12 Dec 2023 17:37:30 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.3.9
+
+## 1.0.22
+
+Tue, 12 Dec 2023 13:48:37 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.3.8
+
+## 1.0.21
+
+Thu, 09 Nov 2023 13:12:42 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.3.7
+
+## 1.0.20
+
+Tue, 07 Nov 2023 14:42:59 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.3.6
 
 ## 1.0.19
 

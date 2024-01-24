@@ -7,6 +7,9 @@ import {
 import { makeSchema } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import { createExecutionUtils } from "../__testUtils__/execute";
+import { executeWithoutSchema } from "../executeWithoutSchema";
+import { encodeASTSchema } from "../utilities/encodeASTSchema";
+import { ResolveInfo } from "../types";
 
 const {
   compareResultsForExecuteWithSchema,
@@ -362,6 +365,26 @@ query Person($id: Int!) {
       throwError: true,
     },
   },
+  {
+    name: "non-null query return null",
+    document: `query { nonNullWithNull }`,
+  },
+  {
+    name: "non-null subscription return null",
+    document: `subscription { nonNullWithNull }`,
+  },
+  {
+    name: "non-null query throw an error",
+    document: `query { nonNullWithError }`,
+  },
+  {
+    name: "non-null subscription throw in subscribe",
+    document: `subscription { nonNullWithError }`,
+  },
+  {
+    name: "non-null subscription throw in resolve",
+    document: `subscription { nonNullWithErrorEvent }`,
+  },
 ];
 
 describe("graphql-js snapshot check to ensure test stability", () => {
@@ -412,5 +435,30 @@ describe("executeWithoutSchema - minimal viable schema annotation", () => {
       document,
       variables,
     );
+  });
+});
+
+describe("executeWithoutSchema - regression tests", () => {
+  test("Supports fieldNodes in ResolveInfo for backwards compatibility", async () => {
+    let infoAtCallTime: ResolveInfo | undefined;
+
+    const resolvers = {
+      Query: {
+        foo(_: unknown, __: unknown, ___: unknown, info: ResolveInfo) {
+          infoAtCallTime = info;
+        },
+      },
+    };
+    const definitions = encodeASTSchema(parse("type Query { foo: String }"))[0];
+    const document = parse(`{ foo, ... { foo } }`);
+
+    await executeWithoutSchema({
+      document,
+      schemaFragment: { schemaId: "test", definitions, resolvers },
+    });
+
+    expect(infoAtCallTime?.fieldNodes?.length).toEqual(2);
+    expect(infoAtCallTime?.fieldNodes[0].name.value).toEqual("foo");
+    expect(infoAtCallTime?.fieldNodes[1].name.value).toEqual("foo");
   });
 });

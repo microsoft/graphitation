@@ -2,6 +2,21 @@
   "name": "@graphitation/embedded-document-artefact-loader",
   "entries": [
     {
+      "date": "Tue, 31 Oct 2023 00:45:05 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.6.8",
+      "version": "0.6.8",
+      "comments": {
+        "patch": [
+          {
+            "author": "kchau@microsoft.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "a4978d404d722e341d4e039a188c432f72300172",
+            "comment": "No behavior change, just makes the loader only do work when there are graphql tags"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 09 Oct 2023 22:53:02 GMT",
       "tag": "@graphitation/embedded-document-artefact-loader_v0.6.7",
       "version": "0.6.7",
