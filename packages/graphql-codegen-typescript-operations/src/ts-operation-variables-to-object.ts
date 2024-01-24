@@ -13,10 +13,7 @@ export class TypeScriptOperationVariablesToObject extends TSOperationVariablesTo
     if (BASIC_SCALARS.includes(name)) {
       return this._scalars[name];
     }
-    const prefix = this._namespacedImportName
-      ? `${this._namespacedImportName}.`
-      : "";
 
-    return `${prefix}Scalars['${name}']`;
+    return super.getScalar(name);
   }
 }
