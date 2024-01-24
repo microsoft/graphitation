@@ -76,10 +76,7 @@ fragment compiledHooks_ForwardPaginationFragment on NodeWithPetAvatarAndConversa
       hasNextPage
     }
   }
-  ... on Node {
-    __isNode: __typename
-    id
-  }
+  id
 }
 
 fragment compiledHooks_QueryTypeFragment on Query {
@@ -300,13 +297,6 @@ v28 = {
   ]
 },
 v29 = {
-  "kind": "NamedType",
-  "name": {
-    "kind": "Name",
-    "value": "Node"
-  }
-},
-v30 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
@@ -624,24 +614,7 @@ return {
                 ]
               }
             },
-            {
-              "kind": "InlineFragment",
-              "typeCondition": (v29/*: any*/),
-              "selectionSet": {
-                "kind": "SelectionSet",
-                "selections": [
-                  {
-                    "kind": "Field",
-                    "alias": {
-                      "kind": "Name",
-                      "value": "__isNode"
-                    },
-                    "name": (v22/*: any*/)
-                  },
-                  (v15/*: any*/)
-                ]
-              }
-            }
+            (v15/*: any*/)
           ]
         }
       },
@@ -711,18 +684,24 @@ return {
                   (v15/*: any*/),
                   {
                     "kind": "InlineFragment",
-                    "typeCondition": (v29/*: any*/),
+                    "typeCondition": {
+                      "kind": "NamedType",
+                      "name": {
+                        "kind": "Name",
+                        "value": "Node"
+                      }
+                    },
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
-                        (v30/*: any*/)
+                        (v29/*: any*/)
                       ]
                     }
                   }
                 ]
               }
             },
-            (v30/*: any*/)
+            (v29/*: any*/)
           ]
         }
       }

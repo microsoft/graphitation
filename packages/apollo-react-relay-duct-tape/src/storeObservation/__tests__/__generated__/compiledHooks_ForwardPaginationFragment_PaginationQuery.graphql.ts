@@ -4,6 +4,7 @@
 
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
 export type compiledHooks_ForwardPaginationFragment_PaginationQueryVariables = {
+    addExtra: boolean;
     avatarSize: number;
     conversationsAfterCursor: string;
     conversationsForwardCount: number;
@@ -26,7 +27,7 @@ export type compiledHooks_ForwardPaginationFragment_PaginationQuery = {
 query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String! = "", $conversationsForwardCount: Int! = 1, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $id: ID!) {
   node(id: $id) {
     __typename
-    ...compiledHooks_ForwardPaginationFragment_4o723C
+    ...compiledHooks_ForwardPaginationFragment_pmmUt
     id
   }
 }
@@ -49,7 +50,7 @@ fragment compiledHooks_BackwardPaginationFragment on Conversation {
   id
 }
 
-fragment compiledHooks_ForwardPaginationFragment_4o723C on NodeWithPetAvatarAndConversations {
+fragment compiledHooks_ForwardPaginationFragment_pmmUt on NodeWithPetAvatarAndConversations {
   __isNodeWithPetAvatarAndConversations: __typename
   petName
   avatarUrl(size: $avatarSize)
@@ -71,10 +72,7 @@ fragment compiledHooks_ForwardPaginationFragment_4o723C on NodeWithPetAvatarAndC
       hasNextPage
     }
   }
-  ... on Node {
-    __isNode: __typename
-    id
-  }
+  id
 }
 */
 
@@ -82,7 +80,7 @@ fragment compiledHooks_ForwardPaginationFragment_4o723C on NodeWithPetAvatarAndC
 query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String! = "", $conversationsForwardCount: Int! = 1, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $id: ID!) {
   node(id: $id) {
     __typename
-    ...compiledHooks_ForwardPaginationFragment_4o723C
+    ...compiledHooks_ForwardPaginationFragment_pmmUt
     id
     ... on Node {
       __fragments @client
@@ -90,7 +88,7 @@ query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!,
   }
 }
 
-fragment compiledHooks_ForwardPaginationFragment_4o723C on NodeWithPetAvatarAndConversations {
+fragment compiledHooks_ForwardPaginationFragment_pmmUt on NodeWithPetAvatarAndConversations {
   __isNodeWithPetAvatarAndConversations: __typename
   petName
   avatarUrl(size: $avatarSize)
@@ -114,10 +112,7 @@ fragment compiledHooks_ForwardPaginationFragment_4o723C on NodeWithPetAvatarAndC
       hasNextPage
     }
   }
-  ... on Node {
-    __isNode: __typename
-    id
-  }
+  id
 }
 */
 
@@ -260,7 +255,7 @@ v14 = {
 },
 v15 = {
   "kind": "Name",
-  "value": "compiledHooks_ForwardPaginationFragment_4o723C"
+  "value": "compiledHooks_ForwardPaginationFragment_pmmUt"
 },
 v16 = {
   "kind": "FragmentSpread",
@@ -406,33 +401,14 @@ v32 = {
   }
 },
 v33 = {
-  "kind": "NamedType",
-  "name": {
-    "kind": "Name",
-    "value": "Node"
-  }
-},
-v34 = {
   "kind": "InlineFragment",
-  "typeCondition": (v33/*: any*/),
-  "selectionSet": {
-    "kind": "SelectionSet",
-    "selections": [
-      {
-        "kind": "Field",
-        "alias": {
-          "kind": "Name",
-          "value": "__isNode"
-        },
-        "name": (v13/*: any*/)
-      },
-      (v17/*: any*/)
-    ]
-  }
-},
-v35 = {
-  "kind": "InlineFragment",
-  "typeCondition": (v33/*: any*/),
+  "typeCondition": {
+    "kind": "NamedType",
+    "name": {
+      "kind": "Name",
+      "value": "Node"
+    }
+  },
   "selectionSet": {
     "kind": "SelectionSet",
     "selections": [
@@ -646,7 +622,7 @@ return {
                 ]
               }
             },
-            (v34/*: any*/)
+            (v17/*: any*/)
           ]
         }
       }
@@ -673,7 +649,7 @@ return {
                   (v14/*: any*/),
                   (v16/*: any*/),
                   (v17/*: any*/),
-                  (v35/*: any*/)
+                  (v33/*: any*/)
                 ]
               }
             }
@@ -713,7 +689,7 @@ return {
                               (v31/*: any*/),
                               (v17/*: any*/),
                               (v14/*: any*/),
-                              (v35/*: any*/)
+                              (v33/*: any*/)
                             ]
                           }
                         },
@@ -725,7 +701,7 @@ return {
                 ]
               }
             },
-            (v34/*: any*/)
+            (v17/*: any*/)
           ]
         }
       }
@@ -734,7 +710,7 @@ return {
   "metadata": {
     "rootSelection": "node",
     "mainFragment": {
-      "name": "compiledHooks_ForwardPaginationFragment_4o723C",
+      "name": "compiledHooks_ForwardPaginationFragment_pmmUt",
       "typeCondition": "NodeWithPetAvatarAndConversations"
     },
     "connection": {

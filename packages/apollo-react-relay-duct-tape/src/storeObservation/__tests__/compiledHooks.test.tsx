@@ -77,6 +77,7 @@ const _ForwardPagination_fragment = graphql`
   @argumentDefinitions(
     conversationsForwardCount: { type: "Int!", defaultValue: 1 }
     conversationsAfterCursor: { type: "String!", defaultValue: "" }
+    addExtra: { type: "Boolean!", defaultValue: false }
   ) {
     petName
     avatarUrl(size: $avatarSize)
@@ -788,6 +789,91 @@ describe.each([
         });
 
         expect(onCompleted).toHaveBeenCalledWith(error);
+      });
+
+      describe("and when refetch is called before loading next page", () => {
+        it("uses correct variable value in load next request", async () => {
+          await act(async () => {
+            const { refetch } = last(forwardUsePaginationFragmentResult);
+            refetch({ addExtra: true });
+            client.mock.resolveMostRecentOperation((operation) =>
+              MockPayloadGenerator.generate(operation),
+            );
+            await new Promise((resolve) => setTimeout(resolve, 0));
+          });
+
+          act(() => {
+            const { loadNext } = last(forwardUsePaginationFragmentResult);
+            loadNext(123);
+          });
+
+          const operation = client.mock.getMostRecentOperation();
+          expect(operation.request.variables).toMatchObject({
+            conversationsForwardCount: 123,
+            conversationsAfterCursor: "first-page-end-cursor",
+            addExtra: true,
+          });
+        });
+
+        [true, false].forEach((addExtra) => {
+          it(`returns complete result based on the value of variable used for refetch (${addExtra})`, async () => {
+            await act(async () => {
+              const { refetch } = last(forwardUsePaginationFragmentResult);
+              refetch({ addExtra });
+              client.mock.resolveMostRecentOperation((operation) => {
+                const { variables } = operation.request;
+                return MockPayloadGenerator.generate(operation, {
+                  Conversation: () => ({
+                    id: "first-paged-conversation",
+                    title: `title-1${variables.addExtra ? "-with-extra" : ""}`,
+                  }),
+                });
+              });
+              await new Promise((resolve) => setTimeout(resolve, 0));
+            });
+            const result = last(forwardUsePaginationFragmentResult);
+            expect(
+              (result.data as any).conversations.edges.map(
+                (edge: any) => edge.node.title,
+              ),
+            ).toMatchInlineSnapshot(`
+              [
+                "title-1${addExtra ? "-with-extra" : ""}",
+              ]
+            `);
+
+            await act(async () => {
+              const { loadNext } = last(forwardUsePaginationFragmentResult);
+              loadNext(1);
+              client.mock.resolveMostRecentOperation((operation) => {
+                const { variables } = operation.request;
+                return MockPayloadGenerator.generate(operation, {
+                  Conversation: () => ({
+                    id: "second-paged-conversation",
+                    title: `title-2${variables.addExtra ? "-with-extra" : ""}`,
+                  }),
+                  PageInfo: () => ({
+                    endCursor: "second-page-end-cursor",
+                    hasNextPage: false,
+                  }),
+                });
+              });
+              await new Promise((resolve) => setTimeout(resolve, 0));
+            });
+
+            const loadNextResult = last(forwardUsePaginationFragmentResult);
+            expect(
+              (loadNextResult.data as any).conversations.edges.map(
+                (edge: any) => edge.node.title,
+              ),
+            ).toMatchInlineSnapshot(`
+              [
+                "title-1${addExtra ? "-with-extra" : ""}",
+                "title-2${addExtra ? "-with-extra" : ""}",
+              ]
+            `);
+          });
+        });
       });
 
       describe("and having received the response", () => {
