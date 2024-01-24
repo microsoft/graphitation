@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-typescript-operations
 
-This log was last generated on Mon, 15 Jan 2024 17:55:46 GMT and should not be manually modified.
+This log was last generated on Wed, 24 Jan 2024 11:02:46 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.6.0
+
+Wed, 24 Jan 2024 11:02:46 GMT
+
+### Minor changes
+
+- Exact/Maybe and Basic scalars are inlined into documents (jakubvejr@microsoft.com)
 
 ## 1.5.0
 

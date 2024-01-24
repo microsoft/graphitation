@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/graphql-codegen-typescript-operations",
   "license": "MIT",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
