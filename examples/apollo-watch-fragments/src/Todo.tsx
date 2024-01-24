@@ -2,6 +2,7 @@ import React, { useCallback } from "react";
 import {
   useRefetchableFragment,
   shallowCompareFragmentReferences,
+  useFragment,
 } from "@graphitation/apollo-react-relay-duct-tape";
 import { graphql } from "@graphitation/graphql-js-tag";
 
@@ -9,15 +10,17 @@ import useChangeTodoStatusMutation from "./useChangeTodoStatusMutation";
 
 import { Todo_todoFragment$key } from "./__generated__/Todo_todoFragment.graphql";
 
-const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({ todo: todoRef }) => {
-  const [todo, refetch] = useRefetchableFragment(
+const Todo: React.FC<{ todo: Todo_todoFragment$key; refetch: () => void }> = ({ todo: todoRef, refetch }) => {
+  // Replaced useRefetchableFragment with useFragment (what we use right now)
+  // Removed @include because it didn't work for me (if we started with includeSomeOtherField as true, it worked,
+  // but if we started with it as false, it didn't work). Removed it for simplicity.
+  const todo = useFragment(
     graphql`
-      fragment Todo_todoFragment on Todo
-      @refetchable(queryName: "TodoRefetchQuery") {
+      fragment Todo_todoFragment on Todo {
         id
         description
         isCompleted
-        someOtherField @include(if: $includeSomeOtherField)
+        someOtherField
       }
     `,
     todoRef,
@@ -34,7 +37,8 @@ const Todo: React.FC<{ todo: Todo_todoFragment$key }> = ({ todo: todoRef }) => {
   );
 
   const refresh = useCallback(() => {
-    refetch({ includeSomeOtherField: !todo.someOtherField });
+    // Keep it simple, remove the parameters
+    refetch();
   }, [refetch]);
 
   return (

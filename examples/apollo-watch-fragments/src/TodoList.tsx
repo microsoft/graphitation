@@ -10,25 +10,16 @@ import { TodoList_nodeFragment$key } from "./__generated__/TodoList_nodeFragment
 import { Todo } from "./Todo";
 import { LoadingSpinner } from "./LoadingSpinner";
 
-const TodoList: React.FC<{ node: TodoList_nodeFragment$key }> = ({
+const TodoList: React.FC<{ node: TodoList_nodeFragment$key, refetch: () => void }> = ({
   node: nodeRef,
+  refetch
 }) => {
-  const {
-    data: node,
-    hasNext,
-    loadNext,
-    isLoadingNext,
-  } = usePaginationFragment(
+  const node = useFragment(
     graphql`
-      fragment TodoList_nodeFragment on NodeWithTodos
-      @refetchable(queryName: "TodoListPaginationQuery")
-      @argumentDefinitions(
-        count: { type: "Int!", defaultValue: 5 }
-        after: { type: "String!", defaultValue: "" }
-      ) {
+      fragment TodoList_nodeFragment on NodeWithTodos {
         __typename
-        todos(first: $count, after: $after)
-          @connection(key: "TodosList_todos") {
+        id
+        todos(first: 5, after: $after) {
           edges {
             node {
               id
@@ -46,14 +37,14 @@ const TodoList: React.FC<{ node: TodoList_nodeFragment$key }> = ({
   /* <!-- List items should get the class `editing` when editing and `completed` when marked as completed --> */
   return (
     <ul className="todo-list">
-      {node.todos.edges.map(({ node: todo }) => {
+      {node?.todos.edges.map(({ node: todo }) => {
         return (
           <li key={todo.id} className={todo.isCompleted ? "completed" : ""}>
-            <Todo todo={todo} />
+            <Todo todo={todo} refetch={refetch} />
           </li>
         );
       })}
-      {hasNext || isLoadingNext ? (
+      {/* {hasNext || isLoadingNext ? (
         <li className="load-more">
           {isLoadingNext ? (
             <LoadingSpinner />
@@ -65,7 +56,7 @@ const TodoList: React.FC<{ node: TodoList_nodeFragment$key }> = ({
             />
           )}
         </li>
-      ) : null}
+      ) : null} */}
     </ul>
   );
 };
