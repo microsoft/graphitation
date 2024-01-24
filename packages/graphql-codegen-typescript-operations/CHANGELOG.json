@@ -2,6 +2,36 @@
   "name": "@graphitation/graphql-codegen-typescript-operations",
   "entries": [
     {
+      "date": "Wed, 24 Jan 2024 12:21:48 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.6.1",
+      "version": "1.6.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "8fc41d62658a605605b8fb97e28b1eccca9ac54f",
+            "comment": "Variables inline Maybe and Scalars too"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 24 Jan 2024 11:02:46 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.6.0",
+      "version": "1.6.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "05dd2d8f92a95851f96bcec5a526af0873a334bb",
+            "comment": "Exact/Maybe and Basic scalars are inlined into documents"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 15 Jan 2024 17:55:46 GMT",
       "tag": "@graphitation/graphql-codegen-typescript-operations_v1.5.0",
       "version": "1.5.0",
