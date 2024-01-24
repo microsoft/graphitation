@@ -38,12 +38,16 @@ export interface TypeScriptDocumentsParsedConfig extends ParsedDocumentsConfig {
   baseTypesPath: string;
   noExport: boolean;
   isTypeOnly: boolean;
+  inlineCommonTypes: boolean;
 }
 export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
   TypeScriptDocumentsPluginConfig,
   TypeScriptDocumentsParsedConfig
 > {
   private usedTypes: Set<string>;
+  private isMaybeUsed = false;
+  private isExactUsed = false;
+
   constructor(
     schema: GraphQLSchema,
     config: TypeScriptDocumentsPluginConfig,
@@ -60,6 +64,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
         immutableTypes: getConfigValue(config.immutableTypes, false),
         nonOptionalTypename: getConfigValue(config.nonOptionalTypename, false),
         isTypeOnly: getConfigValue(config.isTypeOnly, false),
+        inlineCommonTypes: getConfigValue(config.inlineCommonTypes, false),
       } as TypeScriptDocumentsParsedConfig,
       schema,
     );
@@ -68,9 +73,11 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
 
     this.usedTypes = new Set();
     const wrapOptional = (type: string) => {
-      const prefix = this.config.namespacedImportName
-        ? `${this.config.namespacedImportName}.`
-        : "";
+      this.isMaybeUsed = true;
+      const prefix =
+        !this.config.inlineCommonTypes && this.config.namespacedImportName
+          ? `${this.config.namespacedImportName}.`
+          : "";
       return `${prefix}Maybe<${type}>`;
     };
     const wrapArray = (type: string) => {
@@ -144,7 +151,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
   }
 
   public getImports(): Array<string> {
-    return !this.config.globalNamespace
+    const imports = !this.config.globalNamespace
       ? this.config.fragmentImports
           .map((fragmentImport) =>
             generateFragmentImportStatement(fragmentImport, "type"),
@@ -157,6 +164,17 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
               : "",
           )
       : [];
+
+    if (this.config.inlineCommonTypes && this.isMaybeUsed) {
+      imports.push(`type Maybe<T> = T | null;`);
+    }
+    if (this.config.inlineCommonTypes && this.isExactUsed) {
+      imports.push(`type Exact<T extends { [key: string]: unknown }> = {
+        [K in keyof T]: T[K];
+      }`);
+    }
+
+    return imports;
   }
 
   private getTypeNames(node: InputObjectTypeDefinitionNode) {
@@ -240,9 +258,11 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
   }
 
   protected applyVariablesWrapper(variablesBlock: string): string {
-    const prefix = this.config.namespacedImportName
-      ? `${this.config.namespacedImportName}.`
-      : "";
+    this.isExactUsed = true;
+    const prefix =
+      !this.config.inlineCommonTypes && this.config.namespacedImportName
+        ? `${this.config.namespacedImportName}.`
+        : "";
 
     return `${prefix}Exact<${
       variablesBlock === "{}" ? `{ [key: string]: never; }` : variablesBlock

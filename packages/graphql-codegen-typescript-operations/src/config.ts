@@ -121,4 +121,5 @@ export interface TypeScriptDocumentsPluginConfig extends RawDocumentsConfig {
   addOperationExport?: boolean;
   baseTypesPath?: string;
   isTypeOnly?: boolean;
+  inlineCommonTypes?: boolean;
 }
