@@ -55,7 +55,6 @@ const TodoList: React.FC<{ node: TodoList_nodeFragment$key }> = ({
   /* <!-- List items should get the class `editing` when editing and `completed` when marked as completed --> */
   return (
     <>
-      <button onClick={onChangeOrder}>Order {order} </button>
       <ul className="todo-list">
         {node.todos.edges.map(({ node: todo }) => {
           return (
@@ -65,7 +64,7 @@ const TodoList: React.FC<{ node: TodoList_nodeFragment$key }> = ({
           );
         })}
         {hasNext || isLoadingNext ? (
-          <li className="load-more">
+          <li className="action">
             {isLoadingNext ? (
               <LoadingSpinner />
             ) : (
@@ -77,6 +76,14 @@ const TodoList: React.FC<{ node: TodoList_nodeFragment$key }> = ({
             )}
           </li>
         ) : null}
+        <li className="action">
+          <input
+            type="submit"
+            className="sort-button"
+            onClick={onChangeOrder}
+            value={`Sort ${order === "ASC" ? "descending" : "ascending"}`}
+          />
+        </li>
       </ul>
     </>
   );
