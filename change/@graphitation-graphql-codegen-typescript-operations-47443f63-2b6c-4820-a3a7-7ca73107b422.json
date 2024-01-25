@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Bump",
+  "packageName": "@graphitation/graphql-codegen-typescript-operations",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
