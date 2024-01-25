@@ -17,14 +17,14 @@
   },
   "dependencies": {
     "@graphql-codegen/plugin-helpers": "^1.18.2",
-    "@graphql-codegen/typescript": "^1.18.1",
+    "@graphql-codegen/typescript": "^1.19.0",
     "@graphql-codegen/visitor-plugin-common": "^1.17.22",
     "auto-bind": "~4.0.0",
     "tslib": "~2.0.1"
   },
   "devDependencies": {
     "@graphql-codegen/testing": "1.17.7",
-    "@graphql-codegen/typescript": "^1.18.1"
+    "@graphql-codegen/typescript": "^1.19.0"
   },
   "peerDependencies": {
     "graphql": "^15.0.0"

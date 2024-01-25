@@ -5,10 +5,12 @@ import {
   NormalizedScalarsMap,
   ParsedEnumValuesMap,
 } from "@graphql-codegen/visitor-plugin-common";
+import { Kind, TypeNode } from "graphql";
 
 const BASIC_TYPES = ["string", "number", "boolean", "any"];
 export class TypeScriptOperationVariablesToObject extends TSOperationVariablesToObject {
   public isMaybeUsed = false;
+  public immutableTypes: boolean;
 
   constructor(
     _scalars: NormalizedScalarsMap,
@@ -34,6 +36,8 @@ export class TypeScriptOperationVariablesToObject extends TSOperationVariablesTo
       _enumValues,
       _applyCoercion,
     );
+
+    this.immutableTypes = _immutableTypes;
   }
 
   protected formatTypeString(
@@ -59,5 +63,40 @@ export class TypeScriptOperationVariablesToObject extends TSOperationVariablesTo
     }
 
     return super.getScalar(name);
+  }
+
+  private _clearOptional(str: string): string {
+    const rgx = new RegExp(`^${this.wrapMaybe(`(.*?)`)}$`, "i");
+
+    if (
+      str.startsWith(
+        `${
+          this._namespacedImportName ? `${this._namespacedImportName}.` : ""
+        }Maybe`,
+      )
+    ) {
+      return str.replace(rgx, "$1");
+    }
+
+    return str;
+  }
+
+  public wrapAstTypeWithModifiers(
+    baseType: string,
+    typeNode: TypeNode,
+  ): string {
+    if (typeNode.kind === Kind.NON_NULL_TYPE) {
+      const type = this.wrapAstTypeWithModifiers(baseType, typeNode.type);
+
+      return this._clearOptional(type);
+    } else if (typeNode.kind === Kind.LIST_TYPE) {
+      const innerType = this.wrapAstTypeWithModifiers(baseType, typeNode.type);
+
+      return this.wrapMaybe(
+        `${this.immutableTypes ? "ReadonlyArray" : "Array"}<${innerType}>`,
+      );
+    } else {
+      return this.wrapMaybe(baseType);
+    }
   }
 }
