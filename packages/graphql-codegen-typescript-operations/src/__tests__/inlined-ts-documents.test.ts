@@ -2778,9 +2778,9 @@ describe("TypeScript Operations Plugin", () => {
           password: string;
           input?: Maybe<InputType>;
           mandatoryInput: InputType;
-          testArray?: Maybe<Array<Maybe<string>> | Maybe<string>>;
-          requireString: Array<Maybe<string>> | Maybe<string>;
-          innerRequired: Array<string> | string;
+          testArray?: Maybe<Array<Maybe<string>>>;
+          requireString: Array<Maybe<string>>;
+          innerRequired: Array<string>;
         }>;`,
       );
       await validate(content, config);
@@ -5055,9 +5055,9 @@ function test(q: GetEntityBrandDataQuery): void {
 
       expect(content).toBeSimilarStringTo(`
       export type UserQueryVariables = Exact<{
-        testArray?: Maybe<Array<Maybe<string>> | Maybe<string>>;
-        requireString: Array<Maybe<string>> | Maybe<string>;
-        innerRequired: Array<string> | string;
+        testArray?: Maybe<Array<Maybe<string>>>;
+        requireString: Array<Maybe<string>>;
+        innerRequired: Array<string>;
       }>;`);
       await validate(content, config);
     });
