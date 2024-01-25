@@ -67,14 +67,10 @@ export class TypeScriptOperationVariablesToObject extends TSOperationVariablesTo
 
   private _clearOptional(str: string): string {
     const rgx = new RegExp(`^${this.wrapMaybe(`(.*?)`)}$`, "i");
-
-    if (
-      str.startsWith(
-        `${
-          this._namespacedImportName ? `${this._namespacedImportName}.` : ""
-        }Maybe`,
-      )
-    ) {
+    const maybeWithNamespace = `${
+      this._namespacedImportName ? `${this._namespacedImportName}.` : ""
+    }Maybe`;
+    if (str.startsWith(maybeWithNamespace) || str.startsWith("Maybe")) {
       return str.replace(rgx, "$1");
     }
 
