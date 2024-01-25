@@ -4003,6 +4003,7 @@ describe("TypeScript Operations Plugin", () => {
       );
 
       const output = await validate(content, config, testSchema);
+
       expect(mergeOutputs([output])).toMatchSnapshot();
 
       expect(output).toBeSimilarStringTo(`
