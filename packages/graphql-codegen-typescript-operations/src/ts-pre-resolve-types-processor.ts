@@ -6,6 +6,7 @@ import {
   PreResolveTypesProcessor as CodegenPreResolveTypesProcessor,
   PrimitiveField,
   ProcessResult,
+  SelectionSetProcessorConfig,
 } from "@graphql-codegen/visitor-plugin-common";
 import {
   GraphQLInterfaceType,
@@ -14,7 +15,17 @@ import {
   isNonNullType,
 } from "graphql";
 
+interface CustomSelectionSetProcessorConfig
+  extends SelectionSetProcessorConfig {
+  inlineCommonTypes?: boolean;
+}
 export class PreResolveTypesProcessor extends CodegenPreResolveTypesProcessor {
+  private inlineCommonTypes: boolean;
+
+  constructor(config: CustomSelectionSetProcessorConfig) {
+    super(config);
+    this.inlineCommonTypes = config.inlineCommonTypes ?? false;
+  }
   transformPrimitiveFields(
     schemaType: GraphQLObjectType | GraphQLInterfaceType,
     fields: PrimitiveField[],
@@ -36,14 +47,14 @@ export class PreResolveTypesProcessor extends CodegenPreResolveTypesProcessor {
 
       if (isEnumType(baseType)) {
         typeToUse =
-          (this.config.namespacedImportName
+          (this.config.namespacedImportName && this.inlineCommonTypes
             ? `${this.config.namespacedImportName}.`
             : "") +
           this.config.convertName(baseType.name, {
             useTypesPrefix: this.config.enumPrefix,
           });
-      } else if (this.config.scalars[baseType.name]) {
-        typeToUse = this.config.scalars[baseType.name];
+      } else if ((this.config.scalars as any)[baseType.name]) {
+        typeToUse = (this.config.scalars as any)[baseType.name];
       }
 
       const name = this.config.formatNamedField(
@@ -52,7 +63,7 @@ export class PreResolveTypesProcessor extends CodegenPreResolveTypesProcessor {
       );
       const wrappedType = this.config.wrapTypeWithModifiers(
         typeToUse,
-        useInnerType ? innerType : fieldObj.type,
+        useInnerType ? (innerType as any) : fieldObj.type,
       );
 
       return {

@@ -9,7 +9,6 @@ import {
   LoadedFragment,
   normalizeAvoidOptionals,
   ParsedDocumentsConfig,
-  PreResolveTypesProcessor,
   SelectionSetProcessorConfig,
   SelectionSetToObject,
   wrapTypeWithModifiers,
@@ -31,6 +30,7 @@ import {
 import { TypeScriptDocumentsPluginConfig } from "./config";
 import { TypeScriptOperationVariablesToObject } from "./ts-operation-variables-to-object";
 import { TypeScriptSelectionSetProcessor } from "./ts-selection-set-processor";
+import { PreResolveTypesProcessor } from "./ts-pre-resolve-types-processor";
 
 export interface TypeScriptDocumentsParsedConfig extends ParsedDocumentsConfig {
   avoidOptionals: AvoidOptionalsConfig;
@@ -45,6 +45,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
   TypeScriptDocumentsParsedConfig
 > {
   private usedTypes: Set<string>;
+  private usedEnums: Set<string>;
   private isExactUsed = false;
 
   constructor(
@@ -71,6 +72,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
     autoBind(this);
 
     this.usedTypes = new Set();
+    this.usedEnums = new Set();
     const wrapOptional = (type: string) => {
       const prefix =
         !this.config.inlineCommonTypes && this.config.namespacedImportName
@@ -91,6 +93,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
     ): string => {
       const optional =
         !this.config.avoidOptionals.field && !!type && !isNonNullType(type);
+
       return (
         (this.config.immutableTypes ? `readonly ${name}` : name) +
         (optional ? "?" : "")
@@ -100,7 +103,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
     const processorConfig: SelectionSetProcessorConfig = {
       namespacedImportName: this.config.namespacedImportName,
       convertName: this.convertName.bind(this),
-      enumPrefix: this.config.enumPrefix,
+      enumPrefix: false,
       scalars: this.scalars,
       formatNamedField,
       wrapTypeWithModifiers(baseType, type) {
@@ -111,6 +114,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
       },
       avoidOptionals: this.config.avoidOptionals,
     };
+
     const processor = new (
       config.preResolveTypes
         ? PreResolveTypesProcessor
@@ -138,10 +142,11 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
         this.config.immutableTypes,
         this.config.namespacedImportName,
         enumsNames,
-        this.config.enumPrefix,
+        false,
         this.config.enumValues,
         true,
         this.config.inlineCommonTypes,
+        this.usedEnums,
       ),
     );
     this._declarationBlockConfig = {
@@ -168,6 +173,18 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
       imports.push(`type Exact<T extends { [key: string]: unknown }> = {
         [K in keyof T]: T[K];
       }`);
+    }
+
+    if (this.config.inlineCommonTypes && this.usedEnums.size) {
+      for (const usedEnum of this.usedEnums.values()) {
+        const enumType = this.schema.getType(usedEnum) as GraphQLEnumType;
+        imports.push(
+          `export type ${usedEnum} = ${enumType
+            .getValues()
+            .map((value) => `"${value.name}"`)
+            .join(" | ")}`,
+        );
+      }
     }
 
     return imports;
@@ -218,7 +235,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
       } else if (
         this.schema.getType(fieldType.name) instanceof GraphQLEnumType
       ) {
-        this.usedTypes.add(fieldType.name);
+        this.usedEnums.add(fieldType.name);
       }
     }
   }
@@ -243,7 +260,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
         this.getAllEntitiesRelatedToInput(astNode);
       }
     } else if (this.schema.getType(convertedName) instanceof GraphQLEnumType) {
-      this.usedTypes.add(convertedName);
+      this.usedEnums.add(convertedName);
     }
 
     return super.convertName(node, options);
