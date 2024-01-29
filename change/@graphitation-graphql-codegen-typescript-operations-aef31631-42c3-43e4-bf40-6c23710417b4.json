@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Removed unused Maybe declaration",
-  "packageName": "@graphitation/graphql-codegen-typescript-operations",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
