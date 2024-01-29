@@ -74,10 +74,16 @@ export const plugin: PluginFunction<
     }`;
   }
 
+  const commonTypes = [];
+  if (config.inlineCommonTypes && content.includes("Maybe<")) {
+    commonTypes.push(`type Maybe<T> = T | null;`);
+  }
+
   return {
     prepend: [
       ...visitor.getImports(),
       ...visitor.getGlobalDeclarations(visitor.config.noExport),
+      ...commonTypes,
     ],
     content,
   };

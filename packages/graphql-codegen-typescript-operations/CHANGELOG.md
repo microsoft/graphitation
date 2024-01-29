@@ -1,8 +1,40 @@
 # Change Log - @graphitation/graphql-codegen-typescript-operations
 
-This log was last generated on Mon, 15 Jan 2024 17:55:46 GMT and should not be manually modified.
+This log was last generated on Mon, 29 Jan 2024 09:46:56 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.6.3
+
+Mon, 29 Jan 2024 09:46:56 GMT
+
+### Patches
+
+- Removed unused Maybe declaration (jakubvejr@microsoft.com)
+
+## 1.6.2
+
+Fri, 26 Jan 2024 18:01:48 GMT
+
+### Patches
+
+- Fixed Maybe for Non-Nullable types (jakubvejr@microsoft.com)
+
+## 1.6.1
+
+Wed, 24 Jan 2024 12:21:48 GMT
+
+### Patches
+
+- Variables inline Maybe and Scalars too (jakubvejr@microsoft.com)
+
+## 1.6.0
+
+Wed, 24 Jan 2024 11:02:46 GMT
+
+### Minor changes
+
+- Exact/Maybe and Basic scalars are inlined into documents (jakubvejr@microsoft.com)
 
 ## 1.5.0
 

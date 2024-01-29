@@ -123,7 +123,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = { noExport: true };
+      const config = { inlineCommonTypes: true, noExport: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -161,7 +161,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = { namespacedImportName: "Types" };
+      const config = { inlineCommonTypes: true, namespacedImportName: "Types" };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -221,7 +221,11 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = { namespacedImportName: "Types", preResolveTypes: true };
+      const config = {
+        inlineCommonTypes: true,
+        namespacedImportName: "Types",
+        preResolveTypes: true,
+      };
       const { content } = await plugin(
         testSchema,
         [{ location: "test-file.ts", document: ast }],
@@ -232,7 +236,7 @@ describe("TypeScript Operations Plugin", () => {
       );
 
       expect(content).toBeSimilarStringTo(
-        `export type TestQuery = { __typename?: 'Query', f?: Types.Maybe<Types.E>, user: { __typename?: 'User', id: string, f?: Types.Maybe<Types.E>, j?: Types.Maybe<any> } };`,
+        `export type TestQuery = { __typename?: 'Query', f?: Maybe<Types.E>, user: { __typename?: 'User', id: string, f?: Maybe<Types.E>, j?: Maybe<any> } };`,
       );
 
       await validate(content, config);
@@ -258,6 +262,7 @@ describe("TypeScript Operations Plugin", () => {
         }
       `);
       const config = {
+        inlineCommonTypes: true,
         namingConvention: "lower-case#lowerCase",
         immutableTypes: true,
       };
@@ -311,7 +316,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         testSchema,
         [{ location: "test-file.ts", document: doc }],
@@ -345,7 +350,10 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = { operationResultSuffix: "Result" };
+      const config = {
+        inlineCommonTypes: true,
+        operationResultSuffix: "Result",
+      };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -399,7 +407,10 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = { namingConvention: "lower-case#lowerCase" };
+      const config = {
+        inlineCommonTypes: true,
+        namingConvention: "lower-case#lowerCase",
+      };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -449,6 +460,7 @@ describe("TypeScript Operations Plugin", () => {
       `);
 
       const config = {
+        inlineCommonTypes: true,
         typesPrefix: "i",
         namingConvention: "lower-case#lowerCase",
       };
@@ -798,9 +810,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = {
-        skipTypeNameForRoot: true,
-      };
+      const config = { inlineCommonTypes: true, skipTypeNameForRoot: true };
       const { content } = await plugin(
         testSchema,
         [{ location: "test-file.ts", document: ast }],
@@ -837,6 +847,7 @@ describe("TypeScript Operations Plugin", () => {
         }
       `);
       const config = {
+        inlineCommonTypes: true,
         nonOptionalTypename: true,
         skipTypeNameForRoot: true,
       };
@@ -877,6 +888,7 @@ describe("TypeScript Operations Plugin", () => {
         }
       `);
       const config = {
+        inlineCommonTypes: true,
         nonOptionalTypename: true,
         skipTypeNameForRoot: true,
       };
@@ -953,6 +965,7 @@ describe("TypeScript Operations Plugin", () => {
         }
       `);
       const config = {
+        inlineCommonTypes: true,
         nonOptionalTypename: false,
         skipTypename: true,
         preResolveTypes: true,
@@ -981,7 +994,7 @@ describe("TypeScript Operations Plugin", () => {
           dummy
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -1027,7 +1040,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         testSchema,
         [{ location: "test-file.ts", document: ast }],
@@ -1058,7 +1071,7 @@ describe("TypeScript Operations Plugin", () => {
           dummy
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -1084,7 +1097,7 @@ describe("TypeScript Operations Plugin", () => {
           dummy
         }
       `);
-      const config = { preResolveTypes: true };
+      const config = { inlineCommonTypes: true, preResolveTypes: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -1106,7 +1119,7 @@ describe("TypeScript Operations Plugin", () => {
           dummy
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -1130,7 +1143,7 @@ describe("TypeScript Operations Plugin", () => {
           dummy
         }
       `);
-      const config = { nonOptionalTypename: true };
+      const config = { inlineCommonTypes: true, nonOptionalTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -1154,7 +1167,7 @@ describe("TypeScript Operations Plugin", () => {
           dummy
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -1179,7 +1192,7 @@ describe("TypeScript Operations Plugin", () => {
           dummy
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -1212,7 +1225,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -1255,7 +1268,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -1296,7 +1309,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -1333,7 +1346,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -1364,7 +1377,7 @@ describe("TypeScript Operations Plugin", () => {
           dummy
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -1392,7 +1405,7 @@ describe("TypeScript Operations Plugin", () => {
           dummy
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -1425,7 +1438,7 @@ describe("TypeScript Operations Plugin", () => {
           test
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
 
       try {
         await plugin(
@@ -1486,7 +1499,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         testSchema,
         [{ location: "test-file.ts", document: ast }],
@@ -1533,7 +1546,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         testSchema,
         [{ location: "test-file.ts", document: ast }],
@@ -1571,7 +1584,7 @@ describe("TypeScript Operations Plugin", () => {
           name
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         testSchema,
         [{ location: "test-file.ts", document: ast }],
@@ -1607,7 +1620,7 @@ describe("TypeScript Operations Plugin", () => {
           name
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         testSchema,
         [{ location: "test-file.ts", document: ast }],
@@ -1646,7 +1659,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         testSchema,
         [{ location: "test-file.ts", document: ast }],
@@ -1709,7 +1722,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         testSchema,
         [{ location: "test-file.ts", document: ast }],
@@ -1777,7 +1790,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         testSchema,
         [{ location: "test-file.ts", document: ast }],
@@ -1820,7 +1833,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -1851,7 +1864,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -1890,7 +1903,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = { skipTypename: false };
+      const config = { inlineCommonTypes: true, skipTypename: false };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -1968,7 +1981,7 @@ describe("TypeScript Operations Plugin", () => {
           y
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2045,7 +2058,7 @@ describe("TypeScript Operations Plugin", () => {
           bar
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2105,7 +2118,7 @@ describe("TypeScript Operations Plugin", () => {
           x
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2159,7 +2172,7 @@ describe("TypeScript Operations Plugin", () => {
         }
       `);
 
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2201,7 +2214,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2244,7 +2257,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2291,7 +2304,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = {};
+      const config = { inlineCommonTypes: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2333,7 +2346,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2369,7 +2382,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         gitHuntSchema,
         [{ location: "test-file.ts", document: ast }],
@@ -2381,7 +2394,7 @@ describe("TypeScript Operations Plugin", () => {
 
       expect(content).toBeSimilarStringTo(
         `export type MeQueryVariables = Exact<{
-          repoFullName: Scalars['String'];
+          repoFullName: string;
         }>;`,
       );
       expect(content).toBeSimilarStringTo(`
@@ -2410,7 +2423,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = { preResolveTypes: true };
+      const config = { inlineCommonTypes: true, preResolveTypes: true };
       const { content } = await plugin(
         gitHuntSchema,
         [{ location: "test-file.ts", document: ast }],
@@ -2460,7 +2473,7 @@ describe("TypeScript Operations Plugin", () => {
           info: Information
         }
       `);
-      const config = { preResolveTypes: true };
+      const config = { inlineCommonTypes: true, preResolveTypes: true };
       const { content } = await plugin(
         testSchema,
         [{ location: "test-file.ts", document: ast }],
@@ -2516,6 +2529,7 @@ describe("TypeScript Operations Plugin", () => {
         }
       `);
       const config = {
+        inlineCommonTypes: true,
         preResolveTypes: true,
         typesPrefix: "I",
         enumPrefix: false,
@@ -2546,7 +2560,7 @@ describe("TypeScript Operations Plugin", () => {
           dummy
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2571,7 +2585,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2603,7 +2617,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2634,7 +2648,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2667,7 +2681,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2692,7 +2706,7 @@ describe("TypeScript Operations Plugin", () => {
           dummy
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2716,7 +2730,7 @@ describe("TypeScript Operations Plugin", () => {
           }
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2747,7 +2761,7 @@ describe("TypeScript Operations Plugin", () => {
           dummy
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2759,14 +2773,14 @@ describe("TypeScript Operations Plugin", () => {
 
       expect(content).toBeSimilarStringTo(
         `export type TestQueryQueryVariables = Exact<{
-          username?: Maybe<Scalars['String']>;
-          email?: Maybe<Scalars['String']>;
-          password: Scalars['String'];
+          username?: Maybe<string>;
+          email?: Maybe<string>;
+          password: string;
           input?: Maybe<InputType>;
           mandatoryInput: InputType;
-          testArray?: Maybe<Array<Maybe<Scalars['String']>>>;
-          requireString: Array<Maybe<Scalars['String']>>;
-          innerRequired: Array<Scalars['String']>;
+          testArray?: Maybe<Array<Maybe<string>>>;
+          requireString: Array<Maybe<string>>;
+          innerRequired: Array<string>;
         }>;`,
       );
       await validate(content, config);
@@ -2778,7 +2792,7 @@ describe("TypeScript Operations Plugin", () => {
           dummy
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -2790,7 +2804,7 @@ describe("TypeScript Operations Plugin", () => {
 
       expect(content).toBeSimilarStringTo(
         `export type TestQueryQueryVariables = Exact<{
-          test?: Maybe<Scalars['DateTime']>;
+          test?: Maybe<any>;
         }>;`,
       );
       await validate(content, config);
@@ -2802,7 +2816,7 @@ describe("TypeScript Operations Plugin", () => {
           dummy
         }
       `);
-      const config = { skipTypename: true };
+      const config = { inlineCommonTypes: true, skipTypename: true };
       const { content } = await plugin(
         schema,
         [{ location: "test-file.ts", document: ast }],
@@ -3143,7 +3157,7 @@ describe("TypeScript Operations Plugin", () => {
       const { content } = await plugin(
         testSchema,
         [{ location: "", document: query }],
-        {},
+        { inlineCommonTypes: true },
         {
           outputFile: "graphql.ts",
         },
@@ -3151,7 +3165,7 @@ describe("TypeScript Operations Plugin", () => {
 
       expect(content).toBeSimilarStringTo(`
         export type UsersQueryVariables = Exact<{
-          reverse?: Maybe<Scalars['Boolean']>;
+          reverse?: Maybe<boolean>;
         }>;
       `);
     });
@@ -3880,9 +3894,7 @@ describe("TypeScript Operations Plugin", () => {
         }
       `);
 
-      const config = {
-        flattenGeneratedTypes: true,
-      };
+      const config = { inlineCommonTypes: true, flattenGeneratedTypes: true };
 
       const { content } = await plugin(
         testSchema,
@@ -3989,9 +4001,7 @@ describe("TypeScript Operations Plugin", () => {
         }
       `);
 
-      const config = {
-        flattenGeneratedTypes: true,
-      };
+      const config = { inlineCommonTypes: true, flattenGeneratedTypes: true };
 
       const { content } = await plugin(
         testSchema,
@@ -4084,9 +4094,7 @@ describe("TypeScript Operations Plugin", () => {
         }
       `);
 
-      const config = {
-        addOperationExport: true,
-      };
+      const config = { inlineCommonTypes: true, addOperationExport: true };
 
       const { content } = await plugin(
         testSchema,
@@ -4203,9 +4211,7 @@ describe("TypeScript Operations Plugin", () => {
         }
       `);
 
-      const config = {
-        flattenGeneratedTypes: true,
-      };
+      const config = { inlineCommonTypes: true, flattenGeneratedTypes: true };
 
       const { content } = await plugin(
         testSchema,
@@ -4330,9 +4336,7 @@ describe("TypeScript Operations Plugin", () => {
         }
       `);
 
-      const config = {
-        typesSuffix: "Type",
-      };
+      const config = { inlineCommonTypes: true, typesSuffix: "Type" };
 
       const { content } = await plugin(
         testSchema,
@@ -4404,7 +4408,7 @@ describe("TypeScript Operations Plugin", () => {
         }
       `);
 
-      const config = {};
+      const config = { inlineCommonTypes: true };
 
       const { content } = await plugin(
         testSchema,
@@ -4465,6 +4469,7 @@ describe("TypeScript Operations Plugin", () => {
       `);
 
       const config = {
+        inlineCommonTypes: true,
         skipTypename: true,
         preResolveTypes: true,
         namespacedImportName: "Types",
@@ -5038,7 +5043,7 @@ function test(q: GetEntityBrandDataQuery): void {
           }
         }
       `);
-      const config = { preResolveTypes: true };
+      const config = { inlineCommonTypes: true, preResolveTypes: true };
       const { content } = await plugin(
         schema,
         [{ location: "", document: ast }],
@@ -5050,9 +5055,9 @@ function test(q: GetEntityBrandDataQuery): void {
 
       expect(content).toBeSimilarStringTo(`
       export type UserQueryVariables = Exact<{
-        testArray?: Maybe<Array<Maybe<Scalars['String']>>>;
-        requireString: Array<Maybe<Scalars['String']>>;
-        innerRequired: Array<Scalars['String']>;
+        testArray?: Maybe<Array<Maybe<string>>>;
+        requireString: Array<Maybe<string>>;
+        innerRequired: Array<string>;
       }>;`);
       await validate(content, config);
     });
@@ -5144,6 +5149,7 @@ function test(q: GetEntityBrandDataQuery): void {
         schema,
         [{ location: "", document: fragment }],
         {
+          inlineCommonTypes: true,
           preResolveTypes: true,
         },
         {
@@ -5153,62 +5159,12 @@ function test(q: GetEntityBrandDataQuery): void {
 
       expect(content).toBeSimilarStringTo(`
       export type UserQueryVariables = Exact<{
-        showAddress: Scalars['Boolean'];
+        showAddress: boolean;
       }>;
 
       
       export type UserQuery = { __typename?: 'Query', user: { __typename?: 'User', name: string, address?: Maybe<string> } };`);
     });
-
-    // it('objects with @skip, @include should pre resolve into optional', async () => {
-    //   const schema = buildSchema(/* GraphQL */ `
-    //     type Query {
-    //       user: User!
-    //     }
-
-    //     type User {
-    //       id: String!
-    //       name: String!
-    //       address: Address!
-    //     }
-
-    //     type Address {
-    //       city: String!
-    //     }
-    //   `);
-
-    //   const fragment = parse(/* GraphQL */ `
-    //     query user($showAddress: Boolean!, $showName: Boolean!) {
-    //       user {
-    //         id
-    //         name @include(if: $showName)
-    //         address @include(if: $showAddress) {
-    //           city
-    //         }
-    //       }
-    //     }
-    //   `);
-
-    //   const { content } = await plugin(
-    //     schema,
-    //     [{ location: '', document: fragment }],
-    //     {
-    //       preResolveTypes: true,
-    //     },
-    //     {
-    //       outputFile: 'graphql.ts',
-    //     }
-    //   );
-
-    //   expect(content).toBeSimilarStringTo(`
-    //   export type UserQueryVariables = Exact<{
-    //     showAddress: Scalars['Boolean'];
-    //     showName: Scalars['Boolean'];
-    //   }>;
-
-    //   export type UserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, name?: Maybe<string>, address?: Maybe<{ __typename?: 'Address', city: string}> } };`);
-    // });
-
     it("fileds with @skip, @include should make container resolve into MakeOptional type", async () => {
       const schema = buildSchema(/* GraphQL */ `
         type Query {
@@ -5233,7 +5189,7 @@ function test(q: GetEntityBrandDataQuery): void {
       const { content } = await plugin(
         schema,
         [{ location: "", document: fragment }],
-        {},
+        { inlineCommonTypes: true },
         {
           outputFile: "graphql.ts",
         },
@@ -5241,7 +5197,7 @@ function test(q: GetEntityBrandDataQuery): void {
 
       expect(content).toBeSimilarStringTo(`
       export type UserQueryVariables = Exact<{
-        showName: Scalars['Boolean'];
+        showName: boolean;
       }>;
   
       
@@ -5282,6 +5238,7 @@ function test(q: GetEntityBrandDataQuery): void {
         [{ location: "", document: fragment }],
         {
           avoidOptionals: true,
+          inlineCommonTypes: true,
         },
         {
           outputFile: "graphql.ts",
