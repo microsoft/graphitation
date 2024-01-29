@@ -80,7 +80,9 @@ export class TypeScriptOperationVariablesToObject extends TSOperationVariablesTo
         });
 
         typeValue = `${
-          this.usedEnums.has(convertedName) ? "" : prefix
+          this.usedEnums.has(convertedName) && this.inlineCommonTypes
+            ? ""
+            : prefix
         }${convertedName}`;
       }
     }
