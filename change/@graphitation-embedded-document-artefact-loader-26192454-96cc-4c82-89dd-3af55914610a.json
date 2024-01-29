@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Remove trailing interpolations from Nova queries",
-  "packageName": "@graphitation/embedded-document-artefact-loader",
-  "email": "iukondra@microsoft.com",
-  "dependentChangeType": "patch"
-}
