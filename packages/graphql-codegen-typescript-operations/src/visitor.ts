@@ -145,7 +145,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
         this.config.immutableTypes,
         this.config.namespacedImportName,
         enumsNames,
-        false,
+        this.config.enumPrefix,
         this.config.enumValues,
         true,
         this.config.inlineCommonTypes,
