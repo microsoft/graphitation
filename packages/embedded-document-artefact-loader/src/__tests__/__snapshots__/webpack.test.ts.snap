@@ -70,3 +70,11 @@ exports[`webpackLoader works with invalid documents by not replacing them 1`] = 
         );
       "
 `;
+
+exports[`webpackLoader works with trailing interpolations 1`] = `
+"
+        import { graphql } from "@nova/react";
+        const doc = require("./__generated__/SomeComponentQuery.graphql").default;
+        console.log()
+      "
+`;

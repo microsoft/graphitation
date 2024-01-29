@@ -28,6 +28,9 @@ export function transform(
     (taggedTemplateExpression: string, sdl: string, offset: number) => {
       let documentName: string | undefined;
       try {
+        // Remove trailing interpolations from Nova queries and mutations
+        sdl = sdl.replace(/\$\{[a-zA-Z_][a-zA-Z0-9_.]*\}/g, '');
+
         // In the absence of parsing the full JS/TS file, we may run into false
         // positives. We detect this by attempting to parse the tagged template
         // expression. If it fails, we assume it is not a [valid] graphql tag.
