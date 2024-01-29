@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-typescript-operations",
   "entries": [
     {
+      "date": "Mon, 29 Jan 2024 20:37:47 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.7.0",
+      "version": "1.7.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "fa6a43aa3fee7e5d63237c883a01f1cf5d0fc501",
+            "comment": "Enums are inlined and used directly"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 29 Jan 2024 09:46:56 GMT",
       "tag": "@graphitation/graphql-codegen-typescript-operations_v1.6.3",
       "version": "1.6.3",
