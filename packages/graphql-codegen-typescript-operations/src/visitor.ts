@@ -11,6 +11,7 @@ import {
   ParsedDocumentsConfig,
   SelectionSetProcessorConfig,
   SelectionSetToObject,
+  PreResolveTypesProcessor as CodegenPreResolveTypesProcessor,
   wrapTypeWithModifiers,
 } from "@graphql-codegen/visitor-plugin-common";
 import autoBind from "auto-bind";
@@ -117,7 +118,9 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
 
     const processor = new (
       config.preResolveTypes
-        ? PreResolveTypesProcessor
+        ? config.inlineCommonTypes
+          ? PreResolveTypesProcessor
+          : CodegenPreResolveTypesProcessor
         : TypeScriptSelectionSetProcessor
     )(processorConfig);
     this.setSelectionSetHandler(
@@ -154,6 +157,15 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
     };
   }
 
+  private getExportNames(): string[] {
+    const exportNames: string[] = Array.from(this.usedTypes);
+
+    if (this.config.inlineCommonTypes) {
+      exportNames.concat(Array.from(this.usedEnums));
+    }
+
+    return exportNames;
+  }
   public getImports(): Array<string> {
     const imports = !this.config.globalNamespace
       ? this.config.fragmentImports
@@ -162,9 +174,11 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
           )
           .concat(
             this.config.baseTypesPath && this.usedTypes.size
-              ? `export ${this.config.isTypeOnly ? "type " : ""}{${Array.from(
-                  this.usedTypes,
-                ).join(",")}} from "${this.config.baseTypesPath}"`
+              ? `export ${
+                  this.config.isTypeOnly ? "type " : ""
+                }{${this.getExportNames().join(",")}} from "${
+                  this.config.baseTypesPath
+                }"`
               : "",
           )
       : [];
