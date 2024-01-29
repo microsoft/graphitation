@@ -161,7 +161,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
     const exportNames: string[] = Array.from(this.usedTypes);
 
     if (!this.config.inlineCommonTypes) {
-      exportNames.push(...Array.from(this.usedEnums));
+      exportNames.push(...this.usedEnums);
     }
 
     return exportNames;
