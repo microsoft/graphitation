@@ -17,7 +17,6 @@ export class TypeScriptSelectionSetProcessor extends BaseSelectionSetProcessor<S
       return [];
     }
 
-    console.log(0, fields);
     const parentName =
       (this.config.namespacedImportName
         ? `${this.config.namespacedImportName}.`
@@ -59,7 +58,6 @@ export class TypeScriptSelectionSetProcessor extends BaseSelectionSetProcessor<S
   }
 
   transformTypenameField(type: string, name: string): ProcessResult {
-    console.log(type);
     return [`{ ${name}: ${type} }`];
   }
 
@@ -70,7 +68,6 @@ export class TypeScriptSelectionSetProcessor extends BaseSelectionSetProcessor<S
     if (fields.length === 0) {
       return [];
     }
-    console.log(2, fields);
 
     const parentName =
       (this.config.namespacedImportName
@@ -98,7 +95,6 @@ export class TypeScriptSelectionSetProcessor extends BaseSelectionSetProcessor<S
     if (fields.length === 0) {
       return [];
     }
-    console.log(1, fields);
 
     return [
       `{ ${fields
