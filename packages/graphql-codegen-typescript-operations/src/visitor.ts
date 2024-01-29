@@ -45,7 +45,6 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
   TypeScriptDocumentsParsedConfig
 > {
   private usedTypes: Set<string>;
-  private isMaybeUsed = false;
   private isExactUsed = false;
 
   constructor(
@@ -73,7 +72,6 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
 
     this.usedTypes = new Set();
     const wrapOptional = (type: string) => {
-      this.isMaybeUsed = true;
       const prefix =
         !this.config.inlineCommonTypes && this.config.namespacedImportName
           ? `${this.config.namespacedImportName}.`
@@ -144,16 +142,11 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
         this.config.enumValues,
         true,
         this.config.inlineCommonTypes,
-        this.setIsMaybeUsed.bind(this),
       ),
     );
     this._declarationBlockConfig = {
       ignoreExport: this.config.noExport,
     };
-  }
-
-  public setIsMaybeUsed() {
-    this.isMaybeUsed = true;
   }
 
   public getImports(): Array<string> {
@@ -171,9 +164,6 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
           )
       : [];
 
-    if (this.config.inlineCommonTypes && this.isMaybeUsed) {
-      imports.push(`type Maybe<T> = T | null;`);
-    }
     if (this.config.inlineCommonTypes && this.isExactUsed) {
       imports.push(`type Exact<T extends { [key: string]: unknown }> = {
         [K in keyof T]: T[K];

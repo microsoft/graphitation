@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-typescript-operations",
   "entries": [
     {
+      "date": "Mon, 29 Jan 2024 09:46:56 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.6.3",
+      "version": "1.6.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "f6c621b7bea3d2e0bb91dd12485efc4f04dbbe10",
+            "comment": "Removed unused Maybe declaration"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 26 Jan 2024 18:01:48 GMT",
       "tag": "@graphitation/graphql-codegen-typescript-operations_v1.6.2",
       "version": "1.6.2",

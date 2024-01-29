@@ -9,7 +9,6 @@ import { Kind, TypeNode } from "graphql";
 
 const BASIC_TYPES = ["string", "number", "boolean", "any"];
 export class TypeScriptOperationVariablesToObject extends TSOperationVariablesToObject {
-  public isMaybeUsed = false;
   public immutableTypes: boolean;
 
   constructor(
@@ -23,7 +22,6 @@ export class TypeScriptOperationVariablesToObject extends TSOperationVariablesTo
     _enumValues: ParsedEnumValuesMap = {},
     _applyCoercion = false,
     protected inlineCommonTypes = false,
-    protected setIsMaybeUsed: () => void,
   ) {
     super(
       _scalars,
@@ -50,7 +48,6 @@ export class TypeScriptOperationVariablesToObject extends TSOperationVariablesTo
 
   protected wrapMaybe(type?: string) {
     if (this.inlineCommonTypes) {
-      this.setIsMaybeUsed();
       return `Maybe${type ? `<${type}>` : ""}`;
     }
 

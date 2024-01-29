@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-typescript-operations
 
-This log was last generated on Fri, 26 Jan 2024 18:01:48 GMT and should not be manually modified.
+This log was last generated on Mon, 29 Jan 2024 09:46:56 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.6.3
+
+Mon, 29 Jan 2024 09:46:56 GMT
+
+### Patches
+
+- Removed unused Maybe declaration (jakubvejr@microsoft.com)
 
 ## 1.6.2
 
