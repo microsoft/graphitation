@@ -14,7 +14,7 @@ export type compiledHooks_ForwardPaginationFragment = {
             };
         }>;
     };
-    readonly id?: string | undefined;
+    readonly id: string;
     readonly " $refType": "compiledHooks_ForwardPaginationFragment";
 };
 export type compiledHooks_ForwardPaginationFragment$data = compiledHooks_ForwardPaginationFragment;

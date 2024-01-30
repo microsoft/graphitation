@@ -283,8 +283,8 @@ body {
   margin-bottom: -1px;
 }
 
-.todo-list li.load-more input,
-.todo-list li.load-more div.lds-spinner {
+.todo-list li.action input,
+.todo-list li.action div.lds-spinner {
   display: block;
   height: 40px;
   margin: 10px auto;

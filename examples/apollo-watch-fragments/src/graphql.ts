@@ -16,60 +16,60 @@ import {
 const schemaSource: string = require("../data/schema.graphql");
 
 const TODOS_FIXTURE = `
-Clean counter tops
-Clean microwave inside/outside
-Wipe down cabinets/hardware
-Clean outside of appliances
-Polish stainless steel appliances
-Clean refrigerator inside
-Clean range vent/filter
-Clean and sanitize sinks
-Sweep and wash floors
-Clean windows/window treatments
-Clean/polish table and chairs
-Sweep/mop hard floors
-Vacuum carpets/area rugs
-Clean/sanitize sinks
-Clean/sanitize tubs, shower, toilet
-Clean mirrors and glass
-Clean and polish fixtures
-Dust light fixtures and bulbs
-Wash floors
-Change sheets
-Dust furniture/shelves
-Vacuum floor
-Wash windows
-Empty wastebaskets
-Dust light fixtures
-Put away clean laundry
-Dust/mop baseboards
-Dust all hard surfaces/shelves/blinds
-Vacuum carpets/area rugs
-Sweep/mop hard floors
-Vacuum upholstered furniture
-Polish wood
-Clean windows/window treatments
-Dust office surfaces/equipment
-File or toss loose mail/paperwork
-Clean windows/window treatments
-Sweep/mop hard floors
-Vacuum carpets/area rugs
-Vacuum carpets/area rugs
-Sweep/mop hard floors
-Dust cobwebs; ceiling/baseboard
-Clean windows/window treatments
-Clean washer and dryer exteriors
-Clean inside rim of washer
-Change/clean lint traps
-Dust light fixtures and bulbs
-Empty wastebasket
-Sweep and mop floor
-Clean laundry sink and fixtures
-Clean laundry counter/hamper
-Empty wastebaskets
-Organize/dust shelves
-Sweep/mop floor
-Put away tools/supplies
+01. Clean counter tops
+02. Clean microwave inside/outside
+03. Wipe down cabinets/hardware
+04. Clean outside of appliances
+05. Polish stainless steel appliances
+06. Clean refrigerator inside
+07. Clean range vent/filter
+08. Clean and sanitize sinks
+09. Sweep and wash floors
+10. Clean windows/window treatments
+11. Clean/polish table and chairs
+12. Sweep/mop hard floors
+13. Vacuum carpets/area rugs
+14. Clean/sanitize sinks
+15. Clean/sanitize tubs, shower, toilet
+16. Clean mirrors and glass
+17. Clean and polish fixtures
+18. Dust light fixtures and bulbs
+19. Wash floors
+20. Change sheets
+21. Dust furniture/shelves
+22. Vacuum floor
+23. Wash windows
+24. Empty wastebaskets
+25. Dust light fixtures
+26. Put away clean laundry
+27. Dust/mop baseboards
+28. Dust all hard surfaces/shelves/blinds
+29. Vacuum carpets/area rugs
+30. Sweep/mop hard floors
+31. Vacuum upholstered furniture
+32. Polish wood
+33. Clean windows/window treatments
+34. Dust office surfaces/equipment
+35. File or toss loose mail/paperwork
+36. Clean windows/window treatments
+37. Sweep/mop hard floors
+38. Vacuum carpets/area rugs
+39. Vacuum carpets/area rugs
+40. Sweep/mop hard floors
+41. Dust cobwebs; ceiling/baseboard
+42. Clean windows/window treatments
+43. Clean washer and dryer exteriors
+44. Clean inside rim of washer
+45. Change/clean lint traps
+46. Dust light fixtures and bulbs
+47. Empty wastebasket
+48. Sweep and mop floor
+49. Clean laundry sink and fixtures
+50. Clean laundry counter/hamper
+51. Empty wastebaskets
+52. Organize/dust shelves
+53. Sweep/mop floor
+54. Put away tools/supplies
 `;
 
 interface Context {
@@ -102,7 +102,13 @@ const resolvers: Resolvers<Context> = {
         // loading indicator.
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
-      return connectionFromArray(context.db.getTodos(), args);
+      const todos = [...context.db.getTodos()].sort((a, b) => {
+        if (args.sortByOrder === "DESC") {
+          return b.description.localeCompare(a.description);
+        }
+        return a.description.localeCompare(b.description);
+      });
+      return connectionFromArray(todos, args);
     },
   },
   Mutation: {

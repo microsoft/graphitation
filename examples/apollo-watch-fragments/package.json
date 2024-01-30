@@ -12,7 +12,7 @@
     "react-dom": "^17.0.2"
   },
   "scripts": {
-    "start": "yarn generate-resolver-typings && concurrently 'yarn duct-tape-compiler --watch' 'yarn serve'",
+    "start": "yarn generate-resolver-typings && concurrently \"yarn duct-tape-compiler --watch\" \"yarn serve\"",
     "serve": "webpack serve",
     "build": "webpack",
     "duct-tape-compiler": "duct-tape-compiler --schema ./data/schema.graphql --src ./src --emitQueryDebugComments",
