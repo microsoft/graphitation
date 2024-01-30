@@ -2,6 +2,21 @@
   "name": "@graphitation/embedded-document-artefact-loader",
   "entries": [
     {
+      "date": "Mon, 29 Jan 2024 22:07:50 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.6.9",
+      "version": "0.6.9",
+      "comments": {
+        "patch": [
+          {
+            "author": "iukondra@microsoft.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "1ba77be0bbc4aaf7995361e6043290b365b4772a",
+            "comment": "Remove trailing interpolations from Nova queries"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 31 Oct 2023 00:45:05 GMT",
       "tag": "@graphitation/embedded-document-artefact-loader_v0.6.8",
       "version": "0.6.8",

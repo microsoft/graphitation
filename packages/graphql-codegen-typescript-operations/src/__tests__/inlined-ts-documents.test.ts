@@ -236,7 +236,7 @@ describe("TypeScript Operations Plugin", () => {
       );
 
       expect(content).toBeSimilarStringTo(
-        `export type TestQuery = { __typename?: 'Query', f?: Maybe<Types.E>, user: { __typename?: 'User', id: string, f?: Maybe<Types.E>, j?: Maybe<any> } };`,
+        `export type TestQuery = { __typename?: 'Query', f?: Maybe<E>, user: { __typename?: 'User', id: string, f?: Maybe<E>, j?: Maybe<any> } };`,
       );
 
       await validate(content, config);

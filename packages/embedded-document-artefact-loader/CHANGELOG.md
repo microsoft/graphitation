@@ -1,8 +1,16 @@
 # Change Log - @graphitation/embedded-document-artefact-loader
 
-This log was last generated on Tue, 31 Oct 2023 00:45:05 GMT and should not be manually modified.
+This log was last generated on Mon, 29 Jan 2024 22:07:50 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.6.9
+
+Mon, 29 Jan 2024 22:07:50 GMT
+
+### Patches
+
+- Remove trailing interpolations from Nova queries (iukondra@microsoft.com)
 
 ## 0.6.8
 

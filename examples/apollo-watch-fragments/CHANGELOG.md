@@ -1,8 +1,16 @@
 # Change Log - apollo-watch-fragments
 
-This log was last generated on Tue, 16 Jan 2024 04:23:53 GMT and should not be manually modified.
+This log was last generated on Mon, 29 Jan 2024 22:07:50 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.1.0
+
+Mon, 29 Jan 2024 22:07:50 GMT
+
+### Patches
+
+- Bump @graphitation/embedded-document-artefact-loader to v0.6.9
 
 ## 0.1.0
 
