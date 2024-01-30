@@ -5,7 +5,7 @@ interface Node {
 }
 
 type Query {
-  user(id: Int!): User!
+  user(id: Int!, idThatDoesntOverride: String): User!
   node(id: ID!): Node
   nonNode: NonNode!
 }

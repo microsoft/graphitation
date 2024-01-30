@@ -38,9 +38,9 @@ export function useCompiledFragment(
         query: watchQueryDocument,
         returnPartialData: false,
         variables: {
+          ...fragmentReference.__fragments,
           id: fragmentReference.id,
           __fragments: fragmentReference.__fragments,
-          ...fragmentReference.__fragments,
         },
       }),
     [client, fragmentReference.id, fragmentReference.__fragments],
@@ -65,6 +65,16 @@ export function useCompiledFragment(
   }, [observableQuery]);
 
   const result = observableQuery.getCurrentResult();
+  if (result.partial) {
+    invariant(
+      false,
+      "useFragment(): Missing data expected to be seeded by the execution query document",
+      // TODO: queryInfo is private member and we can't access it, can we access last diff in other way?
+      // JSON.stringify(
+      //   observableQuery.queryInfo.lastDiff?.diff?.missing?.map((e) => e.path),
+      // ),
+    );
+  }
   let data = result.data;
   if (metadata?.rootSelection) {
     data = data[metadata.rootSelection];
