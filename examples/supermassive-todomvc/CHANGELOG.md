@@ -1,8 +1,16 @@
 # Change Log - supermassive-todomvc
 
-This log was last generated on Tue, 16 Jan 2024 04:23:53 GMT and should not be manually modified.
+This log was last generated on Tue, 30 Jan 2024 10:24:57 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.1-0
+
+Tue, 30 Jan 2024 10:24:57 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape to v1.0.29
 
 ## 1.0.1-0
 

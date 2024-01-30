@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Tue, 30 Jan 2024 10:24:57 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v1.0.29",
+      "version": "1.0.29",
+      "comments": {
+        "patch": [
+          {
+            "author": "Stanislaw.Wilczynski@microsoft.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "f93514e68fa778b9e9a7d4b8d4a64c61ca1f9b84",
+            "comment": "make sure pagination respected variables used in refetch"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 16 Jan 2024 04:23:53 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v1.0.28",
       "version": "1.0.28",

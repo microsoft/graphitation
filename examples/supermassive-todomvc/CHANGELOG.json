@@ -2,6 +2,21 @@
   "name": "supermassive-todomvc",
   "entries": [
     {
+      "date": "Tue, 30 Jan 2024 10:24:57 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.0.29",
+            "commit": "f93514e68fa778b9e9a7d4b8d4a64c61ca1f9b84"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 16 Jan 2024 04:23:53 GMT",
       "tag": "supermassive-todomvc_v1.0.1-0",
       "version": "1.0.1-0",

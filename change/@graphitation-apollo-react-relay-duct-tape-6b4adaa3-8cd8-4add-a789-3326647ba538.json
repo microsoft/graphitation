@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "make sure pagination respected variables used in refetch",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape",
-  "email": "Stanislaw.Wilczynski@microsoft.com",
-  "dependentChangeType": "patch"
-}
