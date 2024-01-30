@@ -74,9 +74,9 @@ export function useCompiledFragment(
         // we need the cast because queryInfo and lastDiff are private but very useful for debugging
         (
           observableQuery as unknown as {
-            queryInfo: { lastDiff: { diff: Cache.DiffResult<unknown> } };
+            queryInfo: { lastDiff?: { diff?: Cache.DiffResult<unknown> } };
           }
-        ).queryInfo.lastDiff?.diff?.missing?.map((e) => e.path),
+        ).queryInfo?.lastDiff?.diff?.missing?.map((e) => e.path),
       ),
     );
   }
