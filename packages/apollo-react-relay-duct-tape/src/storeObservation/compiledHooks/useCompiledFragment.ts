@@ -5,6 +5,7 @@ import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultAp
 
 import type { FragmentReference } from "./types";
 import type { CompiledArtefactModule } from "@graphitation/apollo-react-relay-duct-tape-compiler";
+import { Cache } from "@apollo/client/core";
 
 /**
  * @param documents Compiled watch query document that is used to setup a narrow
@@ -68,11 +69,15 @@ export function useCompiledFragment(
   if (result.partial) {
     invariant(
       false,
-      "useFragment(): Missing data expected to be seeded by the execution query document",
-      // TODO: queryInfo is private member and we can't access it, can we access last diff in other way?
-      // JSON.stringify(
-      //   observableQuery.queryInfo.lastDiff?.diff?.missing?.map((e) => e.path),
-      // ),
+      "useFragment(): Missing data expected to be seeded by the execution query document %s",
+      JSON.stringify(
+        // we need the cast because queryInfo and lastDiff are private but very useful for debugging
+        (
+          observableQuery as unknown as {
+            queryInfo: { lastDiff: { diff: Cache.DiffResult<unknown> } };
+          }
+        ).queryInfo.lastDiff?.diff?.missing?.map((e) => e.path),
+      ),
     );
   }
   let data = result.data;
