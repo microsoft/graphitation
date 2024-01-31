@@ -1,0 +1,7 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "warn"
+  },
+  "root": true
+}

@@ -1,0 +1,11 @@
+query QueryOne {
+  conversation(id: "42") {
+    __typename
+  }
+}
+
+query QueryTwo {
+  conversation(id: "42") {
+    id
+  }
+}

@@ -1,0 +1,13 @@
+subscription TodoUpdatesSubscription {
+  todoUpdated {
+    __typename
+    id
+    ...TodoSubscriptionFragment
+  }
+}
+
+fragment TodoSubscriptionFragment on Todo {
+  id
+  text
+  isCompleted
+}

@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": ".tsbuildinfo",
+    "rootDir": "src",
+    "outDir": "lib",
+    "lib": ["esnext", "dom"],
+    "jsx": "react"
+  },
+  "include": ["src"],
+  "references": [
+    // { "path": "../graphql-codegen-relay-ir-plugin" },
+    { "path": "../graphql-codegen-supermassive-typed-document-node-plugin" },
+    { "path": "../graphql-codegen-typescript-operations" }
+  ]
+}

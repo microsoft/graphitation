@@ -19,6 +19,29 @@ index afbbcd0..d93d0af 100644
          fieldName: fieldName,
          storeFieldName: storeFieldName,
          variables: variables,
+diff --git a/node_modules/@apollo/client/cache/core/types/DataProxy.d.ts b/node_modules/@apollo/client/cache/core/types/DataProxy.d.ts
+index ce97ef7..fab7252 100644
+--- a/node_modules/@apollo/client/cache/core/types/DataProxy.d.ts
++++ b/node_modules/@apollo/client/cache/core/types/DataProxy.d.ts
+@@ -1,15 +1,16 @@
+ import { DocumentNode } from 'graphql';
+ import { TypedDocumentNode } from '@graphql-typed-document-node/core';
++import { GraphQLTaggedNode } from "relay-runtime";
+ import { MissingFieldError } from './common';
+ export declare namespace DataProxy {
+     interface Query<TVariables, TData> {
+-        query: DocumentNode | TypedDocumentNode<TData, TVariables>;
++        query: (DocumentNode | TypedDocumentNode<TData, TVariables>) & { __relay?: GraphQLTaggedNode };
+         variables?: TVariables;
+         id?: string;
+     }
+     interface Fragment<TVariables, TData> {
+         id?: string;
+-        fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
++        fragment: (DocumentNode | TypedDocumentNode<TData, TVariables>) & { __relay?: GraphQLTaggedNode };
+         fragmentName?: string;
+         variables?: TVariables;
+     }
 diff --git a/node_modules/@apollo/client/cache/inmemory/policies.d.ts b/node_modules/@apollo/client/cache/inmemory/policies.d.ts
 index 6a93238..fdef0a4 100644
 --- a/node_modules/@apollo/client/cache/inmemory/policies.d.ts

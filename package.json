@@ -17,7 +17,7 @@
     "lint": "lage lint --continue",
     "lage": "lage",
     "ci": "yarn lage build types test lint && yarn checkchange",
-    "beachball": "beachball -b origin/main",
+    "beachball": "beachball -b origin/alloy/relay-apollo-duct-tape",
     "change": "yarn beachball change",
     "checkchange": "yarn beachball check",
     "release": "yarn beachball publish -t latest",
@@ -33,8 +33,11 @@
     "@graphql-eslint/eslint-plugin": "^3.7.0"
   },
   "resolutions": {
+    "@types/relay-runtime": "^14.1.2",
+    "relay-runtime": "^15.0.0",
     "cross-fetch": "^3.1.5",
     "glob-parent": "^6.0.2",
+    "graphql": "^15.5.0",
     "minimist": "^1.2.6",
     "node-fetch": "^2.6.7",
     "node-forge": "^1.3.1",

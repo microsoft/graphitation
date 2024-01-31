@@ -1,0 +1,20 @@
+mutation CreateTodoMutation($input: CreateTodoInput!) {
+  createTodo(input: $input) {
+    __typename
+    ... on CreateTodoSuccess {
+      todo {
+        ...CreateTodoMutationFragment
+      }
+    }
+    ... on CreateTodoFailure {
+      reason
+    }
+  }
+}
+
+fragment CreateTodoMutationFragment on Todo {
+  __typename
+  id
+  text
+  isCompleted
+}

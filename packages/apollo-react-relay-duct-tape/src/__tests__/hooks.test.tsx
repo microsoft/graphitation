@@ -164,7 +164,9 @@ const MutationComponent: React.FC<{
 let client: ApolloMockClient;
 
 beforeEach(() => {
-  client = createMockClient(schema, { cache: { addTypename: false } });
+  client = createMockClient(schema, {
+    inMemoryCacheConfig: { addTypename: false },
+  });
 });
 
 describe(useLazyLoadQuery, () => {

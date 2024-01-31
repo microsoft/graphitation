@@ -1,0 +1,4 @@
+fragment CacheTestFragment on Conversation {
+  id
+  title
+}

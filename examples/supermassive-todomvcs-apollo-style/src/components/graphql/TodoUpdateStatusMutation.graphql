@@ -1,0 +1,15 @@
+mutation TodoUpdateStatusMutation($input: SetTodoCompletedInput!) {
+  setTodoCompleted(input: $input) {
+    __typename
+    ... on SetTodoCompletedSuccess {
+      todo {
+        __typename
+        id
+        isCompleted
+      }
+    }
+    ... on SetTodoCompletedFailure {
+      reason
+    }
+  }
+}

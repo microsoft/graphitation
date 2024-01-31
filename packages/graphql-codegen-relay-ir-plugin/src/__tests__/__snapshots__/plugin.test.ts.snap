@@ -1,0 +1,750 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`plugin adds __typename selections for abstract types 1`] = `
+"(AbstractTypeDocument as any).__relay = (function(){
+var v0 = [
+  {
+    "alias": null,
+    "args": [
+      {
+        "kind": "Literal",
+        "name": "id",
+        "value": "42"
+      }
+    ],
+    "concreteType": null,
+    "kind": "LinkedField",
+    "name": "node",
+    "plural": false,
+    "selections": [
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "id",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "__typename",
+        "storageKey": null
+      }
+    ],
+    "storageKey": "node(id:\\"42\\")"
+  }
+];
+return {
+  "fragment": {
+    "argumentDefinitions": [],
+    "kind": "Fragment",
+    "metadata": null,
+    "name": "AbstractType",
+    "selections": (v0/*: any*/),
+    "type": "Query",
+    "abstractKey": null
+  },
+  "kind": "Request",
+  "operation": {
+    "argumentDefinitions": [],
+    "kind": "Operation",
+    "name": "AbstractType",
+    "selections": (v0/*: any*/)
+  },
+  "params": {
+    "cacheID": "b0e97e319cfdd8a7251be99fa78aa658",
+    "metadata": {},
+    "name": "AbstractType",
+    "operationKind": "query",
+    "text": null
+  }
+};
+})();
+(AbstractTypeDocument as any).__relay.hash = "b0e97e319cfdd8a7251be99fa78aa658";"
+`;
+
+exports[`plugin emits connection metadata 1`] = `
+"(ConnectionQueryDocument as any).__relay = (function(){
+var v0 = [
+  {
+    "kind": "Literal",
+    "name": "id",
+    "value": "42"
+  }
+],
+v1 = {
+  "kind": "Literal",
+  "name": "sort",
+  "value": "DESC"
+},
+v2 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "id",
+  "storageKey": null
+},
+v3 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "__typename",
+  "storageKey": null
+},
+v4 = [
+  {
+    "alias": null,
+    "args": null,
+    "concreteType": "MessagesConnectionEdge",
+    "kind": "LinkedField",
+    "name": "edges",
+    "plural": true,
+    "selections": [
+      {
+        "alias": null,
+        "args": null,
+        "concreteType": "Message",
+        "kind": "LinkedField",
+        "name": "node",
+        "plural": false,
+        "selections": [
+          (v2/*: any*/),
+          (v3/*: any*/)
+        ],
+        "storageKey": null
+      },
+      (v3/*: any*/),
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "cursor",
+        "storageKey": null
+      }
+    ],
+    "storageKey": null
+  },
+  (v3/*: any*/),
+  {
+    "alias": null,
+    "args": null,
+    "concreteType": "PageInfo",
+    "kind": "LinkedField",
+    "name": "pageInfo",
+    "plural": false,
+    "selections": [
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "endCursor",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "hasNextPage",
+        "storageKey": null
+      }
+    ],
+    "storageKey": null
+  }
+],
+v5 = [
+  {
+    "kind": "Literal",
+    "name": "deferPresence",
+    "value": true
+  },
+  {
+    "kind": "Literal",
+    "name": "first",
+    "value": 10
+  },
+  (v1/*: any*/)
+];
+return {
+  "fragment": {
+    "argumentDefinitions": [],
+    "kind": "Fragment",
+    "metadata": null,
+    "name": "ConnectionQuery",
+    "selections": [
+      {
+        "alias": null,
+        "args": (v0/*: any*/),
+        "concreteType": "Conversation",
+        "kind": "LinkedField",
+        "name": "conversation",
+        "plural": false,
+        "selections": [
+          {
+            "alias": "messages",
+            "args": [
+              (v1/*: any*/)
+            ],
+            "concreteType": "MessagesConnection",
+            "kind": "LinkedField",
+            "name": "__Connection_messages_connection",
+            "plural": false,
+            "selections": (v4/*: any*/),
+            "storageKey": "__Connection_messages_connection(sort:\\"DESC\\")"
+          },
+          (v3/*: any*/)
+        ],
+        "storageKey": "conversation(id:\\"42\\")"
+      }
+    ],
+    "type": "Query",
+    "abstractKey": null
+  },
+  "kind": "Request",
+  "operation": {
+    "argumentDefinitions": [],
+    "kind": "Operation",
+    "name": "ConnectionQuery",
+    "selections": [
+      {
+        "alias": null,
+        "args": (v0/*: any*/),
+        "concreteType": "Conversation",
+        "kind": "LinkedField",
+        "name": "conversation",
+        "plural": false,
+        "selections": [
+          {
+            "alias": null,
+            "args": (v5/*: any*/),
+            "concreteType": "MessagesConnection",
+            "kind": "LinkedField",
+            "name": "messages",
+            "plural": false,
+            "selections": (v4/*: any*/),
+            "storageKey": "messages(deferPresence:true,first:10,sort:\\"DESC\\")"
+          },
+          {
+            "alias": null,
+            "args": (v5/*: any*/),
+            "filters": [
+              "sort"
+            ],
+            "handle": "connection",
+            "key": "Connection_messages",
+            "kind": "LinkedHandle",
+            "name": "messages"
+          },
+          (v3/*: any*/),
+          (v2/*: any*/)
+        ],
+        "storageKey": "conversation(id:\\"42\\")"
+      }
+    ]
+  },
+  "params": {
+    "cacheID": "dc085550152a35010da2467e00bb6516",
+    "metadata": {},
+    "name": "ConnectionQuery",
+    "operationKind": "query",
+    "text": null
+  }
+};
+})();
+(ConnectionQueryDocument as any).__relay.hash = "dc085550152a35010da2467e00bb6516";
+(Messages_conversationFragmentDoc as any).__relay = (function(){
+var v0 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "__typename",
+  "storageKey": null
+};
+return {
+  "argumentDefinitions": [],
+  "kind": "Fragment",
+  "metadata": {
+    "connection": [
+      {
+        "count": null,
+        "cursor": null,
+        "direction": "forward",
+        "path": [
+          "messages"
+        ]
+      }
+    ]
+  },
+  "name": "Messages_conversation",
+  "selections": [
+    {
+      "alias": "messages",
+      "args": [
+        {
+          "kind": "Literal",
+          "name": "sort",
+          "value": "DESC"
+        }
+      ],
+      "concreteType": "MessagesConnection",
+      "kind": "LinkedField",
+      "name": "__Connection_messages_connection",
+      "plural": false,
+      "selections": [
+        {
+          "alias": null,
+          "args": null,
+          "concreteType": "MessagesConnectionEdge",
+          "kind": "LinkedField",
+          "name": "edges",
+          "plural": true,
+          "selections": [
+            {
+              "alias": null,
+              "args": null,
+              "concreteType": "Message",
+              "kind": "LinkedField",
+              "name": "node",
+              "plural": false,
+              "selections": [
+                {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "id",
+                  "storageKey": null
+                },
+                (v0/*: any*/)
+              ],
+              "storageKey": null
+            },
+            (v0/*: any*/),
+            {
+              "alias": null,
+              "args": null,
+              "kind": "ScalarField",
+              "name": "cursor",
+              "storageKey": null
+            }
+          ],
+          "storageKey": null
+        },
+        (v0/*: any*/),
+        {
+          "alias": null,
+          "args": null,
+          "concreteType": "PageInfo",
+          "kind": "LinkedField",
+          "name": "pageInfo",
+          "plural": false,
+          "selections": [
+            {
+              "alias": null,
+              "args": null,
+              "kind": "ScalarField",
+              "name": "endCursor",
+              "storageKey": null
+            },
+            {
+              "alias": null,
+              "args": null,
+              "kind": "ScalarField",
+              "name": "hasNextPage",
+              "storageKey": null
+            }
+          ],
+          "storageKey": null
+        }
+      ],
+      "storageKey": "__Connection_messages_connection(sort:\\"DESC\\")"
+    },
+    (v0/*: any*/)
+  ],
+  "type": "Conversation",
+  "abstractKey": null
+};
+})();
+(Messages_conversationFragmentDoc as any).__relay.hash = "24b79d122bbfb2fa8f8a86603c6dd84f";"
+`;
+
+exports[`plugin generates a ConcreteRequest for an operation 1`] = `
+"(SomeQueryDocument as any).__relay = (function(){
+var v0 = [
+  {
+    "kind": "Literal",
+    "name": "id",
+    "value": "42"
+  }
+],
+v1 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "id",
+  "storageKey": null
+},
+v2 = [
+  {
+    "kind": "Literal",
+    "name": "first",
+    "value": 10
+  }
+],
+v3 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "text",
+  "storageKey": null
+},
+v4 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "__typename",
+  "storageKey": null
+};
+return {
+  "fragment": {
+    "argumentDefinitions": [],
+    "kind": "Fragment",
+    "metadata": null,
+    "name": "SomeQuery",
+    "selections": [
+      {
+        "alias": null,
+        "args": (v0/*: any*/),
+        "concreteType": "Conversation",
+        "kind": "LinkedField",
+        "name": "conversation",
+        "plural": false,
+        "selections": [
+          (v1/*: any*/),
+          {
+            "alias": null,
+            "args": (v2/*: any*/),
+            "concreteType": "MessagesConnection",
+            "kind": "LinkedField",
+            "name": "messages",
+            "plural": false,
+            "selections": [
+              {
+                "alias": null,
+                "args": null,
+                "concreteType": "MessagesConnectionEdge",
+                "kind": "LinkedField",
+                "name": "edges",
+                "plural": true,
+                "selections": [
+                  {
+                    "alias": null,
+                    "args": null,
+                    "concreteType": "Message",
+                    "kind": "LinkedField",
+                    "name": "node",
+                    "plural": false,
+                    "selections": [
+                      (v3/*: any*/)
+                    ],
+                    "storageKey": null
+                  }
+                ],
+                "storageKey": null
+              }
+            ],
+            "storageKey": "messages(first:10)"
+          },
+          (v4/*: any*/)
+        ],
+        "storageKey": "conversation(id:\\"42\\")"
+      }
+    ],
+    "type": "Query",
+    "abstractKey": null
+  },
+  "kind": "Request",
+  "operation": {
+    "argumentDefinitions": [],
+    "kind": "Operation",
+    "name": "SomeQuery",
+    "selections": [
+      {
+        "alias": null,
+        "args": (v0/*: any*/),
+        "concreteType": "Conversation",
+        "kind": "LinkedField",
+        "name": "conversation",
+        "plural": false,
+        "selections": [
+          (v1/*: any*/),
+          {
+            "alias": null,
+            "args": (v2/*: any*/),
+            "concreteType": "MessagesConnection",
+            "kind": "LinkedField",
+            "name": "messages",
+            "plural": false,
+            "selections": [
+              {
+                "alias": null,
+                "args": null,
+                "concreteType": "MessagesConnectionEdge",
+                "kind": "LinkedField",
+                "name": "edges",
+                "plural": true,
+                "selections": [
+                  {
+                    "alias": null,
+                    "args": null,
+                    "concreteType": "Message",
+                    "kind": "LinkedField",
+                    "name": "node",
+                    "plural": false,
+                    "selections": [
+                      (v3/*: any*/),
+                      (v1/*: any*/)
+                    ],
+                    "storageKey": null
+                  }
+                ],
+                "storageKey": null
+              }
+            ],
+            "storageKey": "messages(first:10)"
+          },
+          (v4/*: any*/)
+        ],
+        "storageKey": "conversation(id:\\"42\\")"
+      }
+    ]
+  },
+  "params": {
+    "cacheID": "a9652ac0095a5cf48982c637e4cab192",
+    "metadata": {},
+    "name": "SomeQuery",
+    "operationKind": "query",
+    "text": null
+  }
+};
+})();
+(SomeQueryDocument as any).__relay.hash = "a9652ac0095a5cf48982c637e4cab192";"
+`;
+
+exports[`plugin generates a ReaderFragment for a fragment 1`] = `
+"(ConversationFragmentFragmentDoc as any).__relay = (function(){
+var v0 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "__typename",
+  "storageKey": null
+};
+return {
+  "argumentDefinitions": [],
+  "kind": "Fragment",
+  "metadata": null,
+  "name": "ConversationFragment",
+  "selections": [
+    {
+      "alias": null,
+      "args": null,
+      "kind": "ScalarField",
+      "name": "id",
+      "storageKey": null
+    },
+    {
+      "alias": null,
+      "args": [
+        {
+          "kind": "Literal",
+          "name": "first",
+          "value": 10
+        }
+      ],
+      "concreteType": "MessagesConnection",
+      "kind": "LinkedField",
+      "name": "messages",
+      "plural": false,
+      "selections": [
+        {
+          "alias": null,
+          "args": null,
+          "concreteType": "MessagesConnectionEdge",
+          "kind": "LinkedField",
+          "name": "edges",
+          "plural": true,
+          "selections": [
+            {
+              "alias": null,
+              "args": null,
+              "concreteType": "Message",
+              "kind": "LinkedField",
+              "name": "node",
+              "plural": false,
+              "selections": [
+                {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "text",
+                  "storageKey": null
+                },
+                (v0/*: any*/)
+              ],
+              "storageKey": null
+            },
+            (v0/*: any*/)
+          ],
+          "storageKey": null
+        },
+        (v0/*: any*/)
+      ],
+      "storageKey": "messages(first:10)"
+    },
+    (v0/*: any*/)
+  ],
+  "type": "Conversation",
+  "abstractKey": null
+};
+})();
+(ConversationFragmentFragmentDoc as any).__relay.hash = "d9f91ad3ffab60368ac2293bffef7f57";"
+`;
+
+exports[`plugin handles multiple operations in a single document 1`] = `
+"(QueryOneDocument as any).__relay = (function(){
+var v0 = [
+  {
+    "kind": "Literal",
+    "name": "id",
+    "value": "42"
+  }
+],
+v1 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "__typename",
+  "storageKey": null
+};
+return {
+  "fragment": {
+    "argumentDefinitions": [],
+    "kind": "Fragment",
+    "metadata": null,
+    "name": "QueryOne",
+    "selections": [
+      {
+        "alias": null,
+        "args": (v0/*: any*/),
+        "concreteType": "Conversation",
+        "kind": "LinkedField",
+        "name": "conversation",
+        "plural": false,
+        "selections": [
+          (v1/*: any*/)
+        ],
+        "storageKey": "conversation(id:\\"42\\")"
+      }
+    ],
+    "type": "Query",
+    "abstractKey": null
+  },
+  "kind": "Request",
+  "operation": {
+    "argumentDefinitions": [],
+    "kind": "Operation",
+    "name": "QueryOne",
+    "selections": [
+      {
+        "alias": null,
+        "args": (v0/*: any*/),
+        "concreteType": "Conversation",
+        "kind": "LinkedField",
+        "name": "conversation",
+        "plural": false,
+        "selections": [
+          (v1/*: any*/),
+          {
+            "alias": null,
+            "args": null,
+            "kind": "ScalarField",
+            "name": "id",
+            "storageKey": null
+          }
+        ],
+        "storageKey": "conversation(id:\\"42\\")"
+      }
+    ]
+  },
+  "params": {
+    "cacheID": "2ce7aba0ae94e184e092aaa4b36cbf96",
+    "metadata": {},
+    "name": "QueryOne",
+    "operationKind": "query",
+    "text": null
+  }
+};
+})();
+(QueryOneDocument as any).__relay.hash = "2ce7aba0ae94e184e092aaa4b36cbf96";
+(QueryTwoDocument as any).__relay = (function(){
+var v0 = [
+  {
+    "alias": null,
+    "args": [
+      {
+        "kind": "Literal",
+        "name": "id",
+        "value": "42"
+      }
+    ],
+    "concreteType": "Conversation",
+    "kind": "LinkedField",
+    "name": "conversation",
+    "plural": false,
+    "selections": [
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "id",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "__typename",
+        "storageKey": null
+      }
+    ],
+    "storageKey": "conversation(id:\\"42\\")"
+  }
+];
+return {
+  "fragment": {
+    "argumentDefinitions": [],
+    "kind": "Fragment",
+    "metadata": null,
+    "name": "QueryTwo",
+    "selections": (v0/*: any*/),
+    "type": "Query",
+    "abstractKey": null
+  },
+  "kind": "Request",
+  "operation": {
+    "argumentDefinitions": [],
+    "kind": "Operation",
+    "name": "QueryTwo",
+    "selections": (v0/*: any*/)
+  },
+  "params": {
+    "cacheID": "8632c780e7fb1f3def0041795d947440",
+    "metadata": {},
+    "name": "QueryTwo",
+    "operationKind": "query",
+    "text": null
+  }
+};
+})();
+(QueryTwoDocument as any).__relay.hash = "8632c780e7fb1f3def0041795d947440";"
+`;

@@ -1,0 +1,16 @@
+query ConnectionQuery {
+  conversation(id: "42") {
+    ...Messages_conversation
+  }
+}
+
+fragment Messages_conversation on Conversation {
+  messages(first: 10, sort: DESC, deferPresence: true)
+    @connection(key: "Connection_messages", filter: ["sort"]) {
+    edges {
+      node {
+        id
+      }
+    }
+  }
+}

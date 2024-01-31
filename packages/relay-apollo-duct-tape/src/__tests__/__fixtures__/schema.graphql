@@ -1,0 +1,81 @@
+type Query {
+  conversation(id: String!): Conversation!
+  message(messageId: String!): Message!
+  node(id: ID!): Node
+  conversationWithGarbage(id: String!, callerInfo: String): Conversation!
+  conversationWithNested(
+    input: ConversationFilter
+    moreCallerInfo: String
+  ): Conversation!
+}
+
+type Mutation {
+  updateConversation(id: String!, title: String!): Conversation!
+  createMessage(conversationId: String!): Message!
+}
+
+type Subscription {
+  messageCreated(conversationId: String!): Message!
+  conversationUpdated: Conversation!
+}
+
+interface Node {
+  id: ID!
+}
+
+type Conversation implements Node {
+  id: ID!
+  title: String!
+  hasUnreadMessages: Boolean!
+  messages(first: Int!, after: String, sort: Sort): MessagesConnection!
+  messagesWithExtraField(
+    first: Int
+    after: String
+    sort: Sort
+    callerInfo: String
+  ): MessagesConnection!
+}
+
+enum Sort {
+  ASC
+  DESC
+}
+
+type MessagesConnection {
+  edges: [MessagesConnectionEdge!]!
+  pageInfo: PageInfo
+}
+
+type PageInfo {
+  startCursor: String
+  endCursor: String
+  hasNextPage: Boolean
+  hasPreviousPage: Boolean
+}
+
+type MessagesConnectionEdge {
+  cursor: String
+  node: Message!
+}
+
+type Message implements Node {
+  id: ID!
+  authorId: String!
+  text: String!
+  createdAt: String!
+}
+
+input ConversationFilter {
+  id: String!
+  callerInfo: String
+}
+
+directive @connection(
+  key: String!
+  filter: [String]
+  filters: [String]
+  handler: String
+  dynamicKey_UNSTABLE: String
+) on FIELD
+
+directive @keyArgs(args: [String!]!) on FIELD

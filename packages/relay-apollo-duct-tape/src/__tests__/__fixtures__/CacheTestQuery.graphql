@@ -1,0 +1,24 @@
+query CacheTestQuery(
+  $conversationId: String!
+  $includeNestedData: Boolean = false
+) {
+  conversation(id: $conversationId) {
+    # NOTE: These /should/ be included in the build-time generated IR.
+    id
+    title
+    ... on Conversation @include(if: $includeNestedData) {
+      messages(first: 10) {
+        edges {
+          node {
+            id
+            authorId
+            text
+            createdAt
+          }
+        }
+      }
+    }
+    # NOTE: This should not be included in the build-time generated IR.
+    ...CacheTestFragment
+  }
+}

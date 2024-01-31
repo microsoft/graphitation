@@ -1,0 +1,4 @@
+fragment CacheTestMessageFragment on Message {
+  id
+  text
+}

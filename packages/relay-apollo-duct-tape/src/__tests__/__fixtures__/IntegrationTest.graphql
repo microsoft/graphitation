@@ -1,0 +1,62 @@
+query ApolloClientIntegrationTestQuery($id: String!, $cursor: String) {
+  conversation(id: $id) {
+    __typename
+    id
+    title
+    messages(first: 10, after: $cursor)
+      @connection(key: "IntegrationTest_messages") {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        cursor # TODO: Check if in TMP these are already being specified
+        node {
+          ...ApolloClientIntegrationTestMessageFragment
+        }
+      }
+    }
+  }
+}
+
+fragment ApolloClientIntegrationTestMessageFragment on Message {
+  __typename
+  id
+  text
+}
+
+mutation ApolloClientIntegrationTestMutation($id: String!, $title: String!) {
+  updateConversation(id: $id, title: $title) {
+    __typename
+    id
+    title
+  }
+}
+
+mutation ApolloClientIntegrationTestCreateMessageMutation(
+  $conversationId: String!
+) {
+  createMessage(conversationId: $conversationId) {
+    __typename
+    id
+    text
+  }
+}
+
+subscription ApolloClientIntegrationTestConversationUpdatedSubscription {
+  conversationUpdated {
+    __typename
+    id
+    title
+  }
+}
+
+subscription ApolloClientIntegrationTestMessageCreatedSubscription(
+  $conversationId: String!
+) {
+  messageCreated(conversationId: $conversationId) {
+    __typename
+    id
+    text
+  }
+}

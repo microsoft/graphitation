@@ -1,0 +1,24 @@
+query CacheTestConversationKeyFieldsWithConnectionLike(
+  $id: String!
+  $first: Int
+  $after: String
+  $sort: Sort
+  $callerInfo: String
+) {
+  conversation(id: $id) {
+    id
+    title
+    messagesWithExtraField(
+      first: $first
+      after: $after
+      sort: $sort
+      callerInfo: $callerInfo
+    ) @keyArgs(args: ["sort"]) {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }
+}

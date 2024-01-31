@@ -1,0 +1,52 @@
+{
+  "name": "@graphitation/relay-apollo-duct-tape",
+  "license": "MIT",
+  "version": "0.5.3",
+  "main": "./src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/graphitation.git",
+    "directory": "packages/relay-apollo-duct-tape"
+  },
+  "scripts": {
+    "codegen": "graphql-codegen",
+    "build": "monorepo-scripts build",
+    "lint": "monorepo-scripts lint",
+    "test": "monorepo-scripts test",
+    "types": "monorepo-scripts types",
+    "just": "monorepo-scripts"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.0.0",
+    "@emotion/hash": "^0.8.0",
+    "immutable": "~3.7.6",
+    "invariant": "^2.2.4",
+    "lru-cache": "^7.14.1",
+    "nullthrows": "^1.1.1",
+    "relay-runtime": "^15.0.0"
+  },
+  "peerDependencies": {
+    "@apollo/client": "3.6.9"
+  },
+  "devDependencies": {
+    "@apollo/client": "3.6.9",
+    "@graphitation/supermassive": "^3.1.0",
+    "@types/jest": "^26.0.22",
+    "@types/react-relay": "^14.1.1",
+    "@types/relay-runtime": "^14.1.2",
+    "monorepo-scripts": "*"
+  },
+  "sideEffects": false,
+  "access": "public",
+  "publishConfig": {
+    "main": "./lib/index",
+    "types": "./lib/index.d.ts",
+    "module": "./lib/index.mjs",
+    "exports": {
+      ".": {
+        "import": "./lib/index.mjs",
+        "require": "./lib/index.js"
+      }
+    }
+  }
+}

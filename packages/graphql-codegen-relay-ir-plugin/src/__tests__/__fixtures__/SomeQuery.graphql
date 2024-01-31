@@ -1,0 +1,5 @@
+query SomeQuery {
+  conversation(id: "42") {
+    ...ConversationFragment
+  }
+}

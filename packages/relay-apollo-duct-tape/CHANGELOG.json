@@ -1,0 +1,374 @@
+{
+  "name": "@graphitation/relay-apollo-duct-tape",
+  "entries": [
+    {
+      "date": "Tue, 19 Dec 2023 10:42:14 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.5.3",
+      "version": "0.5.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "324dc87a3bb3b6c549e3316efca692072256dec7",
+            "comment": "New version"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "comment": "Bump @graphitation/supermassive to v3.2.7",
+            "commit": "324dc87a3bb3b6c549e3316efca692072256dec7"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 04 Oct 2023 14:49:50 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.5.2",
+      "version": "0.5.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "e0783201ea068864067c9d5e6dde81444f4c5e9d",
+            "comment": "More fixes"
+          },
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "3e06badb76f78b85df97be32f596710627098870",
+            "comment": "Wrong doc to spread :/"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "comment": "Bump @graphitation/supermassive to v3.2.0",
+            "commit": "3e06badb76f78b85df97be32f596710627098870"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 04 Oct 2023 13:51:41 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.5.1",
+      "version": "0.5.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "c9c50e4c6bfb1bc50376cd5228b5ad8fe9cc2274",
+            "comment": "Keep adding typename"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "comment": "Bump @graphitation/supermassive to v3.2.0",
+            "commit": "c9c50e4c6bfb1bc50376cd5228b5ad8fe9cc2274"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 04 Oct 2023 10:42:36 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.5.0",
+      "version": "0.5.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "c01a5584b549e1fde6a4554dc190e39c2ee82b5d",
+            "comment": "Alpha work progress"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "comment": "Bump @graphitation/supermassive to v3.2.0",
+            "commit": "d73f011a40f790860efd1324823dbe5b24bf0927"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 07 Sep 2023 13:06:12 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.11",
+      "version": "0.4.11",
+      "comments": {
+        "patch": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "0479db35aeafc1ebd1f999ef0ad9e100b9db3173",
+            "comment": "Type policies and jazz"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "comment": "Bump @graphitation/graphql-codegen-relay-ir-plugin to v1.2.5",
+            "commit": "1a6beb1dde3e356192b9fbee612b64ebe239c5f3"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Sat, 28 Jan 2023 13:45:56 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.10",
+      "version": "0.4.10",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "c3a1eca7e724da31bc535a83826f879a8b3d6563",
+            "comment": "Inline fragments into operation IR"
+          },
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "d3a6ce1ebecd942b25061a76f897152e4e92e6f4",
+            "comment": "Vendor inline transform and patch only that for our needs"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "comment": "Bump @graphitation/graphql-codegen-relay-ir-plugin to v1.2.4",
+            "commit": "04717bc58d8898ce1f34ea969ac100c9c8633f59"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 26 Jan 2023 21:25:11 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.9",
+      "version": "0.4.9",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "25dc9b0a47ea0eb84a0dcdc2f6445d41a511023f",
+            "comment": "Use complete Relay IR"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "comment": "Bump @graphitation/graphql-codegen-relay-ir-plugin to v1.2.3",
+            "commit": "da535a33b18bcc3b39bbd036772e28fc2b0761fc"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 23 Jan 2023 12:48:15 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.8",
+      "version": "0.4.8",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "comment": "Bump @graphitation/graphql-codegen-relay-ir-plugin to v1.2.2",
+            "commit": "c6476ca1546acc94452106530f5b2efbb6d951e0"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Sun, 22 Jan 2023 08:27:54 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.7",
+      "version": "0.4.7",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "6916e6b9e404459c1206b93faba4a303e478e57c",
+            "comment": "Use the codegen plugin"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 12 Jan 2023 17:17:13 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.6",
+      "version": "0.4.6",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "e4cd0b3db7dea0665cb60ee1a89eac87ef4182ec",
+            "comment": "Bunch of fixes"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 19 Dec 2022 22:50:16 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.5",
+      "version": "0.4.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "0b523f555cb17fed26193a63d1b4c18c7c59026c",
+            "comment": "Fix ESM support and filter dupes"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Fri, 16 Dec 2022 23:52:30 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.4",
+      "version": "0.4.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "92307f5c8c61d6c40f871a4d793a4c9dd73ea09f",
+            "comment": "Import original sources without babel stuff"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Fri, 16 Dec 2022 17:00:28 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.3",
+      "version": "0.4.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "02935181f595589819871075526025563bc91f20",
+            "comment": "Try to not compile the vendored js"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Fri, 16 Dec 2022 14:41:48 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.2",
+      "version": "0.4.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "30cc5586cf17e46368977a974c9ee289b2deeae4",
+            "comment": "Add missing dep"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Fri, 16 Dec 2022 11:02:42 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.1",
+      "version": "0.4.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "5a87732aeac41f804d966bdc6b96c8a86579f134",
+            "comment": "Actually import vebdored files"
+          },
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "0330dda32e75740a2d8755e6d61dfba67c138a95",
+            "comment": "More dep fixes"
+          },
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "c894678e9bc0824ec7f81f0bff6c0ad334e04dd4",
+            "comment": "Deal with situation where document contains multiple definitions"
+          },
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "cba5a0fee39834d9d82653b7345179d28af81133",
+            "comment": "Fix type errors"
+          },
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "b14675e9d4656743ceb4e8cf4980171f3075c537",
+            "comment": "Fix type errors definitively"
+          },
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "77398e05150c11e4b77aecb9da250110408f3082",
+            "comment": "[build] Include js files"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 14 Dec 2022 23:47:05 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.4.0",
+      "version": "0.4.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "cc2d6dd567f4e196c9129eb8c63d2022d6f7a3b0",
+            "comment": "Vendor relay-compiler sources"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 14 Dec 2022 15:18:15 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.3.0",
+      "version": "0.3.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "f6a8ac0e6a94a64ff68cb4b3bb4890d607931212",
+            "comment": "Add runtime generated IR"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Fri, 18 Nov 2022 00:17:49 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.2.0",
+      "version": "0.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "f248258932b4f7c85e91af1bfc9f1f918a89b200",
+            "comment": "[relay-duct-tape] Add read memoization"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 22 Sep 2022 23:01:42 GMT",
+      "tag": "@graphitation/relay-apollo-duct-tape_v0.1.0",
+      "version": "0.1.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "eloy.de.enige@gmail.com",
+            "package": "@graphitation/relay-apollo-duct-tape",
+            "commit": "ddd4f926849f00a7979d87e90cb088fe4b5bf2d7",
+            "comment": "Initial release"
+          }
+        ]
+      }
+    }
+  ]
+}

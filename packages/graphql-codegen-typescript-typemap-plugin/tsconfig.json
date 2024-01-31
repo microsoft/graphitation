@@ -5,7 +5,8 @@
     "composite": true,
     "tsBuildInfoFile": ".tsbuildinfo",
     "rootDir": "src",
-    "outDir": "lib"
+    "outDir": "lib",
+    "lib": ["dom", "ES2019"]
   },
   "include": ["src"],
   "references": []

@@ -9,6 +9,7 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "paths": {
+      "@apollo/client": ["./node_modules/@apollo/client"],
       "@graphql-tools/utils": ["./node_modules/@graphql-tools/utils"],
       "graphql": ["./node_modules/graphql"]
     }
