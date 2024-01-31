@@ -69,12 +69,12 @@ export function useCompiledFragment(
   if (result.partial) {
     invariant(
       false,
-      "useFragment(): Missing data expected to be seeded by the execution query document %s",
+      "useFragment(): Missing data expected to be seeded by the execution query document: %s",
       JSON.stringify(
         // we need the cast because queryInfo and lastDiff are private but very useful for debugging
         (
           observableQuery as unknown as {
-            queryInfo: { lastDiff?: { diff?: Cache.DiffResult<unknown> } };
+            queryInfo?: { lastDiff?: { diff?: Cache.DiffResult<unknown> } };
           }
         ).queryInfo?.lastDiff?.diff?.missing?.map((e) => e.path),
       ),
