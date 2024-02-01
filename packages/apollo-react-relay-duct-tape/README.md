@@ -28,13 +28,13 @@ Use this together with [@graphitation/apollo-react-relay-duct-tape-compiler](../
 TODO:
 
 - We cannot support the default apollo cache keys for fragments on Node [derived] interfaces. Seeing as Node semantics are so core to the ability to provide these APIs, it makes sense to remove the apollo default cache key support.
-- Copy apollo cache config required from the example app. This includes getting the list of possible types and the dataIdFromObject implemenation.
+- Copy apollo cache config required from the example app. This includes getting the list of possible types and the dataIdFromObject implementation.
 
 - Configure Apollo Client's cache to automatically add `__typename` field selections, which concrete types implement the `Node` interface, and the type-policies needed to read the watch query data from the store:
 
   ```ts
   import { InMemoryCache } from "@apollo/client";
-  import { typePolicies } from "@graphitation/apollo-react-relay-duct-tape";
+  import { typePoliciesWithGlobalObjectIdStoreKeys as typePolicies } from "@graphitation/apollo-react-relay-duct-tape";
 
   const cache = new InMemoryCache({
     addTypename: true,
@@ -43,7 +43,7 @@ TODO:
     possibleTypes: {
       Node: ["Todo"],
     },
-    // Either use the `typePolicies` object directly or otherwise extend appropriately
+    // Either use the `typePoliciesWithGlobalObjectIdStoreKeys` object directly or otherwise extend appropriately. Alternatively you can also use typePoliciesWithDefaultApolloClientStoreKeys
     typePolicies: {
       Query: {
         fields: {
@@ -63,28 +63,57 @@ TODO:
         },
       },
     },
+    // Make sure to specify the dataIdFromObject implementation if you rely on typePoliciesWithGlobalObjectIdStoreKeys
+    dataIdFromObject(responseObject, keyFieldsContext) {
+      if (
+        responseObject.id &&
+        responseObject.__typename &&
+        possibleTypes?.Node.includes(responseObject.__typename)
+      ) {
+        return responseObject.id as string;
+      }
+      // fallback to default way of doing it
+      return defaultDataIdFromObject(responseObject, keyFieldsContext);
+    },
+  });
+  ```
+
+  In most cases as in [the example app](../../examples/apollo-watch-fragments/src/graphql.ts), you can just build the configuration using utilities exported from `@graphitation/apollo-react-relay-duct-tape`:
+
+  ```ts
+  import { InMemoryCache, defaultDataIdFromObject } from "@apollo/client";
+  import { schema } from "fileWithYourSchema";
+  import {
+    typePoliciesWithGlobalObjectIdStoreKeys,
+    getPossibleTypesAndDataIdFromNode,
+  } from "@graphitation/apollo-react-relay-duct-tape";
+
+  const { possibleTypes, dataIdFromObject } =
+    getPossibleTypesAndDataIdFromNode(schema);
+
+  const cache = new InMemoryCache({
+    addTypename: true,
+    possibleTypes, // already makes sure to contain all possible types for Node interface
+    typePolicies: typePoliciesWithGlobalObjectIdStoreKeys,
+    dataIdFromObject(responseObject, keyFieldsContext) {
+      return (
+        dataIdFromNode(responseObject, keyFieldsContext) ||
+        defaultDataIdFromObject(responseObject, keyFieldsContext)
+      );
+    },
   });
   ```
 
 - Configure webpack to transform your code by replacing inline GraphQL documents with their compiled artefacts:
 
   ```ts
-  const {
-    createImportDocumentsTransform,
-  } = require("@graphitation/apollo-react-relay-duct-tape-compiler");
-
   const config: webpack.Configuration = {
     module: {
       rules: [
         {
-          test: /\.tsx?$/,
-          loader: "ts-loader",
+          test: /.+?\.tsx?$/,
+          loader: "@graphitation/embedded-document-artefact-loader/webpack",
           exclude: /node_modules/,
-          options: {
-            getCustomTransformers: () => ({
-              before: [createImportDocumentsTransform()],
-            }),
-          },
         },
       ],
     },

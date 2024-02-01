@@ -69,7 +69,7 @@ export function useCompiledFragment(
   if (result.partial) {
     invariant(
       false,
-      "useFragment(): Missing data expected to be seeded by the execution query document: %s",
+      "useFragment(): Missing data expected to be seeded by the execution query document: %s. Please check your type policies and possibleTypes configuration. If only subset of properties is missing you might need to configure merge functions for non-normalized types.",
       JSON.stringify(
         // we need the cast because queryInfo and lastDiff are private but very useful for debugging
         (
@@ -82,11 +82,19 @@ export function useCompiledFragment(
   }
   let data = result.data;
   if (metadata?.rootSelection) {
+    invariant(
+      data,
+      "useFragment(): Expected Apollo to respond with previously seeded data of the execution query document: %s. Did you configure your type policies and possibleTypes correctly? Check apollo-react-relay-duct-tape README for more details.",
+      JSON.stringify({
+        selection: metadata.rootSelection,
+        mainFragment: metadata.mainFragment,
+      }),
+    );
     data = data[metadata.rootSelection];
   }
   invariant(
     data,
-    "useFragment(): Expected Apollo to respond with previously seeded data of the execution query document",
+    "useFragment(): Expected Apollo to respond with previously seeded data of the execution query document. Did you configure your type policies and possibleTypes correctly? Check apollo-react-relay-duct-tape README for more details.",
   );
   return data;
 }
