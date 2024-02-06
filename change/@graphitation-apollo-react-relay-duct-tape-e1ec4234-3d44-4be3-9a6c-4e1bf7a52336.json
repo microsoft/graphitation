@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "use correct id for compiled fragment, add check for partial result",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape",
+  "email": "Stanislaw.Wilczynski@microsoft.com",
+  "dependentChangeType": "patch"
+}
