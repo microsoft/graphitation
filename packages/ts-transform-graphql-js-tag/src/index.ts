@@ -6,6 +6,12 @@ import {
   Kind,
 } from "graphql";
 
+type TaggedTemplateTransformer = (
+  source: string,
+  transformerContext: GraphQLTagTransformContext,
+  interpolations: (ts.Identifier | ts.PropertyAccessExpression)[],
+) => ts.Expression;
+
 interface GraphQLTagTransformContext {
   graphqlTagModuleRegexp: RegExp;
   graphqlTagModuleExport: string;
@@ -34,7 +40,12 @@ export function getTransformer(
     return (sourceFile: ts.SourceFile) =>
       ts.visitNode(
         sourceFile,
-        getVisitor(transformerContext, context, sourceFile),
+        getVisitor(
+          transformerContext,
+          context,
+          sourceFile,
+          inlineAstTaggedTemplateTransformer,
+        ),
       );
   };
 }
@@ -49,6 +60,30 @@ export function getRelayTransformer(
         sourceFile,
         getRelayVisitor(transformerContext, context, sourceFile),
       );
+  };
+}
+
+export function getArtefactImportTransformer(
+  options: Partial<Omit<GraphQLTagTransformOptions, "transformer">>,
+): ts.TransformerFactory<ts.SourceFile> {
+  const transformerContext = createTransformerContext(options);
+  return (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
+    return (sourceFile: ts.SourceFile) => {
+      const importDeclarations: ts.ImportDeclaration[] = [];
+      const outputSourceFile = ts.visitNode(
+        sourceFile,
+        getVisitor(
+          transformerContext,
+          context,
+          sourceFile,
+          getImportArtefactTaggedTemplateTransformer(importDeclarations),
+        ),
+      );
+      return ts.factory.updateSourceFile(outputSourceFile, [
+        ...importDeclarations,
+        ...outputSourceFile.statements,
+      ]);
+    };
   };
 }
 
@@ -79,6 +114,7 @@ function getVisitor(
   transformerContext: GraphQLTagTransformContext,
   context: ts.TransformationContext,
   sourceFile: ts.SourceFile,
+  applyTaggedTemplateTransformer: TaggedTemplateTransformer,
 ): ts.Visitor {
   let templateLiteralName: string | null = null;
   const visitor: ts.Visitor = (node: ts.Node): ts.VisitResult<ts.Node> => {
@@ -182,12 +218,11 @@ function getVisitor(
           source = source.replace(/\$\{(.*)\}/g, "");
         }
 
-        const definitions = getDefinitions(
+        return applyTaggedTemplateTransformer(
           source,
-          transformerContext.transformer,
+          transformerContext,
+          interpolations,
         );
-
-        return createDocument(definitions, interpolations);
       }
     }
 
@@ -195,6 +230,16 @@ function getVisitor(
   };
 
   return visitor;
+}
+
+function inlineAstTaggedTemplateTransformer(
+  source: string,
+  transformerContext: GraphQLTagTransformContext,
+  interpolations: (ts.Identifier | ts.PropertyAccessExpression)[],
+) {
+  const definitions = getDefinitions(source, transformerContext.transformer);
+
+  return createDocument(definitions, interpolations);
 }
 
 function getRelayVisitor(
@@ -351,7 +396,7 @@ function getDefinitions(
 function createDocument(
   definitions: Array<unknown>,
   interpolations: Array<ts.Identifier | ts.PropertyAccessExpression>,
-): ts.ObjectLiteralExpression {
+) {
   const baseDefinitions = ts.factory.createArrayLiteralExpression(
     definitions.map((def) => toAst(def)),
   );
@@ -412,4 +457,49 @@ function toAst(literal: any): ts.Expression {
         }),
       );
   }
+}
+
+export function getImportArtefactTaggedTemplateTransformer(
+  artefactImports: ts.ImportDeclaration[],
+): TaggedTemplateTransformer {
+  return (source, _context, _interpolations) => {
+    const definitions = parse(source, {
+      noLocation: true,
+    }).definitions;
+
+    if (definitions.length !== 1) {
+      throw new Error(
+        "Expected exactly one operation or fragment definition in the source string.",
+      );
+    }
+    const definition = definitions[0];
+    if (
+      definition.kind !== Kind.OPERATION_DEFINITION &&
+      definition.kind !== Kind.FRAGMENT_DEFINITION
+    ) {
+      throw new Error(
+        "Expected operation or fragment definition in the source string.",
+      );
+    }
+    const name = definition.name?.value;
+    if (!name) {
+      throw new Error(
+        "Operation or fragment definition must have a name to be imported.",
+      );
+    }
+
+    const identifier = ts.factory.createIdentifier(
+      `__graphql_tag_import_${name}`,
+    );
+
+    artefactImports.push(
+      ts.factory.createImportDeclaration(
+        undefined,
+        ts.factory.createImportClause(false, identifier, undefined),
+        ts.factory.createStringLiteral(`./__generated__/${name}.graphql`),
+      ),
+    );
+
+    return identifier;
+  };
 }
