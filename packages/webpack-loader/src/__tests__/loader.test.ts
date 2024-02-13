@@ -1,4 +1,5 @@
 import { parse, print } from "graphql";
+import { encodeASTSchema } from "@graphitation/supermassive";
 import loader from "../index";
 
 function useLoader(source: string, options: any): string {
@@ -13,9 +14,9 @@ test("basic query", () => {
   `;
   const doc = useLoader(docStr, {});
 
-  const docLine = `var doc = ${JSON.stringify(
+  const docLine = `var doc = JSON.parse('${JSON.stringify(
     parse(docStr, { noLocation: true }),
-  )};`;
+  )}');`;
   const exportLine = `module.exports = doc`;
 
   expect(doc).toContain(docLine);
@@ -23,7 +24,7 @@ test("basic query", () => {
 
   expect(doc).toMatchInlineSnapshot(`
     "
-      var doc = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]};
+    var doc = JSON.parse('{"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]}');
 
       var names = {};
       function unique(defs) {
@@ -65,9 +66,9 @@ test("basic query with esModules on", () => {
     esModule: true,
   });
 
-  const docLine = `var doc = ${JSON.stringify(
+  const docLine = `var doc = JSON.parse('${JSON.stringify(
     parse(docStr, { noLocation: true }),
-  )};`;
+  )}');`;
   const exportLine = `export default doc`;
 
   expect(doc).toContain(docLine);
@@ -75,7 +76,7 @@ test("basic query with esModules on", () => {
 
   expect(doc).toMatchInlineSnapshot(`
     "
-      var doc = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]};
+    var doc = JSON.parse('{"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]}');
 
       var names = {};
       function unique(defs) {
@@ -102,6 +103,90 @@ test("basic query with esModules on", () => {
   //
   //   ${exportLine}
   // `);
+});
+
+test("supermassive encoding for SDL", () => {
+  const docStr = /* GraphQL */ `
+    type Query {
+      foo: String
+    }
+  `;
+  const doc = useLoader(docStr, {
+    esModule: true,
+    supermassiveSDL: true,
+  });
+
+  const docLine = `var doc = JSON.parse('${JSON.stringify(
+    encodeASTSchema(parse(docStr, { noLocation: true })),
+  )}');`;
+  const exportLine = `export default doc`;
+
+  expect(doc).toContain(docLine);
+  expect(doc).toContain(exportLine);
+
+  expect(doc).toMatchInlineSnapshot(`
+    "
+    var doc = JSON.parse('[{"types":{"Query":[2,{"foo":1}]}}]');
+
+      var names = {};
+      function unique(defs) {
+        return defs.filter(function (def) {
+          if (def.kind !== 'FragmentDefinition') return true;
+          var name = def.name.value;
+          if (names[name]) {
+            return false;
+          } else {
+            names[name] = true;
+            return true;
+          }
+        });
+      };
+
+    export default doc
+    "
+  `);
+});
+
+test("supermassive encoding for SDL doesn't affect operations", () => {
+  const docStr = /* GraphQL */ `
+    query Foo {
+      foo
+    }
+  `;
+  const doc = useLoader(docStr, {
+    esModule: true,
+    supermassiveSDL: true,
+  });
+
+  const docLine = `var doc = JSON.parse('${JSON.stringify(
+    parse(docStr, { noLocation: true }),
+  )}');`;
+  const exportLine = `export default doc`;
+
+  expect(doc).toContain(docLine);
+  expect(doc).toContain(exportLine);
+
+  expect(doc).toMatchInlineSnapshot(`
+    "
+    var doc = JSON.parse('{"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]}');
+
+      var names = {};
+      function unique(defs) {
+        return defs.filter(function (def) {
+          if (def.kind !== 'FragmentDefinition') return true;
+          var name = def.name.value;
+          if (names[name]) {
+            return false;
+          } else {
+            names[name] = true;
+            return true;
+          }
+        });
+      };
+
+    export default doc
+    "
+  `);
 });
 
 test("replaceKinds enabled", () => {

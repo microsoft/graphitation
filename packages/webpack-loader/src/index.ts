@@ -6,6 +6,7 @@ import {
   removeEmptyNodes,
 } from "@graphql-tools/optimize";
 import { uniqueCode } from "@graphql-tools/webpack-loader-runtime";
+import { encodeASTSchema } from "@graphitation/supermassive";
 import { parseDocument } from "./parser";
 
 function isSDL(doc: DocumentNode) {
@@ -19,6 +20,7 @@ interface Options {
   replaceKinds?: boolean;
   esModule?: boolean;
   importHelpers?: boolean;
+  supermassiveSDL?: boolean;
 }
 
 function expandImports(source: string, options: Options) {
@@ -64,22 +66,27 @@ export default function graphqlLoader(
     doc = optimizeDocumentNode(doc, optimizers);
   }
 
-  let stringifiedDoc = JSON.stringify(doc);
-
-  if (options.replaceKinds) {
-    for (const identifier in Kind) {
-      const value = Kind[identifier as keyof typeof Kind];
-      stringifiedDoc = stringifiedDoc.replace(
-        new RegExp(`"kind":"${value}"`, "g"),
-        `"kind": Kind.${identifier}`,
-      );
+  let stringifiedDoc = ``;
+  if (options.supermassiveSDL && isSDL(doc)) {
+    stringifiedDoc = JSON.stringify(encodeASTSchema(doc));
+  } else {
+    stringifiedDoc = JSON.stringify(doc);
+    if (options.replaceKinds) {
+      for (const identifier in Kind) {
+        const value = Kind[identifier as keyof typeof Kind];
+        stringifiedDoc = stringifiedDoc.replace(
+          new RegExp(`"kind":"${value}"`, "g"),
+          `"kind": Kind.${identifier}`,
+        );
+      }
     }
   }
 
-  const headerCode = `${
-    options.replaceKinds ? "var Kind = require('graphql/language/kinds');" : ""
-  }
-  var doc = ${stringifiedDoc};`;
+  const headerCode = [
+    options.replaceKinds ? "var Kind = require('graphql/language/kinds');" : "",
+    // See https://v8.dev/blog/cost-of-javascript-2019#json
+    `var doc = JSON.parse('${stringifiedDoc}');`,
+  ].join("\n");
 
   let outputCode = "";
 
