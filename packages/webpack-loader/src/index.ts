@@ -24,13 +24,14 @@ interface Options {
 }
 
 function expandImports(source: string, options: Options) {
-  const lines = source.split(/[\r\n]+/);
-  let outputCode = options.importHelpers
+  const lines = source.trim().split(/[\r\n]+/);
+  const outputHeader = options.importHelpers
     ? `
 var useUnique = require('@graphql-tools/webpack-loader-runtime').useUnique;
 var unique = useUnique();`
     : `${uniqueCode}`;
 
+  let outputCode = ``;
   lines.some((line) => {
     if (line[0] === "#" && line.slice(1).split(" ")[0] === "import") {
       const importFile = line.slice(1).split(" ")[1];
@@ -41,7 +42,7 @@ var unique = useUnique();`
     return line.length !== 0 && line[0] !== "#";
   });
 
-  return outputCode;
+  return outputCode.trim().length > 0 ? outputHeader + "\n" + outputCode : ``;
 }
 
 export default function graphqlLoader(

@@ -26,20 +26,6 @@ test("basic query", () => {
     "
     var doc = JSON.parse('{"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]}');
 
-      var names = {};
-      function unique(defs) {
-        return defs.filter(function (def) {
-          if (def.kind !== 'FragmentDefinition') return true;
-          var name = def.name.value;
-          if (names[name]) {
-            return false;
-          } else {
-            names[name] = true;
-            return true;
-          }
-        });
-      };
-
     module.exports = doc
     "
   `);
@@ -78,6 +64,42 @@ test("basic query with esModules on", () => {
     "
     var doc = JSON.parse('{"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]}');
 
+    export default doc
+    "
+  `);
+
+  // expect(doc).toBeSimilarString(`
+  //   ${docLine}
+  //
+  //   ${uniqueCode}
+  //
+  //   ${exportLine}
+  // `);
+});
+
+test("basic query with imports", () => {
+  const docStr = /* GraphQL */ `
+    #import "../fragments.graphql"
+    query Foo {
+      foo
+    }
+  `;
+  const doc = useLoader(docStr, {
+    esModule: true,
+  });
+
+  const docLine = `var doc = JSON.parse('${JSON.stringify(
+    parse(docStr, { noLocation: true }),
+  )}');`;
+  const exportLine = `export default doc`;
+
+  expect(doc).toContain(docLine);
+  expect(doc).toContain(exportLine);
+
+  expect(doc).toMatchInlineSnapshot(`
+    "
+    var doc = JSON.parse('{"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]}');
+
       var names = {};
       function unique(defs) {
         return defs.filter(function (def) {
@@ -91,6 +113,8 @@ test("basic query with esModules on", () => {
           }
         });
       };
+
+    doc.definitions = doc.definitions.concat(unique(require("../fragments.graphql").definitions));
 
     export default doc
     "
@@ -128,20 +152,6 @@ test("supermassive encoding for SDL", () => {
     "
     var doc = JSON.parse('[{"types":{"Query":[2,{"foo":1}]}}]');
 
-      var names = {};
-      function unique(defs) {
-        return defs.filter(function (def) {
-          if (def.kind !== 'FragmentDefinition') return true;
-          var name = def.name.value;
-          if (names[name]) {
-            return false;
-          } else {
-            names[name] = true;
-            return true;
-          }
-        });
-      };
-
     export default doc
     "
   `);
@@ -169,20 +179,6 @@ test("supermassive encoding for SDL doesn't affect operations", () => {
   expect(doc).toMatchInlineSnapshot(`
     "
     var doc = JSON.parse('{"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]}');
-
-      var names = {};
-      function unique(defs) {
-        return defs.filter(function (def) {
-          if (def.kind !== 'FragmentDefinition') return true;
-          var name = def.name.value;
-          if (names[name]) {
-            return false;
-          } else {
-            names[name] = true;
-            return true;
-          }
-        });
-      };
 
     export default doc
     "
