@@ -1,11 +1,10 @@
 # A fork of GraphQL Tools Webpack Loader
 
+> A fork of `@graphql-tools/webpack-loader` with supermassive SDL encoding support
+
 A webpack loader to preprocess GraphQL Documents (operations, fragments and SDL)
 
-Slightly different fork of
-[graphql-tag/loader](https://github.com/apollographql/graphql-tag/pull/304).
-
-    yarn add @graphql-tools/webpack-loader
+    yarn add @graphitation/webpack-loader
 
 How is it different from `graphql-tag`? It removes locations entirely, doesn't include sources
 (string content of imported files), no warnings about duplicated fragment names and supports more
@@ -15,6 +14,7 @@ custom scenarios.
 
 - noDescription (_default: false_) - removes descriptions
 - esModule (_default: false_) - uses import and export statements instead of CommonJS
+- supermassiveSDL (_default: false_) - encode SDL for execution with [supermassive](../supermassive)
 
 ## Importing GraphQL files
 
@@ -30,7 +30,7 @@ query MyQuery {
 ```
 
 If you have configured
-[the webpack @graphql-tools/webpack-loader](#webpack-loading-and-preprocessing), you can import
+[the webpack @graphitation/webpack-loader](#webpack-loading-and-preprocessing), you can import
 modules containing graphQL queries. The imported value will be the pre-built AST.
 
 ```ts
@@ -43,7 +43,7 @@ Preprocessing GraphQL queries and fragments into ASTs at build time can greatly 
 
 #### Webpack loading and preprocessing
 
-Using the included `@graphql-tools/webpack-loader` it is possible to maintain query logic that is
+Using the included `@graphitation/webpack-loader` it is possible to maintain query logic that is
 separate from the rest of your application logic. With the loader configured, imported graphQL files
 will be converted to AST during the webpack build process.
 
@@ -53,7 +53,7 @@ will be converted to AST during the webpack build process.
     {
       test: /\.(graphql|gql)$/,
       exclude: /node_modules/,
-      loader: '@graphql-tools/webpack-loader',
+      loader: '@graphitation/webpack-loader',
       options: {
         /* ... */
       }
