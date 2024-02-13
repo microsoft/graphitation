@@ -31,7 +31,7 @@ const TodoList: React.FC<{ node: TodoList_nodeFragment$key }> = ({
         sortBy: {
           type: "SortByInput"
           defaultValue: { sortField: DESCRIPTION, sortDirection: ASC }
-        } # TODO: adding default value for sortBy break the compiler
+        } # TODO: adding default value for sortBy break the compiler, removing default value makes it work again
       ) {
         __typename
         todos(first: $count, after: $after, sortBy: $sortBy)
