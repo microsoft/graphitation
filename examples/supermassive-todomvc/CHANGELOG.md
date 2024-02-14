@@ -1,8 +1,16 @@
 # Change Log - supermassive-todomvc
 
-This log was last generated on Tue, 06 Feb 2024 17:55:58 GMT and should not be manually modified.
+This log was last generated on Wed, 14 Feb 2024 20:38:10 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.1-0
+
+Wed, 14 Feb 2024 20:38:10 GMT
+
+### Patches
+
+- Bump @graphitation/webpack-loader to v1.0.0
 
 ## 1.0.1-0
 

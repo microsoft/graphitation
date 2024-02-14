@@ -1,7 +1,0 @@
-{
-  "type": "major",
-  "comment": "Fork of graphql-tools/webpack-loader with supermassive encoding support for SDL",
-  "packageName": "@graphitation/webpack-loader",
-  "email": "vladimir.razuvaev@gmail.com",
-  "dependentChangeType": "patch"
-}
