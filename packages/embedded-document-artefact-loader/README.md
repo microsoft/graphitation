@@ -27,6 +27,29 @@ const webpackConfig = {
 };
 ```
 
+If you are using the `artifactDirectory` option in your relay config you will need to direct the loader to the same folder.
+
+```js
+const webpackConfig = {
+  module: {
+    rules: [
+      {
+        test: /.+?\.tsx?$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: "@graphitation/embedded-document-artefact-loader/webpack",
+            options: {
+              artifactDirectory: "path/to/your/artifact/directory",
+            },
+          },
+        ],
+      },
+    ],
+  },
+};
+```
+
 ## Jest
 
 The jest loader wraps ts-jest because there's no built-in way to chain loaders.

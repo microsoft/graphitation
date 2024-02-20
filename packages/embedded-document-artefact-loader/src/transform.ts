@@ -1,12 +1,21 @@
 import { SourceMapGenerator } from "source-map-js";
 import { Source, parse } from "graphql";
 
+const defaultOptions = {
+  // Default `artifactDirectory` is relative to the sourceFile
+  artifactDirectory: "./__generated__",
+};
+
 export function transform(
   source: string,
   sourcePath: string,
   sourceMap: SourceMapGenerator | undefined,
+  options: {
+    artifactDirectory?: string;
+  } = defaultOptions,
 ): string | undefined {
   let anyChanges = false;
+  const { artifactDirectory } = { ...defaultOptions, ...options };
 
   if (sourceMap) {
     sourceMap.addMapping({
@@ -29,7 +38,7 @@ export function transform(
       let documentName: string | undefined;
       try {
         // Remove trailing interpolations from Nova queries and mutations
-        sdl = sdl.replace(/\$\{[a-zA-Z_][a-zA-Z0-9_.]*\}/g, '');
+        sdl = sdl.replace(/\$\{[a-zA-Z_][a-zA-Z0-9_.]*\}/g, "");
 
         // In the absence of parsing the full JS/TS file, we may run into false
         // positives. We detect this by attempting to parse the tagged template
@@ -82,7 +91,7 @@ export function transform(
 
       lastChunkOffset = offset + taggedTemplateExpression.length;
 
-      const generated = `require("./__generated__/${documentName}.graphql").default`;
+      const generated = `require("${artifactDirectory}/${documentName}.graphql").default`;
 
       if (sourceMap) {
         const originalStart = offsetToLineColumn(source, offset);
