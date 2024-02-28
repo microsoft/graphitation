@@ -1,51 +1,15 @@
-import {
-  BaseSelectionSetProcessor,
-  BaseVisitorConvertOptions,
-  SelectionSetToObject as CodegenSelectionSetToObject,
-  ConvertNameFn,
-  GetFragmentSuffixFn,
-  LoadedFragment,
-  NormalizedScalarsMap,
-  ParsedDocumentsConfig,
-} from "@graphql-codegen/visitor-plugin-common";
+import { SelectionSetToObject as CodegenSelectionSetToObject } from "@graphql-codegen/visitor-plugin-common";
 import {
   FieldNode,
   FragmentSpreadNode,
   GraphQLNamedType,
-  GraphQLSchema,
   InlineFragmentNode,
   Kind,
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
 
-export class SelectionSetToObject<
-  Config extends ParsedDocumentsConfig = ParsedDocumentsConfig,
-> extends CodegenSelectionSetToObject {
-  constructor(
-    protected _processor: BaseSelectionSetProcessor<any>,
-    protected _scalars: NormalizedScalarsMap,
-    protected _schema: GraphQLSchema,
-    protected _convertName: ConvertNameFn<BaseVisitorConvertOptions>,
-    protected _getFragmentSuffix: GetFragmentSuffixFn,
-    protected _loadedFragments: LoadedFragment[],
-    protected _config: Config,
-    protected _parentSchemaType?: GraphQLNamedType,
-    protected _selectionSet?: SelectionSetNode,
-  ) {
-    super(
-      _processor,
-      _scalars,
-      _schema,
-      _convertName,
-      _getFragmentSuffix,
-      _loadedFragments,
-      _config,
-      _parentSchemaType,
-      _selectionSet,
-    );
-  }
-
+export class SelectionSetToObject extends CodegenSelectionSetToObject {
   public createNext(
     parentSchemaType: GraphQLNamedType,
     selectionSet: SelectionSetNode,

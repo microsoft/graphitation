@@ -4809,43 +4809,6 @@ function test(q: GetEntityBrandDataQuery): void {
       );`);
     });
 
-    it("TODO", async () => {
-      const schema = buildSchema(/* GraphQL */ `
-        type Query {
-          user: User
-        }
-
-        type User {
-          name: String
-        }
-      `);
-
-      const fragment = parse(/* GraphQL */ `
-        query user($withUser: [[[Boolean]]]! = false) {
-          ... @include(if: $withUser) {
-            user {
-              name
-            }
-          }
-        }
-      `);
-
-      const { content } = await plugin(
-        schema,
-        [{ location: "", document: fragment }],
-        {},
-        {
-          outputFile: "graphql.ts",
-        },
-      );
-
-      expect(content).toBeSimilarStringTo(`
-      export type UserQueryVariables = Exact<{
-        withUser?: Array<Maybe<Array<Maybe<Array<Maybe<Scalars['Boolean']>>>>>>;
-      }>;
-`);
-    });
-
     it("#2436 - interface with field of same name but different type is correctly handled", async () => {
       const schema = buildSchema(/* GraphQL */ `
         interface DashboardTile {
