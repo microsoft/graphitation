@@ -39,8 +39,18 @@ export class SelectionSetToObject extends CodegenSelectionSetToObject {
     const fragmentSpreads: FragmentSpreadNode[] = [];
 
     for (const selection of selections) {
-      if (selection.directives?.some((value) => value.name.value === "mask")) {
-        break;
+      const hasMaskDirective = selection.directives?.some(
+        (value) => value.name.value === "mask",
+      );
+
+      if (hasMaskDirective) {
+        if (selection.kind === Kind.FRAGMENT_SPREAD) {
+          break;
+        } else {
+          throw new Error(
+            `Only Fragment spread can use @mask directive. Selection: ${selection}`,
+          );
+        }
       }
 
       switch (selection.kind) {
