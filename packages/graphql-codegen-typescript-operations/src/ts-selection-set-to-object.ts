@@ -8,6 +8,7 @@ import {
   Kind,
   SelectionNode,
   SelectionSetNode,
+  formatError,
 } from "graphql";
 
 export class SelectionSetToObject extends CodegenSelectionSetToObject {
@@ -48,9 +49,11 @@ export class SelectionSetToObject extends CodegenSelectionSetToObject {
         if (selection.kind === Kind.FRAGMENT_SPREAD) {
           break;
         } else {
-          throw new GraphQLError(
-            `Only Fragment spread can use @mask directive`,
-            selection,
+          throw formatError(
+            new GraphQLError(
+              `Only Fragment spread can use @mask directive`,
+              selection,
+            ),
           );
         }
       }
