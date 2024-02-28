@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "webpack-loader bump",
+  "packageName": "@graphitation/webpack-loader",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
