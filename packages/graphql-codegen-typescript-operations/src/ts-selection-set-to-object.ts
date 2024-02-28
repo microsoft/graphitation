@@ -2,6 +2,7 @@ import { SelectionSetToObject as CodegenSelectionSetToObject } from "@graphql-co
 import {
   FieldNode,
   FragmentSpreadNode,
+  GraphQLError,
   GraphQLNamedType,
   InlineFragmentNode,
   Kind,
@@ -47,8 +48,9 @@ export class SelectionSetToObject extends CodegenSelectionSetToObject {
         if (selection.kind === Kind.FRAGMENT_SPREAD) {
           break;
         } else {
-          throw new Error(
-            `Only Fragment spread can use @mask directive. Selection: ${selection}`,
+          throw new GraphQLError(
+            `Only Fragment spread can use @mask directive`,
+            selection,
           );
         }
       }
