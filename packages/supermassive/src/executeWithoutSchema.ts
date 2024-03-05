@@ -49,7 +49,7 @@ import {
   getDirectiveValues,
 } from "./values";
 import type { ExecutionHooks } from "./hooks/types";
-// import { arraysAreEqual } from "./utilities/array";
+import { arraysAreEqual } from "./utilities/array";
 import { isAsyncIterable } from "./jsutils/isAsyncIterable";
 import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
 import { GraphQLStreamDirective } from "./schema/directives";
@@ -863,46 +863,18 @@ function resolveAndCompleteField(
 
     let completed;
     if (isPromise(result)) {
-      completed = result.then(
-        (resolved) => {
-          // if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-          //   invokeAfterFieldResolveHook(
-          //     info,
-          //     exeContext,
-          //     hookContext,
-          //     resolved,
-          //   );
-          // }
-          return completeValue(
-            exeContext,
-            returnTypeRef,
-            fieldGroup,
-            info,
-            path,
-            resolved,
-            incrementalDataRecord,
-          );
-        },
-        // (rawError) => {
-        //   // That's where afterResolve hook can only be called
-        //   // in the case of async resolver promise rejection.
-        //   if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-        //     invokeAfterFieldResolveHook(
-        //       info,
-        //       exeContext,
-        //       hookContext,
-        //       undefined,
-        //       rawError,
-        //     );
-        //   }
-        //   // Error will be handled on field completion
-        //   throw rawError;
-        // },
-      );
+      completed = result.then((resolved) => {
+        return completeValue(
+          exeContext,
+          returnTypeRef,
+          fieldGroup,
+          info,
+          path,
+          resolved,
+          incrementalDataRecord,
+        );
+      });
     } else {
-      // if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-      //   invokeAfterFieldResolveHook(info, exeContext, hookContext, result);
-      // }
       completed = completeValue(
         exeContext,
         returnTypeRef,
@@ -963,20 +935,19 @@ function resolveAndCompleteField(
     // it means that field itself resolved fine (so afterFieldResolve has been invoked already),
     // but non-nullable child field resolving throws an error,
     // so that error is propagated to the parent field according to spec
-    // if (
-    //   !isDefaultResolverUsed &&
-    //   hooks?.afterFieldResolve &&
-    //   error.path &&
-    //   arraysAreEqual(pathArray, error.path)
-    // ) {
-    //   hookContext = invokeAfterFieldResolveHook(
-    //     info,
-    //     exeContext,
-    //     hookContext,
-    //     undefined,
-    //     error,
-    //   );
-    // }
+    if (
+      !isDefaultResolverUsed &&
+      hooks?.afterFieldResolve &&
+      error.path &&
+      arraysAreEqual(pathArray, error.path)
+    ) {
+      hookContext = invokeAfterFieldResolveHook(
+        info,
+        exeContext,
+        hookContext,
+        undefined,
+      );
+    }
     if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
       invokeAfterFieldCompleteHook(
         info,
