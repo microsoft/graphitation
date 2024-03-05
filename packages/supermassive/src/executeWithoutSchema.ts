@@ -48,8 +48,8 @@ import {
   getVariableValues,
   getDirectiveValues,
 } from "./values";
-import { ExecutionHooks } from "./hooks/types";
-import { arraysAreEqual } from "./utilities/array";
+import type { ExecutionHooks } from "./hooks/types";
+// import { arraysAreEqual } from "./utilities/array";
 import { isAsyncIterable } from "./jsutils/isAsyncIterable";
 import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
 import { GraphQLStreamDirective } from "./schema/directives";
@@ -833,6 +833,8 @@ function resolveAndCompleteField(
 
   const isDefaultResolverUsed = resolveFn === exeContext.fieldResolver;
   const hooks = exeContext.fieldExecutionHooks;
+  let hookContext: unknown = undefined;
+
   //  the resolve function, regardless of if its result is normal or abrupt (error).
   try {
     // Build a JS object of arguments from the field.arguments AST, using the
@@ -846,18 +848,31 @@ function resolveAndCompleteField(
     const contextValue = exeContext.contextValue;
 
     if (!isDefaultResolverUsed && hooks?.beforeFieldResolve) {
-      invokeBeforeFieldResolveHook(info, exeContext);
+      hookContext = invokeBeforeFieldResolveHook(info, exeContext);
     }
 
     const result = resolveFn(source, args, contextValue, info);
-    let completed;
+    if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
+      hookContext = invokeAfterFieldResolveHook(
+        info,
+        exeContext,
+        hookContext,
+        result,
+      );
+    }
 
+    let completed;
     if (isPromise(result)) {
       completed = result.then(
         (resolved) => {
-          if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-            invokeAfterFieldResolveHook(info, exeContext, resolved);
-          }
+          // if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
+          //   invokeAfterFieldResolveHook(
+          //     info,
+          //     exeContext,
+          //     hookContext,
+          //     resolved,
+          //   );
+          // }
           return completeValue(
             exeContext,
             returnTypeRef,
@@ -868,20 +883,26 @@ function resolveAndCompleteField(
             incrementalDataRecord,
           );
         },
-        (rawError) => {
-          // That's where afterResolve hook can only be called
-          // in the case of async resolver promise rejection.
-          if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-            invokeAfterFieldResolveHook(info, exeContext, undefined, rawError);
-          }
-          // Error will be handled on field completion
-          throw rawError;
-        },
+        // (rawError) => {
+        //   // That's where afterResolve hook can only be called
+        //   // in the case of async resolver promise rejection.
+        //   if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
+        //     invokeAfterFieldResolveHook(
+        //       info,
+        //       exeContext,
+        //       hookContext,
+        //       undefined,
+        //       rawError,
+        //     );
+        //   }
+        //   // Error will be handled on field completion
+        //   throw rawError;
+        // },
       );
     } else {
-      if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-        invokeAfterFieldResolveHook(info, exeContext, result);
-      }
+      // if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
+      //   invokeAfterFieldResolveHook(info, exeContext, hookContext, result);
+      // }
       completed = completeValue(
         exeContext,
         returnTypeRef,
@@ -899,14 +920,25 @@ function resolveAndCompleteField(
       return completed.then(
         (resolved) => {
           if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
-            invokeAfterFieldCompleteHook(info, exeContext, resolved);
+            invokeAfterFieldCompleteHook(
+              info,
+              exeContext,
+              hookContext,
+              resolved,
+            );
           }
           return resolved;
         },
         (rawError) => {
           const error = locatedError(rawError, fieldGroup, pathToArray(path));
           if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
-            invokeAfterFieldCompleteHook(info, exeContext, undefined, error);
+            invokeAfterFieldCompleteHook(
+              info,
+              exeContext,
+              hookContext,
+              undefined,
+              error,
+            );
           }
           handleFieldError(
             rawError,
@@ -921,7 +953,7 @@ function resolveAndCompleteField(
       );
     }
     if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
-      invokeAfterFieldCompleteHook(info, exeContext, completed);
+      invokeAfterFieldCompleteHook(info, exeContext, hookContext, completed);
     }
     return completed;
   } catch (rawError) {
@@ -931,16 +963,28 @@ function resolveAndCompleteField(
     // it means that field itself resolved fine (so afterFieldResolve has been invoked already),
     // but non-nullable child field resolving throws an error,
     // so that error is propagated to the parent field according to spec
-    if (
-      !isDefaultResolverUsed &&
-      hooks?.afterFieldResolve &&
-      error.path &&
-      arraysAreEqual(pathArray, error.path)
-    ) {
-      invokeAfterFieldResolveHook(info, exeContext, undefined, error);
-    }
+    // if (
+    //   !isDefaultResolverUsed &&
+    //   hooks?.afterFieldResolve &&
+    //   error.path &&
+    //   arraysAreEqual(pathArray, error.path)
+    // ) {
+    //   hookContext = invokeAfterFieldResolveHook(
+    //     info,
+    //     exeContext,
+    //     hookContext,
+    //     undefined,
+    //     error,
+    //   );
+    // }
     if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
-      invokeAfterFieldCompleteHook(info, exeContext, undefined, error);
+      invokeAfterFieldCompleteHook(
+        info,
+        exeContext,
+        hookContext,
+        undefined,
+        error,
+      );
     }
     handleFieldError(
       rawError,
@@ -1664,12 +1708,12 @@ function collectAndExecuteSubfields(
 function invokeBeforeFieldResolveHook(
   resolveInfo: ResolveInfo,
   exeContext: ExecutionContext,
-): void {
+) {
   const hook = exeContext.fieldExecutionHooks?.beforeFieldResolve;
   if (!hook) {
     return;
   }
-  executeSafe(
+  return executeSafe(
     () =>
       hook({
         resolveInfo,
@@ -1691,20 +1735,20 @@ function invokeBeforeFieldResolveHook(
 function invokeAfterFieldResolveHook(
   resolveInfo: ResolveInfo,
   exeContext: ExecutionContext,
+  hookContext: unknown,
   result?: unknown,
-  error?: unknown,
-): void {
+) {
   const hook = exeContext.fieldExecutionHooks?.afterFieldResolve;
   if (!hook) {
     return;
   }
-  executeSafe(
+  return executeSafe(
     () =>
       hook({
         resolveInfo,
         context: exeContext.contextValue,
+        hookContext,
         result,
-        error,
       }),
     (_, rawError) => {
       if (rawError) {
@@ -1722,6 +1766,7 @@ function invokeAfterFieldResolveHook(
 function invokeAfterFieldCompleteHook(
   resolveInfo: ResolveInfo,
   exeContext: ExecutionContext,
+  hookContext: unknown,
   result?: unknown,
   error?: unknown,
 ): void {
@@ -1734,6 +1779,7 @@ function invokeAfterFieldCompleteHook(
       hook({
         resolveInfo,
         context: exeContext.contextValue,
+        hookContext,
         result,
         error,
       }),
