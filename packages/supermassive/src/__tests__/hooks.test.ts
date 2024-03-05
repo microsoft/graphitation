@@ -12,7 +12,7 @@ import { UserResolvers, TotalExecutionResult } from "../types";
 import {
   AfterFieldCompleteHookArgs,
   AfterFieldResolveHookArgs,
-  BeforeFieldResolveHookArgs,
+  BaseExecuteFieldHookArgs,
   ExecutionHooks,
 } from "../hooks/types";
 import { pathToArray } from "../jsutils/Path";
@@ -87,13 +87,19 @@ describe.each([
     const hooks: ExecutionHooks = {
       beforeFieldResolve: jest
         .fn()
-        .mockImplementation(({ resolveInfo }: BeforeFieldResolveHookArgs) => {
-          hookCalls.push(`BFR|${pathToArray(resolveInfo.path).join(".")}`);
-        }),
+        .mockImplementation(
+          ({ resolveInfo }: BaseExecuteFieldHookArgs<unknown>) => {
+            hookCalls.push(`BFR|${pathToArray(resolveInfo.path).join(".")}`);
+          },
+        ),
       afterFieldResolve: jest
         .fn()
         .mockImplementation(
-          ({ resolveInfo, result, error }: AfterFieldResolveHookArgs) => {
+          ({
+            resolveInfo,
+            result,
+            error,
+          }: AfterFieldResolveHookArgs<unknown, unknown>) => {
             const resultValue =
               typeof result === "object" && result !== null
                 ? "[object]"
@@ -109,7 +115,11 @@ describe.each([
       afterFieldComplete: jest
         .fn()
         .mockImplementation(
-          ({ resolveInfo, result, error }: AfterFieldCompleteHookArgs) => {
+          ({
+            resolveInfo,
+            result,
+            error,
+          }: AfterFieldCompleteHookArgs<unknown, unknown>) => {
             const resultValue =
               typeof result === "object" && result !== null
                 ? "[object]"
