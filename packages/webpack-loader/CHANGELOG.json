@@ -1,0 +1,47 @@
+{
+  "name": "@graphitation/webpack-loader",
+  "entries": [
+    {
+      "date": "Wed, 28 Feb 2024 17:44:01 GMT",
+      "tag": "@graphitation/webpack-loader_v1.0.2",
+      "version": "1.0.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/webpack-loader",
+            "commit": "4bc510a93fc2082802499963f322cc6cdf4d018c",
+            "comment": "webpack-loader bump"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/webpack-loader",
+            "comment": "Bump @graphitation/supermassive to v3.4.2",
+            "commit": "4bc510a93fc2082802499963f322cc6cdf4d018c"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 14 Feb 2024 20:38:10 GMT",
+      "tag": "@graphitation/webpack-loader_v1.0.0",
+      "version": "1.0.0",
+      "comments": {
+        "major": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/webpack-loader",
+            "commit": "7dd32aba6e58ace776af90d64cec45d0cbe34009",
+            "comment": "Fork of graphql-tools/webpack-loader with supermassive encoding support for SDL"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/webpack-loader",
+            "comment": "Bump @graphitation/supermassive to v3.4.2",
+            "commit": "7dd32aba6e58ace776af90d64cec45d0cbe34009"
+          }
+        ]
+      }
+    }
+  ]
+}

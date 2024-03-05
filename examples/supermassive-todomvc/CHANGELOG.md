@@ -1,8 +1,32 @@
 # Change Log - supermassive-todomvc
 
-This log was last generated on Tue, 30 Jan 2024 10:24:57 GMT and should not be manually modified.
+This log was last generated on Wed, 28 Feb 2024 17:44:01 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.1-0
+
+Wed, 28 Feb 2024 17:44:01 GMT
+
+### Patches
+
+- Bump @graphitation/webpack-loader to v1.0.2
+
+## 1.0.1-0
+
+Wed, 14 Feb 2024 20:38:10 GMT
+
+### Patches
+
+- Bump @graphitation/webpack-loader to v1.0.0
+
+## 1.0.1-0
+
+Tue, 06 Feb 2024 17:55:58 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape to v1.0.30
 
 ## 1.0.1-0
 

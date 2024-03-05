@@ -10,10 +10,10 @@ import {
   normalizeAvoidOptionals,
   ParsedDocumentsConfig,
   SelectionSetProcessorConfig,
-  SelectionSetToObject,
   PreResolveTypesProcessor as CodegenPreResolveTypesProcessor,
   wrapTypeWithModifiers,
 } from "@graphql-codegen/visitor-plugin-common";
+import { SelectionSetToObject } from "./ts-selection-set-to-object";
 import autoBind from "auto-bind";
 import {
   ASTNode,

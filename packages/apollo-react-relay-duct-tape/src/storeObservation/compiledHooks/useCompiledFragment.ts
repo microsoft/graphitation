@@ -5,6 +5,7 @@ import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultAp
 
 import type { FragmentReference } from "./types";
 import type { CompiledArtefactModule } from "@graphitation/apollo-react-relay-duct-tape-compiler";
+import { Cache } from "@apollo/client/core";
 
 /**
  * @param documents Compiled watch query document that is used to setup a narrow
@@ -38,9 +39,9 @@ export function useCompiledFragment(
         query: watchQueryDocument,
         returnPartialData: false,
         variables: {
+          ...fragmentReference.__fragments,
           id: fragmentReference.id,
           __fragments: fragmentReference.__fragments,
-          ...fragmentReference.__fragments,
         },
       }),
     [client, fragmentReference.id, fragmentReference.__fragments],
@@ -65,13 +66,35 @@ export function useCompiledFragment(
   }, [observableQuery]);
 
   const result = observableQuery.getCurrentResult();
+  if (result.partial) {
+    invariant(
+      false,
+      "useFragment(): Missing data expected to be seeded by the execution query document: %s. Please check your type policies and possibleTypes configuration. If only subset of properties is missing you might need to configure merge functions for non-normalized types.",
+      JSON.stringify(
+        // we need the cast because queryInfo and lastDiff are private but very useful for debugging
+        (
+          observableQuery as unknown as {
+            queryInfo?: { lastDiff?: { diff?: Cache.DiffResult<unknown> } };
+          }
+        ).queryInfo?.lastDiff?.diff?.missing?.map((e) => e.path),
+      ),
+    );
+  }
   let data = result.data;
   if (metadata?.rootSelection) {
+    invariant(
+      data,
+      "useFragment(): Expected Apollo to respond with previously seeded data of the execution query document: %s. Did you configure your type policies and possibleTypes correctly? Check apollo-react-relay-duct-tape README for more details.",
+      JSON.stringify({
+        selection: metadata.rootSelection,
+        mainFragment: metadata.mainFragment,
+      }),
+    );
     data = data[metadata.rootSelection];
   }
   invariant(
     data,
-    "useFragment(): Expected Apollo to respond with previously seeded data of the execution query document",
+    "useFragment(): Expected Apollo to respond with previously seeded data of the execution query document. Did you configure your type policies and possibleTypes correctly? Check apollo-react-relay-duct-tape README for more details.",
   );
   return data;
 }

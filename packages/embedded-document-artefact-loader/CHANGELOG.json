@@ -2,6 +2,21 @@
   "name": "@graphitation/embedded-document-artefact-loader",
   "entries": [
     {
+      "date": "Wed, 28 Feb 2024 17:44:01 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.7.0",
+      "version": "0.7.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mark@thedutchies.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "4bc510a93fc2082802499963f322cc6cdf4d018c",
+            "comment": "Add support for artifactDirectory to loader"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 29 Jan 2024 22:07:50 GMT",
       "tag": "@graphitation/embedded-document-artefact-loader_v0.6.9",
       "version": "0.6.9",

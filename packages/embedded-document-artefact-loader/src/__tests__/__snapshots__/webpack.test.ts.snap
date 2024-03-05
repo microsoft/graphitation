@@ -2,6 +2,14 @@
 
 exports[`webpackLoader concerning source-maps returns the input source-map when no code is transformed 1`] = `"{"version":3,"file":"fixture.js","sourceRoot":"","sources":["fixture.ts"],"names":[],"mappings":"AAEQ,OAAO,CAAC,GAAG,EAAE,CAAA","sourcesContent":["\\n        import { graphql } from \\"@nova/react\\";\\n        console.log()\\n      "]}"`;
 
+exports[`webpackLoader works with artifactDirectory option 1`] = `
+"
+        import { graphql } from "@nova/react";
+        const doc = require("../../__generated__/SomeComponentQuery.graphql").default;
+        console.log()
+      "
+`;
+
 exports[`webpackLoader works with documents captured as variable 1`] = `
 "
         import { graphql } from "@nova/react";

@@ -117,8 +117,9 @@ const _Root_executionQueryDocument = graphql`
     $avatarSize: Int = 21
     $messagesBackwardCount: Int!
     $messagesBeforeCursor: String!
+    $id: String = "shouldNotOverrideCompiledFragmentId"
   ) {
-    user(id: $userId) {
+    user(id: $userId, idThatDoesntOverride: $id) {
       name
       ...compiledHooks_ChildFragment
       ...compiledHooks_RefetchableFragment
@@ -561,6 +562,7 @@ describe.each([
         {
           "__fragments": {
             "avatarSize": 21,
+            "id": "shouldNotOverrideCompiledFragmentId",
             "messagesBackwardCount": 1,
             "messagesBeforeCursor": "",
             "userId": 42,

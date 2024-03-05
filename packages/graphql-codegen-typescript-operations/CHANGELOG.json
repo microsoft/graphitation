@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-typescript-operations",
   "entries": [
     {
+      "date": "Wed, 28 Feb 2024 17:44:01 GMT",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.8.0",
+      "version": "1.8.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "jakubvejr@microsoft.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "4bc510a93fc2082802499963f322cc6cdf4d018c",
+            "comment": "Fragments containing @mask directive removed from the type"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 29 Jan 2024 20:37:47 GMT",
       "tag": "@graphitation/graphql-codegen-typescript-operations_v1.7.0",
       "version": "1.7.0",

@@ -1,12 +1,14 @@
 import { RunLoaderResult, runLoaders } from "loader-runner";
-import { SourceMapConsumer, MappingItem } from "source-map-js";
-import * as fs from "fs";
-import * as path from "path";
+import { SourceMapConsumer } from "source-map-js";
 import { Position } from "source-map-js";
 
 function runLoader(
   source: string,
-  options?: { sourceMap?: boolean; compileTS?: boolean },
+  options?: {
+    sourceMap?: boolean;
+    compileTS?: boolean;
+    artifactDirectory?: string;
+  },
 ) {
   return new Promise<RunLoaderResult>((resolve, reject) => {
     runLoaders(
@@ -15,7 +17,9 @@ function runLoader(
         loaders: [
           {
             loader: require.resolve("../webpack.ts"),
-            options: {},
+            options: {
+              artifactDirectory: options?.artifactDirectory,
+            },
           },
           options?.compileTS && {
             loader: require.resolve("./utils/simple-ts-loader.ts"),
@@ -181,8 +185,23 @@ describe("webpackLoader", () => {
         console.log()
       `,
     },
-  ])("works with $name", async ({ source }) => {
-    const result = await runLoader(source);
+    {
+      name: "artifactDirectory option",
+      source: `
+        import { graphql } from "@nova/react";
+        const doc = graphql\`
+          query SomeComponentQuery($id: ID!) {
+            helloWorld
+          }
+        \`;
+        console.log()
+      `,
+      options: {
+        artifactDirectory: "../../__generated__",
+      },
+    },
+  ])("works with $name", async ({ source, options }) => {
+    const result = await runLoader(source, options);
     expect(result.result![0]).toMatchSnapshot();
   });
 
