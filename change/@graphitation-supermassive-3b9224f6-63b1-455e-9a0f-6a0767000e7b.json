@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Execution hooks context",
+  "packageName": "@graphitation/supermassive",
+  "email": "sergeystoyan@microsoft.com",
+  "dependentChangeType": "patch"
+}
