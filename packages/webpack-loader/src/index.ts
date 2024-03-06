@@ -85,8 +85,7 @@ export default function graphqlLoader(
 
   const headerCode = [
     options.replaceKinds ? "var Kind = require('graphql/language/kinds');" : "",
-    // See https://v8.dev/blog/cost-of-javascript-2019#json
-    `var doc = JSON.parse('${stringifiedDoc}');`,
+    `var doc = ${stringifiedDoc};`,
   ].join("\n");
 
   let outputCode = "";

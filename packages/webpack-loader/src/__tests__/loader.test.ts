@@ -14,9 +14,9 @@ test("basic query", () => {
   `;
   const doc = useLoader(docStr, {});
 
-  const docLine = `var doc = JSON.parse('${JSON.stringify(
+  const docLine = `var doc = ${JSON.stringify(
     parse(docStr, { noLocation: true }),
-  )}');`;
+  )};`;
   const exportLine = `module.exports = doc`;
 
   expect(doc).toContain(docLine);
@@ -24,7 +24,7 @@ test("basic query", () => {
 
   expect(doc).toMatchInlineSnapshot(`
     "
-    var doc = JSON.parse('{"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]}');
+    var doc = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]};
 
     module.exports = doc
     "
@@ -52,9 +52,9 @@ test("basic query with esModules on", () => {
     esModule: true,
   });
 
-  const docLine = `var doc = JSON.parse('${JSON.stringify(
+  const docLine = `var doc = ${JSON.stringify(
     parse(docStr, { noLocation: true }),
-  )}');`;
+  )};`;
   const exportLine = `export default doc`;
 
   expect(doc).toContain(docLine);
@@ -62,7 +62,7 @@ test("basic query with esModules on", () => {
 
   expect(doc).toMatchInlineSnapshot(`
     "
-    var doc = JSON.parse('{"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]}');
+    var doc = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]};
 
     export default doc
     "
@@ -88,9 +88,9 @@ test("basic query with imports", () => {
     esModule: true,
   });
 
-  const docLine = `var doc = JSON.parse('${JSON.stringify(
+  const docLine = `var doc = ${JSON.stringify(
     parse(docStr, { noLocation: true }),
-  )}');`;
+  )};`;
   const exportLine = `export default doc`;
 
   expect(doc).toContain(docLine);
@@ -98,7 +98,7 @@ test("basic query with imports", () => {
 
   expect(doc).toMatchInlineSnapshot(`
     "
-    var doc = JSON.parse('{"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]}');
+    var doc = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]};
 
       var names = {};
       function unique(defs) {
@@ -140,9 +140,9 @@ test("supermassive encoding for SDL", () => {
     supermassiveSDL: true,
   });
 
-  const docLine = `var doc = JSON.parse('${JSON.stringify(
+  const docLine = `var doc = ${JSON.stringify(
     encodeASTSchema(parse(docStr, { noLocation: true })),
-  )}');`;
+  )};`;
   const exportLine = `export default doc`;
 
   expect(doc).toContain(docLine);
@@ -150,7 +150,7 @@ test("supermassive encoding for SDL", () => {
 
   expect(doc).toMatchInlineSnapshot(`
     "
-    var doc = JSON.parse('[{"types":{"Query":[2,{"foo":1}]}}]');
+    var doc = [{"types":{"Query":[2,{"foo":1}]}}];
 
     export default doc
     "
@@ -168,9 +168,9 @@ test("supermassive encoding for SDL doesn't affect operations", () => {
     supermassiveSDL: true,
   });
 
-  const docLine = `var doc = JSON.parse('${JSON.stringify(
+  const docLine = `var doc = ${JSON.stringify(
     parse(docStr, { noLocation: true }),
-  )}');`;
+  )};`;
   const exportLine = `export default doc`;
 
   expect(doc).toContain(docLine);
@@ -178,7 +178,7 @@ test("supermassive encoding for SDL doesn't affect operations", () => {
 
   expect(doc).toMatchInlineSnapshot(`
     "
-    var doc = JSON.parse('{"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]}');
+    var doc = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Foo"},"variableDefinitions":[],"directives":[],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"foo"},"arguments":[],"directives":[]}]}}]};
 
     export default doc
     "
