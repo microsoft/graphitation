@@ -1,8 +1,17 @@
 # Change Log - @graphitation/webpack-loader
 
-This log was last generated on Wed, 28 Feb 2024 17:44:01 GMT and should not be manually modified.
+This log was last generated on Thu, 07 Mar 2024 13:08:30 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.3
+
+Thu, 07 Mar 2024 13:08:30 GMT
+
+### Patches
+
+- remove JSON.parse from webpack-loader (vladimir.razuvaev@gmail.com)
+- Bump @graphitation/supermassive to v3.5.0
 
 ## 1.0.2
 

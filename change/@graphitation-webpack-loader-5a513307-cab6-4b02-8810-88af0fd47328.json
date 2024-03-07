@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "remove JSON.parse from webpack-loader",
-  "packageName": "@graphitation/webpack-loader",
-  "email": "vladimir.razuvaev@gmail.com",
-  "dependentChangeType": "patch"
-}
