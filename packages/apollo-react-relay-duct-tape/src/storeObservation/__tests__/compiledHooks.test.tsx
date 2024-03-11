@@ -1,5 +1,5 @@
 import React from "react";
-import { ApolloClient, defaultDataIdFromObject } from "@apollo/client";
+import { ApolloClient, WatchQueryFetchPolicy, defaultDataIdFromObject } from "@apollo/client";
 import {
   act,
   create as createTestRenderer,
@@ -217,10 +217,11 @@ describe.each([
 
   const RootComponent: React.FC<{
     variables: compiledHooks_Root_executionQueryVariables;
+    fetchPolicy?: WatchQueryFetchPolicy;
   }> = (props) => {
     const result = useCompiledLazyLoadQuery(
       compiledHooks_Root_executionQuery_documents,
-      { variables: props.variables },
+      { variables: props.variables, fetchPolicy: props.fetchPolicy },
     );
     useLazyLoadQueryResult = result;
     return result.data ? (
