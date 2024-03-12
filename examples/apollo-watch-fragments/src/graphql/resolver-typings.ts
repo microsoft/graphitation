@@ -46,7 +46,7 @@ export type Me = Node & NodeWithTodos & {
 export type MeTodosArgs = {
   after?: Maybe<Scalars['String']>;
   first: Scalars['Int'];
-  sortByOrder?: Maybe<Scalars['String']>;
+  sortBy?: Maybe<SortByInput>;
 };
 
 export type Mutation = {
@@ -78,7 +78,7 @@ export type NodeWithTodos = {
 export type NodeWithTodosTodosArgs = {
   after?: Maybe<Scalars['String']>;
   first: Scalars['Int'];
-  sortByOrder?: Maybe<Scalars['String']>;
+  sortBy?: Maybe<SortByInput>;
 };
 
 export type PageInfo = {
@@ -99,6 +99,21 @@ export type Query = {
 export type QueryNodeArgs = {
   id: Scalars['ID'];
 };
+
+export type SortByInput = {
+  sortDirection: SortDirection;
+  sortField: SortField;
+};
+
+export enum SortDirection {
+  Asc = 'ASC',
+  Desc = 'DESC'
+}
+
+export enum SortField {
+  Description = 'DESCRIPTION',
+  IsCompleted = 'IS_COMPLETED'
+}
 
 export type Todo = Node & {
   __typename?: 'Todo';
@@ -205,6 +220,9 @@ export type ResolversTypes = {
   NodeWithTodos: ResolversTypes['Me'];
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
   Query: ResolverTypeWrapper<{}>;
+  SortByInput: ResolverTypeWrapper<Partial<SortByInput>>;
+  SortDirection: ResolverTypeWrapper<Partial<SortDirection>>;
+  SortField: ResolverTypeWrapper<Partial<SortField>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
   Todo: ResolverTypeWrapper<TodoData>;
   TodosConnection: ResolverTypeWrapper<Partial<Omit<TodosConnection, 'edges'> & { edges: Array<ResolversTypes['TodosConnectionEdge']> }>>;
@@ -226,6 +244,7 @@ export type ResolversParentTypes = {
   NodeWithTodos: ResolversParentTypes['Me'];
   PageInfo: Partial<PageInfo>;
   Query: {};
+  SortByInput: Partial<SortByInput>;
   String: Partial<Scalars['String']>;
   Todo: TodoData;
   TodosConnection: Partial<Omit<TodosConnection, 'edges'> & { edges: Array<ResolversParentTypes['TodosConnectionEdge']> }>;
