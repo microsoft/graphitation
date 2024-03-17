@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "HOTFIX: Subscription narrowing problem",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "jakubvejr@microsoft.com",
+  "dependentChangeType": "patch"
+}
