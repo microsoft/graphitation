@@ -1,6 +1,10 @@
 import ts from "typescript";
 import { Transformer } from "../transformerTestUtils";
-import { getRelayTransformer, getTransformer } from "../index";
+import {
+  getArtefactImportTransformer,
+  getRelayTransformer,
+  getTransformer,
+} from "../index";
 
 describe("transformer tests", () => {
   it("should convert simple queries", () => {
@@ -349,6 +353,37 @@ describe("transformer tests", () => {
               export default node;
               "
           `);
+    });
+  });
+
+  describe("import embedded document artefact", () => {
+    it("replaces the embedded document with an import of the generated artefact", () => {
+      expect.assertions(1);
+      const transformer = new Transformer()
+        .addTransformer((_program: ts.Program) =>
+          getArtefactImportTransformer({}),
+        )
+        .addMock({
+          name: "@graphitation/graphql-js-tag",
+          content: `export const graphql:any = () => {}; const defaultExport = 1; export default defaultExport ;`,
+        })
+        .setFilePath("/index.tsx");
+
+      const actual = transformer.transform(`
+        import someOtherDefault, { graphql } from "@graphitation/graphql-js-tag"
+
+        export const query = graphql\`
+          query Foo {
+            foo
+          }
+        \`
+        `);
+      expect(actual).toMatchInlineSnapshot(`
+        "import __graphql_tag_import_Foo from "./__generated__/Foo.graphql";
+        import someOtherDefault from "@graphitation/graphql-js-tag";
+        export const query = __graphql_tag_import_Foo;
+        "
+      `);
     });
   });
 });
