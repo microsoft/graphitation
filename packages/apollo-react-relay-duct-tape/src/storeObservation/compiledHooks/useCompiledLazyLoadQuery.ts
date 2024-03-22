@@ -74,7 +74,7 @@ function useExecutionQuery(
     return () => {
       execution.current.reset();
     };
-  }, [executionQueryDocument, variables]);
+  }, [executionQueryDocument, variables, fetchPolicy]);
   return execution.current.status;
 }
 

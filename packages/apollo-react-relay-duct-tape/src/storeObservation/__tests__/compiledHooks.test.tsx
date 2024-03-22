@@ -415,6 +415,42 @@ describe.each([
         ).toMatchSnapshot();
       });
 
+      it("fetches new data when fetchPolicy changes", async () => {
+        const watchQuerySpy = jest.spyOn(client, "watchQuery");
+        act(() => {
+          testRenderer.update(
+            <ApolloReactRelayDuctTapeProvider client={client}>
+              <ErrorBoundary>
+                <RootComponent
+                  variables={{
+                    userId: 21,
+                    messagesBackwardCount: 1,
+                    messagesBeforeCursor: "",
+                  }}
+                  fetchPolicy="network-only"
+                />
+              </ErrorBoundary>
+            </ApolloReactRelayDuctTapeProvider>,
+          );
+        });
+        await act(() =>
+          client.mock.resolveMostRecentOperation((operation) =>
+            MockPayloadGenerator.generate(operation, {
+              User: () => ({ id: operation.request.variables.userId }),
+            }),
+          ),
+        );
+        expect(watchQuerySpy).toHaveBeenCalledWith({
+          query: expect.any(Object),
+          variables: {
+            userId: 21,
+            messagesBackwardCount: 1,
+            messagesBeforeCursor: "",
+          },
+          fetchPolicy: "network-only",
+        });
+      });
+
       it("does not try to kick-off a new query when the variables object deep equals the previous one", async () => {
         const spy = jest.spyOn(client, "query");
         await act(async () => {
