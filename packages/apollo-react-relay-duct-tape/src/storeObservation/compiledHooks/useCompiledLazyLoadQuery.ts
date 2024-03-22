@@ -114,6 +114,7 @@ export function useCompiledLazyLoadQuery(
     client,
     variables,
     // ...but only once finished loading.
+    fetchPolicy: "cache-only",
     skip: loading || !!error,
   });
   return { data, error };
