@@ -408,7 +408,8 @@ describe.each([
           ),
         );
         expect(watchQuerySpy).toHaveBeenCalledWith({
-          query: compiledHooks_Root_executionQuery_documents.executionQueryDocument,
+          query:
+            compiledHooks_Root_executionQuery_documents.executionQueryDocument,
           variables: {
             userId: 21,
             messagesBackwardCount: 1,
@@ -451,7 +452,8 @@ describe.each([
           ),
         );
         expect(watchQuerySpy).toHaveBeenCalledWith({
-          query: compiledHooks_Root_executionQuery_documents.executionQueryDocument,
+          query:
+            compiledHooks_Root_executionQuery_documents.executionQueryDocument,
           variables: {
             userId: 21,
             messagesBackwardCount: 1,
