@@ -5,7 +5,11 @@ import { useDeepCompareMemoize } from "./useDeepCompareMemoize";
 import { useForceUpdate } from "./useForceUpdate";
 import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultApolloClient";
 
-import type { ObservableQuery, ApolloClient, WatchQueryFetchPolicy } from "@apollo/client";
+import type {
+  ObservableQuery,
+  ApolloClient,
+  WatchQueryFetchPolicy,
+} from "@apollo/client";
 import type { DocumentNode } from "graphql";
 import type { CompiledArtefactModule } from "@graphitation/apollo-react-relay-duct-tape-compiler";
 
@@ -53,7 +57,7 @@ function useExecutionQuery(
   client: ApolloClient<unknown>,
   executionQueryDocument: DocumentNode,
   variables: Record<string, unknown>,
-  fetchPolicy: WatchQueryFetchPolicy | undefined
+  fetchPolicy: WatchQueryFetchPolicy | undefined,
 ): [loading: boolean, error?: Error] {
   const forceUpdate = useForceUpdate();
   const execution = useRef(new ExecutionQueryHandler(() => forceUpdate()));
@@ -84,7 +88,10 @@ function useExecutionQuery(
  */
 export function useCompiledLazyLoadQuery(
   documents: CompiledArtefactModule,
-  options: { variables: Record<string, unknown>; fetchPolicy?: WatchQueryFetchPolicy }
+  options: {
+    variables: Record<string, unknown>;
+    fetchPolicy?: WatchQueryFetchPolicy;
+  },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): { data?: Record<string, any>; error?: Error } {
   const { watchQueryDocument } = documents;
@@ -106,7 +113,7 @@ export function useCompiledLazyLoadQuery(
     client,
     executionQueryDocument,
     variables,
-    options.fetchPolicy
+    options.fetchPolicy,
   );
   // ...then fetch/watch data for only the calling component...
   const { data } = useApolloQuery(watchQueryDocument, {

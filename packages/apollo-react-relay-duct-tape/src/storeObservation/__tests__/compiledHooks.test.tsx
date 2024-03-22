@@ -1,5 +1,9 @@
 import React from "react";
-import { ApolloClient, WatchQueryFetchPolicy, defaultDataIdFromObject } from "@apollo/client";
+import {
+  ApolloClient,
+  WatchQueryFetchPolicy,
+  defaultDataIdFromObject,
+} from "@apollo/client";
 import {
   act,
   create as createTestRenderer,
