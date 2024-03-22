@@ -119,8 +119,8 @@ export function useCompiledLazyLoadQuery(
   const { data } = useApolloQuery(watchQueryDocument, {
     client,
     variables,
-    // ...but only once finished loading.
     fetchPolicy: "cache-only",
+    // ...but only once finished loading.
     skip: loading || !!error,
   });
   return { data, error };
