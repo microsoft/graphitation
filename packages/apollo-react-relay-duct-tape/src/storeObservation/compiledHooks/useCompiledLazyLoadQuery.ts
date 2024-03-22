@@ -5,9 +5,11 @@ import { useDeepCompareMemoize } from "./useDeepCompareMemoize";
 import { useForceUpdate } from "./useForceUpdate";
 import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultApolloClient";
 
-import type { ObservableQuery, ApolloClient, WatchQueryFetchPolicy } from "@apollo/client";
+import type { ObservableQuery, ApolloClient } from "@apollo/client";
 import type { DocumentNode } from "graphql";
 import type { CompiledArtefactModule } from "@graphitation/apollo-react-relay-duct-tape-compiler";
+import { convertFetchPolicy } from "../../convertFetchPolicy";
+import type { FetchPolicy } from "../../types";
 
 class ExecutionQueryHandler {
   public status: [loading: boolean, error?: Error];
@@ -53,6 +55,7 @@ function useExecutionQuery(
   client: ApolloClient<unknown>,
   executionQueryDocument: DocumentNode,
   variables: Record<string, unknown>,
+  fetchPolicy: FetchPolicy | undefined
 ): [loading: boolean, error?: Error] {
   const forceUpdate = useForceUpdate();
   const execution = useRef(new ExecutionQueryHandler(() => forceUpdate()));
@@ -62,6 +65,7 @@ function useExecutionQuery(
         client.watchQuery({
           query: executionQueryDocument,
           variables,
+          fetchPolicy: convertFetchPolicy(fetchPolicy) ?? "network-only",
         }),
       );
     }
@@ -82,7 +86,7 @@ function useExecutionQuery(
  */
 export function useCompiledLazyLoadQuery(
   documents: CompiledArtefactModule,
-  options: { variables: Record<string, unknown>; fetchPolicy?: WatchQueryFetchPolicy }
+  options: { variables: Record<string, unknown>; fetchPolicy?: FetchPolicy }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): { data?: Record<string, any>; error?: Error } {
   const { watchQueryDocument } = documents;
@@ -104,12 +108,12 @@ export function useCompiledLazyLoadQuery(
     client,
     executionQueryDocument,
     variables,
+    options.fetchPolicy
   );
   // ...then fetch/watch data for only the calling component...
   const { data } = useApolloQuery(watchQueryDocument, {
     client,
     variables,
-    fetchPolicy: options.fetchPolicy ?? "cache-only",
     // ...but only once finished loading.
     skip: loading || !!error,
   });
