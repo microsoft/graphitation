@@ -8,7 +8,6 @@ import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultAp
 import type { ObservableQuery, ApolloClient, WatchQueryFetchPolicy } from "@apollo/client";
 import type { DocumentNode } from "graphql";
 import type { CompiledArtefactModule } from "@graphitation/apollo-react-relay-duct-tape-compiler";
-import { convertFetchPolicy } from "../../convertFetchPolicy";
 
 class ExecutionQueryHandler {
   public status: [loading: boolean, error?: Error];
