@@ -384,6 +384,7 @@ describe.each([
       });
 
       it("fetches new data when variables change", async () => {
+        const watchQuerySpy = jest.spyOn(client, "watchQuery");
         act(() => {
           testRenderer.update(
             <ApolloReactRelayDuctTapeProvider client={client}>
@@ -406,6 +407,15 @@ describe.each([
             }),
           ),
         );
+        expect(watchQuerySpy).toHaveBeenCalledWith({
+          query: compiledHooks_Root_executionQuery_documents.executionQueryDocument,
+          variables: {
+            userId: 21,
+            messagesBackwardCount: 1,
+            messagesBeforeCursor: "",
+          },
+          fetchPolicy: undefined,
+        });
         expect(
           client.cache.extract()[
             typePolicies === typePoliciesWithDefaultApolloClientStoreKeys
@@ -441,7 +451,7 @@ describe.each([
           ),
         );
         expect(watchQuerySpy).toHaveBeenCalledWith({
-          query: expect.any(Object),
+          query: compiledHooks_Root_executionQuery_documents.executionQueryDocument,
           variables: {
             userId: 21,
             messagesBackwardCount: 1,
@@ -449,6 +459,13 @@ describe.each([
           },
           fetchPolicy: "network-only",
         });
+        expect(
+          client.cache.extract()[
+            typePolicies === typePoliciesWithDefaultApolloClientStoreKeys
+              ? "User:21"
+              : "21"
+          ],
+        ).toMatchSnapshot();
       });
 
       it("does not try to kick-off a new query when the variables object deep equals the previous one", async () => {
