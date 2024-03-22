@@ -12,7 +12,7 @@ export type TodoListPaginationQueryVariables = {
 };
 export type TodoListPaginationQueryResponse = {
     readonly node: {
-        readonly " $fragmentRefs": FragmentRefs<"TodoList_nodeFragment">;
+        readonly " $fragmentSpreads": FragmentRefs<"TodoList_nodeFragment">;
     } | null;
 };
 export type TodoListPaginationQuery = {
