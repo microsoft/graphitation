@@ -63,7 +63,7 @@ function useExecutionQuery(
         client.watchQuery({
           query: executionQueryDocument,
           variables,
-          fetchPolicy: fetchPolicy ?? "network-only",
+          fetchPolicy,
         }),
       );
     }
