@@ -9,7 +9,7 @@ export type TodoRefetchQueryVariables = {
 };
 export type TodoRefetchQueryResponse = {
     readonly node: {
-        readonly " $fragmentRefs": FragmentRefs<"Todo_todoFragment">;
+        readonly " $fragmentSpreads": FragmentRefs<"Todo_todoFragment">;
     } | null;
 };
 export type TodoRefetchQuery = {

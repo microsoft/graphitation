@@ -7,7 +7,7 @@ export type TodoListQueryVariables = {};
 export type TodoListQueryResponse = {
     readonly allTodos: ReadonlyArray<{
         readonly id: string;
-        readonly " $fragmentRefs": FragmentRefs<"TodoFragment">;
+        readonly " $fragmentSpreads": FragmentRefs<"TodoFragment">;
     }>;
 };
 export type TodoListQuery = {

@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "align generated types with relay-compiler >=15.0.0",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape",
+  "email": "dragoshomner@microsoft.com",
+  "dependentChangeType": "patch"
+}

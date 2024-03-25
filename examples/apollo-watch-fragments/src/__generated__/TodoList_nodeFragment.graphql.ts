@@ -10,17 +10,17 @@ export type TodoList_nodeFragment = {
             readonly node: {
                 readonly id: string;
                 readonly isCompleted: boolean;
-                readonly " $fragmentRefs": FragmentRefs<"Todo_todoFragment">;
+                readonly " $fragmentSpreads": FragmentRefs<"Todo_todoFragment">;
             };
         }>;
     };
     readonly id: string;
-    readonly " $refType": "TodoList_nodeFragment";
+    readonly " $fragmentType": "TodoList_nodeFragment";
 };
 export type TodoList_nodeFragment$data = TodoList_nodeFragment;
 export type TodoList_nodeFragment$key = {
     readonly " $data"?: TodoList_nodeFragment$data | undefined;
-    readonly " $fragmentRefs": FragmentRefs<"TodoList_nodeFragment">;
+    readonly " $fragmentSpreads": FragmentRefs<"TodoList_nodeFragment">;
 };
 
 
