@@ -14,7 +14,7 @@
   "dependencies": {
     "@apollo/client": "~3.6.0",
     "@babel/runtime": "^7.12.0",
-    "@graphitation/apollo-react-relay-duct-tape": "^1.1.0",
+    "@graphitation/apollo-react-relay-duct-tape": "^1.1.1",
     "@graphitation/apollo-react-relay-duct-tape-compiler": "^1.5.0",
     "@graphitation/graphql-js-tag": "^0.9.1",
     "@graphitation/supermassive": "^3.5.0",

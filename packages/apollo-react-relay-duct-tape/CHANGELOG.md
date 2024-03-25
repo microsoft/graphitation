@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Mon, 25 Mar 2024 20:42:32 GMT and should not be manually modified.
+This log was last generated on Mon, 25 Mar 2024 22:07:01 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.1.1
+
+Mon, 25 Mar 2024 22:07:01 GMT
+
+### Patches
+
+- Using custom fetch-policy while lazyloading queries. (94519378+pasubhas@users.noreply.github.com)
 
 ## 1.1.0
 

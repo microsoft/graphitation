@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Mon, 25 Mar 2024 22:07:01 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v1.1.1",
+      "version": "1.1.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "94519378+pasubhas@users.noreply.github.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "b4695c9b39b9265403ad0d0372cd6e88999f9e52",
+            "comment": "Using custom fetch-policy while lazyloading queries."
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 25 Mar 2024 20:42:32 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v1.1.0",
       "version": "1.1.0",

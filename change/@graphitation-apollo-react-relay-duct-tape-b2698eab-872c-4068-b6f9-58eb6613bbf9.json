@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Using custom fetch-policy while lazyloading queries.",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape",
-  "email": "94519378+pasubhas@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}
