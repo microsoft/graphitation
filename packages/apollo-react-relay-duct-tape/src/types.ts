@@ -43,11 +43,11 @@ export type FetchPolicy =
  */
 
 export interface _RefType<Ref extends string> {
-  " $refType": Ref;
+  " $fragmentType": Ref;
 }
 
 export interface _FragmentRefs<Refs extends string> {
-  " $fragmentRefs": FragmentRefs<Refs>;
+  " $fragmentSpreads": FragmentRefs<Refs>;
 }
 
 // This is used in the actual artifacts to define the various fragment references a container holds.
@@ -68,7 +68,7 @@ export type FragmentReference = unknown;
 
 export type KeyType<TData = unknown> = Readonly<{
   " $data"?: TData;
-  " $fragmentRefs": FragmentReference;
+  " $fragmentSpreads": FragmentReference;
 }>;
 
 export type KeyTypeData<
