@@ -79,10 +79,14 @@ export function getArtefactImportTransformer(
           getImportArtefactTaggedTemplateTransformer(importDeclarations),
         ),
       );
-      return ts.factory.updateSourceFile(outputSourceFile, [
-        ...importDeclarations,
-        ...outputSourceFile.statements,
-      ]);
+      if (importDeclarations.length > 0) {
+        return ts.factory.updateSourceFile(outputSourceFile, [
+          ...importDeclarations,
+          ...outputSourceFile.statements,
+        ]);
+      } else {
+        return sourceFile;
+      }
     };
   };
 }
