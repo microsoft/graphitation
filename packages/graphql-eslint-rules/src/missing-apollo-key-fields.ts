@@ -57,12 +57,6 @@ function checkRequiredParameters(
     );
   }
 
-  if (!context.parserServices.hasTypeInfo) {
-    throw new Error(
-      `Rule '${ruleName}' requires 'parserOptions.schema' to be set and schema to be loaded. See http://bit.ly/graphql-eslint-schema for more info`,
-    );
-  }
-
   if (!context.options[0]?.typePolicies) {
     throw new Error(
       `Rule '${ruleName}' requires option 'typePolicies' to be set.`,
