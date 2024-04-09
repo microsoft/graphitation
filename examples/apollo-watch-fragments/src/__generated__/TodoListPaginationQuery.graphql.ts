@@ -28,7 +28,7 @@ export type TodoListPaginationQuery = {
 
 
 /*
-query TodoListPaginationQuery($after: String! = "", $count: Int! = 5, $includeSomeOtherField: Boolean, $sortBy: SortByInput, $id: ID!) {
+query TodoListPaginationQuery($after: String! = "", $count: Int! = 5, $includeSomeOtherField: Boolean, $sortBy: SortByInput = {sortField: DESCRIPTION, sortDirection: ASC}, $id: ID!) {
   node(id: $id) {
     __typename
     ...TodoList_nodeFragment_4nog9O
@@ -67,7 +67,7 @@ fragment Todo_todoFragment on Todo {
 */
 
 /*
-query TodoListPaginationQuery($after: String! = "", $count: Int! = 5, $includeSomeOtherField: Boolean, $sortBy: SortByInput, $id: ID!) {
+query TodoListPaginationQuery($after: String! = "", $count: Int! = 5, $includeSomeOtherField: Boolean, $sortBy: SortByInput = {sortField: DESCRIPTION, sortDirection: ASC}, $id: ID!) {
   node(id: $id) {
     __typename
     ...TodoList_nodeFragment_4nog9O
@@ -204,6 +204,33 @@ v9 = [
         "kind": "Name",
         "value": "SortByInput"
       }
+    },
+    "defaultValue": {
+      "kind": "ObjectValue",
+      "fields": [
+        {
+          "kind": "ObjectField",
+          "name": {
+            "kind": "Name",
+            "value": "sortField"
+          },
+          "value": {
+            "kind": "EnumValue",
+            "value": "DESCRIPTION"
+          }
+        },
+        {
+          "kind": "ObjectField",
+          "name": {
+            "kind": "Name",
+            "value": "sortDirection"
+          },
+          "value": {
+            "kind": "EnumValue",
+            "value": "ASC"
+          }
+        }
+      ]
     }
   },
   {
@@ -633,7 +660,13 @@ return {
         "todos"
       ],
       "forwardCountVariable": "count",
-      "forwardCursorVariable": "after"
+      "forwardCursorVariable": "after",
+      "filterVariableDefaults": {
+        "sortBy": {
+          "sortField": "DESCRIPTION",
+          "sortDirection": "ASC"
+        }
+      }
     }
   }
 };
