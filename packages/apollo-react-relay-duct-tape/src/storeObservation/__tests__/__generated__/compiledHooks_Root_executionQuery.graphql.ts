@@ -564,6 +564,40 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
                         block: false,
                       },
                     },
+                    {
+                      kind: "Argument",
+                      name: {
+                        kind: "Name",
+                        value: "sortBy",
+                      },
+                      value: {
+                        kind: "ObjectValue",
+                        fields: [
+                          {
+                            kind: "ObjectField",
+                            name: {
+                              kind: "Name",
+                              value: "sortField",
+                            },
+                            value: {
+                              kind: "EnumValue",
+                              value: "NAME",
+                            },
+                          },
+                          {
+                            kind: "ObjectField",
+                            name: {
+                              kind: "Name",
+                              value: "sortDirection",
+                            },
+                            value: {
+                              kind: "EnumValue",
+                              value: "ASC",
+                            },
+                          },
+                        ],
+                      },
+                    },
                   ],
                   directives: [
                     {
@@ -577,6 +611,23 @@ export const documents: import("@graphitation/apollo-react-relay-duct-tape-compi
                             kind: "StringValue",
                             value: "compiledHooks_user_conversations",
                             block: false,
+                          },
+                        },
+                        {
+                          kind: "Argument",
+                          name: {
+                            kind: "Name",
+                            value: "filter",
+                          },
+                          value: {
+                            kind: "ListValue",
+                            values: [
+                              {
+                                kind: "StringValue",
+                                value: "sortBy",
+                                block: false,
+                              },
+                            ],
                           },
                         },
                       ],
