@@ -62,7 +62,11 @@ fragment compiledHooks_ForwardPaginationFragment on NodeWithPetAvatarAndConversa
   __isNodeWithPetAvatarAndConversations: __typename
   petName
   avatarUrl(size: $avatarSize)
-  conversations(first: 1, after: "") @connection(key: "compiledHooks_user_conversations") {
+  conversations(
+    first: 1
+    after: ""
+    sortBy: {sortField: NAME, sortDirection: ASC}
+  ) @connection(key: "compiledHooks_user_conversations", filter: ["sortBy"]) {
     edges {
       node {
         title
@@ -558,6 +562,40 @@ return {
                     "value": "",
                     "block": false
                   }
+                },
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "sortBy"
+                  },
+                  "value": {
+                    "kind": "ObjectValue",
+                    "fields": [
+                      {
+                        "kind": "ObjectField",
+                        "name": {
+                          "kind": "Name",
+                          "value": "sortField"
+                        },
+                        "value": {
+                          "kind": "EnumValue",
+                          "value": "NAME"
+                        }
+                      },
+                      {
+                        "kind": "ObjectField",
+                        "name": {
+                          "kind": "Name",
+                          "value": "sortDirection"
+                        },
+                        "value": {
+                          "kind": "EnumValue",
+                          "value": "ASC"
+                        }
+                      }
+                    ]
+                  }
                 }
               ],
               "directives": [
@@ -572,6 +610,23 @@ return {
                         "kind": "StringValue",
                         "value": "compiledHooks_user_conversations",
                         "block": false
+                      }
+                    },
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "filter"
+                      },
+                      "value": {
+                        "kind": "ListValue",
+                        "values": [
+                          {
+                            "kind": "StringValue",
+                            "value": "sortBy",
+                            "block": false
+                          }
+                        ]
                       }
                     }
                   ]

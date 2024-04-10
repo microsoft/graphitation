@@ -18,11 +18,30 @@ type Subscription {
   userNameChanged(id: ID!): User!
 }
 
+enum SortDirection {
+  ASC
+  DESC
+}
+
+enum SortField {
+  NAME
+  CREATED_AT
+}
+
+input SortByInput {
+  sortDirection: SortDirection!
+  sortField: SortField!
+}
+
 interface NodeWithPetAvatarAndConversations implements Node {
   id: ID!
   petName: String!
   avatarUrl(size: Int!): String!
-  conversations(first: Int!, after: String!): ConversationsConnection!
+  conversations(
+    first: Int!
+    after: String!
+    sortBy: SortByInput
+  ): ConversationsConnection!
 }
 
 type User implements Node & NodeWithPetAvatarAndConversations {
@@ -31,7 +50,11 @@ type User implements Node & NodeWithPetAvatarAndConversations {
   petName: String!
   avatarUrl(size: Int!): String!
   hasFriends: Boolean!
-  conversations(first: Int!, after: String!): ConversationsConnection!
+  conversations(
+    first: Int!
+    after: String!
+    sortBy: SortByInput
+  ): ConversationsConnection!
   contacts(last: Int!, before: String!): ContactsConnection!
 }
 
