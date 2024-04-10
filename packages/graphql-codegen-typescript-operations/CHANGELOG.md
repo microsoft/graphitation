@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-typescript-operations
 
-This log was last generated on Mon, 29 Jan 2024 20:37:47 GMT and should not be manually modified.
+This log was last generated on Wed, 28 Feb 2024 17:44:01 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.8.0
+
+Wed, 28 Feb 2024 17:44:01 GMT
+
+### Minor changes
+
+- Fragments containing @mask directive removed from the type (jakubvejr@microsoft.com)
 
 ## 1.7.0
 

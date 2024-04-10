@@ -14,10 +14,10 @@
   "dependencies": {
     "@apollo/client": "~3.6.0",
     "@babel/runtime": "^7.12.0",
-    "@graphitation/apollo-react-relay-duct-tape": "^1.0.30",
-    "@graphitation/apollo-react-relay-duct-tape-compiler": "^1.4.0",
+    "@graphitation/apollo-react-relay-duct-tape": "^1.1.1",
+    "@graphitation/apollo-react-relay-duct-tape-compiler": "^1.5.0",
     "@graphitation/graphql-js-tag": "^0.9.1",
-    "@graphitation/supermassive": "^3.4.2",
+    "@graphitation/supermassive": "^3.5.0",
     "@graphitation/ts-transform-graphql-js-tag": "^1.2.0",
     "concurrently": "^6.5.1",
     "graphql": "^15.6.1",
@@ -58,7 +58,7 @@
     "@types/uuid": "^8.3.1",
     "graphql-let": "^0.18.5",
     "prettier": "^2.8.7",
-    "@graphql-tools/webpack-loader": "7.0.0",
+    "@graphitation/webpack-loader": "^1.0.3",
     "typescript": "^4.9.5"
   }
 }

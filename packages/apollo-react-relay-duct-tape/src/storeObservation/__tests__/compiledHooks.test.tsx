@@ -1,5 +1,9 @@
 import React from "react";
-import { ApolloClient, defaultDataIdFromObject } from "@apollo/client";
+import {
+  ApolloClient,
+  WatchQueryFetchPolicy,
+  defaultDataIdFromObject,
+} from "@apollo/client";
 import {
   act,
   create as createTestRenderer,
@@ -222,10 +226,11 @@ describe.each([
 
   const RootComponent: React.FC<{
     variables: compiledHooks_Root_executionQueryVariables;
+    fetchPolicy?: WatchQueryFetchPolicy;
   }> = (props) => {
     const result = useCompiledLazyLoadQuery(
       compiledHooks_Root_executionQuery_documents,
-      { variables: props.variables },
+      { variables: props.variables, fetchPolicy: props.fetchPolicy },
     );
     useLazyLoadQueryResult = result;
     return result.data ? (
@@ -384,6 +389,7 @@ describe.each([
       });
 
       it("fetches new data when variables change", async () => {
+        const watchQuerySpy = jest.spyOn(client, "watchQuery");
         act(() => {
           testRenderer.update(
             <ApolloReactRelayDuctTapeProvider client={client}>
@@ -406,6 +412,60 @@ describe.each([
             }),
           ),
         );
+        expect(watchQuerySpy).toHaveBeenCalledWith({
+          query:
+            compiledHooks_Root_executionQuery_documents.executionQueryDocument,
+          variables: {
+            userId: 21,
+            messagesBackwardCount: 1,
+            messagesBeforeCursor: "",
+          },
+          fetchPolicy: undefined,
+        });
+        expect(
+          client.cache.extract()[
+            typePolicies === typePoliciesWithDefaultApolloClientStoreKeys
+              ? "User:21"
+              : "21"
+          ],
+        ).toMatchSnapshot();
+      });
+
+      it("fetches new data when fetchPolicy changes", async () => {
+        const watchQuerySpy = jest.spyOn(client, "watchQuery");
+        act(() => {
+          testRenderer.update(
+            <ApolloReactRelayDuctTapeProvider client={client}>
+              <ErrorBoundary>
+                <RootComponent
+                  variables={{
+                    userId: 21,
+                    messagesBackwardCount: 1,
+                    messagesBeforeCursor: "",
+                  }}
+                  fetchPolicy="network-only"
+                />
+              </ErrorBoundary>
+            </ApolloReactRelayDuctTapeProvider>,
+          );
+        });
+        await act(() =>
+          client.mock.resolveMostRecentOperation((operation) =>
+            MockPayloadGenerator.generate(operation, {
+              User: () => ({ id: operation.request.variables.userId }),
+            }),
+          ),
+        );
+        expect(watchQuerySpy).toHaveBeenCalledWith({
+          query:
+            compiledHooks_Root_executionQuery_documents.executionQueryDocument,
+          variables: {
+            userId: 21,
+            messagesBackwardCount: 1,
+            messagesBeforeCursor: "",
+          },
+          fetchPolicy: "network-only",
+        });
         expect(
           client.cache.extract()[
             typePolicies === typePoliciesWithDefaultApolloClientStoreKeys

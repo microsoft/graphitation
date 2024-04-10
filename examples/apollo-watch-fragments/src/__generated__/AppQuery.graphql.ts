@@ -11,9 +11,9 @@ export type AppQueryResponse = {
         readonly todoStats: {
             readonly id: string;
             readonly totalCount: number;
-            readonly " $fragmentRefs": FragmentRefs<"TodoListFooter_todosFragment">;
+            readonly " $fragmentSpreads": FragmentRefs<"TodoListFooter_todosFragment">;
         };
-        readonly " $fragmentRefs": FragmentRefs<"TodoList_nodeFragment">;
+        readonly " $fragmentSpreads": FragmentRefs<"TodoList_nodeFragment">;
     };
 };
 export type AppQuery = {

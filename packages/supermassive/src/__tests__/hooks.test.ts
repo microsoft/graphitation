@@ -8,14 +8,15 @@ import schema, { typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
 import { extractMinimalViableSchemaForRequestDocument } from "../utilities/extractMinimalViableSchemaForRequestDocument";
-import { UserResolvers, TotalExecutionResult } from "../types";
-import {
+import type { UserResolvers, TotalExecutionResult } from "../types";
+import type {
   AfterFieldCompleteHookArgs,
   AfterFieldResolveHookArgs,
-  BeforeFieldResolveHookArgs,
+  BaseExecuteFieldHookArgs,
   ExecutionHooks,
 } from "../hooks/types";
 import { pathToArray } from "../jsutils/Path";
+import { isPromise } from "../jsutils/isPromise";
 
 interface TestCase {
   name: string;
@@ -87,29 +88,36 @@ describe.each([
     const hooks: ExecutionHooks = {
       beforeFieldResolve: jest
         .fn()
-        .mockImplementation(({ resolveInfo }: BeforeFieldResolveHookArgs) => {
-          hookCalls.push(`BFR|${pathToArray(resolveInfo.path).join(".")}`);
-        }),
+        .mockImplementation(
+          ({ resolveInfo }: BaseExecuteFieldHookArgs<unknown>) => {
+            hookCalls.push(`BFR|${pathToArray(resolveInfo.path).join(".")}`);
+          },
+        ),
       afterFieldResolve: jest
         .fn()
         .mockImplementation(
-          ({ resolveInfo, result, error }: AfterFieldResolveHookArgs) => {
-            const resultValue =
-              typeof result === "object" && result !== null
-                ? "[object]"
-                : result;
-            const errorMessage = error instanceof Error ? error.message : error;
+          ({
+            resolveInfo,
+            result,
+          }: AfterFieldResolveHookArgs<unknown, unknown>) => {
+            const resultValue = isPromise(result) // result is a promise for async resolvers
+              ? "[promise]"
+              : typeof result === "object" && result !== null
+              ? "[object]"
+              : result;
             hookCalls.push(
-              `AFR|${pathToArray(resolveInfo.path).join(
-                ".",
-              )}|${resultValue}|${errorMessage}`,
+              `AFR|${pathToArray(resolveInfo.path).join(".")}|${resultValue}`,
             );
           },
         ),
       afterFieldComplete: jest
         .fn()
         .mockImplementation(
-          ({ resolveInfo, result, error }: AfterFieldCompleteHookArgs) => {
+          ({
+            resolveInfo,
+            result,
+            error,
+          }: AfterFieldCompleteHookArgs<unknown, unknown>) => {
             const resultValue =
               typeof result === "object" && result !== null
                 ? "[object]"
@@ -148,9 +156,9 @@ describe.each([
         } as UserResolvers,
         expectedHookCalls: [
           "BFR|person",
-          "AFR|person|[object]|undefined",
+          "AFR|person|[object]",
           "BFR|person.name",
-          "AFR|person.name|Luke Skywalker|undefined",
+          "AFR|person.name|Luke Skywalker",
           "AFC|person.name|Luke Skywalker|undefined",
           "AFC|person|[object]|undefined",
         ],
@@ -174,9 +182,9 @@ describe.each([
         } as UserResolvers,
         expectedHookCalls: [
           "BFR|person",
-          "AFR|person|[object]|undefined",
+          "AFR|person|[object]",
           "BFR|person.name",
-          "AFR|person.name|Luke Skywalker|undefined",
+          "AFR|person.name|[promise]",
           "AFC|person.name|Luke Skywalker|undefined",
           "AFC|person|[object]|undefined",
         ],
@@ -200,9 +208,9 @@ describe.each([
         } as UserResolvers,
         expectedHookCalls: [
           "BFR|film",
-          "AFR|film|[object]|undefined",
+          "AFR|film|[object]",
           "BFR|film.producer",
-          "AFR|film.producer|undefined|Resolver error",
+          "AFR|film.producer|undefined",
           "AFC|film.producer|undefined|Resolver error",
           "AFC|film|[object]|undefined",
         ],
@@ -226,9 +234,9 @@ describe.each([
         } as UserResolvers,
         expectedHookCalls: [
           "BFR|film",
-          "AFR|film|[object]|undefined",
+          "AFR|film|[object]",
           "BFR|film.producer",
-          "AFR|film.producer|undefined|Resolver error",
+          "AFR|film.producer|[promise]",
           "AFC|film.producer|undefined|Resolver error",
           "AFC|film|[object]|undefined",
         ],
@@ -252,9 +260,9 @@ describe.each([
         } as UserResolvers,
         expectedHookCalls: [
           "BFR|film",
-          "AFR|film|[object]|undefined",
+          "AFR|film|[object]",
           "BFR|film.title",
-          "AFR|film.title|undefined|Resolver error",
+          "AFR|film.title|undefined",
           "AFC|film.title|undefined|Resolver error",
           "AFC|film|undefined|Resolver error",
         ],
@@ -278,9 +286,9 @@ describe.each([
         } as UserResolvers,
         expectedHookCalls: [
           "BFR|film",
-          "AFR|film|[object]|undefined",
+          "AFR|film|[object]",
           "BFR|film.title",
-          "AFR|film.title|undefined|Resolver error",
+          "AFR|film.title|[promise]",
           "AFC|film.title|undefined|Resolver error",
           "AFC|film|undefined|Resolver error",
         ],
@@ -297,7 +305,7 @@ describe.each([
         resolvers: resolvers as UserResolvers,
         expectedHookCalls: [
           "BFR|film",
-          "AFR|film|[object]|undefined",
+          "AFR|film|[object]",
           "AFC|film|[object]|undefined",
         ],
         resultHasErrors: false,
@@ -447,6 +455,37 @@ describe.each([
         expect(errors).toHaveLength(1);
         expect(errors?.[0].message).toBe(expectedErrorMessage);
       },
+    );
+  });
+
+  it("passes hook context", async () => {
+    expect.assertions(2);
+
+    const query = `
+    {
+      film(id: 1) {
+        title
+      }
+    }`;
+    const beforeHookContext = {
+      foo: "foo",
+    };
+    const afterHookContext = {
+      bar: "bar",
+    };
+    const hooks: ExecutionHooks = {
+      beforeFieldResolve: jest.fn(() => beforeHookContext),
+      afterFieldResolve: jest.fn(() => afterHookContext),
+      afterFieldComplete: jest.fn(),
+    };
+
+    await execute(parse(query), resolvers as UserResolvers, hooks);
+
+    expect(hooks.afterFieldResolve).toHaveBeenCalledWith(
+      expect.objectContaining({ hookContext: beforeHookContext }),
+    );
+    expect(hooks.afterFieldComplete).toHaveBeenCalledWith(
+      expect.objectContaining({ hookContext: afterHookContext }),
     );
   });
 });

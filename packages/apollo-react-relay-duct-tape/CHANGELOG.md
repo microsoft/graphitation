@@ -1,8 +1,33 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Tue, 06 Feb 2024 17:55:58 GMT and should not be manually modified.
+This log was last generated on Mon, 25 Mar 2024 22:07:01 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.1.1
+
+Mon, 25 Mar 2024 22:07:01 GMT
+
+### Patches
+
+- Using custom fetch-policy while lazyloading queries. (94519378+pasubhas@users.noreply.github.com)
+
+## 1.1.0
+
+Mon, 25 Mar 2024 20:42:32 GMT
+
+### Minor changes
+
+- align generated types with relay-compiler >=15.0.0 (dragoshomner@microsoft.com)
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.5.0
+
+## 1.0.31
+
+Thu, 07 Mar 2024 13:08:30 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.4.1
 
 ## 1.0.30
 

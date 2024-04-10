@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-eslint-rules
 
-This log was last generated on Thu, 21 Sep 2023 06:28:45 GMT and should not be manually modified.
+This log was last generated on Mon, 08 Apr 2024 12:41:40 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.7.2
+
+Mon, 08 Apr 2024 12:41:40 GMT
+
+### Patches
+
+- fixes lint rule compatibility with newer version of eslint plugin (dsamsonov@microsoft.com)
 
 ## 0.7.1
 
