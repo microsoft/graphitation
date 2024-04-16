@@ -1,7 +1,0 @@
-{
-  "type": "none",
-  "comment": "add test for defaultValue as object for @argumentDefinitions",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape",
-  "email": "dragoshomner@microsoft.com",
-  "dependentChangeType": "none"
-}

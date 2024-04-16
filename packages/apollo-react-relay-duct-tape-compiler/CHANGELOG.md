@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape-compiler
 
-This log was last generated on Mon, 25 Mar 2024 20:42:32 GMT and should not be manually modified.
+This log was last generated on Tue, 16 Apr 2024 00:44:40 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.5.1
+
+Tue, 16 Apr 2024 00:44:40 GMT
+
+### Patches
+
+- fix defaultValue as object for @argumentDefinitions (dragoshomner@microsoft.com)
 
 ## 1.5.0
 

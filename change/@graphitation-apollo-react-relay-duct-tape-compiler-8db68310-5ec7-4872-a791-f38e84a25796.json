@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "fix defaultValue as object for @argumentDefinitions",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape-compiler",
-  "email": "dragoshomner@microsoft.com",
-  "dependentChangeType": "patch"
-}
