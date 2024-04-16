@@ -7,14 +7,29 @@ type Query {
   me: Me!
 }
 
+enum SortDirection {
+  ASC
+  DESC
+}
+
+enum SortField {
+  DESCRIPTION
+  IS_COMPLETED
+}
+
+input SortByInput {
+  sortDirection: SortDirection!
+  sortField: SortField!
+}
+
 interface NodeWithTodos implements Node {
   id: ID!
-  todos(first: Int!, after: String, sortByOrder: String): TodosConnection!
+  todos(first: Int!, after: String, sortBy: SortByInput): TodosConnection!
 }
 
 type Me implements Node & NodeWithTodos {
   id: ID!
-  todos(first: Int!, after: String, sortByOrder: String): TodosConnection!
+  todos(first: Int!, after: String, sortBy: SortByInput): TodosConnection!
 }
 
 type PageInfo {

@@ -3,11 +3,17 @@
 // @ts-nocheck
 
 import { FragmentRefs } from "@graphitation/apollo-react-relay-duct-tape";
+export type SortDirection = "ASC" | "DESC";
+export type SortField = "DESCRIPTION" | "IS_COMPLETED";
+export type SortByInput = {
+    sortDirection: SortDirection;
+    sortField: SortField;
+};
 export type TodoListPaginationQueryVariables = {
     after: string;
     count: number;
     includeSomeOtherField?: boolean | null | undefined;
-    sortByOrder?: string | null | undefined;
+    sortBy?: SortByInput | null | undefined;
     id: string;
 };
 export type TodoListPaginationQueryResponse = {
@@ -22,18 +28,18 @@ export type TodoListPaginationQuery = {
 
 
 /*
-query TodoListPaginationQuery($after: String! = "", $count: Int! = 5, $includeSomeOtherField: Boolean, $sortByOrder: String, $id: ID!) {
+query TodoListPaginationQuery($after: String! = "", $count: Int! = 5, $includeSomeOtherField: Boolean, $sortBy: SortByInput = {sortField: DESCRIPTION, sortDirection: ASC}, $id: ID!) {
   node(id: $id) {
     __typename
-    ...TodoList_nodeFragment_2azoy9
+    ...TodoList_nodeFragment_4nog9O
     id
   }
 }
 
-fragment TodoList_nodeFragment_2azoy9 on NodeWithTodos {
+fragment TodoList_nodeFragment_4nog9O on NodeWithTodos {
   __isNodeWithTodos: __typename
   __typename
-  todos(first: $count, after: $after, sortByOrder: $sortByOrder) @connection(key: "TodosList_todos", filter: ["sortByOrder"]) {
+  todos(first: $count, after: $after, sortBy: $sortBy) @connection(key: "TodosList_todos", filter: ["sortBy"]) {
     edges {
       node {
         id
@@ -61,10 +67,10 @@ fragment Todo_todoFragment on Todo {
 */
 
 /*
-query TodoListPaginationQuery($after: String! = "", $count: Int! = 5, $includeSomeOtherField: Boolean, $sortByOrder: String, $id: ID!) {
+query TodoListPaginationQuery($after: String! = "", $count: Int! = 5, $includeSomeOtherField: Boolean, $sortBy: SortByInput = {sortField: DESCRIPTION, sortDirection: ASC}, $id: ID!) {
   node(id: $id) {
     __typename
-    ...TodoList_nodeFragment_2azoy9
+    ...TodoList_nodeFragment_4nog9O
     id
     ... on Node {
       __fragments @client
@@ -72,10 +78,10 @@ query TodoListPaginationQuery($after: String! = "", $count: Int! = 5, $includeSo
   }
 }
 
-fragment TodoList_nodeFragment_2azoy9 on NodeWithTodos {
+fragment TodoList_nodeFragment_4nog9O on NodeWithTodos {
   __isNodeWithTodos: __typename
   __typename
-  todos(first: $count, after: $after, sortByOrder: $sortByOrder) @connection(key: "TodosList_todos", filter: ["sortByOrder"]) {
+  todos(first: $count, after: $after, sortBy: $sortBy) @connection(key: "TodosList_todos", filter: ["sortBy"]) {
     edges {
       node {
         id
@@ -111,49 +117,48 @@ v2 = {
   "name": (v1/*: any*/)
 },
 v3 = {
-  "kind": "NamedType",
-  "name": {
-    "kind": "Name",
-    "value": "String"
-  }
-},
-v4 = {
   "kind": "Variable",
   "name": {
     "kind": "Name",
     "value": "count"
   }
 },
-v5 = {
+v4 = {
   "kind": "Variable",
   "name": {
     "kind": "Name",
     "value": "includeSomeOtherField"
   }
 },
-v6 = {
+v5 = {
   "kind": "Name",
-  "value": "sortByOrder"
+  "value": "sortBy"
+},
+v6 = {
+  "kind": "Variable",
+  "name": (v5/*: any*/)
 },
 v7 = {
-  "kind": "Variable",
-  "name": (v6/*: any*/)
-},
-v8 = {
   "kind": "Name",
   "value": "id"
 },
-v9 = {
+v8 = {
   "kind": "Variable",
-  "name": (v8/*: any*/)
+  "name": (v7/*: any*/)
 },
-v10 = [
+v9 = [
   {
     "kind": "VariableDefinition",
     "variable": (v2/*: any*/),
     "type": {
       "kind": "NonNullType",
-      "type": (v3/*: any*/)
+      "type": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "String"
+        }
+      }
     },
     "defaultValue": {
       "kind": "StringValue",
@@ -163,7 +168,7 @@ v10 = [
   },
   {
     "kind": "VariableDefinition",
-    "variable": (v4/*: any*/),
+    "variable": (v3/*: any*/),
     "type": {
       "kind": "NonNullType",
       "type": {
@@ -181,7 +186,7 @@ v10 = [
   },
   {
     "kind": "VariableDefinition",
-    "variable": (v5/*: any*/),
+    "variable": (v4/*: any*/),
     "type": {
       "kind": "NamedType",
       "name": {
@@ -192,12 +197,45 @@ v10 = [
   },
   {
     "kind": "VariableDefinition",
-    "variable": (v7/*: any*/),
-    "type": (v3/*: any*/)
+    "variable": (v6/*: any*/),
+    "type": {
+      "kind": "NamedType",
+      "name": {
+        "kind": "Name",
+        "value": "SortByInput"
+      }
+    },
+    "defaultValue": {
+      "kind": "ObjectValue",
+      "fields": [
+        {
+          "kind": "ObjectField",
+          "name": {
+            "kind": "Name",
+            "value": "sortField"
+          },
+          "value": {
+            "kind": "EnumValue",
+            "value": "DESCRIPTION"
+          }
+        },
+        {
+          "kind": "ObjectField",
+          "name": {
+            "kind": "Name",
+            "value": "sortDirection"
+          },
+          "value": {
+            "kind": "EnumValue",
+            "value": "ASC"
+          }
+        }
+      ]
+    }
   },
   {
     "kind": "VariableDefinition",
-    "variable": (v9/*: any*/),
+    "variable": (v8/*: any*/),
     "type": {
       "kind": "NonNullType",
       "type": {
@@ -210,64 +248,64 @@ v10 = [
     }
   }
 ],
-v11 = {
+v10 = {
   "kind": "Name",
   "value": "node"
 },
-v12 = [
+v11 = [
   {
     "kind": "Argument",
-    "name": (v8/*: any*/),
-    "value": (v9/*: any*/)
+    "name": (v7/*: any*/),
+    "value": (v8/*: any*/)
   }
 ],
-v13 = {
+v12 = {
   "kind": "Name",
   "value": "__typename"
 },
-v14 = {
+v13 = {
   "kind": "Field",
-  "name": (v13/*: any*/)
+  "name": (v12/*: any*/)
+},
+v14 = {
+  "kind": "Name",
+  "value": "TodoList_nodeFragment_4nog9O"
 },
 v15 = {
-  "kind": "Name",
-  "value": "TodoList_nodeFragment_2azoy9"
+  "kind": "FragmentSpread",
+  "name": (v14/*: any*/)
 },
 v16 = {
-  "kind": "FragmentSpread",
-  "name": (v15/*: any*/)
+  "kind": "Field",
+  "name": (v7/*: any*/)
 },
 v17 = {
-  "kind": "Field",
-  "name": (v8/*: any*/)
-},
-v18 = {
   "kind": "NamedType",
   "name": {
     "kind": "Name",
     "value": "NodeWithTodos"
   }
 },
-v19 = {
+v18 = {
   "kind": "Field",
   "alias": {
     "kind": "Name",
     "value": "__isNodeWithTodos"
   },
-  "name": (v13/*: any*/)
+  "name": (v12/*: any*/)
 },
-v20 = {
+v19 = {
   "kind": "Name",
   "value": "todos"
 },
-v21 = [
+v20 = [
   {
     "kind": "Argument",
     "name": {
       "kind": "Name",
       "value": "first"
     },
-    "value": (v4/*: any*/)
+    "value": (v3/*: any*/)
   },
   {
     "kind": "Argument",
@@ -276,11 +314,11 @@ v21 = [
   },
   {
     "kind": "Argument",
-    "name": (v6/*: any*/),
-    "value": (v7/*: any*/)
+    "name": (v5/*: any*/),
+    "value": (v6/*: any*/)
   }
 ],
-v22 = [
+v21 = [
   {
     "kind": "Directive",
     "name": {
@@ -311,7 +349,7 @@ v22 = [
           "values": [
             {
               "kind": "StringValue",
-              "value": "sortByOrder",
+              "value": "sortBy",
               "block": false
             }
           ]
@@ -320,29 +358,29 @@ v22 = [
     ]
   }
 ],
-v23 = {
+v22 = {
   "kind": "Name",
   "value": "edges"
 },
-v24 = {
+v23 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
     "value": "isCompleted"
   }
 },
-v25 = {
+v24 = {
   "kind": "Name",
   "value": "Todo_todoFragment"
 },
-v26 = {
+v25 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
     "value": "cursor"
   }
 },
-v27 = {
+v26 = {
   "kind": "Field",
   "name": {
     "kind": "Name",
@@ -368,7 +406,7 @@ v27 = {
     ]
   }
 },
-v28 = {
+v27 = {
   "kind": "InlineFragment",
   "typeCondition": {
     "kind": "NamedType",
@@ -407,20 +445,20 @@ return {
         "kind": "OperationDefinition",
         "operation": "query",
         "name": (v0/*: any*/),
-        "variableDefinitions": (v10/*: any*/),
+        "variableDefinitions": (v9/*: any*/),
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
             {
               "kind": "Field",
-              "name": (v11/*: any*/),
-              "arguments": (v12/*: any*/),
+              "name": (v10/*: any*/),
+              "arguments": (v11/*: any*/),
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
-                  (v14/*: any*/),
-                  (v16/*: any*/),
-                  (v17/*: any*/)
+                  (v13/*: any*/),
+                  (v15/*: any*/),
+                  (v16/*: any*/)
                 ]
               }
             }
@@ -429,59 +467,59 @@ return {
       },
       {
         "kind": "FragmentDefinition",
-        "name": (v15/*: any*/),
-        "typeCondition": (v18/*: any*/),
+        "name": (v14/*: any*/),
+        "typeCondition": (v17/*: any*/),
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
-            (v19/*: any*/),
-            (v14/*: any*/),
+            (v18/*: any*/),
+            (v13/*: any*/),
             {
               "kind": "Field",
-              "name": (v20/*: any*/),
-              "arguments": (v21/*: any*/),
-              "directives": (v22/*: any*/),
+              "name": (v19/*: any*/),
+              "arguments": (v20/*: any*/),
+              "directives": (v21/*: any*/),
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
                   {
                     "kind": "Field",
-                    "name": (v23/*: any*/),
+                    "name": (v22/*: any*/),
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
                         {
                           "kind": "Field",
-                          "name": (v11/*: any*/),
+                          "name": (v10/*: any*/),
                           "selectionSet": {
                             "kind": "SelectionSet",
                             "selections": [
-                              (v17/*: any*/),
-                              (v24/*: any*/),
+                              (v16/*: any*/),
+                              (v23/*: any*/),
                               {
                                 "kind": "FragmentSpread",
-                                "name": (v25/*: any*/)
+                                "name": (v24/*: any*/)
                               },
-                              (v14/*: any*/)
+                              (v13/*: any*/)
                             ]
                           }
                         },
-                        (v26/*: any*/)
+                        (v25/*: any*/)
                       ]
                     }
                   },
-                  (v27/*: any*/),
-                  (v17/*: any*/)
+                  (v26/*: any*/),
+                  (v16/*: any*/)
                 ]
               }
             },
-            (v17/*: any*/)
+            (v16/*: any*/)
           ]
         }
       },
       {
         "kind": "FragmentDefinition",
-        "name": (v25/*: any*/),
+        "name": (v24/*: any*/),
         "typeCondition": {
           "kind": "NamedType",
           "name": {
@@ -492,7 +530,7 @@ return {
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
-            (v17/*: any*/),
+            (v16/*: any*/),
             {
               "kind": "Field",
               "name": {
@@ -500,7 +538,7 @@ return {
                 "value": "description"
               }
             },
-            (v24/*: any*/),
+            (v23/*: any*/),
             {
               "kind": "Field",
               "name": {
@@ -521,7 +559,7 @@ return {
                         "kind": "Name",
                         "value": "if"
                       },
-                      "value": (v5/*: any*/)
+                      "value": (v4/*: any*/)
                     }
                   ]
                 }
@@ -539,21 +577,21 @@ return {
         "kind": "OperationDefinition",
         "operation": "query",
         "name": (v0/*: any*/),
-        "variableDefinitions": (v10/*: any*/),
+        "variableDefinitions": (v9/*: any*/),
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
             {
               "kind": "Field",
-              "name": (v11/*: any*/),
-              "arguments": (v12/*: any*/),
+              "name": (v10/*: any*/),
+              "arguments": (v11/*: any*/),
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
-                  (v14/*: any*/),
+                  (v13/*: any*/),
+                  (v15/*: any*/),
                   (v16/*: any*/),
-                  (v17/*: any*/),
-                  (v28/*: any*/)
+                  (v27/*: any*/)
                 ]
               }
             }
@@ -562,50 +600,50 @@ return {
       },
       {
         "kind": "FragmentDefinition",
-        "name": (v15/*: any*/),
-        "typeCondition": (v18/*: any*/),
+        "name": (v14/*: any*/),
+        "typeCondition": (v17/*: any*/),
         "selectionSet": {
           "kind": "SelectionSet",
           "selections": [
-            (v19/*: any*/),
-            (v14/*: any*/),
+            (v18/*: any*/),
+            (v13/*: any*/),
             {
               "kind": "Field",
-              "name": (v20/*: any*/),
-              "arguments": (v21/*: any*/),
-              "directives": (v22/*: any*/),
+              "name": (v19/*: any*/),
+              "arguments": (v20/*: any*/),
+              "directives": (v21/*: any*/),
               "selectionSet": {
                 "kind": "SelectionSet",
                 "selections": [
                   {
                     "kind": "Field",
-                    "name": (v23/*: any*/),
+                    "name": (v22/*: any*/),
                     "selectionSet": {
                       "kind": "SelectionSet",
                       "selections": [
                         {
                           "kind": "Field",
-                          "name": (v11/*: any*/),
+                          "name": (v10/*: any*/),
                           "selectionSet": {
                             "kind": "SelectionSet",
                             "selections": [
-                              (v17/*: any*/),
-                              (v24/*: any*/),
-                              (v14/*: any*/),
-                              (v28/*: any*/)
+                              (v16/*: any*/),
+                              (v23/*: any*/),
+                              (v13/*: any*/),
+                              (v27/*: any*/)
                             ]
                           }
                         },
-                        (v26/*: any*/)
+                        (v25/*: any*/)
                       ]
                     }
                   },
-                  (v27/*: any*/),
-                  (v17/*: any*/)
+                  (v26/*: any*/),
+                  (v16/*: any*/)
                 ]
               }
             },
-            (v17/*: any*/)
+            (v16/*: any*/)
           ]
         }
       }
@@ -614,7 +652,7 @@ return {
   "metadata": {
     "rootSelection": "node",
     "mainFragment": {
-      "name": "TodoList_nodeFragment_2azoy9",
+      "name": "TodoList_nodeFragment_4nog9O",
       "typeCondition": "NodeWithTodos"
     },
     "connection": {
@@ -622,7 +660,13 @@ return {
         "todos"
       ],
       "forwardCountVariable": "count",
-      "forwardCursorVariable": "after"
+      "forwardCursorVariable": "after",
+      "filterVariableDefaults": {
+        "sortBy": {
+          "sortField": "DESCRIPTION",
+          "sortDirection": "ASC"
+        }
+      }
     }
   }
 };

@@ -9,6 +9,7 @@ import { graphql } from "@graphitation/graphql-js-tag";
 import { TodoList_nodeFragment$key } from "./__generated__/TodoList_nodeFragment.graphql";
 import { Todo } from "./Todo";
 import { LoadingSpinner } from "./LoadingSpinner";
+import { TodoListPaginationQuery } from "./__generated__/TodoListPaginationQuery.graphql";
 
 const TodoList: React.FC<{ node: TodoList_nodeFragment$key }> = ({
   node: nodeRef,
@@ -20,17 +21,20 @@ const TodoList: React.FC<{ node: TodoList_nodeFragment$key }> = ({
     loadNext,
     isLoadingNext,
     refetch,
-  } = usePaginationFragment(
+  } = usePaginationFragment<TodoListPaginationQuery, TodoList_nodeFragment$key>(
     graphql`
       fragment TodoList_nodeFragment on NodeWithTodos
       @refetchable(queryName: "TodoListPaginationQuery")
       @argumentDefinitions(
         count: { type: "Int!", defaultValue: 5 }
         after: { type: "String!", defaultValue: "" }
-        sortByOrder: { type: "String" }
+        sortBy: {
+          type: "SortByInput"
+          defaultValue: { sortField: DESCRIPTION, sortDirection: ASC }
+        }
       ) {
         __typename
-        todos(first: $count, after: $after, sortByOrder: $sortByOrder)
+        todos(first: $count, after: $after, sortBy: $sortBy)
           @connection(key: "TodosList_todos") {
           edges {
             node {
@@ -49,7 +53,7 @@ const TodoList: React.FC<{ node: TodoList_nodeFragment$key }> = ({
   const onChangeOrder = () => {
     const newOrder = order === "ASC" ? "DESC" : "ASC";
     setOrder(newOrder);
-    refetch({ sortByOrder: newOrder });
+    refetch({ sortBy: { sortField: "DESCRIPTION", sortDirection: newOrder } });
   };
 
   /* <!-- List items should get the class `editing` when editing and `completed` when marked as completed --> */

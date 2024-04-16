@@ -82,12 +82,17 @@ const _ForwardPagination_fragment = graphql`
     conversationsForwardCount: { type: "Int!", defaultValue: 1 }
     conversationsAfterCursor: { type: "String!", defaultValue: "" }
     addExtra: { type: "Boolean!", defaultValue: false }
+    sortBy: {
+      type: "SortByInput"
+      defaultValue: { sortField: NAME, sortDirection: ASC }
+    }
   ) {
     petName
     avatarUrl(size: $avatarSize)
     conversations(
       first: $conversationsForwardCount
       after: $conversationsAfterCursor
+      sortBy: $sortBy
     ) @connection(key: "compiledHooks_user_conversations") {
       edges {
         node {

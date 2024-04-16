@@ -28,7 +28,7 @@ exports[`compiledHooks with strict Global Object Id spec type-policies useCompil
 {
   "__typename": "User",
   "avatarUrl({"size":21})": "<mock-value-for-field-"avatarUrl">",
-  "conversations:compiledHooks_user_conversations": {
+  "conversations:compiledHooks_user_conversations({"sortBy":{"sortDirection":"ASC","sortField":"NAME"}})": {
     "__typename": "ConversationsConnection",
     "edges": [
       {
@@ -56,7 +56,7 @@ exports[`compiledHooks with strict Global Object Id spec type-policies useCompil
 {
   "__typename": "User",
   "avatarUrl({"size":21})": "<mock-value-for-field-"avatarUrl">",
-  "conversations:compiledHooks_user_conversations": {
+  "conversations:compiledHooks_user_conversations({"sortBy":{"sortDirection":"ASC","sortField":"NAME"}})": {
     "__typename": "ConversationsConnection",
     "edges": [
       {
@@ -84,7 +84,7 @@ exports[`compiledHooks with strict Global Object Id spec type-policies useCompil
   "42": {
     "__typename": "User",
     "avatarUrl({"size":21})": "<mock-value-for-field-"avatarUrl">",
-    "conversations:compiledHooks_user_conversations": {
+    "conversations:compiledHooks_user_conversations({"sortBy":{"sortDirection":"ASC","sortField":"NAME"}})": {
       "__typename": "ConversationsConnection",
       "edges": [
         {
