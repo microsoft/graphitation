@@ -31,7 +31,7 @@ import invariant from "invariant";
  */
 export function shallowCompareFragmentReferences<
   K extends string,
-  ComparatorParam extends { [key in K]: { " $fragmentRefs": unknown } },
+  ComparatorParam extends { [key in K]: { " $fragmentSpreads": unknown } },
 >(
   ...fragmentReferenceProps: K[]
 ): (prevProps: ComparatorParam, nextProps: ComparatorParam) => boolean {

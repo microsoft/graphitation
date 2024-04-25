@@ -11,9 +11,9 @@ export type AppQueryResponse = {
         readonly todoStats: {
             readonly id: string;
             readonly totalCount: number;
-            readonly " $fragmentRefs": FragmentRefs<"TodoListFooter_todosFragment">;
+            readonly " $fragmentSpreads": FragmentRefs<"TodoListFooter_todosFragment">;
         };
-        readonly " $fragmentRefs": FragmentRefs<"TodoList_nodeFragment">;
+        readonly " $fragmentSpreads": FragmentRefs<"TodoList_nodeFragment">;
     };
 };
 export type AppQuery = {
@@ -43,7 +43,7 @@ fragment TodoListFooter_todosFragment on TodosConnection {
 fragment TodoList_nodeFragment on NodeWithTodos {
   __isNodeWithTodos: __typename
   __typename
-  todos(first: 5, after: "") @connection(key: "TodosList_todos", filter: ["sortByOrder"]) {
+  todos(first: 5, after: "", sortBy: {sortField: DESCRIPTION, sortDirection: ASC}) @connection(key: "TodosList_todos", filter: ["sortBy"]) {
     edges {
       node {
         id
@@ -329,6 +329,40 @@ return {
                     "value": "",
                     "block": false
                   }
+                },
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "sortBy"
+                  },
+                  "value": {
+                    "kind": "ObjectValue",
+                    "fields": [
+                      {
+                        "kind": "ObjectField",
+                        "name": {
+                          "kind": "Name",
+                          "value": "sortField"
+                        },
+                        "value": {
+                          "kind": "EnumValue",
+                          "value": "DESCRIPTION"
+                        }
+                      },
+                      {
+                        "kind": "ObjectField",
+                        "name": {
+                          "kind": "Name",
+                          "value": "sortDirection"
+                        },
+                        "value": {
+                          "kind": "EnumValue",
+                          "value": "ASC"
+                        }
+                      }
+                    ]
+                  }
                 }
               ],
               "directives": [
@@ -362,7 +396,7 @@ return {
                         "values": [
                           {
                             "kind": "StringValue",
-                            "value": "sortByOrder",
+                            "value": "sortBy",
                             "block": false
                           }
                         ]

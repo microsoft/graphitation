@@ -9,7 +9,7 @@ export type TodoUpdatesSubscriptionVariables = {
 export type TodoUpdatesSubscriptionResponse = {
     readonly emitTodos: {
         readonly id: string;
-        readonly " $fragmentRefs": FragmentRefs<"TodoFragment">;
+        readonly " $fragmentSpreads": FragmentRefs<"TodoFragment">;
     } | null;
 };
 export type TodoUpdatesSubscription = {

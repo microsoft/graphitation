@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Mon, 15 Jan 2024 17:31:26 GMT and should not be manually modified.
+This log was last generated on Thu, 07 Mar 2024 13:08:30 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.5.0
+
+Thu, 07 Mar 2024 13:08:30 GMT
+
+### Minor changes
+
+- Execution hooks context (sergeystoyan@microsoft.com)
 
 ## 3.4.1
 

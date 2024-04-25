@@ -1,0 +1,47 @@
+{
+  "name": "@graphitation/webpack-loader",
+  "license": "MIT",
+  "version": "1.0.3",
+  "description": "A fork of @graphql-tools/webpack-loader with supermassive SDL encoding format support",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/graphitation.git",
+    "directory": "packages/webpack-loader"
+  },
+  "scripts": {
+    "build": "monorepo-scripts build",
+    "lint": "monorepo-scripts lint",
+    "test": "monorepo-scripts test",
+    "types": "monorepo-scripts types",
+    "just": "monorepo-scripts"
+  },
+  "peerDependencies": {
+    "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0",
+    "@graphitation/supermassive": "^3.5.0"
+  },
+  "dependencies": {
+    "@graphql-tools/optimize": "^1.1.1",
+    "@graphql-tools/webpack-loader-runtime": "7.0.0",
+    "tslib": "^2.4.0"
+  },
+  "devDependencies": {
+    "@types/webpack": "^5.28.0"
+  },
+  "sideEffects": false,
+  "access": "public",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "require": "./src/index.ts"
+    }
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./lib/index.mjs",
+        "require": "./lib/index.js",
+        "types": "./lib/index.d.ts"
+      }
+    }
+  }
+}

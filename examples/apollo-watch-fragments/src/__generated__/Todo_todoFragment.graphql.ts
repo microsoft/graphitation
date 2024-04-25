@@ -8,12 +8,12 @@ export type Todo_todoFragment = {
     readonly description: string;
     readonly isCompleted: boolean;
     readonly someOtherField?: string | undefined;
-    readonly " $refType": "Todo_todoFragment";
+    readonly " $fragmentType": "Todo_todoFragment";
 };
 export type Todo_todoFragment$data = Todo_todoFragment;
 export type Todo_todoFragment$key = {
     readonly " $data"?: Todo_todoFragment$data | undefined;
-    readonly " $fragmentRefs": FragmentRefs<"Todo_todoFragment">;
+    readonly " $fragmentSpreads": FragmentRefs<"Todo_todoFragment">;
 };
 
 

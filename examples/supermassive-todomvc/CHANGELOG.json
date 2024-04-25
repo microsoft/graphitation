@@ -2,6 +2,126 @@
   "name": "supermassive-todomvc",
   "entries": [
     {
+      "date": "Tue, 16 Apr 2024 00:44:40 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.1.2",
+            "commit": "08bdc6a8d1bf83ed6ab96c97fc94bd45f679d071"
+          },
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.5.1",
+            "commit": "08bdc6a8d1bf83ed6ab96c97fc94bd45f679d071"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 25 Mar 2024 22:07:01 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.1.1",
+            "commit": "b4695c9b39b9265403ad0d0372cd6e88999f9e52"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 25 Mar 2024 20:42:32 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.1.0",
+            "commit": "9cac9a7c393e6e3cd9ba6415a00415a59b358c75"
+          },
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.5.0",
+            "commit": "9cac9a7c393e6e3cd9ba6415a00415a59b358c75"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 07 Mar 2024 13:08:30 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.0.31",
+            "commit": "fb76994d39442ebeab09f6544ad35de732612f6d"
+          },
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.4.1",
+            "commit": "fb76994d39442ebeab09f6544ad35de732612f6d"
+          },
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/supermassive to v3.5.0",
+            "commit": "fb76994d39442ebeab09f6544ad35de732612f6d"
+          },
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/webpack-loader to v1.0.3",
+            "commit": "fb76994d39442ebeab09f6544ad35de732612f6d"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 28 Feb 2024 17:44:01 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/webpack-loader to v1.0.2",
+            "commit": "4bc510a93fc2082802499963f322cc6cdf4d018c"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 14 Feb 2024 20:38:10 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/webpack-loader to v1.0.0",
+            "commit": "7dd32aba6e58ace776af90d64cec45d0cbe34009"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 06 Feb 2024 17:55:58 GMT",
       "tag": "supermassive-todomvc_v1.0.1-0",
       "version": "1.0.1-0",

@@ -35,6 +35,9 @@ export {
   mergeSchemaDefinitions,
 } from "./utilities/mergeSchemaDefinitions";
 export { schemaFragmentFromMinimalViableSchemaDocument } from "./utilities/schemaFragmentFromMinimalViableSchemaDocument";
+export { pathToArray } from "./jsutils/Path";
+export { isPromise } from "./jsutils/isPromise";
+export { printPathArray } from "./jsutils/printPathArray";
 
 export type {
   CompositeTypeTuple,
@@ -88,6 +91,7 @@ export type {
 } from "./types";
 
 export type { PromiseOrValue } from "./jsutils/PromiseOrValue";
+export type { Path } from "./jsutils/Path";
 
 export type {
   ArgumentNode,
@@ -141,7 +145,7 @@ export type {
   AfterFieldResolveHook,
   AfterFieldResolveHookArgs,
   BeforeFieldResolveHook,
-  BeforeFieldResolveHookArgs,
+  BaseExecuteFieldHookArgs,
   ExecutionHooks,
 } from "./hooks/types";
 

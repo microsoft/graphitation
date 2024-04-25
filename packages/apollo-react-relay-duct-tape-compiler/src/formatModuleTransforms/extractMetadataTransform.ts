@@ -240,10 +240,9 @@ function extractFilterVariableDefaults(
       if (variable) {
         const defaultValue = variableDefaults.get(variable);
         if (defaultValue) {
-          filterVariableDefaults.set(
-            variable,
-            valueFromASTUntyped(defaultValue),
-          );
+          filterVariableDefaults.set(variable, {
+            ...valueFromASTUntyped(defaultValue),
+          });
         }
       }
     });
