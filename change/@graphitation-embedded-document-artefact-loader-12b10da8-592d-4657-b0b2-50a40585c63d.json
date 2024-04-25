@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Add artifactDirectory option support to ts-jest",
+  "packageName": "@graphitation/embedded-document-artefact-loader",
+  "email": "mwanginjuguna59@gmail.com",
+  "dependentChangeType": "patch"
+}
