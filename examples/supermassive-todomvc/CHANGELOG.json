@@ -2,6 +2,21 @@
   "name": "supermassive-todomvc",
   "entries": [
     {
+      "date": "Thu, 25 Apr 2024 10:50:21 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/ts-transform-graphql-js-tag to v1.3.0",
+            "commit": "2b95d8ddcc627d036da88d968d3953b59a9bb53b"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 16 Apr 2024 00:44:40 GMT",
       "tag": "supermassive-todomvc_v1.0.1-0",
       "version": "1.0.1-0",

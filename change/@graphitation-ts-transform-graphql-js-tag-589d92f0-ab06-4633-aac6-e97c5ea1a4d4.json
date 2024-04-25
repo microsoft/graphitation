@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "[ts-transform-graphql-js-tag] Add embedded document support",
-  "packageName": "@graphitation/ts-transform-graphql-js-tag",
-  "email": "eloy.de.enige@gmail.com",
-  "dependentChangeType": "patch"
-}
