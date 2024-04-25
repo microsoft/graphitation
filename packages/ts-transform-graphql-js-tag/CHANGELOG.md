@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-transform-graphql-js-tag
 
-This log was last generated on Sun, 10 Dec 2023 07:22:00 GMT and should not be manually modified.
+This log was last generated on Thu, 25 Apr 2024 10:50:21 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.3.0
+
+Thu, 25 Apr 2024 10:50:21 GMT
+
+### Minor changes
+
+- [ts-transform-graphql-js-tag] Add embedded document support (eloy.de.enige@gmail.com)
 
 ## 1.2.0
 
