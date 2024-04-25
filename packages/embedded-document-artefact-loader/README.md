@@ -63,6 +63,21 @@ const jestConfig = {
 };
 ```
 
+If you are using the `artifactDirectory` option in your relay config you will need to direct the loader to the same folder.
+
+```js
+const jestConfig = {
+  transform: {
+    "^.+\\.tsx?$": [
+      "@graphitation/embedded-document-artefact-loader/ts-jest",
+      {
+        artifactDirectory: "path/to/your/artifact/directory",
+      },
+    ],
+  },
+};
+```
+
 ## TODO
 
 - SourceMap support needs to be finished
