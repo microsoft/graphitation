@@ -1,8 +1,16 @@
 # Change Log - @graphitation/embedded-document-artefact-loader
 
-This log was last generated on Wed, 28 Feb 2024 17:44:01 GMT and should not be manually modified.
+This log was last generated on Thu, 02 May 2024 07:33:39 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.8.0
+
+Thu, 02 May 2024 07:33:39 GMT
+
+### Minor changes
+
+- Add artifactDirectory option support to ts-jest (mwanginjuguna59@gmail.com)
 
 ## 0.7.0
 

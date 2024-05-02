@@ -2,6 +2,21 @@
   "name": "@graphitation/embedded-document-artefact-loader",
   "entries": [
     {
+      "date": "Thu, 02 May 2024 07:33:39 GMT",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.8.0",
+      "version": "0.8.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "mwanginjuguna59@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "8e1f5558cf8dc0a32de867c8fd2531a9ce7c1515",
+            "comment": "Add artifactDirectory option support to ts-jest"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 28 Feb 2024 17:44:01 GMT",
       "tag": "@graphitation/embedded-document-artefact-loader_v0.7.0",
       "version": "0.7.0",
