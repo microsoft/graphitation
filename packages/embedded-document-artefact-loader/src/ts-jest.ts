@@ -6,6 +6,7 @@ import type {
   TransformerFactory,
   SyncTransformer,
   TransformedSource,
+  TransformOptions,
 } from "@jest/transform";
 import type { TsJestGlobalOptions } from "ts-jest";
 import { extractInlineSourceMap } from "./addInlineSourceMap";
@@ -24,6 +25,7 @@ const transformerFactory: TransformerFactory<SyncTransformer<unknown>> = {
           generateSourceMap,
           sourcePath,
           sourceText,
+          options,
         );
 
         const tsResult = tsLoaderInstance.process(
@@ -44,6 +46,7 @@ const transformerFactory: TransformerFactory<SyncTransformer<unknown>> = {
           generateSourceMap,
           sourcePath,
           sourceText,
+          options,
         );
 
         const tsResult = await tsLoaderInstance.processAsync(
@@ -89,10 +92,19 @@ function applyTransform(
   generateSourceMap: boolean,
   sourcePath: string,
   sourceText: string,
+  options: TransformOptions,
 ) {
   const sourceMap = generateSourceMap ? new SourceMapGenerator() : undefined;
   sourceMap?.setSourceContent(sourcePath, sourceText);
-  const transformed = transform(sourceText, sourcePath, sourceMap);
+
+  const userConfig =
+    options.transformerConfig !== null &&
+    typeof options.transformerConfig === "object" &&
+    "artifactDirectory" in options.transformerConfig
+      ? { artifactDirectory: `${options.transformerConfig.artifactDirectory}` }
+      : {};
+
+  const transformed = transform(sourceText, sourcePath, sourceMap, userConfig);
   return { transformed, sourceMap };
 }
 

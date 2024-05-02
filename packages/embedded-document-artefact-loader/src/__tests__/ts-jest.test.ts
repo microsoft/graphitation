@@ -2,8 +2,33 @@ import { runCLI } from "jest";
 import type { Config } from "@jest/types";
 import * as path from "path";
 import { SourceMapGenerator } from "source-map-js";
+import * as transformModule from "../transform";
 
 describe("jest loader", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it.each([
+    {
+      artifactDir: undefined,
+      name: "default option",
+    },
+    {
+      artifactDir: "path/to/your/artifact/directory",
+      name: "user defined option",
+    },
+  ])(
+    "uses the correct artifactDirectory for $name",
+    async ({ artifactDir }) => {
+      const spy = jest.spyOn(transformModule, "transform");
+      await runJestTest("succeeds", artifactDir);
+      expect(spy).toReturnWith(
+        expect.stringMatching(createRegexForPath(artifactDir)),
+      );
+    },
+  );
+
   it("works", async () => {
     expect(await runJestTest("succeeds")).not.toMatch("failed");
   });
@@ -23,7 +48,10 @@ describe("jest loader", () => {
   });
 });
 
-async function runJestTest(testNamePattern: string) {
+async function runJestTest(
+  testNamePattern: string,
+  artifactDirectory?: string,
+) {
   let output = "";
   jest.spyOn(process.stderr, "write").mockImplementation((chunk) => {
     if (typeof chunk === "string") {
@@ -45,7 +73,10 @@ async function runJestTest(testNamePattern: string) {
       useStderr: true,
       cache: false,
       transform: JSON.stringify({
-        "\\.ts$": [path.join(__dirname, "../ts-jest.ts"), {}],
+        "\\.ts$": [
+          path.join(__dirname, "../ts-jest.ts"),
+          artifactDirectory ? { artifactDirectory } : {},
+        ],
       }),
     } as Config.Argv,
     roots,
@@ -62,4 +93,9 @@ function cleanAnsi(str: string): string {
     /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
     "",
   );
+}
+
+function createRegexForPath(path = "./__generated__") {
+  const regexPattern = `require\\("${path}/SomeComponent_query\\.graphql"\\)\\.default`;
+  return new RegExp(regexPattern, "m");
 }
