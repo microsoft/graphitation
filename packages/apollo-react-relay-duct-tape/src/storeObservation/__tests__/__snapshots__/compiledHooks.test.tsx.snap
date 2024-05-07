@@ -4,6 +4,9 @@ exports[`compiledHooks with strict Global Object Id spec type-policies useCompil
 {
   "__fragments": {
     "avatarSize": 21,
+    "filterBy": {
+      "tag": "ALL",
+    },
     "id": "shouldNotOverrideCompiledFragmentId",
     "messagesBackwardCount": 1,
     "messagesBeforeCursor": "",
@@ -12,6 +15,9 @@ exports[`compiledHooks with strict Global Object Id spec type-policies useCompil
   "user": {
     "__fragments": {
       "avatarSize": 21,
+      "filterBy": {
+        "tag": "ALL",
+      },
       "id": "shouldNotOverrideCompiledFragmentId",
       "messagesBackwardCount": 1,
       "messagesBeforeCursor": "",
@@ -114,7 +120,7 @@ exports[`compiledHooks with strict Global Object Id spec type-policies useCompil
     "nonNode": {
       "__ref": "<mock-value-for-field-"id">",
     },
-    "user({"id":42,"idThatDoesntOverride":"shouldNotOverrideCompiledFragmentId"})": {
+    "user({"filterBy":{"tag":"ALL"},"id":42,"idThatDoesntOverride":"shouldNotOverrideCompiledFragmentId"})": {
       "__ref": "42",
     },
   },
@@ -152,6 +158,9 @@ exports[`compiledHooks with strict Global Object Id spec type-policies useCompil
 {
   "__fragments": {
     "avatarSize": 21,
+    "filterBy": {
+      "tag": "ALL",
+    },
     "id": "shouldNotOverrideCompiledFragmentId",
     "messagesBackwardCount": 1,
     "messagesBeforeCursor": "",
@@ -160,6 +169,9 @@ exports[`compiledHooks with strict Global Object Id spec type-policies useCompil
   "user": {
     "__fragments": {
       "avatarSize": 21,
+      "filterBy": {
+        "tag": "ALL",
+      },
       "id": "shouldNotOverrideCompiledFragmentId",
       "messagesBackwardCount": 1,
       "messagesBeforeCursor": "",

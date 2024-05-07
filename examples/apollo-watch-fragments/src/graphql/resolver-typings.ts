@@ -105,6 +105,11 @@ export type SortByInput = {
   sortField: SortField;
 };
 
+export type FilterByInput = {
+  tag: Scalars['String'];
+  keyword: Scalars['String'];
+};
+
 export enum SortDirection {
   Asc = 'ASC',
   Desc = 'DESC'

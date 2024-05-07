@@ -4,8 +4,13 @@ interface Node {
   id: ID!
 }
 
+input FilterByInput {
+  tag: String
+  keyword: String
+}
+
 type Query {
-  user(id: Int!, idThatDoesntOverride: String): User!
+  user(id: Int!, idThatDoesntOverride: String, filterBy: FilterByInput): User!
   node(id: ID!): Node
   nonNode: NonNode!
 }

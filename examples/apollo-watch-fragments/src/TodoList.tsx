@@ -34,7 +34,7 @@ const TodoList: React.FC<{ node: TodoList_nodeFragment$key }> = ({
         }
       ) {
         __typename
-        todos(first: $count, after: $after, sortBy: $sortBy)
+        todos(first: $count, after: $after, sortBy: $sortBy, filterBy: $filterBy)
           @connection(key: "TodosList_todos") {
           edges {
             node {
@@ -53,7 +53,7 @@ const TodoList: React.FC<{ node: TodoList_nodeFragment$key }> = ({
   const onChangeOrder = () => {
     const newOrder = order === "ASC" ? "DESC" : "ASC";
     setOrder(newOrder);
-    refetch({ sortBy: { sortField: "DESCRIPTION", sortDirection: newOrder } });
+    refetch({ sortBy: { sortField: "DESCRIPTION", sortDirection: newOrder }, filterBy: {tag: "ALL"} });
   };
 
   /* <!-- List items should get the class `editing` when editing and `completed` when marked as completed --> */
