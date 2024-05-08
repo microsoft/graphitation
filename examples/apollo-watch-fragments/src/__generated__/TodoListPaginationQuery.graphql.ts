@@ -9,16 +9,11 @@ export type SortByInput = {
     sortDirection: SortDirection;
     sortField: SortField;
 };
-export type FilterByInput = {
-  tag: string;
-  keyword: string | null | undefined;
-};
 export type TodoListPaginationQueryVariables = {
     after: string;
     count: number;
     includeSomeOtherField?: boolean | null | undefined;
     sortBy?: SortByInput | null | undefined;
-    filterBy?: FilterByInput | null | undefined;
     id: string;
 };
 export type TodoListPaginationQueryResponse = {

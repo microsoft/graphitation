@@ -894,28 +894,27 @@ describe.each([
 
         it("uses correct variable value in load next request when previous variable already contains an object that is different on refetch", async () => {
           await act(async () => {
-            await act(async () => {
-              const { refetch } = last(forwardUsePaginationFragmentResult);
-              refetch({ addExtra: true, 
-                filterBy: {
-                  tag: "ALL",
-                  keyword: "9",
-                },
-              });
+            const { refetch } = last(forwardUsePaginationFragmentResult);
+            refetch({ addExtra: true, 
+              filterBy: {
+                tag: "ALL",
+                keyword: "9",
+              },
+            });
 
-              client.mock.resolveMostRecentOperation((operation) =>
-                MockPayloadGenerator.generate(operation),
-              );
-              await new Promise((resolve) => setTimeout(resolve, 0));
+            client.mock.resolveMostRecentOperation((operation) =>
+              MockPayloadGenerator.generate(operation),
+            );
+            await new Promise((resolve) => setTimeout(resolve, 0));
           });
 
-          await act(async() => {
+          act(() => {
             const { loadNext } = last(forwardUsePaginationFragmentResult);
             loadNext(123);
           });
 
-        const operation = client.mock.getMostRecentOperation();
-        expect(operation.request.variables).toMatchObject({
+          const operation = client.mock.getMostRecentOperation();
+          expect(operation.request.variables).toMatchObject({
             conversationsForwardCount: 123,
             conversationsAfterCursor: "first-page-end-cursor",
             addExtra: true,
@@ -985,7 +984,7 @@ describe.each([
             `);
           });
         });
-      });
+        });
 
       describe("and having received the response", () => {
         let onCompleted: jest.Mock;
