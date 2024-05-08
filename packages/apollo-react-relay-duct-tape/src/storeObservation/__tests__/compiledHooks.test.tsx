@@ -127,9 +127,7 @@ const _Root_executionQueryDocument = graphql`
     $messagesBackwardCount: Int!
     $messagesBeforeCursor: String!
     $id: String = "shouldNotOverrideCompiledFragmentId"
-    $filterBy:  FilterByInput = {
-      tag: "ALL"
-    }
+    $filterBy: FilterByInput = { tag: "ALL" }
   ) {
     user(id: $userId, idThatDoesntOverride: $id, filterBy: $filterBy) {
       name
@@ -780,7 +778,7 @@ describe.each([
                   messagesBackwardCount: 1,
                   messagesBeforeCursor: "",
                   userId: 42,
-                  filterBy: {tag: "ALL"}
+                  filterBy: { tag: "ALL" },
                 },
                 __typename: "Conversation",
                 id: "first-paged-conversation",
@@ -895,7 +893,8 @@ describe.each([
         it("uses correct variable value in load next request when previous variable already contains an object that is different on refetch", async () => {
           await act(async () => {
             const { refetch } = last(forwardUsePaginationFragmentResult);
-            refetch({ addExtra: true, 
+            refetch({
+              addExtra: true,
               filterBy: {
                 tag: "ALL",
                 keyword: "9",
@@ -984,7 +983,7 @@ describe.each([
             `);
           });
         });
-        });
+      });
 
       describe("and having received the response", () => {
         let onCompleted: jest.Mock;

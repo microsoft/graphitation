@@ -67,8 +67,14 @@ function useLoadMore({
         "usePaginationFragment(): Expected a cursor value to exist",
       );
       const previousVariables = {
-        ...merge(merge(latestVariablesUsedByStandaloneRefetch, metadata.connection?.filterVariableDefaults), fragmentReference.__fragments), 
-        id: fragmentReference.id
+        ...merge(
+          merge(
+            latestVariablesUsedByStandaloneRefetch,
+            metadata.connection?.filterVariableDefaults,
+          ),
+          fragmentReference.__fragments,
+        ),
+        id: fragmentReference.id,
       };
       const newVariables = {
         ...previousVariables,
