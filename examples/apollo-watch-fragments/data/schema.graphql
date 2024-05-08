@@ -22,11 +22,6 @@ input SortByInput {
   sortField: SortField!
 }
 
-input FilterByInput {
-  tag: String
-  keyword: String
-}
-
 interface NodeWithTodos implements Node {
   id: ID!
   todos(first: Int!, after: String, sortBy: SortByInput): TodosConnection!

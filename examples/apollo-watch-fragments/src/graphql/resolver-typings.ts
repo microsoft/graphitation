@@ -36,11 +36,6 @@ export type ChangeTodoStatusPayload = {
   todos: TodosConnection;
 };
 
-export type FilterByInput = {
-  keyword?: Maybe<Scalars['String']>;
-  tag?: Maybe<Scalars['String']>;
-};
-
 export type Me = Node & NodeWithTodos & {
   __typename?: 'Me';
   id: Scalars['ID'];
@@ -217,7 +212,6 @@ export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']>>;
   ChangeTodoStatusInput: ResolverTypeWrapper<Partial<ChangeTodoStatusInput>>;
   ChangeTodoStatusPayload: ResolverTypeWrapper<Partial<Omit<ChangeTodoStatusPayload, 'todo' | 'todos'> & { todo: ResolversTypes['Todo'], todos: ResolversTypes['TodosConnection'] }>>;
-  FilterByInput: ResolverTypeWrapper<Partial<FilterByInput>>;
   ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
   Me: ResolverTypeWrapper<Partial<Omit<Me, 'todos'> & { todos: ResolversTypes['TodosConnection'] }>>;
@@ -242,7 +236,6 @@ export type ResolversParentTypes = {
   Boolean: Partial<Scalars['Boolean']>;
   ChangeTodoStatusInput: Partial<ChangeTodoStatusInput>;
   ChangeTodoStatusPayload: Partial<Omit<ChangeTodoStatusPayload, 'todo' | 'todos'> & { todo: ResolversParentTypes['Todo'], todos: ResolversParentTypes['TodosConnection'] }>;
-  FilterByInput: Partial<FilterByInput>;
   ID: Partial<Scalars['ID']>;
   Int: Partial<Scalars['Int']>;
   Me: Partial<Omit<Me, 'todos'> & { todos: ResolversParentTypes['TodosConnection'] }>;
