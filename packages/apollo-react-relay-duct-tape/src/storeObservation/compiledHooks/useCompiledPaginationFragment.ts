@@ -68,10 +68,9 @@ function useLoadMore({
       );
       const previousVariables = {
         ...merge(
-          merge(
-            latestVariablesUsedByStandaloneRefetch,
-            metadata.connection?.filterVariableDefaults,
-          ),
+          {},
+          metadata.connection?.filterVariableDefaults,
+          latestVariablesUsedByStandaloneRefetch,
           fragmentReference.__fragments,
         ),
         id: fragmentReference.id,
