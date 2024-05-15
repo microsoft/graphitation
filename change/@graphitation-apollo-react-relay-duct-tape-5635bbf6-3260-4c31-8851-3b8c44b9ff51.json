@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Fix objects merging in loadMore after refetch in usePaginationFragment",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape",
+  "email": "132382266+DarynaAkhmedova@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}

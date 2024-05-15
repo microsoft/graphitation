@@ -127,8 +127,9 @@ const _Root_executionQueryDocument = graphql`
     $messagesBackwardCount: Int!
     $messagesBeforeCursor: String!
     $id: String = "shouldNotOverrideCompiledFragmentId"
+    $filterBy: FilterByInput = { tag: "ALL" }
   ) {
-    user(id: $userId, idThatDoesntOverride: $id) {
+    user(id: $userId, idThatDoesntOverride: $id, filterBy: $filterBy) {
       name
       ...compiledHooks_ChildFragment
       ...compiledHooks_RefetchableFragment
@@ -545,6 +546,9 @@ describe.each([
           messagesBackwardCount: 1,
           messagesBeforeCursor: "",
           userId: 42,
+          filterBy: {
+            tag: "ALL",
+          },
         },
         __typename: "User",
         id: "42",
@@ -627,6 +631,9 @@ describe.each([
         {
           "__fragments": {
             "avatarSize": 21,
+            "filterBy": {
+              "tag": "ALL",
+            },
             "id": "shouldNotOverrideCompiledFragmentId",
             "messagesBackwardCount": 1,
             "messagesBeforeCursor": "",
@@ -771,6 +778,7 @@ describe.each([
                   messagesBackwardCount: 1,
                   messagesBeforeCursor: "",
                   userId: 42,
+                  filterBy: { tag: "ALL" },
                 },
                 __typename: "Conversation",
                 id: "first-paged-conversation",
@@ -879,6 +887,40 @@ describe.each([
             conversationsForwardCount: 123,
             conversationsAfterCursor: "first-page-end-cursor",
             addExtra: true,
+          });
+        });
+
+        it("uses correct variable value in load next request when previous variable already contains an object that is different on refetch", async () => {
+          await act(async () => {
+            const { refetch } = last(forwardUsePaginationFragmentResult);
+            refetch({
+              addExtra: true,
+              filterBy: {
+                tag: "ALL",
+                keyword: "9",
+              },
+            });
+
+            client.mock.resolveMostRecentOperation((operation) =>
+              MockPayloadGenerator.generate(operation),
+            );
+            await new Promise((resolve) => setTimeout(resolve, 0));
+          });
+
+          act(() => {
+            const { loadNext } = last(forwardUsePaginationFragmentResult);
+            loadNext(123);
+          });
+
+          const operation = client.mock.getMostRecentOperation();
+          expect(operation.request.variables).toMatchObject({
+            conversationsForwardCount: 123,
+            conversationsAfterCursor: "first-page-end-cursor",
+            addExtra: true,
+            filterBy: {
+              tag: "ALL",
+              keyword: "9",
+            },
           });
         });
 

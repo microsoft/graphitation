@@ -17,6 +17,7 @@ import type {
 } from "@graphitation/apollo-react-relay-duct-tape-compiler";
 import type { DocumentNode } from "graphql";
 import { Variables } from "../../types";
+import { merge } from "lodash";
 
 export type PaginationFn = (
   count: number,
@@ -66,9 +67,12 @@ function useLoadMore({
         "usePaginationFragment(): Expected a cursor value to exist",
       );
       const previousVariables = {
-        ...metadata.connection?.filterVariableDefaults,
-        ...latestVariablesUsedByStandaloneRefetch,
-        ...fragmentReference.__fragments,
+        ...merge(
+          {},
+          metadata.connection?.filterVariableDefaults,
+          latestVariablesUsedByStandaloneRefetch,
+          fragmentReference.__fragments,
+        ),
         id: fragmentReference.id,
       };
       const newVariables = {
