@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Tue, 16 Apr 2024 00:44:40 GMT and should not be manually modified.
+This log was last generated on Wed, 15 May 2024 12:28:38 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.1.3
+
+Wed, 15 May 2024 12:28:38 GMT
+
+### Patches
+
+- Fix objects merging in loadMore after refetch in usePaginationFragment (132382266+DarynaAkhmedova@users.noreply.github.com)
 
 ## 1.1.2
 
