@@ -27,7 +27,7 @@ import {
 import { optimizeDocumentNode } from "@graphql-tools/optimize";
 import gqlTag from "graphql-tag";
 
-export type SupermassiveOutputType = "V3" | "V2" | "BOTH";
+export type SupermassiveOutputType = "V3" | "V2" | "BOTH" | "NONE";
 
 type RawClientSidePluginConfig = RawClientSideBasePluginConfig & {
   supermassiveDocumentNodeConditional?: string;
@@ -90,7 +90,10 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
       const standard = this._render(node, false);
       return `(${this.config.supermassiveDocumentNodeConditional}\n? ${supermassive}\n: ${standard})`;
     }
-    return this._render(node, true);
+    return this._render(
+      node,
+      this.config.supermassiveDocumentNodeOutputType !== "NONE",
+    );
   }
 
   protected _render(
