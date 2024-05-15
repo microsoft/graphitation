@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Add NONE option to not output any supermassive stuff",
+  "packageName": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "patch"
+}
