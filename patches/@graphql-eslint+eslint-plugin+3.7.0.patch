@@ -1,3 +1,16 @@
+diff --git a/node_modules/@graphql-eslint/eslint-plugin/types.d.ts b/node_modules/@graphql-eslint/eslint-plugin/types.d.ts
+index 0cdbc6b..35c450c 100644
+--- a/node_modules/@graphql-eslint/eslint-plugin/types.d.ts
++++ b/node_modules/@graphql-eslint/eslint-plugin/types.d.ts
+@@ -47,7 +47,7 @@ export declare type GraphQLESLintRuleContext<Options = any[]> = Omit<Rule.RuleCo
+ };
+ export declare type CategoryType = 'Schema' | 'Operations';
+ export declare type RuleDocsInfo<T> = {
+-    docs: Omit<Rule.RuleMetaData['docs'], 'category'> & {
++    docs: Omit<NonNullable<Rule.RuleMetaData['docs']>, 'category'> & {
+         category: CategoryType | CategoryType[];
+         requiresSchema?: true;
+         requiresSiblings?: true;
 diff --git a/node_modules/@graphql-eslint/eslint-plugin/utils.d.ts b/node_modules/@graphql-eslint/eslint-plugin/utils.d.ts
 index 5d66a8d..1dce3b3 100644
 --- a/node_modules/@graphql-eslint/eslint-plugin/utils.d.ts

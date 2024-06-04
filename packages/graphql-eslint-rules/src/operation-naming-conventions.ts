@@ -88,8 +88,7 @@ const rule: GraphQLESLintRule = {
     fixable: "code",
     schema: undefined,
     docs: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...({ description: `Enforce descriptive operation names` } as any), // FIXME: Why can we not pass this prop?
+      description: `Enforce descriptive operation names`,
       category: "Operations",
       requiresSiblings: true,
 
