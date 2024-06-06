@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[` 1`] = `
+"  1 |
+  2 | query myOperation {
+> 3 |   user @client
+    |         ^ Use of directive @client is prohibited
+  4 |   description @foobar
+  5 | }"
+`;
+
+exports[` 2`] = `
+"  1 |
+  2 | query myOperation {
+> 3 |   user @client
+    |         ^ Use of directive @client is prohibited
+  4 |   description @foobar
+  5 | }"
+`;
+
+exports[` 3`] = `
+"  1 |
+  2 | query myOperation {
+  3 |   user @client
+> 4 |   description @foobar
+    |                ^ Use of directive @foobar is prohibited
+  5 | }"
+`;

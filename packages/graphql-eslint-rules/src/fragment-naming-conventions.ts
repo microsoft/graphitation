@@ -38,7 +38,7 @@ const rule: GraphQLESLintRule = {
     fixable: "code",
     schema: undefined,
     docs: {
-      ...({ description: `Enforce more descriptive fragment names` } as object), // FIXME: Why can we not pass this prop?
+      description: `Enforce more descriptive fragment names`,
       category: "Operations",
       requiresSiblings: true,
       examples: [
