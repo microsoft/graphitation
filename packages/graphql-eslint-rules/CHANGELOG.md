@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-eslint-rules
 
-This log was last generated on Mon, 08 Apr 2024 12:41:40 GMT and should not be manually modified.
+This log was last generated on Thu, 06 Jun 2024 13:43:44 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.8.0
+
+Thu, 06 Jun 2024 13:43:44 GMT
+
+### Minor changes
+
+- add ban directives rule (dsamsonov@microsoft.com)
 
 ## 0.7.2
 

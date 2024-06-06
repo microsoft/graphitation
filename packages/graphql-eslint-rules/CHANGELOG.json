@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Thu, 06 Jun 2024 13:43:44 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.8.0",
+      "version": "0.8.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "ea672682cb2e6b30d1133a110b0adc4e5edabf06",
+            "comment": "add ban directives rule"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 08 Apr 2024 12:41:40 GMT",
       "tag": "@graphitation/graphql-eslint-rules_v0.7.2",
       "version": "0.7.2",
