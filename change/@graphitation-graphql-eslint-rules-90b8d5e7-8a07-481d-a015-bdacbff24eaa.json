@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "add ban directives rule",
+  "packageName": "@graphitation/graphql-eslint-rules",
+  "email": "dsamsonov@microsoft.com",
+  "dependentChangeType": "patch"
+}
