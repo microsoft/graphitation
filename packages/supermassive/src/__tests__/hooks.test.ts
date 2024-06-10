@@ -16,7 +16,6 @@ import type {
   ExecutionHooks,
 } from "../hooks/types";
 import { pathToArray } from "../jsutils/Path";
-import { isPromise } from "../jsutils/isPromise";
 
 interface TestCase {
   name: string;
@@ -302,6 +301,23 @@ describe.each([
         query: `
         {
           film(id: 1) {
+            title
+          }
+        }`,
+        resolvers: resolvers as UserResolvers,
+        expectedHookCalls: [
+          "BFR|film",
+          "AFR|film|[object]|undefined",
+          "AFC|film|[object]|undefined",
+        ],
+        resultHasErrors: false,
+      },
+      {
+        name: "do not invoke hooks for the __typename",
+        query: `
+        {
+          film(id: 1) {
+            __typename
             title
           }
         }`,

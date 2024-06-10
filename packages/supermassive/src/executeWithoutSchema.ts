@@ -831,7 +831,8 @@ function resolveAndCompleteField(
     path,
   );
 
-  const isDefaultResolverUsed = resolveFn === exeContext.fieldResolver;
+  const isDefaultResolverUsed =
+    resolveFn === exeContext.fieldResolver || fieldName === "__typename";
   const hooks = exeContext.fieldExecutionHooks;
   let hookContext: unknown = undefined;
 
