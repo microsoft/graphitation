@@ -852,29 +852,54 @@ function resolveAndCompleteField(
     }
 
     const result = resolveFn(source, args, contextValue, info);
-    if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-      hookContext = invokeAfterFieldResolveHook(
-        info,
-        exeContext,
-        hookContext,
-        result,
-      );
-    }
-
     let completed;
+
     if (isPromise(result)) {
-      completed = result.then((resolved) => {
-        return completeValue(
-          exeContext,
-          returnTypeRef,
-          fieldGroup,
-          info,
-          path,
-          resolved,
-          incrementalDataRecord,
-        );
-      });
+      completed = result.then(
+        (resolved) => {
+          if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
+            hookContext = invokeAfterFieldResolveHook(
+              info,
+              exeContext,
+              hookContext,
+              resolved,
+            );
+          }
+          return completeValue(
+            exeContext,
+            returnTypeRef,
+            fieldGroup,
+            info,
+            path,
+            resolved,
+            incrementalDataRecord,
+          );
+        },
+        (rawError) => {
+          // That's where afterResolve hook can only be called
+          // in the case of async resolver promise rejection.
+          if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
+            hookContext = invokeAfterFieldResolveHook(
+              info,
+              exeContext,
+              hookContext,
+              undefined,
+              rawError,
+            );
+          }
+          // Error will be handled on field completion
+          throw rawError;
+        },
+      );
     } else {
+      if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
+        hookContext = invokeAfterFieldResolveHook(
+          info,
+          exeContext,
+          hookContext,
+          result,
+        );
+      }
       completed = completeValue(
         exeContext,
         returnTypeRef,
@@ -946,6 +971,7 @@ function resolveAndCompleteField(
         exeContext,
         hookContext,
         undefined,
+        error,
       );
     }
     if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
@@ -1708,6 +1734,7 @@ function invokeAfterFieldResolveHook(
   exeContext: ExecutionContext,
   hookContext: unknown,
   result?: unknown,
+  error?: unknown,
 ) {
   const hook = exeContext.fieldExecutionHooks?.afterFieldResolve;
   if (!hook) {
@@ -1720,6 +1747,7 @@ function invokeAfterFieldResolveHook(
         context: exeContext.contextValue,
         hookContext,
         result,
+        error,
       }),
     (_, rawError) => {
       if (rawError) {
