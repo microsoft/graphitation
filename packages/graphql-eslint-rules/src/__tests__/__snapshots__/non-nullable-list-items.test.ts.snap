@@ -1,0 +1,16 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Invalid #1 1`] = `
+"#### ⌨️ Code
+
+      1 | type SomeType {
+      2 |   someArray: [Item]
+      3 | }
+
+#### ❌ Error
+
+      1 | type SomeType {
+    > 2 |   someArray: [Item]
+        |              ^^^^^ List items must be not nullable.
+      3 | }"
+`;
