@@ -1,0 +1,34 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Invalid #1 1`] = `
+"#### ⌨️ Code
+
+      1 | type ChatMessage {
+      2 |   id: String
+      3 |   content: String
+      4 |   someOtherImportantField: String
+      5 | }
+
+#### ⚙️ Options
+
+    {
+      "fields": [
+        "id",
+        "someOtherImportantField"
+      ]
+    }
+
+#### ❌ Error 1/2
+
+      1 | type ChatMessage {
+    > 2 |   id: String
+        |   ^^^^ Field "id" cannot be nullable.
+      3 |   content: String
+
+#### ❌ Error 2/2
+
+      3 |   content: String
+    > 4 |   someOtherImportantField: String
+        |   ^^^^^^^^^^^^^^^^^^^^^^^^^ Field "someOtherImportantField" cannot be nullable.
+      5 | }"
+`;
