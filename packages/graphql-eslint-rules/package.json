@@ -16,11 +16,10 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@graphql-eslint/eslint-plugin": "^3.7.0",
+    "@graphql-eslint/eslint-plugin": "^3.20.0",
     "@types/jest": "^26.0.22",
     "@types/lodash.camelcase": "^4.3.6",
     "@types/lodash.kebabcase": "^4.1.6",
-    "@typescript-eslint/utils": "^5.10.1",
     "graphql": "^15.0.0",
     "lodash.camelcase": "^4.3.0",
     "lodash.kebabcase": "^4.1.1",
