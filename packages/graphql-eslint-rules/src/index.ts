@@ -6,3 +6,5 @@ import fragmentNamingConventions from "./fragment-naming-conventions";
 export { fragmentNamingConventions as fragmentNamingConventionRule };
 import banDirectives from "./ban-directives";
 export { banDirectives as banDirectivesRule };
+import strictNonNullableVariables from "./strict-non-nullable-variables";
+export { strictNonNullableVariables as strictNonNullableVariablesRule };
