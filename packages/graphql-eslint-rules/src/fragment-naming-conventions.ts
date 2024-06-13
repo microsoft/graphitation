@@ -1,24 +1,29 @@
-import {
-  GraphQLESLintRule,
-  GraphQLESTreeNode,
-} from "@graphql-eslint/eslint-plugin";
-import { FragmentDefinitionNode } from "graphql";
-import { checkDirForPkg } from "./utils";
-import path from "path";
-import camelCase from "lodash.camelcase";
-import {
-  getMissingLastDirectoryPrefixErrorMessage,
-  isFilenameSuffixValid,
-  isFilenamePrefixValid,
-  reportError,
-} from "./operation-naming-conventions";
+import type { GraphQLESLintRule } from "@graphql-eslint/eslint-plugin";
+import { pascalCase, getFileInfo } from "./utils";
+import { reportError } from "./operation-naming-conventions";
 
 const OPERATIONS = ["Query", "Mutation", "Subscription"];
 const CONDITIONAL_SUFFIX_REGEXP = /^[a-z]+(?:[A-Z][a-z]+)*$/;
 
-function pascalCase(text: string) {
-  const camelCaseText = camelCase(text);
-  return camelCaseText.charAt(0).toUpperCase() + camelCaseText.slice(1);
+function getMissingLastDirectoryPrefixErrorMessage(lastDirectory: string) {
+  return `Filename should start with the package directory name: "${lastDirectory}"`;
+}
+
+function isFilenamePrefixValid(filename: string, lastDirectory: string) {
+  return filename.startsWith(`${lastDirectory}-`);
+}
+
+function isFilenameSuffixValid(
+  filename: string,
+  additionalSuffixes?: string[],
+) {
+  const operations = additionalSuffixes
+    ? [...additionalSuffixes, ...OPERATIONS]
+    : OPERATIONS;
+
+  return operations.some((operation) =>
+    filename.endsWith(`-${operation.toLowerCase()}`),
+  );
 }
 
 function cutOperationName(pascalFilename: string) {
@@ -67,20 +72,18 @@ const rule: GraphQLESLintRule = {
   },
   create(context) {
     return {
-      FragmentDefinition(node: GraphQLESTreeNode<FragmentDefinitionNode>) {
-        if (!node?.name) return;
-        const documentName = node.name.value;
-        const filepath = context.getFilename();
-        const packageJsonPath = checkDirForPkg(
-          path.resolve(process.cwd(), path.dirname(filepath)),
-        );
-
-        if (!packageJsonPath || !filepath) {
+      FragmentDefinition(node) {
+        if (!node?.name) {
           return;
         }
 
-        const lastDirectory = path.basename(path.dirname(packageJsonPath));
-        const filename = path.parse(path.basename(filepath)).name;
+        const documentName = node.name.value;
+        const fileInfo = getFileInfo(context.getFilename());
+        if (!fileInfo) {
+          return;
+        }
+
+        const { name: filename, directory: lastDirectory } = fileInfo;
 
         if (!isFilenameSuffixValid(filename, ["fragment"])) {
           return reportError(
@@ -99,7 +102,7 @@ const rule: GraphQLESLintRule = {
         }
 
         const pascalFilenameWithoutOperation = cutOperationName(
-          pascalCase(path.parse(path.basename(filepath)).name),
+          pascalCase(filename),
         );
 
         const expectedName = pascalFilenameWithoutOperation.endsWith("Fragment")
