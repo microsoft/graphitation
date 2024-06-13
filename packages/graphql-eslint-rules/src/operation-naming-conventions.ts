@@ -1,84 +1,24 @@
-import {
+import type {
   GraphQLESLintRule,
-  GraphQLESTreeNode,
   GraphQLESLintRuleContext,
 } from "@graphql-eslint/eslint-plugin";
-import { OperationDefinitionNode, FragmentDefinitionNode } from "graphql";
-import { RuleFixer } from "@typescript-eslint/utils/dist/ts-eslint";
-import { checkDirForPkg } from "./utils";
-import path from "path";
-import camelCase from "lodash.camelcase";
+import { pascalCase, getFileInfo } from "./utils";
 
 const OPERATIONS = ["query", "mutation", "subscription"];
 
-export const MISSING_OPERATION_NAME_ERROR_MESSAGE = `Filename should end with the operation name (query/mutation/subscription) e.g. foo-query.graphql`;
-
-export function getMissingLastDirectoryPrefixErrorMessage(
-  lastDirectory: string,
-) {
-  return `Filename should start with the package directory name: "${lastDirectory}"`;
-}
-
-export function isFilenamePrefixValid(filename: string, lastDirectory: string) {
-  return filename.startsWith(`${lastDirectory}-`);
-}
-
-export function isFilenameSuffixValid(
-  filename: string,
-  additionalSuffixes?: string[],
-) {
-  const operations = additionalSuffixes
-    ? [...additionalSuffixes, ...OPERATIONS]
-    : OPERATIONS;
-
-  return operations.some((operation) =>
-    filename.endsWith(`-${operation.toLowerCase()}`),
-  );
-}
-
-function pascalCase(text: string) {
-  const camelCaseText = camelCase(text);
-  return camelCaseText.charAt(0).toUpperCase() + camelCaseText.slice(1);
-}
-
 export function reportError(
   context: GraphQLESLintRuleContext,
-  node: GraphQLESTreeNode<
-    OperationDefinitionNode | FragmentDefinitionNode,
-    true
-  >,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  node: any,
   message: string,
   expectedName?: string,
 ) {
-  const newNode = {
-    ...node,
-    loc: node.loc
-      ? {
-          start: {
-            line: node.loc.start.line,
-            column: node.loc.start.column - 1,
-          },
-          end: {
-            line: node.loc.end.line,
-            column: node.loc.end.column - 1,
-          },
-        }
-      : undefined,
-  };
-
-  const fix = (fixer: RuleFixer) => {
-    if (!expectedName) {
-      return;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return fixer.replaceText(node.name as any, expectedName);
-  };
-
   context.report({
-    node: newNode,
+    node,
     message,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    fix: expectedName ? (fix as any) : undefined,
+    fix: expectedName
+      ? (fixer) => fixer.replaceText(node.name, expectedName)
+      : undefined,
   });
 }
 
@@ -90,8 +30,6 @@ const rule: GraphQLESLintRule = {
     docs: {
       description: `Enforce descriptive operation names`,
       category: "Operations",
-      requiresSiblings: true,
-
       examples: [
         {
           title: "Incorrect",
@@ -122,22 +60,18 @@ const rule: GraphQLESLintRule = {
   },
   create(context) {
     return {
-      "OperationDefinition[name!=undefined]"(
-        node: GraphQLESTreeNode<OperationDefinitionNode, true>,
-      ) {
-        if (!node?.name) return;
-        const documentName = node.name.value;
-        const filepath = context.getFilename();
-        const packageJsonPath = checkDirForPkg(
-          path.resolve(process.cwd(), path.dirname(filepath)),
-        );
-
-        if (!packageJsonPath || !filepath) {
+      OperationDefinition(node) {
+        if (!node.name?.value) {
           return;
         }
 
-        const lastDirectory = path.basename(path.dirname(packageJsonPath));
-        const filename = path.parse(path.basename(filepath)).name;
+        const documentName = node.name.value;
+        const fileInfo = getFileInfo(context.getFilename());
+        if (!fileInfo) {
+          return;
+        }
+
+        const { name: filename, directory: lastDirectory } = fileInfo;
 
         if (
           !OPERATIONS.some((operation) => filename.endsWith(`-${operation}`))
