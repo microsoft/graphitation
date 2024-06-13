@@ -1,28 +1,57 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[` 1`] = `
-"  1 |
-  2 | query myOperation {
-> 3 |   user @client
-    |         ^ Use of directive @client is prohibited
-  4 |   description @foobar
-  5 | }"
+exports[`Invalid #1 1`] = `
+"#### ⌨️ Code
+
+      1 | query myOperation {
+      2 |   user @client
+      3 |   description @foobar
+      4 | }
+
+#### ⚙️ Options
+
+    {
+      "bannedDirectives": [
+        "client"
+      ]
+    }
+
+#### ❌ Error
+
+      1 | query myOperation {
+    > 2 |   user @client
+        |        ^ Use of directive @client is prohibited
+      3 |   description @foobar"
 `;
 
-exports[` 2`] = `
-"  1 |
-  2 | query myOperation {
-> 3 |   user @client
-    |         ^ Use of directive @client is prohibited
-  4 |   description @foobar
-  5 | }"
-`;
+exports[`Invalid #2 1`] = `
+"#### ⌨️ Code
 
-exports[` 3`] = `
-"  1 |
-  2 | query myOperation {
-  3 |   user @client
-> 4 |   description @foobar
-    |                ^ Use of directive @foobar is prohibited
-  5 | }"
+      1 | query myOperation {
+      2 |   user @client
+      3 |   description @foobar
+      4 | }
+
+#### ⚙️ Options
+
+    {
+      "bannedDirectives": [
+        "client",
+        "foobar"
+      ]
+    }
+
+#### ❌ Error 1/2
+
+      1 | query myOperation {
+    > 2 |   user @client
+        |        ^ Use of directive @client is prohibited
+      3 |   description @foobar
+
+#### ❌ Error 2/2
+
+      2 |   user @client
+    > 3 |   description @foobar
+        |               ^ Use of directive @foobar is prohibited
+      4 | }"
 `;
