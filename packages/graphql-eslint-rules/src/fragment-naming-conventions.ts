@@ -41,7 +41,7 @@ const rule: GraphQLESLintRule = {
   meta: {
     type: "problem",
     fixable: "code",
-    schema: undefined,
+    schema: [],
     docs: {
       description: `Enforce more descriptive fragment names`,
       category: "Operations",

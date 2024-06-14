@@ -26,7 +26,7 @@ const rule: GraphQLESLintRule = {
   meta: {
     type: "problem",
     fixable: "code",
-    schema: undefined,
+    schema: [],
     docs: {
       description: `Enforce descriptive operation names`,
       category: "Operations",
