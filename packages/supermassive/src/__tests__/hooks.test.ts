@@ -16,7 +16,6 @@ import type {
   ExecutionHooks,
 } from "../hooks/types";
 import { pathToArray } from "../jsutils/Path";
-import { isPromise } from "../jsutils/isPromise";
 
 interface TestCase {
   name: string;
@@ -99,14 +98,17 @@ describe.each([
           ({
             resolveInfo,
             result,
+            error,
           }: AfterFieldResolveHookArgs<unknown, unknown>) => {
-            const resultValue = isPromise(result) // result is a promise for async resolvers
-              ? "[promise]"
-              : typeof result === "object" && result !== null
-              ? "[object]"
-              : result;
+            const resultValue =
+              typeof result === "object" && result !== null
+                ? "[object]"
+                : result;
+            const errorMessage = error instanceof Error ? error.message : error;
             hookCalls.push(
-              `AFR|${pathToArray(resolveInfo.path).join(".")}|${resultValue}`,
+              `AFR|${pathToArray(resolveInfo.path).join(
+                ".",
+              )}|${resultValue}|${errorMessage}`,
             );
           },
         ),
@@ -156,9 +158,9 @@ describe.each([
         } as UserResolvers,
         expectedHookCalls: [
           "BFR|person",
-          "AFR|person|[object]",
+          "AFR|person|[object]|undefined",
           "BFR|person.name",
-          "AFR|person.name|Luke Skywalker",
+          "AFR|person.name|Luke Skywalker|undefined",
           "AFC|person.name|Luke Skywalker|undefined",
           "AFC|person|[object]|undefined",
         ],
@@ -182,9 +184,9 @@ describe.each([
         } as UserResolvers,
         expectedHookCalls: [
           "BFR|person",
-          "AFR|person|[object]",
+          "AFR|person|[object]|undefined",
           "BFR|person.name",
-          "AFR|person.name|[promise]",
+          "AFR|person.name|Luke Skywalker|undefined",
           "AFC|person.name|Luke Skywalker|undefined",
           "AFC|person|[object]|undefined",
         ],
@@ -208,9 +210,9 @@ describe.each([
         } as UserResolvers,
         expectedHookCalls: [
           "BFR|film",
-          "AFR|film|[object]",
+          "AFR|film|[object]|undefined",
           "BFR|film.producer",
-          "AFR|film.producer|undefined",
+          "AFR|film.producer|undefined|Resolver error",
           "AFC|film.producer|undefined|Resolver error",
           "AFC|film|[object]|undefined",
         ],
@@ -234,9 +236,9 @@ describe.each([
         } as UserResolvers,
         expectedHookCalls: [
           "BFR|film",
-          "AFR|film|[object]",
+          "AFR|film|[object]|undefined",
           "BFR|film.producer",
-          "AFR|film.producer|[promise]",
+          "AFR|film.producer|undefined|Resolver error",
           "AFC|film.producer|undefined|Resolver error",
           "AFC|film|[object]|undefined",
         ],
@@ -260,9 +262,9 @@ describe.each([
         } as UserResolvers,
         expectedHookCalls: [
           "BFR|film",
-          "AFR|film|[object]",
+          "AFR|film|[object]|undefined",
           "BFR|film.title",
-          "AFR|film.title|undefined",
+          "AFR|film.title|undefined|Resolver error",
           "AFC|film.title|undefined|Resolver error",
           "AFC|film|undefined|Resolver error",
         ],
@@ -286,9 +288,9 @@ describe.each([
         } as UserResolvers,
         expectedHookCalls: [
           "BFR|film",
-          "AFR|film|[object]",
+          "AFR|film|[object]|undefined",
           "BFR|film.title",
-          "AFR|film.title|[promise]",
+          "AFR|film.title|undefined|Resolver error",
           "AFC|film.title|undefined|Resolver error",
           "AFC|film|undefined|Resolver error",
         ],
@@ -305,7 +307,24 @@ describe.each([
         resolvers: resolvers as UserResolvers,
         expectedHookCalls: [
           "BFR|film",
-          "AFR|film|[object]",
+          "AFR|film|[object]|undefined",
+          "AFC|film|[object]|undefined",
+        ],
+        resultHasErrors: false,
+      },
+      {
+        name: "do not invoke hooks for the __typename",
+        query: `
+        {
+          film(id: 1) {
+            __typename
+            title
+          }
+        }`,
+        resolvers: resolvers as UserResolvers,
+        expectedHookCalls: [
+          "BFR|film",
+          "AFR|film|[object]|undefined",
           "AFC|film|[object]|undefined",
         ],
         resultHasErrors: false,

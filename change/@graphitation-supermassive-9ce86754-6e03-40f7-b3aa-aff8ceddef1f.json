@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Revert back changes in execution where afterFieldResolve hook can return promise if async",
+  "packageName": "@graphitation/supermassive",
+  "email": "sergeystoyan@microsoft.com",
+  "dependentChangeType": "patch"
+}

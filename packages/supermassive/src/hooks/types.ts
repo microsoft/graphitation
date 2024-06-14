@@ -16,13 +16,8 @@ export interface PostExecuteFieldHookArgs<ResolveContext, HookContext>
 
 export interface AfterFieldResolveHookArgs<ResolveContext, HookContext>
   extends PostExecuteFieldHookArgs<ResolveContext, HookContext> {
-  /**
-   * The result of the field execution _before_ completing the value. This
-   * means the result may be a promise that is still pending, and the delta
-   * between the time this hook and the `afterFieldComplete` hook is called
-   * is the time it takes for the promise to resolve.
-   */
-  result?: unknown | Promise<unknown>;
+  result?: unknown;
+  error?: unknown;
 }
 
 export interface AfterFieldCompleteHookArgs<ResolveContext, HookContext>
