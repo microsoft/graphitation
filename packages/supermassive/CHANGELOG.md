@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Thu, 07 Mar 2024 13:08:30 GMT and should not be manually modified.
+This log was last generated on Fri, 14 Jun 2024 18:43:53 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.5.1
+
+Fri, 14 Jun 2024 18:43:53 GMT
+
+### Patches
+
+- Revert back changes in execution where afterFieldResolve hook can return promise if async (sergeystoyan@microsoft.com)
 
 ## 3.5.0
 
