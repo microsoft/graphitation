@@ -1,8 +1,16 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-This log was last generated on Tue, 14 Nov 2023 10:29:53 GMT and should not be manually modified.
+This log was last generated on Mon, 17 Jun 2024 13:26:30 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.7
+
+Mon, 17 Jun 2024 13:26:30 GMT
+
+### Patches
+
+- [HOTFIX] mutations in GraphiQL fixed (jakubvejr@microsoft.com)
 
 ## 1.0.6
 

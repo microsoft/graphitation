@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "[HOTFIX] mutations in GraphiQL fixed",
-  "packageName": "@graphitation/rempl-apollo-devtools",
-  "email": "jakubvejr@microsoft.com",
-  "dependentChangeType": "patch"
-}
