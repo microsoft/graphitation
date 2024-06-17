@@ -1,5 +1,9 @@
 import { RemplWrapper } from "../rempl-wrapper";
-import { parse } from "graphql";
+import {
+  parse,
+  type DocumentNode,
+  type OperationDefinitionNode,
+} from "graphql";
 
 import { ApolloClientsObject, WrapperCallbackParams } from "../../types";
 
@@ -19,16 +23,39 @@ export class GraphiQLPublisher {
     this.attachMethodsToPublisher();
   }
 
+  private getOperationType(operation: DocumentNode): string | null {
+    const operationDefinitionNode = operation.definitions.find(
+      (definition) => definition.kind === "OperationDefinition",
+    );
+
+    if (operationDefinitionNode) {
+      return (operationDefinitionNode as OperationDefinitionNode).operation;
+    }
+
+    return null;
+  }
   private attachMethodsToPublisher() {
     this.apolloPublisher.provide(
       "graphiql",
       (activeClientId: string, graphQLParams: any) => {
         const client = this.apolloClients[activeClientId];
 
-        return client.query({
-          query: parse(graphQLParams.query),
-          variables: graphQLParams.variables,
-        });
+        const documentNode = parse(graphQLParams.query);
+        const operationName = this.getOperationType(documentNode);
+
+        if (operationName === "query") {
+          return client.query({
+            query: documentNode,
+            variables: graphQLParams.variables,
+          });
+        } else if (operationName === "mutation") {
+          return client.mutate({
+            mutation: documentNode,
+            variables: graphQLParams.variables,
+          });
+        } else {
+          throw new Error(`Unsupported operation type ${operationName}`);
+        }
       },
     );
   }

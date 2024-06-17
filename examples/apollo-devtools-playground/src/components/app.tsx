@@ -13,6 +13,8 @@ if ((window as any) && !(window as any).__APOLLO_CLIENTS__?.length) {
   ];
 }
 
+(window as any).__REMPL_APOLLO_DEVTOOLS_URL__ = "/subscriber.html";
+
 const App = () => {
   return (
     <FluentProvider theme={teamsLightTheme}>
