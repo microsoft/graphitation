@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-eslint-rules
 
-This log was last generated on Tue, 18 Jun 2024 12:15:36 GMT and should not be manually modified.
+This log was last generated on Tue, 18 Jun 2024 12:44:07 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.10.0
+
+Tue, 18 Jun 2024 12:44:07 GMT
+
+### Minor changes
+
+- adds new eslit rules (dsamsonov@microsoft.com)
 
 ## 0.9.0
 

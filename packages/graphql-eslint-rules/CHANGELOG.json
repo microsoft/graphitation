@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Tue, 18 Jun 2024 12:44:07 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.10.0",
+      "version": "0.10.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "6729a216c0a200a3380671975c73e4450f3ec70c",
+            "comment": "adds new eslit rules"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 18 Jun 2024 12:15:36 GMT",
       "tag": "@graphitation/graphql-eslint-rules_v0.9.0",
       "version": "0.9.0",
