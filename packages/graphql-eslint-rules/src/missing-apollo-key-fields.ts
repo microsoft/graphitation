@@ -9,15 +9,14 @@ import {
   GraphQLOutputType,
   GraphQLNamedType,
   isNonNullType,
-  SelectionSetNode,
   isListType,
   ASTNode,
 } from "graphql";
 import {
   GraphQLESLintRule,
   CategoryType,
-  GraphQLESTreeNode,
-  GraphQLESLintRuleContext,
+  requireGraphQLSchemaFromContext,
+  requireSiblingsOperations,
 } from "@graphql-eslint/eslint-plugin";
 
 export const REQUIRE_KEY_FIELDS_WHEN_AVAILABLE = "missing-apollo-key-fields";
@@ -39,29 +38,6 @@ function getBaseType(type: GraphQLOutputType): GraphQLNamedType {
   }
 
   return type;
-}
-
-function checkRequiredParameters(
-  ruleName: string,
-  context: GraphQLESLintRuleContext,
-) {
-  if (!context.parserServices) {
-    throw new Error(
-      `Rule '${ruleName}' requires 'parserOptions.operations' to be set and loaded. See http://bit.ly/graphql-eslint-operations for more info`,
-    );
-  }
-
-  if (!context.parserServices.siblingOperations.available) {
-    throw new Error(
-      `Rule '${ruleName}' requires 'parserOptions.operations' to be set and loaded. See http://bit.ly/graphql-eslint-operations for more info`,
-    );
-  }
-
-  if (!context.options[0]?.typePolicies) {
-    throw new Error(
-      `Rule '${ruleName}' requires option 'typePolicies' to be set.`,
-    );
-  }
 }
 
 function keyFieldsForType(
@@ -126,7 +102,8 @@ function hasIdFieldInInterfaceSelectionSet(node: unknown, keyFields: string[]) {
 }
 
 const missingApolloKeyFieldsRule: GraphQLESLintRule<
-  [MissingApolloKeyFieldsRuleConfig]
+  [MissingApolloKeyFieldsRuleConfig],
+  true
 > = {
   meta: {
     type: "problem",
@@ -190,9 +167,11 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
     },
   },
   create(context) {
+    requireGraphQLSchemaFromContext(REQUIRE_KEY_FIELDS_WHEN_AVAILABLE, context);
+    requireSiblingsOperations(REQUIRE_KEY_FIELDS_WHEN_AVAILABLE, context);
+
     return {
-      SelectionSet(node: GraphQLESTreeNode<SelectionSetNode, true>) {
-        checkRequiredParameters(REQUIRE_KEY_FIELDS_WHEN_AVAILABLE, context);
+      SelectionSet(node) {
         const { typePolicies } = context.options[0];
         const siblings = context.parserServices?.siblingOperations;
 
@@ -259,24 +238,8 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
                 unusedKeyFields.length &&
                 !hasIdFieldInInterfaceSelectionSet(node, keyFields)
               ) {
-                const newNode = {
-                  ...node,
-                  loc: node.loc
-                    ? {
-                        start: {
-                          line: node.loc.start.line,
-                          column: node.loc.start.column - 1,
-                        },
-                        end: {
-                          line: node.loc.end.line,
-                          column: node.loc.end.column - 1,
-                        },
-                      }
-                    : undefined,
-                };
-
                 context.report({
-                  node: newNode,
+                  node: node,
                   message: `The key-field${
                     unusedKeyFields.length === 1 ? "" : "s"
                   } "${

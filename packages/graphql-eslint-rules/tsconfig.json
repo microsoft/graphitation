@@ -6,6 +6,9 @@
     "rootDir": "src",
     "outDir": "lib"
   },
-  "include": ["src"],
+  "include": [
+    "src",
+    "./types/kind-override.d.ts"
+  ],
   "references": []
 }
