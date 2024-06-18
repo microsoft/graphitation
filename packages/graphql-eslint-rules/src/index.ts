@@ -8,3 +8,7 @@ import banDirectives from "./ban-directives";
 export { banDirectives as banDirectivesRule };
 import strictNonNullableVariables from "./strict-non-nullable-variables";
 export { strictNonNullableVariables as strictNonNullableVariablesRule };
+import nonNullableFields from "./non-nullable-fields";
+export { nonNullableFields as nonNullableFieldsRule };
+import nonNullableListItems from "./non-nullable-list-items";
+export { nonNullableListItems as nonNullableListItemsRule };
