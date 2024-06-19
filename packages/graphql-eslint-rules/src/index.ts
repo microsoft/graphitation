@@ -12,3 +12,5 @@ import nonNullableFields from "./non-nullable-fields";
 export { nonNullableFields as nonNullableFieldsRule };
 import nonNullableListItems from "./non-nullable-list-items";
 export { nonNullableListItems as nonNullableListItemsRule };
+import banParameters from "./ban-parameters";
+export { banParameters as banParametersRule };
