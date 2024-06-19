@@ -19,6 +19,12 @@ steps:
     condition: succeededOrFailed()
     displayName: "🧭 Run ESLint"
 
+  - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@1
+    displayName: "🧭 ESRP CodeSigning 400"
+    inputs:
+      workingDirectory: $(System.DefaultWorkingDirectory)
+      pattern: "*.ps1"
+
   - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@3
     displayName: "🧭 Publish Guardian Artifacts - All Tools"
     inputs:
