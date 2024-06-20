@@ -19,9 +19,9 @@ steps:
     condition: succeededOrFailed()
     displayName: "🧭 Run ESLint"
 
-  - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@1
+  - template: azure-devops-templates/steps/ESRP-CodeSigning-400.yml&version=GBmaster
     displayName: "🧭 ESRP CodeSigning 400"
-    inputs:
+    parameters:
       workingDirectory: $(System.DefaultWorkingDirectory)
       pattern: "*.ps1"
 
