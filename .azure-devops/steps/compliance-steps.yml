@@ -49,8 +49,8 @@ steps:
             "ToolVersion" : "1.0"
           }
         ]
-    sessionTimeout: 60
-    VerboseLogin: false
+      sessionTimeout: 60
+      VerboseLogin: false
 
   - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@3
     displayName: "🧭 Publish Guardian Artifacts - All Tools"
