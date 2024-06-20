@@ -1,6 +1,6 @@
 resources:
   repositories:
-    - repository: SkypeSpaces-Infra
+    - repository: https://domoreexp.visualstudio.com/DefaultCollection/Teamspace/_git/SkypeSpaces-Infra
       type: git
       name: SkypeSpaces-Infra
 
