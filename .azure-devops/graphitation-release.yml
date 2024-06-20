@@ -1,3 +1,9 @@
+resources:
+  repositories:
+    - repository: SkypeSpaces-Infra
+      type: git
+      name: SkypeSpaces-Infra
+
 pr: none
 trigger:
   - main
