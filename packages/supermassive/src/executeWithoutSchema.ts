@@ -290,7 +290,10 @@ function executeOperation(
     );
     const path = undefined;
     let result;
-
+    const hooks = exeContext.fieldExecutionHooks;
+    if (hooks?.beforeOperationExecute) {
+      invokeBeforeOperationExecuteHook(exeContext);
+    }
     // Note: cannot use OperationTypeNode from graphql-js as it doesn't exist in 15.x
     switch (operation.operation) {
       case "query":
@@ -369,12 +372,14 @@ function buildResponse(
     );
   }
 
+  const hooks = exeContext.fieldExecutionHooks;
   try {
     const initialResult =
       exeContext.errors.length === 0
         ? { data }
         : { errors: exeContext.errors, data };
     if (exeContext.subsequentPayloads.size > 0) {
+      // TODO: define how to call hooks for incremental results
       return {
         initialResult: {
           ...initialResult,
@@ -383,6 +388,12 @@ function buildResponse(
         subsequentResults: yieldSubsequentPayloads(exeContext),
       };
     } else {
+      if (hooks?.afterBuildResponse) {
+        invokeAfterBuildResponseHook(exeContext, initialResult);
+        if (exeContext.errors.length > (initialResult.errors?.length ?? 0)) {
+          initialResult.errors = exeContext.errors;
+        }
+      }
       return initialResult;
     }
   } catch (error) {
@@ -648,6 +659,10 @@ function executeSubscriptionImpl(
     path,
   );
 
+  const isDefaultResolverUsed = resolveFn === exeContext.subscribeFieldResolver;
+  const hooks = exeContext.fieldExecutionHooks;
+  let hookContext: unknown = undefined;
+
   try {
     // Implements the "ResolveFieldEventStream" algorithm from GraphQL specification.
     // It differs from "ResolveFieldValue" due to providing a different `resolveFn`.
@@ -661,18 +676,62 @@ function executeSubscriptionImpl(
     // used to represent an authenticated user, or request-specific caches.
     const contextValue = exeContext.contextValue;
 
+    if (!isDefaultResolverUsed && hooks?.beforeFieldResolve) {
+      hookContext = invokeBeforeFieldResolveHook(info, exeContext);
+    }
+
     // Call the `subscribe()` resolver or the default resolver to produce an
     // AsyncIterable yielding raw payloads.
     const result = resolveFn(rootValue, args, contextValue, info);
 
     if (isPromise(result)) {
-      return result.then(assertEventStream).then(undefined, (error) => {
-        throw locatedError(error, fieldGroup, pathToArray(path));
-      });
+      return result.then(assertEventStream).then(
+        (resolved) => {
+          if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
+            hookContext = invokeAfterFieldResolveHook(
+              info,
+              exeContext,
+              hookContext,
+              resolved,
+            );
+          }
+          return resolved;
+        },
+        (error) => {
+          if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
+            hookContext = invokeAfterFieldResolveHook(
+              info,
+              exeContext,
+              hookContext,
+              undefined,
+              error,
+            );
+          }
+          throw locatedError(error, fieldGroup, pathToArray(path));
+        },
+      );
     }
 
-    return assertEventStream(result);
+    const stream = assertEventStream(result);
+    if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
+      hookContext = invokeAfterFieldResolveHook(
+        info,
+        exeContext,
+        hookContext,
+        stream,
+      );
+    }
+    return stream;
   } catch (error) {
+    if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
+      hookContext = invokeAfterFieldResolveHook(
+        info,
+        exeContext,
+        hookContext,
+        undefined,
+        error,
+      );
+    }
     throw locatedError(error, fieldGroup, pathToArray(path));
   }
 }
@@ -732,6 +791,10 @@ function mapResultOrEventStreamOrPromise(
           exeContext,
           payload,
         );
+        const hooks = exeContext?.fieldExecutionHooks;
+        if (hooks?.beforeSubscriptionEventEmit) {
+          invokeBeforeSubscriptionEventEmitHook(perEventContext, payload);
+        }
         try {
           const data = executeFields(
             exeContext,
@@ -1796,6 +1859,86 @@ function invokeAfterFieldCompleteHook(
   );
 }
 
+function invokeBeforeOperationExecuteHook(exeContext: ExecutionContext) {
+  const hook = exeContext.fieldExecutionHooks?.beforeOperationExecute;
+  if (!hook) {
+    return;
+  }
+  return executeSafe(
+    () =>
+      hook({
+        context: exeContext.contextValue,
+        operation: exeContext.operation,
+      }),
+    (_, rawError) => {
+      if (rawError) {
+        const error = toGraphQLError(
+          rawError,
+          undefined,
+          "Unexpected error in beforeOperationExecute hook",
+        );
+        exeContext.errors.push(error);
+      }
+    },
+  );
+}
+
+function invokeBeforeSubscriptionEventEmitHook(
+  exeContext: ExecutionContext,
+  eventPayload: unknown,
+) {
+  const hook = exeContext.fieldExecutionHooks?.beforeSubscriptionEventEmit;
+  if (!hook) {
+    return;
+  }
+  return executeSafe(
+    () =>
+      hook({
+        context: exeContext.contextValue,
+        operation: exeContext.operation,
+        eventPayload,
+      }),
+    (_, rawError) => {
+      if (rawError) {
+        const error = toGraphQLError(
+          rawError,
+          undefined,
+          "Unexpected error in beforeSubscriptionEventEmit hook",
+        );
+        exeContext.errors.push(error);
+      }
+    },
+  );
+}
+
+function invokeAfterBuildResponseHook(
+  exeContext: ExecutionContext,
+  result: TotalExecutionResult,
+) {
+  const hook = exeContext.fieldExecutionHooks?.afterBuildResponse;
+  if (!hook) {
+    return;
+  }
+  return executeSafe(
+    () =>
+      hook({
+        context: exeContext.contextValue,
+        operation: exeContext.operation,
+        result,
+      }),
+    (_, rawError) => {
+      if (rawError) {
+        const error = toGraphQLError(
+          rawError,
+          undefined,
+          "Unexpected error in afterBuildResponse hook",
+        );
+        exeContext.errors.push(error);
+      }
+    },
+  );
+}
+
 function executeSafe<T>(
   execute: () => T,
   onComplete: (result: T | undefined, error: unknown) => void,
@@ -1814,7 +1957,7 @@ function executeSafe<T>(
 
 function toGraphQLError(
   originalError: unknown,
-  path: Path,
+  path: Path | undefined,
   prependMessage: string,
 ): GraphQLError {
   const originalMessage =
@@ -1822,7 +1965,7 @@ function toGraphQLError(
       ? originalError.message
       : inspect(originalError);
   const error = new Error(`${prependMessage}: ${originalMessage}`);
-  return locatedError(error, undefined, pathToArray(path));
+  return locatedError(error, undefined, path ? pathToArray(path) : undefined);
 }
 
 /**
