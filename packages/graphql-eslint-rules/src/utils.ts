@@ -1,7 +1,8 @@
-import { join, dirname } from "path";
+import { join, dirname, resolve, basename, parse } from "path";
 import fs from "fs";
+import camelCase from "lodash.camelcase";
 
-export function checkDirForPkg(dir: string): string | null {
+function checkDirForPkg(dir: string): string | null {
   const pathname = join(dir, "package.json");
   let stat;
 
@@ -23,4 +24,24 @@ export function checkDirForPkg(dir: string): string | null {
     return null;
   }
   return checkDirForPkg(parentDir);
+}
+
+export function getFileInfo(filepath: string) {
+  const packageJsonPath = checkDirForPkg(
+    resolve(process.cwd(), dirname(filepath)),
+  );
+
+  if (!packageJsonPath) {
+    return;
+  }
+
+  return {
+    name: parse(basename(filepath)).name,
+    directory: basename(dirname(packageJsonPath)),
+  };
+}
+
+export function pascalCase(text: string) {
+  const camelCaseText = camelCase(text);
+  return camelCaseText.charAt(0).toUpperCase() + camelCaseText.slice(1);
 }
