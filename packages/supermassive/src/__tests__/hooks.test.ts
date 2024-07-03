@@ -1,4 +1,9 @@
-import { parse, DocumentNode } from "graphql";
+import {
+  parse,
+  DocumentNode,
+  execute as graphQLExecute,
+  subscribe as graphQLSubscribe,
+} from "graphql";
 import {
   executeWithoutSchema,
   isTotalExecutionResult,
@@ -13,23 +18,35 @@ import type {
   AfterFieldCompleteHookArgs,
   AfterFieldResolveHookArgs,
   BaseExecuteFieldHookArgs,
+  BaseExecuteOperationHookArgs,
+  BeforeSubscriptionEventEmitHookArgs,
   ExecutionHooks,
 } from "../hooks/types";
 import { pathToArray } from "../jsutils/Path";
+import type { Maybe } from "../jsutils/Maybe";
+import { createExecutionUtils } from "../__testUtils__/execute";
+
+const { drainExecution } = createExecutionUtils(
+  graphQLExecute,
+  graphQLSubscribe,
+);
 
 interface TestCase {
   name: string;
-  query: string;
+  document: string;
   resolvers: UserResolvers;
   expectedHookCalls: string[];
   resultHasErrors: boolean;
+  variables?: Maybe<{ [variable: string]: unknown }>;
+  isStrictHookCallsOrder: boolean;
 }
 
 interface HookExceptionTestCase {
   name: string;
-  query: string;
+  document: string;
   hooks: ExecutionHooks;
   expectedErrorMessage: string;
+  variables?: Maybe<{ [variable: string]: unknown }>;
 }
 
 describe.each([
@@ -39,18 +56,20 @@ describe.each([
       document: DocumentNode,
       resolvers: UserResolvers,
       hooks: ExecutionHooks,
+      variables?: Maybe<{ [variable: string]: unknown }>,
     ) => {
       const { definitions } = extractMinimalViableSchemaForRequestDocument(
         schema,
         document,
       );
       return executeWithoutSchema({
-        document,
         schemaFragment: {
           schemaId: "test",
           resolvers,
           definitions,
         },
+        document,
+        variableValues: variables,
         contextValue: {
           models,
         },
@@ -64,11 +83,13 @@ describe.each([
       document: DocumentNode,
       resolvers: UserResolvers,
       hooks: ExecutionHooks,
+      variables?: Maybe<{ [variable: string]: unknown }>,
     ) => {
       return executeWithSchema({
         definitions: typeDefs,
         resolvers,
         document,
+        variableValues: variables,
         contextValue: {
           models,
         },
@@ -84,7 +105,38 @@ describe.each([
     //   BFR: beforeFieldResolve
     //   AFR: afterFieldResolve
     //   AFC: afterFieldComplete
+    //   BOE: beforeOperationExecute
+    //   BSE: beforeSubscriptionEventEmit
+    //   ABR: afterBuildResponse
     const hooks: ExecutionHooks = {
+      beforeOperationExecute: jest
+        .fn()
+        .mockImplementation(
+          ({ operation }: BaseExecuteOperationHookArgs<unknown>) => {
+            hookCalls.push(`BOE|${operation.name?.value}`);
+          },
+        ),
+      beforeSubscriptionEventEmit: jest
+        .fn()
+        .mockImplementation(
+          ({
+            operation,
+            eventPayload,
+          }: BeforeSubscriptionEventEmitHookArgs<unknown>) => {
+            hookCalls.push(
+              `BSE|${operation.name?.value}|${
+                (eventPayload as any).emitPersons.name
+              }`,
+            );
+          },
+        ),
+      afterBuildResponse: jest
+        .fn()
+        .mockImplementation(
+          ({ operation }: BaseExecuteOperationHookArgs<unknown>) => {
+            hookCalls.push(`ABR|${operation.name?.value}`);
+          },
+        ),
       beforeFieldResolve: jest
         .fn()
         .mockImplementation(
@@ -142,7 +194,7 @@ describe.each([
     const testCases: Array<TestCase> = [
       {
         name: "succeeded sync resolver",
-        query: `
+        document: `query GetPerson
         {
           person(id: 1) {
             name
@@ -157,18 +209,21 @@ describe.each([
           },
         } as UserResolvers,
         expectedHookCalls: [
+          "BOE|GetPerson",
           "BFR|person",
           "AFR|person|[object]|undefined",
           "BFR|person.name",
           "AFR|person.name|Luke Skywalker|undefined",
           "AFC|person.name|Luke Skywalker|undefined",
           "AFC|person|[object]|undefined",
+          "ABR|GetPerson",
         ],
         resultHasErrors: false,
+        isStrictHookCallsOrder: true,
       },
       {
         name: "succeeded async resolver",
-        query: `
+        document: `query GetPerson
         {
           person(id: 1) {
             name
@@ -183,18 +238,21 @@ describe.each([
           },
         } as UserResolvers,
         expectedHookCalls: [
+          "BOE|GetPerson",
           "BFR|person",
           "AFR|person|[object]|undefined",
           "BFR|person.name",
           "AFR|person.name|Luke Skywalker|undefined",
           "AFC|person.name|Luke Skywalker|undefined",
           "AFC|person|[object]|undefined",
+          "ABR|GetPerson",
         ],
         resultHasErrors: false,
+        isStrictHookCallsOrder: false,
       },
       {
         name: "error in sync resolver for nullable field",
-        query: `
+        document: `query GetFilm
         {
           film(id: 1) {
             producer
@@ -209,18 +267,21 @@ describe.each([
           },
         } as UserResolvers,
         expectedHookCalls: [
+          "BOE|GetFilm",
           "BFR|film",
           "AFR|film|[object]|undefined",
           "BFR|film.producer",
           "AFR|film.producer|undefined|Resolver error",
           "AFC|film.producer|undefined|Resolver error",
           "AFC|film|[object]|undefined",
+          "ABR|GetFilm",
         ],
         resultHasErrors: true,
+        isStrictHookCallsOrder: true,
       },
       {
         name: "error in async resolver for nullable field",
-        query: `
+        document: `query GetFilm
         {
           film(id: 1) {
             producer
@@ -235,18 +296,21 @@ describe.each([
           },
         } as UserResolvers,
         expectedHookCalls: [
+          "BOE|GetFilm",
           "BFR|film",
           "AFR|film|[object]|undefined",
           "BFR|film.producer",
           "AFR|film.producer|undefined|Resolver error",
           "AFC|film.producer|undefined|Resolver error",
           "AFC|film|[object]|undefined",
+          "ABR|GetFilm",
         ],
         resultHasErrors: true,
+        isStrictHookCallsOrder: false,
       },
       {
         name: "error in sync resolver for non-nullable field",
-        query: `
+        document: `query GetFilm
         {
           film(id: 1) {
             title
@@ -261,18 +325,21 @@ describe.each([
           },
         } as UserResolvers,
         expectedHookCalls: [
+          "BOE|GetFilm",
           "BFR|film",
           "AFR|film|[object]|undefined",
           "BFR|film.title",
           "AFR|film.title|undefined|Resolver error",
           "AFC|film.title|undefined|Resolver error",
           "AFC|film|undefined|Resolver error",
+          "ABR|GetFilm",
         ],
         resultHasErrors: true,
+        isStrictHookCallsOrder: true,
       },
       {
         name: "error in async resolver for non-nullable field",
-        query: `
+        document: `query GetFilm
         {
           film(id: 1) {
             title
@@ -287,18 +354,21 @@ describe.each([
           },
         } as UserResolvers,
         expectedHookCalls: [
+          "BOE|GetFilm",
           "BFR|film",
           "AFR|film|[object]|undefined",
           "BFR|film.title",
           "AFR|film.title|undefined|Resolver error",
           "AFC|film.title|undefined|Resolver error",
           "AFC|film|undefined|Resolver error",
+          "ABR|GetFilm",
         ],
         resultHasErrors: true,
+        isStrictHookCallsOrder: false,
       },
       {
         name: "do not invoke hooks for the field with default resolver",
-        query: `
+        document: `query GetFilm
         {
           film(id: 1) {
             title
@@ -306,15 +376,18 @@ describe.each([
         }`,
         resolvers: resolvers as UserResolvers,
         expectedHookCalls: [
+          "BOE|GetFilm",
           "BFR|film",
           "AFR|film|[object]|undefined",
           "AFC|film|[object]|undefined",
+          "ABR|GetFilm",
         ],
         resultHasErrors: false,
+        isStrictHookCallsOrder: true,
       },
       {
         name: "do not invoke hooks for the __typename",
-        query: `
+        document: `query GetFilm
         {
           film(id: 1) {
             __typename
@@ -323,27 +396,158 @@ describe.each([
         }`,
         resolvers: resolvers as UserResolvers,
         expectedHookCalls: [
+          "BOE|GetFilm",
           "BFR|film",
           "AFR|film|[object]|undefined",
           "AFC|film|[object]|undefined",
+          "ABR|GetFilm",
         ],
         resultHasErrors: false,
+        isStrictHookCallsOrder: true,
+      },
+      {
+        name: "multiple root fields in selection set",
+        document: `query GetFilmAndPerson
+        {
+          film(id: 1) {
+            title
+          }
+          person(id: 1) {
+            name
+          }
+        }`,
+        resolvers: resolvers as UserResolvers,
+        expectedHookCalls: [
+          "BOE|GetFilmAndPerson",
+          "BFR|film",
+          "AFR|film|[object]|undefined",
+          "AFC|film|[object]|undefined",
+          "BFR|person",
+          "AFR|person|[object]|undefined",
+          "AFC|person|[object]|undefined",
+          "ABR|GetFilmAndPerson",
+        ],
+        resultHasErrors: false,
+        isStrictHookCallsOrder: true,
+      },
+      {
+        name: "subscription hooks",
+        document: `subscription EmitPersons($limit: Int!)
+        {
+          emitPersons(limit: $limit) {
+            name
+          }
+        }`,
+        variables: {
+          limit: 3,
+        },
+        resolvers: resolvers as UserResolvers,
+        expectedHookCalls: [
+          "BOE|EmitPersons",
+          "BFR|emitPersons",
+          "AFR|emitPersons|[object]|undefined",
+          "BSE|EmitPersons|Luke Skywalker",
+          "ABR|EmitPersons",
+          "BSE|EmitPersons|C-3PO",
+          "ABR|EmitPersons",
+          "BSE|EmitPersons|R2-D2",
+          "ABR|EmitPersons",
+        ],
+        resultHasErrors: false,
+        isStrictHookCallsOrder: true,
+      },
+      {
+        name: "error in sync subscribe() resolver",
+        document: `subscription EmitPersons($limit: Int!)
+        {
+          emitPersons(limit: $limit) {
+            name
+          }
+        }`,
+        resolvers: {
+          ...resolvers,
+          Subscription: {
+            emitPersons: {
+              subscribe: (_parent: any, _args: unknown, _context: any) => {
+                throw new Error("Subscribe error");
+              },
+            },
+          },
+        } as UserResolvers,
+        variables: {
+          limit: 1,
+        },
+        expectedHookCalls: [
+          "BOE|EmitPersons",
+          "BFR|emitPersons",
+          "AFR|emitPersons|undefined|Subscribe error",
+        ],
+        resultHasErrors: true,
+        isStrictHookCallsOrder: true,
+      },
+      {
+        name: "error in async subscribe() resolver",
+        document: `subscription EmitPersons($limit: Int!)
+        {
+          emitPersons(limit: $limit) {
+            name
+          }
+        }`,
+        resolvers: {
+          ...resolvers,
+          Subscription: {
+            emitPersons: {
+              subscribe: async (
+                _parent: any,
+                _args: unknown,
+                _context: any,
+              ) => {
+                return Promise.reject(new Error("Subscribe error"));
+              },
+            },
+          },
+        } as UserResolvers,
+        variables: {
+          limit: 1,
+        },
+        expectedHookCalls: [
+          "BOE|EmitPersons",
+          "BFR|emitPersons",
+          "AFR|emitPersons|undefined|Subscribe error",
+        ],
+        resultHasErrors: true,
+        isStrictHookCallsOrder: true,
       },
     ];
 
     it.each(testCases)(
       "$name",
-      async ({ query, resolvers, expectedHookCalls, resultHasErrors }) => {
+      async ({
+        document,
+        resolvers,
+        expectedHookCalls,
+        resultHasErrors,
+        isStrictHookCallsOrder,
+        variables,
+      }) => {
         expect.assertions(4);
-        const document = parse(query);
+        const parsedDocument = parse(document);
 
-        const result = await execute(document, resolvers, hooks);
+        const result = await drainExecution(
+          await execute(parsedDocument, resolvers, hooks, variables),
+        );
 
-        // for async resolvers order of resolving isn't strict,
-        // so just verify whether corresponding hook calls happened
-        expect(hookCalls).toEqual(expect.arrayContaining(expectedHookCalls));
+        if (isStrictHookCallsOrder) {
+          expect(hookCalls).toEqual(expectedHookCalls);
+        } else {
+          // for async resolvers order of resolving isn't strict,
+          // so just verify whether corresponding hook calls happened
+          expect(hookCalls).toEqual(expect.arrayContaining(expectedHookCalls));
+        }
         expect(hookCalls).toHaveLength(expectedHookCalls.length);
-        expect(isTotalExecutionResult(result)).toBe(true);
+        expect(isTotalExecutionResult(result as TotalExecutionResult)).toBe(
+          true,
+        );
         expect(((result as TotalExecutionResult).errors?.length ?? 0) > 0).toBe(
           resultHasErrors,
         );
@@ -359,7 +563,7 @@ describe.each([
     const testCases: Array<HookExceptionTestCase> = [
       {
         name: "beforeFieldResolve (Error is thrown)",
-        query: `
+        document: `
         {
           film(id: 1) {
             title
@@ -375,7 +579,7 @@ describe.each([
       },
       {
         name: "beforeFieldResolve (string is thrown)",
-        query: `
+        document: `
         {
           film(id: 1) {
             title
@@ -391,7 +595,7 @@ describe.each([
       },
       {
         name: "afterFieldResolve (Error is thrown)",
-        query: `
+        document: `
         {
           film(id: 1) {
             title
@@ -407,7 +611,7 @@ describe.each([
       },
       {
         name: "afterFieldResolve (string is thrown)",
-        query: `
+        document: `
         {
           film(id: 1) {
             title
@@ -423,7 +627,7 @@ describe.each([
       },
       {
         name: "afterFieldComplete (Error is thrown)",
-        query: `
+        document: `
         {
           film(id: 1) {
             title
@@ -439,7 +643,7 @@ describe.each([
       },
       {
         name: "afterFieldComplete (string is thrown)",
-        query: `
+        document: `
         {
           film(id: 1) {
             title
@@ -453,23 +657,129 @@ describe.each([
         expectedErrorMessage:
           'Unexpected error in afterFieldComplete hook: "Hook error"',
       },
+      {
+        name: "beforeOperationExecute (Error is thrown)",
+        document: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        hooks: {
+          beforeOperationExecute: jest.fn().mockImplementation(() => {
+            throw new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in beforeOperationExecute hook: Hook error",
+      },
+      {
+        name: "beforeOperationExecute (string is thrown)",
+        document: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        hooks: {
+          beforeOperationExecute: jest.fn().mockImplementation(() => {
+            throw "Hook error";
+          }),
+        },
+        expectedErrorMessage:
+          'Unexpected error in beforeOperationExecute hook: "Hook error"',
+      },
+      {
+        name: "afterBuildResponse (Error is thrown)",
+        document: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        hooks: {
+          afterBuildResponse: jest.fn().mockImplementation(() => {
+            throw new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in afterBuildResponse hook: Hook error",
+      },
+      {
+        name: "afterBuildResponse (string is thrown)",
+        document: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        hooks: {
+          afterBuildResponse: jest.fn().mockImplementation(() => {
+            throw "Hook error";
+          }),
+        },
+        expectedErrorMessage:
+          'Unexpected error in afterBuildResponse hook: "Hook error"',
+      },
+      {
+        name: "beforeSubscriptionEventEmit (Error is thrown)",
+        document: `subscription EmitPersons($limit: Int!)
+        {
+          emitPersons(limit: $limit) {
+            name
+          }
+        }`,
+        variables: {
+          limit: 1,
+        },
+        hooks: {
+          beforeSubscriptionEventEmit: jest.fn().mockImplementation(() => {
+            throw new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in beforeSubscriptionEventEmit hook: Hook error",
+      },
+      {
+        name: "beforeSubscriptionEventEmit (string is thrown)",
+        document: `subscription EmitPersons($limit: Int!)
+        {
+          emitPersons(limit: $limit) {
+            name
+          }
+        }`,
+        variables: {
+          limit: 1,
+        },
+        hooks: {
+          beforeSubscriptionEventEmit: jest.fn().mockImplementation(() => {
+            throw "Hook error";
+          }),
+        },
+        expectedErrorMessage:
+          'Unexpected error in beforeSubscriptionEventEmit hook: "Hook error"',
+      },
     ];
 
     it.each(testCases)(
       "$name",
-      async ({ query, hooks, expectedErrorMessage }) => {
+      async ({ document, hooks, expectedErrorMessage, variables }) => {
         expect.assertions(5);
-        const document = parse(query);
+        const parsedDocument = parse(document);
 
-        const response = (await execute(
-          document,
-          resolvers as UserResolvers,
-          hooks,
-        )) as TotalExecutionResult;
-        expect(isTotalExecutionResult(response)).toBe(true);
-        const errors = response.errors;
+        const response = await drainExecution(
+          await execute(
+            parsedDocument,
+            resolvers as UserResolvers,
+            hooks,
+            variables,
+          ),
+        );
+        const result = Array.isArray(response) ? response[0] : response;
+        expect(isTotalExecutionResult(result)).toBe(true);
+        const errors = result.errors;
 
-        expect(response.data).toBeTruthy();
+        expect(result.data).toBeTruthy();
         expect(errors).toBeDefined();
         expect(errors).toHaveLength(1);
         expect(errors?.[0].message).toBe(expectedErrorMessage);
