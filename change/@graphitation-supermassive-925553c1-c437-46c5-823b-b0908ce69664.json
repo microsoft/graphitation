@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Introduce new execution hooks: beforeOperationExecute, beforeSubscriptionEvent and afterBuildResponse",
-  "packageName": "@graphitation/supermassive",
-  "email": "sergeystoyan@microsoft.com",
-  "dependentChangeType": "patch"
-}

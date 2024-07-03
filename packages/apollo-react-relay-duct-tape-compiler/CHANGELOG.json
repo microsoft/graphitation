@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape-compiler",
   "entries": [
     {
+      "date": "Wed, 03 Jul 2024 17:33:49 GMT",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.5.3",
+      "version": "1.5.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "comment": "Bump @graphitation/supermassive to v3.5.2",
+            "commit": "24ed36de0d496e336efbe59d02a6fa9d993b0e1e"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 14 Jun 2024 18:43:53 GMT",
       "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.5.2",
       "version": "1.5.2",

@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Fri, 14 Jun 2024 18:43:53 GMT and should not be manually modified.
+This log was last generated on Wed, 03 Jul 2024 17:33:49 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.5.2
+
+Wed, 03 Jul 2024 17:33:49 GMT
+
+### Patches
+
+- Introduce new execution hooks: beforeOperationExecute, beforeSubscriptionEvent and afterBuildResponse (sergeystoyan@microsoft.com)
 
 ## 3.5.1
 
