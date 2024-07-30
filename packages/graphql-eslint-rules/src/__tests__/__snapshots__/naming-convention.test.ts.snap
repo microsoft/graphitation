@@ -3,6 +3,90 @@
 exports[`Invalid #1 1`] = `
 "#### ⌨️ Code
 
+      1 | type Two_Namespaces_Foo { test: String }
+
+#### ⚙️ Options
+
+    {
+      "types": "Namespaced_PascalCase"
+    }
+
+#### ❌ Error
+
+    > 1 | type Two_Namespaces_Foo { test: String }
+        |      ^^^^^^^^^^^^^^^^^^ Type "Two_Namespaces_Foo" should be in Namespaced_PascalCase format
+
+#### 💡 Suggestion: Rename to \`TwoNamespacesFoo\`
+
+    1 | type TwoNamespacesFoo { test: String }"
+`;
+
+exports[`Invalid #2 1`] = `
+"#### ⌨️ Code
+
+      1 | type Namespaced_foo { test: String }
+
+#### ⚙️ Options
+
+    {
+      "types": "Namespaced_PascalCase"
+    }
+
+#### ❌ Error
+
+    > 1 | type Namespaced_foo { test: String }
+        |      ^^^^^^^^^^^^^^ Type "Namespaced_foo" should be in Namespaced_PascalCase format
+
+#### 💡 Suggestion: Rename to \`NamespacedFoo\`
+
+    1 | type NamespacedFoo { test: String }"
+`;
+
+exports[`Invalid #3 1`] = `
+"#### ⌨️ Code
+
+      1 | type namespaced_Bar { test: String }
+
+#### ⚙️ Options
+
+    {
+      "types": "Namespaced_PascalCase"
+    }
+
+#### ❌ Error
+
+    > 1 | type namespaced_Bar { test: String }
+        |      ^^^^^^^^^^^^^^ Type "namespaced_Bar" should be in Namespaced_PascalCase format
+
+#### 💡 Suggestion: Rename to \`NamespacedBar\`
+
+    1 | type NamespacedBar { test: String }"
+`;
+
+exports[`Invalid #4 1`] = `
+"#### ⌨️ Code
+
+      1 | type baz { test: String }
+
+#### ⚙️ Options
+
+    {
+      "types": "Namespaced_PascalCase"
+    }
+
+#### ❌ Error
+
+    > 1 | type baz { test: String }
+        |      ^^^ Type "baz" should be in Namespaced_PascalCase format
+
+#### 💡 Suggestion: Rename to \`Baz\`
+
+    1 | type Baz { test: String }"
+`;
+
+exports[`Invalid #5 1`] = `
+"#### ⌨️ Code
+
       1 | type b { test: String }
 
 #### ⚙️ Options
@@ -31,7 +115,7 @@ exports[`Invalid #1 1`] = `
     1 | type b { Test: String }"
 `;
 
-exports[`Invalid #2 1`] = `
+exports[`Invalid #6 1`] = `
 "#### ⌨️ Code
 
       1 | type __b { test__: String }
@@ -62,7 +146,7 @@ exports[`Invalid #2 1`] = `
     1 | type __b { test: String }"
 `;
 
-exports[`Invalid #3 1`] = `
+exports[`Invalid #7 1`] = `
 "#### ⌨️ Code
 
       1 | scalar BSONDecimal
@@ -83,7 +167,7 @@ exports[`Invalid #3 1`] = `
     1 | scalar bson_decimal"
 `;
 
-exports[`Invalid #4 1`] = `
+exports[`Invalid #8 1`] = `
 "#### ⌨️ Code
 
       1 | enum B { test }
@@ -114,7 +198,7 @@ exports[`Invalid #4 1`] = `
     1 | enum B { TEST }"
 `;
 
-exports[`Invalid #5 1`] = `
+exports[`Invalid #9 1`] = `
 "#### ⌨️ Code
 
       1 | input test { _Value: String }
@@ -154,7 +238,7 @@ exports[`Invalid #5 1`] = `
     1 | input test { Value: String }"
 `;
 
-exports[`Invalid #6 1`] = `
+exports[`Invalid #10 1`] = `
 "#### ⌨️ Code
 
       1 | type TypeOne { aField: String } enum Z { VALUE_ONE VALUE_TWO }
@@ -212,7 +296,7 @@ exports[`Invalid #6 1`] = `
     1 | type TypeOne { aField: String } enum Z { VALUE_ONE VALUE_TWOENUM }"
 `;
 
-exports[`Invalid #7 1`] = `
+exports[`Invalid #11 1`] = `
 "#### ⌨️ Code
 
       1 | type One { aField: String } enum Z { A_ENUM_VALUE_ONE VALUE_TWO }
@@ -261,7 +345,7 @@ exports[`Invalid #7 1`] = `
     1 | type One { aField: String } enum Z { A_ENUM_VALUE_ONE ENUMVALUE_TWO }"
 `;
 
-exports[`Invalid #8 1`] = `
+exports[`Invalid #12 1`] = `
 "#### ⌨️ Code
 
       1 | type One { getFoo: String, queryBar: String } type Query { getA(id: ID!): String, queryB: String } extend type Query { getC: String }
@@ -340,7 +424,7 @@ exports[`Invalid #8 1`] = `
     1 | type One { getFoo: String, queryBar: String } type Query { getA(id: ID!): String, queryB: String } extend type Query { C: String }"
 `;
 
-exports[`Invalid #9 1`] = `
+exports[`Invalid #13 1`] = `
 "#### ⌨️ Code
 
       1 | query Foo { foo } query getBar { bar }
@@ -375,7 +459,7 @@ exports[`Invalid #9 1`] = `
     1 | query Foo { foo } query Bar { bar }"
 `;
 
-exports[`Invalid #10 1`] = `
+exports[`Invalid #14 1`] = `
 "#### ⌨️ Code
 
        1 |         type Query {
@@ -1126,7 +1210,7 @@ exports[`Invalid #10 1`] = `
     33 |         }"
 `;
 
-exports[`Invalid #11 1`] = `
+exports[`Invalid #15 1`] = `
 "#### ⌨️ Code
 
        1 |         query TestQuery { test }
@@ -1378,7 +1462,7 @@ exports[`Invalid #11 1`] = `
     13 |         fragment Test on Test { id }"
 `;
 
-exports[`Invalid #12 1`] = `
+exports[`Invalid #16 1`] = `
 "#### ⌨️ Code
 
       1 |         {
@@ -1427,7 +1511,7 @@ exports[`Invalid #12 1`] = `
     8 |         }"
 `;
 
-exports[`Invalid #13 1`] = `
+exports[`Invalid #17 1`] = `
 "#### ⌨️ Code
 
        1 |         scalar Secret
@@ -1543,7 +1627,7 @@ exports[`Invalid #13 1`] = `
     11 |         }"
 `;
 
-exports[`Invalid #14 1`] = `
+exports[`Invalid #18 1`] = `
 "#### ⌨️ Code
 
       1 |         scalar IpAddress

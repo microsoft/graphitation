@@ -39,6 +39,14 @@ ruleTester.runGraphQLTests<RuleOptions>("naming-convention", rule, {
       options: [{ types: "PascalCase" }],
     },
     {
+      code: "type Foo { test: String }",
+      options: [{ types: "Namespaced_PascalCase" }],
+    },
+    {
+      code: "type Namespace_Foo { test: String }",
+      options: [{ types: "Namespaced_PascalCase" }],
+    },
+    {
       code: "type my_test_6_t { test: String }",
       options: [{ types: "snake_case" }],
     },
@@ -244,6 +252,26 @@ ruleTester.runGraphQLTests<RuleOptions>("naming-convention", rule, {
     },
   ],
   invalid: [
+    {
+      code: "type Two_Namespaces_Foo { test: String }",
+      options: [{ types: "Namespaced_PascalCase" }],
+      errors: 1,
+    },
+    {
+      code: "type Namespaced_foo { test: String }",
+      options: [{ types: "Namespaced_PascalCase" }],
+      errors: 1,
+    },
+    {
+      code: "type namespaced_Bar { test: String }",
+      options: [{ types: "Namespaced_PascalCase" }],
+      errors: 1,
+    },
+    {
+      code: "type baz { test: String }",
+      options: [{ types: "Namespaced_PascalCase" }],
+      errors: 1,
+    },
     {
       code: "type b { test: String }",
       options: [{ types: "PascalCase", FieldDefinition: "PascalCase" }],

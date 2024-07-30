@@ -29,6 +29,7 @@ type CaseStyle =
   | "camelCase"
   | "kebab-case"
   | "PascalCase"
+  | "Namespaced_PascalCase"
   | "snake_case"
   | "UPPER_CASE";
 
@@ -43,6 +44,7 @@ const convertCase = (style: CaseStyle, str: string): string => {
     case "camelCase":
       return camelCase(str);
     case "PascalCase":
+    case "Namespaced_PascalCase":
       return pascalCase(str);
     case "snake_case":
       return lowerCase(str).replace(/ /g, "_");
@@ -86,11 +88,17 @@ const KindToDisplayName = {
 };
 
 type AllowedKind = keyof typeof KindToDisplayName;
-type AllowedStyle = "camelCase" | "PascalCase" | "snake_case" | "UPPER_CASE";
+type AllowedStyle =
+  | "camelCase"
+  | "PascalCase"
+  | "Namespaced_PascalCase"
+  | "snake_case"
+  | "UPPER_CASE";
 
 const StyleToRegex: Record<AllowedStyle, RegExp> = {
   camelCase: /^[a-z][\dA-Za-z]*$/,
   PascalCase: /^[A-Z][\dA-Za-z]*$/,
+  Namespaced_PascalCase: /^([A-Z][\dA-Za-z]*_)?[A-Z][\dA-Za-z]*$/,
   snake_case: /^[a-z][\d_a-z]*[\da-z]*$/,
   UPPER_CASE: /^[A-Z][\dA-Z_]*[\dA-Z]*$/,
 };
