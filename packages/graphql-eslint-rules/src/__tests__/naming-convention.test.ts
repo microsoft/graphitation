@@ -1,5 +1,5 @@
 import { GraphQLRuleTester } from "@graphql-eslint/eslint-plugin";
-import { rule, RuleOptions } from "../naming-convention";
+import rule, { RuleOptions } from "../naming-convention";
 
 const ruleTester = new GraphQLRuleTester();
 

@@ -197,7 +197,7 @@ type PropertySchema = {
 
 type Options = AllowedStyle | PropertySchema;
 
-export const rule: GraphQLESLintRule<RuleOptions> & {
+const rule: GraphQLESLintRule<RuleOptions> & {
   meta: { hasSuggestions: boolean };
 } = {
   meta: {
@@ -460,3 +460,5 @@ export const rule: GraphQLESLintRule<RuleOptions> & {
     return listeners;
   },
 };
+
+export default rule;
