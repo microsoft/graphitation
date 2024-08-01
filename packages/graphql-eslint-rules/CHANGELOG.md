@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-eslint-rules
 
-This log was last generated on Wed, 19 Jun 2024 09:34:08 GMT and should not be manually modified.
+This log was last generated on Thu, 01 Aug 2024 15:51:09 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.12.0
+
+Thu, 01 Aug 2024 15:51:09 GMT
+
+### Minor changes
+
+- add naming convention rule based on version from graphql-eslint (dsamsonov@microsoft.com)
 
 ## 0.11.0
 

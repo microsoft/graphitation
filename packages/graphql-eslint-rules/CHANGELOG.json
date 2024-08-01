@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Thu, 01 Aug 2024 15:51:09 GMT",
+      "tag": "@graphitation/graphql-eslint-rules_v0.12.0",
+      "version": "0.12.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "90c8e6104fba7706c9433e3d05ab2e11c421b419",
+            "comment": "add naming convention rule based on version from graphql-eslint"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 19 Jun 2024 09:34:08 GMT",
       "tag": "@graphitation/graphql-eslint-rules_v0.11.0",
       "version": "0.11.0",
