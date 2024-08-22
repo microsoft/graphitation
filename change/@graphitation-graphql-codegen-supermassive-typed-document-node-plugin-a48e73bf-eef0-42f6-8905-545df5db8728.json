@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "supermassiveDocumentNodeOutputType config option renamed to astType and supports new mode \"Lazy\". \"V3\" renamed to \"SupermassiveV3\", \"V2\" and \"BOTH\" are no longer available",
+  "packageName": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+  "email": "dsamsonov@microsoft.com",
+  "dependentChangeType": "patch"
+}
