@@ -14,277 +14,281 @@ type Maybe<T> = T | undefined | null;
  * Converts an AST into a compact string
  */
 export function print(ast: ASTNode): string {
-  return visit(ast, printDocASTReducer as Visitor<ASTKindToNode>);
+  return visit(ast, createPrintReducer() as Visitor<ASTKindToNode>);
 }
 
-const printDocASTReducer: ASTReducer<string> = {
-  Name: { leave: (node) => node.value },
-  Variable: { leave: (node) => "$" + node.name },
+function createPrintReducer(): ASTReducer<string> {
+  return {
+    Name: { leave: (node) => node.value },
+    Variable: { leave: (node) => "$" + node.name },
 
-  Document: {
-    leave: (node) => join(node.definitions, " "),
-  },
-
-  OperationDefinition: {
-    leave(node) {
-      const varDefs = wrap("(", join(node.variableDefinitions, ","), ")");
-      const prefix = join(
-        [
-          node.operation,
-          join([node.name, varDefs]),
-          join(node.directives, " "),
-        ],
-        " ",
-      );
-
-      // Anonymous queries with no directives or variable definitions can use
-      // the query short form.
-      return (prefix === "query" ? "" : prefix + " ") + node.selectionSet;
+    Document: {
+      leave: (node) => join(node.definitions, " "),
     },
-  },
 
-  VariableDefinition: {
-    leave: ({ variable, type, defaultValue, directives }) =>
-      variable +
-      ":" +
-      type +
-      wrap("=", defaultValue) +
-      wrap(" ", join(directives, " ")),
-  },
-  SelectionSet: { leave: ({ selections }) => block(selections) },
+    OperationDefinition: {
+      leave(node) {
+        const varDefs = wrap("(", join(node.variableDefinitions, ","), ")");
+        const prefix = join(
+          [
+            node.operation,
+            join([node.name, varDefs]),
+            join(node.directives, " "),
+          ],
+          " ",
+        );
 
-  Field: {
-    leave({ alias, name, arguments: args, directives, selectionSet }) {
-      const prefix = wrap("", alias, ":") + name;
-      const argsLine = prefix + wrap("(", join(args, ","), ")");
-
-      return join([argsLine, join(directives, " "), selectionSet], " ");
+        // Anonymous queries with no directives or variable definitions can use
+        // the query short form.
+        return (prefix === "query" ? "" : prefix + " ") + node.selectionSet;
+      },
     },
-  },
 
-  Argument: { leave: ({ name, value }) => name + ":" + value },
+    VariableDefinition: {
+      leave: ({ variable, type, defaultValue, directives }) =>
+        variable +
+        ":" +
+        type +
+        wrap("=", defaultValue) +
+        wrap(" ", join(directives, " ")),
+    },
+    SelectionSet: { leave: ({ selections }) => block(selections) },
 
-  FragmentSpread: {
-    leave: ({ name, directives }) =>
-      "..." + name + wrap(" ", join(directives, " ")),
-  },
+    Field: {
+      leave({ alias, name, arguments: args, directives, selectionSet }) {
+        const prefix = wrap("", alias, ":") + name;
+        const argsLine = prefix + wrap("(", join(args, ","), ")");
 
-  InlineFragment: {
-    leave: ({ typeCondition, directives, selectionSet }) =>
-      join(
-        [
-          "...",
-          wrap("on ", typeCondition),
-          join(directives, " "),
-          selectionSet,
-        ],
-        " ",
-      ),
-  },
+        return join([argsLine, join(directives, " "), selectionSet], " ");
+      },
+    },
 
-  FragmentDefinition: {
-    leave: ({
-      name,
-      typeCondition,
-      variableDefinitions,
-      directives,
-      selectionSet,
-    }) =>
-      // Note: fragment variable definitions are experimental and may be changed
-      // or removed in the future.
-      `fragment ${name}${wrap("(", join(variableDefinitions, ","), ")")} ` +
-      `on ${typeCondition} ${wrap("", join(directives, " "), " ")}` +
-      selectionSet,
-  },
+    Argument: { leave: ({ name, value }) => name + ":" + value },
 
-  IntValue: { leave: ({ value }) => value },
-  FloatValue: { leave: ({ value }) => value },
-  StringValue: {
-    leave: ({ value, block: isBlockString }) =>
-      isBlockString ? printBlockString(value) : printString(value),
-  },
-  BooleanValue: { leave: ({ value }) => (value ? "true" : "false") },
-  NullValue: { leave: () => "null" },
-  EnumValue: { leave: ({ value }) => value },
-  ListValue: { leave: ({ values }) => "[" + join(values, ",") + "]" },
-  ObjectValue: { leave: ({ fields }) => "{" + join(fields, ",") + "}" },
-  ObjectField: { leave: ({ name, value }) => name + ":" + value },
+    FragmentSpread: {
+      leave: ({ name, directives }) =>
+        "..." + name + wrap(" ", join(directives, " ")),
+    },
 
-  Directive: {
-    leave: ({ name, arguments: args }) =>
-      "@" + name + wrap("(", join(args, ","), ")"),
-  },
+    InlineFragment: {
+      leave: ({ typeCondition, directives, selectionSet }) =>
+        join(
+          [
+            "...",
+            wrap("on ", typeCondition),
+            join(directives, " "),
+            selectionSet,
+          ],
+          " ",
+        ),
+    },
 
-  NamedType: { leave: ({ name }) => name },
-  ListType: { leave: ({ type }) => "[" + type + "]" },
-  NonNullType: { leave: ({ type }) => type + "!" },
+    FragmentDefinition: {
+      leave: ({
+        name,
+        typeCondition,
+        variableDefinitions,
+        directives,
+        selectionSet,
+      }) =>
+        // Note: fragment variable definitions are experimental and may be changed
+        // or removed in the future.
+        `fragment ${name}${wrap("(", join(variableDefinitions, ","), ")")} ` +
+        `on ${typeCondition} ${wrap("", join(directives, " "), " ")}` +
+        selectionSet,
+    },
 
-  SchemaDefinition: {
-    leave: ({ description, directives, operationTypes }) =>
-      wrap("", description, " ") +
-      join(["schema", join(directives, " "), block(operationTypes)], " "),
-  },
+    IntValue: { leave: ({ value }) => value },
+    FloatValue: { leave: ({ value }) => value },
+    StringValue: {
+      leave: ({ value, block: isBlockString }) =>
+        isBlockString
+          ? printBlockString(value, { minimize: true })
+          : printString(value),
+    },
+    BooleanValue: { leave: ({ value }) => (value ? "true" : "false") },
+    NullValue: { leave: () => "null" },
+    EnumValue: { leave: ({ value }) => value },
+    ListValue: { leave: ({ values }) => "[" + join(values, ",") + "]" },
+    ObjectValue: { leave: ({ fields }) => "{" + join(fields, ",") + "}" },
+    ObjectField: { leave: ({ name, value }) => name + ":" + value },
 
-  OperationTypeDefinition: {
-    leave: ({ operation, type }) => operation + ":" + type,
-  },
+    Directive: {
+      leave: ({ name, arguments: args }) =>
+        "@" + name + wrap("(", join(args, ","), ")"),
+    },
 
-  ScalarTypeDefinition: {
-    leave: ({ description, name, directives }) =>
-      wrap("", description, " ") +
-      join(["scalar", name, join(directives, " ")], " "),
-  },
+    NamedType: { leave: ({ name }) => name },
+    ListType: { leave: ({ type }) => "[" + type + "]" },
+    NonNullType: { leave: ({ type }) => type + "!" },
 
-  ObjectTypeDefinition: {
-    leave: ({ description, name, interfaces, directives, fields }) =>
-      wrap("", description, " ") +
-      join(
-        [
-          "type",
-          name,
-          wrap("implements ", join(interfaces, " & ")),
-          join(directives, " "),
-          block(fields),
-        ],
-        " ",
-      ),
-  },
+    SchemaDefinition: {
+      leave: ({ description, directives, operationTypes }) =>
+        wrap("", description, " ") +
+        join(["schema", join(directives, " "), block(operationTypes)], " "),
+    },
 
-  FieldDefinition: {
-    leave: ({ description, name, arguments: args, type, directives }) =>
-      wrap("", description, " ") +
-      name +
-      wrap("(", join(args, ","), ")") +
-      ": " +
-      type +
-      wrap(" ", join(directives, " ")),
-  },
+    OperationTypeDefinition: {
+      leave: ({ operation, type }) => operation + ":" + type,
+    },
 
-  InputValueDefinition: {
-    leave: ({ description, name, type, defaultValue, directives }) =>
-      wrap("", description, " ") +
-      join(
-        [name + ":" + type, wrap("=", defaultValue), join(directives, " ")],
-        " ",
-      ),
-  },
+    ScalarTypeDefinition: {
+      leave: ({ description, name, directives }) =>
+        wrap("", description, " ") +
+        join(["scalar", name, join(directives, " ")], " "),
+    },
 
-  InterfaceTypeDefinition: {
-    leave: ({ description, name, interfaces, directives, fields }) =>
-      wrap("", description, " ") +
-      join(
-        [
-          "interface",
-          name,
-          wrap("implements ", join(interfaces, " & ")),
-          join(directives, " "),
-          block(fields),
-        ],
-        " ",
-      ),
-  },
+    ObjectTypeDefinition: {
+      leave: ({ description, name, interfaces, directives, fields }) =>
+        wrap("", description, " ") +
+        join(
+          [
+            "type",
+            name,
+            wrap("implements ", join(interfaces, " & ")),
+            join(directives, " "),
+            block(fields),
+          ],
+          " ",
+        ),
+    },
 
-  UnionTypeDefinition: {
-    leave: ({ description, name, directives, types }) =>
-      wrap("", description, " ") +
-      join(
-        ["union", name, join(directives, " "), wrap("=", join(types, " | "))],
-        " ",
-      ),
-  },
+    FieldDefinition: {
+      leave: ({ description, name, arguments: args, type, directives }) =>
+        wrap("", description, " ") +
+        name +
+        wrap("(", join(args, ","), ")") +
+        ": " +
+        type +
+        wrap(" ", join(directives, " ")),
+    },
 
-  EnumTypeDefinition: {
-    leave: ({ description, name, directives, values }) =>
-      wrap("", description, " ") +
-      join(["enum", name, join(directives, " "), block(values)], " "),
-  },
+    InputValueDefinition: {
+      leave: ({ description, name, type, defaultValue, directives }) =>
+        wrap("", description, " ") +
+        join(
+          [name + ":" + type, wrap("=", defaultValue), join(directives, " ")],
+          " ",
+        ),
+    },
 
-  EnumValueDefinition: {
-    leave: ({ description, name, directives }) =>
-      wrap("", description, " ") + join([name, join(directives, " ")], " "),
-  },
+    InterfaceTypeDefinition: {
+      leave: ({ description, name, interfaces, directives, fields }) =>
+        wrap("", description, " ") +
+        join(
+          [
+            "interface",
+            name,
+            wrap("implements ", join(interfaces, " & ")),
+            join(directives, " "),
+            block(fields),
+          ],
+          " ",
+        ),
+    },
 
-  InputObjectTypeDefinition: {
-    leave: ({ description, name, directives, fields }) =>
-      wrap("", description, " ") +
-      join(["input", name, join(directives, " "), block(fields)], " "),
-  },
+    UnionTypeDefinition: {
+      leave: ({ description, name, directives, types }) =>
+        wrap("", description, " ") +
+        join(
+          ["union", name, join(directives, " "), wrap("=", join(types, " | "))],
+          " ",
+        ),
+    },
 
-  DirectiveDefinition: {
-    leave: ({ description, name, arguments: args, repeatable, locations }) =>
-      wrap("", description, " ") +
-      "directive @" +
-      name +
-      wrap("(", join(args, ","), ")") +
-      (repeatable ? " repeatable" : "") +
-      " on " +
-      join(locations, " | "),
-  },
+    EnumTypeDefinition: {
+      leave: ({ description, name, directives, values }) =>
+        wrap("", description, " ") +
+        join(["enum", name, join(directives, " "), block(values)], " "),
+    },
 
-  SchemaExtension: {
-    leave: ({ directives, operationTypes }) =>
-      join(
-        ["extend schema", join(directives, " "), block(operationTypes)],
-        " ",
-      ),
-  },
+    EnumValueDefinition: {
+      leave: ({ description, name, directives }) =>
+        wrap("", description, " ") + join([name, join(directives, " ")], " "),
+    },
 
-  ScalarTypeExtension: {
-    leave: ({ name, directives }) =>
-      join(["extend scalar", name, join(directives, " ")], " "),
-  },
+    InputObjectTypeDefinition: {
+      leave: ({ description, name, directives, fields }) =>
+        wrap("", description, " ") +
+        join(["input", name, join(directives, " "), block(fields)], " "),
+    },
 
-  ObjectTypeExtension: {
-    leave: ({ name, interfaces, directives, fields }) =>
-      join(
-        [
-          "extend type",
-          name,
-          wrap("implements ", join(interfaces, " & ")),
-          join(directives, " "),
-          block(fields),
-        ],
-        " ",
-      ),
-  },
+    DirectiveDefinition: {
+      leave: ({ description, name, arguments: args, repeatable, locations }) =>
+        wrap("", description, " ") +
+        "directive @" +
+        name +
+        wrap("(", join(args, ","), ")") +
+        (repeatable ? " repeatable" : "") +
+        " on " +
+        join(locations, " | "),
+    },
 
-  InterfaceTypeExtension: {
-    leave: ({ name, interfaces, directives, fields }) =>
-      join(
-        [
-          "extend interface",
-          name,
-          wrap("implements ", join(interfaces, " & ")),
-          join(directives, " "),
-          block(fields),
-        ],
-        " ",
-      ),
-  },
+    SchemaExtension: {
+      leave: ({ directives, operationTypes }) =>
+        join(
+          ["extend schema", join(directives, " "), block(operationTypes)],
+          " ",
+        ),
+    },
 
-  UnionTypeExtension: {
-    leave: ({ name, directives, types }) =>
-      join(
-        [
-          "extend union",
-          name,
-          join(directives, " "),
-          wrap("=", join(types, " | ")),
-        ],
-        " ",
-      ),
-  },
+    ScalarTypeExtension: {
+      leave: ({ name, directives }) =>
+        join(["extend scalar", name, join(directives, " ")], " "),
+    },
 
-  EnumTypeExtension: {
-    leave: ({ name, directives, values }) =>
-      join(["extend enum", name, join(directives, " "), block(values)], " "),
-  },
+    ObjectTypeExtension: {
+      leave: ({ name, interfaces, directives, fields }) =>
+        join(
+          [
+            "extend type",
+            name,
+            wrap("implements ", join(interfaces, " & ")),
+            join(directives, " "),
+            block(fields),
+          ],
+          " ",
+        ),
+    },
 
-  InputObjectTypeExtension: {
-    leave: ({ name, directives, fields }) =>
-      join(["extend input", name, join(directives, " "), block(fields)], " "),
-  },
-};
+    InterfaceTypeExtension: {
+      leave: ({ name, interfaces, directives, fields }) =>
+        join(
+          [
+            "extend interface",
+            name,
+            wrap("implements ", join(interfaces, " & ")),
+            join(directives, " "),
+            block(fields),
+          ],
+          " ",
+        ),
+    },
+
+    UnionTypeExtension: {
+      leave: ({ name, directives, types }) =>
+        join(
+          [
+            "extend union",
+            name,
+            join(directives, " "),
+            wrap("=", join(types, " | ")),
+          ],
+          " ",
+        ),
+    },
+
+    EnumTypeExtension: {
+      leave: ({ name, directives, values }) =>
+        join(["extend enum", name, join(directives, " "), block(values)], " "),
+    },
+
+    InputObjectTypeExtension: {
+      leave: ({ name, directives, fields }) =>
+        join(["extend input", name, join(directives, " "), block(fields)], " "),
+    },
+  };
+}
 
 /**
  * Given maybeArray, print an empty string if it is null or empty, otherwise
