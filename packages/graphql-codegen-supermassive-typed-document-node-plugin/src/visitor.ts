@@ -130,11 +130,7 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
   ): string {
     const fragments = this._transformFragments(node);
     const doc = this._prepareDocument(`
-    ${
-      print(node)
-        .split("\\")
-        .join("\\\\") /* Re-escape escaped values in GraphQL syntax */
-    }
+    ${print(node)}
     ${this._includeFragments(fragments)}
     `);
 
@@ -169,11 +165,7 @@ export class TypeScriptDocumentNodesVisitor extends ClientSideBaseVisitor<
     const fragments = this._transformFragments(supermassiveNode);
 
     const doc = this._prepareDocument(`
-    ${
-      print(supermassiveNode)
-        .split("\\")
-        .join("\\\\") /* Re-escape escaped values in GraphQL syntax */
-    }
+    ${print(supermassiveNode)}
     ${this._includeFragments(fragments)}`);
 
     if (this.config.documentMode === DocumentMode.documentNode) {
