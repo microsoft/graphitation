@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
   "entries": [
     {
+      "date": "Tue, 27 Aug 2024 09:02:07 GMT",
+      "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v1.0.0",
+      "version": "1.0.0",
+      "comments": {
+        "major": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "commit": "a303c0196e183fd0e8d7bb6411b968a7fce451c8",
+            "comment": "supermassiveDocumentNodeOutputType config option renamed to astType and supports new mode \"Lazy\". \"V3\" renamed to \"SupermassiveV3\", \"V2\" and \"BOTH\" are no longer available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 03 Jul 2024 17:33:49 GMT",
       "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v0.7.2",
       "version": "0.7.2",

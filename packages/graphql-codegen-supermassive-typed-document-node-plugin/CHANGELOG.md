@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-supermassive-typed-document-node-plugin
 
-This log was last generated on Wed, 03 Jul 2024 17:33:49 GMT and should not be manually modified.
+This log was last generated on Tue, 27 Aug 2024 09:02:07 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.0
+
+Tue, 27 Aug 2024 09:02:07 GMT
+
+### Major changes
+
+- supermassiveDocumentNodeOutputType config option renamed to astType and supports new mode "Lazy". "V3" renamed to "SupermassiveV3", "V2" and "BOTH" are no longer available (dsamsonov@microsoft.com)
 
 ## 0.7.2
 
