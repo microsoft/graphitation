@@ -18,7 +18,7 @@ jobs:
   - job: compliance
     displayName: Compliance checks
     pool:
-      name: 1ES-Teams-Windows-2019-Compliant
+      name: 1ES-Teams-Windows-2022-DomoreexpGithub
     steps:
       - template: ./steps/service-tree.yml
         parameters:
@@ -29,7 +29,7 @@ jobs:
     variables:
       - group: oss-secrets
     dependsOn: Compliance
-    pool: "1ES-Teams-Ubuntu-LC-DomoreexpGithub"
+    pool: "1ES-Teams-Ubuntu-Latest-Compliant-NCUS"
     steps:
       - template: ./steps/service-tree.yml
         parameters:
