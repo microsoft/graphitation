@@ -802,6 +802,31 @@ describe.each([
       ]),
     );
 
+    describe("when refetching", () => {
+      it("should update refetch function when the variables change back to the initial ones passed to useCompiledRefetchableFragment", async () => {
+        await act(async () => {
+          const { refetch } = last(forwardUsePaginationFragmentResult);
+          refetch({ addExtra: true });
+          client.mock.resolveMostRecentOperation((operation) =>
+            MockPayloadGenerator.generate(operation),
+          );
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+        await act(async () => {
+          const { refetch } = last(forwardUsePaginationFragmentResult);
+          refetch({});
+          client.mock.resolveMostRecentOperation((operation) =>
+            MockPayloadGenerator.generate(operation),
+          );
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+        const usedDifferentRefetchFunctions =
+          forwardUsePaginationFragmentResult[0].refetch !==
+          forwardUsePaginationFragmentResult[1].refetch;
+        expect(usedDifferentRefetchFunctions).toBeTruthy();
+      });
+    });
+
     describe("when paginating forward", () => {
       it("returns that next data is available", () => {
         const { hasNext } = last(forwardUsePaginationFragmentResult);
