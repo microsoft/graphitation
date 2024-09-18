@@ -5,6 +5,7 @@ import {
   ChangeTodoStatusInput,
   useChangeTodoStatusMutation as useChangeTodoStatusMutationType,
 } from "./__generated__/useChangeTodoStatusMutation.graphql";
+import invariant from "invariant";
 
 const mutation = graphql`
   mutation useChangeTodoStatusMutation($input: ChangeTodoStatusInput!) {
@@ -55,6 +56,9 @@ export default function useChangeTodoStatusMutation() {
       (input: ChangeTodoStatusInput) => {
         return commit({
           variables: { input },
+          onCompleted: (response) => {
+            invariant(response.changeTodoStatus, "Expected response.changeTodoStatus in onCompleted");
+          },
           // optimisticResponse: getOptimisticResponse(mutationData),
         });
       },
