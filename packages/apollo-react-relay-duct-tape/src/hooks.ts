@@ -276,6 +276,7 @@ export function useSubscription<TSubscriptionPayload extends OperationType>(
 interface IMutationCommitterOptions<TMutationPayload extends OperationType> {
   variables: TMutationPayload["variables"];
   optimisticResponse?: Partial<TMutationPayload["response"]> | null;
+  onCompleted?: (response: TMutationPayload["response"]) => void;
   /**
    * This version yields the ApolloCache instance, instead of the RelayStore,
    * and usage of it will not be portable to Relay directly. However, it is a
@@ -325,6 +326,7 @@ export function useMutation<TMutationPayload extends OperationType>(
         variables: options.variables || {},
         context: options.context,
         optimisticResponse: options.optimisticResponse,
+        onCompleted: options.onCompleted,
         update: options.updater,
       });
       if (apolloResult.errors) {

@@ -138,13 +138,19 @@ const MutationComponent: React.FC<{
   variables: any;
   optimisticResponse: any;
   context?: any;
+  onCompleted?: any;
 }> = (props) => {
-  const { variables, optimisticResponse, context } = props;
+  const { variables, optimisticResponse, context, onCompleted } = props;
   const [commit, isInFlight] = useMutation<hooksTestMutation$key>(mutation);
   const [result, setResult] = React.useState<any>(null);
   React.useEffect(() => {
     (async function () {
-      const result = await commit({ variables, optimisticResponse, context });
+      const result = await commit({
+        variables,
+        optimisticResponse,
+        context,
+        onCompleted,
+      });
       setResult(result);
     })();
   }, [variables, optimisticResponse]);
@@ -359,6 +365,7 @@ describe(useSubscription, () => {
 
 describe("useMutation", () => {
   it("uses Apollo's useMutation hook", async () => {
+    const onCompleted = jest.fn();
     const tree = createTestRenderer(
       <ApolloProvider client={client}>
         <MutationComponent
@@ -386,6 +393,7 @@ describe("useMutation", () => {
                 name: '&lt;mock-value-for-field-"name"&gt;',
               },
             }}
+            onCompleted={onCompleted}
             context={{ callerInfo: "mutation-component" }}
           />
         </ApolloProvider>,
@@ -396,6 +404,7 @@ describe("useMutation", () => {
         Loading
       </div>
     `);
+    expect(onCompleted).not.toHaveBeenCalled();
     await act(async () => {
       await client.mock.resolveMostRecentOperation((operation) =>
         MockPayloadGenerator.generate(operation),
@@ -406,6 +415,12 @@ describe("useMutation", () => {
         {"data":{"updateUserName":{"__typename":"User","id":"&lt;User-mock-id-1&gt;","name":"&lt;mock-value-for-field-\\"name\\"&gt;"}}}
       </div>
     `);
+    const onCompletedCall = onCompleted.mock.calls[0][0];
+    expect(onCompletedCall.updateUserName).toEqual({
+      __typename: "User",
+      id: "<User-mock-id-1>",
+      name: '<mock-value-for-field-"name">',
+    });
 
     const [mutationOperation] = client.mock.getAllOperations();
 
