@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@apollo/client": "~3.6.0",
-    "@graphitation/apollo-react-relay-duct-tape": "^1.1.5",
+    "@graphitation/apollo-react-relay-duct-tape": "^1.2.0",
     "@graphitation/graphql-js-tag": "^0.9.1",
     "@graphql-tools/schema": "^9.0.19",
     "graphql": "^15.6.0",

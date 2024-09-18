@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "add onCompleted callback to useMutation",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape",
-  "email": "Stanislaw.Wilczynski@microsoft.com",
-  "dependentChangeType": "patch"
-}
