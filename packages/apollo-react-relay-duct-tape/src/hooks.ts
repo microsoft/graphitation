@@ -28,6 +28,8 @@ import { convertFetchPolicy } from "./convertFetchPolicy";
 import { useOverridenOrDefaultApolloClient } from "./useOverridenOrDefaultApolloClient";
 import type { CompiledArtefactModule } from "@graphitation/apollo-react-relay-duct-tape-compiler";
 import { FragmentReference } from "./storeObservation/compiledHooks/types";
+import { useMutation } from 'relay-hooks';
+export {useMutation};
 
 /**
  * Executes a GraphQL query.
@@ -291,7 +293,7 @@ interface IMutationCommitterOptions<TMutationPayload extends OperationType> {
   context?: TMutationPayload["context"];
 }
 
-type MutationCommiter<TMutationPayload extends OperationType> = (
+type MutationCommiter_deprecated<TMutationPayload extends OperationType> = (
   options: IMutationCommitterOptions<TMutationPayload>,
 ) => Promise<{ errors?: Error[]; data?: TMutationPayload["response"] }>;
 
@@ -301,9 +303,9 @@ type MutationCommiter<TMutationPayload extends OperationType> = (
  * @param mutation
  * @returns
  */
-export function useMutation<TMutationPayload extends OperationType>(
+export function useMutation_deprecated<TMutationPayload extends OperationType>(
   mutation: GraphQLTaggedNode,
-): [MutationCommiter<TMutationPayload>, boolean] {
+): [MutationCommiter_deprecated<TMutationPayload>, boolean] {
   invariant(
     mutation?.__brand === undefined,
     "useMutation: Document must be a valid runtime type.",

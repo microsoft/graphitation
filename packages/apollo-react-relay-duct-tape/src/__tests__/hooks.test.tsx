@@ -20,7 +20,7 @@ import {
 import {
   useFragment,
   useLazyLoadQuery,
-  useMutation,
+  useMutation_deprecated,
   useSubscription,
 } from "../hooks";
 
@@ -30,7 +30,7 @@ import {
   hooksTestFragment,
   hooksTestFragment$key,
 } from "./__generated__/hooksTestFragment.graphql";
-import { hooksTestMutation as hooksTestMutation$key } from "./__generated__/hooksTestMutation.graphql";
+import { hooksTestMutation, hooksTestMutation as hooksTestMutation$key } from "./__generated__/hooksTestMutation.graphql";
 import { getOperationName } from "@apollo/client/utilities";
 
 const schema = buildSchema(
@@ -134,13 +134,13 @@ const SubscriptionComponent: React.FC<SubjectProps> = ({
   return <>{children}</>;
 };
 
-const MutationComponent: React.FC<{
+const MutationComponentDeprecated: React.FC<{
   variables: any;
   optimisticResponse: any;
   context?: any;
 }> = (props) => {
   const { variables, optimisticResponse, context } = props;
-  const [commit, isInFlight] = useMutation<hooksTestMutation$key>(mutation);
+  const [commit, isInFlight] = useMutation_deprecated<hooksTestMutation$key>(mutation);
   const [result, setResult] = React.useState<any>(null);
   React.useEffect(() => {
     (async function () {
@@ -357,11 +357,11 @@ describe(useSubscription, () => {
   });
 });
 
-describe("useMutation", () => {
-  it("uses Apollo's useMutation hook", async () => {
+describe("useMutation_deprecated", () => {
+  it("uses Apollo's useMutation_deprecated hook", async () => {
     const tree = createTestRenderer(
       <ApolloProvider client={client}>
-        <MutationComponent
+        <MutationComponentDeprecated
           variables={{ name: "foo", id: "1" }}
           optimisticResponse={null}
           context={{ callerInfo: "mutation-component" }}
@@ -376,7 +376,7 @@ describe("useMutation", () => {
     act(() => {
       tree.update(
         <ApolloProvider client={client}>
-          <MutationComponent
+          <MutationComponentDeprecated
             variables={{ name: "foo", id: "1" }}
             optimisticResponse={{
               __typename: "Mutation",

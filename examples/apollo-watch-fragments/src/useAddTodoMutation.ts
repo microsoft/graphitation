@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useMutation } from "@graphitation/apollo-react-relay-duct-tape";
+import { useMutation_depricated } from "@graphitation/apollo-react-relay-duct-tape";
 import { graphql } from "@graphitation/graphql-js-tag";
 
 import { useAddTodoMutation } from "./__generated__/useAddTodoMutation.graphql";
@@ -47,7 +47,7 @@ const mutation = graphql`
 // let tempID = 0;
 
 export function useAddTodoMutation() {
-  const [commit] = useMutation<useAddTodoMutation>(mutation);
+  const [commit] = useMutation_depricated<useAddTodoMutation>(mutation);
   return useCallback(
     (description: string) => {
       return commit({
