@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Update to add typescript 5.5 compatibility",
+  "packageName": "@graphitation/ts-transform-graphql-js-tag",
+  "email": "phillip.burch@live.com",
+  "dependentChangeType": "patch"
+}
