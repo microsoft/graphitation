@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "Align nova useMutation to align with Relay",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape",
+  "email": "132382266+DarynaAkhmedova@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}
