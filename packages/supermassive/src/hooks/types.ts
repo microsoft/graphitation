@@ -71,11 +71,13 @@ export interface AfterBuildResponseHook<ResolveContext = unknown> {
 }
 
 export interface BeforeOperationExecuteHook<ResolveContext = unknown> {
-  (args: BaseExecuteOperationHookArgs<ResolveContext>): void;
+  (args: BaseExecuteOperationHookArgs<ResolveContext>): void | Promise<void>;
 }
 
 export interface BeforeSubscriptionEventEmitHook<ResolveContext = unknown> {
-  (args: BeforeSubscriptionEventEmitHookArgs<ResolveContext>): void;
+  (
+    args: BeforeSubscriptionEventEmitHookArgs<ResolveContext>,
+  ): void | Promise<void>;
 }
 
 export interface ExecutionHooks<
