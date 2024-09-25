@@ -250,7 +250,6 @@ export function getCompilerOptions(
     lib: ["/node_modules/typescript/lib/lib.esnext.full.d.ts"],
     module: Ts.ModuleKind.ESNext,
     moduleResolution: Ts.ModuleResolutionKind.NodeJs,
-    suppressImplicitAnyIndexErrors: true,
     resolveJsonModule: true,
     skipLibCheck: true,
     target: Ts.ScriptTarget.ESNext,

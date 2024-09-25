@@ -1,8 +1,24 @@
 # Change Log - supermassive-todomvc
 
-This log was last generated on Wed, 03 Jul 2024 17:33:49 GMT and should not be manually modified.
+This log was last generated on Tue, 24 Sep 2024 15:09:22 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.0.1-0
+
+Tue, 24 Sep 2024 15:09:22 GMT
+
+### Patches
+
+- Bump @graphitation/ts-transform-graphql-js-tag to v1.4.0
+
+## 1.0.1-0
+
+Wed, 18 Sep 2024 15:11:16 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape to v1.2.0
 
 ## 1.0.1-0
 

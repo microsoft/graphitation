@@ -2,6 +2,36 @@
   "name": "supermassive-todomvc",
   "entries": [
     {
+      "date": "Tue, 24 Sep 2024 15:09:22 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/ts-transform-graphql-js-tag to v1.4.0",
+            "commit": "bd92500c2f7afba0bebf4416afd4e7efa57fb226"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 18 Sep 2024 15:11:16 GMT",
+      "tag": "supermassive-todomvc_v1.0.1-0",
+      "version": "1.0.1-0",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "supermassive-todomvc",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape to v1.2.0",
+            "commit": "3551cdaf6e4706845975a320fff5bc94ac957be5"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 03 Jul 2024 17:33:49 GMT",
       "tag": "supermassive-todomvc_v1.0.1-0",
       "version": "1.0.1-0",
