@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Fix refetch function to use new variables instead of old ones when those variables are not defaults",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape",
-  "email": "scheruiyot@microsoft.com",
-  "dependentChangeType": "patch"
-}

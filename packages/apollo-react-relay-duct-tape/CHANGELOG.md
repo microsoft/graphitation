@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Wed, 18 Sep 2024 15:11:16 GMT and should not be manually modified.
+This log was last generated on Wed, 25 Sep 2024 18:37:39 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.2.1
+
+Wed, 25 Sep 2024 18:37:39 GMT
+
+### Patches
+
+- Fix refetch function to use new variables instead of old ones when those variables are not defaults (scheruiyot@microsoft.com)
 
 ## 1.2.0
 
