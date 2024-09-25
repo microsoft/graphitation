@@ -154,6 +154,7 @@ export function useCompiledRefetchableFragment(
       executionQueryDocument,
       fragmentReference.id,
       fragmentReference.__fragments,
+      fragmentReferenceWithOwnVariables.__fragments,
     ],
   );
 

@@ -10,6 +10,10 @@ exports[`compiledHooks with strict Global Object Id spec type-policies useCompil
     "id": "shouldNotOverrideCompiledFragmentId",
     "messagesBackwardCount": 1,
     "messagesBeforeCursor": "",
+    "sortBy": {
+      "sortDirection": "ASC",
+      "sortField": "NAME",
+    },
     "userId": 42,
   },
   "user": {
@@ -21,6 +25,10 @@ exports[`compiledHooks with strict Global Object Id spec type-policies useCompil
       "id": "shouldNotOverrideCompiledFragmentId",
       "messagesBackwardCount": 1,
       "messagesBeforeCursor": "",
+      "sortBy": {
+        "sortDirection": "ASC",
+        "sortField": "NAME",
+      },
       "userId": 42,
     },
     "__typename": "User",
@@ -34,7 +42,7 @@ exports[`compiledHooks with strict Global Object Id spec type-policies useCompil
 {
   "__typename": "User",
   "avatarUrl({"size":21})": "<mock-value-for-field-"avatarUrl">",
-  "conversations:compiledHooks_user_conversations({"sortBy":{"sortDirection":"ASC","sortField":"NAME"}})": {
+  "conversations:compiledHooks_user_conversations({})": {
     "__typename": "ConversationsConnection",
     "edges": [
       {
@@ -62,7 +70,7 @@ exports[`compiledHooks with strict Global Object Id spec type-policies useCompil
 {
   "__typename": "User",
   "avatarUrl({"size":21})": "<mock-value-for-field-"avatarUrl">",
-  "conversations:compiledHooks_user_conversations({"sortBy":{"sortDirection":"ASC","sortField":"NAME"}})": {
+  "conversations:compiledHooks_user_conversations({})": {
     "__typename": "ConversationsConnection",
     "edges": [
       {
@@ -164,6 +172,10 @@ exports[`compiledHooks with strict Global Object Id spec type-policies useCompil
     "id": "shouldNotOverrideCompiledFragmentId",
     "messagesBackwardCount": 1,
     "messagesBeforeCursor": "",
+    "sortBy": {
+      "sortDirection": "ASC",
+      "sortField": "NAME",
+    },
     "userId": 42,
   },
   "user": {
@@ -175,6 +187,10 @@ exports[`compiledHooks with strict Global Object Id spec type-policies useCompil
       "id": "shouldNotOverrideCompiledFragmentId",
       "messagesBackwardCount": 1,
       "messagesBeforeCursor": "",
+      "sortBy": {
+        "sortDirection": "ASC",
+        "sortField": "NAME",
+      },
       "userId": 42,
     },
     "__typename": "User",
