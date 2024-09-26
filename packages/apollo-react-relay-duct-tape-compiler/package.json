@@ -38,13 +38,13 @@
     "relay-test-utils": "^12.0.0",
     "relay-test-utils-internal": "^12.0.0",
     "ts-node": "^10.4.0",
-    "typescript": "^4.9.5",
+    "typescript": "^5.5.0",
     "@types/yargs": "^17.0.13"
   },
   "peerDependencies": {
     "graphql": "^15.0.0",
     "@graphitation/supermassive": "^3.5.2",
-    "typescript": "^4.3.5"
+    "typescript": "^4.3.5 || ^5.0.0"
   },
   "publishConfig": {
     "main": "./lib/index.js",
