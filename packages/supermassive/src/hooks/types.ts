@@ -46,7 +46,9 @@ export interface BeforeFieldResolveHook<
   ResolveContext = unknown,
   BeforeHookContext = unknown,
 > {
-  (args: BaseExecuteFieldHookArgs<ResolveContext>): BeforeHookContext;
+  (args: BaseExecuteFieldHookArgs<ResolveContext>):
+    | Promise<BeforeHookContext>
+    | BeforeHookContext;
 }
 
 export interface AfterFieldResolveHook<
