@@ -1320,4 +1320,35 @@ describe.each([
       expect.objectContaining({ hookContext: afterHookContext }),
     );
   });
+
+  it('passes async "before" hook context but "after" hook should already receive resolved promise', async () => {
+    expect.assertions(2);
+
+    const query = `
+    {
+      film(id: 1) {
+        title
+      }
+    }`;
+    const beforeHookContext = {
+      foo: "foo",
+    };
+    const afterHookContext = {
+      bar: "bar",
+    };
+    const hooks: ExecutionHooks = {
+      beforeFieldResolve: jest.fn(async () => beforeHookContext),
+      afterFieldResolve: jest.fn(() => afterHookContext),
+      afterFieldComplete: jest.fn(),
+    };
+
+    await execute(parse(query), resolvers as UserResolvers, hooks);
+
+    expect(hooks.afterFieldResolve).toHaveBeenCalledWith(
+      expect.objectContaining({ hookContext: beforeHookContext }),
+    );
+    expect(hooks.afterFieldComplete).toHaveBeenCalledWith(
+      expect.objectContaining({ hookContext: afterHookContext }),
+    );
+  });
 });
