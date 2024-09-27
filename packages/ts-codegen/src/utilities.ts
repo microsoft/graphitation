@@ -257,8 +257,8 @@ export function createNonNullableTemplate(): ts.Statement[] {
       factory.createIdentifier("PickNullable"),
       [
         factory.createTypeParameterDeclaration(
-          factory.createIdentifier("T"),
           undefined,
+          factory.createIdentifier("T"),
           undefined,
         ),
       ],
