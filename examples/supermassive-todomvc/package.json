@@ -59,6 +59,6 @@
     "graphql-let": "^0.18.5",
     "prettier": "^2.8.7",
     "@graphitation/webpack-loader": "^1.0.5",
-    "typescript": "5.5.2"
+    "typescript": "^5.5.3"
   }
 }

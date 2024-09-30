@@ -21,7 +21,7 @@
     "graphql": "^15.6.1",
     "monorepo-scripts": "*",
     "ts-transformer-testing-library": "^1.0.0-alpha.7",
-    "typescript": "5.5.2"
+    "typescript": "5.5.3"
   },
   "publishConfig": {
     "main": "./lib/index",

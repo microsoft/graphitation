@@ -26,10 +26,10 @@
   "devDependencies": {
     "graphql": "^15.0.0",
     "beachball": "^2.20.0",
-    "lage": "^2.7.1",
+    "lage": "^2.7.14",
     "patch-package": "^6.4.7",
     "prettier": "^2.8.7",
-    "ts-jest": "^29.1.0"
+    "ts-jest": "^29.2.0"
   },
   "resolutions": {
     "cross-fetch": "^3.1.5",
