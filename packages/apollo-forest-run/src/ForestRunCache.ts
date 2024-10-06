@@ -639,6 +639,10 @@ function logStaleOperations(
     diff: Cache.DiffResult<any>;
   }[],
 ) {
+  if (!transaction.writes.length) {
+    // Custom cache.modify or cache.evict - expected to evict operations
+    return;
+  }
   console.log(
     `Incoming Apollo operation led to missing fields in watched operations (triggering re-fetch)\n` +
       `  Incoming operation(s):\n` +
