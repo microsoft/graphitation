@@ -280,7 +280,7 @@ describe(descendToChunk, () => {
       }
     }`;
 
-    const { value: root1, dataMap: dataMap1 } = generateChunk(query);
+    const { value: root1, dataMap: _ } = generateChunk(query);
     const { value: root2, dataMap: dataMap2 } = generateChunk(query);
 
     const findParent = createParentLocator(dataMap2);

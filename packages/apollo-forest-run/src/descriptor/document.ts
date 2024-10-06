@@ -38,7 +38,7 @@ function debugName({
   if (name?.value) {
     return `${operation} ${name.value}`;
   }
-  let rootSelections = selectionSet.selections.map((node) => {
+  const rootSelections = selectionSet.selections.map((node) => {
     if (node.kind === "FragmentSpread") {
       return `...${getName(node)}`;
     }

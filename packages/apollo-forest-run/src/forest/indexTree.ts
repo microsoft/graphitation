@@ -8,7 +8,6 @@ import type {
   NodeChunk,
   NodeMap,
   ObjectChunk,
-  ObjectChunkReference,
   ObjectDraft,
   OperationResult,
   RootChunkReference,

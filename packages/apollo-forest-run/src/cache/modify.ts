@@ -34,7 +34,6 @@ import * as Difference from "../diff/difference";
 import { getNodeChunks, getObjectChunks } from "./draftHelpers";
 import {
   canRead,
-  FieldPolicyFunctionContext,
   FieldPolicyReadContext,
   maybeReturnRef,
   readField,

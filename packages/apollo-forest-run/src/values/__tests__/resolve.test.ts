@@ -445,7 +445,7 @@ describe("resolveListItemChunk", () => {
   function createTestListChunk(
     query: string | [string, VariableValues],
     data: object,
-    listField: string = "list",
+    listField = "list",
   ): CompositeListChunk {
     const chunk = createTestChunk(query, data);
     const listChunk = resolveFieldValue(chunk, listField);
@@ -1087,7 +1087,7 @@ function createTestChunk(
 function createTestListChunk(
   query: string | [string, VariableValues],
   data: object,
-  listField: string = "list",
+  listField = "list",
 ): CompositeListChunk {
   const chunk = createTestChunk(query, data);
   const field = getField(chunk, listField);
@@ -1099,7 +1099,7 @@ function createTestListChunk(
 function createTestAggregateList(
   query: string | [string, VariableValues],
   dataArray: object[],
-  listField: string = "list",
+  listField = "list",
 ): CompositeListAggregate {
   // Create multiple chunks to simulate an aggregate
   const chunks: CompositeListChunk[] = dataArray.map((data) => {

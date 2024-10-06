@@ -79,12 +79,6 @@ export type OperationStep = {
   start: number;
 };
 
-const ROOT_NODES = Object.freeze([
-  "ROOT_QUERY",
-  "ROOT_SUBSCRIPTION",
-  "ROOT_MUTATION",
-]);
-
 const EMPTY_SET = new Set<any>();
 EMPTY_SET["add"] = () => {
   throw new Error("Frozen set");
@@ -96,7 +90,7 @@ type Transaction = {
 
 export class TransactionStatsCollector {
   private stats: TransactionStats = this.create();
-  private active: boolean = false;
+  private active = false;
 
   start() {
     this.stats.start = performance.now();
@@ -218,7 +212,7 @@ export class TransactionStatsCollector {
 
 export class WriteStatsCollector {
   private stats: WriteStats = this.create();
-  private active: boolean = false;
+  private active = false;
 
   start() {
     this.stats = this.create();
@@ -263,7 +257,7 @@ export class WriteStatsCollector {
     this.stats.steps.mergePolicies.start = performance.now();
   }
 
-  finishMergePolicies(modifiedTree: IndexedTree) {
+  finishMergePolicies(_: IndexedTree) {
     if (!this.active) return;
     this.stats.steps.mergePolicies.time =
       performance.now() - this.stats.steps.mergePolicies.start;
@@ -391,7 +385,7 @@ export class WriteStatsCollector {
 
 export class ReadStatsCollector {
   private stats: ReadStats = this.create();
-  private active: boolean = false;
+  private active = false;
 
   start() {
     this.stats = this.create();

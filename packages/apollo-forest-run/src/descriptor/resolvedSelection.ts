@@ -315,7 +315,7 @@ function shouldIncludeImpl(
   }
   return getInclusionDirectives(directives).every(
     ({ directive, ifArgument }) => {
-      let evaledValue: boolean = false;
+      let evaledValue = false;
       if (ifArgument.value.kind === "Variable") {
         evaledValue =
           (variables &&
@@ -339,7 +339,6 @@ function getInclusionDirectives(
       if (!isInclusionDirective(directive)) return;
 
       const directiveArguments = directive.arguments;
-      const directiveName = directive.name.value;
       assert(directiveArguments && directiveArguments.length === 1);
 
       const ifArgument = directiveArguments![0];

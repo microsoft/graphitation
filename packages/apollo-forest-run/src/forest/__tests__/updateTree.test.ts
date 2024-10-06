@@ -1277,29 +1277,25 @@ describe("update connections", () => {
 
   describe("removes edges", () => {
     it.each([
-      [["a"], [], []],
+      [["a"], []],
       [
         [null, "a", null],
         ["a", null],
-        [1, null],
       ],
-      [["a", null], [null], [null]],
+      [["a", null], [null]],
       [
         ["a", "b", "c"],
         ["a", "b"],
-        [0, 1],
       ],
       [
         ["a", "b", "c"],
         ["b", "c"],
-        [1, 2],
       ],
       [
         ["a", "b", "c"],
         ["a", "c"],
-        [0, 2],
       ],
-    ])("#%#: %p → %p", (oldList, newList, expectedLayout) => {
+    ])("#%#: %p → %p", (oldList, newList) => {
       const base = completeObject({
         connection: entityFooConnection({ edges: oldList.map(keyToEdge) }),
       });

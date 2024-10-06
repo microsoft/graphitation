@@ -393,7 +393,7 @@ export function createComplexScalarValue(
 }
 
 export const createSourceObject = (
-  typename?: TypeName | Object,
+  typename?: TypeName | object,
 ): SourceObject =>
   typeof typename === "object"
     ? (typename as SourceObject)

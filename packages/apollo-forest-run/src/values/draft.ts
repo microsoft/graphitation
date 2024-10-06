@@ -143,8 +143,8 @@ export function hydrateDraft(
       },
       enterList(
         model: IterableListValue,
-        possibleSelections: PossibleSelections,
-        firstVisit: boolean,
+        _possibleSelections: PossibleSelections,
+        _firstVisit: boolean,
       ) {
         // TODO: recycle lists
         // if (
@@ -196,7 +196,7 @@ export function hydrateDraft(
         selection: ResolvedSelection,
         currentValue: SourceObject,
       ) {
-        let value = aggregateFieldValue(
+        const value = aggregateFieldValue(
           model,
           resolveNormalizedField(selection, field),
         );
@@ -274,7 +274,7 @@ function unexpectedSelectionError(
   draft: ObjectDraft,
   parent: ObjectValue,
   field: FieldInfo,
-  value: unknown,
+  _value: unknown,
 ) {
   const op = draft.operation;
   const that = parent.isAggregate

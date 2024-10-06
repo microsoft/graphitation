@@ -1,4 +1,4 @@
-import { assert, assertNever } from "../jsutils/assert";
+import { assertNever } from "../jsutils/assert";
 import { FieldInfo } from "../descriptor/types";
 import {
   CompositeListChunk,

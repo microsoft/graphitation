@@ -2,7 +2,7 @@ import { cloneDeep } from "lodash";
 import { diffObject } from "../diffObject";
 import { PossibleSelections, VariableValues } from "../../descriptor/types";
 import { assert } from "../../jsutils/assert";
-import { ObjectChunk, ObjectChunkReference } from "../../values/types";
+import { ObjectChunk } from "../../values/types";
 import { SourceObject } from "../../values/types";
 import {
   ObjectDiffState,

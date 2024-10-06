@@ -69,7 +69,10 @@ function createPatchesImpl(
     if (!hasField(obj, fieldName)) {
       continue;
     }
-    const fieldDifference = difference.fieldState?.get(fieldName)!;
+    const fieldDifference = difference.fieldState?.get(fieldName);
+    if (!fieldDifference) {
+      continue;
+    }
     const allDiff = Array.isArray(fieldDifference)
       ? fieldDifference
       : [fieldDifference];

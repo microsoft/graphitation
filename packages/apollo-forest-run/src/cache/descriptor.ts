@@ -1,4 +1,4 @@
-import type { DocumentNode, OperationDefinitionNode } from "graphql";
+import type { DocumentNode } from "graphql";
 import type { CacheEnv, Store } from "./types";
 import type {
   DocumentDescriptor,

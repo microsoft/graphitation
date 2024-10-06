@@ -1,6 +1,5 @@
 import { CompositeListValue, ObjectValue, ValueKind } from "./types";
 import { aggregateListItemValue } from "./resolve";
-import { getDataPathForDebugging } from "./traverse";
 import { assertNever } from "../jsutils/assert";
 
 export type IterableListValue = {

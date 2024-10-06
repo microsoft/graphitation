@@ -1,5 +1,5 @@
 export function assert(condition: unknown): asserts condition {
-  if (!Boolean(condition)) {
+  if (!condition) {
     throw new Error("Invariant violation");
   }
 }

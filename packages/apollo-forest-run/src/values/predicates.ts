@@ -19,7 +19,6 @@ import type {
   RootChunkReference,
   ScalarValue,
   SourceCompositeValue,
-  SourceNull,
   SourceObject,
   SourceScalar,
   SourceValue,

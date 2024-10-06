@@ -104,8 +104,8 @@ function rootFieldsOverlap(
   const dirtyFields = difference.dirtyFields;
   assert(rootSelection && dirtyFields);
 
-  for (let field of dirtyFields) {
-    let fieldInfos = rootSelection.fields.get(field);
+  for (const field of dirtyFields) {
+    const fieldInfos = rootSelection.fields.get(field);
     if (!fieldInfos) {
       continue;
     }

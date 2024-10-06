@@ -26,7 +26,6 @@ import {
   descendToChunk,
   findClosestNode,
   isCompositeListValue,
-  isCompositeValue,
   isObjectValue,
   resolveFieldAliases,
   resolveFieldChunk,

@@ -281,7 +281,7 @@ function appendAbstractTypeSelections(
 
 function completeSelections(possibleSelections: PossibleSelections, depth = 0) {
   // This runs when all selections already contain all fields
-  let next: PossibleSelections[] = [];
+  const next: PossibleSelections[] = [];
   for (const selection of possibleSelections.values()) {
     selection.depth = depth;
     for (const fieldAliases of selection.fields.values()) {
@@ -424,7 +424,7 @@ function mergeSelectionsImpl(
       newEmptyList,
     );
     for (const sourceField of sourceAliases) {
-      let index = targetAliases.findIndex(
+      const index = targetAliases.findIndex(
         (typedField) => typedField.alias === sourceField.alias,
       );
       if (index === -1) {
@@ -647,10 +647,6 @@ function findArgument(
 
 function isVariableNode(value: ValueNode | undefined): value is VariableNode {
   return value?.kind === "Variable";
-}
-
-function peek<T>(stack: T[]): T | undefined {
-  return stack[stack.length - 1];
 }
 
 function findClosestFragmentSpread(
