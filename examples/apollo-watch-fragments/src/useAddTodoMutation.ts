@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useMutation } from "@graphitation/apollo-react-relay-duct-tape";
 import { graphql } from "@graphitation/graphql-js-tag";
 
-import { useAddTodoMutation } from "./__generated__/useAddTodoMutation.graphql";
+import type { useAddTodoMutation } from "./__generated__/useAddTodoMutation.graphql";
 import invariant from "invariant";
 
 const mutation = graphql`

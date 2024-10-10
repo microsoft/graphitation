@@ -626,6 +626,10 @@ function executeSubscriptionImpl(
   const { groupedFieldSet } = collectFields(exeContext, rootTypeName);
 
   const firstRootField = groupedFieldSet.entries().next().value;
+  if (firstRootField === undefined) {
+    throw locatedError("Must have at least one root field.", []);
+  }
+
   const [responseName, fieldGroup] = firstRootField;
   const fieldName = fieldGroup[0].name.value;
   const fieldDef = Definitions.getField(

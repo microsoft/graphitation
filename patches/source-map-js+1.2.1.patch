@@ -1,0 +1,13 @@
+diff --git a/node_modules/source-map-js/source-map.d.ts b/node_modules/source-map-js/source-map.d.ts
+index ec8892f..c22d01f 100644
+--- a/node_modules/source-map-js/source-map.d.ts
++++ b/node_modules/source-map-js/source-map.d.ts
+@@ -4,7 +4,7 @@ export interface StartOfSourceMap {
+ }
+ 
+ export interface RawSourceMap extends StartOfSourceMap {
+-    version: string;
++    version: number;
+     sources: string[];
+     names: string[];
+     sourcesContent?: string[];

@@ -70,7 +70,6 @@ function getOmittedFields(typeName: string, omitFields?: string[]) {
   }
   return factory.createTypeAliasDeclaration(
     undefined,
-    undefined,
     factory.createIdentifier(`${typeName}ModelOmitFields`),
     undefined,
     factory.createUnionTypeNode(

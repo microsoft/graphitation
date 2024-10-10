@@ -124,7 +124,6 @@ export function extractImplicitTypesToTypescript(
   const graphQLImportDefinition: ts.ImportDeclaration =
     factory.createImportDeclaration(
       undefined,
-      undefined,
       factory.createImportClause(
         false,
         undefined,
@@ -143,7 +142,6 @@ export function extractImplicitTypesToTypescript(
 
   const supermassiveImportDefinition: ts.ImportDeclaration =
     factory.createImportDeclaration(
-      undefined,
       undefined,
       factory.createImportClause(
         false,
