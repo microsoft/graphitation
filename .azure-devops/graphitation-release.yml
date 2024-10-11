@@ -13,51 +13,51 @@ variables:
     value: https://pkgs.dev.azure.com/domoreexp
   - name: adoNpmFeedName
     value: npm-mirror
-
-jobs:
-  - job: compliance
-    displayName: Compliance checks
+resources:
+  repositories:
+    - repository: 1ESPipelineTemplates
+      type: git
+      name: 1ESPipelineTemplates/1ESPipelineTemplates
+      ref: refs/tags/release
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  parameters:
     pool:
       name: 1ES-Teams-Windows-2022-DomoreexpGithub
-    steps:
-      - template: ./steps/service-tree.yml
-        parameters:
-          serviceTreeID: $(serviceTreeID)
-      - template: ./steps/compliance-steps.yml
-
-  - job: Release
-    variables:
-      - group: oss-secrets
-    dependsOn: Compliance
-    pool: "1ES-Teams-Ubuntu-Latest-Compliant-NCUS"
-    steps:
-      - template: ./steps/service-tree.yml
-        parameters:
-          serviceTreeID: $(serviceTreeID)
-      - script: yarn
-        displayName: yarn
-      - script: |
-          yarn ci
-        displayName: build and test [test]
-      - script: |
-          git config user.email "gql-svc@microsoft.com"
-          git config user.name "Graphitation Service Account"
-          git remote set-url origin https://gql-svc:$(ossGithubPAT)@github.com/microsoft/graphitation.git
-          git fetch --depth=2
-        displayName: Configure git for release
-      - script: yarn release -y -n $(ossNpmToken) --access public
-        displayName: Release
-      - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
-        displayName: 📒 Generate Manifest
-        inputs:
-          BuildDropPath: $(System.DefaultWorkingDirectory)
-      - task: PublishPipelineArtifact@1
-        displayName: 📒 Publish Manifest
-        inputs:
-          artifactName: SBom-$(System.JobAttempt)
-          targetPath: $(System.DefaultWorkingDirectory)/_manifest
-      - template: ./steps/pierce-ado-npm-mirror-cache.yml
-        parameters:
-          adoNpmFeedPat: $(adoNpmFeedPat)
-          adoOrgBaseUrl: $(adoProjectBaseUrl)
-          adoNpmFeedName: $(adoNpmFeedName)
+      os: windows
+    stages:
+      - stage: stage
+        jobs:
+          - job: compliance
+            displayName: Compliance checks
+            steps:
+              - template: /.azure-devops/steps/service-tree.yml@self
+                parameters:
+                  serviceTreeID: $(serviceTreeID)
+              - template: /.azure-devops/steps/compliance-steps.yml@self
+          - job: Release
+            variables:
+              - group: oss-secrets
+            dependsOn: Compliance
+            steps:
+              - template: /.azure-devops/steps/service-tree.yml@self
+                parameters:
+                  serviceTreeID: $(serviceTreeID)
+              - script: yarn
+                displayName: yarn
+              - script: |
+                  yarn ci
+                displayName: build and test [test]
+              - script: |
+                  git config user.email "gql-svc@microsoft.com"
+                  git config user.name "Graphitation Service Account"
+                  git remote set-url origin https://gql-svc:$(ossGithubPAT)@github.com/microsoft/graphitation.git
+                  git fetch --depth=2
+                displayName: Configure git for release
+              - script: yarn release -y -n $(ossNpmToken) --access public
+                displayName: Release
+              - template: /.azure-devops/steps/pierce-ado-npm-mirror-cache.yml@self
+                parameters:
+                  adoNpmFeedPat: $(adoNpmFeedPat)
+                  adoOrgBaseUrl: $(adoProjectBaseUrl)
+                  adoNpmFeedName: $(adoNpmFeedName)
