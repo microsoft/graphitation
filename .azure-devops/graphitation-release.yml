@@ -23,7 +23,8 @@ extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
     pool:
-      name: 1ES-Teams-Windows-2022-DomoreexpGithub
+      name: Azure-Pipelines-1ESPT-ExDShared
+      image: windows-2022
       os: windows
     stages:
       - stage: stage
