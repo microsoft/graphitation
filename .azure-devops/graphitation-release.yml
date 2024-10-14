@@ -8,56 +8,67 @@ variables:
   - name: tags
     value: production,externalfacing
   - name: serviceTreeID
-    value: 6F8CD842-E117-412F-BAE4-56A3B6166594
+    value: ade7d667-42f5-485a-91a9-f1dc6482a9b0
   - name: adoOrgBaseUrl
     value: https://pkgs.dev.azure.com/domoreexp
   - name: adoNpmFeedName
     value: npm-mirror
 
-jobs:
-  - job: compliance
-    displayName: Compliance checks
-    pool:
-      name: 1ES-Teams-Windows-2022-DomoreexpGithub
-    steps:
-      - template: ./steps/service-tree.yml
-        parameters:
-          serviceTreeID: $(serviceTreeID)
-      - template: ./steps/compliance-steps.yml
+resources:
+  repositories:
+    - repository: 1ESPipelineTemplates
+      type: git
+      name: 1ESPipelineTemplates/1ESPipelineTemplates
+      ref: refs/tags/release
 
-  - job: Release
-    variables:
-      - group: oss-secrets
-    dependsOn: Compliance
-    pool: "1ES-Teams-Ubuntu-Latest-Compliant-NCUS"
-    steps:
-      - template: ./steps/service-tree.yml
-        parameters:
-          serviceTreeID: $(serviceTreeID)
-      - script: yarn
-        displayName: yarn
-      - script: |
-          yarn ci
-        displayName: build and test [test]
-      - script: |
-          git config user.email "gql-svc@microsoft.com"
-          git config user.name "Graphitation Service Account"
-          git remote set-url origin https://gql-svc:$(ossGithubPAT)@github.com/microsoft/graphitation.git
-          git fetch --depth=2
-        displayName: Configure git for release
-      - script: yarn release -y -n $(ossNpmToken) --access public
-        displayName: Release
-      - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
-        displayName: 📒 Generate Manifest
-        inputs:
-          BuildDropPath: $(System.DefaultWorkingDirectory)
-      - task: PublishPipelineArtifact@1
-        displayName: 📒 Publish Manifest
-        inputs:
-          artifactName: SBom-$(System.JobAttempt)
-          targetPath: $(System.DefaultWorkingDirectory)/_manifest
-      - template: ./steps/pierce-ado-npm-mirror-cache.yml
-        parameters:
-          adoNpmFeedPat: $(adoNpmFeedPat)
-          adoOrgBaseUrl: $(adoProjectBaseUrl)
-          adoNpmFeedName: $(adoNpmFeedName)
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+
+  parameters:
+    sdl:
+      sourceAnalysisPool:
+        name: Azure-Pipelines-1ESPT-ExDShared
+        image: windows-2022
+        os: windows
+    stages:
+      - stage: release
+        variables:
+          # OPTIONAL: Set this varibale to 'true' to enable signing in a target stage.
+          # Remove if signing is not required.
+          Build.ESRP.CodeSign.Enabled: true
+          # OPTIONAL: To disable required tools not applicable in the pipeline set to false.
+          # Supported values: BinSkim, Roslyn, ESLint, PREFast.
+          Build.SDL.<Roslyn>.Enabled: false
+          Build.SDL.<ESLint>.Enabled: true
+        jobs:
+          - job: Release
+            variables:
+              - group: oss-secrets
+            pool:
+              name: Azure-Pipelines-1ESPT-ExDShared
+              image: ubuntu-latest
+              os: linux
+            steps:
+              - script: yarn
+                displayName: yarn
+              - script: |
+                  yarn ci
+                displayName: build and test [test]
+              - script: |
+                  git config user.email "gql-svc@microsoft.com"
+                  git config user.name "Graphitation Service Account"
+                  git remote set-url origin https://gql-svc:$(ossGithubPAT)@github.com/microsoft/graphitation.git
+                  git fetch --depth=2
+                displayName: Configure git for release
+              - script: yarn release -y -n $(ossNpmToken) --access public
+                displayName: Release
+              - task: 1ES.PublishPipelineArtifact@1
+                displayName: 📒 Publish Manifest
+                inputs:
+                  artifactName: SBom-$(System.JobAttempt)
+                  targetPath: $(System.DefaultWorkingDirectory)/_manifest
+              - template: .azure-devops/steps/pierce-ado-npm-mirror-cache.yml@self
+                parameters:
+                  adoNpmFeedPat: $(adoNpmFeedPat)
+                  adoOrgBaseUrl: $(adoProjectBaseUrl)
+                  adoNpmFeedName: $(adoNpmFeedName)
