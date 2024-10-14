@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Wed, 03 Jul 2024 17:33:49 GMT and should not be manually modified.
+This log was last generated on Mon, 14 Oct 2024 07:58:57 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 3.5.3
+
+Mon, 14 Oct 2024 07:58:57 GMT
+
+### Patches
+
+- Bump TS version to 5.5 (pavelglac@microsoft.com)
 
 ## 3.5.2
 

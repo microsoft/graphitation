@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Mon, 14 Oct 2024 07:58:57 GMT",
+      "tag": "@graphitation/ts-codegen_v2.11.1",
+      "version": "2.11.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "c0f0e8bcddf7d842d9198e0ed549b105c6a5c96a",
+            "comment": "Bump TS version to 5.5"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 15 Jan 2024 17:55:46 GMT",
       "tag": "@graphitation/ts-codegen_v2.11.0",
       "version": "2.11.0",

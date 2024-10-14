@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-transform-graphql-js-tag
 
-This log was last generated on Tue, 24 Sep 2024 15:09:22 GMT and should not be manually modified.
+This log was last generated on Mon, 14 Oct 2024 07:58:57 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.4.1
+
+Mon, 14 Oct 2024 07:58:57 GMT
+
+### Patches
+
+- Bump TS version to 5.5 (pavelglac@microsoft.com)
 
 ## 1.4.0
 

@@ -1,8 +1,16 @@
 # Change Log - @graphitation/embedded-document-artefact-loader
 
-This log was last generated on Thu, 02 May 2024 07:33:39 GMT and should not be manually modified.
+This log was last generated on Mon, 14 Oct 2024 07:58:57 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 0.8.1
+
+Mon, 14 Oct 2024 07:58:57 GMT
+
+### Patches
+
+- Bump TS version to 5.5 (pavelglac@microsoft.com)
 
 ## 0.8.0
 

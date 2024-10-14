@@ -1,8 +1,18 @@
 # Change Log - @graphitation/cli
 
-This log was last generated on Mon, 15 Jan 2024 17:55:46 GMT and should not be manually modified.
+This log was last generated on Mon, 14 Oct 2024 07:58:57 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 1.11.2
+
+Mon, 14 Oct 2024 07:58:57 GMT
+
+### Patches
+
+- Bump TS version to 5.5 (pavelglac@microsoft.com)
+- Bump @graphitation/supermassive-extractors to v2.2.2
+- Bump @graphitation/ts-codegen to v2.11.1
 
 ## 1.11.1
 

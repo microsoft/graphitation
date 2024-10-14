@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Mon, 14 Oct 2024 07:58:57 GMT",
+      "tag": "@graphitation/supermassive_v3.5.3",
+      "version": "3.5.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "c0f0e8bcddf7d842d9198e0ed549b105c6a5c96a",
+            "comment": "Bump TS version to 5.5"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 03 Jul 2024 17:33:49 GMT",
       "tag": "@graphitation/supermassive_v3.5.2",
       "version": "3.5.2",

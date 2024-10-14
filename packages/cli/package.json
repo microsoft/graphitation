@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/cli",
   "license": "MIT",
-  "version": "1.11.1",
+  "version": "1.11.2",
   "bin": {
     "supermassive": "./bin/supermassive.js"
   },
@@ -23,8 +23,8 @@
     "monorepo-scripts": "*"
   },
   "dependencies": {
-    "@graphitation/supermassive-extractors": "^2.2.1",
-    "@graphitation/ts-codegen": "^2.11.0",
+    "@graphitation/supermassive-extractors": "^2.2.2",
+    "@graphitation/ts-codegen": "^2.11.1",
     "commander": "^8.3.0",
     "fast-glob": "^3.2.12",
     "graphql": "^15.6.1"

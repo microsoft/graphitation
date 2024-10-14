@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive-extractors",
   "entries": [
     {
+      "date": "Mon, 14 Oct 2024 07:58:57 GMT",
+      "tag": "@graphitation/supermassive-extractors_v2.2.2",
+      "version": "2.2.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/supermassive-extractors",
+            "commit": "c0f0e8bcddf7d842d9198e0ed549b105c6a5c96a",
+            "comment": "Bump TS version to 5.5"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 21 Sep 2023 06:28:45 GMT",
       "tag": "@graphitation/supermassive-extractors_v2.2.1",
       "version": "2.2.1",

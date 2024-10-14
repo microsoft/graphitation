@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-transform-graphql-js-tag",
   "entries": [
     {
+      "date": "Mon, 14 Oct 2024 07:58:57 GMT",
+      "tag": "@graphitation/ts-transform-graphql-js-tag_v1.4.1",
+      "version": "1.4.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/ts-transform-graphql-js-tag",
+            "commit": "c0f0e8bcddf7d842d9198e0ed549b105c6a5c96a",
+            "comment": "Bump TS version to 5.5"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 24 Sep 2024 15:09:22 GMT",
       "tag": "@graphitation/ts-transform-graphql-js-tag_v1.4.0",
       "version": "1.4.0",
