@@ -31,7 +31,6 @@
     "uuid": "^8.3.2",
     "webpack": "^5.76.0",
     "webpack-cli": "^4.6.0",
-    "webpack-dev-server": "^4.13.3",
     "zen-observable": "^0.8.15"
   },
   "resolutions": {
@@ -59,6 +58,7 @@
     "graphql-let": "^0.18.5",
     "prettier": "^2.8.7",
     "@graphitation/webpack-loader": "^1.0.6",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.3",
+    "webpack-dev-server": "^4.13.3"
   }
 }
