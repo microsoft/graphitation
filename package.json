@@ -24,14 +24,16 @@
     "postinstall": "patch-package"
   },
   "devDependencies": {
-    "graphql": "^15.0.0",
     "beachball": "^2.20.0",
+    "graphql": "^15.0.0",
     "lage": "^2.7.14",
     "patch-package": "^6.4.7",
     "prettier": "^2.8.7",
     "ts-jest": "^29.2.0"
   },
   "resolutions": {
+    "@babel/traverse": "^7.23.2",
+    "ansi-regex": "^5.0.1",
     "cross-fetch": "^3.1.5",
     "glob-parent": "^6.0.2",
     "minimist": "^1.2.6",
