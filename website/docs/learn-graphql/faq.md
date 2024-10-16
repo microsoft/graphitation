@@ -12,4 +12,4 @@ Whenever you have a field called `somethingId` or `something_id`, it is most lik
 
 If you do need just the raw identifier, e.g. for passing to APIs _outside_ of GraphQL, the user can query for `something.id`.
 
-[🔗 More information](./thinking-in-graphql.md#-design-from-back-end-perspective)
+[🔗 More information](./guides/thinking-in-graphql.md#-design-from-back-end-perspective)
