@@ -2,6 +2,9 @@
   "name": "website",
   "version": "0.0.0",
   "private": true,
+  "engines": {
+    "node": ">=18.0"
+  },
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
@@ -15,18 +18,20 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@docusaurus/core": "^2.4.0",
-    "@docusaurus/preset-classic": "^2.4.0",
-    "@mdx-js/react": "^1.6.21",
+    "@docusaurus/core": "^3.5.2",
+    "@docusaurus/preset-classic": "^3.5.2",
+    "@docusaurus/theme-mermaid": "^3.5.2",
+    "@mdx-js/react": "^3.0.0",
     "clsx": "^1.1.1",
-    "prism-react-renderer": "^1.2.1",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1"
+    "prism-react-renderer": "^2.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "^2.4.0",
-    "@docusaurus/theme-mermaid": "^2.4.0",
-    "@tsconfig/docusaurus": "^1.0.7",
+    "@docusaurus/module-type-aliases": "^3.5.2",
+    "@docusaurus/tsconfig": "^3.5.2",
+    "@docusaurus/types": "^3.5.2",
+    "@types/react": "^18.2.29",
     "typescript": "^5.5.3"
   },
   "resolutions": {
