@@ -1,5 +1,6 @@
 {
   "name": "supermassive-todomvc",
+  "license": "MIT",
   "main": "index.js",
   "private": true,
   "version": "1.0.1-0",
