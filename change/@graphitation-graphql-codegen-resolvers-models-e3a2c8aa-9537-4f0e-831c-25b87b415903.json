@@ -1,6 +1,6 @@
 {
   "type": "patch",
-  "comment": "bump dependecies",
+  "comment": "bump ansi-regex",
   "packageName": "@graphitation/graphql-codegen-resolvers-models",
   "email": "pavelglac@microsoft.com",
   "dependentChangeType": "patch"
