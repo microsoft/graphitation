@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "bump dependecies",
-  "packageName": "@graphitation/ts-transform-graphql-js-tag",
-  "email": "pavelglac@microsoft.com",
-  "dependentChangeType": "patch"
-}

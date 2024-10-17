@@ -32,6 +32,7 @@
     "ts-jest": "^29.2.0"
   },
   "resolutions": {
+    "ansi-regex": "^5.0.1",
     "cross-fetch": "^3.1.5",
     "glob-parent": "^6.0.2",
     "minimist": "^1.2.6",

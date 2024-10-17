@@ -1,6 +1,6 @@
 {
   "type": "patch",
-  "comment": "bump dependecies",
+  "comment": "bump ansi-regex",
   "packageName": "@graphitation/cli",
   "email": "pavelglac@microsoft.com",
   "dependentChangeType": "patch"

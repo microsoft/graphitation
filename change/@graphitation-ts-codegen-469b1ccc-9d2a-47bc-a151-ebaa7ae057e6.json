@@ -1,7 +1,7 @@
 {
   "type": "patch",
-  "comment": "bump dependecies",
-  "packageName": "@graphitation/graphql-eslint-rules",
+  "comment": "bump ansi-regex",
+  "packageName": "@graphitation/ts-codegen",
   "email": "pavelglac@microsoft.com",
   "dependentChangeType": "patch"
 }
