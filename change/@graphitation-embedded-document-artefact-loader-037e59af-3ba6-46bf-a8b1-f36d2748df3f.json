@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "bump dependecies",
+  "packageName": "@graphitation/embedded-document-artefact-loader",
+  "email": "pavelglac@microsoft.com",
+  "dependentChangeType": "patch"
+}
