@@ -31,9 +31,6 @@ const schema = buildSchema(
     "utf8",
   ),
 );
-console.log(
-  require.resolve("relay-test-utils-internal/lib/testschema.graphql"),
-);
 
 function testGeneratedData(
   documentNode: DocumentNode,
