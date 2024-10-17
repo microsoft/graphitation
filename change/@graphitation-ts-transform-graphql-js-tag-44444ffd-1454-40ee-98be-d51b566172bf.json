@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "bump release version manually",
+  "packageName": "@graphitation/ts-transform-graphql-js-tag",
+  "email": "pavelglac@microsoft.com",
+  "dependentChangeType": "patch"
+}
