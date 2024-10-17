@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "bump dependecies",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape-compiler",
+  "email": "pavelglac@microsoft.com",
+  "dependentChangeType": "patch"
+}
