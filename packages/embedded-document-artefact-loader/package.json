@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/embedded-document-artefact-loader",
   "license": "MIT",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",

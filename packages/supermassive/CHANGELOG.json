@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 17 Oct 2024 14:53:14 GMT",
+      "version": "3.5.5",
+      "tag": "@graphitation/supermassive_v3.5.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "027435c916b2d385b1bb14fd913021cf02de1d05",
+            "comment": "bump release version manually"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 14 Oct 2024 07:58:57 GMT",
       "tag": "@graphitation/supermassive_v3.5.3",
       "version": "3.5.3",

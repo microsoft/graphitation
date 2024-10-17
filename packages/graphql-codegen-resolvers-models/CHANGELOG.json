@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-resolvers-models",
   "entries": [
     {
+      "date": "Thu, 17 Oct 2024 14:53:14 GMT",
+      "version": "1.2.4",
+      "tag": "@graphitation/graphql-codegen-resolvers-models_v1.2.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/graphql-codegen-resolvers-models",
+            "commit": "027435c916b2d385b1bb14fd913021cf02de1d05",
+            "comment": "bump release version manually"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 14 Oct 2024 07:58:57 GMT",
       "tag": "@graphitation/graphql-codegen-resolvers-models_v1.2.2",
       "version": "1.2.2",

@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "bump release version manually",
-  "packageName": "@graphitation/embedded-document-artefact-loader",
-  "email": "pavelglac@microsoft.com",
-  "dependentChangeType": "patch"
-}

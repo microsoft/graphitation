@@ -2,6 +2,27 @@
   "name": "@graphitation/webpack-loader",
   "entries": [
     {
+      "date": "Thu, 17 Oct 2024 14:53:14 GMT",
+      "version": "1.0.8",
+      "tag": "@graphitation/webpack-loader_v1.0.8",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/webpack-loader",
+            "commit": "027435c916b2d385b1bb14fd913021cf02de1d05",
+            "comment": "bump release version manually"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/webpack-loader",
+            "comment": "Bump @graphitation/supermassive to v3.5.5",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 14 Oct 2024 07:58:57 GMT",
       "tag": "@graphitation/webpack-loader_v1.0.6",
       "version": "1.0.6",

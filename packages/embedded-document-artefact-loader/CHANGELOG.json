@@ -2,6 +2,21 @@
   "name": "@graphitation/embedded-document-artefact-loader",
   "entries": [
     {
+      "date": "Thu, 17 Oct 2024 14:53:14 GMT",
+      "version": "0.8.3",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.8.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "027435c916b2d385b1bb14fd913021cf02de1d05",
+            "comment": "bump release version manually"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 14 Oct 2024 07:58:57 GMT",
       "tag": "@graphitation/embedded-document-artefact-loader_v0.8.1",
       "version": "0.8.1",

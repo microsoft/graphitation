@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-typescript-operations",
   "entries": [
     {
+      "date": "Thu, 17 Oct 2024 14:53:14 GMT",
+      "version": "1.8.2",
+      "tag": "@graphitation/graphql-codegen-typescript-operations_v1.8.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/graphql-codegen-typescript-operations",
+            "commit": "027435c916b2d385b1bb14fd913021cf02de1d05",
+            "comment": "bump release version manually"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 28 Feb 2024 17:44:01 GMT",
       "tag": "@graphitation/graphql-codegen-typescript-operations_v1.8.0",
       "version": "1.8.0",

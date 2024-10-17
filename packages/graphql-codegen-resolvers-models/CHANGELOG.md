@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-resolvers-models
 
-This log was last generated on Mon, 14 Oct 2024 07:58:57 GMT and should not be manually modified.
+<!-- This log was last generated on Thu, 17 Oct 2024 14:53:14 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.2.4
+
+Thu, 17 Oct 2024 14:53:14 GMT
+
+### Patches
+
+- bump release version manually (pavelglac@microsoft.com)
 
 ## 1.2.2
 

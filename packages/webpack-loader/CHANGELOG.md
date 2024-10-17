@@ -1,8 +1,17 @@
 # Change Log - @graphitation/webpack-loader
 
-This log was last generated on Mon, 14 Oct 2024 07:58:57 GMT and should not be manually modified.
+<!-- This log was last generated on Thu, 17 Oct 2024 14:53:14 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.0.8
+
+Thu, 17 Oct 2024 14:53:14 GMT
+
+### Patches
+
+- bump release version manually (pavelglac@microsoft.com)
+- Bump @graphitation/supermassive to v3.5.5
 
 ## 1.0.6
 
