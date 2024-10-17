@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "use relay-test-utils types for consistency",
+  "packageName": "@graphitation/graphql-js-operation-payload-generator",
+  "email": "Stanislaw.Wilczynski@microsoft.com",
+  "dependentChangeType": "patch"
+}
