@@ -1,6 +1,6 @@
 {
   "type": "patch",
-  "comment": "bump ansi-regex",
+  "comment": "bump release version manually",
   "packageName": "@graphitation/supermassive-extractors",
   "email": "pavelglac@microsoft.com",
   "dependentChangeType": "patch"

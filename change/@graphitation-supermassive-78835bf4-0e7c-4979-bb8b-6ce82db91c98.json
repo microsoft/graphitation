@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "bump ansi-regex",
-  "packageName": "@graphitation/supermassive",
-  "email": "pavelglac@microsoft.com",
-  "dependentChangeType": "patch"
-}
