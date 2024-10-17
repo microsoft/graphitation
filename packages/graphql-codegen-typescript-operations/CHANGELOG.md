@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-typescript-operations
 
-This log was last generated on Wed, 28 Feb 2024 17:44:01 GMT and should not be manually modified.
+<!-- This log was last generated on Thu, 17 Oct 2024 14:53:14 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.8.2
+
+Thu, 17 Oct 2024 14:53:14 GMT
+
+### Patches
+
+- bump release version manually (pavelglac@microsoft.com)
 
 ## 1.8.0
 

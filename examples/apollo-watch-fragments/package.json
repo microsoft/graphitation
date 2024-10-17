@@ -4,8 +4,8 @@
   "private": true,
   "dependencies": {
     "@apollo/client": "~3.6.0",
-    "@graphitation/apollo-react-relay-duct-tape": "^1.2.2",
-    "@graphitation/graphql-js-tag": "^0.9.1",
+    "@graphitation/apollo-react-relay-duct-tape": "^1.2.4",
+    "@graphitation/graphql-js-tag": "^0.9.3",
     "@graphql-tools/schema": "^9.0.19",
     "graphql": "^15.6.0",
     "react": "^17.0.2",
@@ -36,9 +36,9 @@
     ]
   },
   "devDependencies": {
-    "@graphitation/apollo-react-relay-duct-tape-compiler": "^1.5.4",
-    "@graphitation/embedded-document-artefact-loader": "^0.8.1",
-    "@graphitation/supermassive": "^3.5.3",
+    "@graphitation/apollo-react-relay-duct-tape-compiler": "^1.5.6",
+    "@graphitation/embedded-document-artefact-loader": "^0.8.3",
+    "@graphitation/supermassive": "^3.5.5",
     "@graphql-codegen/cli": "2.2.0",
     "@graphql-codegen/typescript": "2.2.2",
     "@graphql-codegen/typescript-resolvers": "^2.2.1",

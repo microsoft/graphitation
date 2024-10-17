@@ -1,5 +1,6 @@
 {
   "name": "supermassive-todomvc",
+  "license": "MIT",
   "main": "index.js",
   "private": true,
   "version": "1.0.1-0",
@@ -14,11 +15,11 @@
   "dependencies": {
     "@apollo/client": "~3.6.0",
     "@babel/runtime": "^7.12.0",
-    "@graphitation/apollo-react-relay-duct-tape": "^1.2.2",
-    "@graphitation/apollo-react-relay-duct-tape-compiler": "^1.5.4",
-    "@graphitation/graphql-js-tag": "^0.9.1",
-    "@graphitation/supermassive": "^3.5.3",
-    "@graphitation/ts-transform-graphql-js-tag": "^1.4.1",
+    "@graphitation/apollo-react-relay-duct-tape": "^1.2.4",
+    "@graphitation/apollo-react-relay-duct-tape-compiler": "^1.5.6",
+    "@graphitation/graphql-js-tag": "^0.9.3",
+    "@graphitation/supermassive": "^3.5.5",
+    "@graphitation/ts-transform-graphql-js-tag": "^1.4.3",
     "concurrently": "^6.5.1",
     "graphql": "^15.6.1",
     "graphql-tools": "^8.2.0",
@@ -29,7 +30,7 @@
     "ts-loader": "^9.0.0",
     "ts-node": "^10.4.0",
     "uuid": "^8.3.2",
-    "webpack": "^5.76.0",
+    "webpack": "^5.94.0",
     "webpack-cli": "^4.6.0",
     "zen-observable": "^0.8.15"
   },
@@ -57,7 +58,7 @@
     "@types/uuid": "^8.3.1",
     "graphql-let": "^0.18.5",
     "prettier": "^2.8.7",
-    "@graphitation/webpack-loader": "^1.0.6",
+    "@graphitation/webpack-loader": "^1.0.8",
     "typescript": "^5.5.3",
     "webpack-dev-server": "^4.13.3"
   }

@@ -2,6 +2,21 @@
   "name": "@graphitation/rempl-apollo-devtools",
   "entries": [
     {
+      "date": "Thu, 17 Oct 2024 14:53:14 GMT",
+      "version": "1.0.9",
+      "tag": "@graphitation/rempl-apollo-devtools_v1.0.9",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/rempl-apollo-devtools",
+            "commit": "027435c916b2d385b1bb14fd913021cf02de1d05",
+            "comment": "bump release version manually"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 17 Jun 2024 13:26:30 GMT",
       "tag": "@graphitation/rempl-apollo-devtools_v1.0.7",
       "version": "1.0.7",
