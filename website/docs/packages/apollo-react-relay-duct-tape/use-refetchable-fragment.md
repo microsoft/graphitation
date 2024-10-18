@@ -13,7 +13,7 @@ keywords:
 You can use `useRefetchableFragment` when you want to fetch and re-render a fragment with different data:
 
 ```tsx
-import React from "react";
+import * as React from "react";
 import {
   graphql,
   useRefetchableFragment,

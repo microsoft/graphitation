@@ -1,3 +1,4 @@
+import * as React from "react";
 import { ApolloProvider } from "@apollo/client";
 import { buildClient } from "data/data-builder";
 import ChatContainer from "./chat/chat-container";

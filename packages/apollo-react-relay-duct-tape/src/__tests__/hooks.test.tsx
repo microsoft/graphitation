@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { buildSchema } from "graphql";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -119,11 +119,9 @@ interface SubjectProps {
   onError?: SubscriptionHookParams["onError"] | null;
 }
 
-const SubscriptionComponent: React.FC<SubjectProps> = ({
-  onNext = jest.fn(),
-  onError = jest.fn(),
-  children,
-}) => {
+const SubscriptionComponent: React.FC<
+  React.PropsWithChildren<SubjectProps>
+> = ({ onNext = jest.fn(), onError = jest.fn(), children }) => {
   useSubscription<hooksTestSubscription>({
     subscription,
     variables: { id: "some-user-id" },

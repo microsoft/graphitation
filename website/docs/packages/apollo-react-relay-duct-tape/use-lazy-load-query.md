@@ -14,7 +14,7 @@ keywords:
 Hook used to fetch a GraphQL query during render. This hook can trigger multiple nested or waterfalling round trips if used without caution, and waits until render to start a data fetch.
 
 ```tsx
-import React from "react";
+import * as React from "react";
 import {
   graphql,
   useLazyLoadQuery,

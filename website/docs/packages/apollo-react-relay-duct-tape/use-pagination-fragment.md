@@ -13,7 +13,7 @@ keywords:
 You can use `usePaginationFragment` to render a fragment that uses a `@connection` and paginate over it:
 
 ```tsx
-import React from "react";
+import * as React from "react";
 import {
   graphql,
   usePaginationFragment,

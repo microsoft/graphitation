@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "fix after react 18 bump",
+  "packageName": "@graphitation/embedded-document-artefact-loader",
+  "email": "Stanislaw.Wilczynski@microsoft.com",
+  "dependentChangeType": "patch"
+}

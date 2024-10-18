@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { Messages } from "./messages";
 import { Title2, Button } from "@fluentui/react-components";
 import { useChatRendererStyles } from "./chat-renderer.styles";

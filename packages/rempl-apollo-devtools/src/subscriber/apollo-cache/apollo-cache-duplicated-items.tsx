@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { useStyles } from "./apollo-cache-duplicated-items.styles";
 import {
   Accordion,

@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { ActivityDialog, List, Dialog } from "../../components";
 import { mergeClasses, Text } from "@fluentui/react-components";
 import { useStyles } from "./recent-activity.styles";

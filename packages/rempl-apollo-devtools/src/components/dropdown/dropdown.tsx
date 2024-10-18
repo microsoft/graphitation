@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { useStyles } from "./dropdown.styles";
 import { mergeClasses, Text } from "@fluentui/react-components";
 import {

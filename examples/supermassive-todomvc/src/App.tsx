@@ -4,7 +4,7 @@ import {
   from,
   ApolloProvider,
 } from "@apollo/client";
-import React from "react";
+import * as React from "react";
 
 import { onError } from "@apollo/client/link/error";
 import TodoList from "./components/TodoList";

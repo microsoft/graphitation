@@ -8,13 +8,13 @@
     "@graphitation/graphql-js-tag": "^0.9.3",
     "@graphql-tools/schema": "^9.0.19",
     "graphql": "^15.6.0",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "scripts": {
     "start": "yarn generate-resolver-typings && concurrently \"yarn duct-tape-compiler --watch\" \"yarn serve\"",
     "serve": "webpack serve",
-    "build": "webpack",
+    "build": "yarn duct-tape-compiler && webpack",
     "duct-tape-compiler": "duct-tape-compiler --schema ./data/schema.graphql --src ./src --emitQueryDebugComments",
     "generate-resolver-typings": "graphql-codegen --config codegen.yml"
   },
@@ -43,8 +43,8 @@
     "@graphql-codegen/typescript": "2.2.2",
     "@graphql-codegen/typescript-resolvers": "^2.2.1",
     "@types/node": "^12.0.0",
-    "@types/react": "^17.0.0",
-    "@types/react-dom": "^17.0.0",
+    "@types/react": "^18.2.29",
+    "@types/react-dom": "^18.2.0",
     "@types/webpack": "^5.28.0",
     "@types/webpack-dev-server": "^4.7.2",
     "@welldone-software/why-did-you-render": "^6.2.1",

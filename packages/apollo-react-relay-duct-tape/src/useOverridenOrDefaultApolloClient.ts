@@ -3,7 +3,7 @@ import {
   useApolloClient as useDefaultApolloClient,
 } from "@apollo/client";
 import invariant from "invariant";
-import React from "react";
+import * as React from "react";
 
 /**
  * @internal
@@ -29,9 +29,11 @@ const ApolloReactRelayDuctTapeContext = React.createContext<
  * This allows a subset of a tree to use apollo-react-relay-duct-tape using a
  * different ApolloClient instance than the rest of the tree above and below it.
  */
-export const ApolloReactRelayDuctTapeProvider: React.FC<{
-  client: ApolloClient<unknown>;
-}> = (props) => {
+export const ApolloReactRelayDuctTapeProvider: React.FC<
+  React.PropsWithChildren<{
+    client: ApolloClient<unknown>;
+  }>
+> = (props) => {
   invariant(
     props.client,
     "ApolloReactRelayDuctTapeProvider: client is required",
