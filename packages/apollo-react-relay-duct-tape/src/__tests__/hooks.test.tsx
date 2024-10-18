@@ -119,11 +119,9 @@ interface SubjectProps {
   onError?: SubscriptionHookParams["onError"] | null;
 }
 
-const SubscriptionComponent: React.FC<SubjectProps> = ({
-  onNext = jest.fn(),
-  onError = jest.fn(),
-  children,
-}) => {
+const SubscriptionComponent: React.FC<
+  React.PropsWithChildren<SubjectProps>
+> = ({ onNext = jest.fn(), onError = jest.fn(), children }) => {
   useSubscription<hooksTestSubscription>({
     subscription,
     variables: { id: "some-user-id" },
