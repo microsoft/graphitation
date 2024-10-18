@@ -1,0 +1,36 @@
+diff --git a/node_modules/relay-compiler-language-typescript/lib/TypeScriptGenerator.js b/node_modules/relay-compiler-language-typescript/lib/TypeScriptGenerator.js
+index 080b0a6..9dea991 100644
+--- a/node_modules/relay-compiler-language-typescript/lib/TypeScriptGenerator.js
++++ b/node_modules/relay-compiler-language-typescript/lib/TypeScriptGenerator.js
+@@ -90,7 +90,7 @@ function aggregateRuntimeImports(ast) {
+             importSpecifiers_1.push(specifier);
+         });
+         var namedBindings = ts.createNamedImports(importSpecifiers_1);
+-        var aggregatedRuntimeImportDeclaration = ts.createImportDeclaration(undefined, undefined, ts.factory.createImportClause(false, undefined, namedBindings), ts.factory.createStringLiteral("relay-runtime"));
++        var aggregatedRuntimeImportDeclaration = ts.createImportDeclaration(undefined, ts.factory.createImportClause(false, undefined, namedBindings), ts.factory.createStringLiteral("relay-runtime"));
+         var aggregatedRuntimeImportAST = ast.reduce(function (prev, curr) {
+             if (!ts.isImportDeclaration(curr))
+                 prev.push(curr);
+@@ -276,11 +276,11 @@ function isPlural(node) {
+     return Boolean(node.metadata && node.metadata.plural);
+ }
+ function exportType(name, type) {
+-    return ts.factory.createTypeAliasDeclaration(undefined, [ts.factory.createToken(ts.SyntaxKind.ExportKeyword)], ts.factory.createIdentifier(name), undefined, type);
++    return ts.factory.createTypeAliasDeclaration([ts.factory.createToken(ts.SyntaxKind.ExportKeyword)], ts.factory.createIdentifier(name), undefined, type);
+ }
+ function importTypes(names, fromModule) {
+     return (names &&
+-        ts.factory.createImportDeclaration(undefined, undefined, ts.factory.createImportClause(false, undefined, ts.factory.createNamedImports(names.map(function (name) {
++        ts.factory.createImportDeclaration(undefined, ts.factory.createImportClause(false, undefined, ts.factory.createNamedImports(names.map(function (name) {
+             return ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier(name));
+         }))), ts.factory.createStringLiteral(fromModule)));
+ }
+@@ -669,7 +669,7 @@ function groupRefs(props) {
+ function getFragmentRefsTypeImport(state) {
+     if (state.usedFragments.size > 0) {
+         return [
+-            ts.factory.createImportDeclaration(undefined, undefined, ts.factory.createImportClause(false, undefined, ts.factory.createNamedImports([
++            ts.factory.createImportDeclaration(undefined, ts.factory.createImportClause(false, undefined, ts.factory.createNamedImports([
+                 ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier("FragmentRefs")),
+             ])), ts.factory.createStringLiteral("relay-runtime")),
+         ];
