@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Button, Text } from "@fluentui/react-components";
 import Message from "./message";
 import { useMessagesStyles } from "./messages.styles";

@@ -53,7 +53,7 @@ const ChatContainer = () => {
     });
   }, []);
 
-  const removeMessageFunction = React.useCallback((id) => {
+  const removeMessageFunction = React.useCallback((id: string) => {
     removeMessage({
       variables: { id },
       update(cache) {
@@ -62,7 +62,7 @@ const ChatContainer = () => {
             chat: (previous) => {
               return [
                 previous.messages.filter(
-                  ({ messageId }: { messageId: string[] }) => messageId !== id,
+                  ({ messageId }: { messageId: string }) => messageId !== id,
                 ),
               ];
             },
