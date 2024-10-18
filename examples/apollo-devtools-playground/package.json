@@ -1,6 +1,7 @@
 {
   "name": "graphql-playground",
   "private": true,
+  "version": "0.1.0",
   "scripts": {
     "start": "DISABLE_ESLINT_PLUGIN=true react-scripts start"
   },
@@ -18,5 +19,8 @@
   },
   "devDependencies": {
     "react-scripts": "^5.0.0"
+  },
+  "resolutions": {
+    "@babel/traverse": "^7.23.0"
   }
 }

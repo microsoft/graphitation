@@ -4,6 +4,7 @@
   "workspaces": {
     "packages": [
       "examples/*",
+      "!examples/apollo-devtools-playground",
       "packages/*",
       "scripts"
     ]
