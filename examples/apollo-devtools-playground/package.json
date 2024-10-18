@@ -2,7 +2,7 @@
   "name": "graphql-playground",
   "private": true,
   "scripts": {
-    "start": "DISABLE_ESLINT_PLUGIN=true react-scripts start"
+    "start": "react-scripts start"
   },
   "browserslist": {
     "production": [
