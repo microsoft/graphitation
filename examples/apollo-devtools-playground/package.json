@@ -18,5 +18,8 @@
   },
   "devDependencies": {
     "react-scripts": "^5.0.0"
+  },
+  "resolutions": {
+    "@babel/traverse": "^7.23.0"
   }
 }
