@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { tabMenuStyles } from "./tab-menu.styles";
 import { mergeClasses } from "@fluentui/react-components";
 import { useArrowNavigationGroup } from "@fluentui/react-tabster";

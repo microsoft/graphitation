@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { useApolloClient } from "@apollo/client/react";
 import { useQuery, gql, useMutation } from "@apollo/client";
 import { ChatRenderer } from "./chat-renderer";
