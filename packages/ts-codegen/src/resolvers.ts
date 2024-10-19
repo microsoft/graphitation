@@ -6,6 +6,7 @@ import {
   TsCodegenContext,
   Type,
   InterfaceType,
+  TypeLocation,
 } from "./context";
 import {
   getResolverReturnType,
@@ -13,6 +14,7 @@ import {
   createUnionResolveType,
   createInterfaceResolveType,
 } from "./utilities";
+import { createImportDeclaration } from "./context/utilities";
 
 export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
   const statements: ts.Statement[] = [];
@@ -28,6 +30,93 @@ export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
       factory.createStringLiteral("./models.interface"),
     ),
   );
+
+  if (Object.keys(context.getContextMap()).length) {
+    const contextImportNames: Set<string> = new Set();
+    statements.push(createImportDeclaration(["CoreContext"], "core-context"));
+
+    for (const [key, root] of Object.entries(context.getContextMap())) {
+      const rootValue: string[] =
+        (root as any).__context || (root as any).__fieldTypeContexts;
+      if (rootValue) {
+        if (
+          rootValue.every((importName: string) =>
+            contextImportNames.has(importName),
+          )
+        ) {
+          continue;
+        }
+
+        statements.push(
+          factory.createImportDeclaration(
+            undefined,
+            factory.createImportClause(
+              true,
+              undefined,
+              factory.createNamedImports(
+                rootValue
+                  .map((importName: string) => {
+                    if (contextImportNames.has(importName)) {
+                      return;
+                    }
+                    contextImportNames.add(importName);
+
+                    return factory.createImportSpecifier(
+                      false,
+                      undefined,
+                      factory.createIdentifier(importName),
+                    );
+                  })
+                  .filter(Boolean) as ts.ImportSpecifier[],
+              ),
+            ),
+            factory.createStringLiteral(`${key}-state-machine`),
+          ),
+        );
+      }
+
+      for (const [key, value] of Object.entries(root as any)) {
+        if (key.startsWith("__")) {
+          continue;
+        }
+
+        if (
+          (value as string[]).every((importName: string) =>
+            contextImportNames.has(importName),
+          )
+        ) {
+          continue;
+        }
+
+        statements.push(
+          factory.createImportDeclaration(
+            undefined,
+            factory.createImportClause(
+              true,
+              undefined,
+              factory.createNamedImports(
+                (value as any)
+                  .map((importName: string) => {
+                    if (contextImportNames.has(importName)) {
+                      return;
+                    }
+                    contextImportNames.add(importName);
+
+                    return factory.createImportSpecifier(
+                      false,
+                      undefined,
+                      factory.createIdentifier(importName),
+                    );
+                  })
+                  .filter(Boolean) as ts.ImportSpecifier[],
+              ),
+            ),
+            factory.createStringLiteral(`${key}-state-machine`),
+          ),
+        );
+      }
+    }
+  }
 
   if (context.hasInputs) {
     statements.push(
@@ -144,6 +233,42 @@ function createResolverField(
       .toTypeReference();
   }
 
+  let contextRootType =
+    context.getContextMap()[type.name] ||
+    context.getContextMap()[context.getTypeFromTypeNode(field.type) as string];
+
+  if (
+    (type.kind === "OBJECT" || type.kind === "INTERFACE") &&
+    !contextRootType &&
+    type.interfaces.length
+  ) {
+    type.interfaces.forEach((interfaceName) => {
+      console.log(type.name, contextRootType, context.getContextMap());
+      if (context.getContextMap()[interfaceName]?.__context) {
+        if (contextRootType) {
+          contextRootType.__context = [
+            ...contextRootType,
+            ...context.getContextMap()[interfaceName].__context,
+          ];
+        }
+        contextRootType = {
+          __context: context.getContextMap()[interfaceName].__context,
+        };
+      }
+    });
+  }
+
+  let contextType;
+  if (contextRootType) {
+    if (contextRootType[field.name]) {
+      contextType = contextRootType[field.name][0];
+    } else if (contextRootType.__context) {
+      contextType = contextRootType.__context[0];
+    } else if (contextRootType.__fieldTypeContexts) {
+      contextType = contextRootType.__fieldTypeContexts[0];
+    }
+  }
+
   const resolverParametersDefinitions = {
     parent: {
       name: "model",
@@ -164,7 +289,10 @@ function createResolverField(
     },
     context: {
       name: "context",
-      type: context.getContextType().toTypeReference(),
+      type: (contextType
+        ? new TypeLocation(null, contextType)
+        : context.getContextType()
+      ).toTypeReference(),
     },
     resolveInfo: {
       name: "info",
@@ -179,6 +307,7 @@ function createResolverField(
       field.name,
     );
   }
+
   return factory.createTypeAliasDeclaration(
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     factory.createIdentifier(toValidFieldName(field.name)),
