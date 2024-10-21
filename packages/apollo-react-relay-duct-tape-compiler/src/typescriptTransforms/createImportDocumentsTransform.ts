@@ -57,7 +57,7 @@ export function createImportDocumentsTransform(): ts.TransformerFactory<ts.Sourc
     };
 
     return (sourceFile: ts.SourceFile) => {
-      const outputSourceFile = ts.visitNode(sourceFile, visitor);
+      const outputSourceFile = ts.visitEachChild(sourceFile, visitor, context);
       return ts.factory.updateSourceFile(outputSourceFile, [
         ...imports,
         ...outputSourceFile.statements,
@@ -144,7 +144,6 @@ function createImportStatement(
     );
   } else {
     return ts.factory.createImportDeclaration(
-      undefined,
       undefined,
       ts.factory.createImportClause(
         false,

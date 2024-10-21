@@ -8,14 +8,14 @@ import type {
   TransformedSource,
   TransformOptions,
 } from "@jest/transform";
-import type { TsJestGlobalOptions } from "ts-jest";
+import type { TsJestTransformerOptions, TsJestTransformOptions } from "ts-jest";
 import { extractInlineSourceMap } from "./addInlineSourceMap";
 import { applySourceMap } from "./source-map-utils";
 
 const transformerFactory: TransformerFactory<SyncTransformer<unknown>> = {
   createTransformer(config) {
     const tsLoaderInstance = tsLoader.createTransformer(
-      config as TsJestGlobalOptions,
+      config as TsJestTransformerOptions,
     );
     const generateSourceMap = true;
     return {
@@ -31,7 +31,7 @@ const transformerFactory: TransformerFactory<SyncTransformer<unknown>> = {
         const tsResult = tsLoaderInstance.process(
           transformed || sourceText,
           sourcePath,
-          options,
+          options as TsJestTransformOptions,
         );
 
         return extractAndApplySourceMap(
@@ -52,7 +52,7 @@ const transformerFactory: TransformerFactory<SyncTransformer<unknown>> = {
         const tsResult = await tsLoaderInstance.processAsync(
           transformed || sourceText,
           sourcePath,
-          options,
+          options as TsJestTransformOptions,
         );
 
         return extractAndApplySourceMap(
@@ -92,7 +92,7 @@ function applyTransform(
   generateSourceMap: boolean,
   sourcePath: string,
   sourceText: string,
-  options: TransformOptions,
+  options: TransformOptions<unknown>,
 ) {
   const sourceMap = generateSourceMap ? new SourceMapGenerator() : undefined;
   sourceMap?.setSourceContent(sourcePath, sourceText);
