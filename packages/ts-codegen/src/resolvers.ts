@@ -6,7 +6,6 @@ import {
   TsCodegenContext,
   Type,
   InterfaceType,
-  TypeLocation,
 } from "./context";
 import {
   getResolverReturnType,
@@ -242,30 +241,17 @@ function createResolverField(
     !contextRootType &&
     type.interfaces.length
   ) {
-    type.interfaces.forEach((interfaceName) => {
-      console.log(type.name, contextRootType, context.getContextMap());
-      if (context.getContextMap()[interfaceName]?.__context) {
-        if (contextRootType) {
-          contextRootType.__context = [
-            ...contextRootType,
-            ...context.getContextMap()[interfaceName].__context,
-          ];
-        }
-        contextRootType = {
-          __context: context.getContextMap()[interfaceName].__context,
-        };
-      }
-    });
+    contextRootType = context.mergeContexts(type.interfaces);
   }
 
-  let contextType;
+  let contextTypes;
   if (contextRootType) {
     if (contextRootType[field.name]) {
-      contextType = contextRootType[field.name][0];
+      contextTypes = contextRootType[field.name];
     } else if (contextRootType.__context) {
-      contextType = contextRootType.__context[0];
+      contextTypes = contextRootType.__context;
     } else if (contextRootType.__fieldTypeContexts) {
-      contextType = contextRootType.__fieldTypeContexts[0];
+      contextTypes = contextRootType.__fieldTypeContexts;
     }
   }
 
@@ -289,10 +275,7 @@ function createResolverField(
     },
     context: {
       name: "context",
-      type: (contextType
-        ? new TypeLocation(null, contextType)
-        : context.getContextType()
-      ).toTypeReference(),
+      type: context.getContextTypeNode(contextTypes),
     },
     resolveInfo: {
       name: "info",
@@ -347,6 +330,15 @@ function createUnionTypeResolvers(
       ),
     ],
   );
+
+  let contextRootType = context.getContextMap()[type.name];
+
+  if (!contextRootType && type.types.length) {
+    contextRootType = context.mergeContexts(type.types);
+  }
+
+  const contextTypes = context.getContextTypes(contextRootType);
+
   return factory.createModuleDeclaration(
     [
       factory.createModifier(ts.SyntaxKind.ExportKeyword),
@@ -359,7 +351,11 @@ function createUnionTypeResolvers(
         [factory.createToken(ts.SyntaxKind.ExportKeyword)],
         factory.createIdentifier("__resolveType"),
         undefined,
-        createUnionResolveType(context, type),
+        createUnionResolveType(
+          context,
+          type,
+          context.getContextTypeNode(contextTypes),
+        ),
       ),
     ]),
     ts.NodeFlags.Namespace,
@@ -370,6 +366,14 @@ function createInterfaceTypeResolvers(
   context: TsCodegenContext,
   type: InterfaceType,
 ): ts.ModuleDeclaration {
+  let contextRootType = context.getContextMap()[type.name];
+
+  if (!contextRootType && type.interfaces.length) {
+    contextRootType = context.mergeContexts(type.interfaces);
+  }
+
+  const contextTypes = context.getContextTypes(contextRootType);
+
   const resolversObject = factory.createInterfaceDeclaration(
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     factory.createIdentifier("Resolvers"),
@@ -397,7 +401,10 @@ function createInterfaceTypeResolvers(
         [factory.createToken(ts.SyntaxKind.ExportKeyword)],
         factory.createIdentifier("__resolveType"),
         undefined,
-        createInterfaceResolveType(context),
+        createInterfaceResolveType(
+          context,
+          context.getContextTypeNode(contextTypes),
+        ),
       ),
     ]),
     ts.NodeFlags.Namespace,
