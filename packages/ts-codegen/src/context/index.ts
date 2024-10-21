@@ -146,6 +146,56 @@ export class TsCodegenContext {
     return null;
   }
 
+  public mergeContexts(typeNames: string[]): { __context: string[] } | null {
+    const output = typeNames.reduce<{ __context: string[] }>(
+      (contextRootType, interfaceName) => {
+        if (this.getContextMap()[interfaceName]?.__context) {
+          contextRootType.__context = [
+            ...contextRootType.__context,
+            ...this.getContextMap()[interfaceName].__context,
+          ];
+        }
+        return contextRootType;
+      },
+      { __context: [] },
+    );
+
+    return output.__context.length ? output : null;
+  }
+
+  public getContextTypes<T>(
+    contextRootType: T & {
+      __context?: string[];
+      __fieldTypeContexts: string[];
+    },
+  ): string[] | null {
+    if (contextRootType) {
+      if (contextRootType.__context) {
+        return contextRootType.__context;
+      } else if (contextRootType.__fieldTypeContexts) {
+        return contextRootType.__fieldTypeContexts;
+      }
+    }
+    return null;
+  }
+
+  public getContextTypeNode(typeNames?: string[] | null) {
+    if (!typeNames || !typeNames.length) {
+      return this.getContextType().toTypeReference();
+    } else if (typeNames.length > 1) {
+      return factory.createIntersectionTypeNode(
+        typeNames.map((type: string) => {
+          return factory.createTypeReferenceNode(
+            factory.createIdentifier(type),
+            undefined,
+          );
+        }),
+      );
+    } else {
+      return new TypeLocation(null, typeNames[0]).toTypeReference();
+    }
+  }
+
   // FIX any
   public initContextMap(ancestors: any, values: string[]) {
     if (ancestors.length < 2) {

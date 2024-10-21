@@ -521,11 +521,11 @@ describe(generateTS, () => {
 
     test("Union and interface types", () => {
       const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
-        type Customer {
+        type Customer @context(uses: ["CustomStateMachine"]) {
           id: ID!
         }
 
-        type Admin {
+        type Admin @context(uses: ["AdminStateMachine"]) {
           id: ID!
         }
 
@@ -533,10 +533,12 @@ describe(generateTS, () => {
           id: ID!
         }
 
-        union User = Customer | Admin
+        union whatever = User | Admin
 
         extend type Query {
-          userById(id: ID!): User
+          userById(id: ID!): whatever @context(uses: ["WhateverStateMachine"])
+          userByMail(mail: String): whatever
+            @context(uses: ["DifferentWhateverStateMachine"])
           node(id: ID!): Node
         }
       `);
@@ -565,17 +567,22 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
+        import type { CoreContext } from "core-context";
+        import type { CustomStateMachine } from "Customer-state-machine";
+        import type { AdminStateMachine } from "Admin-state-machine";
+        import type { WhateverStateMachine } from "userById-state-machine";
+        import type { DifferentWhateverStateMachine } from "userByMail-state-machine";
         export declare namespace Customer {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: Models.Customer, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.Customer, args: {}, context: CustomStateMachine, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Admin {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: Models.Admin, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.Admin, args: {}, context: AdminStateMachine, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Node {
             export interface Resolvers {
@@ -583,20 +590,24 @@ describe(generateTS, () => {
             }
             export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
-        export declare namespace User {
+        export declare namespace whatever {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: Models.Customer | Models.Admin, context: unknown, info: ResolveInfo) => PromiseOrValue<"Customer" | "Admin" | null>;
+            export type __resolveType = (parent: Models.User | Models.Admin, context: WhateverStateMachine & DifferentWhateverStateMachine, info: ResolveInfo) => PromiseOrValue<"User" | "Admin" | null>;
         }
         export declare namespace Query {
             export interface Resolvers {
                 readonly userById?: userById;
+                readonly userByMail?: userByMail;
                 readonly node?: node;
             }
             export type userById = (model: unknown, args: {
                 readonly id: string;
-            }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
+            }, context: WhateverStateMachine, info: ResolveInfo) => PromiseOrValue<Models.whatever | null | undefined>;
+            export type userByMail = (model: unknown, args: {
+                readonly mail?: string | null;
+            }, context: DifferentWhateverStateMachine, info: ResolveInfo) => PromiseOrValue<Models.whatever | null | undefined>;
             export type node = (model: unknown, args: {
                 readonly id: string;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Node | null | undefined>;
