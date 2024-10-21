@@ -1,3 +1,9 @@
+/**
+ * Taken from https://github.com/relay-tools/relay-compiler-language-typescript/blob/3231ea09205cc341be704c00e78db0d8ff78b34a/src/TypeScriptTypeTransformers.ts
+ * License: MIT
+ * Copyright 2018 Kaare Hoff Skovgaard kaare@kaareskovgaard.net, Eloy Durán eloy.de.enige@gmail.com
+ */
+
 import { EnumTypeID, FieldID, Schema, TypeID } from "relay-compiler";
 import { TypeGeneratorOptions } from "relay-compiler/lib/language/RelayLanguagePluginInterface";
 import * as ts from "typescript";
