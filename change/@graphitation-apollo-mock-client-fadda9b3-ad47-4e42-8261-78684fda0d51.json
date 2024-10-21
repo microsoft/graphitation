@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "remove dependecy on relay-compiler-language-typescript",
+  "packageName": "@graphitation/apollo-mock-client",
+  "email": "pavelglac@microsoft.com",
+  "dependentChangeType": "patch"
+}

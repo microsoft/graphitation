@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "remove dependecy on relay-compiler-language-typescript",
+  "packageName": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+  "email": "pavelglac@microsoft.com",
+  "dependentChangeType": "patch"
+}
