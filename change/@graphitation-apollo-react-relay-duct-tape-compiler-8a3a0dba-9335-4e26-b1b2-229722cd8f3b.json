@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "revert back to typescript 5",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape-compiler",
-  "email": "Stanislaw.Wilczynski@microsoft.com",
-  "dependentChangeType": "patch"
-}

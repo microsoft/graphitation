@@ -2,6 +2,21 @@
   "name": "@graphitation/embedded-document-artefact-loader",
   "entries": [
     {
+      "date": "Tue, 22 Oct 2024 16:48:19 GMT",
+      "version": "0.8.4",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.8.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "Stanislaw.Wilczynski@microsoft.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "d93a228dc54ffaf70ed5804f49057b0b003fb047",
+            "comment": "fix after react 18 bump"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 17 Oct 2024 14:53:14 GMT",
       "version": "0.8.3",
       "tag": "@graphitation/embedded-document-artefact-loader_v0.8.3",

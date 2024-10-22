@@ -1,8 +1,18 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-<!-- This log was last generated on Thu, 17 Oct 2024 14:53:14 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 22 Oct 2024 16:48:19 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.3.0
+
+Tue, 22 Oct 2024 16:48:19 GMT
+
+### Minor changes
+
+- bump react to 18 (Stanislaw.Wilczynski@microsoft.com)
+- Bump @graphitation/apollo-mock-client to v0.11.7
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.6.0
 
 ## 1.2.4
 
