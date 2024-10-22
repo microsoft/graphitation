@@ -1,3 +1,4 @@
+import type { DocumentNode } from "@apollo/client";
 import type {
   Reference,
   StoreObject,
@@ -87,6 +88,10 @@ export type FieldPolicyReadContext = {
   fieldContext?: FieldContext | null;
 };
 
+type CustomFieldFunctionOptions = FieldFunctionOptions & {
+  query: DocumentNode | null;
+};
+
 const fieldPolicyContext: FieldPolicyFunctionContext = {
   env: null,
   operation: null,
@@ -96,7 +101,7 @@ const fieldPolicyContext: FieldPolicyFunctionContext = {
 
 const EMPTY_ARRAY = Object.freeze([]);
 
-let options: FieldFunctionOptions;
+let options: CustomFieldFunctionOptions;
 
 export function applyReadPolicies(
   env: CacheEnv,
@@ -427,7 +432,7 @@ function assertValidValue(
 
 function prepareFieldPolicyOptions(
   this: FieldPolicyFunctionContext,
-): FieldFunctionOptions {
+): CustomFieldFunctionOptions {
   if (!options) {
     options = {
       args: null,
@@ -448,7 +453,7 @@ function prepareFieldPolicyOptions(
       get cache(): any {
         throw new Error("Not implemented in ForestRun: cache");
       },
-      query: null as any,
+      query: null,
     };
   }
   assert(this.env && this.operation && this.fieldContext && this.layers);
