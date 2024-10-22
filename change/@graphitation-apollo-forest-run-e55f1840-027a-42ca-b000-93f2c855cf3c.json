@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Initial ForestRun implementation",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}
