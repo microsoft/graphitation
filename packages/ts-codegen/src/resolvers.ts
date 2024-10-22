@@ -35,8 +35,7 @@ export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
     statements.push(createImportDeclaration(["CoreContext"], "core-context"));
 
     for (const [key, root] of Object.entries(context.getContextMap())) {
-      const rootValue: string[] =
-        (root as any).__context || (root as any).__fieldTypeContexts;
+      const rootValue: string[] = (root as any).__context;
       if (rootValue) {
         if (
           rootValue.every((importName: string) =>
@@ -250,8 +249,6 @@ function createResolverField(
       contextTypes = contextRootType[field.name];
     } else if (contextRootType.__context) {
       contextTypes = contextRootType.__context;
-    } else if (contextRootType.__fieldTypeContexts) {
-      contextTypes = contextRootType.__fieldTypeContexts;
     }
   }
 

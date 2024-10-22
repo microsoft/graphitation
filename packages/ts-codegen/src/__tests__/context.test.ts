@@ -38,7 +38,7 @@ describe(generateTS, () => {
           optionalUser: User
           requiredUser: User!
           requiredPost: Post!
-          optionalPost: Post
+          optionalPost: Post @context(uses: ["OptionalPostStateMachine"])
         }
       `);
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -85,11 +85,12 @@ describe(generateTS, () => {
         import type { UserStateMachine } from "User-state-machine";
         import type { IdUserStateMachine } from "id-state-machine";
         import type { PostStateMachine } from "post-state-machine";
+        import type { OptionalPostStateMachine } from "optionalPost-state-machine";
         export declare namespace Post {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: Models.Post, args: {}, context: PostStateMachine, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.Post, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Message {
             export interface Resolvers {
@@ -136,12 +137,12 @@ describe(generateTS, () => {
                 readonly requiredPost?: requiredPost;
                 readonly optionalPost?: optionalPost;
             }
-            export type requiredUsers = (model: unknown, args: {}, context: UserStateMachine, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User>>;
-            export type optionalUsers = (model: unknown, args: {}, context: UserStateMachine, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User | null | undefined> | null | undefined>;
-            export type optionalUser = (model: unknown, args: {}, context: UserStateMachine, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
-            export type requiredUser = (model: unknown, args: {}, context: UserStateMachine, info: ResolveInfo) => PromiseOrValue<Models.User>;
-            export type requiredPost = (model: unknown, args: {}, context: PostStateMachine, info: ResolveInfo) => PromiseOrValue<Models.Post>;
-            export type optionalPost = (model: unknown, args: {}, context: PostStateMachine, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
+            export type requiredUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User>>;
+            export type optionalUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User | null | undefined> | null | undefined>;
+            export type optionalUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
+            export type requiredUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
+            export type requiredPost = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Post>;
+            export type optionalPost = (model: unknown, args: {}, context: OptionalPostStateMachine, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
         }
         "
       `);
