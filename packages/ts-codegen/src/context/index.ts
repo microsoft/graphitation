@@ -166,14 +166,11 @@ export class TsCodegenContext {
   public getContextTypes<T>(
     contextRootType: T & {
       __context?: string[];
-      __fieldTypeContexts: string[];
     },
   ): string[] | null {
     if (contextRootType) {
       if (contextRootType.__context) {
         return contextRootType.__context;
-      } else if (contextRootType.__fieldTypeContexts) {
-        return contextRootType.__fieldTypeContexts;
       }
     }
     return null;
@@ -238,21 +235,6 @@ export class TsCodegenContext {
     } else if (node?.kind === "FieldDefinition") {
       if (!this.typeContextMap[ancestors[ancestors.length - 3].name.value]) {
         this.typeContextMap[ancestors[ancestors.length - 3].name.value] = {};
-      }
-
-      const namedType = this.findNamedTyped(node.type);
-      if (
-        namedType &&
-        Array.from(this.getAllRootTypeNames()).includes(namedType)
-      ) {
-        if (!this.typeContextMap[namedType]) {
-          this.typeContextMap[namedType] = { __fieldTypeContexts: [...values] };
-        } else if (this.typeContextMap[namedType].__fieldTypeContexts) {
-          this.typeContextMap[namedType].__fieldTypeContexts = [
-            ...this.typeContextMap[namedType].__fieldTypeContexts,
-            ...values,
-          ];
-        }
       }
 
       this.typeContextMap[ancestors[ancestors.length - 3].name.value][
