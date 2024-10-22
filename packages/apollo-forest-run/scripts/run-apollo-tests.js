@@ -1,4 +1,8 @@
 /* eslint-disable */
+/**
+ * This script runs compatibility test suite where Apollo own tests are executed using ForestRun vs InMemoryCache
+ * (see ../compat folder for the test suite project)
+ */
 const path = require("path");
 const spawn = require("child_process").spawn;
 
