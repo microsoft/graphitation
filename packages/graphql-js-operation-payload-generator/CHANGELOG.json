@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Tue, 22 Oct 2024 17:26:48 GMT",
+      "version": "0.12.8",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.12.8",
+      "comments": {
+        "patch": [
+          {
+            "author": "Stanislaw.Wilczynski@microsoft.com",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "commit": "7f9d83e0358d29c34981df5d4075a097387f1ff2",
+            "comment": "use relay-test-utils types for consistency"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 17 Oct 2024 14:53:14 GMT",
       "version": "0.12.7",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.12.7",
