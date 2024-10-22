@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape-compiler
 
-<!-- This log was last generated on Thu, 17 Oct 2024 14:53:14 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 22 Oct 2024 16:48:19 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.6.0
+
+Tue, 22 Oct 2024 16:48:19 GMT
+
+### Minor changes
+
+- revert back to typescript 5 (Stanislaw.Wilczynski@microsoft.com)
 
 ## 1.5.6
 

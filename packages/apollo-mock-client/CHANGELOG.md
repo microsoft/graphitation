@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-mock-client
 
-<!-- This log was last generated on Thu, 17 Oct 2024 14:53:14 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 22 Oct 2024 16:48:19 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.11.7
+
+Tue, 22 Oct 2024 16:48:19 GMT
+
+### Patches
+
+- bump react to 18 (Stanislaw.Wilczynski@microsoft.com)
 
 ## 0.11.6
 

@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-mock-client",
   "entries": [
     {
+      "date": "Tue, 22 Oct 2024 16:48:19 GMT",
+      "version": "0.11.7",
+      "tag": "@graphitation/apollo-mock-client_v0.11.7",
+      "comments": {
+        "patch": [
+          {
+            "author": "Stanislaw.Wilczynski@microsoft.com",
+            "package": "@graphitation/apollo-mock-client",
+            "commit": "d93a228dc54ffaf70ed5804f49057b0b003fb047",
+            "comment": "bump react to 18"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 17 Oct 2024 14:53:14 GMT",
       "version": "0.11.6",
       "tag": "@graphitation/apollo-mock-client_v0.11.6",

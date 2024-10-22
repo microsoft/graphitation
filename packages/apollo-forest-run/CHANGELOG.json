@@ -1,0 +1,20 @@
+{
+  "name": "@graphitation/apollo-forest-run",
+  "entries": [
+    {
+      "date": "Tue, 22 Oct 2024 16:48:19 GMT",
+      "version": "0.2.0",
+      "tag": "@graphitation/apollo-forest-run_v0.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "d93a228dc54ffaf70ed5804f49057b0b003fb047",
+            "comment": "Initial ForestRun implementation"
+          }
+        ]
+      }
+    }
+  ]
+}

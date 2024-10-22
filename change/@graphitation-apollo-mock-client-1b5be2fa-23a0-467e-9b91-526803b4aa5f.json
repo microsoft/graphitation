@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "bump react to 18",
-  "packageName": "@graphitation/apollo-mock-client",
-  "email": "Stanislaw.Wilczynski@microsoft.com",
-  "dependentChangeType": "patch"
-}
