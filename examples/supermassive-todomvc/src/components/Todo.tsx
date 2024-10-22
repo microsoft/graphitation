@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 
 import { useFragment } from "@graphitation/apollo-react-relay-duct-tape";
 import { graphql } from "@graphitation/graphql-js-tag";

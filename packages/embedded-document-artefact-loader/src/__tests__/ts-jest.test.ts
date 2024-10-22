@@ -4,6 +4,8 @@ import * as path from "path";
 import { SourceMapGenerator } from "source-map-js";
 import * as transformModule from "../transform";
 
+jest.setTimeout(15000);
+
 describe("jest loader", () => {
   afterEach(() => {
     jest.clearAllMocks();

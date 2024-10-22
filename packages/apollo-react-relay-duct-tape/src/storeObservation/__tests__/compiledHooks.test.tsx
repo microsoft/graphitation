@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import {
   ApolloClient,
   WatchQueryFetchPolicy,
@@ -1310,7 +1310,7 @@ describe.each([
   });
 });
 
-class ErrorBoundary extends React.Component {
+class ErrorBoundary extends React.Component<React.PropsWithChildren<unknown>> {
   state = { hasError: false };
 
   static getDerivedStateFromError(_error: Error) {

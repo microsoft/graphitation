@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { searchStyles } from "./search.styles";
 import { Search20Regular } from "@fluentui/react-icons";
 
