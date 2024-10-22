@@ -7,7 +7,7 @@
  * https://github.com/facebook/relay/blob/5d7e2d4a318c5015e2ac91f5f4e7ca602658890c/LICENSE
  */
 
-import React from "react";
+import * as React from "react";
 import { graphql } from "@graphitation/graphql-js-tag";
 import { readFileSync } from "fs";
 import { buildSchema, DocumentNode } from "graphql";
