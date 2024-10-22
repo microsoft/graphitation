@@ -63,13 +63,12 @@ const TYPENAME_KEY = "__typename";
 
 export function generate<TypeMap extends DefaultMockResolvers>(
   operation: OperationDescriptor,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mockResolvers: MockResolvers<TypeMap> = DEFAULT_MOCK_RESOLVERS as any, // FIXME: Why does TS not accept this?
+  mockResolvers?: MockResolvers<TypeMap> | null,
   enableDefer: undefined | false = false,
   generateId?: () => number,
 ): { data: MockData } {
-  mockResolvers = { ...DEFAULT_MOCK_RESOLVERS, ...mockResolvers };
-  const resolveValue = createValueResolver(mockResolvers, generateId);
+  const resolvers = { ...DEFAULT_MOCK_RESOLVERS, ...mockResolvers };
+  const resolveValue = createValueResolver(resolvers, generateId);
 
   // RelayMockPayloadGenerator will execute documents that have optional
   // boolean variables that are not passed by the user, but are required
@@ -108,7 +107,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
     document: document,
     variableValues: operation.request.variables,
     rootValue: mockCompositeType(
-      mockResolvers,
+      resolvers,
       getRootType(operation) as GraphQLObjectType,
       null,
       resolveValue,
@@ -139,7 +138,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
           }
           const result = {
             ...mockCompositeType(
-              mockResolvers,
+              resolvers,
               namedReturnType,
               userValue?.[TYPENAME_KEY] || null,
               resolveValue,

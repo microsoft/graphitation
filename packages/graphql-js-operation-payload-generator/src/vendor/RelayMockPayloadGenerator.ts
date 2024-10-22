@@ -7,38 +7,11 @@
  * https://github.com/facebook/relay/blob/b8d2694dbef01f003c4452fa0364f9a7f20245ee/LICENSE
  */
 
-export type MockResolverContext = Readonly<{
-  parentType: string | null;
-  name: string;
-  alias: string | null;
-  path: ReadonlyArray<string>;
-  args?: Record<string, unknown>;
-}>;
+import type { MockResolvers } from "relay-test-utils";
+import type { MockResolverContext } from "relay-test-utils/lib/RelayMockPayloadGenerator";
 
-type DeepPartial<T> = T extends object
-  ? {
-      [P in keyof T]?: DeepPartial<T[P]>;
-    }
-  : T;
-
-type MockResolver<T> = (
-  context: MockResolverContext,
-  generateId: () => number,
-) => DeepPartial<T> | undefined;
-
-export type DefaultMockResolvers = Partial<{
-  ID: string;
-  Boolean: boolean;
-  Int: number;
-  Float: number;
-  [key: string]: unknown;
-}>;
-
-export declare type MockResolvers<
-  TypeMap extends DefaultMockResolvers = DefaultMockResolvers,
-> = {
-  [K in keyof TypeMap]?: MockResolver<TypeMap[K]>;
-};
+export type { MockResolvers, DefaultMockResolvers } from "relay-test-utils";
+export type { MockResolverContext } from "relay-test-utils/lib/RelayMockPayloadGenerator";
 
 export interface MockData {
   __typename?: string;
