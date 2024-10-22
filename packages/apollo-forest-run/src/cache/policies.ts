@@ -453,7 +453,7 @@ function prepareFieldPolicyOptions(
       get cache(): any {
         throw new Error("Not implemented in ForestRun: cache");
       },
-      query: null,
+      query: null as any,
     };
   }
   assert(this.env && this.operation && this.fieldContext && this.layers);
