@@ -1,5 +1,5 @@
 {
-  "type": "minor",
+  "type": "patch",
   "comment": "async before hooks added",
   "packageName": "@graphitation/supermassive",
   "email": "77059398+vejrj@users.noreply.github.com",
