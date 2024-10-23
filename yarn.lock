@@ -10479,13 +10479,6 @@ relateurl@^0.2.7:
   resolved "https://registry.yarnpkg.com/relateurl/-/relateurl-0.2.7.tgz#54dbf377e51440aca90a4cd274600d3ff2d888a9"
   integrity sha1-VNvzd+UUQKypCkzSdGANP/LYiKk=
 
-relay-compiler-language-typescript@^15.0.1:
-  version "15.0.1"
-  resolved "https://registry.yarnpkg.com/relay-compiler-language-typescript/-/relay-compiler-language-typescript-15.0.1.tgz#78e952cdf6d7c9f833f168c6f8765e985a791d3d"
-  integrity sha512-hy760TxYhylNhSDkkxrQJvEqbhtknE8YtzmY+tRpgKGCq1Axi7eh3YjCLmfc3P2jumJXNEROQTkqqz8IbgU+tg==
-  dependencies:
-    invariant "^2.2.4"
-
 relay-compiler@12.0.0, relay-compiler@^12.0.0:
   version "12.0.0"
   resolved "https://registry.yarnpkg.com/relay-compiler/-/relay-compiler-12.0.0.tgz#9f292d483fb871976018704138423a96c8a45439"
@@ -11760,11 +11753,6 @@ typescript@5.5.3, typescript@^5.5.3:
   version "5.5.3"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.5.3.tgz#e1b0a3c394190838a0b168e771b0ad56a0af0faa"
   integrity sha512-/hreyEujaB0w76zKo6717l3L0o/qEUtRgdvUBvlkhoWeOVMjMuHNHk0BRBzikzuGDqNmPQbg5ifMEqsHLiIUcQ==
-
-typescript@<5:
-  version "4.9.5"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.9.5.tgz#095979f9bcc0d09da324d58d03ce8f8374cbe65a"
-  integrity sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==
 
 typescript@~3.7.2:
   version "3.7.7"

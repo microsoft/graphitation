@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "remove dependecy on relay-compiler-language-typescript",
+  "packageName": "@graphitation/graphql-js-operation-payload-generator",
+  "email": "pavelglac@microsoft.com",
+  "dependentChangeType": "patch"
+}
