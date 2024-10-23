@@ -51,6 +51,7 @@ export type TsCodegenContextOptions = {
   };
   legacyCompat: boolean;
   legacyNoModelsForObjects: boolean;
+  contextMappingContent?: Record<string, string> | null;
   useStringUnionsInsteadOfEnums: boolean;
   enumNamesToMigrate: string[] | null;
   enumNamesToKeep: string[] | null;
@@ -100,6 +101,7 @@ export class TsCodegenContext {
   private typeContextMap: any;
   private allRootTypeNames: Set<string>;
   private typeNameToType: Map<string, Type>;
+  private contextMappingContent: Record<string, string> | null;
   private usedEntitiesInModels: Set<string>;
   private usedEntitiesInResolvers: Set<string>;
   private usedEntitiesInInputs: Set<string>;
@@ -110,6 +112,7 @@ export class TsCodegenContext {
   >;
   private typeNameToModels: Map<string, DefinitionModel>;
   private legacyInterfaces: Set<string>;
+  context?: { name: string; from: string };
   hasUsedModelInInputs: boolean;
   hasUsedEnumsInModels: boolean;
   hasEnums: boolean;
@@ -132,6 +135,13 @@ export class TsCodegenContext {
     this.hasInputs = false;
     this.hasEnums = Boolean(options.enumsImport);
     this.hasUsedEnumsInModels = false;
+    this.contextMappingContent = options.contextMappingContent || null;
+    if (options.context.from && options.context.name) {
+      this.context = {
+        name: options.context.name,
+        from: options.context.from,
+      };
+    }
   }
 
   private findNamedTyped(type: TypeNode): string | null {
@@ -176,17 +186,26 @@ export class TsCodegenContext {
     return null;
   }
 
+  public getContextMappingContent(): Record<string, string> | null {
+    return this.contextMappingContent;
+  }
+
   public getContextTypeNode(typeNames?: string[] | null) {
     if (!typeNames || !typeNames.length) {
       return this.getContextType().toTypeReference();
-    } else if (typeNames.length > 1) {
+    } else if (
+      (typeNames.length === 1 && this.context) ||
+      typeNames.length > 1
+    ) {
       return factory.createIntersectionTypeNode(
-        typeNames.map((type: string) => {
-          return factory.createTypeReferenceNode(
-            factory.createIdentifier(type),
-            undefined,
-          );
-        }),
+        (this.context ? [this.context.name, ...typeNames] : typeNames).map(
+          (type: string) => {
+            return factory.createTypeReferenceNode(
+              factory.createIdentifier(type),
+              undefined,
+            );
+          },
+        ),
       );
     } else {
       return new TypeLocation(null, typeNames[0]).toTypeReference();
@@ -209,35 +228,31 @@ export class TsCodegenContext {
         throw new Error("Type already visited");
       }
 
-      if (!this.typeContextMap[ancestors[ancestors.length - 1].name.value]) {
-        this.typeContextMap[ancestors[ancestors.length - 1].name.value] = {};
+      const typeName = ancestors[ancestors.length - 1].name.value;
+      if (!this.typeContextMap[typeName]) {
+        this.typeContextMap[typeName] = {};
       }
 
-      this.typeContextMap[
-        ancestors[ancestors.length - 1].name.value
-      ].__context = values;
+      this.typeContextMap[typeName].__context = values;
 
       if (node.interfaces.length) {
-        this.typeContextMap[
-          ancestors[ancestors.length - 1].name.value
-        ].__interfaces = node.interfaces.map(
+        this.typeContextMap[typeName].__interfaces = node.interfaces.map(
           (interfaceDefinitionNode: any) => interfaceDefinitionNode.name.value,
         );
       }
 
       if (node.interfaces.length && node?.kind === "InterfaceTypeDefinition") {
-        this.typeContextMap[
-          ancestors[ancestors.length - 1].name.value
-        ].__interfaces = node.interfaces.map(
+        this.typeContextMap[typeName].__interfaces = node.interfaces.map(
           (interfaceDefinitionNode: any) => interfaceDefinitionNode.name.value,
         );
       }
     } else if (node?.kind === "FieldDefinition") {
-      if (!this.typeContextMap[ancestors[ancestors.length - 3].name.value]) {
-        this.typeContextMap[ancestors[ancestors.length - 3].name.value] = {};
+      const typeName = ancestors[ancestors.length - 3].name.value;
+      if (!this.typeContextMap[typeName]) {
+        this.typeContextMap[typeName] = {};
       }
 
-      this.typeContextMap[ancestors[ancestors.length - 3].name.value][
+      this.typeContextMap[typeName][
         ancestors[ancestors.length - 1].name.value
       ] = values;
     }
@@ -516,11 +531,7 @@ export class TsCodegenContext {
   }
 
   getContextType(): TypeLocation {
-    return new TypeLocation(
-      null,
-      this.options.context.name ||
-        (TsCodegenContextDefault.context.name as string),
-    );
+    return new TypeLocation(null, "unknown");
   }
 
   getResolveInfoType(): TypeLocation {
@@ -666,7 +677,7 @@ export function extractContext(
     ...options,
   };
   const context = new TsCodegenContext(fullOptions);
-
+  const { contextMappingContent } = options;
   visit(document, {
     Directive: {
       enter(node, _key, _parent, _path: any, ancestors) {
@@ -696,7 +707,7 @@ export function extractContext(
           }
           const typeName = (typeDef as InterfaceTypeDefinitionNode).name.value;
           context.addLegacyInterface(typeName);
-        } else if (node.name.value === "context") {
+        } else if (node.name.value === "context" && contextMappingContent) {
           if (
             node.arguments?.length !== 1 ||
             node.arguments[0].name.value !== "uses" ||
@@ -712,7 +723,14 @@ export function extractContext(
             }
             return item.value;
           });
-          context.initContextMap(ancestors, directiveValues);
+
+          const filtredDirectiveValues = directiveValues.filter(
+            (directiveValue) => contextMappingContent[directiveValue],
+          );
+
+          if (filtredDirectiveValues.length) {
+            context.initContextMap(ancestors, filtredDirectiveValues);
+          }
         }
       },
     },

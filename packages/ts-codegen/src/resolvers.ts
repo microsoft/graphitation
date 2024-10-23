@@ -13,7 +13,6 @@ import {
   createUnionResolveType,
   createInterfaceResolveType,
 } from "./utilities";
-import { createImportDeclaration } from "./context/utilities";
 
 export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
   const statements: ts.Statement[] = [];
@@ -30,11 +29,13 @@ export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
     ),
   );
 
-  if (Object.keys(context.getContextMap()).length) {
+  if (
+    Object.keys(context.getContextMap()).length &&
+    context.getContextMappingContent()
+  ) {
     const contextImportNames: Set<string> = new Set();
-    statements.push(createImportDeclaration(["CoreContext"], "core-context"));
 
-    for (const [key, root] of Object.entries(context.getContextMap())) {
+    for (const [, root] of Object.entries(context.getContextMap())) {
       const rootValue: string[] = (root as any).__context;
       if (rootValue) {
         if (
@@ -45,32 +46,47 @@ export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
           continue;
         }
 
-        statements.push(
-          factory.createImportDeclaration(
-            undefined,
-            factory.createImportClause(
-              true,
-              undefined,
-              factory.createNamedImports(
-                rootValue
-                  .map((importName: string) => {
-                    if (contextImportNames.has(importName)) {
-                      return;
-                    }
-                    contextImportNames.add(importName);
+        const imports = (rootValue as string[]).reduce<
+          Record<string, string[]>
+        >((acc: Record<string, string[]>, importName: string) => {
+          const importPath = context.getContextMappingContent()?.[importName];
+          if (importPath) {
+            if (!acc[importPath]) {
+              acc[importPath] = [];
+            }
+            acc[importPath].push(importName);
+          }
+          return acc;
+        }, {});
 
-                    return factory.createImportSpecifier(
-                      false,
-                      undefined,
-                      factory.createIdentifier(importName),
-                    );
-                  })
-                  .filter(Boolean) as ts.ImportSpecifier[],
+        for (const [importPath, importNames] of Object.entries(imports)) {
+          statements.push(
+            factory.createImportDeclaration(
+              undefined,
+              factory.createImportClause(
+                true,
+                undefined,
+                factory.createNamedImports(
+                  importNames
+                    .map((importName: string) => {
+                      if (contextImportNames.has(importName)) {
+                        return;
+                      }
+                      contextImportNames.add(importName);
+
+                      return factory.createImportSpecifier(
+                        false,
+                        undefined,
+                        factory.createIdentifier(importName),
+                      );
+                    })
+                    .filter(Boolean) as ts.ImportSpecifier[],
+                ),
               ),
+              factory.createStringLiteral(importPath),
             ),
-            factory.createStringLiteral(`${key}-state-machine`),
-          ),
-        );
+          );
+        }
       }
 
       for (const [key, value] of Object.entries(root as any)) {
@@ -85,33 +101,48 @@ export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
         ) {
           continue;
         }
-
-        statements.push(
-          factory.createImportDeclaration(
-            undefined,
-            factory.createImportClause(
-              true,
-              undefined,
-              factory.createNamedImports(
-                (value as any)
-                  .map((importName: string) => {
-                    if (contextImportNames.has(importName)) {
-                      return;
-                    }
-                    contextImportNames.add(importName);
-
-                    return factory.createImportSpecifier(
-                      false,
-                      undefined,
-                      factory.createIdentifier(importName),
-                    );
-                  })
-                  .filter(Boolean) as ts.ImportSpecifier[],
-              ),
-            ),
-            factory.createStringLiteral(`${key}-state-machine`),
-          ),
+        const imports = (value as string[]).reduce<Record<string, string[]>>(
+          (acc: Record<string, string[]>, importName: string) => {
+            const importPath = context.getContextMappingContent()?.[importName];
+            if (importPath) {
+              if (!acc[importPath]) {
+                acc[importPath] = [];
+              }
+              acc[importPath].push(importName);
+            }
+            return acc;
+          },
+          {},
         );
+
+        for (const [importPath, importNames] of Object.entries(imports)) {
+          statements.push(
+            factory.createImportDeclaration(
+              undefined,
+              factory.createImportClause(
+                true,
+                undefined,
+                factory.createNamedImports(
+                  importNames
+                    .map((importName: string) => {
+                      if (contextImportNames.has(importName)) {
+                        return;
+                      }
+                      contextImportNames.add(importName);
+
+                      return factory.createImportSpecifier(
+                        false,
+                        undefined,
+                        factory.createIdentifier(importName),
+                      );
+                    })
+                    .filter(Boolean) as ts.ImportSpecifier[],
+                ),
+              ),
+              factory.createStringLiteral(importPath),
+            ),
+          );
+        }
       }
     }
   }
