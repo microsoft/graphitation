@@ -2,6 +2,7 @@ pr: none
 trigger:
   - main
   - alloy/relay-apollo-duct-tape
+  - users/jvejr/context-directive
 
 variables:
   - group: InfoSec-SecurityResults

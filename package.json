@@ -18,10 +18,10 @@
     "lint": "lage lint --continue",
     "lage": "lage",
     "ci": "yarn lage build types test lint && yarn checkchange",
-    "beachball": "beachball -b origin/main",
+    "beachball": "beachball -b origin/users/jvejr/context-directive",
     "change": "yarn beachball change",
     "checkchange": "yarn beachball check",
-    "release": "yarn beachball publish -t latest",
+    "release": "yarn beachball publish -t alpha",
     "postinstall": "patch-package"
   },
   "devDependencies": {
