@@ -1639,7 +1639,7 @@ describe(generateTS, () => {
     });
   });
 
-  it("generateTS without ContextName and ContextImport", () => {
+  it("generateTS without ContextName and defaultContextTypePath", () => {
     const { models, resolvers, enums, inputs } = runGenerateTest(graphql`
       interface Node {
         id: ID!
@@ -2299,8 +2299,8 @@ function runGenerateTest(
   options: {
     outputPath?: string;
     documentPath?: string;
-    contextImport?: string;
-    contextName?: string;
+    defaultContextTypePath?: string;
+    contextTypeName?: string;
     legacyCompat?: boolean;
     enumsImport?: string;
     legacyNoModelsForObjects?: boolean;
@@ -2327,8 +2327,8 @@ function runGenerateTest(
   const fullOptions: {
     outputPath: string;
     documentPath: string;
-    contextImport?: string | null;
-    contextName?: string;
+    defaultContextTypePath?: string | null;
+    contextTypeName?: string;
     legacyCompat?: boolean;
     legacyEnumsCompatibility?: boolean;
     legacyNoModelsForObjects?: boolean;
