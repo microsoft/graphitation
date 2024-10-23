@@ -2,6 +2,27 @@
   "name": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
   "entries": [
     {
+      "date": "Wed, 23 Oct 2024 09:22:25 GMT",
+      "version": "1.0.4",
+      "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v1.0.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "commit": "7f236c10e4c1b5ceb491d8cb6916bb657dec1490",
+            "comment": "remove dependecy on relay-compiler-language-typescript"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "comment": "Bump @graphitation/supermassive to v3.5.6",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 17 Oct 2024 14:53:14 GMT",
       "version": "1.0.3",
       "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v1.0.3",

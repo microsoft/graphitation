@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "remove dependecy on relay-compiler-language-typescript",
-  "packageName": "@graphitation/graphql-codegen-typescript-typemap-plugin",
-  "email": "pavelglac@microsoft.com",
-  "dependentChangeType": "patch"
-}

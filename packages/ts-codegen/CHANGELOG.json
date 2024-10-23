@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Wed, 23 Oct 2024 09:22:25 GMT",
+      "version": "2.11.4",
+      "tag": "@graphitation/ts-codegen_v2.11.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "7f236c10e4c1b5ceb491d8cb6916bb657dec1490",
+            "comment": "remove dependecy on relay-compiler-language-typescript"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 17 Oct 2024 14:53:14 GMT",
       "version": "2.11.3",
       "tag": "@graphitation/ts-codegen_v2.11.3",

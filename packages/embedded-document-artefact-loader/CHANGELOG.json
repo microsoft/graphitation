@@ -2,6 +2,21 @@
   "name": "@graphitation/embedded-document-artefact-loader",
   "entries": [
     {
+      "date": "Wed, 23 Oct 2024 09:22:25 GMT",
+      "version": "0.8.5",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.8.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "7f236c10e4c1b5ceb491d8cb6916bb657dec1490",
+            "comment": "remove dependecy on relay-compiler-language-typescript"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 22 Oct 2024 16:48:19 GMT",
       "version": "0.8.4",
       "tag": "@graphitation/embedded-document-artefact-loader_v0.8.4",

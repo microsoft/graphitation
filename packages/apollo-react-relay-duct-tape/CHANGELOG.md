@@ -1,8 +1,20 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-<!-- This log was last generated on Tue, 22 Oct 2024 17:26:48 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 23 Oct 2024 09:22:25 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.3.2
+
+Wed, 23 Oct 2024 09:22:25 GMT
+
+### Patches
+
+- remove dependecy on relay-compiler-language-typescript (pavelglac@microsoft.com)
+- Bump @graphitation/apollo-mock-client to v0.11.9
+- Bump @graphitation/graphql-js-operation-payload-generator to v0.12.9
+- Bump @graphitation/graphql-js-tag to v0.9.4
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.6.1
 
 ## 1.3.1
 

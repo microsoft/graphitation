@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-resolvers-models",
   "entries": [
     {
+      "date": "Wed, 23 Oct 2024 09:22:25 GMT",
+      "version": "1.2.5",
+      "tag": "@graphitation/graphql-codegen-resolvers-models_v1.2.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/graphql-codegen-resolvers-models",
+            "commit": "7f236c10e4c1b5ceb491d8cb6916bb657dec1490",
+            "comment": "remove dependecy on relay-compiler-language-typescript"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 17 Oct 2024 14:53:14 GMT",
       "version": "1.2.4",
       "tag": "@graphitation/graphql-codegen-resolvers-models_v1.2.4",
