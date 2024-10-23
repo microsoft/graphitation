@@ -23,6 +23,7 @@ export function generateTS(
     generateOnlyEnums,
     enumNamesToMigrate,
     enumNamesToKeep,
+    contextMappingContent,
   }: {
     outputPath: string;
     documentPath: string;
@@ -36,6 +37,7 @@ export function generateTS(
     generateOnlyEnums?: boolean;
     enumNamesToMigrate?: string[];
     enumNamesToKeep?: string[];
+    contextMappingContent?: Record<string, string> | null;
   },
 ): {
   files: ts.SourceFile[];
@@ -54,6 +56,7 @@ export function generateTS(
         modelScope,
         enumNamesToMigrate,
         enumNamesToKeep,
+        contextMappingContent,
       },
       document,
       outputPath,
