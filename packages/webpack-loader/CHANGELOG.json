@@ -2,6 +2,21 @@
   "name": "@graphitation/webpack-loader",
   "entries": [
     {
+      "date": "Wed, 23 Oct 2024 16:27:07 GMT",
+      "version": "1.0.10",
+      "tag": "@graphitation/webpack-loader_v1.0.10",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/webpack-loader",
+            "comment": "Bump @graphitation/supermassive to v3.6.0",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 23 Oct 2024 09:22:25 GMT",
       "version": "1.0.9",
       "tag": "@graphitation/webpack-loader_v1.0.9",
