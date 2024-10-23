@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Wed, 23 Oct 2024 19:19:35 GMT",
+      "version": "3.6.1",
+      "tag": "@graphitation/supermassive_v3.6.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/supermassive",
+            "commit": "35224dab12add3fe6701ffeaf06c1c32474a8481",
+            "comment": "async before hooks added"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 23 Oct 2024 16:27:07 GMT",
       "version": "3.6.0",
       "tag": "@graphitation/supermassive_v3.6.0",
