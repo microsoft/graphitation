@@ -45,7 +45,7 @@ import { Policies } from "./policies";
 import { InMemoryCache } from "./inMemoryCache";
 import { MissingFieldError, MissingTree } from "../core/types/common";
 import { canonicalStringify, ObjectCanon } from "./object-canon";
-import { ForestRunCache } from "@graphitation/apollo-forest-run";
+import { ForestRun } from "@graphitation/apollo-forest-run";
 import { assignStoreCache } from "./__tests__/helpers";
 
 export type VariableMap = { [name: string]: any };
@@ -106,7 +106,7 @@ function execSelectionSetKeyArgs(
 }
 
 export class StoreReader {
-  private cache: ForestRunCache;
+  private cache: ForestRun;
 
   constructor(config: StoreReaderConfig) {
     this.cache = config.cache;

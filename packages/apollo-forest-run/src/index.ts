@@ -1,1 +1,2 @@
-export { ForestRunCache } from "./ForestRunCache";
+export { ForestRun } from "./ForestRun";
+export { ForestRunCompat } from "./ForestRunCompat";

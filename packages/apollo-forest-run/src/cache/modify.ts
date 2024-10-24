@@ -41,7 +41,7 @@ import {
 } from "./policies";
 import { assert } from "../jsutils/assert";
 import { DifferenceKind } from "../diff/types";
-import { fieldToStringKey } from "./extract";
+import { fieldToStringKey } from "./keys";
 import { ConversionContext, toGraphCompositeChunk } from "./convert";
 import {
   getActiveForest,

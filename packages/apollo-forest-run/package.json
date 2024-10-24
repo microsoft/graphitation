@@ -8,18 +8,6 @@
     "url": "https://github.com/microsoft/graphitation.git",
     "directory": "packages/apollo-forest-run"
   },
-  "jest2": {
-    "transform": {
-      "^.+.(t|j)sx?$": "ts-jest"
-    },
-    "transformIgnorePatterns": [
-      "/node_modules/(?!(quick-lru))"
-    ],
-    "testMatch": [
-      "**/__tests__/**/*.test.ts"
-    ],
-    "testEnvironment": "node"
-  },
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
@@ -52,9 +40,12 @@
       }
     }
   },
-  "dependencies": {
-    "quick-lru": "^6.1.0"
-  },
+  "files": [
+    "lib/",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "dependencies": {},
   "peerDependencies": {
     "graphql": "^15.0.0 || ^16.0.0 || ^17.0.0",
     "@apollo/client": ">= ^3.6.0 < 3.7.0"

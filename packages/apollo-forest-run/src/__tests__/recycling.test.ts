@@ -1,9 +1,9 @@
 import { gql } from "@apollo/client";
-import { ForestRunCache } from "../ForestRunCache";
+import { ForestRun } from "../ForestRun";
 
 describe("within the same operation", () => {
   it("uses first incoming result as an output", () => {
-    const cache = new ForestRunCache();
+    const cache = new ForestRun();
     const query = gql`
       {
         a {
@@ -21,7 +21,7 @@ describe("within the same operation", () => {
   });
 
   it("recycles first incoming result, when the second result has no changes", () => {
-    const cache = new ForestRunCache();
+    const cache = new ForestRun();
     const query = gql`
       {
         a {
@@ -43,7 +43,7 @@ describe("within the same operation", () => {
   });
 
   it("recycles nested objects on updates", () => {
-    const cache = new ForestRunCache();
+    const cache = new ForestRun();
     const query = gql`
       {
         a {
@@ -70,7 +70,7 @@ describe("within the same operation", () => {
 
   // TODO
   it.skip("recycles sibling objects on updates", () => {
-    const cache = new ForestRunCache();
+    const cache = new ForestRun();
     const query = gql`
       {
         a {
@@ -105,7 +105,7 @@ describe("within the same operation", () => {
   });
 
   it("recycles lists on updates", () => {
-    const cache = new ForestRunCache();
+    const cache = new ForestRun();
     const query = gql`
       {
         a {
@@ -132,7 +132,7 @@ describe("within the same operation", () => {
 
   // TODO
   it.skip("recycles list items on updates", () => {
-    const cache = new ForestRunCache();
+    const cache = new ForestRun();
     const query = gql`
       {
         a {
@@ -158,7 +158,7 @@ describe("within the same operation", () => {
 
   describe("with variables", () => {
     it("recycles objects with the same arguments", () => {
-      const cache = new ForestRunCache();
+      const cache = new ForestRun();
       const query = gql`
         query ($foo: Boolean!) {
           a(arg: $foo) {
@@ -185,7 +185,7 @@ describe("within the same operation", () => {
     });
 
     it("recycles objects with the same arguments in nested fields", () => {
-      const cache = new ForestRunCache();
+      const cache = new ForestRun();
       const query = gql`
         query ($foo: Boolean!) {
           a {
