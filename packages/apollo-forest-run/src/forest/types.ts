@@ -19,6 +19,7 @@ import {
   SourceObject,
   TypeMap,
 } from "../values/types";
+import { MapLike } from "../jsutils/lru";
 
 export type IndexedTree = {
   operation: OperationDescriptor;
@@ -44,7 +45,7 @@ export type IndexedTree = {
 };
 
 export type IndexedForest = {
-  trees: Map<OperationDescriptor, IndexedTree>;
+  trees: MapLike<OperationDescriptor, IndexedTree>;
   extraRootIds: Map<NodeKey, TypeName>;
   operationsByNodes: Map<NodeKey, Set<OperationDescriptor>>; // May contain false positives
   operationsWithErrors: Set<OperationDescriptor>; // May contain false positives

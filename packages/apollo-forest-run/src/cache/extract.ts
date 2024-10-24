@@ -27,7 +27,7 @@ export function extract(
   const entityMap: NodeMap = new Map();
 
   for (const forest of layers) {
-    for (const indexedTree of forest.trees.values()) {
+    for (const [, indexedTree] of forest.trees) {
       for (const [id, chunks] of indexedTree.nodes.entries()) {
         if (forest.deletedNodes.has(id)) {
           entityMap.set(id, []);

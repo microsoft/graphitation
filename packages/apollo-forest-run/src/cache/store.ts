@@ -1,4 +1,3 @@
-import QuickLRU from "quick-lru";
 import {
   CacheEnv,
   DataForest,
@@ -13,21 +12,22 @@ import { NodeKey, OperationDescriptor, TypeName } from "../descriptor/types";
 import { assert } from "../jsutils/assert";
 import { IndexedTree } from "../forest/types";
 import { NodeChunk } from "../values/types";
+import { createLRUMap } from "../jsutils/lru";
 
 const EMPTY_ARRAY = Object.freeze([]);
 
 export function createStore(env: CacheEnv): Store {
   const trees = env.maxOperationCount
-    ? (new QuickLRU({
-        maxSize: env.maxOperationCount,
-        onEviction: (operation: OperationDescriptor, resultTree: DataTree) => {
+    ? createLRUMap(
+        env.maxOperationCount,
+        (operation: OperationDescriptor, resultTree: DataTree) => {
           if (!shouldEvict(env, store, resultTree)) {
             dataForest.trees.set(operation, resultTree);
             return;
           }
           removeTree(store, resultTree);
         },
-      }) as Map<OperationDescriptor, DataTree>)
+      )
     : new Map();
 
   const dataForest: DataForest = {
