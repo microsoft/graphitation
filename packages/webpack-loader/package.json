@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/webpack-loader",
   "license": "MIT",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "A fork of @graphql-tools/webpack-loader with supermassive SDL encoding format support",
   "repository": {
     "type": "git",
