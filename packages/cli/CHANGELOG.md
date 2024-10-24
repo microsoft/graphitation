@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Wed, 23 Oct 2024 09:22:25 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 24 Oct 2024 13:15:11 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.12.1
+
+Thu, 24 Oct 2024 13:15:11 GMT
+
+### Patches
+
+- Bump (77059398+vejrj@users.noreply.github.com)
+- Bump @graphitation/ts-codegen to v2.12.1
 
 ## 1.11.5
 
