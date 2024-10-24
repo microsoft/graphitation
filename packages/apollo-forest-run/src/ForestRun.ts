@@ -16,12 +16,9 @@ import type {
   Transaction,
 } from "./cache/types";
 import { ApolloCache } from "@apollo/client";
-import { indexTree } from "./forest/indexTree";
 import { assert } from "./jsutils/assert";
 import { accumulate, deleteAccumulated } from "./jsutils/map";
 import { read } from "./cache/read";
-import { extract, fieldToStringKey } from "./cache/extract";
-import { restore } from "./cache/restore";
 import { getNodeChunks } from "./cache/draftHelpers";
 import { modify } from "./cache/modify";
 import {
@@ -31,14 +28,9 @@ import {
   removeOptimisticLayers,
   resetStore,
 } from "./cache/store";
-import {
-  getDiffDescriptor,
-  resolveOperationDescriptor,
-  transformDocument,
-} from "./cache/descriptor";
+import { getDiffDescriptor, transformDocument } from "./cache/descriptor";
 import { write } from "./cache/write";
-import { replaceTree } from "./forest/addTree";
-import { identify } from "./cache/keys";
+import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { CacheConfig } from "./cache/types";
 
@@ -87,13 +79,13 @@ const REFS_POOL = new Map(
 );
 const getRef = (ref: string) => REFS_POOL.get(ref) ?? { __ref: ref };
 
-export class ForestRunCache extends ApolloCache<any> {
+export class ForestRun extends ApolloCache<any> {
   public rawConfig: InMemoryCacheConfig;
-  private env: CacheEnv;
-  private store: Store;
+  protected env: CacheEnv;
+  protected store: Store;
 
-  private transactionStack: Transaction[] = [];
-  private newWatches = new Set<Cache.WatchOptions>();
+  protected transactionStack: Transaction[] = [];
+  protected newWatches = new Set<Cache.WatchOptions>();
 
   // ApolloCompat:
   public policies = {
@@ -104,7 +96,7 @@ export class ForestRunCache extends ApolloCache<any> {
     },
   };
 
-  private invalidatedDiffs = new WeakSet<Cache.DiffResult<any>>();
+  protected invalidatedDiffs = new WeakSet<Cache.DiffResult<any>>();
 
   public constructor(public config?: CacheConfig) {
     super();
@@ -258,7 +250,7 @@ export class ForestRunCache extends ApolloCache<any> {
     }
   }
 
-  private getActiveForest(): DataForest | OptimisticLayer {
+  protected getActiveForest(): DataForest | OptimisticLayer {
     const transaction = peek(this.transactionStack);
     return transaction?.optimisticLayer ?? this.store.dataForest;
   }
@@ -357,23 +349,12 @@ export class ForestRunCache extends ApolloCache<any> {
     };
   }
 
-  public restore(nodeMap: Record<string, any>): this {
-    const writes = restore(this.env, nodeMap);
+  public extract(): StoreObject {
+    throw new Error("ForestRunCache.extract() is not supported");
+  }
 
-    this.reset();
-    for (const write of writes) {
-      const operation = resolveOperationDescriptor(
-        this.env,
-        this.store,
-        write.query,
-        write.variables,
-        write.dataId,
-      );
-      const operationResult = { data: write.result ?? {} };
-      const tree = indexTree(this.env, operation, operationResult);
-      replaceTree(this.store.dataForest, tree);
-    }
-    return this;
+  public restore(_: Record<string, any>): this {
+    throw new Error("ForestRunCache.restore() is not supported");
   }
 
   public getStats() {
@@ -381,28 +362,6 @@ export class ForestRunCache extends ApolloCache<any> {
       docCount: this.store.operations.size,
       treeCount: this.store.dataForest.trees.size,
     };
-  }
-
-  public frExtract() {
-    return {
-      forest: this.store.dataForest.trees,
-      optimisticForest: this.store.optimisticLayers,
-    };
-  }
-
-  public extract(optimistic = false): StoreObject {
-    const activeTransaction = peek(this.transactionStack);
-    const effectiveOptimistic =
-      activeTransaction?.forceOptimistic ?? optimistic;
-
-    return extract(
-      this.env,
-      getEffectiveReadLayers(
-        this.store,
-        this.getActiveForest(),
-        effectiveOptimistic,
-      ),
-    );
   }
 
   // Note: this method is necessary for Apollo test suite
@@ -431,7 +390,7 @@ export class ForestRunCache extends ApolloCache<any> {
    * @deprecated use batch
    */
   public performTransaction(
-    update: (cache: ForestRunCache) => any,
+    update: (cache: ForestRun) => any,
     optimisticId?: string | null,
   ) {
     return this.runTransaction({

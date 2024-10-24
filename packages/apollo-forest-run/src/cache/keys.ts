@@ -3,14 +3,15 @@ import type {
   ArgumentValues,
   Directives,
   Key,
+  NormalizedFieldEntry,
   OperationDescriptor,
   PossibleSelection,
 } from "../descriptor/types";
 import type { CacheEnv } from "./types";
 import type { KeySpecifier, SourceObject } from "../values/types";
-import { sortKeys } from "./extract";
 import { assert } from "../jsutils/assert";
 import { ROOT_TYPES } from "./descriptor";
+import * as Descriptor from "../descriptor/resolvedSelection";
 
 export function identify(
   env: CacheEnv,
@@ -209,6 +210,75 @@ function resolveDataKey(
     return idFieldInfo[0].dataKey;
   }
   return canonicalFieldName;
+}
+
+export function fieldToStringKey(fieldEntry: NormalizedFieldEntry): string {
+  const keyArgs =
+    typeof fieldEntry === "object" ? fieldEntry.keyArgs : undefined;
+
+  if (typeof fieldEntry === "string" || keyArgs?.length === 0) {
+    return Descriptor.getFieldName(fieldEntry);
+  }
+  const fieldName = Descriptor.getFieldName(fieldEntry);
+  const fieldArgs = Descriptor.getFieldArgs(fieldEntry);
+
+  // TODO: handle keyArgs === "string" case (basically key)
+  const fieldKeyArgs =
+    keyArgs && fieldArgs
+      ? resolveKeyArgumentValues(fieldArgs, keyArgs)
+      : fieldArgs;
+
+  const filtered = [...(fieldKeyArgs?.entries() ?? [])].filter(
+    ([name, _]) => name !== "__missing",
+  );
+  const args = sortEntriesRecursively(filtered).map(
+    ([name, value]) => `"${name}":${JSON.stringify(value)}`,
+  );
+  if (typeof keyArgs === "string") {
+    return `${fieldName}:${keyArgs}`; // keyArgs is actually the key
+  }
+  return keyArgs ? `${fieldName}:{${args}}` : `${fieldName}({${args}})`;
+}
+
+function resolveKeyArgumentValues(
+  args: ArgumentValues,
+  keyArgsSpecifier: Key | KeySpecifier,
+): ArgumentValues {
+  if (typeof keyArgsSpecifier === "string") {
+    return args;
+  }
+  if (
+    keyArgsSpecifier.length === args.size &&
+    keyArgsSpecifier.every((argName) => args.has(argName))
+  ) {
+    return args;
+  }
+  const keyArgs: ArgumentValues = new Map();
+  for (const argName of keyArgsSpecifier) {
+    const argValue = args.get(argName);
+    if (argValue !== undefined) {
+      keyArgs.set(argName, argValue);
+    }
+  }
+  return keyArgs;
+}
+
+function sortEntriesRecursively(entries: [string, unknown][]) {
+  return sortKeys(entries).sort((a, b) => a[0].localeCompare(b[0]));
+}
+
+function sortKeys<T>(value: T): T {
+  if (typeof value !== "object" || value === null) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((test) => sortKeys(test)) as T;
+  }
+  return Object.fromEntries(
+    Object.entries(value)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([key, value]) => [key, sortKeys(value)]),
+  ) as T;
 }
 
 const inspect = JSON.stringify.bind(JSON);

@@ -25,14 +25,14 @@ import { Policies } from "./policies";
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers";
 import { canonicalStringify } from "./object-canon";
 
-import { ForestRunCache } from "@graphitation/apollo-forest-run";
+import { ForestRunCompat } from "@graphitation/apollo-forest-run";
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
   "optimistic" | "onWatchUpdated"
 >;
 
-export class InMemoryCache extends ForestRunCache {}
+export class InMemoryCache extends ForestRunCompat {}
 
 export class InMemoryCache_bak extends ApolloCache<NormalizedCacheObject> {
   private data: EntityStore;

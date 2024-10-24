@@ -1,5 +1,5 @@
 import { gql } from "../__tests__/helpers/descriptor";
-import { ForestRunCache } from "../ForestRunCache";
+import { ForestRun } from "../ForestRun";
 
 test("properly invalidates nodes added via cache redirects", () => {
   const partialFooQuery = gql`
@@ -28,7 +28,7 @@ test("properly invalidates nodes added via cache redirects", () => {
       }
     }
   `;
-  const cache = new ForestRunCache({
+  const cache = new ForestRun({
     typePolicies: {
       Query: {
         fields: {
@@ -92,7 +92,7 @@ test("properly updates fields of sibling operation", () => {
   const foo = { __typename: "Foo", id: "1", foo: "foo" };
   const fooUpdated = { __typename: "Foo", id: "1", foo: "fooUpdated" };
 
-  const cache = new ForestRunCache();
+  const cache = new ForestRun();
   cache.diff({ query: foo1Query, optimistic: true });
 
   cache.write({ query: foo2Query, result: { foo2: foo } });
@@ -144,7 +144,7 @@ test("properly updates field of sibling operation in presence of another operati
   const bar = { __typename: "Bar", id: "1", foo: "bar" };
   const fooUpdated = { __typename: "Foo", id: "1", foo: "fooUpdated" };
 
-  const cache = new ForestRunCache();
+  const cache = new ForestRun();
   // cache.diff({ query: foo1Query, optimistic: true });
 
   cache.write({ query: fooOrBar, result: { fooOrBar: foo } });
@@ -181,7 +181,7 @@ test("does not fail on missing fields in aggregate", () => {
   const base = { foo1: foo, foo2: foo };
   const model = { foo1: foo, foo2: fooBadChunk };
 
-  const cache = new ForestRunCache();
+  const cache = new ForestRun();
   cache.diff({ query: query, optimistic: true });
 
   cache.write({
@@ -199,7 +199,7 @@ test("does not fail on missing fields in aggregate", () => {
 });
 
 test("merge policies properly update multiple queries", () => {
-  const cache = new ForestRunCache({
+  const cache = new ForestRun({
     typePolicies: {
       Query: {
         fields: {
@@ -262,7 +262,7 @@ test("merge policies properly update multiple queries", () => {
 });
 
 test("calls field policies defined on abstract types", () => {
-  const cache = new ForestRunCache({
+  const cache = new ForestRun({
     possibleTypes: {
       Node: ["Foo"],
     },
@@ -308,7 +308,7 @@ test("calls field policies defined on abstract types", () => {
 });
 
 test("field policies do not mutate original result", () => {
-  const cache = new ForestRunCache({
+  const cache = new ForestRun({
     typePolicies: {
       Query: {
         fields: {
@@ -345,7 +345,7 @@ test("should properly report missing field error on incorrect merge policy", () 
       }
     }
   `;
-  const forestRun = new ForestRunCache({
+  const forestRun = new ForestRun({
     typePolicies: {
       Query: {
         fields: {
@@ -408,7 +408,7 @@ test("completes partial written results", () => {
   const partialResult = {
     foo: "foo",
   };
-  const cache = new ForestRunCache();
+  const cache = new ForestRun();
   cache.write({ query: { ...query }, result: fullResult });
   cache.write({ query, result: partialResult });
   const result = cache.diff({ query, optimistic: false });
@@ -457,7 +457,7 @@ test("properly replaces objects containing nested composite lists", () => {
       bars: [],
     },
   };
-  const cache = new ForestRunCache();
+  const cache = new ForestRun();
   cache.write({ query: query1, result: result1 });
   cache.write({ query: query2, result: result2 });
 
@@ -499,7 +499,7 @@ test("properly reads plain objects from nested lists", () => {
   `;
   const result1 = { foo: [{ bar: "1" }] };
   const result2 = { foo: [{ bar: "1", baz: "1" }] };
-  const cache = new ForestRunCache();
+  const cache = new ForestRun();
 
   cache.write({ query: query1, result: result1 });
   cache.write({ query: query2, result: result2 });
@@ -532,7 +532,7 @@ test("properly compares complex arguments in @connection directive", () => {
     }
   `;
   const result1 = { foo: { edges: [{ cursor: "1" }] } };
-  const cache = new ForestRunCache();
+  const cache = new ForestRun();
   cache.write({ query: query1, result: result1 });
 
   const { result, complete } = cache.diff({ query: query2, optimistic: true });
@@ -547,7 +547,7 @@ test("should not notify immediately canceled watches", () => {
       foo
     }
   `;
-  const cache = new ForestRunCache();
+  const cache = new ForestRun();
   let notifications = 0;
   const watch = {
     query,
@@ -582,7 +582,7 @@ test.skip("ApolloCompat: should support manual writes with missing __typename", 
   const result2 = {
     foo: { id: "1", test: "Bar" },
   };
-  const cache = new ForestRunCache();
+  const cache = new ForestRun();
 
   cache.write({ query, result: result1 });
   cache.write({ query, result: result2 });
@@ -601,7 +601,7 @@ test("should detect empty operations even without sub-selections", () => {
       foo
     }
   `;
-  const cache = new ForestRunCache();
+  const cache = new ForestRun();
 
   cache.write({ query, result: {} });
   const { complete, result } = cache.diff({ query, optimistic: true });
@@ -633,7 +633,7 @@ test("optimistic update affecting list is properly handled", () => {
   const item = { __typename: "Item", id: "1", count: 0 };
   const updatedItem = { ...item, count: 1 };
 
-  const cache = new ForestRunCache();
+  const cache = new ForestRun();
   cache.write({
     query,
     result: { list: { items: [item] } },
@@ -671,7 +671,7 @@ test("should not trigger merge policies for missing incoming fields", () => {
   `;
 
   let calls = 0;
-  const cache = new ForestRunCache({
+  const cache = new ForestRun({
     typePolicies: {
       Query: {
         fields: {
@@ -705,7 +705,7 @@ test("should keep a single result for multiple operations with the same key vari
   const vars3 = { filter: "b", limit: 1 };
   const result3 = { list: ["b"] };
 
-  const cache = new ForestRunCache();
+  const cache = new ForestRun();
   const watch = (variables: any, calls: any) =>
     cache.watch({
       query,
