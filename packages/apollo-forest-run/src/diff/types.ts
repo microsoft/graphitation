@@ -8,6 +8,8 @@ import {
   SourceCompositeList,
 } from "../values/types";
 import { FieldInfo, NormalizedFieldEntry } from "../descriptor/types";
+import * as DifferenceKind from "./differenceKind";
+import * as DiffErrorKind from "./diffErrorKind";
 
 export type DiffEnv = {
   allowMissingFields?: boolean;
@@ -38,24 +40,18 @@ export type DiffState = {
   allowMissingFields?: boolean;
 };
 
-export const enum DiffErrorKind {
-  MissingModelValue,
-  MissingModelFields,
-  MissingBaseFields,
-}
-
 export type MissingModelError = {
-  kind: DiffErrorKind.MissingModelValue;
+  kind: typeof DiffErrorKind.MissingModelValue;
 };
 
 export type MissingModelFieldsError = {
-  kind: DiffErrorKind.MissingModelFields;
+  kind: typeof DiffErrorKind.MissingModelFields;
   chunk: ObjectChunk;
   missingFields: FieldInfo[];
 };
 
 export type MissingBaseFieldsError = {
-  kind: DiffErrorKind.MissingBaseFields;
+  kind: typeof DiffErrorKind.MissingBaseFields;
   chunk: ObjectChunk;
   missingFields: FieldInfo[];
 };
@@ -78,16 +74,8 @@ export type DiffError =
  *
  * State is an implementation detail of diffing algorithm and should not be relied upon by consumers: it can change at any time
  */
-export const enum DifferenceKind {
-  Replacement,
-  Filler,
-  ObjectDifference,
-  CompositeListDifference,
-  FieldEntryDifference,
-}
-
 export type ObjectDifference = {
-  readonly kind: DifferenceKind.ObjectDifference;
+  readonly kind: typeof DifferenceKind.ObjectDifference;
   // readonly allFields: Iterable<FieldName>;
 
   fieldQueue: Set<FieldName>;
@@ -97,13 +85,13 @@ export type ObjectDifference = {
 };
 
 export type FieldEntryDifference = {
-  readonly kind: DifferenceKind.FieldEntryDifference;
+  readonly kind: typeof DifferenceKind.FieldEntryDifference;
   fieldEntry: NormalizedFieldEntry;
   state: ValueDifference;
 };
 
 export type CompositeListDifference = {
-  readonly kind: DifferenceKind.CompositeListDifference;
+  readonly kind: typeof DifferenceKind.CompositeListDifference;
   itemQueue: Set<number>;
   itemState: Map<number, ValueDifference>;
   dirtyItems?: Set<number>;
@@ -116,13 +104,13 @@ type AddedValue = CompositeListValue | ObjectValue;
 export type CompositeListLayoutDifference = (number | null | AddedValue)[];
 
 export type Replacement = {
-  readonly kind: DifferenceKind.Replacement;
+  readonly kind: typeof DifferenceKind.Replacement;
   oldValue: GraphValue;
   newValue: GraphValue;
 };
 
 export type Filler = {
-  readonly kind: DifferenceKind.Filler;
+  readonly kind: typeof DifferenceKind.Filler;
   readonly newValue: GraphValue;
 };
 
@@ -133,3 +121,4 @@ export type ValueDifference =
   | Filler;
 
 export type NodeDifferenceMap = Map<string, ObjectDifference>;
+export { DifferenceKind, DiffErrorKind };

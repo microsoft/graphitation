@@ -8,6 +8,7 @@ import {
   ResolvedSelection,
   ArgumentValues,
 } from "../descriptor/types";
+import * as ValueKind from "./valueKind";
 
 declare const OpaqueSymbol: unique symbol;
 export type Brand<T, B extends symbol> = T & { [K in typeof OpaqueSymbol]: B };
@@ -59,18 +60,6 @@ export type SourceCompositeValue =
   | SourceCompositeList
   | SourceNull
   | undefined;
-
-export const enum ValueKind {
-  Object,
-  CompositeList,
-  CompositeNull,
-  CompositeUndefined,
-  LeafList,
-  LeafError,
-  LeafUndefined,
-  ComplexScalar,
-  ObjectDraft,
-}
 
 // Raw value wrappers (useful for diffing / updating)
 export type FieldName = string;
@@ -127,7 +116,7 @@ export type CompositeValueChunkReference = GraphChunkReference & {
 };
 
 export type ObjectChunk = {
-  readonly kind: ValueKind.Object;
+  readonly kind: typeof ValueKind.Object;
   readonly isAggregate: false;
   readonly data: SourceObject;
   readonly operation: OperationDescriptor;
@@ -151,7 +140,7 @@ export type ObjectChunk = {
 };
 
 export type ObjectAggregate = {
-  readonly kind: ValueKind.Object;
+  readonly kind: typeof ValueKind.Object;
   readonly isAggregate: true;
   readonly data: SourceObject; // source value from the first chunk
   readonly chunks: ObjectChunk[];
@@ -165,7 +154,7 @@ export type ObjectAggregate = {
 };
 
 export type CompositeListChunk = {
-  readonly kind: ValueKind.CompositeList;
+  readonly kind: typeof ValueKind.CompositeList;
   readonly isAggregate: false;
   readonly data: SourceCompositeList;
   readonly operation: OperationDescriptor;
@@ -186,7 +175,7 @@ export type CompositeListChunk = {
 };
 
 export type CompositeListAggregate = {
-  readonly kind: ValueKind.CompositeList;
+  readonly kind: typeof ValueKind.CompositeList;
   readonly isAggregate: true;
   readonly data: SourceCompositeList;
   readonly chunks: CompositeListChunk[];
@@ -199,7 +188,7 @@ export type CompositeListItemKey = string | number;
 export type CompositeListLayout = CompositeListItemKey[];
 
 export type CompositeNullChunk = {
-  readonly kind: ValueKind.CompositeNull;
+  readonly kind: typeof ValueKind.CompositeNull;
   readonly isAggregate: false;
   readonly data: SourceNull;
   readonly operation: OperationDescriptor;
@@ -208,14 +197,14 @@ export type CompositeNullChunk = {
 };
 
 export type CompositeNullAggregate = {
-  readonly kind: ValueKind.CompositeNull;
+  readonly kind: typeof ValueKind.CompositeNull;
   readonly isAggregate: true;
   readonly data: SourceNull;
   readonly chunks: CompositeNullChunk[];
 };
 
 export type CompositeUndefinedChunk = {
-  readonly kind: ValueKind.CompositeUndefined;
+  readonly kind: typeof ValueKind.CompositeUndefined;
   readonly isAggregate: false;
   readonly data: undefined;
   readonly deleted: boolean;
@@ -225,7 +214,7 @@ export type CompositeUndefinedChunk = {
 };
 
 export type CompositeUndefinedAggregate = {
-  readonly kind: ValueKind.CompositeUndefined;
+  readonly kind: typeof ValueKind.CompositeUndefined;
   readonly isAggregate: true;
   readonly data: undefined;
   readonly deleted: boolean;
@@ -237,25 +226,25 @@ export type CompositeUndefinedAggregate = {
 // Object and Lists of objects replaced with "null" are represented as "CompositeNull" kind
 // (with "error" field set if they were nullified due to an error)
 export type LeafErrorValue = {
-  readonly kind: ValueKind.LeafError;
+  readonly kind: typeof ValueKind.LeafError;
   readonly data: SourceNull;
   readonly error: FormattedError;
 };
 
 export type LeafListValue = {
-  readonly kind: ValueKind.LeafList;
+  readonly kind: typeof ValueKind.LeafList;
   readonly data: SourceLeafList;
 };
 
 export type LeafUndefinedValue = {
-  kind: ValueKind.LeafUndefined;
+  kind: typeof ValueKind.LeafUndefined;
   deleted: boolean;
   data: undefined;
 };
 
 // Custom scalars expressed as objects (JSON, complex dates, etc)
 export type ComplexScalarValue = {
-  readonly kind: ValueKind.ComplexScalar;
+  readonly kind: typeof ValueKind.ComplexScalar;
   readonly data: SourceCustomScalar;
 };
 
@@ -307,7 +296,7 @@ export type FormattedError = {
 };
 
 export type ObjectDraft = {
-  readonly kind: ValueKind.ObjectDraft;
+  readonly kind: typeof ValueKind.ObjectDraft;
   readonly operation: OperationDescriptor;
   readonly possibleSelections: PossibleSelections;
   readonly selection: ResolvedSelection;
@@ -358,3 +347,4 @@ export type ParentLocator = (
 
 export type GraphValueReference = NodeKey | EmbeddedValueReference;
 export type EmbeddedValueReference = [ParentInfo, ParentLocator];
+export { ValueKind };
