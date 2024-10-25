@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "refactor(apollo-forest-run): replace const enums with ES modules",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vladimir.razuvaev@gmail.com",
-  "dependentChangeType": "patch"
-}

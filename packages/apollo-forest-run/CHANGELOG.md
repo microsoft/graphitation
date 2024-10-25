@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Thu, 24 Oct 2024 18:47:00 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 25 Oct 2024 16:52:17 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.3.1
+
+Fri, 25 Oct 2024 16:52:17 GMT
+
+### Patches
+
+- refactor(apollo-forest-run): replace const enums with ES modules (vladimir.razuvaev@gmail.com)
 
 ## 0.3.0
 

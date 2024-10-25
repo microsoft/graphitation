@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Fri, 25 Oct 2024 16:52:17 GMT",
+      "version": "0.3.1",
+      "tag": "@graphitation/apollo-forest-run_v0.3.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "7be0b3a78dfee62b25140098fe16b59b0f3066d3",
+            "comment": "refactor(apollo-forest-run): replace const enums with ES modules"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 24 Oct 2024 18:47:00 GMT",
       "version": "0.3.0",
       "tag": "@graphitation/apollo-forest-run_v0.3.0",
