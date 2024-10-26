@@ -302,11 +302,17 @@ export class ForestRun extends ApolloCache<any> {
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {
-    const diff = this.diff(options);
+    const diff = this.runRead(options);
     return diff.complete || options.returnPartialData ? diff.result : null;
   }
 
   public diff<TData, TVariables = any>(
+    options: Cache.DiffOptions<TData, TVariables>,
+  ): Cache.DiffResult<TData> {
+    return this.runRead(options);
+  }
+
+  private runRead<TData, TVariables = any>(
     options: Cache.DiffOptions<TData, TVariables>,
   ): Cache.DiffResult<TData> {
     const activeTransaction = peek(this.transactionStack);
