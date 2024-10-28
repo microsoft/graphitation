@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "fix(apollo-forest-run): improve compatibility with apollo",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vladimir.razuvaev@gmail.com",
-  "dependentChangeType": "patch"
-}
