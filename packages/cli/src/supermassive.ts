@@ -174,6 +174,16 @@ async function generateInterfaces(
       ),
     );
 
+    if (result.contextMappingOutput) {
+      outputs.push(
+        fs.writeFile(
+          path.join(outputPath, "schema-context-mapping-metadata.json"),
+          JSON.stringify(result.contextMappingOutput, null, 2),
+          { encoding: "utf-8" },
+        ),
+      );
+    }
+
     await Promise.all(outputs);
   }
 }

@@ -144,18 +144,6 @@ export class TsCodegenContext {
     }
   }
 
-  private findNamedTyped(type: TypeNode): string | null {
-    if (type.kind === "NamedType") {
-      return type.name.value;
-    } else if (type.kind === "NonNullType") {
-      return this.findNamedTyped(type.type);
-    } else if (type.kind === "ListType") {
-      return this.findNamedTyped(type.type);
-    }
-
-    return null;
-  }
-
   public mergeContexts(typeNames: string[]): { __context: string[] } | null {
     const output = typeNames.reduce<{ __context: string[] }>(
       (contextRootType, interfaceName) => {
@@ -256,7 +244,6 @@ export class TsCodegenContext {
         ancestors[ancestors.length - 1].name.value
       ] = values;
     }
-    console.log(JSON.stringify(this.typeContextMap, null, 2));
   }
 
   isLegacyCompatMode(): boolean {
