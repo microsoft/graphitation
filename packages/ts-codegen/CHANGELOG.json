@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Wed, 30 Oct 2024 20:39:21 GMT",
+      "version": "2.13.0-alpha.2",
+      "tag": "@graphitation/ts-codegen_v2.13.0-alpha.2",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "826804f7e05cb0b5385f3f1f0367381aba329c47",
+            "comment": "[HOTFIX] ts-codegen context metadata map returned"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 30 Oct 2024 09:41:18 GMT",
       "version": "2.13.0-alpha.1",
       "tag": "@graphitation/ts-codegen_v2.13.0-alpha.1",

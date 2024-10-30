@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Wed, 30 Oct 2024 09:41:18 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 30 Oct 2024 20:39:21 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 2.13.0-alpha.2
+
+Wed, 30 Oct 2024 20:39:21 GMT
+
+### Changes
+
+- [HOTFIX] ts-codegen context metadata map returned (77059398+vejrj@users.noreply.github.com)
 
 ## 2.13.0-alpha.1
 
