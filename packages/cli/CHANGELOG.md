@@ -1,8 +1,16 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Wed, 30 Oct 2024 09:41:18 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 30 Oct 2024 10:07:52 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.13.0-alpha.1
+
+Wed, 30 Oct 2024 10:07:52 GMT
+
+### Changes
+
+- CLI alpha bump (77059398+vejrj@users.noreply.github.com)
 
 ## 1.13.0
 
