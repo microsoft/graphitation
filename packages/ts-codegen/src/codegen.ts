@@ -41,6 +41,7 @@ export function generateTS(
   },
 ): {
   files: ts.SourceFile[];
+  contextMappingOutput: Record<string, string> | null;
 } {
   try {
     const context = extractContext(
@@ -79,7 +80,10 @@ export function generateTS(
         result.push(generateLegacyResolvers(context));
       }
     }
-    return { files: result };
+    return {
+      files: result,
+      contextMappingOutput: context.getContextMappingContent(),
+    };
   } catch (e) {
     console.error(e);
     throw e;
