@@ -82,7 +82,7 @@ export function generateTS(
     }
     return {
       files: result,
-      contextMappingOutput: context.getContextMappingContent(),
+      contextMappingOutput: context.getContextMap(),
     };
   } catch (e) {
     console.error(e);
