@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Version bump fix",
-  "packageName": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
-  "email": "77059398+vejrj@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}

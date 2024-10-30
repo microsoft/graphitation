@@ -1,8 +1,16 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Thu, 24 Oct 2024 13:15:11 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 30 Oct 2024 12:58:29 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.13.1
+
+Wed, 30 Oct 2024 12:58:29 GMT
+
+### Patches
+
+- Version bump fix (77059398+vejrj@users.noreply.github.com)
 
 ## 1.12.1
 
