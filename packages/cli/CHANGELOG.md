@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Wed, 30 Oct 2024 10:07:52 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 04 Nov 2024 17:34:20 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.13.0-alpha.2
+
+Mon, 04 Nov 2024 17:34:20 GMT
+
+### Changes
+
+- Added context namespace into the codegen (77059398+vejrj@users.noreply.github.com)
+- Bump @graphitation/ts-codegen to v2.13.0-alpha.3
 
 ## 1.13.0-alpha.1
 

@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Mon, 04 Nov 2024 17:34:20 GMT",
+      "version": "2.13.0-alpha.3",
+      "tag": "@graphitation/ts-codegen_v2.13.0-alpha.3",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "dd33b80a0c6975c118d8376cbba61cda706802c7",
+            "comment": "Added context namespace into the codegen"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 30 Oct 2024 20:39:21 GMT",
       "version": "2.13.0-alpha.2",
       "tag": "@graphitation/ts-codegen_v2.13.0-alpha.2",
