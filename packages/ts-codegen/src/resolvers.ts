@@ -29,122 +29,26 @@ export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
     ),
   );
 
-  if (
-    Object.keys(context.getContextMap()).length &&
-    context.getContextMappingContent()
-  ) {
-    const contextImportNames: Set<string> = new Set();
+  const contextNamespace = context.getContextNamespace();
 
-    for (const [, root] of Object.entries(context.getContextMap())) {
-      const rootValue: string[] = (root as any).__context;
-      if (rootValue) {
-        if (
-          rootValue.every((importName: string) =>
-            contextImportNames.has(importName),
-          )
-        ) {
-          continue;
-        }
-
-        const imports = (rootValue as string[]).reduce<
-          Record<string, string[]>
-        >((acc: Record<string, string[]>, importName: string) => {
-          const importPath = context.getContextMappingContent()?.[importName];
-          if (importPath) {
-            if (!acc[importPath]) {
-              acc[importPath] = [];
-            }
-            acc[importPath].push(importName);
-          }
-          return acc;
-        }, {});
-
-        for (const [importPath, importNames] of Object.entries(imports)) {
-          statements.push(
-            factory.createImportDeclaration(
+  if (Object.keys(context.getContextMap()).length && contextNamespace) {
+    statements.push(
+      factory.createImportDeclaration(
+        undefined,
+        factory.createImportClause(
+          true,
+          undefined,
+          factory.createNamedImports([
+            factory.createImportSpecifier(
+              false,
               undefined,
-              factory.createImportClause(
-                true,
-                undefined,
-                factory.createNamedImports(
-                  importNames
-                    .map((importName: string) => {
-                      if (contextImportNames.has(importName)) {
-                        return;
-                      }
-                      contextImportNames.add(importName);
-
-                      return factory.createImportSpecifier(
-                        false,
-                        undefined,
-                        factory.createIdentifier(importName),
-                      );
-                    })
-                    .filter(Boolean) as ts.ImportSpecifier[],
-                ),
-              ),
-              factory.createStringLiteral(importPath),
+              factory.createIdentifier(contextNamespace.name),
             ),
-          );
-        }
-      }
-
-      for (const [key, value] of Object.entries(root as any)) {
-        if (key.startsWith("__")) {
-          continue;
-        }
-
-        if (
-          (value as string[]).every((importName: string) =>
-            contextImportNames.has(importName),
-          )
-        ) {
-          continue;
-        }
-        const imports = (value as string[]).reduce<Record<string, string[]>>(
-          (acc: Record<string, string[]>, importName: string) => {
-            const importPath = context.getContextMappingContent()?.[importName];
-            if (importPath) {
-              if (!acc[importPath]) {
-                acc[importPath] = [];
-              }
-              acc[importPath].push(importName);
-            }
-            return acc;
-          },
-          {},
-        );
-
-        for (const [importPath, importNames] of Object.entries(imports)) {
-          statements.push(
-            factory.createImportDeclaration(
-              undefined,
-              factory.createImportClause(
-                true,
-                undefined,
-                factory.createNamedImports(
-                  importNames
-                    .map((importName: string) => {
-                      if (contextImportNames.has(importName)) {
-                        return;
-                      }
-                      contextImportNames.add(importName);
-
-                      return factory.createImportSpecifier(
-                        false,
-                        undefined,
-                        factory.createIdentifier(importName),
-                      );
-                    })
-                    .filter(Boolean) as ts.ImportSpecifier[],
-                ),
-              ),
-              factory.createStringLiteral(importPath),
-            ),
-          );
-        }
-      }
-    }
+          ]),
+        ),
+        factory.createStringLiteral(contextNamespace.from),
+      ),
+    );
   }
 
   if (context.hasInputs) {
