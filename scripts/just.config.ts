@@ -75,7 +75,6 @@ export const test = () => {
   return jestTask({
     config: path.join(__dirname, "config", "jest.config.js"),
     watch: argv().watch,
-    updateSnapshot: true,
     _: argv()._,
   });
 };
