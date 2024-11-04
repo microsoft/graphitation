@@ -138,7 +138,7 @@ export class TsCodegenContext {
     this.hasUsedEnumsInModels = false;
 
     if (options.contextNamespaceName && options.contextNamespacePath) {
-      this.context = {
+      this.contextNamespace = {
         name: options.contextNamespaceName,
         from: options.contextNamespacePath,
       };
@@ -187,11 +187,11 @@ export class TsCodegenContext {
 
   public getContextTypeNode(typeNames?: string[] | null) {
     const contextNamespace = this.contextNamespace;
-    if (!typeNames || !typeNames.length) {
+    if (!typeNames || !typeNames.length || !contextNamespace) {
       return this.getContextType().toTypeReference();
     } else if (
-      contextNamespace &&
-      ((typeNames.length === 1 && this.context) || typeNames.length > 1)
+      (typeNames.length === 1 && this.context) ||
+      typeNames.length > 1
     ) {
       const typeNameWithNamespace = typeNames.map((typeName) => {
         return `${contextNamespace.name}.${typeName}`;
@@ -209,7 +209,10 @@ export class TsCodegenContext {
         }),
       );
     } else {
-      return new TypeLocation(null, typeNames[0]).toTypeReference();
+      return new TypeLocation(
+        null,
+        `${contextNamespace.name}.${typeNames[0]}`,
+      ).toTypeReference();
     }
   }
 

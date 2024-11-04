@@ -36,11 +36,15 @@ export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
       factory.createImportDeclaration(
         undefined,
         factory.createImportClause(
-          false,
+          true,
           undefined,
-          factory.createNamespaceImport(
-            factory.createIdentifier(contextNamespace.name),
-          ),
+          factory.createNamedImports([
+            factory.createImportSpecifier(
+              false,
+              undefined,
+              factory.createIdentifier(contextNamespace.name),
+            ),
+          ]),
         ),
         factory.createStringLiteral(contextNamespace.from),
       ),
