@@ -51,7 +51,8 @@ export type TsCodegenContextOptions = {
   };
   legacyCompat: boolean;
   legacyNoModelsForObjects: boolean;
-  contextMappingContent?: Record<string, string> | null;
+  contextNamespaceName?: string;
+  contextNamespacePath?: string;
   useStringUnionsInsteadOfEnums: boolean;
   enumNamesToMigrate: string[] | null;
   enumNamesToKeep: string[] | null;
@@ -101,7 +102,6 @@ export class TsCodegenContext {
   private typeContextMap: any;
   private allRootTypeNames: Set<string>;
   private typeNameToType: Map<string, Type>;
-  private contextMappingContent: Record<string, string> | null;
   private usedEntitiesInModels: Set<string>;
   private usedEntitiesInResolvers: Set<string>;
   private usedEntitiesInInputs: Set<string>;
@@ -113,6 +113,7 @@ export class TsCodegenContext {
   private typeNameToModels: Map<string, DefinitionModel>;
   private legacyInterfaces: Set<string>;
   context?: { name: string; from: string };
+  contextNamespace?: { name: string; from: string };
   hasUsedModelInInputs: boolean;
   hasUsedEnumsInModels: boolean;
   hasEnums: boolean;
@@ -135,7 +136,13 @@ export class TsCodegenContext {
     this.hasInputs = false;
     this.hasEnums = Boolean(options.enumsImport);
     this.hasUsedEnumsInModels = false;
-    this.contextMappingContent = options.contextMappingContent || null;
+
+    if (options.contextNamespaceName && options.contextNamespacePath) {
+      this.context = {
+        name: options.contextNamespaceName,
+        from: options.contextNamespacePath,
+      };
+    }
     if (options.context.from && options.context.name) {
       this.context = {
         name: options.context.name,
@@ -174,26 +181,32 @@ export class TsCodegenContext {
     return null;
   }
 
-  public getContextMappingContent(): Record<string, string> | null {
-    return this.contextMappingContent;
+  public getContextNamespace(): { name: string; from: string } | null {
+    return this.contextNamespace || null;
   }
 
   public getContextTypeNode(typeNames?: string[] | null) {
+    const contextNamespace = this.contextNamespace;
     if (!typeNames || !typeNames.length) {
       return this.getContextType().toTypeReference();
     } else if (
-      (typeNames.length === 1 && this.context) ||
-      typeNames.length > 1
+      contextNamespace &&
+      ((typeNames.length === 1 && this.context) || typeNames.length > 1)
     ) {
+      const typeNameWithNamespace = typeNames.map((typeName) => {
+        return `${contextNamespace.name}.${typeName}`;
+      });
+
       return factory.createIntersectionTypeNode(
-        (this.context ? [this.context.name, ...typeNames] : typeNames).map(
-          (type: string) => {
-            return factory.createTypeReferenceNode(
-              factory.createIdentifier(type),
-              undefined,
-            );
-          },
-        ),
+        (this.context
+          ? [this.context.name, ...typeNameWithNamespace]
+          : typeNameWithNamespace
+        ).map((type: string) => {
+          return factory.createTypeReferenceNode(
+            factory.createIdentifier(type),
+            undefined,
+          );
+        }),
       );
     } else {
       return new TypeLocation(null, typeNames[0]).toTypeReference();
@@ -664,7 +677,7 @@ export function extractContext(
     ...options,
   };
   const context = new TsCodegenContext(fullOptions);
-  const { contextMappingContent } = options;
+  const { contextNamespaceName, contextNamespacePath } = options;
   visit(document, {
     Directive: {
       enter(node, _key, _parent, _path: any, ancestors) {
@@ -694,7 +707,11 @@ export function extractContext(
           }
           const typeName = (typeDef as InterfaceTypeDefinitionNode).name.value;
           context.addLegacyInterface(typeName);
-        } else if (node.name.value === "context" && contextMappingContent) {
+        } else if (
+          node.name.value === "context" &&
+          contextNamespaceName &&
+          contextNamespacePath
+        ) {
           if (
             node.arguments?.length !== 1 ||
             node.arguments[0].name.value !== "uses" ||
@@ -711,12 +728,8 @@ export function extractContext(
             return item.value;
           });
 
-          const filtredDirectiveValues = directiveValues.filter(
-            (directiveValue) => contextMappingContent[directiveValue],
-          );
-
-          if (filtredDirectiveValues.length) {
-            context.initContextMap(ancestors, filtredDirectiveValues);
+          if (directiveValues.length) {
+            context.initContextMap(ancestors, directiveValues);
           }
         }
       },

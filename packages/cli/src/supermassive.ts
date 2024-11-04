@@ -19,7 +19,8 @@ type GenerateInterfacesOptions = {
   enumMigrationJsonFile?: string;
   enumMigrationExceptionsJsonFile?: string;
   generateOnlyEnums?: boolean;
-  contextMappingFile?: string;
+  contextNamespaceName?: string;
+  contextNamespacePath?: string;
   scope?: string;
 };
 
@@ -49,11 +50,15 @@ export function supermassive(): Command {
       "-ci, --context-import [contextImport]",
       "from where to import context",
     )
-    .option(
-      "-cm, --context-mapping-file [contextMappingFile]",
-      "context mapping file",
-    )
     .option("-cn, --context-name [contextName]", "Context name")
+    .option(
+      "-cm, --context-namespace-name [contextNamespaceName]",
+      "context namespace name",
+    )
+    .option(
+      "-cm, --context-namespace-path [contextNamespacePath]",
+      "context namespace path",
+    )
     .option("-ei, --enums-import [enumsImport]", "from where to import enums")
     .option("-l, --legacy", "generate legacy types")
     .option("--legacy-models", "do not use models for object types")
@@ -128,26 +133,6 @@ async function generateInterfaces(
       options.outputDir ? options.outputDir : "__generated__",
     );
 
-    const { contextMappingFile } = options;
-    let contextMappingContent: Record<string, string> | null = null;
-    let fullContextMappingFilePath: string;
-    if (contextMappingFile) {
-      if (path.isAbsolute(contextMappingFile)) {
-        fullContextMappingFilePath = contextMappingFile;
-      } else {
-        fullContextMappingFilePath = path.join(
-          process.cwd(),
-          contextMappingFile,
-        );
-      }
-
-      if (fsSync.existsSync(fullContextMappingFilePath)) {
-        contextMappingContent = JSON.parse(
-          await fs.readFile(fullContextMappingFilePath, { encoding: "utf-8" }),
-        );
-      }
-    }
-
     const result = generateTS(document, {
       outputPath,
       documentPath: fullPath,
@@ -159,7 +144,8 @@ async function generateInterfaces(
       useStringUnionsInsteadOfEnums: !!options.useStringUnionsInsteadOfEnums,
       generateOnlyEnums: !!options.generateOnlyEnums,
       modelScope: options.scope || null,
-      contextMappingContent: contextMappingContent,
+      contextNamespaceName: options.contextNamespaceName,
+      contextNamespacePath: options.contextNamespacePath,
     });
 
     await fs.mkdir(outputPath, { recursive: true });
