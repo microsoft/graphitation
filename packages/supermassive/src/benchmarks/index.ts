@@ -89,7 +89,7 @@ queryRunningSuite.add("supermassive - runtime schemaless", async () => {
 });
 
 queryRunningSuite.add(
-  "supermassive - before operation sync hook - runtime schemaless",
+  "supermassive - before operation execute sync hook - runtime schemaless",
   async () => {
     const result = await supermassiveExecute({
       schemaFragment,
@@ -106,7 +106,7 @@ queryRunningSuite.add(
 );
 
 queryRunningSuite.add(
-  "supermassive - before operation async hook - runtime schemaless",
+  "supermassive - before operation execute async hook - runtime schemaless",
   async () => {
     const result = await supermassiveExecute({
       schemaFragment,
@@ -123,7 +123,7 @@ queryRunningSuite.add(
 );
 
 queryRunningSuite.add(
-  "supermassive - before field sync hook - runtime schemaless",
+  "supermassive - before field resolve sync hook - runtime schemaless",
   async () => {
     const result = await supermassiveExecute({
       schemaFragment,
@@ -140,7 +140,7 @@ queryRunningSuite.add(
 );
 
 queryRunningSuite.add(
-  "supermassive - before field async hook - runtime schemaless",
+  "supermassive - before field resolve async hook - runtime schemaless",
   async () => {
     const result = await supermassiveExecute({
       schemaFragment,
