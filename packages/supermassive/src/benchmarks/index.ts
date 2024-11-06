@@ -88,6 +88,74 @@ queryRunningSuite.add("supermassive - runtime schemaless", async () => {
   }
 });
 
+queryRunningSuite.add(
+  "supermassive - before operation sync hook - runtime schemaless",
+  async () => {
+    const result = await supermassiveExecute({
+      schemaFragment,
+      document: parsedQuery,
+      fieldExecutionHooks: {
+        beforeOperationExecute: () => {},
+      },
+      contextValue: { models },
+    });
+    if ("data" in result && (result.errors || !result.data)) {
+      throw new Error("Stuff ain't executing");
+    }
+  },
+);
+
+queryRunningSuite.add(
+  "supermassive - before operation async hook - runtime schemaless",
+  async () => {
+    const result = await supermassiveExecute({
+      schemaFragment,
+      document: parsedQuery,
+      fieldExecutionHooks: {
+        beforeOperationExecute: async () => {},
+      },
+      contextValue: { models },
+    });
+    if ("data" in result && (result.errors || !result.data)) {
+      throw new Error("Stuff ain't executing");
+    }
+  },
+);
+
+queryRunningSuite.add(
+  "supermassive - before field sync hook - runtime schemaless",
+  async () => {
+    const result = await supermassiveExecute({
+      schemaFragment,
+      document: parsedQuery,
+      fieldExecutionHooks: {
+        beforeFieldResolve: () => {},
+      },
+      contextValue: { models },
+    });
+    if ("data" in result && (result.errors || !result.data)) {
+      throw new Error("Stuff ain't executing");
+    }
+  },
+);
+
+queryRunningSuite.add(
+  "supermassive - before field async hook - runtime schemaless",
+  async () => {
+    const result = await supermassiveExecute({
+      schemaFragment,
+      document: parsedQuery,
+      fieldExecutionHooks: {
+        beforeFieldResolve: async () => {},
+      },
+      contextValue: { models },
+    });
+    if ("data" in result && (result.errors || !result.data)) {
+      throw new Error("Stuff ain't executing");
+    }
+  },
+);
+
 const queryParsingSuite = new NiceBenchmark("Query parsing");
 queryParsingSuite.add("graphql-js", async () => {
   parse(query);
