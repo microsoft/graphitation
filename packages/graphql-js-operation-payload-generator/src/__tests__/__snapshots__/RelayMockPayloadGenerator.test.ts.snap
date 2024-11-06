@@ -235,6 +235,32 @@ fragment RelayMockPayloadGeneratorTest14Fragment on User {
 }
 `;
 
+exports[`generate mock for deeply nested list 1`] = `
+~~~~~~~~~~ INPUT ~~~~~~~~~~
+query RelayMockPayloadGeneratorDeeplyNestedListTestQuery {
+  deeplyNestedList(id: "my-deeply-nested-list-id") {
+    __typename
+    id
+  }
+}
+
+~~~~~~~~~~ OUTPUT ~~~~~~~~~~
+{
+  "data": {
+    "deeplyNestedList": [
+      [
+        [
+          {
+            "__typename": "CustomNode",
+            "id": "<CustomNode-mock-id-1>"
+          }
+        ]
+      ]
+    ]
+  }
+}
+`;
+
 exports[`generate mock for enum 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
 query RelayMockPayloadGeneratorTest1Query {
@@ -344,6 +370,30 @@ fragment RelayMockPayloadGeneratorTest19Fragment on User {
         "uri": "<mock-value-for-field-\\"uri\\">"
       }
     }
+  }
+}
+`;
+
+exports[`generate mock for nested list 1`] = `
+~~~~~~~~~~ INPUT ~~~~~~~~~~
+query RelayMockPayloadGeneratorNestedListTestQuery {
+  nestedList(id: "my-nested-list-id") {
+    __typename
+    id
+  }
+}
+
+~~~~~~~~~~ OUTPUT ~~~~~~~~~~
+{
+  "data": {
+    "nestedList": [
+      [
+        {
+          "__typename": "CustomNode",
+          "id": "<CustomNode-mock-id-1>"
+        }
+      ]
+    ]
   }
 }
 `;

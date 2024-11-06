@@ -20,17 +20,33 @@ import {
 import { readFileSync } from "fs";
 
 import { graphql } from "@graphitation/graphql-js-tag";
+import { mergeSchemas } from "@graphql-tools/schema";
 import { generate, MockResolvers } from "..";
 import { TypeMap } from "./__generated__/schema-types";
 
 import { FIXTURE_TAG } from "relay-test-utils-internal/lib/generateTestsFromFixtures";
 
-const schema = buildSchema(
-  readFileSync(
-    require.resolve("relay-test-utils-internal/lib/testschema.graphql"),
-    "utf8",
-  ),
-);
+const schema = mergeSchemas({
+  schemas: [
+    buildSchema(
+      readFileSync(
+        require.resolve("relay-test-utils-internal/lib/testschema.graphql"),
+        "utf8",
+      ),
+    ),
+    // extension over "relay-test-utils-internal" schema
+    buildSchema(/* GraphQL */ `
+      type Query {
+        nestedList(id: ID!): [[CustomNode!]!]!
+        deeplyNestedList(id: ID!): [[[CustomNode!]!]!]!
+      }
+
+      type CustomNode {
+        id: ID!
+      }
+    `),
+  ],
+});
 
 function testGeneratedData(
   documentNode: DocumentNode,
@@ -2066,4 +2082,26 @@ test("uses explicit mock data over type based mock data", () => {
       Image: () => ({ width: 200 }),
     },
   );
+});
+
+test("generate mock for nested list", () => {
+  testGeneratedData(graphql`
+    query RelayMockPayloadGeneratorNestedListTestQuery {
+      nestedList(id: "my-nested-list-id") {
+        __typename
+        id
+      }
+    }
+  `);
+});
+
+test("generate mock for deeply nested list", () => {
+  testGeneratedData(graphql`
+    query RelayMockPayloadGeneratorDeeplyNestedListTestQuery {
+      deeplyNestedList(id: "my-deeply-nested-list-id") {
+        __typename
+        id
+      }
+    }
+  `);
 });

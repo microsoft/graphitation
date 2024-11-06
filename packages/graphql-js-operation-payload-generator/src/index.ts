@@ -1,4 +1,5 @@
 import {
+  GraphQLList,
   GraphQLObjectType,
   executeSync,
   getNamedType,
@@ -23,6 +24,7 @@ import type {
   FragmentDefinitionNode,
   SelectionNode,
   SelectionSetNode,
+  GraphQLOutputType,
 } from "graphql";
 import { pathToArray } from "graphql/jsutils/Path";
 import {
@@ -39,11 +41,6 @@ import type {
 } from "./vendor/RelayMockPayloadGenerator";
 import invariant from "invariant";
 import deepmerge from "deepmerge";
-import {
-  applyLogicToNestedArray,
-  getArrayDepthFromType,
-  wrapInArray,
-} from "./utils";
 
 export type { MockResolvers };
 
@@ -159,7 +156,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
         if (isList) {
           const value = source[selectionName];
           const result = Array.isArray(value)
-            ? applyLogicToNestedArray(value, generateValue)
+            ? applyIterateeToNestedArray(value, generateValue)
             : wrapInArray(
                 generateValue(value as object),
                 getArrayDepthFromType(info.returnType),
@@ -479,4 +476,39 @@ function getRootType(
     case "subscription":
       return operation.schema.getSubscriptionType();
   }
+}
+
+function applyIterateeToNestedArray<T, U>(
+  value: T | T[],
+  iteratee: (item: T) => U,
+): U | U[] {
+  if (Array.isArray(value)) {
+    return value.map((element) =>
+      applyIterateeToNestedArray(element, iteratee),
+    ) as U[];
+  } else {
+    return iteratee(value);
+  }
+}
+
+function wrapInArray(value: unknown, depth: number) {
+  let result = value;
+
+  for (let i = 0; i < depth; i++) {
+    result = [result];
+  }
+
+  return result;
+}
+
+function getArrayDepthFromType(type: GraphQLOutputType) {
+  let depth = 0;
+  let currentType = getNullableType(type);
+
+  while (currentType instanceof GraphQLList) {
+    depth += 1;
+    currentType = getNullableType(currentType.ofType);
+  }
+
+  return depth;
 }
