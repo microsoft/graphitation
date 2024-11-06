@@ -39,6 +39,11 @@ import type {
 } from "./vendor/RelayMockPayloadGenerator";
 import invariant from "invariant";
 import deepmerge from "deepmerge";
+import {
+  applyLogicToNestedArray,
+  getArrayDepthFromType,
+  wrapInArray,
+} from "./utils";
 
 export type { MockResolvers };
 
@@ -154,8 +159,11 @@ export function generate<TypeMap extends DefaultMockResolvers>(
         if (isList) {
           const value = source[selectionName];
           const result = Array.isArray(value)
-            ? value.map(generateValue)
-            : [generateValue(value as object)];
+            ? applyLogicToNestedArray(value, generateValue)
+            : wrapInArray(
+                generateValue(value as object),
+                getArrayDepthFromType(info.returnType),
+              );
           return result;
         } else {
           return generateValue(source[selectionName] as object | undefined);
