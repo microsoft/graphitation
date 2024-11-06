@@ -95,7 +95,9 @@ queryRunningSuite.add(
       schemaFragment,
       document: parsedQuery,
       fieldExecutionHooks: {
-        beforeOperationExecute: () => {},
+        beforeOperationExecute: ({ context }) => {
+          (context as any).test = 0;
+        },
       },
       contextValue: { models },
     });
@@ -112,7 +114,9 @@ queryRunningSuite.add(
       schemaFragment,
       document: parsedQuery,
       fieldExecutionHooks: {
-        beforeOperationExecute: async () => {},
+        beforeOperationExecute: async ({ context }) => {
+          (context as any).test = 0;
+        },
       },
       contextValue: { models },
     });
@@ -129,7 +133,9 @@ queryRunningSuite.add(
       schemaFragment,
       document: parsedQuery,
       fieldExecutionHooks: {
-        beforeFieldResolve: () => {},
+        beforeFieldResolve: ({ context }) => {
+          (context as any).test = 0;
+        },
       },
       contextValue: { models },
     });
@@ -146,7 +152,9 @@ queryRunningSuite.add(
       schemaFragment,
       document: parsedQuery,
       fieldExecutionHooks: {
-        beforeFieldResolve: async () => {},
+        beforeFieldResolve: async ({ context }) => {
+          (context as any).test = 0;
+        },
       },
       contextValue: { models },
     });
