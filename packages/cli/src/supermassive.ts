@@ -19,8 +19,8 @@ type GenerateInterfacesOptions = {
   enumMigrationJsonFile?: string;
   enumMigrationExceptionsJsonFile?: string;
   generateOnlyEnums?: boolean;
-  contextNamespaceName?: string;
-  contextNamespacePath?: string;
+  contextImportNameTemplate?: string;
+  contextImportPathTemplate?: string;
   scope?: string;
 };
 
@@ -52,11 +52,11 @@ export function supermassive(): Command {
     )
     .option("-cn, --context-name [contextName]", "Context name")
     .option(
-      "-cm, --context-namespace-name [contextNamespaceName]",
+      "-cm, --context-import-name-template [contextImportNameTemplate]",
       "context namespace name",
     )
     .option(
-      "-cm, --context-namespace-path [contextNamespacePath]",
+      "-cm, --context-import-path-template [contextImportPathTemplate]",
       "context namespace path",
     )
     .option("-ei, --enums-import [enumsImport]", "from where to import enums")
@@ -144,8 +144,8 @@ async function generateInterfaces(
       useStringUnionsInsteadOfEnums: !!options.useStringUnionsInsteadOfEnums,
       generateOnlyEnums: !!options.generateOnlyEnums,
       modelScope: options.scope || null,
-      contextNamespaceName: options.contextNamespaceName,
-      contextNamespacePath: options.contextNamespacePath,
+      contextImportNameTemplate: options.contextImportNameTemplate,
+      contextImportPathTemplate: options.contextImportPathTemplate,
     });
 
     await fs.mkdir(outputPath, { recursive: true });

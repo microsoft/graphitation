@@ -25,6 +25,7 @@ import ts, {
 import { DefinitionImport, DefinitionModel } from "../types";
 import { createImportDeclaration } from "./utilities";
 import {
+  camelCase,
   createListType,
   createNonNullableType,
   createNullableType,
@@ -51,8 +52,8 @@ export type TsCodegenContextOptions = {
   };
   legacyCompat: boolean;
   legacyNoModelsForObjects: boolean;
-  contextNamespaceName?: string;
-  contextNamespacePath?: string;
+  contextImportPathTemplate?: string;
+  contextImportNameTemplate?: string;
   useStringUnionsInsteadOfEnums: boolean;
   enumNamesToMigrate: string[] | null;
   enumNamesToKeep: string[] | null;
@@ -113,7 +114,7 @@ export class TsCodegenContext {
   private typeNameToModels: Map<string, DefinitionModel>;
   private legacyInterfaces: Set<string>;
   context?: { name: string; from: string };
-  contextNamespace?: { name: string; from: string };
+  contextTemplate?: { nameTemplate: string; pathTemplate: string };
   hasUsedModelInInputs: boolean;
   hasUsedEnumsInModels: boolean;
   hasEnums: boolean;
@@ -137,10 +138,13 @@ export class TsCodegenContext {
     this.hasEnums = Boolean(options.enumsImport);
     this.hasUsedEnumsInModels = false;
 
-    if (options.contextNamespaceName && options.contextNamespacePath) {
-      this.contextNamespace = {
-        name: options.contextNamespaceName,
-        from: options.contextNamespacePath,
+    if (
+      options.contextImportNameTemplate &&
+      options.contextImportPathTemplate
+    ) {
+      this.contextTemplate = {
+        nameTemplate: options.contextImportNameTemplate,
+        pathTemplate: options.contextImportPathTemplate,
       };
     }
     if (options.context.from && options.context.name) {
@@ -181,20 +185,34 @@ export class TsCodegenContext {
     return null;
   }
 
-  public getContextNamespace(): { name: string; from: string } | null {
-    return this.contextNamespace || null;
+  public replaceTemplateWithContextName(
+    template: string,
+    contextName: string,
+    camelCased = true,
+  ) {
+    return template.replace(
+      "${contextName}",
+      camelCased ? camelCase(contextName, { pascalCase: true }) : contextName,
+    );
+  }
+
+  public getContextTemplate() {
+    return this.contextTemplate || null;
   }
 
   public getContextTypeNode(typeNames?: string[] | null) {
-    const contextNamespace = this.contextNamespace;
-    if (!typeNames || !typeNames.length || !contextNamespace) {
+    const contextTemplate = this.contextTemplate;
+    if (!typeNames || !typeNames.length || !contextTemplate) {
       return this.getContextType().toTypeReference();
     } else if (
       (typeNames.length === 1 && this.context) ||
       typeNames.length > 1
     ) {
       const typeNameWithNamespace = typeNames.map((typeName) => {
-        return `${contextNamespace.name}.${typeName}`;
+        return this.replaceTemplateWithContextName(
+          contextTemplate.nameTemplate,
+          typeName,
+        );
       });
 
       return factory.createIntersectionTypeNode(
@@ -211,7 +229,10 @@ export class TsCodegenContext {
     } else {
       return new TypeLocation(
         null,
-        `${contextNamespace.name}.${typeNames[0]}`,
+        this.replaceTemplateWithContextName(
+          contextTemplate.nameTemplate,
+          typeNames[0],
+        ),
       ).toTypeReference();
     }
   }
@@ -680,7 +701,7 @@ export function extractContext(
     ...options,
   };
   const context = new TsCodegenContext(fullOptions);
-  const { contextNamespaceName, contextNamespacePath } = options;
+  const { contextImportNameTemplate, contextImportPathTemplate } = options;
   visit(document, {
     Directive: {
       enter(node, _key, _parent, _path: any, ancestors) {
@@ -712,12 +733,12 @@ export function extractContext(
           context.addLegacyInterface(typeName);
         } else if (
           node.name.value === "context" &&
-          contextNamespaceName &&
-          contextNamespacePath
+          contextImportNameTemplate &&
+          contextImportPathTemplate
         ) {
           if (
             node.arguments?.length !== 1 ||
-            node.arguments[0].name.value !== "uses" ||
+            node.arguments[0].name.value !== "stateMachines" ||
             node.arguments[0].value.kind !== "ListValue"
           ) {
             throw new Error("Invalid context use");
