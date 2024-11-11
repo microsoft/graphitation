@@ -2,6 +2,27 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Mon, 11 Nov 2024 14:13:12 GMT",
+      "version": "1.13.0-alpha.3",
+      "tag": "@graphitation/cli_v1.13.0-alpha.3",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/cli",
+            "commit": "f3b1a34db0e9fc7bbf4ddf972fd509f4e7d9f5ac",
+            "comment": "Added import state machines templating"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.13.0-alpha.4",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 04 Nov 2024 17:34:20 GMT",
       "version": "1.13.0-alpha.2",
       "tag": "@graphitation/cli_v1.13.0-alpha.2",

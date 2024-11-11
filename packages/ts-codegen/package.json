@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/ts-codegen",
   "license": "MIT",
-  "version": "2.13.0-alpha.3",
+  "version": "2.13.0-alpha.4",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",

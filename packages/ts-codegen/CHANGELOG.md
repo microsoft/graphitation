@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Mon, 04 Nov 2024 17:34:20 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 11 Nov 2024 14:13:12 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 2.13.0-alpha.4
+
+Mon, 11 Nov 2024 14:13:12 GMT
+
+### Changes
+
+- Added import state machines templating (77059398+vejrj@users.noreply.github.com)
 
 ## 2.13.0-alpha.3
 
