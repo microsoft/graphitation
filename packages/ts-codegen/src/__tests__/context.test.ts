@@ -16,11 +16,11 @@ describe(generateTS, () => {
           }
 
           type Message {
-            id: ID! @context(uses: ["MessageStateMachine"])
+            id: ID! @context(stateMachines: ["message"])
           }
 
-          type User @context(uses: ["UserStateMachine"]) {
-            id: ID! @context(uses: ["IdUserStateMachine"])
+          type User @context(stateMachines: ["user"]) {
+            id: ID! @context(stateMachines: ["id-user"])
             name: String
             messagesWithAnswersNonRequired: [[Message]]
             messagesWithAnswersRequired: [[Message]]!
@@ -29,7 +29,7 @@ describe(generateTS, () => {
             messagesWithArrayRequired: [Message]!
             messagesRequired: [Message!]!
             messagesOnlyMessageRequired: [Message!]
-            post: Post @context(uses: ["PostStateMachine"])
+            post: Post @context(stateMachines: ["post"])
             postRequired: Post!
             avatar: Avatar
             avatarRequired: Avatar!
@@ -41,12 +41,12 @@ describe(generateTS, () => {
             optionalUser: User
             requiredUser: User!
             requiredPost: Post!
-            optionalPost: Post @context(uses: ["OptionalPostStateMachine"])
+            optionalPost: Post @context(stateMachines: ["optional-post"])
           }
         `,
         {
-          contextNamespaceName: "ContextNamespace",
-          contextNamespacePath: "context-package",
+          contextImportNameTemplate: "I${contextName}StateMachineContext",
+          contextImportPathTemplate: "@msteams/core-cdl-sync-${contextName}",
         },
       );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -88,7 +88,11 @@ describe(generateTS, () => {
         import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import type { ContextNamespace } from "context-package";
+        import type { IMessageStateMachineContext } from "@msteams/core-cdl-sync-message";
+        import type { IUserStateMachineContext } from "@msteams/core-cdl-sync-user";
+        import type { IIdUserStateMachineContext } from "@msteams/core-cdl-sync-id-user";
+        import type { IPostStateMachineContext } from "@msteams/core-cdl-sync-post";
+        import type { IOptionalPostStateMachineContext } from "@msteams/core-cdl-sync-optional-post";
         export declare namespace Post {
             export interface Resolvers {
                 readonly id?: id;
@@ -99,7 +103,7 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: Models.Message, args: {}, context: ContextNamespace.MessageStateMachine, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.Message, args: {}, context: IMessageStateMachineContext, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace User {
             export interface Resolvers {
@@ -117,19 +121,19 @@ describe(generateTS, () => {
                 readonly avatar?: avatar;
                 readonly avatarRequired?: avatarRequired;
             }
-            export type id = (model: Models.User, args: {}, context: ContextNamespace.IdUserStateMachine, info: ResolveInfo) => PromiseOrValue<string>;
-            export type name = (model: Models.User, args: {}, context: ContextNamespace.UserStateMachine, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
-            export type messagesWithAnswersNonRequired = (model: Models.User, args: {}, context: ContextNamespace.UserStateMachine, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message | null | undefined> | null | undefined> | null | undefined>;
-            export type messagesWithAnswersRequired = (model: Models.User, args: {}, context: ContextNamespace.UserStateMachine, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message | null | undefined> | null | undefined>>;
-            export type messagesWithAnswersAllRequired = (model: Models.User, args: {}, context: ContextNamespace.UserStateMachine, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message>>>;
-            export type messagesNonRequired = (model: Models.User, args: {}, context: ContextNamespace.UserStateMachine, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message | null | undefined> | null | undefined>;
-            export type messagesWithArrayRequired = (model: Models.User, args: {}, context: ContextNamespace.UserStateMachine, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message | null | undefined>>;
-            export type messagesRequired = (model: Models.User, args: {}, context: ContextNamespace.UserStateMachine, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message>>;
-            export type messagesOnlyMessageRequired = (model: Models.User, args: {}, context: ContextNamespace.UserStateMachine, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message> | null | undefined>;
-            export type post = (model: Models.User, args: {}, context: ContextNamespace.PostStateMachine, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
-            export type postRequired = (model: Models.User, args: {}, context: ContextNamespace.UserStateMachine, info: ResolveInfo) => PromiseOrValue<Models.Post>;
-            export type avatar = (model: Models.User, args: {}, context: ContextNamespace.UserStateMachine, info: ResolveInfo) => PromiseOrValue<Avatar | null | undefined>;
-            export type avatarRequired = (model: Models.User, args: {}, context: ContextNamespace.UserStateMachine, info: ResolveInfo) => PromiseOrValue<Avatar>;
+            export type id = (model: Models.User, args: {}, context: IIdUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<string>;
+            export type name = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
+            export type messagesWithAnswersNonRequired = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message | null | undefined> | null | undefined> | null | undefined>;
+            export type messagesWithAnswersRequired = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message | null | undefined> | null | undefined>>;
+            export type messagesWithAnswersAllRequired = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message>>>;
+            export type messagesNonRequired = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message | null | undefined> | null | undefined>;
+            export type messagesWithArrayRequired = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message | null | undefined>>;
+            export type messagesRequired = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message>>;
+            export type messagesOnlyMessageRequired = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message> | null | undefined>;
+            export type post = (model: Models.User, args: {}, context: IPostStateMachineContext, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
+            export type postRequired = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<Models.Post>;
+            export type avatar = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<Avatar | null | undefined>;
+            export type avatarRequired = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<Avatar>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -145,7 +149,7 @@ describe(generateTS, () => {
             export type optionalUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
             export type requiredUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
             export type requiredPost = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Post>;
-            export type optionalPost = (model: unknown, args: {}, context: ContextNamespace.OptionalPostStateMachine, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
+            export type optionalPost = (model: unknown, args: {}, context: IOptionalPostStateMachineContext, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
         }
         "
       `);
@@ -280,11 +284,11 @@ describe(generateTS, () => {
     test("case when interface implements multiple interfaces", () => {
       const { resolvers, models, enums, inputs } = runGenerateTest(
         graphql`
-          interface Node @context(uses: ["NodeStateMachine"]) {
+          interface Node @context(stateMachines: ["node"]) {
             id: ID!
           }
 
-          interface Persona @context(uses: ["PersonaStateMachine"]) {
+          interface Persona @context(stateMachines: ["persona"]) {
             phone: String!
           }
 
@@ -294,7 +298,7 @@ describe(generateTS, () => {
           }
 
           type Admin implements Node & Persona
-            @context(uses: ["AdminStateMachine"]) {
+            @context(stateMachines: ["admin"]) {
             id: ID!
             rank: Int!
           }
@@ -305,8 +309,8 @@ describe(generateTS, () => {
           }
         `,
         {
-          contextNamespaceName: "ContextNamespace",
-          contextNamespacePath: "context-package",
+          contextImportNameTemplate: "I${contextName}StateMachineContext",
+          contextImportPathTemplate: "@msteams/core-cdl-sync-${contextName}",
         },
       );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -336,32 +340,34 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import type { ContextNamespace } from "context-package";
+        import type { INodeStateMachineContext } from "@msteams/core-cdl-sync-node";
+        import type { IPersonaStateMachineContext } from "@msteams/core-cdl-sync-persona";
+        import type { IAdminStateMachineContext } from "@msteams/core-cdl-sync-admin";
         export declare namespace Node {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: unknown, context: ContextNamespace.NodeStateMachine, info: ResolveInfo) => PromiseOrValue<string | null>;
+            export type __resolveType = (parent: unknown, context: INodeStateMachineContext, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
         export declare namespace Persona {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: unknown, context: ContextNamespace.PersonaStateMachine, info: ResolveInfo) => PromiseOrValue<string | null>;
+            export type __resolveType = (parent: unknown, context: IPersonaStateMachineContext, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
         export declare namespace User {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: unknown, context: ContextNamespace.NodeStateMachine & ContextNamespace.PersonaStateMachine, info: ResolveInfo) => PromiseOrValue<string | null>;
+            export type __resolveType = (parent: unknown, context: INodeStateMachineContext & IPersonaStateMachineContext, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
         export declare namespace Admin {
             export interface Resolvers {
                 readonly id?: id;
                 readonly rank?: rank;
             }
-            export type id = (model: Models.Admin, args: {}, context: ContextNamespace.AdminStateMachine, info: ResolveInfo) => PromiseOrValue<string>;
-            export type rank = (model: Models.Admin, args: {}, context: ContextNamespace.AdminStateMachine, info: ResolveInfo) => PromiseOrValue<number>;
+            export type id = (model: Models.Admin, args: {}, context: IAdminStateMachineContext, info: ResolveInfo) => PromiseOrValue<string>;
+            export type rank = (model: Models.Admin, args: {}, context: IAdminStateMachineContext, info: ResolveInfo) => PromiseOrValue<number>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -369,7 +375,7 @@ describe(generateTS, () => {
                 readonly admins?: admins;
             }
             export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User | null | undefined> | null | undefined>;
-            export type admins = (model: unknown, args: {}, context: ContextNamespace.AdminStateMachine, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Admin | null | undefined> | null | undefined>;
+            export type admins = (model: unknown, args: {}, context: IAdminStateMachineContext, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Admin | null | undefined> | null | undefined>;
         }
         "
       `);
@@ -406,7 +412,7 @@ describe(generateTS, () => {
     test("implements", () => {
       const { resolvers, models, enums, inputs } = runGenerateTest(
         graphql`
-          interface Node @context(uses: ["NodeStateMachine"]) {
+          interface Node @context(stateMachines: ["node"]) {
             id: ID!
           }
 
@@ -420,8 +426,8 @@ describe(generateTS, () => {
           }
         `,
         {
-          contextNamespaceName: "ContextNamespace",
-          contextNamespacePath: "context-package",
+          contextImportNameTemplate: "I${contextName}StateMachineContext",
+          contextImportPathTemplate: "@msteams/core-cdl-sync-${contextName}",
         },
       );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -445,20 +451,20 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import type { ContextNamespace } from "context-package";
+        import type { INodeStateMachineContext } from "@msteams/core-cdl-sync-node";
         export declare namespace Node {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: unknown, context: ContextNamespace.NodeStateMachine, info: ResolveInfo) => PromiseOrValue<string | null>;
+            export type __resolveType = (parent: unknown, context: INodeStateMachineContext, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
                 readonly name?: name;
             }
-            export type id = (model: Models.User, args: {}, context: ContextNamespace.NodeStateMachine, info: ResolveInfo) => PromiseOrValue<string>;
-            export type name = (model: Models.User, args: {}, context: ContextNamespace.NodeStateMachine, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.User, args: {}, context: INodeStateMachineContext, info: ResolveInfo) => PromiseOrValue<string>;
+            export type name = (model: Models.User, args: {}, context: INodeStateMachineContext, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -536,11 +542,11 @@ describe(generateTS, () => {
     test("Union and interface types", () => {
       const { resolvers, models, enums, inputs } = runGenerateTest(
         graphql`
-          type Customer @context(uses: ["CustomStateMachine"]) {
+          type Customer @context(stateMachines: ["custom"]) {
             id: ID!
           }
 
-          type Admin @context(uses: ["AdminStateMachine"]) {
+          type Admin @context(stateMachines: ["admin"]) {
             id: ID!
           }
 
@@ -551,15 +557,15 @@ describe(generateTS, () => {
           union whatever = User | Admin
 
           extend type Query {
-            userById(id: ID!): whatever @context(uses: ["WhateverStateMachine"])
+            userById(id: ID!): whatever @context(stateMachines: ["whatever"])
             userByMail(mail: String): whatever
-              @context(uses: ["DifferentWhateverStateMachine"])
+              @context(stateMachines: ["different-whatever"])
             node(id: ID!): Node
           }
         `,
         {
-          contextNamespaceName: "ContextNamespace",
-          contextNamespacePath: "context-package",
+          contextImportNameTemplate: "I${contextName}StateMachineContext",
+          contextImportPathTemplate: "@msteams/core-cdl-sync-${contextName}",
         },
       );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -587,18 +593,21 @@ describe(generateTS, () => {
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import type { ContextNamespace } from "context-package";
+        import type { ICustomStateMachineContext } from "@msteams/core-cdl-sync-custom";
+        import type { IAdminStateMachineContext } from "@msteams/core-cdl-sync-admin";
+        import type { IWhateverStateMachineContext } from "@msteams/core-cdl-sync-whatever";
+        import type { IDifferentWhateverStateMachineContext } from "@msteams/core-cdl-sync-different-whatever";
         export declare namespace Customer {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: Models.Customer, args: {}, context: ContextNamespace.CustomStateMachine, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.Customer, args: {}, context: ICustomStateMachineContext, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Admin {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: Models.Admin, args: {}, context: ContextNamespace.AdminStateMachine, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.Admin, args: {}, context: IAdminStateMachineContext, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Node {
             export interface Resolvers {
@@ -610,7 +619,7 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: Models.User | Models.Admin, context: ContextNamespace.AdminStateMachine, info: ResolveInfo) => PromiseOrValue<"User" | "Admin" | null>;
+            export type __resolveType = (parent: Models.User | Models.Admin, context: IAdminStateMachineContext, info: ResolveInfo) => PromiseOrValue<"User" | "Admin" | null>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -620,10 +629,10 @@ describe(generateTS, () => {
             }
             export type userById = (model: unknown, args: {
                 readonly id: string;
-            }, context: ContextNamespace.WhateverStateMachine, info: ResolveInfo) => PromiseOrValue<Models.whatever | null | undefined>;
+            }, context: IWhateverStateMachineContext, info: ResolveInfo) => PromiseOrValue<Models.whatever | null | undefined>;
             export type userByMail = (model: unknown, args: {
                 readonly mail?: string | null;
-            }, context: ContextNamespace.DifferentWhateverStateMachine, info: ResolveInfo) => PromiseOrValue<Models.whatever | null | undefined>;
+            }, context: IDifferentWhateverStateMachineContext, info: ResolveInfo) => PromiseOrValue<Models.whatever | null | undefined>;
             export type node = (model: unknown, args: {
                 readonly id: string;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Node | null | undefined>;
@@ -649,8 +658,8 @@ function runGenerateTest(
     enumNamesToMigrate?: string[];
     enumNamesToKeep?: string[];
     modelScope?: string;
-    contextNamespaceName?: string;
-    contextNamespacePath?: string;
+    contextImportNameTemplate?: string;
+    contextImportPathTemplate?: string;
   } = {},
 ): {
   enums?: string;
@@ -665,8 +674,8 @@ function runGenerateTest(
   enumNamesToMigrate?: string[];
   enumNamesToKeep?: string[];
   modelScope?: string;
-  contextNamespaceName?: string;
-  contextNamespacePath?: string;
+  contextImportNameTemplate?: string;
+  contextImportPathTemplate?: string;
 } {
   const fullOptions: {
     outputPath: string;
@@ -679,8 +688,8 @@ function runGenerateTest(
     useStringUnionsInsteadOfEnums?: boolean;
     enumNamesToMigrate?: string[];
     enumNamesToKeep?: string[];
-    contextNamespaceName?: string;
-    contextNamespacePath?: string;
+    contextImportNameTemplate?: string;
+    contextImportPathTemplate?: string;
   } = {
     outputPath: "__generated__",
     documentPath: "./typedef.graphql",
@@ -708,8 +717,8 @@ function runGenerateTest(
     enums: enums && printer.printFile(enums),
     inputs: inputs && printer.printFile(inputs),
     models: printer.printFile(models),
-    contextNamespaceName: options.contextNamespaceName,
-    contextNamespacePath: options.contextNamespacePath,
+    contextImportNameTemplate: options.contextImportNameTemplate,
+    contextImportPathTemplate: options.contextImportPathTemplate,
     resolvers: printer.printFile(resolvers),
     legacyTypes: legacyTypes && printer.printFile(legacyTypes),
     legacyResolvers: legacyResolvers && printer.printFile(legacyResolvers),
