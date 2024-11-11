@@ -3,5 +3,5 @@
   "comment": "Added import state machines templating",
   "packageName": "@graphitation/ts-codegen",
   "email": "77059398+vejrj@users.noreply.github.com",
-  "dependentChangeType": "patch"
+  "dependentChangeType": "none"
 }
