@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Wed, 13 Nov 2024 20:52:03 GMT",
+      "version": "2.13.0-alpha.5",
+      "tag": "@graphitation/ts-codegen_v2.13.0-alpha.5",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "e9a34254f389d06042d7deb11bca819dd2d642ed",
+            "comment": "Solution cleanup - new cli parameters and inheritance fixes"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 11 Nov 2024 14:13:12 GMT",
       "version": "2.13.0-alpha.4",
       "tag": "@graphitation/ts-codegen_v2.13.0-alpha.4",
