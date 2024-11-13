@@ -402,12 +402,7 @@ function createInterfaceTypeResolvers(
   context: TsCodegenContext,
   type: InterfaceType,
 ): ts.ModuleDeclaration {
-  let contextRootType = context.getContextMap()[type.name];
-
-  if (!contextRootType && type.interfaces.length) {
-    contextRootType = context.mergeContexts(type.interfaces);
-  }
-
+  const contextRootType = context.getContextMap()[type.name];
   const contextTypes = context.getContextTypes(contextRootType);
 
   const resolversObject = factory.createInterfaceDeclaration(

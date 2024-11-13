@@ -358,7 +358,7 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: unknown, context: INodeStateMachineContext & IPersonaStateMachineContext, info: ResolveInfo) => PromiseOrValue<string | null>;
+            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
         export declare namespace Admin {
             export interface Resolvers {
@@ -408,14 +408,20 @@ describe(generateTS, () => {
       `);
     });
 
-    test("implements", () => {
+    test("implements -> @context in interfaces should be used only in resolveType", () => {
       const { resolvers, models, enums, inputs } = runGenerateTest(
         graphql`
           interface Node @context(stateMachines: ["node"]) {
             id: ID!
           }
 
-          type User implements Node {
+          interface Customer implements Node
+            @context(stateMachines: ["customer"]) {
+            id: ID!
+            name: String!
+          }
+
+          type User implements Node & Customer {
             id: ID!
             name: String!
           }
@@ -439,7 +445,10 @@ describe(generateTS, () => {
         export interface Node extends BaseModel {
             readonly __typename?: string;
         }
-        export interface User extends BaseModel, Node {
+        export interface Customer extends BaseModel, Node {
+            readonly __typename?: string;
+        }
+        export interface User extends BaseModel, Node, Customer {
             readonly __typename?: "User";
             readonly id: string;
             readonly name: string;
@@ -451,19 +460,26 @@ describe(generateTS, () => {
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
         import type { INodeStateMachineContext } from "@msteams/core-cdl-sync-node";
+        import type { ICustomerStateMachineContext } from "@msteams/core-cdl-sync-customer";
         export declare namespace Node {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
             export type __resolveType = (parent: unknown, context: INodeStateMachineContext, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
+        export declare namespace Customer {
+            export interface Resolvers {
+                readonly __resolveType?: __resolveType;
+            }
+            export type __resolveType = (parent: unknown, context: ICustomerStateMachineContext, info: ResolveInfo) => PromiseOrValue<string | null>;
+        }
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
                 readonly name?: name;
             }
-            export type id = (model: Models.User, args: {}, context: INodeStateMachineContext, info: ResolveInfo) => PromiseOrValue<string>;
-            export type name = (model: Models.User, args: {}, context: INodeStateMachineContext, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type name = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Query {
             export interface Resolvers {
