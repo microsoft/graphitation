@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "fix(apollo-forest-run): do not leak variables when operation is evicted via LRU",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}
