@@ -566,6 +566,10 @@ describe(generateTS, () => {
             id: ID!
           }
 
+          type User @context(stateMachines: ["user"]) {
+            id: ID!
+          }
+
           interface Node {
             id: ID!
           }
@@ -599,6 +603,10 @@ describe(generateTS, () => {
             readonly __typename?: "Admin";
             readonly id: string;
         }
+        export interface User extends BaseModel {
+            readonly __typename?: "User";
+            readonly id: string;
+        }
         export interface Node extends BaseModel {
             readonly __typename?: string;
         }
@@ -611,6 +619,7 @@ describe(generateTS, () => {
         import * as Models from "./models.interface";
         import type { ICustomStateMachineContext } from "@msteams/core-cdl-sync-custom";
         import type { IAdminStateMachineContext } from "@msteams/core-cdl-sync-admin";
+        import type { IUserStateMachineContext } from "@msteams/core-cdl-sync-user";
         import type { IWhateverStateMachineContext } from "@msteams/core-cdl-sync-whatever";
         import type { IDifferentWhateverStateMachineContext } from "@msteams/core-cdl-sync-different-whatever";
         export declare namespace Customer {
@@ -625,6 +634,12 @@ describe(generateTS, () => {
             }
             export type id = (model: Models.Admin, args: {}, context: IAdminStateMachineContext, info: ResolveInfo) => PromiseOrValue<string>;
         }
+        export declare namespace User {
+            export interface Resolvers {
+                readonly id?: id;
+            }
+            export type id = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<string>;
+        }
         export declare namespace Node {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
@@ -635,7 +650,7 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: Models.User | Models.Admin, context: IAdminStateMachineContext, info: ResolveInfo) => PromiseOrValue<"User" | "Admin" | null>;
+            export type __resolveType = (parent: Models.User | Models.Admin, context: unknown, info: ResolveInfo) => PromiseOrValue<"User" | "Admin" | null>;
         }
         export declare namespace Query {
             export interface Resolvers {

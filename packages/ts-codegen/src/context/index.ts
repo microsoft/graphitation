@@ -99,10 +99,12 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
 };
 
 type ModelNameAndImport = { modelName: string; imp: DefinitionImport };
-
+type ContextTypeItem = { __context?: string[] } & { [key: string]: string[] };
 export class TsCodegenContext {
   private allTypes: Array<Type>;
-  private typeContextMap: any;
+  private typeContextMap: {
+    [key: string]: ContextTypeItem;
+  };
   private allRootTypeNames: Set<string>;
   private typeNameToType: Map<string, Type>;
   private usedEntitiesInModels: Set<string>;
@@ -155,11 +157,11 @@ export class TsCodegenContext {
     }
 
     if (
-      options.defaultContextSubTypePath &&
+      options.defaultContextSubTypeName &&
       options.defaultContextSubTypePath
     ) {
       this.contextDefaultSubTypeContext = {
-        name: options.defaultContextSubTypePath,
+        name: options.defaultContextSubTypeName,
         from: options.defaultContextSubTypePath,
       };
     }
@@ -170,23 +172,6 @@ export class TsCodegenContext {
         from: options.context.from,
       };
     }
-  }
-
-  public mergeContexts(typeNames: string[]): { __context: string[] } | null {
-    const output = typeNames.reduce<{ __context: string[] }>(
-      (contextRootType, interfaceName) => {
-        if (this.getContextMap()[interfaceName]?.__context) {
-          contextRootType.__context = [
-            ...contextRootType.__context,
-            ...this.getContextMap()[interfaceName].__context,
-          ];
-        }
-        return contextRootType;
-      },
-      { __context: [] },
-    );
-
-    return output.__context.length ? output : null;
   }
 
   public getContextTypes<T>(
@@ -223,7 +208,7 @@ export class TsCodegenContext {
     if (!typeNames || !typeNames.length || !contextDefaultSubTypeTemplate) {
       return this.getContextType().toTypeReference();
     } else if (
-      (typeNames.length === 1 && this.context) ||
+      (typeNames.length === 1 && this.contextDefaultSubTypeContext) ||
       typeNames.length > 1
     ) {
       const typeNameWithNamespace = typeNames.map((typeName) => {
@@ -234,8 +219,8 @@ export class TsCodegenContext {
       });
 
       return factory.createIntersectionTypeNode(
-        (this.context
-          ? [this.context.name, ...typeNameWithNamespace]
+        (this.contextDefaultSubTypeContext
+          ? [this.contextDefaultSubTypeContext.name, ...typeNameWithNamespace]
           : typeNameWithNamespace
         ).map((type: string) => {
           return factory.createTypeReferenceNode(
@@ -327,6 +312,32 @@ export class TsCodegenContext {
     }
   }
 
+  getSubTypeNamesFromTemplate(
+    subTypes: string[],
+    nameTemplate: string,
+    pathTemplate: string,
+  ) {
+    return subTypes.reduce<Record<string, string[]>>(
+      (acc: Record<string, string[]>, importName: string) => {
+        const importPath = this.replaceTemplateWithContextName(
+          pathTemplate,
+          importName,
+          false,
+        );
+        if (importPath) {
+          if (!acc[importPath]) {
+            acc[importPath] = [];
+          }
+          acc[importPath].push(
+            this.replaceTemplateWithContextName(nameTemplate, importName),
+          );
+        }
+        return acc;
+      },
+      {},
+    );
+  }
+
   isLegacyCompatMode(): boolean {
     return this.options.legacyCompat;
   }
@@ -397,15 +408,15 @@ export class TsCodegenContext {
     }
   }
 
-  getTypeFromTypeNode(node: TypeNode | string): ts.TypeNode | string {
+  getTypeFromTypeNode(node: TypeNode): string {
     if (typeof node === "string") {
       return node;
     }
 
     if (node.kind === Kind.NON_NULL_TYPE) {
-      return this.getTypeFromTypeNode(node.type) as ts.TypeNode;
+      return this.getTypeFromTypeNode(node.type);
     } else if (node.kind === Kind.LIST_TYPE) {
-      return this.getTypeFromTypeNode(node.type) as ts.TypeNode;
+      return this.getTypeFromTypeNode(node.type);
     } else {
       return node.name.value;
     }
@@ -748,8 +759,10 @@ export function extractContext(
     ...TsCodegenContextDefault,
     ...options,
   };
+
   const context = new TsCodegenContext(fullOptions);
   const { contextSubTypeNameTemplate, contextSubTypePathTemplate } = options;
+
   visit(document, {
     Directive: {
       enter(node, _key, _parent, _path: any, ancestors) {

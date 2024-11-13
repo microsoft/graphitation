@@ -54,19 +54,19 @@ export function supermassive(): Command {
     )
     .option("-cn, --context-type-name [contextTypeName]", "Context type name")
     .option(
-      "-dcp, --default-context-subtype-path [defaultContextSubTypePath]",
+      "-dcp, --default-context-sub-type-path [defaultContextSubTypePath]",
       "from where to import context",
     )
     .option(
-      "-dcn, --default-context-subtype-name [defaultContextSubTypeName]",
+      "-dcn, --default-context-sub-type-name [defaultContextSubTypeName]",
       "Context name",
     )
     .option(
-      "-cm, --context-import-name-template [contextSubTypeNameTemplate]",
+      "-cm, --context-sub-type-name-template [contextSubTypeNameTemplate]",
       "context namespace name",
     )
     .option(
-      "-cm, --context-import-path-template [contextSubTypePathTemplate]",
+      "-cm, --context-sub-type-path-template [contextSubTypePathTemplate]",
       "context namespace path",
     )
     .option("-ei, --enums-import [enumsImport]", "from where to import enums")
