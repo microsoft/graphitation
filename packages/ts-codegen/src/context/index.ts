@@ -52,8 +52,10 @@ export type TsCodegenContextOptions = {
   };
   legacyCompat: boolean;
   legacyNoModelsForObjects: boolean;
-  contextImportPathTemplate?: string;
-  contextImportNameTemplate?: string;
+  contextSubTypePathTemplate?: string;
+  contextSubTypeNameTemplate?: string;
+  defaultContextSubTypePath?: string;
+  defaultContextSubTypeName?: string;
   useStringUnionsInsteadOfEnums: boolean;
   enumNamesToMigrate: string[] | null;
   enumNamesToKeep: string[] | null;
@@ -114,7 +116,11 @@ export class TsCodegenContext {
   private typeNameToModels: Map<string, DefinitionModel>;
   private legacyInterfaces: Set<string>;
   context?: { name: string; from: string };
-  contextTemplate?: { nameTemplate: string; pathTemplate: string };
+  contextDefaultSubTypeTemplate?: {
+    nameTemplate: string;
+    pathTemplate: string;
+  };
+  contextDefaultSubTypeContext?: { name: string; from: string };
   hasUsedModelInInputs: boolean;
   hasUsedEnumsInModels: boolean;
   hasEnums: boolean;
@@ -139,14 +145,25 @@ export class TsCodegenContext {
     this.hasUsedEnumsInModels = false;
 
     if (
-      options.contextImportNameTemplate &&
-      options.contextImportPathTemplate
+      options.contextSubTypeNameTemplate &&
+      options.contextSubTypePathTemplate
     ) {
-      this.contextTemplate = {
-        nameTemplate: options.contextImportNameTemplate,
-        pathTemplate: options.contextImportPathTemplate,
+      this.contextDefaultSubTypeTemplate = {
+        nameTemplate: options.contextSubTypeNameTemplate,
+        pathTemplate: options.contextSubTypePathTemplate,
       };
     }
+
+    if (
+      options.defaultContextSubTypePath &&
+      options.defaultContextSubTypePath
+    ) {
+      this.contextDefaultSubTypeContext = {
+        name: options.defaultContextSubTypePath,
+        from: options.defaultContextSubTypePath,
+      };
+    }
+
     if (options.context.from && options.context.name) {
       this.context = {
         name: options.context.name,
@@ -197,12 +214,13 @@ export class TsCodegenContext {
   }
 
   public getContextTemplate() {
-    return this.contextTemplate || null;
+    return this.contextDefaultSubTypeTemplate || null;
   }
 
   public getContextTypeNode(typeNames?: string[] | null) {
-    const contextTemplate = this.contextTemplate;
-    if (!typeNames || !typeNames.length || !contextTemplate) {
+    const contextDefaultSubTypeTemplate = this.contextDefaultSubTypeTemplate;
+
+    if (!typeNames || !typeNames.length || !contextDefaultSubTypeTemplate) {
       return this.getContextType().toTypeReference();
     } else if (
       (typeNames.length === 1 && this.context) ||
@@ -210,7 +228,7 @@ export class TsCodegenContext {
     ) {
       const typeNameWithNamespace = typeNames.map((typeName) => {
         return this.replaceTemplateWithContextName(
-          contextTemplate.nameTemplate,
+          contextDefaultSubTypeTemplate.nameTemplate,
           typeName,
         );
       });
@@ -230,56 +248,82 @@ export class TsCodegenContext {
       return new TypeLocation(
         null,
         this.replaceTemplateWithContextName(
-          contextTemplate.nameTemplate,
+          contextDefaultSubTypeTemplate.nameTemplate,
           typeNames[0],
         ),
       ).toTypeReference();
     }
   }
 
+  private isNonArrayNode(
+    node: ASTNode | ReadonlyArray<ASTNode>,
+  ): node is ASTNode {
+    return !Array.isArray(node);
+  }
+
   // FIX any
-  public initContextMap(ancestors: any, values: string[]) {
+  public initContextMap(
+    ancestors: ReadonlyArray<ASTNode | ReadonlyArray<ASTNode>>,
+    values: string[],
+  ) {
     if (ancestors.length < 2) {
-      throw new Error("wtf is happening");
+      throw new Error("Invalid document provided");
     }
 
     const node = ancestors[ancestors.length - 1];
+    const nonArrayNode = this.isNonArrayNode(node) ? node : null;
 
-    if (
-      node?.kind === "ObjectTypeDefinition" ||
-      node?.kind === "InterfaceTypeDefinition"
-    ) {
-      if (this.typeContextMap[node.name.value]?.__context) {
-        throw new Error("Type already visited");
+    if (nonArrayNode) {
+      if (
+        nonArrayNode?.kind === "ObjectTypeDefinition" ||
+        nonArrayNode?.kind === "InterfaceTypeDefinition"
+      ) {
+        if (this.typeContextMap[nonArrayNode.name.value]?.__context) {
+          throw new Error("Type already visited");
+        }
+
+        const typeName = nonArrayNode.name.value;
+        if (!this.typeContextMap[typeName]) {
+          this.typeContextMap[typeName] = {};
+        }
+
+        this.typeContextMap[typeName].__context = values;
+
+        if (nonArrayNode?.interfaces?.length) {
+          this.typeContextMap[typeName].__interfaces =
+            nonArrayNode.interfaces.map(
+              (interfaceDefinitionNode: any) =>
+                interfaceDefinitionNode.name.value,
+            );
+        }
+
+        if (
+          nonArrayNode?.interfaces?.length &&
+          nonArrayNode?.kind === "InterfaceTypeDefinition"
+        ) {
+          this.typeContextMap[typeName].__interfaces =
+            nonArrayNode.interfaces.map(
+              (interfaceDefinitionNode: any) =>
+                interfaceDefinitionNode.name.value,
+            );
+        }
+      } else if (nonArrayNode?.kind === "FieldDefinition") {
+        const node = ancestors[ancestors.length - 3];
+        const typeName =
+          this.isNonArrayNode(node) &&
+          (node.kind === "ObjectTypeDefinition" ||
+            node.kind === "ObjectTypeExtension")
+            ? node.name.value
+            : null;
+
+        if (typeName) {
+          if (!this.typeContextMap[typeName]) {
+            this.typeContextMap[typeName] = {};
+          }
+
+          this.typeContextMap[typeName][nonArrayNode.name.value] = values;
+        }
       }
-
-      const typeName = ancestors[ancestors.length - 1].name.value;
-      if (!this.typeContextMap[typeName]) {
-        this.typeContextMap[typeName] = {};
-      }
-
-      this.typeContextMap[typeName].__context = values;
-
-      if (node.interfaces.length) {
-        this.typeContextMap[typeName].__interfaces = node.interfaces.map(
-          (interfaceDefinitionNode: any) => interfaceDefinitionNode.name.value,
-        );
-      }
-
-      if (node.interfaces.length && node?.kind === "InterfaceTypeDefinition") {
-        this.typeContextMap[typeName].__interfaces = node.interfaces.map(
-          (interfaceDefinitionNode: any) => interfaceDefinitionNode.name.value,
-        );
-      }
-    } else if (node?.kind === "FieldDefinition") {
-      const typeName = ancestors[ancestors.length - 3].name.value;
-      if (!this.typeContextMap[typeName]) {
-        this.typeContextMap[typeName] = {};
-      }
-
-      this.typeContextMap[typeName][
-        ancestors[ancestors.length - 1].name.value
-      ] = values;
     }
   }
 
@@ -555,7 +599,11 @@ export class TsCodegenContext {
   }
 
   getContextType(): TypeLocation {
-    return new TypeLocation(null, "unknown");
+    return new TypeLocation(
+      null,
+      this.options.context.name ||
+        (TsCodegenContextDefault.context.name as string),
+    );
   }
 
   getResolveInfoType(): TypeLocation {
@@ -701,7 +749,7 @@ export function extractContext(
     ...options,
   };
   const context = new TsCodegenContext(fullOptions);
-  const { contextImportNameTemplate, contextImportPathTemplate } = options;
+  const { contextSubTypeNameTemplate, contextSubTypePathTemplate } = options;
   visit(document, {
     Directive: {
       enter(node, _key, _parent, _path: any, ancestors) {
@@ -733,8 +781,8 @@ export function extractContext(
           context.addLegacyInterface(typeName);
         } else if (
           node.name.value === "context" &&
-          contextImportNameTemplate &&
-          contextImportPathTemplate
+          contextSubTypeNameTemplate &&
+          contextSubTypePathTemplate
         ) {
           if (
             node.arguments?.length !== 1 ||

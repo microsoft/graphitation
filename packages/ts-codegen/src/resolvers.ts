@@ -256,13 +256,16 @@ function createObjectTypeResolvers(
   );
 }
 
+function isRootOperationType(type: string): boolean {
+  return ["Query", "Mutation", "Subscription"].includes(type);
+}
 function createResolverField(
   context: TsCodegenContext,
   type: Type,
   field: Field,
 ): ts.TypeAliasDeclaration {
   let modelIdentifier;
-  if (["Query", "Mutation", "Subscription"].includes(type.name)) {
+  if (isRootOperationType(type.name)) {
     modelIdentifier = factory.createKeywordTypeNode(
       ts.SyntaxKind.UnknownKeyword,
     );
@@ -274,7 +277,10 @@ function createResolverField(
 
   let contextRootType =
     context.getContextMap()[type.name] ||
-    context.getContextMap()[context.getTypeFromTypeNode(field.type) as string];
+    (!isRootOperationType(type.name) &&
+      context.getContextMap()[
+        context.getTypeFromTypeNode(field.type) as string
+      ]);
 
   if (
     (type.kind === "OBJECT" || type.kind === "INTERFACE") &&
