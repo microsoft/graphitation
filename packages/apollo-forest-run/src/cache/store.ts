@@ -8,7 +8,12 @@ import {
   Transaction,
   TransformedResult,
 } from "./types";
-import { NodeKey, OperationDescriptor, TypeName } from "../descriptor/types";
+import {
+  NodeKey,
+  OperationDescriptor,
+  OperationId,
+  TypeName,
+} from "../descriptor/types";
 import { assert } from "../jsutils/assert";
 import { IndexedTree } from "../forest/types";
 import { NodeChunk } from "../values/types";
@@ -20,9 +25,9 @@ export function createStore(env: CacheEnv): Store {
   const trees = env.maxOperationCount
     ? createLRUMap(
         env.maxOperationCount,
-        (operation: OperationDescriptor, resultTree: DataTree) => {
+        (operationId: OperationId, resultTree: DataTree) => {
           if (!shouldEvict(env, store, resultTree)) {
-            dataForest.trees.set(operation, resultTree);
+            dataForest.trees.set(operationId, resultTree);
             return;
           }
           removeTree(store, resultTree);
@@ -32,7 +37,7 @@ export function createStore(env: CacheEnv): Store {
 
   const dataForest: DataForest = {
     trees,
-    operationsByNodes: new Map<NodeKey, Set<OperationDescriptor>>(),
+    operationsByNodes: new Map<NodeKey, Set<OperationId>>(),
     operationsWithErrors: new Set<OperationDescriptor>(),
     extraRootIds: new Map<NodeKey, TypeName>(),
     layerTag: null, // not an optimistic layer
@@ -113,9 +118,14 @@ export function removeOptimisticLayers<T>(
   //     `affected operations: ${affectedOps.length}`,
   // );
 
-  const affectedOperationSet = new Set<OperationDescriptor>(affectedOps);
+  const affectedOperationSet = new Set<OperationDescriptor>();
 
-  for (const operation of affectedOperationSet) {
+  for (const operationId of affectedOps) {
+    const operation = store.dataForest.trees.get(operationId)?.operation;
+    if (!operation || affectedOperationSet.has(operation)) {
+      continue;
+    }
+    affectedOperationSet.add(operation);
     const readResult = store.optimisticReadResults.get(operation);
     if (!readResult) {
       continue;
@@ -203,7 +213,7 @@ export function getEffectiveWriteLayers(
 function resolveLayerImpact(
   { dataForest, optimisticLayers }: Store,
   layerTag: string,
-): [affectedNodes: NodeKey[], affectedOperations: OperationDescriptor[]] {
+): [affectedNodes: NodeKey[], affectedOperations: OperationId[]] {
   const layers: OptimisticLayer[] = optimisticLayers.filter(
     (l) => l.layerTag === layerTag,
   );
@@ -211,7 +221,7 @@ function resolveLayerImpact(
   for (const layer of layers) {
     affectedNodes.push(...layer.operationsByNodes.keys());
   }
-  const affectedOperations: OperationDescriptor[] = [];
+  const affectedOperations: OperationId[] = [];
   for (const nodeKey of affectedNodes) {
     affectedOperations.push(
       ...(dataForest.operationsByNodes.get(nodeKey) ?? EMPTY_ARRAY),
@@ -246,7 +256,10 @@ function removeTree(
   optimisticReadResults.delete(operation);
   partialReadResults.delete(operation);
   operations.get(operation.document)?.delete(operation);
-  // Not deleting from optimistic layers because they are meant to be short-lived anyway
+  // Notes:
+  // - Not deleting from optimistic layers because they are meant to be short-lived anyway
+  // - Not removing operation from operationsByNodes because it is expensive to do during LRU eviction.
+  //   TODO: separate step to cleanup stale values from operationsByNodes
 }
 
 export function resetStore(store: Store): void {

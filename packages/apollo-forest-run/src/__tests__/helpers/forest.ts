@@ -40,8 +40,8 @@ export function createTestForest(): IndexedForest {
 }
 
 export function addForestTree(forest: IndexedForest, tree: IndexedTree) {
-  assert(!forest.trees.has(tree.operation));
-  forest.trees.set(tree.operation, tree);
+  assert(!forest.trees.has(tree.operation.id));
+  forest.trees.set(tree.operation.id, tree);
 
   for (const nodeKey of tree.nodes.keys()) {
     let seenIn = forest.operationsByNodes.get(nodeKey);
@@ -49,6 +49,6 @@ export function addForestTree(forest: IndexedForest, tree: IndexedTree) {
       seenIn = new Set();
       forest.operationsByNodes.set(nodeKey, seenIn);
     }
-    seenIn.add(tree.operation);
+    seenIn.add(tree.operation.id);
   }
 }

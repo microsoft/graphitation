@@ -91,6 +91,8 @@ export type CacheEnv = {
 
   possibleTypes?: PossibleTypes;
 
+  genId: () => number;
+
   // TODO: use keyFields instead of objectKey function
   //  (reason being - we can understand when some list contains items with "ids" even when the list is empty or currently contains nulls only)
   //  + possible to warn when some query doesn't include keyFields

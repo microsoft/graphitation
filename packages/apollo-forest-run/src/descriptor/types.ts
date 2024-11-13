@@ -20,6 +20,7 @@ export type SelectedIn = FragmentName | SelectedInOperation;
 export type DeferLabel = string;
 export type VariableValues = { [name: VariableName]: unknown };
 export type NodeKey = string;
+export type OperationId = number;
 
 export type ArgumentValues = Map<string, unknown>;
 export type Directives = Map<string, { args: ArgumentValues }>;
@@ -37,6 +38,8 @@ export type NormalizedFieldEntry =
 export type FragmentMap = Map<string, FragmentDefinitionNode>;
 
 export type OperationEnv = {
+  genId?: () => OperationId;
+
   // ApolloCompat:
   //   Have to keep it as a function for now, should convert to simple static list from type policies
   objectKey?: (
@@ -73,6 +76,7 @@ export type ResolvedSelection = PossibleSelection & {
 };
 
 export type OperationDescriptor = {
+  id: OperationId;
   env: OperationEnv;
   document: DocumentNode;
   fragmentMap: FragmentMap;
