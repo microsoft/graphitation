@@ -13,6 +13,10 @@ import {
   createUnionResolveType,
   createInterfaceResolveType,
 } from "./utilities";
+import {
+  createImportDeclaration,
+  getImportIdentifierForTypenames,
+} from "./context/utilities";
 
 export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
   const statements: ts.Statement[] = [];
@@ -32,9 +36,21 @@ export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
   const contextTemplate = context.getContextTemplate();
 
   if (Object.keys(context.getContextMap()).length && contextTemplate) {
+    if (
+      context.contextDefaultSubTypeContext?.from &&
+      context.contextDefaultSubTypeContext?.name
+    ) {
+      statements.push(
+        createImportDeclaration(
+          [context.contextDefaultSubTypeContext.name],
+          context.contextDefaultSubTypeContext.from,
+        ),
+      );
+    }
+
     const contextImportNames: Set<string> = new Set();
     for (const [, root] of Object.entries(context.getContextMap())) {
-      const rootValue: string[] = (root as any).__context;
+      const rootValue: string[] | undefined = root.__context;
       if (rootValue) {
         if (
           rootValue.every((importName: string) =>
@@ -43,113 +59,46 @@ export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
         ) {
           continue;
         }
-        const imports = (rootValue as string[]).reduce<
-          Record<string, string[]>
-        >((acc: Record<string, string[]>, importName: string) => {
-          const importPath = context.replaceTemplateWithContextName(
-            contextTemplate.pathTemplate,
-            importName,
-            false,
-          );
-          if (importPath) {
-            if (!acc[importPath]) {
-              acc[importPath] = [];
-            }
-            acc[importPath].push(
-              context.replaceTemplateWithContextName(
-                contextTemplate.nameTemplate,
-                importName,
-              ),
-            );
-          }
-          return acc;
-        }, {});
+        const imports = context.getSubTypeNamesFromTemplate(
+          rootValue,
+          contextTemplate.nameTemplate,
+          contextTemplate.pathTemplate,
+        );
+
         for (const [importPath, importNames] of Object.entries(imports)) {
           statements.push(
-            factory.createImportDeclaration(
-              undefined,
-              factory.createImportClause(
-                true,
-                undefined,
-                factory.createNamedImports(
-                  importNames
-                    .map((importName: string) => {
-                      if (contextImportNames.has(importName)) {
-                        return;
-                      }
-                      contextImportNames.add(importName);
-                      return factory.createImportSpecifier(
-                        false,
-                        undefined,
-                        factory.createIdentifier(importName),
-                      );
-                    })
-                    .filter(Boolean) as ts.ImportSpecifier[],
-                ),
-              ),
-              factory.createStringLiteral(importPath),
+            getImportIdentifierForTypenames(
+              importNames,
+              importPath,
+              contextImportNames,
             ),
           );
         }
       }
-      for (const [key, value] of Object.entries(root as any)) {
+      for (const [key, value] of Object.entries(root)) {
         if (key.startsWith("__")) {
           continue;
         }
         if (
-          (value as string[]).every((importName: string) =>
+          value.every((importName: string) =>
             contextImportNames.has(importName),
           )
         ) {
           continue;
         }
-        const imports = (value as string[]).reduce<Record<string, string[]>>(
-          (acc: Record<string, string[]>, importName: string) => {
-            const importPath = context.replaceTemplateWithContextName(
-              contextTemplate.pathTemplate,
-              importName,
-              false,
-            );
-            if (importPath) {
-              if (!acc[importPath]) {
-                acc[importPath] = [];
-              }
-              acc[importPath].push(
-                context.replaceTemplateWithContextName(
-                  contextTemplate.nameTemplate,
-                  importName,
-                ),
-              );
-            }
-            return acc;
-          },
-          {},
+
+        const imports = context.getSubTypeNamesFromTemplate(
+          value,
+          contextTemplate.nameTemplate,
+          contextTemplate.pathTemplate,
         );
 
         for (const [importPath, importNames] of Object.entries(imports)) {
           statements.push(
-            factory.createImportDeclaration(
-              undefined,
-              factory.createImportClause(
-                true,
-                undefined,
-                factory.createNamedImports(
-                  importNames
-                    .map((importName: string) => {
-                      if (contextImportNames.has(importName)) {
-                        return;
-                      }
-                      contextImportNames.add(importName);
-                      return factory.createImportSpecifier(
-                        false,
-                        undefined,
-                        factory.createIdentifier(importName),
-                      );
-                    })
-                    .filter(Boolean) as ts.ImportSpecifier[],
-                ),
-              ),
-              factory.createStringLiteral(importPath),
+            getImportIdentifierForTypenames(
+              importNames,
+              importPath,
+              contextImportNames,
             ),
           );
         }
@@ -256,13 +205,16 @@ function createObjectTypeResolvers(
   );
 }
 
+function isRootOperationType(type: string): boolean {
+  return ["Query", "Mutation", "Subscription"].includes(type);
+}
 function createResolverField(
   context: TsCodegenContext,
   type: Type,
   field: Field,
 ): ts.TypeAliasDeclaration {
   let modelIdentifier;
-  if (["Query", "Mutation", "Subscription"].includes(type.name)) {
+  if (isRootOperationType(type.name)) {
     modelIdentifier = factory.createKeywordTypeNode(
       ts.SyntaxKind.UnknownKeyword,
     );
@@ -272,17 +224,10 @@ function createResolverField(
       .toTypeReference();
   }
 
-  let contextRootType =
+  const contextRootType =
     context.getContextMap()[type.name] ||
-    context.getContextMap()[context.getTypeFromTypeNode(field.type) as string];
-
-  if (
-    (type.kind === "OBJECT" || type.kind === "INTERFACE") &&
-    !contextRootType &&
-    type.interfaces.length
-  ) {
-    contextRootType = context.mergeContexts(type.interfaces);
-  }
+    (!isRootOperationType(type.name) &&
+      context.getContextMap()[context.getTypeFromTypeNode(field.type)]);
 
   let contextTypes;
   if (contextRootType) {
@@ -369,11 +314,7 @@ function createUnionTypeResolvers(
     ],
   );
 
-  let contextRootType = context.getContextMap()[type.name];
-
-  if (!contextRootType && type.types.length) {
-    contextRootType = context.mergeContexts(type.types);
-  }
+  const contextRootType = context.getContextMap()[type.name];
 
   const contextTypes = context.getContextTypes(contextRootType);
 
@@ -404,12 +345,7 @@ function createInterfaceTypeResolvers(
   context: TsCodegenContext,
   type: InterfaceType,
 ): ts.ModuleDeclaration {
-  let contextRootType = context.getContextMap()[type.name];
-
-  if (!contextRootType && type.interfaces.length) {
-    contextRootType = context.mergeContexts(type.interfaces);
-  }
-
+  const contextRootType = context.getContextMap()[type.name];
   const contextTypes = context.getContextTypes(contextRootType);
 
   const resolversObject = factory.createInterfaceDeclaration(

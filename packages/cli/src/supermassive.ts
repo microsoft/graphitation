@@ -10,8 +10,8 @@ import * as glob from "fast-glob";
 
 type GenerateInterfacesOptions = {
   outputDir?: string;
-  contextImport?: string;
-  contextName?: string;
+  contextTypePath?: string;
+  contextTypeName?: string;
   enumsImport?: string;
   legacy?: boolean;
   legacyModels?: boolean;
@@ -19,8 +19,10 @@ type GenerateInterfacesOptions = {
   enumMigrationJsonFile?: string;
   enumMigrationExceptionsJsonFile?: string;
   generateOnlyEnums?: boolean;
-  contextImportNameTemplate?: string;
-  contextImportPathTemplate?: string;
+  contextSubTypeNameTemplate?: string;
+  contextSubTypePathTemplate?: string;
+  defaultContextSubTypePath?: string;
+  defaultContextSubTypeName?: string;
   scope?: string;
 };
 
@@ -47,16 +49,24 @@ export function supermassive(): Command {
       "output directory relative to file, default generated",
     )
     .option(
-      "-ci, --context-import [contextImport]",
+      "-ci, --context-type-path [contextTypePath]",
       "from where to import context",
     )
-    .option("-cn, --context-name [contextName]", "Context name")
+    .option("-cn, --context-type-name [contextTypeName]", "Context type name")
     .option(
-      "-cm, --context-import-name-template [contextImportNameTemplate]",
+      "-dcp, --default-context-sub-type-path [defaultContextSubTypePath]",
+      "from where to import context",
+    )
+    .option(
+      "-dcn, --default-context-sub-type-name [defaultContextSubTypeName]",
+      "Context name",
+    )
+    .option(
+      "-cm, --context-sub-type-name-template [contextSubTypeNameTemplate]",
       "context namespace name",
     )
     .option(
-      "-cm, --context-import-path-template [contextImportPathTemplate]",
+      "-cm, --context-sub-type-path-template [contextSubTypePathTemplate]",
       "context namespace path",
     )
     .option("-ei, --enums-import [enumsImport]", "from where to import enums")
@@ -93,16 +103,19 @@ function getFiles(inputs: Array<string>) {
     .flat()
     .filter(Boolean);
 }
-function getContextPath(outputDir: string, contextImport: string | undefined) {
-  if (!contextImport) {
+function getContextPath(
+  outputDir: string,
+  contextTypePath: string | undefined,
+) {
+  if (!contextTypePath) {
     return;
   }
 
-  if (!contextImport.startsWith(".")) {
-    return contextImport;
+  if (!contextTypePath.startsWith(".")) {
+    return contextTypePath;
   }
 
-  const contextDir = path.join(process.cwd(), contextImport);
+  const contextDir = path.join(process.cwd(), contextTypePath);
 
   return path
     .relative(outputDir, contextDir)
@@ -136,16 +149,22 @@ async function generateInterfaces(
     const result = generateTS(document, {
       outputPath,
       documentPath: fullPath,
-      contextImport: getContextPath(outputPath, options.contextImport) || null,
-      contextName: options.contextName,
+      contextTypePath:
+        getContextPath(outputPath, options.contextTypePath) || null,
+      contextTypeName: options.contextTypeName,
+      contextSubTypeNameTemplate: options.contextSubTypeNameTemplate,
+      contextSubTypePathTemplate: options.contextSubTypePathTemplate,
+      defaultContextSubTypePath: getContextPath(
+        outputPath,
+        options.defaultContextSubTypePath,
+      ),
+      defaultContextSubTypeName: options.defaultContextSubTypeName,
       enumsImport: getContextPath(outputPath, options.enumsImport) || null,
       legacyCompat: !!options.legacy,
       legacyNoModelsForObjects: !!options.legacyModels,
       useStringUnionsInsteadOfEnums: !!options.useStringUnionsInsteadOfEnums,
       generateOnlyEnums: !!options.generateOnlyEnums,
       modelScope: options.scope || null,
-      contextImportNameTemplate: options.contextImportNameTemplate,
-      contextImportPathTemplate: options.contextImportPathTemplate,
     });
 
     await fs.mkdir(outputPath, { recursive: true });

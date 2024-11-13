@@ -41,12 +41,12 @@ describe(generateTS, () => {
             optionalUser: User
             requiredUser: User!
             requiredPost: Post!
-            optionalPost: Post @context(stateMachines: ["optional-post"])
+            optionalPost: Post
           }
         `,
         {
-          contextImportNameTemplate: "I${contextName}StateMachineContext",
-          contextImportPathTemplate: "@msteams/core-cdl-sync-${contextName}",
+          contextSubTypeNameTemplate: "I${contextName}StateMachineContext",
+          contextSubTypePathTemplate: "@msteams/core-cdl-sync-${contextName}",
         },
       );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -92,7 +92,6 @@ describe(generateTS, () => {
         import type { IUserStateMachineContext } from "@msteams/core-cdl-sync-user";
         import type { IIdUserStateMachineContext } from "@msteams/core-cdl-sync-id-user";
         import type { IPostStateMachineContext } from "@msteams/core-cdl-sync-post";
-        import type { IOptionalPostStateMachineContext } from "@msteams/core-cdl-sync-optional-post";
         export declare namespace Post {
             export interface Resolvers {
                 readonly id?: id;
@@ -149,7 +148,7 @@ describe(generateTS, () => {
             export type optionalUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
             export type requiredUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
             export type requiredPost = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Post>;
-            export type optionalPost = (model: unknown, args: {}, context: IOptionalPostStateMachineContext, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
+            export type optionalPost = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
         }
         "
       `);
@@ -309,8 +308,8 @@ describe(generateTS, () => {
           }
         `,
         {
-          contextImportNameTemplate: "I${contextName}StateMachineContext",
-          contextImportPathTemplate: "@msteams/core-cdl-sync-${contextName}",
+          contextSubTypeNameTemplate: "I${contextName}StateMachineContext",
+          contextSubTypePathTemplate: "@msteams/core-cdl-sync-${contextName}",
         },
       );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -359,7 +358,7 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: unknown, context: INodeStateMachineContext & IPersonaStateMachineContext, info: ResolveInfo) => PromiseOrValue<string | null>;
+            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
         export declare namespace Admin {
             export interface Resolvers {
@@ -375,7 +374,7 @@ describe(generateTS, () => {
                 readonly admins?: admins;
             }
             export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User | null | undefined> | null | undefined>;
-            export type admins = (model: unknown, args: {}, context: IAdminStateMachineContext, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Admin | null | undefined> | null | undefined>;
+            export type admins = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Admin | null | undefined> | null | undefined>;
         }
         "
       `);
@@ -409,14 +408,20 @@ describe(generateTS, () => {
       `);
     });
 
-    test("implements", () => {
+    test("implements -> @context in interfaces should be used only in resolveType", () => {
       const { resolvers, models, enums, inputs } = runGenerateTest(
         graphql`
           interface Node @context(stateMachines: ["node"]) {
             id: ID!
           }
 
-          type User implements Node {
+          interface Customer implements Node
+            @context(stateMachines: ["customer"]) {
+            id: ID!
+            name: String!
+          }
+
+          type User implements Node & Customer {
             id: ID!
             name: String!
           }
@@ -426,8 +431,8 @@ describe(generateTS, () => {
           }
         `,
         {
-          contextImportNameTemplate: "I${contextName}StateMachineContext",
-          contextImportPathTemplate: "@msteams/core-cdl-sync-${contextName}",
+          contextSubTypeNameTemplate: "I${contextName}StateMachineContext",
+          contextSubTypePathTemplate: "@msteams/core-cdl-sync-${contextName}",
         },
       );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -440,7 +445,10 @@ describe(generateTS, () => {
         export interface Node extends BaseModel {
             readonly __typename?: string;
         }
-        export interface User extends BaseModel, Node {
+        export interface Customer extends BaseModel, Node {
+            readonly __typename?: string;
+        }
+        export interface User extends BaseModel, Node, Customer {
             readonly __typename?: "User";
             readonly id: string;
             readonly name: string;
@@ -452,19 +460,26 @@ describe(generateTS, () => {
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
         import type { INodeStateMachineContext } from "@msteams/core-cdl-sync-node";
+        import type { ICustomerStateMachineContext } from "@msteams/core-cdl-sync-customer";
         export declare namespace Node {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
             export type __resolveType = (parent: unknown, context: INodeStateMachineContext, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
+        export declare namespace Customer {
+            export interface Resolvers {
+                readonly __resolveType?: __resolveType;
+            }
+            export type __resolveType = (parent: unknown, context: ICustomerStateMachineContext, info: ResolveInfo) => PromiseOrValue<string | null>;
+        }
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
                 readonly name?: name;
             }
-            export type id = (model: Models.User, args: {}, context: INodeStateMachineContext, info: ResolveInfo) => PromiseOrValue<string>;
-            export type name = (model: Models.User, args: {}, context: INodeStateMachineContext, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type name = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -476,13 +491,14 @@ describe(generateTS, () => {
       `);
     });
 
-    test("Enum", () => {
+    test("applying @context to enum shouldn't affect anything", () => {
       const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
-        enum PresenceAvailability {
+        enum PresenceAvailability @context(stateMachines: ["shouldnt-apply"]) {
           Available
           Away
           Offline
         }
+
         type User {
           id: ID!
           availability: PresenceAvailability!
@@ -550,6 +566,10 @@ describe(generateTS, () => {
             id: ID!
           }
 
+          type User @context(stateMachines: ["user"]) {
+            id: ID!
+          }
+
           interface Node {
             id: ID!
           }
@@ -564,8 +584,8 @@ describe(generateTS, () => {
           }
         `,
         {
-          contextImportNameTemplate: "I${contextName}StateMachineContext",
-          contextImportPathTemplate: "@msteams/core-cdl-sync-${contextName}",
+          contextSubTypeNameTemplate: "I${contextName}StateMachineContext",
+          contextSubTypePathTemplate: "@msteams/core-cdl-sync-${contextName}",
         },
       );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -583,6 +603,10 @@ describe(generateTS, () => {
             readonly __typename?: "Admin";
             readonly id: string;
         }
+        export interface User extends BaseModel {
+            readonly __typename?: "User";
+            readonly id: string;
+        }
         export interface Node extends BaseModel {
             readonly __typename?: string;
         }
@@ -595,6 +619,7 @@ describe(generateTS, () => {
         import * as Models from "./models.interface";
         import type { ICustomStateMachineContext } from "@msteams/core-cdl-sync-custom";
         import type { IAdminStateMachineContext } from "@msteams/core-cdl-sync-admin";
+        import type { IUserStateMachineContext } from "@msteams/core-cdl-sync-user";
         import type { IWhateverStateMachineContext } from "@msteams/core-cdl-sync-whatever";
         import type { IDifferentWhateverStateMachineContext } from "@msteams/core-cdl-sync-different-whatever";
         export declare namespace Customer {
@@ -609,6 +634,12 @@ describe(generateTS, () => {
             }
             export type id = (model: Models.Admin, args: {}, context: IAdminStateMachineContext, info: ResolveInfo) => PromiseOrValue<string>;
         }
+        export declare namespace User {
+            export interface Resolvers {
+                readonly id?: id;
+            }
+            export type id = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<string>;
+        }
         export declare namespace Node {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
@@ -619,7 +650,7 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: Models.User | Models.Admin, context: IAdminStateMachineContext, info: ResolveInfo) => PromiseOrValue<"User" | "Admin" | null>;
+            export type __resolveType = (parent: Models.User | Models.Admin, context: unknown, info: ResolveInfo) => PromiseOrValue<"User" | "Admin" | null>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -648,7 +679,7 @@ function runGenerateTest(
   options: {
     outputPath?: string;
     documentPath?: string;
-    contextImport?: string;
+    defaultContextTypePath?: string;
     contextName?: string;
     legacyCompat?: boolean;
     enumsImport?: string;
@@ -658,8 +689,8 @@ function runGenerateTest(
     enumNamesToMigrate?: string[];
     enumNamesToKeep?: string[];
     modelScope?: string;
-    contextImportNameTemplate?: string;
-    contextImportPathTemplate?: string;
+    contextSubTypeNameTemplate?: string;
+    contextSubTypePathTemplate?: string;
   } = {},
 ): {
   enums?: string;
@@ -674,13 +705,13 @@ function runGenerateTest(
   enumNamesToMigrate?: string[];
   enumNamesToKeep?: string[];
   modelScope?: string;
-  contextImportNameTemplate?: string;
-  contextImportPathTemplate?: string;
+  contextSubTypeNameTemplate?: string;
+  contextSubTypePathTemplate?: string;
 } {
   const fullOptions: {
     outputPath: string;
     documentPath: string;
-    contextImport?: string | null;
+    defaultContextTypePath?: string | null;
     contextName?: string;
     legacyCompat?: boolean;
     legacyEnumsCompatibility?: boolean;
@@ -688,8 +719,8 @@ function runGenerateTest(
     useStringUnionsInsteadOfEnums?: boolean;
     enumNamesToMigrate?: string[];
     enumNamesToKeep?: string[];
-    contextImportNameTemplate?: string;
-    contextImportPathTemplate?: string;
+    contextSubTypeNameTemplate?: string;
+    contextSubTypePathTemplate?: string;
   } = {
     outputPath: "__generated__",
     documentPath: "./typedef.graphql",
@@ -717,8 +748,8 @@ function runGenerateTest(
     enums: enums && printer.printFile(enums),
     inputs: inputs && printer.printFile(inputs),
     models: printer.printFile(models),
-    contextImportNameTemplate: options.contextImportNameTemplate,
-    contextImportPathTemplate: options.contextImportPathTemplate,
+    contextSubTypeNameTemplate: options.contextSubTypeNameTemplate,
+    contextSubTypePathTemplate: options.contextSubTypePathTemplate,
     resolvers: printer.printFile(resolvers),
     legacyTypes: legacyTypes && printer.printFile(legacyTypes),
     legacyResolvers: legacyResolvers && printer.printFile(legacyResolvers),

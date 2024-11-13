@@ -13,8 +13,8 @@ export function generateTS(
   {
     outputPath,
     documentPath,
-    contextImport,
-    contextName,
+    contextTypePath,
+    contextTypeName,
     enumsImport,
     legacyCompat,
     useStringUnionsInsteadOfEnums,
@@ -23,13 +23,15 @@ export function generateTS(
     generateOnlyEnums,
     enumNamesToMigrate,
     enumNamesToKeep,
-    contextImportNameTemplate,
-    contextImportPathTemplate,
+    contextSubTypeNameTemplate,
+    contextSubTypePathTemplate,
+    defaultContextSubTypePath,
+    defaultContextSubTypeName,
   }: {
     outputPath: string;
     documentPath: string;
-    contextImport?: string | null;
-    contextName?: string;
+    contextTypePath?: string | null;
+    contextTypeName?: string;
     enumsImport?: string | null;
     legacyCompat?: boolean;
     useStringUnionsInsteadOfEnums?: boolean;
@@ -38,8 +40,10 @@ export function generateTS(
     generateOnlyEnums?: boolean;
     enumNamesToMigrate?: string[];
     enumNamesToKeep?: string[];
-    contextImportNameTemplate?: string;
-    contextImportPathTemplate?: string;
+    contextSubTypeNameTemplate?: string;
+    contextSubTypePathTemplate?: string;
+    defaultContextSubTypePath?: string;
+    defaultContextSubTypeName?: string;
   },
 ): {
   files: ts.SourceFile[];
@@ -49,8 +53,8 @@ export function generateTS(
     const context = extractContext(
       {
         context: {
-          name: contextName,
-          from: contextImport || null,
+          name: contextTypeName,
+          from: contextTypePath || null,
         },
         legacyCompat,
         useStringUnionsInsteadOfEnums,
@@ -59,8 +63,10 @@ export function generateTS(
         modelScope,
         enumNamesToMigrate,
         enumNamesToKeep,
-        contextImportNameTemplate,
-        contextImportPathTemplate,
+        contextSubTypeNameTemplate,
+        contextSubTypePathTemplate,
+        defaultContextSubTypePath,
+        defaultContextSubTypeName,
       },
       document,
       outputPath,
