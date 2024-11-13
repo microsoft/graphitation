@@ -275,20 +275,12 @@ function createResolverField(
       .toTypeReference();
   }
 
-  let contextRootType =
+  const contextRootType =
     context.getContextMap()[type.name] ||
     (!isRootOperationType(type.name) &&
       context.getContextMap()[
         context.getTypeFromTypeNode(field.type) as string
       ]);
-
-  if (
-    (type.kind === "OBJECT" || type.kind === "INTERFACE") &&
-    !contextRootType &&
-    type.interfaces.length
-  ) {
-    contextRootType = context.mergeContexts(type.interfaces);
-  }
 
   let contextTypes;
   if (contextRootType) {
