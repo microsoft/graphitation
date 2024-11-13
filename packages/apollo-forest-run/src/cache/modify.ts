@@ -138,7 +138,7 @@ export function modify(
   const allAffectedOps = new Set(affectedOperations.keys());
 
   for (const [layer, layerDifference] of layerDifferenceMap.entries()) {
-    const operations = layer.operationsByNodes.get(id);
+    const operationIds = layer.operationsByNodes.get(id);
     const nodeDifference = layerDifference.nodeDifference.get(id);
     assert(nodeDifference);
 
@@ -154,7 +154,12 @@ export function modify(
     const dirtyFields = nodeDifference.fieldsToInvalidate;
 
     // Invalidate deleted / invalidated fields in read results
-    for (const operation of operations ?? EMPTY_ARRAY) {
+    for (const operationId of operationIds ?? EMPTY_ARRAY) {
+      const operation = layer.trees.get(operationId)?.operation;
+      if (!operation) {
+        continue;
+      }
+
       if (deletedFromLayers || deletedFieldsFromLayers) {
         layer.readResults.delete(operation);
         store.optimisticReadResults.delete(operation);
@@ -407,12 +412,13 @@ function deletedNodeFields(
   deletedFields: Set<NormalizedFieldEntry>,
 ) {
   let deletedFromOperations = 0;
-  const operations = layer.operationsByNodes.get(nodeKey);
-  for (const operation of operations ?? EMPTY_ARRAY) {
-    const tree = layer.trees.get(operation);
+  const operationIds = layer.operationsByNodes.get(nodeKey);
+  for (const operationId of operationIds ?? EMPTY_ARRAY) {
+    const tree = layer.trees.get(operationId);
     if (!tree) {
       continue;
     }
+    const operation = tree.operation;
     const pathEnv: Value.TraverseEnv = {
       findParent: Value.createParentLocator(tree.dataMap),
     };

@@ -1,5 +1,6 @@
 import {
   OperationDescriptor,
+  OperationId,
   PossibleSelection,
   PossibleSelections,
   TypeName,
@@ -45,9 +46,9 @@ export type IndexedTree = {
 };
 
 export type IndexedForest = {
-  trees: MapLike<OperationDescriptor, IndexedTree>;
+  trees: MapLike<OperationId, IndexedTree>;
   extraRootIds: Map<NodeKey, TypeName>;
-  operationsByNodes: Map<NodeKey, Set<OperationDescriptor>>; // May contain false positives
+  operationsByNodes: Map<NodeKey, Set<OperationId>>; // May contain false positives
   operationsWithErrors: Set<OperationDescriptor>; // May contain false positives
   deletedNodes: Set<NodeKey>;
 };
