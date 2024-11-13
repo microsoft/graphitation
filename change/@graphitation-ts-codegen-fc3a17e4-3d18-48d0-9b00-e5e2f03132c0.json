@@ -1,6 +1,6 @@
 {
   "type": "prerelease",
-  "comment": "Solution cleanup - new cli parameters and inheritence fixes",
+  "comment": "Solution cleanup - new cli parameters and inheritance fixes",
   "packageName": "@graphitation/ts-codegen",
   "email": "77059398+vejrj@users.noreply.github.com",
   "dependentChangeType": "none"
