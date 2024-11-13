@@ -1,0 +1,7 @@
+{
+  "type": "prerelease",
+  "comment": "solution cleanup",
+  "packageName": "@graphitation/cli",
+  "email": "77059398+vejrj@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}
