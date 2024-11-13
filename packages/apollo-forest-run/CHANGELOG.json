@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Wed, 13 Nov 2024 14:50:00 GMT",
+      "version": "0.4.0",
+      "tag": "@graphitation/apollo-forest-run_v0.4.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "6ddd225f13268140b92dcb88ea7098947a3da78c",
+            "comment": "fix(apollo-forest-run): do not leak variables when operation is evicted"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 28 Oct 2024 15:10:14 GMT",
       "version": "0.3.2",
       "tag": "@graphitation/apollo-forest-run_v0.3.2",

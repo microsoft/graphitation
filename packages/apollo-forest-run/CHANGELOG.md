@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Mon, 28 Oct 2024 15:10:14 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 13 Nov 2024 14:50:00 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.4.0
+
+Wed, 13 Nov 2024 14:50:00 GMT
+
+### Minor changes
+
+- fix(apollo-forest-run): do not leak variables when operation is evicted (vladimir.razuvaev@gmail.com)
 
 ## 0.3.2
 
