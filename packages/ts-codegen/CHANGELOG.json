@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Thu, 14 Nov 2024 14:18:34 GMT",
+      "version": "2.13.0-alpha.6",
+      "tag": "@graphitation/ts-codegen_v2.13.0-alpha.6",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "2c90bfecd577995d71baf009e376376d576a79b8",
+            "comment": "Interface inheritence logic cleanup, tests added and union fixed"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 13 Nov 2024 20:52:03 GMT",
       "version": "2.13.0-alpha.5",
       "tag": "@graphitation/ts-codegen_v2.13.0-alpha.5",

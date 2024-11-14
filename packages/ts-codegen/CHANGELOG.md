@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Wed, 13 Nov 2024 20:52:03 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 14 Nov 2024 14:18:34 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 2.13.0-alpha.6
+
+Thu, 14 Nov 2024 14:18:34 GMT
+
+### Changes
+
+- Interface inheritence logic cleanup, tests added and union fixed (77059398+vejrj@users.noreply.github.com)
 
 ## 2.13.0-alpha.5
 
