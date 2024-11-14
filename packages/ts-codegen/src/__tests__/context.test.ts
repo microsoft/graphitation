@@ -2,54 +2,76 @@ import ts from "typescript";
 import { parse } from "graphql";
 import { blankGraphQLTag as graphql } from "../utilities";
 import { generateTS } from "..";
+import { ContextMap } from "../context";
 
 describe(generateTS, () => {
   describe("Tests basic syntax GraphQL syntax", () => {
     test("all possible nullable and non-nullable combinations", () => {
-      const { resolvers, models, enums, inputs } = runGenerateTest(
-        graphql`
-          extend schema
-            @import(from: "@msteams/packages-test", defs: ["Avatar"])
-          type Post
-            @model(from: "./post-model.interface", tsType: "PostModel") {
-            id: ID!
-          }
+      const { resolvers, models, enums, inputs, contextMappingOutput } =
+        runGenerateTest(
+          graphql`
+            extend schema
+              @import(from: "@msteams/packages-test", defs: ["Avatar"])
+            type Post
+              @model(from: "./post-model.interface", tsType: "PostModel") {
+              id: ID!
+            }
 
-          type Message {
-            id: ID! @context(stateMachines: ["message"])
-          }
+            type Message {
+              id: ID! @context(stateMachines: ["message"])
+            }
 
-          type User @context(stateMachines: ["user"]) {
-            id: ID! @context(stateMachines: ["id-user"])
-            name: String
-            messagesWithAnswersNonRequired: [[Message]]
-            messagesWithAnswersRequired: [[Message]]!
-            messagesWithAnswersAllRequired: [[Message!]!]!
-            messagesNonRequired: [Message]
-            messagesWithArrayRequired: [Message]!
-            messagesRequired: [Message!]!
-            messagesOnlyMessageRequired: [Message!]
-            post: Post @context(stateMachines: ["post"])
-            postRequired: Post!
-            avatar: Avatar
-            avatarRequired: Avatar!
-          }
+            type User @context(stateMachines: ["user"]) {
+              id: ID! @context(stateMachines: ["id-user"])
+              name: String
+              messagesWithAnswersNonRequired: [[Message]]
+              messagesWithAnswersRequired: [[Message]]!
+              messagesWithAnswersAllRequired: [[Message!]!]!
+              messagesNonRequired: [Message]
+              messagesWithArrayRequired: [Message]!
+              messagesRequired: [Message!]!
+              messagesOnlyMessageRequired: [Message!]
+              post: Post @context(stateMachines: ["post"])
+              postRequired: Post!
+              avatar: Avatar
+              avatarRequired: Avatar!
+            }
 
-          extend type Query {
-            requiredUsers: [User!]!
-            optionalUsers: [User]
-            optionalUser: User
-            requiredUser: User!
-            requiredPost: Post!
-            optionalPost: Post
-          }
-        `,
-        {
-          contextSubTypeNameTemplate: "I${contextName}StateMachineContext",
-          contextSubTypePathTemplate: "@msteams/core-cdl-sync-${contextName}",
-        },
-      );
+            extend type Query {
+              requiredUsers: [User!]!
+              optionalUsers: [User]
+              optionalUser: User
+              requiredUser: User!
+              requiredPost: Post!
+              optionalPost: Post
+            }
+          `,
+          {
+            contextSubTypeNameTemplate: "I${contextName}StateMachineContext",
+            contextSubTypePathTemplate: "@msteams/core-cdl-sync-${contextName}",
+          },
+        );
       expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(contextMappingOutput).toMatchInlineSnapshot(`
+        {
+          "Message": {
+            "id": [
+              "message",
+            ],
+          },
+          "User": {
+            "__context": [
+              "user",
+            ],
+            "id": [
+              "id-user",
+            ],
+            "post": [
+              "post",
+            ],
+          },
+        }
+      `);
       expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
         "import type { Avatar } from "@msteams/packages-test";
@@ -154,16 +176,18 @@ describe(generateTS, () => {
       `);
     });
     test("Subscription", () => {
-      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
-        type User {
-          id: ID!
-        }
+      const { resolvers, models, enums, inputs, contextMappingOutput } =
+        runGenerateTest(graphql`
+          type User {
+            id: ID!
+          }
 
-        extend type Subscription {
-          userUpdated: User!
-        }
-      `);
+          extend type Subscription {
+            userUpdated: User!
+          }
+        `);
       expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(contextMappingOutput).toMatchInlineSnapshot(`{}`);
       expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
@@ -239,16 +263,18 @@ describe(generateTS, () => {
       `);
     });
     test("extends by exteding a type with pre-generated BaseModel type", () => {
-      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
-        type User {
-          id: ID!
-        }
+      const { resolvers, models, enums, inputs, contextMappingOutput } =
+        runGenerateTest(graphql`
+          type User {
+            id: ID!
+          }
 
-        extend type Query {
-          users: [User!]!
-        }
-      `);
+          extend type Query {
+            users: [User!]!
+          }
+        `);
       expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(contextMappingOutput).toMatchInlineSnapshot(`{}`);
       expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
@@ -281,38 +307,58 @@ describe(generateTS, () => {
       `);
     });
     test("case when interface implements multiple interfaces", () => {
-      const { resolvers, models, enums, inputs } = runGenerateTest(
-        graphql`
-          interface Node @context(stateMachines: ["node"]) {
-            id: ID!
-          }
+      const { resolvers, models, enums, inputs, contextMappingOutput } =
+        runGenerateTest(
+          graphql`
+            interface Node @context(stateMachines: ["node"]) {
+              id: ID!
+            }
 
-          interface Persona @context(stateMachines: ["persona"]) {
-            phone: String!
-          }
+            interface Persona @context(stateMachines: ["persona"]) {
+              phone: String!
+            }
 
-          interface User implements Node & Persona {
-            id: ID!
-            name: String!
-          }
+            interface User implements Node & Persona {
+              id: ID!
+              name: String!
+            }
 
-          type Admin implements Node & Persona
-            @context(stateMachines: ["admin"]) {
-            id: ID!
-            rank: Int!
-          }
+            type Admin implements Node & Persona
+              @context(stateMachines: ["admin"]) {
+              id: ID!
+              rank: Int!
+            }
 
-          extend type Query {
-            users: [User]
-            admins: [Admin]
-          }
-        `,
-        {
-          contextSubTypeNameTemplate: "I${contextName}StateMachineContext",
-          contextSubTypePathTemplate: "@msteams/core-cdl-sync-${contextName}",
-        },
-      );
+            extend type Query {
+              users: [User]
+              admins: [Admin]
+            }
+          `,
+          {
+            contextSubTypeNameTemplate: "I${contextName}StateMachineContext",
+            contextSubTypePathTemplate: "@msteams/core-cdl-sync-${contextName}",
+          },
+        );
       expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(contextMappingOutput).toMatchInlineSnapshot(`
+        {
+          "Admin": {
+            "__context": [
+              "admin",
+            ],
+          },
+          "Node": {
+            "__context": [
+              "node",
+            ],
+          },
+          "Persona": {
+            "__context": [
+              "persona",
+            ],
+          },
+        }
+      `);
       expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
@@ -409,33 +455,48 @@ describe(generateTS, () => {
     });
 
     test("implements -> @context in interfaces should be used only in resolveType", () => {
-      const { resolvers, models, enums, inputs } = runGenerateTest(
-        graphql`
-          interface Node @context(stateMachines: ["node"]) {
-            id: ID!
-          }
+      const { resolvers, models, enums, inputs, contextMappingOutput } =
+        runGenerateTest(
+          graphql`
+            interface Node @context(stateMachines: ["node"]) {
+              id: ID!
+            }
 
-          interface Customer implements Node
-            @context(stateMachines: ["customer"]) {
-            id: ID!
-            name: String!
-          }
+            interface Customer implements Node
+              @context(stateMachines: ["customer"]) {
+              id: ID!
+              name: String!
+            }
 
-          type User implements Node & Customer {
-            id: ID!
-            name: String!
-          }
+            type User implements Node & Customer {
+              id: ID!
+              name: String!
+            }
 
-          extend type Query {
-            users: [User]
-          }
-        `,
-        {
-          contextSubTypeNameTemplate: "I${contextName}StateMachineContext",
-          contextSubTypePathTemplate: "@msteams/core-cdl-sync-${contextName}",
-        },
-      );
+            extend type Query {
+              users: [User]
+            }
+          `,
+          {
+            contextSubTypeNameTemplate: "I${contextName}StateMachineContext",
+            contextSubTypePathTemplate: "@msteams/core-cdl-sync-${contextName}",
+          },
+        );
       expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(contextMappingOutput).toMatchInlineSnapshot(`
+        {
+          "Customer": {
+            "__context": [
+              "customer",
+            ],
+          },
+          "Node": {
+            "__context": [
+              "node",
+            ],
+          },
+        }
+      `);
       expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
@@ -492,22 +553,24 @@ describe(generateTS, () => {
     });
 
     test("applying @context to enum shouldn't affect anything", () => {
-      const { resolvers, models, enums, inputs } = runGenerateTest(graphql`
-        enum PresenceAvailability @context(stateMachines: ["shouldnt-apply"]) {
-          Available
-          Away
-          Offline
-        }
+      const { resolvers, models, enums, inputs, contextMappingOutput } =
+        runGenerateTest(graphql`
+          enum PresenceAvailability
+            @context(stateMachines: ["shouldnt-apply"]) {
+            Available
+            Away
+            Offline
+          }
 
-        type User {
-          id: ID!
-          availability: PresenceAvailability!
-        }
+          type User {
+            id: ID!
+            availability: PresenceAvailability!
+          }
 
-        extend type Query {
-          userById(id: ID!): User
-        }
-      `);
+          extend type Query {
+            userById(id: ID!): User
+          }
+        `);
       expect(enums).toMatchInlineSnapshot(`
         "export enum PresenceAvailability {
             Available = "Available",
@@ -517,6 +580,7 @@ describe(generateTS, () => {
         "
       `);
       expect(inputs).toMatchInlineSnapshot(`undefined`);
+      expect(contextMappingOutput).toMatchInlineSnapshot(`{}`);
       expect(models).toMatchInlineSnapshot(`
         "import * as Enums from "./enums.interface";
         export * from "./enums.interface";
@@ -556,39 +620,83 @@ describe(generateTS, () => {
     });
 
     test("Union and interface types", () => {
-      const { resolvers, models, enums, inputs } = runGenerateTest(
-        graphql`
-          type Customer @context(stateMachines: ["custom"]) {
-            id: ID!
-          }
+      const { resolvers, models, enums, inputs, contextMappingOutput } =
+        runGenerateTest(
+          graphql`
+            type Customer {
+              id: ID!
+            }
 
-          type Admin @context(stateMachines: ["admin"]) {
-            id: ID!
-          }
+            type Company {
+              id: ID!
+            }
 
-          type User @context(stateMachines: ["user"]) {
-            id: ID!
-          }
+            type Admin @context(stateMachines: ["admin"]) {
+              id: ID!
+            }
 
-          interface Node {
-            id: ID!
-          }
+            type User @context(stateMachines: ["user"]) {
+              id: ID!
+            }
 
-          union whatever = User | Admin
+            interface Node {
+              id: ID!
+            }
 
-          extend type Query {
-            userById(id: ID!): whatever @context(stateMachines: ["whatever"])
-            userByMail(mail: String): whatever
-              @context(stateMachines: ["different-whatever"])
-            node(id: ID!): Node
-          }
-        `,
-        {
-          contextSubTypeNameTemplate: "I${contextName}StateMachineContext",
-          contextSubTypePathTemplate: "@msteams/core-cdl-sync-${contextName}",
-        },
-      );
+            union UserOrAdmin = User | Admin
+            union UserOrCustomer @context(stateMachines: ["user-or-customer"]) =
+                User
+              | Customer
+            union CompanyOrCustomer
+              @context(stateMachines: ["company-or-customer"]) =
+                Company
+              | Customer
+
+            extend type Query {
+              userById(id: ID!): whatever @context(stateMachines: ["whatever"])
+              userByMail(mail: String): whatever
+                @context(stateMachines: ["different-whatever"])
+              node(id: ID!): Node
+            }
+          `,
+          {
+            contextSubTypeNameTemplate: "I${contextName}StateMachineContext",
+            contextSubTypePathTemplate: "@msteams/core-cdl-sync-${contextName}",
+          },
+        );
       expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(contextMappingOutput).toMatchInlineSnapshot(`
+        {
+          "Admin": {
+            "__context": [
+              "admin",
+            ],
+          },
+          "CompanyOrCustomer": {
+            "__context": [
+              "company-or-customer",
+            ],
+          },
+          "Query": {
+            "userById": [
+              "whatever",
+            ],
+            "userByMail": [
+              "different-whatever",
+            ],
+          },
+          "User": {
+            "__context": [
+              "user",
+            ],
+          },
+          "UserOrCustomer": {
+            "__context": [
+              "user-or-customer",
+            ],
+          },
+        }
+      `);
       expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
         "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
@@ -597,6 +705,10 @@ describe(generateTS, () => {
         }
         export interface Customer extends BaseModel {
             readonly __typename?: "Customer";
+            readonly id: string;
+        }
+        export interface Company extends BaseModel {
+            readonly __typename?: "Company";
             readonly id: string;
         }
         export interface Admin extends BaseModel {
@@ -610,23 +722,32 @@ describe(generateTS, () => {
         export interface Node extends BaseModel {
             readonly __typename?: string;
         }
-        export type whatever = User | Admin;
+        export type UserOrAdmin = User | Admin;
+        export type UserOrCustomer = User | Customer;
+        export type CompanyOrCustomer = Company | Customer;
         "
       `);
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import type { ICustomStateMachineContext } from "@msteams/core-cdl-sync-custom";
         import type { IAdminStateMachineContext } from "@msteams/core-cdl-sync-admin";
         import type { IUserStateMachineContext } from "@msteams/core-cdl-sync-user";
+        import type { IUserOrCustomerStateMachineContext } from "@msteams/core-cdl-sync-user-or-customer";
+        import type { ICompanyOrCustomerStateMachineContext } from "@msteams/core-cdl-sync-company-or-customer";
         import type { IWhateverStateMachineContext } from "@msteams/core-cdl-sync-whatever";
         import type { IDifferentWhateverStateMachineContext } from "@msteams/core-cdl-sync-different-whatever";
         export declare namespace Customer {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: Models.Customer, args: {}, context: ICustomStateMachineContext, info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.Customer, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        export declare namespace Company {
+            export interface Resolvers {
+                readonly id?: id;
+            }
+            export type id = (model: Models.Company, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Admin {
             export interface Resolvers {
@@ -646,11 +767,23 @@ describe(generateTS, () => {
             }
             export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
-        export declare namespace whatever {
+        export declare namespace UserOrAdmin {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
             export type __resolveType = (parent: Models.User | Models.Admin, context: unknown, info: ResolveInfo) => PromiseOrValue<"User" | "Admin" | null>;
+        }
+        export declare namespace UserOrCustomer {
+            export interface Resolvers {
+                readonly __resolveType?: __resolveType;
+            }
+            export type __resolveType = (parent: Models.User | Models.Customer, context: IUserOrCustomerStateMachineContext, info: ResolveInfo) => PromiseOrValue<"User" | "Customer" | null>;
+        }
+        export declare namespace CompanyOrCustomer {
+            export interface Resolvers {
+                readonly __resolveType?: __resolveType;
+            }
+            export type __resolveType = (parent: Models.Company | Models.Customer, context: ICompanyOrCustomerStateMachineContext, info: ResolveInfo) => PromiseOrValue<"Company" | "Customer" | null>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -705,8 +838,7 @@ function runGenerateTest(
   enumNamesToMigrate?: string[];
   enumNamesToKeep?: string[];
   modelScope?: string;
-  contextSubTypeNameTemplate?: string;
-  contextSubTypePathTemplate?: string;
+  contextMappingOutput: ContextMap | null;
 } {
   const fullOptions: {
     outputPath: string;
@@ -727,7 +859,7 @@ function runGenerateTest(
     ...options,
   };
   const document = parse(doc);
-  const { files } = generateTS(document, fullOptions);
+  const { files, contextMappingOutput } = generateTS(document, fullOptions);
 
   function getFileByFileName(fileName: string) {
     return files.find((file) => file.fileName === fileName);
@@ -748,10 +880,9 @@ function runGenerateTest(
     enums: enums && printer.printFile(enums),
     inputs: inputs && printer.printFile(inputs),
     models: printer.printFile(models),
-    contextSubTypeNameTemplate: options.contextSubTypeNameTemplate,
-    contextSubTypePathTemplate: options.contextSubTypePathTemplate,
     resolvers: printer.printFile(resolvers),
     legacyTypes: legacyTypes && printer.printFile(legacyTypes),
     legacyResolvers: legacyResolvers && printer.printFile(legacyResolvers),
+    contextMappingOutput,
   };
 }

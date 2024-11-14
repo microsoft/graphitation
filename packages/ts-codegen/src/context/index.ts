@@ -99,13 +99,17 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
 };
 
 type ModelNameAndImport = { modelName: string; imp: DefinitionImport };
-type ContextTypeItem = { __context?: string[] } & { [key: string]: string[] };
+
+export type ContextMap = {
+  [key: string]: ContextMapTypeItem;
+};
+
+export type ContextMapTypeItem = { __context?: string[] } & {
+  [key: string]: string[];
+};
 export class TsCodegenContext {
   private allTypes: Array<Type>;
-  private typeContextMap: {
-    [key: string]: ContextTypeItem;
-  };
-  private allRootTypeNames: Set<string>;
+  private typeContextMap: ContextMap;
   private typeNameToType: Map<string, Type>;
   private usedEntitiesInModels: Set<string>;
   private usedEntitiesInResolvers: Set<string>;
@@ -131,7 +135,6 @@ export class TsCodegenContext {
   constructor(private options: TsCodegenContextOptions) {
     this.allTypes = [];
     this.typeContextMap = {};
-    this.allRootTypeNames = new Set();
     this.typeNameToType = new Map();
     this.usedEntitiesInModels = new Set();
     this.usedEntitiesInResolvers = new Set();
@@ -246,7 +249,6 @@ export class TsCodegenContext {
     return !Array.isArray(node);
   }
 
-  // FIX any
   public initContextMap(
     ancestors: ReadonlyArray<ASTNode | ReadonlyArray<ASTNode>>,
     values: string[],
@@ -261,7 +263,8 @@ export class TsCodegenContext {
     if (nonArrayNode) {
       if (
         nonArrayNode?.kind === "ObjectTypeDefinition" ||
-        nonArrayNode?.kind === "InterfaceTypeDefinition"
+        nonArrayNode?.kind === "InterfaceTypeDefinition" ||
+        nonArrayNode?.kind === "UnionTypeDefinition"
       ) {
         if (this.typeContextMap[nonArrayNode.name.value]?.__context) {
           throw new Error("Type already visited");
@@ -273,25 +276,6 @@ export class TsCodegenContext {
         }
 
         this.typeContextMap[typeName].__context = values;
-
-        if (nonArrayNode?.interfaces?.length) {
-          this.typeContextMap[typeName].__interfaces =
-            nonArrayNode.interfaces.map(
-              (interfaceDefinitionNode: any) =>
-                interfaceDefinitionNode.name.value,
-            );
-        }
-
-        if (
-          nonArrayNode?.interfaces?.length &&
-          nonArrayNode?.kind === "InterfaceTypeDefinition"
-        ) {
-          this.typeContextMap[typeName].__interfaces =
-            nonArrayNode.interfaces.map(
-              (interfaceDefinitionNode: any) =>
-                interfaceDefinitionNode.name.value,
-            );
-        }
       } else if (nonArrayNode?.kind === "FieldDefinition") {
         const node = ancestors[ancestors.length - 3];
         const typeName =
@@ -354,17 +338,9 @@ export class TsCodegenContext {
     return this.typeContextMap;
   }
 
-  addRootTypeNames(typename: string): void {
-    this.allRootTypeNames.add(typename);
-  }
-
   addType(type: Type): void {
     this.allTypes.push(type);
     this.typeNameToType.set(type.name, type);
-  }
-
-  getAllRootTypeNames(): Set<string> {
-    return this.allRootTypeNames;
   }
 
   getAllTypes(): Array<Type> {
@@ -765,7 +741,7 @@ export function extractContext(
 
   visit(document, {
     Directive: {
-      enter(node, _key, _parent, _path: any, ancestors) {
+      enter(node, _key, _parent, _path, ancestors) {
         if (node.name.value === IMPORT_DIRECTIVE_NAME) {
           context.addImport(
             processImportDirective(node, outputPath, documentPath),
@@ -804,8 +780,6 @@ export function extractContext(
           ) {
             throw new Error("Invalid context use");
           }
-          // TODO ADD validation
-
           const directiveValues = node.arguments[0].value.values.map((item) => {
             if (item.kind !== "StringValue") {
               throw new Error("Invalid context use");
@@ -833,7 +807,6 @@ export function extractContext(
     },
     ObjectTypeDefinition: {
       leave(node) {
-        context.addRootTypeNames(node.name.value);
         context.addType({
           kind: "OBJECT",
           name: node.name.value,
@@ -848,7 +821,6 @@ export function extractContext(
     },
     InterfaceTypeDefinition: {
       leave(node) {
-        context.addRootTypeNames(node.name.value);
         context.addType({
           kind: "INTERFACE",
           name: node.name.value,
@@ -873,7 +845,6 @@ export function extractContext(
     },
     ObjectTypeExtension: {
       leave(node) {
-        context.addRootTypeNames(node.name.value);
         context.addType({
           kind: "OBJECT",
           name: node.name.value,
@@ -887,7 +858,6 @@ export function extractContext(
     },
     UnionTypeDefinition: {
       leave(node) {
-        context.addRootTypeNames(node.name.value);
         context.addType({
           kind: "UNION",
           name: node.name.value,
