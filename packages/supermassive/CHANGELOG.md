@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Wed, 30 Oct 2024 12:58:29 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 06 Nov 2024 13:29:21 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.7.0
+
+Wed, 06 Nov 2024 13:29:21 GMT
+
+### Minor changes
+
+- async before hooks added (77059398+vejrj@users.noreply.github.com)
 
 ## 3.6.4
 

@@ -139,7 +139,7 @@ export function write(
     existingResult.incompleteChunks.size > 0
   ) {
     // Remove incomplete placeholder tree (saves unnecessary update)
-    targetForest.trees.delete(operationDescriptor);
+    targetForest.trees.delete(operationDescriptor.id);
     existingResult = undefined;
   }
 
@@ -215,7 +215,7 @@ function processDiffErrors(
 ) {
   const pathEnv: TraverseEnv = {
     findParent: (chunk) => {
-      const tree = forest.trees.get(chunk.operation);
+      const tree = forest.trees.get(chunk.operation.id);
       const parentInfo = tree?.dataMap.get(chunk.data);
       assert(parentInfo);
       return parentInfo;
@@ -231,7 +231,7 @@ function processDiffErrors(
         for (const field of baseChunkError.missingFields) {
           chunk.missingFields.add(field);
         }
-        const tree = forest.trees.get(chunk.operation);
+        const tree = forest.trees.get(chunk.operation.id);
         if (tree) {
           tree.incompleteChunks.add(chunk);
         }
@@ -262,7 +262,7 @@ function getExistingResult(
   operation: OperationDescriptor,
 ): DataTree | undefined {
   const op = resolveKeyDescriptor(env, store, operation);
-  return targetForest.trees.get(op);
+  return targetForest.trees.get(op.id);
 }
 
 function shouldCache(

@@ -12,7 +12,7 @@ import { createObjectAggregate } from "../values/create";
 import { diffObject } from "./diffObject";
 import { NodeKey, NodeMap, ObjectValue } from "../values/types";
 import { assert, assertNever } from "../jsutils/assert";
-import { OperationDescriptor } from "../descriptor/types";
+import { OperationId } from "../descriptor/types";
 import { IndexedForest, IndexedTree } from "../forest/types";
 
 type MissingFieldsError = {
@@ -64,7 +64,7 @@ export function diffTree(
   env: DiffEnv,
 ): GraphDifference {
   const context: Context = { env, forest: forest };
-  const currentTreeState = forest.trees.get(model.operation);
+  const currentTreeState = forest.trees.get(model.operation.id);
   return diffNodesImpl(context, forest, model.nodes, env, currentTreeState);
 }
 
@@ -155,15 +155,14 @@ function diffNodesImpl(
 function resolveOperationsWithNode(
   forest: IndexedForest,
   node: ObjectValue,
-): Set<OperationDescriptor> {
+): Set<OperationId> {
   if (!node.key) {
-    return EMPTY_SET as Set<OperationDescriptor>;
+    return EMPTY_SET as Set<OperationId>;
   }
   // TODO: additionally filter trees for common nodes (like ROOT_QUERY or ROOT_SUBSCRIPTION)
   //   Using indexes on types
   return (
-    forest.operationsByNodes.get(node.key) ??
-    (EMPTY_SET as Set<OperationDescriptor>)
+    forest.operationsByNodes.get(node.key) ?? (EMPTY_SET as Set<OperationId>)
   );
 }
 

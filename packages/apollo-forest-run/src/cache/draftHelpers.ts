@@ -122,7 +122,7 @@ export function findRecyclableChunk(
       // Can safely move to lower level
       continue;
     }
-    const tree = layer.trees.get(operation);
+    const tree = layer.trees.get(operation.id);
     for (const chunk of tree?.nodes.get(ref) ?? EMPTY_ARRAY) {
       if (resolvedSelectionsAreEqual(chunk.selection, selection)) {
         return chunk;
@@ -148,7 +148,7 @@ function findParentInfo(
   chunk: ObjectChunk | CompositeListChunk,
 ): ParentInfo {
   for (const layer of layers) {
-    const tree = layer.trees.get(chunk.operation);
+    const tree = layer.trees.get(chunk.operation.id);
     const parentInfo = tree?.dataMap.get(chunk.data);
     if (parentInfo) {
       return parentInfo;

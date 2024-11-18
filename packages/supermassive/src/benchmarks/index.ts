@@ -88,6 +88,82 @@ queryRunningSuite.add("supermassive - runtime schemaless", async () => {
   }
 });
 
+queryRunningSuite.add(
+  "supermassive - before operation execute sync hook - runtime schemaless",
+  async () => {
+    const result = await supermassiveExecute({
+      schemaFragment,
+      document: parsedQuery,
+      fieldExecutionHooks: {
+        beforeOperationExecute: ({ context }) => {
+          (context as any).test = 0;
+        },
+      },
+      contextValue: { models },
+    });
+    if ("data" in result && (result.errors || !result.data)) {
+      throw new Error("Stuff ain't executing");
+    }
+  },
+);
+
+queryRunningSuite.add(
+  "supermassive - before operation execute async hook - runtime schemaless",
+  async () => {
+    const result = await supermassiveExecute({
+      schemaFragment,
+      document: parsedQuery,
+      fieldExecutionHooks: {
+        beforeOperationExecute: async ({ context }) => {
+          (context as any).test = 0;
+        },
+      },
+      contextValue: { models },
+    });
+    if ("data" in result && (result.errors || !result.data)) {
+      throw new Error("Stuff ain't executing");
+    }
+  },
+);
+
+queryRunningSuite.add(
+  "supermassive - before field resolve sync hook - runtime schemaless",
+  async () => {
+    const result = await supermassiveExecute({
+      schemaFragment,
+      document: parsedQuery,
+      fieldExecutionHooks: {
+        beforeFieldResolve: ({ context }) => {
+          (context as any).test = 0;
+        },
+      },
+      contextValue: { models },
+    });
+    if ("data" in result && (result.errors || !result.data)) {
+      throw new Error("Stuff ain't executing");
+    }
+  },
+);
+
+queryRunningSuite.add(
+  "supermassive - before field resolve async hook - runtime schemaless",
+  async () => {
+    const result = await supermassiveExecute({
+      schemaFragment,
+      document: parsedQuery,
+      fieldExecutionHooks: {
+        beforeFieldResolve: async ({ context }) => {
+          (context as any).test = 0;
+        },
+      },
+      contextValue: { models },
+    });
+    if ("data" in result && (result.errors || !result.data)) {
+      throw new Error("Stuff ain't executing");
+    }
+  },
+);
+
 const queryParsingSuite = new NiceBenchmark("Query parsing");
 queryParsingSuite.add("graphql-js", async () => {
   parse(query);

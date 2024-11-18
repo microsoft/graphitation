@@ -98,7 +98,7 @@ function growOutputTree(
   optimistic: boolean,
 ) {
   // See if we can just use primary data tree
-  let dataTree = forest.trees.get(operation);
+  let dataTree = forest.trees.get(operation.id);
 
   if (!dataTree) {
     dataTree = growDataTree(env, forest, operation);

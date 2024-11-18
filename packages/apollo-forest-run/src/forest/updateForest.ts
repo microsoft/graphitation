@@ -30,7 +30,7 @@ export function updateAffectedTrees(
   // Note: affectedOperations may contain false-positives (updateTree will ignore those)
   let totalUpdated = 0;
   for (const [operation, difference] of affectedOperations.entries()) {
-    const currentTreeState = forest.trees.get(operation);
+    const currentTreeState = forest.trees.get(operation.id);
     assert(currentTreeState);
     const nextTreeState = updateTree(
       currentTreeState,
@@ -71,12 +71,12 @@ function accumulateOperationDiffs(
   difference: ObjectDifference,
   accumulatorMutable: Map<OperationDescriptor, NodeDifferenceMap>,
 ) {
-  const operationDescriptors =
-    forest.operationsByNodes.get(nodeKey) ?? EMPTY_ARRAY;
+  const operationIds = forest.operationsByNodes.get(nodeKey) ?? EMPTY_ARRAY;
   const isRootNode = ROOT_NODES.includes(nodeKey);
 
-  for (const operationDescriptor of operationDescriptors) {
-    if (!forest.trees.has(operationDescriptor)) {
+  for (const operationId of operationIds) {
+    const operationDescriptor = forest.trees.get(operationId)?.operation;
+    if (!operationDescriptor) {
       // operationsByNodes may contain operations with evicted data, which is expected
       continue;
     }

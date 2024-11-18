@@ -144,7 +144,7 @@ export function executeWithoutSchema(
   if (!("schemaFragment" in exeContext)) {
     return { errors: exeContext };
   } else {
-    return executeOperation(exeContext);
+    return executeOperationWithBeforeHook(exeContext);
   }
 }
 
@@ -277,23 +277,35 @@ function buildPerEventExecutionContext(
   };
 }
 
+function executeOperationWithBeforeHook(
+  exeContext: ExecutionContext,
+): PromiseOrValue<ExecutionResult> {
+  const hooks = exeContext.fieldExecutionHooks;
+  let hook: Promise<void> | void | undefined;
+  if (hooks?.beforeOperationExecute) {
+    hook = invokeBeforeOperationExecuteHook(exeContext);
+  }
+
+  if (isPromise(hook)) {
+    return hook.then(() => executeOperation(exeContext));
+  }
+
+  return executeOperation(exeContext);
+}
+
 function executeOperation(
   exeContext: ExecutionContext,
 ): PromiseOrValue<ExecutionResult> {
   try {
     const { operation, rootValue } = exeContext;
     const rootTypeName = getOperationRootTypeName(operation);
-
     const { groupedFieldSet, patches } = collectFields(
       exeContext,
       rootTypeName,
     );
     const path = undefined;
     let result;
-    const hooks = exeContext.fieldExecutionHooks;
-    if (hooks?.beforeOperationExecute) {
-      invokeBeforeOperationExecuteHook(exeContext);
-    }
+
     // Note: cannot use OperationTypeNode from graphql-js as it doesn't exist in 15.x
     switch (operation.operation) {
       case "query":
@@ -686,7 +698,12 @@ function executeSubscriptionImpl(
 
     // Call the `subscribe()` resolver or the default resolver to produce an
     // AsyncIterable yielding raw payloads.
-    const result = resolveFn(rootValue, args, contextValue, info);
+    const result = isPromise(hookContext)
+      ? hookContext.then((context) => {
+          hookContext = context;
+          return resolveFn(rootValue, args, contextValue, info);
+        })
+      : resolveFn(rootValue, args, contextValue, info);
 
     if (isPromise(result)) {
       return result.then(assertEventStream).then(
@@ -796,18 +813,33 @@ function mapResultOrEventStreamOrPromise(
           payload,
         );
         const hooks = exeContext?.fieldExecutionHooks;
+        let beforeExecuteFieldsHook: void | Promise<void> | undefined;
         if (hooks?.beforeSubscriptionEventEmit) {
-          invokeBeforeSubscriptionEventEmitHook(perEventContext, payload);
+          beforeExecuteFieldsHook = invokeBeforeSubscriptionEventEmitHook(
+            perEventContext,
+            payload,
+          );
         }
         try {
-          const data = executeFields(
-            exeContext,
-            parentTypeName,
-            payload,
-            path,
-            groupedFieldSet,
-            undefined,
-          );
+          const data = isPromise(beforeExecuteFieldsHook)
+            ? beforeExecuteFieldsHook.then(() =>
+                executeFields(
+                  exeContext,
+                  parentTypeName,
+                  payload,
+                  path,
+                  groupedFieldSet,
+                  undefined,
+                ),
+              )
+            : executeFields(
+                exeContext,
+                parentTypeName,
+                payload,
+                path,
+                groupedFieldSet,
+                undefined,
+              );
           // This is typechecked in collect values
           return buildResponse(perEventContext, data) as TotalExecutionResult;
         } catch (error) {
@@ -919,7 +951,12 @@ function resolveAndCompleteField(
       hookContext = invokeBeforeFieldResolveHook(info, exeContext);
     }
 
-    const result = resolveFn(source, args, contextValue, info);
+    const result = isPromise(hookContext)
+      ? hookContext.then((context) => {
+          hookContext = context;
+          return resolveFn(source, args, contextValue, info);
+        })
+      : resolveFn(source, args, contextValue, info);
     let completed;
 
     if (isPromise(result)) {
@@ -1944,19 +1981,34 @@ function invokeAfterBuildResponseHook(
 }
 
 function executeSafe<T>(
-  execute: () => T,
+  execute: () => T | Promise<T>,
   onComplete: (result: T | undefined, error: unknown) => void,
-): T {
+): T | Promise<T> {
   let error: unknown;
-  let result: T | undefined;
+  let result: T | Promise<T> | undefined;
   try {
     result = execute();
   } catch (e) {
     error = e;
   } finally {
-    onComplete(result, error);
+    if (!isPromise(result)) {
+      onComplete(result, error);
+    }
   }
-  return result as T;
+
+  if (!isPromise(result)) {
+    return result as T;
+  }
+
+  return result
+    .then((hookResult) => {
+      onComplete(hookResult, error);
+      return hookResult;
+    })
+    .catch((e) => {
+      onComplete(undefined, e);
+      return undefined;
+    }) as Promise<T>;
 }
 
 function toGraphQLError(
