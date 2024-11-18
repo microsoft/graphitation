@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Mon, 18 Nov 2024 17:35:34 GMT",
+      "version": "0.12.10",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.12.10",
+      "comments": {
+        "patch": [
+          {
+            "author": "anfidelman@microsoft.com",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "commit": "19d645489649dec10d9d13b204f4f380377d5978",
+            "comment": "RelayMockPayloadGenerator supports nested lists"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 23 Oct 2024 09:22:25 GMT",
       "version": "0.12.9",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.12.9",
