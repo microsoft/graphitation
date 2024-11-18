@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "RelayMockPayloadGenerator supports nested lists",
+  "packageName": "@graphitation/graphql-js-operation-payload-generator",
+  "email": "anfidelman@microsoft.com",
+  "dependentChangeType": "patch"
+}
