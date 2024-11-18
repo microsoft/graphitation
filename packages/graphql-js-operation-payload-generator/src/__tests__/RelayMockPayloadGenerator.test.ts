@@ -37,11 +37,24 @@ const schema = mergeSchemas({
     // extension over "relay-test-utils-internal" schema
     buildSchema(/* GraphQL */ `
       type Query {
-        nestedList(id: ID!): [[CustomNode!]!]!
-        deeplyNestedList(id: ID!): [[[CustomNode!]!]!]!
+        justList(id: ID!): [CustomNodeA!]!
+        nestedList(id: ID!): [[CustomNodeA!]!]!
+        deeplyNestedList(id: ID!): [[[CustomNodeA!]!]!]!
       }
 
-      type CustomNode {
+      type CustomNodeA {
+        id: ID!
+        nodeB: CustomNodeB!
+        nodesB: [CustomNodeB!]!
+      }
+
+      type CustomNodeB {
+        id: ID!
+        nodeC: CustomNodeC!
+        nodesC: [CustomNodeC!]!
+      }
+
+      type CustomNodeC {
         id: ID!
       }
     `),
@@ -2084,24 +2097,190 @@ test("uses explicit mock data over type based mock data", () => {
   );
 });
 
-test("generate mock for nested list", () => {
-  testGeneratedData(graphql`
-    query RelayMockPayloadGeneratorNestedListTestQuery {
-      nestedList(id: "my-nested-list-id") {
-        __typename
-        id
+test("mocks list with nested structure", () => {
+  testGeneratedData(
+    graphql`
+      query RelayMockPayloadGeneratorTestDeeplyNestedMockDataQuery {
+        justList(id: "my-just-list-id") {
+          __typename
+          id
+          nodeB {
+            id
+            __typename
+            nodeC {
+              id
+              __typename
+            }
+            nodesC {
+              id
+              __typename
+            }
+          }
+          nodesB {
+            id
+            __typename
+            nodeC {
+              id
+              __typename
+            }
+            nodesC {
+              id
+              __typename
+            }
+          }
+        }
       }
-    }
-  `);
+    `,
+  );
 });
 
-test("generate mock for deeply nested list", () => {
-  testGeneratedData(graphql`
-    query RelayMockPayloadGeneratorDeeplyNestedListTestQuery {
-      deeplyNestedList(id: "my-deeply-nested-list-id") {
-        __typename
-        id
+test("mocks list with nested structure with provided resolver", () => {
+  testGeneratedData(
+    graphql`
+      query RelayMockPayloadGeneratorTestDeeplyNestedMockDataQuery {
+        justList(id: "my-just-list-id") {
+          __typename
+          id
+          nodeB {
+            id
+            __typename
+            nodeC {
+              id
+              __typename
+            }
+            nodesC {
+              id
+              __typename
+            }
+          }
+          nodesB {
+            id
+            __typename
+            nodeC {
+              id
+              __typename
+            }
+            nodesC {
+              id
+              __typename
+            }
+          }
+        }
       }
-    }
-  `);
+    `,
+    {
+      Query: () =>
+        ({
+          justList: [
+            {
+              __typename: "CustomNodeA",
+              id: "custom-nodeA-id",
+              nodeB: {
+                id: "nodeB-id",
+                __typename: "CustomNodeB",
+                nodeC: { id: "nodeC-id", __typename: "CustomNodeC" },
+                nodesC: [
+                  { id: "nodesC-id-1", __typename: "CustomNodeC" },
+                  { id: "nodesC-id-2", __typename: "CustomNodeC" },
+                ],
+              },
+              nodesB: [
+                {
+                  __typename: "CustomNodeB",
+                  id: "nodesB-id-1",
+                  nodeC: { id: "nodeC-id-1", __typename: "CustomNodeC" },
+                  nodesC: [
+                    { id: "nodesC-id-1-1", __typename: "CustomNodeC" },
+                    { id: "nodesC-id-1-2", __typename: "CustomNodeC" },
+                  ],
+                },
+                {
+                  __typename: "CustomNodeB",
+                  id: "nodesB-id-2",
+                  nodeC: { id: "nodeC-id-2", __typename: "CustomNodeC" },
+                  nodesC: [
+                    { id: "nodesC-id-2-1", __typename: "CustomNodeC" },
+                    { id: "nodesC-id-2-2", __typename: "CustomNodeC" },
+                  ],
+                },
+              ],
+            },
+          ],
+        } as any),
+    },
+  );
+});
+
+test("mocks 2d list with nested structure", () => {
+  testGeneratedData(
+    graphql`
+      query RelayMockPayloadGeneratorTestDeeplyNestedMockDataQuery {
+        nestedList(id: "my-nested-list-id") {
+          __typename
+          id
+          nodeB {
+            id
+            __typename
+            nodeC {
+              id
+              __typename
+            }
+            nodesC {
+              id
+              __typename
+            }
+          }
+          nodesB {
+            id
+            __typename
+            nodeC {
+              id
+              __typename
+            }
+            nodesC {
+              id
+              __typename
+            }
+          }
+        }
+      }
+    `,
+  );
+});
+
+test("mocks 3d list with nested structure", () => {
+  testGeneratedData(
+    graphql`
+      query RelayMockPayloadGeneratorTestDeeplyNestedMockDataQuery {
+        deeplyNestedList(id: "my-deeply-nested-list-id") {
+          __typename
+          id
+          nodeB {
+            id
+            __typename
+            nodeC {
+              id
+              __typename
+            }
+            nodesC {
+              id
+              __typename
+            }
+          }
+          nodesB {
+            id
+            __typename
+            nodeC {
+              id
+              __typename
+            }
+            nodesC {
+              id
+              __typename
+            }
+          }
+        }
+      }
+    `,
+  );
 });
