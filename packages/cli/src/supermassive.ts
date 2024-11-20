@@ -78,6 +78,14 @@ export function supermassive(): Command {
     )
     .option("--generate-only-enums", "Generate only enum file")
     .option("--scope [scope]", "generate models only for scope")
+    .option(
+      "--enum-migration-json-file [enumMigrationJsonFile]",
+      "File containing array of enum names, which should be migrated to string unions",
+    )
+    .option(
+      "--enum-migration-exceptions-json-file [enumMigrationExceptionsJsonFile]",
+      "File containing array of enum names, which should remain typescript enums",
+    )
     .description("generate interfaces and models")
     .action(
       async (inputs: Array<string>, options: GenerateInterfacesOptions) => {
@@ -145,6 +153,43 @@ async function generateInterfaces(
       path.dirname(fullPath),
       options.outputDir ? options.outputDir : "__generated__",
     );
+    let enumNamesToMigrate;
+    let enumNamesToKeep;
+    if (options.enumMigrationJsonFile) {
+      const content = JSON.parse(
+        await fs.readFile(
+          path.join(process.cwd(), options.enumMigrationJsonFile),
+          {
+            encoding: "utf-8",
+          },
+        ),
+      );
+
+      if (!Array.isArray(content)) {
+        throw new Error("enumMigrationJsonFile doesn't contain an array");
+      }
+
+      enumNamesToMigrate = content;
+    }
+
+    if (options.enumMigrationExceptionsJsonFile) {
+      const content = JSON.parse(
+        await fs.readFile(
+          path.join(process.cwd(), options.enumMigrationExceptionsJsonFile),
+          {
+            encoding: "utf-8",
+          },
+        ),
+      );
+
+      if (!Array.isArray(content)) {
+        throw new Error(
+          "enumMigrationExceptionsJsonFile doesn't contain an array",
+        );
+      }
+
+      enumNamesToKeep = content;
+    }
 
     const result = generateTS(document, {
       outputPath,
@@ -164,6 +209,8 @@ async function generateInterfaces(
       legacyNoModelsForObjects: !!options.legacyModels,
       useStringUnionsInsteadOfEnums: !!options.useStringUnionsInsteadOfEnums,
       generateOnlyEnums: !!options.generateOnlyEnums,
+      enumNamesToMigrate,
+      enumNamesToKeep,
       modelScope: options.scope || null,
     });
 
