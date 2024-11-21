@@ -55,19 +55,19 @@ export function supermassive(): Command {
     .option("-cn, --context-type-name [contextTypeName]", "Context type name")
     .option(
       "-dcp, --default-context-sub-type-path [defaultContextSubTypePath]",
-      "from where to import context",
+      "From where the default context type will be exported",
     )
     .option(
       "-dcn, --default-context-sub-type-name [defaultContextSubTypeName]",
-      "Context name",
+      "Default context type which will extend context sub type",
     )
     .option(
       "-cnt, --context-sub-type-name-template [contextSubTypeNameTemplate]",
-      "context namespace name",
+      "context resource name template. You need to specify ${resourceName} in the parameter eg. `${resourceName}Context`",
     )
     .option(
       "-cpt, --context-sub-type-path-template [contextSubTypePathTemplate]",
-      "context namespace path",
+      "context resource path template. You need to specify ${resourceName} in the parameter eg. `@package/preffix-${resourceName}-suffix`",
     )
     .option("-ei, --enums-import [enumsImport]", "from where to import enums")
     .option("-l, --legacy", "generate legacy types")
