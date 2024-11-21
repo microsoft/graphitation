@@ -18,11 +18,11 @@ describe(generateTS, () => {
             }
 
             type Message {
-              id: ID! @context(stateMachines: ["message"])
+              id: ID! @context(uses: ["message"])
             }
 
-            type User @context(stateMachines: ["user"]) {
-              id: ID! @context(stateMachines: ["id-user"])
+            type User @context(uses: ["user"]) {
+              id: ID! @context(uses: ["id-user"])
               name: String
               messagesWithAnswersNonRequired: [[Message]]
               messagesWithAnswersRequired: [[Message]]!
@@ -31,7 +31,7 @@ describe(generateTS, () => {
               messagesWithArrayRequired: [Message]!
               messagesRequired: [Message!]!
               messagesOnlyMessageRequired: [Message!]
-              post: Post @context(stateMachines: ["post"])
+              post: Post @context(uses: ["post"])
               postRequired: Post!
               avatar: Avatar
               avatarRequired: Avatar!
@@ -310,11 +310,11 @@ describe(generateTS, () => {
       const { resolvers, models, enums, inputs, contextMappingOutput } =
         runGenerateTest(
           graphql`
-            interface Node @context(stateMachines: ["node"]) {
+            interface Node @context(uses: ["node"]) {
               id: ID!
             }
 
-            interface Persona @context(stateMachines: ["persona"]) {
+            interface Persona @context(uses: ["persona"]) {
               phone: String!
             }
 
@@ -323,8 +323,7 @@ describe(generateTS, () => {
               name: String!
             }
 
-            type Admin implements Node & Persona
-              @context(stateMachines: ["admin"]) {
+            type Admin implements Node & Persona @context(uses: ["admin"]) {
               id: ID!
               rank: Int!
             }
@@ -458,12 +457,11 @@ describe(generateTS, () => {
       const { resolvers, models, enums, inputs, contextMappingOutput } =
         runGenerateTest(
           graphql`
-            interface Node @context(stateMachines: ["node"]) {
+            interface Node @context(uses: ["node"]) {
               id: ID!
             }
 
-            interface Customer implements Node
-              @context(stateMachines: ["customer"]) {
+            interface Customer implements Node @context(uses: ["customer"]) {
               id: ID!
               name: String!
             }
@@ -555,8 +553,7 @@ describe(generateTS, () => {
     test("applying @context to enum shouldn't affect anything", () => {
       const { resolvers, models, enums, inputs, contextMappingOutput } =
         runGenerateTest(graphql`
-          enum PresenceAvailability
-            @context(stateMachines: ["shouldnt-apply"]) {
+          enum PresenceAvailability @context(uses: ["shouldnt-apply"]) {
             Available
             Away
             Offline
@@ -631,11 +628,11 @@ describe(generateTS, () => {
               id: ID!
             }
 
-            type Admin @context(stateMachines: ["admin"]) {
+            type Admin @context(uses: ["admin"]) {
               id: ID!
             }
 
-            type User @context(stateMachines: ["user"]) {
+            type User @context(uses: ["user"]) {
               id: ID!
             }
 
@@ -644,18 +641,17 @@ describe(generateTS, () => {
             }
 
             union UserOrAdmin = User | Admin
-            union UserOrCustomer @context(stateMachines: ["user-or-customer"]) =
+            union UserOrCustomer @context(uses: ["user-or-customer"]) =
                 User
               | Customer
-            union CompanyOrCustomer
-              @context(stateMachines: ["company-or-customer"]) =
+            union CompanyOrCustomer @context(uses: ["company-or-customer"]) =
                 Company
               | Customer
 
             extend type Query {
-              userById(id: ID!): whatever @context(stateMachines: ["whatever"])
+              userById(id: ID!): whatever @context(uses: ["whatever"])
               userByMail(mail: String): whatever
-                @context(stateMachines: ["different-whatever"])
+                @context(uses: ["different-whatever"])
               node(id: ID!): Node
             }
           `,

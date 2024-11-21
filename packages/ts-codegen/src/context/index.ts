@@ -196,7 +196,7 @@ export class TsCodegenContext {
     camelCased = true,
   ) {
     return template.replace(
-      "${contextName}",
+      "${resourceName}",
       camelCased ? camelCase(contextName, { pascalCase: true }) : contextName,
     );
   }
@@ -775,7 +775,7 @@ export function extractContext(
         ) {
           if (
             node.arguments?.length !== 1 ||
-            node.arguments[0].name.value !== "stateMachines" ||
+            node.arguments[0].name.value !== "uses" ||
             node.arguments[0].value.kind !== "ListValue"
           ) {
             throw new Error("Invalid context use");

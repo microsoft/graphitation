@@ -62,11 +62,11 @@ export function supermassive(): Command {
       "Context name",
     )
     .option(
-      "-cm, --context-sub-type-name-template [contextSubTypeNameTemplate]",
+      "-cnt, --context-sub-type-name-template [contextSubTypeNameTemplate]",
       "context namespace name",
     )
     .option(
-      "-cm, --context-sub-type-path-template [contextSubTypePathTemplate]",
+      "-cpt, --context-sub-type-path-template [contextSubTypePathTemplate]",
       "context namespace path",
     )
     .option("-ei, --enums-import [enumsImport]", "from where to import enums")
