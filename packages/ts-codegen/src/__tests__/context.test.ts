@@ -47,8 +47,9 @@ describe(generateTS, () => {
             }
           `,
           {
-            contextSubTypeNameTemplate: "I${contextName}StateMachineContext",
-            contextSubTypePathTemplate: "@msteams/core-cdl-sync-${contextName}",
+            contextSubTypeNameTemplate: "I${resourceName}StateMachineContext",
+            contextSubTypePathTemplate:
+              "@msteams/core-cdl-sync-${resourceName}",
           },
         );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -334,8 +335,9 @@ describe(generateTS, () => {
             }
           `,
           {
-            contextSubTypeNameTemplate: "I${contextName}StateMachineContext",
-            contextSubTypePathTemplate: "@msteams/core-cdl-sync-${contextName}",
+            contextSubTypeNameTemplate: "I${resourceName}StateMachineContext",
+            contextSubTypePathTemplate:
+              "@msteams/core-cdl-sync-${resourceName}",
           },
         );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -476,8 +478,9 @@ describe(generateTS, () => {
             }
           `,
           {
-            contextSubTypeNameTemplate: "I${contextName}StateMachineContext",
-            contextSubTypePathTemplate: "@msteams/core-cdl-sync-${contextName}",
+            contextSubTypeNameTemplate: "I${resourceName}StateMachineContext",
+            contextSubTypePathTemplate:
+              "@msteams/core-cdl-sync-${resourceName}",
           },
         );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -656,8 +659,9 @@ describe(generateTS, () => {
             }
           `,
           {
-            contextSubTypeNameTemplate: "I${contextName}StateMachineContext",
-            contextSubTypePathTemplate: "@msteams/core-cdl-sync-${contextName}",
+            contextSubTypeNameTemplate: "I${resourceName}StateMachineContext",
+            contextSubTypePathTemplate:
+              "@msteams/core-cdl-sync-${resourceName}",
           },
         );
       expect(enums).toMatchInlineSnapshot(`undefined`);
