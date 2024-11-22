@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Wed, 30 Oct 2024 12:58:29 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 22 Nov 2024 09:11:34 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.14.0
+
+Fri, 22 Nov 2024 09:11:34 GMT
+
+### Minor changes
+
+- Context type generation re-worked (77059398+vejrj@users.noreply.github.com)
+- Bump @graphitation/ts-codegen to v2.13.0
 
 ## 1.13.1
 

@@ -2,6 +2,27 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Fri, 22 Nov 2024 09:11:34 GMT",
+      "version": "1.14.0",
+      "tag": "@graphitation/cli_v1.14.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/cli",
+            "commit": "06a4fb6f618e4a0c39428369fbc9d266a88c8e2e",
+            "comment": "Context type generation re-worked"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.13.0",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 30 Oct 2024 12:58:29 GMT",
       "version": "1.13.1",
       "tag": "@graphitation/cli_v1.13.1",
