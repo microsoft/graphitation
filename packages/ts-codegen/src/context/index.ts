@@ -25,6 +25,7 @@ import ts, {
 import { DefinitionImport, DefinitionModel } from "../types";
 import { createImportDeclaration } from "./utilities";
 import {
+  camelCase,
   createListType,
   createNonNullableType,
   createNullableType,
@@ -51,6 +52,10 @@ export type TsCodegenContextOptions = {
   };
   legacyCompat: boolean;
   legacyNoModelsForObjects: boolean;
+  contextSubTypePathTemplate?: string;
+  contextSubTypeNameTemplate?: string;
+  defaultContextSubTypePath?: string;
+  defaultContextSubTypeName?: string;
   useStringUnionsInsteadOfEnums: boolean;
   enumNamesToMigrate: string[] | null;
   enumNamesToKeep: string[] | null;
@@ -95,8 +100,16 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
 
 type ModelNameAndImport = { modelName: string; imp: DefinitionImport };
 
+export type ContextMap = {
+  [key: string]: ContextMapTypeItem;
+};
+
+export type ContextMapTypeItem = { __context?: string[] } & {
+  [key: string]: string[];
+};
 export class TsCodegenContext {
   private allTypes: Array<Type>;
+  private typeContextMap: ContextMap;
   private typeNameToType: Map<string, Type>;
   private usedEntitiesInModels: Set<string>;
   private usedEntitiesInResolvers: Set<string>;
@@ -108,6 +121,12 @@ export class TsCodegenContext {
   >;
   private typeNameToModels: Map<string, DefinitionModel>;
   private legacyInterfaces: Set<string>;
+  context?: { name: string; from: string };
+  contextDefaultSubTypeTemplate?: {
+    nameTemplate: string;
+    pathTemplate: string;
+  };
+  contextDefaultSubTypeContext?: { name: string; from: string };
   hasUsedModelInInputs: boolean;
   hasUsedEnumsInModels: boolean;
   hasEnums: boolean;
@@ -115,6 +134,7 @@ export class TsCodegenContext {
 
   constructor(private options: TsCodegenContextOptions) {
     this.allTypes = [];
+    this.typeContextMap = {};
     this.typeNameToType = new Map();
     this.usedEntitiesInModels = new Set();
     this.usedEntitiesInResolvers = new Set();
@@ -128,6 +148,178 @@ export class TsCodegenContext {
     this.hasInputs = false;
     this.hasEnums = Boolean(options.enumsImport);
     this.hasUsedEnumsInModels = false;
+
+    if (
+      options.contextSubTypeNameTemplate &&
+      options.contextSubTypePathTemplate
+    ) {
+      this.contextDefaultSubTypeTemplate = {
+        nameTemplate: options.contextSubTypeNameTemplate,
+        pathTemplate: options.contextSubTypePathTemplate,
+      };
+    }
+
+    if (
+      options.defaultContextSubTypeName &&
+      options.defaultContextSubTypePath
+    ) {
+      this.contextDefaultSubTypeContext = {
+        name: options.defaultContextSubTypeName,
+        from: options.defaultContextSubTypePath,
+      };
+    }
+
+    if (options.context.from && options.context.name) {
+      this.context = {
+        name: options.context.name,
+        from: options.context.from,
+      };
+    }
+  }
+
+  public getContextTypes<T>(
+    contextRootType: T & {
+      __context?: string[];
+    },
+  ): string[] | null {
+    if (contextRootType) {
+      if (contextRootType.__context) {
+        return contextRootType.__context;
+      }
+    }
+    return null;
+  }
+
+  public replaceTemplateWithContextName(
+    template: string,
+    contextName: string,
+    camelCased = true,
+  ) {
+    return template.replace(
+      "${resourceName}",
+      camelCased ? camelCase(contextName, { pascalCase: true }) : contextName,
+    );
+  }
+
+  public getContextTemplate() {
+    return this.contextDefaultSubTypeTemplate || null;
+  }
+
+  public getContextTypeNode(typeNames?: string[] | null) {
+    const contextDefaultSubTypeTemplate = this.contextDefaultSubTypeTemplate;
+
+    if (!typeNames || !typeNames.length || !contextDefaultSubTypeTemplate) {
+      return this.getContextType().toTypeReference();
+    } else if (
+      (typeNames.length === 1 && this.contextDefaultSubTypeContext) ||
+      typeNames.length > 1
+    ) {
+      const typeNameWithNamespace = typeNames.map((typeName) => {
+        return this.replaceTemplateWithContextName(
+          contextDefaultSubTypeTemplate.nameTemplate,
+          typeName,
+        );
+      });
+
+      return factory.createIntersectionTypeNode(
+        (this.contextDefaultSubTypeContext
+          ? [this.contextDefaultSubTypeContext.name, ...typeNameWithNamespace]
+          : typeNameWithNamespace
+        ).map((type: string) => {
+          return factory.createTypeReferenceNode(
+            factory.createIdentifier(type),
+            undefined,
+          );
+        }),
+      );
+    } else {
+      return new TypeLocation(
+        null,
+        this.replaceTemplateWithContextName(
+          contextDefaultSubTypeTemplate.nameTemplate,
+          typeNames[0],
+        ),
+      ).toTypeReference();
+    }
+  }
+
+  private isNonArrayNode(
+    node: ASTNode | ReadonlyArray<ASTNode>,
+  ): node is ASTNode {
+    return !Array.isArray(node);
+  }
+
+  public initContextMap(
+    ancestors: ReadonlyArray<ASTNode | ReadonlyArray<ASTNode>>,
+    values: string[],
+  ) {
+    if (ancestors.length < 2) {
+      throw new Error("Invalid document provided");
+    }
+
+    const node = ancestors[ancestors.length - 1];
+    const nonArrayNode = this.isNonArrayNode(node) ? node : null;
+
+    if (nonArrayNode) {
+      if (
+        nonArrayNode?.kind === "ObjectTypeDefinition" ||
+        nonArrayNode?.kind === "InterfaceTypeDefinition" ||
+        nonArrayNode?.kind === "UnionTypeDefinition"
+      ) {
+        if (this.typeContextMap[nonArrayNode.name.value]?.__context) {
+          throw new Error("Type already visited");
+        }
+
+        const typeName = nonArrayNode.name.value;
+        if (!this.typeContextMap[typeName]) {
+          this.typeContextMap[typeName] = {};
+        }
+
+        this.typeContextMap[typeName].__context = values;
+      } else if (nonArrayNode?.kind === "FieldDefinition") {
+        const node = ancestors[ancestors.length - 3];
+        const typeName =
+          this.isNonArrayNode(node) &&
+          (node.kind === "ObjectTypeDefinition" ||
+            node.kind === "ObjectTypeExtension")
+            ? node.name.value
+            : null;
+
+        if (typeName) {
+          if (!this.typeContextMap[typeName]) {
+            this.typeContextMap[typeName] = {};
+          }
+
+          this.typeContextMap[typeName][nonArrayNode.name.value] = values;
+        }
+      }
+    }
+  }
+
+  getSubTypeNamesFromTemplate(
+    subTypes: string[],
+    nameTemplate: string,
+    pathTemplate: string,
+  ) {
+    return subTypes.reduce<Record<string, string[]>>(
+      (acc: Record<string, string[]>, importName: string) => {
+        const importPath = this.replaceTemplateWithContextName(
+          pathTemplate,
+          importName,
+          false,
+        );
+        if (importPath) {
+          if (!acc[importPath]) {
+            acc[importPath] = [];
+          }
+          acc[importPath].push(
+            this.replaceTemplateWithContextName(nameTemplate, importName),
+          );
+        }
+        return acc;
+      },
+      {},
+    );
   }
 
   isLegacyCompatMode(): boolean {
@@ -140,6 +332,10 @@ export class TsCodegenContext {
 
   getEnumsImport(): string | null {
     return this.options.enumsImport;
+  }
+
+  getContextMap() {
+    return this.typeContextMap;
   }
 
   addType(type: Type): void {
@@ -185,6 +381,20 @@ export class TsCodegenContext {
         this.getModelType(node.name.value, markUsage).toTypeReference(),
         markUsage === "RESOLVERS" ? true : false,
       );
+    }
+  }
+
+  getTypeFromTypeNode(node: TypeNode): string {
+    if (typeof node === "string") {
+      return node;
+    }
+
+    if (node.kind === Kind.NON_NULL_TYPE) {
+      return this.getTypeFromTypeNode(node.type);
+    } else if (node.kind === Kind.LIST_TYPE) {
+      return this.getTypeFromTypeNode(node.type);
+    } else {
+      return node.name.value;
     }
   }
 
@@ -525,7 +735,9 @@ export function extractContext(
     ...TsCodegenContextDefault,
     ...options,
   };
+
   const context = new TsCodegenContext(fullOptions);
+  const { contextSubTypeNameTemplate, contextSubTypePathTemplate } = options;
 
   visit(document, {
     Directive: {
@@ -556,6 +768,28 @@ export function extractContext(
           }
           const typeName = (typeDef as InterfaceTypeDefinitionNode).name.value;
           context.addLegacyInterface(typeName);
+        } else if (
+          node.name.value === "context" &&
+          contextSubTypeNameTemplate &&
+          contextSubTypePathTemplate
+        ) {
+          if (
+            node.arguments?.length !== 1 ||
+            node.arguments[0].name.value !== "uses" ||
+            node.arguments[0].value.kind !== "ListValue"
+          ) {
+            throw new Error("Invalid context use");
+          }
+          const directiveValues = node.arguments[0].value.values.map((item) => {
+            if (item.kind !== "StringValue") {
+              throw new Error("Invalid context use");
+            }
+            return item.value;
+          });
+
+          if (directiveValues.length) {
+            context.initContextMap(ancestors, directiveValues);
+          }
         }
       },
     },

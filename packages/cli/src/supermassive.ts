@@ -10,8 +10,8 @@ import * as glob from "fast-glob";
 
 type GenerateInterfacesOptions = {
   outputDir?: string;
-  contextImport?: string;
-  contextName?: string;
+  contextTypePath?: string;
+  contextTypeName?: string;
   enumsImport?: string;
   legacy?: boolean;
   legacyModels?: boolean;
@@ -19,6 +19,10 @@ type GenerateInterfacesOptions = {
   enumMigrationJsonFile?: string;
   enumMigrationExceptionsJsonFile?: string;
   generateOnlyEnums?: boolean;
+  contextSubTypeNameTemplate?: string;
+  contextSubTypePathTemplate?: string;
+  defaultContextSubTypePath?: string;
+  defaultContextSubTypeName?: string;
   scope?: string;
 };
 
@@ -45,10 +49,26 @@ export function supermassive(): Command {
       "output directory relative to file, default generated",
     )
     .option(
-      "-ci, --context-import [contextImport]",
+      "-ci, --context-type-path [contextTypePath]",
       "from where to import context",
     )
-    .option("-cn, --context-name [contextName]", "Context name")
+    .option("-cn, --context-type-name [contextTypeName]", "Context type name")
+    .option(
+      "-dcp, --default-context-sub-type-path [defaultContextSubTypePath]",
+      "From where the default context type will be exported",
+    )
+    .option(
+      "-dcn, --default-context-sub-type-name [defaultContextSubTypeName]",
+      "Default context type which will extend context sub type",
+    )
+    .option(
+      "-cnt, --context-sub-type-name-template [contextSubTypeNameTemplate]",
+      "context resource name template. You need to specify ${resourceName} in the parameter eg. `${resourceName}Context`",
+    )
+    .option(
+      "-cpt, --context-sub-type-path-template [contextSubTypePathTemplate]",
+      "context resource path template. You need to specify ${resourceName} in the parameter eg. `@package/preffix-${resourceName}-suffix`",
+    )
     .option("-ei, --enums-import [enumsImport]", "from where to import enums")
     .option("-l, --legacy", "generate legacy types")
     .option("--legacy-models", "do not use models for object types")
@@ -91,16 +111,19 @@ function getFiles(inputs: Array<string>) {
     .flat()
     .filter(Boolean);
 }
-function getContextPath(outputDir: string, contextImport: string | undefined) {
-  if (!contextImport) {
+function getContextPath(
+  outputDir: string,
+  contextTypePath: string | undefined,
+) {
+  if (!contextTypePath) {
     return;
   }
 
-  if (!contextImport.startsWith(".")) {
-    return contextImport;
+  if (!contextTypePath.startsWith(".")) {
+    return contextTypePath;
   }
 
-  const contextDir = path.join(process.cwd(), contextImport);
+  const contextDir = path.join(process.cwd(), contextTypePath);
 
   return path
     .relative(outputDir, contextDir)
@@ -171,8 +194,16 @@ async function generateInterfaces(
     const result = generateTS(document, {
       outputPath,
       documentPath: fullPath,
-      contextImport: getContextPath(outputPath, options.contextImport) || null,
-      contextName: options.contextName,
+      contextTypePath:
+        getContextPath(outputPath, options.contextTypePath) || null,
+      contextTypeName: options.contextTypeName,
+      contextSubTypeNameTemplate: options.contextSubTypeNameTemplate,
+      contextSubTypePathTemplate: options.contextSubTypePathTemplate,
+      defaultContextSubTypePath: getContextPath(
+        outputPath,
+        options.defaultContextSubTypePath,
+      ),
+      defaultContextSubTypeName: options.defaultContextSubTypeName,
       enumsImport: getContextPath(outputPath, options.enumsImport) || null,
       legacyCompat: !!options.legacy,
       legacyNoModelsForObjects: !!options.legacyModels,
@@ -194,6 +225,16 @@ async function generateInterfaces(
         { encoding: "utf-8" },
       ),
     );
+
+    if (result.contextMappingOutput) {
+      outputs.push(
+        fs.writeFile(
+          path.join(outputPath, "schema-context-mapping-metadata.json"),
+          JSON.stringify(result.contextMappingOutput, null, 2),
+          { encoding: "utf-8" },
+        ),
+      );
+    }
 
     await Promise.all(outputs);
   }
