@@ -24,6 +24,7 @@ export function describeDocument(document: DocumentNode): DocumentDescriptor {
   const operationDefinition = operationDefinitions[0];
   return {
     document,
+    operation: getOperation(operationDefinition),
     debugName: debugName(operationDefinition),
     definition: operationDefinition,
     fragmentMap,
@@ -58,3 +59,11 @@ function debugName({
 
 const getName = (node: { name: NameNode; alias?: NameNode }): string =>
   node.alias ? node.alias.value + ": " + node.name.value : node.name.value;
+
+const getOperation = (
+  def: OperationDefinitionNode,
+): OperationDefinitionNode["operation"] | "fragment" =>
+  def.selectionSet.selections.length === 1 &&
+  def.selectionSet.selections[0].kind === "FragmentSpread"
+    ? "fragment"
+    : def.operation;

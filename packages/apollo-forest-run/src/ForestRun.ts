@@ -11,9 +11,11 @@ import type {
   CacheEnv,
   DataForest,
   DataTree,
+  EventLog,
   OptimisticLayer,
   Store,
   Transaction,
+  TransactionStats,
 } from "./cache/types";
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
@@ -34,6 +36,7 @@ import { write } from "./cache/write";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { CacheConfig } from "./cache/types";
+import { markEnd, markStart } from "./cache/stats";
 
 /**
  * ForestRun cache aims to be an Apollo cache implementation somewhat compatible with InMemoryCache.
@@ -84,6 +87,7 @@ export class ForestRun extends ApolloCache<any> {
   public rawConfig: InMemoryCacheConfig;
   protected env: CacheEnv;
   protected store: Store;
+  protected log: EventLog | null = null;
 
   protected transactionStack: Transaction[] = [];
   protected newWatches = new Set<Cache.WatchOptions>();
@@ -103,6 +107,8 @@ export class ForestRun extends ApolloCache<any> {
     super();
     this.env = createCacheEnvironment(config);
     this.store = createStore(this.env);
+    // this.log = config?.logLevel ? [] : null;
+    this.log = [];
     this.rawConfig = config ?? {};
   }
 
@@ -169,13 +175,13 @@ export class ForestRun extends ApolloCache<any> {
   private runModify(options: Cache.ModifyOptions): boolean {
     const activeTransaction = peek(this.transactionStack);
     assert(activeTransaction);
-    const [dirty, affected] = modify(
+    const { dirty, affected, stats } = modify(
       this.env,
       this.store,
       activeTransaction,
       options,
     );
-
+    activeTransaction.stats.log.push(stats);
     for (const operation of affected) {
       // Hack to force-notify invalidated operations even if their diff is the same, should be explicit somehow
       // TODO: remove invalidation after removing read policies and modify API
@@ -200,12 +206,13 @@ export class ForestRun extends ApolloCache<any> {
   private runWrite(options: Cache.WriteOptions): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
-    const { incoming, affected } = write(
+    const { incoming, affected, stats } = write(
       this.env,
       this.store,
       transaction,
       options,
     );
+    transaction.stats.log.push(stats);
     if (affected) {
       this.updateTransaction(transaction, options, affected, incoming);
     }
@@ -261,7 +268,8 @@ export class ForestRun extends ApolloCache<any> {
     watchesToNotify: Set<Cache.WatchOptions>,
     onWatchUpdated?: Cache.BatchOptions<any>["onWatchUpdated"],
     fromOptimisticTransaction?: boolean,
-  ) {
+  ): number {
+    let totalNotified = 0;
     const stale: {
       operation: OperationDescriptor;
       diff: Cache.DiffResult<any>;
@@ -282,6 +290,7 @@ export class ForestRun extends ApolloCache<any> {
         }
         if (this.shouldNotifyWatch(watch, newDiff, onWatchUpdated)) {
           this.notifyWatch(watch, newDiff);
+          totalNotified++;
         }
       } catch (e) {
         errors.set(watch, e as Error);
@@ -294,6 +303,7 @@ export class ForestRun extends ApolloCache<any> {
       const [firstError] = errors.values();
       throw firstError;
     }
+    return totalNotified;
   }
 
   private notifyWatch(watch: Cache.WatchOptions, diff: Cache.DiffResult<any>) {
@@ -317,12 +327,14 @@ export class ForestRun extends ApolloCache<any> {
     options: Cache.DiffOptions<TData, TVariables>,
   ): Cache.DiffResult<TData> {
     const activeTransaction = peek(this.transactionStack);
-    const result = read<TData>(
-      this.env,
-      this.store,
-      activeTransaction,
-      options,
-    );
+    const result = read(this.env, this.store, activeTransaction, options);
+
+    if (activeTransaction) {
+      activeTransaction.stats.log.push(result.stats);
+    } else {
+      // this.log?.push(result.stats);
+    }
+
     if (options.returnPartialData === false && result.dangling?.size) {
       const [ref] = result.dangling;
       throw new Error(`Dangling reference to missing ${ref} object`);
@@ -330,7 +342,7 @@ export class ForestRun extends ApolloCache<any> {
     if (options.returnPartialData === false && result.missing) {
       throw new Error(result.missing[0].message);
     }
-    return result;
+    return result as Cache.DiffResult<TData>;
   }
 
   public watch<TData = any, TVariables = any>(
@@ -411,6 +423,7 @@ export class ForestRun extends ApolloCache<any> {
   }
 
   private runTransaction<T>(options: Cache.BatchOptions<this, T>): T {
+    const stats = createTransactionStats();
     const parentTransaction = peek(this.transactionStack);
     const { update, optimistic, removeOptimistic, onWatchUpdated } = options;
 
@@ -432,23 +445,34 @@ export class ForestRun extends ApolloCache<any> {
       affectedOperations: null,
       watchesToNotify: null,
       forceOptimistic,
-      writes: [],
+      writes: [], // FIXME: remove and rely on log instead
+      stats,
     };
     this.transactionStack.push(activeTransaction);
+    this.log?.push(stats);
+
     let error;
     let result: T | undefined = undefined;
     let watchesToNotify: Set<Cache.WatchOptions> | null = null;
     try {
+      markStart(stats.steps.updateCallback);
       result = update(this);
+      markEnd(stats.steps.updateCallback);
 
       // This must run within transaction itself, because it runs `diff` under the hood
       // which may need to read results from the active optimistic layer
+      const step = stats.steps.collectWatches;
+      markStart(step);
       watchesToNotify = this.collectAffectedWatches(
         activeTransaction,
         onWatchUpdated,
       );
+      step.dirtyWatches = watchesToNotify?.size ?? 0;
+      step.affectedOperations = activeTransaction.affectedOperations?.size ?? 0;
+      markEnd(step);
     } catch (e) {
       error = e;
+      stats.error = (e as Error).message ?? "Unknown error";
     }
     assert(activeTransaction === peek(this.transactionStack));
     this.transactionStack.pop();
@@ -461,6 +485,7 @@ export class ForestRun extends ApolloCache<any> {
       if (typeof optimistic === "string") {
         this.removeOptimistic(optimistic);
       }
+      markEnd(stats);
       throw error;
     }
     if (typeof removeOptimistic === "string") {
@@ -472,18 +497,24 @@ export class ForestRun extends ApolloCache<any> {
         parentTransaction.watchesToNotify.add(watch);
       }
       parentTransaction.writes.push(...activeTransaction.writes);
+      parentTransaction.stats.log.push(activeTransaction.stats);
+      markEnd(stats);
       return result as T;
     }
     if (watchesToNotify) {
-      this.notifyWatches(
+      const step = stats.steps.notifyWatches;
+      markStart(step);
+      step.notifiedWatches = this.notifyWatches(
         activeTransaction,
         watchesToNotify,
         onWatchUpdated,
         typeof optimistic === "string",
       );
+      markEnd(step);
     }
     maybeEvictOldData(this.env, this.store);
 
+    markEnd(stats);
     return result as T;
   }
 
@@ -583,16 +614,29 @@ export class ForestRun extends ApolloCache<any> {
   private removeOptimisticLayers(layerTag: string) {
     const activeTransaction = peek(this.transactionStack);
     assert(activeTransaction);
+    const step = activeTransaction.stats.steps.removeOptimistic;
     activeTransaction.affectedOperations ??= new Set();
+    markStart(step);
     const affectedOps = removeOptimisticLayers(this, this.store, layerTag);
 
     for (const operation of affectedOps ?? EMPTY_ARRAY) {
       activeTransaction.affectedOperations.add(operation);
     }
+    step.affectedOperations = affectedOps?.size ?? 0;
+    markEnd(step);
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {
     return this.env.addTypename ? transformDocument(document) : document;
+  }
+
+  public flushLog(): EventLog {
+    if (!this.log) {
+      return [];
+    }
+    const log = this.log;
+    this.log = [];
+    return log;
   }
 }
 
@@ -628,3 +672,33 @@ function logStaleOperations(
         .join("\n"),
   );
 }
+
+const createTransactionStats = (): TransactionStats => ({
+  kind: "Transaction",
+  time: Number.NaN,
+  error: "",
+  log: [],
+  steps: {
+    updateCallback: {
+      time: Number.NaN,
+      start: Number.NaN,
+    },
+    collectWatches: {
+      time: Number.NaN,
+      start: Number.NaN,
+      dirtyWatches: -1,
+      affectedOperations: -1,
+    },
+    removeOptimistic: {
+      time: Number.NaN,
+      start: Number.NaN,
+      affectedOperations: -1,
+    },
+    notifyWatches: {
+      time: Number.NaN,
+      start: Number.NaN,
+      notifiedWatches: 0,
+    },
+  },
+  start: performance.now(),
+});

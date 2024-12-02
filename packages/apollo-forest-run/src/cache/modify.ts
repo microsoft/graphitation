@@ -19,6 +19,7 @@ import type {
 import type {
   CacheEnv,
   DataForest,
+  ModifyStats,
   OptimisticLayer,
   Store,
   Transaction,
@@ -55,6 +56,7 @@ import {
 import { invalidateReadResults } from "./invalidate";
 import { IndexedTree } from "../forest/types";
 import { getFieldName } from "../descriptor/resolvedSelection";
+import { markEnd } from "./stats";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const DELETE: any = Object.freeze(Object.create(null));
@@ -76,12 +78,20 @@ type LayerDifferenceMap = Map<
   ModifiedGraphDifference
 >;
 
+export type ModifyResult = {
+  dirty: boolean;
+  affected: Set<OperationDescriptor>;
+  stats: ModifyStats;
+};
+
 export function modify(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
   options: Cache.ModifyOptions,
-): [dirty: boolean, affected: Set<OperationDescriptor>] {
+): ModifyResult {
+  const stats = createStats();
+
   const id = options.id ?? "ROOT_QUERY";
   const optimistic =
     activeTransaction.forceOptimistic ?? options.optimistic ?? false;
@@ -91,7 +101,7 @@ export function modify(
   const layerDifferenceMap = runModifiers(env, layers, id, options.fields);
 
   if (!layerDifferenceMap.size) {
-    return [false, new Set()];
+    return { dirty: false, affected: new Set(), stats: markEnd(stats) };
   }
 
   let deletedFromLayers = 0;
@@ -191,7 +201,7 @@ export function modify(
   const modified =
     updatedLayers > 0 || deletedFromLayers > 0 || deletedFieldsFromLayers > 0;
 
-  return [modified, allAffectedOps];
+  return { dirty: modified, affected: allAffectedOps, stats: markEnd(stats) };
 }
 
 function runModifiers(
@@ -535,3 +545,10 @@ function toGraphValue(
     `ForestRun doesn't support ${base.kind} value in cache.modify() API`,
   );
 }
+
+const createStats = (): ModifyStats => ({
+  kind: "Modify",
+  time: Number.NaN,
+  error: "",
+  start: performance.now(),
+});

@@ -8,6 +8,7 @@ import type {
   OptimisticLayer,
   Store,
   Transaction,
+  WriteStats,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
 import { assert } from "../jsutils/assert";
@@ -36,10 +37,12 @@ import { getNodeChunks } from "./draftHelpers";
 import { addTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
+import { createTimedEvent, markEnd, markStart } from "./stats";
 
 type WriteResult = {
   affected?: Iterable<OperationDescriptor>;
   incoming: DataTree;
+  stats: WriteStats;
 };
 
 export function write(
@@ -49,6 +52,8 @@ export function write(
   options: Cache.WriteOptions,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
+  const stats = createStats();
+  const steps = stats.steps;
   const targetForest = getActiveForest(store, activeTransaction);
 
   const writeData = options.result ?? {};
@@ -59,6 +64,7 @@ export function write(
   if (rootNodeKey !== undefined && options.dataId) {
     keyMap?.set(writeData, rootNodeKey);
   }
+  markStart(steps.descriptor);
   const operationDescriptor = resolveOperationDescriptor(
     env,
     store,
@@ -66,6 +72,11 @@ export function write(
     options.variables,
     rootNodeKey,
   );
+  stats.op = operationDescriptor.debugName;
+  stats.opId = operationDescriptor.id;
+  stats.opType = operationDescriptor.operation;
+  markEnd(steps.descriptor);
+
   touchOperation(env, store, operationDescriptor);
   const operationResult: OperationResult = { data: writeData };
 
@@ -88,7 +99,7 @@ export function write(
   assert(!existingResult?.prev);
 
   if (writeData === existingData && existingResult) {
-    return { incoming: existingResult };
+    return { incoming: existingResult, stats: markEnd(stats) };
   }
 
   if (!ROOT_NODES.includes(operationDescriptor.rootNodeKey)) {
@@ -107,6 +118,7 @@ export function write(
     operationDescriptor.rootType = typeName ?? "";
   }
 
+  markStart(steps.indexing);
   const incomingResult = indexTree(
     env,
     operationDescriptor,
@@ -114,6 +126,8 @@ export function write(
     undefined,
     existingResult,
   );
+  steps.indexing.totalNodes = incomingResult.nodes.size;
+  markEnd(steps.indexing);
 
   // ApolloCompat: necessary for fragment writes with custom ids
   if (options.dataId && incomingResult.rootNodeKey !== options.dataId) {
@@ -124,6 +138,7 @@ export function write(
     incomingResult.rootNodeKey = options.dataId;
   }
 
+  markStart(steps.mergePolicies);
   const modifiedIncomingResult = applyMergePolicies(
     env,
     getEffectiveReadLayers(store, targetForest, false),
@@ -131,12 +146,20 @@ export function write(
     incomingResult,
     options.overwrite ?? false,
   );
+  markEnd(steps.mergePolicies);
 
+  const diffStats = steps.diff;
+  markStart(diffStats);
   const difference = diffTree(targetForest, modifiedIncomingResult, env);
-
   if (difference.errors.length) {
     processDiffErrors(targetForest, modifiedIncomingResult, difference);
   }
+  for (const [nodeKey, nodeDiff] of difference.nodeDifference) {
+    diffStats.dirtyNodes.push([nodeKey, nodeDiff.dirtyFields ?? EMPTY_SET]);
+  }
+  diffStats.newNodes = difference.newNodes;
+  diffStats.errors = difference.errors.length;
+  markEnd(diffStats);
 
   if (
     existingResult &&
@@ -151,21 +174,32 @@ export function write(
   // This function returns exhaustive list of affected operations. It may contain false-positives,
   // because operationsWithNodes also reflects nodes from optimistic updates and read policy results
   // (which may not exist in the main forest trees)
+  markStart(steps.affectedOperations);
   const affectedOperations = resolveAffectedOperations(
     targetForest,
     difference,
   );
+  steps.affectedOperations.totalCount = affectedOperations.size;
+  markEnd(steps.affectedOperations);
 
   const chunkProvider = (key: NodeKey) =>
     getNodeChunks(getEffectiveReadLayers(store, targetForest, false), key);
 
-  updateAffectedTrees(env, targetForest, affectedOperations, chunkProvider);
-
+  markStart(steps.update);
+  steps.update.totalUpdated = updateAffectedTrees(
+    env,
+    targetForest,
+    affectedOperations,
+    chunkProvider,
+  );
   if (!existingResult && shouldCache(targetForest, operationDescriptor)) {
+    steps.update.newTreeAdded = true;
     affectedOperations.set(operationDescriptor, difference.nodeDifference);
     addTree(targetForest, modifiedIncomingResult);
   }
+  markEnd(steps.update);
 
+  markStart(steps.affectedLayerOperations);
   appendAffectedOperationsFromOtherLayers(
     env,
     store,
@@ -173,7 +207,9 @@ export function write(
     targetForest,
     modifiedIncomingResult,
   );
+  markEnd(steps.affectedLayerOperations);
 
+  markStart(steps.invalidateReadResults);
   invalidateReadResults(
     env,
     store,
@@ -182,12 +218,15 @@ export function write(
     affectedOperations,
     modifiedIncomingResult,
   );
+  markEnd(steps.invalidateReadResults);
+
   incomingResult.prev = null;
   modifiedIncomingResult.prev = null;
 
   return {
     incoming: modifiedIncomingResult,
     affected: affectedOperations.keys(),
+    stats: markEnd(stats),
   };
 }
 
@@ -281,5 +320,51 @@ function shouldCache(
   return operation.cache;
 }
 
+const createStats = (): WriteStats => ({
+  kind: "Write",
+  time: Number.NaN,
+  op: "",
+  opId: -1, // operation id
+  opType: "", // query/mutation/subscription/fragment
+  steps: {
+    descriptor: createTimedEvent(),
+    indexing: {
+      time: Number.NaN,
+      totalNodes: -1,
+      start: Number.NaN,
+    },
+    mergePolicies: createTimedEvent(),
+    diff: {
+      time: Number.NaN,
+      dirtyNodes: [],
+      newNodes: [],
+      errors: -1,
+      start: Number.NaN,
+    },
+    affectedOperations: {
+      time: Number.NaN,
+      start: Number.NaN,
+      totalCount: -1,
+    },
+    update: {
+      time: Number.NaN,
+      totalUpdated: -1,
+      newTreeAdded: false,
+      start: Number.NaN,
+    },
+    affectedLayerOperations: {
+      time: Number.NaN,
+      start: Number.NaN,
+      totalCount: -1,
+    },
+    invalidateReadResults: createTimedEvent(),
+  },
+  start: performance.now(),
+});
+
 const inspect = JSON.stringify.bind(JSON);
 const EMPTY_ARRAY = Object.freeze([]);
+const EMPTY_SET = new Set<any>();
+EMPTY_SET["add"] = () => {
+  throw new Error("Frozen set");
+};

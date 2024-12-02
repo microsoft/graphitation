@@ -11,6 +11,7 @@ import type {
   DataForest,
   DataTree,
   OptimisticLayer,
+  ReadStats,
   ResultTree,
   Store,
   Transaction,
@@ -36,13 +37,20 @@ import {
 } from "./store";
 import { assert } from "../jsutils/assert";
 import { addTree, trackTreeNodes } from "../forest/addTree";
+import { markEnd, markStart } from "./stats";
 
-export function read<TData>(
+type ReadResult = Cache.DiffResult<unknown> & {
+  stats: ReadStats;
+  dangling?: Set<string>;
+};
+
+export function read(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction | undefined,
   options: Cache.DiffOptions,
-): Cache.DiffResult<TData> & { dangling?: Set<string> } {
+): ReadResult {
+  const stats = createStats();
   const { partialReadResults, optimisticLayers, optimisticReadResults } = store;
 
   const optimistic = activeTransaction?.forceOptimistic ?? options.optimistic;
@@ -50,6 +58,10 @@ export function read<TData>(
   // Normally, this is a data forest, but when executed within transaction - could be one of the optimistic layers
   const forest = getActiveForest(store, activeTransaction);
   const operationDescriptor = getDiffDescriptor(env, store, options);
+  stats.op = operationDescriptor.debugName;
+  stats.opId = operationDescriptor.id;
+  stats.opType = operationDescriptor.operation;
+
   touchOperation(env, store, operationDescriptor);
 
   const resultsMap =
@@ -61,17 +73,27 @@ export function read<TData>(
 
   if (!readState || readState.dirtyNodes.size) {
     // TODO: more granular updates, as we know all dirty nodes and their dirty fields
+    // See if we can just use primary data tree
+    const { steps } = stats;
+    let dataTree = forest.trees.get(operationDescriptor.id);
+
+    if (!dataTree) {
+      markStart(steps.growDataTree);
+      dataTree = growDataTree(env, forest, operationDescriptor);
+      addTree(forest, dataTree);
+      markEnd(steps.growDataTree);
+    }
+
+    markStart(steps.growOutputTree);
+    if (readState?.dirtyNodes) {
+      stats.steps.growOutputTree.dirtyNodes = readState.dirtyNodes;
+    }
     readState = {
-      outputTree: growOutputTree(
-        env,
-        store,
-        forest,
-        operationDescriptor,
-        optimistic,
-      ),
+      outputTree: growOutputTree(env, store, forest, dataTree, optimistic),
       dirtyNodes: new Map(),
     };
     resultsMap.set(operationDescriptor, readState);
+    markEnd(steps.growOutputTree);
   }
   const { outputTree } = readState;
 
@@ -86,29 +108,25 @@ export function read<TData>(
       complete: false,
       missing: [reportFirstMissingField(outputTree)],
       dangling: outputTree.danglingReferences,
-    } as Cache.DiffResult<any>;
+      stats: markEnd(stats),
+    };
   }
   partialReadResults.delete(operationDescriptor);
+
   return {
     result: outputTree.result.data,
     complete: true,
-  } as Cache.DiffResult<any>;
+    stats: markEnd(stats),
+  };
 }
 
 function growOutputTree(
   env: CacheEnv,
   store: Store,
   forest: DataForest | OptimisticLayer,
-  operation: OperationDescriptor,
+  dataTree: DataTree,
   optimistic: boolean,
 ) {
-  // See if we can just use primary data tree
-  let dataTree = forest.trees.get(operation.id);
-
-  if (!dataTree) {
-    dataTree = growDataTree(env, forest, operation);
-    addTree(forest, dataTree);
-  }
   const tree = applyTransformations(
     dataTree,
     env.readPolicies,
@@ -295,6 +313,29 @@ function reportFirstMissingField(tree: IndexedTree): MissingFieldError {
     tree.operation.variables,
   );
 }
+
+const createStats = (): ReadStats => ({
+  kind: "Read",
+  time: Number.NaN,
+  error: "",
+  op: "",
+  opId: -1,
+  opType: "",
+  steps: {
+    growOutputTree: {
+      time: Number.NaN,
+      start: Number.NaN,
+      dirtyNodes: new Map(),
+      incompleteChunks: -1,
+      totalNodes: -1,
+    },
+    growDataTree: {
+      time: Number.NaN,
+      start: Number.NaN,
+    },
+  },
+  start: performance.now(),
+});
 
 const inspect = JSON.stringify.bind(JSON);
 const EMPTY_ARRAY = Object.freeze([]);

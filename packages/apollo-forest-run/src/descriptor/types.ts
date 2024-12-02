@@ -61,6 +61,7 @@ export type DocumentDescriptor = {
   document: DocumentNode;
   fragmentMap: FragmentMap;
   debugName: string;
+  operation: "query" | "mutation" | "subscription" | "fragment"; // GraphQL clients support manual fragment reads/writes, so "fragment" is an extra type in our case
   definition: OperationDefinitionNode;
 };
 
@@ -81,6 +82,7 @@ export type OperationDescriptor = {
   document: DocumentNode;
   fragmentMap: FragmentMap;
   debugName: string;
+  operation: "query" | "mutation" | "subscription" | "fragment"; // GraphQL clients support manual fragment reads/writes, so "fragment" is an extra type in our case
   definition: OperationDefinitionNode;
   possibleSelections: PossibleSelections;
   variables: VariableValues;

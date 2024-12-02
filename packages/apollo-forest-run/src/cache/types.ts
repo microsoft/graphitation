@@ -75,12 +75,14 @@ export type Transaction = {
     options: Cache.WriteOptions;
     tree: IndexedTree;
   }[];
+  stats: TransactionStats;
 };
 
 export type CacheConfig = InMemoryCacheConfig & {
   maxOperationCount?: number;
   nonEvictableQueries?: Set<string>;
   apolloCompat_keepOrphanNodes?: boolean;
+  // logLevel?: number;
 };
 
 export type CacheEnv = {
@@ -142,3 +144,89 @@ export type CacheEnv = {
   nonEvictableQueries?: Set<string>;
   maxOperationCount?: number;
 };
+
+export type TransactionStats = {
+  kind: "Transaction";
+  time: number;
+  start: number;
+  error: string; // empty string when no error
+  log: (WriteStats | ReadStats | ModifyStats | TransactionStats)[];
+  steps: {
+    updateCallback: TimedEvent;
+    collectWatches: TimedEvent & {
+      affectedOperations: number;
+      dirtyWatches: number;
+    };
+    removeOptimistic: TimedEvent & {
+      affectedOperations: number;
+    };
+    notifyWatches: TimedEvent & {
+      notifiedWatches: number;
+    };
+  };
+};
+
+export type WriteStats = {
+  kind: "Write";
+  op: string;
+  opId: number;
+  opType: string; // "query" | "subscription" | "mutation" | "fragment";
+  time: number;
+  start: number;
+  steps: {
+    descriptor: TimedEvent;
+    indexing: TimedEvent & {
+      totalNodes: number;
+    };
+    mergePolicies: TimedEvent;
+    diff: TimedEvent & {
+      dirtyNodes: [string, Set<string>][];
+      newNodes: string[];
+      errors: number;
+    };
+    affectedOperations: TimedEvent & {
+      totalCount: number;
+    };
+    update: TimedEvent & {
+      newTreeAdded: boolean;
+      totalUpdated: number;
+    };
+    affectedLayerOperations: TimedEvent & {
+      totalCount: number;
+    };
+    invalidateReadResults: TimedEvent;
+  };
+};
+
+export type ModifyStats = {
+  kind: "Modify";
+  error: string; // empty string when no error
+  time: number;
+  start: number;
+  // TODO: steps
+};
+
+export type ReadStats = {
+  kind: "Read";
+  op: string;
+  opId: number;
+  opType: string; // "query" | "subscription" | "mutation" | "fragment";
+  error: string; // empty string when no error
+  time: number;
+  start: number;
+  steps: {
+    growDataTree: TimedEvent;
+    growOutputTree: TimedEvent & {
+      totalNodes: number;
+      incompleteChunks: number;
+      dirtyNodes: Map<string, Set<string>>;
+    };
+  };
+};
+
+export type TimedEvent = {
+  time: number;
+  start: number;
+};
+
+export type EventLog = (TransactionStats | ReadStats)[];
