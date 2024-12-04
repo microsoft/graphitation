@@ -29,7 +29,11 @@ import { indexTree } from "../forest/indexTree";
 import { createChunkMatcher, createChunkProvider } from "./draftHelpers";
 import { getDiffDescriptor, getOriginalDocument } from "./descriptor";
 import { Cache, MissingFieldError } from "@apollo/client";
-import { getActiveForest, getEffectiveReadLayers } from "./store";
+import {
+  getActiveForest,
+  getEffectiveReadLayers,
+  touchOperation,
+} from "./store";
 import { assert } from "../jsutils/assert";
 import { addTree, trackTreeNodes } from "../forest/addTree";
 
@@ -46,6 +50,7 @@ export function read<TData>(
   // Normally, this is a data forest, but when executed within transaction - could be one of the optimistic layers
   const forest = getActiveForest(store, activeTransaction);
   const operationDescriptor = getDiffDescriptor(env, store, options);
+  touchOperation(env, store, operationDescriptor);
 
   const resultsMap =
     options.optimistic && optimisticLayers.length

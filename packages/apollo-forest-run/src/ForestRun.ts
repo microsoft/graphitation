@@ -25,6 +25,7 @@ import {
   createOptimisticLayer,
   createStore,
   getEffectiveReadLayers,
+  maybeEvictOldData,
   removeOptimisticLayers,
   resetStore,
 } from "./cache/store";
@@ -481,6 +482,8 @@ export class ForestRun extends ApolloCache<any> {
         typeof optimistic === "string",
       );
     }
+    maybeEvictOldData(this.env, this.store);
+
     return result as T;
   }
 
