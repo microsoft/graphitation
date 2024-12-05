@@ -281,7 +281,7 @@ function executeOperationWithBeforeHook(
   exeContext: ExecutionContext,
 ): PromiseOrValue<ExecutionResult> {
   const hooks = exeContext.fieldExecutionHooks;
-  let hook: Promise<void> | void | undefined;
+  let hook;
   if (hooks?.beforeOperationExecute) {
     hook = invokeBeforeOperationExecuteHook(exeContext);
   }
@@ -696,13 +696,22 @@ function executeSubscriptionImpl(
       hookContext = invokeBeforeFieldResolveHook(info, exeContext);
     }
 
-    // Call the `subscribe()` resolver or the default resolver to produce an
-    // AsyncIterable yielding raw payloads.
-    const result = isPromise(hookContext)
-      ? hookContext.then((context) => {
+    let result: unknown;
+
+    if (hookContext) {
+      if (isPromise(hookContext)) {
+        result = hookContext.then((context) => {
           hookContext = context;
           return resolveFn(rootValue, args, contextValue, info);
-        })
+        });
+      } else if (hookContext instanceof Error) {
+        result = wrapAsAsyncIterable(null);
+      }
+    }
+    // Call the `subscribe()` resolver or the default resolver to produce an
+    // AsyncIterable yielding raw payloads.
+    result = assertEventStream(result)
+      ? result
       : resolveFn(rootValue, args, contextValue, info);
 
     if (isPromise(result)) {
@@ -755,6 +764,10 @@ function executeSubscriptionImpl(
     }
     throw locatedError(error, fieldGroup, pathToArray(path));
   }
+}
+
+async function* wrapAsAsyncIterable<T>(input: T): AsyncIterable<T> {
+  yield input;
 }
 
 function assertEventStream(result: unknown): AsyncIterable<unknown> {
@@ -813,16 +826,15 @@ function mapResultOrEventStreamOrPromise(
           payload,
         );
         const hooks = exeContext?.fieldExecutionHooks;
-        let beforeExecuteFieldsHook: void | Promise<void> | undefined;
+        let beforeExecuteSubscriptionEvenEmitHook;
+
         if (hooks?.beforeSubscriptionEventEmit) {
-          beforeExecuteFieldsHook = invokeBeforeSubscriptionEventEmitHook(
-            perEventContext,
-            payload,
-          );
+          beforeExecuteSubscriptionEvenEmitHook =
+            invokeBeforeSubscriptionEventEmitHook(perEventContext, payload);
         }
         try {
-          const data = isPromise(beforeExecuteFieldsHook)
-            ? beforeExecuteFieldsHook.then(() =>
+          const data = isPromise(beforeExecuteSubscriptionEvenEmitHook)
+            ? beforeExecuteSubscriptionEvenEmitHook.then(() =>
                 executeFields(
                   exeContext,
                   parentTypeName,
@@ -949,13 +961,25 @@ function resolveAndCompleteField(
 
     if (!isDefaultResolverUsed && hooks?.beforeFieldResolve) {
       hookContext = invokeBeforeFieldResolveHook(info, exeContext);
+      if (hookContext instanceof Error) {
+        return null;
+      }
     }
 
     const result = isPromise(hookContext)
-      ? hookContext.then((context) => {
-          hookContext = context;
-          return resolveFn(source, args, contextValue, info);
-        })
+      ? hookContext
+          .then((context) => {
+            hookContext = context;
+
+            if (hookContext instanceof Error) {
+              return null;
+            }
+
+            return resolveFn(source, args, contextValue, info);
+          })
+          .catch(() => {
+            return null;
+          })
       : resolveFn(source, args, contextValue, info);
     let completed;
 
@@ -1821,8 +1845,19 @@ function invokeBeforeFieldResolveHook(
         resolveInfo,
         context: exeContext.contextValue,
       }),
-    (_, rawError) => {
+    (result, rawError) => {
       if (rawError) {
+        const error = toGraphQLError(
+          rawError,
+          resolveInfo.path,
+          "Unexpected error in beforeFieldResolve hook",
+        );
+        exeContext.errors.push(error);
+
+        return error;
+      }
+
+      if (result instanceof Error) {
         const error = toGraphQLError(
           rawError,
           resolveInfo.path,
@@ -1911,8 +1946,17 @@ function invokeBeforeOperationExecuteHook(exeContext: ExecutionContext) {
         context: exeContext.contextValue,
         operation: exeContext.operation,
       }),
-    (_, rawError) => {
+    (result, rawError) => {
       if (rawError) {
+        const error = toGraphQLError(
+          rawError,
+          undefined,
+          "Unexpected error in beforeOperationExecute hook",
+        );
+        throw error;
+      }
+
+      if (result instanceof Error) {
         const error = toGraphQLError(
           rawError,
           undefined,
@@ -1939,8 +1983,17 @@ function invokeBeforeSubscriptionEventEmitHook(
         operation: exeContext.operation,
         eventPayload,
       }),
-    (_, rawError) => {
+    (result, rawError) => {
       if (rawError) {
+        const error = toGraphQLError(
+          rawError,
+          undefined,
+          "Unexpected error in beforeSubscriptionEventEmit hook",
+        );
+        throw error;
+      }
+
+      if (result instanceof Error) {
         const error = toGraphQLError(
           rawError,
           undefined,
