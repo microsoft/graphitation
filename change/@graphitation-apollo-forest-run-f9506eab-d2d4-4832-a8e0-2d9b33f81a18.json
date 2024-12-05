@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Explicit LRU eviction as a part of write transaction",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}
