@@ -48,7 +48,8 @@ export interface BeforeFieldResolveHook<
 > {
   (args: BaseExecuteFieldHookArgs<ResolveContext>):
     | Promise<BeforeHookContext>
-    | BeforeHookContext;
+    | BeforeHookContext
+    | Error;
 }
 
 export interface AfterFieldResolveHook<
@@ -73,13 +74,17 @@ export interface AfterBuildResponseHook<ResolveContext = unknown> {
 }
 
 export interface BeforeOperationExecuteHook<ResolveContext = unknown> {
-  (args: BaseExecuteOperationHookArgs<ResolveContext>): void | Promise<void>;
+  (args: BaseExecuteOperationHookArgs<ResolveContext>):
+    | void
+    | Promise<void>
+    | Error;
 }
 
 export interface BeforeSubscriptionEventEmitHook<ResolveContext = unknown> {
-  (
-    args: BeforeSubscriptionEventEmitHookArgs<ResolveContext>,
-  ): void | Promise<void>;
+  (args: BeforeSubscriptionEventEmitHookArgs<ResolveContext>):
+    | void
+    | Promise<void>
+    | Error;
 }
 
 export interface ExecutionHooks<
