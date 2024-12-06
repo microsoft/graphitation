@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Wed, 13 Nov 2024 14:50:00 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 06 Dec 2024 11:56:43 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.5.0
+
+Fri, 06 Dec 2024 11:56:43 GMT
+
+### Minor changes
+
+- Explicit LRU eviction as a part of write transaction (vladimir.razuvaev@gmail.com)
 
 ## 0.4.0
 

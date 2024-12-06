@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Fri, 06 Dec 2024 11:56:43 GMT",
+      "version": "0.5.0",
+      "tag": "@graphitation/apollo-forest-run_v0.5.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "60361975f604e96728d14c99ca1fb3fd63d4ee19",
+            "comment": "Explicit LRU eviction as a part of write transaction"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 13 Nov 2024 14:50:00 GMT",
       "version": "0.4.0",
       "tag": "@graphitation/apollo-forest-run_v0.4.0",
