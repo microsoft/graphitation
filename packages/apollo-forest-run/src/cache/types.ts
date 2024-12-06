@@ -1,6 +1,6 @@
-import { Cache, InMemoryCacheConfig, TypePolicies } from "@apollo/client";
-import { IndexedForest, IndexedTree } from "../forest/types";
-import {
+import type { Cache, InMemoryCacheConfig, TypePolicies } from "@apollo/client";
+import type { IndexedForest, IndexedTree } from "../forest/types";
+import type {
   NodeKey,
   FieldName,
   OperationDescriptor,
@@ -9,16 +9,17 @@ import {
   ArgumentValues,
   Directives,
   TypeName,
+  OperationId,
 } from "../descriptor/types";
-import { DocumentNode } from "graphql/index";
-import {
+import type { DocumentNode } from "graphql";
+import type {
   Key,
   KeySpecifier,
   ObjectKey,
   SourceCompositeList,
   SourceObject,
 } from "../values/types";
-import {
+import type {
   FieldMergeFunction,
   FieldReadFunction,
 } from "@apollo/client/cache/inmemory/policies";
@@ -60,6 +61,9 @@ export type Store = {
   optimisticReadResults: Map<OperationDescriptor, TransformedResult>;
   partialReadResults: Set<OperationDescriptor>; // FIXME: this should be per layer for proper cleanup
   watches: Map<OperationDescriptor, Array<Cache.WatchOptions>>;
+  // Last access time of operation
+  //   Used for LRU eviction
+  atime: Map<OperationId, number>;
 };
 
 export type Transaction = {
@@ -91,6 +95,7 @@ export type CacheEnv = {
 
   possibleTypes?: PossibleTypes;
 
+  now(): number;
   genId: () => number;
 
   // TODO: use keyFields instead of objectKey function

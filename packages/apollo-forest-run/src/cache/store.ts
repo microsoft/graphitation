@@ -17,26 +17,12 @@ import {
 import { assert } from "../jsutils/assert";
 import { IndexedTree } from "../forest/types";
 import { NodeChunk } from "../values/types";
-import { createLRUMap } from "../jsutils/lru";
 
 const EMPTY_ARRAY = Object.freeze([]);
 
-export function createStore(env: CacheEnv): Store {
-  const trees = env.maxOperationCount
-    ? createLRUMap(
-        env.maxOperationCount,
-        (operationId: OperationId, resultTree: DataTree) => {
-          if (!shouldEvict(env, store, resultTree)) {
-            dataForest.trees.set(operationId, resultTree);
-            return;
-          }
-          removeTree(store, resultTree);
-        },
-      )
-    : new Map();
-
+export function createStore(_: CacheEnv): Store {
   const dataForest: DataForest = {
-    trees,
+    trees: new Map(),
     operationsByNodes: new Map<NodeKey, Set<OperationId>>(),
     operationsWithErrors: new Set<OperationDescriptor>(),
     extraRootIds: new Map<NodeKey, TypeName>(),
@@ -61,11 +47,50 @@ export function createStore(env: CacheEnv): Store {
     optimisticReadResults,
     partialReadResults,
     watches: new Map(),
+    atime: new Map(),
   };
   return store;
 }
 
-function shouldEvict(env: CacheEnv, store: Store, resultTree: DataTree) {
+export function touchOperation(
+  env: CacheEnv,
+  store: Store,
+  operation: OperationDescriptor,
+) {
+  store.atime.set(operation.id, env.now());
+}
+
+export function maybeEvictOldData(env: CacheEnv, store: Store): OperationId[] {
+  const { dataForest, atime } = store;
+  if (
+    !env.maxOperationCount ||
+    dataForest.trees.size <= env.maxOperationCount * 2
+  ) {
+    return [];
+  }
+  let nonEvictable = 0;
+  const toEvict: number[] = [];
+  for (const tree of dataForest.trees.values()) {
+    if (!canEvict(env, store, tree)) {
+      nonEvictable++;
+      continue;
+    }
+    toEvict.push(tree.operation.id);
+  }
+  toEvict.sort((a, b) => (atime.get(a) ?? 0) - (atime.get(b) ?? 0));
+  toEvict.length = Math.max(
+    0,
+    dataForest.trees.size - (env.maxOperationCount + nonEvictable),
+  );
+  for (const opId of toEvict) {
+    const tree = store.dataForest.trees.get(opId);
+    assert(tree);
+    removeDataTree(store, tree);
+  }
+  return toEvict;
+}
+
+function canEvict(env: CacheEnv, store: Store, resultTree: DataTree) {
   if (store.watches.has(resultTree.operation)) {
     return false;
   }
@@ -240,22 +265,25 @@ function resolveLayerImpact(
   return [affectedNodes, affectedOperations];
 }
 
-function removeTree(
+function removeDataTree(
   {
     dataForest,
     optimisticReadResults,
     partialReadResults,
     operations,
     watches,
+    atime,
   }: Store,
   { operation }: ResultTree,
 ) {
   assert(!watches.has(operation));
+  dataForest.trees.delete(operation.id);
   dataForest.readResults.delete(operation);
   dataForest.operationsWithErrors.delete(operation);
   optimisticReadResults.delete(operation);
   partialReadResults.delete(operation);
   operations.get(operation.document)?.delete(operation);
+  atime.delete(operation.id);
   // Notes:
   // - Not deleting from optimistic layers because they are meant to be short-lived anyway
   // - Not removing operation from operationsByNodes because it is expensive to do during LRU eviction.

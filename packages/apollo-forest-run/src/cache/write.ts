@@ -19,7 +19,11 @@ import {
   ROOT_TYPES,
 } from "./descriptor";
 import { applyMergePolicies } from "./policies";
-import { getActiveForest, getEffectiveReadLayers } from "./store";
+import {
+  getActiveForest,
+  getEffectiveReadLayers,
+  touchOperation,
+} from "./store";
 import { diffTree, GraphDifference } from "../diff/diffTree";
 import {
   resolveAffectedOperations,
@@ -62,6 +66,7 @@ export function write(
     options.variables,
     rootNodeKey,
   );
+  touchOperation(env, store, operationDescriptor);
   const operationResult: OperationResult = { data: writeData };
 
   if (

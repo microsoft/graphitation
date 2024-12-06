@@ -19,6 +19,7 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
     inheritTypePolicies(typePolicies, possibleTypes);
   }
   let id = 0;
+  let tick = 0;
   const env: CacheEnv = {
     addTypename: config?.addTypename ?? true,
     apolloCompat_keepOrphanNodes: config?.apolloCompat_keepOrphanNodes ?? false,
@@ -34,6 +35,7 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
     },
     mergePolicies: new Map(),
     readPolicies: new Map(),
+    now: () => ++tick, // Logical time
     genId: () => ++id,
     objectKey: (
       object: object,
