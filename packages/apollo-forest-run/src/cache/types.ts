@@ -163,6 +163,9 @@ export type TransactionStats = {
     notifyWatches: TimedEvent & {
       notifiedWatches: number;
     };
+    eviction: TimedEvent & {
+      evictedOperations: OperationId[];
+    };
   };
 };
 

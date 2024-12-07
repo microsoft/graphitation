@@ -512,7 +512,13 @@ export class ForestRun extends ApolloCache<any> {
       );
       markEnd(step);
     }
-    maybeEvictOldData(this.env, this.store);
+
+    markStart(stats.steps.eviction);
+    stats.steps.eviction.evictedOperations = maybeEvictOldData(
+      this.env,
+      this.store,
+    );
+    markEnd(stats.steps.eviction);
 
     markEnd(stats);
     return result as T;
@@ -698,6 +704,11 @@ const createTransactionStats = (): TransactionStats => ({
       time: Number.NaN,
       start: Number.NaN,
       notifiedWatches: 0,
+    },
+    eviction: {
+      time: Number.NaN,
+      start: Number.NaN,
+      evictedOperations: [],
     },
   },
   start: performance.now(),
