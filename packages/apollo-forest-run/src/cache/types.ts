@@ -150,7 +150,11 @@ export type TransactionStats = {
   time: number;
   start: number;
   error: string; // empty string when no error
-  log: (WriteStats | ReadStats | ModifyStats | TransactionStats)[];
+  log: (WriteStats | ModifyStats | TransactionStats)[];
+  reads: {
+    count: 0;
+    slowest: ReadStats | null;
+  };
   steps: {
     updateCallback: TimedEvent;
     collectWatches: TimedEvent & {
@@ -161,7 +165,7 @@ export type TransactionStats = {
       affectedOperations: number;
     };
     notifyWatches: TimedEvent & {
-      notifiedWatches: number;
+      notifiedWatches: OperationId[];
     };
     eviction: TimedEvent & {
       evictedOperations: OperationId[];

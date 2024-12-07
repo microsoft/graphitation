@@ -6,7 +6,7 @@ import type {
 } from "@apollo/client";
 import type { DocumentNode } from "graphql";
 import { equal } from "@wry/equality";
-import type { OperationDescriptor } from "./descriptor/types";
+import type { OperationDescriptor, OperationId } from "./descriptor/types";
 import type {
   CacheEnv,
   DataForest,
@@ -20,7 +20,7 @@ import type {
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
 import { accumulate, deleteAccumulated } from "./jsutils/map";
-import { read } from "./cache/read";
+import { read, ReadResult } from "./cache/read";
 import { getNodeChunks } from "./cache/draftHelpers";
 import { modify } from "./cache/modify";
 import {
@@ -268,12 +268,9 @@ export class ForestRun extends ApolloCache<any> {
     watchesToNotify: Set<Cache.WatchOptions>,
     onWatchUpdated?: Cache.BatchOptions<any>["onWatchUpdated"],
     fromOptimisticTransaction?: boolean,
-  ): number {
-    let totalNotified = 0;
-    const stale: {
-      operation: OperationDescriptor;
-      diff: Cache.DiffResult<any>;
-    }[] = [];
+  ): OperationId[] {
+    const stale: ReadResult[] = [];
+    const notified: OperationId[] = [];
     const errors = new Map<Cache.WatchOptions, Error>();
     for (const watch of watchesToNotify) {
       try {
@@ -283,14 +280,11 @@ export class ForestRun extends ApolloCache<any> {
           newDiff.fromOptimisticTransaction = true;
         }
         if (!newDiff.complete && watch.lastDiff?.complete) {
-          stale.push({
-            operation: getDiffDescriptor(this.env, this.store, watch),
-            diff: newDiff,
-          });
+          stale.push(newDiff);
         }
         if (this.shouldNotifyWatch(watch, newDiff, onWatchUpdated)) {
           this.notifyWatch(watch, newDiff);
-          totalNotified++;
+          notified.push(newDiff.stats.opId);
         }
       } catch (e) {
         errors.set(watch, e as Error);
@@ -303,7 +297,7 @@ export class ForestRun extends ApolloCache<any> {
       const [firstError] = errors.values();
       throw firstError;
     }
-    return totalNotified;
+    return notified;
   }
 
   private notifyWatch(watch: Cache.WatchOptions, diff: Cache.DiffResult<any>) {
@@ -319,20 +313,23 @@ export class ForestRun extends ApolloCache<any> {
 
   public diff<TData, TVariables = any>(
     options: Cache.DiffOptions<TData, TVariables>,
-  ): Cache.DiffResult<TData> {
+  ): ReadResult<TData> {
     return this.runRead(options);
   }
 
   private runRead<TData, TVariables = any>(
     options: Cache.DiffOptions<TData, TVariables>,
-  ): Cache.DiffResult<TData> {
+  ): ReadResult<TData> {
     const activeTransaction = peek(this.transactionStack);
     const result = read(this.env, this.store, activeTransaction, options);
 
     if (activeTransaction) {
-      activeTransaction.stats.log.push(result.stats);
-    } else {
-      // this.log?.push(result.stats);
+      const reads = activeTransaction.stats.reads;
+      const slowest = reads.slowest;
+      if (!slowest || slowest.time < result.stats.time) {
+        reads.slowest = result.stats;
+      }
+      reads.count++;
     }
 
     if (options.returnPartialData === false && result.dangling?.size) {
@@ -342,7 +339,7 @@ export class ForestRun extends ApolloCache<any> {
     if (options.returnPartialData === false && result.missing) {
       throw new Error(result.missing[0].message);
     }
-    return result as Cache.DiffResult<TData>;
+    return result as ReadResult<TData>;
   }
 
   public watch<TData = any, TVariables = any>(
@@ -445,7 +442,7 @@ export class ForestRun extends ApolloCache<any> {
       affectedOperations: null,
       watchesToNotify: null,
       forceOptimistic,
-      writes: [], // FIXME: remove and rely on log instead
+      writes: [], // FIXME: remove and rely on log / stats instead
       stats,
     };
     this.transactionStack.push(activeTransaction);
@@ -650,13 +647,7 @@ function peek<T>(stack: T[]): T | undefined {
   return stack[stack.length - 1];
 }
 
-function logStaleOperations(
-  transaction: Transaction,
-  stale: {
-    operation: OperationDescriptor;
-    diff: Cache.DiffResult<any>;
-  }[],
-) {
+function logStaleOperations(transaction: Transaction, stale: ReadResult[]) {
   if (!transaction.writes.length) {
     // Custom cache.modify or cache.evict - expected to evict operations
     return;
@@ -670,11 +661,7 @@ function logStaleOperations(
       `\n` +
       `  Affected operation(s):\n` +
       stale
-        .map(
-          (op) =>
-            op.operation.debugName +
-            ` (${op.diff.missing?.[0]?.message ?? "?"})`,
-        )
+        .map((op) => op.stats.op + ` (${op.missing?.[0]?.message ?? "?"})`)
         .join("\n"),
   );
 }
@@ -684,6 +671,10 @@ const createTransactionStats = (): TransactionStats => ({
   time: Number.NaN,
   error: "",
   log: [],
+  reads: {
+    count: 0,
+    slowest: null,
+  },
   steps: {
     updateCallback: {
       time: Number.NaN,
@@ -703,7 +694,7 @@ const createTransactionStats = (): TransactionStats => ({
     notifyWatches: {
       time: Number.NaN,
       start: Number.NaN,
-      notifiedWatches: 0,
+      notifiedWatches: [],
     },
     eviction: {
       time: Number.NaN,

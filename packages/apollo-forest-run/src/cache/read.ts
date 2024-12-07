@@ -39,7 +39,7 @@ import { assert } from "../jsutils/assert";
 import { addTree, trackTreeNodes } from "../forest/addTree";
 import { markEnd, markStart } from "./stats";
 
-type ReadResult = Cache.DiffResult<unknown> & {
+export type ReadResult<T = unknown> = Cache.DiffResult<T> & {
   stats: ReadStats;
   dangling?: Set<string>;
 };
