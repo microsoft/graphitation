@@ -16,6 +16,7 @@ import type {
   Store,
   Transaction,
   TransactionStats,
+  TransactionStatsSerialized,
 } from "./cache/types";
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
@@ -36,7 +37,7 @@ import { write } from "./cache/write";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { CacheConfig } from "./cache/types";
-import { markEnd, markStart } from "./cache/stats";
+import { markEnd, markStart, transactionToJSON } from "./cache/stats";
 
 /**
  * ForestRun cache aims to be an Apollo cache implementation somewhat compatible with InMemoryCache.
@@ -703,4 +704,9 @@ const createTransactionStats = (): TransactionStats => ({
     },
   },
   start: performance.now(),
+  toJSON,
 });
+
+function toJSON(this: TransactionStats): TransactionStatsSerialized {
+  return transactionToJSON(this);
+}

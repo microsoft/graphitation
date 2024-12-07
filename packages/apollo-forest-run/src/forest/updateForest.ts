@@ -1,5 +1,5 @@
 import { GraphDifference } from "../diff/diffTree";
-import { NodeKey, OperationDescriptor } from "../descriptor/types";
+import { NodeKey, OperationDescriptor, OperationId } from "../descriptor/types";
 import { NodeDifferenceMap, updateTree } from "./updateTree";
 import { isDirty } from "../diff/difference";
 import { ObjectDifference } from "../diff/types";
@@ -26,9 +26,9 @@ export function updateAffectedTrees(
   forest: DataForest | OptimisticLayer,
   affectedOperations: Map<OperationDescriptor, NodeDifferenceMap>,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
-): number {
+): OperationId[] {
   // Note: affectedOperations may contain false-positives (updateTree will ignore those)
-  let totalUpdated = 0;
+  const updated = [];
   for (const [operation, difference] of affectedOperations.entries()) {
     const currentTreeState = forest.trees.get(operation.id);
     assert(currentTreeState);
@@ -47,9 +47,9 @@ export function updateAffectedTrees(
     // Reset previous tree state on commit
     nextTreeState.prev = null;
     replaceTree(forest, nextTreeState);
-    totalUpdated++;
+    updated.push(operation.id);
   }
-  return totalUpdated;
+  return updated;
 }
 
 export function resolveAffectedOperations(

@@ -171,7 +171,24 @@ export type TransactionStats = {
       evictedOperations: OperationId[];
     };
   };
+  toJSON: () => TransactionStatsSerialized;
 };
+
+export type TransactionStatsSerialized = [
+  kind: 0,
+  time: number,
+  updateCallbackTime: number,
+  collectWatchesTime: number,
+  [removeOptimisticTime: number, affectedOps: number],
+  [notifyWatchesTime: number, OperationId[]],
+  [evictionTime: number, OperationId[]],
+  log:
+    | (
+        | WriteStatsSerialized
+        | ModifyStatsSerialized
+        | TransactionStatsSerialized
+      )[],
+];
 
 export type WriteStats = {
   kind: "Write";
@@ -187,7 +204,7 @@ export type WriteStats = {
     };
     mergePolicies: TimedEvent;
     diff: TimedEvent & {
-      dirtyNodes: [string, Set<string>][];
+      dirtyNodes: [id: string, Set<string>][];
       newNodes: string[];
       errors: number;
     };
@@ -196,7 +213,7 @@ export type WriteStats = {
     };
     update: TimedEvent & {
       newTreeAdded: boolean;
-      totalUpdated: number;
+      updated: OperationId[];
     };
     affectedLayerOperations: TimedEvent & {
       totalCount: number;
@@ -205,13 +222,31 @@ export type WriteStats = {
   };
 };
 
+export type WriteStatsSerialized = [
+  kind: 1,
+  operationName: string,
+  operationId: number,
+  time: number,
+  descriptorTime: number,
+  [indexingTime: number, totalNodes: number],
+  mergePoliciesTime: number,
+  [diffTime: number, dirtyNodes: number, newNodes: number, errors: number],
+  [affectedOperationsTime: number, totalCount: number],
+  [updateTime: number, updated: OperationId[]],
+  [affectedLayerOperationsTime: number, affectedLayerOperationsCount: number],
+  invalidateReadResultsTime: number,
+];
+
 export type ModifyStats = {
   kind: "Modify";
   error: string; // empty string when no error
   time: number;
   start: number;
   // TODO: steps
+  toJSON: () => ModifyStatsSerialized;
 };
+
+export type ModifyStatsSerialized = [kind: 2, time: number];
 
 export type ReadStats = {
   kind: "Read";

@@ -186,7 +186,7 @@ export function write(
     getNodeChunks(getEffectiveReadLayers(store, targetForest, false), key);
 
   markStart(steps.update);
-  steps.update.totalUpdated = updateAffectedTrees(
+  steps.update.updated = updateAffectedTrees(
     env,
     targetForest,
     affectedOperations,
@@ -348,7 +348,7 @@ const createStats = (): WriteStats => ({
     },
     update: {
       time: Number.NaN,
-      totalUpdated: -1,
+      updated: [],
       newTreeAdded: false,
       start: Number.NaN,
     },
