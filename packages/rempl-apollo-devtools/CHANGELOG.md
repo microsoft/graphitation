@@ -1,8 +1,16 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-<!-- This log was last generated on Wed, 23 Oct 2024 09:22:25 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 11 Dec 2024 14:16:51 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.2.0
+
+Wed, 11 Dec 2024 14:16:51 GMT
+
+### Minor changes
+
+- Apollo devtools supports forest run store (77059398+vejrj@users.noreply.github.com)
 
 ## 1.1.1
 
