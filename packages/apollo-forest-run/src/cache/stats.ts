@@ -28,19 +28,19 @@ export function transactionToJSON(
 ): TransactionStatsSerialized {
   return [
     0,
-    microseconds(item.time),
-    microseconds(item.steps.updateCallback.time),
-    microseconds(item.steps.collectWatches.time),
+    normalize(item.time),
+    normalize(item.steps.updateCallback.time),
+    normalize(item.steps.collectWatches.time),
     [
-      microseconds(item.steps.removeOptimistic.time),
+      normalize(item.steps.removeOptimistic.time),
       item.steps.removeOptimistic.affectedOperations,
     ],
     [
-      microseconds(item.steps.notifyWatches.time),
+      normalize(item.steps.notifyWatches.time),
       item.steps.notifyWatches.notifiedWatches,
     ],
     [
-      microseconds(item.steps.eviction.time),
+      normalize(item.steps.eviction.time),
       item.steps.eviction.evictedOperations,
     ],
     item.log.map(toJSON),
@@ -62,23 +62,23 @@ function writeToJSON(item: WriteStats): WriteStatsSerialized {
     1,
     item.op,
     item.opId,
-    microseconds(item.time),
-    microseconds(descriptor.time),
-    [microseconds(indexing.time), indexing.totalNodes],
-    microseconds(mergePolicies.time),
+    normalize(item.time),
+    normalize(descriptor.time),
+    [normalize(indexing.time), indexing.totalNodes],
+    normalize(mergePolicies.time),
     [
-      microseconds(diff.time),
+      normalize(diff.time),
       diff.dirtyNodes.length,
       diff.newNodes.length,
       diff.errors,
     ],
-    [microseconds(affectedOperations.time), affectedOperations.totalCount],
-    [microseconds(update.time), update.updated],
+    [normalize(affectedOperations.time), affectedOperations.totalCount],
+    [normalize(update.time), update.updated],
     [
-      microseconds(affectedLayerOperations.time),
+      normalize(affectedLayerOperations.time),
       affectedLayerOperations.totalCount,
     ],
-    microseconds(invalidateReadResults.time),
+    normalize(invalidateReadResults.time),
   ];
 }
 
@@ -91,10 +91,12 @@ function toJSON(
     case "Write":
       return writeToJSON(item);
     case "Modify":
-      return [2, microseconds(item.time)];
+      return [2, normalize(item.time)];
     default:
       assertNever(item);
   }
 }
 
-const microseconds = (time: number) => Math.round(time * 1000);
+// performance.now() is limited to 100 microseconds due to security reasons.
+// But this precision (100 microseconds) is enough for us
+const normalize = (time: number) => Math.round(time * 10);
