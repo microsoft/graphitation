@@ -122,6 +122,14 @@ async function main() {
           }
         },
       },
+      customScalars: {
+        demandOption: false,
+        default: null,
+        describe:
+          "Mappings from custom scalars in your schema to built-in GraphQL " +
+          "types, for type emission purposes. (Uses yargs dot-notation, e.g. " +
+          "--customScalars.DateTime=Date)",
+      },
     })
     .help().argv;
 
@@ -152,7 +160,7 @@ async function main() {
       ...(argv.exclude || []),
     ],
     noFutureProofEnums: true,
-    customScalars: {},
+    customScalars: argv.customScalars || {},
   });
 }
 
