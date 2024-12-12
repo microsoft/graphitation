@@ -160,14 +160,15 @@ describe("Does not add `%future added values` when the noFutureProofEnums option
 });
 
 describe.each`
-  mapping     | type
-  ${"String"} | ${"string"}
-  ${"Url"}    | ${"string"}
-  ${"ID"}     | ${"string"}
-  ${"Int"}    | ${"number"}
-  ${"Color"}  | ${"Color"}
-  ${"{}"}     | ${"{}"}
-  ${"[]"}     | ${"[]"}
+  mapping       | type
+  ${"String"}   | ${"string"}
+  ${"Url"}      | ${"string"}
+  ${"DateTime"} | ${"string"}
+  ${"ID"}       | ${"string"}
+  ${"Int"}      | ${"number"}
+  ${"Color"}    | ${"Color"}
+  ${"{}"}       | ${"{}"}
+  ${"[]"}       | ${"[]"}
 `("Custom scalar mapping $mapping to $type", ({ mapping, type }) => {
   const text = `
     fragment Test on User {

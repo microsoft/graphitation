@@ -90,6 +90,7 @@ function transformGraphQLScalarType(
     case "ID":
     case "String":
     case "Url":
+    case "DateTime":
       return ts.factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword);
     case "Float":
     case "Int":
