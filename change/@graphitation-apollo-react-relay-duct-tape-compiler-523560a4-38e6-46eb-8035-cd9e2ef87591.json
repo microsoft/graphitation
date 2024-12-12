@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "add customScalars as parameter to the cli",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape-compiler",
+  "email": "dragoshomner@microsoft.com",
+  "dependentChangeType": "patch"
+}
