@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import {
   ApolloClient,
   WatchQueryFetchPolicy,
@@ -82,10 +82,6 @@ const _ForwardPagination_fragment = graphql`
     conversationsForwardCount: { type: "Int!", defaultValue: 1 }
     conversationsAfterCursor: { type: "String!", defaultValue: "" }
     addExtra: { type: "Boolean!", defaultValue: false }
-    sortBy: {
-      type: "SortByInput"
-      defaultValue: { sortField: NAME, sortDirection: ASC }
-    }
   ) {
     petName
     avatarUrl(size: $avatarSize)
@@ -128,6 +124,7 @@ const _Root_executionQueryDocument = graphql`
     $messagesBeforeCursor: String!
     $id: String = "shouldNotOverrideCompiledFragmentId"
     $filterBy: FilterByInput = { tag: "ALL" }
+    $sortBy: SortByInput
   ) {
     user(id: $userId, idThatDoesntOverride: $id, filterBy: $filterBy) {
       name
@@ -279,6 +276,7 @@ describe.each([
                 userId: 42,
                 messagesBackwardCount: 1,
                 messagesBeforeCursor: "",
+                sortBy: { sortDirection: "ASC", sortField: "NAME" },
               }}
             />
           </ErrorBoundary>
@@ -637,6 +635,10 @@ describe.each([
             "id": "shouldNotOverrideCompiledFragmentId",
             "messagesBackwardCount": 1,
             "messagesBeforeCursor": "",
+            "sortBy": {
+              "sortDirection": "ASC",
+              "sortField": "NAME",
+            },
             "userId": 42,
           },
           "__typename": "Query",
@@ -801,6 +803,95 @@ describe.each([
         refetch,
       ]),
     );
+
+    const resolveOperation = async () => {
+      client.mock.queueOperationResolver((operation) => {
+        const { variables } = operation.request;
+        return MockPayloadGenerator.generate(operation, {
+          Node: () => ({
+            id: 42,
+          }),
+          Conversation: () => ({
+            id: "conv1",
+            title: `Conversation 1 - ${variables.sortBy.sortField}`,
+          }),
+          PageInfo: () => ({
+            endCursor: "first-page-end-cursor",
+            hasNextPage: false,
+          }),
+        });
+      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    };
+
+    describe("when refetching", () => {
+      it("should return original data when refetching with original variables after refetch", async () => {
+        // Set up the resolver once for all operations
+        await resolveOperation();
+
+        // Verify initial data
+        let result = last(forwardUsePaginationFragmentResult);
+        expect(result.data.conversations.edges[0].node.title).toBe(
+          '<mock-value-for-field-"title">',
+        );
+        expect(result.data.__fragments.sortBy).toEqual({
+          sortField: "NAME",
+          sortDirection: "ASC",
+        });
+
+        // Refetch with new variables
+        await act(async () => {
+          const { refetch } = last(forwardUsePaginationFragmentResult);
+          refetch({
+            sortBy: { sortField: "CREATED_AT", sortDirection: "ASC" },
+          });
+        });
+
+        // Verify data after first refetch
+        result = last(forwardUsePaginationFragmentResult);
+        expect(result.data.conversations.edges[0].node.title).toBe(
+          "Conversation 1 - CREATED_AT",
+        );
+        expect(result.data.__fragments.sortBy).toEqual({
+          sortField: "CREATED_AT",
+          sortDirection: "ASC",
+        });
+
+        // Refetch with original variables (should use all previous values)
+        await act(async () => {
+          const { refetch } = last(forwardUsePaginationFragmentResult);
+          refetch({
+            sortBy: { sortField: "NAME", sortDirection: "ASC" },
+          });
+        });
+
+        // Verify data returned to original state with merged variables
+        result = last(forwardUsePaginationFragmentResult);
+        expect(result.data.conversations.edges[0].node.title).toBe(
+          "Conversation 1 - NAME",
+        );
+        expect(result.data.__fragments.sortBy).toEqual({
+          sortField: "NAME",
+          sortDirection: "ASC",
+        });
+
+        // Refetch with no variables (should use all previous values)
+        await act(async () => {
+          const { refetch } = last(forwardUsePaginationFragmentResult);
+          refetch({});
+        });
+
+        // Verify data uses previous variables
+        result = last(forwardUsePaginationFragmentResult);
+        expect(result.data.conversations.edges[0].node.title).toBe(
+          "Conversation 1 - NAME",
+        );
+        expect(result.data.__fragments.sortBy).toEqual({
+          sortField: "NAME",
+          sortDirection: "ASC",
+        });
+      });
+    });
 
     describe("when paginating forward", () => {
       it("returns that next data is available", () => {
@@ -1219,7 +1310,7 @@ describe.each([
   });
 });
 
-class ErrorBoundary extends React.Component {
+class ErrorBoundary extends React.Component<React.PropsWithChildren<unknown>> {
   state = { hasError: false };
 
   static getDerivedStateFromError(_error: Error) {

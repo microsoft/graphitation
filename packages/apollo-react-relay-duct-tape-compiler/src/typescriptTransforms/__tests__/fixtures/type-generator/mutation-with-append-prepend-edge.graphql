@@ -1,0 +1,27 @@
+mutation AppendEdgeMutation(
+  $input: CommentCreateInput!,
+  $connections: [ID!]!
+)  {
+  commentCreate(input: $input) {
+    feedbackCommentEdge @appendEdge(connections: $connections) {
+      cursor
+      node {
+        id
+      }
+    }
+  }
+}
+
+mutation PrependEdgeMutation(
+  $input: CommentCreateInput!,
+  $connections: [ID!]!
+)  {
+  commentCreate(input: $input) {
+    feedbackCommentEdge @prependEdge(connections: $connections) {
+      cursor
+      node {
+        id
+      }
+    }
+  }
+}

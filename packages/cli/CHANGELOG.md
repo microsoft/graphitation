@@ -1,8 +1,64 @@
 # Change Log - @graphitation/cli
 
-This log was last generated on Mon, 15 Jan 2024 17:55:46 GMT and should not be manually modified.
+<!-- This log was last generated on Fri, 22 Nov 2024 09:11:34 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.14.0
+
+Fri, 22 Nov 2024 09:11:34 GMT
+
+### Minor changes
+
+- Context type generation re-worked (77059398+vejrj@users.noreply.github.com)
+- Bump @graphitation/ts-codegen to v2.13.0
+
+## 1.13.1
+
+Wed, 30 Oct 2024 12:58:29 GMT
+
+### Patches
+
+- Version bump fix (77059398+vejrj@users.noreply.github.com)
+
+## 1.12.1
+
+Thu, 24 Oct 2024 13:15:11 GMT
+
+### Patches
+
+- Bump (77059398+vejrj@users.noreply.github.com)
+- Bump @graphitation/ts-codegen to v2.12.1
+
+## 1.11.5
+
+Wed, 23 Oct 2024 09:22:25 GMT
+
+### Patches
+
+- remove dependecy on relay-compiler-language-typescript (pavelglac@microsoft.com)
+- Bump @graphitation/supermassive-extractors to v2.2.5
+- Bump @graphitation/ts-codegen to v2.11.4
+
+## 1.11.4
+
+Thu, 17 Oct 2024 14:53:14 GMT
+
+### Patches
+
+- bump release version manually (pavelglac@microsoft.com)
+- Bump @graphitation/supermassive-extractors to v2.2.4
+- Bump @graphitation/ts-codegen to v2.11.3
+
+## 1.11.2
+
+Mon, 14 Oct 2024 07:58:57 GMT
+
+### Patches
+
+- Bump TS version to 5.5 (pavelglac@microsoft.com)
+- Bump @graphitation/supermassive-extractors to v2.2.2
+- Bump @graphitation/ts-codegen to v2.11.1
 
 ## 1.11.1
 

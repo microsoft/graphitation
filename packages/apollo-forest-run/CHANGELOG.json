@@ -1,0 +1,110 @@
+{
+  "name": "@graphitation/apollo-forest-run",
+  "entries": [
+    {
+      "date": "Fri, 06 Dec 2024 11:56:43 GMT",
+      "version": "0.5.0",
+      "tag": "@graphitation/apollo-forest-run_v0.5.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "60361975f604e96728d14c99ca1fb3fd63d4ee19",
+            "comment": "Explicit LRU eviction as a part of write transaction"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 13 Nov 2024 14:50:00 GMT",
+      "version": "0.4.0",
+      "tag": "@graphitation/apollo-forest-run_v0.4.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "6ddd225f13268140b92dcb88ea7098947a3da78c",
+            "comment": "fix(apollo-forest-run): do not leak variables when operation is evicted"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 28 Oct 2024 15:10:14 GMT",
+      "version": "0.3.2",
+      "tag": "@graphitation/apollo-forest-run_v0.3.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "ab2bddbdb94ee51e483b3cc5658d688b10cdf9b9",
+            "comment": "fix(apollo-forest-run): improve compatibility with apollo"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Fri, 25 Oct 2024 16:52:17 GMT",
+      "version": "0.3.1",
+      "tag": "@graphitation/apollo-forest-run_v0.3.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "7be0b3a78dfee62b25140098fe16b59b0f3066d3",
+            "comment": "refactor(apollo-forest-run): replace const enums with ES modules"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 24 Oct 2024 18:47:00 GMT",
+      "version": "0.3.0",
+      "tag": "@graphitation/apollo-forest-run_v0.3.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "0330a353d94acd91c36dc44af7e75cf41ada65e7",
+            "comment": "zero dependencies for ForestRun"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 23 Oct 2024 09:22:25 GMT",
+      "version": "0.2.1",
+      "tag": "@graphitation/apollo-forest-run_v0.2.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "7f236c10e4c1b5ceb491d8cb6916bb657dec1490",
+            "comment": "remove dependecy on relay-compiler-language-typescript"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 22 Oct 2024 16:48:19 GMT",
+      "version": "0.2.0",
+      "tag": "@graphitation/apollo-forest-run_v0.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "d93a228dc54ffaf70ed5804f49057b0b003fb047",
+            "comment": "Initial ForestRun implementation"
+          }
+        ]
+      }
+    }
+  ]
+}

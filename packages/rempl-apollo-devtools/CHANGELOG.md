@@ -1,8 +1,40 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-This log was last generated on Mon, 17 Jun 2024 13:26:30 GMT and should not be manually modified.
+<!-- This log was last generated on Wed, 11 Dec 2024 14:16:51 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.2.0
+
+Wed, 11 Dec 2024 14:16:51 GMT
+
+### Minor changes
+
+- Apollo devtools supports forest run store (77059398+vejrj@users.noreply.github.com)
+
+## 1.1.1
+
+Wed, 23 Oct 2024 09:22:25 GMT
+
+### Patches
+
+- remove dependecy on relay-compiler-language-typescript (pavelglac@microsoft.com)
+
+## 1.1.0
+
+Tue, 22 Oct 2024 16:48:19 GMT
+
+### Minor changes
+
+- bump react to 18 (Stanislaw.Wilczynski@microsoft.com)
+
+## 1.0.9
+
+Thu, 17 Oct 2024 14:53:14 GMT
+
+### Patches
+
+- bump release version manually (pavelglac@microsoft.com)
 
 ## 1.0.7
 

@@ -2,6 +2,144 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Fri, 22 Nov 2024 09:11:34 GMT",
+      "version": "1.14.0",
+      "tag": "@graphitation/cli_v1.14.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/cli",
+            "commit": "06a4fb6f618e4a0c39428369fbc9d266a88c8e2e",
+            "comment": "Context type generation re-worked"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.13.0",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 30 Oct 2024 12:58:29 GMT",
+      "version": "1.13.1",
+      "tag": "@graphitation/cli_v1.13.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/cli",
+            "commit": "9133143fa84aa4b993dfd203bd1e4e86466fb4ea",
+            "comment": "Version bump fix"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 24 Oct 2024 13:15:11 GMT",
+      "version": "1.12.1",
+      "tag": "@graphitation/cli_v1.12.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/cli",
+            "commit": "5307d4763d61621069eebe193e443b7cbd2f5b8f",
+            "comment": "Bump"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.12.1",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 23 Oct 2024 09:22:25 GMT",
+      "version": "1.11.5",
+      "tag": "@graphitation/cli_v1.11.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "7f236c10e4c1b5ceb491d8cb6916bb657dec1490",
+            "comment": "remove dependecy on relay-compiler-language-typescript"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/supermassive-extractors to v2.2.5",
+            "commit": "not available"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.11.4",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 17 Oct 2024 14:53:14 GMT",
+      "version": "1.11.4",
+      "tag": "@graphitation/cli_v1.11.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "027435c916b2d385b1bb14fd913021cf02de1d05",
+            "comment": "bump release version manually"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/supermassive-extractors to v2.2.4",
+            "commit": "not available"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.11.3",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 14 Oct 2024 07:58:57 GMT",
+      "tag": "@graphitation/cli_v1.11.2",
+      "version": "1.11.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "c0f0e8bcddf7d842d9198e0ed549b105c6a5c96a",
+            "comment": "Bump TS version to 5.5"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/supermassive-extractors to v2.2.2",
+            "commit": "c0f0e8bcddf7d842d9198e0ed549b105c6a5c96a"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.11.1",
+            "commit": "c0f0e8bcddf7d842d9198e0ed549b105c6a5c96a"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 15 Jan 2024 17:55:46 GMT",
       "tag": "@graphitation/cli_v1.11.1",
       "version": "1.11.1",

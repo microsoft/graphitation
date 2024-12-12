@@ -1,8 +1,56 @@
 # Change Log - @graphitation/supermassive
 
-This log was last generated on Wed, 03 Jul 2024 17:33:49 GMT and should not be manually modified.
+<!-- This log was last generated on Wed, 06 Nov 2024 13:29:21 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.7.0
+
+Wed, 06 Nov 2024 13:29:21 GMT
+
+### Minor changes
+
+- async before hooks added (77059398+vejrj@users.noreply.github.com)
+
+## 3.6.4
+
+Wed, 30 Oct 2024 12:58:29 GMT
+
+### Patches
+
+- Version bump fix (77059398+vejrj@users.noreply.github.com)
+
+## 3.6.2
+
+Thu, 24 Oct 2024 13:15:11 GMT
+
+### Patches
+
+- Bump (77059398+vejrj@users.noreply.github.com)
+
+## 3.5.6
+
+Wed, 23 Oct 2024 09:22:25 GMT
+
+### Patches
+
+- remove dependecy on relay-compiler-language-typescript (pavelglac@microsoft.com)
+
+## 3.5.5
+
+Thu, 17 Oct 2024 14:53:14 GMT
+
+### Patches
+
+- bump release version manually (pavelglac@microsoft.com)
+
+## 3.5.3
+
+Mon, 14 Oct 2024 07:58:57 GMT
+
+### Patches
+
+- Bump TS version to 5.5 (pavelglac@microsoft.com)
 
 ## 3.5.2
 

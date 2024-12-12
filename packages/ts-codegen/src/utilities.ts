@@ -23,13 +23,16 @@ type ResolverParameterDefinition<T> = { name: string; type: T };
 type ResolverParametersDefinitions = {
   parent: ResolverParameterDefinition<ts.TypeReferenceNode>;
   args?: ResolverParameterDefinition<readonly ts.TypeElement[]>;
-  context: ResolverParameterDefinition<ts.TypeReferenceNode>;
+  context: ResolverParameterDefinition<
+    ts.TypeReferenceNode | ts.IntersectionTypeNode
+  >;
   resolveInfo: ResolverParameterDefinition<ts.TypeReferenceNode>;
 };
 
 export function createUnionResolveType(
   context: TsCodegenContext,
   type: UnionType,
+  contextType: ts.TypeReferenceNode | ts.IntersectionTypeNode,
 ): ts.FunctionTypeNode {
   return factory.createFunctionTypeNode(
     undefined,
@@ -44,7 +47,7 @@ export function createUnionResolveType(
       },
       context: {
         name: "context",
-        type: context.getContextType().toTypeReference(),
+        type: contextType,
       },
       resolveInfo: {
         name: "info",
@@ -68,6 +71,7 @@ export function createUnionResolveType(
 
 export function createInterfaceResolveType(
   context: TsCodegenContext,
+  contextType: ts.TypeReferenceNode | ts.IntersectionTypeNode,
 ): ts.FunctionTypeNode {
   return factory.createFunctionTypeNode(
     undefined,
@@ -78,7 +82,7 @@ export function createInterfaceResolveType(
       },
       context: {
         name: "context",
-        type: context.getContextType().toTypeReference(),
+        type: contextType,
       },
       resolveInfo: {
         name: "info",
@@ -257,8 +261,8 @@ export function createNonNullableTemplate(): ts.Statement[] {
       factory.createIdentifier("PickNullable"),
       [
         factory.createTypeParameterDeclaration(
-          factory.createIdentifier("T"),
           undefined,
+          factory.createIdentifier("T"),
           undefined,
         ),
       ],

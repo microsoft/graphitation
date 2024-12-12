@@ -1,8 +1,48 @@
 # Change Log - @graphitation/ts-codegen
 
-This log was last generated on Mon, 15 Jan 2024 17:55:46 GMT and should not be manually modified.
+<!-- This log was last generated on Fri, 22 Nov 2024 09:11:34 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 2.13.0
+
+Fri, 22 Nov 2024 09:11:34 GMT
+
+### Minor changes
+
+- Context type generation re-worked (77059398+vejrj@users.noreply.github.com)
+
+## 2.12.1
+
+Thu, 24 Oct 2024 13:15:11 GMT
+
+### Patches
+
+- Bump (77059398+vejrj@users.noreply.github.com)
+
+## 2.11.4
+
+Wed, 23 Oct 2024 09:22:25 GMT
+
+### Patches
+
+- remove dependecy on relay-compiler-language-typescript (pavelglac@microsoft.com)
+
+## 2.11.3
+
+Thu, 17 Oct 2024 14:53:14 GMT
+
+### Patches
+
+- bump release version manually (pavelglac@microsoft.com)
+
+## 2.11.1
+
+Mon, 14 Oct 2024 07:58:57 GMT
+
+### Patches
+
+- Bump TS version to 5.5 (pavelglac@microsoft.com)
 
 ## 2.11.0
 

@@ -38,7 +38,7 @@ export function getTransformer(
   const transformerContext = createTransformerContext(options);
   return (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
     return (sourceFile: ts.SourceFile) =>
-      ts.visitNode(
+      ts.visitEachChild(
         sourceFile,
         getVisitor(
           transformerContext,
@@ -46,6 +46,7 @@ export function getTransformer(
           sourceFile,
           inlineAstTaggedTemplateTransformer,
         ),
+        context,
       );
   };
 }
@@ -56,9 +57,10 @@ export function getRelayTransformer(
   const transformerContext = createTransformerContext(options);
   return (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
     return (sourceFile: ts.SourceFile) =>
-      ts.visitNode(
+      ts.visitEachChild(
         sourceFile,
         getRelayVisitor(transformerContext, context, sourceFile),
+        context,
       );
   };
 }
@@ -70,7 +72,7 @@ export function getArtefactImportTransformer(
   return (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
     return (sourceFile: ts.SourceFile) => {
       const importDeclarations: ts.ImportDeclaration[] = [];
-      const outputSourceFile = ts.visitNode(
+      const outputSourceFile = ts.visitEachChild(
         sourceFile,
         getVisitor(
           transformerContext,
@@ -78,6 +80,7 @@ export function getArtefactImportTransformer(
           sourceFile,
           getImportArtefactTaggedTemplateTransformer(importDeclarations),
         ),
+        context,
       );
       if (importDeclarations.length > 0) {
         return ts.factory.updateSourceFile(outputSourceFile, [
@@ -121,7 +124,9 @@ function getVisitor(
   applyTaggedTemplateTransformer: TaggedTemplateTransformer,
 ): ts.Visitor {
   let templateLiteralName: string | null = null;
-  const visitor: ts.Visitor = (node: ts.Node): ts.VisitResult<ts.Node> => {
+  const visitor: ts.Visitor = (
+    node: ts.Node,
+  ): ts.VisitResult<ts.Node> | undefined => {
     // `graphql-tag` import declaration detected
     if (ts.isImportDeclaration(node)) {
       const moduleName = (node as ts.ImportDeclaration).moduleSpecifier.getText(

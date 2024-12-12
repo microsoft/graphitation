@@ -2,6 +2,36 @@
   "name": "@graphitation/graphql-codegen-typescript-typemap-plugin",
   "entries": [
     {
+      "date": "Wed, 23 Oct 2024 09:22:25 GMT",
+      "version": "0.1.9",
+      "tag": "@graphitation/graphql-codegen-typescript-typemap-plugin_v0.1.9",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/graphql-codegen-typescript-typemap-plugin",
+            "commit": "7f236c10e4c1b5ceb491d8cb6916bb657dec1490",
+            "comment": "remove dependecy on relay-compiler-language-typescript"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 17 Oct 2024 14:53:14 GMT",
+      "version": "0.1.8",
+      "tag": "@graphitation/graphql-codegen-typescript-typemap-plugin_v0.1.8",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/graphql-codegen-typescript-typemap-plugin",
+            "commit": "027435c916b2d385b1bb14fd913021cf02de1d05",
+            "comment": "bump release version manually"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 21 Sep 2023 06:28:45 GMT",
       "tag": "@graphitation/graphql-codegen-typescript-typemap-plugin_v0.1.6",
       "version": "0.1.6",

@@ -2,6 +2,66 @@
   "name": "@graphitation/ts-transform-graphql-js-tag",
   "entries": [
     {
+      "date": "Wed, 23 Oct 2024 09:22:25 GMT",
+      "version": "1.4.4",
+      "tag": "@graphitation/ts-transform-graphql-js-tag_v1.4.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/ts-transform-graphql-js-tag",
+            "commit": "7f236c10e4c1b5ceb491d8cb6916bb657dec1490",
+            "comment": "remove dependecy on relay-compiler-language-typescript"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 17 Oct 2024 14:53:14 GMT",
+      "version": "1.4.3",
+      "tag": "@graphitation/ts-transform-graphql-js-tag_v1.4.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/ts-transform-graphql-js-tag",
+            "commit": "027435c916b2d385b1bb14fd913021cf02de1d05",
+            "comment": "bump release version manually"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 14 Oct 2024 07:58:57 GMT",
+      "tag": "@graphitation/ts-transform-graphql-js-tag_v1.4.1",
+      "version": "1.4.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/ts-transform-graphql-js-tag",
+            "commit": "c0f0e8bcddf7d842d9198e0ed549b105c6a5c96a",
+            "comment": "Bump TS version to 5.5"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 24 Sep 2024 15:09:22 GMT",
+      "tag": "@graphitation/ts-transform-graphql-js-tag_v1.4.0",
+      "version": "1.4.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "phillip.burch@live.com",
+            "package": "@graphitation/ts-transform-graphql-js-tag",
+            "commit": "bd92500c2f7afba0bebf4416afd4e7efa57fb226",
+            "comment": "Update to add typescript 5.5 compatibility"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 25 Apr 2024 10:50:21 GMT",
       "tag": "@graphitation/ts-transform-graphql-js-tag_v1.3.0",
       "version": "1.3.0",

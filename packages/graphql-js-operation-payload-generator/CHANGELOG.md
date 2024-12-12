@@ -1,8 +1,44 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-This log was last generated on Fri, 13 Oct 2023 08:43:43 GMT and should not be manually modified.
+<!-- This log was last generated on Mon, 18 Nov 2024 17:35:34 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.12.10
+
+Mon, 18 Nov 2024 17:35:34 GMT
+
+### Patches
+
+- RelayMockPayloadGenerator supports nested lists (anfidelman@microsoft.com)
+
+## 0.12.9
+
+Wed, 23 Oct 2024 09:22:25 GMT
+
+### Patches
+
+- remove dependecy on relay-compiler-language-typescript (pavelglac@microsoft.com)
+- Bump @graphitation/graphql-js-tag to v0.9.4
+- Bump @graphitation/graphql-codegen-typescript-typemap-plugin to v0.1.9
+
+## 0.12.8
+
+Tue, 22 Oct 2024 17:26:48 GMT
+
+### Patches
+
+- use relay-test-utils types for consistency (Stanislaw.Wilczynski@microsoft.com)
+
+## 0.12.7
+
+Thu, 17 Oct 2024 14:53:14 GMT
+
+### Patches
+
+- bump release version manually (pavelglac@microsoft.com)
+- Bump @graphitation/graphql-js-tag to v0.9.3
+- Bump @graphitation/graphql-codegen-typescript-typemap-plugin to v0.1.8
 
 ## 0.12.5
 

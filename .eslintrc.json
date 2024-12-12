@@ -10,7 +10,13 @@
     "node": true,
     "jest/globals": true
   },
-  "ignorePatterns": ["**/coverage", "**/lib", "**/temp", "**/__generated__"],
+  "ignorePatterns": [
+    "**/coverage",
+    "**/lib",
+    "**/temp",
+    "**/__generated__",
+    "**/compat" // apollo sources, necessary for backwards-compatibility testing of ForestRun
+  ],
   "plugins": ["check-file", "prettier", "jest", "@typescript-eslint"],
 
   "extends": [

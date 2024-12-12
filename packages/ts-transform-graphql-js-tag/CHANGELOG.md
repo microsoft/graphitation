@@ -1,8 +1,40 @@
 # Change Log - @graphitation/ts-transform-graphql-js-tag
 
-This log was last generated on Thu, 25 Apr 2024 10:50:21 GMT and should not be manually modified.
+<!-- This log was last generated on Wed, 23 Oct 2024 09:22:25 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.4.4
+
+Wed, 23 Oct 2024 09:22:25 GMT
+
+### Patches
+
+- remove dependecy on relay-compiler-language-typescript (pavelglac@microsoft.com)
+
+## 1.4.3
+
+Thu, 17 Oct 2024 14:53:14 GMT
+
+### Patches
+
+- bump release version manually (pavelglac@microsoft.com)
+
+## 1.4.1
+
+Mon, 14 Oct 2024 07:58:57 GMT
+
+### Patches
+
+- Bump TS version to 5.5 (pavelglac@microsoft.com)
+
+## 1.4.0
+
+Tue, 24 Sep 2024 15:09:22 GMT
+
+### Minor changes
+
+- Update to add typescript 5.5 compatibility (phillip.burch@live.com)
 
 ## 1.3.0
 

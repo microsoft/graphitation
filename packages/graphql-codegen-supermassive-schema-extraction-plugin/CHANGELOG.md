@@ -1,8 +1,67 @@
 # Change Log - @graphitation/graphql-codegen-supermassive-schema-extraction-plugin
 
-This log was last generated on Wed, 03 Jul 2024 17:33:49 GMT and should not be manually modified.
+<!-- This log was last generated on Fri, 22 Nov 2024 09:11:34 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 2.0.18
+
+Fri, 22 Nov 2024 09:11:34 GMT
+
+### Patches
+
+- Bump @graphitation/supermassive to v3.7.1
+
+## 2.0.17
+
+Wed, 06 Nov 2024 13:29:21 GMT
+
+### Patches
+
+- Bump @graphitation/supermassive to v3.7.0
+
+## 2.0.16
+
+Wed, 30 Oct 2024 12:58:29 GMT
+
+### Patches
+
+- Version bump fix (77059398+vejrj@users.noreply.github.com)
+- Bump @graphitation/supermassive to v3.6.4
+
+## 2.0.14
+
+Thu, 24 Oct 2024 13:15:11 GMT
+
+### Patches
+
+- Bump @graphitation/supermassive to v3.6.2
+
+## 2.0.11
+
+Wed, 23 Oct 2024 09:22:25 GMT
+
+### Patches
+
+- remove dependecy on relay-compiler-language-typescript (pavelglac@microsoft.com)
+- Bump @graphitation/supermassive to v3.5.6
+
+## 2.0.10
+
+Thu, 17 Oct 2024 14:53:14 GMT
+
+### Patches
+
+- bump release version manually (pavelglac@microsoft.com)
+- Bump @graphitation/supermassive to v3.5.5
+
+## 2.0.8
+
+Mon, 14 Oct 2024 07:58:57 GMT
+
+### Patches
+
+- Bump @graphitation/supermassive to v3.5.3
 
 ## 2.0.7
 

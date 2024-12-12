@@ -31,10 +31,10 @@ export type compiledHooks_ForwardPaginationFragment_PaginationQuery = {
 
 
 /*
-query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String! = "", $conversationsForwardCount: Int! = 1, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $sortBy: SortByInput = {sortField: NAME, sortDirection: ASC}, $id: ID!) {
+query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String! = "", $conversationsForwardCount: Int! = 1, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $sortBy: SortByInput, $id: ID!) {
   node(id: $id) {
     __typename
-    ...compiledHooks_ForwardPaginationFragment_2AFkol
+    ...compiledHooks_ForwardPaginationFragment_pmmUt
     id
   }
 }
@@ -57,7 +57,7 @@ fragment compiledHooks_BackwardPaginationFragment on Conversation {
   id
 }
 
-fragment compiledHooks_ForwardPaginationFragment_2AFkol on NodeWithPetAvatarAndConversations {
+fragment compiledHooks_ForwardPaginationFragment_pmmUt on NodeWithPetAvatarAndConversations {
   __isNodeWithPetAvatarAndConversations: __typename
   petName
   avatarUrl(size: $avatarSize)
@@ -85,10 +85,10 @@ fragment compiledHooks_ForwardPaginationFragment_2AFkol on NodeWithPetAvatarAndC
 */
 
 /*
-query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String! = "", $conversationsForwardCount: Int! = 1, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $sortBy: SortByInput = {sortField: NAME, sortDirection: ASC}, $id: ID!) {
+query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String! = "", $conversationsForwardCount: Int! = 1, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $sortBy: SortByInput, $id: ID!) {
   node(id: $id) {
     __typename
-    ...compiledHooks_ForwardPaginationFragment_2AFkol
+    ...compiledHooks_ForwardPaginationFragment_pmmUt
     id
     ... on Node {
       __fragments @client
@@ -96,7 +96,7 @@ query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!,
   }
 }
 
-fragment compiledHooks_ForwardPaginationFragment_2AFkol on NodeWithPetAvatarAndConversations {
+fragment compiledHooks_ForwardPaginationFragment_pmmUt on NodeWithPetAvatarAndConversations {
   __isNodeWithPetAvatarAndConversations: __typename
   petName
   avatarUrl(size: $avatarSize)
@@ -245,33 +245,6 @@ v12 = [
         "kind": "Name",
         "value": "SortByInput"
       }
-    },
-    "defaultValue": {
-      "kind": "ObjectValue",
-      "fields": [
-        {
-          "kind": "ObjectField",
-          "name": {
-            "kind": "Name",
-            "value": "sortField"
-          },
-          "value": {
-            "kind": "EnumValue",
-            "value": "NAME"
-          }
-        },
-        {
-          "kind": "ObjectField",
-          "name": {
-            "kind": "Name",
-            "value": "sortDirection"
-          },
-          "value": {
-            "kind": "EnumValue",
-            "value": "ASC"
-          }
-        }
-      ]
     }
   },
   {
@@ -310,7 +283,7 @@ v16 = {
 },
 v17 = {
   "kind": "Name",
-  "value": "compiledHooks_ForwardPaginationFragment_2AFkol"
+  "value": "compiledHooks_ForwardPaginationFragment_pmmUt"
 },
 v18 = {
   "kind": "FragmentSpread",
@@ -787,7 +760,7 @@ return {
   "metadata": {
     "rootSelection": "node",
     "mainFragment": {
-      "name": "compiledHooks_ForwardPaginationFragment_2AFkol",
+      "name": "compiledHooks_ForwardPaginationFragment_pmmUt",
       "typeCondition": "NodeWithPetAvatarAndConversations"
     },
     "connection": {
@@ -795,13 +768,7 @@ return {
         "conversations"
       ],
       "forwardCountVariable": "conversationsForwardCount",
-      "forwardCursorVariable": "conversationsAfterCursor",
-      "filterVariableDefaults": {
-        "sortBy": {
-          "sortField": "NAME",
-          "sortDirection": "ASC"
-        }
-      }
+      "forwardCursorVariable": "conversationsAfterCursor"
     }
   }
 };

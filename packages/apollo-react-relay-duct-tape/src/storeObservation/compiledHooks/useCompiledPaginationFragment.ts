@@ -266,7 +266,7 @@ export function useCompiledPaginationFragment(
       latestVariablesUsedByStandaloneRefetch.current = variables;
       return refetch(variables, options);
     },
-    [],
+    [refetch],
   );
 
   const commonPaginationParams = {

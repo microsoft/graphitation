@@ -1,8 +1,109 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-This log was last generated on Wed, 18 Sep 2024 15:11:16 GMT and should not be manually modified.
+<!-- This log was last generated on Fri, 22 Nov 2024 09:11:34 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.3.10
+
+Fri, 22 Nov 2024 09:11:34 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.6.8
+
+## 1.3.9
+
+Mon, 18 Nov 2024 17:35:34 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-mock-client to v0.11.10
+- Bump @graphitation/graphql-js-operation-payload-generator to v0.12.10
+
+## 1.3.8
+
+Wed, 06 Nov 2024 13:29:21 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.6.7
+
+## 1.3.7
+
+Wed, 30 Oct 2024 12:58:29 GMT
+
+### Patches
+
+- Version bump fix (77059398+vejrj@users.noreply.github.com)
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.6.6
+
+## 1.3.5
+
+Thu, 24 Oct 2024 13:15:11 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.6.4
+
+## 1.3.2
+
+Wed, 23 Oct 2024 09:22:25 GMT
+
+### Patches
+
+- remove dependecy on relay-compiler-language-typescript (pavelglac@microsoft.com)
+- Bump @graphitation/apollo-mock-client to v0.11.9
+- Bump @graphitation/graphql-js-operation-payload-generator to v0.12.9
+- Bump @graphitation/graphql-js-tag to v0.9.4
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.6.1
+
+## 1.3.1
+
+Tue, 22 Oct 2024 17:26:48 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-mock-client to v0.11.8
+- Bump @graphitation/graphql-js-operation-payload-generator to v0.12.8
+
+## 1.3.0
+
+Tue, 22 Oct 2024 16:48:19 GMT
+
+### Minor changes
+
+- bump react to 18 (Stanislaw.Wilczynski@microsoft.com)
+- Bump @graphitation/apollo-mock-client to v0.11.7
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.6.0
+
+## 1.2.4
+
+Thu, 17 Oct 2024 14:53:14 GMT
+
+### Patches
+
+- bump release version manually (pavelglac@microsoft.com)
+- Bump @graphitation/apollo-mock-client to v0.11.6
+- Bump @graphitation/graphql-js-operation-payload-generator to v0.12.7
+- Bump @graphitation/graphql-js-tag to v0.9.3
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.5.6
+
+## 1.2.2
+
+Mon, 14 Oct 2024 07:58:57 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.5.4
+
+## 1.2.1
+
+Wed, 25 Sep 2024 18:37:39 GMT
+
+### Patches
+
+- Fix refetch function to use new variables instead of old ones when those variables are not defaults (scheruiyot@microsoft.com)
 
 ## 1.2.0
 

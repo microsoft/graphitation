@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { Button, Text } from "@fluentui/react-components";
 import { useStyles } from "./vertical-viewer.styles";
 import {

@@ -1,4 +1,5 @@
 import {
+  GraphQLList,
   GraphQLObjectType,
   executeSync,
   getNamedType,
@@ -60,16 +61,17 @@ interface InternalMockData extends MockData {
 }
 
 const TYPENAME_KEY = "__typename";
+type MultiDimensionalArray<T> = T | MultiDimensionalArray<T>[];
+type UserValue = { __typename?: string };
 
 export function generate<TypeMap extends DefaultMockResolvers>(
   operation: OperationDescriptor,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mockResolvers: MockResolvers<TypeMap> = DEFAULT_MOCK_RESOLVERS as any, // FIXME: Why does TS not accept this?
+  mockResolvers?: MockResolvers<TypeMap> | null,
   enableDefer: undefined | false = false,
   generateId?: () => number,
 ): { data: MockData } {
-  mockResolvers = { ...DEFAULT_MOCK_RESOLVERS, ...mockResolvers };
-  const resolveValue = createValueResolver(mockResolvers, generateId);
+  const resolvers = { ...DEFAULT_MOCK_RESOLVERS, ...mockResolvers };
+  const resolveValue = createValueResolver(resolvers, generateId);
 
   // RelayMockPayloadGenerator will execute documents that have optional
   // boolean variables that are not passed by the user, but are required
@@ -108,7 +110,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
     document: document,
     variableValues: operation.request.variables,
     rootValue: mockCompositeType(
-      mockResolvers,
+      resolvers,
       getRootType(operation) as GraphQLObjectType,
       null,
       resolveValue,
@@ -116,6 +118,7 @@ export function generate<TypeMap extends DefaultMockResolvers>(
       null,
       {},
       operation,
+      false, // default root
     ),
     fieldResolver: (source: InternalMockData, args, _context, info) => {
       // FIXME: This should not assume a single selection
@@ -130,37 +133,42 @@ export function generate<TypeMap extends DefaultMockResolvers>(
       const namedReturnType = getNamedType(info.returnType);
       const isList = isListType(getNullableType(info.returnType));
       if (isCompositeType(namedReturnType)) {
-        // TODO: This 'is list' logic is also done by the value resolver,
-        // so probably need to refactor this code to actually leverage that.
-        const generateValue = (userValue?: { __typename?: string }) => {
+        const value = source[selectionName];
+        const generateValue = (
+          userValue?: UserValue | MultiDimensionalArray<UserValue> | null,
+        ) => {
           // Explicit null value
           if (userValue === null) {
             return null;
           }
-          const result = {
-            ...mockCompositeType(
-              mockResolvers,
-              namedReturnType,
-              userValue?.[TYPENAME_KEY] || null,
-              resolveValue,
-              fieldNode,
-              info,
-              args,
-              operation,
-            ),
-            ...userValue,
-          };
-          return result;
+
+          const userSpecifiedTypename =
+            userValue && !Array.isArray(userValue)
+              ? userValue[TYPENAME_KEY] ?? null
+              : null;
+
+          const mockedCompositeType = mockCompositeType(
+            resolvers,
+            namedReturnType,
+            userSpecifiedTypename,
+            resolveValue,
+            fieldNode,
+            info,
+            args,
+            operation,
+            isList,
+          );
+
+          if (Array.isArray(mockedCompositeType)) {
+            if (Array.isArray(userValue)) {
+              return [...userValue];
+            }
+            return [...mockedCompositeType];
+          }
+
+          return { ...mockedCompositeType, ...userValue };
         };
-        if (isList) {
-          const value = source[selectionName];
-          const result = Array.isArray(value)
-            ? value.map(generateValue)
-            : [generateValue(value as object)];
-          return result;
-        } else {
-          return generateValue(source[selectionName] as object | undefined);
-        }
+        return generateValue(value);
       } else if (isScalarType(namedReturnType)) {
         if (source[selectionName] !== undefined) {
           return source[selectionName];
@@ -205,6 +213,7 @@ function mockCompositeType(
   info: GraphQLResolveInfo | null,
   args: { [argName: string]: unknown },
   operation: OperationDescriptor<GraphQLSchema, DocumentNode>,
+  plural: boolean,
 ) {
   // Get the concrete type selection, concrete type on an abstract type
   // selection, or the abstract type selection.
@@ -232,7 +241,7 @@ function mockCompositeType(
     }
   }
 
-  let result: InternalMockData = {
+  let result: InternalMockData | MultiDimensionalArray<InternalMockData> = {
     ...getDefaultValues(
       mockResolvers,
       // If a mock resolver is provided for the abstract type, use it.
@@ -243,6 +252,7 @@ function mockCompositeType(
       fieldNode,
       info,
       args,
+      plural,
     ),
   };
   if (
@@ -264,6 +274,7 @@ function mockCompositeType(
         fieldNode,
         info,
         args,
+        plural,
       ) as InternalMockData,
     );
   }
@@ -290,6 +301,16 @@ function mockCompositeType(
     result.__abstractType = namedReturnType;
   }
 
+  if (!info) {
+    return result;
+  }
+
+  let currentType = getNullableType(info.returnType);
+  while (currentType instanceof GraphQLList) {
+    currentType = getNullableType(currentType.ofType);
+    result = [result];
+  }
+
   return result;
 }
 
@@ -300,6 +321,7 @@ function getDefaultValues(
   fieldNode: FieldNode | null,
   info: GraphQLResolveInfo | null,
   args: { [argName: string]: unknown },
+  plural: boolean,
 ) {
   const defaultValues =
     mockResolvers?.[typename] &&
@@ -312,10 +334,7 @@ function getDefaultValues(
         path: info ? pathToArray(info.path).filter(isString) : [],
         args: args,
       },
-      // FIXME: This is disabled here because we're currently doing this work
-      // in the field resolver's isCompositeType check.
-      // isListType(info.returnType),
-      false,
+      plural,
     ) as MockData | undefined);
   invariant(
     defaultValues === undefined || typeof defaultValues === "object",

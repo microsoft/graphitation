@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { DocumentNode } from "graphql";
-import { extractContext } from "./context/index";
+import { ContextMap, extractContext } from "./context/index";
 import { generateResolvers } from "./resolvers";
 import { generateModels } from "./models";
 import { generateLegacyTypes } from "./legacyTypes";
@@ -13,8 +13,8 @@ export function generateTS(
   {
     outputPath,
     documentPath,
-    contextImport,
-    contextName,
+    contextTypePath,
+    contextTypeName,
     enumsImport,
     legacyCompat,
     useStringUnionsInsteadOfEnums,
@@ -23,11 +23,15 @@ export function generateTS(
     generateOnlyEnums,
     enumNamesToMigrate,
     enumNamesToKeep,
+    contextSubTypeNameTemplate,
+    contextSubTypePathTemplate,
+    defaultContextSubTypePath,
+    defaultContextSubTypeName,
   }: {
     outputPath: string;
     documentPath: string;
-    contextImport?: string | null;
-    contextName?: string;
+    contextTypePath?: string | null;
+    contextTypeName?: string;
     enumsImport?: string | null;
     legacyCompat?: boolean;
     useStringUnionsInsteadOfEnums?: boolean;
@@ -36,16 +40,21 @@ export function generateTS(
     generateOnlyEnums?: boolean;
     enumNamesToMigrate?: string[];
     enumNamesToKeep?: string[];
+    contextSubTypeNameTemplate?: string;
+    contextSubTypePathTemplate?: string;
+    defaultContextSubTypePath?: string;
+    defaultContextSubTypeName?: string;
   },
 ): {
   files: ts.SourceFile[];
+  contextMappingOutput: ContextMap | null;
 } {
   try {
     const context = extractContext(
       {
         context: {
-          name: contextName,
-          from: contextImport || null,
+          name: contextTypeName,
+          from: contextTypePath || null,
         },
         legacyCompat,
         useStringUnionsInsteadOfEnums,
@@ -54,6 +63,10 @@ export function generateTS(
         modelScope,
         enumNamesToMigrate,
         enumNamesToKeep,
+        contextSubTypeNameTemplate,
+        contextSubTypePathTemplate,
+        defaultContextSubTypePath,
+        defaultContextSubTypeName,
       },
       document,
       outputPath,
@@ -76,7 +89,10 @@ export function generateTS(
         result.push(generateLegacyResolvers(context));
       }
     }
-    return { files: result };
+    return {
+      files: result,
+      contextMappingOutput: context.getContextMap(),
+    };
   } catch (e) {
     console.error(e);
     throw e;

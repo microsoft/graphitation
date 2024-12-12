@@ -1,12 +1,17 @@
 import { NormalizedCacheObject, ApolloClient } from "@apollo/client";
 import { RemplWrapper } from "../rempl-wrapper";
-import { ClientObject, WrapperCallbackParams } from "../../types";
+import {
+  ClientObject,
+  ForestRunStoreObject,
+  WrapperCallbackParams,
+} from "../../types";
 
 export class ApolloCachePublisher {
   private apolloPublisher;
   private remplWrapper: RemplWrapper;
   private activeClient: ClientObject | null = null;
   private lastCacheHistory: NormalizedCacheObject = {};
+  private lastForestRunCacheHistory: Record<string, ForestRunStoreObject> = {};
 
   constructor(remplWrapper: RemplWrapper) {
     this.remplWrapper = remplWrapper;
@@ -27,8 +32,31 @@ export class ApolloCachePublisher {
     });
   }
 
+  private getForrestRunCache(client: any) {
+    const { dataForest } = client.cache.store;
+
+    const output: Record<string, ForestRunStoreObject> = {};
+    for (const [_, value] of dataForest.trees.entries()) {
+      output[`${value.operation.debugName}:${value.operation.id}`] = {
+        id: value.operation.id,
+        data: value.result?.data,
+        variables: value.operation.variables,
+      };
+    }
+
+    return output;
+  }
+
+  private isForestRunCache(cache: any): cache is unknown {
+    return !!(cache as any)?.store?.dataForest;
+  }
+
   private getCache(client: ApolloClient<NormalizedCacheObject>) {
-    return client.cache.extract(true);
+    if (this.isForestRunCache(client.cache)) {
+      return this.getForrestRunCache(client);
+    } else {
+      return (client.cache as ApolloClient<NormalizedCacheObject>).extract();
+    }
   }
 
   private serializeCacheObject = (client?: ClientObject) => {
@@ -53,7 +81,16 @@ export class ApolloCachePublisher {
     if (this.activeClient?.clientId !== activeClient.clientId) {
       this.activeClient = activeClient;
     } else if (
+      !this.isForestRunCache(this.activeClient.client.cache) &&
       !this.hasCacheChanged(this.lastCacheHistory, serializedCacheObject)
+    ) {
+      return;
+    } else if (
+      this.isForestRunCache(this.activeClient.client.cache) &&
+      !this.hasForestRunCacheChanged(
+        this.lastForestRunCacheHistory,
+        serializedCacheObject as Record<string, ForestRunStoreObject>,
+      )
     ) {
       return;
     }
@@ -76,6 +113,20 @@ export class ApolloCachePublisher {
         return false;
       }
       return currentCache[key] !== lastCacheHistory[key];
+    });
+  }
+
+  private hasForestRunCacheChanged(
+    lastCacheHistory: Record<string, ForestRunStoreObject>,
+    currentCache: Record<string, ForestRunStoreObject>,
+  ) {
+    const cacheKeys = Object.keys(currentCache);
+    if (Object.keys(lastCacheHistory).length !== cacheKeys.length) {
+      return true;
+    }
+
+    return cacheKeys.some((key) => {
+      return currentCache[key]?.id !== lastCacheHistory[key]?.id;
     });
   }
 

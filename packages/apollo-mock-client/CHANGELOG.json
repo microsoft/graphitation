@@ -2,6 +2,105 @@
   "name": "@graphitation/apollo-mock-client",
   "entries": [
     {
+      "date": "Mon, 18 Nov 2024 17:35:34 GMT",
+      "version": "0.11.10",
+      "tag": "@graphitation/apollo-mock-client_v0.11.10",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-mock-client",
+            "comment": "Bump @graphitation/graphql-js-operation-payload-generator to v0.12.10",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Wed, 23 Oct 2024 09:22:25 GMT",
+      "version": "0.11.9",
+      "tag": "@graphitation/apollo-mock-client_v0.11.9",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/apollo-mock-client",
+            "commit": "7f236c10e4c1b5ceb491d8cb6916bb657dec1490",
+            "comment": "remove dependecy on relay-compiler-language-typescript"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-mock-client",
+            "comment": "Bump @graphitation/graphql-js-tag to v0.9.4",
+            "commit": "not available"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-mock-client",
+            "comment": "Bump @graphitation/graphql-js-operation-payload-generator to v0.12.9",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 22 Oct 2024 17:26:48 GMT",
+      "version": "0.11.8",
+      "tag": "@graphitation/apollo-mock-client_v0.11.8",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-mock-client",
+            "comment": "Bump @graphitation/graphql-js-operation-payload-generator to v0.12.8",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 22 Oct 2024 16:48:19 GMT",
+      "version": "0.11.7",
+      "tag": "@graphitation/apollo-mock-client_v0.11.7",
+      "comments": {
+        "patch": [
+          {
+            "author": "Stanislaw.Wilczynski@microsoft.com",
+            "package": "@graphitation/apollo-mock-client",
+            "commit": "d93a228dc54ffaf70ed5804f49057b0b003fb047",
+            "comment": "bump react to 18"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 17 Oct 2024 14:53:14 GMT",
+      "version": "0.11.6",
+      "tag": "@graphitation/apollo-mock-client_v0.11.6",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/apollo-mock-client",
+            "commit": "027435c916b2d385b1bb14fd913021cf02de1d05",
+            "comment": "bump release version manually"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-mock-client",
+            "comment": "Bump @graphitation/graphql-js-tag to v0.9.3",
+            "commit": "not available"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-mock-client",
+            "comment": "Bump @graphitation/graphql-js-operation-payload-generator to v0.12.7",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 13 Oct 2023 08:43:43 GMT",
       "tag": "@graphitation/apollo-mock-client_v0.11.4",
       "version": "0.11.4",

@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/graphql-codegen-typescript-typemap-plugin",
   "license": "MIT",
-  "version": "0.1.6",
+  "version": "0.1.9",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",

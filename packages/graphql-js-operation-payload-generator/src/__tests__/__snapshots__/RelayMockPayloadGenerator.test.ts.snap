@@ -993,6 +993,342 @@ query RelayMockPayloadGeneratorTestDifferentConcreteTypesQuery {
 }
 `;
 
+exports[`mocks 2d list with nested structure 1`] = `
+~~~~~~~~~~ INPUT ~~~~~~~~~~
+query RelayMockPayloadGeneratorTestDeeplyNestedMockDataQuery {
+  nestedList(id: "my-nested-list-id") {
+    __typename
+    id
+    nodeB {
+      id
+      __typename
+      nodeC {
+        id
+        __typename
+      }
+      nodesC {
+        id
+        __typename
+      }
+    }
+    nodesB {
+      id
+      __typename
+      nodeC {
+        id
+        __typename
+      }
+      nodesC {
+        id
+        __typename
+      }
+    }
+  }
+}
+
+~~~~~~~~~~ OUTPUT ~~~~~~~~~~
+{
+  "data": {
+    "nestedList": [
+      [
+        {
+          "__typename": "CustomNodeA",
+          "id": "<CustomNodeA-mock-id-1>",
+          "nodeB": {
+            "id": "<CustomNodeB-mock-id-2>",
+            "__typename": "CustomNodeB",
+            "nodeC": {
+              "id": "<CustomNodeC-mock-id-3>",
+              "__typename": "CustomNodeC"
+            },
+            "nodesC": [
+              {
+                "id": "<CustomNodeC-mock-id-4>",
+                "__typename": "CustomNodeC"
+              }
+            ]
+          },
+          "nodesB": [
+            {
+              "id": "<CustomNodeB-mock-id-5>",
+              "__typename": "CustomNodeB",
+              "nodeC": {
+                "id": "<CustomNodeC-mock-id-6>",
+                "__typename": "CustomNodeC"
+              },
+              "nodesC": [
+                {
+                  "id": "<CustomNodeC-mock-id-7>",
+                  "__typename": "CustomNodeC"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    ]
+  }
+}
+`;
+
+exports[`mocks 3d list with nested structure 1`] = `
+~~~~~~~~~~ INPUT ~~~~~~~~~~
+query RelayMockPayloadGeneratorTestDeeplyNestedMockDataQuery {
+  deeplyNestedList(id: "my-deeply-nested-list-id") {
+    __typename
+    id
+    nodeB {
+      id
+      __typename
+      nodeC {
+        id
+        __typename
+      }
+      nodesC {
+        id
+        __typename
+      }
+    }
+    nodesB {
+      id
+      __typename
+      nodeC {
+        id
+        __typename
+      }
+      nodesC {
+        id
+        __typename
+      }
+    }
+  }
+}
+
+~~~~~~~~~~ OUTPUT ~~~~~~~~~~
+{
+  "data": {
+    "deeplyNestedList": [
+      [
+        [
+          {
+            "__typename": "CustomNodeA",
+            "id": "<CustomNodeA-mock-id-1>",
+            "nodeB": {
+              "id": "<CustomNodeB-mock-id-2>",
+              "__typename": "CustomNodeB",
+              "nodeC": {
+                "id": "<CustomNodeC-mock-id-3>",
+                "__typename": "CustomNodeC"
+              },
+              "nodesC": [
+                {
+                  "id": "<CustomNodeC-mock-id-4>",
+                  "__typename": "CustomNodeC"
+                }
+              ]
+            },
+            "nodesB": [
+              {
+                "id": "<CustomNodeB-mock-id-5>",
+                "__typename": "CustomNodeB",
+                "nodeC": {
+                  "id": "<CustomNodeC-mock-id-6>",
+                  "__typename": "CustomNodeC"
+                },
+                "nodesC": [
+                  {
+                    "id": "<CustomNodeC-mock-id-7>",
+                    "__typename": "CustomNodeC"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      ]
+    ]
+  }
+}
+`;
+
+exports[`mocks list with nested structure 1`] = `
+~~~~~~~~~~ INPUT ~~~~~~~~~~
+query RelayMockPayloadGeneratorTestDeeplyNestedMockDataQuery {
+  justList(id: "my-just-list-id") {
+    __typename
+    id
+    nodeB {
+      id
+      __typename
+      nodeC {
+        id
+        __typename
+      }
+      nodesC {
+        id
+        __typename
+      }
+    }
+    nodesB {
+      id
+      __typename
+      nodeC {
+        id
+        __typename
+      }
+      nodesC {
+        id
+        __typename
+      }
+    }
+  }
+}
+
+~~~~~~~~~~ OUTPUT ~~~~~~~~~~
+{
+  "data": {
+    "justList": [
+      {
+        "__typename": "CustomNodeA",
+        "id": "<CustomNodeA-mock-id-1>",
+        "nodeB": {
+          "id": "<CustomNodeB-mock-id-2>",
+          "__typename": "CustomNodeB",
+          "nodeC": {
+            "id": "<CustomNodeC-mock-id-3>",
+            "__typename": "CustomNodeC"
+          },
+          "nodesC": [
+            {
+              "id": "<CustomNodeC-mock-id-4>",
+              "__typename": "CustomNodeC"
+            }
+          ]
+        },
+        "nodesB": [
+          {
+            "id": "<CustomNodeB-mock-id-5>",
+            "__typename": "CustomNodeB",
+            "nodeC": {
+              "id": "<CustomNodeC-mock-id-6>",
+              "__typename": "CustomNodeC"
+            },
+            "nodesC": [
+              {
+                "id": "<CustomNodeC-mock-id-7>",
+                "__typename": "CustomNodeC"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+`;
+
+exports[`mocks list with nested structure with provided resolver 1`] = `
+~~~~~~~~~~ INPUT ~~~~~~~~~~
+query RelayMockPayloadGeneratorTestDeeplyNestedMockDataQuery {
+  justList(id: "my-just-list-id") {
+    __typename
+    id
+    nodeB {
+      id
+      __typename
+      nodeC {
+        id
+        __typename
+      }
+      nodesC {
+        id
+        __typename
+      }
+    }
+    nodesB {
+      id
+      __typename
+      nodeC {
+        id
+        __typename
+      }
+      nodesC {
+        id
+        __typename
+      }
+    }
+  }
+}
+
+~~~~~~~~~~ OUTPUT ~~~~~~~~~~
+{
+  "data": {
+    "justList": [
+      {
+        "__typename": "CustomNodeA",
+        "id": "custom-nodeA-id",
+        "nodeB": {
+          "id": "nodeB-id",
+          "__typename": "CustomNodeB",
+          "nodeC": {
+            "id": "nodeC-id",
+            "__typename": "CustomNodeC"
+          },
+          "nodesC": [
+            {
+              "id": "nodesC-id-1",
+              "__typename": "CustomNodeC"
+            },
+            {
+              "id": "nodesC-id-2",
+              "__typename": "CustomNodeC"
+            }
+          ]
+        },
+        "nodesB": [
+          {
+            "id": "nodesB-id-1",
+            "__typename": "CustomNodeB",
+            "nodeC": {
+              "id": "nodeC-id-1",
+              "__typename": "CustomNodeC"
+            },
+            "nodesC": [
+              {
+                "id": "nodesC-id-1-1",
+                "__typename": "CustomNodeC"
+              },
+              {
+                "id": "nodesC-id-1-2",
+                "__typename": "CustomNodeC"
+              }
+            ]
+          },
+          {
+            "id": "nodesB-id-2",
+            "__typename": "CustomNodeB",
+            "nodeC": {
+              "id": "nodeC-id-2",
+              "__typename": "CustomNodeC"
+            },
+            "nodesC": [
+              {
+                "id": "nodesC-id-2-1",
+                "__typename": "CustomNodeC"
+              },
+              {
+                "id": "nodesC-id-2-2",
+                "__typename": "CustomNodeC"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+`;
+
 exports[`should return \`null\` for selection if that is specified in default values 1`] = `
 ~~~~~~~~~~ INPUT ~~~~~~~~~~
 query RelayMockPayloadGeneratorTest19Query {
@@ -1135,18 +1471,8 @@ query RelayMockPayloadGeneratorTest35Query @relay_test_operation {
       "id": "this-is-my-id",
       "friends": {
         "edges": [
-          {
-            "node": {
-              "id": "<User-mock-id-1>",
-              "name": "<mock-value-for-field-\\"name\\">"
-            }
-          },
-          {
-            "node": {
-              "id": "<User-mock-id-2>",
-              "name": "<mock-value-for-field-\\"name\\">"
-            }
-          }
+          null,
+          null
         ]
       }
     }
@@ -1177,31 +1503,6 @@ query RelayMockPayloadGeneratorTest40Query @relay_test_operation {
         "CHEERFUL",
         "DERISIVE"
       ]
-    }
-  }
-}
-`;
-
-exports[`with @relay_test_operation generate mock for enum with different case should be OK 1`] = `
-~~~~~~~~~~ INPUT ~~~~~~~~~~
-query RelayMockPayloadGeneratorTest39Query @relay_test_operation {
-  node(id: "my-id") {
-    __typename
-    ... on User {
-      id
-      environment
-    }
-    id
-  }
-}
-
-~~~~~~~~~~ OUTPUT ~~~~~~~~~~
-{
-  "data": {
-    "node": {
-      "__typename": "User",
-      "id": "<mock-id-1>",
-      "environment": "WEB"
     }
   }
 }
@@ -1504,7 +1805,7 @@ query RelayMockPayloadGeneratorTest36Query @relay_test_operation {
           {
             "node": {
               "id": "<User-mock-id-2>",
-              "name": "Alice"
+              "name": "<mock-value-for-field-\\"name\\">"
             }
           }
         ]
@@ -1542,36 +1843,11 @@ query RelayMockPayloadGeneratorTest37Query @relay_test_operation {
       "id": "<mock-id-1>",
       "friends": {
         "edges": [
-          {
-            "node": {
-              "id": "<User-mock-id-2>",
-              "name": "Alice"
-            }
-          },
-          {
-            "node": {
-              "id": "<User-mock-id-3>",
-              "name": "Alice"
-            }
-          },
-          {
-            "node": {
-              "id": "<User-mock-id-4>",
-              "name": "Alice"
-            }
-          },
-          {
-            "node": {
-              "id": "<User-mock-id-5>",
-              "name": "Alice"
-            }
-          },
-          {
-            "node": {
-              "id": "<User-mock-id-6>",
-              "name": "Alice"
-            }
-          }
+          null,
+          null,
+          null,
+          null,
+          null
         ]
       }
     }
@@ -1726,23 +2002,13 @@ query RelayMockPayloadGeneratorTest34Query @relay_test_operation {
       "id": "<mock-id-1>",
       "friends": {
         "edges": [
+          null,
           {
             "node": {
               "id": "<User-mock-id-2>",
-              "name": "<mock-value-for-field-\\"name\\">",
-              "profile_picture": {
-                "uri": "/image-url-3.jpg",
-                "width": 42,
-                "height": 42
-              }
-            }
-          },
-          {
-            "node": {
-              "id": "<User-mock-id-4>",
               "name": "Bob with Image",
               "profile_picture": {
-                "uri": "/image-url-5.jpg",
+                "uri": "/image-url-3.jpg",
                 "width": 42,
                 "height": 42
               }
@@ -1788,61 +2054,11 @@ query RelayMockPayloadGeneratorTest31Query @relay_test_operation {
       "id": "<mock-id-1>",
       "friends": {
         "edges": [
-          {
-            "node": {
-              "id": "<User-mock-id-2>",
-              "name": "<mock-value-for-field-\\"name\\">",
-              "profile_picture": {
-                "uri": "<mock-value-for-field-\\"uri\\">",
-                "width": 42,
-                "height": 42
-              }
-            }
-          },
-          {
-            "node": {
-              "id": "<User-mock-id-3>",
-              "name": "<mock-value-for-field-\\"name\\">",
-              "profile_picture": {
-                "uri": "<mock-value-for-field-\\"uri\\">",
-                "width": 42,
-                "height": 42
-              }
-            }
-          },
-          {
-            "node": {
-              "id": "<User-mock-id-4>",
-              "name": "<mock-value-for-field-\\"name\\">",
-              "profile_picture": {
-                "uri": "<mock-value-for-field-\\"uri\\">",
-                "width": 42,
-                "height": 42
-              }
-            }
-          },
-          {
-            "node": {
-              "id": "<User-mock-id-5>",
-              "name": "<mock-value-for-field-\\"name\\">",
-              "profile_picture": {
-                "uri": "<mock-value-for-field-\\"uri\\">",
-                "width": 42,
-                "height": 42
-              }
-            }
-          },
-          {
-            "node": {
-              "id": "<User-mock-id-6>",
-              "name": "<mock-value-for-field-\\"name\\">",
-              "profile_picture": {
-                "uri": "<mock-value-for-field-\\"uri\\">",
-                "width": 42,
-                "height": 42
-              }
-            }
-          }
+          null,
+          null,
+          null,
+          null,
+          null
         ]
       }
     }
@@ -1915,17 +2131,7 @@ query RelayMockPayloadGeneratorTest32Query @relay_test_operation {
       "friends": {
         "edges": [
           null,
-          {
-            "node": {
-              "id": "<User-mock-id-2>",
-              "name": "<mock-value-for-field-\\"name\\">",
-              "profile_picture": {
-                "uri": "<mock-value-for-field-\\"uri\\">",
-                "width": 42,
-                "height": 42
-              }
-            }
-          }
+          null
         ]
       }
     }

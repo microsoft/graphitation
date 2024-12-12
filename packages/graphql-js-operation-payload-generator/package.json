@@ -2,7 +2,7 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "description": "Generates a payload for a given GraphQL operation expressed in graphql-js AST and a GraphQL Schema.",
   "license": "MIT",
-  "version": "0.12.5",
+  "version": "0.12.10",
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",
@@ -18,13 +18,14 @@
     "test:schema-types": "ts-node ./scripts/graphql-codegen.ts"
   },
   "dependencies": {
+    "@types/relay-test-utils": ">=17.0.0",
     "deepmerge": "^4.2.2",
     "invariant": "^2.2.4",
     "graphql": "^15.0.0"
   },
   "devDependencies": {
-    "@graphitation/graphql-js-tag": "^0.9.1",
-    "@graphitation/graphql-codegen-typescript-typemap-plugin": "^0.1.6",
+    "@graphitation/graphql-js-tag": "^0.9.4",
+    "@graphitation/graphql-codegen-typescript-typemap-plugin": "^0.1.9",
     "@graphql-codegen/cli": "^2.6.2",
     "@graphql-codegen/typescript": "^2.5.1",
     "@types/jest": "^26.0.22",

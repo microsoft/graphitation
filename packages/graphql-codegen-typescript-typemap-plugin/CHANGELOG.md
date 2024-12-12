@@ -1,8 +1,24 @@
 # Change Log - @graphitation/graphql-codegen-typescript-typemap-plugin
 
-This log was last generated on Thu, 21 Sep 2023 06:28:45 GMT and should not be manually modified.
+<!-- This log was last generated on Wed, 23 Oct 2024 09:22:25 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.1.9
+
+Wed, 23 Oct 2024 09:22:25 GMT
+
+### Patches
+
+- remove dependecy on relay-compiler-language-typescript (pavelglac@microsoft.com)
+
+## 0.1.8
+
+Thu, 17 Oct 2024 14:53:14 GMT
+
+### Patches
+
+- bump release version manually (pavelglac@microsoft.com)
 
 ## 0.1.6
 
