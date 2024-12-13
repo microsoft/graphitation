@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "add DateTime to TypeScriptTypeTransformers",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape-compiler",
+  "email": "dragoshomner@microsoft.com",
+  "dependentChangeType": "patch"
+}
