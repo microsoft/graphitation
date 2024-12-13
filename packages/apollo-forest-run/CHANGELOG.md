@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Fri, 06 Dec 2024 11:56:43 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 13 Dec 2024 15:40:14 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.6.0
+
+Fri, 13 Dec 2024 15:40:14 GMT
+
+### Minor changes
+
+- Expose explicit data cleanup through Apollo gc() method (vladimir.razuvaev@gmail.com)
 
 ## 0.5.0
 
