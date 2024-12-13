@@ -61,13 +61,18 @@ export function touchOperation(
 }
 
 export function maybeEvictOldData(env: CacheEnv, store: Store): OperationId[] {
-  const { dataForest, atime } = store;
   if (
     !env.maxOperationCount ||
-    dataForest.trees.size <= env.maxOperationCount * 2
+    store.dataForest.trees.size <= env.maxOperationCount * 2
   ) {
     return [];
   }
+  return evictOldData(env, store);
+}
+
+export function evictOldData(env: CacheEnv, store: Store): OperationId[] {
+  assert(env.maxOperationCount);
+  const { dataForest, atime } = store;
   let nonEvictable = 0;
   const toEvict: number[] = [];
   for (const tree of dataForest.trees.values()) {
