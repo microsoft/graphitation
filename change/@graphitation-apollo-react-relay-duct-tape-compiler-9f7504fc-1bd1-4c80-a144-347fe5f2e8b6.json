@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "new error when trying to merge scalar with object",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape-compiler",
+  "email": "pavelglac@microsoft.com",
+  "dependentChangeType": "patch"
+}
