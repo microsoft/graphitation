@@ -121,6 +121,16 @@ function aggregateRuntimeImports(ast: ts.Statement[]) {
   }
 }
 
+function incompatibleTypesThrows(a: Selection, b: Selection) {
+  const isAScalar = !a.nodeSelections;
+  const isBScalar = !b.nodeSelections;
+  if (isAScalar !== isBScalar) {
+    throw new Error(
+      `Type mismatch when merging selections. For union selection ensure all fragments quering for __typename`,
+    );
+  }
+}
+
 function nullThrows<T>(obj: T | null | undefined): T {
   if (obj == null) {
     throw new Error("Obj is null");
@@ -371,6 +381,8 @@ function mergeSelection(
 
     return b;
   }
+
+  incompatibleTypesThrows(a, b);
 
   return {
     ...a,

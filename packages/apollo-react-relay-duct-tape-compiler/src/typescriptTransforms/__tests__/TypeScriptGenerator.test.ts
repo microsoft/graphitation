@@ -2,8 +2,27 @@ import { CompilerContext, IRTransforms, Root } from "relay-compiler";
 import { TypeGeneratorOptions } from "relay-compiler/lib/language/RelayLanguagePluginInterface";
 import { generateTestsFromFixtures } from "relay-test-utils-internal/lib/generateTestsFromFixtures";
 import parseGraphQLText = require("relay-test-utils-internal/lib/parseGraphQLText");
-import { TestSchema } from "relay-test-utils-internal/lib/TestSchema";
+import { TestSchema as DefaultTestSchema } from "relay-test-utils-internal/lib/TestSchema";
 import * as TypeScriptGenerator from "../TypeScriptGenerator";
+
+const TestSchema = DefaultTestSchema.extend([
+  /* GraphQL */ `
+    type Ingredient {
+      name: String!
+      isGood: Boolean!
+    }
+    type MealA {
+      ingredients: [Ingredient!]!
+    }
+    type MealB {
+      ingredients: [String!]!
+    }
+    union Meal = MealA | MealB
+    extend type User {
+      favouriteMeal: Meal!
+    }
+  `,
+]);
 
 function generate(
   text: string,
