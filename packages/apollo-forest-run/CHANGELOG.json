@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Fri, 13 Dec 2024 15:40:14 GMT",
+      "version": "0.6.0",
+      "tag": "@graphitation/apollo-forest-run_v0.6.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "013898c3cf993f54d327a5a39d76572847e4a83d",
+            "comment": "Expose explicit data cleanup through Apollo gc() method"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 06 Dec 2024 11:56:43 GMT",
       "version": "0.5.0",
       "tag": "@graphitation/apollo-forest-run_v0.5.0",
