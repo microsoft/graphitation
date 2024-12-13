@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Expose explicit data cleanup through Apollo gc() method",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}
