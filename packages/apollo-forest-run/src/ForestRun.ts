@@ -24,6 +24,7 @@ import { modify } from "./cache/modify";
 import {
   createOptimisticLayer,
   createStore,
+  evictOldData,
   getEffectiveReadLayers,
   maybeEvictOldData,
   removeOptimisticLayers,
@@ -362,6 +363,13 @@ export class ForestRun extends ApolloCache<any> {
 
   public restore(_: Record<string, any>): this {
     throw new Error("ForestRunCache.restore() is not supported");
+  }
+
+  public gc(): string[] {
+    if (this.env.maxOperationCount) {
+      return evictOldData(this.env, this.store).map(String);
+    }
+    return [];
   }
 
   public getStats() {
