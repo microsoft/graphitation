@@ -372,6 +372,44 @@ describe.each([
         isStrictHookCallsOrder: true,
       },
       {
+        name: "error in sync resolver for non-nullable field 2",
+        document: `query GetPersonX
+        {
+          person(id: 1) {
+            name
+            xField
+          }
+        }`,
+        resolvers: {
+          ...resolvers,
+          Person: {
+            name: async () => {
+              // NOTE: this has to be async
+              return "John Doe";
+            },
+            xField: () => {
+              // NOTE this has to be sync, to make sure it throws before Person.name is resolved
+              throw new Error("Resolver error");
+            },
+          },
+        } as UserResolvers,
+        expectedHookCalls: [
+          "BOE|GetPersonX",
+          "BFR|person",
+          "AFR|person|[object]|undefined",
+          "BFR|person.name",
+          "BFR|person.xField",
+          "AFR|person.xField|undefined|Resolver error",
+          "AFC|person.xField|undefined|Resolver error",
+          'AFR|person.name|undefined|Sibling non-nullable field threw: "Resolver error"',
+          'AFC|person.name|undefined|Sibling non-nullable field threw: "Resolver error"',
+          "AFC|person|undefined|Resolver error",
+          "ABR|GetPersonX",
+        ],
+        resultHasErrors: true,
+        isStrictHookCallsOrder: true,
+      },
+      {
         name: "error in async resolver for non-nullable field",
         document: `query GetFilm
         {

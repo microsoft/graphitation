@@ -23,7 +23,7 @@ import { isPromise } from "./jsutils/isPromise";
 import type { Maybe } from "./jsutils/Maybe";
 import type { ObjMap } from "./jsutils/ObjMap";
 import type { Path } from "./jsutils/Path";
-import { addPath, pathToArray } from "./jsutils/Path";
+import { addPath, pathToArray, pathToString } from "./jsutils/Path";
 import { promiseForObject } from "./jsutils/promiseForObject";
 import type { PromiseOrValue } from "./jsutils/PromiseOrValue";
 import { promiseReduce } from "./jsutils/promiseReduce";
@@ -121,7 +121,20 @@ export interface ExecutionContext {
   errors: Array<GraphQLError>;
   fieldExecutionHooks?: ExecutionHooks;
   subsequentPayloads: Set<IncrementalDataRecord>;
+  hookCallMap: Map<string, Set<HookName>>;
+  hookContextMap: Map<
+    string,
+    {
+      resolveInfo: ResolveInfo;
+      hookContext: unknown;
+    }
+  >;
 }
+
+type HookName =
+  | "beforeFieldResolve"
+  | "afterFieldResolve"
+  | "afterFieldComplete";
 
 /**
  * Implements the "Executing requests" section of the GraphQL specification.
@@ -259,6 +272,8 @@ function buildExecutionContext(
     errors: [],
     fieldExecutionHooks,
     subsequentPayloads: new Set(),
+    hookCallMap: new Map(),
+    hookContextMap: new Map(),
   };
 }
 
@@ -676,8 +691,28 @@ function executeSubscriptionImpl(
   );
 
   const isDefaultResolverUsed = resolveFn === exeContext.subscribeFieldResolver;
-  const hooks = exeContext.fieldExecutionHooks;
-  let hookContext: unknown = undefined;
+
+  const fieldKey = pathToString(info.path);
+  exeContext.hookCallMap.set(fieldKey, new Set());
+  exeContext.hookContextMap.set(fieldKey, {
+    resolveInfo: info,
+    hookContext: undefined,
+  });
+
+  const handleError = (rawError: unknown) => {
+    const pathArray = pathToArray(path);
+    const error = locatedError(rawError, fieldGroup, pathArray);
+
+    if (!isDefaultResolverUsed) {
+      invokeAfterFieldResolveHook(info, exeContext, undefined, error);
+    }
+
+    // clean up hook related data
+    exeContext.hookCallMap.delete(fieldKey);
+    exeContext.hookContextMap.delete(fieldKey);
+
+    throw error;
+  };
 
   try {
     // Implements the "ResolveFieldEventStream" algorithm from GraphQL specification.
@@ -692,68 +727,27 @@ function executeSubscriptionImpl(
     // used to represent an authenticated user, or request-specific caches.
     const contextValue = exeContext.contextValue;
 
-    if (!isDefaultResolverUsed && hooks?.beforeFieldResolve) {
-      hookContext = invokeBeforeFieldResolveHook(info, exeContext);
-    }
+    const result = pipe(
+      () =>
+        isDefaultResolverUsed
+          ? true // skip beforeFieldResolve hook for default resolver
+          : invokeBeforeFieldResolveHook(info, exeContext),
+      () => resolveFn(rootValue, args, contextValue, info),
+      assertEventStream,
+      (resolved) =>
+        isDefaultResolverUsed
+          ? resolved
+          : pipe(
+              () => invokeAfterFieldResolveHook(info, exeContext, resolved),
+              () => resolved,
+            ),
+    );
 
-    // Call the `subscribe()` resolver or the default resolver to produce an
-    // AsyncIterable yielding raw payloads.
-    const result = isPromise(hookContext)
-      ? hookContext.then((context) => {
-          hookContext = context;
-          return resolveFn(rootValue, args, contextValue, info);
-        })
-      : resolveFn(rootValue, args, contextValue, info);
-
-    if (isPromise(result)) {
-      return result.then(assertEventStream).then(
-        (resolved) => {
-          if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-            hookContext = invokeAfterFieldResolveHook(
-              info,
-              exeContext,
-              hookContext,
-              resolved,
-            );
-          }
-          return resolved;
-        },
-        (error) => {
-          if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-            hookContext = invokeAfterFieldResolveHook(
-              info,
-              exeContext,
-              hookContext,
-              undefined,
-              error,
-            );
-          }
-          throw locatedError(error, fieldGroup, pathToArray(path));
-        },
-      );
-    }
-
-    const stream = assertEventStream(result);
-    if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-      hookContext = invokeAfterFieldResolveHook(
-        info,
-        exeContext,
-        hookContext,
-        stream,
-      );
-    }
-    return stream;
+    return isPromise(result)
+      ? result.then(assertEventStream).catch(handleError)
+      : assertEventStream(result);
   } catch (error) {
-    if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-      hookContext = invokeAfterFieldResolveHook(
-        info,
-        exeContext,
-        hookContext,
-        undefined,
-        error,
-      );
-    }
-    throw locatedError(error, fieldGroup, pathToArray(path));
+    return handleError(error);
   }
 }
 
@@ -932,162 +926,59 @@ function resolveAndCompleteField(
 
   const isDefaultResolverUsed =
     resolveFn === exeContext.fieldResolver || fieldName === "__typename";
-  const hooks = exeContext.fieldExecutionHooks;
-  let hookContext: unknown = undefined;
 
-  //  the resolve function, regardless of if its result is normal or abrupt (error).
-  try {
-    // Build a JS object of arguments from the field.arguments AST, using the
-    // variables scope to fulfill any variable references.
-    // TODO: find a way to memoize, in case this field is within a List type.
-    const args = getArgumentValues(exeContext, fieldDefinition, fieldGroup[0]);
+  const fieldKey = pathToString(info.path);
+  if (!isDefaultResolverUsed) {
+    exeContext.hookCallMap.set(fieldKey, new Set());
+    exeContext.hookContextMap.set(fieldKey, {
+      resolveInfo: info,
+      hookContext: undefined,
+    });
+  }
 
-    // The resolve function's optional third argument is a context value that
-    // is provided to every resolve function within an execution. It is commonly
-    // used to represent an authenticated user, or request-specific caches.
-    const contextValue = exeContext.contextValue;
-
-    if (!isDefaultResolverUsed && hooks?.beforeFieldResolve) {
-      hookContext = invokeBeforeFieldResolveHook(info, exeContext);
-    }
-
-    const result = isPromise(hookContext)
-      ? hookContext.then((context) => {
-          hookContext = context;
-          return resolveFn(source, args, contextValue, info);
-        })
-      : resolveFn(source, args, contextValue, info);
-    let completed;
-
-    if (isPromise(result)) {
-      completed = result.then(
-        (resolved) => {
-          if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-            hookContext = invokeAfterFieldResolveHook(
-              info,
-              exeContext,
-              hookContext,
-              resolved,
-            );
-          }
-          return completeValue(
-            exeContext,
-            returnTypeRef,
-            fieldGroup,
-            info,
-            path,
-            resolved,
-            incrementalDataRecord,
-          );
-        },
-        (rawError) => {
-          // That's where afterResolve hook can only be called
-          // in the case of async resolver promise rejection.
-          if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-            hookContext = invokeAfterFieldResolveHook(
-              info,
-              exeContext,
-              hookContext,
-              undefined,
-              rawError,
-            );
-          }
-          // Error will be handled on field completion
-          throw rawError;
-        },
-      );
-    } else {
-      if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-        hookContext = invokeAfterFieldResolveHook(
-          info,
-          exeContext,
-          hookContext,
-          result,
-        );
-      }
-      completed = completeValue(
-        exeContext,
-        returnTypeRef,
-        fieldGroup,
-        info,
-        path,
-        result,
-        incrementalDataRecord,
-      );
-    }
-
-    if (isPromise(completed)) {
-      // Note: we don't rely on a `catch` method, but we do expect "thenable"
-      // to take a second callback for the error case.
-      return completed.then(
-        (resolved) => {
-          if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
-            invokeAfterFieldCompleteHook(
-              info,
-              exeContext,
-              hookContext,
-              resolved,
-            );
-          }
-          return resolved;
-        },
-        (rawError) => {
-          const error = locatedError(rawError, fieldGroup, pathToArray(path));
-          if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
-            invokeAfterFieldCompleteHook(
-              info,
-              exeContext,
-              hookContext,
-              undefined,
-              error,
-            );
-          }
-          handleFieldError(
-            rawError,
-            exeContext,
-            returnTypeRef,
-            fieldGroup,
-            path,
-            incrementalDataRecord,
-          );
-          return null;
-        },
-      );
-    }
-    if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
-      invokeAfterFieldCompleteHook(info, exeContext, hookContext, completed);
-    }
-    return completed;
-  } catch (rawError) {
+  const handleError = (rawError: unknown) => {
     const pathArray = pathToArray(path);
     const error = locatedError(rawError, fieldGroup, pathArray);
+
+    const hookContextMap = exeContext.hookContextMap;
+    for (const [hookKey, { resolveInfo }] of hookContextMap.entries()) {
+      if (hookKey.startsWith(fieldKey) && hookKey !== fieldKey) {
+        const siblingError = locatedError(
+          new Error(`Sibling non-nullable field threw: "${error.message}"`),
+          resolveInfo.fieldNodes,
+          pathToArray(resolveInfo.path),
+        );
+        // Call resolve/complete hooks for all the nested fields, or they might be called too late
+        invokeAfterFieldResolveHook(
+          resolveInfo,
+          exeContext,
+          undefined,
+          siblingError,
+        );
+        invokeAfterFieldCompleteHook(
+          resolveInfo,
+          exeContext,
+          undefined,
+          siblingError,
+        );
+      }
+    }
+
     // Do not invoke afterFieldResolve hook when error path and current field path are not equal:
     // it means that field itself resolved fine (so afterFieldResolve has been invoked already),
     // but non-nullable child field resolving throws an error,
     // so that error is propagated to the parent field according to spec
     if (
       !isDefaultResolverUsed &&
-      hooks?.afterFieldResolve &&
       error.path &&
       arraysAreEqual(pathArray, error.path)
     ) {
-      hookContext = invokeAfterFieldResolveHook(
-        info,
-        exeContext,
-        hookContext,
-        undefined,
-        error,
-      );
+      invokeAfterFieldResolveHook(info, exeContext, undefined, error);
     }
-    if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
-      invokeAfterFieldCompleteHook(
-        info,
-        exeContext,
-        hookContext,
-        undefined,
-        error,
-      );
+    if (!isDefaultResolverUsed) {
+      invokeAfterFieldCompleteHook(info, exeContext, undefined, error);
     }
+
     handleFieldError(
       rawError,
       exeContext,
@@ -1096,7 +987,61 @@ function resolveAndCompleteField(
       path,
       incrementalDataRecord,
     );
+
+    // clean up hook related data
+    exeContext.hookCallMap.delete(fieldKey);
+    exeContext.hookContextMap.delete(fieldKey);
     return null;
+  };
+
+  //  the resolve function, regardless of if its result is normal or abrupt (error).
+  try {
+    // Build a JS object of arguments from the field.arguments AST, using the
+    // variables scope to fulfill any variable references.
+    // TODO: find a way to memoize, in case this field is within a List type.
+    // FIXME: this could cause beforeFieldResolve hook not called
+    const args = getArgumentValues(exeContext, fieldDefinition, fieldGroup[0]);
+
+    // The resolve function's optional third argument is a context value that
+    // is provided to every resolve function within an execution. It is commonly
+    // used to represent an authenticated user, or request-specific caches.
+    const contextValue = exeContext.contextValue;
+
+    const result = pipe(
+      () =>
+        isDefaultResolverUsed
+          ? true // skip beforeFieldResolve hook for default resolver
+          : invokeBeforeFieldResolveHook(info, exeContext),
+      () => resolveFn(source, args, contextValue, info),
+      (resolved) =>
+        isDefaultResolverUsed
+          ? resolved
+          : pipe(
+              () => invokeAfterFieldResolveHook(info, exeContext, resolved),
+              () => resolved,
+            ),
+      (resolved) =>
+        completeValue(
+          exeContext,
+          returnTypeRef,
+          fieldGroup,
+          info,
+          path,
+          resolved,
+          incrementalDataRecord,
+        ),
+      (completed) =>
+        isDefaultResolverUsed
+          ? completed
+          : pipe(
+              () => invokeAfterFieldCompleteHook(info, exeContext, completed),
+              () => completed,
+            ),
+    );
+
+    return isPromise(result) ? result.catch(handleError) : result;
+  } catch (rawError) {
+    return handleError(rawError);
   }
 }
 
@@ -1815,13 +1760,22 @@ function invokeBeforeFieldResolveHook(
   if (!hook) {
     return;
   }
+
   return executeSafe(
     () =>
       hook({
         resolveInfo,
         context: exeContext.contextValue,
       }),
-    (_, rawError) => {
+    (hookContext, rawError) => {
+      const fieldKey = pathToString(resolveInfo.path);
+      const hookName = "beforeFieldResolve";
+      exeContext.hookCallMap.get(fieldKey)?.add(hookName);
+      exeContext.hookContextMap.set(fieldKey, {
+        resolveInfo,
+        hookContext,
+      });
+
       if (rawError) {
         const error = toGraphQLError(
           rawError,
@@ -1837,7 +1791,6 @@ function invokeBeforeFieldResolveHook(
 function invokeAfterFieldResolveHook(
   resolveInfo: ResolveInfo,
   exeContext: ExecutionContext,
-  hookContext: unknown,
   result?: unknown,
   error?: unknown,
 ) {
@@ -1845,16 +1798,31 @@ function invokeAfterFieldResolveHook(
   if (!hook) {
     return;
   }
+
+  const fieldKey = pathToString(resolveInfo.path);
+  const hookName = "afterFieldResolve";
   return executeSafe(
-    () =>
-      hook({
+    () => {
+      if (exeContext.hookCallMap.get(fieldKey)?.has(hookName)) {
+        // afterFieldResolve hook for this field was already called
+        return;
+      }
+
+      return hook({
         resolveInfo,
         context: exeContext.contextValue,
-        hookContext,
+        hookContext: exeContext.hookContextMap.get(fieldKey)?.hookContext,
         result,
         error,
-      }),
-    (_, rawError) => {
+      });
+    },
+    (hookContext, rawError) => {
+      exeContext.hookCallMap.get(fieldKey)?.add(hookName);
+      exeContext.hookContextMap.set(fieldKey, {
+        resolveInfo,
+        hookContext,
+      });
+
       if (rawError) {
         const error = toGraphQLError(
           rawError,
@@ -1870,7 +1838,6 @@ function invokeAfterFieldResolveHook(
 function invokeAfterFieldCompleteHook(
   resolveInfo: ResolveInfo,
   exeContext: ExecutionContext,
-  hookContext: unknown,
   result?: unknown,
   error?: unknown,
 ): void {
@@ -1878,16 +1845,28 @@ function invokeAfterFieldCompleteHook(
   if (!hook) {
     return;
   }
+
+  const fieldKey = pathToString(resolveInfo.path);
+  const hookName = "afterFieldComplete";
   executeSafe(
-    () =>
-      hook({
+    () => {
+      if (exeContext.hookCallMap.get(fieldKey)?.has(hookName)) {
+        // complete hook was already called for this field, do not call it twice
+        return;
+      }
+
+      return hook({
         resolveInfo,
         context: exeContext.contextValue,
-        hookContext,
+        hookContext: exeContext.hookContextMap.get(fieldKey)?.hookContext,
         result,
         error,
-      }),
+      });
+    },
     (_, rawError) => {
+      exeContext.hookCallMap.get(fieldKey)?.add(hookName);
+      exeContext.hookContextMap.delete(fieldKey);
+
       if (rawError) {
         const error = toGraphQLError(
           rawError,
@@ -2513,6 +2492,7 @@ class DeferredFragmentRecord {
   isCompleted: boolean;
   _exeContext: ExecutionContext;
   _resolve?: (arg: PromiseOrValue<ObjMap<unknown> | null>) => void;
+
   constructor(opts: {
     label: string | undefined;
     path: Path | undefined;
@@ -2561,6 +2541,7 @@ class StreamItemsRecord {
   isCompleted: boolean;
   _exeContext: ExecutionContext;
   _resolve?: (arg: PromiseOrValue<Array<unknown> | null>) => void;
+
   constructor(opts: {
     label: string | undefined;
     path: Path | undefined;
@@ -2619,4 +2600,15 @@ export function isTotalExecutionResult<
   result: ExecutionResult<TData, TExtensions>,
 ): result is TotalExecutionResult<TData, TExtensions> {
   return !("initialResult" in result);
+}
+
+function pipe(
+  ...fns: Array<(prevResult: unknown) => PromiseOrValue<unknown>>
+): PromiseOrValue<unknown> {
+  let result: PromiseOrValue<unknown> | undefined;
+  for (const fn of fns) {
+    result = isPromise(result) ? result.then(fn) : fn(result);
+  }
+
+  return result;
 }

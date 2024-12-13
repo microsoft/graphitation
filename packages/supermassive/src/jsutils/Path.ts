@@ -31,3 +31,7 @@ export function pathToArray(
   }
   return flattened.reverse();
 }
+
+export function pathToString(path: Maybe<Readonly<Path>>): string {
+  return pathToArray(path).join(".");
+}
