@@ -21,7 +21,7 @@
     "beachball": "beachball -b origin/main",
     "change": "yarn beachball change",
     "checkchange": "yarn beachball check",
-    "release": "yarn beachball publish -t latest",
+    "release": "yarn beachball publish -t alpha",
     "postinstall": "patch-package"
   },
   "devDependencies": {
