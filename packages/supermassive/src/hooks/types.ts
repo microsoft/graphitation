@@ -1,4 +1,4 @@
-import type { OperationDefinitionNode } from "graphql";
+import type { GraphQLError, OperationDefinitionNode } from "graphql";
 import type { ResolveInfo, TotalExecutionResult } from "../types";
 
 interface BaseExecuteHookArgs<ResolveContext> {
@@ -16,6 +16,12 @@ export interface PostExecuteFieldHookArgs<ResolveContext, HookContext>
 }
 
 export interface AfterFieldResolveHookArgs<ResolveContext, HookContext>
+  extends PostExecuteFieldHookArgs<ResolveContext, HookContext> {
+  result?: unknown;
+  error?: unknown;
+}
+
+export interface AfterFieldSubscribeHookArgs<ResolveContext, HookContext>
   extends PostExecuteFieldHookArgs<ResolveContext, HookContext> {
   result?: unknown;
   error?: unknown;
@@ -48,7 +54,18 @@ export interface BeforeFieldResolveHook<
 > {
   (args: BaseExecuteFieldHookArgs<ResolveContext>):
     | Promise<BeforeHookContext>
-    | BeforeHookContext;
+    | BeforeHookContext
+    | GraphQLError;
+}
+
+export interface BeforeFieldSubscribe<
+  ResolveContext = unknown,
+  BeforeHookContext = unknown,
+> {
+  (args: BaseExecuteFieldHookArgs<ResolveContext>):
+    | Promise<BeforeHookContext>
+    | BeforeHookContext
+    | GraphQLError;
 }
 
 export interface AfterFieldResolveHook<
@@ -56,16 +73,28 @@ export interface AfterFieldResolveHook<
   BeforeHookContext = unknown,
   AfterHookContext = BeforeHookContext,
 > {
-  (
-    args: AfterFieldResolveHookArgs<ResolveContext, BeforeHookContext>,
-  ): AfterHookContext;
+  (args: AfterFieldResolveHookArgs<ResolveContext, BeforeHookContext>):
+    | AfterHookContext
+    | GraphQLError;
+}
+
+export interface AfterFieldSubscribe<
+  ResolveContext = unknown,
+  BeforeHookContext = unknown,
+  AfterHookContext = BeforeHookContext,
+> {
+  (args: AfterFieldSubscribeHookArgs<ResolveContext, BeforeHookContext>):
+    | AfterHookContext
+    | GraphQLError;
 }
 
 export interface AfterFieldCompleteHook<
   ResolveContext = unknown,
   AfterHookContext = unknown,
 > {
-  (args: AfterFieldCompleteHookArgs<ResolveContext, AfterHookContext>): void;
+  (
+    args: AfterFieldCompleteHookArgs<ResolveContext, AfterHookContext>,
+  ): void | GraphQLError;
 }
 
 export interface AfterBuildResponseHook<ResolveContext = unknown> {
@@ -73,13 +102,17 @@ export interface AfterBuildResponseHook<ResolveContext = unknown> {
 }
 
 export interface BeforeOperationExecuteHook<ResolveContext = unknown> {
-  (args: BaseExecuteOperationHookArgs<ResolveContext>): void | Promise<void>;
+  (args: BaseExecuteOperationHookArgs<ResolveContext>):
+    | void
+    | Promise<void>
+    | GraphQLError;
 }
 
 export interface BeforeSubscriptionEventEmitHook<ResolveContext = unknown> {
-  (
-    args: BeforeSubscriptionEventEmitHookArgs<ResolveContext>,
-  ): void | Promise<void>;
+  (args: BeforeSubscriptionEventEmitHookArgs<ResolveContext>):
+    | void
+    | Promise<void>
+    | GraphQLError;
 }
 
 export interface ExecutionHooks<
@@ -93,7 +126,16 @@ export interface ExecutionHooks<
     ResolveContext,
     BeforeHookContext
   >;
+  beforeFieldSubscribe?: BeforeFieldSubscribe<
+    ResolveContext,
+    BeforeHookContext
+  >;
   afterFieldResolve?: AfterFieldResolveHook<
+    ResolveContext,
+    BeforeHookContext,
+    AfterHookContext
+  >;
+  afterFieldSubscribe?: AfterFieldSubscribe<
     ResolveContext,
     BeforeHookContext,
     AfterHookContext
