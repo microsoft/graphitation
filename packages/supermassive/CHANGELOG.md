@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Wed, 06 Nov 2024 13:29:21 GMT and should not be manually modified. -->
+<!-- This log was last generated on Sun, 15 Dec 2024 19:04:32 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.8.0-alpha.1
+
+Sun, 15 Dec 2024 19:04:32 GMT
+
+### Changes
+
+- Supermassive hook error handling modified (77059398+vejrj@users.noreply.github.com)
 
 ## 3.7.0
 
