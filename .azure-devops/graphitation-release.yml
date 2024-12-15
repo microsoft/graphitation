@@ -2,6 +2,7 @@ pr: none
 trigger:
   - main
   - alloy/relay-apollo-duct-tape
+  - jvejr/supermassive-hooks-error-handling-alpha
 
 variables:
   - group: InfoSec-SecurityResults
