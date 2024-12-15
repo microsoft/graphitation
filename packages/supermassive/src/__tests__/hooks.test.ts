@@ -17,6 +17,7 @@ import type { UserResolvers, TotalExecutionResult } from "../types";
 import type {
   AfterFieldCompleteHookArgs,
   AfterFieldResolveHookArgs,
+  AfterFieldSubscribeHookArgs,
   BaseExecuteFieldHookArgs,
   BaseExecuteOperationHookArgs,
   BeforeSubscriptionEventEmitHookArgs,
@@ -136,6 +137,26 @@ describe.each([
             );
           },
         ),
+      afterFieldSubscribe: jest
+        .fn()
+        .mockImplementation(
+          ({
+            resolveInfo,
+            result,
+            error,
+          }: AfterFieldSubscribeHookArgs<unknown, unknown>) => {
+            const resultValue =
+              typeof result === "object" && result !== null
+                ? "[object]"
+                : result;
+            const errorMessage = error instanceof Error ? error.message : error;
+            hookCalls.push(
+              `AFS|${pathToArray(resolveInfo.path).join(
+                ".",
+              )}|${resultValue}|${errorMessage}`,
+            );
+          },
+        ),
       afterFieldComplete: jest
         .fn()
         .mockImplementation(
@@ -187,6 +208,13 @@ describe.each([
             hookCalls.push(`BFR|${pathToArray(resolveInfo.path).join(".")}`);
           },
         ),
+      beforeFieldSubscribe: jest
+        .fn()
+        .mockImplementation(
+          ({ resolveInfo }: BaseExecuteFieldHookArgs<unknown>) => {
+            hookCalls.push(`BFS|${pathToArray(resolveInfo.path).join(".")}`);
+          },
+        ),
     };
 
     const asyncBeforeHooks: ExecutionHooks = {
@@ -194,7 +222,7 @@ describe.each([
         .fn()
         .mockImplementation(
           async ({ operation }: BaseExecuteOperationHookArgs<unknown>) => {
-            hookCalls.push(`BOE|${operation.name?.value}`);
+            hookCalls.push(`ABOE|${operation.name?.value}`);
           },
         ),
       beforeSubscriptionEventEmit: jest
@@ -205,7 +233,7 @@ describe.each([
             eventPayload,
           }: BeforeSubscriptionEventEmitHookArgs<unknown>) => {
             hookCalls.push(
-              `BSE|${operation.name?.value}|${
+              `ABSE|${operation.name?.value}|${
                 (eventPayload as any).emitPersons.name
               }`,
             );
@@ -215,7 +243,14 @@ describe.each([
         .fn()
         .mockImplementation(
           async ({ resolveInfo }: BaseExecuteFieldHookArgs<unknown>) => {
-            hookCalls.push(`BFR|${pathToArray(resolveInfo.path).join(".")}`);
+            hookCalls.push(`ABFR|${pathToArray(resolveInfo.path).join(".")}`);
+          },
+        ),
+      beforeFieldSubscribe: jest
+        .fn()
+        .mockImplementation(
+          async ({ resolveInfo }: BaseExecuteFieldHookArgs<unknown>) => {
+            hookCalls.push(`ABFR|${pathToArray(resolveInfo.path).join(".")}`);
           },
         ),
     };
@@ -478,8 +513,8 @@ describe.each([
         resolvers: resolvers as UserResolvers,
         expectedHookCalls: [
           "BOE|EmitPersons",
-          "BFR|emitPersons",
-          "AFR|emitPersons|[object]|undefined",
+          "BFS|emitPersons",
+          "AFS|emitPersons|[object]|undefined",
           "BSE|EmitPersons|Luke Skywalker",
           "ABR|EmitPersons",
           "BSE|EmitPersons|C-3PO",
@@ -513,8 +548,8 @@ describe.each([
         },
         expectedHookCalls: [
           "BOE|EmitPersons",
-          "BFR|emitPersons",
-          "AFR|emitPersons|undefined|Subscribe error",
+          "BFS|emitPersons",
+          "AFS|emitPersons|undefined|Subscribe error",
         ],
         resultHasErrors: true,
         isStrictHookCallsOrder: true,
@@ -546,8 +581,8 @@ describe.each([
         },
         expectedHookCalls: [
           "BOE|EmitPersons",
-          "BFR|emitPersons",
-          "AFR|emitPersons|undefined|Subscribe error",
+          "BFS|emitPersons",
+          "AFS|emitPersons|undefined|Subscribe error",
         ],
         resultHasErrors: true,
         isStrictHookCallsOrder: true,
@@ -572,10 +607,10 @@ describe.each([
           },
         } as UserResolvers,
         expectedHookCalls: [
-          "BOE|GetPerson",
-          "BFR|person",
+          "ABOE|GetPerson",
+          "ABFR|person",
           "AFR|person|[object]|undefined",
-          "BFR|person.name",
+          "ABFR|person.name",
           "AFR|person.name|Luke Skywalker|undefined",
           "AFC|person.name|Luke Skywalker|undefined",
           "AFC|person|[object]|undefined",
@@ -601,10 +636,10 @@ describe.each([
           },
         } as UserResolvers,
         expectedHookCalls: [
-          "BOE|GetPerson",
-          "BFR|person",
+          "ABOE|GetPerson",
+          "ABFR|person",
           "AFR|person|[object]|undefined",
-          "BFR|person.name",
+          "ABFR|person.name",
           "AFR|person.name|Luke Skywalker|undefined",
           "AFC|person.name|Luke Skywalker|undefined",
           "AFC|person|[object]|undefined",
@@ -630,10 +665,10 @@ describe.each([
           },
         } as UserResolvers,
         expectedHookCalls: [
-          "BOE|GetFilm",
-          "BFR|film",
+          "ABOE|GetFilm",
+          "ABFR|film",
           "AFR|film|[object]|undefined",
-          "BFR|film.producer",
+          "ABFR|film.producer",
           "AFR|film.producer|undefined|Resolver error",
           "AFC|film.producer|undefined|Resolver error",
           "AFC|film|[object]|undefined",
@@ -659,10 +694,10 @@ describe.each([
           },
         } as UserResolvers,
         expectedHookCalls: [
-          "BOE|GetFilm",
-          "BFR|film",
+          "ABOE|GetFilm",
+          "ABFR|film",
           "AFR|film|[object]|undefined",
-          "BFR|film.producer",
+          "ABFR|film.producer",
           "AFR|film.producer|undefined|Resolver error",
           "AFC|film.producer|undefined|Resolver error",
           "AFC|film|[object]|undefined",
@@ -688,10 +723,10 @@ describe.each([
           },
         } as UserResolvers,
         expectedHookCalls: [
-          "BOE|GetFilm",
-          "BFR|film",
+          "ABOE|GetFilm",
+          "ABFR|film",
           "AFR|film|[object]|undefined",
-          "BFR|film.title",
+          "ABFR|film.title",
           "AFR|film.title|undefined|Resolver error",
           "AFC|film.title|undefined|Resolver error",
           "AFC|film|undefined|Resolver error",
@@ -717,10 +752,10 @@ describe.each([
           },
         } as UserResolvers,
         expectedHookCalls: [
-          "BOE|GetFilm",
-          "BFR|film",
+          "ABOE|GetFilm",
+          "ABFR|film",
           "AFR|film|[object]|undefined",
-          "BFR|film.title",
+          "ABFR|film.title",
           "AFR|film.title|undefined|Resolver error",
           "AFC|film.title|undefined|Resolver error",
           "AFC|film|undefined|Resolver error",
@@ -739,8 +774,8 @@ describe.each([
         }`,
         resolvers: resolvers as UserResolvers,
         expectedHookCalls: [
-          "BOE|GetFilm",
-          "BFR|film",
+          "ABOE|GetFilm",
+          "ABFR|film",
           "AFR|film|[object]|undefined",
           "AFC|film|[object]|undefined",
           "ABR|GetFilm",
@@ -759,8 +794,8 @@ describe.each([
         }`,
         resolvers: resolvers as UserResolvers,
         expectedHookCalls: [
-          "BOE|GetFilm",
-          "BFR|film",
+          "ABOE|GetFilm",
+          "ABFR|film",
           "AFR|film|[object]|undefined",
           "AFC|film|[object]|undefined",
           "ABR|GetFilm",
@@ -781,9 +816,9 @@ describe.each([
         }`,
         resolvers: resolvers as UserResolvers,
         expectedHookCalls: [
-          "BOE|GetFilmAndPerson",
-          "BFR|film",
-          "BFR|person",
+          "ABOE|GetFilmAndPerson",
+          "ABFR|film",
+          "ABFR|person",
           "AFR|film|[object]|undefined",
           "AFR|person|[object]|undefined",
           "AFC|film|[object]|undefined",
@@ -806,14 +841,14 @@ describe.each([
         },
         resolvers: resolvers as UserResolvers,
         expectedHookCalls: [
-          "BOE|EmitPersons",
-          "BFR|emitPersons",
-          "AFR|emitPersons|[object]|undefined",
-          "BSE|EmitPersons|Luke Skywalker",
+          "ABOE|EmitPersons",
+          "ABFR|emitPersons",
+          "AFS|emitPersons|[object]|undefined",
+          "ABSE|EmitPersons|Luke Skywalker",
           "ABR|EmitPersons",
-          "BSE|EmitPersons|C-3PO",
+          "ABSE|EmitPersons|C-3PO",
           "ABR|EmitPersons",
-          "BSE|EmitPersons|R2-D2",
+          "ABSE|EmitPersons|R2-D2",
           "ABR|EmitPersons",
         ],
         resultHasErrors: false,
@@ -841,9 +876,9 @@ describe.each([
           limit: 1,
         },
         expectedHookCalls: [
-          "BOE|EmitPersons",
-          "BFR|emitPersons",
-          "AFR|emitPersons|undefined|Subscribe error",
+          "ABOE|EmitPersons",
+          "ABFR|emitPersons",
+          "AFS|emitPersons|undefined|Subscribe error",
         ],
         resultHasErrors: true,
         isStrictHookCallsOrder: true,
@@ -874,9 +909,9 @@ describe.each([
           limit: 1,
         },
         expectedHookCalls: [
-          "BOE|EmitPersons",
-          "BFR|emitPersons",
-          "AFR|emitPersons|undefined|Subscribe error",
+          "ABOE|EmitPersons",
+          "ABFR|emitPersons",
+          "AFS|emitPersons|undefined|Subscribe error",
         ],
         resultHasErrors: true,
         isStrictHookCallsOrder: true,
@@ -981,11 +1016,15 @@ describe.each([
               .fn()
               .mockImplementation(
                 ({ resolveInfo }: BaseExecuteFieldHookArgs<unknown>) => {
+                  if (resolveInfo.fieldName === "film") {
+                    hookCalls.push(
+                      `ABFR|${pathToArray(resolveInfo.path).join(".")}`,
+                    );
+                    return Promise.resolve();
+                  }
                   hookCalls.push(
                     `BFR|${pathToArray(resolveInfo.path).join(".")}`,
                   );
-                  if (resolveInfo.fieldName === "film")
-                    return Promise.resolve();
                   return;
                 },
               ),
@@ -997,8 +1036,8 @@ describe.each([
       );
 
       const expectedHookCalls = [
-        "BOE|GetFilmAndPerson",
-        "BFR|film",
+        "ABOE|GetFilmAndPerson",
+        "ABFR|film",
         "BFR|person",
         "AFR|person|[object]|undefined",
         "AFC|person|[object]|undefined",
@@ -1016,7 +1055,229 @@ describe.each([
     });
   });
 
-  describe("Error thrown in the hook doesn't break execution and is returned in response 'errors'", () => {
+  describe("error in subscription is thrown", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    const testCases: Array<HookExceptionTestCase> = [
+      {
+        name: "beforeSubscriptionEventEmit (Error is thrown)",
+        document: `subscription EmitPersons($limit: Int!)
+        {
+          emitPersons(limit: $limit) {
+            name
+          }
+        }`,
+        variables: {
+          limit: 1,
+        },
+        hooks: {
+          beforeSubscriptionEventEmit: jest.fn().mockImplementation(() => {
+            throw new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in beforeSubscriptionEventEmit hook: Hook error",
+      },
+      {
+        name: "async beforeSubscriptionEventEmit (Error is thrown)",
+        document: `subscription EmitPersons($limit: Int!)
+        {
+          emitPersons(limit: $limit) {
+            name
+          }
+        }`,
+        variables: {
+          limit: 1,
+        },
+        hooks: {
+          beforeSubscriptionEventEmit: jest
+            .fn()
+            .mockImplementation(async () => {
+              throw new Error("Hook error");
+            }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in beforeSubscriptionEventEmit hook: Hook error",
+      },
+    ];
+
+    it.each(testCases)(
+      "$name",
+      async ({ document, hooks, expectedErrorMessage, variables }) => {
+        expect.assertions(5);
+        const parsedDocument = parse(document);
+
+        const response = await drainExecution(
+          await execute(
+            parsedDocument,
+            resolvers as UserResolvers,
+            hooks,
+            variables,
+          ),
+        );
+        const result = Array.isArray(response) ? response[0] : response;
+
+        expect(isTotalExecutionResult(result)).toBe(true);
+
+        const errors = result.errors;
+        expect(result.data).toBeNull();
+        expect(errors).toBeDefined();
+        expect(errors).toHaveLength(1);
+        expect(errors?.[0].message).toBe(expectedErrorMessage);
+      },
+    );
+  });
+
+  describe("Error in subscription during creating event stream", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    const testCases: Array<HookExceptionTestCase> = [
+      {
+        name: "beforeFieldSubscribe (Error is returned)",
+        document: `subscription EmitPersons($limit: Int!)
+        {
+          emitPersons(limit: $limit) {
+            name
+          }
+        }`,
+        variables: {
+          limit: 1,
+        },
+        hooks: {
+          beforeFieldSubscribe: jest.fn().mockImplementation(() => {
+            return new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in beforeFieldSubscribe hook: Hook error",
+      },
+      {
+        name: "afterFieldSubscribe (Error is returned)",
+        document: `subscription EmitPersons($limit: Int!)
+        {
+          emitPersons(limit: $limit) {
+            name
+          }
+        }`,
+        variables: {
+          limit: 1,
+        },
+        hooks: {
+          afterFieldSubscribe: jest.fn().mockImplementation(() => {
+            return new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in afterFieldSubscribe hook: Hook error",
+      },
+      {
+        name: "beforeFieldSubscribe (Error is thrown)",
+        document: `subscription EmitPersons($limit: Int!)
+        {
+          emitPersons(limit: $limit) {
+            name
+          }
+        }`,
+        variables: {
+          limit: 1,
+        },
+        hooks: {
+          beforeFieldSubscribe: jest.fn().mockImplementation(() => {
+            throw new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in beforeFieldSubscribe hook: Hook error",
+      },
+      {
+        name: "beforeFieldSubscribe (string is thrown)",
+        document: `subscription EmitPersons($limit: Int!)
+        {
+          emitPersons(limit: $limit) {
+            name
+          }
+        }`,
+        variables: {
+          limit: 1,
+        },
+        hooks: {
+          beforeFieldSubscribe: jest.fn().mockImplementation(() => {
+            throw "Hook error";
+          }),
+        },
+        expectedErrorMessage:
+          'Unexpected error in beforeFieldSubscribe hook: "Hook error"',
+      },
+      {
+        name: "afterFieldSubscribe (Error is thrown)",
+        document: `subscription EmitPersons($limit: Int!)
+        {
+          emitPersons(limit: $limit) {
+            name
+          }
+        }`,
+        variables: {
+          limit: 1,
+        },
+        hooks: {
+          afterFieldSubscribe: jest.fn().mockImplementation(() => {
+            throw new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in afterFieldSubscribe hook: Hook error",
+      },
+      {
+        name: "afterFieldSubscribe (string is thrown)",
+        document: `subscription EmitPersons($limit: Int!)
+        {
+          emitPersons(limit: $limit) {
+            name
+          }
+        }`,
+        variables: {
+          limit: 1,
+        },
+        hooks: {
+          afterFieldSubscribe: jest.fn().mockImplementation(() => {
+            throw "Hook error";
+          }),
+        },
+        expectedErrorMessage:
+          'Unexpected error in afterFieldSubscribe hook: "Hook error"',
+      },
+    ];
+
+    it.each(testCases)(
+      "$name",
+      async ({ document, hooks, expectedErrorMessage, variables }) => {
+        expect.assertions(5);
+        const parsedDocument = parse(document);
+
+        const response = await drainExecution(
+          await execute(
+            parsedDocument,
+            resolvers as UserResolvers,
+            hooks,
+            variables,
+          ),
+        );
+        const result = Array.isArray(response) ? response[0] : response;
+        expect(isTotalExecutionResult(result)).toBe(true);
+        const errors = result.errors;
+        expect(result.data).toBeUndefined();
+        expect(errors).toBeDefined();
+        expect(errors).toHaveLength(1);
+        expect(errors?.[0].message).toBe(expectedErrorMessage);
+      },
+    );
+  });
+
+  describe("Error is thrown by hooks during field resolution", () => {
     beforeEach(() => {
       jest.clearAllMocks();
     });
@@ -1118,6 +1379,122 @@ describe.each([
         expectedErrorMessage:
           'Unexpected error in afterFieldComplete hook: "Hook error"',
       },
+    ];
+
+    it.each(testCases)(
+      "$name",
+      async ({ document, hooks, expectedErrorMessage, variables }) => {
+        expect.assertions(5);
+        const parsedDocument = parse(document);
+
+        const response = await drainExecution(
+          await execute(
+            parsedDocument,
+            resolvers as UserResolvers,
+            hooks,
+            variables,
+          ),
+        );
+        const result = Array.isArray(response) ? response[0] : response;
+
+        expect(isTotalExecutionResult(result)).toBe(true);
+        const errors = result.errors;
+
+        expect(result.data.film).toBeNull();
+        expect(errors).toBeDefined();
+        expect(errors).toHaveLength(1);
+        expect(errors?.[0].message).toBe(expectedErrorMessage);
+      },
+    );
+  });
+
+  describe("Error is returned by hooks during field resolution", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    const testCases: Array<HookExceptionTestCase> = [
+      {
+        name: "beforeFieldResolve (Error is returned)",
+        document: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        hooks: {
+          beforeFieldResolve: jest.fn().mockImplementation(() => {
+            return new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in beforeFieldResolve hook: Hook error",
+      },
+      {
+        name: "afterFieldResolve (Error is returned)",
+        document: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        hooks: {
+          afterFieldResolve: jest.fn().mockImplementation(() => {
+            return new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in afterFieldResolve hook: Hook error",
+      },
+      {
+        name: "afterFieldComplete (Error is returned)",
+        document: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        hooks: {
+          afterFieldComplete: jest.fn().mockImplementation(() => {
+            return new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in afterFieldComplete hook: Hook error",
+      },
+    ];
+
+    it.each(testCases)(
+      "$name",
+      async ({ document, hooks, expectedErrorMessage, variables }) => {
+        expect.assertions(5);
+        const parsedDocument = parse(document);
+
+        const response = await drainExecution(
+          await execute(
+            parsedDocument,
+            resolvers as UserResolvers,
+            hooks,
+            variables,
+          ),
+        );
+        const result = Array.isArray(response) ? response[0] : response;
+        expect(isTotalExecutionResult(result)).toBe(true);
+        const errors = result.errors;
+        expect(result.data.film).not.toBeNull();
+        expect(errors).toBeDefined();
+        expect(errors).toHaveLength(1);
+        expect(errors?.[0].message).toBe(expectedErrorMessage);
+      },
+    );
+  });
+
+  describe("Error thrown in the BEFORE OPERATION hook breaks execution", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    const testCases: Array<HookExceptionTestCase> = [
       {
         name: "beforeOperationExecute (Error is thrown)",
         document: `
@@ -1150,8 +1527,35 @@ describe.each([
         expectedErrorMessage:
           'Unexpected error in beforeOperationExecute hook: "Hook error"',
       },
+    ];
+
+    it.each(testCases)(
+      "$name",
+      async ({ document, hooks, expectedErrorMessage, variables }) => {
+        expect.assertions(1);
+        const parsedDocument = parse(document);
+
+        await expect(async function () {
+          const result = await execute(
+            parsedDocument,
+            resolvers as UserResolvers,
+            hooks,
+            variables,
+          );
+          return drainExecution(result);
+        }).rejects.toThrow(expectedErrorMessage);
+      },
+    );
+  });
+
+  describe("Error returned in the hook doesn't break execution and is returned in response 'errors'", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    const testCases: Array<HookExceptionTestCase> = [
       {
-        name: "afterBuildResponse (Error is thrown)",
+        name: "beforeFieldResolve (Error is thrown)",
         document: `
         {
           film(id: 1) {
@@ -1159,15 +1563,15 @@ describe.each([
           }
         }`,
         hooks: {
-          afterBuildResponse: jest.fn().mockImplementation(() => {
-            throw new Error("Hook error");
+          beforeFieldResolve: jest.fn().mockImplementation(() => {
+            return new Error("Hook error");
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in afterBuildResponse hook: Hook error",
+          "Unexpected error in beforeFieldResolve hook: Hook error",
       },
       {
-        name: "afterBuildResponse (string is thrown)",
+        name: "afterFieldResolve (Error is thrown)",
         document: `
         {
           film(id: 1) {
@@ -1175,12 +1579,28 @@ describe.each([
           }
         }`,
         hooks: {
-          afterBuildResponse: jest.fn().mockImplementation(() => {
-            throw "Hook error";
+          afterFieldResolve: jest.fn().mockImplementation(() => {
+            return new Error("Hook error");
           }),
         },
         expectedErrorMessage:
-          'Unexpected error in afterBuildResponse hook: "Hook error"',
+          "Unexpected error in afterFieldResolve hook: Hook error",
+      },
+      {
+        name: "afterFieldComplete (Error is thrown)",
+        document: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        hooks: {
+          afterFieldComplete: jest.fn().mockImplementation(() => {
+            return new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in afterFieldComplete hook: Hook error",
       },
       {
         name: "beforeSubscriptionEventEmit (Error is thrown)",
@@ -1195,30 +1615,11 @@ describe.each([
         },
         hooks: {
           beforeSubscriptionEventEmit: jest.fn().mockImplementation(() => {
-            throw new Error("Hook error");
+            return new Error("Hook error");
           }),
         },
         expectedErrorMessage:
           "Unexpected error in beforeSubscriptionEventEmit hook: Hook error",
-      },
-      {
-        name: "beforeSubscriptionEventEmit (string is thrown)",
-        document: `subscription EmitPersons($limit: Int!)
-        {
-          emitPersons(limit: $limit) {
-            name
-          }
-        }`,
-        variables: {
-          limit: 1,
-        },
-        hooks: {
-          beforeSubscriptionEventEmit: jest.fn().mockImplementation(() => {
-            throw "Hook error";
-          }),
-        },
-        expectedErrorMessage:
-          'Unexpected error in beforeSubscriptionEventEmit hook: "Hook error"',
       },
       {
         name: "async beforeSubscriptionEventEmit (Error is thrown)",
@@ -1235,32 +1636,11 @@ describe.each([
           beforeSubscriptionEventEmit: jest
             .fn()
             .mockImplementation(async () => {
-              throw new Error("Hook error");
+              return new Error("Hook error");
             }),
         },
         expectedErrorMessage:
           "Unexpected error in beforeSubscriptionEventEmit hook: Hook error",
-      },
-      {
-        name: "async beforeSubscriptionEventEmit (string is thrown)",
-        document: `subscription EmitPersons($limit: Int!)
-        {
-          emitPersons(limit: $limit) {
-            name
-          }
-        }`,
-        variables: {
-          limit: 1,
-        },
-        hooks: {
-          beforeSubscriptionEventEmit: jest
-            .fn()
-            .mockImplementation(async () => {
-              throw "Hook error";
-            }),
-        },
-        expectedErrorMessage:
-          'Unexpected error in beforeSubscriptionEventEmit hook: "Hook error"',
       },
     ];
 
