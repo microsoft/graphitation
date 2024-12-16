@@ -130,6 +130,7 @@ type Person implements Node {
   films: [Film]
   bubblingError: String
   bubblingListError: [String!]
+  xField: String!
 }
 
 type Starship implements Node {
