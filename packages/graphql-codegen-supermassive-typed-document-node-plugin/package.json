@@ -29,7 +29,7 @@
     "@graphql-codegen/visitor-plugin-common": ">= ^1.17.0 < 2",
     "graphql-tag": ">= 2.11.0 < 3",
     "@graphql-tools/optimize": "^1.0.1",
-    "@graphitation/supermassive": "^3.7.2"
+    "@graphitation/supermassive": "^3.8.0-alpha.2"
   },
   "sideEffects": false,
   "access": "public",
