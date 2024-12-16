@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Mon, 16 Dec 2024 15:39:40 GMT",
+      "version": "3.7.2",
+      "tag": "@graphitation/supermassive_v3.7.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "ee1921d3baa1132ac27dd20f4e38f98167064319",
+            "comment": "fix hook execution order when non-nullable field throws"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 06 Nov 2024 18:17:58 GMT",
       "version": "3.7.0",
       "tag": "@graphitation/supermassive_v3.7.0",

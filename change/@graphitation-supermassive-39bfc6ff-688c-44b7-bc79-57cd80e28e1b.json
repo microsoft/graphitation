@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "fix hook execution order when non-nullable field throws",
-  "packageName": "@graphitation/supermassive",
-  "email": "dsamsonov@microsoft.com",
-  "dependentChangeType": "patch"
-}

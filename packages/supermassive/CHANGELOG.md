@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Wed, 06 Nov 2024 13:29:21 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 16 Dec 2024 15:39:40 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.7.2
+
+Mon, 16 Dec 2024 15:39:40 GMT
+
+### Patches
+
+- fix hook execution order when non-nullable field throws (dsamsonov@microsoft.com)
 
 ## 3.7.0
 
