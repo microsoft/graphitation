@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape-compiler
 
-<!-- This log was last generated on Fri, 13 Dec 2024 20:53:56 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 16 Dec 2024 10:30:04 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.6.10
+
+Mon, 16 Dec 2024 10:30:04 GMT
+
+### Patches
+
+- new error when trying to merge scalar with object (pavelglac@microsoft.com)
 
 ## 1.6.9
 
