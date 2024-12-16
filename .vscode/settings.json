@@ -1,5 +1,6 @@
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
-  "cSpell.words": ["Daichi", "fukuda", "Kadji"]
+  "cSpell.words": ["Daichi", "fukuda", "Kadji"],
+  "jestrunner.configPath": "scripts/config/jest.config.js"
 }

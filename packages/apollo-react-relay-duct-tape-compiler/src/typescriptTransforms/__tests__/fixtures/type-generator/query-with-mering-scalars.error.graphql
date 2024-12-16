@@ -1,0 +1,17 @@
+query ScalarMerging($id: ID!) {
+  node(id: $id) {
+    ... on User {
+      favouriteMeal {
+        ... on MealA {
+          ingredients {
+            name
+            isGood
+          }
+        }
+        ... on MealB {
+          ingredients
+        }
+      }
+    }
+  }
+}

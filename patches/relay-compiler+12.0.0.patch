@@ -1,0 +1,13 @@
+diff --git a/node_modules/relay-compiler/lib/core/Schema.js b/node_modules/relay-compiler/lib/core/Schema.js
+index 3aa2c30..315444a 100644
+--- a/node_modules/relay-compiler/lib/core/Schema.js
++++ b/node_modules/relay-compiler/lib/core/Schema.js
+@@ -1708,6 +1708,8 @@ var TypeMap = /*#__PURE__*/function () {
+         _this9._parseInterfaceTypeExtension(definition);
+       } else if (definition.kind === 'ObjectTypeExtension') {
+         _this9._parseObjectTypeExtension(definition);
++      } else if (definition.kind === 'UnionTypeDefinition') {
++        _this9._parseUnionNode(definition, true);
+       } else if (definition.kind === 'DirectiveDefinition') {
+         _this9._parseDirective(definition, true
+         /* client directive */
