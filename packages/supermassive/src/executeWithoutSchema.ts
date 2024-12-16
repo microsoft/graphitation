@@ -1713,6 +1713,7 @@ function ensureValidRuntimeType(
       fieldGroup,
     );
   }
+
   if (typeof runtimeTypeName !== "string") {
     throw locatedError(
       `Abstract type "${returnTypeName}" must resolve to an Object type at runtime for field "${info.returnTypeName}.${info.fieldName}" with ` +
