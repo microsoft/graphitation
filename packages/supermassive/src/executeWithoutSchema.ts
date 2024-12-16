@@ -468,23 +468,33 @@ function executeFields(
   const results = Object.create(null);
   let containsPromise = false;
 
-  for (const [responseName, fieldGroup] of groupedFieldSet) {
-    const fieldPath = addPath(path, responseName, parentTypeName);
-    const result = executeField(
-      exeContext,
-      parentTypeName,
-      sourceValue,
-      fieldGroup,
-      fieldPath,
-      incrementalDataRecord,
-    );
+  try {
+    for (const [responseName, fieldGroup] of groupedFieldSet) {
+      const fieldPath = addPath(path, responseName, parentTypeName);
+      const result = executeField(
+        exeContext,
+        parentTypeName,
+        sourceValue,
+        fieldGroup,
+        fieldPath,
+        incrementalDataRecord,
+      );
 
-    if (result !== undefined) {
-      results[responseName] = result;
-      if (isPromise(result)) {
-        containsPromise = true;
+      if (result !== undefined) {
+        results[responseName] = result;
+        if (isPromise(result)) {
+          containsPromise = true;
+        }
       }
     }
+  } catch (error) {
+    if (containsPromise) {
+      // Ensure that any promises returned by other fields are handled, as they may also reject.
+      return promiseForObject(results).finally(() => {
+        throw error;
+      });
+    }
+    throw error;
   }
 
   // If there are no promises, we can just return the object
@@ -2513,6 +2523,7 @@ class DeferredFragmentRecord {
   isCompleted: boolean;
   _exeContext: ExecutionContext;
   _resolve?: (arg: PromiseOrValue<ObjMap<unknown> | null>) => void;
+
   constructor(opts: {
     label: string | undefined;
     path: Path | undefined;
@@ -2561,6 +2572,7 @@ class StreamItemsRecord {
   isCompleted: boolean;
   _exeContext: ExecutionContext;
   _resolve?: (arg: PromiseOrValue<Array<unknown> | null>) => void;
+
   constructor(opts: {
     label: string | undefined;
     path: Path | undefined;
