@@ -2082,7 +2082,7 @@ function invokeBeforeOperationExecuteHook(exeContext: ExecutionContext) {
 
       if (result instanceof Error) {
         const error = toGraphQLError(
-          rawError,
+          result,
           undefined,
           "Unexpected error in beforeOperationExecute hook",
         );

@@ -1673,6 +1673,22 @@ describe.each([
           "Unexpected error in beforeFieldResolve hook: Hook error",
       },
       {
+        name: "beforeOperationExecute (Error is thrown)",
+        document: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        hooks: {
+          beforeOperationExecute: jest.fn().mockImplementation(() => {
+            return new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in beforeOperationExecute hook: Hook error",
+      },
+      {
         name: "afterFieldResolve (Error is thrown)",
         document: `
         {
