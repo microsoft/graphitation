@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Mon, 16 Dec 2024 15:39:40 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 17 Dec 2024 19:43:09 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.8.0-alpha.3
+
+Tue, 17 Dec 2024 19:43:09 GMT
+
+### Changes
+
+- subscribe hooks fixed (77059398+vejrj@users.noreply.github.com)
 
 ## 3.7.2
 

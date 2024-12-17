@@ -23,7 +23,7 @@
     "@graphql-codegen/plugin-helpers": ">= 1.18.0 < 2"
   },
   "dependencies": {
-    "@graphitation/supermassive": "^3.7.2",
+    "@graphitation/supermassive": "^3.8.0-alpha.3",
     "graphql": "^15.0.0"
   },
   "sideEffects": false,
