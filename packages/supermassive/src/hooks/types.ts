@@ -64,8 +64,7 @@ export interface BeforeFieldSubscribe<
 > {
   (args: BaseExecuteFieldHookArgs<ResolveContext>):
     | Promise<BeforeHookContext>
-    | BeforeHookContext
-    | GraphQLError;
+    | BeforeHookContext;
 }
 
 export interface AfterFieldResolveHook<
@@ -98,7 +97,7 @@ export interface AfterFieldCompleteHook<
 }
 
 export interface AfterBuildResponseHook<ResolveContext = unknown> {
-  (args: AfterBuildResponseHookArgs<ResolveContext>): void;
+  (args: AfterBuildResponseHookArgs<ResolveContext>): void | GraphQLError;
 }
 
 export interface BeforeOperationExecuteHook<ResolveContext = unknown> {

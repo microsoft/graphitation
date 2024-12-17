@@ -401,9 +401,15 @@ function buildResponse(
       };
     } else {
       if (hooks?.afterBuildResponse) {
-        invokeAfterBuildResponseHook(exeContext, initialResult);
+        const hookResult = invokeAfterBuildResponseHook(
+          exeContext,
+          initialResult,
+        );
         if (exeContext.errors.length > (initialResult.errors?.length ?? 0)) {
           initialResult.errors = exeContext.errors;
+        }
+        if (hookResult instanceof GraphQLError) {
+          return { errors: initialResult.errors };
         }
       }
       return initialResult;
@@ -693,6 +699,12 @@ function executeSubscriptionImpl(
     // Implements the "ResolveFieldEventStream" algorithm from GraphQL specification.
     // It differs from "ResolveFieldValue" due to providing a different `resolveFn`.
 
+    let result: unknown;
+
+    if (!isDefaultResolverUsed && hooks?.beforeFieldSubscribe) {
+      hookContext = invokeBeforeFieldSubscribeHook(info, exeContext);
+    }
+
     // Build a JS object of arguments from the field.arguments AST, using the
     // variables scope to fulfill any variable references.
     const args = getArgumentValues(exeContext, fieldDef, fieldGroup[0]);
@@ -702,27 +714,16 @@ function executeSubscriptionImpl(
     // used to represent an authenticated user, or request-specific caches.
     const contextValue = exeContext.contextValue;
 
-    if (!isDefaultResolverUsed && hooks?.beforeFieldSubscribe) {
-      hookContext = invokeBeforeFieldSubscribeHook(info, exeContext);
-    }
-
-    let result: unknown;
-
     if (hookContext) {
       if (isPromise(hookContext)) {
         result = hookContext.then((context) => {
           hookContext = context;
 
-          if (hookContext instanceof GraphQLError) {
-            return null;
-          }
-
           return resolveFn(rootValue, args, contextValue, info);
         });
-      } else if (hookContext instanceof GraphQLError) {
-        result = null;
       }
     }
+
     // Call the `subscribe()` resolver or the default resolver to produce an
     // AsyncIterable yielding raw payloads.
     if (result === undefined) {
@@ -738,40 +739,20 @@ function executeSubscriptionImpl(
           resolved,
           error,
         );
-
-        if (hookContext instanceof GraphQLError) {
-          throw hookContext;
-        }
       }
     };
 
     if (isPromise(result)) {
-      return result.then(assertEventStream).then(
-        (resolved) => {
-          if (resolved instanceof GraphQLError) {
-            throw resolved;
-          }
-
-          if (!isDefaultResolverUsed && hooks?.afterFieldSubscribe) {
-            hookContext = invokeAfterFieldSubscribeHook(
-              info,
-              exeContext,
-              hookContext,
-              resolved,
-            );
-
-            if (hookContext instanceof GraphQLError) {
-              throw hookContext;
-            }
-          }
-          return resolved;
-        },
-        (error) => {
+      return result
+        .then(assertEventStream, (error) => {
           afterFieldSubscribeHandle(undefined, error);
-
           throw locatedError(error, fieldGroup, pathToArray(path));
-        },
-      );
+        })
+        .then((resolved) => {
+          afterFieldSubscribeHandle(resolved);
+
+          return resolved;
+        });
     }
 
     const stream = assertEventStream(result);
@@ -779,17 +760,13 @@ function executeSubscriptionImpl(
     return stream;
   } catch (error) {
     if (!isDefaultResolverUsed && hooks?.afterFieldSubscribe) {
-      hookContext = invokeAfterFieldSubscribeHook(
+      invokeAfterFieldSubscribeHook(
         info,
         exeContext,
         hookContext,
         undefined,
         error,
       );
-    }
-
-    if (hookContext instanceof GraphQLError) {
-      throw hookContext;
     }
 
     throw locatedError(error, fieldGroup, pathToArray(path));
@@ -1091,14 +1068,10 @@ function resolveAndCompleteField(
         (rawError) => {
           const error = locatedError(rawError, fieldGroup, pathToArray(path));
 
-          const hookResult = handleAfterFieldHooks(
+          handleAfterFieldHooks(
             invokeAfterFieldCompleteHook,
             !!hooks?.afterFieldComplete,
           )(undefined, error);
-
-          if (hookResult === null) {
-            return null;
-          }
 
           handleFieldError(
             rawError,
@@ -1896,7 +1869,7 @@ function invokeBeforeFieldSubscribeHook(
         );
         exeContext.errors.push(error);
 
-        return error;
+        throw error;
       } else if (result instanceof Error) {
         const error = toGraphQLError(
           result,
@@ -1905,7 +1878,7 @@ function invokeBeforeFieldSubscribeHook(
         );
         exeContext.errors.push(error);
 
-        return error;
+        throw error;
       }
 
       return result;
@@ -2025,7 +1998,7 @@ function invokeAfterFieldSubscribeHook(
         );
         exeContext.errors.push(error);
 
-        return error;
+        throw error;
       } else if (result instanceof Error) {
         const error = toGraphQLError(
           result,
@@ -2034,7 +2007,7 @@ function invokeAfterFieldSubscribeHook(
         );
         exeContext.errors.push(error);
 
-        return error;
+        throw error;
       }
 
       return result;
@@ -2109,7 +2082,7 @@ function invokeBeforeOperationExecuteHook(exeContext: ExecutionContext) {
 
       if (result instanceof Error) {
         const error = toGraphQLError(
-          rawError,
+          result,
           undefined,
           "Unexpected error in beforeOperationExecute hook",
         );
@@ -2175,13 +2148,23 @@ function invokeAfterBuildResponseHook(
         operation: exeContext.operation,
         result,
       }),
-    (_, rawError) => {
+    (result, rawError) => {
       if (rawError) {
         const error = toGraphQLError(
           rawError,
           undefined,
           "Unexpected error in afterBuildResponse hook",
         );
+        exeContext.errors.push(error);
+
+        return error;
+      } else if (result instanceof Error) {
+        const error = toGraphQLError(
+          result,
+          undefined,
+          "Unexpected error in afterBuildResponse hook",
+        );
+
         exeContext.errors.push(error);
       }
     },

@@ -1093,7 +1093,7 @@ describe.each([
     });
   });
 
-  describe("error in subscription is thrown", () => {
+  describe("error in beforeSubscriptionEventEmit", () => {
     beforeEach(() => {
       jest.clearAllMocks();
     });
@@ -1168,31 +1168,12 @@ describe.each([
     );
   });
 
-  describe("Error in subscription during creating event stream", () => {
+  describe("afterFieldSubscribe and beforeFieldSubscribe hook errors during creating event stream. It should throw if an error is thrown or returned", () => {
     beforeEach(() => {
       jest.clearAllMocks();
     });
 
     const testCases: Array<HookExceptionTestCase> = [
-      {
-        name: "beforeFieldSubscribe (Error is returned)",
-        document: `subscription EmitPersons($limit: Int!)
-        {
-          emitPersons(limit: $limit) {
-            name
-          }
-        }`,
-        variables: {
-          limit: 1,
-        },
-        hooks: {
-          beforeFieldSubscribe: jest.fn().mockImplementation(() => {
-            return new Error("Hook error");
-          }),
-        },
-        expectedErrorMessage:
-          "Unexpected error in beforeFieldSubscribe hook: Hook error",
-      },
       {
         name: "afterFieldSubscribe (Error is returned)",
         document: `subscription EmitPersons($limit: Int!)
@@ -1211,44 +1192,6 @@ describe.each([
         },
         expectedErrorMessage:
           "Unexpected error in afterFieldSubscribe hook: Hook error",
-      },
-      {
-        name: "beforeFieldSubscribe (Error is thrown)",
-        document: `subscription EmitPersons($limit: Int!)
-        {
-          emitPersons(limit: $limit) {
-            name
-          }
-        }`,
-        variables: {
-          limit: 1,
-        },
-        hooks: {
-          beforeFieldSubscribe: jest.fn().mockImplementation(() => {
-            throw new Error("Hook error");
-          }),
-        },
-        expectedErrorMessage:
-          "Unexpected error in beforeFieldSubscribe hook: Hook error",
-      },
-      {
-        name: "beforeFieldSubscribe (string is thrown)",
-        document: `subscription EmitPersons($limit: Int!)
-        {
-          emitPersons(limit: $limit) {
-            name
-          }
-        }`,
-        variables: {
-          limit: 1,
-        },
-        hooks: {
-          beforeFieldSubscribe: jest.fn().mockImplementation(() => {
-            throw "Hook error";
-          }),
-        },
-        expectedErrorMessage:
-          'Unexpected error in beforeFieldSubscribe hook: "Hook error"',
       },
       {
         name: "afterFieldSubscribe (Error is thrown)",
@@ -1287,6 +1230,63 @@ describe.each([
         },
         expectedErrorMessage:
           'Unexpected error in afterFieldSubscribe hook: "Hook error"',
+      },
+      {
+        name: "beforeFieldSubscribe (Error is thrown)",
+        document: `subscription EmitPersons($limit: Int!)
+        {
+          emitPersons(limit: $limit) {
+            name
+          }
+        }`,
+        variables: {
+          limit: 1,
+        },
+        hooks: {
+          beforeFieldSubscribe: jest.fn().mockImplementation(() => {
+            throw new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in beforeFieldSubscribe hook: Hook error",
+      },
+      {
+        name: "beforeFieldSubscribe (Error is returned)",
+        document: `subscription EmitPersons($limit: Int!)
+        {
+          emitPersons(limit: $limit) {
+            name
+          }
+        }`,
+        variables: {
+          limit: 1,
+        },
+        hooks: {
+          beforeFieldSubscribe: jest.fn().mockImplementation(() => {
+            return new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in beforeFieldSubscribe hook: Hook error",
+      },
+      {
+        name: "beforeFieldSubscribe (string is thrown)",
+        document: `subscription EmitPersons($limit: Int!)
+        {
+          emitPersons(limit: $limit) {
+            name
+          }
+        }`,
+        variables: {
+          limit: 1,
+        },
+        hooks: {
+          beforeFieldSubscribe: jest.fn().mockImplementation(() => {
+            throw "Hook error";
+          }),
+        },
+        expectedErrorMessage:
+          'Unexpected error in beforeFieldSubscribe hook: "Hook error"',
       },
     ];
 
@@ -1527,6 +1527,70 @@ describe.each([
     );
   });
 
+  describe("Error in afterBuildResponse", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    test("afterBuildResponse (Error is thrown)", async () => {
+      expect.assertions(5);
+
+      const response = await drainExecution(
+        await execute(
+          parse(`{
+              film(id: 1) {
+                title
+              }
+            }`),
+          resolvers as UserResolvers,
+          {
+            afterBuildResponse: jest.fn().mockImplementation(() => {
+              throw new Error("Hook error");
+            }),
+          },
+        ),
+      );
+      const result = Array.isArray(response) ? response[0] : response;
+      expect(isTotalExecutionResult(result)).toBe(true);
+      const errors = result.errors;
+      expect(result.data).toBeUndefined();
+      expect(errors).toBeDefined();
+      expect(errors).toHaveLength(1);
+      expect(errors?.[0].message).toBe(
+        "Unexpected error in afterBuildResponse hook: Hook error",
+      );
+    });
+
+    test("afterBuildResponse (Error is returned)", async () => {
+      expect.assertions(5);
+
+      const response = await drainExecution(
+        await execute(
+          parse(`{
+              film(id: 1) {
+                title
+              }
+            }`),
+          resolvers as UserResolvers,
+          {
+            afterBuildResponse: jest.fn().mockImplementation(() => {
+              return new Error("Hook error");
+            }),
+          },
+        ),
+      );
+      const result = Array.isArray(response) ? response[0] : response;
+      expect(isTotalExecutionResult(result)).toBe(true);
+      const errors = result.errors;
+      expect(result.data).toBeDefined();
+      expect(errors).toBeDefined();
+      expect(errors).toHaveLength(1);
+      expect(errors?.[0].message).toBe(
+        "Unexpected error in afterBuildResponse hook: Hook error",
+      );
+    });
+  });
+
   describe("Error thrown in the BEFORE OPERATION hook breaks execution", () => {
     beforeEach(() => {
       jest.clearAllMocks();
@@ -1607,6 +1671,22 @@ describe.each([
         },
         expectedErrorMessage:
           "Unexpected error in beforeFieldResolve hook: Hook error",
+      },
+      {
+        name: "beforeOperationExecute (Error is thrown)",
+        document: `
+        {
+          film(id: 1) {
+            title
+          }
+        }`,
+        hooks: {
+          beforeOperationExecute: jest.fn().mockImplementation(() => {
+            return new Error("Hook error");
+          }),
+        },
+        expectedErrorMessage:
+          "Unexpected error in beforeOperationExecute hook: Hook error",
       },
       {
         name: "afterFieldResolve (Error is thrown)",
