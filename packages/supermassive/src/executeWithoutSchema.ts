@@ -1112,17 +1112,13 @@ function resolveAndCompleteField(
       );
     }
     if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
-      const invokeAfterFieldCompleteHookResult = invokeAfterFieldCompleteHook(
+      invokeAfterFieldCompleteHook(
         info,
         exeContext,
         hookContext,
         undefined,
         error,
       );
-
-      if (invokeAfterFieldCompleteHookResult instanceof GraphQLError) {
-        return null;
-      }
     }
 
     handleFieldError(
