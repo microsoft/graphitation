@@ -21,6 +21,12 @@ export interface AfterFieldResolveHookArgs<ResolveContext, HookContext>
   error?: unknown;
 }
 
+export interface AfterFieldSubscribeHookArgs<ResolveContext, HookContext>
+  extends PostExecuteFieldHookArgs<ResolveContext, HookContext> {
+  result?: unknown;
+  error?: unknown;
+}
+
 export interface AfterFieldCompleteHookArgs<ResolveContext, HookContext>
   extends PostExecuteFieldHookArgs<ResolveContext, HookContext> {
   result?: unknown;
@@ -48,7 +54,19 @@ export interface BeforeFieldResolveHook<
 > {
   (args: BaseExecuteFieldHookArgs<ResolveContext>):
     | Promise<BeforeHookContext>
-    | BeforeHookContext;
+    | BeforeHookContext
+    | Error;
+}
+
+export interface BeforeFieldSubscribe<
+  ResolveContext = unknown,
+  BeforeHookContext = unknown,
+> {
+  (args: BaseExecuteFieldHookArgs<ResolveContext>):
+    | Promise<BeforeHookContext>
+    | Promise<Error>
+    | BeforeHookContext
+    | Error;
 }
 
 export interface AfterFieldResolveHook<
@@ -56,30 +74,48 @@ export interface AfterFieldResolveHook<
   BeforeHookContext = unknown,
   AfterHookContext = BeforeHookContext,
 > {
-  (
-    args: AfterFieldResolveHookArgs<ResolveContext, BeforeHookContext>,
-  ): AfterHookContext;
+  (args: AfterFieldResolveHookArgs<ResolveContext, BeforeHookContext>):
+    | AfterHookContext
+    | Error;
+}
+
+export interface AfterFieldSubscribe<
+  ResolveContext = unknown,
+  BeforeHookContext = unknown,
+  AfterHookContext = BeforeHookContext,
+> {
+  (args: AfterFieldSubscribeHookArgs<ResolveContext, BeforeHookContext>):
+    | AfterHookContext
+    | Error;
 }
 
 export interface AfterFieldCompleteHook<
   ResolveContext = unknown,
   AfterHookContext = unknown,
 > {
-  (args: AfterFieldCompleteHookArgs<ResolveContext, AfterHookContext>): void;
+  (
+    args: AfterFieldCompleteHookArgs<ResolveContext, AfterHookContext>,
+  ): void | Error;
 }
 
 export interface AfterBuildResponseHook<ResolveContext = unknown> {
-  (args: AfterBuildResponseHookArgs<ResolveContext>): void;
+  (args: AfterBuildResponseHookArgs<ResolveContext>): void | Error;
 }
 
 export interface BeforeOperationExecuteHook<ResolveContext = unknown> {
-  (args: BaseExecuteOperationHookArgs<ResolveContext>): void | Promise<void>;
+  (args: BaseExecuteOperationHookArgs<ResolveContext>):
+    | void
+    | Promise<void>
+    | Error
+    | Promise<Error>;
 }
 
 export interface BeforeSubscriptionEventEmitHook<ResolveContext = unknown> {
-  (
-    args: BeforeSubscriptionEventEmitHookArgs<ResolveContext>,
-  ): void | Promise<void>;
+  (args: BeforeSubscriptionEventEmitHookArgs<ResolveContext>):
+    | void
+    | Promise<void>
+    | Error
+    | Promise<Error>;
 }
 
 export interface ExecutionHooks<
@@ -93,7 +129,16 @@ export interface ExecutionHooks<
     ResolveContext,
     BeforeHookContext
   >;
+  beforeFieldSubscribe?: BeforeFieldSubscribe<
+    ResolveContext,
+    BeforeHookContext
+  >;
   afterFieldResolve?: AfterFieldResolveHook<
+    ResolveContext,
+    BeforeHookContext,
+    AfterHookContext
+  >;
+  afterFieldSubscribe?: AfterFieldSubscribe<
     ResolveContext,
     BeforeHookContext,
     AfterHookContext
