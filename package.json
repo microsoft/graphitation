@@ -21,7 +21,7 @@
     "beachball": "beachball -b origin/jvejr/supermassive-hooks-error-handling-alpha",
     "change": "yarn beachball change",
     "checkchange": "yarn beachball check",
-    "release": "yarn beachball publish -t alpha",
+    "release": "yarn beachball publish -t latest",
     "postinstall": "patch-package"
   },
   "devDependencies": {
