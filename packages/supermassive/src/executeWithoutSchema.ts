@@ -286,8 +286,17 @@ function executeOperationWithBeforeHook(
     hook = invokeBeforeOperationExecuteHook(exeContext);
   }
 
+  if (hook instanceof GraphQLError) {
+    return buildResponse(exeContext, null);
+  }
+
   if (isPromise(hook)) {
-    return hook.then(() => executeOperation(exeContext));
+    return hook.then((hookResult) => {
+      if (hookResult instanceof GraphQLError) {
+        return buildResponse(exeContext, null);
+      }
+      return executeOperation(exeContext);
+    });
   }
 
   return executeOperation(exeContext);
@@ -2073,7 +2082,9 @@ function invokeBeforeOperationExecuteHook(exeContext: ExecutionContext) {
           undefined,
           "Unexpected error in beforeOperationExecute hook",
         );
-        throw error;
+        exeContext.errors.push(error);
+
+        return error;
       }
 
       if (result instanceof Error) {

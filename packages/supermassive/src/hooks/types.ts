@@ -1,4 +1,4 @@
-import type { GraphQLError, OperationDefinitionNode } from "graphql";
+import type { OperationDefinitionNode } from "graphql";
 import type { ResolveInfo, TotalExecutionResult } from "../types";
 
 interface BaseExecuteHookArgs<ResolveContext> {
@@ -55,7 +55,7 @@ export interface BeforeFieldResolveHook<
   (args: BaseExecuteFieldHookArgs<ResolveContext>):
     | Promise<BeforeHookContext>
     | BeforeHookContext
-    | GraphQLError;
+    | Error;
 }
 
 export interface BeforeFieldSubscribe<
@@ -64,7 +64,9 @@ export interface BeforeFieldSubscribe<
 > {
   (args: BaseExecuteFieldHookArgs<ResolveContext>):
     | Promise<BeforeHookContext>
-    | BeforeHookContext;
+    | Promise<Error>
+    | BeforeHookContext
+    | Error;
 }
 
 export interface AfterFieldResolveHook<
@@ -74,7 +76,7 @@ export interface AfterFieldResolveHook<
 > {
   (args: AfterFieldResolveHookArgs<ResolveContext, BeforeHookContext>):
     | AfterHookContext
-    | GraphQLError;
+    | Error;
 }
 
 export interface AfterFieldSubscribe<
@@ -84,7 +86,7 @@ export interface AfterFieldSubscribe<
 > {
   (args: AfterFieldSubscribeHookArgs<ResolveContext, BeforeHookContext>):
     | AfterHookContext
-    | GraphQLError;
+    | Error;
 }
 
 export interface AfterFieldCompleteHook<
@@ -93,25 +95,27 @@ export interface AfterFieldCompleteHook<
 > {
   (
     args: AfterFieldCompleteHookArgs<ResolveContext, AfterHookContext>,
-  ): void | GraphQLError;
+  ): void | Error;
 }
 
 export interface AfterBuildResponseHook<ResolveContext = unknown> {
-  (args: AfterBuildResponseHookArgs<ResolveContext>): void | GraphQLError;
+  (args: AfterBuildResponseHookArgs<ResolveContext>): void | Error;
 }
 
 export interface BeforeOperationExecuteHook<ResolveContext = unknown> {
   (args: BaseExecuteOperationHookArgs<ResolveContext>):
     | void
     | Promise<void>
-    | GraphQLError;
+    | Error
+    | Promise<Error>;
 }
 
 export interface BeforeSubscriptionEventEmitHook<ResolveContext = unknown> {
   (args: BeforeSubscriptionEventEmitHookArgs<ResolveContext>):
     | void
     | Promise<void>
-    | GraphQLError;
+    | Error
+    | Promise<Error>;
 }
 
 export interface ExecutionHooks<

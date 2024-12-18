@@ -1634,18 +1634,26 @@ describe.each([
     it.each(testCases)(
       "$name",
       async ({ document, hooks, expectedErrorMessage, variables }) => {
-        expect.assertions(1);
+        expect.assertions(5);
         const parsedDocument = parse(document);
 
-        await expect(async function () {
-          const result = await execute(
+        const response = await drainExecution(
+          await execute(
             parsedDocument,
             resolvers as UserResolvers,
             hooks,
             variables,
-          );
-          return drainExecution(result);
-        }).rejects.toThrow(expectedErrorMessage);
+          ),
+        );
+
+        const result = Array.isArray(response) ? response[0] : response;
+        expect(isTotalExecutionResult(result)).toBe(true);
+        const errors = result.errors;
+
+        expect(result.data).toBeNull();
+        expect(errors).toBeDefined();
+        expect(errors).toHaveLength(1);
+        expect(errors?.[0].message).toBe(expectedErrorMessage);
       },
     );
   });
