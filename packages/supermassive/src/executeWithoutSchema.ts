@@ -281,17 +281,17 @@ function executeOperationWithBeforeHook(
   exeContext: ExecutionContext,
 ): PromiseOrValue<ExecutionResult> {
   const hooks = exeContext.fieldExecutionHooks;
-  let hook;
+  let hookResultPromise;
   if (hooks?.beforeOperationExecute) {
-    hook = invokeBeforeOperationExecuteHook(exeContext);
+    hookResultPromise = invokeBeforeOperationExecuteHook(exeContext);
   }
 
-  if (hook instanceof GraphQLError) {
+  if (hookResultPromise instanceof GraphQLError) {
     return buildResponse(exeContext, null);
   }
 
-  if (isPromise(hook)) {
-    return hook.then((hookResult) => {
+  if (isPromise(hookResultPromise)) {
+    return hookResultPromise.then((hookResult) => {
       if (hookResult instanceof GraphQLError) {
         return buildResponse(exeContext, null);
       }

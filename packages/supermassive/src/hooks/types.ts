@@ -1,5 +1,6 @@
 import type { OperationDefinitionNode } from "graphql";
 import type { ResolveInfo, TotalExecutionResult } from "../types";
+import { PromiseOrValue } from "../jsutils/PromiseOrValue";
 
 interface BaseExecuteHookArgs<ResolveContext> {
   context: ResolveContext;
@@ -53,20 +54,20 @@ export interface BeforeFieldResolveHook<
   BeforeHookContext = unknown,
 > {
   (args: BaseExecuteFieldHookArgs<ResolveContext>):
-    | Promise<BeforeHookContext>
-    | BeforeHookContext
-    | Error;
+    | PromiseOrValue<BeforeHookContext>
+    | PromiseOrValue<Error>;
 }
 
+/**
+ * Represents a user in the system.
+ */
 export interface BeforeFieldSubscribe<
   ResolveContext = unknown,
   BeforeHookContext = unknown,
 > {
   (args: BaseExecuteFieldHookArgs<ResolveContext>):
-    | Promise<BeforeHookContext>
-    | Promise<Error>
-    | BeforeHookContext
-    | Error;
+    | PromiseOrValue<BeforeHookContext>
+    | PromiseOrValue<Error>;
 }
 
 export interface AfterFieldResolveHook<
@@ -104,18 +105,14 @@ export interface AfterBuildResponseHook<ResolveContext = unknown> {
 
 export interface BeforeOperationExecuteHook<ResolveContext = unknown> {
   (args: BaseExecuteOperationHookArgs<ResolveContext>):
-    | void
-    | Promise<void>
-    | Error
-    | Promise<Error>;
+    | PromiseOrValue<void>
+    | PromiseOrValue<Error>;
 }
 
 export interface BeforeSubscriptionEventEmitHook<ResolveContext = unknown> {
   (args: BeforeSubscriptionEventEmitHookArgs<ResolveContext>):
-    | void
-    | Promise<void>
-    | Error
-    | Promise<Error>;
+    | PromiseOrValue<void>
+    | PromiseOrValue<Error>;
 }
 
 export interface ExecutionHooks<
@@ -123,26 +120,83 @@ export interface ExecutionHooks<
   BeforeHookContext = unknown,
   AfterHookContext = BeforeHookContext,
 > {
+  /**
+   * Called before every operation.
+   *
+   * @hook
+   * @throws {Error} Stops execution and sets `data` to `null` and registers the error.
+   * @returns {Error} The error is registered and execution continues.
+   */
   beforeOperationExecute?: BeforeOperationExecuteHook<ResolveContext>;
+  /**
+   * Called before every subscription event emit.
+   *
+   * @hook
+   * @throws {Error} Sets `data` to `null` and registers the error.
+   * @returns {Error} The error is registered and execution continues.
+   */
   beforeSubscriptionEventEmit?: BeforeSubscriptionEventEmitHook<ResolveContext>;
+  /**
+   * Called before every field resolution.
+   *
+   * @hook
+   * @throws {Error} The field is not executed and is handled as if it has returned `null`.
+   * @returns {Error} The error is registered and execution continues.
+   */
   beforeFieldResolve?: BeforeFieldResolveHook<
     ResolveContext,
     BeforeHookContext
   >;
+  /**
+   * Called before subscription event stream creation.
+   *
+   * @hook
+   * @throws {Error} Stops execution and sets `data` to `undefined` and error is returned in `errors` field.
+   * @returns {Error} Stops execution and sets `data` to `undefined` and error is returned in `errors` field.
+   */
   beforeFieldSubscribe?: BeforeFieldSubscribe<
     ResolveContext,
     BeforeHookContext
   >;
+  /**
+   * Called after every field resolution.
+   *
+   * @hook
+   * @throws {Error} The field is set to `null` and the error is registered.
+   * @returns {Error} The error is registered and execution continues.
+   */
   afterFieldResolve?: AfterFieldResolveHook<
     ResolveContext,
     BeforeHookContext,
     AfterHookContext
   >;
+
+  /**
+   * Called after subscription event stream creation.
+   *
+   * @hook
+   * @throws {Error} Stops execution and sets `data` to `undefined` and error is returned in `errors` field.
+   * @returns {Error} Stops execution and sets `data` to `undefined` and error is returned in `errors` field.
+   */
   afterFieldSubscribe?: AfterFieldSubscribe<
     ResolveContext,
     BeforeHookContext,
     AfterHookContext
   >;
+  /**
+   * Called when field value is completed.
+   *
+   * @hook
+   * @throws {Error} The field is set to `null` and the error is registered.
+   * @returns {Error} The error is registered and execution continues.
+   */
   afterFieldComplete?: AfterFieldCompleteHook<ResolveContext, AfterHookContext>;
+  /**
+   * Called after the response is built.
+   *
+   * @hook
+   * @throws {Error} Returns no data property, only errors.
+   * @returns {Error} The error is registered and execution continues.
+   */
   afterBuildResponse?: AfterBuildResponseHook<ResolveContext>;
 }
