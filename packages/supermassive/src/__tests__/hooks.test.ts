@@ -1116,7 +1116,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in beforeSubscriptionEventEmit hook: Hook error",
+          "Unexpected error thrown by beforeSubscriptionEventEmit hook (operation: EmitPersons): Hook error",
       },
       {
         name: "async beforeSubscriptionEventEmit (Error is thrown)",
@@ -1137,7 +1137,7 @@ describe.each([
             }),
         },
         expectedErrorMessage:
-          "Unexpected error in beforeSubscriptionEventEmit hook: Hook error",
+          "Unexpected error thrown by beforeSubscriptionEventEmit hook (operation: EmitPersons): Hook error",
       },
     ];
 
@@ -1191,7 +1191,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in afterFieldSubscribe hook: Hook error",
+          "Unexpected error returned from afterFieldSubscribe hook: Hook error",
       },
       {
         name: "afterFieldSubscribe (Error is thrown)",
@@ -1210,7 +1210,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in afterFieldSubscribe hook: Hook error",
+          "Unexpected error thrown by afterFieldSubscribe hook: Hook error",
       },
       {
         name: "afterFieldSubscribe (string is thrown)",
@@ -1229,7 +1229,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          'Unexpected error in afterFieldSubscribe hook: "Hook error"',
+          'Unexpected error thrown by afterFieldSubscribe hook: "Hook error"',
       },
       {
         name: "beforeFieldSubscribe (Error is thrown)",
@@ -1248,7 +1248,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in beforeFieldSubscribe hook: Hook error",
+          "Unexpected error thrown by beforeFieldSubscribe hook: Hook error",
       },
       {
         name: "beforeFieldSubscribe (Error is returned)",
@@ -1267,7 +1267,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in beforeFieldSubscribe hook: Hook error",
+          "Unexpected error returned from beforeFieldSubscribe hook: Hook error",
       },
       {
         name: "beforeFieldSubscribe (string is thrown)",
@@ -1286,7 +1286,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          'Unexpected error in beforeFieldSubscribe hook: "Hook error"',
+          'Unexpected error thrown by beforeFieldSubscribe hook: "Hook error"',
       },
     ];
 
@@ -1335,7 +1335,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in beforeFieldResolve hook: Hook error",
+          "Unexpected error thrown by beforeFieldResolve hook: Hook error",
       },
       {
         name: "beforeFieldResolve (string is thrown)",
@@ -1351,7 +1351,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          'Unexpected error in beforeFieldResolve hook: "Hook error"',
+          'Unexpected error thrown by beforeFieldResolve hook: "Hook error"',
       },
       {
         name: "afterFieldResolve (Error is thrown)",
@@ -1367,7 +1367,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in afterFieldResolve hook: Hook error",
+          "Unexpected error thrown by afterFieldResolve hook: Hook error",
       },
       {
         name: "afterFieldResolve (string is thrown)",
@@ -1383,7 +1383,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          'Unexpected error in afterFieldResolve hook: "Hook error"',
+          'Unexpected error thrown by afterFieldResolve hook: "Hook error"',
       },
       {
         name: "afterFieldComplete (Error is thrown)",
@@ -1399,7 +1399,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in afterFieldComplete hook: Hook error",
+          "Unexpected error thrown by afterFieldComplete hook: Hook error",
       },
       {
         name: "afterFieldComplete (string is thrown)",
@@ -1415,7 +1415,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          'Unexpected error in afterFieldComplete hook: "Hook error"',
+          'Unexpected error thrown by afterFieldComplete hook: "Hook error"',
       },
     ];
 
@@ -1466,7 +1466,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in beforeFieldResolve hook: Hook error",
+          "Unexpected error returned from beforeFieldResolve hook: Hook error",
       },
       {
         name: "afterFieldResolve (Error is returned)",
@@ -1482,7 +1482,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in afterFieldResolve hook: Hook error",
+          "Unexpected error returned from afterFieldResolve hook: Hook error",
       },
       {
         name: "afterFieldComplete (Error is returned)",
@@ -1498,7 +1498,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in afterFieldComplete hook: Hook error",
+          "Unexpected error returned from afterFieldComplete hook: Hook error",
       },
     ];
 
@@ -1537,7 +1537,7 @@ describe.each([
 
       const response = await drainExecution(
         await execute(
-          parse(`{
+          parse(`query GetFilm{
               film(id: 1) {
                 title
               }
@@ -1557,7 +1557,7 @@ describe.each([
       expect(errors).toBeDefined();
       expect(errors).toHaveLength(1);
       expect(errors?.[0].message).toBe(
-        "Unexpected error in afterBuildResponse hook: Hook error",
+        "Unexpected error thrown by afterBuildResponse hook (operation: GetFilm): Hook error",
       );
     });
 
@@ -1586,7 +1586,7 @@ describe.each([
       expect(errors).toBeDefined();
       expect(errors).toHaveLength(1);
       expect(errors?.[0].message).toBe(
-        "Unexpected error in afterBuildResponse hook: Hook error",
+        "Unexpected error returned from afterBuildResponse hook (operation: unknown): Hook error",
       );
     });
   });
@@ -1611,7 +1611,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in beforeOperationExecute hook: Hook error",
+          "Unexpected error thrown by beforeOperationExecute hook (operation: unknown): Hook error",
       },
       {
         name: "beforeOperationExecute (string is thrown)",
@@ -1627,7 +1627,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          'Unexpected error in beforeOperationExecute hook: "Hook error"',
+          'Unexpected error thrown by beforeOperationExecute hook (operation: unknown): "Hook error"',
       },
     ];
 
@@ -1678,7 +1678,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in beforeFieldResolve hook: Hook error",
+          "Unexpected error returned from beforeFieldResolve hook: Hook error",
       },
       {
         name: "beforeOperationExecute (Error is thrown)",
@@ -1694,7 +1694,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in beforeOperationExecute hook: Hook error",
+          "Unexpected error returned from beforeOperationExecute hook (operation: unknown): Hook error",
       },
       {
         name: "afterFieldResolve (Error is thrown)",
@@ -1710,7 +1710,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in afterFieldResolve hook: Hook error",
+          "Unexpected error returned from afterFieldResolve hook: Hook error",
       },
       {
         name: "afterFieldComplete (Error is thrown)",
@@ -1726,7 +1726,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in afterFieldComplete hook: Hook error",
+          "Unexpected error returned from afterFieldComplete hook: Hook error",
       },
       {
         name: "beforeSubscriptionEventEmit (Error is thrown)",
@@ -1745,7 +1745,7 @@ describe.each([
           }),
         },
         expectedErrorMessage:
-          "Unexpected error in beforeSubscriptionEventEmit hook: Hook error",
+          "Unexpected error returned from beforeSubscriptionEventEmit hook (operation: EmitPersons): Hook error",
       },
       {
         name: "async beforeSubscriptionEventEmit (Error is thrown)",
@@ -1766,7 +1766,7 @@ describe.each([
             }),
         },
         expectedErrorMessage:
-          "Unexpected error in beforeSubscriptionEventEmit hook: Hook error",
+          "Unexpected error returned from beforeSubscriptionEventEmit hook (operation: EmitPersons): Hook error",
       },
     ];
 

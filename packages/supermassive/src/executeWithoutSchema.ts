@@ -1870,7 +1870,7 @@ function invokeBeforeFieldSubscribeHook(
         const error = toGraphQLError(
           rawError,
           resolveInfo.path,
-          "Unexpected error in beforeFieldSubscribe hook",
+          "Unexpected error thrown by beforeFieldSubscribe hook",
         );
         exeContext.errors.push(error);
 
@@ -1879,7 +1879,7 @@ function invokeBeforeFieldSubscribeHook(
         const error = toGraphQLError(
           result,
           resolveInfo.path,
-          "Unexpected error in beforeFieldSubscribe hook",
+          "Unexpected error returned from beforeFieldSubscribe hook",
         );
         exeContext.errors.push(error);
 
@@ -1911,7 +1911,7 @@ function invokeBeforeFieldResolveHook(
         const error = toGraphQLError(
           rawError,
           resolveInfo.path,
-          "Unexpected error in beforeFieldResolve hook",
+          "Unexpected error thrown by beforeFieldResolve hook",
         );
         exeContext.errors.push(error);
 
@@ -1920,7 +1920,7 @@ function invokeBeforeFieldResolveHook(
         const error = toGraphQLError(
           result,
           resolveInfo.path,
-          "Unexpected error in beforeFieldResolve hook",
+          "Unexpected error returned from beforeFieldResolve hook",
         );
         exeContext.errors.push(error);
       }
@@ -1955,7 +1955,7 @@ function invokeAfterFieldResolveHook(
         const error = toGraphQLError(
           rawError,
           resolveInfo.path,
-          "Unexpected error in afterFieldResolve hook",
+          "Unexpected error thrown by afterFieldResolve hook",
         );
         exeContext.errors.push(error);
 
@@ -1964,7 +1964,7 @@ function invokeAfterFieldResolveHook(
         const error = toGraphQLError(
           result,
           resolveInfo.path,
-          "Unexpected error in afterFieldResolve hook",
+          "Unexpected error returned from afterFieldResolve hook",
         );
         exeContext.errors.push(error);
       }
@@ -1999,7 +1999,7 @@ function invokeAfterFieldSubscribeHook(
         const error = toGraphQLError(
           rawError,
           resolveInfo.path,
-          "Unexpected error in afterFieldSubscribe hook",
+          "Unexpected error thrown by afterFieldSubscribe hook",
         );
         exeContext.errors.push(error);
 
@@ -2008,7 +2008,7 @@ function invokeAfterFieldSubscribeHook(
         const error = toGraphQLError(
           result,
           resolveInfo.path,
-          "Unexpected error in afterFieldSubscribe hook",
+          "Unexpected error returned from afterFieldSubscribe hook",
         );
         exeContext.errors.push(error);
 
@@ -2045,7 +2045,7 @@ function invokeAfterFieldCompleteHook(
         const error = toGraphQLError(
           rawError,
           resolveInfo.path,
-          "Unexpected error in afterFieldComplete hook",
+          "Unexpected error thrown by afterFieldComplete hook",
         );
         exeContext.errors.push(error);
 
@@ -2054,7 +2054,7 @@ function invokeAfterFieldCompleteHook(
         const error = toGraphQLError(
           result,
           resolveInfo.path,
-          "Unexpected error in afterFieldComplete hook",
+          "Unexpected error returned from afterFieldComplete hook",
         );
         exeContext.errors.push(error);
       }
@@ -2076,11 +2076,12 @@ function invokeBeforeOperationExecuteHook(exeContext: ExecutionContext) {
         operation: exeContext.operation,
       }),
     (result, rawError) => {
+      const operationName = exeContext.operation.name?.value ?? "unknown";
       if (rawError) {
         const error = toGraphQLError(
           rawError,
           undefined,
-          "Unexpected error in beforeOperationExecute hook",
+          `Unexpected error thrown by beforeOperationExecute hook (operation: ${operationName})`,
         );
         exeContext.errors.push(error);
 
@@ -2091,7 +2092,7 @@ function invokeBeforeOperationExecuteHook(exeContext: ExecutionContext) {
         const error = toGraphQLError(
           result,
           undefined,
-          "Unexpected error in beforeOperationExecute hook",
+          `Unexpected error returned from beforeOperationExecute hook (operation: ${operationName})`,
         );
         exeContext.errors.push(error);
       }
@@ -2117,11 +2118,12 @@ function invokeBeforeSubscriptionEventEmitHook(
         eventPayload,
       }),
     (result, rawError) => {
+      const operationName = exeContext.operation.name?.value ?? "unknown";
       if (rawError) {
         const error = toGraphQLError(
           rawError,
           undefined,
-          "Unexpected error in beforeSubscriptionEventEmit hook",
+          `Unexpected error thrown by beforeSubscriptionEventEmit hook (operation: ${operationName})`,
         );
         exeContext.errors.push(error);
 
@@ -2130,7 +2132,7 @@ function invokeBeforeSubscriptionEventEmitHook(
         const error = toGraphQLError(
           result,
           undefined,
-          "Unexpected error in beforeSubscriptionEventEmit hook",
+          `Unexpected error returned from beforeSubscriptionEventEmit hook (operation: ${operationName})`,
         );
         exeContext.errors.push(error);
       }
@@ -2156,11 +2158,12 @@ function invokeAfterBuildResponseHook(
         result,
       }),
     (result, rawError) => {
+      const operationName = exeContext.operation.name?.value ?? "unknown";
       if (rawError) {
         const error = toGraphQLError(
           rawError,
           undefined,
-          "Unexpected error in afterBuildResponse hook",
+          `Unexpected error thrown by afterBuildResponse hook (operation: ${operationName})`,
         );
         exeContext.errors.push(error);
 
@@ -2169,7 +2172,7 @@ function invokeAfterBuildResponseHook(
         const error = toGraphQLError(
           result,
           undefined,
-          "Unexpected error in afterBuildResponse hook",
+          `Unexpected error returned from afterBuildResponse hook (operation: ${operationName})`,
         );
 
         exeContext.errors.push(error);
