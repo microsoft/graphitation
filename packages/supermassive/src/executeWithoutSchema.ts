@@ -1110,6 +1110,7 @@ function resolveAndCompleteField(
               hookContext,
               resolved,
             );
+
             return hookContext instanceof GraphQLError ? null : resolved;
           }
 
