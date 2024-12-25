@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Mon, 16 Dec 2024 15:39:40 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 25 Dec 2024 21:18:59 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.8.0-alpha.4
+
+Wed, 25 Dec 2024 21:18:59 GMT
+
+### Changes
+
+- Supermassive PR comment fixes (77059398+vejrj@users.noreply.github.com)
 
 ## 3.7.2
 

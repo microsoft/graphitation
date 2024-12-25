@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Wed, 25 Dec 2024 21:18:59 GMT",
+      "version": "3.8.0-alpha.4",
+      "tag": "@graphitation/supermassive_v3.8.0-alpha.4",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/supermassive",
+            "commit": "24097ac60df4238a0e6c7fbd549f63384e196770",
+            "comment": "Supermassive PR comment fixes"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 16 Dec 2024 15:39:40 GMT",
       "version": "3.7.2",
       "tag": "@graphitation/supermassive_v3.7.2",
