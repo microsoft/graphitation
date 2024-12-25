@@ -1,7 +1,7 @@
 {
   "type": "prerelease",
-  "comment": "bump",
+  "comment": "Supermassive PR comment fixes",
   "packageName": "@graphitation/supermassive",
   "email": "77059398+vejrj@users.noreply.github.com",
-  "dependentChangeType": "patch"
+  "dependentChangeType": "none"
 }
