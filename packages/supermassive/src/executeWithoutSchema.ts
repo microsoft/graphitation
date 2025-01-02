@@ -281,13 +281,22 @@ function executeOperationWithBeforeHook(
   exeContext: ExecutionContext,
 ): PromiseOrValue<ExecutionResult> {
   const hooks = exeContext.fieldExecutionHooks;
-  let hook: Promise<void> | void | undefined;
+  let hookResultPromise;
   if (hooks?.beforeOperationExecute) {
-    hook = invokeBeforeOperationExecuteHook(exeContext);
+    hookResultPromise = invokeBeforeOperationExecuteHook(exeContext);
   }
 
-  if (isPromise(hook)) {
-    return hook.then(() => executeOperation(exeContext));
+  if (hookResultPromise instanceof GraphQLError) {
+    return buildResponse(exeContext, null);
+  }
+
+  if (isPromise(hookResultPromise)) {
+    return hookResultPromise.then((hookResult) => {
+      if (hookResult instanceof GraphQLError) {
+        return buildResponse(exeContext, null);
+      }
+      return executeOperation(exeContext);
+    });
   }
 
   return executeOperation(exeContext);
@@ -401,9 +410,15 @@ function buildResponse(
       };
     } else {
       if (hooks?.afterBuildResponse) {
-        invokeAfterBuildResponseHook(exeContext, initialResult);
+        const hookResult = invokeAfterBuildResponseHook(
+          exeContext,
+          initialResult,
+        );
         if (exeContext.errors.length > (initialResult.errors?.length ?? 0)) {
           initialResult.errors = exeContext.errors;
+        }
+        if (hookResult instanceof GraphQLError) {
+          return { errors: initialResult.errors };
         }
       }
       return initialResult;
@@ -640,6 +655,26 @@ function createSourceEventStream(
   }
 }
 
+function afterFieldSubscribeHandle(
+  resolved: unknown,
+  isDefaultResolverUsed: boolean,
+  exeContext: ExecutionContext,
+  info: ResolveInfo,
+  hookContext: unknown | undefined,
+  afterFieldSubscribe: boolean,
+  error?: Error,
+) {
+  if (!isDefaultResolverUsed && afterFieldSubscribe) {
+    hookContext = invokeAfterFieldSubscribeHook(
+      info,
+      exeContext,
+      hookContext,
+      resolved,
+      error,
+    );
+  }
+}
+
 function executeSubscriptionImpl(
   exeContext: ExecutionContext,
 ): PromiseOrValue<AsyncIterable<unknown>> {
@@ -693,6 +728,12 @@ function executeSubscriptionImpl(
     // Implements the "ResolveFieldEventStream" algorithm from GraphQL specification.
     // It differs from "ResolveFieldValue" due to providing a different `resolveFn`.
 
+    let result: unknown;
+
+    if (!isDefaultResolverUsed && hooks?.beforeFieldSubscribe) {
+      hookContext = invokeBeforeFieldSubscribeHook(info, exeContext);
+    }
+
     // Build a JS object of arguments from the field.arguments AST, using the
     // variables scope to fulfill any variable references.
     const args = getArgumentValues(exeContext, fieldDef, fieldGroup[0]);
@@ -702,60 +743,63 @@ function executeSubscriptionImpl(
     // used to represent an authenticated user, or request-specific caches.
     const contextValue = exeContext.contextValue;
 
-    if (!isDefaultResolverUsed && hooks?.beforeFieldResolve) {
-      hookContext = invokeBeforeFieldResolveHook(info, exeContext);
+    if (hookContext) {
+      if (isPromise(hookContext)) {
+        result = hookContext.then((context) => {
+          hookContext = context;
+
+          return resolveFn(rootValue, args, contextValue, info);
+        });
+      }
     }
 
     // Call the `subscribe()` resolver or the default resolver to produce an
     // AsyncIterable yielding raw payloads.
-    const result = isPromise(hookContext)
-      ? hookContext.then((context) => {
-          hookContext = context;
-          return resolveFn(rootValue, args, contextValue, info);
-        })
-      : resolveFn(rootValue, args, contextValue, info);
+    if (result === undefined) {
+      result = resolveFn(rootValue, args, contextValue, info);
+    }
 
     if (isPromise(result)) {
-      return result.then(assertEventStream).then(
-        (resolved) => {
-          if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-            hookContext = invokeAfterFieldResolveHook(
-              info,
-              exeContext,
-              hookContext,
-              resolved,
-            );
-          }
-          return resolved;
-        },
-        (error) => {
-          if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-            hookContext = invokeAfterFieldResolveHook(
-              info,
-              exeContext,
-              hookContext,
-              undefined,
-              error,
-            );
-          }
+      return result
+        .then(assertEventStream, (error) => {
+          afterFieldSubscribeHandle(
+            undefined,
+            isDefaultResolverUsed,
+            exeContext,
+            info,
+            hookContext,
+            !!hooks?.afterFieldSubscribe,
+            error,
+          );
           throw locatedError(error, fieldGroup, pathToArray(path));
-        },
-      );
+        })
+        .then((resolved) => {
+          afterFieldSubscribeHandle(
+            resolved,
+            isDefaultResolverUsed,
+            exeContext,
+            info,
+            hookContext,
+            !!hooks?.afterFieldSubscribe,
+          );
+
+          return resolved;
+        });
     }
 
     const stream = assertEventStream(result);
-    if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-      hookContext = invokeAfterFieldResolveHook(
-        info,
-        exeContext,
-        hookContext,
-        stream,
-      );
-    }
+    afterFieldSubscribeHandle(
+      stream,
+      isDefaultResolverUsed,
+      exeContext,
+      info,
+      hookContext,
+      !!hooks?.afterFieldSubscribe,
+    );
     return stream;
   } catch (error) {
-    if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-      hookContext = invokeAfterFieldResolveHook(
+    if (!isDefaultResolverUsed && hooks?.afterFieldSubscribe) {
+      invokeAfterFieldSubscribeHook(
         info,
         exeContext,
         hookContext,
@@ -763,6 +807,7 @@ function executeSubscriptionImpl(
         error,
       );
     }
+
     throw locatedError(error, fieldGroup, pathToArray(path));
   }
 }
@@ -823,27 +868,34 @@ function mapResultOrEventStreamOrPromise(
           payload,
         );
         const hooks = exeContext?.fieldExecutionHooks;
-        let beforeExecuteFieldsHook: void | Promise<void> | undefined;
+        let beforeExecuteSubscriptionEvenEmitHook;
+
         if (hooks?.beforeSubscriptionEventEmit) {
-          beforeExecuteFieldsHook = invokeBeforeSubscriptionEventEmitHook(
-            perEventContext,
-            payload,
-          );
+          beforeExecuteSubscriptionEvenEmitHook =
+            invokeBeforeSubscriptionEventEmitHook(perEventContext, payload);
+
+          if (beforeExecuteSubscriptionEvenEmitHook instanceof GraphQLError) {
+            return buildResponse(perEventContext, null) as TotalExecutionResult;
+          }
         }
         try {
-          const data = isPromise(beforeExecuteFieldsHook)
-            ? beforeExecuteFieldsHook.then(() =>
-                executeFields(
-                  exeContext,
+          const data = isPromise(beforeExecuteSubscriptionEvenEmitHook)
+            ? beforeExecuteSubscriptionEvenEmitHook.then((context) => {
+                if (context instanceof GraphQLError) {
+                  return null;
+                }
+
+                return executeFields(
+                  perEventContext,
                   parentTypeName,
                   payload,
                   path,
                   groupedFieldSet,
                   undefined,
-                ),
-              )
+                );
+              })
             : executeFields(
-                exeContext,
+                perEventContext,
                 parentTypeName,
                 payload,
                 path,
@@ -961,17 +1013,29 @@ function resolveAndCompleteField(
       hookContext = invokeBeforeFieldResolveHook(info, exeContext);
     }
 
-    const result = isPromise(hookContext)
-      ? hookContext.then((context) => {
-          hookContext = context;
-          return resolveFn(source, args, contextValue, info);
-        })
-      : resolveFn(source, args, contextValue, info);
+    let result: unknown;
+
+    if (hookContext instanceof GraphQLError) {
+      result = null;
+    } else if (isPromise(hookContext)) {
+      result = hookContext.then((context) => {
+        hookContext = context;
+
+        if (hookContext instanceof GraphQLError) {
+          return null;
+        }
+
+        return resolveFn(source, args, contextValue, info);
+      });
+    } else {
+      result = resolveFn(source, args, contextValue, info);
+    }
+
     let completed;
 
     if (isPromise(result)) {
-      completed = result.then(
-        (resolved) => {
+      completed = result
+        .then((resolved) => {
           if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
             hookContext = invokeAfterFieldResolveHook(
               info,
@@ -979,33 +1043,39 @@ function resolveAndCompleteField(
               hookContext,
               resolved,
             );
+            return hookContext instanceof GraphQLError ? null : resolved;
           }
-          return completeValue(
-            exeContext,
-            returnTypeRef,
-            fieldGroup,
-            info,
-            path,
-            resolved,
-            incrementalDataRecord,
-          );
-        },
-        (rawError) => {
-          // That's where afterResolve hook can only be called
-          // in the case of async resolver promise rejection.
-          if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
-            hookContext = invokeAfterFieldResolveHook(
-              info,
+
+          return resolved;
+        })
+        .then(
+          (resolved) => {
+            return completeValue(
               exeContext,
-              hookContext,
-              undefined,
-              rawError,
+              returnTypeRef,
+              fieldGroup,
+              info,
+              path,
+              hookContext instanceof GraphQLError ? null : resolved,
+              incrementalDataRecord,
             );
-          }
-          // Error will be handled on field completion
-          throw rawError;
-        },
-      );
+          },
+          (rawError) => {
+            // That's where afterResolve hook can only be called
+            // in the case of async resolver promise rejection.
+            if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
+              hookContext = invokeAfterFieldResolveHook(
+                info,
+                exeContext,
+                hookContext,
+                undefined,
+                rawError,
+              );
+            }
+            // Error will be handled on field completion
+            throw rawError;
+          },
+        );
     } else {
       if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
         hookContext = invokeAfterFieldResolveHook(
@@ -1014,7 +1084,9 @@ function resolveAndCompleteField(
           hookContext,
           result,
         );
+        result = hookContext instanceof GraphQLError ? null : result;
       }
+
       completed = completeValue(
         exeContext,
         returnTypeRef,
@@ -1032,19 +1104,22 @@ function resolveAndCompleteField(
       return completed.then(
         (resolved) => {
           if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
-            invokeAfterFieldCompleteHook(
+            hookContext = invokeAfterFieldCompleteHook(
               info,
               exeContext,
               hookContext,
               resolved,
             );
+            return hookContext instanceof GraphQLError ? null : resolved;
           }
+
           return resolved;
         },
         (rawError) => {
           const error = locatedError(rawError, fieldGroup, pathToArray(path));
+
           if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
-            invokeAfterFieldCompleteHook(
+            hookContext = invokeAfterFieldCompleteHook(
               info,
               exeContext,
               hookContext,
@@ -1052,6 +1127,7 @@ function resolveAndCompleteField(
               error,
             );
           }
+
           handleFieldError(
             rawError,
             exeContext,
@@ -1064,8 +1140,16 @@ function resolveAndCompleteField(
         },
       );
     }
+
     if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
-      invokeAfterFieldCompleteHook(info, exeContext, hookContext, completed);
+      hookContext = invokeAfterFieldCompleteHook(
+        info,
+        exeContext,
+        hookContext,
+        completed,
+      );
+
+      return hookContext instanceof GraphQLError ? null : completed;
     }
     return completed;
   } catch (rawError) {
@@ -1098,6 +1182,7 @@ function resolveAndCompleteField(
         error,
       );
     }
+
     handleFieldError(
       rawError,
       exeContext,
@@ -1659,6 +1744,7 @@ function ensureValidRuntimeType(
       fieldGroup,
     );
   }
+
   if (typeof runtimeTypeName !== "string") {
     throw locatedError(
       `Abstract type "${returnTypeName}" must resolve to an Object type at runtime for field "${info.returnTypeName}.${info.fieldName}" with ` +
@@ -1817,6 +1903,47 @@ function collectAndExecuteSubfields(
   return subFields;
 }
 
+function invokeBeforeFieldSubscribeHook(
+  resolveInfo: ResolveInfo,
+  exeContext: ExecutionContext,
+) {
+  const hook = exeContext.fieldExecutionHooks?.beforeFieldSubscribe;
+  if (!hook) {
+    return;
+  }
+
+  return executeSafe(
+    () =>
+      hook({
+        resolveInfo,
+        context: exeContext.contextValue,
+      }),
+    (result, rawError) => {
+      if (rawError) {
+        const error = toGraphQLError(
+          rawError,
+          resolveInfo.path,
+          "Unexpected error thrown by beforeFieldSubscribe hook",
+        );
+        exeContext.errors.push(error);
+
+        throw error;
+      } else if (result instanceof Error) {
+        const error = toGraphQLError(
+          result,
+          resolveInfo.path,
+          "Unexpected error returned from beforeFieldSubscribe hook",
+        );
+        exeContext.errors.push(error);
+
+        throw error;
+      }
+
+      return result;
+    },
+  );
+}
+
 function invokeBeforeFieldResolveHook(
   resolveInfo: ResolveInfo,
   exeContext: ExecutionContext,
@@ -1825,21 +1952,33 @@ function invokeBeforeFieldResolveHook(
   if (!hook) {
     return;
   }
+
   return executeSafe(
     () =>
       hook({
         resolveInfo,
         context: exeContext.contextValue,
       }),
-    (_, rawError) => {
+    (result, rawError) => {
       if (rawError) {
         const error = toGraphQLError(
           rawError,
           resolveInfo.path,
-          "Unexpected error in beforeFieldResolve hook",
+          "Unexpected error thrown by beforeFieldResolve hook",
+        );
+        exeContext.errors.push(error);
+
+        return error;
+      } else if (result instanceof Error) {
+        const error = toGraphQLError(
+          result,
+          resolveInfo.path,
+          "Unexpected error returned from beforeFieldResolve hook",
         );
         exeContext.errors.push(error);
       }
+
+      return result;
     },
   );
 }
@@ -1864,15 +2003,72 @@ function invokeAfterFieldResolveHook(
         result,
         error,
       }),
-    (_, rawError) => {
+    (result, rawError) => {
       if (rawError) {
         const error = toGraphQLError(
           rawError,
           resolveInfo.path,
-          "Unexpected error in afterFieldResolve hook",
+          "Unexpected error thrown by afterFieldResolve hook",
+        );
+        exeContext.errors.push(error);
+
+        return error;
+      } else if (result instanceof Error) {
+        const error = toGraphQLError(
+          result,
+          resolveInfo.path,
+          "Unexpected error returned from afterFieldResolve hook",
         );
         exeContext.errors.push(error);
       }
+
+      return result;
+    },
+  );
+}
+
+function invokeAfterFieldSubscribeHook(
+  resolveInfo: ResolveInfo,
+  exeContext: ExecutionContext,
+  hookContext: unknown,
+  result?: unknown,
+  error?: unknown,
+) {
+  const hook = exeContext.fieldExecutionHooks?.afterFieldSubscribe;
+  if (!hook) {
+    return;
+  }
+  return executeSafe(
+    () =>
+      hook({
+        resolveInfo,
+        context: exeContext.contextValue,
+        hookContext,
+        result,
+        error,
+      }),
+    (result, rawError) => {
+      if (rawError) {
+        const error = toGraphQLError(
+          rawError,
+          resolveInfo.path,
+          "Unexpected error thrown by afterFieldSubscribe hook",
+        );
+        exeContext.errors.push(error);
+
+        throw error;
+      } else if (result instanceof Error) {
+        const error = toGraphQLError(
+          result,
+          resolveInfo.path,
+          "Unexpected error returned from afterFieldSubscribe hook",
+        );
+        exeContext.errors.push(error);
+
+        throw error;
+      }
+
+      return result;
     },
   );
 }
@@ -1883,12 +2079,12 @@ function invokeAfterFieldCompleteHook(
   hookContext: unknown,
   result?: unknown,
   error?: unknown,
-): void {
+) {
   const hook = exeContext.fieldExecutionHooks?.afterFieldComplete;
   if (!hook) {
     return;
   }
-  executeSafe(
+  return executeSafe(
     () =>
       hook({
         resolveInfo,
@@ -1897,15 +2093,26 @@ function invokeAfterFieldCompleteHook(
         result,
         error,
       }),
-    (_, rawError) => {
+    (result, rawError) => {
       if (rawError) {
         const error = toGraphQLError(
           rawError,
           resolveInfo.path,
-          "Unexpected error in afterFieldComplete hook",
+          "Unexpected error thrown by afterFieldComplete hook",
+        );
+        exeContext.errors.push(error);
+
+        return error;
+      } else if (result instanceof Error) {
+        const error = toGraphQLError(
+          result,
+          resolveInfo.path,
+          "Unexpected error returned from afterFieldComplete hook",
         );
         exeContext.errors.push(error);
       }
+
+      return result;
     },
   );
 }
@@ -1921,15 +2128,29 @@ function invokeBeforeOperationExecuteHook(exeContext: ExecutionContext) {
         context: exeContext.contextValue,
         operation: exeContext.operation,
       }),
-    (_, rawError) => {
+    (result, rawError) => {
+      const operationName = exeContext.operation.name?.value ?? "unknown";
       if (rawError) {
         const error = toGraphQLError(
           rawError,
           undefined,
-          "Unexpected error in beforeOperationExecute hook",
+          `Unexpected error thrown by beforeOperationExecute hook (operation: ${operationName})`,
+        );
+        exeContext.errors.push(error);
+
+        return error;
+      }
+
+      if (result instanceof Error) {
+        const error = toGraphQLError(
+          result,
+          undefined,
+          `Unexpected error returned from beforeOperationExecute hook (operation: ${operationName})`,
         );
         exeContext.errors.push(error);
       }
+
+      return result;
     },
   );
 }
@@ -1949,15 +2170,27 @@ function invokeBeforeSubscriptionEventEmitHook(
         operation: exeContext.operation,
         eventPayload,
       }),
-    (_, rawError) => {
+    (result, rawError) => {
+      const operationName = exeContext.operation.name?.value ?? "unknown";
       if (rawError) {
         const error = toGraphQLError(
           rawError,
           undefined,
-          "Unexpected error in beforeSubscriptionEventEmit hook",
+          `Unexpected error thrown by beforeSubscriptionEventEmit hook (operation: ${operationName})`,
+        );
+        exeContext.errors.push(error);
+
+        return error;
+      } else if (result instanceof Error) {
+        const error = toGraphQLError(
+          result,
+          undefined,
+          `Unexpected error returned from beforeSubscriptionEventEmit hook (operation: ${operationName})`,
         );
         exeContext.errors.push(error);
       }
+
+      return result;
     },
   );
 }
@@ -1977,13 +2210,24 @@ function invokeAfterBuildResponseHook(
         operation: exeContext.operation,
         result,
       }),
-    (_, rawError) => {
+    (result, rawError) => {
+      const operationName = exeContext.operation.name?.value ?? "unknown";
       if (rawError) {
         const error = toGraphQLError(
           rawError,
           undefined,
-          "Unexpected error in afterBuildResponse hook",
+          `Unexpected error thrown by afterBuildResponse hook (operation: ${operationName})`,
         );
+        exeContext.errors.push(error);
+
+        return error;
+      } else if (result instanceof Error) {
+        const error = toGraphQLError(
+          result,
+          undefined,
+          `Unexpected error returned from afterBuildResponse hook (operation: ${operationName})`,
+        );
+
         exeContext.errors.push(error);
       }
     },
@@ -1992,7 +2236,7 @@ function invokeAfterBuildResponseHook(
 
 function executeSafe<T>(
   execute: () => T | Promise<T>,
-  onComplete: (result: T | undefined, error: unknown) => void,
+  onComplete: (result: T | undefined, error: unknown) => T | Promise<T>,
 ): T | Promise<T> {
   let error: unknown;
   let result: T | Promise<T> | undefined;
@@ -2000,24 +2244,18 @@ function executeSafe<T>(
     result = execute();
   } catch (e) {
     error = e;
-  } finally {
-    if (!isPromise(result)) {
-      onComplete(result, error);
-    }
   }
 
   if (!isPromise(result)) {
-    return result as T;
+    return onComplete(result, error);
   }
 
   return result
     .then((hookResult) => {
-      onComplete(hookResult, error);
-      return hookResult;
+      return onComplete(hookResult, error);
     })
     .catch((e) => {
-      onComplete(undefined, e);
-      return undefined;
+      return onComplete(undefined, e);
     }) as Promise<T>;
 }
 
