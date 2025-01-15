@@ -1,9 +1,32 @@
 trigger:
   - "*"
 
+resources:
+  repositories:
+    - repository: 1ESPipelineTemplates
+      type: git
+      name: 1ESPipelineTemplates/1ESPipelineTemplates
+      ref: refs/tags/release
+
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+
   parameters:
+    sdl:
+      sourceAnalysisPool:
+        name: Azure-Pipelines-1ESPT-ExDShared
+        image: windows-2022
+        os: windows
     stages:
       - stage: release
+        variables:
+          # OPTIONAL: Set this varibale to 'true' to enable signing in a target stage.
+          # Remove if signing is not required.
+          Build.ESRP.CodeSign.Enabled: true
+          # OPTIONAL: To disable required tools not applicable in the pipeline set to false.
+          # Supported values: BinSkim, Roslyn, ESLint, PREFast.
+          Build.SDL.<Roslyn>.Enabled: false
+          Build.SDL.<ESLint>.Enabled: true
         jobs:
           - job: Release
             variables:
