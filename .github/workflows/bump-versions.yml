@@ -1,0 +1,17 @@
+name: Bump Version
+
+on:
+  workflow_run:
+    workflows: ["microsoft.graphitation"]
+    types:
+      - completed
+
+jobs:
+  dummy-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dummy Step
+        run: |
+          echo "Starting dummy step..."
+          sleep 2
+          echo "Dummy step completed successfully."

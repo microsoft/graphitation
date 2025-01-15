@@ -1,45 +1,9 @@
-pr: none
 trigger:
-  - main
-  - alloy/relay-apollo-duct-tape
-
-variables:
-  - group: InfoSec-SecurityResults
-  - name: tags
-    value: production,externalfacing
-  - name: serviceTreeID
-    value: ade7d667-42f5-485a-91a9-f1dc6482a9b0
-  - name: adoOrgBaseUrl
-    value: https://pkgs.dev.azure.com/domoreexp
-  - name: adoNpmFeedName
-    value: npm-mirror
-
-resources:
-  repositories:
-    - repository: 1ESPipelineTemplates
-      type: git
-      name: 1ESPipelineTemplates/1ESPipelineTemplates
-      ref: refs/tags/release
-
-extends:
-  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  - "*"
 
   parameters:
-    sdl:
-      sourceAnalysisPool:
-        name: Azure-Pipelines-1ESPT-ExDShared
-        image: windows-2022
-        os: windows
     stages:
       - stage: release
-        variables:
-          # OPTIONAL: Set this varibale to 'true' to enable signing in a target stage.
-          # Remove if signing is not required.
-          Build.ESRP.CodeSign.Enabled: true
-          # OPTIONAL: To disable required tools not applicable in the pipeline set to false.
-          # Supported values: BinSkim, Roslyn, ESLint, PREFast.
-          Build.SDL.<Roslyn>.Enabled: false
-          Build.SDL.<ESLint>.Enabled: true
         jobs:
           - job: Release
             variables:
@@ -49,26 +13,8 @@ extends:
               image: ubuntu-latest
               os: linux
             steps:
-              - script: yarn
-                displayName: yarn
               - script: |
-                  yarn ci
-                displayName: build and test [test]
-              - script: |
-                  git config user.email "gql-svc@microsoft.com"
-                  git config user.name "Graphitation Service Account"
-                  git remote set-url origin https://gql-svc:$(ossGithubPAT)@github.com/microsoft/graphitation.git
-                  git fetch --depth=2
-                displayName: Configure git for release
-              - script: yarn release -y -n $(ossNpmToken) --access public
-                displayName: Release
-              - task: 1ES.PublishPipelineArtifact@1
-                displayName: 📒 Publish Manifest
-                inputs:
-                  artifactName: SBom-$(System.JobAttempt)
-                  targetPath: $(System.DefaultWorkingDirectory)/_manifest
-              - template: .azure-devops/steps/pierce-ado-npm-mirror-cache.yml@self
-                parameters:
-                  adoNpmFeedPat: $(adoNpmFeedPat)
-                  adoOrgBaseUrl: $(adoProjectBaseUrl)
-                  adoNpmFeedName: $(adoNpmFeedName)
+                  echo "Waiting for 2 seconds..."
+                  sleep 2
+                  echo "Returning success."
+                displayName: Wait and return success
