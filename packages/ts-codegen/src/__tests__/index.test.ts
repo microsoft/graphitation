@@ -2292,6 +2292,80 @@ describe(generateTS, () => {
     expect(models).toMatch("extends BaseModel, _StringScope");
     expect(models).toMatch("import type { StringScopeModel as _StringScope");
   });
+  test("generateTS with exportSchemaMap option", () => {
+    const { resolvers, models, enums, inputs } = runGenerateTest(
+      graphql`
+        type User {
+          id: ID!
+          name: String
+        }
+
+        type Post {
+          id: ID!
+          title: String
+        }
+
+        extend type Query {
+          users: [User!]!
+          posts: [Post!]!
+        }
+      `,
+      { exportSchemaMap: true },
+    );
+
+    expect(models).toMatchInlineSnapshot(`
+      "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+      export interface BaseModel {
+          readonly __typename?: string;
+      }
+      export interface User extends BaseModel {
+          readonly __typename?: "User";
+          readonly id: string;
+          readonly name?: string | null;
+      }
+      export interface Post extends BaseModel {
+          readonly __typename?: "Post";
+          readonly id: string;
+          readonly title?: string | null;
+      }
+      "
+    `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import * as Models from "./models.interface";
+      export declare namespace User {
+          export interface Resolvers {
+              readonly id?: id;
+              readonly name?: name;
+          }
+          export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type name = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
+      }
+      export declare namespace Post {
+          export interface Resolvers {
+              readonly id?: id;
+              readonly title?: title;
+          }
+          export type id = (model: Models.Post, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type title = (model: Models.Post, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
+      }
+      export declare namespace Query {
+          export interface Resolvers {
+              readonly users?: users;
+              readonly posts?: posts;
+          }
+          export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User>>;
+          export type posts = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Post>>;
+      }
+      export default interface ResolversMap {
+          readonly User?: User.Resolvers;
+          readonly Post?: Post.Resolvers;
+          readonly Query?: Query.Resolvers;
+      }
+      "
+    `);
+  });
 });
 
 function runGenerateTest(
@@ -2309,6 +2383,7 @@ function runGenerateTest(
     enumNamesToMigrate?: string[];
     enumNamesToKeep?: string[];
     modelScope?: string;
+    exportSchemaMap?: boolean;
   } = {},
 ): {
   enums?: string;
@@ -2335,6 +2410,7 @@ function runGenerateTest(
     useStringUnionsInsteadOfEnums?: boolean;
     enumNamesToMigrate?: string[];
     enumNamesToKeep?: string[];
+    exportSchemaMap?: boolean;
   } = {
     outputPath: "__generated__",
     documentPath: "./typedef.graphql",

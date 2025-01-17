@@ -8,6 +8,26 @@ import { generateLegacyResolvers } from "./legacyResolvers";
 import { generateEnums } from "./enums";
 import { generateInputs } from "./inputs";
 
+interface GenerateTSOptions {
+  outputPath: string;
+  documentPath: string;
+  contextTypePath?: string | null;
+  contextTypeName?: string;
+  enumsImport?: string | null;
+  legacyCompat?: boolean;
+  useStringUnionsInsteadOfEnums?: boolean;
+  legacyNoModelsForObjects?: boolean;
+  modelScope?: string | null;
+  generateOnlyEnums?: boolean;
+  enumNamesToMigrate?: string[];
+  enumNamesToKeep?: string[];
+  contextSubTypeNameTemplate?: string;
+  contextSubTypePathTemplate?: string;
+  defaultContextSubTypePath?: string;
+  defaultContextSubTypeName?: string;
+  generateResolverSchemaMap?: boolean;
+}
+
 export function generateTS(
   document: DocumentNode,
   {
@@ -27,24 +47,8 @@ export function generateTS(
     contextSubTypePathTemplate,
     defaultContextSubTypePath,
     defaultContextSubTypeName,
-  }: {
-    outputPath: string;
-    documentPath: string;
-    contextTypePath?: string | null;
-    contextTypeName?: string;
-    enumsImport?: string | null;
-    legacyCompat?: boolean;
-    useStringUnionsInsteadOfEnums?: boolean;
-    legacyNoModelsForObjects?: boolean;
-    modelScope?: string | null;
-    generateOnlyEnums?: boolean;
-    enumNamesToMigrate?: string[];
-    enumNamesToKeep?: string[];
-    contextSubTypeNameTemplate?: string;
-    contextSubTypePathTemplate?: string;
-    defaultContextSubTypePath?: string;
-    defaultContextSubTypeName?: string;
-  },
+    generateResolverSchemaMap,
+  }: GenerateTSOptions,
 ): {
   files: ts.SourceFile[];
   contextMappingOutput: ContextMap | null;
@@ -80,7 +84,7 @@ export function generateTS(
 
     if (!generateOnlyEnums) {
       result.push(generateModels(context));
-      result.push(generateResolvers(context));
+      result.push(generateResolvers(context, generateResolverSchemaMap));
       if (context.hasInputs) {
         result.push(generateInputs(context));
       }

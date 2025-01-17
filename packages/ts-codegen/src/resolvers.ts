@@ -18,7 +18,10 @@ import {
   getImportIdentifierForTypenames,
 } from "./context/utilities";
 
-export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
+export function generateResolvers(
+  context: TsCodegenContext,
+  generateSchemaMap?: boolean,
+): ts.SourceFile {
   const statements: ts.Statement[] = [];
   statements.push(...context.getBasicImports());
   statements.push(
@@ -137,6 +140,10 @@ export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
   );
 
   const extra: ts.Statement[] = [];
+  if (generateSchemaMap) {
+    extra.push(createResolversMap(context.getAllTypes()));
+  }
+
   const source = factory.createSourceFile(
     (context.getAllImportDeclarations("RESOLVERS") as ts.Statement[])
       .concat(statements)
@@ -382,6 +389,31 @@ function createInterfaceTypeResolvers(
       ),
     ]),
     ts.NodeFlags.Namespace,
+  );
+}
+
+function createResolversMap(types: Type[]): ts.InterfaceDeclaration {
+  return factory.createInterfaceDeclaration(
+    [
+      factory.createModifier(ts.SyntaxKind.ExportKeyword),
+      factory.createModifier(ts.SyntaxKind.DefaultKeyword),
+    ],
+    factory.createIdentifier("ResolversMap"),
+    undefined,
+    undefined,
+    types.map(({ name }) => {
+      return factory.createPropertySignature(
+        [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+        name,
+        factory.createToken(ts.SyntaxKind.QuestionToken),
+        factory.createTypeReferenceNode(
+          factory.createQualifiedName(
+            factory.createIdentifier(name),
+            factory.createIdentifier("Resolvers"),
+          ),
+        ),
+      );
+    }),
   );
 }
 

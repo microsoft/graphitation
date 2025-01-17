@@ -19,6 +19,7 @@ type GenerateInterfacesOptions = {
   enumMigrationJsonFile?: string;
   enumMigrationExceptionsJsonFile?: string;
   generateOnlyEnums?: boolean;
+  generateResolverSchemaMap?: boolean;
   contextSubTypeNameTemplate?: string;
   contextSubTypePathTemplate?: string;
   defaultContextSubTypePath?: string;
@@ -85,6 +86,10 @@ export function supermassive(): Command {
     .option(
       "--enum-migration-exceptions-json-file [enumMigrationExceptionsJsonFile]",
       "File containing array of enum names, which should remain typescript enums",
+    )
+    .option(
+      "--generate-resolver-schema-map",
+      "Generate a schema map for resolvers",
     )
     .description("generate interfaces and models")
     .action(
@@ -209,6 +214,7 @@ async function generateInterfaces(
       legacyNoModelsForObjects: !!options.legacyModels,
       useStringUnionsInsteadOfEnums: !!options.useStringUnionsInsteadOfEnums,
       generateOnlyEnums: !!options.generateOnlyEnums,
+      generateResolverSchemaMap: !!options.generateResolverSchemaMap,
       enumNamesToMigrate,
       enumNamesToKeep,
       modelScope: options.scope || null,
