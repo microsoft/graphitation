@@ -49,6 +49,8 @@ extends:
               image: ubuntu-latest
               os: linux
             steps:
+              - checkout: self
+                persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
               - script: yarn
                 displayName: yarn
               - script: |
@@ -57,7 +59,6 @@ extends:
               - script: |
                   git config user.email "gql-svc@microsoft.com"
                   git config user.name "Graphitation Service Account"
-                  git remote set-url origin https://gql-svc:$(ossGithubPAT)@github.com/microsoft/graphitation.git
                   git fetch --depth=2
                 displayName: Configure git for release
               - script: yarn release -y -n $(ossNpmToken) --access public
