@@ -817,7 +817,6 @@ function runGenerateTest(
     legacyCompat?: boolean;
     enumsImport?: string;
     legacyNoModelsForObjects?: boolean;
-    legacyEnumsCompatibility?: boolean;
     useStringUnionsInsteadOfEnums?: boolean;
     enumNamesToMigrate?: string[];
     enumNamesToKeep?: string[];
@@ -833,7 +832,6 @@ function runGenerateTest(
   legacyTypes?: string;
   legacyResolvers?: string;
   legacyNoModelsForObjects?: boolean;
-  legacyEnumsCompatibility?: boolean;
   useStringUnionsInsteadOfEnums?: boolean;
   enumNamesToMigrate?: string[];
   enumNamesToKeep?: string[];
@@ -846,7 +844,6 @@ function runGenerateTest(
     defaultContextTypePath?: string | null;
     contextName?: string;
     legacyCompat?: boolean;
-    legacyEnumsCompatibility?: boolean;
     legacyNoModelsForObjects?: boolean;
     useStringUnionsInsteadOfEnums?: boolean;
     enumNamesToMigrate?: string[];

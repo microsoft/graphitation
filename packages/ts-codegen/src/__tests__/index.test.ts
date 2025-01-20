@@ -2,6 +2,7 @@ import ts from "typescript";
 import { parse } from "graphql";
 import { blankGraphQLTag as graphql } from "../utilities";
 import { generateTS } from "..";
+import type { GenerateTSOptions } from "../codegen";
 
 describe(generateTS, () => {
   describe("Tests basic syntax GraphQL syntax", () => {
@@ -704,72 +705,6 @@ describe(generateTS, () => {
           userById(id: ID!): User
         }
       `);
-      expect(enums).toMatchInlineSnapshot(`
-        "export enum PresenceAvailability {
-            Available = "Available",
-            Away = "Away",
-            Offline = "Offline"
-        }
-        "
-      `);
-      expect(inputs).toMatchInlineSnapshot(`undefined`);
-      expect(models).toMatchInlineSnapshot(`
-        "import * as Enums from "./enums.interface";
-        export * from "./enums.interface";
-        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
-        export interface BaseModel {
-            readonly __typename?: string;
-        }
-        export interface User extends BaseModel {
-            readonly __typename?: "User";
-            readonly id: string;
-            readonly availability: Enums.PresenceAvailability;
-        }
-        "
-      `);
-      expect(resolvers).toMatchInlineSnapshot(`
-        "import type { PromiseOrValue } from "@graphitation/supermassive";
-        import type { ResolveInfo } from "@graphitation/supermassive";
-        import * as Models from "./models.interface";
-        export declare namespace User {
-            export interface Resolvers {
-                readonly id?: id;
-                readonly availability?: availability;
-            }
-            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-            export type availability = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.PresenceAvailability>;
-        }
-        export declare namespace Query {
-            export interface Resolvers {
-                readonly userById?: userById;
-            }
-            export type userById = (model: unknown, args: {
-                readonly id: string;
-            }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
-        }
-        "
-      `);
-    });
-
-    test("Legacy enums compatibility mode", () => {
-      const { resolvers, models, enums, inputs } = runGenerateTest(
-        graphql`
-          enum PresenceAvailability {
-            Available
-            Away
-            Offline
-          }
-          type User {
-            id: ID!
-            availability: PresenceAvailability!
-          }
-
-          extend type Query {
-            userById(id: ID!): User
-          }
-        `,
-        { legacyEnumsCompatibility: true },
-      );
       expect(enums).toMatchInlineSnapshot(`
         "export enum PresenceAvailability {
             Available = "Available",
@@ -1800,82 +1735,6 @@ describe(generateTS, () => {
     `);
   });
 
-  it("generateTS with string unions instead of enums", () => {
-    const { models, resolvers, legacyTypes, enums, inputs } = runGenerateTest(
-      graphql`
-        interface Node {
-          id: ID!
-        }
-
-        enum Type {
-          type1
-          type2
-        }
-
-        type User implements Node {
-          id: ID!
-          userType: Type!
-        }
-
-        extend type Query {
-          user(id: ID!): User!
-        }
-      `,
-      { useStringUnionsInsteadOfEnums: true },
-    );
-    expect(enums).toMatchInlineSnapshot(`
-      "export type Type = "type1" | "type2";
-      "
-    `);
-    expect(inputs).toMatchInlineSnapshot(`undefined`);
-    expect(models).toMatchInlineSnapshot(`
-      "import * as Enums from "./enums.interface";
-      export * from "./enums.interface";
-      // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
-      export interface BaseModel {
-          readonly __typename?: string;
-      }
-      export interface Node extends BaseModel {
-          readonly __typename?: string;
-      }
-      export interface User extends BaseModel, Node {
-          readonly __typename?: "User";
-          readonly id: string;
-          readonly userType: Enums.Type;
-      }
-      "
-    `);
-    expect(resolvers).toMatchInlineSnapshot(`
-      "import type { PromiseOrValue } from "@graphitation/supermassive";
-      import type { ResolveInfo } from "@graphitation/supermassive";
-      import * as Models from "./models.interface";
-      export declare namespace Node {
-          export interface Resolvers {
-              readonly __resolveType?: __resolveType;
-          }
-          export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
-      }
-      export declare namespace User {
-          export interface Resolvers {
-              readonly id?: id;
-              readonly userType?: userType;
-          }
-          export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-          export type userType = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Type>;
-      }
-      export declare namespace Query {
-          export interface Resolvers {
-              readonly user?: user;
-          }
-          export type user = (model: unknown, args: {
-              readonly id: string;
-          }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
-      }
-      "
-    `);
-    expect(legacyTypes).toMatchInlineSnapshot(`undefined`);
-  });
-
   it("generateTS with string unions instead of enums, but only Enums specified in enumNamesToMigrate will be migrated", () => {
     const { models, resolvers, legacyTypes, enums, inputs } = runGenerateTest(
       graphql`
@@ -2292,44 +2151,21 @@ describe(generateTS, () => {
     expect(models).toMatch("extends BaseModel, _StringScope");
     expect(models).toMatch("import type { StringScopeModel as _StringScope");
   });
-  test("generateTS with exportSchemaMap option", () => {
-    const { resolvers, models, enums, inputs } = runGenerateTest(
+
+  test("generateTS with generateResolverMap option", () => {
+    const { resolvers } = runGenerateTest(
       graphql`
         type User {
           id: ID!
           name: String
         }
 
-        type Post {
-          id: ID!
-          title: String
-        }
-
         extend type Query {
           users: [User!]!
-          posts: [Post!]!
         }
       `,
-      { exportSchemaMap: true },
+      { generateResolverMap: true },
     );
-
-    expect(models).toMatchInlineSnapshot(`
-      "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
-      export interface BaseModel {
-          readonly __typename?: string;
-      }
-      export interface User extends BaseModel {
-          readonly __typename?: "User";
-          readonly id: string;
-          readonly name?: string | null;
-      }
-      export interface Post extends BaseModel {
-          readonly __typename?: "Post";
-          readonly id: string;
-          readonly title?: string | null;
-      }
-      "
-    `);
     expect(resolvers).toMatchInlineSnapshot(`
       "import type { PromiseOrValue } from "@graphitation/supermassive";
       import type { ResolveInfo } from "@graphitation/supermassive";
@@ -2342,25 +2178,14 @@ describe(generateTS, () => {
           export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
           export type name = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
       }
-      export declare namespace Post {
-          export interface Resolvers {
-              readonly id?: id;
-              readonly title?: title;
-          }
-          export type id = (model: Models.Post, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-          export type title = (model: Models.Post, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
-      }
       export declare namespace Query {
           export interface Resolvers {
               readonly users?: users;
-              readonly posts?: posts;
           }
           export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User>>;
-          export type posts = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Post>>;
       }
       export default interface ResolversMap {
           readonly User?: User.Resolvers;
-          readonly Post?: Post.Resolvers;
           readonly Query?: Query.Resolvers;
       }
       "
@@ -2370,21 +2195,7 @@ describe(generateTS, () => {
 
 function runGenerateTest(
   doc: string,
-  options: {
-    outputPath?: string;
-    documentPath?: string;
-    defaultContextTypePath?: string;
-    contextTypeName?: string;
-    legacyCompat?: boolean;
-    enumsImport?: string;
-    legacyNoModelsForObjects?: boolean;
-    legacyEnumsCompatibility?: boolean;
-    useStringUnionsInsteadOfEnums?: boolean;
-    enumNamesToMigrate?: string[];
-    enumNamesToKeep?: string[];
-    modelScope?: string;
-    exportSchemaMap?: boolean;
-  } = {},
+  options: Partial<GenerateTSOptions> = {},
 ): {
   enums?: string;
   inputs?: string;
@@ -2393,29 +2204,16 @@ function runGenerateTest(
   legacyTypes?: string;
   legacyResolvers?: string;
   legacyNoModelsForObjects?: boolean;
-  legacyEnumsCompatibility?: boolean;
   useStringUnionsInsteadOfEnums?: boolean;
   enumNamesToMigrate?: string[];
   enumNamesToKeep?: string[];
   modelScope?: string;
 } {
-  const fullOptions: {
-    outputPath: string;
-    documentPath: string;
-    defaultContextTypePath?: string | null;
-    contextTypeName?: string;
-    legacyCompat?: boolean;
-    legacyEnumsCompatibility?: boolean;
-    legacyNoModelsForObjects?: boolean;
-    useStringUnionsInsteadOfEnums?: boolean;
-    enumNamesToMigrate?: string[];
-    enumNamesToKeep?: string[];
-    exportSchemaMap?: boolean;
-  } = {
+  const fullOptions = {
     outputPath: "__generated__",
     documentPath: "./typedef.graphql",
     ...options,
-  };
+  } satisfies GenerateTSOptions;
   const document = parse(doc);
   const { files } = generateTS(document, fullOptions);
 

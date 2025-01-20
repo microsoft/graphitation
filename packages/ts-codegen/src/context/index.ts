@@ -957,6 +957,8 @@ export type Type =
   | InputObjectType
   | ScalarType;
 
+export type ResolverType = ObjectType | InterfaceType | UnionType;
+
 export interface EnumType {
   kind: "ENUM";
 

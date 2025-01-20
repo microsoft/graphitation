@@ -8,7 +8,7 @@ import { generateLegacyResolvers } from "./legacyResolvers";
 import { generateEnums } from "./enums";
 import { generateInputs } from "./inputs";
 
-interface GenerateTSOptions {
+export interface GenerateTSOptions {
   outputPath: string;
   documentPath: string;
   contextTypePath?: string | null;
@@ -25,7 +25,19 @@ interface GenerateTSOptions {
   contextSubTypePathTemplate?: string;
   defaultContextSubTypePath?: string;
   defaultContextSubTypeName?: string;
-  generateResolverSchemaMap?: boolean;
+  /**
+   * Enable the generation of the resolver map as the default export in the resolvers file.
+   *
+   * @see createResolversMap in packages/ts-codegen/src/resolvers.ts
+   *
+   * @example
+   * export default interface ResolversMap {
+   *    readonly User?: User.Resolvers;
+   *    readonly Post?: Post.Resolvers;
+   *    readonly Query?: Query.Resolvers;
+   *   }
+   * */
+  generateResolverMap?: boolean;
 }
 
 export function generateTS(
@@ -47,7 +59,7 @@ export function generateTS(
     contextSubTypePathTemplate,
     defaultContextSubTypePath,
     defaultContextSubTypeName,
-    generateResolverSchemaMap,
+    generateResolverMap,
   }: GenerateTSOptions,
 ): {
   files: ts.SourceFile[];
@@ -84,7 +96,7 @@ export function generateTS(
 
     if (!generateOnlyEnums) {
       result.push(generateModels(context));
-      result.push(generateResolvers(context, generateResolverSchemaMap));
+      result.push(generateResolvers(context, generateResolverMap));
       if (context.hasInputs) {
         result.push(generateInputs(context));
       }
