@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createAsyncIterator, forAwaitEach, getAsyncIterator } from "iterall";
 import { mapAsyncIterator } from "../../utilities/mapAsyncIterator";
@@ -242,7 +241,7 @@ const searchTransportsByName: FieldResolver<any, SwapiContext, any> = (
     .filter((transport: any) => new RegExp(search, "i").test(transport.name));
 };
 
-const resolvers: Resolvers = {
+const resolvers: Resolvers<any, SwapiContext> = {
   SearchResult: {
     __resolveType(parent: any) {
       return parent.__typename;
@@ -274,33 +273,33 @@ const resolvers: Resolvers = {
   Query: {
     search(parent, { search }, { models }, info) {
       const result = [
-        ...searchFilmsByTitle(parent, { search }, { models }, info).map(
-          (r: any) => (r.__typename = "Film") && r,
-        ),
-        ...searchPeopleByName(parent, { search }, { models }, info).map(
-          (r: any) => (r.__typename = "Person") && r,
-        ),
-        ...searchPlanetsByName(parent, { search }, { models }, info).map(
-          (r: any) => (r.__typename = "Planet") && r,
-        ),
-        ...searchSpeciesByName(parent, { search }, { models }, info).map(
-          (r: any) => (r.__typename = "Species") && r,
-        ),
-        ...searchStarshipsByName(parent, { search }, { models }, info).map(
-          (r: any) => (r.__typename = "Starship") && r,
-        ),
-        ...searchTransportsByName(parent, { search }, { models }, info).map(
-          (r: any) => (r.__typename = "Transport") && r,
-        ),
-        ...searchVehiclesByName(parent, { search }, { models }, info).map(
-          (r: any) => (r.__typename = "Vehicle") && r,
-        ),
+        ...(
+          searchFilmsByTitle(parent, { search }, { models }, info) as any
+        ).map((r: any) => (r.__typename = "Film") && r),
+        ...(
+          searchPeopleByName(parent, { search }, { models }, info) as any
+        ).map((r: any) => (r.__typename = "Person") && r),
+        ...(
+          searchPlanetsByName(parent, { search }, { models }, info) as any
+        ).map((r: any) => (r.__typename = "Planet") && r),
+        ...(
+          searchSpeciesByName(parent, { search }, { models }, info) as any
+        ).map((r: any) => (r.__typename = "Species") && r),
+        ...(
+          searchStarshipsByName(parent, { search }, { models }, info) as any
+        ).map((r: any) => (r.__typename = "Starship") && r),
+        ...(
+          searchTransportsByName(parent, { search }, { models }, info) as any
+        ).map((r: any) => (r.__typename = "Transport") && r),
+        ...(
+          searchVehiclesByName(parent, { search }, { models }, info) as any
+        ).map((r: any) => (r.__typename = "Vehicle") && r),
       ];
 
       return result;
     },
 
-    node(parent, args, context, info) {
+    node(parent, args: any, context: any, info) {
       let result;
       switch (args.nodeType) {
         case "Person": {
@@ -335,7 +334,7 @@ const resolvers: Resolvers = {
           throw new Error(`Invalid node type ${args.nodeType}`);
       }
       return {
-        ...result,
+        ...(result as any),
         __typename: args.nodeType,
       };
     },
@@ -391,19 +390,19 @@ const resolvers: Resolvers = {
     species,
   },
   Starship: {
-    MGLT: (starship) => +starship.MGLT,
-    hyperdrive_rating: (starship) => +starship.hyperdrive_rating,
-    cargo_capacity: (starship) => +starship.cargo_capacity,
-    passengers: (starship) => +starship.passengers,
-    max_atmosphering_speed: (starship) => +starship.max_atmosphering_speed,
-    length: (starship) => +starship.length,
-    cost_in_credits: (starship) => +starship.cost_in_credits,
+    MGLT: (starship: any) => +starship.MGLT,
+    hyperdrive_rating: (starship: any) => +starship.hyperdrive_rating,
+    cargo_capacity: (starship: any) => +starship.cargo_capacity,
+    passengers: (starship: any) => +starship.passengers,
+    max_atmosphering_speed: (starship: any) => +starship.max_atmosphering_speed,
+    length: (starship: any) => +starship.length,
+    cost_in_credits: (starship: any) => +starship.cost_in_credits,
     pilots: people("pilots"),
     films,
   },
   Person: {
-    height: (pilot) => +pilot.height,
-    mass: (pilot) => +pilot.mass,
+    height: (pilot: any) => +pilot.height,
+    mass: (pilot: any) => +pilot.mass,
     starships,
     homeworld,
     films,
