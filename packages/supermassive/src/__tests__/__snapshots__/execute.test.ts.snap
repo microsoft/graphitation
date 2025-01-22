@@ -376,7 +376,7 @@ exports[`graphql-js snapshot check to ensure test stability subscription throw a
 [
   {
     "data": {
-      "emitPersons": {
+      "emitPersonsV2": {
         "gender": "male",
         "name": "Luke Skywalker",
       },
@@ -384,7 +384,7 @@ exports[`graphql-js snapshot check to ensure test stability subscription throw a
   },
   {
     "data": {
-      "emitPersons": {
+      "emitPersonsV2": {
         "gender": "n/a",
         "name": "C-3PO",
       },
@@ -392,7 +392,7 @@ exports[`graphql-js snapshot check to ensure test stability subscription throw a
   },
   {
     "data": {
-      "emitPersons": null,
+      "emitPersonsV2": null,
     },
     "errors": [
       [GraphQLError: No robots allowed],
@@ -400,7 +400,7 @@ exports[`graphql-js snapshot check to ensure test stability subscription throw a
   },
   {
     "data": {
-      "emitPersons": {
+      "emitPersonsV2": {
         "gender": "male",
         "name": "Darth Vader",
       },
@@ -408,7 +408,7 @@ exports[`graphql-js snapshot check to ensure test stability subscription throw a
   },
   {
     "data": {
-      "emitPersons": {
+      "emitPersonsV2": {
         "gender": "female",
         "name": "Leia Organa",
       },
