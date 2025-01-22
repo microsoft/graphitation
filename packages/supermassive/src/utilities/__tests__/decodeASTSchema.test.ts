@@ -47,9 +47,13 @@ function cleanUpDocument(doc: DocumentNode): DocumentNode {
       delete node.description;
       delete node.loc;
       delete node.block;
-      if (node.directives?.length === 0) {
+      if (node.directives?.length === 0 || node.directives == null) {
         delete node.directives;
       }
+      // Enable for Gql 17
+      // if (node.interfaces?.length === 0) {
+      //   delete node.interfaces;
+      // }
       return node;
     },
   });

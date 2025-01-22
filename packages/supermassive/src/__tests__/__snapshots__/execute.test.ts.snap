@@ -372,6 +372,51 @@ exports[`graphql-js snapshot check to ensure test stability subscription throw a
 }
 `;
 
+exports[`graphql-js snapshot check to ensure test stability subscription throw an error in the middle 1`] = `
+[
+  {
+    "data": {
+      "emitPersons": {
+        "gender": "male",
+        "name": "Luke Skywalker",
+      },
+    },
+  },
+  {
+    "data": {
+      "emitPersons": {
+        "gender": "n/a",
+        "name": "C-3PO",
+      },
+    },
+  },
+  {
+    "data": {
+      "emitPersons": null,
+    },
+    "errors": [
+      [GraphQLError: No robots allowed],
+    ],
+  },
+  {
+    "data": {
+      "emitPersons": {
+        "gender": "male",
+        "name": "Darth Vader",
+      },
+    },
+  },
+  {
+    "data": {
+      "emitPersons": {
+        "gender": "female",
+        "name": "Leia Organa",
+      },
+    },
+  },
+]
+`;
+
 exports[`graphql-js snapshot check to ensure test stability union in interface fragment spread 1`] = `
 {
   "data": {
