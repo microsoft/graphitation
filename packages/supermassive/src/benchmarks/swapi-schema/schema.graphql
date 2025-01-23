@@ -29,7 +29,8 @@ enum NodeType {
 }
 
 type Subscription {
-  emitPersons(limit: Int!, throwError: Boolean): Person
+  emitPersons(limit: Int!, throwError: Boolean, emitError: Boolean): Person
+  emitPersonsV2(limit: Int!, throwError: Boolean, emitError: Boolean): Person
   nonNullWithError: String!
   nonNullWithErrorEvent: String!
   nonNullWithNull: String!

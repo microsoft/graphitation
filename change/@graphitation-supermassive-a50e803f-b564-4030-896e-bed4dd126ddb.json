@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "Add test for correct subscirption behaviour",
+  "packageName": "@graphitation/supermassive",
+  "email": "mnovikov@microsoft.com",
+  "dependentChangeType": "none"
+}
