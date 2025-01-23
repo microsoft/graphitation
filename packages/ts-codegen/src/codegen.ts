@@ -8,6 +8,38 @@ import { generateLegacyResolvers } from "./legacyResolvers";
 import { generateEnums } from "./enums";
 import { generateInputs } from "./inputs";
 
+export interface GenerateTSOptions {
+  outputPath: string;
+  documentPath: string;
+  contextTypePath?: string | null;
+  contextTypeName?: string;
+  enumsImport?: string | null;
+  legacyCompat?: boolean;
+  useStringUnionsInsteadOfEnums?: boolean;
+  legacyNoModelsForObjects?: boolean;
+  modelScope?: string | null;
+  generateOnlyEnums?: boolean;
+  enumNamesToMigrate?: string[];
+  enumNamesToKeep?: string[];
+  contextSubTypeNameTemplate?: string;
+  contextSubTypePathTemplate?: string;
+  defaultContextSubTypePath?: string;
+  defaultContextSubTypeName?: string;
+  /**
+   * Enable the generation of the resolver map as the default export in the resolvers file.
+   *
+   * @see createResolversMap in packages/ts-codegen/src/resolvers.ts
+   *
+   * @example
+   * export default interface ResolversMap {
+   *    readonly User?: User.Resolvers;
+   *    readonly Post?: Post.Resolvers;
+   *    readonly Query?: Query.Resolvers;
+   *   }
+   * */
+  generateResolverMap?: boolean;
+}
+
 export function generateTS(
   document: DocumentNode,
   {
@@ -27,24 +59,8 @@ export function generateTS(
     contextSubTypePathTemplate,
     defaultContextSubTypePath,
     defaultContextSubTypeName,
-  }: {
-    outputPath: string;
-    documentPath: string;
-    contextTypePath?: string | null;
-    contextTypeName?: string;
-    enumsImport?: string | null;
-    legacyCompat?: boolean;
-    useStringUnionsInsteadOfEnums?: boolean;
-    legacyNoModelsForObjects?: boolean;
-    modelScope?: string | null;
-    generateOnlyEnums?: boolean;
-    enumNamesToMigrate?: string[];
-    enumNamesToKeep?: string[];
-    contextSubTypeNameTemplate?: string;
-    contextSubTypePathTemplate?: string;
-    defaultContextSubTypePath?: string;
-    defaultContextSubTypeName?: string;
-  },
+    generateResolverMap,
+  }: GenerateTSOptions,
 ): {
   files: ts.SourceFile[];
   contextMappingOutput: ContextMap | null;
@@ -80,7 +96,7 @@ export function generateTS(
 
     if (!generateOnlyEnums) {
       result.push(generateModels(context));
-      result.push(generateResolvers(context));
+      result.push(generateResolvers(context, generateResolverMap));
       if (context.hasInputs) {
         result.push(generateInputs(context));
       }

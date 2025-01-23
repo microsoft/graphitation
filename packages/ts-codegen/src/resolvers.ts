@@ -4,7 +4,7 @@ import {
   ObjectType,
   UnionType,
   TsCodegenContext,
-  Type,
+  ResolverType,
   InterfaceType,
 } from "./context";
 import {
@@ -18,7 +18,21 @@ import {
   getImportIdentifierForTypenames,
 } from "./context/utilities";
 
-export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
+const getResolverTypes = (context: TsCodegenContext): ResolverType[] => {
+  return context
+    .getAllTypes()
+    .filter(
+      (type) =>
+        type.kind === "OBJECT" ||
+        type.kind === "UNION" ||
+        type.kind === "INTERFACE",
+    );
+};
+
+export function generateResolvers(
+  context: TsCodegenContext,
+  generateResolverMap?: boolean,
+): ts.SourceFile {
   const statements: ts.Statement[] = [];
   statements.push(...context.getBasicImports());
   statements.push(
@@ -129,14 +143,16 @@ export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
     );
   }
 
+  const resolverTypes = getResolverTypes(context);
   statements.push(
-    ...(context
-      .getAllTypes()
-      .map((type) => createResolversForType(context, type))
-      .filter((t) => t != null) as ts.Statement[]),
+    ...resolverTypes.map((type) => createResolversForType(context, type)),
   );
 
   const extra: ts.Statement[] = [];
+  if (generateResolverMap) {
+    extra.push(createResolversMap(resolverTypes));
+  }
+
   const source = factory.createSourceFile(
     (context.getAllImportDeclarations("RESOLVERS") as ts.Statement[])
       .concat(statements)
@@ -150,9 +166,10 @@ export function generateResolvers(context: TsCodegenContext): ts.SourceFile {
 
 function createResolversForType(
   context: TsCodegenContext,
-  type: Type,
-): ts.Statement | null {
-  switch (type.kind) {
+  type: ResolverType,
+): ts.Statement {
+  const { kind } = type;
+  switch (kind) {
     case "OBJECT": {
       return createObjectTypeResolvers(context, type);
     }
@@ -162,16 +179,14 @@ function createResolversForType(
     case "INTERFACE": {
       return createInterfaceTypeResolvers(context, type);
     }
-    default: {
-      return null;
-    }
   }
+  kind satisfies never;
 }
 
 function createObjectTypeResolvers(
   context: TsCodegenContext,
   type: ObjectType,
-): ts.ModuleDeclaration | null {
+): ts.ModuleDeclaration {
   const members: ts.Statement[] = type.fields.map((field) =>
     createResolverField(context, type, field),
   );
@@ -210,7 +225,7 @@ function isRootOperationType(type: string): boolean {
 }
 function createResolverField(
   context: TsCodegenContext,
-  type: Type,
+  type: ResolverType,
   field: Field,
 ): ts.TypeAliasDeclaration {
   let modelIdentifier;
@@ -382,6 +397,31 @@ function createInterfaceTypeResolvers(
       ),
     ]),
     ts.NodeFlags.Namespace,
+  );
+}
+
+function createResolversMap(types: ResolverType[]): ts.InterfaceDeclaration {
+  return factory.createInterfaceDeclaration(
+    [
+      factory.createModifier(ts.SyntaxKind.ExportKeyword),
+      factory.createModifier(ts.SyntaxKind.DefaultKeyword),
+    ],
+    factory.createIdentifier("ResolversMap"),
+    undefined,
+    undefined,
+    types.map(({ name }) => {
+      return factory.createPropertySignature(
+        [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+        name,
+        factory.createToken(ts.SyntaxKind.QuestionToken),
+        factory.createTypeReferenceNode(
+          factory.createQualifiedName(
+            factory.createIdentifier(name),
+            factory.createIdentifier("Resolvers"),
+          ),
+        ),
+      );
+    }),
   );
 }
 
