@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 23 Jan 2025 10:40:26 GMT",
+      "version": "3.8.0",
+      "tag": "@graphitation/supermassive_v3.8.0",
+      "comments": {
+        "none": [
+          {
+            "author": "mnovikov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "5b89756283f357be4901b31486a9129656aa645a",
+            "comment": "Add test for correct subscirption behaviour"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 02 Jan 2025 12:43:51 GMT",
       "version": "3.8.0",
       "tag": "@graphitation/supermassive_v3.8.0",
