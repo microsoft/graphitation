@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Reverting back context bug fix in mapResultOrEventStreamOrPromise",
-  "packageName": "@graphitation/supermassive",
-  "email": "77059398+vejrj@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}

@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 23 Jan 2025 12:25:19 GMT",
+      "version": "3.8.2",
+      "tag": "@graphitation/supermassive_v3.8.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/supermassive",
+            "commit": "c1041fc742299584ebbe5774a6ba056b4a14a830",
+            "comment": "Reverting back context bug fix in mapResultOrEventStreamOrPromise"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 23 Jan 2025 10:40:26 GMT",
       "version": "3.8.0",
       "tag": "@graphitation/supermassive_v3.8.0",
