@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Fri, 22 Nov 2024 09:11:34 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 23 Jan 2025 11:35:51 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 2.14.0
+
+Thu, 23 Jan 2025 11:35:51 GMT
+
+### Minor changes
+
+- new --generate-resolver-map flag (pavelglac@gmail.com)
 
 ## 2.13.0
 

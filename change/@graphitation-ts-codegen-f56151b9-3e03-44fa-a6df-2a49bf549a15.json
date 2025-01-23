@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "new --generate-resolver-map flag",
-  "packageName": "@graphitation/ts-codegen",
-  "email": "pavelglac@gmail.com",
-  "dependentChangeType": "patch"
-}

@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Thu, 23 Jan 2025 11:35:51 GMT",
+      "version": "2.14.0",
+      "tag": "@graphitation/ts-codegen_v2.14.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "f195f121a4ae4a684681fca67deee1db5c367710",
+            "comment": "new --generate-resolver-map flag"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 22 Nov 2024 09:11:34 GMT",
       "version": "2.13.0",
       "tag": "@graphitation/ts-codegen_v2.13.0",

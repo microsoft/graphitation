@@ -2,6 +2,27 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Thu, 23 Jan 2025 11:35:51 GMT",
+      "version": "1.15.0",
+      "tag": "@graphitation/cli_v1.15.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/cli",
+            "commit": "f195f121a4ae4a684681fca67deee1db5c367710",
+            "comment": "new --generate-resolver-map flag"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.14.0",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 22 Nov 2024 09:11:34 GMT",
       "version": "1.14.0",
       "tag": "@graphitation/cli_v1.14.0",
