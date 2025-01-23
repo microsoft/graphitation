@@ -307,16 +307,18 @@ function executeOperation(
 ): PromiseOrValue<ExecutionResult> {
   try {
     const { operation, rootValue } = exeContext;
+    const { operation: operationType, selectionSet } = operation;
     const rootTypeName = getOperationRootTypeName(operation);
-    const { groupedFieldSet, patches } = collectFields(
+    const { groupedFieldSet, deferredFieldSets } = collectFields(
       exeContext,
       rootTypeName,
+      selectionSet,
     );
     const path = undefined;
     let result;
 
     // Note: cannot use OperationTypeNode from graphql-js as it doesn't exist in 15.x
-    switch (operation.operation) {
+    switch (operationType) {
       case "query":
         result = executeFields(
           exeContext,
@@ -356,13 +358,12 @@ function executeOperation(
         );
     }
 
-    for (const patch of patches) {
-      const { label, groupedFieldSet: patchGroupedFieldSet } = patch;
+    for (const { label, groupedFieldSet } of deferredFieldSets) {
       executeDeferredFragment(
         exeContext,
         rootTypeName,
         rootValue,
-        patchGroupedFieldSet,
+        groupedFieldSet,
         label,
         path,
       );
@@ -405,8 +406,8 @@ function buildResponse(
         initialResult: {
           ...initialResult,
           hasNext: true,
-        },
-        subsequentResults: yieldSubsequentPayloads(exeContext),
+        } as any,
+        subsequentResults: yieldSubsequentPayloads(exeContext) as any,
       };
     } else {
       if (hooks?.afterBuildResponse) {
@@ -525,7 +526,7 @@ function executeFields(
 
 /**
  * Implements the "Executing field" section of the spec
- * In particular, this function figures out the value that the field returns by
+ * `In` particular, this function figures out the value that the field returns by
  * calling its resolve function, then calls completeValue to complete promises,
  * serialize scalars, or execute the sub-selection-set for objects.
  */
@@ -680,7 +681,11 @@ function executeSubscriptionImpl(
 ): PromiseOrValue<AsyncIterable<unknown>> {
   const { operation, rootValue, schemaFragment } = exeContext;
   const rootTypeName = getOperationRootTypeName(operation);
-  const { groupedFieldSet } = collectFields(exeContext, rootTypeName);
+  const { groupedFieldSet } = collectFields(
+    exeContext,
+    rootTypeName,
+    operation.selectionSet,
+  );
 
   const firstRootField = groupedFieldSet.entries().next().value;
   if (firstRootField === undefined) {
@@ -931,6 +936,7 @@ export function buildResolveInfo(
   return {
     fieldName: fieldName,
     fieldNodes: fieldGroup,
+    fieldGroup: fieldGroup,
     returnTypeName,
     parentTypeName,
     path,
@@ -1875,7 +1881,7 @@ function collectAndExecuteSubfields(
   incrementalDataRecord: IncrementalDataRecord | undefined,
 ): PromiseOrValue<ObjMap<unknown>> {
   // Collect sub-fields to execute to complete this value.
-  const { groupedFieldSet: subGroupedFieldSet, patches: subPatches } =
+  const { groupedFieldSet: subGroupedFieldSet, deferredFieldSets: subPatches } =
     collectSubfields(exeContext, { name: returnTypeName }, fieldGroup);
 
   const subFields = executeFields(

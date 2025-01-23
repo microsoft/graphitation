@@ -148,7 +148,3 @@ export type {
   BaseExecuteFieldHookArgs,
   ExecutionHooks,
 } from "./hooks/types";
-
-export * as LegacyTypedAST from "./legacyAST/TypedAST";
-export { addTypesToRequestDocument as addSupermassiveLegacyTypesToRequestDocument } from "./legacyAST/addTypesToRequestDocument";
-export { annotateDocumentGraphQLTransform as annotateDocumentWithSupermassiveLegacyTypesGraphQLTransform } from "./legacyAST/annotateDocumentGraphQLTransform";

@@ -1,7 +1,4 @@
-import {
-  DirectiveLocation as GraphQLDirectiveLocation,
-  DirectiveLocationEnum,
-} from "graphql";
+import { DirectiveLocation as GraphQLDirectiveLocation } from "graphql";
 import { isSpecifiedScalarType } from "./resolvers";
 import { TypeName, TypeReference, typeNameFromReference } from "./reference";
 
@@ -432,13 +429,13 @@ export function getDirectiveLocations(
 }
 
 export function encodeDirectiveLocation(
-  location: DirectiveLocationEnum,
+  location: GraphQLDirectiveLocation,
 ): DirectiveLocation {
   return DirectiveLocation[location];
 }
 export function decodeDirectiveLocation(
   location: DirectiveLocation,
-): DirectiveLocationEnum {
+): GraphQLDirectiveLocation {
   return DirectiveLocationToGraphQL[location];
 }
 

@@ -13,7 +13,7 @@ async function main() {
   const packageJsonData = await fs.readFile(packageJsonPath, "utf-8");
 
   const { stderr } = await exec(
-    `yarn add graphql@17.0.0-alpha.2 --exact --dev --no-lockfile`,
+    `yarn add graphql@17.0.0-alpha.7 --exact --dev --no-lockfile`,
   );
   console.log(stderr);
 
