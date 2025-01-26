@@ -1,14 +1,17 @@
 import type { DocumentNode } from "graphql";
-import type { CacheEnv, Store } from "./types";
+import type { CacheEnv, CacheKey, Store } from "./types";
 import type {
   DocumentDescriptor,
   OperationDescriptor,
   ResultTreeDescriptor,
-  VariableName,
 } from "../descriptor/types";
 import { equal } from "@wry/equality";
 import { describeDocument } from "../descriptor/document";
-import { applyDefaultValues, describeOperation } from "../descriptor/operation";
+import {
+  applyDefaultValues,
+  createVariablesKey,
+  describeOperation,
+} from "../descriptor/operation";
 import { addTypenameToDocument } from "../descriptor/addTypenameToDocument";
 import { assert } from "../jsutils/assert";
 import { describeResultTree } from "../descriptor/possibleSelection";
@@ -33,43 +36,26 @@ export function resolveOperationDescriptor(
   doc: DocumentNode,
   variables?: { [key: string]: unknown },
   rootNodeKey?: string,
-  keyVars: VariableName[] | null = null,
 ): OperationDescriptor & { rootNodeKey: string | false } {
   const document = env.addTypename ? transformDocument(doc) : doc;
   const documentDescriptor = describeDocument(document);
 
   let variants = operations.get(document);
   if (!variants) {
-    variants = new Set<OperationDescriptor>();
+    variants = new Map<CacheKey, OperationDescriptor>();
     operations.set(document, variants);
   }
-
-  let rootTypeName;
-  if (isFragmentDocument(documentDescriptor)) {
-    const fragment = getFragmentNode(documentDescriptor);
-    rootTypeName = fragment.typeCondition.name.value;
-  }
-
   const variablesWithDefaultValues = applyDefaultValues(
     variables ?? {},
     documentDescriptor.definition.variableDefinitions,
   );
+  const variablesKey = createVariablesKey(
+    documentDescriptor.definition.variableDefinitions,
+    variablesWithDefaultValues,
+  );
+  const cacheKey = createCacheKeyImpl(variablesKey, rootNodeKey);
 
-  let match: OperationDescriptor | undefined;
-  for (const variant of variants) {
-    if (
-      variablesAreEqual(
-        variablesWithDefaultValues,
-        variant.variablesWithDefaults,
-        keyVars,
-      ) &&
-      (typeof rootNodeKey === "undefined" ||
-        variant.rootNodeKey === rootNodeKey)
-    ) {
-      match = variant;
-      break;
-    }
-  }
+  let match = variants.get(cacheKey);
   if (!match) {
     let resultTreeDescriptor = resultTreeDescriptors.get(document);
     if (!resultTreeDescriptor) {
@@ -79,16 +65,22 @@ export function resolveOperationDescriptor(
       );
       resultTreeDescriptors.set(document, resultTreeDescriptor);
     }
+    let rootTypeName;
+    if (isFragmentDocument(documentDescriptor)) {
+      const fragment = getFragmentNode(documentDescriptor);
+      rootTypeName = fragment.typeCondition.name.value;
+    }
     match = describeOperation(
       env,
       documentDescriptor,
       resultTreeDescriptor,
       variables ?? {},
       variablesWithDefaultValues,
+      variablesKey,
       rootTypeName,
       rootNodeKey,
     );
-    variants.add(match);
+    variants.set(cacheKey, match);
   }
   if (
     typeof rootNodeKey !== "undefined" &&
@@ -155,28 +147,46 @@ export function getDiffDescriptor(
     );
     diffDescriptors.set(options, operationDescriptor);
   }
-  return resolveKeyDescriptor(env, store, operationDescriptor);
+  return resolveResultDescriptor(env, store, operationDescriptor);
 }
 
 /**
- * Returned result will be the same as `operation` when `@cache(keyVars: [...])` is not set on document,
- * otherwise - the first found descriptor with matching keyVars
+ * ApolloCompat: In some cases results of multiple operations may be stored in a single result tree.
+ *
+ * E.g. when using merge policies for pagination and merging multiple pages into
+ * the very first page, all other pages should not be stored separately
+ * (otherwise updates become too expensive)
+ *
+ * This is achieved via `@cache(keyVars: [...])` directive.
+ *
+ * We still have individual operation descriptors, but only using the very first
+ * descriptor with matching keyVariables as a key for result tree.
  */
-export function resolveKeyDescriptor(
+export function resolveResultDescriptor(
   env: CacheEnv,
   store: Store,
   operation: OperationDescriptor,
 ): OperationDescriptor {
-  return operation.keyVariables
-    ? resolveOperationDescriptor(
-        env,
-        store,
-        operation.document,
-        operation.variables,
-        operation.rootNodeKey,
+  if (!operation.keyVariables) {
+    return operation;
+  }
+  const byDocument = store.operations.get(operation.document);
+  assert(byDocument?.size); // at least operation itself is expected to be there
+
+  // Result descriptor is the first registered descriptor with matching key variables
+  for (const otherOperation of byDocument.values()) {
+    if (
+      otherOperation === operation ||
+      variablesAreEqual(
+        operation.variablesWithDefaults,
+        otherOperation.variablesWithDefaults,
         operation.keyVariables,
       )
-    : operation;
+    ) {
+      return otherOperation;
+    }
+  }
+  assert(false);
 }
 
 function variablesAreEqual(
@@ -194,3 +204,15 @@ function variablesAreEqual(
   }
   return true;
 }
+
+export function operationCacheKey(operation: OperationDescriptor): CacheKey {
+  return createCacheKeyImpl(operation.variablesKey, operation.rootNodeKey);
+}
+
+const createCacheKeyImpl = (
+  variablesKey: string,
+  rootNodeKey: string | undefined,
+) =>
+  rootNodeKey === void 0 || ROOT_NODES.includes(rootNodeKey)
+    ? variablesKey
+    : variablesKey + `{rootNodeKey:${rootNodeKey}}`;

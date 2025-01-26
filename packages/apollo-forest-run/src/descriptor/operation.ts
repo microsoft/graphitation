@@ -9,6 +9,7 @@ import type {
   VariableValues,
   VariableName,
 } from "./types";
+import { sortKeys } from "../jsutils/normalize";
 
 const defaultOperationTypes: Record<
   OperationDefinitionNode["operation"],
@@ -34,6 +35,7 @@ export function describeOperation(
   resultTreeDescriptor: ResultTreeDescriptor,
   variables: VariableValues,
   variablesWithDefaults?: VariableValues,
+  variablesKey?: string,
   rootTypeName?: TypeName,
   rootNodeKey?: string,
 ): OperationDescriptor {
@@ -63,6 +65,9 @@ export function describeOperation(
     rootNodeKey: effectiveRootNodeKey,
     selections: new Map(),
     keyVariables: getKeyVars(documentDescriptor.definition),
+    variablesKey:
+      variablesKey ??
+      createVariablesKey(variableDefinitions, variablesWithDefaults),
     cache: Boolean(
       operation !== "mutation" ||
         directives?.some((d) => d.name.value === "cache"),
@@ -123,4 +128,24 @@ function getKeyVars(doc: OperationDefinitionNode): VariableName[] | null {
     );
   }
   return value;
+}
+
+export function createVariablesKey(
+  defs: ReadonlyArray<VariableDefinitionNode> | undefined,
+  variablesWithDefaults: VariableValues,
+): string {
+  // Note: string concatenation in V8 is fast and memory efficient due to string interning and windowing
+  let key = "";
+  if (defs?.length) {
+    for (const variableDef of defs) {
+      const variableName = variableDef.variable.name.value;
+      const value = variablesWithDefaults[variableName];
+      key += variableName + ":" + JSON.stringify(sortKeys(value)) + ",";
+    }
+  } else {
+    // ApolloCompat: apollo supports writes without variable definitions
+    //   TODO: detect existing variables in resultTreeDescriptor
+    key = JSON.stringify(sortKeys(variablesWithDefaults));
+  }
+  return key;
 }
