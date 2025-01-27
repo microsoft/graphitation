@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Mon, 27 Jan 2025 17:57:15 GMT",
+      "version": "0.6.1",
+      "tag": "@graphitation/apollo-forest-run_v0.6.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "aa6818d8d5e4b2313c8e027b05d8d6a498053ad5",
+            "comment": "fix: prevent excessive re-renders"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 13 Dec 2024 15:40:14 GMT",
       "version": "0.6.0",
       "tag": "@graphitation/apollo-forest-run_v0.6.0",

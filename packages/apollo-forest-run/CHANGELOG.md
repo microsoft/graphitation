@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Fri, 13 Dec 2024 15:40:14 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 27 Jan 2025 17:57:15 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.6.1
+
+Mon, 27 Jan 2025 17:57:15 GMT
+
+### Patches
+
+- fix: prevent excessive re-renders (vladimir.razuvaev@gmail.com)
 
 ## 0.6.0
 
