@@ -1,6 +1,6 @@
 import {
   parse,
-  execute as graphQLExecute,
+  experimentalExecuteIncrementally as graphQLExecute,
   subscribe as graphQLSubscribe,
   GraphQLSchema,
 } from "graphql";
@@ -16,7 +16,7 @@ const {
   compareResultForExecuteWithoutSchemaWithMVSAnnotation,
   drainExecution,
   graphqlExecuteOrSubscribe,
-} = createExecutionUtils(graphQLExecute, graphQLSubscribe);
+} = createExecutionUtils(graphQLExecute as any, graphQLSubscribe);
 
 interface TestCase {
   name: string;

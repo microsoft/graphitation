@@ -2,30 +2,12 @@
 
 exports[`graphql-js snapshot check to ensure test stability @defer crossselection 1`] = `
 {
-  "initialResult": {
-    "data": {
-      "person": {
-        "gender": "male",
-        "name": "Luke Skywalker",
-      },
+  "data": {
+    "person": {
+      "gender": "male",
+      "name": "Luke Skywalker",
     },
-    "hasNext": true,
   },
-  "subsequentResults": [
-    {
-      "hasNext": false,
-      "incremental": [
-        {
-          "data": {
-            "gender": "male",
-          },
-          "path": [
-            "person",
-          ],
-        },
-      ],
-    },
-  ],
 }
 `;
 
@@ -39,18 +21,29 @@ exports[`graphql-js snapshot check to ensure test stability @defer if 1`] = `
       },
     },
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "path": [
+          "person",
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
+      "completed": [
+        {
+          "id": "0",
+        },
+      ],
       "hasNext": false,
       "incremental": [
         {
           "data": {
             "gender": "male",
           },
-          "path": [
-            "person",
-          ],
+          "id": "0",
         },
       ],
     },
@@ -67,27 +60,45 @@ exports[`graphql-js snapshot check to ensure test stability @defer label simple 
       },
     },
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "label": "INLINE",
+        "path": [
+          "person",
+        ],
+      },
+      {
+        "id": "1",
+        "path": [
+          "person",
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
+      "completed": [
+        {
+          "id": "0",
+        },
+        {
+          "id": "1",
+        },
+      ],
       "hasNext": false,
       "incremental": [
         {
           "data": {
             "gender": "male",
           },
-          "label": "INLINE",
-          "path": [
-            "person",
-          ],
+          "id": "0",
         },
         {
           "data": {
             "birth_year": "19BBY",
           },
-          "path": [
-            "person",
-          ],
+          "id": "1",
         },
       ],
     },
@@ -104,26 +115,44 @@ exports[`graphql-js snapshot check to ensure test stability @defer multiple frag
       },
     },
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "path": [
+          "person",
+        ],
+      },
+      {
+        "id": "1",
+        "path": [
+          "person",
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
+      "completed": [
+        {
+          "id": "0",
+        },
+        {
+          "id": "1",
+        },
+      ],
       "hasNext": false,
       "incremental": [
         {
           "data": {
             "gender": "male",
           },
-          "path": [
-            "person",
-          ],
+          "id": "0",
         },
         {
           "data": {
             "birth_year": "19BBY",
           },
-          "path": [
-            "person",
-          ],
+          "id": "1",
         },
       ],
     },
@@ -140,15 +169,34 @@ exports[`graphql-js snapshot check to ensure test stability @defer nested 1`] = 
       },
     },
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "path": [
+          "person",
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
+      "completed": [
+        {
+          "id": "0",
+        },
+      ],
       "hasNext": true,
       "incremental": [
         {
           "data": {
             "birth_year": "19BBY",
           },
+          "id": "0",
+        },
+      ],
+      "pending": [
+        {
+          "id": "1",
           "path": [
             "person",
           ],
@@ -156,6 +204,11 @@ exports[`graphql-js snapshot check to ensure test stability @defer nested 1`] = 
       ],
     },
     {
+      "completed": [
+        {
+          "id": "1",
+        },
+      ],
       "hasNext": false,
       "incremental": [
         {
@@ -175,9 +228,7 @@ exports[`graphql-js snapshot check to ensure test stability @defer nested 1`] = 
               },
             ],
           },
-          "path": [
-            "person",
-          ],
+          "id": "1",
         },
       ],
     },
@@ -194,9 +245,22 @@ exports[`graphql-js snapshot check to ensure test stability @defer on fragment 1
       },
     },
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "path": [
+          "person",
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
+      "completed": [
+        {
+          "id": "0",
+        },
+      ],
       "hasNext": false,
       "incremental": [
         {
@@ -204,9 +268,7 @@ exports[`graphql-js snapshot check to ensure test stability @defer on fragment 1
             "birth_year": "19BBY",
             "gender": "male",
           },
-          "path": [
-            "person",
-          ],
+          "id": "0",
         },
       ],
     },
@@ -223,9 +285,22 @@ exports[`graphql-js snapshot check to ensure test stability @defer on inline fra
       },
     },
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "path": [
+          "person",
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
+      "completed": [
+        {
+          "id": "0",
+        },
+      ],
       "hasNext": false,
       "incremental": [
         {
@@ -233,9 +308,7 @@ exports[`graphql-js snapshot check to ensure test stability @defer on inline fra
             "birth_year": "19BBY",
             "gender": "male",
           },
-          "path": [
-            "person",
-          ],
+          "id": "0",
         },
       ],
     },
@@ -258,50 +331,82 @@ exports[`graphql-js snapshot check to ensure test stability @defer on list 1`] =
       },
     },
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "path": [
+          "person",
+          "films",
+          0,
+        ],
+      },
+      {
+        "id": "1",
+        "path": [
+          "person",
+          "films",
+          1,
+        ],
+      },
+      {
+        "id": "2",
+        "path": [
+          "person",
+          "films",
+          2,
+        ],
+      },
+      {
+        "id": "3",
+        "path": [
+          "person",
+          "films",
+          3,
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
+      "completed": [
+        {
+          "id": "0",
+        },
+        {
+          "id": "1",
+        },
+        {
+          "id": "2",
+        },
+        {
+          "id": "3",
+        },
+      ],
       "hasNext": false,
       "incremental": [
         {
           "data": {
             "title": "A New Hope",
           },
-          "path": [
-            "person",
-            "films",
-            0,
-          ],
+          "id": "0",
         },
         {
           "data": {
             "title": "The Empire Strikes Back",
           },
-          "path": [
-            "person",
-            "films",
-            1,
-          ],
+          "id": "1",
         },
         {
           "data": {
             "title": "Return of the Jedi",
           },
-          "path": [
-            "person",
-            "films",
-            2,
-          ],
+          "id": "2",
         },
         {
           "data": {
             "title": "Revenge of the Sith",
           },
-          "path": [
-            "person",
-            "films",
-            3,
-          ],
+          "id": "3",
         },
       ],
     },
@@ -343,28 +448,46 @@ exports[`graphql-js snapshot check to ensure test stability @defer on query with
       ],
     },
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "path": [
+          "search",
+          0,
+        ],
+      },
+      {
+        "id": "1",
+        "path": [
+          "search",
+          1,
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
+      "completed": [
+        {
+          "id": "0",
+        },
+        {
+          "id": "1",
+        },
+      ],
       "hasNext": false,
       "incremental": [
         {
           "data": {
             "name": "Luke Skywalker",
           },
-          "path": [
-            "search",
-            0,
-          ],
+          "id": "0",
         },
         {
           "data": {
             "name": "Luminara Unduli",
           },
-          "path": [
-            "search",
-            1,
-          ],
+          "id": "1",
         },
       ],
     },
@@ -381,27 +504,44 @@ exports[`graphql-js snapshot check to ensure test stability @defer overlapping f
       },
     },
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "path": [
+          "person",
+        ],
+      },
+      {
+        "id": "1",
+        "path": [
+          "person",
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
+      "completed": [
+        {
+          "id": "0",
+        },
+        {
+          "id": "1",
+        },
+      ],
       "hasNext": false,
       "incremental": [
         {
           "data": {
             "gender": "male",
           },
-          "path": [
-            "person",
-          ],
+          "id": "0",
         },
         {
           "data": {
             "birth_year": "19BBY",
-            "gender": "male",
           },
-          "path": [
-            "person",
-          ],
+          "id": "1",
         },
       ],
     },
@@ -411,33 +551,11 @@ exports[`graphql-js snapshot check to ensure test stability @defer overlapping f
 
 exports[`graphql-js snapshot check to ensure test stability @defer skip/include 1`] = `
 {
-  "initialResult": {
-    "data": {
-      "person": {
-        "name": "Luke Skywalker",
-      },
+  "data": {
+    "person": {
+      "name": "Luke Skywalker",
     },
-    "hasNext": true,
   },
-  "subsequentResults": [
-    {
-      "hasNext": false,
-      "incremental": [
-        {
-          "data": {},
-          "path": [
-            "person",
-          ],
-        },
-        {
-          "data": {},
-          "path": [
-            "person",
-          ],
-        },
-      ],
-    },
-  ],
 }
 `;
 
@@ -451,22 +569,27 @@ exports[`graphql-js snapshot check to ensure test stability @stream basic 1`] = 
       },
     },
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "path": [
+          "person",
+          "films",
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "A New Hope",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            0,
-          ],
         },
       ],
     },
@@ -474,16 +597,12 @@ exports[`graphql-js snapshot check to ensure test stability @stream basic 1`] = 
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "The Empire Strikes Back",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            1,
-          ],
         },
       ],
     },
@@ -491,16 +610,12 @@ exports[`graphql-js snapshot check to ensure test stability @stream basic 1`] = 
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "Return of the Jedi",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            2,
-          ],
         },
       ],
     },
@@ -508,20 +623,21 @@ exports[`graphql-js snapshot check to ensure test stability @stream basic 1`] = 
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "Revenge of the Sith",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            3,
-          ],
         },
       ],
     },
     {
+      "completed": [
+        {
+          "id": "0",
+        },
+      ],
       "hasNext": false,
     },
   ],
@@ -546,34 +662,40 @@ exports[`graphql-js snapshot check to ensure test stability @stream if 1`] = `
       },
     },
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "path": [
+          "person",
+          "films",
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "A New Hope",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            0,
-          ],
         },
+      ],
+    },
+    {
+      "hasNext": true,
+      "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "The Empire Strikes Back",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            1,
-          ],
         },
       ],
     },
@@ -581,16 +703,12 @@ exports[`graphql-js snapshot check to ensure test stability @stream if 1`] = `
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "Return of the Jedi",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            2,
-          ],
         },
       ],
     },
@@ -598,20 +716,21 @@ exports[`graphql-js snapshot check to ensure test stability @stream if 1`] = `
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "Revenge of the Sith",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            3,
-          ],
         },
       ],
     },
     {
+      "completed": [
+        {
+          "id": "0",
+        },
+      ],
       "hasNext": false,
     },
   ],
@@ -635,22 +754,27 @@ exports[`graphql-js snapshot check to ensure test stability @stream initialCount
       },
     },
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "label": "FILMS",
+        "path": [
+          "person",
+          "films",
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "Return of the Jedi",
             },
-          ],
-          "label": "FILMS",
-          "path": [
-            "person",
-            "films",
-            2,
           ],
         },
       ],
@@ -659,21 +783,21 @@ exports[`graphql-js snapshot check to ensure test stability @stream initialCount
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "Revenge of the Sith",
             },
           ],
-          "label": "FILMS",
-          "path": [
-            "person",
-            "films",
-            3,
-          ],
         },
       ],
     },
     {
+      "completed": [
+        {
+          "id": "0",
+        },
+      ],
       "hasNext": false,
     },
   ],
@@ -689,15 +813,34 @@ exports[`graphql-js snapshot check to ensure test stability @stream inside @defe
       },
     },
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "path": [
+          "person",
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
+      "completed": [
+        {
+          "id": "0",
+        },
+      ],
       "hasNext": true,
       "incremental": [
         {
           "data": {
             "birth_year": "19BBY",
           },
+          "id": "0",
+        },
+      ],
+      "pending": [
+        {
+          "id": "1",
           "path": [
             "person",
           ],
@@ -705,14 +848,26 @@ exports[`graphql-js snapshot check to ensure test stability @stream inside @defe
       ],
     },
     {
+      "completed": [
+        {
+          "id": "1",
+        },
+      ],
       "hasNext": true,
       "incremental": [
         {
           "data": {
             "films": [],
           },
+          "id": "1",
+        },
+      ],
+      "pending": [
+        {
+          "id": "2",
           "path": [
             "person",
+            "films",
           ],
         },
       ],
@@ -721,16 +876,12 @@ exports[`graphql-js snapshot check to ensure test stability @stream inside @defe
       "hasNext": true,
       "incremental": [
         {
+          "id": "2",
           "items": [
             {
               "title": "A New Hope",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            0,
-          ],
         },
       ],
     },
@@ -738,16 +889,12 @@ exports[`graphql-js snapshot check to ensure test stability @stream inside @defe
       "hasNext": true,
       "incremental": [
         {
+          "id": "2",
           "items": [
             {
               "title": "The Empire Strikes Back",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            1,
-          ],
         },
       ],
     },
@@ -755,16 +902,12 @@ exports[`graphql-js snapshot check to ensure test stability @stream inside @defe
       "hasNext": true,
       "incremental": [
         {
+          "id": "2",
           "items": [
             {
               "title": "Return of the Jedi",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            2,
-          ],
         },
       ],
     },
@@ -772,20 +915,21 @@ exports[`graphql-js snapshot check to ensure test stability @stream inside @defe
       "hasNext": true,
       "incremental": [
         {
+          "id": "2",
           "items": [
             {
               "title": "Revenge of the Sith",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            3,
-          ],
         },
       ],
     },
     {
+      "completed": [
+        {
+          "id": "2",
+        },
+      ],
       "hasNext": false,
     },
   ],
@@ -803,23 +947,36 @@ exports[`graphql-js snapshot check to ensure test stability @stream label 1`] = 
       },
     },
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "label": "FILMS",
+        "path": [
+          "person",
+          "films",
+        ],
+      },
+      {
+        "id": "1",
+        "label": "STARSHIPS",
+        "path": [
+          "person",
+          "starships",
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "A New Hope",
             },
           ],
-          "label": "FILMS",
-          "path": [
-            "person",
-            "films",
-            0,
-          ],
         },
       ],
     },
@@ -827,17 +984,12 @@ exports[`graphql-js snapshot check to ensure test stability @stream label 1`] = 
       "hasNext": true,
       "incremental": [
         {
+          "id": "1",
           "items": [
             {
               "name": "X-wing",
             },
           ],
-          "label": "STARSHIPS",
-          "path": [
-            "person",
-            "starships",
-            0,
-          ],
         },
       ],
     },
@@ -845,17 +997,12 @@ exports[`graphql-js snapshot check to ensure test stability @stream label 1`] = 
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "The Empire Strikes Back",
             },
           ],
-          "label": "FILMS",
-          "path": [
-            "person",
-            "films",
-            1,
-          ],
         },
       ],
     },
@@ -863,35 +1010,33 @@ exports[`graphql-js snapshot check to ensure test stability @stream label 1`] = 
       "hasNext": true,
       "incremental": [
         {
+          "id": "1",
           "items": [
             {
               "name": "Imperial shuttle",
             },
           ],
-          "label": "STARSHIPS",
-          "path": [
-            "person",
-            "starships",
-            1,
-          ],
         },
       ],
+    },
+    {
+      "completed": [
+        {
+          "id": "1",
+        },
+      ],
+      "hasNext": true,
     },
     {
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "Return of the Jedi",
             },
           ],
-          "label": "FILMS",
-          "path": [
-            "person",
-            "films",
-            2,
-          ],
         },
       ],
     },
@@ -899,21 +1044,21 @@ exports[`graphql-js snapshot check to ensure test stability @stream label 1`] = 
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "Revenge of the Sith",
             },
           ],
-          "label": "FILMS",
-          "path": [
-            "person",
-            "films",
-            3,
-          ],
         },
       ],
     },
     {
+      "completed": [
+        {
+          "id": "0",
+        },
+      ],
       "hasNext": false,
     },
   ],
@@ -931,22 +1076,34 @@ exports[`graphql-js snapshot check to ensure test stability @stream multiple 1`]
       },
     },
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "path": [
+          "person",
+          "films",
+        ],
+      },
+      {
+        "id": "1",
+        "path": [
+          "person",
+          "starships",
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "A New Hope",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            0,
-          ],
         },
       ],
     },
@@ -954,16 +1111,12 @@ exports[`graphql-js snapshot check to ensure test stability @stream multiple 1`]
       "hasNext": true,
       "incremental": [
         {
+          "id": "1",
           "items": [
             {
               "name": "X-wing",
             },
           ],
-          "path": [
-            "person",
-            "starships",
-            0,
-          ],
         },
       ],
     },
@@ -971,16 +1124,12 @@ exports[`graphql-js snapshot check to ensure test stability @stream multiple 1`]
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "The Empire Strikes Back",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            1,
-          ],
         },
       ],
     },
@@ -988,33 +1137,33 @@ exports[`graphql-js snapshot check to ensure test stability @stream multiple 1`]
       "hasNext": true,
       "incremental": [
         {
+          "id": "1",
           "items": [
             {
               "name": "Imperial shuttle",
             },
           ],
-          "path": [
-            "person",
-            "starships",
-            1,
-          ],
         },
       ],
+    },
+    {
+      "completed": [
+        {
+          "id": "1",
+        },
+      ],
+      "hasNext": true,
     },
     {
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "Return of the Jedi",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            2,
-          ],
         },
       ],
     },
@@ -1022,20 +1171,21 @@ exports[`graphql-js snapshot check to ensure test stability @stream multiple 1`]
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "title": "Revenge of the Sith",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            3,
-          ],
         },
       ],
     },
     {
+      "completed": [
+        {
+          "id": "0",
+        },
+      ],
       "hasNext": false,
     },
   ],
@@ -1052,469 +1202,189 @@ exports[`graphql-js snapshot check to ensure test stability @stream nested 1`] =
       },
     },
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "path": [
+          "person",
+          "films",
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
+      "completed": [
+        {
+          "id": "1",
+        },
+      ],
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "planets": [],
               "title": "A New Hope",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            0,
+        },
+        {
+          "id": "1",
+          "items": [
+            {},
+            {},
+            {},
           ],
         },
       ],
-    },
-    {
-      "hasNext": true,
-      "incremental": [
+      "pending": [
         {
-          "items": [
-            {},
-          ],
+          "id": "1",
           "path": [
             "person",
             "films",
             0,
             "planets",
-            0,
           ],
         },
       ],
     },
     {
-      "hasNext": true,
-      "incremental": [
+      "completed": [
         {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            0,
-            "planets",
-            1,
-          ],
-        },
-        {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            0,
-            "planets",
-            2,
-          ],
+          "id": "2",
         },
       ],
-    },
-    {
       "hasNext": true,
       "incremental": [
         {
+          "id": "0",
           "items": [
             {
               "planets": [],
               "title": "The Empire Strikes Back",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            1,
+        },
+        {
+          "id": "2",
+          "items": [
+            {},
+            {},
+            {},
+            {},
           ],
         },
       ],
-    },
-    {
-      "hasNext": true,
-      "incremental": [
+      "pending": [
         {
-          "items": [
-            {},
-          ],
+          "id": "2",
           "path": [
             "person",
             "films",
             1,
             "planets",
-            0,
           ],
         },
       ],
     },
     {
-      "hasNext": true,
-      "incremental": [
+      "completed": [
         {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            1,
-            "planets",
-            1,
-          ],
-        },
-        {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            1,
-            "planets",
-            2,
-          ],
+          "id": "3",
         },
       ],
-    },
-    {
       "hasNext": true,
       "incremental": [
         {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            1,
-            "planets",
-            3,
-          ],
-        },
-      ],
-    },
-    {
-      "hasNext": true,
-      "incremental": [
-        {
+          "id": "0",
           "items": [
             {
               "planets": [],
               "title": "Return of the Jedi",
             },
           ],
-          "path": [
-            "person",
-            "films",
-            2,
+        },
+        {
+          "id": "3",
+          "items": [
+            {},
+            {},
+            {},
+            {},
+            {},
           ],
         },
       ],
-    },
-    {
-      "hasNext": true,
-      "incremental": [
+      "pending": [
         {
-          "items": [
-            {},
-          ],
+          "id": "3",
           "path": [
             "person",
             "films",
             2,
             "planets",
-            0,
           ],
         },
       ],
     },
     {
-      "hasNext": true,
-      "incremental": [
+      "completed": [
         {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            2,
-            "planets",
-            1,
-          ],
-        },
-        {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            2,
-            "planets",
-            2,
-          ],
+          "id": "4",
         },
       ],
-    },
-    {
       "hasNext": true,
       "incremental": [
         {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            2,
-            "planets",
-            3,
-          ],
-        },
-      ],
-    },
-    {
-      "hasNext": true,
-      "incremental": [
-        {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            2,
-            "planets",
-            4,
-          ],
-        },
-      ],
-    },
-    {
-      "hasNext": true,
-      "incremental": [
-        {
+          "id": "0",
           "items": [
             {
               "planets": [],
               "title": "Revenge of the Sith",
             },
           ],
+        },
+        {
+          "id": "4",
+          "items": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+          ],
+        },
+      ],
+      "pending": [
+        {
+          "id": "4",
           "path": [
             "person",
             "films",
             3,
+            "planets",
           ],
         },
       ],
     },
     {
-      "hasNext": true,
-      "incremental": [
+      "completed": [
         {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            3,
-            "planets",
-            0,
-          ],
+          "id": "0",
         },
       ],
-    },
-    {
-      "hasNext": true,
-      "incremental": [
-        {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            3,
-            "planets",
-            1,
-          ],
-        },
-        {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            3,
-            "planets",
-            2,
-          ],
-        },
-      ],
-    },
-    {
-      "hasNext": true,
-      "incremental": [
-        {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            3,
-            "planets",
-            3,
-          ],
-        },
-      ],
-    },
-    {
-      "hasNext": true,
-      "incremental": [
-        {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            3,
-            "planets",
-            4,
-          ],
-        },
-        {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            3,
-            "planets",
-            5,
-          ],
-        },
-      ],
-    },
-    {
-      "hasNext": true,
-      "incremental": [
-        {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            3,
-            "planets",
-            6,
-          ],
-        },
-      ],
-    },
-    {
-      "hasNext": true,
-      "incremental": [
-        {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            3,
-            "planets",
-            7,
-          ],
-        },
-        {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            3,
-            "planets",
-            8,
-          ],
-        },
-      ],
-    },
-    {
-      "hasNext": true,
-      "incremental": [
-        {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            3,
-            "planets",
-            9,
-          ],
-        },
-      ],
-    },
-    {
-      "hasNext": true,
-      "incremental": [
-        {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            3,
-            "planets",
-            10,
-          ],
-        },
-        {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            3,
-            "planets",
-            11,
-          ],
-        },
-      ],
-    },
-    {
       "hasNext": false,
-      "incremental": [
-        {
-          "items": [
-            {},
-          ],
-          "path": [
-            "person",
-            "films",
-            3,
-            "planets",
-            12,
-          ],
-        },
-      ],
     },
   ],
 }
@@ -1533,9 +1403,22 @@ exports[`graphql-js snapshot check to ensure test stability @stream/defer errors
       [GraphQLError: Bubbling in list!],
     ],
     "hasNext": true,
+    "pending": [
+      {
+        "id": "0",
+        "path": [
+          "person",
+        ],
+      },
+    ],
   },
   "subsequentResults": [
     {
+      "completed": [
+        {
+          "id": "0",
+        },
+      ],
       "hasNext": false,
       "incremental": [
         {
@@ -1545,9 +1428,7 @@ exports[`graphql-js snapshot check to ensure test stability @stream/defer errors
           "errors": [
             [GraphQLError: Bubbling!],
           ],
-          "path": [
-            "person",
-          ],
+          "id": "0",
         },
       ],
     },

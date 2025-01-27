@@ -28,6 +28,7 @@ export interface CollectFieldsResult {
 export interface DeferUsage {
   label: string | undefined;
   groupedFieldSet: GroupedFieldSet;
+  nestedDefers: ReadonlyArray<DeferUsage>;
 }
 
 export type FieldGroup = ReadonlyArray<FieldNode>;
@@ -38,10 +39,13 @@ export function collectFields(
   exeContext: ExecutionContext,
   returnTypeName: string,
   selectionSet: SelectionSetNode,
+  visitedFragmentNames?: Set<string>,
 ): CollectFieldsResult {
   const groupedFieldSet = new AccumulatorMap<string, FieldNode>();
-  const visitedFragmentNames = new Set<string>();
   const deferredFieldSets = new Array<DeferUsage>();
+  if (!visitedFragmentNames) {
+    visitedFragmentNames = new Set<string>();
+  }
   collectFieldsImpl(
     exeContext,
     returnTypeName,
@@ -50,10 +54,7 @@ export function collectFields(
     deferredFieldSets,
     visitedFragmentNames,
   );
-  return {
-    groupedFieldSet,
-    deferredFieldSets,
-  };
+  return { groupedFieldSet, deferredFieldSets: deferredFieldSets };
 }
 
 function collectFieldsImpl(
@@ -76,8 +77,10 @@ function collectFieldsImpl(
       case Kind.FRAGMENT_SPREAD: {
         const fragmentName = selection.name.value;
         const fragment = exeContext.fragments[fragmentName];
+        const deferUsage = getDeferValues(exeContext, selection);
+
         if (
-          visitedFragmentNames.has(fragmentName) ||
+          (visitedFragmentNames.has(fragmentName) && !deferUsage) ||
           !doesFragmentConditionMatch(
             fragment,
             returnTypeName,
@@ -86,29 +89,42 @@ function collectFieldsImpl(
         ) {
           continue;
         }
-        visitedFragmentNames.add(fragmentName);
+
+        if (!deferUsage) {
+          visitedFragmentNames.add(fragmentName);
+        }
+
         const fragmentSelectionSet = fragment.selectionSet;
-        const { groupedFieldSet: fragmentGroupedFieldSets } = collectFields(
+
+        const {
+          groupedFieldSet: fragmentGroupedFieldSets,
+          deferredFieldSets: fragmentDeferredFieldGroups,
+        } = collectFields(
           exeContext,
           returnTypeName,
           fragmentSelectionSet,
+          visitedFragmentNames,
         );
-        const deferUsage = getDeferValues(exeContext, selection);
         if (deferUsage) {
-          const deferGroupedFieldSet = new AccumulatorMap<string, FieldNode>();
-          for (const [responseKey, selections] of fragmentGroupedFieldSets) {
-            for (const selection of selections) {
-              deferGroupedFieldSet.add(responseKey, selection);
-            }
-          }
-          deferredFieldSets.push({
+          const deferredFieldSet = {
             label: deferUsage.label,
-            groupedFieldSet: deferGroupedFieldSet,
-          });
+            groupedFieldSet: fragmentGroupedFieldSets,
+            nestedDefers: fragmentDeferredFieldGroups,
+          };
+          if (fragmentGroupedFieldSets.size > 0) {
+            deferredFieldSets.push(deferredFieldSet);
+          }
         } else {
           for (const [responseKey, selections] of fragmentGroupedFieldSets) {
             for (const selection of selections) {
               groupedFieldSet.add(responseKey, selection);
+            }
+          }
+
+          for (const fragmentDeferredFieldGroup of fragmentDeferredFieldGroups) {
+            console.log(fragmentDeferredFieldGroup);
+            if (fragmentDeferredFieldGroup.groupedFieldSet.size > 0) {
+              deferredFieldSets.push(fragmentDeferredFieldGroup);
             }
           }
         }
@@ -125,31 +141,39 @@ function collectFieldsImpl(
           continue;
         }
         const fragmentSelectionSet = selection.selectionSet;
-        const { groupedFieldSet: fragmentGroupedFieldSets } = collectFields(
+        const deferUsage = getDeferValues(exeContext, selection);
+
+        const {
+          groupedFieldSet: fragmentGroupedFieldSets,
+          deferredFieldSets: fragmentDeferredFieldGroups,
+        } = collectFields(
           exeContext,
           returnTypeName,
           fragmentSelectionSet,
+          visitedFragmentNames,
         );
-        const deferUsage = getDeferValues(exeContext, selection);
         if (deferUsage) {
-          const deferGroupedFieldSet = new AccumulatorMap<string, FieldNode>();
-          for (const [responseKey, selections] of fragmentGroupedFieldSets) {
-            for (const selection of selections) {
-              deferGroupedFieldSet.add(responseKey, selection);
-            }
-          }
-          deferredFieldSets.push({
+          const deferredFieldSet = {
             label: deferUsage.label,
-            groupedFieldSet: deferGroupedFieldSet,
-          });
+            groupedFieldSet: fragmentGroupedFieldSets,
+            nestedDefers: fragmentDeferredFieldGroups,
+          };
+          if (fragmentGroupedFieldSets.size > 0) {
+            deferredFieldSets.push(deferredFieldSet);
+          }
         } else {
           for (const [responseKey, selections] of fragmentGroupedFieldSets) {
             for (const selection of selections) {
               groupedFieldSet.add(responseKey, selection);
             }
           }
+
+          for (const fragmentDeferredFieldGroup of fragmentDeferredFieldGroups) {
+            if (fragmentDeferredFieldGroup.groupedFieldSet.size > 0) {
+              deferredFieldSets.push(fragmentDeferredFieldGroup);
+            }
+          }
         }
-        break;
       }
     }
   }
@@ -161,14 +185,14 @@ export function collectSubfields(
   fieldGroup: FieldGroup,
 ): CollectFieldsResult {
   const groupedFieldSet = new AccumulatorMap<string, FieldNode>();
-  const deferredFieldSets = new Array<DeferUsage>();
+  const deferredFieldGroups = new Array<DeferUsage>();
   for (const fieldNode of fieldGroup) {
     if (fieldNode.selectionSet) {
       const {
         groupedFieldSet: subGroupedFieldSet,
         deferredFieldSets: deferredSubGrouppedFieldSets,
       } = collectFields(exeContext, returnTypeName, fieldNode.selectionSet);
-      deferredFieldSets.push(...deferredSubGrouppedFieldSets);
+      deferredFieldGroups.push(...deferredSubGrouppedFieldSets);
       for (const [responseKey, selections] of subGroupedFieldSet) {
         for (const selection of selections) {
           groupedFieldSet.add(responseKey, selection);
@@ -176,7 +200,7 @@ export function collectSubfields(
       }
     }
   }
-  return { groupedFieldSet, deferredFieldSets };
+  return { groupedFieldSet, deferredFieldSets: deferredFieldGroups };
 }
 
 /**
