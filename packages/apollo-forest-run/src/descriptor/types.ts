@@ -85,6 +85,7 @@ export type OperationDescriptor = {
   possibleSelections: PossibleSelections;
   variables: VariableValues;
   variablesWithDefaults: VariableValues;
+  variablesKey: string; // Stringified, normalized variables
   keyVariables: VariableName[] | null;
   rootType: TypeName; // e.g. Query | Mutation, etc
   rootNodeKey: NodeKey; // e.g. ROOT_QUERY | ROOT_MUTATION, etc
