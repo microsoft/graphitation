@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "perf: store operations by key constructed from variables",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vladimir.razuvaev@gmail.com",
-  "dependentChangeType": "patch"
-}

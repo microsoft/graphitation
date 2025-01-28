@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Tue, 28 Jan 2025 14:30:28 GMT",
+      "version": "0.7.0",
+      "tag": "@graphitation/apollo-forest-run_v0.7.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "ac4f430358f097b576d96ee527b5f553cb94e043",
+            "comment": "perf: store operations by key constructed from variables"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 27 Jan 2025 17:57:15 GMT",
       "version": "0.6.1",
       "tag": "@graphitation/apollo-forest-run_v0.6.1",

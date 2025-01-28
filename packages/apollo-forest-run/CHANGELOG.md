@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Mon, 27 Jan 2025 17:57:15 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 28 Jan 2025 14:30:28 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.7.0
+
+Tue, 28 Jan 2025 14:30:28 GMT
+
+### Minor changes
+
+- perf: store operations by key constructed from variables (vladimir.razuvaev@gmail.com)
 
 ## 0.6.1
 
