@@ -175,7 +175,11 @@ function getVisitor(
                 }
               }
             } else {
-              throw new Error("Namespace imports are not supported");
+              throw new Error(
+                `Namespace imports are not supported. Found ${node.importClause.namedBindings.getText()} in ${
+                  sourceFile.fileName
+                }`,
+              );
             }
           }
           if (newImportSpecifiers.length || node.importClause.name) {

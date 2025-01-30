@@ -386,4 +386,53 @@ describe("transformer tests", () => {
       `);
     });
   });
+  describe("should not apply transformer", () => {
+    it("should allow namespace import when tag is not used", () => {
+      expect.assertions(1);
+      const transformer = new Transformer()
+        .addTransformer((_program: ts.Program) => getTransformer({}))
+        .addMock({
+          name: "@graphitation/graphqla-js-tag",
+          content: `export default {}`,
+        })
+        .setFilePath("/index.tsx");
+
+      const actual = transformer.transform(`
+        import * as Hooks from "@graphitation/graphql-js-tag"
+
+        const ProviderHooks = {
+          ...Hooks,
+        }
+      `);
+      expect(actual).toMatchInlineSnapshot(`
+      "import * as Hooks from "@graphitation/graphql-js-tag";
+      const ProviderHooks = {
+          ...Hooks,
+      };
+      "
+    `);
+    });
+
+    it("should keep graphql import", () => {
+      expect.assertions(1);
+      const transformer = new Transformer()
+        .addTransformer((_program: ts.Program) => getTransformer({}))
+        .addMock({
+          name: "@graphitation/graphql-js-tag",
+          content: `export const graphql:any = () => {}`,
+        })
+        .setFilePath("/index.tsx");
+
+      const actual = transformer.transform(`
+      import { graphql } from "@graphitation/graphql-js-tag"
+  
+      export const graphqlTag = graphql
+     `);
+      expect(actual).toMatchInlineSnapshot(`
+        "import { graphql } from "@graphitation/graphql-js-tag";
+        export const graphqlTag = graphql;
+        "
+      `);
+    });
+  });
 });
