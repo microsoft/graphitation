@@ -80,6 +80,7 @@ export type Transaction = {
 };
 
 export type CacheConfig = InMemoryCacheConfig & {
+  autoEvict?: boolean;
   maxOperationCount?: number;
   nonEvictableQueries?: Set<string>;
   apolloCompat_keepOrphanNodes?: boolean;
@@ -141,6 +142,7 @@ export type CacheEnv = {
 
   mergePolicies: Map<TypeName, Map<FieldName, FieldMergeFunction>>;
   readPolicies: Map<TypeName, Map<FieldName, FieldReadFunction>>;
-  nonEvictableQueries?: Set<string>;
-  maxOperationCount?: number;
+  autoEvict: boolean;
+  nonEvictableQueries: Set<string>;
+  maxOperationCount: number;
 };

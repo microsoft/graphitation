@@ -63,6 +63,7 @@ export function touchOperation(
 
 export function maybeEvictOldData(env: CacheEnv, store: Store): OperationId[] {
   if (
+    !env.autoEvict ||
     !env.maxOperationCount ||
     store.dataForest.trees.size <= env.maxOperationCount * 2
   ) {
