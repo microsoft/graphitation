@@ -392,7 +392,7 @@ describe("transformer tests", () => {
       const transformer = new Transformer()
         .addTransformer((_program: ts.Program) => getTransformer({}))
         .addMock({
-          name: "@graphitation/graphqla-js-tag",
+          name: "@graphitation/graphql-js-tag",
           content: `export default {}`,
         })
         .setFilePath("/index.tsx");
