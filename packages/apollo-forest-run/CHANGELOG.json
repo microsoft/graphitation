@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Fri, 31 Jan 2025 09:39:55 GMT",
+      "version": "0.8.0",
+      "tag": "@graphitation/apollo-forest-run_v0.8.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "bedc5533ecdc0453d994396512bbdb5581d114ad",
+            "comment": "feat: configurable auto-eviction"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 28 Jan 2025 14:30:28 GMT",
       "version": "0.7.0",
       "tag": "@graphitation/apollo-forest-run_v0.7.0",
