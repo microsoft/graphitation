@@ -23,7 +23,6 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
   const env: CacheEnv = {
     addTypename: config?.addTypename ?? true,
     apolloCompat_keepOrphanNodes: config?.apolloCompat_keepOrphanNodes ?? false,
-    maxOperationCount: config?.maxOperationCount ?? 1000,
     possibleTypes,
     typePolicies,
     dataIdFromObject: config?.dataIdFromObject,
@@ -35,6 +34,9 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
     },
     mergePolicies: new Map(),
     readPolicies: new Map(),
+    autoEvict: config?.autoEvict ?? true,
+    nonEvictableQueries: config?.nonEvictableQueries ?? new Set(),
+    maxOperationCount: config?.maxOperationCount ?? 1000,
     now: () => ++tick, // Logical time
     genId: () => ++id,
     objectKey: (
