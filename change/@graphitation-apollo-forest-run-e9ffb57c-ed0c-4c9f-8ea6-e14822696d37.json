@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "feat: configurable auto-eviction",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}
