@@ -151,8 +151,9 @@ with all the updates that came from different sources (mutations, subscriptions,
 3. Reading data from the `store` to return it back to requester in the shape of the original GraphQL result
 
 But there is more... Clients also keep track of "active" queries and whenever data in the store changes,
-they essentially re-read those active queries, using the data from the store and notify any query observers
-about the change.
+they essentially re-read those active queries, using the data from the store and notify any query observers 
+about the change. (Apollo re-reads at the query level; Relay at the fragment level.
+[This has performance implications.][15])
 
 Read more:
 
@@ -168,6 +169,12 @@ so it is always up-to-date with the server results.
 Also, _in theory_, normalized caches allow you to reduce the number of network requests:
 if the data requested by your query was already fetched by another query,
 the client can just retrieve it from the cache and bypass the network request.
+
+However, note that _even if you cannot avoid a network request_, a normalized cache that integrates
+with suspense (such as Relay's) makes it very trivial to achieve the following behavior:
+when a user navigates from a list view to a detail view, the transition can occur instantaneously,
+and the components for which there is enough data (such as the detail view header) can render
+instantly. The rest of the detail view is replaced by a suspense boundary.
 
 However, normalization in GraphQL clients comes at a cost, and also has surprising pitfalls that we will cover below.
 
@@ -575,9 +582,10 @@ keep results in sync).
 
 Potential benefits:
 
-- Much simpler architecture with way less data transformations
+- Much simpler architecture with way less data transformations.
 - Natural garbage collection (dispose the whole query and all associated metadata when not needed)
-- `O(1)` `read` complexity (simply returns the object that is already up-to-date)
+- `O(1)` `read` complexity (simply returns the object that is already up-to-date). Memoization works out of the box,
+  and no need for subscriptions.
 - `write` performance comparable to `normalization` due to the need of synchronization of different results
   (although much better for initial writes and writes that do not affect other results)
 - Stale data still available when consistency cannot be achieved by syncing with other operations
@@ -585,8 +593,13 @@ Potential benefits:
 Limitations:
 
 - No cross-query data reads. `read` only allowed for queries that were written previously (+reads for subsets of queries).
+  - Relatedly, no cross-query consistency, meaning that if a user modifies data on a given page and navigates back to a previous
+    page, the data on the previous page will be inconsistent. Adds a burden on developers to invalidate in response to mutations.
 - Potentially higher memory consumption as strings are not de-duplicated from source JSON
   (could be mitigated with background compaction, also less important with natural GC)
+- One cannot obviously get [data masking][14]
+  without introducing a step in which data is read from a source, so the simplicity gains may not be as drastic as assumed.
+- Inability to reuse data, meaning that transitions from list views to detailed views cannot be perceptually instant.
 
 ### 3. Graph cache
 
@@ -611,3 +624,5 @@ And complexity is even higher than in existing cache implementations.
 [11]: https://en.wikipedia.org/wiki/Idempotence
 [12]: https://formidable.com/open-source/urql/docs/basics/document-caching/
 [13]: https://github.com/convoyinc/apollo-cache-hermes/blob/master/docs/Motivation.md
+[14]: https://relay.dev/docs/principles-and-architecture/thinking-in-relay/#data-masking
+[15]: https://quoraengineering.quora.com/Choosing-Quora-s-GraphQL-client
