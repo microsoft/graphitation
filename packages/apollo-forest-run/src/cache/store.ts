@@ -17,7 +17,6 @@ import {
 import { assert } from "../jsutils/assert";
 import { IndexedTree } from "../forest/types";
 import { NodeChunk } from "../values/types";
-import { operationCacheKey } from "./descriptor";
 
 const EMPTY_ARRAY = Object.freeze([]);
 
@@ -289,7 +288,7 @@ function removeDataTree(
   dataForest.operationsWithErrors.delete(operation);
   optimisticReadResults.delete(operation);
   partialReadResults.delete(operation);
-  operations.get(operation.document)?.delete(operationCacheKey(operation));
+  operations.get(operation.document)?.delete(operation);
   atime.delete(operation.id);
   // Notes:
   // - Not deleting from optimistic layers because they are meant to be short-lived anyway

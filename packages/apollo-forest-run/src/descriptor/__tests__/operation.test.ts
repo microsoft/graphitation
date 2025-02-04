@@ -67,7 +67,6 @@ describe(describeOperation, () => {
       resultTree,
       variables,
       undefined,
-      undefined,
       "CustomRootType",
       "CUSTOM_ROOT",
     );
