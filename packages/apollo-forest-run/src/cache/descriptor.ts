@@ -4,7 +4,6 @@ import type {
   DocumentDescriptor,
   OperationDescriptor,
   ResultTreeDescriptor,
-  VariableName,
 } from "../descriptor/types";
 import { equal } from "@wry/equality";
 import { describeDocument } from "../descriptor/document";
@@ -33,7 +32,6 @@ export function resolveOperationDescriptor(
   doc: DocumentNode,
   variables?: { [key: string]: unknown },
   rootNodeKey?: string,
-  keyVars: VariableName[] | null = null,
 ): OperationDescriptor & { rootNodeKey: string | false } {
   const document = env.addTypename ? transformDocument(doc) : doc;
   const documentDescriptor = describeDocument(document);
@@ -61,7 +59,6 @@ export function resolveOperationDescriptor(
       variablesAreEqual(
         variablesWithDefaultValues,
         variant.variablesWithDefaults,
-        keyVars,
       ) &&
       (typeof rootNodeKey === "undefined" ||
         variant.rootNodeKey === rootNodeKey)
@@ -167,16 +164,26 @@ export function resolveKeyDescriptor(
   store: Store,
   operation: OperationDescriptor,
 ): OperationDescriptor {
-  return operation.keyVariables
-    ? resolveOperationDescriptor(
-        env,
-        store,
-        operation.document,
-        operation.variables,
-        operation.rootNodeKey,
+  if (!operation.keyVariables) {
+    return operation;
+  }
+  const variants = store.operations.get(operation.document);
+  assert(variants?.size); // at least `operation` itself is expected to be there
+
+  // Result descriptor is the first registered descriptor with matching key variables
+  for (const otherOperation of variants) {
+    if (
+      otherOperation === operation ||
+      variablesAreEqual(
+        operation.variablesWithDefaults,
+        otherOperation.variablesWithDefaults,
         operation.keyVariables,
       )
-    : operation;
+    ) {
+      return otherOperation;
+    }
+  }
+  assert(false);
 }
 
 function variablesAreEqual(
