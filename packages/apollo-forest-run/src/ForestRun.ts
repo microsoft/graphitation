@@ -555,13 +555,21 @@ export class ForestRun extends ApolloCache<any> {
     }
 
     // Always notify when there is no "lastDiff" (first notification)
-    if (
-      lastDiff &&
-      (newDiff.result == lastDiff.result || // intentionally not strict (null == undefined)
-        equal(lastDiff.result, newDiff.result))
-    ) {
+    // intentionally not strict (null == undefined)
+    if (lastDiff && newDiff.result == lastDiff.result) {
       return false;
     }
+    if (
+      lastDiff &&
+      !newDiff.complete &&
+      !lastDiff.complete &&
+      !watch.returnPartialData &&
+      equal(lastDiff.result, newDiff.result)
+    ) {
+      // Already notified about partial data once
+      return false;
+    }
+
     // ApolloCompat: let transaction initiator decide
     if (
       onWatchUpdated &&
