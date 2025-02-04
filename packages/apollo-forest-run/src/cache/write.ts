@@ -13,7 +13,7 @@ import type { NodeKey, OperationDescriptor } from "../descriptor/types";
 import { assert } from "../jsutils/assert";
 import {
   isFragmentDocument,
-  resolveResultDescriptor,
+  resolveKeyDescriptor,
   resolveOperationDescriptor,
   ROOT_NODES,
   ROOT_TYPES,
@@ -266,7 +266,7 @@ function getExistingResult(
   targetForest: IndexedForest,
   operation: OperationDescriptor,
 ): DataTree | undefined {
-  const op = resolveResultDescriptor(env, store, operation);
+  const op = resolveKeyDescriptor(env, store, operation);
   return targetForest.trees.get(op.id);
 }
 

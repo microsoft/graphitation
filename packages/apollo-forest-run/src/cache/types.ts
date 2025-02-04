@@ -53,10 +53,8 @@ export type OptimisticLayer = ExtendedForest & {
   replay: <T>(cache: T) => any; // ApolloCompat
 };
 
-export type CacheKey = string;
-
 export type Store = {
-  operations: Map<DocumentNode, Map<CacheKey, OperationDescriptor>>;
+  operations: Map<DocumentNode, Set<OperationDescriptor>>;
   dataForest: DataForest;
   optimisticLayers: OptimisticLayer[];
   // Derived trees resulted after applying optimistic layers and read policies

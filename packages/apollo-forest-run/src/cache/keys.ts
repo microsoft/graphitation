@@ -10,7 +10,6 @@ import type {
 import type { CacheEnv } from "./types";
 import type { KeySpecifier, SourceObject } from "../values/types";
 import { assert } from "../jsutils/assert";
-import { sortKeys } from "../jsutils/normalize";
 import { ROOT_TYPES } from "./descriptor";
 import * as Descriptor from "../descriptor/resolvedSelection";
 
@@ -266,6 +265,20 @@ function resolveKeyArgumentValues(
 
 function sortEntriesRecursively(entries: [string, unknown][]) {
   return sortKeys(entries).sort((a, b) => a[0].localeCompare(b[0]));
+}
+
+function sortKeys<T>(value: T): T {
+  if (typeof value !== "object" || value === null) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((test) => sortKeys(test)) as T;
+  }
+  return Object.fromEntries(
+    Object.entries(value)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([key, value]) => [key, sortKeys(value)]),
+  ) as T;
 }
 
 const inspect = JSON.stringify.bind(JSON);
