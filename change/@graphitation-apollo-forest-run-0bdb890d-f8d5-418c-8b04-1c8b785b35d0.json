@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Revert changes that prooved making perf worse",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vladimir.razuvaev@gmail.com",
-  "dependentChangeType": "patch"
-}
