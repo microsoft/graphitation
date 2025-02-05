@@ -152,8 +152,7 @@ with all the updates that came from different sources (mutations, subscriptions,
 
 But there is more... Clients also keep track of "active" queries and whenever data in the store changes,
 they essentially re-read those active queries, using the data from the store and notify any query observers 
-about the change. (Apollo re-reads at the query level; Relay at the fragment level.
-[This has performance implications.][15])
+about the change. Granularity of re-reading (i.e. at the query level vs the fragment level) has different [performance implications][15])
 
 Read more:
 
