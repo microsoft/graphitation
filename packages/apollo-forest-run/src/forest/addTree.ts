@@ -1,5 +1,6 @@
 import { IndexedForest, IndexedTree } from "./types";
 import { assert } from "../jsutils/assert";
+import { trackTreeNodes } from "./trackNodes";
 
 export function addTree(forest: IndexedForest, tree: IndexedTree) {
   const { trees } = forest;
@@ -14,16 +15,4 @@ export function replaceTree(forest: IndexedForest, tree: IndexedTree) {
   trees.set(tree.operation.id, tree);
 
   trackTreeNodes(forest, tree);
-}
-
-export function trackTreeNodes(forest: IndexedForest, tree: IndexedTree) {
-  const { operationsByNodes } = forest;
-  for (const nodeKey of tree.nodes.keys()) {
-    let seenIn = operationsByNodes.get(nodeKey);
-    if (!seenIn) {
-      seenIn = new Set();
-      operationsByNodes.set(nodeKey, seenIn);
-    }
-    seenIn.add(tree.operation.id);
-  }
 }

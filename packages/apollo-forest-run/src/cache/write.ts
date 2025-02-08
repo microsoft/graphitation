@@ -36,6 +36,7 @@ import { getNodeChunks } from "./draftHelpers";
 import { addTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
+import { trackRelationshipChanges } from "../forest/trackNodes";
 
 type WriteResult = {
   affected?: Iterable<OperationDescriptor>;
@@ -149,17 +150,29 @@ export function write(
   }
 
   // This function returns exhaustive list of affected operations. It may contain false-positives,
-  // because operationsWithNodes also reflects nodes from optimistic updates and read policy results
+  // because operationsByNodes also reflects nodes from optimistic updates and read policy results
   // (which may not exist in the main forest trees)
   const affectedOperations = resolveAffectedOperations(
     targetForest,
     difference,
   );
+  // const chunkProvider = (key: NodeKey) =>
+  //   getNodeChunks(getEffectiveReadLayers(store, targetForest, false), key);
+  scheduleTreeUpdates(env, targetForest, affectedOperations);
 
-  const chunkProvider = (key: NodeKey) =>
-    getNodeChunks(getEffectiveReadLayers(store, targetForest, false), key);
-
-  updateAffectedTrees(env, targetForest, affectedOperations, chunkProvider);
+  // Problem: how to detect which operations are affected by the next incoming change?
+  //
+  // For example, imagine a query containing "the latest book of some author".
+  // Now consider two sequential changes coming via two distinct mutations:
+  //   1. Author writes a new book
+  //   2. Book title is modified
+  //
+  // On the first mutation we successfully detect that the query needs to be lazily updated with the new book.
+  // But until the query is actually updated, it is not "linked" to the new book in "operationsByNode".
+  //
+  // So when the second mutation arrives - we will fail to detect that the query is affected by this change,
+  // unless we explicitly register association between the query and the book after the first mutation.
+  trackRelationshipChanges(targetForest, difference.nodeDifference);
 
   if (!existingResult && shouldCache(targetForest, operationDescriptor)) {
     affectedOperations.set(operationDescriptor, difference.nodeDifference);
@@ -189,6 +202,18 @@ export function write(
     incoming: modifiedIncomingResult,
     affected: affectedOperations.keys(),
   };
+}
+
+function scheduleTreeUpdates(
+  env: CacheEnv,
+  forest: DataForest | OptimisticLayer,
+  affectedOperations: Map<OperationDescriptor, NodeDifferenceMap>,
+) {
+  for (const [operation, difference] of affectedOperations.entries()) {
+    const currentTreeState = forest.trees.get(operation.id);
+    assert(currentTreeState);
+    currentTreeState.pendingUpdates.push(difference);
+  }
 }
 
 function appendAffectedOperationsFromOtherLayers(

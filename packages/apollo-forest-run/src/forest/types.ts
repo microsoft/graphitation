@@ -20,6 +20,7 @@ import {
   SourceObject,
   TypeMap,
 } from "../values/types";
+import { NodeDifferenceMap } from "../diff/types";
 
 export type IndexedTree = {
   operation: OperationDescriptor;
@@ -36,6 +37,12 @@ export type IndexedTree = {
   //   Useful for recycling chunks from multiple tree states, (e.g. with merge policies when final tree
   //   should recycle chunks from both - incoming and existing trees).
   prev: IndexedTree | null;
+
+  // Scheduled tree updates.
+  //   Trees are updated lazily when someone needs to "see" them.
+  //   In many cases trees are evicted from cache before updates are actually applied.
+  //   "If a tree falls in a forest and no one is around to hear it, does it make a sound?"
+  pendingUpdates: NodeDifferenceMap[];
 
   // Error states
   incompleteChunks: Set<ObjectChunk | CompositeListChunk>;

@@ -109,6 +109,7 @@ export function indexTree(
     dataMap: context.dataMap,
     incompleteChunks: context.incompleteChunks,
     prev: previousTreeState,
+    pendingUpdates: [],
   };
 }
 

@@ -127,6 +127,7 @@ function markChangedNodesAsDirty(
 
   const nodeMap = outputTree.nodes;
   for (const [nodeKey, diff] of nodeDifference.entries()) {
+    assert(diff.difference);
     let currentDirtyFields = dirtyNodes.get(nodeKey);
     if (currentDirtyFields?.size === 0) {
       continue; // Must run full diff of all fields
@@ -142,7 +143,7 @@ function markChangedNodesAsDirty(
         dirtyNodes.set(nodeKey, currentDirtyFields);
         continue;
       }
-      for (const dirtyField of diff?.dirtyFields ?? EMPTY_ARRAY) {
+      for (const dirtyField of diff.difference.dirtyFields ?? EMPTY_ARRAY) {
         if (node.selection.fields.has(dirtyField)) {
           currentDirtyFields.add(dirtyField);
         }

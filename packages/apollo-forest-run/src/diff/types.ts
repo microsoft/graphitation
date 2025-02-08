@@ -6,6 +6,7 @@ import {
   ObjectValue,
   SourceObject,
   SourceCompositeList,
+  NodeKey,
 } from "../values/types";
 import { FieldInfo, NormalizedFieldEntry } from "../descriptor/types";
 import * as DifferenceKind from "./differenceKind";
@@ -26,12 +27,17 @@ export type DiffEnv = {
 export type DiffContext = {
   env: DiffEnv;
   errors: DiffError[] | undefined;
+  // Track relationship changes at the root level:
+  added: Set<NodeKey> | undefined;
+  removed: Set<NodeKey> | undefined;
 };
 
 export type ObjectDiffState = {
-  difference?: ObjectDifference;
+  difference: ObjectDifference | undefined;
   errors?: DiffError[];
   allowMissingFields?: boolean;
+  added?: Set<NodeKey> | undefined;
+  removed?: Set<NodeKey> | undefined;
 };
 
 export type DiffState = {
@@ -120,5 +126,5 @@ export type ValueDifference =
   | Replacement
   | Filler;
 
-export type NodeDifferenceMap = Map<string, ObjectDifference>;
+export type NodeDifferenceMap = Map<string, ObjectDiffState>;
 export { DifferenceKind, DiffErrorKind };

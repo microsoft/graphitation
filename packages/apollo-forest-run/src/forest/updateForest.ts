@@ -2,7 +2,7 @@ import { GraphDifference } from "../diff/diffTree";
 import { NodeKey, OperationDescriptor } from "../descriptor/types";
 import { NodeDifferenceMap, updateTree } from "./updateTree";
 import { isDirty } from "../diff/difference";
-import { ObjectDifference } from "../diff/types";
+import { ObjectDifference, ObjectDiffState } from "../diff/types";
 import {
   resolveNormalizedField,
   resolveSelection,
@@ -57,9 +57,10 @@ export function resolveAffectedOperations(
   difference: GraphDifference,
   accumulatorMutable: Map<OperationDescriptor, NodeDifferenceMap> = new Map(),
 ): Map<OperationDescriptor, NodeDifferenceMap> {
-  for (const [nodeKey, diff] of difference.nodeDifference.entries()) {
-    if (isDirty(diff)) {
-      accumulateOperationDiffs(forest, nodeKey, diff, accumulatorMutable);
+  for (const [nodeKey, nodeDiff] of difference.nodeDifference.entries()) {
+    assert(nodeDiff.difference);
+    if (isDirty(nodeDiff.difference)) {
+      accumulateOperationDiffs(forest, nodeKey, nodeDiff, accumulatorMutable);
     }
   }
   return accumulatorMutable;
@@ -68,7 +69,7 @@ export function resolveAffectedOperations(
 function accumulateOperationDiffs(
   forest: IndexedForest,
   nodeKey: string,
-  difference: ObjectDifference,
+  diffState: ObjectDiffState,
   accumulatorMutable: Map<OperationDescriptor, NodeDifferenceMap>,
 ) {
   const operationIds = forest.operationsByNodes.get(nodeKey) ?? EMPTY_ARRAY;
@@ -80,7 +81,11 @@ function accumulateOperationDiffs(
       // operationsByNodes may contain operations with evicted data, which is expected
       continue;
     }
-    if (isRootNode && !rootFieldsOverlap(operationDescriptor, difference)) {
+    assert(diffState.difference);
+    if (
+      isRootNode &&
+      !rootFieldsOverlap(operationDescriptor, diffState?.difference)
+    ) {
       continue;
     }
     let map = accumulatorMutable.get(operationDescriptor);
@@ -88,7 +93,7 @@ function accumulateOperationDiffs(
       map = new Map();
       accumulatorMutable.set(operationDescriptor, map);
     }
-    map.set(nodeKey, difference);
+    map.set(nodeKey, diffState);
   }
 }
 

@@ -38,19 +38,16 @@ export function diffObject(
   env: DiffEnv,
   state: ObjectDiffState = { difference: undefined },
 ): ObjectDiffState {
-  let { errors, difference } = state;
-  const context = createDiffContext(env);
-  difference = diffPlainObjectValue(context, base, model, difference);
-
-  if (context.errors?.length) {
-    if (!errors?.length) {
-      errors = context.errors;
-    } else {
-      errors.push(...context.errors);
-    }
-  }
-  state.errors = errors;
-  state.difference = difference;
+  const context = createDiffContext(env, state);
+  state.difference = diffPlainObjectValue(
+    context,
+    base,
+    model,
+    state?.difference,
+  );
+  state.errors = context.errors;
+  state.added = context.added;
+  state.removed = context.removed;
 
   return state;
 }
@@ -61,7 +58,7 @@ export function diffValue(
   model: GraphValue,
   state?: ValueDifference,
 ): ValueDifference | undefined {
-  const context = createDiffContext(env);
+  const context = createDiffContext(env, undefined);
   const difference =
     Value.isMissingValue(base) || Value.isMissingValue(model)
       ? diffMissingValue(context, base, model, state)
@@ -85,6 +82,9 @@ function diffObjectValue(
   diff?: ObjectDifference,
 ) {
   if (base.data.__typename !== model.data.__typename) {
+    removeRelationship(context, base);
+    addRelationship(context, model);
+
     return Difference.createReplacement(base, model);
   }
   return model.key !== false
@@ -103,10 +103,13 @@ function diffCustomObjectValue(
   const modelKey = model.key;
   const baseKey = base.key;
 
-  if (modelKey !== baseKey) {
-    return Difference.createReplacement(base, model);
+  if (modelKey === baseKey) {
+    return diff;
   }
-  return diff;
+  removeRelationship(context, base);
+  addRelationship(context, model);
+
+  return Difference.createReplacement(base, model);
 }
 
 function diffPlainObjectValue(
@@ -598,8 +601,13 @@ function findKeyIndex(
   return -1;
 }
 
-function createDiffContext(env: DiffEnv): DiffContext {
-  return { env, errors: undefined };
+function createDiffContext(env: DiffEnv, state?: ObjectDiffState): DiffContext {
+  return {
+    env,
+    errors: state?.errors,
+    added: state?.added,
+    removed: state?.removed,
+  };
 }
 
 function shouldSkipObjectField(
@@ -667,5 +675,19 @@ function addMissingModelFieldError(
   }
   for (const chunk of model.chunks) {
     addMissingChunkFieldError(context, chunk, field, true);
+  }
+}
+
+function addRelationship(context: DiffContext, model: ObjectValue) {
+  if (model.key !== false) {
+    context.added ??= new Set();
+    context.added.add(model.key);
+  }
+}
+
+function removeRelationship(context: DiffContext, model: ObjectValue) {
+  if (model.key !== false) {
+    context.removed ??= new Set();
+    context.removed.add(model.key);
   }
 }

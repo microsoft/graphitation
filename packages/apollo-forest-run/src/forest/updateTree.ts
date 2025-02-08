@@ -13,7 +13,7 @@ import type {
   ObjectDraft,
   SourceObject,
 } from "../values/types";
-import type { ObjectDifference } from "../diff/types";
+import type { ObjectDifference, ObjectDiffState } from "../diff/types";
 import type {
   IndexedTree,
   Draft,
@@ -35,7 +35,7 @@ import {
 } from "../values";
 import { updateObject } from "./updateObject";
 
-export type NodeDifferenceMap = Map<string, ObjectDifference>;
+export type NodeDifferenceMap = Map<string, ObjectDiffState>;
 type ComplexValue = SourceObject | NestedList<SourceObject>;
 
 export function updateTree(
@@ -84,13 +84,13 @@ export function updateTree(
 
   let dirty = false;
   for (const chunk of chunkQueue) {
-    const difference = differenceMap.get(chunk.key as string);
-    assert(difference);
+    const nodeDiff = differenceMap.get(chunk.key as string);
+    assert(nodeDiff?.difference);
 
     const result = updateObject(
       base.dataMap,
       chunk,
-      difference,
+      nodeDiff.difference,
       completeObject.bind(null, env, base, getNodeChunks),
       state,
     );
@@ -153,8 +153,8 @@ function resolveAffectedChunks(
   differenceMap: NodeDifferenceMap,
 ): ObjectChunk[] {
   const affectedChunks: ObjectChunk[] = [];
-  for (const [objectKey, difference] of differenceMap.entries()) {
-    if (!isDirty(difference)) {
+  for (const [objectKey, nodeDiff] of differenceMap.entries()) {
+    if (!nodeDiff?.difference || !isDirty(nodeDiff.difference)) {
       continue;
     }
     const chunks = base.nodes.get(objectKey);

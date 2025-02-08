@@ -302,7 +302,7 @@ function getDifference(
   parentNode: NodeChunk,
   chunk: ObjectChunk,
 ): ObjectDifference | undefined {
-  const nodeDiff = treeState.nodeDifference.get(parentNode.key);
+  const nodeDiff = treeState.nodeDifference.get(parentNode.key)?.difference;
   return chunk === parentNode
     ? nodeDiff
     : getEmbeddedChunkDifference(treeState, chunk, parentNode, nodeDiff);
@@ -315,15 +315,15 @@ function addDifference(
   chunkDifference: ObjectDifference,
 ): ObjectDifference {
   const { nodeDifference } = treeState;
-  let nodeDiff = nodeDifference.get(parentNode.key);
+  let nodeDiff = nodeDifference.get(parentNode.key)?.difference;
   if (chunk === parentNode) {
     assert(!nodeDiff || nodeDiff === chunkDifference);
-    nodeDifference.set(parentNode.key, chunkDifference);
+    nodeDifference.set(parentNode.key, { difference: chunkDifference });
     return chunkDifference;
   }
   if (!nodeDiff) {
     nodeDiff = Difference.createObjectDifference();
-    nodeDifference.set(parentNode.key, nodeDiff);
+    nodeDifference.set(parentNode.key, { difference: nodeDiff });
   }
   addEmbeddedChunkDifference(
     treeState,
@@ -438,7 +438,9 @@ function markParentNodeDirty(
   parentNode: NodeChunk,
   chunk: ObjectChunk,
 ) {
-  const parentNodeDifference = treeState.nodeDifference.get(parentNode.key);
+  const parentNodeDifference = treeState.nodeDifference.get(
+    parentNode.key,
+  )?.difference;
   assert(parentNodeDifference);
 
   let parentDifference: ValueDifference | undefined = parentNodeDifference;

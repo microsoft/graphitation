@@ -35,7 +35,8 @@ import {
   touchOperation,
 } from "./store";
 import { assert } from "../jsutils/assert";
-import { addTree, trackTreeNodes } from "../forest/addTree";
+import { addTree } from "../forest/addTree";
+import { trackTreeNodes } from "../forest/trackNodes";
 
 export function read<TData>(
   env: CacheEnv,

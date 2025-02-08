@@ -52,12 +52,6 @@ EMPTY_SET.add = () => {
   throw new Error("Immutable Empty Set");
 };
 
-// Re-using state object for multiple nodes
-const nodeDiffState = {
-  difference: undefined,
-  errors: [],
-};
-
 export function diffTree(
   forest: IndexedForest,
   model: IndexedTree,
@@ -86,11 +80,10 @@ function diffNodesImpl(
 ): GraphDifference {
   const newNodes: NodeKey[] = [];
   const nodeDifference: NodeDifferenceMap = new Map();
+  let nodeDiffState: ObjectDiffState | undefined = undefined;
 
   for (const nodeChunks of nodes.values()) {
     assert(nodeChunks.length);
-    nodeDiffState.difference = undefined;
-    nodeDiffState.errors.length = 0;
 
     const modelNode =
       nodeChunks.length === 1
@@ -100,16 +93,15 @@ function diffNodesImpl(
     assert(modelNode.key);
 
     if (currentTreeState?.nodes.has(modelNode.key)) {
-      const difference = diffTreeNode(
+      nodeDiffState = diffTreeNode(
         context,
         currentTreeState,
         modelNode,
-        nodeDifference,
         nodeDiffState,
       );
       // TODO: additionally diff nodes that exist in the incoming state, but are missing in the current state
       //    And keep a list of "removed" / "added" nodes
-      if (!difference) {
+      if (!nodeDiffState) {
         continue;
       }
     }
@@ -126,14 +118,13 @@ function diffNodesImpl(
         // Already ran a diff for it above
         continue;
       }
-      const difference = diffTreeNode(
+      nodeDiffState = diffTreeNode(
         context,
         treeWithNode,
         modelNode,
-        nodeDifference,
         nodeDiffState,
       );
-      if (!difference) {
+      if (!nodeDiffState) {
         break;
       }
     }
@@ -141,11 +132,11 @@ function diffNodesImpl(
       assert(typeof modelNode.key === "string");
       newNodes.push(modelNode.key);
     }
-    if (nodeDiffState.difference && isDirty(nodeDiffState.difference)) {
+    if (nodeDiffState?.difference && isDirty(nodeDiffState.difference)) {
       assert(modelNode.key);
-      nodeDifference.set(modelNode.key, nodeDiffState.difference);
+      nodeDifference.set(modelNode.key, nodeDiffState);
     }
-    if (nodeDiffState.errors?.length) {
+    if (nodeDiffState?.errors?.length) {
       accumulateDiffErrors(context, modelNode, nodeDiffState.errors);
     }
   }
@@ -170,11 +161,10 @@ function diffTreeNode(
   context: Context,
   baseTree: IndexedTree,
   modelNode: ObjectValue,
-  nodeDifferenceMap: NodeDifferenceMap,
-  nodeDiffState: ObjectDiffState,
-) {
-  if (nodeDiffState.difference && isComplete(nodeDiffState.difference)) {
-    return nodeDiffState.difference;
+  nodeDiffState: ObjectDiffState | undefined,
+): ObjectDiffState | undefined {
+  if (nodeDiffState?.difference && isComplete(nodeDiffState.difference)) {
+    return nodeDiffState;
   }
   const baseChunks = baseTree.nodes.get(modelNode.key as string);
   assert(baseChunks?.length);
@@ -183,14 +173,15 @@ function diffTreeNode(
     baseChunks.length === 1 ? baseChunks[0] : createObjectAggregate(baseChunks);
 
   try {
-    const { difference } = diffObject(
+    const diffState = diffObject(
       baseNode,
       modelNode,
       context.env,
       nodeDiffState,
     );
+    const difference = diffState.difference;
     return difference && (isDirty(difference) || !isComplete(difference))
-      ? difference
+      ? diffState
       : undefined;
   } catch (e) {
     assert(modelNode.key !== false);

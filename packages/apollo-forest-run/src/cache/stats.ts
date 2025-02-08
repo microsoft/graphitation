@@ -272,8 +272,8 @@ export class WriteStatsCollector {
     if (!this.active) return;
     const step = this.stats.steps.diff;
     step.newNodes = diff.newNodes;
-    for (const [nodeKey, difference] of diff.nodeDifference) {
-      step.dirtyNodes.push([nodeKey, difference.dirtyFields ?? EMPTY_SET]);
+    for (const [nodeKey, { difference }] of diff.nodeDifference) {
+      step.dirtyNodes.push([nodeKey, difference?.dirtyFields ?? EMPTY_SET]);
     }
     step.time = performance.now() - step.start;
     step.errors = diff.errors.length;

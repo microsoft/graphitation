@@ -24,7 +24,7 @@ import type {
   Transaction,
   TransformedResult,
 } from "./types";
-import type { ObjectDifference, Replacement } from "../diff/types";
+import type { ObjectDiffState, Replacement } from "../diff/types";
 import type { GraphDiffError } from "../diff/diffTree";
 import { isReference, makeReference } from "@apollo/client";
 import { maybeDeepFreeze } from "@apollo/client/utilities";
@@ -60,7 +60,7 @@ const EMPTY_ARRAY = Object.freeze([]);
 const DELETE: any = Object.freeze(Object.create(null));
 const INVALIDATE: any = Object.freeze(Object.create(null));
 
-export type ModifiedNodeDifference = ObjectDifference & {
+export type ModifiedNodeDifference = ObjectDiffState & {
   fieldsToInvalidate: Set<NormalizedFieldEntry>;
   fieldsToDelete: Set<NormalizedFieldEntry>;
   deleteNode: boolean;
@@ -238,8 +238,9 @@ function runModifiers(
     const node = Value.createObjectAggregate(chunks);
     const fieldNames = Value.aggregateFieldNames(node);
 
+    const difference = Difference.createObjectDifference();
     const nodeDifference: ModifiedNodeDifference = {
-      ...Difference.createObjectDifference(),
+      difference,
       fieldsToDelete: new Set(),
       fieldsToInvalidate: new Set(),
       deleteNode: true,
@@ -304,12 +305,12 @@ function runModifiers(
           oldValue,
           newValue: toGraphValue(env, layer, oldValue, newSourceValue),
         };
-        Difference.addFieldDifference(nodeDifference, fieldEntry, replacement);
-        Difference.addDirtyField(nodeDifference, fieldEntry);
+        Difference.addFieldDifference(difference, fieldEntry, replacement);
+        Difference.addDirtyField(difference, fieldEntry);
       }
     }
     if (
-      Difference.isDirty(nodeDifference) ||
+      Difference.isDirty(difference) ||
       nodeDifference.fieldsToInvalidate.size ||
       nodeDifference.fieldsToDelete.size ||
       nodeDifference.deleteNode

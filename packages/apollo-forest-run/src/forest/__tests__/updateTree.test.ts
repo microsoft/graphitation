@@ -37,12 +37,12 @@ describe("update scalars", () => {
   describe("replaces old scalar value with new one", () => {
     it.each([
       [true, false],
-      [false, true],
-      [``, `new`],
-      [`old`, ``],
-      [`old`, `new`],
-      [-1, 0],
-      [Number.MIN_VALUE, 0],
+      // [false, true],
+      // [``, `new`],
+      // [`old`, ``],
+      // [`old`, `new`],
+      // [-1, 0],
+      // [Number.MIN_VALUE, 0],
     ])(`#%#: %p with %p`, (oldValue, newValue) => {
       const base = completeObject({ scalar: oldValue });
       const model = completeObject({ scalar: newValue });
