@@ -1,6 +1,7 @@
 import type { FieldReadFunction } from "@apollo/client/cache/inmemory/policies";
 import type {
   FieldName,
+  NodeKey,
   OperationDescriptor,
   TypeName,
 } from "../descriptor/types";
@@ -26,7 +27,11 @@ import {
 } from "../values";
 import { applyReadPolicies } from "./policies";
 import { indexTree } from "../forest/indexTree";
-import { createChunkMatcher, createChunkProvider } from "./draftHelpers";
+import {
+  createChunkMatcher,
+  createChunkProvider,
+  getNodeChunks,
+} from "./draftHelpers";
 import { getDiffDescriptor, getOriginalDocument } from "./descriptor";
 import { Cache, MissingFieldError } from "@apollo/client";
 import {
@@ -37,6 +42,8 @@ import {
 import { assert } from "../jsutils/assert";
 import { addTree } from "../forest/addTree";
 import { trackTreeNodes } from "../forest/trackNodes";
+import { applyPendingUpdates } from "../forest/updateTree";
+import { getTreeAtLatest } from "../forest/getTree";
 
 export function read<TData>(
   env: CacheEnv,
@@ -103,8 +110,11 @@ function growOutputTree(
   operation: OperationDescriptor,
   optimistic: boolean,
 ) {
+  const chunkProvider = (key: NodeKey) =>
+    getNodeChunks(getEffectiveReadLayers(store, forest, false), key);
+
   // See if we can just use primary data tree
-  let dataTree = forest.trees.get(operation.id);
+  let dataTree = getTreeAtLatest(env, store, forest, operation, chunkProvider);
 
   if (!dataTree) {
     dataTree = growDataTree(env, forest, operation);

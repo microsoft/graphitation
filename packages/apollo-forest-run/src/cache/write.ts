@@ -38,6 +38,7 @@ import { IndexedForest } from "../forest/types";
 import { trackRelationshipChanges } from "../forest/trackNodes";
 import { NodeDifferenceMap } from "../diff/types";
 import { applyPendingUpdates } from "../forest/updateTree";
+import { getTreeAtLatest } from "../forest/getTree";
 
 type WriteResult = {
   affected?: Iterable<OperationDescriptor>;
@@ -81,7 +82,7 @@ export function write(
   const chunkProvider = (key: NodeKey) =>
     getNodeChunks(getEffectiveReadLayers(store, targetForest, false), key);
 
-  let existingResult = getExistingResult(
+  let existingResult = getTreeAtLatest(
     env,
     store,
     targetForest,
@@ -287,20 +288,6 @@ function processDiffErrors(
       }
     }
   }
-}
-
-function getExistingResult(
-  env: CacheEnv,
-  store: Store,
-  targetForest: IndexedForest,
-  operation: OperationDescriptor,
-  getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
-): DataTree | undefined {
-  const op = resolveKeyDescriptor(env, store, operation);
-  const tree = targetForest.trees.get(op.id);
-  return tree?.pendingUpdates.length
-    ? applyPendingUpdates(env, targetForest, tree, getNodeChunks)
-    : tree;
 }
 
 function shouldCache(
