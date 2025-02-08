@@ -7,12 +7,12 @@ import type {
 } from "./types";
 import { GraphDifference } from "../diff/diffTree";
 import { OperationDescriptor } from "../descriptor/types";
-import { NodeDifferenceMap } from "../forest/updateTree";
 import { IndexedTree } from "../forest/types";
 import { isNodeValue, isObjectValue } from "../values/predicates";
 import { assert } from "../jsutils/assert";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { hasFieldEntry } from "../values/resolve";
+import { NodeDifferenceMap } from "../diff/types";
 
 export function invalidateReadResults(
   env: CacheEnv,

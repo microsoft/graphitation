@@ -4,6 +4,7 @@ import type { CacheEnv, DataForest, OptimisticLayer } from "./types";
 import * as Value from "../values";
 import { assertNever, assert } from "../jsutils/assert";
 import { fieldToStringKey } from "./keys";
+import { applyPendingUpdates } from "../forest/updateTree";
 
 // ApolloCompat:
 //   Transform forest run layers into Apollo-compatible format (mostly useful for tests)
@@ -18,7 +19,9 @@ export function extract(
 
   for (const forest of layers) {
     for (const [, indexedTree] of forest.trees) {
-      for (const [id, chunks] of indexedTree.nodes.entries()) {
+      const updatedTree = applyPendingUpdates(env, forest, indexedTree);
+
+      for (const [id, chunks] of updatedTree.nodes.entries()) {
         if (forest.deletedNodes.has(id)) {
           entityMap.set(id, []);
           continue;

@@ -1,8 +1,8 @@
 import { IndexedTree } from "../forest/types";
 import { GraphDifference } from "../diff/diffTree";
 import { OperationDescriptor } from "../descriptor/types";
-import { NodeDifferenceMap } from "../forest/updateTree";
 import { ResultTree } from "./types";
+import { NodeDifferenceMap } from "../diff/types";
 
 export type TransactionStats = {
   kind: "Transaction";

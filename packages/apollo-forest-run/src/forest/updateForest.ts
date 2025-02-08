@@ -1,8 +1,12 @@
 import { GraphDifference } from "../diff/diffTree";
 import { NodeKey, OperationDescriptor } from "../descriptor/types";
-import { NodeDifferenceMap, updateTree } from "./updateTree";
+import { updateTree } from "./updateTree";
 import { isDirty } from "../diff/difference";
-import { ObjectDifference, ObjectDiffState } from "../diff/types";
+import {
+  NodeDifferenceMap,
+  ObjectDifference,
+  ObjectDiffState,
+} from "../diff/types";
 import {
   resolveNormalizedField,
   resolveSelection,

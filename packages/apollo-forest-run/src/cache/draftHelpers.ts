@@ -13,7 +13,7 @@ import type {
   OperationDescriptor,
   ResolvedSelection,
 } from "../descriptor/types";
-import type { IndexedForest } from "../forest/types";
+import type { IndexedForest, IndexedTree } from "../forest/types";
 import { assert } from "../jsutils/assert";
 import {
   isMissingValue,
@@ -83,15 +83,23 @@ export function* getNodeChunks(
   key: NodeKey,
   includeDeleted = false,
 ): Generator<NodeChunk> {
+  const hasDirtyNode = (tree: IndexedTree) =>
+    tree.pendingUpdates.some((pendingUpdate) => pendingUpdate.has(key));
+
   for (const layer of layers) {
     if (!includeDeleted && layer.deletedNodes.has(key)) {
       // When a node is deleted in some layer - it is treated as deleted from lower layers too
       break;
     }
     const operations = layer.operationsByNodes.get(key);
+
+    // First, return up-to-date chunks
     for (const operation of operations ?? EMPTY_ARRAY) {
       const tree = layer.trees.get(operation);
       if (!tree) {
+        continue;
+      }
+      if (tree.pendingUpdates.length && hasDirtyNode(tree)) {
         continue;
       }
       const chunks = tree.nodes.get(key) ?? EMPTY_ARRAY;

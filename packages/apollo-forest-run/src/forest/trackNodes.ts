@@ -1,6 +1,5 @@
 import { IndexedForest, IndexedTree } from "./types";
 import { NodeDifferenceMap } from "../diff/types";
-import { assert } from "../jsutils/assert";
 
 const EMPTY_ARRAY = Object.freeze([]);
 

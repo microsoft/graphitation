@@ -1,4 +1,3 @@
-/* eslint-disable */
 import type {
   OperationDescriptor,
   PossibleSelections,
@@ -13,13 +12,13 @@ import type {
   ObjectDraft,
   SourceObject,
 } from "../values/types";
-import type { ObjectDifference, ObjectDiffState } from "../diff/types";
-import type {
+import type { NodeDifferenceMap } from "../diff/types";
+import {
   IndexedTree,
   Draft,
-  Source,
   UpdateState,
   ForestEnv,
+  IndexedForest,
 } from "./types";
 import { assert } from "../jsutils/assert";
 import { indexTree } from "./indexTree";
@@ -34,13 +33,37 @@ import {
   resolveObjectKey,
 } from "../values";
 import { updateObject } from "./updateObject";
+import { replaceTree } from "./addTree";
 
-export type NodeDifferenceMap = Map<string, ObjectDiffState>;
 type ComplexValue = SourceObject | NestedList<SourceObject>;
+
+export function applyPendingUpdates(
+  env: ForestEnv,
+  forest: IndexedForest,
+  base: IndexedTree,
+  getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
+) {
+  if (!base.pendingUpdates.length) {
+    return base;
+  }
+  const updated = updateTree(base, base.pendingUpdates, env, getNodeChunks);
+
+  if (!updated || updated === base) {
+    // nodeDifference may not be overlapping with selections of this tree.
+    //   E.g. difference could be for operation { id: "1", firstName: "Changed" }
+    //   but current operation is { id: "1", lastName: "Unchanged" }
+    return base;
+  }
+  // Reset previous tree state on commit
+  updated.prev = null;
+  replaceTree(forest, updated);
+
+  return updated;
+}
 
 export function updateTree(
   base: IndexedTree,
-  differenceMap: NodeDifferenceMap,
+  changeLogOrDiff: NodeDifferenceMap | NodeDifferenceMap[],
   env: ForestEnv,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
   state?: UpdateState,
@@ -53,6 +76,9 @@ export function updateTree(
     missingFields: new Map(),
   };
   const { missingFields, drafts } = state;
+  const changeLog = Array.isArray(changeLogOrDiff)
+    ? changeLogOrDiff
+    : [changeLogOrDiff];
 
   // Preserve existing information about any missing fields.
   // (updated objects will get their own entry in the map, so there won't be collisions)
@@ -79,21 +105,27 @@ export function updateTree(
   // By executing updates from bottom to top we make sure that list updates happen after all nested objects
   //   are already updated (thus, we can safely change paths); and that all "dirty" child nodes
   //   (and their intermediate parent plain objects) already have their "drafts" by the time we update them.
-  const chunkQueue = resolveAffectedChunks(base, differenceMap);
+  const chunkQueue = resolveAffectedChunks(base, changeLog);
   chunkQueue.sort((a, b) => b.selection.depth - a.selection.depth); // parent is missing for orphan nodes
 
   let dirty = false;
   for (const chunk of chunkQueue) {
-    const nodeDiff = differenceMap.get(chunk.key as string);
-    assert(nodeDiff?.difference);
+    let result;
+    for (const differenceMap of changeLog) {
+      const nodeDiff = differenceMap.get(chunk.key as string);
+      if (!nodeDiff) {
+        continue;
+      }
+      assert(nodeDiff?.difference);
 
-    const result = updateObject(
-      base.dataMap,
-      chunk,
-      nodeDiff.difference,
-      completeObject.bind(null, env, base, getNodeChunks),
-      state,
-    );
+      result = updateObject(
+        base.dataMap,
+        chunk,
+        nodeDiff.difference,
+        completeObject.bind(null, env, base, getNodeChunks),
+        state,
+      );
+    }
     if (!result) {
       continue;
     }
@@ -150,16 +182,24 @@ export function updateTree(
 
 function resolveAffectedChunks(
   base: IndexedTree,
-  differenceMap: NodeDifferenceMap,
+  changeLog: NodeDifferenceMap[],
 ): ObjectChunk[] {
+  const visited = new Set();
   const affectedChunks: ObjectChunk[] = [];
-  for (const [objectKey, nodeDiff] of differenceMap.entries()) {
-    if (!nodeDiff?.difference || !isDirty(nodeDiff.difference)) {
-      continue;
-    }
-    const chunks = base.nodes.get(objectKey);
-    if (chunks?.length) {
-      affectedChunks.push(...chunks);
+  for (const differenceMap of changeLog) {
+    for (const [objectKey, nodeDiff] of differenceMap.entries()) {
+      if (
+        !nodeDiff?.difference ||
+        !isDirty(nodeDiff.difference) ||
+        visited.has(objectKey)
+      ) {
+        continue;
+      }
+      const chunks = base.nodes.get(objectKey);
+      if (chunks?.length) {
+        affectedChunks.push(...chunks);
+        visited.add(objectKey);
+      }
     }
   }
   return affectedChunks;

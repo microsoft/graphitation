@@ -1,6 +1,6 @@
 import type { Cache } from "@apollo/client";
 import type { IndexedTree } from "../forest/types";
-import type { OperationResult } from "../values/types";
+import { NodeChunk, OperationResult } from "../values/types";
 import type {
   CacheEnv,
   DataForest,
@@ -31,12 +31,13 @@ import {
 } from "../forest/updateForest";
 import { indexTree } from "../forest/indexTree";
 import { createParentLocator, markAsPartial, TraverseEnv } from "../values";
-import { NodeDifferenceMap } from "../forest/updateTree";
 import { getNodeChunks } from "./draftHelpers";
 import { addTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
 import { trackRelationshipChanges } from "../forest/trackNodes";
+import { NodeDifferenceMap } from "../diff/types";
+import { applyPendingUpdates } from "../forest/updateTree";
 
 type WriteResult = {
   affected?: Iterable<OperationDescriptor>;
@@ -77,11 +78,15 @@ export function write(
     throw new Error(`Could not identify object ${inspect(writeData)}`);
   }
 
+  const chunkProvider = (key: NodeKey) =>
+    getNodeChunks(getEffectiveReadLayers(store, targetForest, false), key);
+
   let existingResult = getExistingResult(
     env,
     store,
     targetForest,
     operationDescriptor,
+    chunkProvider,
   );
   const existingData = existingResult?.result.data;
 
@@ -156,8 +161,7 @@ export function write(
     targetForest,
     difference,
   );
-  // const chunkProvider = (key: NodeKey) =>
-  //   getNodeChunks(getEffectiveReadLayers(store, targetForest, false), key);
+
   scheduleTreeUpdates(env, targetForest, affectedOperations);
 
   // Problem: how to detect which operations are affected by the next incoming change?
@@ -290,9 +294,13 @@ function getExistingResult(
   store: Store,
   targetForest: IndexedForest,
   operation: OperationDescriptor,
+  getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
 ): DataTree | undefined {
   const op = resolveKeyDescriptor(env, store, operation);
-  return targetForest.trees.get(op.id);
+  const tree = targetForest.trees.get(op.id);
+  return tree?.pendingUpdates.length
+    ? applyPendingUpdates(env, targetForest, tree, getNodeChunks)
+    : tree;
 }
 
 function shouldCache(
