@@ -80,10 +80,10 @@ function diffNodesImpl(
 ): GraphDifference {
   const newNodes: NodeKey[] = [];
   const nodeDifference: NodeDifferenceMap = new Map();
-  let nodeDiffState: ObjectDiffState | undefined = undefined;
 
   for (const nodeChunks of nodes.values()) {
     assert(nodeChunks.length);
+    let nodeDiffState: ObjectDiffState | undefined = undefined;
 
     const modelNode =
       nodeChunks.length === 1
@@ -179,10 +179,10 @@ function diffTreeNode(
       context.env,
       nodeDiffState,
     );
-    const difference = diffState.difference;
-    return difference && (isDirty(difference) || !isComplete(difference))
-      ? diffState
-      : undefined;
+    const { difference, errors } = diffState;
+    const hasChanges =
+      difference && (isDirty(difference) || !isComplete(difference));
+    return hasChanges || errors?.length ? diffState : undefined;
   } catch (e) {
     assert(modelNode.key !== false);
     context.firstError ??= {
