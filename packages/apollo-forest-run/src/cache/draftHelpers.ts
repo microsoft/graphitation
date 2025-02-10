@@ -13,7 +13,7 @@ import type {
   OperationDescriptor,
   ResolvedSelection,
 } from "../descriptor/types";
-import type { IndexedForest, IndexedTree } from "../forest/types";
+import type { ForestEnv, IndexedForest, IndexedTree } from "../forest/types";
 import { assert } from "../jsutils/assert";
 import {
   isMissingValue,
@@ -26,6 +26,7 @@ import {
   isCompositeListValue,
 } from "../values";
 import { resolvedSelectionsAreEqual } from "../descriptor/resolvedSelection";
+import { applyPendingUpdates } from "../forest/updateTree";
 
 const EMPTY_ARRAY = Object.freeze([]);
 
@@ -82,11 +83,13 @@ export function* getNodeChunks(
   layers: IndexedForest[],
   key: NodeKey,
   includeDeleted = false,
+  updateStale = true,
 ): Generator<NodeChunk> {
   const hasDirtyNode = (tree: IndexedTree) =>
     tree.pendingUpdates.some((pendingUpdate) => pendingUpdate.has(key));
 
-  for (const layer of layers) {
+  for (let i = 0; i < layers.length; i++) {
+    const layer = layers[i];
     if (!includeDeleted && layer.deletedNodes.has(key)) {
       // When a node is deleted in some layer - it is treated as deleted from lower layers too
       break;
@@ -94,15 +97,42 @@ export function* getNodeChunks(
     const operations = layer.operationsByNodes.get(key);
 
     // First, return up-to-date chunks
+    let dirtyTrees: IndexedTree[] | undefined = undefined;
     for (const operation of operations ?? EMPTY_ARRAY) {
       const tree = layer.trees.get(operation);
       if (!tree) {
         continue;
       }
       if (tree.pendingUpdates.length && hasDirtyNode(tree)) {
+        dirtyTrees ??= [];
+        dirtyTrees.push(tree);
         continue;
       }
       const chunks = tree.nodes.get(key) ?? EMPTY_ARRAY;
+      for (const chunk of chunks) {
+        yield chunk;
+      }
+    }
+    if (!updateStale || !dirtyTrees?.length) {
+      continue;
+    }
+    // ApolloCompat: this is necessary for custom reads from field policies and optimistic stuff
+    // FIXME: env passing has become messy - warrants a refactor
+    const updateLayers = layers.slice(i);
+    const chunkProvider = (nodeKey: NodeKey) =>
+      nodeKey === key
+        ? []
+        : getNodeChunks(updateLayers, nodeKey, includeDeleted, true);
+
+    for (const tree of dirtyTrees ?? EMPTY_ARRAY) {
+      assert(tree.operation.env.objectKey);
+      const updatedTree = applyPendingUpdates(
+        tree.operation.env as ForestEnv,
+        layer,
+        tree,
+        chunkProvider,
+      );
+      const chunks = updatedTree.nodes.get(key) ?? EMPTY_ARRAY;
       for (const chunk of chunks) {
         yield chunk;
       }

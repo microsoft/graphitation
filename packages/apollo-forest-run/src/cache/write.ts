@@ -158,10 +158,7 @@ export function write(
   // This function returns exhaustive list of affected operations. It may contain false-positives,
   // because operationsByNodes also reflects nodes from optimistic updates and read policy results
   // (which may not exist in the main forest trees)
-  const affectedOperations = resolveAffectedOperations(
-    targetForest,
-    difference,
-  );
+  let affectedOperations = resolveAffectedOperations(targetForest, difference);
 
   scheduleTreeUpdates(env, targetForest, affectedOperations);
 
@@ -184,7 +181,7 @@ export function write(
     addTree(targetForest, modifiedIncomingResult);
   }
 
-  appendAffectedOperationsFromOtherLayers(
+  affectedOperations = appendAffectedOperationsFromOtherLayers(
     env,
     store,
     affectedOperations,
@@ -224,23 +221,34 @@ function scheduleTreeUpdates(
 function appendAffectedOperationsFromOtherLayers(
   env: CacheEnv,
   store: Store,
-  affectedForestOperationsMutable: Map<OperationDescriptor, NodeDifferenceMap>,
+  affectedForestOperations: Map<OperationDescriptor, NodeDifferenceMap>,
   targetForest: DataForest | OptimisticLayer,
   incomingResult: IndexedTree,
 ) {
   // Optimistic reads go through all existing layers
   //  And those layers may be affected by incoming results too, so we actually need to diff all other layers too
   //  TODO: just write to all effective layers?
-  for (const layer of getEffectiveReadLayers(store, targetForest, true)) {
+  const layers = getEffectiveReadLayers(store, targetForest, true);
+  if (!layers.length) {
+    return affectedForestOperations;
+  }
+  const affectedLayerOperations = new Map(
+    [...affectedForestOperations.entries()].map((e) => [
+      e[0],
+      new Map(e[1].entries()),
+    ]),
+  );
+  for (const layer of layers) {
     if (layer === targetForest) {
       continue;
     }
     resolveAffectedOperations(
       layer,
       diffTree(layer, incomingResult, env),
-      affectedForestOperationsMutable,
+      affectedLayerOperations,
     );
   }
+  return affectedLayerOperations;
 }
 
 function processDiffErrors(
