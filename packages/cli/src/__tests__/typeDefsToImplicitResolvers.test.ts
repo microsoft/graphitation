@@ -52,4 +52,25 @@ describe(supermassive, () => {
       ).toMatchSnapshot();
     }
   });
+
+  it("should generate interfaces with --mandatory-root-operation-types --generate-resolver-map", async () => {
+    const program = supermassive();
+    await program.parseAsync([
+      "node",
+      "supermassive",
+      "generate-interfaces",
+      path.join(__dirname, "./fixtures/schema.graphql"),
+      "--output-dir=../__generated__",
+      "--mandatory-root-operation-types",
+      "--generate-resolver-map",
+    ]);
+    const files = await fs.readdir(path.join(__dirname, "./__generated__"));
+    for (const file of files) {
+      expect(
+        await fs.readFile(path.join(__dirname, "./__generated__", file), {
+          encoding: "utf-8",
+        }),
+      ).toMatchSnapshot();
+    }
+  });
 });

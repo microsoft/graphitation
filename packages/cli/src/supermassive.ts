@@ -20,6 +20,7 @@ type GenerateInterfacesOptions = {
   enumMigrationExceptionsJsonFile?: string;
   generateOnlyEnums?: boolean;
   generateResolverMap?: boolean;
+  mandatoryRootOperationTypes?: boolean;
   contextSubTypeNameTemplate?: string;
   contextSubTypePathTemplate?: string;
   defaultContextSubTypePath?: string;
@@ -91,6 +92,10 @@ export function supermassive(): Command {
       "--generate-resolver-map",
       "Generate a schema map for resolvers. Default export with resolvers for each type",
     )
+    .option(
+      "--mandatory-root-operation-types",
+      "Makes root operation types and its properties mandatory in all generated resolver interfaces",
+    )
     .description("generate interfaces and models")
     .action(
       async (inputs: Array<string>, options: GenerateInterfacesOptions) => {
@@ -116,6 +121,7 @@ function getFiles(inputs: Array<string>) {
     .flat()
     .filter(Boolean);
 }
+
 function getContextPath(
   outputDir: string,
   contextTypePath: string | undefined,
@@ -215,6 +221,7 @@ async function generateInterfaces(
       useStringUnionsInsteadOfEnums: !!options.useStringUnionsInsteadOfEnums,
       generateOnlyEnums: !!options.generateOnlyEnums,
       generateResolverMap: !!options.generateResolverMap,
+      mandatoryRootOperationTypes: !!options.mandatoryRootOperationTypes,
       enumNamesToMigrate,
       enumNamesToKeep,
       modelScope: options.scope || null,

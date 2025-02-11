@@ -38,6 +38,34 @@ export interface GenerateTSOptions {
    *   }
    * */
   generateResolverMap?: boolean;
+  /**
+   * Makes root operation types and its properties mandatory in all generated resolver interfaces,
+   * including ResolverMap.
+   *
+   * @example
+   * // mandatoryRootOperationTypes: enabled
+   * export declare namespace Query {
+   *    export interface Resolvers {
+   *       readonly allTodos: allTodos;
+   *    }
+   * }
+   * export default interface ResolversMap {
+   *    readonly Query: Query.Resolvers;
+   *    readonly User?: User.Resolvers;
+   * }
+   *
+   * // mandatoryRootOperationTypes: disabled
+   * export declare namespace Query {
+   *    export interface Resolvers {
+   *       readonly allTodos?: allTodos;
+   *    }
+   * }
+   * export default interface ResolversMap {
+   *    readonly Query?: Query.Resolvers;
+   *    readonly User?: User.Resolvers;
+   * }
+   */
+  mandatoryRootOperationTypes?: boolean;
 }
 
 export function generateTS(
@@ -60,6 +88,7 @@ export function generateTS(
     defaultContextSubTypePath,
     defaultContextSubTypeName,
     generateResolverMap,
+    mandatoryRootOperationTypes,
   }: GenerateTSOptions,
 ): {
   files: ts.SourceFile[];
@@ -96,7 +125,12 @@ export function generateTS(
 
     if (!generateOnlyEnums) {
       result.push(generateModels(context));
-      result.push(generateResolvers(context, generateResolverMap));
+      result.push(
+        generateResolvers(context, {
+          generateResolverMap,
+          mandatoryRootOperationTypes,
+        }),
+      );
       if (context.hasInputs) {
         result.push(generateInputs(context));
       }
