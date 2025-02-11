@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "feat(ts-codegen): option to make root operation types mandatory",
+  "packageName": "@graphitation/cli",
+  "email": "dsamsonov@microsoft.com",
+  "dependentChangeType": "patch"
+}
