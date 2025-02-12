@@ -10,7 +10,7 @@ parameters:
     default: "PROVIDE AN ADO NPM FEED PAT THAT HAS CONTRIBUTOR PERMISSION"
   - name: adoOrgBaseUrl
     type: string
-    default: "https://pkgs.dev.azure.com/[ORG]"
+    default: "https://pkgs.dev.azure.com/domoreexp"
   - name: adoNpmFeedName
     type: string
 
