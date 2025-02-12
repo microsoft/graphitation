@@ -53,11 +53,6 @@ extends:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
                 fetchDepth: 2
-              - task: 1ES.PublishPipelineArtifact@1
-                displayName: 📒 Publish Manifest
-                inputs:
-                  artifactName: SBom-$(System.JobAttempt)
-                  targetPath: $(System.DefaultWorkingDirectory)/_manifest
               - template: .azure-devops/steps/pierce-ado-npm-mirror-cache.yml@self
                 parameters:
                   adoNpmFeedPat: $(adoNpmFeedPat)

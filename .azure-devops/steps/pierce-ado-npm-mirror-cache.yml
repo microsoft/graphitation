@@ -16,6 +16,7 @@ parameters:
 
 steps:
   - bash: |
+      git checkout main
       git diff --name-only HEAD HEAD~1 | grep 'packages/.*/package.json' | while read pkgFilename ; do
         pkgName=`cat $pkgFilename | jq -r '.name'`
         pkgVersion=`cat $pkgFilename | jq -r '.version'`
