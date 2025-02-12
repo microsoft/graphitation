@@ -2,6 +2,27 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Wed, 12 Feb 2025 12:32:29 GMT",
+      "version": "1.16.0",
+      "tag": "@graphitation/cli_v1.16.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "f1ae8b842dd5714a604b5696ec1a148e879c6e7e",
+            "comment": "feat(ts-codegen): option to generate mandatory resolver types for graphql type extension"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v2.15.0",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 23 Jan 2025 11:35:51 GMT",
       "version": "1.15.0",
       "tag": "@graphitation/cli_v1.15.0",

@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Thu, 23 Jan 2025 11:35:51 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 12 Feb 2025 12:32:29 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.16.0
+
+Wed, 12 Feb 2025 12:32:29 GMT
+
+### Minor changes
+
+- feat(ts-codegen): option to generate mandatory resolver types for graphql type extension (dsamsonov@microsoft.com)
+- Bump @graphitation/ts-codegen to v2.15.0
 
 ## 1.15.0
 

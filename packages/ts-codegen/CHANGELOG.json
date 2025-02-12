@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Wed, 12 Feb 2025 12:32:29 GMT",
+      "version": "2.15.0",
+      "tag": "@graphitation/ts-codegen_v2.15.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "f1ae8b842dd5714a604b5696ec1a148e879c6e7e",
+            "comment": "feat(ts-codegen): option to generate mandatory resolver types for graphql type extension"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 23 Jan 2025 11:35:51 GMT",
       "version": "2.14.0",
       "tag": "@graphitation/ts-codegen_v2.14.0",
