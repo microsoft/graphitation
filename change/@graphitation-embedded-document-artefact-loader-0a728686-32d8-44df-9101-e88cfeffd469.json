@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "reapply inline source maps",
+  "packageName": "@graphitation/embedded-document-artefact-loader",
+  "email": "email not defined",
+  "dependentChangeType": "patch"
+}
