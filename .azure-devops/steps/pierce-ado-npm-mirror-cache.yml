@@ -16,13 +16,11 @@ parameters:
 
 steps:
   - bash: |
-      git fetch --all
-      git checkout main
-      git diff --name-only HEAD HEAD~1 | grep 'packages/.*/package.json' | while read pkgFilename ; do
+      pkgFilename="packages/apollo-react-relay-duct-tape/package.json"
         pkgName=`cat $pkgFilename | jq -r '.name'`
         pkgVersion=`cat $pkgFilename | jq -r '.version'`
         pkgBasename=`echo $pkgName | cut -d "/" -f 2`
+        echo "Piercing ADO npm feed cache for $pkgName@$pkgVersion"
         curl -Ivu $(adoNpmFeedPat) $(adoOrgBaseUrl)/_apis/packaging/feeds/$(adoNpmFeedName)/npm/packages/$pkgName/versions/$pkgVersion/content || true
         curl -o /dev/null -vu $(adoNpmFeedPat) $(adoOrgBaseUrl)/_packaging/$(adoNpmFeedName)/npm/registry/$pkgName/-/$pkgBasename-$pkgVersion.tgz || true
-      done
     displayName: "Pierce ADO NPM feed cache"
