@@ -38,6 +38,30 @@ export interface GenerateTSOptions {
    *   }
    * */
   generateResolverMap?: boolean;
+  /**
+   * Makes resolver types for type extensions mandatory to ensure that new resolvers are provided if module extends a type.
+   *
+   * @example
+   * // module.graphql
+   * extend type User {
+   *    isAdmin: Boolean
+   * }
+   *
+   * // generated resolver types (mandatoryResolverTypes: false)
+   * export declare namespace User {
+   *    export interface Resolvers {
+   *       readonly isAdmin?: isAdmin;
+   *    }
+   * }
+   *
+   * // generated resolver types (mandatoryResolverTypes: true)
+   * export declare namespace User {
+   *    export interface Resolvers {
+   *       readonly isAdmin: isAdmin;
+   *    }
+   * }
+   */
+  mandatoryResolverTypes?: boolean;
 }
 
 export function generateTS(
@@ -59,7 +83,8 @@ export function generateTS(
     contextSubTypePathTemplate,
     defaultContextSubTypePath,
     defaultContextSubTypeName,
-    generateResolverMap,
+    generateResolverMap = false,
+    mandatoryResolverTypes = false,
   }: GenerateTSOptions,
 ): {
   files: ts.SourceFile[];
@@ -96,7 +121,12 @@ export function generateTS(
 
     if (!generateOnlyEnums) {
       result.push(generateModels(context));
-      result.push(generateResolvers(context, generateResolverMap));
+      result.push(
+        generateResolvers(context, {
+          generateResolverMap,
+          mandatoryResolverTypes,
+        }),
+      );
       if (context.hasInputs) {
         result.push(generateInputs(context));
       }

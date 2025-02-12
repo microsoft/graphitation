@@ -29,10 +29,16 @@ const getResolverTypes = (context: TsCodegenContext): ResolverType[] => {
     );
 };
 
+interface Options {
+  generateResolverMap: boolean;
+  mandatoryResolverTypes: boolean;
+}
+
 export function generateResolvers(
   context: TsCodegenContext,
-  generateResolverMap?: boolean,
+  options: Options,
 ): ts.SourceFile {
+  const { generateResolverMap, mandatoryResolverTypes } = options;
   const statements: ts.Statement[] = [];
   statements.push(...context.getBasicImports());
   statements.push(
@@ -145,12 +151,14 @@ export function generateResolvers(
 
   const resolverTypes = getResolverTypes(context);
   statements.push(
-    ...resolverTypes.map((type) => createResolversForType(context, type)),
+    ...resolverTypes.map((type) =>
+      createResolversForType(context, type, mandatoryResolverTypes),
+    ),
   );
 
   const extra: ts.Statement[] = [];
   if (generateResolverMap) {
-    extra.push(createResolversMap(resolverTypes));
+    extra.push(createResolversMap(resolverTypes, mandatoryResolverTypes));
   }
 
   const source = factory.createSourceFile(
@@ -167,11 +175,12 @@ export function generateResolvers(
 function createResolversForType(
   context: TsCodegenContext,
   type: ResolverType,
+  mandatoryResolverTypes: boolean,
 ): ts.Statement {
   const { kind } = type;
   switch (kind) {
     case "OBJECT": {
-      return createObjectTypeResolvers(context, type);
+      return createObjectTypeResolvers(context, type, mandatoryResolverTypes);
     }
     case "UNION": {
       return createUnionTypeResolvers(context, type);
@@ -186,6 +195,7 @@ function createResolversForType(
 function createObjectTypeResolvers(
   context: TsCodegenContext,
   type: ObjectType,
+  mandatoryResolverTypes: boolean,
 ): ts.ModuleDeclaration {
   const members: ts.Statement[] = type.fields.map((field) =>
     createResolverField(context, type, field),
@@ -199,7 +209,9 @@ function createObjectTypeResolvers(
       factory.createPropertySignature(
         [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
         field.name,
-        factory.createToken(ts.SyntaxKind.QuestionToken),
+        mandatoryResolverTypes && type.isExtension
+          ? undefined
+          : factory.createToken(ts.SyntaxKind.QuestionToken),
         type.name === "Subscription"
           ? factory.createTypeReferenceNode(toValidFieldName(field.name), [
               factory.createTypeReferenceNode("any", undefined),
@@ -223,6 +235,7 @@ function createObjectTypeResolvers(
 function isRootOperationType(type: string): boolean {
   return ["Query", "Mutation", "Subscription"].includes(type);
 }
+
 function createResolverField(
   context: TsCodegenContext,
   type: ResolverType,
@@ -400,7 +413,10 @@ function createInterfaceTypeResolvers(
   );
 }
 
-function createResolversMap(types: ResolverType[]): ts.InterfaceDeclaration {
+function createResolversMap(
+  types: ResolverType[],
+  mandatoryResolverTypes: boolean,
+): ts.InterfaceDeclaration {
   return factory.createInterfaceDeclaration(
     [
       factory.createModifier(ts.SyntaxKind.ExportKeyword),
@@ -409,14 +425,17 @@ function createResolversMap(types: ResolverType[]): ts.InterfaceDeclaration {
     factory.createIdentifier("ResolversMap"),
     undefined,
     undefined,
-    types.map(({ name }) => {
+    types.map((type) => {
+      const isExtension = type.kind === "OBJECT" && type.isExtension;
       return factory.createPropertySignature(
         [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
-        name,
-        factory.createToken(ts.SyntaxKind.QuestionToken),
+        type.name,
+        mandatoryResolverTypes && isExtension
+          ? undefined
+          : factory.createToken(ts.SyntaxKind.QuestionToken),
         factory.createTypeReferenceNode(
           factory.createQualifiedName(
-            factory.createIdentifier(name),
+            factory.createIdentifier(type.name),
             factory.createIdentifier("Resolvers"),
           ),
         ),
