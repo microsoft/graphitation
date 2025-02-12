@@ -1,7 +1,8 @@
 pr: none
 trigger:
-  - main
-  - alloy/relay-apollo-duct-tape
+  branches:
+    include:
+      - "*"
 
 variables:
   - group: InfoSec-SecurityResults
@@ -51,18 +52,7 @@ extends:
             steps:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
-              - script: yarn
-                displayName: yarn
-              - script: |
-                  yarn ci
-                displayName: build and test [test]
-              - script: |
-                  git config user.email "gql-svc@microsoft.com"
-                  git config user.name "Graphitation Service Account"
-                  git fetch --depth=2
-                displayName: Configure git for release
-              - script: yarn release -y -n $(ossNpmToken) --access public
-                displayName: Release
+                fetchDepth: 2
               - task: 1ES.PublishPipelineArtifact@1
                 displayName: 📒 Publish Manifest
                 inputs:
