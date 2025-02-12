@@ -2191,6 +2191,69 @@ describe(generateTS, () => {
       "
     `);
   });
+
+  test("generateTS with mandatoryResolverTypes option", () => {
+    const { resolvers } = runGenerateTest(
+      graphql`
+        extend type User {
+          isAdmin: Boolean
+        }
+      `,
+      { mandatoryResolverTypes: true },
+    );
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import * as Models from "./models.interface";
+      export declare namespace User {
+          export interface Resolvers {
+              readonly isAdmin: isAdmin;
+          }
+          export type isAdmin = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<boolean | null | undefined>;
+      }
+      "
+    `);
+  });
+
+  test("generateTS with mandatoryResolverTypes and generateResolverMap option", () => {
+    const { resolvers } = runGenerateTest(
+      graphql`
+        type User {
+          id: ID!
+          name: String
+        }
+
+        extend type Query {
+          users: [User!]!
+        }
+      `,
+      { generateResolverMap: true, mandatoryResolverTypes: true },
+    );
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import * as Models from "./models.interface";
+      export declare namespace User {
+          export interface Resolvers {
+              readonly id?: id;
+              readonly name?: name;
+          }
+          export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+          export type name = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
+      }
+      export declare namespace Query {
+          export interface Resolvers {
+              readonly users: users;
+          }
+          export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User>>;
+      }
+      export default interface ResolversMap {
+          readonly User?: User.Resolvers;
+          readonly Query: Query.Resolvers;
+      }
+      "
+    `);
+  });
 });
 
 function runGenerateTest(

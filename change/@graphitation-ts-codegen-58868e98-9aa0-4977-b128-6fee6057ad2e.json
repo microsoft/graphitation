@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "feat(ts-codegen): option to generate mandatory resolver types for graphql type extension",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "dsamsonov@microsoft.com",
+  "dependentChangeType": "patch"
+}
