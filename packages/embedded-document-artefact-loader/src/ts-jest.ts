@@ -9,7 +9,10 @@ import type {
   TransformOptions,
 } from "@jest/transform";
 import type { TsJestTransformerOptions, TsJestTransformOptions } from "ts-jest";
-import { extractInlineSourceMap } from "./addInlineSourceMap";
+import {
+  addInlineSourceMap,
+  extractInlineSourceMap,
+} from "./addInlineSourceMap";
 import { applySourceMap } from "./source-map-utils";
 
 const transformerFactory: TransformerFactory<SyncTransformer<unknown>> = {
@@ -80,9 +83,15 @@ function extractAndApplySourceMap(
     if (tsResultMap === undefined) {
       throw new Error("Expected inline source-map");
     }
+    const mergedMap = applySourceMap(
+      sourcePath,
+      sourceMap.toJSON(),
+      tsResultMap,
+    ).toJSON();
     tsResult = {
-      code: tsResultCode,
-      map: applySourceMap(sourcePath, sourceMap.toJSON(), tsResultMap).toJSON(),
+      // Reapply merged inline source map to code to help debugger map to original source.
+      code: addInlineSourceMap(tsResultCode, JSON.stringify(mergedMap)),
+      map: mergedMap,
     };
   }
   return tsResult;
