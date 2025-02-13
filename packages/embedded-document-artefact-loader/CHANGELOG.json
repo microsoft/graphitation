@@ -2,6 +2,21 @@
   "name": "@graphitation/embedded-document-artefact-loader",
   "entries": [
     {
+      "date": "Thu, 13 Feb 2025 09:09:52 GMT",
+      "version": "0.9.0",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.9.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "email not defined",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "8ea0839b3f05999b20340523ce6db9d913d3163f",
+            "comment": "reapply inline source maps"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 23 Oct 2024 09:22:25 GMT",
       "version": "0.8.5",
       "tag": "@graphitation/embedded-document-artefact-loader_v0.8.5",

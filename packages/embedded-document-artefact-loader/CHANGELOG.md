@@ -1,8 +1,16 @@
 # Change Log - @graphitation/embedded-document-artefact-loader
 
-<!-- This log was last generated on Wed, 23 Oct 2024 09:22:25 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 13 Feb 2025 09:09:52 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.9.0
+
+Thu, 13 Feb 2025 09:09:52 GMT
+
+### Minor changes
+
+- reapply inline source maps (email not defined)
 
 ## 0.8.5
 

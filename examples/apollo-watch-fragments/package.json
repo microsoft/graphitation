@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@graphitation/apollo-react-relay-duct-tape-compiler": "^1.6.15",
-    "@graphitation/embedded-document-artefact-loader": "^0.8.5",
+    "@graphitation/embedded-document-artefact-loader": "^0.9.0",
     "@graphitation/supermassive": "^3.8.3",
     "@graphql-codegen/cli": "2.2.0",
     "@graphql-codegen/typescript": "2.2.2",
