@@ -51,6 +51,7 @@ extends:
             steps:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
+                fetchDepth: 2
               - script: yarn
                 displayName: yarn
               - script: |
