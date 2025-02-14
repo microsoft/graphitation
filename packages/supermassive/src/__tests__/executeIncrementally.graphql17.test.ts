@@ -2,7 +2,6 @@ import {
   parse,
   GraphQLSchema,
   experimentalExecuteIncrementally as graphQLExecute,
-  experimentalSubscribeIncrementally as graphQLSubscribe,
 } from "graphql";
 import { makeSchema } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
@@ -13,7 +12,7 @@ const {
   compareResultForExecuteWithoutSchemaWithMVSAnnotation,
   drainExecution,
   graphqlExecuteOrSubscribe,
-} = createExecutionUtils(graphQLExecute, graphQLSubscribe);
+} = createExecutionUtils(graphQLExecute as any, graphQLExecute as any);
 
 interface TestCase {
   name: string;

@@ -15,7 +15,7 @@ import {
   UnionTypeExtensionNode,
   EnumTypeExtensionNode,
   ScalarTypeExtensionNode,
-  DirectiveLocationEnum,
+  DirectiveLocation,
 } from "graphql";
 import {
   DirectiveDefinitionTuple,
@@ -200,7 +200,7 @@ function encodeDirective(
     return [
       node.name.value,
       node.locations.map((node) =>
-        encodeDirectiveLocation(node.value as DirectiveLocationEnum),
+        encodeDirectiveLocation(node.value as DirectiveLocation),
       ),
       encodeArguments(node),
     ];
@@ -208,7 +208,7 @@ function encodeDirective(
     return [
       node.name.value,
       node.locations.map((node) =>
-        encodeDirectiveLocation(node.value as DirectiveLocationEnum),
+        encodeDirectiveLocation(node.value as DirectiveLocation),
       ),
     ];
   }
