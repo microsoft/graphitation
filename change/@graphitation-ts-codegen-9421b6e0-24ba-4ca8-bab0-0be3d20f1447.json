@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "feat(ts-codegen): do not emit empty resolvers.interface.ts",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "dsamsonov@microsoft.com",
+  "dependentChangeType": "patch"
+}
