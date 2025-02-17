@@ -1935,18 +1935,7 @@ describe(generateTS, () => {
       }
       "
     `);
-    expect(resolvers).toMatchInlineSnapshot(`
-      "import type { PromiseOrValue } from "@graphitation/supermassive";
-      import type { ResolveInfo } from "@graphitation/supermassive";
-      import * as Models from "./models.interface";
-      export declare namespace MyInterface {
-          export interface Resolvers {
-              readonly __resolveType?: __resolveType;
-          }
-          export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
-      }
-      "
-    `);
+    expect(resolvers).toMatchInlineSnapshot(`undefined`);
   });
 
   it("handles reserved keywords", () => {
@@ -2029,12 +2018,7 @@ describe(generateTS, () => {
       }
       "
     `);
-    expect(resolvers).toMatchInlineSnapshot(`
-      "import type { PromiseOrValue } from "@graphitation/supermassive";
-      import type { ResolveInfo } from "@graphitation/supermassive";
-      import * as Models from "./models.interface";
-      "
-    `);
+    expect(resolvers).toMatchInlineSnapshot(`undefined`);
   });
   it("legacy import enums", () => {
     const { models, resolvers, enums, inputs } = runGenerateTest(
@@ -2062,12 +2046,7 @@ describe(generateTS, () => {
       }
       "
     `);
-    expect(resolvers).toMatchInlineSnapshot(`
-      "import type { PromiseOrValue } from "@graphitation/supermassive";
-      import type { ResolveInfo } from "@graphitation/supermassive";
-      import * as Models from "./models.interface";
-      "
-    `);
+    expect(resolvers).toMatchInlineSnapshot(`undefined`);
   });
 
   it("does not generate models in legacy mode", () => {
@@ -2299,7 +2278,7 @@ function runGenerateTest(
     enums: enums && printer.printFile(enums),
     inputs: inputs && printer.printFile(inputs),
     models: printer.printFile(models),
-    resolvers: printer.printFile(resolvers),
+    resolvers: resolvers && printer.printFile(resolvers),
     legacyTypes: legacyTypes && printer.printFile(legacyTypes),
     legacyResolvers: legacyResolvers && printer.printFile(legacyResolvers),
   };
