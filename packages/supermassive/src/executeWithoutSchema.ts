@@ -886,7 +886,7 @@ function mapResultOrEventStreamOrPromise(
                 }
 
                 return executeFields(
-                  exeContext,
+                  perEventContext,
                   parentTypeName,
                   payload,
                   path,
@@ -895,7 +895,7 @@ function mapResultOrEventStreamOrPromise(
                 );
               })
             : executeFields(
-                exeContext,
+                perEventContext,
                 parentTypeName,
                 payload,
                 path,
