@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Tue, 18 Feb 2025 09:21:15 GMT",
+      "version": "2.15.1",
+      "tag": "@graphitation/ts-codegen_v2.15.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "113caab27107296fde8199bbd85301a81dcf8272",
+            "comment": "feat(ts-codegen): do not emit empty resolvers.interface.ts"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 12 Feb 2025 12:32:29 GMT",
       "version": "2.15.0",
       "tag": "@graphitation/ts-codegen_v2.15.0",

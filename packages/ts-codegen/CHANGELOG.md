@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Wed, 12 Feb 2025 12:32:29 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 18 Feb 2025 09:21:15 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 2.15.1
+
+Tue, 18 Feb 2025 09:21:15 GMT
+
+### Patches
+
+- feat(ts-codegen): do not emit empty resolvers.interface.ts (dsamsonov@microsoft.com)
 
 ## 2.15.0
 
