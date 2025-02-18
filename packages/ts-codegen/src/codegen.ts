@@ -121,12 +121,14 @@ export function generateTS(
 
     if (!generateOnlyEnums) {
       result.push(generateModels(context));
-      result.push(
-        generateResolvers(context, {
-          generateResolverMap,
-          mandatoryResolverTypes,
-        }),
-      );
+      if (context.hasResolvers) {
+        result.push(
+          generateResolvers(context, {
+            generateResolverMap,
+            mandatoryResolverTypes,
+          }),
+        );
+      }
       if (context.hasInputs) {
         result.push(generateInputs(context));
       }

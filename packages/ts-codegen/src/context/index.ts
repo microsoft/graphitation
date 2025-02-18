@@ -131,6 +131,7 @@ export class TsCodegenContext {
   hasUsedEnumsInModels: boolean;
   hasEnums: boolean;
   hasInputs: boolean;
+  hasResolvers: boolean;
 
   constructor(private options: TsCodegenContextOptions) {
     this.allTypes = [];
@@ -145,6 +146,7 @@ export class TsCodegenContext {
     this.typeNameToModels = new Map();
     this.legacyInterfaces = new Set();
     this.hasUsedModelInInputs = false;
+    this.hasResolvers = false;
     this.hasInputs = false;
     this.hasEnums = Boolean(options.enumsImport);
     this.hasUsedEnumsInModels = false;
@@ -807,6 +809,8 @@ export function extractContext(
     },
     ObjectTypeDefinition: {
       leave(node) {
+        context.hasResolvers = true;
+
         context.addType({
           kind: "OBJECT",
           name: node.name.value,
@@ -845,6 +849,8 @@ export function extractContext(
     },
     ObjectTypeExtension: {
       leave(node) {
+        context.hasResolvers = true;
+
         context.addType({
           kind: "OBJECT",
           name: node.name.value,
