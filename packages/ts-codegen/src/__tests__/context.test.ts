@@ -75,7 +75,7 @@ describe(generateTS, () => {
       `);
       expect(inputs).toMatchInlineSnapshot(`undefined`);
       expect(models).toMatchInlineSnapshot(`
-        "import type { Avatar } from "@msteams/packages-test";
+        "import type { models as NSMsteamsPackagesTestModels } from "@msteams/packages-test";
         import type { PostModel as _Post } from "../post-model.interface";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
@@ -101,13 +101,13 @@ describe(generateTS, () => {
             readonly messagesOnlyMessageRequired?: ReadonlyArray<Message> | null;
             readonly post?: Post | null;
             readonly postRequired: Post;
-            readonly avatar?: Avatar | null;
-            readonly avatarRequired: Avatar;
+            readonly avatar?: NSMsteamsPackagesTestModels.Avatar | null;
+            readonly avatarRequired: NSMsteamsPackagesTestModels.Avatar;
         }
         "
       `);
       expect(resolvers).toMatchInlineSnapshot(`
-        "import type { Avatar } from "@msteams/packages-test";
+        "import type { models as NSMsteamsPackagesTestModels } from "@msteams/packages-test";
         import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
@@ -154,8 +154,8 @@ describe(generateTS, () => {
             export type messagesOnlyMessageRequired = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message> | null | undefined>;
             export type post = (model: Models.User, args: {}, context: IPostStateMachineContext, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
             export type postRequired = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<Models.Post>;
-            export type avatar = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<Avatar | null | undefined>;
-            export type avatarRequired = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<Avatar>;
+            export type avatar = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<NSMsteamsPackagesTestModels.Avatar | null | undefined>;
+            export type avatarRequired = (model: Models.User, args: {}, context: IUserStateMachineContext, info: ResolveInfo) => PromiseOrValue<NSMsteamsPackagesTestModels.Avatar>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -441,7 +441,7 @@ describe(generateTS, () => {
         }
       `);
       expect(models).toMatchInlineSnapshot(`
-        "import type { User } from "@msteams/packages-test";
+        "import type { models as NSMsteamsPackagesTestModels } from "@msteams/packages-test";
         // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
         export interface BaseModel {
             readonly __typename?: string;
@@ -449,7 +449,7 @@ describe(generateTS, () => {
         export interface Post extends BaseModel {
             readonly __typename?: "Post";
             readonly id: string;
-            readonly user: User;
+            readonly user: NSMsteamsPackagesTestModels.User;
         }
         "
       `);

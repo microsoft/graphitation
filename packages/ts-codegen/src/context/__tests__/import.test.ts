@@ -7,8 +7,8 @@ import { DefinitionImport } from "../../types";
 describe(processImportDirective, () => {
   it("extracts scoped package import", () => {
     const result = processDirectives(graphql`
-        @import(from: "@scoped/packageImport", defs: ["ScopedPackageImport", "ScopedPackageImport2"])
-      `);
+      @import(from: "@scoped/packageImport", defs: ["ScopedPackageImport", "ScopedPackageImport2"])
+    `);
 
     const imp = result[0];
     expect(imp.from).toEqual("@scoped/packageImport");
@@ -20,7 +20,9 @@ describe(processImportDirective, () => {
         typeName: "ScopedPackageImport2",
       },
     ]);
-    expect(imp.importName).toMatchInlineSnapshot(`"NSScopedPackageImport"`);
+    expect(imp.importName).toMatchInlineSnapshot(
+      `"NSScopedPackageImportModels"`,
+    );
     expect(print(imp.directive)).toMatchInlineSnapshot(
       `"@import(from: "@scoped/packageImport", defs: ["ScopedPackageImport", "ScopedPackageImport2"])"`,
     );
@@ -28,8 +30,8 @@ describe(processImportDirective, () => {
   it("extracts package imports", () => {
     const result = processDirectives(
       graphql`
-          @import(from: "packageImport", defs: ["PackageImport", "PackageImport2"])
-          @import(from: "packageImport/subDir", defs: ["PackageImportSubDir"])
+        @import(from: "packageImport", defs: ["PackageImport", "PackageImport2"])
+        @import(from: "packageImport/subDir", defs: ["PackageImportSubDir"])
       `,
     );
     expect(result.length).toBe(2);
@@ -43,7 +45,7 @@ describe(processImportDirective, () => {
         typeName: "PackageImport2",
       },
     ]);
-    expect(plain.importName).toMatchInlineSnapshot(`"PackageImport"`);
+    expect(plain.importName).toMatchInlineSnapshot(`"PackageImportModels"`);
     expect(print(plain.directive)).toMatchInlineSnapshot(
       `"@import(from: "packageImport", defs: ["PackageImport", "PackageImport2"])"`,
     );
@@ -54,7 +56,7 @@ describe(processImportDirective, () => {
         typeName: "PackageImportSubDir",
       },
     ]);
-    expect(dir.importName).toMatchInlineSnapshot(`"PackageImportSubDir"`);
+    expect(dir.importName).toMatchInlineSnapshot(`"PackageImportSubDirModels"`);
     expect(print(dir.directive)).toMatchInlineSnapshot(
       `"@import(from: "packageImport/subDir", defs: ["PackageImportSubDir"])"`,
     );
@@ -64,8 +66,8 @@ describe(processImportDirective, () => {
     try {
       processDirectives(
         graphql`
-        @import(from: ["../upDir"], defs: ["UpDir"])
-      `,
+          @import(from: ["../upDir"], defs: ["UpDir"])
+        `,
       );
     } catch (err) {
       expect(err).toBeInstanceOf(GraphQLError);
@@ -76,8 +78,8 @@ describe(processImportDirective, () => {
     try {
       processDirectives(
         graphql`
-        @import(from: "../upDir", defs: [1])
-      `,
+          @import(from: "../upDir", defs: [1])
+        `,
       );
     } catch (err) {
       expect(err).toBeInstanceOf(GraphQLError);
@@ -86,8 +88,8 @@ describe(processImportDirective, () => {
     try {
       processDirectives(
         graphql`
-        @import(from: "../upDir", defs: "UpDir")
-      `,
+          @import(from: "../upDir", defs: "UpDir")
+        `,
       );
     } catch (err) {
       expect(err).toBeInstanceOf(GraphQLError);
@@ -109,7 +111,7 @@ describe(processImportDirective, () => {
         typeName: "UpDir",
       },
     ]);
-    expect(upDir.importName).toMatchInlineSnapshot(`"UpUpDir"`);
+    expect(upDir.importName).toMatchInlineSnapshot(`"UpUpDirModels"`);
     expect(print(upDir.directive)).toMatchInlineSnapshot(
       `"@import(from: "../upDir", defs: ["UpDir"])"`,
     );
@@ -120,7 +122,7 @@ describe(processImportDirective, () => {
         typeName: "FooBarDir",
       },
     ]);
-    expect(upUpDir.importName).toMatchInlineSnapshot(`"UpUpFooBarDir"`);
+    expect(upUpDir.importName).toMatchInlineSnapshot(`"UpUpFooBarDirModels"`);
     expect(print(upUpDir.directive)).toMatchInlineSnapshot(
       `"@import(from: "../../foo/bar/Dir", defs: ["FooBarDir"])"`,
     );
@@ -131,7 +133,7 @@ describe(processImportDirective, () => {
         typeName: "LocalImport",
       },
     ]);
-    expect(loc.importName).toMatchInlineSnapshot(`"CwdLoc"`);
+    expect(loc.importName).toMatchInlineSnapshot(`"CwdLocModels"`);
     expect(print(loc.directive)).toMatchInlineSnapshot(
       `"@import(from: "./loc", defs: ["LocalImport"])"`,
     );
