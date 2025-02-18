@@ -485,16 +485,11 @@ export class TsCodegenContext {
     }
     return Array.from(this.imports)
       .sort()
-      .reduce<ts.ImportDeclaration[]>((acc, { defs, from }) => {
+      .reduce<ts.ImportDeclaration[]>((acc, { defs, from, importName }) => {
         const filteredDefs = defs.filter(({ typeName }) => filter(typeName));
 
         if (filteredDefs.length) {
-          acc.push(
-            createImportDeclaration(
-              filteredDefs.map(({ typeName }) => typeName),
-              from,
-            ),
-          );
+          acc.push(createImportDeclaration([importName], from, "models"));
         }
         return acc;
       }, [])
@@ -656,10 +651,10 @@ export class TsCodegenContext {
       }
 
       if (this.typeNameToImports.has(typeName)) {
-        const { modelName } = this.typeNameToImports.get(
+        const { modelName, imp } = this.typeNameToImports.get(
           typeName,
         ) as ModelNameAndImport;
-        return new TypeLocation(null, modelName);
+        return new TypeLocation(null, `${imp.importName}.${modelName}`);
       } else {
         return new TypeLocation(
           null,
@@ -683,10 +678,10 @@ export class TsCodegenContext {
       } else if (markUsage === "INPUTS") {
         this.usedEntitiesInInputs.add(typeName);
       }
-      const { modelName } = this.typeNameToImports.get(
+      const { modelName, imp } = this.typeNameToImports.get(
         typeName,
       ) as ModelNameAndImport;
-      return new TypeLocation(null, modelName);
+      return new TypeLocation(null, `${imp.importName}.${modelName}`);
     } else {
       const type = this.typeNameToType.get(typeName);
       if (type && type.kind !== "INPUT_OBJECT") {
