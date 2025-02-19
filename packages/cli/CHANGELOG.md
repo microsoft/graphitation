@@ -1,8 +1,16 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Tue, 18 Feb 2025 09:21:15 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 19 Feb 2025 11:31:28 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.16.2
+
+Wed, 19 Feb 2025 11:31:28 GMT
+
+### Patches
+
+- Bump @graphitation/ts-codegen to v3.0.0
 
 ## 1.16.1
 

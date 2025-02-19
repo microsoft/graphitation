@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Tue, 18 Feb 2025 09:21:15 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 19 Feb 2025 11:31:28 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.0.0
+
+Wed, 19 Feb 2025 11:31:28 GMT
+
+### Major changes
+
+- feat(ts-codegen): translate @import into namespace imports (dsamsonov@microsoft.com)
 
 ## 2.15.1
 
