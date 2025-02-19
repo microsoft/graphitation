@@ -2,6 +2,21 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Wed, 19 Feb 2025 14:18:14 GMT",
+      "version": "2.0.0",
+      "tag": "@graphitation/cli_v2.0.0",
+      "comments": {
+        "major": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/cli",
+            "commit": "7c88d614c37094064c6fa9dbc7fd030b52496d0a",
+            "comment": "chore(cli): bump ts-codegen version"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 19 Feb 2025 11:31:28 GMT",
       "version": "1.16.2",
       "tag": "@graphitation/cli_v1.16.2",

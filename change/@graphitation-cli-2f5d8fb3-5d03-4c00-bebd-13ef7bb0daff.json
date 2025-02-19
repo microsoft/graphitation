@@ -1,7 +1,0 @@
-{
-  "type": "major",
-  "comment": "chore(cli): bump ts-codegen version",
-  "packageName": "@graphitation/cli",
-  "email": "dsamsonov@microsoft.com",
-  "dependentChangeType": "patch"
-}
