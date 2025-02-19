@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "feat(ts-codegen): translate @import into namespace imports",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "dsamsonov@microsoft.com",
+  "dependentChangeType": "patch"
+}

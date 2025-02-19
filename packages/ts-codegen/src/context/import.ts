@@ -43,7 +43,7 @@ export function processImportDirective(
     defs: definitionNames.map((typeName) => ({
       typeName,
     })),
-    importName: createVariableNameFromImport(from.value),
+    importName: `${createVariableNameFromImport(from.value)}Models`,
     directive: node,
   };
 }
