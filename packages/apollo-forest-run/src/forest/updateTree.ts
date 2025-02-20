@@ -47,6 +47,7 @@ export function applyPendingUpdates(
     return base;
   }
   const updated = updateTree(base, base.pendingUpdates, env, getNodeChunks);
+  updated.pendingUpdates.length = 0;
 
   if (!updated || updated === base) {
     // nodeDifference may not be overlapping with selections of this tree.
