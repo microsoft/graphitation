@@ -27,6 +27,7 @@ import {
 } from "../values";
 import { resolvedSelectionsAreEqual } from "../descriptor/resolvedSelection";
 import { applyPendingUpdates } from "../forest/updateTree";
+import { DataTree } from "./types";
 
 const EMPTY_ARRAY = Object.freeze([]);
 
@@ -97,9 +98,10 @@ export function* getNodeChunks(
     const operations = layer.operationsByNodes.get(key);
 
     // First, return up-to-date chunks
-    let dirtyTrees: IndexedTree[] | undefined = undefined;
+    let dirtyTrees: DataTree[] | undefined = undefined;
+    let grownTrees: DataTree[] | undefined = undefined;
     for (const operation of operations ?? EMPTY_ARRAY) {
-      const tree = layer.trees.get(operation);
+      const tree = layer.trees.get(operation) as DataTree | undefined;
       if (!tree) {
         continue;
       }
@@ -108,12 +110,15 @@ export function* getNodeChunks(
         dirtyTrees.push(tree);
         continue;
       }
-      const chunks = tree.nodes.get(key) ?? EMPTY_ARRAY;
-      for (const chunk of chunks) {
-        yield chunk;
+      if (tree.grown) {
+        grownTrees ??= [];
+        grownTrees.push(tree);
+        continue;
       }
+      const chunks = tree.nodes.get(key) ?? EMPTY_ARRAY;
+      yield* chunks as any;
     }
-    if (!updateStale || !dirtyTrees?.length) {
+    if (!grownTrees?.length && (!updateStale || !dirtyTrees?.length)) {
       continue;
     }
     // ApolloCompat: this is necessary for custom reads from field policies and optimistic stuff
@@ -133,9 +138,11 @@ export function* getNodeChunks(
         chunkProvider,
       );
       const chunks = updatedTree.nodes.get(key) ?? EMPTY_ARRAY;
-      for (const chunk of chunks) {
-        yield chunk;
-      }
+      yield* chunks as any;
+    }
+    for (const tree of grownTrees ?? EMPTY_ARRAY) {
+      const chunks = tree.nodes.get(key) ?? EMPTY_ARRAY;
+      yield* chunks as any;
     }
   }
 }
