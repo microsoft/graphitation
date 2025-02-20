@@ -14,6 +14,7 @@ import { describeResultTree } from "../descriptor/possibleSelection";
 import { Cache } from "@apollo/client";
 import { VariableValues } from "../descriptor/types";
 
+const EMPTY_ARRAY = Object.freeze([]);
 export const ROOT_TYPES = Object.freeze(["Query", "Mutation", "Subscription"]);
 export const ROOT_NODES = Object.freeze([
   "ROOT_QUERY",
@@ -90,9 +91,17 @@ export function resolveOperationDescriptor(
   if (
     typeof rootNodeKey !== "undefined" &&
     !ROOT_NODES.includes(rootNodeKey) &&
-    ROOT_TYPES.includes(match.rootType)
+    !(match as any).__actualTypeSet
   ) {
-    match.rootType = dataForest.extraRootIds.get(rootNodeKey) ?? match.rootType;
+    // Currently the only reliable way to determine a proper typeName on a descriptor is by
+    //   setting the actual typeName known from data (e.g. fragment type condition may be on abstract type)
+    const actualTypeName =
+      dataForest.extraRootIds.get(rootNodeKey) ??
+      findNodeType(dataForest, rootNodeKey);
+    if (actualTypeName) {
+      match.rootType = actualTypeName;
+      (match as any).__actualTypeSet = true;
+    }
   }
   return match;
 }
@@ -184,6 +193,20 @@ export function resolveKeyDescriptor(
     }
   }
   assert(false);
+}
+
+function findNodeType(
+  dataForest: Store["dataForest"],
+  rootNodeKey: string,
+): string | undefined {
+  const ops = dataForest.operationsByNodes.get(rootNodeKey) ?? EMPTY_ARRAY;
+  for (const opId of ops) {
+    const node = dataForest.trees.get(opId)?.nodes.get(rootNodeKey)?.[0];
+    if (node?.type) {
+      return node.type;
+    }
+  }
+  return undefined;
 }
 
 function variablesAreEqual(
