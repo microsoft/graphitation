@@ -96,7 +96,7 @@ export function write(
 
   if (!ROOT_NODES.includes(operationDescriptor.rootNodeKey)) {
     let typeName = writeData["__typename"];
-    if (isFragmentDocument(operationDescriptor)) {
+    if (isFragmentDocument(operationDescriptor.document)) {
       if (!typeName && addTypename) {
         const [fragmentDef] = operationDescriptor.fragmentMap.values();
         typeName = fragmentDef?.typeCondition.name.value;
