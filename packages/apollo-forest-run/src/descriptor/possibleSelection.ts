@@ -171,6 +171,7 @@ function collectFields(
         getTypeName(fragment),
         getFragmentAlias(node),
       );
+      matchFragment(context, selectionsByType, fragment);
       inferPossibleType(context, typeCondition, getTypeName(fragment));
       fragmentStack.pop();
     }
@@ -328,6 +329,21 @@ function completeSelections(possibleSelections: PossibleSelections, depth = 0) {
   return possibleSelections;
 }
 
+function matchFragment(
+  context: Context,
+  selectionsByType: PossibleSelections,
+  fragment: FragmentDefinitionNode,
+) {
+  const selection = selectionsByType.get(fragment.typeCondition.name.value);
+  if (!selection) {
+    return;
+  }
+  selection.matchingFragments ??= [];
+  if (!selection.matchingFragments.includes(fragment.name.value)) {
+    selection.matchingFragments.push(fragment.name.value);
+  }
+}
+
 function inferPossibleType(
   context: Context,
   abstractType: TypeName | null | undefined,
@@ -437,6 +453,15 @@ function mergeSelectionsImpl(
         targetAliases[index],
         sourceField,
       );
+    }
+  }
+  if (source.matchingFragments?.length) {
+    mutableTarget.matchingFragments ??= [];
+    for (let i = 0; i < source.matchingFragments.length; i++) {
+      const fragment = source.matchingFragments[i];
+      if (!mutableTarget.matchingFragments.includes(fragment)) {
+        mutableTarget.matchingFragments.push(fragment);
+      }
     }
   }
   return mutableTarget;
@@ -591,8 +616,8 @@ function copySelection(
       context.copyOnWrite.add(subSelection);
     }
   }
-  if (selection.fragmentSpreads) {
-    copy.fragmentSpreads = [...selection.fragmentSpreads];
+  if (selection.matchingFragments) {
+    copy.matchingFragments = [...selection.matchingFragments];
   }
   return copy;
 }

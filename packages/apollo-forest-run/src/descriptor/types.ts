@@ -122,7 +122,7 @@ export type PossibleSelection = {
   fieldsToNormalize?: FieldInfo[];
   fieldsWithDirectives?: FieldInfo[];
 
-  fragmentSpreads?: FragmentName[];
+  matchingFragments?: FragmentName[]; // e.g. object with selection { foo, ...Bar, ... { ...Baz } } will have ["Bar", "Baz"] here
   experimentalAlias?: DataKey;
   experimentalAliasedFragments?: Map<DataKey, PossibleSelection>;
 };

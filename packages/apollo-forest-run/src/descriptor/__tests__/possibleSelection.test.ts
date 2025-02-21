@@ -47,34 +47,27 @@ describe(describeResultTree, () => {
       `{
         foo {
           bar {
-            ...Bar
+            ...BarFragment
           }
         }
       }
-      fragment Bar on Bar {
+      fragment BarFragment on Bar {
         nested
         baz
       }`,
     );
-    const commonSelection = possible?.get(commonSelectionKey);
-    const foo = commonSelection?.fields.get("foo")?.[0];
-    const fooCommonSelection = foo?.selection?.get(null);
-    const bar = fooCommonSelection?.fields.get("bar")?.[0];
-    const barCommonSelection = bar?.selection?.get(null);
-    const barFragmentSelection = bar?.selection?.get("Bar");
+    const foo = possible?.get(null)?.fields.get("foo")?.[0];
+    const bar = foo?.selection?.get(null)?.fields.get("bar")?.[0];
 
-    expect(possible?.size).toEqual(1);
-    expect(commonSelection?.fieldsWithSelections?.length).toEqual(1);
-    expect(printFieldGroups(commonSelection)).toEqual({
-      foo: ["foo { bar { ...Bar } }"],
+    expect(printPossibleSelections(possible)).toEqual({
+      null: { fields: ["foo"], fieldsWithSelections: ["foo"] },
     });
-    expect(printFieldGroups(fooCommonSelection)).toEqual({
-      bar: ["bar { ...Bar }"],
+    expect(printPossibleSelections(foo?.selection)).toEqual({
+      null: { fields: ["bar"], fieldsWithSelections: ["bar"] },
     });
-    expect(printFieldGroups(barCommonSelection)).toEqual({});
-    expect(printFieldGroups(barFragmentSelection)).toEqual({
-      nested: ["nested"],
-      baz: ["baz"],
+    expect(printPossibleSelections(bar?.selection)).toEqual({
+      null: { fields: [] },
+      Bar: { fields: ["nested", "baz"], matchingFragments: ["BarFragment"] },
     });
   });
 
@@ -103,26 +96,30 @@ describe(describeResultTree, () => {
       }
       `,
     );
-    const common = possible.get(commonSelectionKey);
-    const byFooType = possible.get("Foo");
-    const barAliases = byFooType?.fields.get("bar");
-
-    expect(possible.size).toEqual(2);
-    expect(printSelectedIn(common)).toEqual({});
-    expect(printSelectedIn(byFooType)).toEqual({
+    expect(printPossibleSelections(possible)).toEqual({
+      null: { fields: [] },
+      Foo: {
+        fields: ["bar"],
+        fieldsWithSelections: ["bar"],
+        matchingFragments: ["Foo1", "Foo2"],
+      },
+    });
+    expect(printSelectedIn(possible.get("Foo"))).toEqual({
       bar: ["Foo1", "Foo2"],
     });
-
-    const barPossible = barAliases?.[0]?.selection;
-    const barCommon = barAliases?.[0]?.selection?.get(null);
-    const onBarType = barAliases?.[0]?.selection?.get("Bar");
-
-    expect(barPossible?.size).toEqual(2);
-
-    expect(printFieldGroups(barCommon)).toEqual({
-      baz: ["baz"],
+    const bar = possible.get("Foo")?.fields.get("bar");
+    expect(printPossibleSelections(bar?.[0]?.selection)).toEqual({
+      null: { fields: ["baz"] },
+      Bar: {
+        fields: ["__typename", "baz"],
+        fieldsToNormalize: ["__typename", "baz"], // TODO: verify if this is correct
+        matchingFragments: ["Bar1", "Bar2"],
+      },
     });
-    expect(printSelectedIn(onBarType)).toEqual({
+    expect(printSelectedIn(bar?.[0]?.selection?.get(null))).toEqual({
+      baz: ["Foo2"],
+    });
+    expect(printSelectedIn(bar?.[0]?.selection?.get("Bar"))).toEqual({
       __typename: ["Bar1"],
       baz: ["Bar2", "Foo2"],
     });
@@ -163,7 +160,7 @@ describe(describeResultTree, () => {
       ?.fields.get("foo")?.[0];
 
     // Sanity check
-    expect(printPossibleSelections(foo?.selection)).toEqual({
+    expect(printFieldEntries(foo?.selection)).toEqual({
       Foo: {
         bar: ["bar { ...Bar baz { id fooBarOverflow { leaf } } }"],
       },
@@ -171,7 +168,7 @@ describe(describeResultTree, () => {
     });
 
     const bar = foo?.selection?.get("Foo")?.fields.get("bar")?.[0];
-    expect(printPossibleSelections(bar?.selection)).toEqual({
+    expect(printFieldEntries(bar?.selection)).toEqual({
       Bar: {
         baz: ["baz { ...Baz }", "baz { id fooBarOverflow { leaf } }"],
       },
@@ -181,7 +178,7 @@ describe(describeResultTree, () => {
     });
 
     const baz = bar?.selection?.get("Bar")?.fields.get("baz")?.[0];
-    expect(printPossibleSelections(baz?.selection)).toEqual({
+    expect(printFieldEntries(baz?.selection)).toEqual({
       Baz: {
         id: ["id"],
         fooBarOverflow: [
@@ -197,7 +194,7 @@ describe(describeResultTree, () => {
     const fooBarOverflow = baz?.selection
       ?.get("Baz")
       ?.fields.get("fooBarOverflow")?.[0];
-    expect(printPossibleSelections(fooBarOverflow?.selection)).toEqual({
+    expect(printFieldEntries(fooBarOverflow?.selection)).toEqual({
       null: {
         id: ["id"],
         leaf: ["leaf"],
@@ -206,26 +203,45 @@ describe(describeResultTree, () => {
     });
 
     // Ensure fieldsWithSelections are properly merged as well
-    expect(printFieldsWithSelections(possible)).toEqual({
-      null: ["entry"],
+    expect(printPossibleSelections(possible)).toEqual({
+      null: {
+        fields: ["entry"],
+        fieldsToNormalize: ["entry"],
+        fieldsWithSelections: ["entry"],
+      },
     });
-    expect(printFieldsWithSelections(entry?.selection)).toEqual({
-      null: ["foo"],
+    expect(printPossibleSelections(entry?.selection)).toEqual({
+      null: { fields: ["id", "foo"], fieldsWithSelections: ["foo"] },
     });
-    expect(printFieldsWithSelections(foo?.selection)).toEqual({
-      null: [],
-      Foo: ["bar"],
+    expect(printPossibleSelections(foo?.selection)).toEqual({
+      Foo: {
+        fields: ["bar"],
+        fieldsWithSelections: ["bar"],
+        matchingFragments: ["Foo"],
+      },
+      null: { fields: [] },
     });
-    expect(printFieldsWithSelections(bar?.selection)).toEqual({
-      null: ["baz"],
-      Bar: ["baz"],
+    expect(printPossibleSelections(bar?.selection)).toEqual({
+      null: { fields: ["baz"], fieldsWithSelections: ["baz"] },
+      Bar: {
+        fields: ["baz"],
+        fieldsWithSelections: ["baz"],
+        matchingFragments: ["Bar"],
+      },
     });
-    expect(printFieldsWithSelections(baz?.selection)).toEqual({
-      null: ["fooBarOverflow"],
-      Baz: ["fooBarOverflow"],
+    expect(printPossibleSelections(baz?.selection)).toEqual({
+      null: {
+        fields: ["id", "fooBarOverflow"],
+        fieldsWithSelections: ["fooBarOverflow"],
+      },
+      Baz: {
+        fields: ["fooBarOverflow", "id"],
+        fieldsWithSelections: ["fooBarOverflow"],
+        matchingFragments: ["Baz"],
+      },
     });
-    expect(printFieldsWithSelections(fooBarOverflow?.selection)).toEqual({
-      null: ["exit"],
+    expect(printPossibleSelections(fooBarOverflow?.selection)).toEqual({
+      null: { fields: ["id", "exit", "leaf"], fieldsWithSelections: ["exit"] },
     });
   });
 
@@ -320,30 +336,14 @@ describe(describeResultTree, () => {
         foo
       }`,
       );
-      const common = possible?.get(commonSelectionKey);
-      const onFoo = possible?.get("Foo");
-      const onBar = possible?.get("Bar");
-      const onBaz = possible?.get("Baz");
-
-      expect(possible?.size).toEqual(4);
-      expect(printFieldGroups(common)).toEqual({
-        commonField1: ["commonField1"],
-        commonField2: ["commonField2"],
-      });
-      expect(printFieldGroups(onFoo)).toEqual({
-        foo: ["foo"],
-        commonField1: ["commonField1"],
-        commonField2: ["commonField2"],
-      });
-      expect(printFieldGroups(onBar)).toEqual({
-        bar: ["bar"],
-        commonField1: ["commonField1"],
-        commonField2: ["commonField2"],
-      });
-      expect(printFieldGroups(onBaz)).toEqual({
-        baz: ["baz"],
-        commonField1: ["commonField1"],
-        commonField2: ["commonField2"],
+      expect(printPossibleSelections(possible)).toEqual({
+        null: { fields: ["commonField1", "commonField2"] },
+        Foo: {
+          fields: ["foo", "commonField1", "commonField2"],
+          matchingFragments: ["Foo"],
+        },
+        Bar: { fields: ["bar", "commonField1", "commonField2"] },
+        Baz: { fields: ["baz", "commonField1", "commonField2"] },
       });
     });
 
@@ -354,37 +354,27 @@ describe(describeResultTree, () => {
       const possible = testHelper(
         `{
           common
-          ... on MyInterface { iface }
+          ...MyIface
           ...Foo
           ... on Bar { bar }
         }
         fragment Foo on Foo {
           foo
-        }`,
+        }
+        fragment MyIface on MyInterface { iface }`,
         possibleTypes,
       );
-
-      const common = possible?.get(commonSelectionKey);
-      const onMyInterface = possible?.get("MyInterface");
-      const onFoo = possible?.get("Foo");
-      const onBar = possible?.get("Bar");
-
-      expect(possible?.size).toEqual(4);
-      expect(printFieldGroups(common)).toEqual({
-        common: ["common"],
-      });
-      expect(printFieldGroups(onMyInterface)).toEqual({
-        iface: ["iface"],
-      });
-      expect(printFieldGroups(onFoo)).toEqual({
-        foo: ["foo"],
-        common: ["common"],
-        iface: ["iface"],
-      });
-      expect(printFieldGroups(onBar)).toEqual({
-        bar: ["bar"],
-        common: ["common"],
-        iface: ["iface"],
+      expect(printPossibleSelections(possible)).toEqual({
+        null: { fields: ["common"] },
+        MyInterface: { fields: ["iface"], matchingFragments: ["MyIface"] },
+        Foo: {
+          fields: ["foo", "common", "iface"],
+          matchingFragments: ["Foo", "MyIface"],
+        },
+        Bar: {
+          fields: ["bar", "common", "iface"],
+          matchingFragments: ["MyIface"],
+        },
       });
     });
 
@@ -401,7 +391,7 @@ describe(describeResultTree, () => {
         }`,
       );
 
-      expect(printPossibleSelections(possible)).toEqual({
+      expect(printFieldEntries(possible)).toEqual({
         null: {},
         UnionMemberType: {
           __typename: ["__typename"],
@@ -440,7 +430,7 @@ describe(describeResultTree, () => {
       );
 
       expect(possible.size).toEqual(4);
-      expect(printPossibleSelections(possible)).toEqual({
+      expect(printFieldEntries(possible)).toEqual({
         null: {},
         Foo: {
           __typename: ["__typename"],
@@ -466,8 +456,10 @@ describe(describeResultTree, () => {
       const possible = testHelper(
         `{
           common
-          ... on MyInterface { iface }
-        }`,
+          ...MyIface
+        }
+        fragment MyIface on MyInterface { iface }
+        `,
         possibleTypes,
       );
 
@@ -491,6 +483,13 @@ describe(describeResultTree, () => {
         common: ["common"],
         iface: ["iface"],
       });
+
+      expect(printPossibleSelections(possible)).toEqual({
+        null: { fields: ["common"] },
+        MyInterface: { fields: ["iface"], matchingFragments: ["MyIface"] },
+        Foo: { fields: ["iface", "common"], matchingFragments: ["MyIface"] },
+        Bar: { fields: ["iface", "common"], matchingFragments: ["MyIface"] },
+      });
     });
 
     it("infers possible types for abstract types when possibleTypes is undefined", () => {
@@ -508,21 +507,13 @@ describe(describeResultTree, () => {
           }
         }`,
       );
-
       const search = possible
         .get(commonSelectionKey)
         ?.fields.get("search")?.[0];
-      const searchSelection = search?.selection;
-      expect(printPossibleSelections(searchSelection)).toEqual({
-        null: {},
-        User: {
-          id: ["id"],
-          name: ["name"],
-        },
-        Post: {
-          id: ["id"],
-          title: ["title"],
-        },
+      expect(printPossibleSelections(search?.selection)).toEqual({
+        null: { fields: [] },
+        User: { fields: ["id", "name"] },
+        Post: { fields: ["id", "title"] },
       });
     });
   });
@@ -548,7 +539,7 @@ describe(collectSubFields, () => {
       `test { __typename }`,
     ]);
     expect(possibleSelections?.size).toEqual(1);
-    expect(printPossibleSelections(possibleSelections)).toEqual({
+    expect(printFieldEntries(possibleSelections)).toEqual({
       null: {
         __typename: ["__typename", "__typename"],
       },
@@ -559,7 +550,7 @@ describe(collectSubFields, () => {
     const possibleSelections = testHelper([`test { id }`, `test { id }`]);
 
     expect(possibleSelections?.size).toEqual(1);
-    expect(printPossibleSelections(possibleSelections)).toEqual({
+    expect(printFieldEntries(possibleSelections)).toEqual({
       null: {
         id: ["id", "id"],
       },
@@ -572,7 +563,7 @@ describe(collectSubFields, () => {
       `test { ... { bar } }`,
     ]);
     expect(possibleSelections?.size).toEqual(1);
-    expect(printPossibleSelections(possibleSelections)).toEqual({
+    expect(printFieldEntries(possibleSelections)).toEqual({
       null: { bar: ["bar", "bar"] },
     });
   });
@@ -587,7 +578,7 @@ describe(collectSubFields, () => {
       `test { ... @defer(if: false) { baz @a } }`,
       `test { ... @defer(if: $variable) { baz @b } }`,
     ]);
-    expect(printPossibleSelections(possibleSelections)).toEqual({
+    expect(printFieldEntries(possibleSelections)).toEqual({
       null: {
         foo: ["foo @a", "foo @b"],
         bar: ["bar"],
@@ -603,7 +594,7 @@ describe(collectSubFields, () => {
       `test { ... @defer(if: $defer) { foo @b } }`,
     ]);
     expect(possibleSelections?.size).toEqual(1);
-    expect(printPossibleSelections(possibleSelections)).toEqual({
+    expect(printFieldEntries(possibleSelections)).toEqual({
       null: {
         foo: ["foo", "foo @a", "foo @b"],
       },
@@ -617,7 +608,7 @@ describe(collectSubFields, () => {
       `test { baz: bar }`,
     ]);
     expect(result?.size).toEqual(1);
-    expect(printPossibleSelections(result)).toEqual({
+    expect(printFieldEntries(result)).toEqual({
       null: {
         bar: ["bar @a", "bar @b"],
         "baz: bar": ["baz: bar"],
@@ -633,7 +624,7 @@ describe(collectSubFields, () => {
     ]);
 
     expect(result?.size).toEqual(1);
-    expect(printPossibleSelections(result)).toEqual({
+    expect(printFieldEntries(result)).toEqual({
       null: {
         bar: ["bar @a", "bar @b"],
         baz: ["baz"],
@@ -650,7 +641,7 @@ describe(collectSubFields, () => {
     `;
     const possible = testHelper([field]);
     expect(possible?.size).toEqual(3);
-    expect(printPossibleSelections(possible)).toEqual({
+    expect(printFieldEntries(possible)).toEqual({
       null: {},
       Bar: { bar: ["bar"] },
       Baz: { baz: ["baz"] },
@@ -677,7 +668,7 @@ describe(collectSubFields, () => {
     );
 
     expect(result?.size).toEqual(2);
-    expect(printPossibleSelections(result)).toEqual({
+    expect(printFieldEntries(result)).toEqual({
       null: {
         __typename: ["__typename"],
         bar: ["bar { leaf }"],
@@ -720,7 +711,7 @@ describe(collectSubFields, () => {
     );
 
     expect(result?.size).toEqual(4);
-    expect(printPossibleSelections(result)).toEqual({
+    expect(printFieldEntries(result)).toEqual({
       null: {},
       Foo: {
         __typename: ["__typename"],
@@ -829,7 +820,7 @@ describe(collectSubFields, () => {
       const foo = possibleSelections?.get("Foo")?.fields.get("foo");
 
       expect(possibleSelections?.size).toEqual(2);
-      expect(printPossibleSelections(possibleSelections)).toEqual({
+      expect(printFieldEntries(possibleSelections)).toEqual({
         null: {
           bar: ["bar"],
         },
@@ -853,7 +844,7 @@ describe(collectSubFields, () => {
            fragment Foo2 on Foo { bar @b }`,
         ),
       );
-      expect(printPossibleSelections(possibleSelections)).toEqual({
+      expect(printFieldEntries(possibleSelections)).toEqual({
         null: {},
         Foo: {
           bar: ["bar @a", "bar @b"],
@@ -946,7 +937,7 @@ describe(collectSubFields, () => {
         ?.experimentalAliasedFragments?.get("foo");
 
       expect(possibleSelections?.size).toEqual(2);
-      expect(printPossibleSelections(possibleSelections)).toEqual({
+      expect(printFieldEntries(possibleSelections)).toEqual({
         null: {},
         Foo: {
           baz: ["baz"],
@@ -1020,12 +1011,22 @@ describe(collectSubFields, () => {
   }
 });
 
-function printFieldsWithSelections(selection: PossibleSelections | undefined) {
+function printPossibleSelections(selection: PossibleSelections | undefined) {
   return selection
     ? Object.fromEntries(
         [...selection.entries()].map(([type, selection]) => [
           String(type),
-          [...(selection?.fieldsWithSelections ?? [])],
+          // Note: using stringify/parse just to get rid of keys with undefined values
+          JSON.parse(
+            JSON.stringify({
+              fields: [...selection.fields.keys()],
+              fieldsWithSelections: selection.fieldsWithSelections,
+              fieldsToNormalize: selection.fieldsToNormalize?.map(
+                (f) => f.alias ?? f.name,
+              ),
+              matchingFragments: selection.matchingFragments,
+            }),
+          ),
         ]),
       )
     : {};
@@ -1035,7 +1036,7 @@ function printSelectedIn(selection: PossibleSelection | undefined) {
   return printFieldGroups(selection, true);
 }
 
-function printPossibleSelections(selection: PossibleSelections | undefined) {
+function printFieldEntries(selection: PossibleSelections | undefined) {
   return selection
     ? Object.fromEntries(
         [...selection.entries()].map(([type, selection]) => [
