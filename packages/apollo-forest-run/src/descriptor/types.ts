@@ -4,8 +4,8 @@ import {
   FragmentDefinitionNode,
   FragmentSpreadNode,
   GraphQLFormattedError,
-  InlineFragmentNode,
   OperationDefinitionNode,
+  SelectionNode,
   ValueNode,
 } from "graphql";
 
@@ -14,6 +14,7 @@ export type FieldName = string;
 export type FieldAlias = string;
 export type DataKey = string;
 export type FragmentName = string;
+export type FragmentAlias = string;
 export type SelectedInOperation = true;
 export type VariableName = string;
 export type SelectedIn = FragmentName | SelectedInOperation;
@@ -73,6 +74,7 @@ export type ResultTreeDescriptor = {
 export type ResolvedSelection = PossibleSelection & {
   normalizedFields?: Map<FieldInfo, NormalizedFieldEntry>;
   skippedFields?: Set<FieldInfo>;
+  skippedSpreads?: Set<SpreadInfo>;
 };
 
 export type OperationDescriptor = {
@@ -101,17 +103,26 @@ export type FieldInfo = {
   alias?: FieldAlias;
   selection?: PossibleSelections;
   selectedIn: SelectedIn[];
-
-  // AST references MUST NOT be used outside indexing. There is no guarantee they will exist.
-  // E.g. consider case when "Selection" structures are generated at build time.
-  __refs: ASTReference[];
+  __refs: ASTFieldReference[];
 };
 
-// Note: the same field node may have multiple references via different fragment spreads
-export type ASTReference = {
+export type SpreadInfo = {
+  name: FragmentName;
+  alias?: FragmentAlias;
+  __refs: ASTSpreadReference[];
+};
+
+export type ASTFieldReference = {
   node: FieldNode;
-  parentSpreads: (FragmentSpreadNode | InlineFragmentNode)[];
+  ancestors: SelectionNode[];
 };
+
+export type ASTSpreadReference = {
+  node: FragmentSpreadNode;
+  ancestors: SelectionNode[];
+};
+
+export type ASTReference = ASTFieldReference | ASTSpreadReference;
 
 export type PossibleSelections = Map<TypeName | null, PossibleSelection>;
 export type PossibleSelection = {
@@ -120,11 +131,12 @@ export type PossibleSelection = {
   fieldsWithSelections?: FieldName[];
   fieldQueue: FieldInfo[];
   fieldsToNormalize?: FieldInfo[];
-  fieldsWithDirectives?: FieldInfo[];
+  fieldsWithDirectives?: FieldInfo[]; // fields affected by include/skip/defer directives
 
-  fragmentSpreads?: FragmentName[];
-  experimentalAlias?: DataKey;
-  experimentalAliasedFragments?: Map<DataKey, PossibleSelection>;
+  spreads?: FragmentSpreadMap; // e.g. object with selection { foo, ...Bar, ... { ...Baz } } will have ["Bar", "Baz"] here
+
+  experimentalAlias?: FragmentAlias;
+  experimentalAliasedFragments?: Map<FragmentAlias, PossibleSelection>;
 };
 
 export type ResolvedSelections = Map<
@@ -136,4 +148,4 @@ export type PossibleTypes = { [abstractType: TypeName]: TypeName[] };
 
 // e.g. { a: foo { bar }, { b: foo { baz } } -> same canonical name `foo` leads to multiple entries: `a { bar }` and `b { baz }`;
 export type FieldMap = Map<FieldName, FieldInfo[]>;
-export type FragmentSpreadMap = Map<FragmentName, SelectedIn[]>;
+export type FragmentSpreadMap = Map<FragmentName, SpreadInfo>;
