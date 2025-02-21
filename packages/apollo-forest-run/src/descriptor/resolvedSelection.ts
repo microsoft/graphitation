@@ -56,9 +56,9 @@ export function resolveSelection(
       ? normalizeFields(operation, selection.fieldsToNormalize, typeName)
       : undefined;
 
-    const skippedFields = selection.fieldsWithDirectives?.length
+    const skippedFields = selection.fieldsOptional?.length
       ? new Set(
-          selection.fieldsWithDirectives.filter(
+          selection.fieldsOptional.filter(
             (field) =>
               !shouldInclude(field.__refs, operation.variablesWithDefaults),
           ),
@@ -302,7 +302,7 @@ function shouldInclude(
   return nodes.some(
     (ref) =>
       shouldIncludeImpl(ref.node, variables) &&
-      ref.parentSpreads.every((spread) => shouldIncludeImpl(spread, variables)),
+      ref.ancestors.every((spread) => shouldIncludeImpl(spread, variables)),
   );
 }
 

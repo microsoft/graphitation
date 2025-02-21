@@ -6,6 +6,7 @@ import type {
   FragmentDefinitionNode,
   FragmentSpreadNode,
   InlineFragmentNode,
+  SelectionNode,
   SelectionSetNode,
   ValueNode,
   VariableNode,
@@ -20,9 +21,10 @@ import type {
   PossibleTypes,
   ResultTreeDescriptor,
   FragmentMap,
+  SpreadInfo,
 } from "./types";
 import { accumulate, getOrCreate } from "../jsutils/map";
-import { assert } from "../jsutils/assert";
+import { assert, assertNever } from "../jsutils/assert";
 
 export type Context = Readonly<{
   fragmentMap: FragmentMap;
@@ -30,7 +32,7 @@ export type Context = Readonly<{
   inferredPossibleTypes: PossibleTypes;
   fieldsWithArgs: FieldInfo[];
   mergeMemo: Map<PossibleSelection, Set<PossibleSelection>>;
-  copyOnWrite: Set<PossibleSelection | FieldInfo>;
+  copyOnWrite: Set<PossibleSelection | FieldInfo | SpreadInfo>;
 }>;
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -67,7 +69,7 @@ function collectPossibleSelections(
   ]);
   collectFields(context, possibleSelections, selectionSet);
   mergeSubSelections(context, possibleSelections);
-  completeSelections(possibleSelections, 0);
+  completeSelections(context, possibleSelections, 0);
 
   return possibleSelections;
 }
@@ -75,14 +77,14 @@ function collectPossibleSelections(
 /**
  * Shallowly collects all subfields of a given field group.
  *
- * A variation of https://spec.graphql.org/draft/#sec-Field-Collection
+ * A variation of https://spec.graphql.org/October2021/#sec-Field-Collection
  *
- * Several key differences from spec:
+ * Several key differences from the spec:
  *
  * 1. Field nodes are grouped at two levels: first - by field name, then - by "response key" (spec groups by "response key" only).
  *    This makes it easier to compare selections across different operations.
  *
- * 2. There is no runtime type, so fields for all possible type combinations are collected (PossibleSelections).
+ * 2. Runtime type is not known at this stage, so fields for all possible type combinations are collected (PossibleSelections).
  *
  * 3. Fields of matching abstract types are not merged into selections of concrete types.
  *    They are merged later via appendUntypedSelection and appendAbstractTypeSelections methods.
@@ -101,14 +103,16 @@ export function collectSubFields(
   const possibleSelections: PossibleSelections = new Map([
     [null, commonSelection],
   ]);
-  for (const fieldUsage of usages) {
-    if (fieldUsage.node.selectionSet) {
-      collectFields(
-        context,
-        possibleSelections,
-        fieldUsage.node.selectionSet,
-        fieldUsage.parentSpreads ? [...fieldUsage.parentSpreads] : [],
-      );
+  for (const { node, ancestors } of usages) {
+    if (node.selectionSet) {
+      // Note: mutating `ancestors` here and passing to `collectFields` without cloning for effiecency.
+      //   Under the hood collectFields treats it as a stack and mutates, but since it is a stack - it is restored by the end of the call.
+      const len = ancestors.length;
+      const last = ancestors[len - 1];
+      ancestors.push(node);
+      collectFields(context, possibleSelections, node.selectionSet, ancestors);
+      ancestors.pop();
+      assert(ancestors.length === len && ancestors[len - 1] === last);
     }
   }
   return possibleSelections;
@@ -118,7 +122,7 @@ function collectFields(
   context: Context,
   selectionsByType: PossibleSelections,
   selectionSet: SelectionSetNode,
-  fragmentStack: (FragmentSpreadNode | InlineFragmentNode)[] = [],
+  ancestorStack: SelectionNode[] = [],
   typeCondition: TypeName | null | undefined = null,
   fragmentAlias?: string,
 ) {
@@ -135,44 +139,56 @@ function collectFields(
     );
     selection.experimentalAlias = fragmentAlias;
   }
-  const parentSpreads = [...fragmentStack];
+  const ancestors = [...ancestorStack];
   for (const node of selectionSet.selections) {
     if (shouldSkip(node)) {
       continue;
     }
     if (node.kind === "Field") {
-      addFieldEntry(context, selection.fields, node, parentSpreads);
+      addFieldEntry(context, selection.fields, node, ancestors);
     } else if (node.kind === "InlineFragment") {
-      fragmentStack.push(node);
+      inferPossibleType(context, typeCondition, getTypeName(node));
+      ancestorStack.push(node);
       collectFields(
         context,
         selectionsByType,
         node.selectionSet,
-        fragmentStack,
+        ancestorStack,
         getTypeName(node) ?? typeCondition, // inherit type for inline fragments without type condition, i.e. ... {}
         // getFragmentAlias(node) ?
       );
-      inferPossibleType(context, typeCondition, getTypeName(node));
-      fragmentStack.pop();
+      ancestorStack.pop();
     } else if (node.kind === "FragmentSpread") {
-      if (fragmentStack.includes(node)) {
+      if (
+        // TODO:
+        // ancestorStack.some(
+        //   (ancestor) =>
+        //     node === ancestor ||
+        //     (ancestor.kind === "FragmentSpread" &&
+        //       ancestor.name.value === node.name.value),
+        // )
+        ancestorStack.includes(node)
+      ) {
         continue;
       }
       const fragment = context.fragmentMap.get(node.name.value);
       if (!fragment) {
         throw new Error(`No fragment named ${node.name.value}.`);
       }
-      fragmentStack.push(node);
+      addSpreadEntry(context, selectionsByType, fragment, node, ancestors);
+      inferPossibleType(context, typeCondition, getTypeName(fragment));
+      ancestorStack.push(node);
       collectFields(
         context,
         selectionsByType,
         fragment.selectionSet,
-        fragmentStack,
+        ancestorStack,
         getTypeName(fragment),
         getFragmentAlias(node),
       );
-      inferPossibleType(context, typeCondition, getTypeName(fragment));
-      fragmentStack.pop();
+      ancestorStack.pop();
+    } else {
+      assertNever(node);
     }
   }
 }
@@ -279,41 +295,62 @@ function appendAbstractTypeSelections(
   }
 }
 
-function completeSelections(possibleSelections: PossibleSelections, depth = 0) {
-  // This runs when all selections already contain all fields
+function completeSelections(
+  context: Context,
+  possibleSelections: PossibleSelections,
+  depth = 0,
+) {
+  // Note:
+  //   This function runs when all typed selections are created and contain all fields (i.e. after untyped selection is merged and selections for concrete types are added).
+  //   This means that some selections may be identical (e.g. selections for different interface implementations), so we must visit and mutate them only once.
   const next: PossibleSelections[] = [];
   for (const selection of possibleSelections.values()) {
+    if (selection.depth !== -1) {
+      continue; // already visited (selection on abstract type could be re-used by multiple implementations)
+    }
     selection.depth = depth;
+    for (const spread of selection.spreads?.values() ?? EMPTY_ARRAY) {
+      completeSpreadInfo(context, spread);
+    }
     for (const fieldAliases of selection.fields.values()) {
       selection.fieldQueue.push(...fieldAliases);
     }
     for (const fieldAliases of selection.fields.values()) {
       for (const fieldInfo of fieldAliases) {
+        completeFieldInfo(context, fieldInfo);
+
         if (fieldInfo.args?.size) {
           selection.fieldsToNormalize ??= [];
           selection.fieldsToNormalize.push(fieldInfo);
         }
+        // if (isOptionalField(fieldInfo)) {
+        //   selection.fieldsOptional ??= [];
+        //   selection.fieldsOptional.push(fieldInfo);
+        // }
         if (fieldInfo.selection) {
           selection.fieldsWithSelections ??= [];
           selection.fieldsWithSelections.push(fieldInfo.name);
 
           next.push(fieldInfo.selection);
         }
-        for (const ref of fieldInfo.__refs) {
+        if (!fieldInfo.__refs) {
+          continue; // already visited
+        }
+        for (const { node, ancestors } of fieldInfo.__refs) {
           if (
-            ref.node.directives?.length ||
-            ref.parentSpreads.some((spread) => spread.directives?.length)
+            node.directives?.length ||
+            ancestors.some((ancestor) => ancestor.directives?.length)
           ) {
-            selection.fieldsWithDirectives ??= [];
-            if (!selection.fieldsWithDirectives.includes(fieldInfo)) {
-              selection.fieldsWithDirectives.push(fieldInfo);
+            selection.fieldsOptional ??= [];
+            if (!selection.fieldsOptional.includes(fieldInfo)) {
+              selection.fieldsOptional.push(fieldInfo);
             }
             if (!selection.fieldsToNormalize?.includes(fieldInfo)) {
               selection.fieldsToNormalize ??= [];
               selection.fieldsToNormalize.push(fieldInfo);
             }
           }
-          const spread = findClosestFragmentSpread(ref.parentSpreads);
+          const spread = findClosestFragmentSpread(ancestors);
           const selectedIn = spread ? spread.name.value : true;
           if (!fieldInfo.selectedIn.includes(selectedIn)) {
             fieldInfo.selectedIn.push(selectedIn);
@@ -323,9 +360,19 @@ function completeSelections(possibleSelections: PossibleSelections, depth = 0) {
     }
   }
   for (const selection of next) {
-    completeSelections(selection, depth + 1);
+    completeSelections(context, selection, depth + 1);
   }
   return possibleSelections;
+}
+
+function completeFieldInfo(context: Context, fieldInfo: FieldInfo): FieldInfo {
+  // fieldInfo.__refs = undefined;
+  return fieldInfo;
+}
+
+function completeSpreadInfo(context: Context, spread: SpreadInfo): SpreadInfo {
+  // spreadInfo.__refs = undefined;
+  return spread;
 }
 
 function inferPossibleType(
@@ -439,6 +486,21 @@ function mergeSelectionsImpl(
       );
     }
   }
+  if (source.spreads?.size) {
+    mutableTarget.spreads ??= new Map();
+    for (const [name, sourceSpread] of source.spreads.entries()) {
+      const targetSpread = mutableTarget.spreads.get(name);
+      if (!targetSpread) {
+        mutableTarget.spreads.set(name, sourceSpread);
+        context.copyOnWrite.add(sourceSpread);
+        continue;
+      }
+      mutableTarget.spreads.set(
+        name,
+        mergeSpread(context, targetSpread, sourceSpread),
+      );
+    }
+  }
   return mutableTarget;
 }
 
@@ -491,6 +553,19 @@ function mergeField(
   return mutableTarget;
 }
 
+function mergeSpread(
+  context: Context,
+  target: SpreadInfo,
+  source: SpreadInfo,
+): SpreadInfo {
+  assert(target.name === source.name && target.alias === source.alias);
+  const mutableTarget = context.copyOnWrite.has(target)
+    ? copySpreadInfo(context, target)
+    : target;
+  mutableTarget.__refs.push(...source.__refs);
+  return mutableTarget;
+}
+
 function newEmptyList() {
   return [];
 }
@@ -503,7 +578,7 @@ function addFieldEntry(
   context: Context,
   fieldMap: FieldMap,
   node: FieldNode,
-  parentSpreads: (FragmentSpreadNode | InlineFragmentNode)[],
+  ancestors: SelectionNode[],
 ): FieldInfo {
   const fieldAliases = fieldMap.get(node.name.value);
   let fieldGroup = fieldAliases?.find(
@@ -517,7 +592,7 @@ function addFieldEntry(
     accumulate(fieldMap, node.name.value, fieldGroup);
   }
   fieldGroup.__refs ||= [];
-  fieldGroup.__refs.push({ node, parentSpreads });
+  fieldGroup.__refs.push({ node, ancestors });
 
   return fieldGroup;
 }
@@ -536,6 +611,35 @@ export function createFieldGroup(node: FieldNode): FieldInfo {
     field.args = createArgumentDefs(node.arguments);
   }
   return field;
+}
+
+function addSpreadEntry(
+  context: Context,
+  selectionsByType: PossibleSelections,
+  fragment: FragmentDefinitionNode,
+  node: FragmentSpreadNode,
+  ancestors: SelectionNode[],
+) {
+  const selection = getOrCreate(
+    selectionsByType,
+    fragment.typeCondition.name.value,
+    createEmptySelection,
+  );
+  if (!selection.spreads) {
+    selection.spreads = new Map();
+  }
+  let spread = selection.spreads.get(node.name.value);
+  if (!spread) {
+    spread = {
+      name: node.name.value,
+      alias: getFragmentAlias(node),
+      __refs: [{ node, ancestors }],
+    };
+    selection.spreads.set(node.name.value, spread);
+  } else {
+    spread.__refs.push({ node, ancestors });
+  }
+  return spread;
 }
 
 export function createArgumentDefs(args: ReadonlyArray<ArgumentNode>) {
@@ -567,6 +671,14 @@ function copyFieldInfo(context: Context, info: FieldInfo): FieldInfo {
   return copy;
 }
 
+function copySpreadInfo(context: Context, info: SpreadInfo): SpreadInfo {
+  return {
+    name: info.name,
+    alias: info.alias,
+    __refs: [...(info.__refs ?? [])],
+  };
+}
+
 function copySelection(
   context: Context,
   selection: PossibleSelection,
@@ -583,6 +695,13 @@ function copySelection(
       context.copyOnWrite.add(alias);
     }
   }
+  if (selection.spreads) {
+    copy.spreads = new Map();
+    for (const [name, spread] of selection.spreads.entries()) {
+      copy.spreads.set(name, spread);
+      context.copyOnWrite.add(spread);
+    }
+  }
   if (selection.experimentalAliasedFragments) {
     copy.experimentalAliasedFragments = new Map(
       selection.experimentalAliasedFragments.entries(),
@@ -590,9 +709,6 @@ function copySelection(
     for (const subSelection of selection.experimentalAliasedFragments.values()) {
       context.copyOnWrite.add(subSelection);
     }
-  }
-  if (selection.fragmentSpreads) {
-    copy.fragmentSpreads = [...selection.fragmentSpreads];
   }
   return copy;
 }
@@ -650,10 +766,10 @@ function isVariableNode(value: ValueNode | undefined): value is VariableNode {
 }
 
 function findClosestFragmentSpread(
-  parentSpreads: (FragmentSpreadNode | InlineFragmentNode)[],
+  ancestors: SelectionNode[],
 ): FragmentSpreadNode | undefined {
-  for (let i = parentSpreads.length - 1; i >= 0; i--) {
-    const spread = parentSpreads[i];
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    const spread = ancestors[i];
     if (spread.kind === "FragmentSpread") {
       return spread;
     }
@@ -668,3 +784,6 @@ function getTypeName(
     ? (fragment.typeCondition.name.value as TypeName)
     : undefined;
 }
+
+// const isOptionalField = (field: FieldInfo) =>
+//   field.includeIfSome || field.skipIfEvery; // TODO: || field.deferIfEvery;
