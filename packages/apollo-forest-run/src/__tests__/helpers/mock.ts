@@ -15,7 +15,7 @@ export function generateMockObject(doc: DocumentNode): SourceObject {
   const result = visit(doc, {
     Field: {
       leave: (node) => [
-        node.name.value,
+        node.alias?.value ?? node.name.value,
         itemsCount(node) === -1
           ? fieldValue(node)
           : [...new Array(itemsCount(node))].map(() => fieldValue(node)),

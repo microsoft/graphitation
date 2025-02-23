@@ -64,6 +64,7 @@ type Context<TModel, TListModel> = {
   operation: OperationDescriptor;
   resolver: Resolver<TModel, TListModel>;
   incompleteValues: IncompleteValues;
+  visited: Map<SourceObject | SourceCompositeList, Set<TModel | TListModel>>;
   amend: boolean;
 };
 
@@ -98,6 +99,7 @@ export function execute<TModel, TListModel = NestedIterable<TModel | null>>(
     //   except for "leaf" object fields defined on the source object.
     //   This will re-traverse every field, but won't overwrite existing leaf values.
     amend: Boolean(state.data && !state.incompleteValues),
+    visited: new Map(),
   };
   const { result } = executeObjectSelection(
     context,
@@ -116,6 +118,9 @@ function executeSelection<TModel, TListModel>(
   value: TModel | TListModel,
   draft: SourceObject | SourceCompositeList | undefined,
 ): { result: SourceObject | SourceCompositeList; complete: boolean } {
+  if (draft && isVisited(context, draft, value)) {
+    return { result: draft, complete: false };
+  }
   if (isIterable(value)) {
     assert(!draft || Array.isArray(draft));
     return executeCompositeListSelection(
@@ -147,8 +152,6 @@ function executeObjectSelection<TModel, TListModel>(
   const firstEnter = draft === undefined;
   const source = draft ?? ({} as SourceObject);
 
-  // TODO: we should also keep info about all visited models per `SourceObject` and do not enter the same model twice
-  //   (this is possible when re-entering the same object via multiple parent chunks)
   const info = resolver.enterObject(model, selection, firstEnter, source);
 
   if (isCompleteValue(info)) {
@@ -215,9 +218,14 @@ function executeObjectChunkSelection<TModel, TListModel>(
   typeName: string | null,
   incompleteFields: FieldQueue,
 ): FieldQueue {
+  if (isVisited(context, draft, chunk)) {
+    return incompleteFields;
+  }
+  registerVisit(context, draft, chunk);
+
   const { amend, resolver } = context;
 
-  let nextIncompleteFields: FieldInfo[] | undefined = undefined;
+  let nextIncompleteFields: FieldQueue | undefined = undefined;
   for (const fieldInfo of incompleteFields) {
     if (
       amend &&
@@ -300,7 +308,7 @@ function executeCompositeListSelection<TModel, TListModel>(
 
   let incompleteItems: Set<number> | undefined;
   if (draft) {
-    incompleteItems = incompleteValues.get(draft);
+    incompleteItems = incompleteValues.get(draft) as Set<number> | undefined;
     if (!incompleteItems?.size) {
       return { result: draft, complete: true };
     }
@@ -308,6 +316,8 @@ function executeCompositeListSelection<TModel, TListModel>(
   if (!draft) {
     draft = new Array(lenOrValue);
   }
+  registerVisit(context, draft, list);
+
   let index = 0;
   assert(isIterable(list));
   for (const tmp of list) {
@@ -363,6 +373,31 @@ function resolveFieldQueue(
   return wasAutoAdded
     ? fieldQueue.filter((field) => field.name !== "__typename")
     : fieldQueue;
+}
+
+function isVisited<TModel, TListModel>(
+  context: Context<TModel, TListModel>,
+  draft: SourceObject | SourceCompositeList,
+  model: TModel | TListModel,
+) {
+  return context.visited.get(draft)?.has(model);
+}
+
+/**
+ * Keep records about all visited models per `SourceObject` to not enter the same model twice
+ *   (this is possible when re-entering the same object via multiple parent chunks)
+ */
+function registerVisit<TModel, TListModel>(
+  context: Context<TModel, TListModel>,
+  draft: SourceObject | SourceCompositeList,
+  model: TModel | TListModel,
+) {
+  let visitedModels = context.visited.get(draft);
+  if (!visitedModels) {
+    visitedModels = new Set();
+    context.visited.set(draft, visitedModels);
+  }
+  visitedModels.add(model);
 }
 
 function isIterable(value: unknown): value is Iterable<any> {
