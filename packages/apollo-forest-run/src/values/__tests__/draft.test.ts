@@ -1,14 +1,19 @@
 import { hydrateDraft } from "../draft";
 import { createTestOperation } from "../../__tests__/helpers/descriptor";
+import { ResolvedSelection } from "../../descriptor/types";
+import { accumulate } from "../../jsutils/map";
 import {
   createTestChunk,
   createTestDraft,
   generateChunk,
 } from "../../__tests__/helpers/values";
 import {
+  ChunkMatcher,
   IncompleteValues,
   MissingFieldsMap,
+  ObjectChunk,
   ObjectDraft,
+  ObjectValue,
   SourceObject,
 } from "../types";
 
@@ -478,17 +483,122 @@ describe("handling nested lists and complex structures", () => {
 
     expect(result.missingFields?.size).toEqual(0);
   });
+
+  test("visits every chunk once per draft", () => {
+    // Missing fields will keep execution running until all chunks are traversed
+    // At least we should make sure the same chunk is not re-entered twice per the same object
+    const query = `
+      {
+        me {
+          __typename
+          id
+          name2 # Note: this field is missing in existing chunks
+          lastPost {
+            id
+            author {
+              __typename
+              id
+              name
+            }
+          }
+        }
+      }
+    `;
+    const chunks = [
+      `{ me { __typename @mock(value: "User") id @mock(value: "1") label: chunk1 } }`,
+      `{
+         user {
+           __typename @mock(value: "User")
+           id @mock(value: "1")
+           label: chunk2 
+           lastPost {
+            __typename @mock(value: "Post")
+             id
+             author {
+               __typename @mock(value: "User")
+               id @mock(value: "1")
+               label: chunk3
+             }
+           }
+         }
+       }`,
+      `{
+         user {
+           __typename @mock(value: "User")
+           id @mock(value: "1")
+           label: chunk4 
+           lastPost {
+            __typename @mock(value: "Post")
+             id
+             author {
+               __typename @mock(value: "User")
+               id @mock(value: "1")
+               label: chunk5
+             }
+           }
+         }
+       }`,
+    ];
+
+    const visited: any = new Map<object, object[]>();
+    const enterObject = (_selection: any, chunk: any, draft: any) => {
+      accumulate(
+        visited,
+        draft,
+        `${chunk.type}:${chunk.key}:${chunk.data?.label ?? "-"}`,
+      );
+    };
+    const result = draftHelper(query, chunks, { enterObject }) as any;
+    const source = result.data;
+
+    // Sanity checks
+    expect(source).toEqual({
+      me: {
+        __typename: "User",
+        id: "1",
+        lastPost: { id: "id", author: { __typename: "User", id: "1" } },
+      },
+    });
+    expect(result.missingFields?.size).toEqual(2);
+
+    expect(visited.size).toEqual(4);
+    expect(visited.get(source)).toEqual(["Query:ROOT_QUERY:-"]);
+    expect(visited.get(source.me)).toEqual(["User:1:chunk1"]);
+    // Without proper deduplication, the following objects are re-visited many times
+    expect(visited.get(source.me?.lastPost)).toEqual(["Post:id:-"]);
+    expect(visited.get(source.me?.lastPost.author)).toEqual(["User:1:chunk3"]);
+  });
 });
 
 const env = { keyMap: new WeakMap() };
 
-function draftHelper(query: string, chunkSelections: string[]) {
+type HelperOptions = {
+  chunkMatcher?: ChunkMatcher;
+  enterObject?: (
+    selection: ResolvedSelection,
+    model: ObjectValue,
+    data: SourceObject,
+  ) => void;
+};
+
+function draftHelper(
+  query: string,
+  chunkSelections: string[],
+  options?: HelperOptions,
+) {
   const op = createTestOperation(query);
   const chunksInfo = chunkSelections.map((obj) => generateChunk(obj));
-  const getChunks = (key: any) =>
+  const getChunks = (key: string): ObjectChunk[] =>
     chunksInfo.flatMap((chunkInfo) => chunkInfo.nodes.get(key)?.flat() ?? []);
+
   const testDraft = createTestDraft(op);
-  const result = hydrateDraft(env, testDraft, getChunks);
+  const result = hydrateDraft(
+    env,
+    testDraft,
+    getChunks as any,
+    options?.chunkMatcher,
+    options?.enterObject,
+  );
 
   return { ...result, testDraft, chunksInfo, getChunks };
 }
