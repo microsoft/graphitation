@@ -32,8 +32,7 @@ export function useCompiledFragment(
   const from = fragmentReference.id;
   invariant(
     typeof from === "string",
-    "useFragment(): Expected the fragment reference to have a string id. " +
-      "Did you forget to invoke the compiler?",
+    "useFragment(): Expected the fragment reference to have a string id.",
   );
   invariant(
     metadata,
@@ -58,8 +57,13 @@ export function useCompiledFragment(
   };
 
   const result = useFragment(doc);
-  const data = result.complete ? result.data : {};
-  return data as object;
+
+  invariant(
+    result.complete,
+    "useFragment(): Missing data expected to be seeded by the execution query document. Please check your type policies and possibleTypes configuration. If only subset of properties is missing you might need to configure merge functions for non-normalized types.",
+  );
+
+  return result.data as object;
 }
 
 type DefaultValue =

@@ -19,6 +19,70 @@ index afbbcd0..d93d0af 100644
          fieldName: fieldName,
          storeFieldName: storeFieldName,
          variables: variables,
+diff --git a/node_modules/@apollo/client/cache/core/types/Cache.d.ts b/node_modules/@apollo/client/cache/core/types/Cache.d.ts
+index 13fdd1f..6ceac48 100644
+--- a/node_modules/@apollo/client/cache/core/types/Cache.d.ts
++++ b/node_modules/@apollo/client/cache/core/types/Cache.d.ts
+@@ -14,9 +14,9 @@ export declare namespace Cache {
+         dataId?: string;
+         result: TResult;
+     }
+-    interface DiffOptions<TData = any, TVariables = any> extends ReadOptions<TVariables, TData> {
++    interface DiffOptions<TData = any, TVariables = any> extends Omit<ReadOptions<TVariables, TData>, "rootId"> {
+     }
+-    interface WatchOptions<TData = any, TVariables = any> extends ReadOptions<TVariables, TData> {
++    interface WatchOptions<TData = any, TVariables = any> extends DiffOptions<TData, TVariables> {
+         watcher?: object;
+         immediate?: boolean;
+         callback: WatchCallback<TData>;
+diff --git a/node_modules/@apollo/client/cache/core/types/common.js b/node_modules/@apollo/client/cache/core/types/common.js
+index bf82b96..266f9fe 100644
+--- a/node_modules/@apollo/client/cache/core/types/common.js
++++ b/node_modules/@apollo/client/cache/core/types/common.js
+@@ -7,6 +7,15 @@ var MissingFieldError = (function (_super) {
+         _this.path = path;
+         _this.query = query;
+         _this.variables = variables;
++        if (Array.isArray(_this.path)) {
++            _this.missing = _this.message;
++            for (var i = _this.path.length - 1; i >= 0; --i) {
++                _this.missing = (_a = {}, _a[_this.path[i]] = _this.missing, _a);
++            }
++        }
++        else {
++            _this.missing = _this.path;
++        }
+         _this.__proto__ = MissingFieldError.prototype;
+         return _this;
+     }
+diff --git a/node_modules/@apollo/client/cache/index.d.ts b/node_modules/@apollo/client/cache/index.d.ts
+index 2f13047..4d9e466 100644
+--- a/node_modules/@apollo/client/cache/index.d.ts
++++ b/node_modules/@apollo/client/cache/index.d.ts
+@@ -2,7 +2,7 @@ import '../utilities/globals';
+ export { Transaction, ApolloCache } from './core/cache';
+ export { Cache } from './core/types/Cache';
+ export { DataProxy } from './core/types/DataProxy';
+-export { Modifier, Modifiers, MissingFieldError, ReadFieldOptions } from './core/types/common';
++export { MissingTree, Modifier, Modifiers, MissingFieldError, ReadFieldOptions } from './core/types/common';
+ export { Reference, isReference, makeReference, } from '../utilities';
+ export { EntityStore } from './inmemory/entityStore';
+ export { fieldNameFromStoreName, defaultDataIdFromObject, } from './inmemory/helpers';
+diff --git a/node_modules/@apollo/client/cache/inmemory/inMemoryCache.js b/node_modules/@apollo/client/cache/inmemory/inMemoryCache.js
+index 18fb41a..d8360e0 100644
+--- a/node_modules/@apollo/client/cache/inmemory/inMemoryCache.js
++++ b/node_modules/@apollo/client/cache/inmemory/inMemoryCache.js
+@@ -60,8 +60,8 @@ var InMemoryCache = (function (_super) {
+             makeCacheKey: function (c) {
+                 var store = c.optimistic ? _this.optimisticData : _this.data;
+                 if (supportsResultCaching(store)) {
+-                    var optimistic = c.optimistic, rootId = c.rootId, variables = c.variables;
+-                    return store.makeCacheKey(c.query, c.callback, canonicalStringify({ optimistic: optimistic, rootId: rootId, variables: variables }));
++                    var optimistic = c.optimistic, id = c.id, variables = c.variables;
++                    return store.makeCacheKey(c.query, c.callback, canonicalStringify({ optimistic: optimistic, id: id, variables: variables }));
+                 }
+             }
+         });
 diff --git a/node_modules/@apollo/client/cache/inmemory/policies.d.ts b/node_modules/@apollo/client/cache/inmemory/policies.d.ts
 index 6a93238..fdef0a4 100644
 --- a/node_modules/@apollo/client/cache/inmemory/policies.d.ts
@@ -58,3 +122,118 @@ index a2c1b93..d28dddf 100644
          fieldName: fieldName,
          storeFieldName: storeFieldName,
          variables: variables,
+diff --git a/node_modules/@apollo/client/react/hooks/index.d.ts b/node_modules/@apollo/client/react/hooks/index.d.ts
+index a590efb..458f53f 100644
+--- a/node_modules/@apollo/client/react/hooks/index.d.ts
++++ b/node_modules/@apollo/client/react/hooks/index.d.ts
+@@ -5,4 +5,5 @@ export * from './useMutation';
+ export { useQuery } from './useQuery';
+ export * from './useSubscription';
+ export * from './useReactiveVar';
++export * from "./useFragment.js";
+ //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/node_modules/@apollo/client/react/hooks/index.js b/node_modules/@apollo/client/react/hooks/index.js
+index 5a93908..074732c 100644
+--- a/node_modules/@apollo/client/react/hooks/index.js
++++ b/node_modules/@apollo/client/react/hooks/index.js
+@@ -5,4 +5,5 @@ export * from "./useMutation.js";
+ export { useQuery } from "./useQuery.js";
+ export * from "./useSubscription.js";
+ export * from "./useReactiveVar.js";
++export * from "./useFragment.js";
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/node_modules/@apollo/client/react/hooks/useFragment.d.ts b/node_modules/@apollo/client/react/hooks/useFragment.d.ts
+new file mode 100644
+index 0000000..0e91e5e
+--- /dev/null
++++ b/node_modules/@apollo/client/react/hooks/useFragment.d.ts
+@@ -0,0 +1,19 @@
++import type { DeepPartial } from "../../utilities/index.js";
++import type { Cache, Reference, StoreObject, MissingTree } from "../../cache/index.js";
++import type { OperationVariables } from "../../core/index.js";
++import type { NoInfer } from "../types/types.js";
++export interface UseFragmentOptions<TData, TVars> extends Omit<Cache.DiffOptions<NoInfer<TData>, NoInfer<TVars>>, "id" | "query" | "optimistic" | "previousResult" | "returnPartialData">, Omit<Cache.ReadFragmentOptions<TData, TVars>, "id" | "variables" | "returnPartialData"> {
++    from: StoreObject | Reference | string;
++    optimistic?: boolean;
++}
++export type UseFragmentResult<TData> = {
++    data: TData;
++    complete: true;
++    missing?: never;
++} | {
++    data: DeepPartial<TData>;
++    complete: false;
++    missing?: MissingTree;
++};
++export declare function useFragment<TData = any, TVars = OperationVariables>(options: UseFragmentOptions<TData, TVars>): UseFragmentResult<TData>;
++//# sourceMappingURL=useFragment.d.ts.map
+\ No newline at end of file
+diff --git a/node_modules/@apollo/client/react/hooks/useFragment.d.ts.map b/node_modules/@apollo/client/react/hooks/useFragment.d.ts.map
+new file mode 100644
+index 0000000..09c87a4
+--- /dev/null
++++ b/node_modules/@apollo/client/react/hooks/useFragment.d.ts.map
+@@ -0,0 +1 @@
++{"version":3,"file":"useFragment.d.ts","sourceRoot":"","sources":["../../../src/react/hooks/useFragment.ts"],"names":[],"mappings":"AAGA,OAAO,KAAK,EAAE,WAAW,EAAE,MAAM,0BAA0B,CAAC;AAE5D,OAAO,KAAK,EACV,KAAK,EACL,SAAS,EACT,WAAW,EACX,WAAW,EACZ,MAAM,sBAAsB,CAAC;AAI9B,OAAO,KAAK,EAAE,kBAAkB,EAAE,MAAM,qBAAqB,CAAC;AAC9D,OAAO,KAAK,EAAE,OAAO,EAAE,MAAM,mBAAmB,CAAC;AAEjD,MAAM,WAAW,kBAAkB,CAAC,KAAK,EAAE,KAAK,CAC9C,SAAQ,IAAI,CACR,KAAK,CAAC,WAAW,CAAC,OAAO,CAAC,KAAK,CAAC,EAAE,OAAO,CAAC,KAAK,CAAC,CAAC,EACjD,IAAI,GAAG,OAAO,GAAG,YAAY,GAAG,gBAAgB,GAAG,mBAAmB,CACvE,EACD,IAAI,CACF,KAAK,CAAC,mBAAmB,CAAC,KAAK,EAAE,KAAK,CAAC,EACvC,IAAI,GAAG,WAAW,GAAG,mBAAmB,CACzC;IACH,IAAI,EAAE,WAAW,GAAG,SAAS,GAAG,MAAM,CAAC;IAEvC,UAAU,CAAC,EAAE,OAAO,CAAC;CACtB;AAED,MAAM,MAAM,iBAAiB,CAAC,KAAK,IAC/B;IACE,IAAI,EAAE,KAAK,CAAC;IACZ,QAAQ,EAAE,IAAI,CAAC;IACf,OAAO,CAAC,EAAE,KAAK,CAAC;CACjB,GACD;IACE,IAAI,EAAE,WAAW,CAAC,KAAK,CAAC,CAAC;IACzB,QAAQ,EAAE,KAAK,CAAC;IAChB,OAAO,CAAC,EAAE,WAAW,CAAC;CACvB,CAAC;AAEN,wBAAgB,WAAW,CAAC,KAAK,GAAG,GAAG,EAAE,KAAK,GAAG,kBAAkB,EACjE,OAAO,EAAE,kBAAkB,CAAC,KAAK,EAAE,KAAK,CAAC,GACxC,iBAAiB,CAAC,KAAK,CAAC,CA8C1B"}
+\ No newline at end of file
+diff --git a/node_modules/@apollo/client/react/hooks/useFragment.js b/node_modules/@apollo/client/react/hooks/useFragment.js
+new file mode 100644
+index 0000000..0f480b5
+--- /dev/null
++++ b/node_modules/@apollo/client/react/hooks/useFragment.js
+@@ -0,0 +1,44 @@
++import { __assign, __rest } from "tslib";
++import * as React from "react";
++import { equal } from "@wry/equality";
++import { mergeDeepArray } from "../../utilities/index.js";
++import { useApolloClient } from "./useApolloClient.js";
++import { useSyncExternalStore } from "./useSyncExternalStore.js";
++export function useFragment(options) {
++    var cache = useApolloClient().cache;
++    var fragment = options.fragment, fragmentName = options.fragmentName, from = options.from, _a = options.optimistic, optimistic = _a === void 0 ? true : _a, rest = __rest(options, ["fragment", "fragmentName", "from", "optimistic"]);
++    var diffOptions = __assign(__assign({}, rest), { returnPartialData: true, id: typeof from === "string" ? from : cache.identify(from), query: cache["getFragmentDoc"](fragment, fragmentName), optimistic: optimistic });
++    var resultRef = React.useRef();
++    var latestDiff = cache.diff(diffOptions);
++    var getSnapshot = function () {
++        var latestDiffToResult = diffToResult(latestDiff);
++        return resultRef.current &&
++            equal(resultRef.current.data, latestDiffToResult.data)
++            ? resultRef.current
++            : (resultRef.current = latestDiffToResult);
++    };
++    return useSyncExternalStore(function (forceUpdate) {
++        var lastTimeout = 0;
++        var unsubcribe = cache.watch(__assign(__assign({}, diffOptions), { immediate: true, callback: function (diff) {
++                if (!equal(diff, latestDiff)) {
++                    resultRef.current = diffToResult((latestDiff = diff));
++                    lastTimeout = setTimeout(forceUpdate);
++                }
++            } }));
++        return function () {
++            unsubcribe();
++            clearTimeout(lastTimeout);
++        };
++    }, getSnapshot, getSnapshot);
++}
++function diffToResult(diff) {
++    var result = {
++        data: diff.result,
++        complete: !!diff.complete,
++    };
++    if (diff.missing) {
++        result.missing = mergeDeepArray(diff.missing.map(function (error) { return error.missing; }));
++    }
++    return result;
++}
++//# sourceMappingURL=useFragment.js.map
+\ No newline at end of file
+diff --git a/node_modules/@apollo/client/react/hooks/useFragment.js.map b/node_modules/@apollo/client/react/hooks/useFragment.js.map
+new file mode 100644
+index 0000000..abd2a70
+--- /dev/null
++++ b/node_modules/@apollo/client/react/hooks/useFragment.js.map
+@@ -0,0 +1 @@
++{"version":3,"file":"useFragment.js","sourceRoot":"","sources":["../../../src/react/hooks/useFragment.ts"],"names":[],"mappings":";AAAA,OAAO,KAAK,KAAK,MAAM,OAAO,CAAC;AAC/B,OAAO,EAAE,KAAK,EAAE,MAAM,eAAe,CAAC;AAGtC,OAAO,EAAE,cAAc,EAAE,MAAM,0BAA0B,CAAC;AAQ1D,OAAO,EAAE,eAAe,EAAE,MAAM,sBAAsB,CAAC;AACvD,OAAO,EAAE,oBAAoB,EAAE,MAAM,2BAA2B,CAAC;AA8BjE,MAAM,UAAU,WAAW,CACzB,OAAyC;IAEjC,IAAA,KAAK,GAAK,eAAe,EAAE,MAAtB,CAAuB;IAE5B,IAAA,QAAQ,GAAqD,OAAO,SAA5D,EAAE,YAAY,GAAuC,OAAO,aAA9C,EAAE,IAAI,GAAiC,OAAO,KAAxC,EAAE,KAA+B,OAAO,WAArB,EAAjB,UAAU,mBAAG,IAAI,KAAA,EAAK,IAAI,UAAK,OAAO,EAAtE,kDAA4D,CAAF,CAAa;IAE7E,IAAM,WAAW,yBACZ,IAAI,KACP,iBAAiB,EAAE,IAAI,EACvB,EAAE,EAAE,OAAO,IAAI,KAAK,QAAQ,CAAC,CAAC,CAAC,IAAI,CAAC,CAAC,CAAC,KAAK,CAAC,QAAQ,CAAC,IAAI,CAAC,EAC1D,KAAK,EAAE,KAAK,CAAC,gBAAgB,CAAC,CAAC,QAAQ,EAAE,YAAY,CAAC,EACtD,UAAU,YAAA,GACX,CAAC;IAEF,IAAM,SAAS,GAAG,KAAK,CAAC,MAAM,EAA4B,CAAC;IAC3D,IAAI,UAAU,GAAG,KAAK,CAAC,IAAI,CAAQ,WAAW,CAAC,CAAC;IAGhD,IAAM,WAAW,GAAG;QAClB,IAAM,kBAAkB,GAAG,YAAY,CAAC,UAAU,CAAC,CAAC;QACpD,OAAO,SAAS,CAAC,OAAO;YACtB,KAAK,CAAC,SAAS,CAAC,OAAO,CAAC,IAAI,EAAE,kBAAkB,CAAC,IAAI,CAAC;YACtD,CAAC,CAAC,SAAS,CAAC,OAAO;YACnB,CAAC,CAAC,CAAC,SAAS,CAAC,OAAO,GAAG,kBAAkB,CAAC,CAAC;IAC/C,CAAC,CAAC;IAEF,OAAO,oBAAoB,CACzB,UAAC,WAAW;QACV,IAAI,WAAW,GAAG,CAAC,CAAC;QACpB,IAAM,UAAU,GAAG,KAAK,CAAC,KAAK,uBACzB,WAAW,KACd,SAAS,EAAE,IAAI,EACf,QAAQ,YAAC,IAAI;gBACX,IAAI,CAAC,KAAK,CAAC,IAAI,EAAE,UAAU,CAAC,EAAE;oBAC5B,SAAS,CAAC,OAAO,GAAG,YAAY,CAAC,CAAC,UAAU,GAAG,IAAI,CAAC,CAAC,CAAC;oBACtD,WAAW,GAAG,UAAU,CAAC,WAAW,CAAQ,CAAC;iBAC9C;YACH,CAAC,IACD,CAAC;QACH,OAAO;YACL,UAAU,EAAE,CAAC;YACb,YAAY,CAAC,WAAW,CAAC,CAAC;QAC5B,CAAC,CAAC;IACJ,CAAC,EACD,WAAW,EACX,WAAW,CACZ,CAAC;AACJ,CAAC;AAED,SAAS,YAAY,CACnB,IAA6B;IAE7B,IAAM,MAAM,GAAG;QACb,IAAI,EAAE,IAAI,CAAC,MAAO;QAClB,QAAQ,EAAE,CAAC,CAAC,IAAI,CAAC,QAAQ;KACE,CAAC;IAE9B,IAAI,IAAI,CAAC,OAAO,EAAE;QAChB,MAAM,CAAC,OAAO,GAAG,cAAc,CAAC,IAAI,CAAC,OAAO,CAAC,GAAG,CAAC,UAAC,KAAK,IAAK,OAAA,KAAK,CAAC,OAAO,EAAb,CAAa,CAAC,CAAC,CAAC;KAC7E;IAED,OAAO,MAAM,CAAC;AAChB,CAAC","sourcesContent":["import * as React from \"react\";\nimport { equal } from \"@wry/equality\";\n\nimport type { DeepPartial } from \"../../utilities/index.js\";\nimport { mergeDeepArray } from \"../../utilities/index.js\";\nimport type {\n  Cache,\n  Reference,\n  StoreObject,\n  MissingTree,\n} from \"../../cache/index.js\";\n\nimport { useApolloClient } from \"./useApolloClient.js\";\nimport { useSyncExternalStore } from \"./useSyncExternalStore.js\";\nimport type { OperationVariables } from \"../../core/index.js\";\nimport type { NoInfer } from \"../types/types.js\";\n\nexport interface UseFragmentOptions<TData, TVars>\n  extends Omit<\n      Cache.DiffOptions<NoInfer<TData>, NoInfer<TVars>>,\n      \"id\" | \"query\" | \"optimistic\" | \"previousResult\" | \"returnPartialData\"\n    >,\n    Omit<\n      Cache.ReadFragmentOptions<TData, TVars>,\n      \"id\" | \"variables\" | \"returnPartialData\"\n    > {\n  from: StoreObject | Reference | string;\n  // Override this field to make it optional (default: true).\n  optimistic?: boolean;\n}\n\nexport type UseFragmentResult<TData> =\n  | {\n      data: TData;\n      complete: true;\n      missing?: never;\n    }\n  | {\n      data: DeepPartial<TData>;\n      complete: false;\n      missing?: MissingTree;\n    };\n\nexport function useFragment<TData = any, TVars = OperationVariables>(\n  options: UseFragmentOptions<TData, TVars>\n): UseFragmentResult<TData> {\n  const { cache } = useApolloClient();\n\n  const { fragment, fragmentName, from, optimistic = true, ...rest } = options;\n\n  const diffOptions: Cache.DiffOptions<TData, TVars> = {\n    ...rest,\n    returnPartialData: true,\n    id: typeof from === \"string\" ? from : cache.identify(from),\n    query: cache[\"getFragmentDoc\"](fragment, fragmentName),\n    optimistic,\n  };\n\n  const resultRef = React.useRef<UseFragmentResult<TData>>();\n  let latestDiff = cache.diff<TData>(diffOptions);\n\n  // Used for both getSnapshot and getServerSnapshot\n  const getSnapshot = () => {\n    const latestDiffToResult = diffToResult(latestDiff);\n    return resultRef.current &&\n      equal(resultRef.current.data, latestDiffToResult.data)\n      ? resultRef.current\n      : (resultRef.current = latestDiffToResult);\n  };\n\n  return useSyncExternalStore(\n    (forceUpdate) => {\n      let lastTimeout = 0;\n      const unsubcribe = cache.watch({\n        ...diffOptions,\n        immediate: true,\n        callback(diff) {\n          if (!equal(diff, latestDiff)) {\n            resultRef.current = diffToResult((latestDiff = diff));\n            lastTimeout = setTimeout(forceUpdate) as any;\n          }\n        },\n      });\n      return () => {\n        unsubcribe();\n        clearTimeout(lastTimeout);\n      };\n    },\n    getSnapshot,\n    getSnapshot\n  );\n}\n\nfunction diffToResult<TData>(\n  diff: Cache.DiffResult<TData>\n): UseFragmentResult<TData> {\n  const result = {\n    data: diff.result!,\n    complete: !!diff.complete,\n  } as UseFragmentResult<TData>;\n\n  if (diff.missing) {\n    result.missing = mergeDeepArray(diff.missing.map((error) => error.missing));\n  }\n\n  return result;\n}\n"]}
+\ No newline at end of file
