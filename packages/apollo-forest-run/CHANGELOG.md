@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Tue, 04 Feb 2025 12:28:13 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 24 Feb 2025 13:15:51 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.9.1
+
+Mon, 24 Feb 2025 13:15:51 GMT
+
+### Patches
+
+- fix(execute): do not visit the same chunk twice when reading (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.9.0
 

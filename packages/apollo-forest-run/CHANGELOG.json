@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Mon, 24 Feb 2025 13:15:51 GMT",
+      "version": "0.9.1",
+      "tag": "@graphitation/apollo-forest-run_v0.9.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "f559ac91755f1a6c937ab452db6aded2b4b7fa56",
+            "comment": "fix(execute): do not visit the same chunk twice when reading"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 04 Feb 2025 12:28:13 GMT",
       "version": "0.9.0",
       "tag": "@graphitation/apollo-forest-run_v0.9.0",
