@@ -19,22 +19,6 @@ index afbbcd0..d93d0af 100644
          fieldName: fieldName,
          storeFieldName: storeFieldName,
          variables: variables,
-diff --git a/node_modules/@apollo/client/cache/core/types/Cache.d.ts b/node_modules/@apollo/client/cache/core/types/Cache.d.ts
-index 13fdd1f..6ceac48 100644
---- a/node_modules/@apollo/client/cache/core/types/Cache.d.ts
-+++ b/node_modules/@apollo/client/cache/core/types/Cache.d.ts
-@@ -14,9 +14,9 @@ export declare namespace Cache {
-         dataId?: string;
-         result: TResult;
-     }
--    interface DiffOptions<TData = any, TVariables = any> extends ReadOptions<TVariables, TData> {
-+    interface DiffOptions<TData = any, TVariables = any> extends Omit<ReadOptions<TVariables, TData>, "rootId"> {
-     }
--    interface WatchOptions<TData = any, TVariables = any> extends ReadOptions<TVariables, TData> {
-+    interface WatchOptions<TData = any, TVariables = any> extends DiffOptions<TData, TVariables> {
-         watcher?: object;
-         immediate?: boolean;
-         callback: WatchCallback<TData>;
 diff --git a/node_modules/@apollo/client/cache/core/types/common.js b/node_modules/@apollo/client/cache/core/types/common.js
 index bf82b96..266f9fe 100644
 --- a/node_modules/@apollo/client/cache/core/types/common.js
@@ -236,4 +220,77 @@ index 0000000..abd2a70
 +++ b/node_modules/@apollo/client/react/hooks/useFragment.js.map
 @@ -0,0 +1 @@
 +{"version":3,"file":"useFragment.js","sourceRoot":"","sources":["../../../src/react/hooks/useFragment.ts"],"names":[],"mappings":";AAAA,OAAO,KAAK,KAAK,MAAM,OAAO,CAAC;AAC/B,OAAO,EAAE,KAAK,EAAE,MAAM,eAAe,CAAC;AAGtC,OAAO,EAAE,cAAc,EAAE,MAAM,0BAA0B,CAAC;AAQ1D,OAAO,EAAE,eAAe,EAAE,MAAM,sBAAsB,CAAC;AACvD,OAAO,EAAE,oBAAoB,EAAE,MAAM,2BAA2B,CAAC;AA8BjE,MAAM,UAAU,WAAW,CACzB,OAAyC;IAEjC,IAAA,KAAK,GAAK,eAAe,EAAE,MAAtB,CAAuB;IAE5B,IAAA,QAAQ,GAAqD,OAAO,SAA5D,EAAE,YAAY,GAAuC,OAAO,aAA9C,EAAE,IAAI,GAAiC,OAAO,KAAxC,EAAE,KAA+B,OAAO,WAArB,EAAjB,UAAU,mBAAG,IAAI,KAAA,EAAK,IAAI,UAAK,OAAO,EAAtE,kDAA4D,CAAF,CAAa;IAE7E,IAAM,WAAW,yBACZ,IAAI,KACP,iBAAiB,EAAE,IAAI,EACvB,EAAE,EAAE,OAAO,IAAI,KAAK,QAAQ,CAAC,CAAC,CAAC,IAAI,CAAC,CAAC,CAAC,KAAK,CAAC,QAAQ,CAAC,IAAI,CAAC,EAC1D,KAAK,EAAE,KAAK,CAAC,gBAAgB,CAAC,CAAC,QAAQ,EAAE,YAAY,CAAC,EACtD,UAAU,YAAA,GACX,CAAC;IAEF,IAAM,SAAS,GAAG,KAAK,CAAC,MAAM,EAA4B,CAAC;IAC3D,IAAI,UAAU,GAAG,KAAK,CAAC,IAAI,CAAQ,WAAW,CAAC,CAAC;IAGhD,IAAM,WAAW,GAAG;QAClB,IAAM,kBAAkB,GAAG,YAAY,CAAC,UAAU,CAAC,CAAC;QACpD,OAAO,SAAS,CAAC,OAAO;YACtB,KAAK,CAAC,SAAS,CAAC,OAAO,CAAC,IAAI,EAAE,kBAAkB,CAAC,IAAI,CAAC;YACtD,CAAC,CAAC,SAAS,CAAC,OAAO;YACnB,CAAC,CAAC,CAAC,SAAS,CAAC,OAAO,GAAG,kBAAkB,CAAC,CAAC;IAC/C,CAAC,CAAC;IAEF,OAAO,oBAAoB,CACzB,UAAC,WAAW;QACV,IAAI,WAAW,GAAG,CAAC,CAAC;QACpB,IAAM,UAAU,GAAG,KAAK,CAAC,KAAK,uBACzB,WAAW,KACd,SAAS,EAAE,IAAI,EACf,QAAQ,YAAC,IAAI;gBACX,IAAI,CAAC,KAAK,CAAC,IAAI,EAAE,UAAU,CAAC,EAAE;oBAC5B,SAAS,CAAC,OAAO,GAAG,YAAY,CAAC,CAAC,UAAU,GAAG,IAAI,CAAC,CAAC,CAAC;oBACtD,WAAW,GAAG,UAAU,CAAC,WAAW,CAAQ,CAAC;iBAC9C;YACH,CAAC,IACD,CAAC;QACH,OAAO;YACL,UAAU,EAAE,CAAC;YACb,YAAY,CAAC,WAAW,CAAC,CAAC;QAC5B,CAAC,CAAC;IACJ,CAAC,EACD,WAAW,EACX,WAAW,CACZ,CAAC;AACJ,CAAC;AAED,SAAS,YAAY,CACnB,IAA6B;IAE7B,IAAM,MAAM,GAAG;QACb,IAAI,EAAE,IAAI,CAAC,MAAO;QAClB,QAAQ,EAAE,CAAC,CAAC,IAAI,CAAC,QAAQ;KACE,CAAC;IAE9B,IAAI,IAAI,CAAC,OAAO,EAAE;QAChB,MAAM,CAAC,OAAO,GAAG,cAAc,CAAC,IAAI,CAAC,OAAO,CAAC,GAAG,CAAC,UAAC,KAAK,IAAK,OAAA,KAAK,CAAC,OAAO,EAAb,CAAa,CAAC,CAAC,CAAC;KAC7E;IAED,OAAO,MAAM,CAAC;AAChB,CAAC","sourcesContent":["import * as React from \"react\";\nimport { equal } from \"@wry/equality\";\n\nimport type { DeepPartial } from \"../../utilities/index.js\";\nimport { mergeDeepArray } from \"../../utilities/index.js\";\nimport type {\n  Cache,\n  Reference,\n  StoreObject,\n  MissingTree,\n} from \"../../cache/index.js\";\n\nimport { useApolloClient } from \"./useApolloClient.js\";\nimport { useSyncExternalStore } from \"./useSyncExternalStore.js\";\nimport type { OperationVariables } from \"../../core/index.js\";\nimport type { NoInfer } from \"../types/types.js\";\n\nexport interface UseFragmentOptions<TData, TVars>\n  extends Omit<\n      Cache.DiffOptions<NoInfer<TData>, NoInfer<TVars>>,\n      \"id\" | \"query\" | \"optimistic\" | \"previousResult\" | \"returnPartialData\"\n    >,\n    Omit<\n      Cache.ReadFragmentOptions<TData, TVars>,\n      \"id\" | \"variables\" | \"returnPartialData\"\n    > {\n  from: StoreObject | Reference | string;\n  // Override this field to make it optional (default: true).\n  optimistic?: boolean;\n}\n\nexport type UseFragmentResult<TData> =\n  | {\n      data: TData;\n      complete: true;\n      missing?: never;\n    }\n  | {\n      data: DeepPartial<TData>;\n      complete: false;\n      missing?: MissingTree;\n    };\n\nexport function useFragment<TData = any, TVars = OperationVariables>(\n  options: UseFragmentOptions<TData, TVars>\n): UseFragmentResult<TData> {\n  const { cache } = useApolloClient();\n\n  const { fragment, fragmentName, from, optimistic = true, ...rest } = options;\n\n  const diffOptions: Cache.DiffOptions<TData, TVars> = {\n    ...rest,\n    returnPartialData: true,\n    id: typeof from === \"string\" ? from : cache.identify(from),\n    query: cache[\"getFragmentDoc\"](fragment, fragmentName),\n    optimistic,\n  };\n\n  const resultRef = React.useRef<UseFragmentResult<TData>>();\n  let latestDiff = cache.diff<TData>(diffOptions);\n\n  // Used for both getSnapshot and getServerSnapshot\n  const getSnapshot = () => {\n    const latestDiffToResult = diffToResult(latestDiff);\n    return resultRef.current &&\n      equal(resultRef.current.data, latestDiffToResult.data)\n      ? resultRef.current\n      : (resultRef.current = latestDiffToResult);\n  };\n\n  return useSyncExternalStore(\n    (forceUpdate) => {\n      let lastTimeout = 0;\n      const unsubcribe = cache.watch({\n        ...diffOptions,\n        immediate: true,\n        callback(diff) {\n          if (!equal(diff, latestDiff)) {\n            resultRef.current = diffToResult((latestDiff = diff));\n            lastTimeout = setTimeout(forceUpdate) as any;\n          }\n        },\n      });\n      return () => {\n        unsubcribe();\n        clearTimeout(lastTimeout);\n      };\n    },\n    getSnapshot,\n    getSnapshot\n  );\n}\n\nfunction diffToResult<TData>(\n  diff: Cache.DiffResult<TData>\n): UseFragmentResult<TData> {\n  const result = {\n    data: diff.result!,\n    complete: !!diff.complete,\n  } as UseFragmentResult<TData>;\n\n  if (diff.missing) {\n    result.missing = mergeDeepArray(diff.missing.map((error) => error.missing));\n  }\n\n  return result;\n}\n"]}
+\ No newline at end of file
+diff --git a/node_modules/@apollo/client/react/types/types.d.ts b/node_modules/@apollo/client/react/types/types.d.ts
+index dd7a345..586a405 100644
+--- a/node_modules/@apollo/client/react/types/types.d.ts
++++ b/node_modules/@apollo/client/react/types/types.d.ts
+@@ -112,4 +112,5 @@ export interface SubscriptionCurrentObservable {
+     query?: Observable<any>;
+     subscription?: ObservableSubscription;
+ }
++export type NoInfer<T> = [T][T extends any ? 0 : never];
+ //# sourceMappingURL=types.d.ts.map
+\ No newline at end of file
+diff --git a/node_modules/@apollo/client/utilities/index.d.ts b/node_modules/@apollo/client/utilities/index.d.ts
+index cea6746..153d291 100644
+--- a/node_modules/@apollo/client/utilities/index.d.ts
++++ b/node_modules/@apollo/client/utilities/index.d.ts
+@@ -22,4 +22,5 @@ export * from './common/makeUniqueId';
+ export * from './common/stringifyForDisplay';
+ export * from './common/mergeOptions';
+ export * from './types/IsStrictlyAny';
++export type { DeepPartial } from "./types/DeepPartial";
+ //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/node_modules/@apollo/client/utilities/types/DeepPartial.d.ts b/node_modules/@apollo/client/utilities/types/DeepPartial.d.ts
+new file mode 100644
+index 0000000..2cc68e7
+--- /dev/null
++++ b/node_modules/@apollo/client/utilities/types/DeepPartial.d.ts
+@@ -0,0 +1,44 @@
++type Primitive =
++  | null
++  | undefined
++  | string
++  | number
++  | boolean
++  | symbol
++  | bigint;
++type DeepPartialPrimitive = Primitive | Date | RegExp;
++export type DeepPartial<T> = T extends DeepPartialPrimitive
++  ? T
++  : T extends Map<infer TKey, infer TValue>
++  ? DeepPartialMap<TKey, TValue>
++  : T extends ReadonlyMap<infer TKey, infer TValue>
++  ? DeepPartialReadonlyMap<TKey, TValue>
++  : T extends Set<infer TItem>
++  ? DeepPartialSet<TItem>
++  : T extends ReadonlySet<infer TItem>
++  ? DeepPartialReadonlySet<TItem>
++  : T extends (...args: any[]) => unknown
++  ? T | undefined
++  : T extends object
++  ? T extends ReadonlyArray<infer TItem>
++    ? TItem[] extends T
++      ? readonly TItem[] extends T
++        ? ReadonlyArray<DeepPartial<TItem | undefined>>
++        : Array<DeepPartial<TItem | undefined>>
++      : DeepPartialObject<T>
++    : DeepPartialObject<T>
++  : unknown;
++type DeepPartialMap<TKey, TValue> = {} & Map<
++  DeepPartial<TKey>,
++  DeepPartial<TValue>
++>;
++type DeepPartialReadonlyMap<TKey, TValue> = {} & ReadonlyMap<
++  DeepPartial<TKey>,
++  DeepPartial<TValue>
++>;
++type DeepPartialSet<T> = {} & Set<DeepPartial<T>>;
++type DeepPartialReadonlySet<T> = {} & ReadonlySet<DeepPartial<T>>;
++type DeepPartialObject<T extends object> = {
++  [K in keyof T]?: DeepPartial<T[K]>;
++};
++export {};
 \ No newline at end of file
