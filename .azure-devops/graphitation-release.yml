@@ -53,7 +53,12 @@ extends:
                 fetchDepth: 2
               - script: yarn
                 displayName: yarn
-              - script: yarn release -y -n $(ossNpmToken) --access public --registry 'https://registry.npmjs.org' --no-push --keep-change-files
+              - script: |
+                  git config user.email "gql-svc@microsoft.com"
+                  git config user.name "Graphitation Service Account"
+                  git fetch --depth=2
+                displayName: Configure git for release
+              - script: yarn release -y -n $(ossNpmToken) --access public --no-push --keep-change-files
                 displayName: Release to the npm registry
               - script: |
                   echo "always-auth=true" > .npmrc
