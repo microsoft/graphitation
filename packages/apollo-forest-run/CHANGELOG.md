@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Mon, 24 Feb 2025 13:15:51 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 27 Feb 2025 12:37:33 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.9.2
+
+Thu, 27 Feb 2025 12:37:33 GMT
+
+### Patches
+
+- fix(apollo-forest-run): use replaceTree vs addTree to fix incorrect assumption (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.9.1
 
