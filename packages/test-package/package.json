@@ -1,16 +1,15 @@
 {
-    "name": "@graphitation/test-package",
-    "version": "1.0.3",
-    "repository": {
-      "type": "git",
-      "url": "https://github.com/Microsoft/1GQL.git"
-    },
-    "author": "Microsoft Corporation",
-    "license": "MIT",
-    "private": false,
-    "main": "index.graphql",
-    "files": [
-      "*.graphql"
-    ]
-  }
-  
+  "name": "@graphitation/test-package",
+  "version": "1.0.6",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Microsoft/1GQL.git"
+  },
+  "author": "Microsoft Corporation",
+  "license": "MIT",
+  "private": false,
+  "main": "index.graphql",
+  "files": [
+    "*.graphql"
+  ]
+}

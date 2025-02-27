@@ -61,6 +61,9 @@ extends:
               - script: yarn release -y -n $(ossNpmToken) --access public --no-push --keep-change-files
                 displayName: Release to the npm registry
               - script: |
+                  git restore .
+                displayName: discard beachball's changes
+              - script: |
                   echo "always-auth=true" > .npmrc
                   echo "registry=$(adoNpmFeedBaseUrl)" >> .npmrc
               - task: npmAuthenticate@0
