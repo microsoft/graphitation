@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "test package",
+  "packageName": "@graphitation/test-package",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}
