@@ -1,5 +1,0 @@
-
-        import { graphql } from "@nova/react";
-        const doc = require("./__generated__/SomeComponentQuery.graphql").default;
-        console.log()
-      

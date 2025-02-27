@@ -1,3 +1,0 @@
-# grahitation-cli
-
-TODO

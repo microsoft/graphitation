@@ -1,1 +1,0 @@
-export { generateTS } from "./codegen";

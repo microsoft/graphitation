@@ -1,7 +1,8 @@
 pr: none
 trigger:
-  - main
-  - alloy/relay-apollo-duct-tape
+  branches:
+    include:
+      - "*"
 
 variables:
   - group: InfoSec-SecurityResults
@@ -9,10 +10,8 @@ variables:
     value: production,externalfacing
   - name: serviceTreeID
     value: ade7d667-42f5-485a-91a9-f1dc6482a9b0
-  - name: adoOrgBaseUrl
-    value: https://pkgs.dev.azure.com/domoreexp
-  - name: adoNpmFeedName
-    value: npm-mirror
+  - name: adoNpmFeedBaseUrl
+    value: https://pkgs.dev.azure.com/DomoreexpGithub/_packaging/GraphQL/npm/registry/
 
 resources:
   repositories:
@@ -54,23 +53,18 @@ extends:
                 fetchDepth: 2
               - script: yarn
                 displayName: yarn
+              - script: yarn release -y -n $(ossNpmToken) --access public --registry 'https://registry.npmjs.org' --no-push --keep-change-files
+                displayName: Release to the npm registry
               - script: |
-                  yarn ci
-                displayName: build and test [test]
-              - script: |
-                  git config user.email "gql-svc@microsoft.com"
-                  git config user.name "Graphitation Service Account"
-                  git fetch --depth=2
-                displayName: Configure git for release
-              - script: yarn release -y -n $(ossNpmToken) --access public
+                  echo "always-auth=true" > .npmrc
+                  echo "registry=$(adoNpmFeedBaseUrl)" >> .npmrc
+              - task: npmAuthenticate@0
+                inputs:
+                  workingFile: ".npmrc"
+              - script: yarn release -y --no-push --keep-change-files --registry 'https://pkgs.dev.azure.com/DomoreexpGithub/_packaging/GraphQL/npm/registry/'
                 displayName: Release
               - task: 1ES.PublishPipelineArtifact@1
                 displayName: 📒 Publish Manifest
                 inputs:
                   artifactName: SBom-$(System.JobAttempt)
                   targetPath: $(System.DefaultWorkingDirectory)/_manifest
-              - template: .azure-devops/steps/pierce-ado-npm-mirror-cache.yml@self
-                parameters:
-                  adoNpmFeedPat: $(adoNpmFeedPat)
-                  adoOrgBaseUrl: $(adoProjectBaseUrl)
-                  adoNpmFeedName: $(adoNpmFeedName)
