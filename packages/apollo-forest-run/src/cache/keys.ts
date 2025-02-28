@@ -35,7 +35,7 @@ export function objectKey(
   // ApolloCompat: this is necessary for compatibility with extract/restore methods
   //   (where object key is not inferable otherwise)
   const key = keyMap?.get(object);
-  if (key !== undefined) {
+  if (key !== undefined && key !== "ROOT_QUERY") {
     return key;
   }
   const typeName = object.__typename;
