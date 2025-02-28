@@ -761,7 +761,13 @@ test("bad manual writes shouldn't cause invariant violation", () => {
   //   in the keyMap via previous operations where it was indeed a ROOT node
   cache.writeQuery({ query, data: { foo: data } });
 
-  const run = () => cache.writeQuery({ query, data: { foo: { bar: "bar" } } });
+  // Sanity-check
+  expect(cache.readQuery({ query })).toEqual(null);
 
+  // Actual failing call
+  const run = () => cache.writeQuery({ query, data: { foo: { bar: "baz" } } });
   expect(run).not.toThrow();
+
+  // Additional sanity-check
+  expect(cache.readQuery({ query })).toEqual({ foo: { bar: "baz" } });
 });
