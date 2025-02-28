@@ -61,6 +61,12 @@ extends:
                   git config user.name "Graphitation Service Account"
                   git fetch --depth=2
                 displayName: Configure git for release
+              - script: |
+                  echo "always-auth=true" > .npmrc
+                  echo "registry=$(adoNpmFeedBaseUrl)" >> .npmrc
+              - task: npmAuthenticate@0
+                inputs:
+                  workingFile: ".npmrc"
               - script: yarn release -y --registry $(adoNpmFeedBaseUrl) --prerelease-prefix "microsoft" --no-push --keep-change-files
                 displayName: Release to the ado npm feed
               - task: 1ES.PublishPipelineArtifact@1
