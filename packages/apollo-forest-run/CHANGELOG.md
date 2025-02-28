@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Thu, 27 Feb 2025 12:37:33 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 28 Feb 2025 15:25:36 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.9.3
+
+Fri, 28 Feb 2025 15:25:36 GMT
+
+### Patches
+
+- fix(apollo-forest-run): do not rely on cached key for root-level objects (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.9.2
 
