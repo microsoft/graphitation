@@ -33,7 +33,7 @@ import { indexTree } from "../forest/indexTree";
 import { createParentLocator, markAsPartial, TraverseEnv } from "../values";
 import { NodeDifferenceMap } from "../forest/updateTree";
 import { getNodeChunks } from "./draftHelpers";
-import { addTree } from "../forest/addTree";
+import { replaceTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
 
@@ -163,7 +163,10 @@ export function write(
 
   if (!existingResult && shouldCache(targetForest, operationDescriptor)) {
     affectedOperations.set(operationDescriptor, difference.nodeDifference);
-    addTree(targetForest, modifiedIncomingResult);
+    // Note: even with existingResult === undefined the tree for this operation may still exist in the cache
+    //   (when existingResult is resolved with a different key descriptor due to key variables)
+    // TODO: replace with addTree and add a proper check for keyVariables
+    replaceTree(targetForest, modifiedIncomingResult);
   }
 
   appendAffectedOperationsFromOtherLayers(
