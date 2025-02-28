@@ -60,17 +60,6 @@ extends:
                 displayName: Configure git for release
               - script: yarn release -y -n $(ossNpmToken) --access public --no-push --keep-change-files
                 displayName: Release to the npm registry
-              - script: |
-                  git restore .
-                displayName: discard beachball's changes
-              - script: |
-                  echo "always-auth=true" > .npmrc
-                  echo "registry=$(adoNpmFeedBaseUrl)" >> .npmrc
-              - task: npmAuthenticate@0
-                inputs:
-                  workingFile: ".npmrc"
-              - script: yarn release -y --no-push --keep-change-files --registry 'https://pkgs.dev.azure.com/DomoreexpGithub/_packaging/GraphQL/npm/registry/'
-                displayName: Release
               - task: 1ES.PublishPipelineArtifact@1
                 displayName: 📒 Publish Manifest
                 inputs:
