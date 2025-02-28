@@ -743,3 +743,25 @@ test("should keep a single result for multiple operations with the same key vari
   expect(diff).toEqual({ complete: true, result: result2 });
   expect(statsAfterDiff.treeCount).toBe(2);
 });
+
+test("bad manual writes shouldn't cause invariant violation", () => {
+  const query = gql`
+    {
+      foo {
+        bar
+      }
+    }
+  `;
+  const cache = new ForestRun();
+  cache.writeQuery({ query, data: { foo: { bar: "bar" } } });
+
+  const data = cache.readQuery({ query });
+
+  // Note: faulty write where nested "foo" object is identified as having ROOT_QUERY key because it was cached
+  //   in the keyMap via previous operations where it was indeed a ROOT node
+  cache.writeQuery({ query, data: { foo: data } });
+
+  const run = () => cache.writeQuery({ query, data: { foo: { bar: "bar" } } });
+
+  expect(run).not.toThrow();
+});
