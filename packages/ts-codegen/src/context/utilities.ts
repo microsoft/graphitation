@@ -1,35 +1,5 @@
-import ts, { factory } from "typescript";
+import { factory } from "typescript";
 import path from "path";
-
-export function getImportIdentifierForTypenames(
-  importNames: string[],
-  importPath: string,
-  contextImportNames: Set<string>,
-) {
-  return factory.createImportDeclaration(
-    undefined,
-    factory.createImportClause(
-      true,
-      undefined,
-      factory.createNamedImports(
-        importNames
-          .map((importName: string) => {
-            if (contextImportNames.has(importName)) {
-              return;
-            }
-            contextImportNames.add(importName);
-            return factory.createImportSpecifier(
-              false,
-              undefined,
-              factory.createIdentifier(importName),
-            );
-          })
-          .filter(Boolean) as ts.ImportSpecifier[],
-      ),
-    ),
-    factory.createStringLiteral(importPath),
-  );
-}
 
 export function createImportDeclaration(
   importNames: string[],
