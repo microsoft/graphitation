@@ -725,7 +725,10 @@ export function extractContext(
           }
           const typeName = (typeDef as InterfaceTypeDefinitionNode).name.value;
           context.addLegacyInterface(typeName);
-        } else if (node.name.value === "context") {
+        } else if (
+          node.name.value === "context" &&
+          options.contextSubTypeMetadata
+        ) {
           const subTypeKeys: Set<string> = new Set();
           if (
             node.arguments?.length !== 1 ||
@@ -733,10 +736,6 @@ export function extractContext(
             node.arguments[0].value.kind !== "ObjectValue"
           ) {
             throw new Error("Invalid context use");
-          }
-
-          if (!options.contextSubTypeMetadata) {
-            throw new Error("No context subtype metadata provided");
           }
 
           node.arguments[0].value.fields.forEach(({ name, value, kind }) => {

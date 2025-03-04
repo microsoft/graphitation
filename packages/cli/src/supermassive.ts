@@ -16,7 +16,7 @@ type GenerateInterfacesOptions = {
   legacy?: boolean;
   legacyModels?: boolean;
   useStringUnionsInsteadOfEnums?: boolean;
-  contextSubTypeMetadata?: string;
+  contextSubTypeMetadataFile?: string;
   generateOnlyEnums?: boolean;
   generateResolverMap?: boolean;
   mandatoryResolverTypes?: boolean;
@@ -70,7 +70,7 @@ export function supermassive(): Command {
     .option("--generate-only-enums", "Generate only enum file")
     .option("--scope [scope]", "generate models only for scope")
     .option(
-      "--context-sub-type-metadata-file [contextSubTypeMetadata]",
+      "--context-sub-type-metadata-file [contextSubTypeMetadataFile]",
       "Subtype metadata file",
     )
     .option(
@@ -151,10 +151,10 @@ async function generateInterfaces(
 
     let contextSubTypeMetadata: Record<string, any> | undefined;
 
-    if (options.contextSubTypeMetadata) {
+    if (options.contextSubTypeMetadataFile) {
       const content = JSON.parse(
         await fs.readFile(
-          path.join(process.cwd(), options.contextSubTypeMetadata),
+          path.join(process.cwd(), options.contextSubTypeMetadataFile),
           {
             encoding: "utf-8",
           },
