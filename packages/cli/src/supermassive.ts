@@ -16,13 +16,10 @@ type GenerateInterfacesOptions = {
   legacy?: boolean;
   legacyModels?: boolean;
   useStringUnionsInsteadOfEnums?: boolean;
-  enumMigrationJsonFile?: string;
-  enumMigrationExceptionsJsonFile?: string;
+  contextSubTypeMetadata?: string;
   generateOnlyEnums?: boolean;
   generateResolverMap?: boolean;
   mandatoryResolverTypes?: boolean;
-  contextSubTypeNameTemplate?: string;
-  contextSubTypePathTemplate?: string;
   defaultContextSubTypePath?: string;
   defaultContextSubTypeName?: string;
   scope?: string;
@@ -63,14 +60,6 @@ export function supermassive(): Command {
       "-dcn, --default-context-sub-type-name [defaultContextSubTypeName]",
       "Default context type which will extend context sub type",
     )
-    .option(
-      "-cnt, --context-sub-type-name-template [contextSubTypeNameTemplate]",
-      "context resource name template. You need to specify ${resourceName} in the parameter eg. `${resourceName}Context`",
-    )
-    .option(
-      "-cpt, --context-sub-type-path-template [contextSubTypePathTemplate]",
-      "context resource path template. You need to specify ${resourceName} in the parameter eg. `@package/preffix-${resourceName}-suffix`",
-    )
     .option("-ei, --enums-import [enumsImport]", "from where to import enums")
     .option("-l, --legacy", "generate legacy types")
     .option("--legacy-models", "do not use models for object types")
@@ -81,12 +70,8 @@ export function supermassive(): Command {
     .option("--generate-only-enums", "Generate only enum file")
     .option("--scope [scope]", "generate models only for scope")
     .option(
-      "--enum-migration-json-file [enumMigrationJsonFile]",
-      "File containing array of enum names, which should be migrated to string unions",
-    )
-    .option(
-      "--enum-migration-exceptions-json-file [enumMigrationExceptionsJsonFile]",
-      "File containing array of enum names, which should remain typescript enums",
+      "--context-sub-type-metadata-file [contextSubTypeMetadata]",
+      "Subtype metadata file",
     )
     .option(
       "--generate-resolver-map",
@@ -163,42 +148,20 @@ async function generateInterfaces(
       path.dirname(fullPath),
       options.outputDir ? options.outputDir : "__generated__",
     );
-    let enumNamesToMigrate;
-    let enumNamesToKeep;
-    if (options.enumMigrationJsonFile) {
+
+    let contextSubTypeMetadata: Record<string, any> | undefined;
+
+    if (options.contextSubTypeMetadata) {
       const content = JSON.parse(
         await fs.readFile(
-          path.join(process.cwd(), options.enumMigrationJsonFile),
+          path.join(process.cwd(), options.contextSubTypeMetadata),
           {
             encoding: "utf-8",
           },
         ),
       );
 
-      if (!Array.isArray(content)) {
-        throw new Error("enumMigrationJsonFile doesn't contain an array");
-      }
-
-      enumNamesToMigrate = content as string[];
-    }
-
-    if (options.enumMigrationExceptionsJsonFile) {
-      const content = JSON.parse(
-        await fs.readFile(
-          path.join(process.cwd(), options.enumMigrationExceptionsJsonFile),
-          {
-            encoding: "utf-8",
-          },
-        ),
-      );
-
-      if (!Array.isArray(content)) {
-        throw new Error(
-          "enumMigrationExceptionsJsonFile doesn't contain an array",
-        );
-      }
-
-      enumNamesToKeep = content as string[];
+      contextSubTypeMetadata = content;
     }
 
     const result = generateTS(document, {
@@ -207,8 +170,6 @@ async function generateInterfaces(
       contextTypePath:
         getContextPath(outputPath, options.contextTypePath) || null,
       contextTypeName: options.contextTypeName,
-      contextSubTypeNameTemplate: options.contextSubTypeNameTemplate,
-      contextSubTypePathTemplate: options.contextSubTypePathTemplate,
       defaultContextSubTypePath: getContextPath(
         outputPath,
         options.defaultContextSubTypePath,
@@ -221,8 +182,7 @@ async function generateInterfaces(
       generateOnlyEnums: !!options.generateOnlyEnums,
       generateResolverMap: !!options.generateResolverMap,
       mandatoryResolverTypes: !!options.mandatoryResolverTypes,
-      enumNamesToMigrate,
-      enumNamesToKeep,
+      contextSubTypeMetadata,
       modelScope: options.scope || null,
     });
 

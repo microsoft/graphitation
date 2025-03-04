@@ -3,9 +3,80 @@ import { parse } from "graphql";
 import { blankGraphQLTag as graphql } from "../utilities";
 import { generateTS } from "..";
 import { ContextMap } from "../context";
+import { SubTypeNamespace } from "../codegen";
 
 describe(generateTS, () => {
   describe("Tests basic syntax GraphQL syntax", () => {
+    const contextSubTypeMetadata = {
+      managers: {
+        user: {
+          name: "user",
+          importTypeName: 'UserStateMachineType["user"]',
+          importPath: "@package/user-state-machine",
+        },
+        whatever: {
+          name: "whatever",
+          importTypeName: 'WhateverStateMachineType["whatever"]',
+          importPath: "@package/whatever-state-machine",
+        },
+        "different-whatever": {
+          name: "different-whatever",
+          importTypeName:
+            'DifferentWhateverStateMachineType["different-whatever"]',
+          importPath: "@package/different-whatever-state-machine",
+        },
+        post: {
+          name: "post",
+          importTypeName: 'PostStateMachineType["post"]',
+          importPath: "@package/post-state-machine",
+        },
+        node: {
+          name: "node",
+          importTypeName: 'NodeStateMachineType["node"]',
+          importPath: "@package/node-state-machine",
+        },
+        persona: {
+          name: "persona",
+          importTypeName: 'PersonaStateMachineType["persona"]',
+          importPath: "@package/persona-state-machine",
+        },
+        admin: {
+          name: "admin",
+          importTypeName: 'AdminStateMachineType["admin"]',
+          importPath: "@package/admin-state-machine",
+        },
+        message: {
+          name: "message",
+          importTypeName: 'MessageStateMachineType["message"]',
+          importPath: "@package/message-state-machine",
+        },
+        customer: {
+          name: "customer",
+          importTypeName: 'CustomerStateMachineType["customer"]',
+          importPath: "@package/customer-state-machine",
+        },
+        "shouldnt-apply": {
+          name: "shouldnt-apply",
+          importTypeName: 'UserStateMachineType["shouldnt-apply"]',
+          importPath: "@package/shouldnt-apply-state-machine",
+        },
+        "user-or-customer": {
+          name: "user-or-customer",
+          importTypeName: 'UserStateMachineType["user-or-customer"]',
+          importPath: "@package/user-or-customer-state-machine",
+        },
+        "company-or-customer": {
+          name: "company-or-customer",
+          importTypeName: 'UserStateMachineType["company-or-customer"]',
+          importPath: "@package/company-or-customer-state-machine",
+        },
+        "id-user": {
+          name: "id-user",
+          importTypeName: 'UserStateMachineType["id-user"]',
+          importPath: "@package/id-user-state-machine",
+        },
+      },
+    };
     test("all possible nullable and non-nullable combinations", () => {
       const { resolvers, models, enums, inputs, contextMappingOutput } =
         runGenerateTest(
@@ -18,11 +89,11 @@ describe(generateTS, () => {
             }
 
             type Message {
-              id: ID! @context(uses: ["message"])
+              id: ID! @context(uses: { managers: ["message"] })
             }
 
-            type User @context(uses: ["user"]) {
-              id: ID! @context(uses: ["id-user"])
+            type User @context(uses: { managers: ["user"] }) {
+              id: ID! @context(uses: { managers: ["id-user"] })
               name: String
               messagesWithAnswersNonRequired: [[Message]]
               messagesWithAnswersRequired: [[Message]]!
@@ -31,7 +102,7 @@ describe(generateTS, () => {
               messagesWithArrayRequired: [Message]!
               messagesRequired: [Message!]!
               messagesOnlyMessageRequired: [Message!]
-              post: Post @context(uses: ["post"])
+              post: Post @context(uses: { managers: ["post"] })
               postRequired: Post!
               avatar: Avatar
               avatarRequired: Avatar!
@@ -47,9 +118,7 @@ describe(generateTS, () => {
             }
           `,
           {
-            contextSubTypeNameTemplate: "I${resourceName}StateMachineContext",
-            contextSubTypePathTemplate:
-              "@msteams/core-cdl-sync-${resourceName}",
+            contextSubTypeMetadata: contextSubTypeMetadata,
           },
         );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -311,11 +380,11 @@ describe(generateTS, () => {
       const { resolvers, models, enums, inputs, contextMappingOutput } =
         runGenerateTest(
           graphql`
-            interface Node @context(uses: ["node"]) {
+            interface Node @context(uses: { managers: ["node"] }) {
               id: ID!
             }
 
-            interface Persona @context(uses: ["persona"]) {
+            interface Persona @context(uses: { managers: ["persona"] }) {
               phone: String!
             }
 
@@ -324,7 +393,8 @@ describe(generateTS, () => {
               name: String!
             }
 
-            type Admin implements Node & Persona @context(uses: ["admin"]) {
+            type Admin implements Node & Persona
+              @context(uses: { managers: ["admin"] }) {
               id: ID!
               rank: Int!
             }
@@ -335,9 +405,7 @@ describe(generateTS, () => {
             }
           `,
           {
-            contextSubTypeNameTemplate: "I${resourceName}StateMachineContext",
-            contextSubTypePathTemplate:
-              "@msteams/core-cdl-sync-${resourceName}",
+            contextSubTypeMetadata,
           },
         );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -459,11 +527,12 @@ describe(generateTS, () => {
       const { resolvers, models, enums, inputs, contextMappingOutput } =
         runGenerateTest(
           graphql`
-            interface Node @context(uses: ["node"]) {
+            interface Node @context(uses: { managers: ["node"] }) {
               id: ID!
             }
 
-            interface Customer implements Node @context(uses: ["customer"]) {
+            interface Customer implements Node
+              @context(uses: { managers: ["customer"] }) {
               id: ID!
               name: String!
             }
@@ -478,9 +547,7 @@ describe(generateTS, () => {
             }
           `,
           {
-            contextSubTypeNameTemplate: "I${resourceName}StateMachineContext",
-            contextSubTypePathTemplate:
-              "@msteams/core-cdl-sync-${resourceName}",
+            contextSubTypeMetadata,
           },
         );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -555,22 +622,26 @@ describe(generateTS, () => {
 
     test("applying @context to enum shouldn't affect anything", () => {
       const { resolvers, models, enums, inputs, contextMappingOutput } =
-        runGenerateTest(graphql`
-          enum PresenceAvailability @context(uses: ["shouldnt-apply"]) {
-            Available
-            Away
-            Offline
-          }
+        runGenerateTest(
+          graphql`
+            enum PresenceAvailability
+              @context(uses: { managers: ["shouldnt-apply"] }) {
+              Available
+              Away
+              Offline
+            }
 
-          type User {
-            id: ID!
-            availability: PresenceAvailability!
-          }
+            type User {
+              id: ID!
+              availability: PresenceAvailability!
+            }
 
-          extend type Query {
-            userById(id: ID!): User
-          }
-        `);
+            extend type Query {
+              userById(id: ID!): User
+            }
+          `,
+          { contextSubTypeMetadata },
+        );
       expect(enums).toMatchInlineSnapshot(`
         "export enum PresenceAvailability {
             Available = "Available",
@@ -631,11 +702,11 @@ describe(generateTS, () => {
               id: ID!
             }
 
-            type Admin @context(uses: ["admin"]) {
+            type Admin @context(uses: { managers: ["admin"] }) {
               id: ID!
             }
 
-            type User @context(uses: ["user"]) {
+            type User @context(uses: { managers: ["user"] }) {
               id: ID!
             }
 
@@ -644,24 +715,25 @@ describe(generateTS, () => {
             }
 
             union UserOrAdmin = User | Admin
-            union UserOrCustomer @context(uses: ["user-or-customer"]) =
+            union UserOrCustomer
+              @context(uses: { managers: ["user-or-customer"] }) =
                 User
               | Customer
-            union CompanyOrCustomer @context(uses: ["company-or-customer"]) =
+            union CompanyOrCustomer
+              @context(uses: { managers: ["company-or-customer"] }) =
                 Company
               | Customer
 
             extend type Query {
-              userById(id: ID!): whatever @context(uses: ["whatever"])
+              userById(id: ID!): whatever
+                @context(uses: { managers: ["whatever"] })
               userByMail(mail: String): whatever
-                @context(uses: ["different-whatever"])
+                @context(uses: { managers: ["different-whatever"] })
               node(id: ID!): Node
             }
           `,
           {
-            contextSubTypeNameTemplate: "I${resourceName}StateMachineContext",
-            contextSubTypePathTemplate:
-              "@msteams/core-cdl-sync-${resourceName}",
+            contextSubTypeMetadata,
           },
         );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -818,11 +890,8 @@ function runGenerateTest(
     enumsImport?: string;
     legacyNoModelsForObjects?: boolean;
     useStringUnionsInsteadOfEnums?: boolean;
-    enumNamesToMigrate?: string[];
-    enumNamesToKeep?: string[];
     modelScope?: string;
-    contextSubTypeNameTemplate?: string;
-    contextSubTypePathTemplate?: string;
+    contextSubTypeMetadata?: SubTypeNamespace;
   } = {},
 ): {
   enums?: string;
@@ -833,8 +902,6 @@ function runGenerateTest(
   legacyResolvers?: string;
   legacyNoModelsForObjects?: boolean;
   useStringUnionsInsteadOfEnums?: boolean;
-  enumNamesToMigrate?: string[];
-  enumNamesToKeep?: string[];
   modelScope?: string;
   contextMappingOutput: ContextMap | null;
 } {
@@ -846,10 +913,6 @@ function runGenerateTest(
     legacyCompat?: boolean;
     legacyNoModelsForObjects?: boolean;
     useStringUnionsInsteadOfEnums?: boolean;
-    enumNamesToMigrate?: string[];
-    enumNamesToKeep?: string[];
-    contextSubTypeNameTemplate?: string;
-    contextSubTypePathTemplate?: string;
   } = {
     outputPath: "__generated__",
     documentPath: "./typedef.graphql",
