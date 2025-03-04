@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Wed, 19 Feb 2025 14:18:14 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 04 Mar 2025 14:17:11 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 2.1.0-alpha.1
+
+Tue, 04 Mar 2025 14:17:11 GMT
+
+### Changes
+
+- ts-codegen context subtype v2 (77059398+vejrj@users.noreply.github.com)
+- Bump @graphitation/ts-codegen to v3.1.0-alpha.1
 
 ## 2.0.0
 
