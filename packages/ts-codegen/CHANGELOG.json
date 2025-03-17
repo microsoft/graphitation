@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Mon, 17 Mar 2025 13:09:38 GMT",
+      "version": "3.1.0-alpha.2",
+      "tag": "@graphitation/ts-codegen_v3.1.0-alpha.2",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "f3a78cb45a5bc94c0309dd43a2c770e062344db4",
+            "comment": "Return namespaced type"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 04 Mar 2025 14:17:11 GMT",
       "version": "3.1.0-alpha.1",
       "tag": "@graphitation/ts-codegen_v3.1.0-alpha.1",

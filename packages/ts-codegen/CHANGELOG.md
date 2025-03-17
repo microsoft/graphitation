@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Tue, 04 Mar 2025 14:17:11 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 17 Mar 2025 13:09:38 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.1.0-alpha.2
+
+Mon, 17 Mar 2025 13:09:38 GMT
+
+### Changes
+
+- Return namespaced type (77059398+vejrj@users.noreply.github.com)
 
 ## 3.1.0-alpha.1
 
