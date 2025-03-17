@@ -2,6 +2,21 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Mon, 17 Mar 2025 14:45:57 GMT",
+      "version": "2.1.0-alpha.2",
+      "tag": "@graphitation/cli_v2.1.0-alpha.2",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/cli",
+            "commit": "c9e29a0d662b1e728faf43ec341453dd54060a97",
+            "comment": "Return namespaced type"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 17 Mar 2025 13:09:38 GMT",
       "version": "2.1.0-alpha.1",
       "tag": "@graphitation/cli_v2.1.0-alpha.1",
