@@ -176,44 +176,72 @@ export class TsCodegenContext {
   public getSubTypesMetadata() {
     return this.options.contextSubTypeMetadata;
   }
+
+  private buildContextSubTypeNamespaceObject(typeNames: string[]) {
+    const subTypesMetadata = this.getSubTypesMetadata();
+
+    return typeNames.reduce<
+      Record<string, { subType: string; name: string }[]>
+    >((acc, typeName) => {
+      const [namespace, subTypeName] = typeName.split(":");
+      if (!acc[namespace]) {
+        acc[namespace] = [];
+      }
+
+      if (!subTypesMetadata?.[namespace]?.[subTypeName]) {
+        throw new Error("something went really wrong");
+      }
+      acc[namespace].push({
+        subType: subTypesMetadata[namespace][subTypeName].importTypeName,
+        name: subTypeName,
+      });
+
+      return acc;
+    }, {});
+  }
+
   public getContextTypeNode(typeNames?: string[] | null) {
     const subTypesMetadata = this.getSubTypesMetadata();
 
     if (!typeNames || !typeNames.length || !subTypesMetadata) {
       return this.getContextType().toTypeReference();
-    } else if (
-      (typeNames.length === 1 && this.contextDefaultSubTypeContext) ||
-      typeNames.length > 1
-    ) {
-      const typeNameWithNamespace = typeNames.map((typeName) => {
-        const [namespace, subTypeName] = typeName.split(":");
-        if (!subTypesMetadata?.[namespace]?.[subTypeName]) {
-          throw new Error("something went really wrong");
-        }
-        return subTypesMetadata[namespace][subTypeName].importTypeName;
-      });
+    } else {
+      const typeNameWithNamespace =
+        this.buildContextSubTypeNamespaceObject(typeNames);
 
       return factory.createIntersectionTypeNode(
-        (this.contextDefaultSubTypeContext
-          ? [this.contextDefaultSubTypeContext.name, ...typeNameWithNamespace]
-          : typeNameWithNamespace
-        ).map((type: string) => {
-          return factory.createTypeReferenceNode(
-            factory.createIdentifier(type),
-            undefined,
-          );
-        }),
+        [
+          this.contextDefaultSubTypeContext?.name &&
+            factory.createTypeReferenceNode(
+              factory.createIdentifier(this.contextDefaultSubTypeContext.name),
+              undefined,
+            ),
+          factory.createTypeLiteralNode(
+            Object.entries(typeNameWithNamespace).map(
+              ([namespace, subTypes]) => {
+                return factory.createPropertySignature(
+                  undefined,
+                  factory.createIdentifier(namespace),
+                  undefined,
+                  factory.createTypeLiteralNode(
+                    subTypes.map(({ subType, name }) => {
+                      return factory.createPropertySignature(
+                        undefined,
+                        factory.createIdentifier(`"${name}"`),
+                        undefined,
+                        factory.createTypeReferenceNode(
+                          factory.createIdentifier(subType),
+                          undefined,
+                        ),
+                      );
+                    }),
+                  ),
+                );
+              },
+            ),
+          ),
+        ].filter(Boolean) as ts.TypeNode[],
       );
-    } else {
-      const [namespace, subTypeName] = typeNames[0].split(":");
-      if (!subTypesMetadata?.[namespace]?.[subTypeName]) {
-        throw new Error("something went really wrong");
-      }
-
-      return new TypeLocation(
-        null,
-        subTypesMetadata[namespace][subTypeName].importTypeName,
-      ).toTypeReference();
     }
   }
 

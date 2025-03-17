@@ -93,7 +93,7 @@ describe(generateTS, () => {
             }
 
             type User @context(uses: { managers: ["user"] }) {
-              id: ID! @context(uses: { managers: ["id-user"] })
+              id: ID! @context(uses: { managers: ["id-user", "user"] })
               name: String
               messagesWithAnswersNonRequired: [[Message]]
               messagesWithAnswersRequired: [[Message]]!
@@ -119,6 +119,8 @@ describe(generateTS, () => {
           `,
           {
             contextSubTypeMetadata: contextSubTypeMetadata,
+            defaultContextSubTypePath: "@package/default-context",
+            defaultContextSubTypeName: "DefaultContextType",
           },
         );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -135,6 +137,7 @@ describe(generateTS, () => {
             ],
             "id": [
               "managers:id-user",
+              "managers:user",
             ],
             "post": [
               "managers:post",
@@ -180,6 +183,7 @@ describe(generateTS, () => {
         import type { PromiseOrValue } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
+        import type { DefaultContextType } from "@package/default-context";
         import type { MessageStateMachineType } from "@package/message-state-machine";
         import type { UserStateMachineType } from "@package/user-state-machine";
         import type { PostStateMachineType } from "@package/post-state-machine";
@@ -193,7 +197,11 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: Models.Message, args: {}, context: MessageStateMachineType["message"], info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.Message, args: {}, context: DefaultContextType & {
+                managers: {
+                    "message": MessageStateMachineType["message"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace User {
             export interface Resolvers {
@@ -211,19 +219,72 @@ describe(generateTS, () => {
                 readonly avatar?: avatar;
                 readonly avatarRequired?: avatarRequired;
             }
-            export type id = (model: Models.User, args: {}, context: UserStateMachineType["id-user"], info: ResolveInfo) => PromiseOrValue<string>;
-            export type name = (model: Models.User, args: {}, context: UserStateMachineType["user"], info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
-            export type messagesWithAnswersNonRequired = (model: Models.User, args: {}, context: UserStateMachineType["user"], info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message | null | undefined> | null | undefined> | null | undefined>;
-            export type messagesWithAnswersRequired = (model: Models.User, args: {}, context: UserStateMachineType["user"], info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message | null | undefined> | null | undefined>>;
-            export type messagesWithAnswersAllRequired = (model: Models.User, args: {}, context: UserStateMachineType["user"], info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message>>>;
-            export type messagesNonRequired = (model: Models.User, args: {}, context: UserStateMachineType["user"], info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message | null | undefined> | null | undefined>;
-            export type messagesWithArrayRequired = (model: Models.User, args: {}, context: UserStateMachineType["user"], info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message | null | undefined>>;
-            export type messagesRequired = (model: Models.User, args: {}, context: UserStateMachineType["user"], info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message>>;
-            export type messagesOnlyMessageRequired = (model: Models.User, args: {}, context: UserStateMachineType["user"], info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message> | null | undefined>;
-            export type post = (model: Models.User, args: {}, context: PostStateMachineType["post"], info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
-            export type postRequired = (model: Models.User, args: {}, context: UserStateMachineType["user"], info: ResolveInfo) => PromiseOrValue<Models.Post>;
-            export type avatar = (model: Models.User, args: {}, context: UserStateMachineType["user"], info: ResolveInfo) => PromiseOrValue<NSMsteamsPackagesTestModels.Avatar | null | undefined>;
-            export type avatarRequired = (model: Models.User, args: {}, context: UserStateMachineType["user"], info: ResolveInfo) => PromiseOrValue<NSMsteamsPackagesTestModels.Avatar>;
+            export type id = (model: Models.User, args: {}, context: DefaultContextType & {
+                managers: {
+                    "id-user": UserStateMachineType["id-user"];
+                    "user": UserStateMachineType["user"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<string>;
+            export type name = (model: Models.User, args: {}, context: DefaultContextType & {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
+            export type messagesWithAnswersNonRequired = (model: Models.User, args: {}, context: DefaultContextType & {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message | null | undefined> | null | undefined> | null | undefined>;
+            export type messagesWithAnswersRequired = (model: Models.User, args: {}, context: DefaultContextType & {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message | null | undefined> | null | undefined>>;
+            export type messagesWithAnswersAllRequired = (model: Models.User, args: {}, context: DefaultContextType & {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message>>>;
+            export type messagesNonRequired = (model: Models.User, args: {}, context: DefaultContextType & {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message | null | undefined> | null | undefined>;
+            export type messagesWithArrayRequired = (model: Models.User, args: {}, context: DefaultContextType & {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message | null | undefined>>;
+            export type messagesRequired = (model: Models.User, args: {}, context: DefaultContextType & {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message>>;
+            export type messagesOnlyMessageRequired = (model: Models.User, args: {}, context: DefaultContextType & {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message> | null | undefined>;
+            export type post = (model: Models.User, args: {}, context: DefaultContextType & {
+                managers: {
+                    "post": PostStateMachineType["post"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
+            export type postRequired = (model: Models.User, args: {}, context: DefaultContextType & {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<Models.Post>;
+            export type avatar = (model: Models.User, args: {}, context: DefaultContextType & {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<NSMsteamsPackagesTestModels.Avatar | null | undefined>;
+            export type avatarRequired = (model: Models.User, args: {}, context: DefaultContextType & {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<NSMsteamsPackagesTestModels.Avatar>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -460,13 +521,21 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: unknown, context: NodeStateMachineType["node"], info: ResolveInfo) => PromiseOrValue<string | null>;
+            export type __resolveType = (parent: unknown, context: {
+                managers: {
+                    "node": NodeStateMachineType["node"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
         export declare namespace Persona {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: unknown, context: PersonaStateMachineType["persona"], info: ResolveInfo) => PromiseOrValue<string | null>;
+            export type __resolveType = (parent: unknown, context: {
+                managers: {
+                    "persona": PersonaStateMachineType["persona"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
         export declare namespace User {
             export interface Resolvers {
@@ -479,8 +548,16 @@ describe(generateTS, () => {
                 readonly id?: id;
                 readonly rank?: rank;
             }
-            export type id = (model: Models.Admin, args: {}, context: AdminStateMachineType["admin"], info: ResolveInfo) => PromiseOrValue<string>;
-            export type rank = (model: Models.Admin, args: {}, context: AdminStateMachineType["admin"], info: ResolveInfo) => PromiseOrValue<number>;
+            export type id = (model: Models.Admin, args: {}, context: {
+                managers: {
+                    "admin": AdminStateMachineType["admin"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<string>;
+            export type rank = (model: Models.Admin, args: {}, context: {
+                managers: {
+                    "admin": AdminStateMachineType["admin"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<number>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -593,13 +670,21 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: unknown, context: NodeStateMachineType["node"], info: ResolveInfo) => PromiseOrValue<string | null>;
+            export type __resolveType = (parent: unknown, context: {
+                managers: {
+                    "node": NodeStateMachineType["node"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
         export declare namespace Customer {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: unknown, context: CustomerStateMachineType["customer"], info: ResolveInfo) => PromiseOrValue<string | null>;
+            export type __resolveType = (parent: unknown, context: {
+                managers: {
+                    "customer": CustomerStateMachineType["customer"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
         export declare namespace User {
             export interface Resolvers {
@@ -822,13 +907,21 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: Models.Admin, args: {}, context: AdminStateMachineType["admin"], info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.Admin, args: {}, context: {
+                managers: {
+                    "admin": AdminStateMachineType["admin"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace User {
             export interface Resolvers {
                 readonly id?: id;
             }
-            export type id = (model: Models.User, args: {}, context: UserStateMachineType["user"], info: ResolveInfo) => PromiseOrValue<string>;
+            export type id = (model: Models.User, args: {}, context: {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<string>;
         }
         export declare namespace Node {
             export interface Resolvers {
@@ -846,13 +939,21 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: Models.User | Models.Customer, context: UserStateMachineType["user-or-customer"], info: ResolveInfo) => PromiseOrValue<"User" | "Customer" | null>;
+            export type __resolveType = (parent: Models.User | Models.Customer, context: {
+                managers: {
+                    "user-or-customer": UserStateMachineType["user-or-customer"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<"User" | "Customer" | null>;
         }
         export declare namespace CompanyOrCustomer {
             export interface Resolvers {
                 readonly __resolveType?: __resolveType;
             }
-            export type __resolveType = (parent: Models.Company | Models.Customer, context: UserStateMachineType["company-or-customer"], info: ResolveInfo) => PromiseOrValue<"Company" | "Customer" | null>;
+            export type __resolveType = (parent: Models.Company | Models.Customer, context: {
+                managers: {
+                    "company-or-customer": UserStateMachineType["company-or-customer"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<"Company" | "Customer" | null>;
         }
         export declare namespace Query {
             export interface Resolvers {
@@ -862,10 +963,18 @@ describe(generateTS, () => {
             }
             export type userById = (model: unknown, args: {
                 readonly id: string;
-            }, context: WhateverStateMachineType["whatever"], info: ResolveInfo) => PromiseOrValue<Models.whatever | null | undefined>;
+            }, context: {
+                managers: {
+                    "whatever": WhateverStateMachineType["whatever"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<Models.whatever | null | undefined>;
             export type userByMail = (model: unknown, args: {
                 readonly mail?: string | null;
-            }, context: DifferentWhateverStateMachineType["different-whatever"], info: ResolveInfo) => PromiseOrValue<Models.whatever | null | undefined>;
+            }, context: {
+                managers: {
+                    "different-whatever": DifferentWhateverStateMachineType["different-whatever"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<Models.whatever | null | undefined>;
             export type node = (model: unknown, args: {
                 readonly id: string;
             }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Node | null | undefined>;
@@ -881,7 +990,8 @@ function runGenerateTest(
   options: {
     outputPath?: string;
     documentPath?: string;
-    defaultContextTypePath?: string;
+    defaultContextSubTypeName?: string;
+    defaultContextSubTypePath?: string;
     contextName?: string;
     legacyCompat?: boolean;
     enumsImport?: string;
@@ -905,7 +1015,8 @@ function runGenerateTest(
   const fullOptions: {
     outputPath: string;
     documentPath: string;
-    defaultContextTypePath?: string | null;
+    defaultContextSubTypeName?: string;
+    defaultContextSubTypePath?: string;
     contextName?: string;
     legacyCompat?: boolean;
     legacyNoModelsForObjects?: boolean;
