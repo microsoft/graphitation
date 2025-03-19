@@ -809,9 +809,9 @@ describe(generateTS, () => {
               | Customer
 
             extend type Query {
-              userById(id: ID!): whatever
-                @context(uses: { managers: ["whatever"] })
-              userByMail(mail: String): whatever
+              userById(id: ID!): User @context(uses: { managers: ["whatever"] })
+              userByIdWithoutContext(id: ID!): User
+              userByMail(mail: String): User
                 @context(uses: { managers: ["different-whatever"] })
               node(id: ID!): Node
             }

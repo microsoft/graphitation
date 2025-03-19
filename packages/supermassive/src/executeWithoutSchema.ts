@@ -183,13 +183,15 @@ function buildExecutionContext(
     schemaFragmentLoader,
     document,
     rootValue,
-    contextValue,
+    contextValue: argsContextValue,
     buildContextValue,
     variableValues,
     operationName,
     fieldResolver,
     typeResolver,
     subscribeFieldResolver,
+    devModeEnabled,
+    contextProxyHandler,
     fieldExecutionHooks,
   } = args;
 
@@ -242,14 +244,20 @@ function buildExecutionContext(
     return coercedVariableValues.errors;
   }
 
+  let contextValue = buildContextValue
+    ? buildContextValue(argsContextValue)
+    : argsContextValue;
+
+  if (devModeEnabled && contextProxyHandler) {
+    contextValue = new Proxy(contextValue as object, contextProxyHandler);
+  }
+
   return {
     schemaFragment,
     schemaFragmentLoader,
     fragments,
     rootValue,
-    contextValue: buildContextValue
-      ? buildContextValue(contextValue)
-      : contextValue,
+    contextValue,
     buildContextValue,
     operation,
     variableValues: coercedVariableValues.coerced,
