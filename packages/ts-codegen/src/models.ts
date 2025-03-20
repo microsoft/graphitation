@@ -1,4 +1,5 @@
 import ts, { factory } from "typescript";
+import { isRootOperationType } from "./context/utilities";
 import {
   ScalarType,
   TsCodegenContext,
@@ -81,10 +82,7 @@ function createObjectTypeModel(
   context: TsCodegenContext,
   type: ObjectType,
 ): ts.InterfaceDeclaration | null {
-  if (
-    ["Query", "Mutation", "Subscription"].includes(type.name) ||
-    type.isExtension
-  ) {
+  if (isRootOperationType(type.name) || type.isExtension) {
     return null;
   }
 

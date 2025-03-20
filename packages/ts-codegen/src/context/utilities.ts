@@ -83,3 +83,7 @@ export function getRelativePath(
 
   return cleanRelativePath(path.relative(outputPath, modelFullPath));
 }
+
+export function isRootOperationType(typeName: string) {
+  return ["Query", "Mutation", "Subscription"].includes(typeName);
+}
