@@ -17,7 +17,7 @@ class ExecutionQueryHandler {
   public status: [pending: boolean, error?: Error];
   private querySubscription?: ZenObservable.Subscription;
 
-  constructor(private onComplete: () => void) {
+  constructor(private onDataReceived: () => void) {
     this.status = [true, undefined];
   }
 
@@ -46,7 +46,7 @@ class ExecutionQueryHandler {
     if (!loading) {
       this.dispose();
     }
-    this.onComplete();
+    this.onDataReceived();
   }
 
   public subscribe(observable: ObservableQuery) {
