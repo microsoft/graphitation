@@ -161,6 +161,7 @@ describe.each([
     typeof useCompiledPaginationFragment
   >[];
   let useLazyLoadQueryResult: { data?: any; error?: Error } | null = null;
+  let useLazyLoadQueryResultArray: Array<{ data?: any; error?: Error }> = [];
   let componentOnQueryTypeResult: object[];
 
   const ChildComponent: React.FC<{ user: { id: any } }> = (props) => {
@@ -231,6 +232,7 @@ describe.each([
       { variables: props.variables, fetchPolicy: props.fetchPolicy },
     );
     useLazyLoadQueryResult = result;
+    useLazyLoadQueryResultArray.push(result);
     return result.data ? (
       <>
         <ChildComponent user={result.data.user} />
@@ -243,6 +245,7 @@ describe.each([
 
   beforeEach(() => {
     useLazyLoadQueryResult = null;
+    useLazyLoadQueryResultArray = [];
     useFragmentResult = [];
     useRefetchableFragmentResult = [];
     forwardUsePaginationFragmentResult = [];
@@ -501,6 +504,42 @@ describe.each([
           return new Promise((resolve) => setTimeout(resolve, 0));
         });
         expect(client.getObservableQueries().size).toBe(0);
+      });
+
+      it("should return data from cache and update with network data", async () => {
+        useLazyLoadQueryResultArray = [];
+        client.mock.queueOperationResolver((operation) => {
+          return MockPayloadGenerator.generate(operation, {
+            User: () => ({
+              id: operation.request.variables.userId,
+              name: "Network User",
+            }),
+          });
+        });
+
+        await act(() => {
+          testRenderer.update(
+            <ApolloReactRelayDuctTapeProvider client={client}>
+              <ErrorBoundary>
+                <RootComponent
+                  variables={{
+                    userId: 42,
+                    messagesBackwardCount: 1,
+                    messagesBeforeCursor: "",
+                  }}
+                  fetchPolicy="cache-and-network"
+                />
+              </ErrorBoundary>
+            </ApolloReactRelayDuctTapeProvider>,
+          );
+        });
+        const rendersWithCache = useLazyLoadQueryResultArray.filter(
+          (result) =>
+            result.data?.user.name === '<mock-value-for-field-"name">',
+        );
+
+        expect(rendersWithCache.length).toBeGreaterThanOrEqual(1);
+        expect(useLazyLoadQueryResult?.data?.user?.name).toBe("Network User");
       });
     });
   });
