@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "do not unsubscribe when we are still in loading state",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}
