@@ -25,13 +25,13 @@ import ts, {
 import { DefinitionImport, DefinitionModel } from "../types";
 import { createImportDeclaration } from "./utilities";
 import {
-  camelCase,
   createListType,
   createNonNullableType,
   createNullableType,
 } from "../utilities";
 import { IMPORT_DIRECTIVE_NAME, processImportDirective } from "./import";
 import { MODEL_DIRECTIVE_NAME, processModelDirective } from "./model";
+import { SubTypeNamespace } from "../codegen";
 
 export type TsCodegenContextOptions = {
   moduleRoot: string;
@@ -52,13 +52,10 @@ export type TsCodegenContextOptions = {
   };
   legacyCompat: boolean;
   legacyNoModelsForObjects: boolean;
-  contextSubTypePathTemplate?: string;
-  contextSubTypeNameTemplate?: string;
   defaultContextSubTypePath?: string;
   defaultContextSubTypeName?: string;
   useStringUnionsInsteadOfEnums: boolean;
-  enumNamesToMigrate: string[] | null;
-  enumNamesToKeep: string[] | null;
+  contextSubTypeMetadata?: SubTypeNamespace;
   modelScope: string | null;
 };
 
@@ -90,8 +87,6 @@ const TsCodegenContextDefault: TsCodegenContextOptions = {
     from: "@graphitation/supermassive",
   },
   legacyCompat: false,
-  enumNamesToMigrate: null,
-  enumNamesToKeep: null,
   legacyNoModelsForObjects: false,
   useStringUnionsInsteadOfEnums: false,
 
@@ -122,10 +117,6 @@ export class TsCodegenContext {
   private typeNameToModels: Map<string, DefinitionModel>;
   private legacyInterfaces: Set<string>;
   context?: { name: string; from: string };
-  contextDefaultSubTypeTemplate?: {
-    nameTemplate: string;
-    pathTemplate: string;
-  };
   contextDefaultSubTypeContext?: { name: string; from: string };
   hasUsedModelInInputs: boolean;
   hasUsedEnumsInModels: boolean;
@@ -150,16 +141,6 @@ export class TsCodegenContext {
     this.hasInputs = false;
     this.hasEnums = Boolean(options.enumsImport);
     this.hasUsedEnumsInModels = false;
-
-    if (
-      options.contextSubTypeNameTemplate &&
-      options.contextSubTypePathTemplate
-    ) {
-      this.contextDefaultSubTypeTemplate = {
-        nameTemplate: options.contextSubTypeNameTemplate,
-        pathTemplate: options.contextSubTypePathTemplate,
-      };
-    }
 
     if (
       options.defaultContextSubTypeName &&
@@ -192,56 +173,75 @@ export class TsCodegenContext {
     return null;
   }
 
-  public replaceTemplateWithContextName(
-    template: string,
-    contextName: string,
-    camelCased = true,
-  ) {
-    return template.replace(
-      "${resourceName}",
-      camelCased ? camelCase(contextName, { pascalCase: true }) : contextName,
-    );
+  public getSubTypesMetadata() {
+    return this.options.contextSubTypeMetadata;
   }
 
-  public getContextTemplate() {
-    return this.contextDefaultSubTypeTemplate || null;
+  private buildContextSubTypeNamespaceObject(typeNames: string[]) {
+    const subTypesMetadata = this.getSubTypesMetadata();
+
+    return typeNames.reduce<
+      Record<string, { subType: string; name: string }[]>
+    >((acc, typeName) => {
+      const [namespace, subTypeName] = typeName.split(":");
+      if (!acc[namespace]) {
+        acc[namespace] = [];
+      }
+
+      if (!subTypesMetadata?.[namespace]?.[subTypeName]) {
+        throw new Error("something went really wrong");
+      }
+      acc[namespace].push({
+        subType: subTypesMetadata[namespace][subTypeName].importTypeName,
+        name: subTypeName,
+      });
+
+      return acc;
+    }, {});
   }
 
   public getContextTypeNode(typeNames?: string[] | null) {
-    const contextDefaultSubTypeTemplate = this.contextDefaultSubTypeTemplate;
+    const subTypesMetadata = this.getSubTypesMetadata();
 
-    if (!typeNames || !typeNames.length || !contextDefaultSubTypeTemplate) {
+    if (!typeNames || !typeNames.length || !subTypesMetadata) {
       return this.getContextType().toTypeReference();
-    } else if (
-      (typeNames.length === 1 && this.contextDefaultSubTypeContext) ||
-      typeNames.length > 1
-    ) {
-      const typeNameWithNamespace = typeNames.map((typeName) => {
-        return this.replaceTemplateWithContextName(
-          contextDefaultSubTypeTemplate.nameTemplate,
-          typeName,
-        );
-      });
+    } else {
+      const typeNameWithNamespace =
+        this.buildContextSubTypeNamespaceObject(typeNames);
 
       return factory.createIntersectionTypeNode(
-        (this.contextDefaultSubTypeContext
-          ? [this.contextDefaultSubTypeContext.name, ...typeNameWithNamespace]
-          : typeNameWithNamespace
-        ).map((type: string) => {
-          return factory.createTypeReferenceNode(
-            factory.createIdentifier(type),
-            undefined,
-          );
-        }),
+        [
+          this.contextDefaultSubTypeContext?.name &&
+            factory.createTypeReferenceNode(
+              factory.createIdentifier(this.contextDefaultSubTypeContext.name),
+              undefined,
+            ),
+          factory.createTypeLiteralNode(
+            Object.entries(typeNameWithNamespace).map(
+              ([namespace, subTypes]) => {
+                return factory.createPropertySignature(
+                  undefined,
+                  factory.createIdentifier(namespace),
+                  undefined,
+                  factory.createTypeLiteralNode(
+                    subTypes.map(({ subType, name }) => {
+                      return factory.createPropertySignature(
+                        undefined,
+                        factory.createIdentifier(`"${name}"`),
+                        undefined,
+                        factory.createTypeReferenceNode(
+                          factory.createIdentifier(subType),
+                          undefined,
+                        ),
+                      );
+                    }),
+                  ),
+                );
+              },
+            ),
+          ),
+        ].filter(Boolean) as ts.TypeNode[],
       );
-    } else {
-      return new TypeLocation(
-        null,
-        this.replaceTemplateWithContextName(
-          contextDefaultSubTypeTemplate.nameTemplate,
-          typeNames[0],
-        ),
-      ).toTypeReference();
     }
   }
 
@@ -298,25 +298,30 @@ export class TsCodegenContext {
     }
   }
 
-  getSubTypeNamesFromTemplate(
-    subTypes: string[],
-    nameTemplate: string,
-    pathTemplate: string,
-  ) {
+  cleanSubtypeImportName(subTypeImportIdentifier: string) {
+    return subTypeImportIdentifier.split(/\.|\[/)[0];
+  }
+
+  getSubTypeNamesImportMap(subTypes: string[]) {
+    const subTypeMetadata = this.getSubTypesMetadata();
     return subTypes.reduce<Record<string, string[]>>(
       (acc: Record<string, string[]>, importName: string) => {
-        const importPath = this.replaceTemplateWithContextName(
-          pathTemplate,
-          importName,
-          false,
-        );
+        const [namespace, subTypeName] = importName.split(":");
+        const subType = subTypeMetadata?.[namespace]?.[subTypeName];
+
+        if (!subType) {
+          throw new Error(
+            `Critical Error: Subtype ${importName} not found in metadata`,
+          );
+        }
+
+        const { importPath, importTypeName } = subType;
+
         if (importPath) {
           if (!acc[importPath]) {
             acc[importPath] = [];
           }
-          acc[importPath].push(
-            this.replaceTemplateWithContextName(nameTemplate, importName),
-          );
+          acc[importPath].push(this.cleanSubtypeImportName(importTypeName));
         }
         return acc;
       },
@@ -347,22 +352,6 @@ export class TsCodegenContext {
 
   getAllTypes(): Array<Type> {
     return this.allTypes;
-  }
-
-  shouldMigrateEnum(enumName: string) {
-    if (!this.options.enumNamesToKeep && !this.options.enumNamesToMigrate) {
-      return true;
-    }
-
-    if (this.options.enumNamesToKeep) {
-      return !this.options.enumNamesToKeep.includes(enumName);
-    }
-
-    if (this.options.enumNamesToMigrate) {
-      return this.options.enumNamesToMigrate.includes(enumName);
-    }
-
-    return true;
   }
 
   getTypeReferenceFromTypeNode(
@@ -734,7 +723,6 @@ export function extractContext(
   };
 
   const context = new TsCodegenContext(fullOptions);
-  const { contextSubTypeNameTemplate, contextSubTypePathTemplate } = options;
 
   visit(document, {
     Directive: {
@@ -767,26 +755,51 @@ export function extractContext(
           context.addLegacyInterface(typeName);
         } else if (
           node.name.value === "context" &&
-          contextSubTypeNameTemplate &&
-          contextSubTypePathTemplate
+          options.contextSubTypeMetadata
         ) {
+          const subTypeKeys: Set<string> = new Set();
           if (
             node.arguments?.length !== 1 ||
             node.arguments[0].name.value !== "uses" ||
-            node.arguments[0].value.kind !== "ListValue"
+            node.arguments[0].value.kind !== "ObjectValue"
           ) {
             throw new Error("Invalid context use");
           }
-          const directiveValues = node.arguments[0].value.values.map((item) => {
-            if (item.kind !== "StringValue") {
+
+          node.arguments[0].value.fields.forEach(({ name, value, kind }) => {
+            if (kind !== "ObjectField") {
               throw new Error("Invalid context use");
             }
-            return item.value;
+            const namespace = name.value;
+            if (value.kind !== "ListValue") {
+              throw new Error(`Namespace "${name}" must be list of strings`);
+            }
+
+            const namespaceValues: string[] = value.values.map((v) => {
+              if (v.kind !== "StringValue") {
+                throw new Error(`Namespace "${name}" must be list of strings`);
+              }
+              return v.value;
+            });
+
+            if (!options.contextSubTypeMetadata?.[namespace]) {
+              throw new Error(`Namespace "${name}" is not supported`);
+            }
+
+            namespaceValues.forEach((namespaceValue) => {
+              if (
+                !options.contextSubTypeMetadata?.[namespace]?.[namespaceValue]
+              ) {
+                throw new Error(
+                  `Value "${namespaceValue}" in namespace "${namespace}" is not supported`,
+                );
+              }
+
+              subTypeKeys.add(`${namespace}:${namespaceValue}`);
+            });
           });
 
-          if (directiveValues.length) {
-            context.initContextMap(ancestors, directiveValues);
-          }
+          context.initContextMap(ancestors, Array.from(subTypeKeys));
         }
       },
     },

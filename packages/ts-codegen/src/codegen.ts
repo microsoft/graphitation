@@ -8,6 +8,18 @@ import { generateLegacyResolvers } from "./legacyResolvers";
 import { generateEnums } from "./enums";
 import { generateInputs } from "./inputs";
 
+export type SubTypeItem = {
+  [name: string]: {
+    name: string;
+    importTypeName: string;
+    importPath: string;
+  };
+};
+
+export type SubTypeNamespace = {
+  [namespace: string]: SubTypeItem;
+};
+
 export interface GenerateTSOptions {
   outputPath: string;
   documentPath: string;
@@ -19,10 +31,7 @@ export interface GenerateTSOptions {
   legacyNoModelsForObjects?: boolean;
   modelScope?: string | null;
   generateOnlyEnums?: boolean;
-  enumNamesToMigrate?: string[];
-  enumNamesToKeep?: string[];
-  contextSubTypeNameTemplate?: string;
-  contextSubTypePathTemplate?: string;
+  contextSubTypeMetadata?: SubTypeNamespace;
   defaultContextSubTypePath?: string;
   defaultContextSubTypeName?: string;
   /**
@@ -77,10 +86,7 @@ export function generateTS(
     legacyNoModelsForObjects,
     modelScope,
     generateOnlyEnums,
-    enumNamesToMigrate,
-    enumNamesToKeep,
-    contextSubTypeNameTemplate,
-    contextSubTypePathTemplate,
+    contextSubTypeMetadata,
     defaultContextSubTypePath,
     defaultContextSubTypeName,
     generateResolverMap = false,
@@ -102,10 +108,7 @@ export function generateTS(
         enumsImport,
         legacyNoModelsForObjects,
         modelScope,
-        enumNamesToMigrate,
-        enumNamesToKeep,
-        contextSubTypeNameTemplate,
-        contextSubTypePathTemplate,
+        contextSubTypeMetadata,
         defaultContextSubTypePath,
         defaultContextSubTypeName,
       },
