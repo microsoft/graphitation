@@ -2233,6 +2233,82 @@ describe(generateTS, () => {
       "
     `);
   });
+
+  test("does not emit empty models.interface.ts", () => {
+    const { resolvers, models } = runGenerateTest(
+      graphql`
+        extend type Mutation {
+          updateId(newId: ID!): ID
+        }
+      `,
+    );
+    expect(models).toBeUndefined();
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      export declare namespace Mutation {
+          export interface Resolvers {
+              readonly updateId?: updateId;
+          }
+          export type updateId = (model: unknown, args: {
+              readonly newId: string;
+          }, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
+      }
+      "
+    `);
+  });
+
+  test("emits models.interface.ts to re-export enums", () => {
+    const { resolvers, models } = runGenerateTest(
+      graphql`
+        extend type Query {
+          foo: Foo
+        }
+
+        enum Foo {
+          Bar
+          Baz
+        }
+      `,
+    );
+    expect(models).toMatchInlineSnapshot(`
+     "export * from "./enums.interface";
+     // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+     export interface BaseModel {
+         readonly __typename?: string;
+     }
+     "
+     `);
+    expect(resolvers).toMatchInlineSnapshot(`
+      "import type { PromiseOrValue } from "@graphitation/supermassive";
+      import type { ResolveInfo } from "@graphitation/supermassive";
+      import * as Models from "./models.interface";
+      export declare namespace Query {
+          export interface Resolvers {
+              readonly foo?: foo;
+          }
+          export type foo = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Foo | null | undefined>;
+      }
+      "
+    `);
+  });
+
+  test("emits models.interface.ts for custom scalars", () => {
+    const { models } = runGenerateTest(
+      graphql`
+        scalar DateTime
+        scalar String
+      `,
+    );
+    expect(models).toMatchInlineSnapshot(`
+     "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+     export interface BaseModel {
+         readonly __typename?: string;
+     }
+     export type DateTime = unknown;
+     "
+     `);
+  });
 });
 
 function runGenerateTest(
@@ -2241,8 +2317,8 @@ function runGenerateTest(
 ): {
   enums?: string;
   inputs?: string;
-  models: string;
-  resolvers: string;
+  models?: string;
+  resolvers?: string;
   legacyTypes?: string;
   legacyResolvers?: string;
   legacyNoModelsForObjects?: boolean;
@@ -2264,7 +2340,7 @@ function runGenerateTest(
   }
 
   const { models, resolvers, enums, inputs, legacyTypes, legacyResolvers } = {
-    models: getFileByFileName("models.interface.ts") as ts.SourceFile,
+    models: getFileByFileName("models.interface.ts"),
     inputs: getFileByFileName("inputs.interface.ts"),
     enums: getFileByFileName("enums.interface.ts"),
     resolvers: getFileByFileName("resolvers.interface.ts") as ts.SourceFile,
@@ -2277,7 +2353,7 @@ function runGenerateTest(
   return {
     enums: enums && printer.printFile(enums),
     inputs: inputs && printer.printFile(inputs),
-    models: printer.printFile(models),
+    models: models && printer.printFile(models),
     resolvers: resolvers && printer.printFile(resolvers),
     legacyTypes: legacyTypes && printer.printFile(legacyTypes),
     legacyResolvers: legacyResolvers && printer.printFile(legacyResolvers),

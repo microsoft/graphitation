@@ -23,7 +23,7 @@ import ts, {
   SyntaxKind,
 } from "typescript";
 import { DefinitionImport, DefinitionModel } from "../types";
-import { createImportDeclaration } from "./utilities";
+import { createImportDeclaration, isRootOperationType } from "./utilities";
 import {
   camelCase,
   createListType,
@@ -107,6 +107,7 @@ export type ContextMap = {
 export type ContextMapTypeItem = { __context?: string[] } & {
   [key: string]: string[];
 };
+
 export class TsCodegenContext {
   private allTypes: Array<Type>;
   private typeContextMap: ContextMap;
@@ -130,6 +131,7 @@ export class TsCodegenContext {
   hasUsedModelInInputs: boolean;
   hasUsedEnumsInModels: boolean;
   hasEnums: boolean;
+  hasModels: boolean;
   hasInputs: boolean;
   hasResolvers: boolean;
 
@@ -148,6 +150,7 @@ export class TsCodegenContext {
     this.hasUsedModelInInputs = false;
     this.hasResolvers = false;
     this.hasInputs = false;
+    this.hasModels = false;
     this.hasEnums = Boolean(options.enumsImport);
     this.hasUsedEnumsInModels = false;
 
@@ -805,6 +808,7 @@ export function extractContext(
     ObjectTypeDefinition: {
       leave(node) {
         context.hasResolvers = true;
+        context.hasModels = true;
 
         context.addType({
           kind: "OBJECT",
@@ -820,6 +824,8 @@ export function extractContext(
     },
     InterfaceTypeDefinition: {
       leave(node) {
+        context.hasModels = true;
+
         context.addType({
           kind: "INTERFACE",
           name: node.name.value,
@@ -846,6 +852,10 @@ export function extractContext(
       leave(node) {
         context.hasResolvers = true;
 
+        if (!isRootOperationType(node.name.value)) {
+          context.hasModels = true;
+        }
+
         context.addType({
           kind: "OBJECT",
           name: node.name.value,
@@ -859,6 +869,8 @@ export function extractContext(
     },
     UnionTypeDefinition: {
       leave(node) {
+        context.hasModels = true;
+
         context.addType({
           kind: "UNION",
           name: node.name.value,
@@ -869,6 +881,11 @@ export function extractContext(
     },
     ScalarTypeDefinition: {
       leave(node) {
+        const isCustomScalar = BUILT_IN_SCALARS[node.name.value] == null;
+        if (isCustomScalar) {
+          context.hasModels = true;
+        }
+
         context.addType({
           kind: "SCALAR",
           name: node.name.value,
@@ -878,6 +895,9 @@ export function extractContext(
       },
     },
   });
+
+  // model file also re-exports enums, so we need to emit it if either is present
+  context.hasModels = context.hasModels || context.hasEnums;
 
   return context;
 }

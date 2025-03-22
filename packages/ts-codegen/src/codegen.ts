@@ -120,7 +120,9 @@ export function generateTS(
     }
 
     if (!generateOnlyEnums) {
-      result.push(generateModels(context));
+      if (context.hasModels) {
+        result.push(generateModels(context));
+      }
       if (context.hasResolvers) {
         result.push(
           generateResolvers(context, {
