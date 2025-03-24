@@ -16,6 +16,7 @@ import {
 import {
   createImportDeclaration,
   getImportIdentifierForTypenames,
+  isRootOperationType,
 } from "./context/utilities";
 
 const getResolverTypes = (context: TsCodegenContext): ResolverType[] => {
@@ -41,18 +42,19 @@ export function generateResolvers(
   const { generateResolverMap, mandatoryResolverTypes } = options;
   const statements: ts.Statement[] = [];
   statements.push(...context.getBasicImports());
-  statements.push(
-    factory.createImportDeclaration(
-      undefined,
-      factory.createImportClause(
-        false,
+  if (context.hasModels) {
+    statements.push(
+      factory.createImportDeclaration(
         undefined,
-        factory.createNamespaceImport(factory.createIdentifier("Models")),
+        factory.createImportClause(
+          false,
+          undefined,
+          factory.createNamespaceImport(factory.createIdentifier("Models")),
+        ),
+        factory.createStringLiteral("./models.interface"),
       ),
-      factory.createStringLiteral("./models.interface"),
-    ),
-  );
-
+    );
+  }
   const contextTemplate = context.getContextTemplate();
 
   if (Object.keys(context.getContextMap()).length && contextTemplate) {
@@ -230,10 +232,6 @@ function createObjectTypeResolvers(
     factory.createModuleBlock(members),
     ts.NodeFlags.Namespace,
   );
-}
-
-function isRootOperationType(type: string): boolean {
-  return ["Query", "Mutation", "Subscription"].includes(type);
 }
 
 function createResolverField(
