@@ -1,6 +1,7 @@
 pr: none
 trigger:
   - main
+  - jvejr/ts-codegen-subtype-alpha-release
   - alloy/relay-apollo-duct-tape
 
 variables:

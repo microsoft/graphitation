@@ -11,8 +11,7 @@ export function generateEnums(context: TsCodegenContext): ts.SourceFile {
         .map((type) => {
           if (type.kind === "ENUM") {
             const isStringUnion =
-              context.isUseStringUnionsInsteadOfEnumsEnabled() &&
-              context.shouldMigrateEnum(type.name);
+              context.isUseStringUnionsInsteadOfEnumsEnabled();
 
             return factory.createExportDeclaration(
               undefined,
@@ -54,10 +53,7 @@ function createEnumTypeModel(
   context: TsCodegenContext,
   type: EnumType,
 ): ts.EnumDeclaration | ts.TypeAliasDeclaration {
-  if (
-    context.isUseStringUnionsInsteadOfEnumsEnabled() &&
-    context.shouldMigrateEnum(type.name)
-  ) {
+  if (context.isUseStringUnionsInsteadOfEnumsEnabled()) {
     return factory.createTypeAliasDeclaration(
       [factory.createToken(ts.SyntaxKind.ExportKeyword)],
       factory.createIdentifier(type.name),
