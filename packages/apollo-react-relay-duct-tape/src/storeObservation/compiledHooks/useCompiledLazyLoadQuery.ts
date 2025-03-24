@@ -14,10 +14,10 @@ import type { DocumentNode } from "graphql";
 import type { CompiledArtefactModule } from "@graphitation/apollo-react-relay-duct-tape-compiler";
 
 class ExecutionQueryHandler {
-  public status: [loading: boolean, error?: Error];
+  public status: [pending: boolean, error?: Error];
   private querySubscription?: ZenObservable.Subscription;
 
-  constructor(private onComplete: () => void) {
+  constructor(private onDataReceive: () => void) {
     this.status = [true, undefined];
   }
 
@@ -35,16 +35,24 @@ class ExecutionQueryHandler {
     this.status = [true, undefined];
   }
 
-  private handleResult(error?: Error) {
+  private handleResult(error: Error | undefined, loading?: boolean) {
     this.status = [false, error];
-    this.dispose();
-    this.onComplete();
+
+    /**
+    /* For cache-and-network, we return the result from the cache
+    /* immediately, but we don't want to dispose of the observable
+    /* until the network request completes.
+    */
+    if (!loading) {
+      this.dispose();
+    }
+    this.onDataReceive();
   }
 
   public subscribe(observable: ObservableQuery) {
     this.querySubscription = observable.subscribe(
-      ({ error: err }) => {
-        this.handleResult(err);
+      ({ error: err, loading }) => {
+        this.handleResult(err, loading);
       },
       (err) => {
         this.handleResult(err);
@@ -109,7 +117,7 @@ export function useCompiledLazyLoadQuery(
   const client = useOverridenOrDefaultApolloClient();
   const variables = useDeepCompareMemoize(options.variables);
   // First fetch all data needed for the entire tree...
-  const [loading, error] = useExecutionQuery(
+  const [pending, error] = useExecutionQuery(
     client,
     executionQueryDocument,
     variables,
@@ -121,7 +129,7 @@ export function useCompiledLazyLoadQuery(
     variables,
     fetchPolicy: "cache-only",
     // ...but only once finished loading.
-    skip: loading || !!error,
+    skip: pending || !!error,
   });
   return { data, error };
 }
