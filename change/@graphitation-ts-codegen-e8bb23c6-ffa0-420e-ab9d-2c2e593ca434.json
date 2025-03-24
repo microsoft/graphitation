@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "feat(ts-codegen): do not emit empty models.interface.ts",
-  "packageName": "@graphitation/ts-codegen",
-  "email": "dsamsonov@microsoft.com",
-  "dependentChangeType": "patch"
-}
