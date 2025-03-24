@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Wed, 19 Feb 2025 11:31:28 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 24 Mar 2025 11:24:10 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.1.0
+
+Mon, 24 Mar 2025 11:24:10 GMT
+
+### Minor changes
+
+- feat(ts-codegen): do not emit empty models.interface.ts (dsamsonov@microsoft.com)
 
 ## 3.0.0
 

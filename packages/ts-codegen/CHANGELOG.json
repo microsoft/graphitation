@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Mon, 24 Mar 2025 11:24:10 GMT",
+      "version": "3.1.0",
+      "tag": "@graphitation/ts-codegen_v3.1.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "20779f17bcf0e0d0216359e8e714a9fa6729f2c7",
+            "comment": "feat(ts-codegen): do not emit empty models.interface.ts"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 19 Feb 2025 11:31:28 GMT",
       "version": "3.0.0",
       "tag": "@graphitation/ts-codegen_v3.0.0",
