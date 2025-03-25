@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-eslint-rules
 
-<!-- This log was last generated on Wed, 23 Oct 2024 09:22:25 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 25 Mar 2025 09:31:15 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.12.5
+
+Tue, 25 Mar 2025 09:31:15 GMT
+
+### Patches
+
+- test release (pavelglac@gmail.com)
 
 ## 0.12.4
 
