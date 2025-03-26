@@ -121,6 +121,7 @@ export interface ExecutionContext {
   errors: Array<GraphQLError>;
   fieldExecutionHooks?: ExecutionHooks;
   subsequentPayloads: Set<IncrementalDataRecord>;
+  enablePerEventContext?: boolean;
 }
 
 /**
@@ -191,6 +192,7 @@ function buildExecutionContext(
     typeResolver,
     subscribeFieldResolver,
     fieldExecutionHooks,
+    enablePerEventContext,
   } = args;
 
   assertValidExecutionArguments(document, variableValues);
@@ -259,6 +261,7 @@ function buildExecutionContext(
     errors: [],
     fieldExecutionHooks,
     subsequentPayloads: new Set(),
+    enablePerEventContext,
   };
 }
 
@@ -886,7 +889,9 @@ function mapResultOrEventStreamOrPromise(
                 }
 
                 return executeFields(
-                  perEventContext,
+                  exeContext.enablePerEventContext
+                    ? perEventContext
+                    : exeContext,
                   parentTypeName,
                   payload,
                   path,
@@ -895,7 +900,7 @@ function mapResultOrEventStreamOrPromise(
                 );
               })
             : executeFields(
-                perEventContext,
+                exeContext.enablePerEventContext ? perEventContext : exeContext,
                 parentTypeName,
                 payload,
                 path,

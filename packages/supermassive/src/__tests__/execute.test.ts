@@ -22,6 +22,7 @@ interface TestCase {
   name: string;
   document: string;
   variables?: Record<string, unknown>;
+  enablePerEventContext?: boolean;
 }
 
 const testCases: Array<TestCase> = [
@@ -379,6 +380,7 @@ query Person($id: Int!) {
       limit: 5,
       emitError: true,
     },
+    enablePerEventContext: true,
   },
   {
     name: "non-null query return null",
@@ -433,9 +435,17 @@ describe("executeWithSchema", () => {
     schema = makeSchema();
   });
 
-  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
-    await compareResultsForExecuteWithSchema(schema, document, variables);
-  });
+  test.each(testCases)(
+    "$name",
+    async ({ document, variables, enablePerEventContext }: TestCase) => {
+      await compareResultsForExecuteWithSchema(
+        schema,
+        document,
+        variables,
+        enablePerEventContext,
+      );
+    },
+  );
 });
 
 describe("executeWithoutSchema - minimal viable schema annotation", () => {
@@ -444,13 +454,17 @@ describe("executeWithoutSchema - minimal viable schema annotation", () => {
     jest.resetAllMocks();
     schema = makeSchema();
   });
-  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
-    await compareResultForExecuteWithoutSchemaWithMVSAnnotation(
-      schema,
-      document,
-      variables,
-    );
-  });
+  test.each(testCases)(
+    "$name",
+    async ({ document, variables, enablePerEventContext }: TestCase) => {
+      await compareResultForExecuteWithoutSchemaWithMVSAnnotation(
+        schema,
+        document,
+        variables,
+        enablePerEventContext,
+      );
+    },
+  );
 });
 
 describe("executeWithoutSchema - regression tests", () => {
