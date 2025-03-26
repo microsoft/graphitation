@@ -121,7 +121,7 @@ export interface ExecutionContext {
   errors: Array<GraphQLError>;
   fieldExecutionHooks?: ExecutionHooks;
   subsequentPayloads: Set<IncrementalDataRecord>;
-  enablePerEventContext?: boolean;
+  enablePerEventContext: boolean;
 }
 
 /**
@@ -261,7 +261,8 @@ function buildExecutionContext(
     errors: [],
     fieldExecutionHooks,
     subsequentPayloads: new Set(),
-    enablePerEventContext,
+    enablePerEventContext:
+      enablePerEventContext === undefined ? true : enablePerEventContext,
   };
 }
 
