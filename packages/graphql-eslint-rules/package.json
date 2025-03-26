@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/graphql-eslint-rules",
   "license": "MIT",
-  "version": "0.12.4",
+  "version": "0.12.5",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
