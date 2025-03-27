@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "fix: Use output Scalars in TypeMap",
+  "packageName": "@graphitation/graphql-codegen-typescript-typemap-plugin",
+  "email": "alina.o.zaieva@gmail.com",
+  "dependentChangeType": "patch"
+}
