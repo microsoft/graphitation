@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-mock-client
 
-<!-- This log was last generated on Mon, 18 Nov 2024 17:35:34 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 27 Mar 2025 16:19:03 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.11.11
+
+Thu, 27 Mar 2025 16:19:03 GMT
+
+### Patches
+
+- Bump @graphitation/graphql-js-operation-payload-generator to v0.12.11
 
 ## 0.11.10
 

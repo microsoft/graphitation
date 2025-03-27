@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-typescript-typemap-plugin",
   "entries": [
     {
+      "date": "Thu, 27 Mar 2025 16:19:03 GMT",
+      "version": "1.0.0",
+      "tag": "@graphitation/graphql-codegen-typescript-typemap-plugin_v1.0.0",
+      "comments": {
+        "major": [
+          {
+            "author": "alina.o.zaieva@gmail.com",
+            "package": "@graphitation/graphql-codegen-typescript-typemap-plugin",
+            "commit": "b9caf7c61a13d857c30c03608874c75430d2ff3f",
+            "comment": "fix: Use output Scalars in TypeMap"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 23 Oct 2024 09:22:25 GMT",
       "version": "0.1.9",
       "tag": "@graphitation/graphql-codegen-typescript-typemap-plugin_v0.1.9",
