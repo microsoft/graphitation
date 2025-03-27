@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-typescript-typemap-plugin
 
-<!-- This log was last generated on Wed, 23 Oct 2024 09:22:25 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 27 Mar 2025 15:24:56 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.0.0
+
+Thu, 27 Mar 2025 15:24:56 GMT
+
+### Major changes
+
+- fix: Use output Scalars in TypeMap (alina.o.zaieva@gmail.com)
 
 ## 0.1.9
 

@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Thu, 27 Mar 2025 15:24:56 GMT",
+      "version": "0.12.11",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.12.11",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "comment": "Bump @graphitation/graphql-codegen-typescript-typemap-plugin to v1.0.0",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 18 Nov 2024 17:35:34 GMT",
       "version": "0.12.10",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.12.10",
