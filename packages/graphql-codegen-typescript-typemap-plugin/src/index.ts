@@ -16,7 +16,7 @@ const graphqlCodegenTypeMapPlugin: PluginFunction = (
         (typeName) =>
           `  "${typeName}": ${
             isScalarType(typesMap[typeName])
-              ? `Scalars["${typeName}"]`
+              ? `Scalars["${typeName}"]["output"]`
               : typeName
                   .split("_")
                   .map((part) => pascalCase(part))

@@ -21,11 +21,11 @@ describe(plugin, () => {
     const result = plugin(schema, [], null);
     expect(result).toMatchInlineSnapshot(`
       "export type TypeMap = {
-        "Boolean": Scalars["Boolean"];
+        "Boolean": Scalars["Boolean"]["output"];
         "HTML": Html;
-        "ID": Scalars["ID"];
+        "ID": Scalars["ID"]["output"];
         "Query": Query;
-        "String": Scalars["String"];
+        "String": Scalars["String"]["output"];
         "TypeWITHUnderscore_AndSomeCapitalCharacters": TypeWithUnderscore_AndSomeCapitalCharacters;
         "lowerCaseTypeName": LowerCaseTypeName;
       };
