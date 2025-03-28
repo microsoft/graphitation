@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Thu, 23 Jan 2025 12:25:19 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 28 Mar 2025 09:57:05 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.9.0
+
+Fri, 28 Mar 2025 09:57:05 GMT
+
+### Minor changes
+
+- Returing back bug fix in event stream context (77059398+vejrj@users.noreply.github.com)
 
 ## 3.8.2
 

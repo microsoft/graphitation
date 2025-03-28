@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Fri, 28 Mar 2025 09:57:05 GMT",
+      "version": "3.9.0",
+      "tag": "@graphitation/supermassive_v3.9.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/supermassive",
+            "commit": "138b7ceb8162723dd4f1640b16a6176ecd63e6de",
+            "comment": "Returing back bug fix in event stream context"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 23 Jan 2025 12:25:19 GMT",
       "version": "3.8.2",
       "tag": "@graphitation/supermassive_v3.8.2",
