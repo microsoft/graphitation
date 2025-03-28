@@ -261,8 +261,7 @@ function buildExecutionContext(
     errors: [],
     fieldExecutionHooks,
     subsequentPayloads: new Set(),
-    enablePerEventContext:
-      enablePerEventContext === undefined ? true : enablePerEventContext,
+    enablePerEventContext: enablePerEventContext ?? true,
   };
 }
 
