@@ -33,6 +33,7 @@ export function createExecutionUtils(
     schema: GraphQLSchema,
     query: string,
     variables?: Record<string, unknown>,
+    enablePerEventContext?: boolean,
   ) {
     expect.assertions(1);
     const document = parse(query);
@@ -45,6 +46,7 @@ export function createExecutionUtils(
           models,
         },
         variableValues: variables,
+        enablePerEventContext,
       }),
     );
     const validResult = await drainExecution(
@@ -64,6 +66,7 @@ export function createExecutionUtils(
     schema: GraphQLSchema,
     query: string,
     variables: Record<string, unknown> = {},
+    enablePerEventContext?: boolean,
   ) {
     expect.assertions(1);
     const document = parse(query);
@@ -83,6 +86,7 @@ export function createExecutionUtils(
           resolvers: resolvers as UserResolvers,
         },
         variableValues: variables,
+        enablePerEventContext,
       }),
     );
     const validResult = await drainExecution(

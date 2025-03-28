@@ -15,6 +15,7 @@ export function executeWithSchema({
   fieldResolver,
   typeResolver,
   fieldExecutionHooks,
+  enablePerEventContext,
 }: ExecutionWithSchemaArgs): PromiseOrValue<ExecutionResult> {
   const extracted = extractMinimalViableSchemaForRequestDocument(
     buildASTSchema(definitions),
@@ -34,5 +35,6 @@ export function executeWithSchema({
     fieldResolver,
     typeResolver,
     fieldExecutionHooks,
+    enablePerEventContext,
   });
 }

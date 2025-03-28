@@ -256,6 +256,7 @@ export interface CommonExecutionArgs {
   typeResolver?: Maybe<TypeResolver<unknown, unknown>>;
   subscribeFieldResolver?: Maybe<FunctionFieldResolver<unknown, unknown>>;
   fieldExecutionHooks?: ExecutionHooks;
+  enablePerEventContext?: boolean;
 }
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
   schemaFragment: SchemaFragment;
