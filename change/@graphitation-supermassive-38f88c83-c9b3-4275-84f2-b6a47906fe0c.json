@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Returing back bug fix in event stream context",
-  "packageName": "@graphitation/supermassive",
-  "email": "77059398+vejrj@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}
