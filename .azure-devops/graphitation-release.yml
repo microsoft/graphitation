@@ -50,31 +50,5 @@ extends:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
                 fetchDepth: 2
-              - script: yarn
-                displayName: yarn
               - script: |
-                  yarn ci
-                displayName: build and test [test]
-              - script: |
-                  git config user.email "gql-svc@microsoft.com"
-                  git config user.name "Graphitation Service Account"
-                  git fetch --depth=2
-                displayName: Configure git for release
-              - script: yarn release -y -n $(ossNpmToken) --access public --no-push --keep-change-files
-                displayName: Release to the npm registry
-              - script: |
-                  git restore .
-                displayName: Discard beachball's changes
-              - script: |
-                  echo "always-auth=true" > .npmrc
-                  echo "registry=$(adoNpmFeedBaseUrl)" >> .npmrc
-              - task: npmAuthenticate@0
-                inputs:
-                  workingFile: ".npmrc"
-              - script: yarn release -y --registry $(adoNpmFeedBaseUrl)
-                displayName: Release to the ado npm feed
-              - task: 1ES.PublishPipelineArtifact@1
-                displayName: 📒 Publish Manifest
-                inputs:
-                  artifactName: SBom-$(System.JobAttempt)
-                  targetPath: $(System.DefaultWorkingDirectory)/_manifest
+                  git config --local --list
