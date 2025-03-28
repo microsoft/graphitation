@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "test release",
-  "packageName": "@graphitation/graphql-eslint-rules",
-  "email": "pavelglac@gmail.com",
-  "dependentChangeType": "patch"
-}
