@@ -17,7 +17,9 @@ function filterListItems(items: any[], searchValue: string) {
   const filteredItems = [...items];
 
   return filteredItems.filter((value: any) => {
-    return JSON.stringify(value.key).toLowerCase().includes(searchValue);
+    return JSON.stringify(value.key)
+      .toLowerCase()
+      .includes(searchValue.toLowerCase());
   });
 }
 
