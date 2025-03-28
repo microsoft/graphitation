@@ -1,8 +1,16 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-<!-- This log was last generated on Wed, 11 Dec 2024 14:16:51 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 28 Mar 2025 11:35:13 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.2.1
+
+Fri, 28 Mar 2025 11:35:13 GMT
+
+### Patches
+
+- Search hotfix (77059398+vejrj@users.noreply.github.com)
 
 ## 1.2.0
 
