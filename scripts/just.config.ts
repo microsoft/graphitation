@@ -10,6 +10,8 @@ import {
 import * as path from "path";
 import * as glob from "fast-glob";
 import * as fs from "fs";
+import { transformFileSync } from "@babel/core";
+import { inlineAssert } from "./inline-assert";
 
 export const types = () => {
   return tscTask({
@@ -22,7 +24,7 @@ export const build = () => {
   const baseEsbuildOptions: EsbuildBuildOptions = {
     entryPoints: glob.sync(["src/**/*.{ts,tsx}", "!src/**/__tests__/**"]),
     outdir: "lib",
-    target: "es6",
+    target: "es2018",
     sourcemap: "external",
   };
   return parallel(
@@ -32,6 +34,24 @@ export const build = () => {
       bundle: true,
       outExtension: { ".js": ".mjs" },
       plugins: [
+        {
+          name: "inline-assert",
+          setup(build) {
+            // TODO: switch to SWC or tree-sitter
+            build.onLoad({ filter: /apollo-forest-run/ }, async (args) => {
+              const result = transformFileSync(args.path, {
+                filename: args.path,
+                presets: ["@babel/preset-typescript"],
+                plugins: [inlineAssert()],
+                sourceMaps: "inline",
+              });
+              return {
+                contents: result?.code ?? undefined,
+                loader: args.path.endsWith(".ts") ? "ts" : "js",
+              };
+            });
+          },
+        },
         {
           name: "add-mjs",
           setup(build) {
