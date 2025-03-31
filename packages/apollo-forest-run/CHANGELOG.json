@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Mon, 31 Mar 2025 14:15:49 GMT",
+      "version": "0.10.1",
+      "tag": "@graphitation/apollo-forest-run_v0.10.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "877fb98040f9b7d77cfe4a4f3f2cd36ca263a5ea",
+            "comment": "fix(apollo-forest-run): don't throw on incorrect written data"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 31 Mar 2025 11:23:11 GMT",
       "version": "0.10.0",
       "tag": "@graphitation/apollo-forest-run_v0.10.0",

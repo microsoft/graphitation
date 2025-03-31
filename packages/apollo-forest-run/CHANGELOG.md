@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Mon, 31 Mar 2025 11:23:11 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 31 Mar 2025 14:15:49 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.10.1
+
+Mon, 31 Mar 2025 14:15:49 GMT
+
+### Patches
+
+- fix(apollo-forest-run): don't throw on incorrect written data (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.10.0
 

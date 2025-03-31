@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "fix(apollo-forest-run): don't throw on incorrect written data",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vrazuvaev@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}
