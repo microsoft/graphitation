@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Mon, 31 Mar 2025 11:23:11 GMT",
+      "version": "0.10.0",
+      "tag": "@graphitation/apollo-forest-run_v0.10.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "7da485374f28f1a7c88b67aea8627c20694c971a",
+            "comment": "Build target ES2018; inlined asserts"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 28 Feb 2025 15:25:36 GMT",
       "version": "0.9.3",
       "tag": "@graphitation/apollo-forest-run_v0.9.3",

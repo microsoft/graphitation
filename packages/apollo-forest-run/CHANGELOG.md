@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Fri, 28 Feb 2025 15:25:36 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 31 Mar 2025 11:23:11 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.10.0
+
+Mon, 31 Mar 2025 11:23:11 GMT
+
+### Minor changes
+
+- Build target ES2018; inlined asserts (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.9.3
 

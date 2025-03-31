@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Build target ES2018; inlined asserts",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vrazuvaev@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}
