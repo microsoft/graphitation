@@ -771,3 +771,50 @@ test("bad manual writes shouldn't cause invariant violation", () => {
   // Additional sanity-check
   expect(cache.readQuery({ query })).toEqual({ foo: { bar: "baz" } });
 });
+
+test("writes of non-object data should not throw", () => {
+  // Note: this is a no-op in Apollo today
+  const query = gql`
+    mutation {
+      foo
+    }
+  `;
+  const cache = new ForestRun();
+  const run1 = () =>
+    cache.write({ query, result: true, dataId: "ROOT_MUTATION" });
+  const run2 = () => cache.write({ query, result: true });
+  const run3 = () => cache.write({ query, result: null });
+
+  expect(run1).not.toThrow();
+  expect(run2).not.toThrow();
+  expect(run3).not.toThrow();
+});
+
+test("writes with missing fields should be kept up-to-date", () => {
+  const q1 = gql`
+    {
+      foo
+    }
+  `;
+  const q2 = gql`
+    {
+      foo
+      bar
+    }
+  `;
+  const cache = new ForestRun();
+  cache.write({ query: q1, result: { foo: "foo" } });
+  cache.write({ query: q2, result: { bar: "bar" } });
+
+  // Sanity-check
+  expect(cache.read({ query: q2, optimistic: true })).toEqual({
+    foo: "foo",
+    bar: "bar",
+  });
+
+  cache.write({ query: q2, result: { bar: "barUpdated" } });
+  expect(cache.read({ query: q2, optimistic: true })).toEqual({
+    foo: "foo",
+    bar: "barUpdated",
+  });
+});

@@ -122,5 +122,5 @@ function getKeyVars(doc: OperationDefinitionNode): VariableName[] | null {
         `got ${JSON.stringify(value)} in place of keyVars`,
     );
   }
-  return value;
+  return value as string[];
 }

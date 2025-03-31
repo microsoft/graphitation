@@ -51,7 +51,10 @@ export function write(
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);
 
-  const writeData = options.result ?? {};
+  const writeData =
+    typeof options.result === "object" && options.result !== null
+      ? options.result
+      : {};
   const rootNodeKey = options.dataId ?? objectKey(writeData);
   assert(rootNodeKey !== false);
 
