@@ -1,6 +1,6 @@
-export function assert(condition: unknown): asserts condition {
+export function assert(condition: unknown, message = ""): asserts condition {
   if (!condition) {
-    throw new Error("Invariant violation");
+    throw new Error("Invariant violation" + (message ? `: ${message}` : ""));
   }
 }
 

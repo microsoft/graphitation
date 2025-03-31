@@ -25,8 +25,10 @@
     "postinstall": "patch-package"
   },
   "devDependencies": {
-    "graphql": "^15.0.0",
+    "@babel/core": "^7.14.0",
+    "@babel/preset-typescript": "^7.14.0",
     "beachball": "^2.47.1",
+    "graphql": "^15.0.0",
     "lage": "^2.7.14",
     "patch-package": "^6.4.7",
     "prettier": "^2.8.7",
