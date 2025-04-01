@@ -216,17 +216,7 @@ function indexSourceObject(
     : env.objectKey(source, selection, context.operation);
 
   const key = typeof objectKeyResult === "string" ? objectKeyResult : false;
-  let missingFields = knownMissingFields?.get(source);
-
-  if (typeName === void 0 && selection.fields.has("__typename")) {
-    const field = selection.fields.get("__typename");
-    if (!missingFields) {
-      missingFields = new Set();
-      knownMissingFields?.set(source, missingFields);
-    }
-    assert(field?.length);
-    missingFields.add(field[0]);
-  }
+  const missingFields = knownMissingFields?.get(source);
 
   const chunk = createObjectChunk(
     op,
@@ -356,6 +346,9 @@ function indexSourceList(
         list[index] = fixedValue;
       }
       item = indexSourceObject(context, fixedValue, selection, itemParent);
+      item.missingFields = new Set([...item.selection.fields.values()].flat());
+      markAsPartial(context, itemParent);
+      context.incompleteChunks.add(item);
     }
     itemParent.value = item;
     chunk.itemChunks[index] = itemParent;
