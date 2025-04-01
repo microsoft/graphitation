@@ -216,7 +216,17 @@ function indexSourceObject(
     : env.objectKey(source, selection, context.operation);
 
   const key = typeof objectKeyResult === "string" ? objectKeyResult : false;
-  const missingFields = knownMissingFields?.get(source);
+  let missingFields = knownMissingFields?.get(source);
+
+  if (typeName === void 0 && selection.fields.has("__typename")) {
+    const field = selection.fields.get("__typename");
+    if (!missingFields) {
+      missingFields = new Set();
+      knownMissingFields?.set(source, missingFields);
+    }
+    assert(field?.length);
+    missingFields.add(field[0]);
+  }
 
   const chunk = createObjectChunk(
     op,
@@ -338,8 +348,15 @@ function indexSourceList(
       item = indexSourceObject(context, value, selection, itemParent);
     } else if (value === null) {
       item = createCompositeNullChunk(operation, selection);
+    } else {
+      // ApolloCompat: unexpected values are converted to empty objects 🤷‍♂️
+      // FIXME: remove this garbage in the next major
+      const fixedValue = Object.create(null) as SourceObject;
+      if (!Object.isFrozen(list)) {
+        list[index] = fixedValue;
+      }
+      item = indexSourceObject(context, fixedValue, selection, itemParent);
     }
-    assert(item !== undefined);
     itemParent.value = item;
     chunk.itemChunks[index] = itemParent;
   }

@@ -818,3 +818,23 @@ test("writes with missing fields should be kept up-to-date", () => {
     bar: "barUpdated",
   });
 });
+
+test("treats incorrect list items as empty objects", () => {
+  // Note: this is for backwards compatibility with Apollo Client 3.6+ 🤷‍♂️
+  const query = gql`
+    {
+      foo {
+        bar
+      }
+    }
+  `;
+
+  const cache = new ForestRun();
+  const result = { foo: [{ bar: "test" }, "bad"] };
+
+  cache.write({ query, result, dataId: "ROOT_QUERY" });
+
+  const data = cache.diff({ query, optimistic: true });
+  expect(data.result).toEqual({ foo: [{ bar: "test" }, {}] });
+  expect(data.complete).toBe(false);
+});
