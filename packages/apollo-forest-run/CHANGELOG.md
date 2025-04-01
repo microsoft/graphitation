@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Mon, 31 Mar 2025 14:15:49 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 01 Apr 2025 15:56:38 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.10.2
+
+Tue, 01 Apr 2025 15:56:38 GMT
+
+### Patches
+
+- fix(apollo-forest-run): treat incorrect list items the same way as InMemoryCache (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.10.1
 

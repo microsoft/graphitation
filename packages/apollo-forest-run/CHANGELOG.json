@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Tue, 01 Apr 2025 15:56:38 GMT",
+      "version": "0.10.2",
+      "tag": "@graphitation/apollo-forest-run_v0.10.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "630777458791986ca5d4e6da1e4fdd1a4ceca059",
+            "comment": "fix(apollo-forest-run): treat incorrect list items the same way as InMemoryCache"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 31 Mar 2025 14:15:49 GMT",
       "version": "0.10.1",
       "tag": "@graphitation/apollo-forest-run_v0.10.1",
