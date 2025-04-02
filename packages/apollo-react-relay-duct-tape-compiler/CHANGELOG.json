@@ -2,6 +2,33 @@
   "name": "@graphitation/apollo-react-relay-duct-tape-compiler",
   "entries": [
     {
+      "date": "Wed, 02 Apr 2025 11:43:32 GMT",
+      "version": "1.7.0",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.7.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "commit": "b17c48f6ca3c3cdbafc1634c9aff9b8013b51794",
+            "comment": "Changed build target from ES6 to ES2018"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "comment": "Bump @graphitation/graphql-js-tag to v0.10.0",
+            "commit": "not available"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "comment": "Bump @graphitation/supermassive to v3.10.0",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 28 Mar 2025 09:57:05 GMT",
       "version": "1.6.20",
       "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.6.20",

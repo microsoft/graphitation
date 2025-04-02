@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Wed, 02 Apr 2025 11:43:32 GMT",
+      "version": "3.2.0",
+      "tag": "@graphitation/ts-codegen_v3.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/ts-codegen",
+            "commit": "b17c48f6ca3c3cdbafc1634c9aff9b8013b51794",
+            "comment": "Changed build target from ES6 to ES2018"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 24 Mar 2025 11:24:10 GMT",
       "version": "3.1.0",
       "tag": "@graphitation/ts-codegen_v3.1.0",

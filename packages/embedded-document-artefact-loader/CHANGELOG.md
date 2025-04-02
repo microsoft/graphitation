@@ -1,8 +1,16 @@
 # Change Log - @graphitation/embedded-document-artefact-loader
 
-<!-- This log was last generated on Thu, 13 Feb 2025 09:09:52 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 02 Apr 2025 11:43:32 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.10.0
+
+Wed, 02 Apr 2025 11:43:32 GMT
+
+### Minor changes
+
+- Changed build target from ES6 to ES2018 (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.9.0
 

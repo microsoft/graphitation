@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-tag",
   "entries": [
     {
+      "date": "Wed, 02 Apr 2025 11:43:32 GMT",
+      "version": "0.10.0",
+      "tag": "@graphitation/graphql-js-tag_v0.10.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/graphql-js-tag",
+            "commit": "b17c48f6ca3c3cdbafc1634c9aff9b8013b51794",
+            "comment": "Changed build target from ES6 to ES2018"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 23 Oct 2024 09:22:25 GMT",
       "version": "0.9.4",
       "tag": "@graphitation/graphql-js-tag_v0.9.4",

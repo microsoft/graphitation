@@ -2,6 +2,27 @@
   "name": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
   "entries": [
     {
+      "date": "Wed, 02 Apr 2025 11:43:32 GMT",
+      "version": "2.1.0",
+      "tag": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin_v2.1.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
+            "commit": "b17c48f6ca3c3cdbafc1634c9aff9b8013b51794",
+            "comment": "Changed build target from ES6 to ES2018"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
+            "comment": "Bump @graphitation/supermassive to v3.10.0",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 28 Mar 2025 09:57:05 GMT",
       "version": "2.0.28",
       "tag": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin_v2.0.28",

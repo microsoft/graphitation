@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-typescript-typemap-plugin
 
-<!-- This log was last generated on Thu, 27 Mar 2025 16:19:03 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 02 Apr 2025 11:43:32 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.1.0
+
+Wed, 02 Apr 2025 11:43:32 GMT
+
+### Minor changes
+
+- Changed build target from ES6 to ES2018 (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 1.0.0
 

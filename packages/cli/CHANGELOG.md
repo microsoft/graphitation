@@ -1,8 +1,18 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Mon, 24 Mar 2025 11:24:11 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 02 Apr 2025 11:43:32 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 2.1.0
+
+Wed, 02 Apr 2025 11:43:32 GMT
+
+### Minor changes
+
+- Changed build target from ES6 to ES2018 (vrazuvaev@microsoft.com_msteamsmdb)
+- Bump @graphitation/supermassive-extractors to v2.3.0
+- Bump @graphitation/ts-codegen to v3.2.0
 
 ## 2.0.1
 

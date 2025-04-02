@@ -2,6 +2,33 @@
   "name": "@graphitation/graphql-js-operation-payload-generator",
   "entries": [
     {
+      "date": "Wed, 02 Apr 2025 11:43:32 GMT",
+      "version": "0.13.0",
+      "tag": "@graphitation/graphql-js-operation-payload-generator_v0.13.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "commit": "b17c48f6ca3c3cdbafc1634c9aff9b8013b51794",
+            "comment": "Changed build target from ES6 to ES2018"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "comment": "Bump @graphitation/graphql-js-tag to v0.10.0",
+            "commit": "not available"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-js-operation-payload-generator",
+            "comment": "Bump @graphitation/graphql-codegen-typescript-typemap-plugin to v1.1.0",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 27 Mar 2025 16:19:03 GMT",
       "version": "0.12.11",
       "tag": "@graphitation/graphql-js-operation-payload-generator_v0.12.11",

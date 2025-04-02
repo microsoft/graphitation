@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-eslint-rules
 
-<!-- This log was last generated on Fri, 28 Mar 2025 12:18:15 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 02 Apr 2025 11:43:32 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.13.0
+
+Wed, 02 Apr 2025 11:43:32 GMT
+
+### Minor changes
+
+- Changed build target from ES6 to ES2018 (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.12.6
 

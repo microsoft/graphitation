@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-eslint-rules",
   "entries": [
     {
+      "date": "Wed, 02 Apr 2025 11:43:32 GMT",
+      "version": "0.13.0",
+      "tag": "@graphitation/graphql-eslint-rules_v0.13.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/graphql-eslint-rules",
+            "commit": "b17c48f6ca3c3cdbafc1634c9aff9b8013b51794",
+            "comment": "Changed build target from ES6 to ES2018"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 28 Mar 2025 12:18:15 GMT",
       "version": "0.12.6",
       "tag": "@graphitation/graphql-eslint-rules_v0.12.6",

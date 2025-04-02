@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive-extractors",
   "entries": [
     {
+      "date": "Wed, 02 Apr 2025 11:43:32 GMT",
+      "version": "2.3.0",
+      "tag": "@graphitation/supermassive-extractors_v2.3.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/supermassive-extractors",
+            "commit": "b17c48f6ca3c3cdbafc1634c9aff9b8013b51794",
+            "comment": "Changed build target from ES6 to ES2018"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 23 Oct 2024 09:22:25 GMT",
       "version": "2.2.5",
       "tag": "@graphitation/supermassive-extractors_v2.2.5",

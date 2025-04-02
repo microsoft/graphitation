@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-typescript-typemap-plugin",
   "entries": [
     {
+      "date": "Wed, 02 Apr 2025 11:43:32 GMT",
+      "version": "1.1.0",
+      "tag": "@graphitation/graphql-codegen-typescript-typemap-plugin_v1.1.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/graphql-codegen-typescript-typemap-plugin",
+            "commit": "b17c48f6ca3c3cdbafc1634c9aff9b8013b51794",
+            "comment": "Changed build target from ES6 to ES2018"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 27 Mar 2025 16:19:03 GMT",
       "version": "1.0.0",
       "tag": "@graphitation/graphql-codegen-typescript-typemap-plugin_v1.0.0",

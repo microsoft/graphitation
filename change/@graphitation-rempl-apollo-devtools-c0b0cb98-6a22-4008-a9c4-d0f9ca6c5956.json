@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Changed build target from ES6 to ES2018",
-  "packageName": "@graphitation/rempl-apollo-devtools",
-  "email": "vrazuvaev@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}
