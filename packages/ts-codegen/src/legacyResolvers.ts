@@ -140,7 +140,7 @@ function createFieldArgs(
       type.kind !== "NonNullType"
         ? factory.createToken(ts.SyntaxKind.QuestionToken)
         : undefined,
-      context.getTypeReferenceForInputTypeFromTypeNode(type, "LEGACY"),
+      context.getTypeReferenceForInputTypeFromTypeNode(type, "RESOLVERS"),
     ),
   );
 
