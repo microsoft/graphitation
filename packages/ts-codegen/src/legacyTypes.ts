@@ -21,6 +21,7 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
         LEGACY_TYPES.includes(type.kind) &&
         !ROOT_OPERATIONS.includes(type.name),
     );
+
   statements.push(
     factory.createImportDeclaration(
       undefined,
@@ -30,17 +31,6 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
         factory.createNamespaceImport(factory.createIdentifier("Models")),
       ),
       factory.createStringLiteral("./models.interface"),
-    ),
-  );
-  statements.push(
-    factory.createImportDeclaration(
-      undefined,
-      factory.createImportClause(
-        false,
-        undefined,
-        factory.createNamespaceImport(factory.createIdentifier("Resolvers")),
-      ),
-      factory.createStringLiteral("./resolvers.interface"),
     ),
   );
 
@@ -60,17 +50,6 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
         false,
         undefined,
         factory.createStringLiteral("./enums.interface"),
-      ),
-    );
-  }
-
-  if (context.hasInputs) {
-    statements.push(
-      factory.createExportDeclaration(
-        undefined,
-        false,
-        undefined,
-        factory.createStringLiteral("./inputs.interface"),
       ),
     );
   }
@@ -122,15 +101,10 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
           type.name,
           undefined,
           factory.createTypeReferenceNode(
-            type.kind === "INPUT_OBJECT"
-              ? factory.createQualifiedName(
-                  factory.createIdentifier("Resolvers"),
-                  type.name,
-                )
-              : factory.createQualifiedName(
-                  factory.createIdentifier("Models"),
-                  type.name,
-                ),
+            factory.createQualifiedName(
+              factory.createIdentifier("Models"),
+              type.name,
+            ),
           ),
         ),
       ),

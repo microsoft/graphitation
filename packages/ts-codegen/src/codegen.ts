@@ -6,7 +6,6 @@ import { generateModels } from "./models";
 import { generateLegacyTypes } from "./legacyTypes";
 import { generateLegacyResolvers } from "./legacyResolvers";
 import { generateEnums } from "./enums";
-import { generateInputs } from "./inputs";
 
 export interface GenerateTSOptions {
   outputPath: string;
@@ -131,9 +130,7 @@ export function generateTS(
           }),
         );
       }
-      if (context.hasInputs) {
-        result.push(generateInputs(context));
-      }
+
       if (legacyCompat) {
         result.push(generateLegacyTypes(context));
         result.push(generateLegacyResolvers(context));

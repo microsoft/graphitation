@@ -114,7 +114,6 @@ export class TsCodegenContext {
   private typeNameToType: Map<string, Type>;
   private usedEntitiesInModels: Set<string>;
   private usedEntitiesInResolvers: Set<string>;
-  private usedEntitiesInInputs: Set<string>;
   private imports: DefinitionImport[];
   private typeNameToImports: Map<
     string,
@@ -128,11 +127,9 @@ export class TsCodegenContext {
     pathTemplate: string;
   };
   contextDefaultSubTypeContext?: { name: string; from: string };
-  hasUsedModelInInputs: boolean;
   hasUsedEnumsInModels: boolean;
   hasEnums: boolean;
   hasModels: boolean;
-  hasInputs: boolean;
   hasResolvers: boolean;
 
   constructor(private options: TsCodegenContextOptions) {
@@ -141,15 +138,12 @@ export class TsCodegenContext {
     this.typeNameToType = new Map();
     this.usedEntitiesInModels = new Set();
     this.usedEntitiesInResolvers = new Set();
-    this.usedEntitiesInInputs = new Set();
 
     this.imports = [];
     this.typeNameToImports = new Map();
     this.typeNameToModels = new Map();
     this.legacyInterfaces = new Set();
-    this.hasUsedModelInInputs = false;
     this.hasResolvers = false;
-    this.hasInputs = false;
     this.hasModels = false;
     this.hasEnums = Boolean(options.enumsImport);
     this.hasUsedEnumsInModels = false;
@@ -409,7 +403,7 @@ export class TsCodegenContext {
 
   getTypeReferenceForInputTypeFromTypeNode(
     node: TypeNode,
-    markUsage?: "MODELS" | "RESOLVERS" | "LEGACY" | "INPUTS",
+    markUsage?: "MODELS" | "RESOLVERS",
   ): ts.TypeNode {
     if (node.kind === Kind.NON_NULL_TYPE) {
       return createNonNullableType(
@@ -421,7 +415,7 @@ export class TsCodegenContext {
       );
     } else {
       return createNullableType(
-        this.getInputType(node.name.value, markUsage).toTypeReference(),
+        this.getModelType(node.name.value, markUsage).toTypeReference(),
       );
     }
   }
@@ -476,13 +470,11 @@ export class TsCodegenContext {
   }
 
   getAllImportDeclarations(
-    filterFor: "MODELS" | "RESOLVERS" | "INPUTS",
+    filterFor: "MODELS" | "RESOLVERS",
   ): ts.ImportDeclaration[] {
     let filter: (typeName: string) => boolean;
     if (filterFor === "MODELS") {
       filter = (typeName: string) => this.usedEntitiesInModels.has(typeName);
-    } else if (filterFor === "INPUTS") {
-      filter = (typeName: string) => this.usedEntitiesInInputs.has(typeName);
     } else {
       filter = (typeName: string) => this.usedEntitiesInResolvers.has(typeName);
     }
@@ -667,51 +659,6 @@ export class TsCodegenContext {
     }
   }
 
-  getInputType(
-    typeName: string,
-    markUsage?: "MODELS" | "RESOLVERS" | "LEGACY" | "INPUTS",
-  ): TypeLocation {
-    if (Object.prototype.hasOwnProperty.call(BUILT_IN_SCALARS, typeName)) {
-      return new TypeLocation(null, BUILT_IN_SCALARS[typeName]);
-    } else if (this.typeNameToImports.has(typeName)) {
-      if (markUsage === "MODELS") {
-        this.usedEntitiesInModels.add(typeName);
-      } else if (markUsage === "RESOLVERS") {
-        this.usedEntitiesInResolvers.add(typeName);
-      } else if (markUsage === "INPUTS") {
-        this.usedEntitiesInInputs.add(typeName);
-      }
-      const { modelName, imp } = this.typeNameToImports.get(
-        typeName,
-      ) as ModelNameAndImport;
-      return new TypeLocation(null, `${imp.importName}.${modelName}`);
-    } else {
-      const type = this.typeNameToType.get(typeName);
-      if (type && type.kind !== "INPUT_OBJECT") {
-        if (markUsage === "MODELS") {
-          this.usedEntitiesInModels.add(typeName);
-        } else if (markUsage === "RESOLVERS") {
-          this.usedEntitiesInResolvers.add(typeName);
-          return new TypeLocation(null, `Models.${typeName}`);
-        } else if (markUsage === "LEGACY") {
-          return new TypeLocation(null, `Types.${typeName}`);
-        } else if (markUsage === "INPUTS") {
-          this.hasUsedModelInInputs = true;
-          return new TypeLocation(null, `Models.${typeName}`);
-        }
-        return new TypeLocation(null, typeName);
-      } else {
-        if (markUsage === "LEGACY") {
-          return new TypeLocation(null, `Resolvers.${typeName}`);
-        } else if (markUsage === "RESOLVERS") {
-          return new TypeLocation(null, `Inputs.${typeName}`);
-        } else {
-          return new TypeLocation(null, typeName);
-        }
-      }
-    }
-  }
-
   getDefinedModelType(typeName: string): TypeLocation | null {
     if (this.typeNameToModels.has(typeName)) {
       const imp = this.typeNameToModels.get(typeName) as DefinitionModel;
@@ -838,7 +785,7 @@ export function extractContext(
     },
     InputObjectTypeDefinition: {
       leave(node) {
-        context.hasInputs = true;
+        context.hasModels = true;
 
         context.addType({
           kind: "INPUT_OBJECT",
