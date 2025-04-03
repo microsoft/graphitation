@@ -1,8 +1,16 @@
 # Change Log - supermassive-todomvc
 
-This log was last generated on Mon, 14 Oct 2024 07:58:57 GMT and should not be manually modified.
+<!-- This log was last generated on Thu, 03 Apr 2025 09:53:17 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.0.1-1
+
+Thu, 03 Apr 2025 09:53:17 GMT
+
+### Changes
+
+- update license (pavelglac@gmail.com)
 
 ## 1.0.1-0
 

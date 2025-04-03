@@ -3,7 +3,7 @@
   "license": "MIT",
   "main": "index.js",
   "private": true,
-  "version": "1.0.1-0",
+  "version": "1.0.1-1",
   "scripts": {
     "start": "concurrently 'yarn duct-tape-compiler --watch' 'yarn serve --progress --color --mode=development'",
     "build": "",
