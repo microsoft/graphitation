@@ -64,17 +64,6 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
     );
   }
 
-  if (context.hasInputs) {
-    statements.push(
-      factory.createExportDeclaration(
-        undefined,
-        false,
-        undefined,
-        factory.createStringLiteral("./inputs.interface"),
-      ),
-    );
-  }
-
   statements.push(
     factory.createInterfaceDeclaration(
       [factory.createModifier(ts.SyntaxKind.ExportKeyword)],

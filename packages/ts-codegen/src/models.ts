@@ -4,6 +4,7 @@ import {
   ScalarType,
   TsCodegenContext,
   Type,
+  InputObjectType,
   InterfaceType,
   ObjectType,
   UnionType,
@@ -71,6 +72,9 @@ function createModelForType(
     }
     case "SCALAR": {
       return createScalarModel(context, type);
+    }
+    case "INPUT_OBJECT": {
+      return createInputObjectType(context, type);
     }
     default: {
       return null;
@@ -250,4 +254,27 @@ function createScalarModel(
   type: ScalarType,
 ): ts.TypeAliasDeclaration | null {
   return context.getScalarDefinition(type.name) || null;
+}
+
+function createInputObjectType(
+  context: TsCodegenContext,
+  type: InputObjectType,
+): ts.TypeAliasDeclaration {
+  return factory.createTypeAliasDeclaration(
+    [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+    type.name,
+    undefined,
+    factory.createTypeLiteralNode(
+      type.fields.map(({ name, type }) =>
+        factory.createPropertySignature(
+          [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+          factory.createIdentifier(name),
+          type.kind !== "NonNullType"
+            ? factory.createToken(ts.SyntaxKind.QuestionToken)
+            : undefined,
+          context.getTypeReferenceForInputTypeFromTypeNode(type, "MODELS"),
+        ),
+      ),
+    ),
+  );
 }

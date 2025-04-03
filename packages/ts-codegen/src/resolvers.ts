@@ -128,29 +128,6 @@ export function generateResolvers(
     }
   }
 
-  if (context.hasInputs) {
-    statements.push(
-      factory.createImportDeclaration(
-        undefined,
-        factory.createImportClause(
-          false,
-          undefined,
-          factory.createNamespaceImport(factory.createIdentifier("Inputs")),
-        ),
-        factory.createStringLiteral("./inputs.interface"),
-      ),
-    );
-
-    statements.push(
-      factory.createExportDeclaration(
-        undefined,
-        false,
-        undefined,
-        factory.createStringLiteral("./inputs.interface"),
-      ),
-    );
-  }
-
   const resolverTypes = getResolverTypes(context);
   statements.push(
     ...resolverTypes.map((type) =>
