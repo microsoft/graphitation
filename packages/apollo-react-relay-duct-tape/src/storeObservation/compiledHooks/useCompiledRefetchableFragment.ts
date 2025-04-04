@@ -97,8 +97,9 @@ export function useCompiledRefetchableFragment(
       });
       let subscription: ZenObservable.Subscription | undefined =
         observable.subscribe(
-          ({ data, error }) => {
+          ({ data, error, loading }) => {
             // Be sure not to keep a retain cycle, so cleanup the reference first thing.
+            // if (!loading) {
             subscription?.unsubscribe();
             subscription = undefined;
             disposable.current = undefined;
@@ -133,6 +134,7 @@ export function useCompiledRefetchableFragment(
                 }
               }
             });
+            // }
           },
           (error) => {
             // Be sure not to keep a retain cycle
