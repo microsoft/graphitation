@@ -506,7 +506,7 @@ describe.each([
         expect(client.getObservableQueries().size).toBe(0);
       });
 
-      it.only("should return data from cache and update with network data", async () => {
+      it("should return data from cache and update with network data", async () => {
         useLazyLoadQueryResultArray = [];
         client.mock.queueOperationResolver((operation) => {
           return MockPayloadGenerator.generate(operation, {
@@ -783,89 +783,56 @@ describe.each([
     describe("when refetching with store-and-network", () => {
       it("should return data from cache and update with network data", async () => {
         const [, refetch] = last(returnedResults());
-
         const intialObservableQueriesCount = client.getObservableQueries().size;
-
         const onCompleted = jest.fn();
 
-        useRefetchableFragmentResult = [];
+        // Helper function to perform refetch and verify network update
+        const performRefetchAndVerify = async (expectedPetName: string) => {
+          await act(async () => {
+            refetch(
+              { avatarSize: 50 },
+              { fetchPolicy: "store-and-network", onCompleted },
+            );
+          });
 
-        // Trigger refetch with cache-and-network
-        await act(async () => {
-          refetch(
-            { avatarSize: 50 },
-            {
-              fetchPolicy: "store-and-network",
-              // @ts-ignore
-              UNSTABLE_onCompletedWithData: (error, data) => {
-                onCompleted(error, data);
-              },
-            },
-          );
-          // Allow promises to resolve
-          await new Promise((resolve) => setTimeout(resolve, 0));
-        });
+          // Wait slightly before resolving to simulate network latency
+          await new Promise((resolve) => setTimeout(resolve, 100));
 
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        await act(async () => {
-          client.mock.resolveMostRecentOperation((operation) =>
-            MockPayloadGenerator.generate(operation, {
-              Node: () => ({
-                id: 42,
-                // Network data should have a different value
-                avatarUrl: `network-avatarUrl-size-${operation.request.variables.avatarSize}`,
-                petName: "Network Pet 1", // Add another field to ensure full update
+          await act(async () => {
+            client.mock.resolveMostRecentOperation((operation) =>
+              MockPayloadGenerator.generate(operation, {
+                Node: () => ({
+                  id: 42,
+                  // Network data should have a different value
+                  avatarUrl: `network-avatarUrl-size-${operation.request.variables.avatarSize}`,
+                  petName: expectedPetName, // Use the expected name
+                }),
               }),
-            }),
-          );
-        });
+            );
+            await new Promise((resolve) => setTimeout(resolve, 0));
+          });
 
-        await new Promise((resolve) => setTimeout(resolve, 100));
+          // Wait slightly for state updates to propagate
+          await new Promise((resolve) => setTimeout(resolve, 50));
 
-        const lastResult = last(useRefetchableFragmentResult)[0];
-        expect(lastResult).toMatchObject({
-          petName: "Network Pet 1",
-        });
+          const lastResult = last(returnedResults())[0];
+          expect(lastResult).toMatchObject({
+            petName: expectedPetName,
+            avatarUrl: `network-avatarUrl-size-50`,
+            __fragments: expect.objectContaining({ avatarSize: 50 }), // Ensure variables updated
+          });
+        };
 
-        await act(async () => {
-          refetch(
-            { avatarSize: 50 },
-            {
-              fetchPolicy: "store-and-network",
-              // @ts-ignore
-              UNSTABLE_onCompletedWithData: (error, data) => {
-                onCompleted(error, data);
-              },
-            },
-          );
-          // Allow promises to resolve
-          await new Promise((resolve) => setTimeout(resolve, 0));
-        });
+        // Perform the first refetch
+        await performRefetchAndVerify("Network Pet 1");
 
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        // Perform the second refetch
+        await performRefetchAndVerify("Network Pet 2");
 
-        await act(async () => {
-          client.mock.resolveMostRecentOperation((operation) =>
-            MockPayloadGenerator.generate(operation, {
-              Node: () => ({
-                id: 42,
-                // Network data should have a different value
-                avatarUrl: `network-avatarUrl-size-${operation.request.variables.avatarSize}`,
-                petName: "Network Pet 2", // Add another field to ensure full update
-              }),
-            }),
-          );
-        });
-
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        const lastSecondResult = last(useRefetchableFragmentResult)[0];
-        expect(lastSecondResult).toMatchObject({
-          petName: "Network Pet 2",
-        });
-
+        // onCompleted should be called once per refetch after network completes
         expect(onCompleted).toHaveBeenCalledTimes(2);
+        // Verify arguments of the last call (error should be null)
+        expect(onCompleted).toHaveBeenLastCalledWith(null);
 
         // Ensure observable was cleaned up after network result
         expect(client.getObservableQueries().size).toBe(
@@ -875,7 +842,7 @@ describe.each([
     });
   }
 
-  describe.only(useCompiledRefetchableFragment, () => {
+  describe(useCompiledRefetchableFragment, () => {
     itBehavesLikeFragment(
       () =>
         useRefetchableFragmentResult.map(

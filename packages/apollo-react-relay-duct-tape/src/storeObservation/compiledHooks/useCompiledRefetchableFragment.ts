@@ -98,43 +98,43 @@ export function useCompiledRefetchableFragment(
       let subscription: ZenObservable.Subscription | undefined =
         observable.subscribe(
           ({ data, error, loading }) => {
-            // Be sure not to keep a retain cycle, so cleanup the reference first thing.
-            // if (!loading) {
-            subscription?.unsubscribe();
-            subscription = undefined;
-            disposable.current = undefined;
+            if (!loading) {
+              // Be sure not to keep a retain cycle, so cleanup the reference first thing.
+              subscription?.unsubscribe();
+              subscription = undefined;
+              disposable.current = undefined;
 
-            unstable_batchedUpdates(() => {
-              if (options?.UNSTABLE_onCompletedWithData) {
-                options.UNSTABLE_onCompletedWithData(error || null, data);
-              } else {
-                options?.onCompleted?.(error || null);
-              }
-              if (!error) {
-                const { id: _, ...variablesToPropagate } = variables;
-                const nextVariables = {
-                  ...fragmentReference.__fragments,
-                  ...variablesToPropagate,
-                };
-                // No need to trigger an update to propagate new variables if they don't actually change.
-                if (
-                  !isEqual(
-                    fragmentReferenceWithOwnVariables.__fragments,
-                    nextVariables,
-                  )
-                ) {
-                  const nextFragmentReference: FragmentReference = {
-                    __fragments: nextVariables,
-                  };
-                  // Don't add an empty key if this is a fragment on the Query type.
-                  if (fragmentReference.id !== undefined) {
-                    nextFragmentReference.id = fragmentReference.id;
-                  }
-                  setFragmentReferenceWithOwnVariables(nextFragmentReference);
+              unstable_batchedUpdates(() => {
+                if (options?.UNSTABLE_onCompletedWithData) {
+                  options.UNSTABLE_onCompletedWithData(error || null, data);
+                } else {
+                  options?.onCompleted?.(error || null);
                 }
-              }
-            });
-            // }
+                if (!error) {
+                  const { id: _, ...variablesToPropagate } = variables;
+                  const nextVariables = {
+                    ...fragmentReference.__fragments,
+                    ...variablesToPropagate,
+                  };
+                  // No need to trigger an update to propagate new variables if they don't actually change.
+                  if (
+                    !isEqual(
+                      fragmentReferenceWithOwnVariables.__fragments,
+                      nextVariables,
+                    )
+                  ) {
+                    const nextFragmentReference: FragmentReference = {
+                      __fragments: nextVariables,
+                    };
+                    // Don't add an empty key if this is a fragment on the Query type.
+                    if (fragmentReference.id !== undefined) {
+                      nextFragmentReference.id = fragmentReference.id;
+                    }
+                    setFragmentReferenceWithOwnVariables(nextFragmentReference);
+                  }
+                }
+              });
+            }
           },
           (error) => {
             // Be sure not to keep a retain cycle
