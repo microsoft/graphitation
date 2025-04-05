@@ -779,6 +779,67 @@ describe.each([
         });
       });
     });
+
+    describe("when refetching with store-and-network", () => {
+      it("should return data from cache and update with network data", async () => {
+        const [, refetch] = last(returnedResults());
+        const intialObservableQueriesCount = client.getObservableQueries().size;
+        const onCompleted = jest.fn();
+
+        // Helper function to perform refetch and verify network update
+        const performRefetchAndVerify = async (expectedPetName: string) => {
+          await act(async () => {
+            refetch(
+              { avatarSize: 50 },
+              { fetchPolicy: "store-and-network", onCompleted },
+            );
+          });
+
+          // Wait slightly before resolving to simulate network latency
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          await act(async () => {
+            client.mock.resolveMostRecentOperation((operation) =>
+              MockPayloadGenerator.generate(operation, {
+                Node: () => ({
+                  id: 42,
+                  // Network data should have a different value
+                  avatarUrl: `network-avatarUrl-size-${operation.request.variables.avatarSize}`,
+                  petName: expectedPetName, // Use the expected name
+                }),
+              }),
+            );
+            await new Promise((resolve) => setTimeout(resolve, 0));
+          });
+
+          // Wait slightly for state updates to propagate
+          await new Promise((resolve) => setTimeout(resolve, 50));
+
+          const lastResult = last(returnedResults())[0];
+          expect(lastResult).toMatchObject({
+            petName: expectedPetName,
+            avatarUrl: `network-avatarUrl-size-50`,
+            __fragments: expect.objectContaining({ avatarSize: 50 }), // Ensure variables updated
+          });
+        };
+
+        // Perform the first refetch
+        await performRefetchAndVerify("Network Pet 1");
+
+        // Perform the second refetch
+        await performRefetchAndVerify("Network Pet 2");
+
+        // onCompleted should be called once per refetch after network completes
+        expect(onCompleted).toHaveBeenCalledTimes(2);
+        // Verify arguments of the last call (error should be null)
+        expect(onCompleted).toHaveBeenLastCalledWith(null);
+
+        // Ensure observable was cleaned up after network result
+        expect(client.getObservableQueries().size).toBe(
+          intialObservableQueriesCount,
+        );
+      });
+    });
   }
 
   describe(useCompiledRefetchableFragment, () => {
