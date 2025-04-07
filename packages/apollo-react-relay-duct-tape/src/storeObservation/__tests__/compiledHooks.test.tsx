@@ -700,88 +700,88 @@ describe.each([
       "supports variables with default values on either operations or with @argumentDefinitions",
     );
 
-    // describe("when refetching", () => {
-    //   let onCompleted: jest.Mock;
-    //   let disposable: Disposable;
+    describe("when refetching", () => {
+      let onCompleted: jest.Mock;
+      let disposable: Disposable;
 
-    //   beforeEach(() => {
-    //     const [_data, refetch] = last(returnedResults());
-    //     onCompleted = jest.fn();
-    //     disposable = refetch({ avatarSize: 42 }, { onCompleted });
-    //   });
+      beforeEach(() => {
+        const [_data, refetch] = last(returnedResults());
+        onCompleted = jest.fn();
+        disposable = refetch({ avatarSize: 42 }, { onCompleted });
+      });
 
-    //   it("can be cancelled", () => {
-    //     const query = last(activeQueries(client));
-    //     disposable.dispose();
-    //     expect(client.getObservableQueries().has(query.queryId)).toBeFalsy();
-    //   });
+      it("can be cancelled", () => {
+        const query = last(activeQueries(client));
+        disposable.dispose();
+        expect(client.getObservableQueries().has(query.queryId)).toBeFalsy();
+      });
 
-    //   it("cancels when unmounting", async () => {
-    //     await act(async () => {
-    //       const query = last(activeQueries(client));
-    //       testRenderer.unmount();
-    //       await new Promise((resolve) => setTimeout(resolve, 0));
-    //       expect(client.getObservableQueries().has(query.queryId)).toBeFalsy();
-    //     });
-    //   });
+      it("cancels when unmounting", async () => {
+        await act(async () => {
+          const query = last(activeQueries(client));
+          testRenderer.unmount();
+          await new Promise((resolve) => setTimeout(resolve, 0));
+          expect(client.getObservableQueries().has(query.queryId)).toBeFalsy();
+        });
+      });
 
-    //   describe("successfully", () => {
-    //     beforeEach(async () => {
-    //       await act(() => {
-    //         client.mock.resolveMostRecentOperation((operation) =>
-    //           MockPayloadGenerator.generate(operation, {
-    //             Node: () => ({
-    //               id: 42,
-    //               avatarUrl: `avatarUrl-with-size-${operation.request.variables.avatarSize}`,
-    //             }),
-    //           }),
-    //         );
-    //         return new Promise((resolve) => setTimeout(resolve, 0));
-    //       });
-    //     });
+      describe("successfully", () => {
+        beforeEach(async () => {
+          await act(() => {
+            client.mock.resolveMostRecentOperation((operation) =>
+              MockPayloadGenerator.generate(operation, {
+                Node: () => ({
+                  id: 42,
+                  avatarUrl: `avatarUrl-with-size-${operation.request.variables.avatarSize}`,
+                }),
+              }),
+            );
+            return new Promise((resolve) => setTimeout(resolve, 0));
+          });
+        });
 
-    //     it("returns a new object from the hook", () => {
-    //       expect(last(returnedResults())[0]).toMatchObject({
-    //         __typename: "User",
-    //         avatarUrl: "avatarUrl-with-size-42",
-    //         id: "42",
-    //       });
-    //     });
+        it("returns a new object from the hook", () => {
+          expect(last(returnedResults())[0]).toMatchObject({
+            __typename: "User",
+            avatarUrl: "avatarUrl-with-size-42",
+            id: "42",
+          });
+        });
 
-    //     it("updates the fragment reference request variables for future requests", () => {
-    //       expect(last(returnedResults())[0]).toMatchObject({
-    //         __fragments: {
-    //           avatarSize: 42,
-    //           userId: 42,
-    //         },
-    //       });
-    //     });
+        it("updates the fragment reference request variables for future requests", () => {
+          expect(last(returnedResults())[0]).toMatchObject({
+            __fragments: {
+              avatarSize: 42,
+              userId: 42,
+            },
+          });
+        });
 
-    //     it("invokes the onComplete callback without error", () => {
-    //       expect(onCompleted).toHaveBeenCalledWith(null);
-    //     });
-    //   });
+        it("invokes the onComplete callback without error", () => {
+          expect(onCompleted).toHaveBeenCalledWith(null);
+        });
+      });
 
-    //   describe("and an error occurs", () => {
-    //     const error = new Error("oh noes");
+      describe("and an error occurs", () => {
+        const error = new Error("oh noes");
 
-    //     beforeEach(async () => {
-    //       await act(() => client.mock.rejectMostRecentOperation(error));
-    //     });
+        beforeEach(async () => {
+          await act(() => client.mock.rejectMostRecentOperation(error));
+        });
 
-    //     it("invokes the onComplete callback when an error occurs", () => {
-    //       expect(onCompleted).toHaveBeenCalledWith(error);
-    //     });
+        it("invokes the onComplete callback when an error occurs", () => {
+          expect(onCompleted).toHaveBeenCalledWith(error);
+        });
 
-    //     it("does not update the fragment reference request variables for future requests", async () => {
-    //       const [_data, refetch] = last(returnedResults());
-    //       refetch({});
-    //       expect(
-    //         client.mock.getMostRecentOperation().request.variables.avatarSize,
-    //       ).toBe(21);
-    //     });
-    //   });
-    // });
+        it("does not update the fragment reference request variables for future requests", async () => {
+          const [_data, refetch] = last(returnedResults());
+          refetch({});
+          expect(
+            client.mock.getMostRecentOperation().request.variables.avatarSize,
+          ).toBe(21);
+        });
+      });
+    });
 
     describe("when refetching with store-and-network", () => {
       it("should return data from cache and update with network data", async () => {
