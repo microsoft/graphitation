@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "fix store-and-network when used with refetchable fragments",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape",
-  "email": "sjwilczynski@gmail.com",
-  "dependentChangeType": "patch"
-}

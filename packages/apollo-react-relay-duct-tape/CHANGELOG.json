@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Mon, 07 Apr 2025 08:26:58 GMT",
+      "version": "1.4.1",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v1.4.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "sjwilczynski@gmail.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "7678bbc1976fde148dee4e94656a6882153ad31c",
+            "comment": "fix store-and-network when used with refetchable fragments"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 02 Apr 2025 11:43:32 GMT",
       "version": "1.4.0",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v1.4.0",
