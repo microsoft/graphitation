@@ -31,10 +31,10 @@ export type compiledHooks_ForwardPaginationFragment_PaginationQuery = {
 
 
 /*
-query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String! = "", $conversationsForwardCount: Int! = 1, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $sortBy: SortByInput, $id: ID!) {
+query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int! = 21, $conversationsAfterCursor: String! = "", $conversationsForwardCount: Int! = 1, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $sortBy: SortByInput, $id: ID!) {
   node(id: $id) {
     __typename
-    ...compiledHooks_ForwardPaginationFragment_pmmUt
+    ...compiledHooks_ForwardPaginationFragment_2G5Lct
     id
   }
 }
@@ -57,7 +57,7 @@ fragment compiledHooks_BackwardPaginationFragment on Conversation {
   id
 }
 
-fragment compiledHooks_ForwardPaginationFragment_pmmUt on NodeWithPetAvatarAndConversations {
+fragment compiledHooks_ForwardPaginationFragment_2G5Lct on NodeWithPetAvatarAndConversations {
   __isNodeWithPetAvatarAndConversations: __typename
   petName
   avatarUrl(size: $avatarSize)
@@ -85,10 +85,10 @@ fragment compiledHooks_ForwardPaginationFragment_pmmUt on NodeWithPetAvatarAndCo
 */
 
 /*
-query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!, $conversationsAfterCursor: String! = "", $conversationsForwardCount: Int! = 1, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $sortBy: SortByInput, $id: ID!) {
+query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int! = 21, $conversationsAfterCursor: String! = "", $conversationsForwardCount: Int! = 1, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $sortBy: SortByInput, $id: ID!) {
   node(id: $id) {
     __typename
-    ...compiledHooks_ForwardPaginationFragment_pmmUt
+    ...compiledHooks_ForwardPaginationFragment_2G5Lct
     id
     ... on Node {
       __fragments @client
@@ -96,7 +96,7 @@ query compiledHooks_ForwardPaginationFragment_PaginationQuery($avatarSize: Int!,
   }
 }
 
-fragment compiledHooks_ForwardPaginationFragment_pmmUt on NodeWithPetAvatarAndConversations {
+fragment compiledHooks_ForwardPaginationFragment_2G5Lct on NodeWithPetAvatarAndConversations {
   __isNodeWithPetAvatarAndConversations: __typename
   petName
   avatarUrl(size: $avatarSize)
@@ -205,7 +205,11 @@ v12 = [
   {
     "kind": "VariableDefinition",
     "variable": (v1/*: any*/),
-    "type": (v2/*: any*/)
+    "type": (v2/*: any*/),
+    "defaultValue": {
+      "kind": "IntValue",
+      "value": "21"
+    }
   },
   {
     "kind": "VariableDefinition",
@@ -283,7 +287,7 @@ v16 = {
 },
 v17 = {
   "kind": "Name",
-  "value": "compiledHooks_ForwardPaginationFragment_pmmUt"
+  "value": "compiledHooks_ForwardPaginationFragment_2G5Lct"
 },
 v18 = {
   "kind": "FragmentSpread",
@@ -760,7 +764,7 @@ return {
   "metadata": {
     "rootSelection": "node",
     "mainFragment": {
-      "name": "compiledHooks_ForwardPaginationFragment_pmmUt",
+      "name": "compiledHooks_ForwardPaginationFragment_2G5Lct",
       "typeCondition": "NodeWithPetAvatarAndConversations"
     },
     "connection": {
