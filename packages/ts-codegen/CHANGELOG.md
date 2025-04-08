@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Wed, 02 Apr 2025 11:43:32 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 08 Apr 2025 15:39:00 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 4.0.0
+
+Tue, 08 Apr 2025 15:39:00 GMT
+
+### Major changes
+
+- emit input types as a part of models.interface.ts (dsamsonov@microsoft.com)
 
 ## 3.2.0
 

@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Tue, 08 Apr 2025 15:39:00 GMT",
+      "version": "4.0.0",
+      "tag": "@graphitation/ts-codegen_v4.0.0",
+      "comments": {
+        "major": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "9ef335f75b8aca853cb0076d9848cd15355382c2",
+            "comment": "emit input types as a part of models.interface.ts"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 02 Apr 2025 11:43:32 GMT",
       "version": "3.2.0",
       "tag": "@graphitation/ts-codegen_v3.2.0",

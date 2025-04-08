@@ -1,7 +1,0 @@
-{
-  "type": "major",
-  "comment": "emit input types as a part of models.interface.ts",
-  "packageName": "@graphitation/ts-codegen",
-  "email": "dsamsonov@microsoft.com",
-  "dependentChangeType": "patch"
-}
