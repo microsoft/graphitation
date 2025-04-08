@@ -18,17 +18,19 @@ export function generateLegacyResolvers(
     ),
   );
 
-  imports.push(
-    factory.createImportDeclaration(
-      undefined,
-      factory.createImportClause(
-        false,
+  if (context.hasModels) {
+    imports.push(
+      factory.createImportDeclaration(
         undefined,
-        factory.createNamespaceImport(factory.createIdentifier("Types")),
+        factory.createImportClause(
+          false,
+          undefined,
+          factory.createNamespaceImport(factory.createIdentifier("Models")),
+        ),
+        factory.createStringLiteral("./models.interface"),
       ),
-      factory.createStringLiteral("./models.interface"),
-    ),
-  );
+    );
+  }
 
   const extra = [];
 
@@ -140,7 +142,7 @@ function createFieldArgs(
       type.kind !== "NonNullType"
         ? factory.createToken(ts.SyntaxKind.QuestionToken)
         : undefined,
-      context.getTypeReferenceForInputTypeFromTypeNode(type, "LEGACY"),
+      context.getTypeReferenceForInputTypeFromTypeNode(type, "RESOLVERS"),
     ),
   );
 
