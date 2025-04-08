@@ -19,15 +19,15 @@ export type compiledHooks_RefetchableFragment_RefetchQuery = {
 
 
 /*
-query compiledHooks_RefetchableFragment_RefetchQuery($avatarSize: Int!, $id: ID!) {
+query compiledHooks_RefetchableFragment_RefetchQuery($avatarSize: Int! = 21, $id: ID!) {
   node(id: $id) {
     __typename
-    ...compiledHooks_RefetchableFragment
+    ...compiledHooks_RefetchableFragment_17xSkz
     id
   }
 }
 
-fragment compiledHooks_RefetchableFragment on User {
+fragment compiledHooks_RefetchableFragment_17xSkz on User {
   petName
   avatarUrl(size: $avatarSize)
   id
@@ -35,10 +35,10 @@ fragment compiledHooks_RefetchableFragment on User {
 */
 
 /*
-query compiledHooks_RefetchableFragment_RefetchQuery($avatarSize: Int!, $id: ID!) {
+query compiledHooks_RefetchableFragment_RefetchQuery($avatarSize: Int! = 21, $id: ID!) {
   node(id: $id) {
     __typename
-    ...compiledHooks_RefetchableFragment
+    ...compiledHooks_RefetchableFragment_17xSkz
     id
     ... on Node {
       __fragments @client
@@ -46,7 +46,7 @@ query compiledHooks_RefetchableFragment_RefetchQuery($avatarSize: Int!, $id: ID!
   }
 }
 
-fragment compiledHooks_RefetchableFragment on User {
+fragment compiledHooks_RefetchableFragment_17xSkz on User {
   petName
   avatarUrl(size: $avatarSize)
   id
@@ -86,6 +86,10 @@ v4 = [
           "value": "Int"
         }
       }
+    },
+    "defaultValue": {
+      "kind": "IntValue",
+      "value": "21"
     }
   },
   {
@@ -123,7 +127,7 @@ v7 = {
 },
 v8 = {
   "kind": "Name",
-  "value": "compiledHooks_RefetchableFragment"
+  "value": "compiledHooks_RefetchableFragment_17xSkz"
 },
 v9 = {
   "kind": "FragmentSpread",
@@ -269,7 +273,7 @@ return {
   "metadata": {
     "rootSelection": "node",
     "mainFragment": {
-      "name": "compiledHooks_RefetchableFragment",
+      "name": "compiledHooks_RefetchableFragment_17xSkz",
       "typeCondition": "User"
     }
   }

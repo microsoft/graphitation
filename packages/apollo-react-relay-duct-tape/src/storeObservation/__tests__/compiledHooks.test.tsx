@@ -59,7 +59,8 @@ const _Child_fragment = graphql`
 
 const _Refetchable_fragment = graphql`
   fragment compiledHooks_RefetchableFragment on User
-  @refetchable(queryName: "compiledHooks_RefetchableFragment_RefetchQuery") {
+  @refetchable(queryName: "compiledHooks_RefetchableFragment_RefetchQuery")
+  @argumentDefinitions(avatarSize: { type: "Int!", defaultValue: 21 }) {
     petName
     avatarUrl(size: $avatarSize)
   }
@@ -82,6 +83,7 @@ const _ForwardPagination_fragment = graphql`
     conversationsForwardCount: { type: "Int!", defaultValue: 1 }
     conversationsAfterCursor: { type: "String!", defaultValue: "" }
     addExtra: { type: "Boolean!", defaultValue: false }
+    avatarSize: { type: "Int!", defaultValue: 21 }
   ) {
     petName
     avatarUrl(size: $avatarSize)
@@ -119,18 +121,19 @@ const _BackwardPagination_fragment = graphql`
 const _Root_executionQueryDocument = graphql`
   query compiledHooks_Root_executionQuery(
     $userId: Int!
-    $avatarSize: Int = 21
     $messagesBackwardCount: Int!
     $messagesBeforeCursor: String!
     $id: String = "shouldNotOverrideCompiledFragmentId"
     $filterBy: FilterByInput = { tag: "ALL" }
     $sortBy: SortByInput
+    $avatarSize: Int = 21
   ) {
     user(id: $userId, idThatDoesntOverride: $id, filterBy: $filterBy) {
       name
       ...compiledHooks_ChildFragment
-      ...compiledHooks_RefetchableFragment
+      ...compiledHooks_RefetchableFragment @arguments(avatarSize: $avatarSize)
       ...compiledHooks_ForwardPaginationFragment
+        @arguments(avatarSize: $avatarSize)
     }
     ...compiledHooks_QueryTypeFragment
   }
@@ -787,10 +790,14 @@ describe.each([
         const onCompleted = jest.fn();
 
         // Helper function to perform refetch and verify network update
-        const performRefetchAndVerify = async (expectedPetName: string) => {
+        const performRefetchAndVerify = async (
+          avatarSize: number,
+          resolvedSize: number,
+          expectedCacheResult?: object,
+        ) => {
           await act(async () => {
             refetch(
-              { avatarSize: 50 },
+              { avatarSize },
               { fetchPolicy: "store-and-network", onCompleted },
             );
           });
@@ -798,14 +805,20 @@ describe.each([
           // Wait slightly before resolving to simulate network latency
           await new Promise((resolve) => setTimeout(resolve, 100));
 
+          if (expectedCacheResult) {
+            expect(last(returnedResults())[0]).toMatchObject({
+              ...expectedCacheResult,
+              __fragments: expect.objectContaining({ avatarSize }),
+            });
+          }
+
           await act(async () => {
             client.mock.resolveMostRecentOperation((operation) =>
               MockPayloadGenerator.generate(operation, {
                 Node: () => ({
                   id: 42,
                   // Network data should have a different value
-                  avatarUrl: `network-avatarUrl-size-${operation.request.variables.avatarSize}`,
-                  petName: expectedPetName, // Use the expected name
+                  avatarUrl: `network-avatarUrl-size-${resolvedSize}`,
                 }),
               }),
             );
@@ -817,20 +830,24 @@ describe.each([
 
           const lastResult = last(returnedResults())[0];
           expect(lastResult).toMatchObject({
-            petName: expectedPetName,
-            avatarUrl: `network-avatarUrl-size-50`,
-            __fragments: expect.objectContaining({ avatarSize: 50 }), // Ensure variables updated
+            avatarUrl: `network-avatarUrl-size-${resolvedSize}`,
+            __fragments: expect.objectContaining({ avatarSize }), // Ensure variables updated
           });
         };
 
         // Perform the first refetch
-        await performRefetchAndVerify("Network Pet 1");
+        await performRefetchAndVerify(20, 25);
 
         // Perform the second refetch
-        await performRefetchAndVerify("Network Pet 2");
+        await performRefetchAndVerify(30, 35);
+
+        // Perform the third refetch and check if result from cache was returned before network completed
+        await performRefetchAndVerify(20, 27, {
+          avatarUrl: "network-avatarUrl-size-25",
+        });
 
         // onCompleted should be called once per refetch after network completes
-        expect(onCompleted).toHaveBeenCalledTimes(2);
+        expect(onCompleted).toHaveBeenCalledTimes(3);
         // Verify arguments of the last call (error should be null)
         expect(onCompleted).toHaveBeenLastCalledWith(null);
 

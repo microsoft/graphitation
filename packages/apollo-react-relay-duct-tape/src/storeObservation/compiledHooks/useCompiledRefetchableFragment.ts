@@ -103,38 +103,38 @@ export function useCompiledRefetchableFragment(
               subscription?.unsubscribe();
               subscription = undefined;
               disposable.current = undefined;
-
-              unstable_batchedUpdates(() => {
+            }
+            unstable_batchedUpdates(() => {
+              if (!loading) {
                 if (options?.UNSTABLE_onCompletedWithData) {
                   options.UNSTABLE_onCompletedWithData(error || null, data);
                 } else {
-                  options?.onCompleted?.(error || null);
+                  options?.onCompleted?.(error || null); // Public callback fires only when finished loading
                 }
-                if (!error) {
-                  const { id: _, ...variablesToPropagate } = variables;
-                  const nextVariables = {
-                    ...fragmentReference.__fragments,
-                    ...variablesToPropagate,
+              }
+              if (!error) {
+                const { id: _, ...variablesToPropagate } = variables;
+                const nextVariables = {
+                  ...fragmentReference.__fragments,
+                  ...variablesToPropagate,
+                };
+                // No need to trigger an update to propagate new variables if they don't actually change.
+                if (
+                  !isEqual(
+                    fragmentReferenceWithOwnVariables.__fragments,
+                    nextVariables,
+                  )
+                ) {
+                  const nextFragmentReference: FragmentReference = {
+                    __fragments: nextVariables,
                   };
-                  // No need to trigger an update to propagate new variables if they don't actually change.
-                  if (
-                    !isEqual(
-                      fragmentReferenceWithOwnVariables.__fragments,
-                      nextVariables,
-                    )
-                  ) {
-                    const nextFragmentReference: FragmentReference = {
-                      __fragments: nextVariables,
-                    };
-                    // Don't add an empty key if this is a fragment on the Query type.
-                    if (fragmentReference.id !== undefined) {
-                      nextFragmentReference.id = fragmentReference.id;
-                    }
-                    setFragmentReferenceWithOwnVariables(nextFragmentReference);
+                  if (fragmentReference.id !== undefined) {
+                    nextFragmentReference.id = fragmentReference.id;
                   }
+                  setFragmentReferenceWithOwnVariables(nextFragmentReference);
                 }
-              });
-            }
+              }
+            });
           },
           (error) => {
             // Be sure not to keep a retain cycle

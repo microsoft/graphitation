@@ -15,12 +15,12 @@ export type SortByInput = {
 };
 export type compiledHooks_Root_executionQueryVariables = {
     userId: number;
-    avatarSize?: number | null | undefined;
     messagesBackwardCount: number;
     messagesBeforeCursor: string;
     id?: string | null | undefined;
     filterBy?: FilterByInput | null | undefined;
     sortBy?: SortByInput | null | undefined;
+    avatarSize?: number | null | undefined;
 };
 export type compiledHooks_Root_executionQueryResponse = {
     readonly user: {
@@ -36,12 +36,12 @@ export type compiledHooks_Root_executionQuery = {
 
 
 /*
-query compiledHooks_Root_executionQuery($userId: Int!, $avatarSize: Int = 21, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $id: String = "shouldNotOverrideCompiledFragmentId", $filterBy: FilterByInput = {tag: "ALL"}, $sortBy: SortByInput) {
+query compiledHooks_Root_executionQuery($userId: Int!, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $id: String = "shouldNotOverrideCompiledFragmentId", $filterBy: FilterByInput = {tag: "ALL"}, $sortBy: SortByInput, $avatarSize: Int = 21) {
   user(id: $userId, idThatDoesntOverride: $id, filterBy: $filterBy) {
     name
     ...compiledHooks_ChildFragment
-    ...compiledHooks_RefetchableFragment
-    ...compiledHooks_ForwardPaginationFragment
+    ...compiledHooks_RefetchableFragment_17xSkz
+    ...compiledHooks_ForwardPaginationFragment_17xSkz
     id
   }
   ...compiledHooks_QueryTypeFragment
@@ -70,7 +70,7 @@ fragment compiledHooks_ChildFragment on User {
   id
 }
 
-fragment compiledHooks_ForwardPaginationFragment on NodeWithPetAvatarAndConversations {
+fragment compiledHooks_ForwardPaginationFragment_17xSkz on NodeWithPetAvatarAndConversations {
   __isNodeWithPetAvatarAndConversations: __typename
   petName
   avatarUrl(size: $avatarSize)
@@ -98,7 +98,7 @@ fragment compiledHooks_QueryTypeFragment on Query {
   }
 }
 
-fragment compiledHooks_RefetchableFragment on User {
+fragment compiledHooks_RefetchableFragment_17xSkz on User {
   petName
   avatarUrl(size: $avatarSize)
   id
@@ -106,7 +106,7 @@ fragment compiledHooks_RefetchableFragment on User {
 */
 
 /*
-query compiledHooks_Root_executionQuery($userId: Int!, $avatarSize: Int = 21, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $id: String = "shouldNotOverrideCompiledFragmentId", $filterBy: FilterByInput = {tag: "ALL"}, $sortBy: SortByInput) {
+query compiledHooks_Root_executionQuery($userId: Int!, $messagesBackwardCount: Int!, $messagesBeforeCursor: String!, $id: String = "shouldNotOverrideCompiledFragmentId", $filterBy: FilterByInput = {tag: "ALL"}, $sortBy: SortByInput, $avatarSize: Int = 21) {
   user(id: $userId, idThatDoesntOverride: $id, filterBy: $filterBy) {
     name
     id
@@ -145,53 +145,53 @@ v4 = {
   "kind": "Variable",
   "name": {
     "kind": "Name",
-    "value": "avatarSize"
+    "value": "messagesBackwardCount"
   }
 },
 v5 = {
   "kind": "Variable",
   "name": {
     "kind": "Name",
-    "value": "messagesBackwardCount"
-  }
-},
-v6 = {
-  "kind": "Variable",
-  "name": {
-    "kind": "Name",
     "value": "messagesBeforeCursor"
   }
 },
-v7 = {
+v6 = {
   "kind": "NamedType",
   "name": {
     "kind": "Name",
     "value": "String"
   }
 },
-v8 = {
+v7 = {
   "kind": "Name",
   "value": "id"
 },
-v9 = {
+v8 = {
   "kind": "Variable",
-  "name": (v8/*: any*/)
+  "name": (v7/*: any*/)
 },
-v10 = {
+v9 = {
   "kind": "Name",
   "value": "filterBy"
 },
-v11 = {
+v10 = {
   "kind": "Variable",
-  "name": (v10/*: any*/)
+  "name": (v9/*: any*/)
 },
-v12 = {
+v11 = {
   "kind": "Name",
   "value": "sortBy"
 },
+v12 = {
+  "kind": "Variable",
+  "name": (v11/*: any*/)
+},
 v13 = {
   "kind": "Variable",
-  "name": (v12/*: any*/)
+  "name": {
+    "kind": "Name",
+    "value": "avatarSize"
+  }
 },
 v14 = [
   {
@@ -202,29 +202,20 @@ v14 = [
   {
     "kind": "VariableDefinition",
     "variable": (v4/*: any*/),
-    "type": (v2/*: any*/),
-    "defaultValue": {
-      "kind": "IntValue",
-      "value": "21"
-    }
-  },
-  {
-    "kind": "VariableDefinition",
-    "variable": (v5/*: any*/),
     "type": (v3/*: any*/)
   },
   {
     "kind": "VariableDefinition",
-    "variable": (v6/*: any*/),
+    "variable": (v5/*: any*/),
     "type": {
       "kind": "NonNullType",
-      "type": (v7/*: any*/)
+      "type": (v6/*: any*/)
     }
   },
   {
     "kind": "VariableDefinition",
-    "variable": (v9/*: any*/),
-    "type": (v7/*: any*/),
+    "variable": (v8/*: any*/),
+    "type": (v6/*: any*/),
     "defaultValue": {
       "kind": "StringValue",
       "value": "shouldNotOverrideCompiledFragmentId",
@@ -233,7 +224,7 @@ v14 = [
   },
   {
     "kind": "VariableDefinition",
-    "variable": (v11/*: any*/),
+    "variable": (v10/*: any*/),
     "type": {
       "kind": "NamedType",
       "name": {
@@ -261,13 +252,22 @@ v14 = [
   },
   {
     "kind": "VariableDefinition",
-    "variable": (v13/*: any*/),
+    "variable": (v12/*: any*/),
     "type": {
       "kind": "NamedType",
       "name": {
         "kind": "Name",
         "value": "SortByInput"
       }
+    }
+  },
+  {
+    "kind": "VariableDefinition",
+    "variable": (v13/*: any*/),
+    "type": (v2/*: any*/),
+    "defaultValue": {
+      "kind": "IntValue",
+      "value": "21"
     }
   }
 ],
@@ -278,7 +278,7 @@ v15 = {
 v16 = [
   {
     "kind": "Argument",
-    "name": (v8/*: any*/),
+    "name": (v7/*: any*/),
     "value": (v1/*: any*/)
   },
   {
@@ -287,12 +287,12 @@ v16 = [
       "kind": "Name",
       "value": "idThatDoesntOverride"
     },
-    "value": (v9/*: any*/)
+    "value": (v8/*: any*/)
   },
   {
     "kind": "Argument",
-    "name": (v10/*: any*/),
-    "value": (v11/*: any*/)
+    "name": (v9/*: any*/),
+    "value": (v10/*: any*/)
   }
 ],
 v17 = {
@@ -308,15 +308,15 @@ v18 = {
 },
 v19 = {
   "kind": "Name",
-  "value": "compiledHooks_RefetchableFragment"
+  "value": "compiledHooks_RefetchableFragment_17xSkz"
 },
 v20 = {
   "kind": "Name",
-  "value": "compiledHooks_ForwardPaginationFragment"
+  "value": "compiledHooks_ForwardPaginationFragment_17xSkz"
 },
 v21 = {
   "kind": "Field",
-  "name": (v8/*: any*/)
+  "name": (v7/*: any*/)
 },
 v22 = {
   "kind": "Name",
@@ -388,7 +388,7 @@ v34 = {
         "kind": "Name",
         "value": "size"
       },
-      "value": (v4/*: any*/)
+      "value": (v13/*: any*/)
     }
   ]
 },
@@ -477,7 +477,7 @@ return {
                     "kind": "Name",
                     "value": "last"
                   },
-                  "value": (v5/*: any*/)
+                  "value": (v4/*: any*/)
                 },
                 {
                   "kind": "Argument",
@@ -485,7 +485,7 @@ return {
                     "kind": "Name",
                     "value": "before"
                   },
-                  "value": (v6/*: any*/)
+                  "value": (v5/*: any*/)
                 }
               ],
               "directives": [
@@ -633,8 +633,8 @@ return {
                 },
                 {
                   "kind": "Argument",
-                  "name": (v12/*: any*/),
-                  "value": (v13/*: any*/)
+                  "name": (v11/*: any*/),
+                  "value": (v12/*: any*/)
                 }
               ],
               "directives": [
