@@ -106,6 +106,57 @@ index a2c1b93..d28dddf 100644
          fieldName: fieldName,
          storeFieldName: storeFieldName,
          variables: variables,
+diff --git a/node_modules/@apollo/client/react/hooks/hooks.cjs b/node_modules/@apollo/client/react/hooks/hooks.cjs
+index 3a2234a..d7b5029 100644
+--- a/node_modules/@apollo/client/react/hooks/hooks.cjs
++++ b/node_modules/@apollo/client/react/hooks/hooks.cjs
+@@ -616,7 +616,46 @@ function useReactiveVar(rv) {
+     return value;
+ }
+ 
++function useFragment(options) {
++    var cache = useApolloClient().cache;
++    var fragment = options.fragment, fragmentName = options.fragmentName, from = options.from, _a = options.optimistic, optimistic = _a === void 0 ? true : _a, rest = tslib.__rest(options, ["fragment", "fragmentName", "from", "optimistic"]);
++    var diffOptions = tslib.__assign(tslib.__assign({}, rest), { returnPartialData: true, id: typeof from === "string" ? from : cache.identify(from), query: cache["getFragmentDoc"](fragment, fragmentName), optimistic: optimistic });
++    var resultRef = React__namespace.useRef();
++    var latestDiff = cache.diff(diffOptions);
++    var getSnapshot = function () {
++        var latestDiffToResult = diffToResult(latestDiff);
++        return resultRef.current &&
++            equality.equal(resultRef.current.data, latestDiffToResult.data)
++            ? resultRef.current
++            : (resultRef.current = latestDiffToResult);
++    };
++    return useSyncExternalStore(function (forceUpdate) {
++        var lastTimeout = 0;
++        var unsubcribe = cache.watch(tslib.__assign(tslib.__assign({}, diffOptions), { immediate: true, callback: function (diff) {
++                if (!equality.equal(diff, latestDiff)) {
++                    resultRef.current = diffToResult((latestDiff = diff));
++                    lastTimeout = setTimeout(forceUpdate);
++                }
++            } }));
++        return function () {
++            unsubcribe();
++            clearTimeout(lastTimeout);
++        };
++    }, getSnapshot, getSnapshot);
++}
++function diffToResult(diff) {
++    var result = {
++        data: diff.result,
++        complete: !!diff.complete,
++    };
++    if (diff.missing) {
++        result.missing = utilities.mergeDeepArray(diff.missing.map(function (error) { return error.missing; }));
++    }
++    return result;
++}
++
+ exports.useApolloClient = useApolloClient;
++exports.useFragment = useFragment;
+ exports.useLazyQuery = useLazyQuery;
+ exports.useMutation = useMutation;
+ exports.useQuery = useQuery;
 diff --git a/node_modules/@apollo/client/react/hooks/index.d.ts b/node_modules/@apollo/client/react/hooks/index.d.ts
 index a590efb..458f53f 100644
 --- a/node_modules/@apollo/client/react/hooks/index.d.ts
