@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Tue, 08 Apr 2025 08:19:14 GMT",
+      "version": "1.4.2",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v1.4.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "sjwilczynski@gmail.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "c34b6142940d630b8fe1af4db4c930630e29ad1d",
+            "comment": "fix issue with data not being returned correctly from cache"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 07 Apr 2025 08:26:58 GMT",
       "version": "1.4.1",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v1.4.1",

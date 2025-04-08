@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-<!-- This log was last generated on Mon, 07 Apr 2025 08:26:58 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 08 Apr 2025 08:19:14 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.4.2
+
+Tue, 08 Apr 2025 08:19:14 GMT
+
+### Patches
+
+- fix issue with data not being returned correctly from cache (sjwilczynski@gmail.com)
 
 ## 1.4.1
 
