@@ -13,12 +13,6 @@ export type WrapperCallbackParams = {
   activeClient: ClientObject | null;
 };
 
-export type ForestRunStoreObject = {
-  id: string;
-  data: Record<string, unknown>;
-  variables: Record<string, unknown>;
-};
-
 export type ClientObject = {
   clientId: string;
   client: ApolloClient<NormalizedCacheObject>;
