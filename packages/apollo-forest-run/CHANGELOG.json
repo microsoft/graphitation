@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Thu, 10 Apr 2025 13:29:51 GMT",
+      "version": "0.11.0",
+      "tag": "@graphitation/apollo-forest-run_v0.11.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "6b7698688e8ab7184ccc14d9ebea99913f1bc1d7",
+            "comment": "feat(apollo-forest-run): support custom logger and rudimentary telemetry"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 01 Apr 2025 16:22:07 GMT",
       "version": "0.10.2",
       "tag": "@graphitation/apollo-forest-run_v0.10.2",

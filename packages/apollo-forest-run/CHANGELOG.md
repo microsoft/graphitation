@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Tue, 01 Apr 2025 16:22:07 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 10 Apr 2025 13:29:51 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.11.0
+
+Thu, 10 Apr 2025 13:29:51 GMT
+
+### Minor changes
+
+- feat(apollo-forest-run): support custom logger and rudimentary telemetry (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.10.2
 
