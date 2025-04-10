@@ -4,7 +4,6 @@ import { restore } from "./cache/restore";
 import { resolveOperationDescriptor } from "./cache/descriptor";
 import { indexTree } from "./forest/indexTree";
 import { replaceTree } from "./forest/addTree";
-import type { StoreObject } from "@apollo/client";
 import { getEffectiveReadLayers } from "./cache/store";
 
 /**
@@ -19,7 +18,7 @@ export class ForestRunCompat extends ForestRun {
     };
   }
 
-  public extract(optimistic = false): StoreObject {
+  public extract(optimistic = false): any {
     const activeTransaction = peek(this.transactionStack);
     const effectiveOptimistic =
       activeTransaction?.forceOptimistic ?? optimistic;

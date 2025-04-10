@@ -12,6 +12,7 @@ import type {
   DataForest,
   DataTree,
   OptimisticLayer,
+  SerializedCache,
   Store,
   Transaction,
 } from "./cache/types";
@@ -82,7 +83,7 @@ const REFS_POOL = new Map(
 );
 const getRef = (ref: string) => REFS_POOL.get(ref) ?? { __ref: ref };
 
-export class ForestRun extends ApolloCache<any> {
+export class ForestRun extends ApolloCache<SerializedCache> {
   public rawConfig: InMemoryCacheConfig;
   protected env: CacheEnv;
   protected store: Store;
@@ -358,11 +359,40 @@ export class ForestRun extends ApolloCache<any> {
     };
   }
 
-  public extract(): StoreObject {
-    throw new Error("ForestRunCache.extract() is not supported");
+  public extract(optimistic = false): SerializedCache {
+    const { dataForest } = this.store;
+    const key = (operation: OperationDescriptor) =>
+      `${operation.debugName}:${operation.id}`;
+
+    const output: SerializedCache = {};
+    for (const [_, value] of dataForest.trees.entries()) {
+      output[key(value.operation)] = {
+        data: value.result?.data,
+        variables: value.operation.variables,
+        optimisticData: null,
+      };
+    }
+    if (optimistic) {
+      for (const layer of this.store.optimisticLayers) {
+        for (const [_, value] of layer.trees.entries()) {
+          let entry = output[key(value.operation)];
+          if (!entry) {
+            entry = {
+              data: {},
+              variables: value.operation.variables,
+              optimisticData: null,
+            };
+            output[key(value.operation)] = entry;
+          }
+          entry.optimisticData = value.result?.data;
+        }
+      }
+    }
+
+    return output;
   }
 
-  public restore(_: Record<string, any>): this {
+  public restore(_: SerializedCache): this {
     throw new Error("ForestRunCache.restore() is not supported");
   }
 

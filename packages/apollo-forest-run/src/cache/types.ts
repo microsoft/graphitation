@@ -151,3 +151,14 @@ export type CacheEnv = {
   nonEvictableQueries: Set<string>;
   maxOperationCount: number;
 };
+
+export type SerializedOperationKey = string;
+export type SerializedOperationInfo = {
+  data: Record<string, unknown>;
+  variables: Record<string, unknown>;
+  optimisticData: Record<string, unknown> | null;
+};
+export type SerializedCache = Record<
+  SerializedOperationKey,
+  SerializedOperationInfo
+>;
