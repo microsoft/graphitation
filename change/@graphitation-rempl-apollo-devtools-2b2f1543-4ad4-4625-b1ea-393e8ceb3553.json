@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Revert \"Apollo devtools support forestrun (#483)\"",
+  "packageName": "@graphitation/rempl-apollo-devtools",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
