@@ -132,6 +132,7 @@ export function createOptimisticLayer(
 
 export function removeOptimisticLayers<T>(
   cache: T,
+  env: CacheEnv,
   store: Store,
   layerTag: string,
 ): Set<OperationDescriptor> | undefined {
@@ -143,11 +144,10 @@ export function removeOptimisticLayers<T>(
   }
   const [affectedNodes, affectedOps] = resolveLayerImpact(store, layerTag);
 
-  //
-  // console.log(
-  //   `Removing optimistic layer ${layerTag}. Affected nodes: ${affectedNodes.length}; ` +
-  //     `affected operations: ${affectedOps.length}`,
-  // );
+  env.logger?.debug(
+    `Removing optimistic layer ${layerTag}. Affected nodes: ${affectedNodes.length}; ` +
+      `affected operations: ${affectedOps.length}`,
+  );
 
   const affectedOperationSet = new Set<OperationDescriptor>();
 

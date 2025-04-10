@@ -349,7 +349,16 @@ export function invokeReadFunctionSafely(
     assertValidValue(fieldContext, value, existing);
     return value;
   } catch (e) {
-    console.log("Read function error:", e);
+    env.notify?.({
+      kind: "READ_POLICY_ERROR",
+      op: operation.debugName,
+      type: fieldContext.parentTypeName,
+      field: fieldContext.field.name,
+    });
+    env.logger?.error(
+      `Error in read policy ${fieldContext.parentTypeName}.${fieldContext.field.name} (applied to ${operation.debugName}):`,
+      e,
+    );
     return existing;
   } finally {
     fieldPolicyContext.env = null;
@@ -380,7 +389,16 @@ export function invokeMergeFunctionSafely(
       prepareFieldPolicyOptions.call(fieldPolicyContext),
     );
   } catch (e) {
-    console.log("Merge function error:", e);
+    env.notify?.({
+      kind: "MERGE_POLICY_ERROR",
+      op: operation.debugName,
+      type: fieldContext.parentTypeName,
+      field: fieldContext.field.name,
+    });
+    env.logger?.error(
+      `Error in merge policy ${fieldContext.parentTypeName}.${fieldContext.field.name} (applied to ${operation.debugName}):`,
+      e,
+    );
     return fieldContext.parentValue[fieldContext.field.dataKey];
   } finally {
     fieldPolicyContext.env = null;
@@ -412,8 +430,7 @@ function assertValidValue(
         (Array.isArray(existing) && !Array.isArray(userValue)))
     ) {
       throw new Error(
-        `Read policy for ${fieldContext.parentTypeName}.${fieldContext.field.name}` +
-          `has returned a value that has a different type than the existing value. Using old value.\n` +
+        `Read policy has returned a value that has a different type than the existing value. Using old value.\n` +
           `  returned: ${JSON.stringify(userValue)}\n` +
           `  existing: ${JSON.stringify(existing)}`,
       );
@@ -422,10 +439,9 @@ function assertValidValue(
   }
   if (typeof userValue !== "object") {
     throw new Error(
-      `Read policy for ${fieldContext.parentTypeName}.${fieldContext.field.name}` +
-        `has returned unexpected non-object value: ${JSON.stringify(
-          userValue,
-        )}`,
+      `Read policy has returned unexpected non-object value: ${JSON.stringify(
+        userValue,
+      )}`,
     );
   }
 }

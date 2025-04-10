@@ -15,6 +15,7 @@ import type {
   Store,
   Transaction,
 } from "./cache/types";
+import type { UnexpectedRefetch } from "./telemetry/types";
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
 import { accumulate, deleteAccumulated } from "./jsutils/map";
@@ -289,7 +290,7 @@ export class ForestRun extends ApolloCache<any> {
       }
     }
     if (stale.length) {
-      logStaleOperations(rootTransaction, stale);
+      logStaleOperations(this.env, rootTransaction, stale);
     }
     if (errors.size) {
       const [firstError] = errors.values();
@@ -592,7 +593,12 @@ export class ForestRun extends ApolloCache<any> {
     const activeTransaction = peek(this.transactionStack);
     assert(activeTransaction);
     activeTransaction.affectedOperations ??= new Set();
-    const affectedOps = removeOptimisticLayers(this, this.store, layerTag);
+    const affectedOps = removeOptimisticLayers(
+      this,
+      this.env,
+      this.store,
+      layerTag,
+    );
 
     for (const operation of affectedOps ?? EMPTY_ARRAY) {
       activeTransaction.affectedOperations.add(operation);
@@ -609,6 +615,7 @@ function peek<T>(stack: T[]): T | undefined {
 }
 
 function logStaleOperations(
+  env: CacheEnv,
   transaction: Transaction,
   stale: {
     operation: OperationDescriptor;
@@ -619,20 +626,22 @@ function logStaleOperations(
     // Custom cache.modify or cache.evict - expected to evict operations
     return;
   }
-  console.log(
+  const event: UnexpectedRefetch = {
+    kind: "UNEXPECTED_REFETCH",
+    causedBy: transaction.writes.map((write) => write.tree.operation.debugName),
+    affected: stale.map((op) => [
+      op.operation.debugName,
+      op.diff.missing?.[0]?.message ?? "?",
+    ]),
+  };
+  env?.notify?.(event);
+
+  env.logger?.warn(
     `Incoming Apollo operation led to missing fields in watched operations (triggering re-fetch)\n` +
       `  Incoming operation(s):\n` +
-      transaction.writes
-        .map((write) => write.tree.operation.debugName)
-        .join("\n") +
+      event.causedBy.join("\n") +
       `\n` +
       `  Affected operation(s):\n` +
-      stale
-        .map(
-          (op) =>
-            op.operation.debugName +
-            ` (${op.diff.missing?.[0]?.message ?? "?"})`,
-        )
-        .join("\n"),
+      event.affected.map((op) => `${op[0]} (${op[1]})`).join("\n"),
   );
 }

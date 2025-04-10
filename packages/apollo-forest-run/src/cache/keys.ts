@@ -21,7 +21,7 @@ export function identify(
     const value = object.__ref ?? objectKey(env, object as SourceObject);
     return typeof value !== "string" ? undefined : value;
   } catch (e) {
-    console.warn(e);
+    env.logger?.warn(e);
     return undefined;
   }
 }

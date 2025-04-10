@@ -30,6 +30,7 @@ import type {
 import type {
   CompleteObjectFn,
   Draft,
+  ForestEnv,
   Source,
   UpdateObjectResult,
   UpdateState,
@@ -46,6 +47,7 @@ const EMPTY_ARRAY = Object.freeze([]);
 const inspect = JSON.stringify.bind(JSON);
 
 type Context = UpdateState & {
+  env: ForestEnv;
   dataMap: DataMap;
   base: ObjectChunk;
   operation: OperationDescriptor;
@@ -54,6 +56,7 @@ type Context = UpdateState & {
 };
 
 export function updateObject(
+  env: ForestEnv,
   dataMap: DataMap,
   base: ObjectChunk,
   diff: ObjectDifference,
@@ -66,7 +69,8 @@ export function updateObject(
       missingFields: new Map(),
     };
   }
-  const context = {
+  const context: Context = {
+    env,
     base,
     operation: base.operation,
     drafts: state.drafts,
@@ -115,9 +119,9 @@ function updateObjectValue(
       if (valueIsMissing && !Difference.isFiller(fieldDifference.state)) {
         // Inconsistent state - do not update this field
         //   (assuming it will be re-fetched from the server to resolve inconsistency)
-        console.log(
-          `ForestRun: ${base.operation.debugName} ` +
-            `is in inconsistent state at path ` +
+        context.env.logger?.debug(
+          base.operation.debugName +
+            ` is in inconsistent state at path ` +
             Value.getDataPathForDebugging(context, base)
               .concat(fieldName)
               .join("."),
@@ -246,8 +250,8 @@ function updateCompositeListValue(
       continue;
     }
     const op = operation.definition.name?.value;
-    console.error(
-      `ForestRun unknown list item kind: ${itemRef.kind} at #${i}\n` +
+    context.env.logger?.warn(
+      `Unknown list item kind: ${itemRef.kind} at #${i}\n` +
         `  source list: ${inspect(base.data)})` +
         `  operation: ${op}\n`,
     );
@@ -356,8 +360,8 @@ function replaceCompositeList(
   for (let i = 0; i < len; i++) {
     const item = Value.aggregateListItemValue(newList, i);
     if (!Value.isCompositeValue(item) || Value.isMissingValue(item)) {
-      console.log(
-        `ForestRun: failed list item #${i} replacement, returning source list\n` +
+      context.env.logger?.warn(
+        `Failed list item #${i} replacement, returning source list\n` +
           `  new list: ${inspect(newList.data)}\n` +
           `  source list: ${inspect(baseList.data)}\n` +
           `  operation: ${context.operation.definition.name?.value}`,
