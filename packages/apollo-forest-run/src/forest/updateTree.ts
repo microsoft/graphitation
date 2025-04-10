@@ -88,6 +88,7 @@ export function updateTree(
     assert(difference);
 
     const result = updateObject(
+      env,
       base.dataMap,
       chunk,
       difference,

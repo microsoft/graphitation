@@ -2,5 +2,8 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "cSpell.words": ["Daichi", "fukuda", "Kadji"],
-  "jestrunner.configPath": "scripts/config/jest.config.js"
+  "jestrunner.configPath": "scripts/config/jest.config.js",
+  "files.eol": "\n",
+  "jest.jestCommandLine": "node node_modules/jest-cli/bin/jest.js --config scripts/config/jest.config.js",
+  "jest.runMode": "on-demand"
 }

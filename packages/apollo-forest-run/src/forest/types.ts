@@ -20,6 +20,8 @@ import {
   SourceObject,
   TypeMap,
 } from "../values/types";
+import { TelemetryEvent } from "../telemetry/types";
+import { Logger } from "../jsutils/logger";
 
 export type IndexedTree = {
   operation: OperationDescriptor;
@@ -77,6 +79,9 @@ export type ForestEnv = {
     fields?: PossibleSelection,
     operation?: OperationDescriptor,
   ) => ObjectKey | false | undefined;
+
+  logger?: Logger;
+  notify?: (event: TelemetryEvent) => void;
 
   // ApolloCompat:
   //   Apollo can track dirty entries in results of read operations even if some "key" fields are missing in selection

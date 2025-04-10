@@ -23,6 +23,8 @@ import type {
   FieldMergeFunction,
   FieldReadFunction,
 } from "@apollo/client/cache/inmemory/policies";
+import type { TelemetryEvent } from "../telemetry/types";
+import { Logger } from "../jsutils/logger";
 
 export type DataTree = IndexedTree & {
   grown?: boolean;
@@ -82,6 +84,8 @@ export type CacheConfig = InMemoryCacheConfig & {
   maxOperationCount?: number;
   nonEvictableQueries?: Set<string>;
   apolloCompat_keepOrphanNodes?: boolean;
+  logger?: Logger;
+  notify?: (event: TelemetryEvent) => void;
 };
 
 export type CacheEnv = {
@@ -124,6 +128,9 @@ export type CacheEnv = {
     directives?: Directives,
     source?: OperationDescriptor | undefined,
   ) => Key | KeySpecifier | undefined;
+
+  notify?: (event: TelemetryEvent) => void;
+  logger?: Logger;
 
   // ApolloCompat:
   //   Apollo can track dirty entries in results of read operations even if some "key" fields are missing in selection
