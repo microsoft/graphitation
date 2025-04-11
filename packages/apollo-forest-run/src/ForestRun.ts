@@ -12,6 +12,8 @@ import type {
   DataForest,
   DataTree,
   OptimisticLayer,
+  SerializedCache,
+  SerializedOperationInfo,
   Store,
   Transaction,
 } from "./cache/types";
@@ -36,6 +38,7 @@ import { write } from "./cache/write";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { CacheConfig } from "./cache/types";
+import { SourceObject } from "./values/types";
 
 /**
  * ForestRun cache aims to be an Apollo cache implementation somewhat compatible with InMemoryCache.
@@ -82,7 +85,7 @@ const REFS_POOL = new Map(
 );
 const getRef = (ref: string) => REFS_POOL.get(ref) ?? { __ref: ref };
 
-export class ForestRun extends ApolloCache<any> {
+export class ForestRun extends ApolloCache<SerializedCache> {
   public rawConfig: InMemoryCacheConfig;
   protected env: CacheEnv;
   protected store: Store;
@@ -100,6 +103,7 @@ export class ForestRun extends ApolloCache<any> {
   };
 
   protected invalidatedDiffs = new WeakSet<Cache.DiffResult<any>>();
+  protected extractedObjects = new WeakMap<any, SerializedOperationInfo>();
 
   public constructor(public config?: CacheConfig) {
     super();
@@ -358,11 +362,66 @@ export class ForestRun extends ApolloCache<any> {
     };
   }
 
-  public extract(): StoreObject {
-    throw new Error("ForestRunCache.extract() is not supported");
+  // Compatibility with InMemoryCache for Apollo dev tools
+  get data() {
+    const extract = this.extract.bind(this);
+    return {
+      get data() {
+        return extract();
+      },
+    };
   }
 
-  public restore(_: Record<string, any>): this {
+  public extract(optimistic = false): SerializedCache {
+    const { dataForest } = this.store;
+    const key = (operation: OperationDescriptor) =>
+      `${operation.debugName}:${operation.id}-${operation.id}`;
+
+    const stableConvert = (
+      op: OperationDescriptor,
+      data: SourceObject | null = null,
+      optimisticData: SourceObject | null = null,
+    ): SerializedOperationInfo => {
+      const key = data ?? optimisticData;
+      assert(key);
+      // Need to preserve references to the same object for compatibility with Apollo devtools,
+      // which uses strict comparison to detect changes in cache
+      let entry = this.extractedObjects.get(key);
+      if (entry?.data !== data || entry?.optimisticData !== optimisticData) {
+        entry = {
+          data,
+          variables: op.variables,
+          optimisticData,
+        };
+        this.extractedObjects.set(data, entry);
+      }
+      return entry;
+    };
+
+    const output: SerializedCache = {};
+    for (const [_, tree] of dataForest.trees.entries()) {
+      output[key(tree.operation)] = stableConvert(
+        tree.operation,
+        tree.result.data,
+      );
+    }
+    if (optimistic) {
+      for (const layer of this.store.optimisticLayers) {
+        for (const [id, optimisticTree] of layer.trees.entries()) {
+          const tree = dataForest.trees.get(id);
+          output[key(optimisticTree.operation)] = stableConvert(
+            optimisticTree.operation,
+            tree?.result.data ?? null,
+            optimisticTree.result.data,
+          );
+        }
+      }
+    }
+
+    return output;
+  }
+
+  public restore(_: SerializedCache): this {
     throw new Error("ForestRunCache.restore() is not supported");
   }
 

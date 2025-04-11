@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "feat(apollo-forest-run): cache extract",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
