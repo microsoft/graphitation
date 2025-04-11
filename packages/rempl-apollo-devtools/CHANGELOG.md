@@ -1,8 +1,16 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-<!-- This log was last generated on Wed, 02 Apr 2025 11:43:32 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 11 Apr 2025 16:00:56 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.4.0
+
+Fri, 11 Apr 2025 16:00:56 GMT
+
+### Minor changes
+
+- Revert "Apollo devtools support forestrun (#483)" (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 1.3.0
 

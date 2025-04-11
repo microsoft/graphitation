@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Thu, 10 Apr 2025 13:29:51 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 11 Apr 2025 16:00:56 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.12.0
+
+Fri, 11 Apr 2025 16:00:56 GMT
+
+### Minor changes
+
+- feat(apollo-forest-run): cache extract (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.11.0
 

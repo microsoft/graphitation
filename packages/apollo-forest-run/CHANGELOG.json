@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Fri, 11 Apr 2025 16:00:56 GMT",
+      "version": "0.12.0",
+      "tag": "@graphitation/apollo-forest-run_v0.12.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "87c43ff6af9b9c042bb4cef5cb691aa0d25ddab4",
+            "comment": "feat(apollo-forest-run): cache extract"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 10 Apr 2025 13:29:51 GMT",
       "version": "0.11.0",
       "tag": "@graphitation/apollo-forest-run_v0.11.0",
