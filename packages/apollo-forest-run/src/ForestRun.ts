@@ -364,10 +364,10 @@ export class ForestRun extends ApolloCache<SerializedCache> {
 
   // Compatibility with InMemoryCache for Apollo dev tools
   get data() {
-    let cache = this;
+    const extract = this.extract.bind(this);
     return {
       get data() {
-        return cache.extract();
+        return extract();
       },
     };
   }
