@@ -154,9 +154,9 @@ export type CacheEnv = {
 
 export type SerializedOperationKey = string;
 export type SerializedOperationInfo = {
-  data: Record<string, unknown>;
+  data: SourceObject | null;
+  optimisticData: SourceObject | null;
   variables: Record<string, unknown>;
-  optimisticData: Record<string, unknown> | null;
 };
 export type SerializedCache = Record<
   SerializedOperationKey,

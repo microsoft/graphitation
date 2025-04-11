@@ -13,6 +13,7 @@ import type {
   DataTree,
   OptimisticLayer,
   SerializedCache,
+  SerializedOperationInfo,
   Store,
   Transaction,
 } from "./cache/types";
@@ -37,6 +38,7 @@ import { write } from "./cache/write";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { CacheConfig } from "./cache/types";
+import { SourceObject } from "./values/types";
 
 /**
  * ForestRun cache aims to be an Apollo cache implementation somewhat compatible with InMemoryCache.
@@ -101,6 +103,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
   };
 
   protected invalidatedDiffs = new WeakSet<Cache.DiffResult<any>>();
+  protected extractedObjects = new WeakMap<any, SerializedOperationInfo>();
 
   public constructor(public config?: CacheConfig) {
     super();
@@ -359,32 +362,58 @@ export class ForestRun extends ApolloCache<SerializedCache> {
     };
   }
 
+  // Compatibility with InMemoryCache for Apollo dev tools
+  get data() {
+    let cache = this;
+    return {
+      get data() {
+        return cache.extract();
+      },
+    };
+  }
+
   public extract(optimistic = false): SerializedCache {
     const { dataForest } = this.store;
     const key = (operation: OperationDescriptor) =>
-      `${operation.debugName}:${operation.id}`;
+      `${operation.debugName}:${operation.id}-${operation.id}`;
+
+    const stableConvert = (
+      op: OperationDescriptor,
+      data: SourceObject | null = null,
+      optimisticData: SourceObject | null = null,
+    ): SerializedOperationInfo => {
+      const key = data ?? optimisticData;
+      assert(key);
+      // Need to preserve references to the same object for compatibility with Apollo devtools,
+      // which uses strict comparison to detect changes in cache
+      let entry = this.extractedObjects.get(key);
+      if (entry?.data !== data || entry?.optimisticData !== optimisticData) {
+        entry = {
+          data,
+          variables: op.variables,
+          optimisticData,
+        };
+        this.extractedObjects.set(data, entry);
+      }
+      return entry;
+    };
 
     const output: SerializedCache = {};
-    for (const [_, value] of dataForest.trees.entries()) {
-      output[key(value.operation)] = {
-        data: value.result?.data,
-        variables: value.operation.variables,
-        optimisticData: null,
-      };
+    for (const [_, tree] of dataForest.trees.entries()) {
+      output[key(tree.operation)] = stableConvert(
+        tree.operation,
+        tree.result.data,
+      );
     }
     if (optimistic) {
       for (const layer of this.store.optimisticLayers) {
-        for (const [_, value] of layer.trees.entries()) {
-          let entry = output[key(value.operation)];
-          if (!entry) {
-            entry = {
-              data: {},
-              variables: value.operation.variables,
-              optimisticData: null,
-            };
-            output[key(value.operation)] = entry;
-          }
-          entry.optimisticData = value.result?.data;
+        for (const [id, optimisticTree] of layer.trees.entries()) {
+          const tree = dataForest.trees.get(id);
+          output[key(optimisticTree.operation)] = stableConvert(
+            optimisticTree.operation,
+            tree?.result.data ?? null,
+            optimisticTree.result.data,
+          );
         }
       }
     }

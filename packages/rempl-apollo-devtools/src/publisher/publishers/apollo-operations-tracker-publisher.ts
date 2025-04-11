@@ -84,7 +84,7 @@ export class ApolloOperationsTrackerPublisher {
               (ac) => ac.clientId === data.data.clientId,
             );
             window.navigator.clipboard.writeText(
-              JSON.stringify((apolloClient?.client.cache as any).data.data),
+              JSON.stringify(apolloClient?.client.cache.extract()),
             );
           } else {
             const copiedData = JSON.stringify(data.data.operations);
