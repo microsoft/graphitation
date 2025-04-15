@@ -283,6 +283,8 @@ function createResolverField(
     }
   }
 
+  context.setResolverTypeMapItem(type.name, field.name);
+
   const resolverParametersDefinitions = {
     parent: {
       name: "model",
@@ -363,6 +365,8 @@ function createUnionTypeResolvers(
 
   const contextTypes = context.getContextTypes(contextRootType);
 
+  context.setResolverTypeMapItem(type.name, null);
+
   return factory.createModuleDeclaration(
     [
       factory.createModifier(ts.SyntaxKind.ExportKeyword),
@@ -392,6 +396,8 @@ function createInterfaceTypeResolvers(
 ): ts.ModuleDeclaration {
   const contextRootType = context.getContextMap()[type.name];
   const contextTypes = context.getContextTypes(contextRootType);
+
+  context.setResolverTypeMapItem(type.name, null);
 
   const resolversObject = factory.createInterfaceDeclaration(
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],

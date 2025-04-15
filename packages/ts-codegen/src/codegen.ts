@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { DocumentNode } from "graphql";
-import { ContextMap, extractContext } from "./context/index";
+import { extractContext } from "./context/index";
 import { generateResolvers } from "./resolvers";
 import { generateModels } from "./models";
 import { generateLegacyTypes } from "./legacyTypes";
@@ -94,7 +94,7 @@ export function generateTS(
   }: GenerateTSOptions,
 ): {
   files: ts.SourceFile[];
-  contextMappingOutput: ContextMap | null;
+  contextMappingOutput: any | null;
 } {
   try {
     const context = extractContext(
@@ -140,9 +140,10 @@ export function generateTS(
         result.push(generateLegacyResolvers(context));
       }
     }
+
     return {
       files: result,
-      contextMappingOutput: context.getContextMap(),
+      contextMappingOutput: context.getMetadataObject(),
     };
   } catch (e) {
     console.error(e);

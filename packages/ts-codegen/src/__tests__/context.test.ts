@@ -127,21 +127,79 @@ describe(generateTS, () => {
       expect(contextMappingOutput).toMatchInlineSnapshot(`
         {
           "Message": {
-            "id": [
-              "managers:message",
-            ],
+            "id": {
+              "managers": [
+                "message",
+              ],
+            },
           },
           "User": {
-            "__context": [
-              "managers:user",
-            ],
-            "id": [
-              "managers:id-user",
-              "managers:user",
-            ],
-            "post": [
-              "managers:post",
-            ],
+            "avatar": {
+              "managers": [
+                "user",
+              ],
+            },
+            "avatarRequired": {
+              "managers": [
+                "user",
+              ],
+            },
+            "id": {
+              "managers": [
+                "id-user",
+                "user",
+              ],
+            },
+            "messagesNonRequired": {
+              "managers": [
+                "user",
+              ],
+            },
+            "messagesOnlyMessageRequired": {
+              "managers": [
+                "user",
+              ],
+            },
+            "messagesRequired": {
+              "managers": [
+                "user",
+              ],
+            },
+            "messagesWithAnswersAllRequired": {
+              "managers": [
+                "user",
+              ],
+            },
+            "messagesWithAnswersNonRequired": {
+              "managers": [
+                "user",
+              ],
+            },
+            "messagesWithAnswersRequired": {
+              "managers": [
+                "user",
+              ],
+            },
+            "messagesWithArrayRequired": {
+              "managers": [
+                "user",
+              ],
+            },
+            "name": {
+              "managers": [
+                "user",
+              ],
+            },
+            "post": {
+              "managers": [
+                "post",
+              ],
+            },
+            "postRequired": {
+              "managers": [
+                "user",
+              ],
+            },
           },
         }
       `);
@@ -472,18 +530,25 @@ describe(generateTS, () => {
       expect(contextMappingOutput).toMatchInlineSnapshot(`
         {
           "Admin": {
-            "__context": [
-              "managers:admin",
-            ],
+            "id": {
+              "managers": [
+                "admin",
+              ],
+            },
+            "rank": {
+              "managers": [
+                "admin",
+              ],
+            },
           },
           "Node": {
-            "__context": [
-              "managers:node",
+            "managers": [
+              "node",
             ],
           },
           "Persona": {
-            "__context": [
-              "managers:persona",
+            "managers": [
+              "persona",
             ],
           },
         }
@@ -630,13 +695,13 @@ describe(generateTS, () => {
       expect(contextMappingOutput).toMatchInlineSnapshot(`
         {
           "Customer": {
-            "__context": [
-              "managers:customer",
+            "managers": [
+              "customer",
             ],
           },
           "Node": {
-            "__context": [
-              "managers:node",
+            "managers": [
+              "node",
             ],
           },
         }
@@ -824,31 +889,39 @@ describe(generateTS, () => {
       expect(contextMappingOutput).toMatchInlineSnapshot(`
         {
           "Admin": {
-            "__context": [
-              "managers:admin",
-            ],
+            "id": {
+              "managers": [
+                "admin",
+              ],
+            },
           },
           "CompanyOrCustomer": {
-            "__context": [
-              "managers:company-or-customer",
+            "managers": [
+              "company-or-customer",
             ],
           },
           "Query": {
-            "userById": [
-              "managers:whatever",
-            ],
-            "userByMail": [
-              "managers:different-whatever",
-            ],
+            "userById": {
+              "managers": [
+                "whatever",
+              ],
+            },
+            "userByMail": {
+              "managers": [
+                "different-whatever",
+              ],
+            },
           },
           "User": {
-            "__context": [
-              "managers:user",
-            ],
+            "id": {
+              "managers": [
+                "user",
+              ],
+            },
           },
           "UserOrCustomer": {
-            "__context": [
-              "managers:user-or-customer",
+            "managers": [
+              "user-or-customer",
             ],
           },
         }
