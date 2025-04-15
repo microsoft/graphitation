@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@graphitation/supermassive-extractors": "^2.2.5",
-    "@graphitation/ts-codegen": "^3.1.0-alpha.2",
+    "@graphitation/ts-codegen": "^3.1.0-alpha.3",
     "commander": "^8.3.0",
     "fast-glob": "^3.2.12",
     "graphql": "^15.6.1"

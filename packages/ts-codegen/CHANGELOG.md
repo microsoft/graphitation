@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Mon, 17 Mar 2025 13:09:38 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 15 Apr 2025 13:35:07 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.1.0-alpha.3
+
+Tue, 15 Apr 2025 13:35:07 GMT
+
+### Changes
+
+- Metadata dump added (77059398+vejrj@users.noreply.github.com)
 
 ## 3.1.0-alpha.2
 
