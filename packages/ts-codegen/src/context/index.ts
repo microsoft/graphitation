@@ -23,7 +23,10 @@ import ts, {
   SyntaxKind,
 } from "typescript";
 import { DefinitionImport, DefinitionModel } from "../types";
-import { createImportDeclaration } from "./utilities";
+import {
+  createImportDeclaration,
+  buildContextMetadataOutput,
+} from "./utilities";
 import {
   createListType,
   createNonNullableType,
@@ -104,6 +107,7 @@ export type ContextMapTypeItem = { __context?: string[] } & {
 };
 export class TsCodegenContext {
   private allTypes: Array<Type>;
+  private resolverTypeMap: any;
   private typeContextMap: ContextMap;
   private typeNameToType: Map<string, Type>;
   private usedEntitiesInModels: Set<string>;
@@ -127,6 +131,7 @@ export class TsCodegenContext {
   constructor(private options: TsCodegenContextOptions) {
     this.allTypes = [];
     this.typeContextMap = {};
+    this.resolverTypeMap = {};
     this.typeNameToType = new Map();
     this.usedEntitiesInModels = new Set();
     this.usedEntitiesInResolvers = new Set();
@@ -296,6 +301,34 @@ export class TsCodegenContext {
         }
       }
     }
+  }
+
+  getMetadataObject() {
+    if (!this.typeContextMap || !this.resolverTypeMap) {
+      return null;
+    }
+
+    return buildContextMetadataOutput(
+      this.typeContextMap,
+      this.resolverTypeMap,
+    );
+  }
+
+  setResolverTypeMapItem(typeName: string, fieldName: string | null) {
+    if (fieldName === null) {
+      this.resolverTypeMap[typeName] = null;
+      return;
+    }
+
+    if (!this.resolverTypeMap[typeName]) {
+      this.resolverTypeMap[typeName] = [];
+    }
+
+    this.resolverTypeMap[typeName].push(fieldName);
+  }
+
+  getResolverTypeMap() {
+    return this.resolverTypeMap;
   }
 
   cleanSubtypeImportName(subTypeImportIdentifier: string) {
