@@ -50,6 +50,12 @@ extends:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
                 fetchDepth: 2
+                
+              - task: UseNode@1
+                inputs:
+                  version: '20.x'
+                displayName: 'Use Node.js 20.x'
+
               - script: yarn
                 displayName: yarn
               - script: |
