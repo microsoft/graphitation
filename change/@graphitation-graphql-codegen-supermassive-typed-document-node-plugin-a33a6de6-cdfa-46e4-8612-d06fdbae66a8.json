@@ -1,7 +1,7 @@
 {
-  "type": "major",
+  "type": "prerelease",
   "comment": "bump graphql codegen",
   "packageName": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
   "email": "pavelglac@gmail.com",
-  "dependentChangeType": "patch"
+  "dependentChangeType": "none"
 }

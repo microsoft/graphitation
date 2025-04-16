@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Wed, 16 Apr 2025 10:59:07 GMT",
+      "version": "4.0.1-alpha.0",
+      "tag": "@graphitation/ts-codegen_v4.0.1-alpha.0",
+      "comments": {
+        "major": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "bf11feba51e749f5e6fd3ae74368e7504a431c88",
+            "comment": "bump graphql codegen"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 08 Apr 2025 15:39:00 GMT",
       "version": "4.0.0",
       "tag": "@graphitation/ts-codegen_v4.0.0",

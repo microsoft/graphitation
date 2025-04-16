@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-typescript-typemap-plugin
 
-<!-- This log was last generated on Wed, 02 Apr 2025 11:43:32 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 16 Apr 2025 10:59:07 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.1.1-alpha.0
+
+Wed, 16 Apr 2025 10:59:07 GMT
+
+### Major changes
+
+- bump cli (pavelglac@gmail.com)
 
 ## 1.1.0
 

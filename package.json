@@ -18,7 +18,7 @@
     "lint": "lage lint --continue",
     "lage": "lage",
     "ci": "yarn lage build",
-    "beachball": "beachball -b user/pavelglac/bump-graphql-codegen",
+    "beachball": "beachball -b origin/user/pavelglac/bump-graphql-codegen",
     "change": "yarn beachball change",
     "checkchange": "yarn beachball check",
     "release": "yarn beachball publish -t alpha --prerelease-prefix alpha",

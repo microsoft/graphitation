@@ -1,7 +1,7 @@
 {
-  "type": "major",
+  "type": "prerelease",
   "comment": "bump cli",
   "packageName": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
   "email": "pavelglac@gmail.com",
-  "dependentChangeType": "patch"
+  "dependentChangeType": "none"
 }
