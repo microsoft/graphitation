@@ -16,14 +16,14 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@graphql-codegen/plugin-helpers": "^1.18.2",
+    "@graphql-codegen/plugin-helpers": "^5.0.2",
     "@graphql-codegen/visitor-plugin-common": "^5.0.0",
     "@types/jest": "^26.0.22",
     "typescript": "^5.5.3",
     "monorepo-scripts": "*"
   },
   "peerDependencies": {
-    "@graphql-codegen/plugin-helpers": ">= 1.18.0 < 2",
+    "@graphql-codegen/plugin-helpers": "^5.0.2",
     "@graphql-codegen/visitor-plugin-common": "^5.0.0",
     "typescript": "^5.5.3"
   },

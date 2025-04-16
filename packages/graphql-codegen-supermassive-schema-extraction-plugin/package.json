@@ -15,12 +15,12 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@graphql-codegen/plugin-helpers": "^1.18.2",
+    "@graphql-codegen/plugin-helpers": "^5.0.2",
     "@types/jest": "^26.0.22",
     "monorepo-scripts": "*"
   },
   "peerDependencies": {
-    "@graphql-codegen/plugin-helpers": ">= 1.18.0 < 2"
+    "@graphql-codegen/plugin-helpers": "^5.0.2"
   },
   "dependencies": {
     "@graphitation/supermassive": "^3.10.1",

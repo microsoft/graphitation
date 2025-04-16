@@ -6,6 +6,7 @@ import {
   NormalizedScalarsMap,
   ParsedEnumValuesMap,
   getBaseTypeNode,
+  normalizeAvoidOptionals,
 } from "@graphql-codegen/visitor-plugin-common";
 import { Kind, TypeNode } from "graphql";
 
@@ -16,7 +17,7 @@ export class TypeScriptOperationVariablesToObject extends TSOperationVariablesTo
   constructor(
     _scalars: NormalizedScalarsMap,
     _convertName: ConvertNameFn,
-    _avoidOptionals: boolean | AvoidOptionalsConfig,
+    _avoidOptionals: AvoidOptionalsConfig | boolean,
     _immutableTypes: boolean,
     _namespacedImportName: string | null = null,
     _enumNames: string[] = [],
@@ -30,7 +31,7 @@ export class TypeScriptOperationVariablesToObject extends TSOperationVariablesTo
     super(
       _scalars,
       _convertName,
-      _avoidOptionals,
+      normalizeAvoidOptionals(_avoidOptionals),
       _immutableTypes,
       _namespacedImportName,
       _enumNames,

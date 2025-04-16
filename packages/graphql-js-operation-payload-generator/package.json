@@ -26,7 +26,7 @@
   "devDependencies": {
     "@graphitation/graphql-js-tag": "^0.10.0",
     "@graphitation/graphql-codegen-typescript-typemap-plugin": "^1.1.0",
-    "@graphql-codegen/cli": "^2.6.2",
+    "@graphql-codegen/cli": "^5.0.0",
     "@graphql-codegen/typescript": "^4.0.0",
     "@types/jest": "^26.0.22",
     "monorepo-scripts": "*",

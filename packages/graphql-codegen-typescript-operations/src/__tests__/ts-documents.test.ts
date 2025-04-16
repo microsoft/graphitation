@@ -91,14 +91,13 @@ describe("TypeScript Operations Plugin", () => {
     config: any = {},
     pluginSchema = schema,
     usage = "",
-    openPlayground = false,
   ) => {
     const m = mergeOutputs([
       await tsPlugin(pluginSchema, [], config, { outputFile: "" }),
       content,
       usage,
     ]);
-    await validateTs(m, undefined, undefined, undefined, openPlayground);
+    await validateTs(m, undefined, undefined, undefined);
 
     return m;
   };
