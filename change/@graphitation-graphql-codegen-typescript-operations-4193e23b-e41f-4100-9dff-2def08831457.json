@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "bump graphql codegen",
+  "packageName": "@graphitation/graphql-codegen-typescript-operations",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}

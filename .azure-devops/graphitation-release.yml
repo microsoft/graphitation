@@ -1,7 +1,7 @@
 pr: none
 trigger:
   - main
-  - alloy/relay-apollo-duct-tape
+  - user/pavelglac/bump-graphql-codegen
 
 variables:
   - group: InfoSec-SecurityResults
@@ -60,11 +60,7 @@ extends:
                   git config user.name "Graphitation Service Account"
                   git fetch --depth=2
                 displayName: Configure git for release
-              - script: yarn release -y -n $(ossNpmToken) --access public --no-push --keep-change-files
-                displayName: Release to the npm registry
-              - script: |
-                  git restore .
-                displayName: Discard beachball's changes
+
               - script: |
                   echo "always-auth=true" > .npmrc
                   echo "registry=$(adoNpmFeedBaseUrl)" >> .npmrc
