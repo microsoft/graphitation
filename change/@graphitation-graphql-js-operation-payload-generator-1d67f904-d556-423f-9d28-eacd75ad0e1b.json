@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "bump cli",
-  "packageName": "@graphitation/graphql-js-operation-payload-generator",
-  "email": "pavelglac@gmail.com",
-  "dependentChangeType": "none"
-}

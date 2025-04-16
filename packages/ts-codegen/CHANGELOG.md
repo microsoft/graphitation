@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Wed, 16 Apr 2025 10:59:07 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 16 Apr 2025 12:08:33 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 4.0.1-alpha.1
+
+Wed, 16 Apr 2025 12:08:33 GMT
+
+### Changes
+
+- bump graphql codegen (pavelglac@gmail.com)
 
 ## 4.0.1-alpha.0
 

@@ -2,6 +2,27 @@
   "name": "@graphitation/graphql-codegen-resolvers-models",
   "entries": [
     {
+      "date": "Wed, 16 Apr 2025 12:08:33 GMT",
+      "version": "1.3.1-alpha.1",
+      "tag": "@graphitation/graphql-codegen-resolvers-models_v1.3.1-alpha.1",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/graphql-codegen-resolvers-models",
+            "commit": "72064f1b80f8386560193676f72d35d10aa0daa9",
+            "comment": "bump graphql codegen"
+          },
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/graphql-codegen-resolvers-models",
+            "commit": "72064f1b80f8386560193676f72d35d10aa0daa9",
+            "comment": "bump cli"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 16 Apr 2025 10:59:06 GMT",
       "version": "1.3.1-alpha.0",
       "tag": "@graphitation/graphql-codegen-resolvers-models_v1.3.1-alpha.0",

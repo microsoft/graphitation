@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "bump graphql codegen",
-  "packageName": "@graphitation/ts-codegen",
-  "email": "pavelglac@gmail.com",
-  "dependentChangeType": "none"
-}

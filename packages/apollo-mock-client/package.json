@@ -19,7 +19,7 @@
   "devDependencies": {
     "@apollo/client": ">= ^3.3.0 < 3.7.0",
     "@graphitation/graphql-js-tag": "^0.10.0",
-    "@graphitation/graphql-js-operation-payload-generator": "^0.13.1-alpha.0",
+    "@graphitation/graphql-js-operation-payload-generator": "^0.13.1-alpha.1",
     "@types/invariant": "^2.2.34",
     "@types/jest": "^26.0.22",
     "@types/react": "^18.2.29",

@@ -22,7 +22,7 @@
   "devDependencies": {
     "@apollo/client": ">= ^3.3.0 < 3.7.0",
     "@graphitation/apollo-mock-client": "^0.12.1-alpha.0",
-    "@graphitation/graphql-js-operation-payload-generator": "^0.13.1-alpha.0",
+    "@graphitation/graphql-js-operation-payload-generator": "^0.13.1-alpha.1",
     "@graphitation/graphql-js-tag": "^0.10.0",
     "@types/jest": "^26.0.22",
     "@types/lodash": "^4.14.176",

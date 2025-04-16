@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "bump cli",
-  "packageName": "@graphitation/graphql-codegen-typescript-operations",
-  "email": "pavelglac@gmail.com",
-  "dependentChangeType": "none"
-}

@@ -1,8 +1,17 @@
 # Change Log - @graphitation/graphql-codegen-resolvers-models
 
-<!-- This log was last generated on Wed, 16 Apr 2025 10:59:06 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 16 Apr 2025 12:08:33 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.3.1-alpha.1
+
+Wed, 16 Apr 2025 12:08:33 GMT
+
+### Changes
+
+- bump graphql codegen (pavelglac@gmail.com)
+- bump cli (pavelglac@gmail.com)
 
 ## 1.3.1-alpha.0
 
