@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "bump cli",
+  "packageName": "@graphitation/graphql-codegen-resolvers-models",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}
