@@ -41,7 +41,7 @@ export class TypeScriptSelectionSetProcessor extends BaseSelectionSetProcessor<S
       const avoidOptional =
         // TODO: check type and exec only if relevant
         // TODO: why is avoidOptionals checked as a boolean?
-        (this.config.avoidOptionals as unknown as boolean) === true ||
+        typeof this.config.avoidOptionals === "boolean" ? this.config.avoidOptionals :
         this.config.avoidOptionals?.field ||
         this.config.avoidOptionals?.inputValue ||
         this.config.avoidOptionals?.object;

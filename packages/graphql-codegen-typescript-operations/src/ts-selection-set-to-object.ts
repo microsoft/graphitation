@@ -1,5 +1,6 @@
 import { SelectionSetToObject as CodegenSelectionSetToObject } from "@graphql-codegen/visitor-plugin-common";
 import {
+  DirectiveNode,
   FieldNode,
   FragmentSpreadNode,
   GraphQLNamedType,
@@ -9,6 +10,14 @@ import {
   SelectionSetNode,
   locatedError,
 } from "graphql";
+
+type FragmentSpreadUsage = {
+  fragmentName: string;
+  typeName: string;
+  onType: string;
+  selectionNodes: Array<SelectionNode>;
+  fragmentDirectives?: DirectiveNode[];
+};
 
 export class SelectionSetToObject extends CodegenSelectionSetToObject {
   public createNext(
@@ -30,10 +39,10 @@ export class SelectionSetToObject extends CodegenSelectionSetToObject {
 
   protected flattenSelectionSet(
     selections: ReadonlyArray<SelectionNode>,
-  ): Map<string, Array<SelectionNode | string>> {
+  ): Map<string, Array<SelectionNode | FragmentSpreadUsage>> {
     const selectionNodesByTypeName = new Map<
       string,
-      Array<SelectionNode | string>
+      Array<SelectionNode | FragmentSpreadUsage>
     >();
     const inlineFragmentSelections: InlineFragmentNode[] = [];
     const fieldNodes: FieldNode[] = [];

@@ -638,7 +638,13 @@ describe("TypeScript Operations Plugin", () => {
       expect(withUsage).toBeSimilarStringTo(`
       export type NotificationsQuery = (
         { __typename?: 'Query' }
-        & MyFragment
+        & { notifications: Array<(
+          { __typename?: 'TextNotification' }
+          & Pick<TextNotification, 'id'>
+          ) | (
+            { __typename?: 'ImageNotification' }
+            & Pick<ImageNotification, 'id'>
+          )> }
       );
       `);
     });
@@ -787,7 +793,11 @@ describe("TypeScript Operations Plugin", () => {
     expect(withUsage).toBeSimilarStringTo(`
     export type Notifications = (
       { __typename?: 'Query' }
-      & My
+      & { notifications: Array<(
+        { __typename?: 'TextNotification' }
+        & Pick<TextNotification, 'id'>  ) 
+        | (    { __typename?: 'ImageNotification' }
+        & Pick<ImageNotification, 'id'>  )> }
     );
     `);
   });
@@ -1050,17 +1060,17 @@ describe("TypeScript Operations Plugin", () => {
         },
       );
       expect(content).toBeSimilarStringTo(`
-      export type TestQuery = (
-        { __typename?: 'Query' }
-        & { some?: Maybe<(
-          { __typename?: 'A' }
-          & Node_A_Fragment
-        ) | (
-          { __typename?: 'B' }
-          & Node_B_Fragment
-        )> }
-      );
-      `);
+        export type TestQuery = (
+          { __typename?: 'Query' }
+          & { some?: Maybe<(
+            { __typename: 'A' }
+            & Pick<A, 'id'>
+          ) | (
+            { __typename: 'B' }
+            & Pick<B, 'id'>
+          )> }
+        );
+        `);
       await validate(content, config, testSchema);
     });
 
@@ -1843,7 +1853,10 @@ describe("TypeScript Operations Plugin", () => {
         },
       );
       expect(content).toBeSimilarStringTo(`
-        export type MeQuery = { me?: Maybe<UserFieldsFragment> };
+        export type MeQuery = { me?: Maybe<(
+          Pick<User, 'id' | 'username' | 'role'> 
+          & { profile?: Maybe<Pick<Profile, 'age'>> } 
+        )> };
       `);
       await validate(content, config);
     });
@@ -1876,8 +1889,8 @@ describe("TypeScript Operations Plugin", () => {
 
       expect(content).toBeSimilarStringTo(`
       export type MeQuery = { me?: Maybe<(
-        Pick<User, 'username'>
-        & UserFieldsFragment
+        Pick<User, 'username' | 'id'>
+        & { profile?: Maybe<Pick<Profile, 'age'>> }
       )> };
       `);
       await validate(content, config);
@@ -1918,9 +1931,11 @@ describe("TypeScript Operations Plugin", () => {
         { __typename?: 'Query' }
         & { me?: Maybe<(
           { __typename?: 'User' }
-          & Pick<User, 'username'>
-          & UserFieldsFragment
-          & UserProfileFragment
+          & Pick<User, 'username' | 'id'> 
+          & { profile?: Maybe<(
+            { __typename?: 'Profile' }
+            & Pick<Profile, 'age'>
+            )> }
         )> }
       );
       `);
@@ -1996,10 +2011,10 @@ describe("TypeScript Operations Plugin", () => {
         { __typename?: 'Query' }
         & { b?: Maybe<(
           { __typename?: 'A' }
-          & AFragment
+          & Pick<A, 'id' | 'x'>
         ) | (
           { __typename?: 'B' }
-          & BFragment
+          & Pick<B, 'id' | 'y'>
         )> }
       );
 
@@ -2072,9 +2087,7 @@ describe("TypeScript Operations Plugin", () => {
         { __typename?: 'Query' }
         & { myType: (
           { __typename?: 'MyType' }
-          & AFragment
-          & BFragment
-          & CFragment
+          & Pick<MyType, 'foo' | 'bar' | 'test'>
         ) }
       );
       `);
@@ -2133,8 +2146,7 @@ describe("TypeScript Operations Plugin", () => {
         { __typename?: 'Query' }
         & { b?: Maybe<(
           { __typename?: 'A' }
-          & AFragment
-          & BFragment
+          & Pick<A, 'id' | 'x'>
         ) | { __typename?: 'B' }> }
       );
   
@@ -3641,8 +3653,7 @@ describe("TypeScript Operations Plugin", () => {
         { __typename?: 'Query' }
         & { user: (
           { __typename?: 'User' }
-          & Pick<User, 'id'>
-          & TestFragment
+          & Pick<User, 'id' | 'login'>
         ) }
       );`);
 
@@ -3764,25 +3775,19 @@ describe("TypeScript Operations Plugin", () => {
         { __typename?: 'Query' }
         & { user: (
           { __typename?: 'User' }
-          & Pick<User, 'login'>
-          & UserResult_User_Fragment
-          & UserResult1_User_Fragment
+          & Pick<User, 'login' | 'id'>
         ) | (
           { __typename?: 'Error2' }
-          & UserResult_Error2_Fragment
-          & UserResult1_Error2_Fragment
+          & Pick<Error2, 'message'>
         ) | (
           { __typename?: 'Error3' }
           & Pick<Error3, 'message'>
           & { info?: Maybe<(
             { __typename?: 'AdditionalInfo' }
-            & AdditionalInfoFragment
+            & Pick<AdditionalInfo, 'message2' | 'message'>
           )> }
-          & UserResult_Error3_Fragment
-          & UserResult1_Error3_Fragment
         ) }
       );`);
-
       expect(output).toBeSimilarStringTo(`
       export type AdditionalInfoFragment = (
         { __typename?: 'AdditionalInfo' }
@@ -4017,16 +4022,34 @@ describe("TypeScript Operations Plugin", () => {
 
       expect(output).toBeSimilarStringTo(`
         export type Maybe<T> = T | null;
+        export type InputMaybe<T> = Maybe<T>;
         export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
         export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
         export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+        export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+        export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
         /** All built-in and custom scalars, mapped to their actual values */
         export type Scalars = {
-          ID: string;
-          String: string;
-          Boolean: boolean;
-          Int: number;
-          Float: number;
+          ID: {
+            input: string;
+            output: string;
+          }
+          String: {
+            input: string;
+            output: string;
+          }
+          Boolean: {
+            input: boolean;
+            output: boolean;
+          }
+          Int: {
+            input: number;
+            output: number;
+          }
+          Float: {
+            input: number;
+            output: number;
+          }
         };
 
         export type Query = {
@@ -4035,18 +4058,18 @@ describe("TypeScript Operations Plugin", () => {
         };
 
         export type Concept = {
-          id?: Maybe<Scalars['String']>;
+          id?: Maybe<Scalars['String']['output']>;
         };
 
         export type Dimension = Concept & {
           __typename?: 'Dimension';
-          id?: Maybe<Scalars['String']>;
+          id?: Maybe<Scalars['String']['output']>;
         };
 
         export type DimValue = {
           __typename?: 'DimValue';
           dimension?: Maybe<Dimension>;
-          value: Scalars['String'];
+          value: Scalars['String']['output'];
         };
 
         export type Searchable = Dimension | DimValue;
@@ -4686,7 +4709,7 @@ function test(q: GetEntityBrandDataQuery): void {
       expect(content).toBeSimilarStringTo(`
       export type TestQueryQuery = (
         { __typename?: 'Query' }
-        & { fooBar: Array<( { __typename?: 'Foo' } & FooBarFragment_Foo_Fragment ) | ( { __typename?: 'Bar' } & FooBarFragment_Bar_Fragment )> }
+        & { fooBar: Array<( { __typename?: 'Foo' } & Pick<Foo, 'id'> ) | ( { __typename?: 'Bar' } & Pick<Bar, 'id'> )> }
       );
 
       type FooBarFragment_Foo_Fragment = (
@@ -4763,7 +4786,7 @@ function test(q: GetEntityBrandDataQuery): void {
           & Pick<Price, 'id'>
           & { item: Array<Maybe<(
             { __typename?: 'Product' }
-            & ProductFragmentFragment
+            & Pick<Product, 'id' | 'title'>
           )>> }
         );
       `);
@@ -5009,7 +5032,7 @@ function test(q: GetEntityBrandDataQuery): void {
       );
 
       expect(content).toBeSimilarStringTo(`
-        export type UserQuery = { user: Pick<User, 'id' | 'login'> };
+        export type UserQuery = { user: Pick<User, 'id' | 'login'> | {} };
       `);
     });
 

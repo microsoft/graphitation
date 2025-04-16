@@ -21,6 +21,7 @@ export class TypeScriptOperationVariablesToObject extends TSOperationVariablesTo
     _namespacedImportName: string | null = null,
     _enumNames: string[] = [],
     _enumPrefix = true,
+    _enumSuffix = false,
     _enumValues: ParsedEnumValuesMap = {},
     _applyCoercion = false,
     protected inlineCommonTypes = false,
@@ -34,10 +35,10 @@ export class TypeScriptOperationVariablesToObject extends TSOperationVariablesTo
       _namespacedImportName,
       _enumNames,
       _enumPrefix,
+      _enumSuffix,
       _enumValues,
       _applyCoercion,
     );
-
     this.immutableTypes = _immutableTypes;
   }
 
@@ -121,8 +122,8 @@ export class TypeScriptOperationVariablesToObject extends TSOperationVariablesTo
   }
 
   protected getScalar(name: string): string {
-    if (this.inlineCommonTypes && BASIC_TYPES.includes(this._scalars[name])) {
-      return this._scalars[name];
+    if (this.inlineCommonTypes && BASIC_TYPES.includes(this._scalars[name].input)) {
+      return this._scalars[name].input;
     }
 
     return super.getScalar(name);

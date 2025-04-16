@@ -11,20 +11,19 @@
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
-    "test": "monorepo-scripts test",
+    "test": "monorepo-scripts test -- -u",
     "types": "monorepo-scripts types",
     "just": "monorepo-scripts"
   },
   "dependencies": {
     "@graphql-codegen/plugin-helpers": "^1.18.2",
-    "@graphql-codegen/typescript": "^1.19.0",
-    "@graphql-codegen/visitor-plugin-common": "^1.17.22",
+    "@graphql-codegen/typescript": "^4.0.0",
+    "@graphql-codegen/visitor-plugin-common": "^5.0.0",
     "auto-bind": "~4.0.0",
     "tslib": "~2.0.1"
   },
   "devDependencies": {
-    "@graphql-codegen/testing": "1.17.7",
-    "@graphql-codegen/typescript": "^1.19.0"
+    "@graphql-codegen/testing": "1.17.7"
   },
   "peerDependencies": {
     "graphql": "^15.0.0"

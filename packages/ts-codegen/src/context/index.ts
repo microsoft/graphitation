@@ -64,12 +64,30 @@ export type TsCodegenContextOptions = {
 
 const DEFAULT_SCALAR_TYPE = "unknown";
 
-export const BUILT_IN_SCALARS: Record<string, string> = {
-  ID: "string",
-  Int: "number",
-  Float: "number",
-  String: "string",
-  Boolean: "boolean",
+export const BUILT_IN_SCALARS: Record<string, {
+  input: string;
+  output: string;
+}> = {
+  ID: {
+    input: "string",
+    output: "string",
+  },
+  Int: {
+    input: "number",
+    output: "number",
+  },
+  Float: {
+    input: "number",
+    output: "number",
+  },
+  String: {
+    input: "string",
+    output: "string",
+  },
+  Boolean: {
+    input: "boolean",
+    output: "boolean",
+  },
 };
 
 const TsCodegenContextDefault: TsCodegenContextOptions = {
@@ -626,7 +644,7 @@ export class TsCodegenContext {
     markUsage?: "MODELS" | "RESOLVERS",
   ): TypeLocation {
     if (Object.prototype.hasOwnProperty.call(BUILT_IN_SCALARS, typeName)) {
-      return new TypeLocation(null, BUILT_IN_SCALARS[typeName]);
+      return new TypeLocation(null, BUILT_IN_SCALARS[typeName].input);
     } else {
       if (markUsage === "MODELS") {
         this.usedEntitiesInModels.add(typeName);
