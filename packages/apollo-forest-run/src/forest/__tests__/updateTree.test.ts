@@ -1207,7 +1207,7 @@ describe("update list of union type", () => {
         plainObjectUnionList: [
           plainObjectBar({
             bar: "1",
-            entityUnion: entityFoo({ id: "1", foo: "foo1" }),
+            entityUnion: entityFoo({ id: "3", foo: "foo1" }),
           }),
           plainObjectFoo({
             foo: "2",
@@ -1616,16 +1616,16 @@ describe("with missing fields", () => {
 describe("with different selections", () => {
   test("updates entities", () => {
     const base = completeObject({
-      entity: entityFoo({ foo: "foo" }),
+      entity: entityFoo({ id: "2", foo: "foo" }),
     });
     const model = completeObject({
-      entity: entityFoo({ foo: "changed" }),
+      entity: entityFoo({ id: "2", foo: "changed" }),
     });
     const { difference } = diff(base, model);
 
     const otherTree: TestValue = [
       completeObject({
-        entity: entityFoo({ fooAliased: "foo" }),
+        entity: entityFoo({ id: "2", fooAliased: "foo" }),
       }),
       gql`
         fragment OtherObject on CompleteObject {
@@ -1640,7 +1640,7 @@ describe("with different selections", () => {
     ];
     const { data } = update(otherTree, difference);
 
-    expect(data.entity).toEqual(entityFoo({ fooAliased: "changed" }));
+    expect(data.entity).toEqual(entityFoo({ id: "2", fooAliased: "changed" }));
     expect(data).not.toBe(base);
     expect(data).not.toBe(model);
   });

@@ -767,7 +767,8 @@ describe(aggregateFieldValue, () => {
     ]);
     const result = aggregateFieldValue(aggregateObject, "foo");
 
-    expect(result).toBe(42);
+    // ApolloCompat: last chunk takes precedence
+    expect(result).toBe(43);
   });
 
   it("aggregates object field values when parent is an aggregate", () => {
@@ -784,7 +785,7 @@ describe(aggregateFieldValue, () => {
 
     // The field 'bar' should have been aggregated
     const barValue = aggregateFieldValue(fooValue as ObjectValue, "bar");
-    expect(barValue).toBe("baz1"); // First value takes precedence
+    expect(barValue).toBe("baz2"); // ApolloCompat: last chunk takes precedence
   });
 
   it("handles missing fields in some chunks when aggregating", () => {
@@ -869,16 +870,17 @@ describe(aggregateFieldValue, () => {
     expect(result).toBe(leafDeletedValue);
   });
 
-  it("returns the first non-missing field value when aggregating", () => {
+  it("returns the last non-missing field value when aggregating", () => {
     const aggregateObject = createTestAggregateObject([
       [`query { foo }`, {}],
       [`query { foo }`, { foo: 43 }],
       [`query { foo }`, { foo: 44 }],
+      [`query { foo }`, {}],
     ]);
 
     const result = aggregateFieldValue(aggregateObject, "foo");
 
-    expect(result).toBe(43);
+    expect(result).toBe(44); // ApolloCompat: last non-empty chunk takes precedence
   });
 
   it("aggregates fields with arguments", () => {
@@ -921,7 +923,7 @@ describe(aggregateFieldValue, () => {
 
     const result = aggregateFieldValue(aggregateObject, "foo");
 
-    expect(result).toBe(42); // First value takes precedence
+    expect(result).toBe(43); // ApolloCompat: last chunk takes precedence
   });
 
   it("aggregates nested fields recursively", () => {
@@ -986,7 +988,7 @@ describe(aggregateFieldValue, () => {
 
     const result = aggregateFieldValue(aggregateObject, fieldEntry);
 
-    expect(result).toBe(42); // First value takes precedence
+    expect(result).toBe(43); // ApolloCompat: last chunk takes precedence
   });
 
   it("handles null values in some chunks when aggregating", () => {

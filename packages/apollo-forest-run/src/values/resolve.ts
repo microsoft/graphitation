@@ -12,6 +12,7 @@ import type {
   SourceLeafValue,
   SourceNull,
   SourceValue,
+  LeafErrorValue,
 } from "./types";
 import type {
   FieldInfo,
@@ -299,12 +300,15 @@ export function aggregateFieldValue(
     return resolveFieldValue(parentChunks[0], fieldEntry);
   }
 
-  const accumulator = CreateValue.createChunkAccumulator();
+  let fieldChunks: (LeafErrorValue | CompositeValue)[] | undefined;
 
   let hasField = false;
   let deleted = false;
   let isNull = false;
-  for (const parentObjectChunk of parentChunks) {
+
+  // ApolloCompat: mimic last-write wins approach where the last chunk actually has precedence over all others
+  for (let index = parentChunks.length - 1; index >= 0; index--) {
+    const parentObjectChunk = parentChunks[index];
     const fieldValue = resolveFieldValue(parentObjectChunk, fieldEntry);
 
     if (fieldValue === undefined) {
@@ -323,11 +327,20 @@ export function aggregateFieldValue(
     if (!CreateValue.shouldAggregateChunks(fieldValue)) {
       return fieldValue;
     }
-    CreateValue.accumulateChunks(accumulator, fieldValue);
     hasField = true;
+    fieldChunks ??= [];
+    fieldChunks.push(fieldValue);
   }
   if (!hasField) {
     return undefined;
+  }
+  // Undo chunk reversal that was done for Apollo compatibility (chunk aggregation MUST NOT be reversed)
+  const accumulator = CreateValue.createChunkAccumulator();
+  if (fieldChunks?.length) {
+    for (let index = fieldChunks.length - 1; index >= 0; index--) {
+      const fieldValue = fieldChunks[index];
+      CreateValue.accumulateChunks(accumulator, fieldValue);
+    }
   }
   const value = CreateValue.createValue(accumulator);
   if (value !== undefined) {

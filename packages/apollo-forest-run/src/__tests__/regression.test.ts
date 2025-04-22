@@ -838,3 +838,36 @@ test("treats incorrect list items as empty objects", () => {
   expect(data.result).toEqual({ foo: [{ bar: "test" }, {}] });
   expect(data.complete).toBe(false);
 });
+
+test("ApolloCompat: last-object wins in write with conflicts", () => {
+  const cache = new ForestRun();
+  const query = gql`
+    {
+      foo1 {
+        id
+        value
+      }
+      foo2 {
+        id
+        value
+      }
+    }
+  `;
+  const initialResult = {
+    foo1: { __typename: "Foo", id: "foo", value: "foo" },
+    foo2: { __typename: "Foo", id: "foo", value: "foo" },
+  };
+  const badResult = {
+    foo1: { __typename: "Foo", id: "foo", value: "foo1" },
+    foo2: { __typename: "Foo", id: "foo", value: "foo2" },
+  };
+
+  cache.write({ query, result: initialResult });
+  cache.write({ query, result: badResult });
+
+  const data = cache.diff({ query, optimistic: true });
+  expect(data.result).toEqual({
+    foo1: { __typename: "Foo", id: "foo", value: "foo2" },
+    foo2: { __typename: "Foo", id: "foo", value: "foo2" },
+  });
+});
