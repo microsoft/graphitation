@@ -206,10 +206,16 @@ function applyTransformations(
     createChunkProvider(dataLayers),
     createChunkMatcher(dataLayers),
   );
+  // Special case: root-level __typename field may become out of sync due to difference in manual writes/optimistic results and network results
+  //   so forcing them to be in sync:
+  const data = optimisticDraft.data as SourceObject;
+  if (inputTree.result.data.__typename) {
+    data.__typename = inputTree.result.data.__typename;
+  }
   const optimisticTree = indexTree(
     env,
     operation,
-    { data: optimisticDraft.data as SourceObject },
+    { data },
     optimisticDraft.missingFields,
     inputTree,
   );

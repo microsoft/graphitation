@@ -838,3 +838,106 @@ test("treats incorrect list items as empty objects", () => {
   expect(data.result).toEqual({ foo: [{ bar: "test" }, {}] });
   expect(data.complete).toBe(false);
 });
+
+test("consistent root-level __typename in optimistic response 1", () => {
+  const query = gql`
+    {
+      foo {
+        id
+        bar
+      }
+    }
+  `;
+  const update = gql`
+    {
+      bar {
+        id
+        bar
+      }
+    }
+  `;
+  const cache = new ForestRun();
+  cache.write({
+    query,
+    result: {
+      __typename: "Query",
+      foo: { __typename: "Bar", id: "1", bar: "bar" },
+    },
+  });
+
+  const data = cache.diff({ query, optimistic: true });
+  cache.recordOptimisticTransaction(() => {
+    cache.write({
+      query: update,
+      result: {
+        bar: { __typename: "Bar", id: "1", bar: "changed" },
+      },
+    });
+  }, "test");
+  const optimisticData = cache.diff({ query, optimistic: true });
+  cache.removeOptimistic("test");
+  const data2 = cache.diff({ query, optimistic: true });
+
+  expect(data.result).toEqual({
+    __typename: "Query",
+    foo: { __typename: "Bar", id: "1", bar: "bar" },
+  });
+  expect(optimisticData.result).toEqual({
+    __typename: "Query", // <-- This was missing
+    foo: { __typename: "Bar", id: "1", bar: "changed" },
+  });
+  expect(data2.result).toEqual({
+    __typename: "Query",
+    foo: { __typename: "Bar", id: "1", bar: "bar" },
+  });
+});
+
+test("consistent root-level __typename in optimistic response 2", () => {
+  const query = gql`
+    {
+      foo {
+        id
+        bar
+      }
+    }
+  `;
+  const update = gql`
+    {
+      bar {
+        id
+        bar
+      }
+    }
+  `;
+  const cache = new ForestRun();
+  cache.write({
+    query,
+    result: {
+      foo: { __typename: "Bar", id: "1", bar: "bar" },
+    },
+  });
+
+  const data = cache.diff({ query, optimistic: true });
+  cache.recordOptimisticTransaction(() => {
+    cache.write({
+      query: update,
+      result: {
+        bar: { __typename: "Bar", id: "1", bar: "changed" },
+      },
+    });
+  }, "test");
+  const optimisticData = cache.diff({ query, optimistic: true });
+  cache.removeOptimistic("test");
+  const data2 = cache.diff({ query, optimistic: true });
+
+  expect(data.result).toEqual({
+    foo: { __typename: "Bar", id: "1", bar: "bar" },
+  });
+  expect(optimisticData.result).toEqual({
+    // __typename: "Query", // <-- This shouldn't be here
+    foo: { __typename: "Bar", id: "1", bar: "changed" },
+  });
+  expect(data2.result).toEqual({
+    foo: { __typename: "Bar", id: "1", bar: "bar" },
+  });
+});
