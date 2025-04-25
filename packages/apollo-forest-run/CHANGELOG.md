@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Fri, 11 Apr 2025 16:00:56 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 25 Apr 2025 14:47:47 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.12.1
+
+Fri, 25 Apr 2025 14:47:47 GMT
+
+### Patches
+
+- fix(apollo-forest-run): keep root-level __typename in sync when reading (vladimir.razuvaev@gmail.com)
 
 ## 0.12.0
 

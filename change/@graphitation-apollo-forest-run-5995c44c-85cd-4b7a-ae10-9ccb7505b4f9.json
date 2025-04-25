@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "fix(apollo-forest-run): keep root-level __typename in sync when reading",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vladimir.razuvaev@gmail.com",
-  "dependentChangeType": "patch"
-}
