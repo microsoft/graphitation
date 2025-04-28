@@ -619,7 +619,7 @@ describe('Cache', () => {
       });
 
       expect(firstNameResult).toEqual({
-        __typename: "Person",
+        // __typename: "Person", // ForestRun: keeps __typename consistent with the query selection
         firstName: "Ben",
       });
 
@@ -652,7 +652,7 @@ describe('Cache', () => {
       });
 
       expect(lastNameResult).toEqual({
-        __typename: "Person",
+        // __typename: "Person", // ForestRun: keeps __typename consistent with the query selection
         lastName: "Newman",
       });
 
@@ -681,13 +681,13 @@ describe('Cache', () => {
       });
 
       expect(benjaminResult).toEqual({
-        __typename: "Person",
+        // __typename: "Person", // ForestRun: keeps __typename consistent with the query selection
         firstName: "Benjamin",
       });
 
       // Still the same as it was?
       expect(firstNameResult).toEqual({
-        __typename: "Person",
+        // __typename: "Person", // ForestRun: keeps __typename consistent with the query selection
         firstName: "Ben",
       });
 
