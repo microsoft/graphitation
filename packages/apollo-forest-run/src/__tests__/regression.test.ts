@@ -842,6 +842,7 @@ test("treats incorrect list items as empty objects", () => {
 test("consistent root-level __typename in optimistic response 1", () => {
   const query = gql`
     {
+      __typename
       foo {
         id
         bar
@@ -873,6 +874,7 @@ test("consistent root-level __typename in optimistic response 1", () => {
         bar: { __typename: "Bar", id: "1", bar: "changed" },
       },
     });
+    cache.diff({ query, optimistic: true });
   }, "test");
   const optimisticData = cache.diff({ query, optimistic: true });
   cache.removeOptimistic("test");
@@ -913,6 +915,7 @@ test("consistent root-level __typename in optimistic response 2", () => {
   cache.write({
     query,
     result: {
+      __typename: "Query",
       foo: { __typename: "Bar", id: "1", bar: "bar" },
     },
   });
@@ -925,6 +928,7 @@ test("consistent root-level __typename in optimistic response 2", () => {
         bar: { __typename: "Bar", id: "1", bar: "changed" },
       },
     });
+    cache.diff({ query, optimistic: true });
   }, "test");
   const optimisticData = cache.diff({ query, optimistic: true });
   cache.removeOptimistic("test");

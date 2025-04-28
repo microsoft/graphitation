@@ -71,6 +71,7 @@ export function read<TData>(
       ),
       dirtyNodes: new Map(),
     };
+    normalizeRootLevelTypeName(readState.outputTree);
     resultsMap.set(operationDescriptor, readState);
   }
   const { outputTree } = readState;
@@ -93,6 +94,20 @@ export function read<TData>(
     result: outputTree.result.data,
     complete: true,
   } as Cache.DiffResult<any>;
+}
+
+function normalizeRootLevelTypeName(tree: IndexedTree) {
+  // Root-level __typename field may become out of sync due to difference in manual writes/optimistic results and network results
+  //   so forcing consistent state matching operation selection set:
+  const rootNode = tree.nodes.get(tree.rootNodeKey)?.[0];
+  if (!rootNode || Object.isFrozen(rootNode.data)) {
+    return;
+  }
+  if (rootNode.selection.fields.has("__typename")) {
+    rootNode.data.__typename ??= rootNode.type || tree.operation.rootType;
+  } else if (rootNode.data.__typename) {
+    delete rootNode.data.__typename;
+  }
 }
 
 function growOutputTree(
@@ -155,8 +170,8 @@ function growDataTree(
   if (
     !rootDraft.data &&
     rootNodeKey === "ROOT_QUERY" &&
-    possibleSelections.get(null)?.fields?.size === 1 &&
-    possibleSelections.get(null)?.fields.has("__typename")
+    rootDraft.selection.fields?.size === 1 &&
+    rootDraft.selection.fields.has("__typename")
   ) {
     rootDraft.data = {
       __typename: env.rootTypes?.query ?? "Query",
@@ -206,16 +221,10 @@ function applyTransformations(
     createChunkProvider(dataLayers),
     createChunkMatcher(dataLayers),
   );
-  // Special case: root-level __typename field may become out of sync due to difference in manual writes/optimistic results and network results
-  //   so forcing them to be in sync:
-  const data = optimisticDraft.data as SourceObject;
-  if (inputTree.result.data.__typename) {
-    data.__typename = inputTree.result.data.__typename;
-  }
   const optimisticTree = indexTree(
     env,
     operation,
-    { data },
+    { data: optimisticDraft.data as SourceObject },
     optimisticDraft.missingFields,
     inputTree,
   );

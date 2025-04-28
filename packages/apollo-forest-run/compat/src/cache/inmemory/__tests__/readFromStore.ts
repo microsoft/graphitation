@@ -106,6 +106,7 @@ describe('reading from the store', () => {
       });
 
       expect(queryResult).toEqual({
+        __typename: 'Query', // ForestRun: keeps __typename consistent with the query selection (__typename is added automatically for inline fragment selections)
         nestedObj: {
           innerArray: [{ id: 'abcdef', someField: 3 }],
         },
@@ -400,6 +401,7 @@ describe('reading from the store', () => {
 
     // The result of the query shouldn't contain __data_id fields
     expect(queryResult).toEqual({
+      __typename: 'Query', // ForestRun: keeps __typename consistent with the query selection (__typename is added automatically for inline fragment selections)
       stringField: 'This is a string!',
       numberField: 5,
       nullField: null,
@@ -1148,6 +1150,7 @@ describe('reading from the store', () => {
         }
       `,
     })).toEqual({
+      __typename: 'Query', // ForestRun: keeps __typename consistent with the query selection (__typename is added automatically for inline fragment selections)
       uuid: "8d573b9c-cfcf-4e3e-98dd-14d255af577e",
       null: null,
     });
