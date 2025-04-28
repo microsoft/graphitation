@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Mon, 28 Apr 2025 15:16:24 GMT",
+      "version": "0.12.2",
+      "tag": "@graphitation/apollo-forest-run_v0.12.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "dc9629c9a8a2f8971e71ec0cdfd507d451fe4793",
+            "comment": "fix(apollo-forest-run): use other approach for consistent root-level __typename"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 25 Apr 2025 14:47:47 GMT",
       "version": "0.12.1",
       "tag": "@graphitation/apollo-forest-run_v0.12.1",
