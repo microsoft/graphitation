@@ -178,11 +178,11 @@ describe(generateTS, () => {
                 readonly userUpdated?: userUpdated<any>;
             }
             export type userUpdated<SubscribeResult = never> = {
-                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<{
+                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterable<{
                     userUpdated: Models.User;
                 }>>;
             } | {
-                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<SubscribeResult>>;
+                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterable<SubscribeResult>>;
                 resolve: (subcribeResult: SubscribeResult, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
             };
         }
@@ -214,11 +214,11 @@ describe(generateTS, () => {
                 readonly userUpdated?: userUpdated<any>;
             }
             export type userUpdated<SubscribeResult = never> = {
-                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<{
+                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterable<{
                     userUpdated: Models.User;
                 }>>;
             } | {
-                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<SubscribeResult>>;
+                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterable<SubscribeResult>>;
                 resolve: (subcribeResult: SubscribeResult, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
             };
         }
@@ -916,11 +916,11 @@ describe(generateTS, () => {
                 readonly emitTodos?: emitTodos<any>;
             }
             export type emitTodos<SubscribeResult = never> = {
-                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<{
+                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterable<{
                     emitTodos: Models.Todo | null | undefined;
                 }>>;
             } | {
-                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<SubscribeResult>>;
+                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterable<SubscribeResult>>;
                 resolve: (subcribeResult: SubscribeResult, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Todo | null | undefined>;
             };
         }
