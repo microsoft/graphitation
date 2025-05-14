@@ -43,7 +43,17 @@ export type MergePolicyError = {
   field: string;
 };
 
+// Event occurs when an expensive cache write is logged
+export type ExpensiveWrite = {
+  kind: "EXPENSIVE_WRITE";
+  op: OperationDebugName;
+  causeBy?: string;
+  affectedSizeMap?: number;
+  [key: string]: any;
+};
+
 export type TelemetryEvent =
   | UnexpectedRefetch
   | ReadPolicyError
-  | MergePolicyError;
+  | MergePolicyError
+  | ExpensiveWrite;
