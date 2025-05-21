@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Wed, 21 May 2025 21:51:44 GMT",
+      "version": "0.12.3",
+      "tag": "@graphitation/apollo-forest-run_v0.12.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "daa776d2d8b3f3ed2ec3c603a0316008a3a84a74",
+            "comment": "fix(apollo-forest-run): correctly write fragments on abstract types"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 28 Apr 2025 15:16:24 GMT",
       "version": "0.12.2",
       "tag": "@graphitation/apollo-forest-run_v0.12.2",

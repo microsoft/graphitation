@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Mon, 28 Apr 2025 15:16:24 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 21 May 2025 21:51:44 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.12.3
+
+Wed, 21 May 2025 21:51:44 GMT
+
+### Patches
+
+- fix(apollo-forest-run): correctly write fragments on abstract types (vladimir.razuvaev@gmail.com)
 
 ## 0.12.2
 
