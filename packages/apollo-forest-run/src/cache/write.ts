@@ -48,7 +48,7 @@ export function write(
   activeTransaction: Transaction,
   options: Cache.WriteOptions,
 ): WriteResult {
-  const { mergePolicies, objectKey, keyMap } = env;
+  const { mergePolicies, objectKey, addTypename, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);
 
   const writeData =
@@ -101,7 +101,7 @@ export function write(
       operationDescriptor,
       writeData,
     );
-    if (env.addTypename && typeName && !writeData["__typename"]) {
+    if (addTypename && typeName && !writeData["__typename"]) {
       writeData["__typename"] = typeName;
     }
     targetForest.extraRootIds.set(
