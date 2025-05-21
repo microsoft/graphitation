@@ -945,3 +945,56 @@ test("consistent root-level __typename in optimistic response 2", () => {
     foo: { __typename: "Bar", id: "1", bar: "bar" },
   });
 });
+
+test("correctly writes fragment on abstract type", () => {
+  const query = gql`
+    {
+      items {
+        id
+        name
+      }
+    }
+  `;
+  const update = gql`
+    fragment Named on INamed {
+      name
+    }
+  `;
+  const foo = { __typename: "Foo", id: "1", name: "foo" };
+  const bar = { __typename: "Bar", id: "2", name: "bar" };
+  const cache = new ForestRun({
+    possibleTypes: {
+      INamed: ["Foo", "Bar"],
+    },
+  });
+  cache.write({
+    query,
+    result: {
+      __typename: "Query",
+      items: [{ ...foo }, { ...bar }],
+    },
+  });
+  const before = cache.diff({ query, optimistic: true });
+
+  cache.writeFragment({
+    fragment: update,
+    id: cache.identify(foo),
+    data: { name: "fooChanged" },
+  });
+
+  const after = cache.diff({ query, optimistic: true });
+
+  expect(before.result).toEqual({
+    items: [foo, bar],
+  });
+  expect(after.result).toEqual({
+    items: [
+      {
+        ...foo,
+        __typename: "Foo", // <-- Not INamed
+        name: "fooChanged",
+      },
+      bar,
+    ],
+  });
+});

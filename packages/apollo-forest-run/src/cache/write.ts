@@ -48,7 +48,7 @@ export function write(
   activeTransaction: Transaction,
   options: Cache.WriteOptions,
 ): WriteResult {
-  const { mergePolicies, objectKey, addTypename, keyMap } = env;
+  const { mergePolicies, objectKey, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);
 
   const writeData =
@@ -95,12 +95,13 @@ export function write(
   }
 
   if (!ROOT_NODES.includes(operationDescriptor.rootNodeKey)) {
-    let typeName = writeData["__typename"];
-    if (isFragmentDocument(operationDescriptor)) {
-      if (!typeName && addTypename) {
-        const [fragmentDef] = operationDescriptor.fragmentMap.values();
-        typeName = fragmentDef?.typeCondition.name.value;
-      }
+    const typeName = resolveExtraRootNodeType(
+      env,
+      store,
+      operationDescriptor,
+      writeData,
+    );
+    if (env.addTypename && typeName && !writeData["__typename"]) {
       writeData["__typename"] = typeName;
     }
     targetForest.extraRootIds.set(
@@ -285,6 +286,34 @@ function shouldCache(
     return true;
   }
   return operation.cache;
+}
+
+function resolveExtraRootNodeType(
+  env: CacheEnv,
+  store: Store,
+  operationDescriptor: OperationDescriptor,
+  data: Record<string, unknown> & { __typename?: string },
+): string | undefined {
+  if (data["__typename"]) {
+    return data["__typename"];
+  }
+  // Try fragment condition (fragments on abstract types are ignored)
+  if (isFragmentDocument(operationDescriptor)) {
+    const [fragmentDef] = operationDescriptor.fragmentMap.values();
+    const typeName = fragmentDef?.typeCondition.name.value;
+    if (!env.possibleTypes?.[typeName]) {
+      return typeName;
+    }
+  }
+  // Finally, try from store
+  const [chunk] = getNodeChunks(
+    [store.dataForest, ...store.optimisticLayers],
+    operationDescriptor.rootNodeKey,
+  );
+  if (chunk?.type) {
+    return chunk.type;
+  }
+  return undefined;
 }
 
 const inspect = JSON.stringify.bind(JSON);
