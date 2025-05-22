@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/graphql-codegen-typescript-typemap-plugin",
   "license": "MIT",
-  "version": "1.1.0",
+  "version": "1.1.1-alpha.1",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
@@ -19,7 +19,7 @@
     "change-case-all": "1.0.14"
   },
   "devDependencies": {
-    "@graphql-codegen/plugin-helpers": "^1.18.2",
+    "@graphql-codegen/plugin-helpers": "^5.0.2",
     "@types/jest": "^26.0.22",
     "monorepo-scripts": "*"
   },
