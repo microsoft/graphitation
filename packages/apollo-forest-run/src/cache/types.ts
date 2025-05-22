@@ -25,6 +25,7 @@ import type {
 } from "@apollo/client/cache/inmemory/policies";
 import type { TelemetryEvent } from "../telemetry/types";
 import { Logger } from "../jsutils/logger";
+import { GraphDifference } from "../diff/diffTree";
 
 export type DataTree = IndexedTree & {
   grown?: boolean;
@@ -76,6 +77,7 @@ export type Transaction = {
   writes: {
     options: Cache.WriteOptions;
     tree: IndexedTree;
+    difference: GraphDifference | null;
   }[];
 };
 

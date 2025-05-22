@@ -1,5 +1,10 @@
 import type { NormalizedFieldEntry } from "../descriptor/types";
-import type { CompositeValue, FieldName, GraphValue } from "../values/types";
+import type {
+  CompositeValue,
+  FieldName,
+  GraphValue,
+  ObjectValue,
+} from "../values/types";
 import type {
   CompositeListDifference,
   FieldEntryDifference,
