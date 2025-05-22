@@ -1,3 +1,4 @@
+import { InMemoryCache } from "@apollo/client";
 import { gql } from "../__tests__/helpers/descriptor";
 import { ForestRun } from "../ForestRun";
 
@@ -996,5 +997,53 @@ test("correctly writes fragment on abstract type", () => {
       },
       bar,
     ],
+  });
+});
+
+test("correctly handles optimistic fragment write", () => {
+  const query = gql`
+    {
+      items {
+        id
+        name
+      }
+    }
+  `;
+  const update = gql`
+    fragment Foo on Foo {
+      name
+    }
+  `;
+  const foo = { __typename: "Foo", id: "1", name: "foo" };
+  const bar = { __typename: "Bar", id: "2", name: "bar" };
+  const cache = new ForestRun();
+
+  cache.write({
+    query,
+    result: {
+      items: [{ ...foo }, { ...bar }],
+    },
+  });
+
+  const before = cache.diff({ query, optimistic: true });
+  cache.recordOptimisticTransaction(() => {
+    cache.writeFragment({
+      fragment: update,
+      id: cache.identify(foo),
+      data: { name: "fooChanged" },
+    });
+  }, "test");
+  const optimisticData = cache.diff({ query, optimistic: true });
+  cache.removeOptimistic("test");
+  const restoredData = cache.diff({ query, optimistic: true });
+
+  expect(before.result).toEqual({
+    items: [foo, bar],
+  });
+  expect(optimisticData.result).toEqual({
+    items: [{ ...foo, name: "fooChanged" }, bar],
+  });
+  expect(restoredData.result).toEqual({
+    items: [foo, bar],
   });
 });

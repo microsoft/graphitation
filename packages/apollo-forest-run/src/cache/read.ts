@@ -4,7 +4,7 @@ import type {
   OperationDescriptor,
   TypeName,
 } from "../descriptor/types";
-import type { ObjectDraft, SourceObject } from "../values/types";
+import type { NodeChunk, ObjectDraft, SourceObject } from "../values/types";
 import type { IndexedTree } from "../forest/types";
 import type {
   CacheEnv,
@@ -14,6 +14,8 @@ import type {
   ResultTree,
   Store,
   Transaction,
+  TransformedResult,
+  DirtyNodeMap,
 } from "./types";
 import {
   createDraft,
@@ -23,6 +25,11 @@ import {
   isRootRef,
   TraverseEnv,
   createParentLocator,
+  descendToChunk,
+  findClosestNode,
+  isCompositeValue,
+  isNodeValue,
+  isCompositeListValue,
 } from "../values";
 import { applyReadPolicies } from "./policies";
 import { indexTree } from "../forest/indexTree";
@@ -43,7 +50,7 @@ export function read<TData>(
   activeTransaction: Transaction | undefined,
   options: Cache.DiffOptions,
 ): Cache.DiffResult<TData> & { dangling?: Set<string> } {
-  const { partialReadResults, optimisticLayers, optimisticReadResults } = store;
+  const { partialReadResults, optimisticReadResults } = store;
 
   const optimistic = activeTransaction?.forceOptimistic ?? options.optimistic;
 
@@ -52,25 +59,21 @@ export function read<TData>(
   const operationDescriptor = getDiffDescriptor(env, store, options);
   touchOperation(env, store, operationDescriptor);
 
-  const resultsMap =
-    options.optimistic && optimisticLayers.length
-      ? optimisticReadResults
-      : forest.readResults;
+  const resultsMap = options.optimistic
+    ? optimisticReadResults
+    : forest.readResults;
 
   let readState = resultsMap.get(operationDescriptor);
 
   if (!readState || readState.dirtyNodes.size) {
-    // TODO: more granular updates, as we know all dirty nodes and their dirty fields
-    readState = {
-      outputTree: growOutputTree(
-        env,
-        store,
-        forest,
-        operationDescriptor,
-        optimistic,
-      ),
-      dirtyNodes: new Map(),
-    };
+    readState = growOutputTree(
+      env,
+      store,
+      forest,
+      operationDescriptor,
+      optimistic,
+      readState,
+    );
     normalizeRootLevelTypeName(readState.outputTree);
     resultsMap.set(operationDescriptor, readState);
   }
@@ -116,7 +119,8 @@ function growOutputTree(
   forest: DataForest | OptimisticLayer,
   operation: OperationDescriptor,
   optimistic: boolean,
-) {
+  previous?: TransformedResult,
+): TransformedResult {
   // See if we can just use primary data tree
   let dataTree = forest.trees.get(operation.id);
 
@@ -125,15 +129,15 @@ function growOutputTree(
     addTree(forest, dataTree);
   }
   const tree = applyTransformations(
-    dataTree,
-    env.readPolicies,
-    getEffectiveReadLayers(store, forest, optimistic),
     env,
+    dataTree,
+    getEffectiveReadLayers(store, forest, optimistic),
+    previous,
   );
   indexReadPolicies(env, tree);
 
   if (tree === dataTree) {
-    return tree;
+    return { outputTree: tree, dirtyNodes: new Map() };
   }
 
   // ApolloCompat: this is to throw properly when field policy returns a ref which doesn't exist in cache
@@ -148,7 +152,7 @@ function growOutputTree(
 
   tree.prev = null;
   trackTreeNodes(forest, tree);
-  return tree;
+  return { outputTree: tree, dirtyNodes: new Map() };
 }
 
 function growDataTree(
@@ -193,11 +197,13 @@ function growDataTree(
  * Output tree contains a blend of data from different layers. Data from earlier layers has priority.
  */
 function applyTransformations(
-  inputTree: ResultTree,
-  readPoliciesMap: Map<TypeName, Map<FieldName, FieldReadFunction>>,
-  dataLayers: (OptimisticLayer | DataForest)[],
   env: CacheEnv,
+  inputTree: ResultTree,
+  dataLayers: (OptimisticLayer | DataForest)[],
+  previous?: TransformedResult,
 ): IndexedTree {
+  const chunks = resolveAffectedOptimisticChunks(inputTree, dataLayers);
+
   // This effectively disables recycling when optimistic layers are present, which is suboptimal.
   const hasOptimisticLayers = dataLayers.length > 1;
   const operation = inputTree.operation;
@@ -205,11 +211,10 @@ function applyTransformations(
   // TODO: inputTree.incompleteChunks must be updated on write, then we can remove size check
   if (!inputTree.incompleteChunks.size && !hasOptimisticLayers) {
     // Fast-path: skip optimistic layers
-    return applyReadPolicies(env, dataLayers, readPoliciesMap, inputTree);
+    return applyReadPolicies(env, dataLayers, env.readPolicies, inputTree);
   }
 
   // Slow-path: apply optimistic layers first
-  // TODO: hydrate dirty fields only!
   const optimisticDraft = hydrateDraft(
     env,
     createDraft(
@@ -228,7 +233,7 @@ function applyTransformations(
     optimisticDraft.missingFields,
     inputTree,
   );
-  return applyReadPolicies(env, dataLayers, readPoliciesMap, optimisticTree);
+  return applyReadPolicies(env, dataLayers, env.readPolicies, optimisticTree);
 }
 
 function indexReadPolicies(env: CacheEnv, tree: ResultTree) {
@@ -311,5 +316,62 @@ function reportFirstMissingField(tree: IndexedTree): MissingFieldError {
   );
 }
 
+function _affectedByOptimisticLayers(
+  inputTree: ResultTree,
+  dataLayers: (OptimisticLayer | DataForest)[],
+) {
+  if (dataLayers.length <= 1) {
+    return false; // no optimistic layers essentially
+  }
+}
+
+function resolveAffectedOptimisticChunks(
+  inputTree: ResultTree,
+  dataLayers: (OptimisticLayer | DataForest)[],
+): Set<NodeChunk> {
+  if (dataLayers.length <= 1) {
+    return EMPTY_SET as Set<NodeChunk>;
+  }
+  const result = new Set<NodeChunk>();
+  const findParent = createParentLocator(inputTree.dataMap);
+
+  for (let i = 0; i < dataLayers.length - 1; i++) {
+    // Note: last layer is the data layer
+    const optimisticLayer = dataLayers[i];
+    const nodeKeys =
+      inputTree.nodes.size < optimisticLayer.operationsByNodes.size
+        ? inputTree.nodes.keys()
+        : optimisticLayer.operationsByNodes.keys();
+
+    for (const nodeKey of nodeKeys) {
+      if (!optimisticLayer.operationsByNodes.has(nodeKey)) {
+        continue;
+      }
+      const nodeChunks = inputTree.nodes.get(nodeKey);
+      for (const chunk of nodeChunks ?? EMPTY_ARRAY) {
+        result.add(chunk);
+        let parent = findParent(chunk);
+        while (!isRootRef(parent) && !result.has(chunk)) {
+          if (isNodeValue(parent.value)) {
+            result.add(parent.value);
+          }
+          if (
+            !isCompositeListValue(parent.value) &&
+            !isObjectValue(parent.value)
+          ) {
+            break;
+          }
+          parent = findParent(parent.value);
+        }
+      }
+    }
+  }
+  return result;
+}
+
 const inspect = JSON.stringify.bind(JSON);
 const EMPTY_ARRAY = Object.freeze([]);
+const EMPTY_SET = new Set();
+const EMPTY_MAP = new Map();
+EMPTY_SET.add = () => EMPTY_SET;
+EMPTY_MAP.set = () => EMPTY_MAP;
