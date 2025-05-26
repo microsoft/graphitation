@@ -9,7 +9,7 @@ import {
   fieldEntriesAreEqual,
 } from "../descriptor/resolvedSelection";
 import { assert } from "../jsutils/assert";
-import type { IndexedForest, ForestEnv, UpdateForestMetadata } from "./types";
+import type { IndexedForest, ForestEnv, UpdateForestStats } from "./types";
 import { DataForest, OptimisticLayer } from "../cache/types";
 import { replaceTree } from "./addTree";
 import { NodeChunk } from "../values/types";
@@ -26,34 +26,30 @@ export function updateAffectedTrees(
   forest: DataForest | OptimisticLayer,
   affectedOperations: Map<OperationDescriptor, NodeDifferenceMap>,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
-): UpdateForestMetadata {
+): UpdateForestStats {
   // Note: affectedOperations may contain false-positives (updateTree will ignore those)
-  const metadata: UpdateForestMetadata = {
-    totalUpdated: 0,
-    operationCosts: new Map(),
-  };
+  const forestStats: UpdateForestStats = new Map();
   for (const [operation, difference] of affectedOperations.entries()) {
     const currentTreeState = forest.trees.get(operation.id);
     assert(currentTreeState);
-    const nextTreeState = updateTree(
+    const { indexedTree, stats: treeStats } = updateTree(
       currentTreeState,
       difference,
       env,
       getNodeChunks,
     );
-    if (!nextTreeState || nextTreeState === currentTreeState) {
+    if (!indexedTree || indexedTree === currentTreeState) {
       // nodeDifference may not be overlapping with selections of this tree.
       //   E.g. difference could be for operation { id: "1", firstName: "Changed" }
       //   but current operation is { id: "1", lastName: "Unchanged" }
       continue;
     }
     // Reset previous tree state on commit
-    nextTreeState.prev = null;
-    replaceTree(forest, nextTreeState);
-    metadata.operationCosts.set(operation, nextTreeState.chunksMetadata);
-    metadata.totalUpdated++;
+    indexedTree.prev = null;
+    replaceTree(forest, indexedTree);
+    forestStats.set(operation, treeStats);
   }
-  return metadata;
+  return forestStats;
 }
 
 export function resolveAffectedOperations(

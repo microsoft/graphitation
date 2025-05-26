@@ -1763,13 +1763,13 @@ function diffAndUpdate(
   maybeDeepFreeze(modelTree.result);
 
   const difference = diffTree(forest, modelTree, env);
-  const updatedTree = updateTree(baseTree, difference.nodeDifference, env);
+  const { indexedTree } = updateTree(baseTree, difference.nodeDifference, env);
   return {
     baseTree,
     difference,
     modelTree,
-    updatedTree,
-    data: updatedTree.result.data as any,
+    updatedTree: indexedTree,
+    data: indexedTree.result.data as any,
   };
 }
 
@@ -1847,8 +1847,12 @@ function update(
       )
     : createTestTree(defaultOperation, base, undefined, env);
 
-  const updatedTree = updateTree(baseTree, diff.nodeDifference, env);
-  return { baseTree, updatedTree, data: updatedTree.result.data as any };
+  const { indexedTree } = updateTree(baseTree, diff.nodeDifference, env);
+  return {
+    baseTree,
+    updatedTree: indexedTree,
+    data: indexedTree.result.data as any,
+  };
 }
 
 function keyToEntity(keyOrOther: string | unknown) {
