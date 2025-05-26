@@ -9,7 +9,7 @@ import {
   fieldEntriesAreEqual,
 } from "../descriptor/resolvedSelection";
 import { assert } from "../jsutils/assert";
-import type { IndexedForest, ForestEnv } from "./types";
+import type { IndexedForest, ForestEnv, UpdateForestMetadata } from "./types";
 import { DataForest, OptimisticLayer } from "../cache/types";
 import { replaceTree } from "./addTree";
 import { NodeChunk } from "../values/types";
@@ -26,9 +26,12 @@ export function updateAffectedTrees(
   forest: DataForest | OptimisticLayer,
   affectedOperations: Map<OperationDescriptor, NodeDifferenceMap>,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
-): number {
+): UpdateForestMetadata {
   // Note: affectedOperations may contain false-positives (updateTree will ignore those)
-  let totalUpdated = 0;
+  const metadata: UpdateForestMetadata = {
+    totalUpdated: 0,
+    operationCosts: new Map(),
+  };
   for (const [operation, difference] of affectedOperations.entries()) {
     const currentTreeState = forest.trees.get(operation.id);
     assert(currentTreeState);
@@ -47,9 +50,10 @@ export function updateAffectedTrees(
     // Reset previous tree state on commit
     nextTreeState.prev = null;
     replaceTree(forest, nextTreeState);
-    totalUpdated++;
+    metadata.operationCosts.set(operation, nextTreeState.chunksMetadata);
+    metadata.totalUpdated++;
   }
-  return totalUpdated;
+  return metadata;
 }
 
 export function resolveAffectedOperations(

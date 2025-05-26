@@ -1,5 +1,9 @@
 import type { Cache, InMemoryCacheConfig, TypePolicies } from "@apollo/client";
-import type { IndexedForest, IndexedTree } from "../forest/types";
+import type {
+  IndexedForest,
+  IndexedTree,
+  UpdateForestMetadata,
+} from "../forest/types";
 import type {
   NodeKey,
   FieldName,
@@ -76,6 +80,7 @@ export type Transaction = {
   writes: {
     options: Cache.WriteOptions;
     tree: IndexedTree;
+    updateMetadata?: UpdateForestMetadata;
   }[];
 };
 

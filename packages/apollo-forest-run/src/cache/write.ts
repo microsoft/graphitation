@@ -1,5 +1,5 @@
 import type { Cache } from "@apollo/client";
-import type { IndexedTree } from "../forest/types";
+import type { IndexedTree, UpdateForestMetadata } from "../forest/types";
 import type { OperationResult } from "../values/types";
 import type {
   CacheEnv,
@@ -40,6 +40,7 @@ import { IndexedForest } from "../forest/types";
 type WriteResult = {
   affected?: Iterable<OperationDescriptor>;
   incoming: DataTree;
+  updateMetadata?: UpdateForestMetadata;
 };
 
 export function write(
@@ -163,7 +164,12 @@ export function write(
   const chunkProvider = (key: NodeKey) =>
     getNodeChunks(getEffectiveReadLayers(store, targetForest, false), key);
 
-  updateAffectedTrees(env, targetForest, affectedOperations, chunkProvider);
+  const updateMetadata = updateAffectedTrees(
+    env,
+    targetForest,
+    affectedOperations,
+    chunkProvider,
+  );
 
   if (!existingResult && shouldCache(targetForest, operationDescriptor)) {
     affectedOperations.set(operationDescriptor, difference.nodeDifference);
@@ -195,6 +201,7 @@ export function write(
   return {
     incoming: modifiedIncomingResult,
     affected: affectedOperations.keys(),
+    updateMetadata,
   };
 }
 
