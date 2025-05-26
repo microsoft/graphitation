@@ -44,9 +44,6 @@ export type IndexedTree = {
 
   // ApolloCompat
   danglingReferences?: Set<NodeKey>;
-
-  // Metadata about chunk updates, used for telemetry and debugging
-  chunksMetadata: UpdateChunkMetadata[];
 };
 
 export type IndexedForest = {
@@ -60,21 +57,20 @@ export type IndexedForest = {
 export type Source = Readonly<SourceObject | SourceCompositeList>;
 export type Draft = SourceObject | SourceCompositeList;
 
-export type UpdateChunkMetadata = {
+export type UpdateChunkStats = {
   type: string;
   depth: number;
   siblings: number;
   dirtyFields: Set<string>;
 };
 
-export type UpdateForestMetadata = {
-  totalUpdated: number;
-  operationCosts: Map<OperationDescriptor, UpdateChunkMetadata[]>;
-};
+export type UpdateForestStats = Map<OperationDescriptor, UpdateChunkStats[]>;
 
 export type UpdateState = {
   drafts: Map<Source, Draft>;
   missingFields: MissingFieldsMap;
+  indexedTree: IndexedTree;
+  stats: UpdateChunkStats[];
 };
 
 export type UpdateObjectResult = {

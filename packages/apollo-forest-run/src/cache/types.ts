@@ -2,7 +2,7 @@ import type { Cache, InMemoryCacheConfig, TypePolicies } from "@apollo/client";
 import type {
   IndexedForest,
   IndexedTree,
-  UpdateForestMetadata,
+  UpdateForestStats,
 } from "../forest/types";
 import type {
   NodeKey,
@@ -80,7 +80,7 @@ export type Transaction = {
   writes: {
     options: Cache.WriteOptions;
     tree: IndexedTree;
-    updateMetadata?: UpdateForestMetadata;
+    updateStats?: UpdateForestStats;
   }[];
 };
 

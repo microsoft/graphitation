@@ -39,7 +39,7 @@ import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { CacheConfig } from "./cache/types";
 import { SourceObject } from "./values/types";
-import { UpdateForestMetadata } from "./forest/types";
+import { UpdateForestStats } from "./forest/types";
 
 /**
  * ForestRun cache aims to be an Apollo cache implementation somewhat compatible with InMemoryCache.
@@ -207,7 +207,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
   private runWrite(options: Cache.WriteOptions): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
-    const { incoming, affected, updateMetadata } = write(
+    const { incoming, affected, updateStats } = write(
       this.env,
       this.store,
       transaction,
@@ -219,7 +219,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
         options,
         affected,
         incoming,
-        updateMetadata,
+        updateStats,
       );
     }
     return incoming.nodes.size ? getRef(incoming.rootNodeKey) : undefined;
@@ -230,13 +230,13 @@ export class ForestRun extends ApolloCache<SerializedCache> {
     options: Cache.WriteOptions | Cache.ModifyOptions,
     affectedOperations: Iterable<OperationDescriptor>,
     incoming?: DataTree,
-    updateMetadata: UpdateForestMetadata | undefined = undefined,
+    updateStats: UpdateForestStats | undefined = undefined,
   ) {
     if (incoming) {
       transaction.writes.push({
         options: options as Cache.WriteOptions,
         tree: incoming,
-        updateMetadata,
+        updateStats,
       });
     }
 

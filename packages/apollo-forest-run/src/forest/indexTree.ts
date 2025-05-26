@@ -20,7 +20,7 @@ import type {
   OperationDescriptor,
   PossibleSelections,
 } from "../descriptor/types";
-import type { ForestEnv, IndexedTree, UpdateChunkMetadata } from "./types";
+import type { ForestEnv, IndexedTree } from "./types";
 import { ValueKind } from "../values/types";
 import { resolveSelection } from "../descriptor/resolvedSelection";
 import { accumulate } from "../jsutils/map";
@@ -59,7 +59,6 @@ export function indexTree(
   result: OperationResult,
   knownMissingFields?: MissingFieldsMap,
   previousTreeState: IndexedTree | null = null,
-  chunksMetadata: UpdateChunkMetadata[] = [],
 ): IndexedTree {
   let rootNodeKey;
   try {
@@ -110,7 +109,6 @@ export function indexTree(
     dataMap: context.dataMap,
     incompleteChunks: context.incompleteChunks,
     prev: previousTreeState,
-    chunksMetadata,
   };
 }
 

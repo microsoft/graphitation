@@ -20,7 +20,7 @@ import type {
   Source,
   UpdateState,
   ForestEnv,
-  UpdateChunkMetadata,
+  UpdateChunkStats,
 } from "./types";
 import { assert } from "../jsutils/assert";
 import { indexTree } from "./indexTree";
@@ -29,6 +29,7 @@ import {
   createDraft,
   hydrateDraft,
   isObjectValue,
+  isParentListRef,
   isParentObjectRef,
   isRootRef,
   isSourceObject,
@@ -45,16 +46,17 @@ export function updateTree(
   env: ForestEnv,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
   state?: UpdateState,
-): IndexedTree {
+): UpdateState {
   const rootChunks = base.nodes.get(base.rootNodeKey);
   assert(rootChunks?.length === 1);
   const rootChunk = rootChunks[0];
   state ??= {
+    indexedTree: base,
     drafts: new Map(),
     missingFields: new Map(),
+    stats: [],
   };
-  const { missingFields, drafts } = state;
-  const chunksMetadata: UpdateChunkMetadata[] = [];
+  const { missingFields, drafts, stats } = state;
 
   // Preserve existing information about any missing fields.
   // (updated objects will get their own entry in the map, so there won't be collisions)
@@ -115,22 +117,23 @@ export function updateTree(
       continue;
     }
 
-    const parentRef = chunkRef.parent;
-    if (parentRef?.kind === 1 && difference.dirtyFields?.size) {
-      const metadata: UpdateChunkMetadata = {
+    if (isParentListRef(chunkRef) && difference.dirtyFields) {
+      const parentRef = chunkRef.parent;
+
+      const chunkStats: UpdateChunkStats = {
         type: chunk.type || "unknown",
         depth: chunk.selection.depth,
         siblings: parentRef.itemChunks.length,
         dirtyFields: difference.dirtyFields,
       };
-      chunksMetadata.push(metadata);
+      stats.push(chunkStats);
     }
 
     createSourceCopiesUpToRoot(env, base, chunk, state);
     dirty = true;
   }
   if (!dirty) {
-    return base;
+    return state;
   }
   const rootDraft = drafts.get(rootChunk.data);
   assert(isSourceObject(rootDraft));
@@ -160,7 +163,8 @@ export function updateTree(
   if (env.apolloCompat_keepOrphanNodes) {
     apolloBackwardsCompatibility_saveOrphanNodes(base, newIndexedResult);
   }
-  return newIndexedResult;
+  state.indexedTree = newIndexedResult;
+  return state;
 }
 
 function resolveAffectedChunks(
