@@ -20,6 +20,7 @@ import type {
   Source,
   UpdateState,
   ForestEnv,
+  UpdateChunkMetadata,
 } from "./types";
 import { assert } from "../jsutils/assert";
 import { indexTree } from "./indexTree";
@@ -53,6 +54,7 @@ export function updateTree(
     missingFields: new Map(),
   };
   const { missingFields, drafts } = state;
+  const chunksMetadata: UpdateChunkMetadata[] = [];
 
   // Preserve existing information about any missing fields.
   // (updated objects will get their own entry in the map, so there won't be collisions)
@@ -112,6 +114,18 @@ export function updateTree(
       });
       continue;
     }
+
+    const parentRef = chunkRef.parent;
+    if (parentRef?.kind === 1 && difference.dirtyFields?.size) {
+      const metadata: UpdateChunkMetadata = {
+        type: chunk.type || "unknown",
+        depth: chunk.selection.depth,
+        siblings: parentRef.itemChunks.length,
+        dirtyFields: difference.dirtyFields,
+      };
+      chunksMetadata.push(metadata);
+    }
+
     createSourceCopiesUpToRoot(env, base, chunk, state);
     dirty = true;
   }
