@@ -1,12 +1,23 @@
 import ts from "typescript";
 import { DocumentNode } from "graphql";
-import { ContextMap, extractContext } from "./context/index";
+import { extractContext } from "./context/index";
 import { generateResolvers } from "./resolvers";
 import { generateModels } from "./models";
 import { generateLegacyTypes } from "./legacyTypes";
 import { generateLegacyResolvers } from "./legacyResolvers";
 import { generateEnums } from "./enums";
 
+export type SubTypeItem = {
+  [name: string]: {
+    name: string;
+    importTypeName: string;
+    importPath: string;
+  };
+};
+
+export type SubTypeNamespace = {
+  [namespace: string]: SubTypeItem;
+};
 export interface GenerateTSOptions {
   outputPath: string;
   documentPath: string;
@@ -20,8 +31,7 @@ export interface GenerateTSOptions {
   generateOnlyEnums?: boolean;
   enumNamesToMigrate?: string[];
   enumNamesToKeep?: string[];
-  contextSubTypeNameTemplate?: string;
-  contextSubTypePathTemplate?: string;
+  contextSubTypeMetadata?: SubTypeNamespace;
   defaultContextSubTypePath?: string;
   defaultContextSubTypeName?: string;
   /**
@@ -78,8 +88,7 @@ export function generateTS(
     generateOnlyEnums,
     enumNamesToMigrate,
     enumNamesToKeep,
-    contextSubTypeNameTemplate,
-    contextSubTypePathTemplate,
+    contextSubTypeMetadata,
     defaultContextSubTypePath,
     defaultContextSubTypeName,
     generateResolverMap = false,
@@ -87,7 +96,7 @@ export function generateTS(
   }: GenerateTSOptions,
 ): {
   files: ts.SourceFile[];
-  contextMappingOutput: ContextMap | null;
+  contextMappingOutput: any | null;
 } {
   try {
     const context = extractContext(
@@ -103,8 +112,7 @@ export function generateTS(
         modelScope,
         enumNamesToMigrate,
         enumNamesToKeep,
-        contextSubTypeNameTemplate,
-        contextSubTypePathTemplate,
+        contextSubTypeMetadata,
         defaultContextSubTypePath,
         defaultContextSubTypeName,
       },
@@ -138,7 +146,7 @@ export function generateTS(
     }
     return {
       files: result,
-      contextMappingOutput: context.getContextMap(),
+      contextMappingOutput: context.getMetadataObject(),
     };
   } catch (e) {
     console.error(e);
