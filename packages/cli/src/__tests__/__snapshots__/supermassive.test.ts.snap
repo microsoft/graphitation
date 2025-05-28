@@ -179,7 +179,7 @@ export interface Transport extends BaseModel, Node {
 exports[`supermassive should generate interfaces with --generate-resolver-map 3`] = `
 "/* eslint-disable */ 
 // This file was automatically generated (by @graphitation/supermassive) and should not be edited.
-import type { PromiseOrValue } from "@graphitation/supermassive";
+import type { PromiseOrValue, IterableOrAsyncIterable } from "@graphitation/supermassive";
 import type { ResolveInfo } from "@graphitation/supermassive";
 import * as Models from "./models.interface";
 export declare namespace SearchResult {
@@ -218,7 +218,7 @@ export declare namespace Query {
     }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Node | null | undefined>;
     export type search = (model: unknown, args: {
         readonly search?: string | null;
-    }, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.SearchResult | null | undefined> | null | undefined>;
+    }, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.SearchResult | null | undefined> | null | undefined>;
     export type person = (model: unknown, args: {
         readonly id: number;
     }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Person | null | undefined>;
@@ -239,31 +239,31 @@ export declare namespace Query {
     }, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Vehicle | null | undefined>;
     export type searchPeopleByName = (model: unknown, args: {
         readonly search: string;
-    }, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Person | null | undefined> | null | undefined>;
+    }, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Person | null | undefined> | null | undefined>;
     export type searchStarshipsByName = (model: unknown, args: {
         readonly search: string;
-    }, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Starship | null | undefined> | null | undefined>;
+    }, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Starship | null | undefined> | null | undefined>;
     export type searchTransportsByName = (model: unknown, args: {
         readonly search: string;
-    }, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Transport | null | undefined> | null | undefined>;
+    }, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Transport | null | undefined> | null | undefined>;
     export type searchSpeciesByName = (model: unknown, args: {
         readonly search: string;
-    }, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Species | null | undefined> | null | undefined>;
+    }, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Species | null | undefined> | null | undefined>;
     export type searchVehiclesByName = (model: unknown, args: {
         readonly search: string;
-    }, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Vehicle | null | undefined> | null | undefined>;
+    }, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Vehicle | null | undefined> | null | undefined>;
     export type searchPlanetsByName = (model: unknown, args: {
         readonly search: string;
-    }, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Planet | null | undefined> | null | undefined>;
+    }, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Planet | null | undefined> | null | undefined>;
     export type searchFilmsByTitle = (model: unknown, args: {
         readonly search: string;
-    }, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Film | null | undefined> | null | undefined>;
-    export type allFilms = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Film | null | undefined> | null | undefined>;
-    export type allStarships = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Starship | null | undefined> | null | undefined>;
-    export type allPeople = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Person | null | undefined> | null | undefined>;
-    export type allPlanets = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Planet | null | undefined> | null | undefined>;
-    export type allSpecies = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Species | null | undefined> | null | undefined>;
-    export type allTransports = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Transport | null | undefined> | null | undefined>;
+    }, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Film | null | undefined> | null | undefined>;
+    export type allFilms = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Film | null | undefined> | null | undefined>;
+    export type allStarships = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Starship | null | undefined> | null | undefined>;
+    export type allPeople = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Person | null | undefined> | null | undefined>;
+    export type allPlanets = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Planet | null | undefined> | null | undefined>;
+    export type allSpecies = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Species | null | undefined> | null | undefined>;
+    export type allTransports = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Transport | null | undefined> | null | undefined>;
 }
 export declare namespace Node {
     export interface Resolvers {
@@ -289,18 +289,18 @@ export declare namespace Film {
         readonly id?: id;
     }
     export type title = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-    export type starships = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Starship | null | undefined> | null | undefined>;
+    export type starships = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Starship | null | undefined> | null | undefined>;
     export type edited = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
-    export type vehicles = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Vehicle | null | undefined> | null | undefined>;
-    export type planets = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Planet | null | undefined> | null | undefined>;
+    export type vehicles = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Vehicle | null | undefined> | null | undefined>;
+    export type planets = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Planet | null | undefined> | null | undefined>;
     export type producer = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
     export type created = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
     export type episode_id = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number | null | undefined>;
     export type director = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
     export type release_date = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
     export type opening_crawl = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
-    export type characters = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Person | null | undefined> | null | undefined>;
-    export type species = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Species | null | undefined> | null | undefined>;
+    export type characters = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Person | null | undefined> | null | undefined>;
+    export type species = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Species | null | undefined> | null | undefined>;
     export type id = (model: Models.Film, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number | null | undefined>;
 }
 export declare namespace Vehicle {
@@ -325,7 +325,7 @@ export declare namespace Vehicle {
     export type id = (model: Models.Vehicle, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number | null | undefined>;
     export type name = (model: Models.Vehicle, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
     export type vehicle_class = (model: Models.Vehicle, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
-    export type pilots = (model: Models.Vehicle, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Person | null | undefined> | null | undefined>;
+    export type pilots = (model: Models.Vehicle, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Person | null | undefined> | null | undefined>;
     export type edited = (model: Models.Vehicle, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
     export type consumables = (model: Models.Vehicle, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
     export type created = (model: Models.Vehicle, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
@@ -371,9 +371,9 @@ export declare namespace Person {
     export type homeworld = (model: Models.Person, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Planet | null | undefined>;
     export type birth_year = (model: Models.Person, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
     export type image = (model: Models.Person, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
-    export type vehicles = (model: Models.Person, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Vehicle | null | undefined> | null | undefined>;
-    export type starships = (model: Models.Person, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Starship | null | undefined> | null | undefined>;
-    export type films = (model: Models.Person, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Film | null | undefined> | null | undefined>;
+    export type vehicles = (model: Models.Person, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Vehicle | null | undefined> | null | undefined>;
+    export type starships = (model: Models.Person, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Starship | null | undefined> | null | undefined>;
+    export type films = (model: Models.Person, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Film | null | undefined> | null | undefined>;
 }
 export declare namespace Starship {
     export interface Resolvers {
@@ -398,8 +398,8 @@ export declare namespace Starship {
         readonly image?: image;
     }
     export type id = (model: Models.Starship, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number | null | undefined>;
-    export type films = (model: Models.Starship, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Film | null | undefined> | null | undefined>;
-    export type pilots = (model: Models.Starship, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Person | null | undefined> | null | undefined>;
+    export type films = (model: Models.Starship, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Film | null | undefined> | null | undefined>;
+    export type pilots = (model: Models.Starship, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Person | null | undefined> | null | undefined>;
     export type MGLT = (model: Models.Starship, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number | null | undefined>;
     export type starship_class = (model: Models.Starship, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
     export type hyperdrive_rating = (model: Models.Starship, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number | null | undefined>;
@@ -446,8 +446,8 @@ export declare namespace Planet {
     export type gravity = (model: Models.Planet, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
     export type orbital_period = (model: Models.Planet, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number | null | undefined>;
     export type population = (model: Models.Planet, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number | null | undefined>;
-    export type residents = (model: Models.Planet, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Person | null | undefined> | null | undefined>;
-    export type films = (model: Models.Planet, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Film | null | undefined> | null | undefined>;
+    export type residents = (model: Models.Planet, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Person | null | undefined> | null | undefined>;
+    export type films = (model: Models.Planet, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Film | null | undefined> | null | undefined>;
 }
 export declare namespace Species {
     export interface Resolvers {
@@ -472,7 +472,7 @@ export declare namespace Species {
     export type designation = (model: Models.Species, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
     export type created = (model: Models.Species, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
     export type eye_colors = (model: Models.Species, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
-    export type people = (model: Models.Species, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Person | null | undefined> | null | undefined>;
+    export type people = (model: Models.Species, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Person | null | undefined> | null | undefined>;
     export type skin_colors = (model: Models.Species, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
     export type language = (model: Models.Species, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
     export type hair_colors = (model: Models.Species, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;

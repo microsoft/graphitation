@@ -254,6 +254,16 @@ export function getResolverReturnType(
   );
 }
 
+export function getResolverReturnListType(node: ts.TypeNode) {
+  return createNullableType(
+    factory.createTypeReferenceNode(
+      factory.createIdentifier("IterableOrAsyncIterable"),
+      [node],
+    ),
+    true,
+  );
+}
+
 export function createNonNullableTemplate(): ts.Statement[] {
   return [
     factory.createTypeAliasDeclaration(
