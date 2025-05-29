@@ -91,6 +91,7 @@ export type {
 } from "./types";
 
 export type { PromiseOrValue } from "./jsutils/PromiseOrValue";
+export type { IterableOrAsyncIterable } from "./jsutils/IterableOrAsyncIterable";
 export type { Path } from "./jsutils/Path";
 
 export type {
