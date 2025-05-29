@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 29 May 2025 15:22:30 GMT",
+      "version": "3.11.0",
+      "tag": "@graphitation/supermassive_v3.11.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "b1744ed18e2c1758d4d4278d7a12d81822b2cf3f",
+            "comment": "feat: add IterableOrAsyncIterable<T> type"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 02 Apr 2025 11:43:32 GMT",
       "version": "3.10.0",
       "tag": "@graphitation/supermassive_v3.10.0",

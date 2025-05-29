@@ -1,7 +1,0 @@
-{
-  "type": "major",
-  "comment": "feat(ts-codegen): use IterableOrAsyncIterable for return type of list field resolvers",
-  "packageName": "@graphitation/cli",
-  "email": "dsamsonov@microsoft.com",
-  "dependentChangeType": "patch"
-}
