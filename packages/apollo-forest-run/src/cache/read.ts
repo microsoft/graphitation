@@ -1,9 +1,4 @@
-import type { FieldReadFunction } from "@apollo/client/cache/inmemory/policies";
-import type {
-  FieldName,
-  OperationDescriptor,
-  TypeName,
-} from "../descriptor/types";
+import type { FieldName, OperationDescriptor } from "../descriptor/types";
 import type { NodeChunk, ObjectDraft, SourceObject } from "../values/types";
 import type { IndexedTree } from "../forest/types";
 import type {
@@ -25,11 +20,9 @@ import {
   isRootRef,
   TraverseEnv,
   createParentLocator,
-  descendToChunk,
-  findClosestNode,
-  isCompositeValue,
   isNodeValue,
   isCompositeListValue,
+  isParentObjectRef,
 } from "../values";
 import { applyReadPolicies } from "./policies";
 import { indexTree } from "../forest/indexTree";
@@ -202,14 +195,17 @@ function applyTransformations(
   dataLayers: (OptimisticLayer | DataForest)[],
   previous?: TransformedResult,
 ): IndexedTree {
-  const chunks = resolveAffectedOptimisticChunks(inputTree, dataLayers);
+  const dirtyNodes =
+    previous?.dirtyNodes ??
+    resolveAffectedOptimisticNodes(inputTree, dataLayers);
 
-  // This effectively disables recycling when optimistic layers are present, which is suboptimal.
-  const hasOptimisticLayers = dataLayers.length > 1;
+  // Add parent nodes to make sure they are not recycled
+  //   (when parents are recycled, nested affected nodes won't be updated properly)
+  appendIncompleteAndParentNodes(inputTree, dirtyNodes);
+
   const operation = inputTree.operation;
 
-  // TODO: inputTree.incompleteChunks must be updated on write, then we can remove size check
-  if (!inputTree.incompleteChunks.size && !hasOptimisticLayers) {
+  if (!inputTree.incompleteChunks.size && !dirtyNodes.size) {
     // Fast-path: skip optimistic layers
     return applyReadPolicies(env, dataLayers, env.readPolicies, inputTree);
   }
@@ -224,7 +220,7 @@ function applyTransformations(
       operation.rootType,
     ),
     createChunkProvider(dataLayers),
-    createChunkMatcher(dataLayers),
+    createChunkMatcher(dataLayers, false, dirtyNodes),
   );
   const optimisticTree = indexTree(
     env,
@@ -325,15 +321,14 @@ function _affectedByOptimisticLayers(
   }
 }
 
-function resolveAffectedOptimisticChunks(
+function resolveAffectedOptimisticNodes(
   inputTree: ResultTree,
   dataLayers: (OptimisticLayer | DataForest)[],
-): Set<NodeChunk> {
+): DirtyNodeMap {
   if (dataLayers.length <= 1) {
-    return EMPTY_SET as Set<NodeChunk>;
+    return EMPTY_MAP;
   }
-  const result = new Set<NodeChunk>();
-  const findParent = createParentLocator(inputTree.dataMap);
+  const result: DirtyNodeMap = new Map();
 
   for (let i = 0; i < dataLayers.length - 1; i++) {
     // Note: last layer is the data layer
@@ -344,29 +339,53 @@ function resolveAffectedOptimisticChunks(
         : optimisticLayer.operationsByNodes.keys();
 
     for (const nodeKey of nodeKeys) {
-      if (!optimisticLayer.operationsByNodes.has(nodeKey)) {
-        continue;
-      }
-      const nodeChunks = inputTree.nodes.get(nodeKey);
-      for (const chunk of nodeChunks ?? EMPTY_ARRAY) {
-        result.add(chunk);
-        let parent = findParent(chunk);
-        while (!isRootRef(parent) && !result.has(chunk)) {
-          if (isNodeValue(parent.value)) {
-            result.add(parent.value);
-          }
-          if (
-            !isCompositeListValue(parent.value) &&
-            !isObjectValue(parent.value)
-          ) {
-            break;
-          }
-          parent = findParent(parent.value);
-        }
+      if (
+        optimisticLayer.operationsByNodes.has(nodeKey) &&
+        inputTree.nodes.has(nodeKey)
+      ) {
+        result.set(nodeKey, EMPTY_SET as Set<FieldName>);
       }
     }
   }
   return result;
+}
+
+function appendIncompleteAndParentNodes(
+  inputTree: ResultTree,
+  dirtyNodes: DirtyNodeMap,
+) {
+  for (const chunk of inputTree.incompleteChunks) {
+    if (isNodeValue(chunk) && !dirtyNodes.has(chunk.key)) {
+      dirtyNodes.set(chunk.key, EMPTY_SET as Set<FieldName>);
+    }
+  }
+  const findParent = createParentLocator(inputTree.dataMap);
+  for (const nodeKey of dirtyNodes.keys()) {
+    const chunks = inputTree.nodes.get(nodeKey);
+    for (const chunk of chunks ?? EMPTY_ARRAY) {
+      let parentInfo = findParent(chunk);
+      while (!isRootRef(parentInfo)) {
+        if (isParentObjectRef(parentInfo) && isNodeValue(parentInfo.parent)) {
+          let dirtyFields = dirtyNodes.get(parentInfo.parent.key);
+          if (dirtyFields && dirtyFields.has(parentInfo.field.name)) {
+            break;
+          }
+          if (!dirtyFields) {
+            dirtyFields = new Set();
+            dirtyNodes.set(parentInfo.parent.key, dirtyFields);
+          }
+          dirtyFields.add(parentInfo.field.name);
+        }
+        if (
+          !isCompositeListValue(parentInfo.parent) &&
+          !isObjectValue(parentInfo.parent)
+        ) {
+          break;
+        }
+        parentInfo = findParent(parentInfo.parent);
+      }
+    }
+  }
 }
 
 const inspect = JSON.stringify.bind(JSON);
