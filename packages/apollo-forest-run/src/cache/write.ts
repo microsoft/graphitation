@@ -39,6 +39,7 @@ import { IndexedForest } from "../forest/types";
 
 type WriteResult = {
   affected?: Iterable<OperationDescriptor>;
+  difference?: GraphDifference;
   incoming: DataTree;
 };
 
@@ -194,6 +195,7 @@ export function write(
 
   return {
     incoming: modifiedIncomingResult,
+    difference,
     affected: affectedOperations.keys(),
   };
 }
