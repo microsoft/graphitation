@@ -53,8 +53,8 @@ export class PreResolveTypesProcessor extends CodegenPreResolveTypesProcessor {
           this.config.convertName(baseType.name, {
             useTypesPrefix: this.config.enumPrefix,
           });
-      } else if ((this.config.scalars as any)[baseType.name]) {
-        typeToUse = (this.config.scalars as any)[baseType.name];
+      } else if ((this.config.scalars)[baseType.name]) {
+        typeToUse = (this.config.scalars)[baseType.name].input;
       }
 
       const name = this.config.formatNamedField(

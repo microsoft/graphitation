@@ -12,6 +12,7 @@ import {
   SelectionSetProcessorConfig,
   PreResolveTypesProcessor as CodegenPreResolveTypesProcessor,
   wrapTypeWithModifiers,
+  OperationVariablesToObject,
 } from "@graphql-codegen/visitor-plugin-common";
 import { SelectionSetToObject } from "./ts-selection-set-to-object";
 import autoBind from "auto-bind";
@@ -105,6 +106,7 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
       namespacedImportName: this.config.namespacedImportName,
       convertName: this.convertName.bind(this),
       enumPrefix: false,
+      enumSuffix: false,
       scalars: this.scalars,
       formatNamedField,
       wrapTypeWithModifiers(baseType, type) {
@@ -146,11 +148,12 @@ export class TypeScriptDocumentsVisitor extends BaseDocumentsVisitor<
         this.config.namespacedImportName,
         enumsNames,
         this.config.enumPrefix,
+        this.config.enumSuffix,
         this.config.enumValues,
         true,
         this.config.inlineCommonTypes,
         this.usedEnums,
-      ),
+      ) as unknown as OperationVariablesToObject,
     );
     this._declarationBlockConfig = {
       ignoreExport: this.config.noExport,

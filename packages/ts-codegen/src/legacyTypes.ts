@@ -66,7 +66,7 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
             [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
             name,
             undefined,
-            factory.createTypeReferenceNode(BUILT_IN_SCALARS[name]),
+            factory.createTypeReferenceNode(BUILT_IN_SCALARS[name].input),
           ),
         )
         .concat(
