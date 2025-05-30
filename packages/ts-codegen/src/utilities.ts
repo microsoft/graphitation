@@ -1,4 +1,5 @@
 import ts, { factory } from "typescript";
+import path from "path";
 import { TsCodegenContext, UnionType } from "./context";
 
 const MODEL_SUFFIX = "Model";
@@ -495,4 +496,24 @@ export function camelCase(
   }
 
   return postProcess(input, toUpperCase);
+}
+
+export function getContextPath(
+  outputDir: string,
+  contextTypePath: string | undefined,
+) {
+  if (!contextTypePath) {
+    return;
+  }
+
+  if (!contextTypePath.startsWith(".")) {
+    return contextTypePath;
+  }
+
+  const contextDir = path.join(process.cwd(), contextTypePath);
+
+  return path
+    .relative(outputDir, contextDir)
+    .split(path.sep)
+    .join(path.posix.sep);
 }
