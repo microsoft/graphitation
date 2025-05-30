@@ -6,6 +6,7 @@ import { generateModels } from "./models";
 import { generateLegacyTypes } from "./legacyTypes";
 import { generateLegacyResolvers } from "./legacyResolvers";
 import { generateEnums } from "./enums";
+import { OutputMetadata } from "./context/utilities";
 
 export type SubTypeItem = {
   [name: string]: {
@@ -96,7 +97,7 @@ export function generateTS(
   }: GenerateTSOptions,
 ): {
   files: ts.SourceFile[];
-  contextMappingOutput: any | null;
+  contextMappingOutput: OutputMetadata | null;
 } {
   try {
     const context = extractContext(

@@ -7,6 +7,7 @@ import { extractImplicitTypesToTypescript } from "@graphitation/supermassive-ext
 import { parse } from "graphql";
 import { generateTS } from "@graphitation/ts-codegen";
 import * as glob from "fast-glob";
+import type { SubTypeNamespace } from "@graphitation/ts-codegen";
 
 type GenerateInterfacesOptions = {
   outputDir?: string;
@@ -153,7 +154,7 @@ async function generateInterfaces(
     }
     const content = await fs.readFile(fullPath, { encoding: "utf-8" });
     const document = parse(content);
-    let contextSubTypeMetadata: Record<string, any> | undefined;
+    let contextSubTypeMetadata: SubTypeNamespace | undefined;
 
     const outputPath = path.join(
       path.dirname(fullPath),

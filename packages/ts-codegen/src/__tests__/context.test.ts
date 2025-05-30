@@ -2,8 +2,8 @@ import ts from "typescript";
 import { parse } from "graphql";
 import { blankGraphQLTag as graphql } from "../utilities";
 import { generateTS } from "..";
-import { ContextMap } from "../context";
 import { SubTypeNamespace } from "../codegen";
+import { OutputMetadata } from "../context/utilities";
 
 describe(generateTS, () => {
   describe("Tests basic syntax GraphQL syntax", () => {
@@ -1087,7 +1087,7 @@ function runGenerateTest(
   enumNamesToMigrate?: string[];
   enumNamesToKeep?: string[];
   modelScope?: string;
-  contextMappingOutput: ContextMap | null;
+  contextMappingOutput: OutputMetadata | null;
 } {
   const fullOptions: {
     outputPath: string;

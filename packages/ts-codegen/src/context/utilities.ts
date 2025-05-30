@@ -1,5 +1,6 @@
 import { factory } from "typescript";
 import path from "path";
+import { ContextMap } from ".";
 
 export function createImportDeclaration(
   importNames: string[],
@@ -64,17 +65,15 @@ type TypeMetadata = {
   [typeName: string]: { [field: string]: MetadataItem };
 };
 
-type OutputMetadata = RootResolersMetadata | TypeMetadata;
+export type OutputMetadata = RootResolersMetadata | TypeMetadata;
 
 export function buildContextMetadataOutput(
-  contextMap: any,
-  resolverTypeMap: any,
+  contextMap: ContextMap,
+  resolverTypeMap: Record<string, string[] | null>,
 ) {
   const metadata: OutputMetadata = {};
 
-  for (const [key, values] of Object.entries(
-    resolverTypeMap as Record<string, string>,
-  )) {
+  for (const [key, values] of Object.entries(resolverTypeMap)) {
     if (!contextMap[key]) {
       continue;
     }

@@ -114,7 +114,7 @@ export type ContextMapTypeItem = { __context?: string[] } & {
 
 export class TsCodegenContext {
   private allTypes: Array<Type>;
-  private resolverTypeMap: any;
+  private resolverTypeMap: Record<string, string[] | null>;
   private typeContextMap: ContextMap;
   private typeNameToType: Map<string, Type>;
   private usedEntitiesInModels: Set<string>;
