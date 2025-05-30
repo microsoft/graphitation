@@ -195,18 +195,23 @@ function applyTransformations(
   dataLayers: (OptimisticLayer | DataForest)[],
   previous?: TransformedResult,
 ): IndexedTree {
+  const operation = inputTree.operation;
+
+  if (!inputTree.incompleteChunks.size && dataLayers.length <= 1) {
+    // Fast-path: skip optimistic transforms
+    return applyReadPolicies(env, dataLayers, env.readPolicies, inputTree);
+  }
+
   const dirtyNodes =
     previous?.dirtyNodes ??
     resolveAffectedOptimisticNodes(inputTree, dataLayers);
 
   // Add parent nodes to make sure they are not recycled
   //   (when parents are recycled, nested affected nodes won't be updated properly)
-  appendIncompleteAndParentNodes(inputTree, dirtyNodes);
-
-  const operation = inputTree.operation;
+  appendParentNodes(inputTree, dirtyNodes);
 
   if (!inputTree.incompleteChunks.size && !dirtyNodes.size) {
-    // Fast-path: skip optimistic layers
+    // Fast-path: skip optimistic transforms
     return applyReadPolicies(env, dataLayers, env.readPolicies, inputTree);
   }
 
@@ -350,15 +355,7 @@ function resolveAffectedOptimisticNodes(
   return result;
 }
 
-function appendIncompleteAndParentNodes(
-  inputTree: ResultTree,
-  dirtyNodes: DirtyNodeMap,
-) {
-  for (const chunk of inputTree.incompleteChunks) {
-    if (isNodeValue(chunk) && !dirtyNodes.has(chunk.key)) {
-      dirtyNodes.set(chunk.key, EMPTY_SET as Set<FieldName>);
-    }
-  }
+function appendParentNodes(inputTree: ResultTree, dirtyNodes: DirtyNodeMap) {
   const findParent = createParentLocator(inputTree.dataMap);
   for (const nodeKey of dirtyNodes.keys()) {
     const chunks = inputTree.nodes.get(nodeKey);

@@ -161,7 +161,8 @@ describe('optimistic cache layers', () => {
       },
     });
 
-    expect(readOptimistic(cache)).toBe(resultCatch22);
+    expect(readOptimistic(cache)).toEqual(resultCatch22);
+    // expect(readOptimistic(cache)).toBe(resultCatch22); // ForestRun
 
     const resultF451 = readRealistic(cache);
     expect(resultF451).toEqual({
@@ -447,7 +448,7 @@ describe('optimistic cache layers', () => {
     // expect(resultAfterRemovingBuzzLayer).toBe(resultWithBuzz); // ForestRun
     resultWithTwoAuthors.books.forEach((book, i) => {
       expect(book).toEqual(resultAfterRemovingBuzzLayer.books[i]);
-      expect(book).toBe(resultAfterRemovingBuzzLayer.books[i]);
+      // expect(book).toBe(resultAfterRemovingBuzzLayer.books[i]); // ForestRun
     });
 
     const nonOptimisticResult = readWithAuthors(false);
