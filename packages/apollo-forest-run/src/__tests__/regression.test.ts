@@ -1043,3 +1043,7 @@ test("correctly handles optimistic cache.modify", () => {
   });
   expect(optimisticModify).toBe(true);
 });
+
+test("definitely fails", () => {
+  expect(true).toBe(false);
+});
