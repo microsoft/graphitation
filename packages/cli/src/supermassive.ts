@@ -17,14 +17,12 @@ type GenerateInterfacesOptions = {
   legacy?: boolean;
   legacyModels?: boolean;
   useStringUnionsInsteadOfEnums?: boolean;
-  contextSubTypeMetadataFile?: string;
+  contextTypeExtensionsFile?: string;
   enumMigrationJsonFile?: string;
   enumMigrationExceptionsJsonFile?: string;
   generateOnlyEnums?: boolean;
   generateResolverMap?: boolean;
   mandatoryResolverTypes?: boolean;
-  defaultContextSubTypePath?: string;
-  defaultContextSubTypeName?: string;
   scope?: string;
 };
 
@@ -56,7 +54,7 @@ export function supermassive(): Command {
     )
     .option("-cn, --context-type-name [contextTypeName]", "Context type name")
     .option(
-      "-dcp, --default-context-sub-type-path [defaultContextSubTypePath]",
+      "-dcp, --default-context-sub-type-path [baseContextSubTypePath]",
       "From where the default context type will be exported",
     )
     .option(
@@ -81,8 +79,8 @@ export function supermassive(): Command {
       "File containing array of enum names, which should remain typescript enums",
     )
     .option(
-      "--context-sub-type-metadata-file [contextSubTypeMetadataFile]",
-      "Subtype metadata file",
+      "--context-sub-type-metadata-file [contextTypeExtensionsFile]",
+      "Describes context types and their import paths. Used to generate resolver context type extensions. The file must be defined in the following format: { baseContextSubTypePath?: string, baseContextSubTypeName?: string, contextSubTypes: { [namespace: string]: { [type: string]: { importNamespaceName: string, importPath: string }}}",
     )
     .option(
       "--generate-resolver-map",
@@ -154,7 +152,7 @@ async function generateInterfaces(
     }
     const content = await fs.readFile(fullPath, { encoding: "utf-8" });
     const document = parse(content);
-    let contextSubTypeMetadata: SubTypeNamespace | undefined;
+    let contextTypeExtensions: SubTypeNamespace | undefined;
 
     const outputPath = path.join(
       path.dirname(fullPath),
@@ -179,17 +177,17 @@ async function generateInterfaces(
       enumNamesToMigrate = content as string[];
     }
 
-    if (options.contextSubTypeMetadataFile) {
+    if (options.contextTypeExtensionsFile) {
       const content = JSON.parse(
         await fs.readFile(
-          path.join(process.cwd(), options.contextSubTypeMetadataFile),
+          path.join(process.cwd(), options.contextTypeExtensionsFile),
           {
             encoding: "utf-8",
           },
         ),
       );
 
-      contextSubTypeMetadata = content;
+      contextTypeExtensions = content;
     }
 
     if (options.enumMigrationExceptionsJsonFile) {
@@ -217,11 +215,6 @@ async function generateInterfaces(
       contextTypePath:
         getContextPath(outputPath, options.contextTypePath) || null,
       contextTypeName: options.contextTypeName,
-      defaultContextSubTypePath: getContextPath(
-        outputPath,
-        options.defaultContextSubTypePath,
-      ),
-      defaultContextSubTypeName: options.defaultContextSubTypeName,
       enumsImport: getContextPath(outputPath, options.enumsImport) || null,
       legacyCompat: !!options.legacy,
       legacyNoModelsForObjects: !!options.legacyModels,
@@ -231,7 +224,7 @@ async function generateInterfaces(
       mandatoryResolverTypes: !!options.mandatoryResolverTypes,
       enumNamesToMigrate,
       enumNamesToKeep,
-      contextSubTypeMetadata,
+      contextTypeExtensions,
       modelScope: options.scope || null,
     });
 

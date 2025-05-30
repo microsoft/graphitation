@@ -57,9 +57,9 @@ export type TsCodegenContextOptions = {
   };
   legacyCompat: boolean;
   legacyNoModelsForObjects: boolean;
-  defaultContextSubTypePath?: string;
-  defaultContextSubTypeName?: string;
-  contextSubTypeMetadata?: SubTypeNamespace;
+  baseContextSubTypePath?: string;
+  baseContextSubTypeName?: string;
+  contextTypeExtensions?: SubTypeNamespace;
   useStringUnionsInsteadOfEnums: boolean;
   enumNamesToMigrate: string[] | null;
   enumNamesToKeep: string[] | null;
@@ -152,13 +152,10 @@ export class TsCodegenContext {
     this.hasUsedEnumsInModels = false;
     this.iterableTypeUsed = false;
 
-    if (
-      options.defaultContextSubTypeName &&
-      options.defaultContextSubTypePath
-    ) {
+    if (options.baseContextSubTypeName && options.baseContextSubTypePath) {
       this.contextDefaultSubTypeContext = {
-        name: options.defaultContextSubTypeName,
-        from: options.defaultContextSubTypePath,
+        name: options.baseContextSubTypeName,
+        from: options.baseContextSubTypePath,
       };
     }
 
@@ -228,7 +225,7 @@ export class TsCodegenContext {
     }
   }
   public getSubTypesMetadata() {
-    return this.options.contextSubTypeMetadata;
+    return this.options.contextTypeExtensions;
   }
 
   private buildContextSubTypeNamespaceObject(typeNames: string[]) {
@@ -242,11 +239,17 @@ export class TsCodegenContext {
         acc[namespace] = [];
       }
 
-      if (!subTypesMetadata?.[namespace]?.[subTypeName]) {
+      if (!subTypesMetadata?.contextSubTypes?.[namespace]?.[subTypeName]) {
         throw new Error("something went really wrong");
       }
+
+      const subTypeRawMetadata =
+        subTypesMetadata?.contextSubTypes[namespace][subTypeName];
+      const subType = subTypeRawMetadata.importNamespaceName
+        ? `${subTypeRawMetadata.importNamespaceName}["${subTypeName}"]`
+        : subTypeName;
       acc[namespace].push({
-        subType: subTypesMetadata[namespace][subTypeName].importTypeName,
+        subType,
         name: subTypeName,
       });
 
@@ -331,16 +334,13 @@ export class TsCodegenContext {
     this.resolverTypeMap[typeName].push(fieldName);
   }
 
-  cleanSubtypeImportName(subTypeImportIdentifier: string) {
-    return subTypeImportIdentifier.split(/\.|\[/)[0];
-  }
-
   getSubTypeNamesImportMap(subTypes: string[]) {
     const subTypeMetadata = this.getSubTypesMetadata();
     return subTypes.reduce<Record<string, string[]>>(
       (acc: Record<string, string[]>, importName: string) => {
         const [namespace, subTypeName] = importName.split(":");
-        const subType = subTypeMetadata?.[namespace]?.[subTypeName];
+        const subType =
+          subTypeMetadata?.contextSubTypes?.[namespace]?.[subTypeName];
 
         if (!subType) {
           throw new Error(
@@ -348,13 +348,13 @@ export class TsCodegenContext {
           );
         }
 
-        const { importPath, importTypeName } = subType;
+        const { importPath, importNamespaceName } = subType;
 
         if (importPath) {
           if (!acc[importPath]) {
             acc[importPath] = [];
           }
-          acc[importPath].push(this.cleanSubtypeImportName(importTypeName));
+          acc[importPath].push(importNamespaceName || subTypeName);
         }
         return acc;
       },
@@ -806,13 +806,15 @@ export function extractContext(
               return v.value;
             });
 
-            if (!options.contextSubTypeMetadata?.[namespace]) {
+            if (!options.contextTypeExtensions?.contextSubTypes?.[namespace]) {
               throw new Error(`Namespace "${name}" is not supported`);
             }
 
             namespaceValues.forEach((namespaceValue) => {
               if (
-                !options.contextSubTypeMetadata?.[namespace]?.[namespaceValue]
+                !options.contextTypeExtensions?.contextSubTypes?.[namespace]?.[
+                  namespaceValue
+                ]
               ) {
                 throw new Error(
                   `Value "${namespaceValue}" in namespace "${namespace}" is not supported`,

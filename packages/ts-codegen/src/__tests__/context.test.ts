@@ -7,73 +7,63 @@ import { OutputMetadata } from "../context/utilities";
 
 describe(generateTS, () => {
   describe("Tests basic syntax GraphQL syntax", () => {
-    const contextSubTypeMetadata = {
-      managers: {
-        user: {
-          name: "user",
-          importTypeName: 'UserStateMachineType["user"]',
-          importPath: "@package/user-state-machine",
-        },
-        whatever: {
-          name: "whatever",
-          importTypeName: 'WhateverStateMachineType["whatever"]',
-          importPath: "@package/whatever-state-machine",
-        },
-        "different-whatever": {
-          name: "different-whatever",
-          importTypeName:
-            'DifferentWhateverStateMachineType["different-whatever"]',
-          importPath: "@package/different-whatever-state-machine",
-        },
-        post: {
-          name: "post",
-          importTypeName: 'PostStateMachineType["post"]',
-          importPath: "@package/post-state-machine",
-        },
-        node: {
-          name: "node",
-          importTypeName: 'NodeStateMachineType["node"]',
-          importPath: "@package/node-state-machine",
-        },
-        persona: {
-          name: "persona",
-          importTypeName: 'PersonaStateMachineType["persona"]',
-          importPath: "@package/persona-state-machine",
-        },
-        admin: {
-          name: "admin",
-          importTypeName: 'AdminStateMachineType["admin"]',
-          importPath: "@package/admin-state-machine",
-        },
-        message: {
-          name: "message",
-          importTypeName: 'MessageStateMachineType["message"]',
-          importPath: "@package/message-state-machine",
-        },
-        customer: {
-          name: "customer",
-          importTypeName: 'CustomerStateMachineType["customer"]',
-          importPath: "@package/customer-state-machine",
-        },
-        "shouldnt-apply": {
-          name: "shouldnt-apply",
-          importTypeName: 'UserStateMachineType["shouldnt-apply"]',
-          importPath: "@package/shouldnt-apply-state-machine",
-        },
-        "user-or-customer": {
-          name: "user-or-customer",
-          importTypeName: 'UserStateMachineType["user-or-customer"]',
-          importPath: "@package/user-or-customer-state-machine",
-        },
-        "company-or-customer": {
-          name: "company-or-customer",
-          importTypeName: 'UserStateMachineType["company-or-customer"]',
-          importPath: "@package/company-or-customer-state-machine",
-        },
-        "id-user": {
-          name: "id-user",
-          importTypeName: 'UserStateMachineType["id-user"]',
-          importPath: "@package/id-user-state-machine",
+    const contextTypeExtensions = {
+      baseContextSubTypePath: "@package/default-context",
+      baseContextSubTypeName: "DefaultContextType",
+      contextSubTypes: {
+        managers: {
+          user: {
+            importNamespaceName: "UserStateMachineType",
+            importPath: "@package/user-state-machine",
+          },
+          whatever: {
+            importNamespaceName: "WhateverStateMachineType",
+            importPath: "@package/whatever-state-machine",
+          },
+          "different-whatever": {
+            importNamespaceName: "DifferentWhateverStateMachineType",
+            importPath: "@package/different-whatever-state-machine",
+          },
+          post: {
+            importNamespaceName: "PostStateMachineType",
+            importPath: "@package/post-state-machine",
+          },
+          node: {
+            importNamespaceName: "NodeStateMachineType",
+            importPath: "@package/node-state-machine",
+          },
+          persona: {
+            importNamespaceName: "PersonaStateMachineType",
+            importPath: "@package/persona-state-machine",
+          },
+          admin: {
+            importNamespaceName: "AdminStateMachineType",
+            importPath: "@package/admin-state-machine",
+          },
+          message: {
+            importNamespaceName: "MessageStateMachineType",
+            importPath: "@package/message-state-machine",
+          },
+          customer: {
+            importNamespaceName: "CustomerStateMachineType",
+            importPath: "@package/customer-state-machine",
+          },
+          "shouldnt-apply": {
+            importNamespaceName: "UserStateMachineType",
+            importPath: "@package/shouldnt-apply-state-machine",
+          },
+          "user-or-customer": {
+            importNamespaceName: "UserStateMachineType",
+            importPath: "@package/user-or-customer-state-machine",
+          },
+          "company-or-customer": {
+            importNamespaceName: "UserStateMachineType",
+            importPath: "@package/company-or-customer-state-machine",
+          },
+          "id-user": {
+            importNamespaceName: "UserStateMachineType",
+            importPath: "@package/id-user-state-machine",
+          },
         },
       },
     };
@@ -118,9 +108,7 @@ describe(generateTS, () => {
             }
           `,
           {
-            contextSubTypeMetadata: contextSubTypeMetadata,
-            defaultContextSubTypePath: "@package/default-context",
-            defaultContextSubTypeName: "DefaultContextType",
+            contextTypeExtensions: contextTypeExtensions,
           },
         );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -523,7 +511,9 @@ describe(generateTS, () => {
             }
           `,
           {
-            contextSubTypeMetadata,
+            contextTypeExtensions: {
+              contextSubTypes: contextTypeExtensions.contextSubTypes,
+            },
           },
         );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -688,7 +678,9 @@ describe(generateTS, () => {
             }
           `,
           {
-            contextSubTypeMetadata,
+            contextTypeExtensions: {
+              contextSubTypes: contextTypeExtensions.contextSubTypes,
+            },
           },
         );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -789,7 +781,7 @@ describe(generateTS, () => {
               userById(id: ID!): User
             }
           `,
-          { contextSubTypeMetadata },
+          { contextTypeExtensions },
         );
       expect(enums).toMatchInlineSnapshot(`
         "export enum PresenceAvailability {
@@ -882,7 +874,9 @@ describe(generateTS, () => {
             }
           `,
           {
-            contextSubTypeMetadata,
+            contextTypeExtensions: {
+              contextSubTypes: contextTypeExtensions.contextSubTypes,
+            },
           },
         );
       expect(enums).toMatchInlineSnapshot(`undefined`);
@@ -1063,8 +1057,6 @@ function runGenerateTest(
   options: {
     outputPath?: string;
     documentPath?: string;
-    defaultContextSubTypeName?: string;
-    defaultContextSubTypePath?: string;
     contextName?: string;
     legacyCompat?: boolean;
     enumsImport?: string;
@@ -1073,7 +1065,7 @@ function runGenerateTest(
     enumNamesToMigrate?: string[];
     enumNamesToKeep?: string[];
     modelScope?: string;
-    contextSubTypeMetadata?: SubTypeNamespace;
+    contextTypeExtensions?: SubTypeNamespace;
   } = {},
 ): {
   enums?: string;
@@ -1092,8 +1084,8 @@ function runGenerateTest(
   const fullOptions: {
     outputPath: string;
     documentPath: string;
-    defaultContextSubTypeName?: string;
-    defaultContextSubTypePath?: string;
+    baseContextSubTypeName?: string;
+    baseContextSubTypePath?: string;
     contextName?: string;
     legacyCompat?: boolean;
     legacyNoModelsForObjects?: boolean;
@@ -1104,6 +1096,10 @@ function runGenerateTest(
     outputPath: "__generated__",
     documentPath: "./typedef.graphql",
     ...options,
+    baseContextSubTypeName:
+      options?.contextTypeExtensions?.baseContextSubTypeName,
+    baseContextSubTypePath:
+      options?.contextTypeExtensions?.baseContextSubTypePath,
   };
   const document = parse(doc);
   const { files, contextMappingOutput } = generateTS(document, fullOptions);

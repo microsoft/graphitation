@@ -7,18 +7,21 @@ import { generateLegacyTypes } from "./legacyTypes";
 import { generateLegacyResolvers } from "./legacyResolvers";
 import { generateEnums } from "./enums";
 import { OutputMetadata } from "./context/utilities";
+import { getContextPath } from "./utilities";
 
 export type SubTypeItem = {
-  [name: string]: {
-    name: string;
-    importTypeName: string;
+  [subType: string]: {
+    importNamespaceName?: string;
     importPath: string;
   };
 };
 
 export type SubTypeNamespace = {
-  [namespace: string]: SubTypeItem;
+  baseContextSubTypeName?: string;
+  baseContextSubTypePath?: string;
+  contextSubTypes: { [namespace: string]: SubTypeItem };
 };
+
 export interface GenerateTSOptions {
   outputPath: string;
   documentPath: string;
@@ -32,9 +35,7 @@ export interface GenerateTSOptions {
   generateOnlyEnums?: boolean;
   enumNamesToMigrate?: string[];
   enumNamesToKeep?: string[];
-  contextSubTypeMetadata?: SubTypeNamespace;
-  defaultContextSubTypePath?: string;
-  defaultContextSubTypeName?: string;
+  contextTypeExtensions?: SubTypeNamespace;
   /**
    * Enable the generation of the resolver map as the default export in the resolvers file.
    *
@@ -89,9 +90,7 @@ export function generateTS(
     generateOnlyEnums,
     enumNamesToMigrate,
     enumNamesToKeep,
-    contextSubTypeMetadata,
-    defaultContextSubTypePath,
-    defaultContextSubTypeName,
+    contextTypeExtensions,
     generateResolverMap = false,
     mandatoryResolverTypes = false,
   }: GenerateTSOptions,
@@ -113,9 +112,12 @@ export function generateTS(
         modelScope,
         enumNamesToMigrate,
         enumNamesToKeep,
-        contextSubTypeMetadata,
-        defaultContextSubTypePath,
-        defaultContextSubTypeName,
+        contextTypeExtensions,
+        baseContextSubTypePath: getContextPath(
+          outputPath,
+          contextTypeExtensions?.baseContextSubTypePath,
+        ),
+        baseContextSubTypeName: contextTypeExtensions?.baseContextSubTypeName,
       },
       document,
       outputPath,
