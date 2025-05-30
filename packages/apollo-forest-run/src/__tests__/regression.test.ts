@@ -998,3 +998,48 @@ test("correctly writes fragment on abstract type", () => {
     ],
   });
 });
+
+test("correctly handles optimistic cache.modify", () => {
+  const query = gql`
+    {
+      items {
+        id
+        name
+      }
+    }
+  `;
+  const foo = { __typename: "Foo", id: "1", name: "foo" };
+  const bar = { __typename: "Bar", id: "2", name: "bar" };
+  const cache = new ForestRun();
+
+  cache.write({
+    dataId: "ROOT_QUERY",
+    query,
+    result: {
+      items: [{ ...foo }, { ...bar }],
+    },
+  });
+
+  let optimisticModify;
+  const before = cache.diff({ query, optimistic: true });
+  cache.recordOptimisticTransaction(() => {
+    optimisticModify = cache.modify({
+      id: cache.identify(foo),
+      fields: { name: () => "fooChanged" },
+    });
+  }, "test");
+  const optimisticData = cache.diff({ query, optimistic: true });
+  cache.removeOptimistic("test");
+  const restoredData = cache.diff({ query, optimistic: true });
+
+  expect(before.result).toEqual({
+    items: [foo, bar],
+  });
+  expect(optimisticData.result).toEqual({
+    items: [{ ...foo, name: "fooChanged" }, bar],
+  });
+  expect(restoredData.result).toEqual({
+    items: [foo, bar],
+  });
+  expect(optimisticModify).toBe(true);
+});
