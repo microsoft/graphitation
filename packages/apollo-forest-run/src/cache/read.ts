@@ -1,5 +1,5 @@
 import type { FieldName, OperationDescriptor } from "../descriptor/types";
-import type { NodeChunk, ObjectDraft, SourceObject } from "../values/types";
+import type { ObjectDraft, SourceObject } from "../values/types";
 import type { IndexedTree } from "../forest/types";
 import type {
   CacheEnv,
@@ -43,7 +43,7 @@ export function read<TData>(
   activeTransaction: Transaction | undefined,
   options: Cache.DiffOptions,
 ): Cache.DiffResult<TData> & { dangling?: Set<string> } {
-  const { partialReadResults, optimisticReadResults } = store;
+  const { partialReadResults, optimisticLayers, optimisticReadResults } = store;
 
   const optimistic = activeTransaction?.forceOptimistic ?? options.optimistic;
 
@@ -52,9 +52,10 @@ export function read<TData>(
   const operationDescriptor = getDiffDescriptor(env, store, options);
   touchOperation(env, store, operationDescriptor);
 
-  const resultsMap = options.optimistic
-    ? optimisticReadResults
-    : forest.readResults;
+  const resultsMap =
+    options.optimistic && optimisticLayers.length
+      ? optimisticReadResults
+      : forest.readResults;
 
   let readState = resultsMap.get(operationDescriptor);
 
@@ -195,20 +196,20 @@ function applyTransformations(
   dataLayers: (OptimisticLayer | DataForest)[],
   previous?: TransformedResult,
 ): IndexedTree {
+  // This effectively disables recycling when optimistic layers are present, which is suboptimal.
+  const hasOptimisticLayers = dataLayers.length > 1;
   const operation = inputTree.operation;
 
-  if (!inputTree.incompleteChunks.size && dataLayers.length <= 1) {
+  // TODO: inputTree.incompleteChunks must be updated on write, then we can remove size check
+  if (!inputTree.incompleteChunks.size && !hasOptimisticLayers) {
     // Fast-path: skip optimistic transforms
     return applyReadPolicies(env, dataLayers, env.readPolicies, inputTree);
   }
 
+  // For dirty nodes we should not recycle existing chunks
   const dirtyNodes =
     previous?.dirtyNodes ??
     resolveAffectedOptimisticNodes(inputTree, dataLayers);
-
-  // Add parent nodes to make sure they are not recycled
-  //   (when parents are recycled, nested affected nodes won't be updated properly)
-  appendParentNodes(inputTree, dirtyNodes);
 
   if (!inputTree.incompleteChunks.size && !dirtyNodes.size) {
     // Fast-path: skip optimistic transforms
@@ -317,15 +318,6 @@ function reportFirstMissingField(tree: IndexedTree): MissingFieldError {
   );
 }
 
-function _affectedByOptimisticLayers(
-  inputTree: ResultTree,
-  dataLayers: (OptimisticLayer | DataForest)[],
-) {
-  if (dataLayers.length <= 1) {
-    return false; // no optimistic layers essentially
-  }
-}
-
 function resolveAffectedOptimisticNodes(
   inputTree: ResultTree,
   dataLayers: (OptimisticLayer | DataForest)[],
@@ -352,6 +344,9 @@ function resolveAffectedOptimisticNodes(
       }
     }
   }
+  // Add parent nodes to make sure they are not recycled
+  //   (when parents are recycled, nested affected nodes won't be updated properly)
+  appendParentNodes(inputTree, result);
   return result;
 }
 

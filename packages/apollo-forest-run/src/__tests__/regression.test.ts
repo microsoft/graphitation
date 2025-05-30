@@ -1,4 +1,3 @@
-import { InMemoryCache } from "@apollo/client";
 import { gql } from "../__tests__/helpers/descriptor";
 import { ForestRun } from "../ForestRun";
 
