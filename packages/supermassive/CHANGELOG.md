@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Wed, 02 Apr 2025 11:43:32 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 29 May 2025 15:22:30 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.11.0
+
+Thu, 29 May 2025 15:22:30 GMT
+
+### Minor changes
+
+- feat: add IterableOrAsyncIterable<T> type (dsamsonov@microsoft.com)
 
 ## 3.10.0
 

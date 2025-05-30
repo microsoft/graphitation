@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Tue, 08 Apr 2025 15:39:00 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 29 May 2025 15:22:30 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.0.0
+
+Thu, 29 May 2025 15:22:30 GMT
+
+### Major changes
+
+- feat(ts-codegen): use IterableOrAsyncIterable for return type of list field resolvers (dsamsonov@microsoft.com)
+- Bump @graphitation/ts-codegen to v5.0.0
 
 ## 2.1.1
 

@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Thu, 29 May 2025 15:22:30 GMT",
+      "version": "5.0.0",
+      "tag": "@graphitation/ts-codegen_v5.0.0",
+      "comments": {
+        "major": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "b1744ed18e2c1758d4d4278d7a12d81822b2cf3f",
+            "comment": "feat(ts-codegen): use IterableOrAsyncIterable for return type of list field resolvers"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 08 Apr 2025 15:39:00 GMT",
       "version": "4.0.0",
       "tag": "@graphitation/ts-codegen_v4.0.0",

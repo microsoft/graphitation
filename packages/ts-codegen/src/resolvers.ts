@@ -81,9 +81,34 @@ export function generateResolvers(
 ): ts.SourceFile {
   const { generateResolverMap, mandatoryResolverTypes } = options;
   const statements: ts.Statement[] = [];
-  statements.push(...context.getBasicImports());
+  const resolverTypes = getResolverTypes(context);
+  statements.push(
+    ...resolverTypes.map((type) =>
+      createResolversForType(context, type, mandatoryResolverTypes),
+    ),
+  );
+
+  const extra: ts.Statement[] = [];
+  if (generateResolverMap) {
+    extra.push(createResolversMap(resolverTypes, mandatoryResolverTypes));
+  }
+
+  const source = factory.createSourceFile(
+    [...generateImports(context), ...statements, ...extra],
+    factory.createToken(ts.SyntaxKind.EndOfFileToken),
+    ts.NodeFlags.None,
+  );
+  source.fileName = "resolvers.interface.ts";
+  return source;
+}
+
+function generateImports(context: TsCodegenContext) {
+  const importStatements: ts.Statement[] = [
+    ...(context.getAllImportDeclarations("RESOLVERS") as ts.Statement[]),
+    ...context.getBasicImports(),
+  ];
   if (context.hasModels) {
-    statements.push(
+    importStatements.push(
       factory.createImportDeclaration(
         undefined,
         factory.createImportClause(
@@ -102,7 +127,7 @@ export function generateResolvers(
       context.contextDefaultSubTypeContext?.from &&
       context.contextDefaultSubTypeContext?.name
     ) {
-      statements.push(
+      importStatements.push(
         createImportDeclaration(
           [context.contextDefaultSubTypeContext.name],
           context.contextDefaultSubTypeContext.from,
@@ -123,7 +148,7 @@ export function generateResolvers(
         }
 
         const imports = context.getSubTypeNamesImportMap(rootValue);
-        statements.push(
+        importStatements.push(
           ...getImportIdentifierForTypenames(imports, contextImportNames),
         );
       }
@@ -141,34 +166,14 @@ export function generateResolvers(
 
         const imports = context.getSubTypeNamesImportMap(value);
 
-        statements.push(
+        importStatements.push(
           ...getImportIdentifierForTypenames(imports, contextImportNames),
         );
       }
     }
   }
 
-  const resolverTypes = getResolverTypes(context);
-  statements.push(
-    ...resolverTypes.map((type) =>
-      createResolversForType(context, type, mandatoryResolverTypes),
-    ),
-  );
-
-  const extra: ts.Statement[] = [];
-  if (generateResolverMap) {
-    extra.push(createResolversMap(resolverTypes, mandatoryResolverTypes));
-  }
-
-  const source = factory.createSourceFile(
-    (context.getAllImportDeclarations("RESOLVERS") as ts.Statement[])
-      .concat(statements)
-      .concat(extra),
-    factory.createToken(ts.SyntaxKind.EndOfFileToken),
-    ts.NodeFlags.None,
-  );
-  source.fileName = "resolvers.interface.ts";
-  return source;
+  return importStatements;
 }
 
 function createResolversForType(
@@ -313,7 +318,7 @@ function createResolverField(
         ]
       : undefined,
     getResolverReturnType(
-      context.getTypeReferenceFromTypeNode(field.type, "RESOLVERS"),
+      context.getTypeReferenceForFieldResolverResultFromTypeNode(field.type),
       resolverParametersDefinitions,
     ),
   );

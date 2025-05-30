@@ -238,7 +238,7 @@ describe(generateTS, () => {
       `);
       expect(resolvers).toMatchInlineSnapshot(`
         "import type { models as NSMsteamsPackagesTestModels } from "@msteams/packages-test";
-        import type { PromiseOrValue } from "@graphitation/supermassive";
+        import type { PromiseOrValue, IterableOrAsyncIterable } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
         import type { DefaultContextType } from "@package/default-context";
@@ -292,37 +292,37 @@ describe(generateTS, () => {
                 managers: {
                     "user": UserStateMachineType["user"];
                 };
-            }, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message | null | undefined> | null | undefined> | null | undefined>;
+            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<IterableOrAsyncIterable<Models.Message | null | undefined> | null | undefined> | null | undefined>;
             export type messagesWithAnswersRequired = (model: Models.User, args: {}, context: DefaultContextType & {
                 managers: {
                     "user": UserStateMachineType["user"];
                 };
-            }, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message | null | undefined> | null | undefined>>;
+            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<IterableOrAsyncIterable<Models.Message | null | undefined> | null | undefined>>;
             export type messagesWithAnswersAllRequired = (model: Models.User, args: {}, context: DefaultContextType & {
                 managers: {
                     "user": UserStateMachineType["user"];
                 };
-            }, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<ReadonlyArray<Models.Message>>>;
+            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<IterableOrAsyncIterable<Models.Message>>>;
             export type messagesNonRequired = (model: Models.User, args: {}, context: DefaultContextType & {
                 managers: {
                     "user": UserStateMachineType["user"];
                 };
-            }, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message | null | undefined> | null | undefined>;
+            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Message | null | undefined> | null | undefined>;
             export type messagesWithArrayRequired = (model: Models.User, args: {}, context: DefaultContextType & {
                 managers: {
                     "user": UserStateMachineType["user"];
                 };
-            }, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message | null | undefined>>;
+            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Message | null | undefined>>;
             export type messagesRequired = (model: Models.User, args: {}, context: DefaultContextType & {
                 managers: {
                     "user": UserStateMachineType["user"];
                 };
-            }, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message>>;
+            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Message>>;
             export type messagesOnlyMessageRequired = (model: Models.User, args: {}, context: DefaultContextType & {
                 managers: {
                     "user": UserStateMachineType["user"];
                 };
-            }, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Message> | null | undefined>;
+            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Message> | null | undefined>;
             export type post = (model: Models.User, args: {}, context: DefaultContextType & {
                 managers: {
                     "post": PostStateMachineType["post"];
@@ -353,8 +353,8 @@ describe(generateTS, () => {
                 readonly requiredPost?: requiredPost;
                 readonly optionalPost?: optionalPost;
             }
-            export type requiredUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User>>;
-            export type optionalUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User | null | undefined> | null | undefined>;
+            export type requiredUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.User>>;
+            export type optionalUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.User | null | undefined> | null | undefined>;
             export type optionalUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
             export type requiredUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
             export type requiredPost = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Post>;
@@ -403,11 +403,11 @@ describe(generateTS, () => {
                 readonly userUpdated?: userUpdated<any>;
             }
             export type userUpdated<SubscribeResult = never> = {
-                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<{
+                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterable<{
                     userUpdated: Models.User;
                 }>>;
             } | {
-                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<SubscribeResult>>;
+                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterable<SubscribeResult>>;
                 resolve: (subcribeResult: SubscribeResult, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
             };
         }
@@ -439,11 +439,11 @@ describe(generateTS, () => {
                 readonly userUpdated?: userUpdated<any>;
             }
             export type userUpdated<SubscribeResult = never> = {
-                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<{
+                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterable<{
                     userUpdated: Models.User;
                 }>>;
             } | {
-                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterator<SubscribeResult>>;
+                subscribe: (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<AsyncIterable<SubscribeResult>>;
                 resolve: (subcribeResult: SubscribeResult, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
             };
         }
@@ -476,7 +476,7 @@ describe(generateTS, () => {
         "
       `);
       expect(resolvers).toMatchInlineSnapshot(`
-        "import type { PromiseOrValue } from "@graphitation/supermassive";
+        "import type { PromiseOrValue, IterableOrAsyncIterable } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
         export declare namespace User {
@@ -489,7 +489,7 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly users?: users;
             }
-            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User>>;
+            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.User>>;
         }
         "
       `);
@@ -576,7 +576,7 @@ describe(generateTS, () => {
         "
       `);
       expect(resolvers).toMatchInlineSnapshot(`
-        "import type { PromiseOrValue } from "@graphitation/supermassive";
+        "import type { PromiseOrValue, IterableOrAsyncIterable } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
         import type { NodeStateMachineType } from "@package/node-state-machine";
@@ -629,8 +629,8 @@ describe(generateTS, () => {
                 readonly users?: users;
                 readonly admins?: admins;
             }
-            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User | null | undefined> | null | undefined>;
-            export type admins = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.Admin | null | undefined> | null | undefined>;
+            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.User | null | undefined> | null | undefined>;
+            export type admins = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Admin | null | undefined> | null | undefined>;
         }
         "
       `);
@@ -726,7 +726,7 @@ describe(generateTS, () => {
         "
       `);
       expect(resolvers).toMatchInlineSnapshot(`
-        "import type { PromiseOrValue } from "@graphitation/supermassive";
+        "import type { PromiseOrValue, IterableOrAsyncIterable } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
         import type { NodeStateMachineType } from "@package/node-state-machine";
@@ -763,7 +763,7 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly users?: users;
             }
-            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<ReadonlyArray<Models.User | null | undefined> | null | undefined>;
+            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.User | null | undefined> | null | undefined>;
         }
         "
       `);

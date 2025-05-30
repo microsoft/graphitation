@@ -32,6 +32,7 @@ import {
   createListType,
   createNonNullableType,
   createNullableType,
+  getResolverReturnListType,
 } from "../utilities";
 import { IMPORT_DIRECTIVE_NAME, processImportDirective } from "./import";
 import { MODEL_DIRECTIVE_NAME, processModelDirective } from "./model";
@@ -125,6 +126,7 @@ export class TsCodegenContext {
   >;
   private typeNameToModels: Map<string, DefinitionModel>;
   private legacyInterfaces: Set<string>;
+  private iterableTypeUsed: boolean;
   context?: { name: string; from: string };
   contextDefaultSubTypeContext?: { name: string; from: string };
   hasUsedEnumsInModels: boolean;
@@ -148,6 +150,7 @@ export class TsCodegenContext {
     this.hasModels = false;
     this.hasEnums = Boolean(options.enumsImport);
     this.hasUsedEnumsInModels = false;
+    this.iterableTypeUsed = false;
 
     if (
       options.defaultContextSubTypeName &&
@@ -421,6 +424,26 @@ export class TsCodegenContext {
     }
   }
 
+  getTypeReferenceForFieldResolverResultFromTypeNode(
+    node: TypeNode,
+  ): ts.TypeNode {
+    if (node.kind === Kind.NON_NULL_TYPE) {
+      return createNonNullableType(
+        this.getTypeReferenceForFieldResolverResultFromTypeNode(node.type),
+      );
+    } else if (node.kind === Kind.LIST_TYPE) {
+      this.iterableTypeUsed = true;
+      return getResolverReturnListType(
+        this.getTypeReferenceForFieldResolverResultFromTypeNode(node.type),
+      );
+    } else {
+      return createNullableType(
+        this.getModelType(node.name.value, "RESOLVERS").toTypeReference(),
+        true,
+      );
+    }
+  }
+
   getTypeFromTypeNode(node: TypeNode): string {
     if (typeof node === "string") {
       return node;
@@ -558,8 +581,13 @@ export class TsCodegenContext {
 
   getBasicImports(): ts.ImportDeclaration[] {
     const imports = [];
+    const supermassiveTypes = ["PromiseOrValue"];
+    if (this.iterableTypeUsed) {
+      supermassiveTypes.push("IterableOrAsyncIterable");
+    }
+
     imports.push(
-      createImportDeclaration(["PromiseOrValue"], "@graphitation/supermassive"),
+      createImportDeclaration(supermassiveTypes, "@graphitation/supermassive"),
     );
 
     if (this.options.resolveInfo.from) {
