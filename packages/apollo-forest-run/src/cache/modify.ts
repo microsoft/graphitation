@@ -8,7 +8,6 @@ import type {
   FieldInfo,
   NodeKey,
   NormalizedFieldEntry,
-  OperationDescriptor,
 } from "../descriptor/types";
 import type {
   GraphValue,
@@ -19,12 +18,16 @@ import type {
 import type {
   CacheEnv,
   DataForest,
+  LayerDifferenceMap,
+  ModifiedGraphDifference,
+  ModifiedNodeDifference,
+  ModifyResult,
   OptimisticLayer,
   Store,
   Transaction,
   TransformedResult,
 } from "./types";
-import type { ObjectDifference, Replacement } from "../diff/types";
+import type { Replacement } from "../diff/types";
 import type { GraphDiffError } from "../diff/diffTree";
 import { isReference, makeReference } from "@apollo/client";
 import { maybeDeepFreeze } from "@apollo/client/utilities";
@@ -60,28 +63,12 @@ const EMPTY_ARRAY = Object.freeze([]);
 const DELETE: any = Object.freeze(Object.create(null));
 const INVALIDATE: any = Object.freeze(Object.create(null));
 
-export type ModifiedNodeDifference = ObjectDifference & {
-  fieldsToInvalidate: Set<NormalizedFieldEntry>;
-  fieldsToDelete: Set<NormalizedFieldEntry>;
-  deleteNode: boolean;
-};
-type ModifiedGraphDifference = {
-  nodeDifference: Map<NodeKey, ModifiedNodeDifference>;
-  newNodes: NodeKey[];
-  deletedNodes: NodeKey[];
-  errors: GraphDiffError[];
-};
-type LayerDifferenceMap = Map<
-  DataForest | OptimisticLayer,
-  ModifiedGraphDifference
->;
-
 export function modify(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
   options: Cache.ModifyOptions,
-): [dirty: boolean, affected: Set<OperationDescriptor>] {
+): ModifyResult {
   const id = options.id ?? "ROOT_QUERY";
   const optimistic =
     activeTransaction.forceOptimistic ?? options.optimistic ?? false;
@@ -91,7 +78,7 @@ export function modify(
   const layerDifferenceMap = runModifiers(env, layers, id, options.fields);
 
   if (!layerDifferenceMap.size) {
-    return [false, new Set()];
+    return { options, dirty: false, affected: new Set() };
   }
 
   let deletedFromLayers = 0;
@@ -188,10 +175,15 @@ export function modify(
       }
     }
   }
-  const modified =
+  const dirty =
     updatedLayers > 0 || deletedFromLayers > 0 || deletedFieldsFromLayers > 0;
 
-  return [modified, allAffectedOps];
+  return {
+    options,
+    dirty,
+    affected: allAffectedOps,
+    difference: layerDifferenceMap,
+  };
 }
 
 function runModifiers(

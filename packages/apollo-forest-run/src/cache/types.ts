@@ -10,6 +10,7 @@ import type {
   Directives,
   TypeName,
   OperationId,
+  NormalizedFieldEntry,
 } from "../descriptor/types";
 import type { DocumentNode } from "graphql";
 import type {
@@ -25,6 +26,8 @@ import type {
 } from "@apollo/client/cache/inmemory/policies";
 import type { TelemetryEvent } from "../telemetry/types";
 import { Logger } from "../jsutils/logger";
+import { GraphDifference, GraphDiffError } from "../diff/diffTree";
+import { ObjectDifference } from "../diff/types";
 
 export type DataTree = IndexedTree & {
   grown?: boolean;
@@ -73,10 +76,36 @@ export type Transaction = {
   affectedOperations: Set<OperationDescriptor> | null;
   watchesToNotify: Set<Cache.WatchOptions> | null;
   forceOptimistic: boolean | null;
-  writes: {
+  changelog: (WriteResult | ModifyResult)[];
+};
+
+export type WriteResult = {
     options: Cache.WriteOptions;
-    tree: IndexedTree;
-  }[];
+  incoming: DataTree;
+  affected: Iterable<OperationDescriptor>;
+  difference?: GraphDifference;
+};
+
+export type ModifiedNodeDifference = ObjectDifference & {
+  fieldsToInvalidate: Set<NormalizedFieldEntry>;
+  fieldsToDelete: Set<NormalizedFieldEntry>;
+  deleteNode: boolean;
+};
+export type ModifiedGraphDifference = {
+  nodeDifference: Map<NodeKey, ModifiedNodeDifference>;
+  newNodes: NodeKey[];
+  deletedNodes: NodeKey[];
+  errors: GraphDiffError[];
+};
+export type LayerDifferenceMap = Map<
+  DataForest | OptimisticLayer,
+  ModifiedGraphDifference
+>;
+export type ModifyResult = {
+  options: Cache.ModifyOptions;
+  dirty: boolean;
+  affected: Set<OperationDescriptor>;
+  difference?: LayerDifferenceMap;
 };
 
 export type CacheConfig = InMemoryCacheConfig & {

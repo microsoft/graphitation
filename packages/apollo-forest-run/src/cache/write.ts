@@ -8,6 +8,7 @@ import type {
   OptimisticLayer,
   Store,
   Transaction,
+  WriteResult,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
 import { assert } from "../jsutils/assert";
@@ -36,11 +37,6 @@ import { getNodeChunks } from "./draftHelpers";
 import { replaceTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
-
-type WriteResult = {
-  affected?: Iterable<OperationDescriptor>;
-  incoming: DataTree;
-};
 
 export function write(
   env: CacheEnv,
@@ -91,7 +87,7 @@ export function write(
   assert(!existingResult?.prev);
 
   if (writeData === existingData && existingResult) {
-    return { incoming: existingResult };
+    return { options, incoming: existingResult, affected: [] };
   }
 
   if (!ROOT_NODES.includes(operationDescriptor.rootNodeKey)) {
@@ -192,8 +188,10 @@ export function write(
   modifiedIncomingResult.prev = null;
 
   return {
+    options,
     incoming: modifiedIncomingResult,
     affected: affectedOperations.keys(),
+    difference,
   };
 }
 
