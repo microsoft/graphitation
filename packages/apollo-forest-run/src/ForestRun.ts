@@ -11,11 +11,13 @@ import type {
   CacheEnv,
   DataForest,
   DataTree,
+  ModifyResult,
   OptimisticLayer,
   SerializedCache,
   SerializedOperationInfo,
   Store,
   Transaction,
+  WriteResult,
 } from "./cache/types";
 import type { UnexpectedRefetch } from "./telemetry/types";
 import { ApolloCache } from "@apollo/client";
@@ -177,14 +179,9 @@ export class ForestRun extends ApolloCache<SerializedCache> {
   private runModify(options: Cache.ModifyOptions): boolean {
     const activeTransaction = peek(this.transactionStack);
     assert(activeTransaction);
-    const [dirty, affected] = modify(
-      this.env,
-      this.store,
-      activeTransaction,
-      options,
-    );
+    const result = modify(this.env, this.store, activeTransaction, options);
 
-    for (const operation of affected) {
+    for (const operation of result.affected) {
       // Hack to force-notify invalidated operations even if their diff is the same, should be explicit somehow
       // TODO: remove invalidation after removing read policies and modify API
       for (const watch of this.store.watches.get(operation) ?? EMPTY_ARRAY) {
@@ -193,8 +190,8 @@ export class ForestRun extends ApolloCache<SerializedCache> {
         }
       }
     }
-    this.updateTransaction(activeTransaction, options, affected);
-    return dirty;
+    activeTransaction.changelog.push(result);
+    return result.dirty;
   }
 
   public write(options: Cache.WriteOptions): Reference | undefined {
@@ -208,62 +205,36 @@ export class ForestRun extends ApolloCache<SerializedCache> {
   private runWrite(options: Cache.WriteOptions): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
-    const { incoming, affected, updateStats } = write(
-      this.env,
-      this.store,
-      transaction,
-      options,
-    );
-    if (affected) {
-      this.updateTransaction(
-        transaction,
-        options,
-        affected,
-        incoming,
-        updateStats,
-      );
-    }
+    const result = write(this.env, this.store, transaction, options);
+    transaction.changelog.push(result);
+
+    const incoming = result.incoming;
     return incoming.nodes.size ? getRef(incoming.rootNodeKey) : undefined;
   }
 
-  private updateTransaction(
-    transaction: Transaction,
-    options: Cache.WriteOptions | Cache.ModifyOptions,
-    affectedOperations: Iterable<OperationDescriptor>,
-    incoming?: DataTree,
-    updateStats: UpdateForestStats | undefined = undefined,
-  ) {
-    if (incoming) {
-      transaction.writes.push({
-        options: options as Cache.WriteOptions,
-        tree: incoming,
-        updateStats,
-      });
-    }
-
-    // Actual notification will happen on transaction completion (in batch)
-    if (options.broadcast === false) {
-      return;
-    }
-    if (transaction.affectedOperations) {
-      for (const operation of affectedOperations) {
+  private collectAffectedOperations(transaction: Transaction) {
+    transaction.affectedOperations ??= new Set();
+    for (const entry of transaction.changelog) {
+      // Actual notification will happen on transaction completion (in batch)
+      if (entry.options.broadcast === false) {
+        continue;
+      }
+      for (const operation of entry.affected) {
         transaction.affectedOperations.add(operation);
       }
-    } else {
-      transaction.affectedOperations = new Set(affectedOperations);
-    }
-    // Incoming operation may not have been updated, but let "watch" decide how to handle it
-    if (incoming) {
-      transaction.affectedOperations.add(incoming.operation);
-    }
-
-    // ApolloCompat: new watches must be notified immediately after the next write
-    if (this.newWatches.size) {
-      transaction.watchesToNotify ??= new Set();
-      for (const watch of this.newWatches) {
-        transaction.watchesToNotify.add(watch);
+      // Incoming operation may not have been updated, but let "watch" decide how to handle it
+      if (isWrite(entry) && entry.incoming) {
+        transaction.affectedOperations.add(entry.incoming.operation);
       }
-      this.newWatches.clear();
+
+      // ApolloCompat: new watches must be notified immediately after the next write
+      if (this.newWatches.size) {
+        transaction.watchesToNotify ??= new Set();
+        for (const watch of this.newWatches) {
+          transaction.watchesToNotify.add(watch);
+        }
+        this.newWatches.clear();
+      }
     }
   }
 
@@ -510,7 +481,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
       affectedOperations: null,
       watchesToNotify: null,
       forceOptimistic,
-      writes: [],
+      changelog: [],
     };
     this.transactionStack.push(activeTransaction);
     let error;
@@ -518,6 +489,8 @@ export class ForestRun extends ApolloCache<SerializedCache> {
     let watchesToNotify: Set<Cache.WatchOptions> | null = null;
     try {
       result = update(this);
+
+      this.collectAffectedOperations(activeTransaction);
 
       // This must run within transaction itself, because it runs `diff` under the hood
       // which may need to read results from the active optimistic layer
@@ -549,7 +522,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
       for (const watch of watchesToNotify ?? EMPTY_ARRAY) {
         parentTransaction.watchesToNotify.add(watch);
       }
-      parentTransaction.writes.push(...activeTransaction.writes);
+      parentTransaction.changelog.push(...activeTransaction.changelog);
       return result as T;
     }
     if (watchesToNotify) {
@@ -559,7 +532,11 @@ export class ForestRun extends ApolloCache<SerializedCache> {
         onWatchUpdated,
         typeof optimistic === "string",
       );
-      logUpdateStats(this.env, activeTransaction.writes, watchesToNotify);
+      logUpdateStats(
+        this.env,
+        activeTransaction.changelog.filter(isWrite),
+        watchesToNotify,
+      );
     }
     maybeEvictOldData(this.env, this.store);
 
@@ -692,13 +669,17 @@ function logStaleOperations(
     diff: Cache.DiffResult<any>;
   }[],
 ) {
-  if (!transaction.writes.length) {
+  if (!transaction.changelog.length) {
+    return;
+  }
+  const writes = transaction.changelog.filter((o) => isWrite(o));
+  if (!writes.length) {
     // Custom cache.modify or cache.evict - expected to evict operations
     return;
   }
   const event: UnexpectedRefetch = {
     kind: "UNEXPECTED_REFETCH",
-    causedBy: transaction.writes.map((write) => write.tree.operation.debugName),
+    causedBy: writes.map((write) => write.incoming.operation.debugName),
     affected: stale.map((op) => [
       op.operation.debugName,
       op.diff.missing?.[0]?.message ?? "?",
@@ -714,4 +695,8 @@ function logStaleOperations(
       `  Affected operation(s):\n` +
       event.affected.map((op) => `${op[0]} (${op[1]})`).join("\n"),
   );
+}
+
+function isWrite(op: WriteResult | ModifyResult): op is WriteResult {
+  return "incoming" in op; // write has "incoming" tree
 }
