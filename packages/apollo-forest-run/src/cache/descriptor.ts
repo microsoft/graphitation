@@ -209,7 +209,7 @@ export function resolveKeyDescriptor(
   assert(false);
 }
 
-function variablesAreEqual(
+export function variablesAreEqual(
   a: VariableValues,
   b: VariableValues,
   keyVars: string[] | null = null,

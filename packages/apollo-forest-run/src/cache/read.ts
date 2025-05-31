@@ -3,6 +3,7 @@ import type {
   FieldName,
   OperationDescriptor,
   TypeName,
+  VariableValues,
 } from "../descriptor/types";
 import type { ObjectDraft, SourceObject } from "../values/types";
 import type { IndexedTree } from "../forest/types";
@@ -27,7 +28,13 @@ import {
 import { applyReadPolicies } from "./policies";
 import { indexTree } from "../forest/indexTree";
 import { createChunkMatcher, createChunkProvider } from "./draftHelpers";
-import { getDiffDescriptor, getOriginalDocument } from "./descriptor";
+import {
+  getDiffDescriptor,
+  getOriginalDocument,
+  isFragmentDocument,
+  transformDocument,
+  variablesAreEqual,
+} from "./descriptor";
 import { Cache, MissingFieldError } from "@apollo/client";
 import {
   getActiveForest,
@@ -36,6 +43,7 @@ import {
 } from "./store";
 import { assert } from "../jsutils/assert";
 import { addTree, trackTreeNodes } from "../forest/addTree";
+import { FragmentDefinitionNode } from "graphql";
 
 export function read<TData>(
   env: CacheEnv,
@@ -43,13 +51,60 @@ export function read<TData>(
   activeTransaction: Transaction | undefined,
   options: Cache.DiffOptions,
 ): Cache.DiffResult<TData> & { dangling?: Set<string> } {
-  const { partialReadResults, optimisticLayers, optimisticReadResults } = store;
+  const { partialReadResults } = store;
+  const operationDescriptor = getDiffDescriptor(env, store, options);
+
+  if (isFragmentDocument(options.query)) {
+    // FIXME: no variable mapping here
+    const chunk: any = readFragment(env, store, activeTransaction, options);
+    if (chunk) {
+      return {
+        result: chunk.data as any,
+        complete: !chunk.missingFields?.size,
+      };
+    }
+  }
+
+  const outputTree = readOperation(
+    env,
+    store,
+    activeTransaction,
+    operationDescriptor,
+    options,
+  );
+
+  // FIXME: this may break with optimistic layers - partialReadResults should be per layer?
+  if (outputTree.incompleteChunks.size) {
+    partialReadResults.add(operationDescriptor);
+    return {
+      result: outputTree.result.data,
+      complete: false,
+      missing: [reportFirstMissingField(outputTree)],
+      dangling: outputTree.danglingReferences,
+    } as Cache.DiffResult<any>;
+  }
+  partialReadResults.delete(operationDescriptor);
+
+  return {
+    result: outputTree.result.data,
+    complete: true,
+  } as Cache.DiffResult<any>;
+}
+
+function readOperation(
+  env: CacheEnv,
+  store: Store,
+  activeTransaction: Transaction | undefined,
+  operationDescriptor: OperationDescriptor,
+  options: Cache.DiffOptions,
+): IndexedTree {
+  const { optimisticLayers, optimisticReadResults } = store;
 
   const optimistic = activeTransaction?.forceOptimistic ?? options.optimistic;
 
   // Normally, this is a data forest, but when executed within transaction - could be one of the optimistic layers
   const forest = getActiveForest(store, activeTransaction);
-  const operationDescriptor = getDiffDescriptor(env, store, options);
+
   touchOperation(env, store, operationDescriptor);
 
   const resultsMap =
@@ -79,21 +134,74 @@ export function read<TData>(
   // Safeguard: make sure previous state doesn't leak outside write operation
   assert(!outputTree?.prev);
 
-  // FIXME: this may break with optimistic layers - partialReadResults should be per layer?
-  if (outputTree.incompleteChunks.size) {
-    partialReadResults.add(operationDescriptor);
-    return {
-      result: outputTree.result.data,
-      complete: false,
-      missing: [reportFirstMissingField(outputTree)],
-      dangling: outputTree.danglingReferences,
-    } as Cache.DiffResult<any>;
+  return outputTree;
+}
+
+function readFragment(
+  env: CacheEnv,
+  store: Store,
+  activeTransaction: Transaction | undefined,
+  options: Cache.DiffOptions,
+) {
+  const id = options.id ?? options.rootId ?? "ROOT_QUERY";
+  const document = env.addTypename
+    ? transformDocument(options.query)
+    : options.query;
+
+  const fragment = document.definitions[1];
+  assert(fragment.kind === "FragmentDefinition");
+
+  // Normally, this is a data forest, but when executed within transaction - could be one of the optimistic layers
+  const forest = getActiveForest(store, activeTransaction);
+
+  const ops = forest.operationsByNodes.get(id);
+  for (const opId of ops ?? EMPTY_ARRAY) {
+    const tree = forest.trees.get(opId);
+    if (!tree || !hasMatchingFragment(tree, fragment, options.variables)) {
+      continue;
+    }
+    const result = readOperation(
+      env,
+      store,
+      activeTransaction,
+      tree.operation,
+      options,
+    );
+    const nodeChunks = result.nodes.get(id);
+    if (!nodeChunks?.length) {
+      continue;
+    }
+    const matchingChunk = nodeChunks?.find((chunk) => {
+      const spread = chunk.selection.spreads?.get(fragment.name.value);
+      return spread ? !chunk.selection.skippedSpreads?.has(spread) : false;
+    });
+    if (matchingChunk) {
+      return matchingChunk;
+    }
   }
-  partialReadResults.delete(operationDescriptor);
-  return {
-    result: outputTree.result.data,
-    complete: true,
-  } as Cache.DiffResult<any>;
+  return undefined;
+}
+
+function hasMatchingFragment(
+  tree: IndexedTree,
+  fragment: FragmentDefinitionNode,
+  variables?: VariableValues,
+): boolean {
+  const treeFragment = tree.operation.fragmentMap.get(fragment.name.value);
+  if (treeFragment !== fragment) {
+    return false;
+  }
+  if (
+    variables &&
+    !variablesAreEqual(
+      tree.operation.variablesWithDefaults,
+      variables,
+      Object.keys(variables),
+    )
+  ) {
+    return false;
+  }
+  return true;
 }
 
 function normalizeRootLevelTypeName(tree: IndexedTree) {
@@ -132,10 +240,6 @@ function growOutputTree(
   );
   indexReadPolicies(env, tree);
 
-  if (tree === dataTree) {
-    return tree;
-  }
-
   // ApolloCompat: this is to throw properly when field policy returns a ref which doesn't exist in cache
   for (const ref of tree.danglingReferences ?? EMPTY_ARRAY) {
     let ops = forest.operationsWithDanglingRefs.get(ref);
@@ -144,6 +248,10 @@ function growOutputTree(
       forest.operationsWithDanglingRefs.set(ref, ops);
     }
     ops.add(tree.operation);
+  }
+
+  if (tree === dataTree) {
+    return tree;
   }
 
   tree.prev = null;
