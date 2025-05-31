@@ -68,6 +68,7 @@ export type DocumentDescriptor = {
 export type ResultTreeDescriptor = {
   possibleSelections: PossibleSelections;
   fieldsWithArgs: FieldInfo[]; // aggregated from all levels
+  // fragments: Map<FragmentName, FragmentInfo>;
 };
 
 // Selection with additional information based on operation variables (resolved at runtime)

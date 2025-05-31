@@ -1062,6 +1062,7 @@ describe(collectSubFields, () => {
       fieldsWithArgs: [],
       mergeMemo: new Map(),
       copyOnWrite: new Set(),
+      // fragments: new Map(),
     };
     return collectSubFields(context, fieldInfo);
   }

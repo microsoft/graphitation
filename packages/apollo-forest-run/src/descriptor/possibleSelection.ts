@@ -69,7 +69,7 @@ function collectPossibleSelections(
   ]);
   collectFields(context, possibleSelections, selectionSet);
   mergeSubSelections(context, possibleSelections);
-  completeSelections(possibleSelections, 0);
+  completeSelections(context, possibleSelections, 0);
 
   return possibleSelections;
 }
@@ -294,7 +294,11 @@ function appendAbstractTypeSelections(
   }
 }
 
-function completeSelections(possibleSelections: PossibleSelections, depth = 0) {
+function completeSelections(
+  context: Context,
+  possibleSelections: PossibleSelections,
+  depth = 0,
+) {
   // Note:
   //   This function runs when all typed selections are created and contain all fields (i.e. after untyped selection is merged and selections for concrete types are added).
   //   This means that some selections may be identical (e.g. selections for different interface implementations), so we must visit and mutate them only once.
@@ -304,15 +308,24 @@ function completeSelections(possibleSelections: PossibleSelections, depth = 0) {
       continue; // already visited (selection on abstract type could be re-used by multiple implementations)
     }
     selection.depth = depth;
+    for (const spread of selection.spreads?.values() ?? EMPTY_ARRAY) {
+      completeSpreadInfo(context, spread);
+    }
     for (const fieldAliases of selection.fields.values()) {
       selection.fieldQueue.push(...fieldAliases);
     }
     for (const fieldAliases of selection.fields.values()) {
       for (const fieldInfo of fieldAliases) {
+        completeFieldInfo(context, fieldInfo);
+
         if (fieldInfo.args?.size) {
           selection.fieldsToNormalize ??= [];
           selection.fieldsToNormalize.push(fieldInfo);
         }
+        // if (isOptionalField(fieldInfo)) {
+        //   selection.fieldsOptional ??= [];
+        //   selection.fieldsOptional.push(fieldInfo);
+        // }
         if (fieldInfo.selection) {
           selection.fieldsWithSelections ??= [];
           selection.fieldsWithSelections.push(fieldInfo.name);
@@ -343,9 +356,19 @@ function completeSelections(possibleSelections: PossibleSelections, depth = 0) {
     }
   }
   for (const selection of next) {
-    completeSelections(selection, depth + 1);
+    completeSelections(context, selection, depth + 1);
   }
   return possibleSelections;
+}
+
+function completeFieldInfo(context: Context, fieldInfo: FieldInfo): FieldInfo {
+  // fieldInfo.__refs = undefined;
+  return fieldInfo;
+}
+
+function completeSpreadInfo(context: Context, spread: SpreadInfo): SpreadInfo {
+  // spreadInfo.__refs = undefined;
+  return spread;
 }
 
 function inferPossibleType(
@@ -456,6 +479,21 @@ function mergeSelectionsImpl(
         context,
         targetAliases[index],
         sourceField,
+      );
+    }
+  }
+  if (source.spreads?.size) {
+    mutableTarget.spreads ??= new Map();
+    for (const [name, sourceSpread] of source.spreads.entries()) {
+      const targetSpread = mutableTarget.spreads.get(name);
+      if (!targetSpread) {
+        mutableTarget.spreads.set(name, sourceSpread);
+        context.copyOnWrite.add(sourceSpread);
+        continue;
+      }
+      mutableTarget.spreads.set(
+        name,
+        mergeSpread(context, targetSpread, sourceSpread),
       );
     }
   }
@@ -668,6 +706,13 @@ function copySelection(
       context.copyOnWrite.add(alias);
     }
   }
+  if (selection.spreads) {
+    copy.spreads = new Map();
+    for (const [name, spread] of selection.spreads.entries()) {
+      copy.spreads.set(name, spread);
+      context.copyOnWrite.add(spread);
+    }
+  }
   if (selection.experimentalAliasedFragments) {
     copy.experimentalAliasedFragments = new Map(
       selection.experimentalAliasedFragments.entries(),
@@ -757,3 +802,6 @@ function getTypeName(
     ? (fragment.typeCondition.name.value as TypeName)
     : undefined;
 }
+
+// const isOptionalField = (field: FieldInfo) =>
+//   field.includeIfSome || field.skipIfEvery; // TODO: || field.deferIfEvery;
