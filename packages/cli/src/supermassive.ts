@@ -7,6 +7,7 @@ import { extractImplicitTypesToTypescript } from "@graphitation/supermassive-ext
 import { parse } from "graphql";
 import { generateTS } from "@graphitation/ts-codegen";
 import * as glob from "fast-glob";
+import type { SubTypeNamespace } from "@graphitation/ts-codegen";
 
 type GenerateInterfacesOptions = {
   outputDir?: string;
@@ -16,15 +17,12 @@ type GenerateInterfacesOptions = {
   legacy?: boolean;
   legacyModels?: boolean;
   useStringUnionsInsteadOfEnums?: boolean;
+  contextTypeExtensionsFile?: string;
   enumMigrationJsonFile?: string;
   enumMigrationExceptionsJsonFile?: string;
   generateOnlyEnums?: boolean;
   generateResolverMap?: boolean;
   mandatoryResolverTypes?: boolean;
-  contextSubTypeNameTemplate?: string;
-  contextSubTypePathTemplate?: string;
-  defaultContextSubTypePath?: string;
-  defaultContextSubTypeName?: string;
   scope?: string;
 };
 
@@ -55,22 +53,6 @@ export function supermassive(): Command {
       "from where to import context",
     )
     .option("-cn, --context-type-name [contextTypeName]", "Context type name")
-    .option(
-      "-dcp, --default-context-sub-type-path [defaultContextSubTypePath]",
-      "From where the default context type will be exported",
-    )
-    .option(
-      "-dcn, --default-context-sub-type-name [defaultContextSubTypeName]",
-      "Default context type which will extend context sub type",
-    )
-    .option(
-      "-cnt, --context-sub-type-name-template [contextSubTypeNameTemplate]",
-      "context resource name template. You need to specify ${resourceName} in the parameter eg. `${resourceName}Context`",
-    )
-    .option(
-      "-cpt, --context-sub-type-path-template [contextSubTypePathTemplate]",
-      "context resource path template. You need to specify ${resourceName} in the parameter eg. `@package/preffix-${resourceName}-suffix`",
-    )
     .option("-ei, --enums-import [enumsImport]", "from where to import enums")
     .option("-l, --legacy", "generate legacy types")
     .option("--legacy-models", "do not use models for object types")
@@ -87,6 +69,10 @@ export function supermassive(): Command {
     .option(
       "--enum-migration-exceptions-json-file [enumMigrationExceptionsJsonFile]",
       "File containing array of enum names, which should remain typescript enums",
+    )
+    .option(
+      "--context-sub-type-metadata-file [contextTypeExtensionsFile]",
+      "Describes context types and their import paths. Used to generate resolver context type extensions. The file must be defined in the following format: { baseContextTypePath?: string, baseContextTypeName?: string, contextTypes: { [namespace: string]: { [type: string]: { importNamespaceName: string, importPath: string }}}",
     )
     .option(
       "--generate-resolver-map",
@@ -158,6 +144,7 @@ async function generateInterfaces(
     }
     const content = await fs.readFile(fullPath, { encoding: "utf-8" });
     const document = parse(content);
+    let contextTypeExtensions: SubTypeNamespace | undefined;
 
     const outputPath = path.join(
       path.dirname(fullPath),
@@ -180,6 +167,25 @@ async function generateInterfaces(
       }
 
       enumNamesToMigrate = content as string[];
+    }
+
+    if (options.contextTypeExtensionsFile) {
+      const content = JSON.parse(
+        await fs.readFile(
+          path.join(process.cwd(), options.contextTypeExtensionsFile),
+          {
+            encoding: "utf-8",
+          },
+        ),
+      );
+
+      if (!content?.contextTypes) {
+        throw new Error(
+          "contextTypeExtensionsFile doesn't contain contextTypes",
+        );
+      }
+
+      contextTypeExtensions = content;
     }
 
     if (options.enumMigrationExceptionsJsonFile) {
@@ -207,13 +213,6 @@ async function generateInterfaces(
       contextTypePath:
         getContextPath(outputPath, options.contextTypePath) || null,
       contextTypeName: options.contextTypeName,
-      contextSubTypeNameTemplate: options.contextSubTypeNameTemplate,
-      contextSubTypePathTemplate: options.contextSubTypePathTemplate,
-      defaultContextSubTypePath: getContextPath(
-        outputPath,
-        options.defaultContextSubTypePath,
-      ),
-      defaultContextSubTypeName: options.defaultContextSubTypeName,
       enumsImport: getContextPath(outputPath, options.enumsImport) || null,
       legacyCompat: !!options.legacy,
       legacyNoModelsForObjects: !!options.legacyModels,
@@ -223,6 +222,7 @@ async function generateInterfaces(
       mandatoryResolverTypes: !!options.mandatoryResolverTypes,
       enumNamesToMigrate,
       enumNamesToKeep,
+      contextTypeExtensions,
       modelScope: options.scope || null,
     });
 

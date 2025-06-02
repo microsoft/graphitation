@@ -1,11 +1,26 @@
 import ts from "typescript";
 import { DocumentNode } from "graphql";
-import { ContextMap, extractContext } from "./context/index";
+import { extractContext } from "./context/index";
 import { generateResolvers } from "./resolvers";
 import { generateModels } from "./models";
 import { generateLegacyTypes } from "./legacyTypes";
 import { generateLegacyResolvers } from "./legacyResolvers";
 import { generateEnums } from "./enums";
+import { OutputMetadata } from "./context/utilities";
+import { getContextPath } from "./utilities";
+
+export type SubTypeItem = {
+  [subType: string]: {
+    importNamespaceName?: string;
+    importPath: string;
+  };
+};
+
+export type SubTypeNamespace = {
+  baseContextTypeName?: string;
+  baseContextTypePath?: string;
+  contextTypes: { [namespace: string]: SubTypeItem };
+};
 
 export interface GenerateTSOptions {
   outputPath: string;
@@ -20,10 +35,7 @@ export interface GenerateTSOptions {
   generateOnlyEnums?: boolean;
   enumNamesToMigrate?: string[];
   enumNamesToKeep?: string[];
-  contextSubTypeNameTemplate?: string;
-  contextSubTypePathTemplate?: string;
-  defaultContextSubTypePath?: string;
-  defaultContextSubTypeName?: string;
+  contextTypeExtensions?: SubTypeNamespace;
   /**
    * Enable the generation of the resolver map as the default export in the resolvers file.
    *
@@ -78,16 +90,13 @@ export function generateTS(
     generateOnlyEnums,
     enumNamesToMigrate,
     enumNamesToKeep,
-    contextSubTypeNameTemplate,
-    contextSubTypePathTemplate,
-    defaultContextSubTypePath,
-    defaultContextSubTypeName,
+    contextTypeExtensions,
     generateResolverMap = false,
     mandatoryResolverTypes = false,
   }: GenerateTSOptions,
 ): {
   files: ts.SourceFile[];
-  contextMappingOutput: ContextMap | null;
+  contextMappingOutput: OutputMetadata | null;
 } {
   try {
     const context = extractContext(
@@ -103,10 +112,12 @@ export function generateTS(
         modelScope,
         enumNamesToMigrate,
         enumNamesToKeep,
-        contextSubTypeNameTemplate,
-        contextSubTypePathTemplate,
-        defaultContextSubTypePath,
-        defaultContextSubTypeName,
+        contextTypeExtensions,
+        baseContextTypePath: getContextPath(
+          outputPath,
+          contextTypeExtensions?.baseContextTypePath,
+        ),
+        baseContextTypeName: contextTypeExtensions?.baseContextTypeName,
       },
       document,
       outputPath,
@@ -138,7 +149,7 @@ export function generateTS(
     }
     return {
       files: result,
-      contextMappingOutput: context.getContextMap(),
+      contextMappingOutput: context.getMetadataObject(),
     };
   } catch (e) {
     console.error(e);

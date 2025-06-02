@@ -15,9 +15,49 @@ import {
 } from "./utilities";
 import {
   createImportDeclaration,
-  getImportIdentifierForTypenames,
   isRootOperationType,
 } from "./context/utilities";
+
+function getContextImportIdentifiers(
+  imports: Record<string, string[]>,
+  contextImportNames: Set<string>,
+) {
+  const statements = [];
+
+  for (const [importPath, importNames] of Object.entries(imports)) {
+    const importIndentifiers = importNames
+      .map((importName: string) => {
+        if (contextImportNames.has(importName)) {
+          return;
+        }
+        contextImportNames.add(importName);
+        return factory.createImportSpecifier(
+          false,
+          undefined,
+          factory.createIdentifier(importName),
+        );
+      })
+      .filter(Boolean) as ts.ImportSpecifier[];
+
+    if (!importIndentifiers.length) {
+      continue;
+    }
+
+    statements.push(
+      factory.createImportDeclaration(
+        undefined,
+        factory.createImportClause(
+          true,
+          undefined,
+          factory.createNamedImports(importIndentifiers),
+        ),
+        factory.createStringLiteral(importPath),
+      ),
+    );
+  }
+
+  return statements;
+}
 
 const getResolverTypes = (context: TsCodegenContext): ResolverType[] => {
   return context
@@ -81,8 +121,8 @@ function generateImports(context: TsCodegenContext) {
     );
   }
 
-  const contextTemplate = context.getContextTemplate();
-  if (Object.keys(context.getContextMap()).length && contextTemplate) {
+  const contextTypeExtensions = context.getContextTypeExtensions();
+  if (Object.keys(context.getContextMap()).length && contextTypeExtensions) {
     if (
       context.contextDefaultSubTypeContext?.from &&
       context.contextDefaultSubTypeContext?.name
@@ -106,21 +146,11 @@ function generateImports(context: TsCodegenContext) {
         ) {
           continue;
         }
-        const imports = context.getSubTypeNamesFromTemplate(
-          rootValue,
-          contextTemplate.nameTemplate,
-          contextTemplate.pathTemplate,
-        );
 
-        for (const [importPath, importNames] of Object.entries(imports)) {
-          importStatements.push(
-            getImportIdentifierForTypenames(
-              importNames,
-              importPath,
-              contextImportNames,
-            ),
-          );
-        }
+        const imports = context.getSubTypeNamesImportMap(rootValue);
+        importStatements.push(
+          ...getContextImportIdentifiers(imports, contextImportNames),
+        );
       }
       for (const [key, value] of Object.entries(root)) {
         if (key.startsWith("__")) {
@@ -134,21 +164,11 @@ function generateImports(context: TsCodegenContext) {
           continue;
         }
 
-        const imports = context.getSubTypeNamesFromTemplate(
-          value,
-          contextTemplate.nameTemplate,
-          contextTemplate.pathTemplate,
-        );
+        const imports = context.getSubTypeNamesImportMap(value);
 
-        for (const [importPath, importNames] of Object.entries(imports)) {
-          importStatements.push(
-            getImportIdentifierForTypenames(
-              importNames,
-              importPath,
-              contextImportNames,
-            ),
-          );
-        }
+        importStatements.push(
+          ...getContextImportIdentifiers(imports, contextImportNames),
+        );
       }
     }
   }
@@ -246,6 +266,8 @@ function createResolverField(
     }
   }
 
+  context.setResolverTypeMapItem(type.name, field.name);
+
   const resolverParametersDefinitions = {
     parent: {
       name: "model",
@@ -325,6 +347,7 @@ function createUnionTypeResolvers(
   const contextRootType = context.getContextMap()[type.name];
 
   const contextTypes = context.getContextTypes(contextRootType);
+  context.setResolverTypeMapItem(type.name, null);
 
   return factory.createModuleDeclaration(
     [
@@ -355,6 +378,7 @@ function createInterfaceTypeResolvers(
 ): ts.ModuleDeclaration {
   const contextRootType = context.getContextMap()[type.name];
   const contextTypes = context.getContextTypes(contextRootType);
+  context.setResolverTypeMapItem(type.name, null);
 
   const resolversObject = factory.createInterfaceDeclaration(
     [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
