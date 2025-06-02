@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Thu, 29 May 2025 15:22:30 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 02 Jun 2025 12:26:31 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.1.0
+
+Mon, 02 Jun 2025 12:26:31 GMT
+
+### Minor changes
+
+- Resolver context subtypes added (77059398+vejrj@users.noreply.github.com)
+- Bump @graphitation/ts-codegen to v5.1.0
 
 ## 3.0.0
 
