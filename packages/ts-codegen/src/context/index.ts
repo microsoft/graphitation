@@ -57,8 +57,8 @@ export type TsCodegenContextOptions = {
   };
   legacyCompat: boolean;
   legacyNoModelsForObjects: boolean;
-  baseContextSubTypePath?: string;
-  baseContextSubTypeName?: string;
+  baseContextTypePath?: string;
+  baseContextTypeName?: string;
   contextTypeExtensions?: SubTypeNamespace;
   useStringUnionsInsteadOfEnums: boolean;
   enumNamesToMigrate: string[] | null;
@@ -152,10 +152,10 @@ export class TsCodegenContext {
     this.hasUsedEnumsInModels = false;
     this.iterableTypeUsed = false;
 
-    if (options.baseContextSubTypeName && options.baseContextSubTypePath) {
+    if (options.baseContextTypeName && options.baseContextTypePath) {
       this.contextDefaultSubTypeContext = {
-        name: options.baseContextSubTypeName,
-        from: options.baseContextSubTypePath,
+        name: options.baseContextTypeName,
+        from: options.baseContextTypePath,
       };
     }
 
@@ -181,9 +181,9 @@ export class TsCodegenContext {
   }
 
   public getContextTypeNode(typeNames?: string[] | null) {
-    const subTypesMetadata = this.getSubTypesMetadata();
+    const contextTypeExtensions = this.getContextTypeExtensions();
 
-    if (!typeNames || !typeNames.length || !subTypesMetadata) {
+    if (!typeNames || !typeNames.length || !contextTypeExtensions) {
       return this.getContextType().toTypeReference();
     } else {
       const typeNameWithNamespace =
@@ -224,31 +224,44 @@ export class TsCodegenContext {
       );
     }
   }
-  public getSubTypesMetadata() {
+  public getContextTypeExtensions() {
     return this.options.contextTypeExtensions;
   }
 
   private buildContextSubTypeNamespaceObject(typeNames: string[]) {
-    const subTypesMetadata = this.getSubTypesMetadata();
+    const contextTypeExtensions = this.getContextTypeExtensions();
+
+    if (!contextTypeExtensions || !contextTypeExtensions.contextTypes) {
+      throw new Error("Context type extensions are not defined in the options");
+    }
 
     return typeNames.reduce<
       Record<string, { subType: string; name: string }[]>
     >((acc, typeName) => {
-      const [namespace, subTypeName] = typeName.split(":");
-      if (!acc[namespace]) {
-        acc[namespace] = [];
+      const [namespaceName, subTypeName] = typeName.split(":");
+      if (!acc[namespaceName]) {
+        acc[namespaceName] = [];
       }
 
-      if (!subTypesMetadata?.contextSubTypes?.[namespace]?.[subTypeName]) {
-        throw new Error("something went really wrong");
+      const namespace = contextTypeExtensions.contextTypes[namespaceName];
+
+      if (!namespace) {
+        throw new Error(
+          `Namespace "${namespaceName}" is not supported in context type extensions`,
+        );
       }
 
-      const subTypeRawMetadata =
-        subTypesMetadata?.contextSubTypes[namespace][subTypeName];
+      if (!namespace[subTypeName]) {
+        throw new Error(
+          `SubType "${subTypeName}" in namespace "${namespaceName}" is not supported in context type extensions`,
+        );
+      }
+
+      const subTypeRawMetadata = namespace[subTypeName];
       const subType = subTypeRawMetadata.importNamespaceName
         ? `${subTypeRawMetadata.importNamespaceName}["${subTypeName}"]`
         : subTypeName;
-      acc[namespace].push({
+      acc[namespaceName].push({
         subType,
         name: subTypeName,
       });
@@ -335,12 +348,12 @@ export class TsCodegenContext {
   }
 
   getSubTypeNamesImportMap(subTypes: string[]) {
-    const subTypeMetadata = this.getSubTypesMetadata();
+    const subTypeMetadata = this.getContextTypeExtensions();
     return subTypes.reduce<Record<string, string[]>>(
       (acc: Record<string, string[]>, importName: string) => {
         const [namespace, subTypeName] = importName.split(":");
         const subType =
-          subTypeMetadata?.contextSubTypes?.[namespace]?.[subTypeName];
+          subTypeMetadata?.contextTypes?.[namespace]?.[subTypeName];
 
         if (!subType) {
           throw new Error(
@@ -806,13 +819,13 @@ export function extractContext(
               return v.value;
             });
 
-            if (!options.contextTypeExtensions?.contextSubTypes?.[namespace]) {
+            if (!options.contextTypeExtensions?.contextTypes?.[namespace]) {
               throw new Error(`Namespace "${name}" is not supported`);
             }
 
             namespaceValues.forEach((namespaceValue) => {
               if (
-                !options.contextTypeExtensions?.contextSubTypes?.[namespace]?.[
+                !options.contextTypeExtensions?.contextTypes?.[namespace]?.[
                   namespaceValue
                 ]
               ) {

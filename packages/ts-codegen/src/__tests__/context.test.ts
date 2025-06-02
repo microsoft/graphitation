@@ -8,16 +8,15 @@ import { OutputMetadata } from "../context/utilities";
 describe(generateTS, () => {
   describe("Tests basic syntax GraphQL syntax", () => {
     const contextTypeExtensions = {
-      baseContextSubTypePath: "@package/default-context",
-      baseContextSubTypeName: "DefaultContextType",
-      contextSubTypes: {
+      baseContextTypePath: "@package/default-context",
+      baseContextTypeName: "DefaultContextType",
+      contextTypes: {
         managers: {
           user: {
             importNamespaceName: "UserStateMachineType",
             importPath: "@package/user-state-machine",
           },
           whatever: {
-            importNamespaceName: "WhateverStateMachineType",
             importPath: "@package/whatever-state-machine",
           },
           "different-whatever": {
@@ -512,7 +511,7 @@ describe(generateTS, () => {
           `,
           {
             contextTypeExtensions: {
-              contextSubTypes: contextTypeExtensions.contextSubTypes,
+              contextTypes: contextTypeExtensions.contextTypes,
             },
           },
         );
@@ -679,7 +678,7 @@ describe(generateTS, () => {
           `,
           {
             contextTypeExtensions: {
-              contextSubTypes: contextTypeExtensions.contextSubTypes,
+              contextTypes: contextTypeExtensions.contextTypes,
             },
           },
         );
@@ -875,7 +874,7 @@ describe(generateTS, () => {
           `,
           {
             contextTypeExtensions: {
-              contextSubTypes: contextTypeExtensions.contextSubTypes,
+              contextTypes: contextTypeExtensions.contextTypes,
             },
           },
         );
@@ -956,7 +955,7 @@ describe(generateTS, () => {
         import * as Models from "./models.interface";
         import type { AdminStateMachineType } from "@package/admin-state-machine";
         import type { UserStateMachineType } from "@package/user-state-machine";
-        import type { WhateverStateMachineType } from "@package/whatever-state-machine";
+        import type { whatever } from "@package/whatever-state-machine";
         import type { DifferentWhateverStateMachineType } from "@package/different-whatever-state-machine";
         export declare namespace Customer {
             export interface Resolvers {
@@ -1032,7 +1031,7 @@ describe(generateTS, () => {
                 readonly id: string;
             }, context: {
                 managers: {
-                    "whatever": WhateverStateMachineType["whatever"];
+                    "whatever": whatever;
                 };
             }, info: ResolveInfo) => PromiseOrValue<Models.whatever | null | undefined>;
             export type userByMail = (model: unknown, args: {
@@ -1084,8 +1083,8 @@ function runGenerateTest(
   const fullOptions: {
     outputPath: string;
     documentPath: string;
-    baseContextSubTypeName?: string;
-    baseContextSubTypePath?: string;
+    baseContextTypeName?: string;
+    baseContextTypePath?: string;
     contextName?: string;
     legacyCompat?: boolean;
     legacyNoModelsForObjects?: boolean;
@@ -1096,10 +1095,8 @@ function runGenerateTest(
     outputPath: "__generated__",
     documentPath: "./typedef.graphql",
     ...options,
-    baseContextSubTypeName:
-      options?.contextTypeExtensions?.baseContextSubTypeName,
-    baseContextSubTypePath:
-      options?.contextTypeExtensions?.baseContextSubTypePath,
+    baseContextTypeName: options?.contextTypeExtensions?.baseContextTypeName,
+    baseContextTypePath: options?.contextTypeExtensions?.baseContextTypePath,
   };
   const document = parse(doc);
   const { files, contextMappingOutput } = generateTS(document, fullOptions);

@@ -17,9 +17,9 @@ export type SubTypeItem = {
 };
 
 export type SubTypeNamespace = {
-  baseContextSubTypeName?: string;
-  baseContextSubTypePath?: string;
-  contextSubTypes: { [namespace: string]: SubTypeItem };
+  baseContextTypeName?: string;
+  baseContextTypePath?: string;
+  contextTypes: { [namespace: string]: SubTypeItem };
 };
 
 export interface GenerateTSOptions {
@@ -113,11 +113,11 @@ export function generateTS(
         enumNamesToMigrate,
         enumNamesToKeep,
         contextTypeExtensions,
-        baseContextSubTypePath: getContextPath(
+        baseContextTypePath: getContextPath(
           outputPath,
-          contextTypeExtensions?.baseContextSubTypePath,
+          contextTypeExtensions?.baseContextTypePath,
         ),
-        baseContextSubTypeName: contextTypeExtensions?.baseContextSubTypeName,
+        baseContextTypeName: contextTypeExtensions?.baseContextTypeName,
       },
       document,
       outputPath,

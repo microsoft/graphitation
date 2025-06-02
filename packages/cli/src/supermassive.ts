@@ -53,14 +53,6 @@ export function supermassive(): Command {
       "from where to import context",
     )
     .option("-cn, --context-type-name [contextTypeName]", "Context type name")
-    .option(
-      "-dcp, --default-context-sub-type-path [baseContextSubTypePath]",
-      "From where the default context type will be exported",
-    )
-    .option(
-      "-cpt, --context-sub-type-path-template [contextSubTypePathTemplate]",
-      "context resource path template. You need to specify ${resourceName} in the parameter eg. `@package/preffix-${resourceName}-suffix`",
-    )
     .option("-ei, --enums-import [enumsImport]", "from where to import enums")
     .option("-l, --legacy", "generate legacy types")
     .option("--legacy-models", "do not use models for object types")
@@ -80,7 +72,7 @@ export function supermassive(): Command {
     )
     .option(
       "--context-sub-type-metadata-file [contextTypeExtensionsFile]",
-      "Describes context types and their import paths. Used to generate resolver context type extensions. The file must be defined in the following format: { baseContextSubTypePath?: string, baseContextSubTypeName?: string, contextSubTypes: { [namespace: string]: { [type: string]: { importNamespaceName: string, importPath: string }}}",
+      "Describes context types and their import paths. Used to generate resolver context type extensions. The file must be defined in the following format: { baseContextTypePath?: string, baseContextTypeName?: string, contextTypes: { [namespace: string]: { [type: string]: { importNamespaceName: string, importPath: string }}}",
     )
     .option(
       "--generate-resolver-map",
@@ -186,6 +178,12 @@ async function generateInterfaces(
           },
         ),
       );
+
+      if (!content?.contextTypes) {
+        throw new Error(
+          "contextTypeExtensionsFile doesn't contain contextTypes",
+        );
+      }
 
       contextTypeExtensions = content;
     }

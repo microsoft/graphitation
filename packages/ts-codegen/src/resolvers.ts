@@ -18,7 +18,7 @@ import {
   isRootOperationType,
 } from "./context/utilities";
 
-export function getImportIdentifierForTypenames(
+function getContextImportIdentifiers(
   imports: Record<string, string[]>,
   contextImportNames: Set<string>,
 ) {
@@ -121,8 +121,8 @@ function generateImports(context: TsCodegenContext) {
     );
   }
 
-  const getSubTypesMetadata = context.getSubTypesMetadata();
-  if (Object.keys(context.getContextMap()).length && getSubTypesMetadata) {
+  const contextTypeExtensions = context.getContextTypeExtensions();
+  if (Object.keys(context.getContextMap()).length && contextTypeExtensions) {
     if (
       context.contextDefaultSubTypeContext?.from &&
       context.contextDefaultSubTypeContext?.name
@@ -149,7 +149,7 @@ function generateImports(context: TsCodegenContext) {
 
         const imports = context.getSubTypeNamesImportMap(rootValue);
         importStatements.push(
-          ...getImportIdentifierForTypenames(imports, contextImportNames),
+          ...getContextImportIdentifiers(imports, contextImportNames),
         );
       }
       for (const [key, value] of Object.entries(root)) {
@@ -167,7 +167,7 @@ function generateImports(context: TsCodegenContext) {
         const imports = context.getSubTypeNamesImportMap(value);
 
         importStatements.push(
-          ...getImportIdentifierForTypenames(imports, contextImportNames),
+          ...getContextImportIdentifiers(imports, contextImportNames),
         );
       }
     }
