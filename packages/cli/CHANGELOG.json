@@ -2,6 +2,27 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Tue, 03 Jun 2025 11:06:26 GMT",
+      "version": "3.1.1",
+      "tag": "@graphitation/cli_v3.1.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/cli",
+            "commit": "70a9692a92fc965a9682055c4c120d53f468b63c",
+            "comment": "[HOTFIX] resolver context types generation fixed"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v5.1.1",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 02 Jun 2025 12:26:31 GMT",
       "version": "3.1.0",
       "tag": "@graphitation/cli_v3.1.0",

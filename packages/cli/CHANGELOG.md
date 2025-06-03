@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Mon, 02 Jun 2025 12:26:31 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 03 Jun 2025 11:06:26 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.1.1
+
+Tue, 03 Jun 2025 11:06:26 GMT
+
+### Patches
+
+- [HOTFIX] resolver context types generation fixed (77059398+vejrj@users.noreply.github.com)
+- Bump @graphitation/ts-codegen to v5.1.1
 
 ## 3.1.0
 
