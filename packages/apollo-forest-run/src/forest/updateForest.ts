@@ -32,7 +32,7 @@ export function updateAffectedTrees(
   for (const [operation, difference] of affectedOperations.entries()) {
     const currentTreeState = forest.trees.get(operation.id);
     assert(currentTreeState);
-    const { indexedTree, stats: treeStats } = updateTree(
+    const { indexedTree, statsLogger } = updateTree(
       currentTreeState,
       difference,
       env,
@@ -47,7 +47,7 @@ export function updateAffectedTrees(
     // Reset previous tree state on commit
     indexedTree.prev = null;
     replaceTree(forest, indexedTree);
-    forestStats.set(operation, treeStats);
+    forestStats.set(operation, statsLogger.getStats());
   }
   return forestStats;
 }

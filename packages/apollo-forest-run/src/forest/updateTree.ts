@@ -20,8 +20,6 @@ import type {
   Source,
   UpdateState,
   ForestEnv,
-  UpdateTreeStats,
-  MutationStats,
 } from "./types";
 import { assert } from "../jsutils/assert";
 import { indexTree } from "./indexTree";
@@ -38,7 +36,7 @@ import {
   resolveObjectKey,
 } from "../values";
 import { updateObject } from "./updateObject";
-import { logCopyStats, logObjectCopyStats } from "../telemetry/logUpdateStats";
+import { createUpdateLogger } from "../telemetry/updateStats/updateLogger";
 
 export type NodeDifferenceMap = Map<string, ObjectDifference>;
 type ComplexValue = SourceObject | NestedList<SourceObject>;
@@ -57,17 +55,9 @@ export function updateTree(
     indexedTree: base,
     drafts: new Map(),
     missingFields: new Map(),
-    stats: {
-      arrayItemsCopied: 0,
-      arraysCopied: 0,
-      objectsCopied: 0,
-      objectFieldsCopied: 0,
-      heaviestArrayCopy: undefined,
-      heaviestObjectCopy: undefined,
-      mutations: [],
-    },
+    statsLogger: createUpdateLogger(),
   };
-  const { missingFields, drafts, stats } = state;
+  const { missingFields, drafts } = state;
 
   // Preserve existing information about any missing fields.
   // (updated objects will get their own entry in the map, so there won't be collisions)
@@ -248,7 +238,7 @@ function createSourceCopiesUpToRoot(
   from: CompositeValueChunk,
   state: UpdateState,
 ): ComplexValue {
-  const { drafts } = state;
+  const { drafts, statsLogger } = state;
   const parent = from.data ? tree.dataMap.get(from.data) : null;
 
   if (!parent || isRootRef(parent)) {
@@ -257,7 +247,7 @@ function createSourceCopiesUpToRoot(
     let draft = drafts.get(data);
     if (!draft) {
       draft = { ...data };
-      logCopyStats(state.stats, from);
+      statsLogger.copy(from);
       drafts.set(data, draft);
     }
     return data;
@@ -279,7 +269,7 @@ function createSourceCopiesUpToRoot(
   let draft = drafts.get(value);
   if (!draft) {
     draft = (Array.isArray(value) ? [...value] : { ...value }) as Draft;
-    logCopyStats(state.stats, from);
+    statsLogger.copy(from);
     drafts.set(value, draft);
   }
   (parentDraft as any)[dataKey] = draft;

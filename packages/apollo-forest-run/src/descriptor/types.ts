@@ -21,6 +21,7 @@ export type DeferLabel = string;
 export type VariableValues = { [name: VariableName]: unknown };
 export type NodeKey = string;
 export type OperationId = number;
+export type ArrayIndex = number;
 
 export type ArgumentValues = Map<string, unknown>;
 export type Directives = Map<string, { args: ArgumentValues }>;
