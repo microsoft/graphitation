@@ -8,6 +8,7 @@ import {
 import {
   CompositeListChunk,
   DataMap,
+  FieldName,
   MissingFieldsMap,
   NodeKey,
   NodeMap,
@@ -57,20 +58,40 @@ export type IndexedForest = {
 export type Source = Readonly<SourceObject | SourceCompositeList>;
 export type Draft = SourceObject | SourceCompositeList;
 
-export type UpdateChunkStats = {
-  type: string;
-  depth: number;
-  siblings: number;
-  dirtyFields: Set<string>;
+type ArrayIndex = number;
+
+export type UpdateTreeStats = {
+  arraysCopied: number;
+  arrayItemsCopied: number;
+  objectsCopied: number;
+  objectFieldsCopied: number; // (chunk.selection.fields.size - chunk.selection.skippedFields.size)
+  heaviestArrayCopy?: CopyStats;
+  heaviestObjectCopy?: CopyStats;
+  causedBy?: TypeName; // take it from differenceMap in updateTree
+  mutations: MutationStats[];
 };
 
-export type UpdateForestStats = Map<OperationDescriptor, UpdateChunkStats[]>;
+type CopyStats = {
+  nodeType: TypeName;
+  path: (ArrayIndex | FieldName)[];
+  size?: number; // length for array, count of fields for object
+  depth: number;
+};
+
+export type MutationStats = {
+  nodeType: TypeName;
+  depth: number;
+  fieldsMutated: number;
+  itemsMutated: number;
+};
+
+export type UpdateForestStats = Map<OperationDescriptor, UpdateTreeStats>;
 
 export type UpdateState = {
   drafts: Map<Source, Draft>;
   missingFields: MissingFieldsMap;
   indexedTree: IndexedTree;
-  stats: UpdateChunkStats[];
+  stats: UpdateTreeStats;
 };
 
 export type UpdateObjectResult = {

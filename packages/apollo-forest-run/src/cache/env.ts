@@ -36,6 +36,7 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
     mergePolicies: new Map(),
     readPolicies: new Map(),
     autoEvict: config?.autoEvict ?? true,
+    logUpdateStats: config?.logUpdateStats ?? false,
     nonEvictableQueries: config?.nonEvictableQueries ?? new Set(),
     maxOperationCount: config?.maxOperationCount ?? 1000,
     logger: config && "logger" in config ? config.logger : logger,

@@ -72,16 +72,45 @@ export type Store = {
   atime: Map<OperationId, number>;
 };
 
+export type Write = {
+  options: Cache.WriteOptions;
+  tree: IndexedTree;
+  updateStats?: UpdateForestStats;
+};
+
+type ArrayIndex = number;
+
+type UpdateStats = {
+  arraysCopied: number;
+  arrayItemsCopied: number;
+  objectsCopied: number;
+  objectFieldsCopied: number; // (chunk.selection.fields.size - chunk.selection.skippedFields.size)
+  heaviestArrayCopy: CopyStats;
+  heaviestObjectCopy: CopyStats;
+  mutations: MutationStats[]; // Basically one (or zero) per updateObject. Alternatively only include "deepestMutation" and/or "heaviestMutation"
+};
+
+type CopyStats = {
+  nodeType: TypeName;
+  path: (ArrayIndex | FieldName)[];
+  size: number; // length for array, count of fields for object
+  depth: number;
+  causedBy: TypeName; // take it from differenceMap in updateTree
+};
+
+type MutationStats = {
+  nodeType: TypeName;
+  depth: number;
+  fieldsMutated: number;
+  itemsMutated: number;
+};
+
 export type Transaction = {
   optimisticLayer: OptimisticLayer | null;
   affectedOperations: Set<OperationDescriptor> | null;
   watchesToNotify: Set<Cache.WatchOptions> | null;
   forceOptimistic: boolean | null;
-  writes: {
-    options: Cache.WriteOptions;
-    tree: IndexedTree;
-    updateStats?: UpdateForestStats;
-  }[];
+  writes: Write[];
 };
 
 export type CacheConfig = InMemoryCacheConfig & {
@@ -91,6 +120,9 @@ export type CacheConfig = InMemoryCacheConfig & {
   apolloCompat_keepOrphanNodes?: boolean;
   logger?: Logger;
   notify?: (event: TelemetryEvent) => void;
+
+  // Telemetry feature flags
+  logUpdateStats?: boolean;
 };
 
 export type CacheEnv = {
@@ -155,6 +187,9 @@ export type CacheEnv = {
   autoEvict: boolean;
   nonEvictableQueries: Set<string>;
   maxOperationCount: number;
+
+  // Telemetry feature flags
+  logUpdateStats: boolean;
 };
 
 export type SerializedOperationKey = string;
