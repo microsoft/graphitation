@@ -624,6 +624,101 @@ describe(generateTS, () => {
         "
       `);
     });
+    test("it doesn't use context at all due to the missing input file", () => {
+      const { resolvers, models, enums, inputs, contextMappingOutput } =
+        runGenerateTest(
+          graphql`
+            interface Node @context(uses: { managers: ["node"] }) {
+              id: ID!
+            }
+
+            interface Persona @context(uses: { managers: ["persona"] }) {
+              phone: String!
+            }
+
+            interface User implements Node & Persona {
+              id: ID!
+              name: String!
+            }
+
+            type Admin implements Node & Persona
+              @context(uses: { managers: ["admin"] }) {
+              id: ID!
+              rank: Int!
+            }
+
+            extend type Query {
+              users: [User]
+              admins: [Admin]
+            }
+          `,
+          {},
+        );
+      expect(enums).toMatchInlineSnapshot(`undefined`);
+      expect(contextMappingOutput).toMatchInlineSnapshot(`{}`);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
+      expect(models).toMatchInlineSnapshot(`
+        "// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
+            readonly __typename?: string;
+        }
+        export interface Node extends BaseModel {
+            readonly __typename?: string;
+        }
+        export interface Persona extends BaseModel {
+            readonly __typename?: string;
+        }
+        export interface User extends BaseModel, Node, Persona {
+            readonly __typename?: string;
+        }
+        export interface Admin extends BaseModel, Node, Persona {
+            readonly __typename?: "Admin";
+            readonly id: string;
+            readonly rank: number;
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue, IterableOrAsyncIterable } from "@graphitation/supermassive";
+        import type { ResolveInfo } from "@graphitation/supermassive";
+        import * as Models from "./models.interface";
+        export declare namespace Node {
+            export interface Resolvers {
+                readonly __resolveType?: __resolveType;
+            }
+            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
+        }
+        export declare namespace Persona {
+            export interface Resolvers {
+                readonly __resolveType?: __resolveType;
+            }
+            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
+        }
+        export declare namespace User {
+            export interface Resolvers {
+                readonly __resolveType?: __resolveType;
+            }
+            export type __resolveType = (parent: unknown, context: unknown, info: ResolveInfo) => PromiseOrValue<string | null>;
+        }
+        export declare namespace Admin {
+            export interface Resolvers {
+                readonly id?: id;
+                readonly rank?: rank;
+            }
+            export type id = (model: Models.Admin, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type rank = (model: Models.Admin, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<number>;
+        }
+        export declare namespace Query {
+            export interface Resolvers {
+                readonly users?: users;
+                readonly admins?: admins;
+            }
+            export type users = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.User | null | undefined> | null | undefined>;
+            export type admins = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Admin | null | undefined> | null | undefined>;
+        }
+        "
+      `);
+    });
     test("extensions are not generated in the models", () => {
       const { models } = runGenerateTest(graphql`
         extend schema @import(from: "@msteams/packages-test", defs: ["User"])

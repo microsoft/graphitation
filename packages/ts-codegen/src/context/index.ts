@@ -793,7 +793,10 @@ export function extractContext(
           }
           const typeName = (typeDef as InterfaceTypeDefinitionNode).name.value;
           context.addLegacyInterface(typeName);
-        } else if (node.name.value === "context") {
+        } else if (
+          node.name.value === "context" &&
+          options.contextTypeExtensions
+        ) {
           const subTypeKeys: Set<string> = new Set();
           if (
             node.arguments?.length !== 1 ||
@@ -809,18 +812,22 @@ export function extractContext(
             }
             const namespace = name.value;
             if (value.kind !== "ListValue") {
-              throw new Error(`Namespace "${name}" must be list of strings`);
+              throw new Error(
+                `Namespace "${namespace}" must be list of strings`,
+              );
             }
 
             const namespaceValues: string[] = value.values.map((v) => {
               if (v.kind !== "StringValue") {
-                throw new Error(`Namespace "${name}" must be list of strings`);
+                throw new Error(
+                  `Namespace "${namespace}" must be list of strings`,
+                );
               }
               return v.value;
             });
 
             if (!options.contextTypeExtensions?.contextTypes?.[namespace]) {
-              throw new Error(`Namespace "${name}" is not supported`);
+              throw new Error(`Namespace "${namespace}" is not supported`);
             }
 
             namespaceValues.forEach((namespaceValue) => {

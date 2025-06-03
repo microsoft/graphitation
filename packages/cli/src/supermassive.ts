@@ -71,7 +71,7 @@ export function supermassive(): Command {
       "File containing array of enum names, which should remain typescript enums",
     )
     .option(
-      "--context-sub-type-metadata-file [contextTypeExtensionsFile]",
+      "--context-type-extensions-file [contextTypeExtensionsFile]",
       "Describes context types and their import paths. Used to generate resolver context type extensions. The file must be defined in the following format: { baseContextTypePath?: string, baseContextTypeName?: string, contextTypes: { [namespace: string]: { [type: string]: { importNamespaceName: string, importPath: string }}}",
     )
     .option(
