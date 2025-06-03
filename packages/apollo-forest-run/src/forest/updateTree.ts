@@ -20,7 +20,8 @@ import type {
   Source,
   UpdateState,
   ForestEnv,
-  UpdateChunkStats,
+  UpdateTreeStats,
+  MutationStats,
 } from "./types";
 import { assert } from "../jsutils/assert";
 import { indexTree } from "./indexTree";
@@ -28,6 +29,7 @@ import { isDirty } from "../diff/difference";
 import {
   createDraft,
   hydrateDraft,
+  isCompositeListValue,
   isObjectValue,
   isParentListRef,
   isParentObjectRef,
@@ -36,6 +38,7 @@ import {
   resolveObjectKey,
 } from "../values";
 import { updateObject } from "./updateObject";
+import { logCopyStats, logObjectCopyStats } from "../telemetry/logUpdateStats";
 
 export type NodeDifferenceMap = Map<string, ObjectDifference>;
 type ComplexValue = SourceObject | NestedList<SourceObject>;
@@ -54,7 +57,15 @@ export function updateTree(
     indexedTree: base,
     drafts: new Map(),
     missingFields: new Map(),
-    stats: [],
+    stats: {
+      arrayItemsCopied: 0,
+      arraysCopied: 0,
+      objectsCopied: 0,
+      objectFieldsCopied: 0,
+      heaviestArrayCopy: undefined,
+      heaviestObjectCopy: undefined,
+      mutations: [],
+    },
   };
   const { missingFields, drafts, stats } = state;
 
@@ -115,18 +126,6 @@ export function updateTree(
         missingFields: result?.missingFields?.get(result.draft),
       });
       continue;
-    }
-
-    if (isParentListRef(chunkRef) && difference.dirtyFields) {
-      const parentRef = chunkRef.parent;
-
-      const chunkStats: UpdateChunkStats = {
-        type: chunk.type || "unknown",
-        depth: chunk.selection.depth,
-        siblings: parentRef.itemChunks.length,
-        dirtyFields: difference.dirtyFields,
-      };
-      stats.push(chunkStats);
     }
 
     createSourceCopiesUpToRoot(env, base, chunk, state);
@@ -258,6 +257,7 @@ function createSourceCopiesUpToRoot(
     let draft = drafts.get(data);
     if (!draft) {
       draft = { ...data };
+      logCopyStats(state.stats, from);
       drafts.set(data, draft);
     }
     return data;
@@ -279,6 +279,7 @@ function createSourceCopiesUpToRoot(
   let draft = drafts.get(value);
   if (!draft) {
     draft = (Array.isArray(value) ? [...value] : { ...value }) as Draft;
+    logCopyStats(state.stats, from);
     drafts.set(value, draft);
   }
   (parentDraft as any)[dataKey] = draft;

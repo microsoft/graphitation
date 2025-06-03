@@ -40,6 +40,7 @@ import { createCacheEnvironment } from "./cache/env";
 import { CacheConfig } from "./cache/types";
 import { SourceObject } from "./values/types";
 import { UpdateForestStats } from "./forest/types";
+import { logUpdateStats } from "./telemetry/logUpdateStats";
 
 /**
  * ForestRun cache aims to be an Apollo cache implementation somewhat compatible with InMemoryCache.
@@ -558,6 +559,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
         onWatchUpdated,
         typeof optimistic === "string",
       );
+      logUpdateStats(this.env, activeTransaction.writes);
     }
     maybeEvictOldData(this.env, this.store);
 
