@@ -89,6 +89,7 @@ export function updateObject(
       }
     : undefined;
 }
+
 function updateObjectValue(
   context: Context,
   base: ObjectChunk,

@@ -27,9 +27,7 @@ import { isDirty } from "../diff/difference";
 import {
   createDraft,
   hydrateDraft,
-  isCompositeListValue,
   isObjectValue,
-  isParentListRef,
   isParentObjectRef,
   isRootRef,
   isSourceObject,
