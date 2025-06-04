@@ -78,33 +78,6 @@ export type Write = {
   updateStats?: UpdateForestStats;
 };
 
-type ArrayIndex = number;
-
-type UpdateStats = {
-  arraysCopied: number;
-  arrayItemsCopied: number;
-  objectsCopied: number;
-  objectFieldsCopied: number; // (chunk.selection.fields.size - chunk.selection.skippedFields.size)
-  heaviestArrayCopy: CopyStats;
-  heaviestObjectCopy: CopyStats;
-  mutations: MutationStats[]; // Basically one (or zero) per updateObject. Alternatively only include "deepestMutation" and/or "heaviestMutation"
-};
-
-type CopyStats = {
-  nodeType: TypeName;
-  path: (ArrayIndex | FieldName)[];
-  size: number; // length for array, count of fields for object
-  depth: number;
-  causedBy: TypeName; // take it from differenceMap in updateTree
-};
-
-type MutationStats = {
-  nodeType: TypeName;
-  depth: number;
-  fieldsMutated: number;
-  itemsMutated: number;
-};
-
 export type Transaction = {
   optimisticLayer: OptimisticLayer | null;
   affectedOperations: Set<OperationDescriptor> | null;

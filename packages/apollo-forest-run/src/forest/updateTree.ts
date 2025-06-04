@@ -55,7 +55,7 @@ export function updateTree(
     indexedTree: base,
     drafts: new Map(),
     missingFields: new Map(),
-    statsLogger: createUpdateLogger(),
+    statsLogger: createUpdateLogger(env.logUpdateStats),
   };
   const { missingFields, drafts } = state;
 
