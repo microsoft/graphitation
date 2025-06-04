@@ -25,16 +25,35 @@ export class UpdateLogger {
     this.currentMutation = null;
   }
 
-  private createMutation(
-    nodeType: TypeName | false,
-    depth: number,
-  ): MutationStats {
-    return {
-      nodeType: nodeType || "UNKNOWN_OBJECT",
-      depth,
-      fieldsMutated: 0,
-      itemsMutated: 0,
-    };
+  copy(chunk: CompositeValueChunk) {
+    switch (chunk.kind) {
+      case ValueKind.Object: {
+        this.copyObject(chunk);
+        break;
+      }
+      case ValueKind.CompositeList: {
+        this.copyArray(chunk);
+        break;
+      }
+    }
+  }
+
+  private copyObject(chunk: ObjectChunk) {
+    const copiedFields = chunk.selection.fieldQueue.length;
+
+    this.stats.objectsCopied++;
+    this.stats.objectFieldsCopied += copiedFields;
+    this.updateHeaviestObjectCopy(chunk, copiedFields);
+  }
+
+  private updateHeaviestObjectCopy(chunk: ObjectChunk, copiedFields: number) {
+    if (copiedFields > (this.stats.heaviestObjectCopy?.size ?? 0)) {
+      this.stats.heaviestObjectCopy = {
+        nodeType: chunk.type || "UNKNOWN_OBJECT",
+        size: copiedFields,
+        depth: chunk.selection.depth,
+      };
+    }
   }
 
   private copyArray(chunk: CompositeListChunk) {
@@ -65,26 +84,20 @@ export class UpdateLogger {
     }
   }
 
-  private copyObject(chunk: ObjectChunk) {
-    const copiedFields = chunk.selection.fieldQueue.length;
-
-    this.stats.objectsCopied++;
-    this.stats.objectFieldsCopied += copiedFields;
-    this.updateHeaviestObjectCopy(chunk, copiedFields);
-  }
-
-  private updateHeaviestObjectCopy(chunk: ObjectChunk, copiedFields: number) {
-    if (copiedFields > (this.stats.heaviestObjectCopy?.size ?? 0)) {
-      this.stats.heaviestObjectCopy = {
-        nodeType: chunk.type || "UNKNOWN_OBJECT",
-        size: copiedFields,
-        depth: chunk.selection.depth,
-      };
-    }
-  }
-
   startMutation(nodeType: TypeName | false, depth: number) {
     this.currentMutation = this.createMutation(nodeType, depth);
+  }
+
+  private createMutation(
+    nodeType: TypeName | false,
+    depth: number,
+  ): MutationStats {
+    return {
+      nodeType: nodeType || "UNKNOWN_OBJECT",
+      depth,
+      fieldsMutated: 0,
+      itemsMutated: 0,
+    };
   }
 
   finishMutation() {
@@ -92,19 +105,6 @@ export class UpdateLogger {
       this.stats.mutations.push(this.currentMutation);
     }
     this.currentMutation = null;
-  }
-
-  copy(chunk: CompositeValueChunk) {
-    switch (chunk.kind) {
-      case ValueKind.Object: {
-        this.copyObject(chunk);
-        break;
-      }
-      case ValueKind.CompositeList: {
-        this.copyArray(chunk);
-        break;
-      }
-    }
   }
 
   fieldMutation() {
