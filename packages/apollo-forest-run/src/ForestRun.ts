@@ -39,7 +39,7 @@ import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { CacheConfig } from "./cache/types";
 import { SourceObject } from "./values/types";
-import { UpdateForestStats } from "./forest/types";
+import type { UpdateForestStats } from "./forest/types";
 import { logUpdateStats } from "./telemetry/updateStats/logUpdateStats";
 
 /**

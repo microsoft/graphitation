@@ -32,22 +32,22 @@ export function updateAffectedTrees(
   for (const [operation, difference] of affectedOperations.entries()) {
     const currentTreeState = forest.trees.get(operation.id);
     assert(currentTreeState);
-    const { indexedTree, statsLogger } = updateTree(
+    const { indexedTree: nextTreeState, statsLogger } = updateTree(
       currentTreeState,
       difference,
       env,
       getNodeChunks,
     );
-    if (!indexedTree || indexedTree === currentTreeState) {
+    if (!nextTreeState || nextTreeState === currentTreeState) {
       // nodeDifference may not be overlapping with selections of this tree.
       //   E.g. difference could be for operation { id: "1", firstName: "Changed" }
       //   but current operation is { id: "1", lastName: "Unchanged" }
       continue;
     }
     // Reset previous tree state on commit
-    indexedTree.prev = null;
-    replaceTree(forest, indexedTree);
-    forestStats.set(operation, statsLogger.getStats());
+    nextTreeState.prev = null;
+    replaceTree(forest, nextTreeState);
+    forestStats.set(operation.debugName, statsLogger.getStats());
   }
   return forestStats;
 }
