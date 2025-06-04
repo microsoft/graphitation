@@ -42,7 +42,7 @@ import { DifferenceKind } from "../diff/types";
 import { assert, assertNever } from "../jsutils/assert";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { createParentLocator } from "../values";
-import { UpdateLoggerAbstract } from "../telemetry/updateStats/types";
+import { UpdateLogger } from "../telemetry/updateStats/updateLogger";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const inspect = JSON.stringify.bind(JSON);
@@ -54,7 +54,7 @@ type Context = UpdateState & {
   operation: OperationDescriptor;
   completeObjectFn: CompleteObjectFn;
   findParent: ParentLocator;
-  statsLogger: UpdateLoggerAbstract;
+  statsLogger: UpdateLogger;
 };
 
 export function updateObject(

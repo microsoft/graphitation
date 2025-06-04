@@ -40,7 +40,7 @@ import { createCacheEnvironment } from "./cache/env";
 import { CacheConfig } from "./cache/types";
 import { SourceObject } from "./values/types";
 import { UpdateForestStats } from "./forest/types";
-import { logUpdateStats } from "./telemetry/logUpdateStats";
+import { logUpdateStats } from "./telemetry/updateStats/logUpdateStats";
 
 /**
  * ForestRun cache aims to be an Apollo cache implementation somewhat compatible with InMemoryCache.
