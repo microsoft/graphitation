@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "fix(apollo-forest-run): cache.modify within optimistic transaction",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}
