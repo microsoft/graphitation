@@ -258,9 +258,8 @@ export class TsCodegenContext {
       }
 
       const subTypeRawMetadata = namespace[subTypeName];
-      const subType = subTypeRawMetadata.importNamespaceName
-        ? `${subTypeRawMetadata.importNamespaceName}["${subTypeName}"]`
-        : subTypeName;
+      const subType = subTypeRawMetadata.typeName;
+
       acc[namespaceName].push({
         subType,
         name: subTypeName,
