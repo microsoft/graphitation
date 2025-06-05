@@ -6,7 +6,7 @@ import type {
 } from "@apollo/client";
 import type { DocumentNode } from "graphql";
 import { equal } from "@wry/equality";
-import type { OperationDescriptor } from "./descriptor/types";
+import type { OperationDescriptor, TypeName } from "./descriptor/types";
 import type {
   CacheEnv,
   DataForest,
@@ -39,6 +39,7 @@ import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { CacheConfig } from "./cache/types";
 import { SourceObject } from "./values/types";
+import { GraphDifference } from "./diff/diffTree";
 
 /**
  * ForestRun cache aims to be an Apollo cache implementation somewhat compatible with InMemoryCache.
@@ -206,14 +207,20 @@ export class ForestRun extends ApolloCache<SerializedCache> {
   private runWrite(options: Cache.WriteOptions): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
-    const { incoming, affected } = write(
+    const { incoming, affected, difference } = write(
       this.env,
       this.store,
       transaction,
       options,
     );
     if (affected) {
-      this.updateTransaction(transaction, options, affected, incoming);
+      this.updateTransaction(
+        transaction,
+        options,
+        affected,
+        difference,
+        incoming,
+      );
     }
     return incoming.nodes.size ? getRef(incoming.rootNodeKey) : undefined;
   }
@@ -222,10 +229,12 @@ export class ForestRun extends ApolloCache<SerializedCache> {
     transaction: Transaction,
     options: Cache.WriteOptions | Cache.ModifyOptions,
     affectedOperations: Iterable<OperationDescriptor>,
+    difference: GraphDifference | null = null,
     incoming?: DataTree,
   ) {
     if (incoming) {
       transaction.writes.push({
+        difference,
         options: options as Cache.WriteOptions,
         tree: incoming,
       });
@@ -276,6 +285,40 @@ export class ForestRun extends ApolloCache<SerializedCache> {
     for (const watch of watchesToNotify) {
       try {
         const newDiff = this.diff(watch);
+        const difference =
+          rootTransaction.writes[0]?.difference?.nodeDifference.keys();
+        // let typename: string | undefined;
+        // if (difference) {
+        //   for (const keyId of difference) {
+        //     const [chunk] = getNodeChunks(
+        //       getEffectiveReadLayers(this.store, this.getActiveForest(), true),
+        //       keyId,
+        //     );
+        //     if (chunk && chunk.type) {
+        //       typename = chunk.type;
+        //       break;
+        //     }
+        //   }
+        // }
+        if (difference && Array.from(difference).length) {
+          const causeByDef =
+            rootTransaction.writes[0].options.query.definitions[0];
+          let causeBy: TypeName | undefined;
+          if (
+            "name" in causeByDef &&
+            causeByDef.name &&
+            "value" in causeByDef.name
+          ) {
+            causeBy = causeByDef.name.value;
+          }
+          this.env.notify?.({
+            kind: "EXPENSIVE_WRITE",
+            op: "OPERATION",
+            causeBy,
+            //figure out what is expensive
+          });
+        }
+
         // ApolloCompat: expected by QueryManager (and looks like only for watches???) :/
         if (fromOptimisticTransaction && watch.optimistic) {
           newDiff.fromOptimisticTransaction = true;
