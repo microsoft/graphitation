@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Thu, 05 Jun 2025 08:25:20 GMT",
+      "version": "0.12.4",
+      "tag": "@graphitation/apollo-forest-run_v0.12.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "1edf826fd5771d37600029ebc8296221c127d2b9",
+            "comment": "fix(apollo-forest-run): fix bogus operation id in extract"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 21 May 2025 21:51:44 GMT",
       "version": "0.12.3",
       "tag": "@graphitation/apollo-forest-run_v0.12.3",

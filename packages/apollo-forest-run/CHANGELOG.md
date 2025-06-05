@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Wed, 21 May 2025 21:51:44 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 05 Jun 2025 08:25:20 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.12.4
+
+Thu, 05 Jun 2025 08:25:20 GMT
+
+### Patches
+
+- fix(apollo-forest-run): fix bogus operation id in extract (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.12.3
 

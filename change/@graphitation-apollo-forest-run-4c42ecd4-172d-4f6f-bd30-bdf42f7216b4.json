@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "fix(apollo-forest-run): fix bogus operation id in extract",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vrazuvaev@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}
