@@ -375,7 +375,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
   public extract(optimistic = false): SerializedCache {
     const { dataForest } = this.store;
     const key = (operation: OperationDescriptor) =>
-      `${operation.debugName}:${operation.id}-${operation.id}`;
+      `${operation.debugName}:${operation.id}`;
 
     const stableConvert = (
       op: OperationDescriptor,

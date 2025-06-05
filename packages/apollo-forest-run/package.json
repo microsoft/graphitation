@@ -11,7 +11,7 @@
   "scripts": {
     "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
-    "test": "yarn test:own & yarn test:apollo",
+    "test": "yarn test:own && yarn test:apollo",
     "test:own": "monorepo-scripts test",
     "test:apollo": "node ./scripts/run-apollo-tests.js",
     "types": "monorepo-scripts types",
