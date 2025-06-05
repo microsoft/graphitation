@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Tue, 03 Jun 2025 11:06:26 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 05 Jun 2025 08:39:11 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.1.2
+
+Thu, 05 Jun 2025 08:39:11 GMT
+
+### Patches
+
+- ts-codegen resolver context types will be defined explicitly in the input file (77059398+vejrj@users.noreply.github.com)
+- Bump @graphitation/ts-codegen to v5.1.2
 
 ## 3.1.1
 

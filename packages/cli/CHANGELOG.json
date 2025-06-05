@@ -2,6 +2,27 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Thu, 05 Jun 2025 08:39:11 GMT",
+      "version": "3.1.2",
+      "tag": "@graphitation/cli_v3.1.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/cli",
+            "commit": "b787ccfd48884fcea467d52be0f01c433109ffe9",
+            "comment": "ts-codegen resolver context types will be defined explicitly in the input file"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v5.1.2",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 03 Jun 2025 11:06:26 GMT",
       "version": "3.1.1",
       "tag": "@graphitation/cli_v3.1.1",
