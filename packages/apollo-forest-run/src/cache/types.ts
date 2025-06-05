@@ -1,5 +1,9 @@
 import type { Cache, InMemoryCacheConfig, TypePolicies } from "@apollo/client";
-import type { IndexedForest, IndexedTree } from "../forest/types";
+import type {
+  IndexedForest,
+  IndexedTree,
+  UpdateForestStats,
+} from "../forest/types";
 import type {
   NodeKey,
   FieldName,
@@ -68,15 +72,18 @@ export type Store = {
   atime: Map<OperationId, number>;
 };
 
+export type Write = {
+  options: Cache.WriteOptions;
+  tree: IndexedTree;
+  updateStats?: UpdateForestStats;
+};
+
 export type Transaction = {
   optimisticLayer: OptimisticLayer | null;
   affectedOperations: Set<OperationDescriptor> | null;
   watchesToNotify: Set<Cache.WatchOptions> | null;
   forceOptimistic: boolean | null;
-  writes: {
-    options: Cache.WriteOptions;
-    tree: IndexedTree;
-  }[];
+  writes: Write[];
 };
 
 export type CacheConfig = InMemoryCacheConfig & {
@@ -86,6 +93,9 @@ export type CacheConfig = InMemoryCacheConfig & {
   apolloCompat_keepOrphanNodes?: boolean;
   logger?: Logger;
   notify?: (event: TelemetryEvent) => void;
+
+  // Telemetry feature flags
+  logUpdateStats?: boolean;
 };
 
 export type CacheEnv = {
@@ -150,6 +160,9 @@ export type CacheEnv = {
   autoEvict: boolean;
   nonEvictableQueries: Set<string>;
   maxOperationCount: number;
+
+  // Telemetry feature flags
+  logUpdateStats: boolean;
 };
 
 export type SerializedOperationKey = string;

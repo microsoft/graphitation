@@ -42,6 +42,7 @@ import { DifferenceKind } from "../diff/types";
 import { assert, assertNever } from "../jsutils/assert";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { createParentLocator } from "../values";
+import { UpdateLogger } from "../telemetry/updateStats/updateLogger";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const inspect = JSON.stringify.bind(JSON);
@@ -53,6 +54,7 @@ type Context = UpdateState & {
   operation: OperationDescriptor;
   completeObjectFn: CompleteObjectFn;
   findParent: ParentLocator;
+  statsLogger: UpdateLogger;
 };
 
 export function updateObject(
@@ -61,25 +63,25 @@ export function updateObject(
   base: ObjectChunk,
   diff: ObjectDifference,
   completeObjectFn: CompleteObjectFn,
-  state?: UpdateState,
+  state: UpdateState,
 ): UpdateObjectResult | undefined {
-  if (!state) {
-    state = {
-      drafts: new Map(),
-      missingFields: new Map(),
-    };
-  }
+  const { statsLogger } = state;
   const context: Context = {
     env,
     base,
     operation: base.operation,
     drafts: state.drafts,
     missingFields: state.missingFields,
+    indexedTree: state.indexedTree,
     dataMap,
     completeObjectFn,
     findParent: createParentLocator(dataMap),
+    statsLogger,
   };
+  statsLogger.startMutation(base.type, base.selection.depth);
   const draft = updateObjectValue(context, base, diff);
+  statsLogger.finishMutation();
+
   return draft && draft !== base.data
     ? {
         draft,
@@ -139,8 +141,10 @@ function updateObjectValue(
       }
       if (!copy) {
         copy = { ...base.data };
+        context.statsLogger.copy(base);
         context.drafts.set(base.data, copy);
       }
+      context.statsLogger.fieldMutation();
       copy[fieldInfo.dataKey] = updated;
     }
   }
@@ -187,7 +191,7 @@ function updateCompositeListValue(
   if (!Difference.hasDirtyItems(difference) && !difference.layout) {
     return undefined;
   }
-  const { drafts, operation } = context;
+  const { drafts, operation, statsLogger } = context;
   const layoutDiff = difference.layout;
   let copy = drafts.get(base.data);
   assert(Array.isArray(copy) || copy === undefined);
@@ -206,9 +210,11 @@ function updateCompositeListValue(
     }
     if (!copy) {
       copy = [...base.data] as SourceCompositeList;
+      statsLogger.copy(base);
       drafts.set(base.data, copy);
     }
     copy[index] = updatedValue as Draft;
+    statsLogger.itemMutation();
     drafts.set(base.data[index] as Source, updatedValue as Draft);
   }
 

@@ -34,6 +34,7 @@ import {
   resolveObjectKey,
 } from "../values";
 import { updateObject } from "./updateObject";
+import { createUpdateLogger } from "../telemetry/updateStats/updateLogger";
 
 export type NodeDifferenceMap = Map<string, ObjectDifference>;
 type ComplexValue = SourceObject | NestedList<SourceObject>;
@@ -44,13 +45,15 @@ export function updateTree(
   env: ForestEnv,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
   state?: UpdateState,
-): IndexedTree {
+): UpdateState {
   const rootChunks = base.nodes.get(base.rootNodeKey);
   assert(rootChunks?.length === 1);
   const rootChunk = rootChunks[0];
   state ??= {
+    indexedTree: base,
     drafts: new Map(),
     missingFields: new Map(),
+    statsLogger: createUpdateLogger(env.logUpdateStats),
   };
   const { missingFields, drafts } = state;
 
@@ -112,11 +115,12 @@ export function updateTree(
       });
       continue;
     }
+
     createSourceCopiesUpToRoot(env, base, chunk, state);
     dirty = true;
   }
   if (!dirty) {
-    return base;
+    return state;
   }
   const rootDraft = drafts.get(rootChunk.data);
   assert(isSourceObject(rootDraft));
@@ -146,7 +150,8 @@ export function updateTree(
   if (env.apolloCompat_keepOrphanNodes) {
     apolloBackwardsCompatibility_saveOrphanNodes(base, newIndexedResult);
   }
-  return newIndexedResult;
+  state.indexedTree = newIndexedResult;
+  return state;
 }
 
 function resolveAffectedChunks(
@@ -231,7 +236,7 @@ function createSourceCopiesUpToRoot(
   from: CompositeValueChunk,
   state: UpdateState,
 ): ComplexValue {
-  const { drafts } = state;
+  const { drafts, statsLogger } = state;
   const parent = from.data ? tree.dataMap.get(from.data) : null;
 
   if (!parent || isRootRef(parent)) {
@@ -240,6 +245,7 @@ function createSourceCopiesUpToRoot(
     let draft = drafts.get(data);
     if (!draft) {
       draft = { ...data };
+      statsLogger.copy(from);
       drafts.set(data, draft);
     }
     return data;
@@ -261,6 +267,7 @@ function createSourceCopiesUpToRoot(
   let draft = drafts.get(value);
   if (!draft) {
     draft = (Array.isArray(value) ? [...value] : { ...value }) as Draft;
+    statsLogger.copy(from);
     drafts.set(value, draft);
   }
   (parentDraft as any)[dataKey] = draft;
