@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "ts-codegen resolver context types will be defined explicitly in the input file",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "77059398+vejrj@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}
