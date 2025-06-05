@@ -72,7 +72,7 @@ export function supermassive(): Command {
     )
     .option(
       "--context-type-extensions-file [contextTypeExtensionsFile]",
-      "Describes context types and their import paths. Used to generate resolver context type extensions. The file must be defined in the following format: { baseContextTypePath?: string, baseContextTypeName?: string, contextTypes: { [namespace: string]: { [type: string]: { importNamespaceName: string, importPath: string }}}",
+      "Describes context types and their import paths. Used to generate resolver context type extensions. The file must be defined in the following format: { baseContextTypePath?: string, baseContextTypeName?: string, contextTypes: { [namespace: string]: { [type: string]: { importNamespaceName?: string, importPath: string, typeName: string }}}",
     )
     .option(
       "--generate-resolver-map",

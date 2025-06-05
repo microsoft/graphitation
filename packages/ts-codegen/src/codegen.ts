@@ -13,6 +13,7 @@ export type SubTypeItem = {
   [subType: string]: {
     importNamespaceName?: string;
     importPath: string;
+    typeName: string;
   };
 };
 

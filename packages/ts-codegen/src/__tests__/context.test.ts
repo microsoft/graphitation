@@ -15,53 +15,67 @@ describe(generateTS, () => {
           user: {
             importNamespaceName: "UserStateMachineType",
             importPath: "@package/user-state-machine",
+            typeName: 'UserStateMachineType["user"]',
           },
           whatever: {
             importPath: "@package/whatever-state-machine",
+            typeName: "whatever",
           },
           "different-whatever": {
             importNamespaceName: "DifferentWhateverStateMachineType",
             importPath: "@package/different-whatever-state-machine",
+            typeName:
+              'DifferentWhateverStateMachineType["managers"]["different-whatever"]',
           },
           post: {
             importNamespaceName: "PostStateMachineType",
             importPath: "@package/post-state-machine",
+            typeName: 'PostStateMachineType["post"]',
           },
           node: {
             importNamespaceName: "NodeStateMachineType",
             importPath: "@package/node-state-machine",
+            typeName: 'NodeStateMachineType["node"]',
           },
           persona: {
             importNamespaceName: "PersonaStateMachineType",
             importPath: "@package/persona-state-machine",
+            typeName: 'PersonaStateMachineType["managers"]["persona"]',
           },
           admin: {
             importNamespaceName: "AdminStateMachineType",
             importPath: "@package/admin-state-machine",
+            typeName: 'AdminStateMachineType["managers"]["admin"]',
           },
           message: {
             importNamespaceName: "MessageStateMachineType",
             importPath: "@package/message-state-machine",
+            typeName: 'MessageStateMachineType["message"]',
           },
           customer: {
             importNamespaceName: "CustomerStateMachineType",
             importPath: "@package/customer-state-machine",
+            typeName: 'CustomerStateMachineType["customer"]',
           },
           "shouldnt-apply": {
             importNamespaceName: "UserStateMachineType",
             importPath: "@package/shouldnt-apply-state-machine",
+            typeName: 'UserStateMachineType["managers"]["shouldnt-apply"]',
           },
           "user-or-customer": {
             importNamespaceName: "UserStateMachineType",
             importPath: "@package/user-or-customer-state-machine",
+            typeName: 'UserStateMachineType["user-or-customer"]',
           },
           "company-or-customer": {
             importNamespaceName: "UserStateMachineType",
             importPath: "@package/company-or-customer-state-machine",
+            typeName: 'UserStateMachineType["managers"]["company-or-customer"]',
           },
           "id-user": {
             importNamespaceName: "UserStateMachineType",
             importPath: "@package/id-user-state-machine",
+            typeName: 'UserStateMachineType["id-user"]',
           },
         },
       },
@@ -587,7 +601,7 @@ describe(generateTS, () => {
             }
             export type __resolveType = (parent: unknown, context: {
                 managers: {
-                    "persona": PersonaStateMachineType["persona"];
+                    "persona": PersonaStateMachineType["managers"]["persona"];
                 };
             }, info: ResolveInfo) => PromiseOrValue<string | null>;
         }
@@ -604,12 +618,12 @@ describe(generateTS, () => {
             }
             export type id = (model: Models.Admin, args: {}, context: {
                 managers: {
-                    "admin": AdminStateMachineType["admin"];
+                    "admin": AdminStateMachineType["managers"]["admin"];
                 };
             }, info: ResolveInfo) => PromiseOrValue<string>;
             export type rank = (model: Models.Admin, args: {}, context: {
                 managers: {
-                    "admin": AdminStateMachineType["admin"];
+                    "admin": AdminStateMachineType["managers"]["admin"];
                 };
             }, info: ResolveInfo) => PromiseOrValue<number>;
         }
@@ -1070,7 +1084,7 @@ describe(generateTS, () => {
             }
             export type id = (model: Models.Admin, args: {}, context: {
                 managers: {
-                    "admin": AdminStateMachineType["admin"];
+                    "admin": AdminStateMachineType["managers"]["admin"];
                 };
             }, info: ResolveInfo) => PromiseOrValue<string>;
         }
@@ -1112,7 +1126,7 @@ describe(generateTS, () => {
             }
             export type __resolveType = (parent: Models.Company | Models.Customer, context: {
                 managers: {
-                    "company-or-customer": UserStateMachineType["company-or-customer"];
+                    "company-or-customer": UserStateMachineType["managers"]["company-or-customer"];
                 };
             }, info: ResolveInfo) => PromiseOrValue<"Company" | "Customer" | null>;
         }
@@ -1133,7 +1147,7 @@ describe(generateTS, () => {
                 readonly mail?: string | null;
             }, context: {
                 managers: {
-                    "different-whatever": DifferentWhateverStateMachineType["different-whatever"];
+                    "different-whatever": DifferentWhateverStateMachineType["managers"]["different-whatever"];
                 };
             }, info: ResolveInfo) => PromiseOrValue<Models.whatever | null | undefined>;
             export type node = (model: unknown, args: {
