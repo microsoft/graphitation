@@ -26,6 +26,7 @@ import {
   isCompositeListValue,
 } from "../values";
 import { resolvedSelectionsAreEqual } from "../descriptor/resolvedSelection";
+import { DirtyNodeMap } from "./types";
 
 const EMPTY_ARRAY = Object.freeze([]);
 
@@ -108,9 +109,13 @@ export function findRecyclableChunk(
   ref: GraphValueReference,
   selection: ResolvedSelection,
   includeDeleted = false,
+  dirtyNodes?: DirtyNodeMap,
 ): NodeChunk | undefined {
   if (typeof ref !== "string") {
     return undefined; // TODO?
+  }
+  if (dirtyNodes && isDirtyNode(ref, selection, dirtyNodes)) {
+    return undefined;
   }
   for (const layer of layers) {
     if (!includeDeleted && layer.deletedNodes.has(ref)) {
@@ -157,19 +162,54 @@ function findParentInfo(
   assert(false);
 }
 
+function isDirtyNode(
+  nodeKey: NodeKey,
+  selection: ResolvedSelection,
+  dirtyNodes: DirtyNodeMap,
+) {
+  const dirtyFields = dirtyNodes.get(nodeKey);
+  if (!dirtyFields) {
+    return false;
+  }
+  if (dirtyFields.size === 0) {
+    return true;
+  }
+  for (const fieldName of dirtyFields) {
+    const aliases = selection.fields.get(fieldName);
+    if (
+      aliases?.length &&
+      aliases.some((alias) => !selection.skippedFields?.has(alias))
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export const createParentLocator =
   (layers: IndexedForest[]): ParentLocator =>
   (chunk: ObjectChunk | CompositeListChunk) =>
     findParentInfo(layers, chunk);
 
 export const createChunkMatcher =
-  (layers: IndexedForest[], includeDeleted = false): ChunkMatcher =>
+  (
+    layers: IndexedForest[],
+    includeDeleted = false,
+    dirtyNodes?: DirtyNodeMap | undefined,
+  ): ChunkMatcher =>
   (
     ref: GraphValueReference,
     operation: OperationDescriptor,
     selection: ResolvedSelection,
   ) =>
-    findRecyclableChunk(layers, operation, ref, selection, includeDeleted);
+    findRecyclableChunk(
+      layers,
+      operation,
+      ref,
+      selection,
+      includeDeleted,
+      dirtyNodes,
+    );
 
 export const createChunkProvider =
   (layers: IndexedForest[], includeDeleted = false): ChunkProvider =>
