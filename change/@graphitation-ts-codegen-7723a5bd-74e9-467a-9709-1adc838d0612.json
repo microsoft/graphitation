@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Resolver context type - subtype can be optional",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "77059398+vejrj@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}

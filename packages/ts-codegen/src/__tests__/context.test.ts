@@ -21,6 +21,11 @@ describe(generateTS, () => {
             importPath: "@package/whatever-state-machine",
             typeName: "whatever",
           },
+          optionalWhatever: {
+            importPath: "@package/whatever-state-machine",
+            typeName: "optionalWhatever",
+            optional: true,
+          },
           "different-whatever": {
             importNamespaceName: "DifferentWhateverStateMachineType",
             importPath: "@package/different-whatever-state-machine",
@@ -31,6 +36,7 @@ describe(generateTS, () => {
             importNamespaceName: "PostStateMachineType",
             importPath: "@package/post-state-machine",
             typeName: 'PostStateMachineType["post"]',
+            optional: true,
           },
           node: {
             importNamespaceName: "NodeStateMachineType",
@@ -96,7 +102,10 @@ describe(generateTS, () => {
             }
 
             type User @context(uses: { managers: ["user"] }) {
-              id: ID! @context(uses: { managers: ["id-user", "user"] })
+              id: ID!
+                @context(
+                  uses: { managers: ["id-user", "user", "optionalWhatever"] }
+                )
               name: String
               messagesWithAnswersNonRequired: [[Message]]
               messagesWithAnswersRequired: [[Message]]!
@@ -149,6 +158,7 @@ describe(generateTS, () => {
               "managers": [
                 "id-user",
                 "user",
+                "optionalWhatever",
               ],
             },
             "messagesNonRequired": {
@@ -245,6 +255,7 @@ describe(generateTS, () => {
         import type { DefaultContextType } from "@package/default-context";
         import type { MessageStateMachineType } from "@package/message-state-machine";
         import type { UserStateMachineType } from "@package/user-state-machine";
+        import type { optionalWhatever } from "@package/whatever-state-machine";
         import type { PostStateMachineType } from "@package/post-state-machine";
         export declare namespace Post {
             export interface Resolvers {
@@ -282,6 +293,7 @@ describe(generateTS, () => {
                 managers: {
                     "id-user": UserStateMachineType["id-user"];
                     "user": UserStateMachineType["user"];
+                    "optionalWhatever"?: optionalWhatever;
                 };
             }, info: ResolveInfo) => PromiseOrValue<string>;
             export type name = (model: Models.User, args: {}, context: DefaultContextType & {
@@ -326,7 +338,7 @@ describe(generateTS, () => {
             }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Message> | null | undefined>;
             export type post = (model: Models.User, args: {}, context: DefaultContextType & {
                 managers: {
-                    "post": PostStateMachineType["post"];
+                    "post"?: PostStateMachineType["post"];
                 };
             }, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
             export type postRequired = (model: Models.User, args: {}, context: DefaultContextType & {

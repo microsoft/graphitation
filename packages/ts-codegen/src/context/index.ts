@@ -204,11 +204,13 @@ export class TsCodegenContext {
                   factory.createIdentifier(namespace),
                   undefined,
                   factory.createTypeLiteralNode(
-                    subTypes.map(({ subType, name }) => {
+                    subTypes.map(({ subType, name, optional }) => {
                       return factory.createPropertySignature(
                         undefined,
                         factory.createIdentifier(`"${name}"`),
-                        undefined,
+                        optional
+                          ? factory.createToken(ts.SyntaxKind.QuestionToken)
+                          : undefined,
                         factory.createTypeReferenceNode(
                           factory.createIdentifier(subType),
                           undefined,
@@ -236,7 +238,7 @@ export class TsCodegenContext {
     }
 
     return typeNames.reduce<
-      Record<string, { subType: string; name: string }[]>
+      Record<string, { subType: string; name: string; optional: boolean }[]>
     >((acc, typeName) => {
       const [namespaceName, subTypeName] = typeName.split(":");
       if (!acc[namespaceName]) {
@@ -268,6 +270,7 @@ export class TsCodegenContext {
       acc[namespaceName].push({
         subType,
         name: subTypeName,
+        optional: subTypeRawMetadata.optional || false,
       });
 
       return acc;
