@@ -14,6 +14,7 @@ export type SubTypeItem = {
     importNamespaceName?: string;
     importPath: string;
     typeName: string;
+    optional?: boolean;
   };
 };
 
