@@ -3,7 +3,6 @@ import type {
   CompositeListValue,
   CompositeNullChunk,
   CompositeUndefinedChunk,
-  DataMap,
   GraphChunk,
   GraphValue,
   NestedList,
@@ -41,31 +40,30 @@ import { ValueKind } from "../values/types";
 import { DifferenceKind } from "../diff/types";
 import { assert, assertNever } from "../jsutils/assert";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
-import { createParentLocator } from "../values";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const inspect = JSON.stringify.bind(JSON);
 
 type Context = UpdateState & {
   env: ForestEnv;
-  dataMap: DataMap;
   base: ObjectChunk;
   operation: OperationDescriptor;
-  completeObjectFn: CompleteObjectFn;
+  completeObject: CompleteObjectFn;
   findParent: ParentLocator;
 };
 
 export function updateObject(
   env: ForestEnv,
-  dataMap: DataMap,
   base: ObjectChunk,
   diff: ObjectDifference,
+  findParentFn: ParentLocator,
   completeObjectFn: CompleteObjectFn,
   state?: UpdateState,
 ): UpdateObjectResult | undefined {
   if (!state) {
     state = {
       drafts: new Map(),
+      changes: new Map(),
       missingFields: new Map(),
     };
   }
@@ -74,10 +72,10 @@ export function updateObject(
     base,
     operation: base.operation,
     drafts: state.drafts,
+    changes: state.changes,
     missingFields: state.missingFields,
-    dataMap,
-    completeObjectFn,
-    findParent: createParentLocator(dataMap),
+    completeObject: completeObjectFn,
+    findParent: findParentFn,
   };
   const draft = updateObjectValue(context, base, diff);
   return draft && draft !== base.data
@@ -98,6 +96,7 @@ function updateObjectValue(
   }
   let copy = context.drafts.get(base.data);
   assert(!Array.isArray(copy));
+  let dirtyFields: FieldInfo[] | undefined;
 
   for (const fieldName of difference.dirtyFields) {
     const aliases = base.selection.fields.get(fieldName);
@@ -113,10 +112,11 @@ function updateObjectValue(
       if (!fieldDifference) {
         continue;
       }
+      const fieldDiff = fieldDifference.state;
       const value = Value.resolveFieldChunk(base, fieldInfo);
       const valueIsMissing = Value.isMissingValue(value);
 
-      if (valueIsMissing && !Difference.isFiller(fieldDifference.state)) {
+      if (valueIsMissing && !Difference.isFiller(fieldDiff)) {
         // Inconsistent state - do not update this field
         //   (assuming it will be re-fetched from the server to resolve inconsistency)
         context.env.logger?.debug(
@@ -129,7 +129,7 @@ function updateObjectValue(
         continue;
       }
 
-      const updated = updateValue(context, value, fieldDifference.state);
+      const updated = updateValue(context, value, fieldDiff);
 
       if (valueIsMissing && updated !== undefined) {
         context.missingFields.get(base.data)?.delete(fieldInfo);
@@ -142,7 +142,19 @@ function updateObjectValue(
         context.drafts.set(base.data, copy);
       }
       copy[fieldInfo.dataKey] = updated;
+
+      // Record immediately mutated fields (ignore changes caused by nested chunk mutations)
+      if (
+        fieldDiff.kind === DifferenceKind.Replacement ||
+        fieldDiff.kind === DifferenceKind.Filler
+      ) {
+        dirtyFields ??= [];
+        dirtyFields.push(fieldInfo);
+      }
     }
+  }
+  if (dirtyFields?.length) {
+    context.changes.set(base, dirtyFields);
   }
   return copy ?? base.data;
 }
@@ -189,6 +201,7 @@ function updateCompositeListValue(
   }
   const { drafts, operation } = context;
   const layoutDiff = difference.layout;
+  let dirty = false; // Only dirty on self changes - item replacement/filler, layout changes (ignores child changes)
   let copy = drafts.get(base.data);
   assert(Array.isArray(copy) || copy === undefined);
 
@@ -210,8 +223,16 @@ function updateCompositeListValue(
     }
     copy[index] = updatedValue as Draft;
     drafts.set(base.data[index] as Source, updatedValue as Draft);
+    if (
+      itemDiff.kind === DifferenceKind.Replacement ||
+      itemDiff.kind === DifferenceKind.Filler
+    ) {
+      dirty = true;
+    }
   }
-
+  if (dirty) {
+    context.changes.set(base, null);
+  }
   if (!layoutDiff) {
     return copy ?? base.data;
   }
@@ -229,6 +250,9 @@ function updateCompositeListValue(
   const result: NestedList<SourceObject | SourceNull> = new Array(length);
   for (let i = 0; i < length; i++) {
     const itemRef = layoutDiff[i];
+    if (itemRef !== i) {
+      dirty = true;
+    }
     if (typeof itemRef === "number") {
       result[i] =
         drafts.get(base.data[itemRef] as SourceObject) ?? base.data[itemRef];
@@ -239,7 +263,7 @@ function updateCompositeListValue(
       continue;
     }
     if (Value.isObjectValue(itemRef)) {
-      const newValue = context.completeObjectFn(
+      const newValue = context.completeObject(
         itemRef,
         base.possibleSelections,
         operation,
@@ -266,6 +290,12 @@ function updateCompositeListValue(
     copy.length = result.length;
   } else {
     drafts.set(base.data, result);
+  }
+  if (copy.length !== base.data.length) {
+    dirty = true;
+  }
+  if (dirty) {
+    context.changes.set(base, null);
   }
 
   return copy ?? base.data;
@@ -340,7 +370,7 @@ function replaceObject(
     }
     return fullMatch;
   }
-  const newValue = context.completeObjectFn(
+  const newValue = context.completeObject(
     replacement,
     possibleSelections,
     context.operation,

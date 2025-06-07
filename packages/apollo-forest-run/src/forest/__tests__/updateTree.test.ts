@@ -1646,6 +1646,147 @@ describe("with different selections", () => {
   });
 });
 
+describe("change reporting", () => {
+  test("reports changed object fields", () => {
+    const base = completeObject({
+      scalar: "foo",
+      plainObject: plainObjectFoo({ foo: "foo" }),
+    });
+    const model = completeObject({
+      scalar: "changed",
+      plainObject: plainObjectFoo({ foo: "changed" }),
+    });
+    const { changes } = diffAndUpdate(base, model);
+
+    expect(changes.size).toEqual(2);
+
+    const [[first, firstFields], [second, secondFields]] = changes.entries();
+    expect(firstFields?.length).toEqual(1);
+    expect(firstFields?.[0]?.name).toEqual("foo");
+    expect(first.data).toBe(base.plainObject);
+
+    expect(secondFields?.length).toEqual(1);
+    expect(secondFields?.[0]?.name).toEqual("scalar");
+    expect(second.data).toBe(base);
+  });
+
+  test("does not report parent as changed on nested chunk change", () => {
+    const base = completeObject({
+      plainObject: plainObjectFoo({ foo: "foo" }),
+    });
+    const model = completeObject({
+      plainObject: plainObjectFoo({ foo: "changed" }),
+    });
+    const { changes } = diffAndUpdate(base, model);
+
+    expect(changes.size).toEqual(1);
+
+    const [[first, firstFields]] = changes.entries();
+    expect(firstFields?.length).toEqual(1);
+    expect(firstFields?.[0]?.name).toEqual("foo");
+    expect(first.data).toBe(base.plainObject);
+  });
+
+  describe("reports changes in lists of scalars", () => {
+    it.each([
+      [["a"], []], // remove last item
+      [["a", "b"], ["a"]], // remove from tail
+      [["a", "b"], ["b"]], // remove from head
+      [[], ["a"]], // add first item
+      [["a"], ["b", "a"]], // prepend item
+      [["a"], ["a", "b"]], // append item
+      [
+        ["a", "b"],
+        ["a", "c"],
+      ], // replace item
+    ])("#%#: %p → %p", (baseList, modelList) => {
+      const base = completeObject({ scalarList: baseList });
+      const model = completeObject({ scalarList: modelList });
+
+      const { changes } = diffAndUpdate(base, model);
+
+      expect(changes.size).toEqual(1);
+
+      // Expected to report as a change in parent object field
+      const [[first, firstFields]] = changes.entries();
+      expect(firstFields?.length).toEqual(1);
+      expect(firstFields?.[0]?.name).toEqual("scalarList");
+      expect(first.data).toBe(base);
+    });
+  });
+
+  describe("reports changes in lists of plain objects", () => {
+    it.each([
+      [["a"], []], // remove last item
+      [["a", "b"], ["a"]], // remove from tail
+      [["a", "b"], ["b"]], // remove from head
+      [[], ["a"]], // add first item
+      [["a"], ["b", "a"]], // prepend item
+      [["a"], ["a", "b"]], // append item
+      // The following case actually mutates object fields, so list change should not be reported (see next test):
+      // [["a", "b"], ["a", "c"]]
+    ])("#%#: %p → %p", (a, b) => {
+      const baseList = a.map((foo) => plainObjectFoo({ foo }));
+      const modelList = b.map((foo) => plainObjectFoo({ foo }));
+
+      const base = completeObject({ plainObjectList: baseList });
+      const model = completeObject({ plainObjectList: modelList });
+
+      const { changes } = diffAndUpdate(base, model);
+
+      // Some of those list changes also mutate object fields, which we ignore in this test
+      const listChunks = [...changes.keys()].filter((chunk) =>
+        Array.isArray(chunk.data),
+      );
+      const [first] = listChunks;
+
+      expect(listChunks.length).toEqual(1);
+      expect(first.data).toBe(baseList);
+    });
+  });
+
+  test("does not report change in list of plain objects when there are no layout changes", () => {
+    const baseList = ["a", "b"].map((foo) => plainObjectFoo({ foo }));
+    const modelList = ["a", "c"].map((foo) => plainObjectFoo({ foo }));
+
+    const base = completeObject({ plainObjectList: baseList });
+    const model = completeObject({ plainObjectList: modelList });
+
+    const { changes } = diffAndUpdate(base, model);
+
+    const listChunks = [...changes.keys()].filter((chunk) =>
+      Array.isArray(chunk.data),
+    );
+    expect(listChunks.length).toEqual(0);
+    expect(changes.size).toBeGreaterThan(0);
+  });
+
+  it.each([
+    [["a"], []], // remove last item
+    [["a", "b"], ["a"]], // remove from tail
+    [["a", "b"], ["b"]], // remove from head
+    [[], ["a"]], // add first item
+    [["a"], ["b", "a"]], // prepend item
+    [["a"], ["a", "b"]], // append item
+    [
+      ["a", "b"],
+      ["a", "c"],
+    ], // replace item
+  ])("reports changes in entity lists", (oldList, newList) => {
+    const base = completeObject({
+      entityList: oldList.map(keyToEntity),
+    });
+    const model = completeObject({
+      entityList: newList.map(keyToEntity),
+    });
+    const { changes } = diffAndUpdate(base, model);
+    const [first] = changes.keys();
+
+    expect(changes.size).toEqual(1);
+    expect(first.data).toBe(base.entityList); // sanity-check
+  });
+});
+
 describe("inconsistent state", () => {
   // Note: this can happen if previous operation update failed and operation result is now stale.
   //   It is still possible to update _some_ "nodes", but others may be in a permanent stale state.
@@ -1763,12 +1904,17 @@ function diffAndUpdate(
   maybeDeepFreeze(modelTree.result);
 
   const difference = diffTree(forest, modelTree, env);
-  const updatedTree = updateTree(baseTree, difference.nodeDifference, env);
+  const { updatedTree, changes } = updateTree(
+    baseTree,
+    difference.nodeDifference,
+    env,
+  );
   return {
     baseTree,
     difference,
     modelTree,
     updatedTree,
+    changes,
     data: updatedTree.result.data as any,
   };
 }
@@ -1815,8 +1961,8 @@ function prepareDiffTrees(
 }
 
 function diff(
-  base: SourceObject | [SourceObject, DocumentNode, VariableValues?],
-  model: SourceObject | [SourceObject, DocumentNode, VariableValues?],
+  base: SourceObject | TestValue,
+  model: SourceObject | TestValue,
   testEnv: Partial<ForestEnv & DiffEnv> = {},
 ) {
   const { env, modelTree, baseTree, forest } = prepareDiffTrees(
@@ -1847,8 +1993,17 @@ function update(
       )
     : createTestTree(defaultOperation, base, undefined, env);
 
-  const updatedTree = updateTree(baseTree, diff.nodeDifference, env);
-  return { baseTree, updatedTree, data: updatedTree.result.data as any };
+  const { updatedTree, changes } = updateTree(
+    baseTree,
+    diff.nodeDifference,
+    env,
+  );
+  return {
+    baseTree,
+    updatedTree,
+    changes,
+    data: updatedTree.result.data as any,
+  };
 }
 
 function keyToEntity(keyOrOther: string | unknown) {

@@ -1,8 +1,8 @@
 import { GraphDifference } from "../diff/diffTree";
 import { NodeKey, OperationDescriptor } from "../descriptor/types";
-import { NodeDifferenceMap, updateTree } from "./updateTree";
+import { updateTree } from "./updateTree";
 import { isDirty } from "../diff/difference";
-import { ObjectDifference } from "../diff/types";
+import { NodeDifferenceMap, ObjectDifference } from "../diff/types";
 import {
   resolveNormalizedField,
   resolveSelection,
@@ -32,21 +32,21 @@ export function updateAffectedTrees(
   for (const [operation, difference] of affectedOperations.entries()) {
     const currentTreeState = forest.trees.get(operation.id);
     assert(currentTreeState);
-    const nextTreeState = updateTree(
+    const { updatedTree } = updateTree(
       currentTreeState,
       difference,
       env,
       getNodeChunks,
     );
-    if (!nextTreeState || nextTreeState === currentTreeState) {
+    if (!updatedTree || updatedTree === currentTreeState) {
       // nodeDifference may not be overlapping with selections of this tree.
       //   E.g. difference could be for operation { id: "1", firstName: "Changed" }
       //   but current operation is { id: "1", lastName: "Unchanged" }
       continue;
     }
     // Reset previous tree state on commit
-    nextTreeState.prev = null;
-    replaceTree(forest, nextTreeState);
+    updatedTree.prev = null;
+    replaceTree(forest, updatedTree);
     totalUpdated++;
   }
   return totalUpdated;

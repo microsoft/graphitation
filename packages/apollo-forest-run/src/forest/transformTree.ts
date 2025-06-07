@@ -143,6 +143,7 @@ export function transformTree(
   }
   return treeState.dirty !== DirtyState.Clean
     ? updateTree(treeState.intermediateTree, treeState.nodeDifference, env)
+        .updatedTree
     : treeState.intermediateTree;
 }
 
@@ -233,7 +234,11 @@ function updateTreeStructure(env: ForestEnv, state: TreeState) {
   //   We can skip intermediate updates in ASCEND mode because output of transformation doesn't change
   //   which chunks are visited during transformation.
   //   This is the same logic as returning changed values in visitor on "ENTER" vs. "LEAVE".
-  const newTree = updateTree(state.intermediateTree, state.nodeDifference, env);
+  const { updatedTree: newTree } = updateTree(
+    state.intermediateTree,
+    state.nodeDifference,
+    env,
+  );
   state.intermediateTree = newTree;
   state.dirty = DirtyState.Clean;
   state.nodeDifference.clear();
