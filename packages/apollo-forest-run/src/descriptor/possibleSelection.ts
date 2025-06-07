@@ -308,16 +308,11 @@ function completeSelections(
       continue; // already visited (selection on abstract type could be re-used by multiple implementations)
     }
     selection.depth = depth;
-    for (const spread of selection.spreads?.values() ?? EMPTY_ARRAY) {
-      completeSpreadInfo(context, spread);
-    }
     for (const fieldAliases of selection.fields.values()) {
       selection.fieldQueue.push(...fieldAliases);
     }
     for (const fieldAliases of selection.fields.values()) {
       for (const fieldInfo of fieldAliases) {
-        completeFieldInfo(context, fieldInfo);
-
         if (fieldInfo.args?.size) {
           selection.fieldsToNormalize ??= [];
           selection.fieldsToNormalize.push(fieldInfo);
@@ -354,21 +349,31 @@ function completeSelections(
         }
       }
     }
+    for (const spreadAliases of selection.spreads?.values() ?? EMPTY_ARRAY) {
+      for (const spreadInfo of spreadAliases) {
+        for (const { node, ancestors } of spreadInfo.__refs) {
+          if (
+            node.directives?.length ||
+            ancestors.some((ancestor) => ancestor.directives?.length)
+          ) {
+            selection.spreadsWithDirectives ??= [];
+            if (!selection.spreadsWithDirectives.includes(spreadInfo)) {
+              selection.spreadsWithDirectives.push(spreadInfo);
+            }
+          }
+          const spreadNode = findClosestFragmentSpread(ancestors);
+          const selectedIn = spreadNode ? spreadNode.name.value : true;
+          if (!spreadInfo.selectedIn.includes(selectedIn)) {
+            spreadInfo.selectedIn.push(selectedIn);
+          }
+        }
+      }
+    }
   }
   for (const selection of next) {
     completeSelections(context, selection, depth + 1);
   }
   return possibleSelections;
-}
-
-function completeFieldInfo(context: Context, fieldInfo: FieldInfo): FieldInfo {
-  // fieldInfo.__refs = undefined;
-  return fieldInfo;
-}
-
-function completeSpreadInfo(context: Context, spread: SpreadInfo): SpreadInfo {
-  // spreadInfo.__refs = undefined;
-  return spread;
 }
 
 function inferPossibleType(
@@ -484,32 +489,27 @@ function mergeSelectionsImpl(
   }
   if (source.spreads?.size) {
     mutableTarget.spreads ??= new Map();
-    for (const [name, sourceSpread] of source.spreads.entries()) {
-      const targetSpread = mutableTarget.spreads.get(name);
-      if (!targetSpread) {
-        mutableTarget.spreads.set(name, sourceSpread);
-        context.copyOnWrite.add(sourceSpread);
-        continue;
-      }
-      mutableTarget.spreads.set(
+    for (const [name, spreadAliases] of source.spreads.entries()) {
+      const targetAliases: SpreadInfo[] = getOrCreate(
+        mutableTarget.spreads,
         name,
-        mergeSpread(context, targetSpread, sourceSpread),
+        newEmptyList,
       );
-    }
-  }
-  if (source.spreads?.size) {
-    mutableTarget.spreads ??= new Map();
-    for (const [name, sourceSpread] of source.spreads.entries()) {
-      const targetSpread = mutableTarget.spreads.get(name);
-      if (!targetSpread) {
-        mutableTarget.spreads.set(name, sourceSpread);
-        context.copyOnWrite.add(sourceSpread);
-        continue;
+      for (const sourceSpread of spreadAliases) {
+        const index = targetAliases.findIndex(
+          (spread) => spread.alias === sourceSpread.alias,
+        );
+        if (index === -1) {
+          targetAliases.push(sourceSpread);
+          context.copyOnWrite.add(sourceSpread);
+          continue;
+        }
+        targetAliases[index] = mergeSpread(
+          context,
+          targetAliases[index],
+          sourceSpread,
+        );
       }
-      mutableTarget.spreads.set(
-        name,
-        mergeSpread(context, targetSpread, sourceSpread),
-      );
     }
   }
   return mutableTarget;
@@ -639,18 +639,22 @@ function addSpreadEntry(
   if (!selection.spreads) {
     selection.spreads = new Map();
   }
-  let spread = selection.spreads.get(node.name.value);
-  if (!spread) {
-    spread = {
+  const spreadAliases = selection.spreads.get(node.name.value);
+  const alias = getFragmentAlias(node);
+  let spreadGroup = spreadAliases?.find((spread) => spread.alias === alias);
+  if (!spreadGroup) {
+    spreadGroup = {
       name: node.name.value,
-      alias: getFragmentAlias(node),
-      __refs: [{ node, ancestors }],
+      alias,
+      selectedIn: [],
+      __refs: [],
     };
-    selection.spreads.set(node.name.value, spread);
-  } else {
-    spread.__refs.push({ node, ancestors });
+    accumulate(selection.spreads, node.name.value, spreadGroup);
   }
-  return spread;
+  spreadGroup.__refs ||= [];
+  spreadGroup.__refs.push({ node, ancestors });
+
+  return spreadGroup;
 }
 
 export function createArgumentDefs(args: ReadonlyArray<ArgumentNode>) {
@@ -686,6 +690,7 @@ function copySpreadInfo(context: Context, info: SpreadInfo): SpreadInfo {
   return {
     name: info.name,
     alias: info.alias,
+    selectedIn: [...info.selectedIn],
     __refs: [...(info.__refs ?? [])],
   };
 }
@@ -708,9 +713,11 @@ function copySelection(
   }
   if (selection.spreads) {
     copy.spreads = new Map();
-    for (const [name, spread] of selection.spreads.entries()) {
-      copy.spreads.set(name, spread);
-      context.copyOnWrite.add(spread);
+    for (const [name, aliases] of selection.spreads.entries()) {
+      copy.spreads.set(name, [...aliases]);
+      for (const alias of aliases) {
+        context.copyOnWrite.add(alias);
+      }
     }
   }
   if (selection.experimentalAliasedFragments) {
@@ -719,13 +726,6 @@ function copySelection(
     );
     for (const subSelection of selection.experimentalAliasedFragments.values()) {
       context.copyOnWrite.add(subSelection);
-    }
-  }
-  if (selection.spreads) {
-    copy.spreads = new Map();
-    for (const [name, spread] of selection.spreads.entries()) {
-      copy.spreads.set(name, spread);
-      context.copyOnWrite.add(spread);
     }
   }
   return copy;

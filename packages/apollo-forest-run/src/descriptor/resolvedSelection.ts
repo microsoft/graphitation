@@ -65,9 +65,9 @@ export function resolveSelection(
         )
       : undefined;
 
-    const skippedSpreads = selection.spreads?.size
+    const skippedSpreads = selection.spreadsWithDirectives?.length
       ? new Set(
-          [...selection.spreads.values()].filter(
+          [...selection.spreadsWithDirectives.values()].filter(
             (spread) =>
               !shouldInclude(spread.__refs, operation.variablesWithDefaults),
           ),

@@ -13,6 +13,7 @@ import {
   Context,
 } from "../possibleSelection";
 import { describeDocument } from "../document";
+import { assert } from "../../jsutils/assert";
 
 const commonSelectionKey = null;
 
@@ -106,7 +107,13 @@ describe(describeResultTree, () => {
       },
     });
     expect(printSelectedIn(possible.get("Foo"))).toEqual({
-      bar: ["Foo1", "Foo2"],
+      fields: {
+        bar: ["Foo1", "Foo2"],
+      },
+      spreads: {
+        Foo1: [true],
+        Foo2: [true],
+      },
     });
     const bar = possible.get("Foo")?.fields.get("bar");
     expect(printPossibleSelections(bar?.[0]?.selection)).toEqual({
@@ -118,11 +125,20 @@ describe(describeResultTree, () => {
       },
     });
     expect(printSelectedIn(bar?.[0]?.selection?.get(null))).toEqual({
-      baz: ["Foo2"],
+      fields: {
+        baz: ["Foo2"],
+      },
+      spreads: {}, // spreads do not exist on untyped selection by their nature
     });
     expect(printSelectedIn(bar?.[0]?.selection?.get("Bar"))).toEqual({
-      __typename: ["Bar1"],
-      baz: ["Bar2", "Foo2"],
+      fields: {
+        __typename: ["Bar1"],
+        baz: ["Bar2", "Foo2"],
+      },
+      spreads: {
+        Bar1: ["Foo1", "Bar2"],
+        Bar2: ["Bar1", "Foo2"],
+      },
     });
   });
 
@@ -291,6 +307,7 @@ describe(describeResultTree, () => {
         foo
         ... on Bar { bar }
         ...Foo1
+        ...Bar1
       }
       fragment Foo1 on Foo {
          foo
@@ -311,15 +328,30 @@ describe(describeResultTree, () => {
 
     expect(possible?.size).toEqual(3);
     expect(printSelectedIn(common)).toEqual({
-      foo: [true],
+      fields: {
+        foo: [true],
+      },
+      spreads: {},
     });
     expect(printSelectedIn(onFoo)).toEqual({
-      baz: ["Foo2"],
-      foo: ["Foo1", "Foo2", true],
+      fields: {
+        baz: ["Foo2"],
+        foo: ["Foo1", "Foo2", true],
+      },
+      spreads: {
+        Foo1: [true],
+        Foo2: ["Foo1"],
+        // Bar1: ["Foo2"], // fragment "Bar1" is on type "Bar", so it shouldn't be included in selection on type "Foo"
+      },
     });
     expect(printSelectedIn(onBar)).toEqual({
-      bar: [true, "Bar1"],
-      foo: [true],
+      fields: {
+        bar: [true, "Bar1"],
+        foo: [true],
+      },
+      spreads: {
+        Bar1: ["Foo2", true],
+      },
     });
   });
 
@@ -1105,7 +1137,10 @@ function printPossibleSelections(selection: PossibleSelections | undefined) {
 }
 
 function printSelectedIn(selection: PossibleSelection | undefined) {
-  return printFieldGroups(selection, true);
+  return {
+    fields: printFieldGroups(selection, true),
+    spreads: printSpreadGroups(selection, true),
+  };
 }
 
 function printFieldEntries(selection: PossibleSelections | undefined) {
@@ -1126,11 +1161,7 @@ function printFieldGroups(
   const fields: Record<string, unknown> = {};
   for (const [fieldName, fieldAliases] of selection?.fields.entries() ?? []) {
     for (const fieldInfo of fieldAliases) {
-      if (fieldInfo.name !== fieldName) {
-        throw new Error(
-          `Fields in map key and value do not match. Key: ${fieldName}, value: ${fieldInfo.name}`,
-        );
-      }
+      assert(fieldInfo.name === fieldName);
       const debugKey = fieldInfo.alias
         ? `${fieldInfo.alias}: ${fieldInfo.name}`
         : fieldInfo.name;
@@ -1145,4 +1176,28 @@ function printFieldGroups(
     }
   }
   return fields;
+}
+
+function printSpreadGroups(
+  selection: PossibleSelection | undefined,
+  printSelectedIn = false,
+) {
+  const spreads: Record<string, unknown> = {};
+  for (const [name, spreadAliases] of selection?.spreads?.entries() ?? []) {
+    for (const spreadInfo of spreadAliases) {
+      assert(spreadInfo.name === name);
+      const debugKey = spreadInfo.alias
+        ? `${spreadInfo.alias}: ${spreadInfo.name}`
+        : spreadInfo.name;
+
+      if (printSelectedIn) {
+        spreads[debugKey] = spreadInfo.selectedIn;
+      } else {
+        spreads[debugKey] = (spreadInfo?.__refs ?? []).map((usage) =>
+          print(usage.node).replace(/[\s\n]+/g, " "),
+        );
+      }
+    }
+  }
+  return spreads;
 }

@@ -110,6 +110,7 @@ export type FieldInfo = {
 export type SpreadInfo = {
   name: FragmentName;
   alias?: FragmentAlias;
+  selectedIn: SelectedIn[];
   __refs: ASTSpreadReference[];
 };
 
@@ -135,6 +136,7 @@ export type PossibleSelection = {
   fieldsWithDirectives?: FieldInfo[]; // fields affected by include/skip/defer directives
 
   spreads?: FragmentSpreadMap; // e.g. object with selection { foo, ...Bar, ... { ...Baz } } will have ["Bar", "Baz"] here
+  spreadsWithDirectives?: SpreadInfo[];
 
   experimentalAlias?: FragmentAlias;
   experimentalAliasedFragments?: Map<FragmentAlias, PossibleSelection>;
@@ -149,4 +151,4 @@ export type PossibleTypes = { [abstractType: TypeName]: TypeName[] };
 
 // e.g. { a: foo { bar }, { b: foo { baz } } -> same canonical name `foo` leads to multiple entries: `a { bar }` and `b { baz }`;
 export type FieldMap = Map<FieldName, FieldInfo[]>;
-export type FragmentSpreadMap = Map<FragmentName, SpreadInfo>;
+export type FragmentSpreadMap = Map<FragmentName, SpreadInfo[]>;
