@@ -22,6 +22,7 @@ import type {
   ResultTreeDescriptor,
   FragmentMap,
   SpreadInfo,
+  WatchBoundary,
 } from "./types";
 import { accumulate, getOrCreate } from "../jsutils/map";
 import { assert, assertNever } from "../jsutils/assert";
@@ -36,6 +37,11 @@ export type Context = Readonly<{
 }>;
 
 const EMPTY_ARRAY = Object.freeze([]);
+
+const OPERATION_WATCH_BOUNDARY = "";
+const DEFAULT_WATCH_BOUNDARIES = Object.freeze([
+  OPERATION_WATCH_BOUNDARY,
+]) as WatchBoundary[];
 
 export function describeResultTree(
   doc: DocumentDescriptor,
@@ -341,11 +347,7 @@ function completeSelections(
               selection.fieldsToNormalize.push(fieldInfo);
             }
           }
-          const spread = findClosestFragmentSpread(ancestors);
-          const selectedIn = spread ? spread.name.value : true;
-          if (!fieldInfo.selectedIn.includes(selectedIn)) {
-            fieldInfo.selectedIn.push(selectedIn);
-          }
+          addWatchBoundary(fieldInfo, findClosestWatchBoundary(ancestors));
         }
       }
     }
@@ -361,11 +363,7 @@ function completeSelections(
               selection.spreadsWithDirectives.push(spreadInfo);
             }
           }
-          const spreadNode = findClosestFragmentSpread(ancestors);
-          const selectedIn = spreadNode ? spreadNode.name.value : true;
-          if (!spreadInfo.selectedIn.includes(selectedIn)) {
-            spreadInfo.selectedIn.push(selectedIn);
-          }
+          addWatchBoundary(spreadInfo, findClosestWatchBoundary(ancestors));
         }
       }
     }
@@ -529,9 +527,10 @@ function mergeField(
     ? copyFieldInfo(context, target)
     : target;
 
+  for (const boundary of source.watchBoundaries) {
+    addWatchBoundary(mutableTarget, boundary);
+  }
   mutableTarget.__refs.push(...source.__refs);
-  mutableTarget.selectedIn.push(...source.selectedIn);
-
   if (!source.selection) {
     assert(!mutableTarget.selection);
     return mutableTarget;
@@ -612,7 +611,7 @@ export function createFieldGroup(node: FieldNode): FieldInfo {
   const field: FieldInfo = {
     name: node.name.value,
     dataKey: node.alias ? node.alias.value : node.name.value,
-    selectedIn: [],
+    watchBoundaries: EMPTY_ARRAY as unknown as WatchBoundary[], // There are two many fields to create a separate array for each, use `addWatchBoundary` for proper management
     __refs: [],
   };
   if (node.alias) {
@@ -622,6 +621,29 @@ export function createFieldGroup(node: FieldNode): FieldInfo {
     field.args = createArgumentDefs(node.arguments);
   }
   return field;
+}
+
+function addWatchBoundary(
+  container: FieldInfo | SpreadInfo,
+  boundary: WatchBoundary,
+) {
+  if (container.watchBoundaries === (EMPTY_ARRAY as unknown)) {
+    container.watchBoundaries =
+      boundary === OPERATION_WATCH_BOUNDARY
+        ? DEFAULT_WATCH_BOUNDARIES
+        : [boundary];
+    return;
+  }
+  if (container.watchBoundaries === DEFAULT_WATCH_BOUNDARIES) {
+    if (boundary === OPERATION_WATCH_BOUNDARY) {
+      return;
+    }
+    container.watchBoundaries = [...DEFAULT_WATCH_BOUNDARIES, boundary];
+    return;
+  }
+  if (!container.watchBoundaries.includes(boundary)) {
+    container.watchBoundaries.push(boundary);
+  }
 }
 
 function addSpreadEntry(
@@ -646,7 +668,7 @@ function addSpreadEntry(
     spreadGroup = {
       name: node.name.value,
       alias,
-      selectedIn: [],
+      watchBoundaries: EMPTY_ARRAY as unknown as WatchBoundary[], // use `addWatchBoundary` to manage it
       __refs: [],
     };
     accumulate(selection.spreads, node.name.value, spreadGroup);
@@ -665,7 +687,11 @@ function copyFieldInfo(context: Context, info: FieldInfo): FieldInfo {
   const copy: FieldInfo = {
     name: info.name,
     dataKey: info.dataKey,
-    selectedIn: [...info.selectedIn],
+    watchBoundaries:
+      info.watchBoundaries === (EMPTY_ARRAY as unknown) ||
+      info.watchBoundaries === DEFAULT_WATCH_BOUNDARIES
+        ? info.watchBoundaries
+        : [...info.watchBoundaries],
     __refs: [...(info.__refs ?? [])],
   };
   if (info.alias) {
@@ -690,7 +716,11 @@ function copySpreadInfo(context: Context, info: SpreadInfo): SpreadInfo {
   return {
     name: info.name,
     alias: info.alias,
-    selectedIn: [...info.selectedIn],
+    watchBoundaries:
+      info.watchBoundaries === (EMPTY_ARRAY as unknown) ||
+      info.watchBoundaries === DEFAULT_WATCH_BOUNDARIES
+        ? info.watchBoundaries
+        : [...info.watchBoundaries],
     __refs: [...(info.__refs ?? [])],
   };
 }
@@ -783,16 +813,24 @@ function isVariableNode(value: ValueNode | undefined): value is VariableNode {
   return value?.kind === "Variable";
 }
 
-function findClosestFragmentSpread(
-  ancestors: SelectionNode[],
-): FragmentSpreadNode | undefined {
+function findClosestWatchBoundary(ancestors: SelectionNode[]): WatchBoundary {
   for (let i = ancestors.length - 1; i >= 0; i--) {
-    const spread = ancestors[i];
-    if (spread.kind === "FragmentSpread") {
-      return spread;
+    const node = ancestors[i];
+    // ApolloCompat:
+    // In Apollo 3.x watch boundary is marked by @nonreactive directive
+    // Note:
+    //   There is additional complication - custom variants: @nonreactive(if: $variable) and @mask(if: $variable)
+    //   Variables are handled at runtime when bubbling to closest boundary
+    if (
+      node.kind === "FragmentSpread" &&
+      node.directives?.some(
+        (d) => d.name.value === "nonreactive" || d.name.value === "mask",
+      )
+    ) {
+      return node.name.value;
     }
   }
-  return undefined;
+  return OPERATION_WATCH_BOUNDARY;
 }
 
 function getTypeName(

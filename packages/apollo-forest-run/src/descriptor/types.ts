@@ -15,18 +15,20 @@ export type FieldAlias = string;
 export type DataKey = string;
 export type FragmentName = string;
 export type FragmentAlias = string;
-export type SelectedInOperation = true;
 export type VariableName = string;
-export type SelectedIn = FragmentName | SelectedInOperation;
 export type DeferLabel = string;
 export type VariableValues = { [name: VariableName]: unknown };
 export type NodeKey = string;
 export type OperationId = number;
-
 export type ArgumentValues = Map<string, unknown>;
 export type Directives = Map<string, { args: ArgumentValues }>;
 export type KeySpecifier = readonly string[];
 export type Key = string;
+
+// In Apollo fragment spread with @nonreactive indicates watch boundary (for `watchFragment`).
+// Operations can always be observed with `watchQuery`
+export type OperationWatchBoundary = "";
+export type WatchBoundary = FragmentName | OperationWatchBoundary;
 
 export type NormalizedFieldEntry =
   | string
@@ -100,17 +102,17 @@ export type FormattedError = GraphQLFormattedError;
 export type FieldInfo = {
   name: FieldName;
   dataKey: FieldAlias | FieldName;
+  watchBoundaries: WatchBoundary[];
   args?: Map<string, ValueNode>; // keeping as ValueNode to simplify matching against variables later
   alias?: FieldAlias;
   selection?: PossibleSelections;
-  selectedIn: SelectedIn[];
   __refs: ASTFieldReference[];
 };
 
 export type SpreadInfo = {
   name: FragmentName;
+  watchBoundaries: WatchBoundary[];
   alias?: FragmentAlias;
-  selectedIn: SelectedIn[];
   __refs: ASTSpreadReference[];
 };
 
