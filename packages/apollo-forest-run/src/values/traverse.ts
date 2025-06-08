@@ -63,6 +63,30 @@ export function findClosestNode(
   return findClosestNode(parentInfo.parent, findParent);
 }
 
+export function ascendFromChunk(
+  env: TraverseEnv,
+  from: ObjectChunk | CompositeListChunk,
+  visit?: (
+    value: ObjectChunk | CompositeListChunk,
+    parent: ObjectChunk | CompositeListChunk,
+    step: number | FieldInfo,
+  ) => void | false,
+): ObjectChunk | CompositeListChunk | undefined {
+  let value: ObjectChunk | CompositeListChunk = from;
+  let parentInfo: GraphChunkReference | null = env.findParent(from);
+  while (parentInfo?.parent) {
+    const step = Predicates.isParentListRef(parentInfo)
+      ? parentInfo.index
+      : parentInfo.field;
+    if (visit?.(value, parentInfo.parent, step) === false) {
+      break;
+    }
+    value = parentInfo.parent;
+    parentInfo = env.findParent(parentInfo.parent);
+  }
+  return value;
+}
+
 export function descendToChunk(
   env: TraverseEnv,
   from: ObjectChunk,
