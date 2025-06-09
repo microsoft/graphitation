@@ -65,15 +65,25 @@ export type Draft = SourceObject | SourceCompositeList;
 export type ChangedChunksMap = Map<ObjectChunk, FieldInfo[]> &
   Map<CompositeListChunk, null>;
 
-export type UpdateState = {
+export type UpdateObjectState = {
   drafts: Map<Source, Draft>;
   missingFields: MissingFieldsMap;
   changes: ChangedChunksMap;
 };
 
+export type UpdateTreeState = {
+  drafts: Map<Source, Draft>;
+  missingFields: MissingFieldsMap;
+  changes: ChangedChunksMap;
+  changedNodes: Set<NodeKey>;
+  affectedNodes: Set<NodeKey>;
+};
+
 export type UpdateTreeResult = {
   updatedTree: IndexedTree;
   changes: ChangedChunksMap;
+  changedNodes: Set<NodeKey>; // Directly changed nodes (subset of NodeDifferenceMap keys)
+  affectedNodes: Set<NodeKey>; // Parent nodes updated due to a change in a nested node (if node is both - directly updated and affected by another node update, it will be in both: changedNodes and affectedNodes)
 };
 
 export type UpdateObjectResult = {

@@ -32,7 +32,7 @@ import type {
   ForestEnv,
   Source,
   UpdateObjectResult,
-  UpdateState,
+  UpdateObjectState,
 } from "./types";
 import * as Difference from "../diff/difference";
 import * as Value from "../values";
@@ -44,7 +44,7 @@ import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 const EMPTY_ARRAY = Object.freeze([]);
 const inspect = JSON.stringify.bind(JSON);
 
-type Context = UpdateState & {
+type Context = UpdateObjectState & {
   env: ForestEnv;
   base: ObjectChunk;
   operation: OperationDescriptor;
@@ -58,7 +58,7 @@ export function updateObject(
   diff: ObjectDifference,
   findParentFn: ParentLocator,
   completeObjectFn: CompleteObjectFn,
-  state?: UpdateState,
+  state?: UpdateObjectState,
 ): UpdateObjectResult | undefined {
   if (!state) {
     state = {

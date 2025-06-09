@@ -1787,6 +1787,69 @@ describe("change reporting", () => {
   });
 });
 
+describe("changed and affected nodes detection", () => {
+  test("detects directly changed nodes", () => {
+    const base = completeObject({
+      entityList: [
+        entityFoo({ id: "entity-1", foo: "foo" }),
+        entityFoo({ id: "entity-2", foo: "foo" }),
+        entityFoo({ id: "entity-3", foo: "foo" }),
+      ],
+    });
+    const model = completeObject({
+      entityList: [
+        entityFoo({ id: "entity-1", foo: "changed" }),
+        entityFoo({ id: "entity-2", foo: "foo" }),
+        entityFoo({ id: "entity-3", foo: "changed" }),
+      ],
+    });
+    const { changedNodes, affectedNodes } = diffAndUpdate(base, model);
+    expect([...changedNodes]).toEqual(["entity-1", "entity-3"]);
+    expect([...affectedNodes]).toEqual(["ROOT_QUERY"]);
+  });
+
+  test("detects affected nodes when nested nodes change", () => {
+    const baseTreeWithNestedNodes: TestValue = [
+      {
+        test: completeObject({
+          id: "complete-1",
+          completeObject: {
+            id: "complete-2",
+            entityList: [entityFoo({ id: "entity-1", foo: "foo" })],
+          },
+        }),
+      } as any,
+      gql`
+        {
+          test {
+            id
+            completeObject {
+              id
+              entityList {
+                id
+                foo
+              }
+            }
+          }
+        }
+      `,
+    ];
+    const model = completeObject({
+      entity: entityFoo({ id: "entity-1", foo: "changed" }),
+    });
+    const { changedNodes, affectedNodes } = diffAndUpdate(
+      baseTreeWithNestedNodes,
+      model,
+    );
+    expect([...changedNodes]).toEqual(["entity-1"]);
+    expect([...affectedNodes]).toEqual([
+      "complete-2",
+      "complete-1",
+      "ROOT_QUERY",
+    ]);
+  });
+});
+
 describe("inconsistent state", () => {
   // Note: this can happen if previous operation update failed and operation result is now stale.
   //   It is still possible to update _some_ "nodes", but others may be in a permanent stale state.
@@ -1904,7 +1967,7 @@ function diffAndUpdate(
   maybeDeepFreeze(modelTree.result);
 
   const difference = diffTree(forest, modelTree, env);
-  const { updatedTree, changes } = updateTree(
+  const { updatedTree, changes, changedNodes, affectedNodes } = updateTree(
     baseTree,
     difference.nodeDifference,
     env,
@@ -1915,6 +1978,8 @@ function diffAndUpdate(
     modelTree,
     updatedTree,
     changes,
+    changedNodes,
+    affectedNodes,
     data: updatedTree.result.data as any,
   };
 }

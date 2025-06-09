@@ -17,7 +17,7 @@ import type { NodeDifferenceMap } from "../diff/types";
 import type {
   IndexedTree,
   Draft,
-  UpdateState,
+  UpdateTreeState,
   UpdateTreeResult,
   ForestEnv,
 } from "./types";
@@ -28,6 +28,7 @@ import {
   createDraft,
   createParentLocator,
   hydrateDraft,
+  isNodeValue,
   isObjectValue,
   isParentObjectRef,
   isRootRef,
@@ -47,12 +48,14 @@ export function updateTree(
   const rootChunks = base.nodes.get(base.rootNodeKey);
   assert(rootChunks?.length === 1);
   const rootChunk = rootChunks[0];
-  const state: UpdateState = {
+  const state: UpdateTreeState = {
     drafts: new Map(),
     changes: new Map(),
+    changedNodes: new Set(),
+    affectedNodes: new Set(),
     missingFields: new Map(),
   };
-  const { missingFields, drafts, changes } = state;
+  const { missingFields, drafts, changes, changedNodes, affectedNodes } = state;
 
   // Preserve existing information about any missing fields.
   // (updated objects will get their own entry in the map, so there won't be collisions)
@@ -101,6 +104,7 @@ export function updateTree(
       continue;
     }
     assert(result.draft === drafts.get(chunk.data));
+    changedNodes.add(chunk.key as string);
 
     // ApolloCompat: orphan nodes are mutated in place
     // TODO: remove this together with orphan nodes
@@ -117,7 +121,7 @@ export function updateTree(
     createSourceCopiesUpToRoot(env, base, chunk, state);
   }
   if (!changes.size) {
-    return { updatedTree: base, changes };
+    return { updatedTree: base, changes, changedNodes, affectedNodes };
   }
   const rootDraft = drafts.get(rootChunk.data);
   assert(isSourceObject(rootDraft));
@@ -147,7 +151,7 @@ export function updateTree(
   if (env.apolloCompat_keepOrphanNodes) {
     apolloBackwardsCompatibility_saveOrphanNodes(base, updatedTree);
   }
-  return { updatedTree, changes };
+  return { updatedTree, changes, changedNodes, affectedNodes };
 }
 
 function resolveAffectedChunks(
@@ -230,10 +234,18 @@ function createSourceCopiesUpToRoot(
   env: ForestEnv,
   tree: IndexedTree,
   from: CompositeValueChunk,
-  state: UpdateState,
+  state: UpdateTreeState,
+  isIndirectlyAffected = false,
 ): ComplexValue {
-  const { drafts } = state;
+  const { drafts, affectedNodes } = state;
   const parent = from.data ? tree.dataMap.get(from.data) : null;
+
+  if (isIndirectlyAffected && isNodeValue(from)) {
+    // Affected nodes include:
+    // 1. Nodes with difference that were modified (some nodes with normalized difference won't be actually affected by the update due to not having)
+    // 2. Parent nodes affected by the change in nested nodes
+    affectedNodes.add(from.key);
+  }
 
   if (!parent || isRootRef(parent)) {
     assert(isObjectValue(from));
@@ -250,6 +262,7 @@ function createSourceCopiesUpToRoot(
     tree,
     parent.parent,
     state,
+    true,
   );
   const parentDraft = drafts.get(parentSource);
   assert(parentDraft);
