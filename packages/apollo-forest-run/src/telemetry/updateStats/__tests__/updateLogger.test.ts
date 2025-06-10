@@ -46,13 +46,7 @@ describe("UpdateLogger", () => {
     disabledLogger?.fieldMutation();
     disabledLogger?.finishChunkUpdate();
 
-    expect(disabledLogger?.getStats()).toEqual({
-      objectsCopied: 0,
-      objectFieldsCopied: 0,
-      arraysCopied: 0,
-      arrayItemsCopied: 0,
-      updates: [],
-    });
+    expect(disabledLogger?.getStats()).toEqual(undefined);
   });
 
   it("should finish chunk", () => {
@@ -69,7 +63,7 @@ describe("UpdateLogger", () => {
         itemsMutated: 0,
         ...makeCopyStats(),
       },
-      parentUpdateStats: makeCopyStats(),
+      updateAscendantStats: makeCopyStats(),
     });
   });
 
