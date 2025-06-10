@@ -4,7 +4,6 @@ import { UpdateForestStats } from "../forest/types";
 // 1. Events MUST NOT include any user data or any other information that can be used to identify a user.
 //    This is necessary to comply with GDPR and other privacy regulations.
 //    Events could be sent to the server and may be stored in logs or other storage.
-
 // 2. Events MUST be serializable with JSON.stringify.
 type OperationDebugName = string;
 type FirstMissingFieldMessage = string;

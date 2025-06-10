@@ -1772,7 +1772,7 @@ function diffAndUpdate(
     baseTree,
     difference,
     modelTree,
-    updatedTree: updatedTree,
+    updatedTree,
     data: updatedTree.result.data as any,
   };
 }

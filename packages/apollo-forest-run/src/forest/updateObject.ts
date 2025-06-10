@@ -42,7 +42,7 @@ import { DifferenceKind } from "../diff/types";
 import { assert, assertNever } from "../jsutils/assert";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { createParentLocator } from "../values";
-import { UpdateLogger } from "../telemetry/updateStats/updateLogger";
+import type { UpdateLogger } from "../telemetry/updateStats/updateLogger";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const inspect = JSON.stringify.bind(JSON);
