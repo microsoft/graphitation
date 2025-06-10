@@ -54,7 +54,7 @@ type Context = UpdateState & {
   operation: OperationDescriptor;
   completeObjectFn: CompleteObjectFn;
   findParent: ParentLocator;
-  statsLogger: UpdateLogger;
+  statsLogger?: UpdateLogger;
 };
 
 export function updateObject(
@@ -78,9 +78,7 @@ export function updateObject(
     findParent: createParentLocator(dataMap),
     statsLogger,
   };
-  statsLogger.startMutation(base.type, base.selection.depth);
   const draft = updateObjectValue(context, base, diff);
-  statsLogger.finishMutation();
 
   return draft && draft !== base.data
     ? {
@@ -100,6 +98,7 @@ function updateObjectValue(
   }
   let copy = context.drafts.get(base.data);
   assert(!Array.isArray(copy));
+  context.statsLogger?.copyChunkStats(base, copy);
 
   for (const fieldName of difference.dirtyFields) {
     const aliases = base.selection.fields.get(fieldName);
@@ -141,10 +140,9 @@ function updateObjectValue(
       }
       if (!copy) {
         copy = { ...base.data };
-        context.statsLogger.copy(base);
         context.drafts.set(base.data, copy);
       }
-      context.statsLogger.fieldMutation();
+      context.statsLogger?.fieldMutation();
       copy[fieldInfo.dataKey] = updated;
     }
   }
@@ -195,6 +193,7 @@ function updateCompositeListValue(
   const layoutDiff = difference.layout;
   let copy = drafts.get(base.data);
   assert(Array.isArray(copy) || copy === undefined);
+  statsLogger?.copyChunkStats(base, copy);
 
   // Applying item changes _before_ layout changes (i.e. before item paths change)
   for (const index of difference.dirtyItems ?? EMPTY_ARRAY) {
@@ -210,11 +209,10 @@ function updateCompositeListValue(
     }
     if (!copy) {
       copy = [...base.data] as SourceCompositeList;
-      statsLogger.copy(base);
       drafts.set(base.data, copy);
     }
     copy[index] = updatedValue as Draft;
-    statsLogger.itemMutation();
+    statsLogger?.itemMutation();
     drafts.set(base.data[index] as Source, updatedValue as Draft);
   }
 

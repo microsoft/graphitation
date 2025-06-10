@@ -55,7 +55,7 @@ export function updateTree(
     missingFields: new Map(),
     statsLogger: createUpdateLogger(env.logUpdateStats),
   };
-  const { missingFields, drafts } = state;
+  const { missingFields, drafts, statsLogger } = state;
 
   // Preserve existing information about any missing fields.
   // (updated objects will get their own entry in the map, so there won't be collisions)
@@ -90,6 +90,7 @@ export function updateTree(
     const difference = differenceMap.get(chunk.key as string);
     assert(difference);
 
+    statsLogger?.startChunkUpdate(chunk);
     const result = updateObject(
       env,
       base.dataMap,
@@ -115,8 +116,8 @@ export function updateTree(
       });
       continue;
     }
-
     createSourceCopiesUpToRoot(env, base, chunk, state);
+    statsLogger?.finishChunkUpdate();
     dirty = true;
   }
   if (!dirty) {
@@ -235,6 +236,7 @@ function createSourceCopiesUpToRoot(
   tree: IndexedTree,
   from: CompositeValueChunk,
   state: UpdateState,
+  isRootCall = true,
 ): ComplexValue {
   const { drafts, statsLogger } = state;
   const parent = from.data ? tree.dataMap.get(from.data) : null;
@@ -243,9 +245,9 @@ function createSourceCopiesUpToRoot(
     assert(isObjectValue(from));
     const data = from.data;
     let draft = drafts.get(data);
+    statsLogger?.copyParentChunkStats(from, draft);
     if (!draft) {
       draft = { ...data };
-      statsLogger.copy(from);
       drafts.set(data, draft);
     }
     return data;
@@ -255,6 +257,7 @@ function createSourceCopiesUpToRoot(
     tree,
     parent.parent,
     state,
+    false,
   );
   const parentDraft = drafts.get(parentSource);
   assert(parentDraft);
@@ -265,9 +268,15 @@ function createSourceCopiesUpToRoot(
   const value = (parentSource as any)[dataKey];
 
   let draft = drafts.get(value);
+
+  // Only report copies made while traversing up the tree.
+  // The initial (root) call includes fields copied by updateValue,
+  // which are unrelated to the upward copy process.
+  if (!isRootCall) {
+    statsLogger?.copyParentChunkStats(from, draft);
+  }
   if (!draft) {
     draft = (Array.isArray(value) ? [...value] : { ...value }) as Draft;
-    statsLogger.copy(from);
     drafts.set(value, draft);
   }
   (parentDraft as any)[dataKey] = draft;

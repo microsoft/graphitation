@@ -59,13 +59,13 @@ export type IndexedForest = {
 export type Source = Readonly<SourceObject | SourceCompositeList>;
 export type Draft = SourceObject | SourceCompositeList;
 
-export type UpdateForestStats = Map<TypeName, UpdateTreeStats>;
+export type UpdateForestStats = Map<TypeName, UpdateTreeStats | undefined>;
 
 export type UpdateState = {
   drafts: Map<Source, Draft>;
   missingFields: MissingFieldsMap;
   indexedTree: IndexedTree;
-  statsLogger: UpdateLogger;
+  statsLogger?: UpdateLogger;
 };
 
 export type UpdateObjectResult = {
@@ -101,5 +101,5 @@ export type ForestEnv = {
   apolloCompat_keepOrphanNodes?: boolean;
 
   // Telemetry feature flags
-  logUpdateStats: boolean;
+  logUpdateStats?: boolean;
 };

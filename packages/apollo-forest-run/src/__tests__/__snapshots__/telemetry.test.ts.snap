@@ -1,0 +1,74 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Update Stats Telemetry should report update stats telemetry 1`] = `
+[
+  {
+    "causedBy": "mutation UpdateFriend",
+    "kind": "UPDATE_STATS",
+    "updateStats": Map {
+      "query MyQuery" => {
+        "arrayItemsCopied": 2,
+        "arraysCopied": 1,
+        "objectFieldsCopied": 13,
+        "objectsCopied": 4,
+        "updates": [
+          {
+            "depth": 3,
+            "nodeType": "Profile",
+            "updateAscendantStats": {
+              "arrayItemsCopied": 2,
+              "arraysCopied": 1,
+              "objectFieldsCopied": 10,
+              "objectsCopied": 3,
+            },
+            "updateStats": {
+              "arrayItemsCopied": 0,
+              "arraysCopied": 0,
+              "fieldsMutated": 1,
+              "itemsMutated": 0,
+              "objectFieldsCopied": 3,
+              "objectsCopied": 1,
+            },
+          },
+          {
+            "depth": 2,
+            "nodeType": "Friend",
+            "updateAscendantStats": {
+              "arrayItemsCopied": 2,
+              "arraysCopied": 1,
+              "objectFieldsCopied": 6,
+              "objectsCopied": 2,
+            },
+            "updateStats": {
+              "arrayItemsCopied": 0,
+              "arraysCopied": 0,
+              "fieldsMutated": 1,
+              "itemsMutated": 0,
+              "objectFieldsCopied": 4,
+              "objectsCopied": 1,
+            },
+          },
+          {
+            "depth": 1,
+            "nodeType": "User",
+            "updateAscendantStats": {
+              "arrayItemsCopied": 0,
+              "arraysCopied": 0,
+              "objectFieldsCopied": 1,
+              "objectsCopied": 1,
+            },
+            "updateStats": {
+              "arrayItemsCopied": 0,
+              "arraysCopied": 0,
+              "fieldsMutated": 2,
+              "itemsMutated": 0,
+              "objectFieldsCopied": 5,
+              "objectsCopied": 1,
+            },
+          },
+        ],
+      },
+    },
+  },
+]
+`;

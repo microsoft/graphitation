@@ -55,6 +55,6 @@ export type UpdateStats = {
 
 export type TelemetryEvent =
   | UnexpectedRefetch
+  | UpdateStats
   | ReadPolicyError
-  | MergePolicyError
-  | UpdateStats;
+  | MergePolicyError;

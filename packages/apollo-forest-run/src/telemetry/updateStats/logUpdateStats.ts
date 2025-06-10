@@ -5,7 +5,7 @@ export function logUpdateStats(env: CacheEnv, writes: Write[]) {
 
   writes.forEach((write) => {
     const { updateStats } = write;
-    if (logUpdateStats || !updateStats || updateStats.size === 0) {
+    if (!logUpdateStats || !updateStats || updateStats.size === 0) {
       return;
     }
 

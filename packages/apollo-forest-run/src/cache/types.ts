@@ -86,7 +86,7 @@ export type Transaction = {
   writes: Write[];
 };
 
-export type CacheConfig = InMemoryCacheConfig & {
+export type ForestRunAdditionalConfig = {
   autoEvict?: boolean;
   maxOperationCount?: number;
   nonEvictableQueries?: Set<string>;
@@ -97,6 +97,8 @@ export type CacheConfig = InMemoryCacheConfig & {
   // Telemetry feature flags
   logUpdateStats?: boolean;
 };
+
+export type CacheConfig = InMemoryCacheConfig & ForestRunAdditionalConfig;
 
 export type CacheEnv = {
   addTypename?: boolean; // ApolloCompat
