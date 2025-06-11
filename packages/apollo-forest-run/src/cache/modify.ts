@@ -110,7 +110,7 @@ export function modify(
       targetForest,
       affectedOperations,
       chunkProvider,
-    );
+    ).length;
     updatedLayers += updated ? 1 : 0;
 
     if (layerDifference.deletedNodes.length) {

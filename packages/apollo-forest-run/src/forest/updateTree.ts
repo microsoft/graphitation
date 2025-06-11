@@ -34,6 +34,7 @@ import {
   resolveObjectKey,
 } from "../values";
 import { updateObject } from "./updateObject";
+import { createUpdateLogger } from "../telemetry/updateStats/updateLogger";
 
 export type NodeDifferenceMap = Map<string, ObjectDifference>;
 type ComplexValue = SourceObject | NestedList<SourceObject>;
@@ -44,15 +45,17 @@ export function updateTree(
   env: ForestEnv,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
   state?: UpdateState,
-): IndexedTree {
+): UpdateState {
   const rootChunks = base.nodes.get(base.rootNodeKey);
   assert(rootChunks?.length === 1);
   const rootChunk = rootChunks[0];
   state ??= {
+    indexedTree: base,
     drafts: new Map(),
     missingFields: new Map(),
+    statsLogger: createUpdateLogger(env.logUpdateStats),
   };
-  const { missingFields, drafts } = state;
+  const { missingFields, drafts, statsLogger } = state;
 
   // Preserve existing information about any missing fields.
   // (updated objects will get their own entry in the map, so there won't be collisions)
@@ -87,6 +90,7 @@ export function updateTree(
     const difference = differenceMap.get(chunk.key as string);
     assert(difference);
 
+    statsLogger?.startChunkUpdate(chunk);
     const result = updateObject(
       env,
       base.dataMap,
@@ -113,10 +117,11 @@ export function updateTree(
       continue;
     }
     createSourceCopiesUpToRoot(env, base, chunk, state);
+    statsLogger?.finishChunkUpdate();
     dirty = true;
   }
   if (!dirty) {
-    return base;
+    return state;
   }
   const rootDraft = drafts.get(rootChunk.data);
   assert(isSourceObject(rootDraft));
@@ -146,7 +151,8 @@ export function updateTree(
   if (env.apolloCompat_keepOrphanNodes) {
     apolloBackwardsCompatibility_saveOrphanNodes(base, newIndexedResult);
   }
-  return newIndexedResult;
+  state.indexedTree = newIndexedResult;
+  return state;
 }
 
 function resolveAffectedChunks(
@@ -230,14 +236,16 @@ function createSourceCopiesUpToRoot(
   tree: IndexedTree,
   from: CompositeValueChunk,
   state: UpdateState,
+  isRootCall = true,
 ): ComplexValue {
-  const { drafts } = state;
+  const { drafts, statsLogger } = state;
   const parent = from.data ? tree.dataMap.get(from.data) : null;
 
   if (!parent || isRootRef(parent)) {
     assert(isObjectValue(from));
     const data = from.data;
     let draft = drafts.get(data);
+    statsLogger?.copyParentChunkStats(from, draft);
     if (!draft) {
       draft = { ...data };
       drafts.set(data, draft);
@@ -249,6 +257,7 @@ function createSourceCopiesUpToRoot(
     tree,
     parent.parent,
     state,
+    false,
   );
   const parentDraft = drafts.get(parentSource);
   assert(parentDraft);
@@ -259,6 +268,13 @@ function createSourceCopiesUpToRoot(
   const value = (parentSource as any)[dataKey];
 
   let draft = drafts.get(value);
+
+  // Only report copies made while traversing up the tree.
+  // The initial (root) call includes fields copied by updateValue,
+  // which are unrelated to the upward copy process.
+  if (!isRootCall) {
+    statsLogger?.copyParentChunkStats(from, draft);
+  }
   if (!draft) {
     draft = (Array.isArray(value) ? [...value] : { ...value }) as Draft;
     drafts.set(value, draft);

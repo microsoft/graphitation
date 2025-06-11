@@ -1,3 +1,5 @@
+import { UpdateTreeStats } from "./updateStats/types";
+
 // IMPORTANT!
 // 1. Events MUST NOT include any user data or any other information that can be used to identify a user.
 //    This is necessary to comply with GDPR and other privacy regulations.
@@ -43,7 +45,15 @@ export type MergePolicyError = {
   field: string;
 };
 
+// Event occurs when merge policy throws an error
+export type UpdateStats = {
+  kind: "UPDATE_STATS";
+  causedBy: OperationDebugName;
+  updateStats: UpdateTreeStats[];
+};
+
 export type TelemetryEvent =
   | UnexpectedRefetch
+  | UpdateStats
   | ReadPolicyError
   | MergePolicyError;
