@@ -59,7 +59,7 @@ export type IndexedForest = {
 export type Source = Readonly<SourceObject | SourceCompositeList>;
 export type Draft = SourceObject | SourceCompositeList;
 
-export type UpdateForestStats = UpdateTreeStats[];
+export type UpdateForestStats = (UpdateTreeStats | null)[];
 
 export type UpdateState = {
   drafts: Map<Source, Draft>;

@@ -12,7 +12,7 @@ export function logUpdateStats(env: CacheEnv, writes: Write[]) {
     env.notify?.({
       kind: "UPDATE_STATS",
       causedBy: write.tree.operation.debugName,
-      updateStats,
+      updateStats: updateStats as NonNullable<(typeof updateStats)[number]>[],
     });
   });
 }

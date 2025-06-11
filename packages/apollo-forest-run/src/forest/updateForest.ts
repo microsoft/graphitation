@@ -47,10 +47,7 @@ export function updateAffectedTrees(
     // Reset previous tree state on commit
     nextTreeState.prev = null;
     replaceTree(forest, nextTreeState);
-    const treeUpdateStats = statsLogger?.getStats(operation.debugName);
-    if (treeUpdateStats) {
-      forestStats.push(treeUpdateStats);
-    }
+    forestStats.push(statsLogger?.getStats(operation.debugName) ?? null);
   }
   return forestStats;
 }

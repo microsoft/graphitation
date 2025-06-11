@@ -1,4 +1,4 @@
-import { UpdateForestStats } from "../forest/types";
+import { UpdateTreeStats } from "./updateStats/types";
 
 // IMPORTANT!
 // 1. Events MUST NOT include any user data or any other information that can be used to identify a user.
@@ -49,7 +49,7 @@ export type MergePolicyError = {
 export type UpdateStats = {
   kind: "UPDATE_STATS";
   causedBy: OperationDebugName;
-  updateStats: UpdateForestStats;
+  updateStats: UpdateTreeStats[];
 };
 
 export type TelemetryEvent =
