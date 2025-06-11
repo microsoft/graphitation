@@ -43,10 +43,15 @@ export class UpdateLogger {
   private currentUpdate: ChunkUpdateStats | undefined;
 
   constructor() {
-    this.stats = {
-      ...makeCopyStats(),
+    const stats = {
+      objectsCopied: 0,
+      objectFieldsCopied: 0,
+      arraysCopied: 0,
+      arrayItemsCopied: 0,
+      operationName: "UNKNOWN_OPERATION",
       updates: [],
     };
+    this.stats = stats;
 
     this.currentUpdate = undefined;
   }
@@ -116,9 +121,12 @@ export class UpdateLogger {
       nodeType: chunk.type || "UNKNOWN_OBJECT",
       depth: chunk.selection.depth,
       updateStats: {
+        arraysCopied: 0,
+        arrayItemsCopied: 0,
+        objectFieldsCopied: 0,
+        objectsCopied: 0,
         fieldsMutated: 0,
         itemsMutated: 0,
-        ...makeCopyStats(),
       },
       updateAscendantStats: makeCopyStats(),
     };
@@ -145,7 +153,8 @@ export class UpdateLogger {
     }
   }
 
-  getStats(): UpdateTreeStats {
+  getStats(operationName: string): UpdateTreeStats {
+    this.stats.operationName = operationName;
     return this.stats;
   }
 }

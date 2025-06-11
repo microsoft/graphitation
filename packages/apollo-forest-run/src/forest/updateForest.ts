@@ -28,7 +28,7 @@ export function updateAffectedTrees(
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
 ): UpdateForestStats {
   // Note: affectedOperations may contain false-positives (updateTree will ignore those)
-  const forestStats: UpdateForestStats = new Map();
+  const forestStats: UpdateForestStats = [];
   for (const [operation, difference] of affectedOperations.entries()) {
     const currentTreeState = forest.trees.get(operation.id);
     assert(currentTreeState);
@@ -47,7 +47,10 @@ export function updateAffectedTrees(
     // Reset previous tree state on commit
     nextTreeState.prev = null;
     replaceTree(forest, nextTreeState);
-    forestStats.set(operation.debugName, statsLogger?.getStats());
+    const treeUpdateStats = statsLogger?.getStats(operation.debugName);
+    if (treeUpdateStats) {
+      forestStats.push(treeUpdateStats);
+    }
   }
   return forestStats;
 }

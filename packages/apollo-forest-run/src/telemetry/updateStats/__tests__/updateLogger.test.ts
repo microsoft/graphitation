@@ -11,6 +11,7 @@ import {
 
 describe("UpdateLogger", () => {
   let logger: UpdateLogger;
+  const queryName = "TestQuery";
   const testObjectChunk = {
     type: "MY_TYPE",
     kind: ValueKind.Object,
@@ -31,7 +32,7 @@ describe("UpdateLogger", () => {
   });
 
   it("should initialize with empty stats", () => {
-    expect(logger.getStats()).toEqual({
+    expect(logger.getStats(queryName)).toEqual({
       objectsCopied: 0,
       objectFieldsCopied: 0,
       arraysCopied: 0,
@@ -46,14 +47,14 @@ describe("UpdateLogger", () => {
     disabledLogger?.fieldMutation();
     disabledLogger?.finishChunkUpdate();
 
-    expect(disabledLogger?.getStats()).toEqual(undefined);
+    expect(disabledLogger?.getStats(queryName)).toEqual(undefined);
   });
 
   it("should finish chunk", () => {
     logger.startChunkUpdate(testObjectChunk);
     logger.finishChunkUpdate();
 
-    const chunkUpdateStats = logger.getStats();
+    const chunkUpdateStats = logger.getStats(queryName);
     expect(chunkUpdateStats.updates.length).toEqual(1);
     expect(chunkUpdateStats.updates[0]).toEqual({
       nodeType: "MY_TYPE",
@@ -73,7 +74,7 @@ describe("UpdateLogger", () => {
     logger.fieldMutation();
     logger.finishChunkUpdate();
 
-    const chunkUpdateStats = logger.getStats();
+    const chunkUpdateStats = logger.getStats(queryName);
     expect(chunkUpdateStats.updates[0].updateStats.fieldsMutated).toEqual(2);
   });
 
@@ -83,7 +84,7 @@ describe("UpdateLogger", () => {
     logger.itemMutation();
     logger.finishChunkUpdate();
 
-    const chunkUpdateStats = logger.getStats();
+    const chunkUpdateStats = logger.getStats(queryName);
     expect(chunkUpdateStats.updates[0].updateStats.itemsMutated).toEqual(2);
   });
 
@@ -92,7 +93,7 @@ describe("UpdateLogger", () => {
     logger.copyChunkStats(testArrayChunk, undefined);
     logger.finishChunkUpdate();
 
-    const chunkUpdateStats = logger.getStats();
+    const chunkUpdateStats = logger.getStats(queryName);
     expect(chunkUpdateStats.updates[0].updateStats.arraysCopied).toEqual(1);
     expect(chunkUpdateStats.updates[0].updateStats.arrayItemsCopied).toEqual(2);
   });

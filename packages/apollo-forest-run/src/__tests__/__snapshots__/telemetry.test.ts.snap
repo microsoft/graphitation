@@ -5,12 +5,13 @@ exports[`Update Stats Telemetry should report update stats telemetry 1`] = `
   {
     "causedBy": "mutation UpdateFriend",
     "kind": "UPDATE_STATS",
-    "updateStats": Map {
-      "query MyQuery" => {
+    "updateStats": [
+      {
         "arrayItemsCopied": 2,
         "arraysCopied": 1,
         "objectFieldsCopied": 13,
         "objectsCopied": 4,
+        "operationName": "query MyQuery",
         "updates": [
           {
             "depth": 3,
@@ -68,7 +69,7 @@ exports[`Update Stats Telemetry should report update stats telemetry 1`] = `
           },
         ],
       },
-    },
+    ],
   },
 ]
 `;
