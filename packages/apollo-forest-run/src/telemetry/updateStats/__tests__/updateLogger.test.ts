@@ -37,6 +37,7 @@ describe("UpdateLogger", () => {
       objectFieldsCopied: 0,
       arraysCopied: 0,
       arrayItemsCopied: 0,
+      operationName: "TestQuery",
       updates: [],
     });
   });
