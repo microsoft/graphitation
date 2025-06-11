@@ -48,7 +48,7 @@ export class UpdateLogger {
       objectFieldsCopied: 0,
       arraysCopied: 0,
       arrayItemsCopied: 0,
-      operationName: "UNKNOWN_OPERATION",
+      operationName: "",
       updates: [],
     };
     this.stats = stats;
