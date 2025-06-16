@@ -69,9 +69,9 @@ export function ascendFromChunk(
   visit?: (
     value: ObjectChunk | CompositeListChunk,
     parent: ObjectChunk | CompositeListChunk,
-    step: number | FieldInfo,
+    step: number | FieldInfo, // TODO: | SpreadInfo (for fragment aliases)
   ) => void | false,
-): ObjectChunk | CompositeListChunk | undefined {
+): ObjectChunk | CompositeListChunk {
   let value: ObjectChunk | CompositeListChunk = from;
   let parentInfo: GraphChunkReference | null = env.findParent(from);
   while (parentInfo?.parent) {
@@ -94,7 +94,7 @@ export function descendToChunk(
   visit?: (
     value: GraphChunk,
     parent: ObjectChunk | CompositeListChunk,
-    step: number | FieldInfo,
+    step: number | FieldInfo, // TODO: | SpreadInfo (for fragment aliases)
   ) => void | false,
 ): GraphChunk | undefined {
   if (

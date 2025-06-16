@@ -9,7 +9,7 @@ import {
   fieldEntriesAreEqual,
 } from "../descriptor/resolvedSelection";
 import { assert } from "../jsutils/assert";
-import type { IndexedForest, ForestEnv } from "./types";
+import type { IndexedForest, ForestEnv, UpdateTreeResult } from "./types";
 import { DataForest, OptimisticLayer } from "../cache/types";
 import { replaceTree } from "./addTree";
 import { NodeChunk } from "../values/types";
@@ -26,30 +26,27 @@ export function updateAffectedTrees(
   forest: DataForest | OptimisticLayer,
   affectedOperations: Map<OperationDescriptor, NodeDifferenceMap>,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
-): number {
+): UpdateTreeResult[] {
   // Note: affectedOperations may contain false-positives (updateTree will ignore those)
-  let totalUpdated = 0;
+  const allUpdated: UpdateTreeResult[] = [];
   for (const [operation, difference] of affectedOperations.entries()) {
     const currentTreeState = forest.trees.get(operation.id);
     assert(currentTreeState);
-    const { updatedTree } = updateTree(
-      currentTreeState,
-      difference,
-      env,
-      getNodeChunks,
-    );
-    if (!updatedTree || updatedTree === currentTreeState) {
+    const result = updateTree(currentTreeState, difference, env, getNodeChunks);
+
+    if (result.updatedTree === currentTreeState) {
       // nodeDifference may not be overlapping with selections of this tree.
       //   E.g. difference could be for operation { id: "1", firstName: "Changed" }
       //   but current operation is { id: "1", lastName: "Unchanged" }
       continue;
     }
+    allUpdated.push(result);
+
     // Reset previous tree state on commit
-    updatedTree.prev = null;
-    replaceTree(forest, updatedTree);
-    totalUpdated++;
+    result.updatedTree.prev = null;
+    replaceTree(forest, result.updatedTree);
   }
-  return totalUpdated;
+  return allUpdated;
 }
 
 export function resolveAffectedOperations(

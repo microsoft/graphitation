@@ -7,7 +7,7 @@ import type {
 } from "./types";
 import { GraphDifference } from "../diff/diffTree";
 import { OperationDescriptor } from "../descriptor/types";
-import { NodeDifferenceMap } from "../forest/updateTree";
+import { NodeDifferenceMap } from "../diff/types";
 import { IndexedTree } from "../forest/types";
 import { isNodeValue, isObjectValue } from "../values/predicates";
 import { assert } from "../jsutils/assert";

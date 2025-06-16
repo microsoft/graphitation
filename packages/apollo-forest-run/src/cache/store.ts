@@ -47,6 +47,7 @@ export function createStore(_: CacheEnv): Store {
     optimisticReadResults,
     partialReadResults,
     watches: new Map(),
+    fragmentWatches: new Map(),
     atime: new Map(),
   };
   return store;

@@ -1,5 +1,5 @@
 import type { Cache } from "@apollo/client";
-import type { IndexedTree } from "../forest/types";
+import type { IndexedTree, UpdateTreeResult } from "../forest/types";
 import type { OperationResult } from "../values/types";
 import type {
   CacheEnv,
@@ -32,7 +32,7 @@ import {
 } from "../forest/updateForest";
 import { indexTree } from "../forest/indexTree";
 import { createParentLocator, markAsPartial, TraverseEnv } from "../values";
-import { NodeDifferenceMap } from "../forest/updateTree";
+import { NodeDifferenceMap } from "../diff/types";
 import { getNodeChunks } from "./draftHelpers";
 import { replaceTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
@@ -87,7 +87,12 @@ export function write(
   assert(!existingResult?.prev);
 
   if (writeData === existingData && existingResult) {
-    return { options, incoming: existingResult, affected: [] };
+    return {
+      options,
+      incoming: existingResult,
+      affected: [],
+      affectedNodes: new Set(),
+    };
   }
 
   if (!ROOT_NODES.includes(operationDescriptor.rootNodeKey)) {
@@ -158,7 +163,13 @@ export function write(
   const chunkProvider = (key: NodeKey) =>
     getNodeChunks(getEffectiveReadLayers(store, targetForest, false), key);
 
-  updateAffectedTrees(env, targetForest, affectedOperations, chunkProvider);
+  const allUpdates = updateAffectedTrees(
+    env,
+    targetForest,
+    affectedOperations,
+    chunkProvider,
+  );
+  const affectedNodes = aggregateAllAffectedNodes(difference, allUpdates);
 
   if (!existingResult && shouldCache(targetForest, operationDescriptor)) {
     affectedOperations.set(operationDescriptor, difference.nodeDifference);
@@ -191,6 +202,7 @@ export function write(
     options,
     incoming: modifiedIncomingResult,
     affected: affectedOperations.keys(),
+    affectedNodes,
     difference,
   };
 }
@@ -283,6 +295,22 @@ function shouldCache(
     return true;
   }
   return operation.cache;
+}
+
+function aggregateAllAffectedNodes(
+  difference: GraphDifference,
+  updates: UpdateTreeResult[],
+): Set<NodeKey> {
+  const accumulator = new Set<NodeKey>([
+    ...difference.newNodes,
+    ...difference.nodeDifference.keys(),
+  ]);
+  for (const { affectedNodes } of updates) {
+    for (const nodeKey of affectedNodes) {
+      accumulator.add(nodeKey);
+    }
+  }
+  return accumulator;
 }
 
 const inspect = JSON.stringify.bind(JSON);

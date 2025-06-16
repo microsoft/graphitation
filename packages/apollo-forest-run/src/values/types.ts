@@ -7,6 +7,7 @@ import {
   DataKey,
   ResolvedSelection,
   ArgumentValues,
+  SpreadInfo,
 } from "../descriptor/types";
 import * as ValueKind from "./valueKind";
 
@@ -95,6 +96,11 @@ export type ObjectFieldReference = {
   parent: ObjectChunk;
   field: FieldInfo;
 };
+export type FragmentAliasReference = {
+  value: ObjectChunk | CompositeListChunk;
+  parent: ObjectChunk;
+  spread: SpreadInfo;
+};
 export type ListItemReference = {
   value: CompositeValueChunk;
   parent: CompositeListChunk;
@@ -103,6 +109,7 @@ export type ListItemReference = {
 
 export type GraphChunkReference =
   | ObjectFieldReference
+  // TODO: | FragmentAliasReference
   | ListItemReference
   | RootChunkReference;
 

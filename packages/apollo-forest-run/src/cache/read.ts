@@ -172,8 +172,11 @@ function readFragment(
       continue;
     }
     const matchingChunk = nodeChunks?.find((chunk) => {
-      const spread = chunk.selection.spreads?.get(fragment.name.value);
-      return spread ? !chunk.selection.skippedSpreads?.has(spread) : false;
+      const aliases =
+        chunk.selection.spreads?.get(fragment.name.value) ?? EMPTY_ARRAY;
+      return aliases.some(
+        (spread) => !chunk.selection.skippedSpreads?.has(spread),
+      );
     });
     if (matchingChunk) {
       return matchingChunk;

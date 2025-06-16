@@ -66,6 +66,7 @@ export type Store = {
   optimisticReadResults: Map<OperationDescriptor, TransformedResult>;
   partialReadResults: Set<OperationDescriptor>; // FIXME: this should be per layer for proper cleanup
   watches: Map<OperationDescriptor, Array<Cache.WatchOptions>>;
+  fragmentWatches: Map<NodeKey, Array<Cache.WatchOptions>>;
   // Last access time of operation
   //   Used for LRU eviction
   atime: Map<OperationId, number>;
@@ -74,15 +75,17 @@ export type Store = {
 export type Transaction = {
   optimisticLayer: OptimisticLayer | null;
   affectedOperations: Set<OperationDescriptor> | null;
+  affectedNodes: Set<NodeKey> | null;
   watchesToNotify: Set<Cache.WatchOptions> | null;
   forceOptimistic: boolean | null;
   changelog: (WriteResult | ModifyResult)[];
 };
 
 export type WriteResult = {
-    options: Cache.WriteOptions;
+  options: Cache.WriteOptions;
   incoming: DataTree;
   affected: Iterable<OperationDescriptor>;
+  affectedNodes: Set<NodeKey>; // contains directly updated nodes + parent nodes indirectly affected by nested node update
   difference?: GraphDifference;
 };
 

@@ -30,13 +30,20 @@ export function describeDocument(document: DocumentNode): DocumentDescriptor {
   };
 }
 
-function debugName({
+export function debugName({
   name,
   operation,
   selectionSet,
 }: OperationDefinitionNode): string {
   if (name?.value) {
     return `${operation} ${name.value}`;
+  }
+  if (
+    selectionSet.selections.length === 1 &&
+    selectionSet.selections[0].kind === "FragmentSpread"
+  ) {
+    // Apollo special fragment operation
+    return `fragment ${getName(selectionSet.selections[0])}`;
   }
   const rootSelections = selectionSet.selections.map((node) => {
     if (node.kind === "FragmentSpread") {
@@ -53,7 +60,9 @@ function debugName({
         : `... {...}`;
     }
   });
-  return `${operation} {\n  ` + rootSelections.join("\n  ") + `\n}`;
+  return rootSelections.length === 1
+    ? `${operation} { ` + rootSelections[0] + `}`
+    : `${operation} {\n  ` + rootSelections.join("\n  ") + `\n}`;
 }
 
 const getName = (node: { name: NameNode; alias?: NameNode }): string =>
