@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "log update stats",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "pavelglac@microsoft.com",
-  "dependentChangeType": "patch"
-}

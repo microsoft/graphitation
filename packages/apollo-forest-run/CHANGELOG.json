@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Mon, 16 Jun 2025 10:23:51 GMT",
+      "version": "0.13.0",
+      "tag": "@graphitation/apollo-forest-run_v0.13.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "8a2a65ea1a8b063979cdc6f344076404b2720f26",
+            "comment": "log update stats"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 05 Jun 2025 08:25:20 GMT",
       "version": "0.12.4",
       "tag": "@graphitation/apollo-forest-run_v0.12.4",
