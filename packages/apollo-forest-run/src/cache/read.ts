@@ -115,20 +115,23 @@ function growOutputTree(
   optimistic: boolean,
   previous?: TransformedResult,
 ): TransformedResult {
-  const readLayers = getEffectiveReadLayers(store, forest, optimistic);
-
   let dataTree: IndexedTree | undefined = forest.trees.get(operation.id);
-  for (const layer of readLayers) {
+  for (const layer of getEffectiveReadLayers(store, forest, false)) {
     dataTree = layer.trees.get(operation.id);
     if (dataTree) {
       break;
     }
   }
   if (!dataTree) {
-    dataTree = growDataTree(env, store.dataForest, operation);
-    addTree(store.dataForest, dataTree);
+    dataTree = growDataTree(env, forest, operation);
+    addTree(forest, dataTree);
   }
-  const tree = applyTransformations(env, dataTree, readLayers, previous);
+  const tree = applyTransformations(
+    env,
+    dataTree,
+    getEffectiveReadLayers(store, forest, optimistic),
+    previous,
+  );
   indexReadPolicies(env, tree);
 
   if (tree === dataTree) {
