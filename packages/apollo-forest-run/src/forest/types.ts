@@ -22,6 +22,8 @@ import {
 } from "../values/types";
 import { TelemetryEvent } from "../telemetry/types";
 import { Logger } from "../jsutils/logger";
+import { UpdateTreeStats } from "../telemetry/updateStats/types";
+import { UpdateLogger } from "../telemetry/updateStats/updateLogger";
 
 export type IndexedTree = {
   operation: OperationDescriptor;
@@ -57,9 +59,13 @@ export type IndexedForest = {
 export type Source = Readonly<SourceObject | SourceCompositeList>;
 export type Draft = SourceObject | SourceCompositeList;
 
+export type UpdateForestStats = (UpdateTreeStats | null)[];
+
 export type UpdateState = {
   drafts: Map<Source, Draft>;
   missingFields: MissingFieldsMap;
+  indexedTree: IndexedTree;
+  statsLogger?: UpdateLogger;
 };
 
 export type UpdateObjectResult = {
@@ -93,4 +99,7 @@ export type ForestEnv = {
   //   This is mostly needed for compatibility with Apollo tests - real world apps _shouldn't_ be affected
   keyMap?: WeakMap<SourceObject, string | false>;
   apolloCompat_keepOrphanNodes?: boolean;
+
+  // Telemetry feature flags
+  logUpdateStats?: boolean;
 };

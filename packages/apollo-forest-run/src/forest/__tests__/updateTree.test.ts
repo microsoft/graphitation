@@ -1763,7 +1763,11 @@ function diffAndUpdate(
   maybeDeepFreeze(modelTree.result);
 
   const difference = diffTree(forest, modelTree, env);
-  const updatedTree = updateTree(baseTree, difference.nodeDifference, env);
+  const { indexedTree: updatedTree } = updateTree(
+    baseTree,
+    difference.nodeDifference,
+    env,
+  );
   return {
     baseTree,
     difference,
@@ -1786,6 +1790,7 @@ function prepareDiffTrees(
     : createTestOperation(completeObjectDoc);
   const env: DiffEnv & ForestEnv = {
     objectKey: (obj) => obj.id as string,
+    logUpdateStats: false,
     ...(testEnv ?? {}),
   };
   const baseTree = isTree(base)
@@ -1836,6 +1841,7 @@ function update(
   const defaultOperation = createTestOperation(completeObjectDoc);
   const env: ForestEnv = {
     objectKey: (obj) => obj.id as string,
+    logUpdateStats: false,
     ...(testEnv ?? {}),
   };
   const baseTree = Array.isArray(base)
@@ -1847,8 +1853,16 @@ function update(
       )
     : createTestTree(defaultOperation, base, undefined, env);
 
-  const updatedTree = updateTree(baseTree, diff.nodeDifference, env);
-  return { baseTree, updatedTree, data: updatedTree.result.data as any };
+  const { indexedTree: updatedTree } = updateTree(
+    baseTree,
+    diff.nodeDifference,
+    env,
+  );
+  return {
+    baseTree,
+    updatedTree,
+    data: updatedTree.result.data as any,
+  };
 }
 
 function keyToEntity(keyOrOther: string | unknown) {
