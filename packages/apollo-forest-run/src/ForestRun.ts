@@ -403,7 +403,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
           variables: op.variables,
           optimisticData,
         };
-        this.extractedObjects.set(data, entry);
+        this.extractedObjects.set(key, entry);
       }
       return entry;
     };
