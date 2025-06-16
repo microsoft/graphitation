@@ -1046,3 +1046,62 @@ test("correctly handles optimistic fragment write", () => {
     items: [foo, bar],
   });
 });
+
+test("correctly handles optimistic fragment write for deeply nested node", () => {
+  const query = gql`
+    {
+      items {
+        id
+        nested {
+          id
+          name
+        }
+      }
+    }
+  `;
+  const update = gql`
+    fragment Foo on Foo {
+      name
+    }
+  `;
+  const foo = { __typename: "Foo", id: "1", name: "foo" };
+  const bar = { __typename: "Bar", id: "2", name: "bar" };
+  const item1 = { __typename: "Item", id: "1", nested: foo };
+  const item2 = { __typename: "Item", id: "2", nested: bar };
+  const cache = new ForestRun();
+
+  const notifications: any[] = [];
+  cache.watch({
+    query,
+    optimistic: true,
+    callback: (diff) => notifications.push(diff.result),
+  });
+
+  cache.write({
+    query,
+    result: {
+      items: [item1, item2],
+    },
+  });
+
+  cache.recordOptimisticTransaction(() => {
+    cache.batch({
+      update: () => {
+        cache.writeFragment({
+          fragment: update,
+          id: cache.identify(foo),
+          data: { name: "fooChanged" },
+        });
+      },
+      optimistic: false,
+    });
+  }, "test");
+
+  cache.removeOptimistic("test");
+
+  expect(notifications).toEqual([
+    { items: [item1, item2] }, // initial write
+    { items: [{ ...item1, nested: { ...foo, name: "fooChanged" } }, item2] },
+    { items: [item1, item2] },
+  ]);
+});

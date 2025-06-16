@@ -115,19 +115,20 @@ function growOutputTree(
   optimistic: boolean,
   previous?: TransformedResult,
 ): TransformedResult {
-  // See if we can just use primary data tree
-  let dataTree = forest.trees.get(operation.id);
+  const readLayers = getEffectiveReadLayers(store, forest, optimistic);
 
-  if (!dataTree) {
-    dataTree = growDataTree(env, forest, operation);
-    addTree(forest, dataTree);
+  let dataTree: IndexedTree | undefined = forest.trees.get(operation.id);
+  for (const layer of readLayers) {
+    dataTree = layer.trees.get(operation.id);
+    if (dataTree) {
+      break;
+    }
   }
-  const tree = applyTransformations(
-    env,
-    dataTree,
-    getEffectiveReadLayers(store, forest, optimistic),
-    previous,
-  );
+  if (!dataTree) {
+    dataTree = growDataTree(env, store.dataForest, operation);
+    addTree(store.dataForest, dataTree);
+  }
+  const tree = applyTransformations(env, dataTree, readLayers, previous);
   indexReadPolicies(env, tree);
 
   if (tree === dataTree) {
