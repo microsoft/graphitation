@@ -283,6 +283,10 @@ function completeSelections(possibleSelections: PossibleSelections, depth = 0) {
   // This runs when all selections already contain all fields
   const next: PossibleSelections[] = [];
   for (const selection of possibleSelections.values()) {
+    if (selection.depth !== -1) {
+      // Already completed this selection, do not revisit: it is possible when the same interface selection is re-used for multiple implementations
+      continue;
+    }
     selection.depth = depth;
     for (const fieldAliases of selection.fields.values()) {
       selection.fieldQueue.push(...fieldAliases);

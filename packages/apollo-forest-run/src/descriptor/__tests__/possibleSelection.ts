@@ -388,6 +388,63 @@ describe(describeResultTree, () => {
       });
     });
 
+    it("adds selections for all known interface implementations", () => {
+      const possibleTypes = {
+        MyInterface: ["Foo", "Bar", "Baz", "Bug"],
+      };
+      const possible = testHelper(
+        `{
+          ... MyIface
+          ... on Bar {
+            bar
+          }
+          ...Baz
+        }
+        fragment MyIface on MyInterface {
+          iface
+        }
+        fragment Baz on Baz {
+          baz
+        }
+          `,
+        possibleTypes,
+      );
+
+      const onMyInterface = possible?.get("MyInterface");
+      const onFoo = possible?.get("Foo");
+      const onBar = possible?.get("Bar");
+      const onBaz = possible?.get("Baz");
+      const onBug = possible?.get("Bug");
+
+      expect(possible?.size).toEqual(6);
+      expect(printFieldGroups(onMyInterface)).toEqual({
+        iface: ["iface"],
+      });
+      expect(printFieldGroups(onFoo)).toEqual({
+        iface: ["iface"],
+      });
+      expect(printFieldGroups(onBar)).toEqual({
+        bar: ["bar"],
+        iface: ["iface"],
+      });
+      expect(printFieldGroups(onBaz)).toEqual({
+        baz: ["baz"],
+        iface: ["iface"],
+      });
+      expect(printFieldGroups(onBug)).toEqual({
+        iface: ["iface"],
+      });
+
+      // Also verify fieldMap is added correctly
+      expect(printFieldQueue(onMyInterface)).toEqual(["iface"]);
+      expect(printFieldQueue(onBar)).toEqual(["bar", "iface"]);
+      expect(printFieldQueue(onBaz)).toEqual(["baz", "iface"]);
+
+      // Note: there was a bug where interface fields were added multiple times to implementations without explicit own selection
+      expect(printFieldQueue(onFoo)).toEqual(["iface"]); // Not ["iface", "iface"]
+      expect(printFieldQueue(onBug)).toEqual(["iface"]); // Not ["iface", "iface"]
+    });
+
     // TODO: this currently requires proper `possibleTypes` to be passed, which seems unnecessary
     it.skip("propagates __typename to nested selections when present in parent", () => {
       const possible = testHelper(
@@ -1044,6 +1101,10 @@ function printPossibleSelections(selection: PossibleSelections | undefined) {
         ]),
       )
     : {};
+}
+
+function printFieldQueue(selection: PossibleSelection | undefined) {
+  return selection?.fieldQueue?.map((f) => f.name);
 }
 
 function printFieldGroups(
