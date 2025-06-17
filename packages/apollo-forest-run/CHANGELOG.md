@@ -1,8 +1,17 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Mon, 16 Jun 2025 10:23:51 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 17 Jun 2025 14:28:26 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.13.1
+
+Tue, 17 Jun 2025 14:28:26 GMT
+
+### Patches
+
+- fix(apollo-forest-run): fix bogus optimistic data extract (vrazuvaev@microsoft.com_msteamsmdb)
+- log number of notified watchers (pavelglac@microsoft.com)
 
 ## 0.13.0
 

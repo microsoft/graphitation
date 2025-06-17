@@ -2,6 +2,27 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Tue, 17 Jun 2025 14:28:26 GMT",
+      "version": "0.13.1",
+      "tag": "@graphitation/apollo-forest-run_v0.13.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "7c588762319a189fd8a6ed076726b16a24c13e20",
+            "comment": "fix(apollo-forest-run): fix bogus optimistic data extract"
+          },
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "e1b34f7f1a81fc08eba06923642fb35bb7047d1e",
+            "comment": "log number of notified watchers"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 16 Jun 2025 10:23:51 GMT",
       "version": "0.13.0",
       "tag": "@graphitation/apollo-forest-run_v0.13.0",
