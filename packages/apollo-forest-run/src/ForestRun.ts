@@ -559,7 +559,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
         onWatchUpdated,
         typeof optimistic === "string",
       );
-      logUpdateStats(this.env, activeTransaction.writes);
+      logUpdateStats(this.env, activeTransaction.writes, watchesToNotify);
     }
     maybeEvictOldData(this.env, this.store);
 

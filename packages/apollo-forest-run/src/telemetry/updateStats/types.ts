@@ -1,7 +1,6 @@
 import { TypeName } from "../../descriptor/types";
 
 export type UpdateTreeStats = {
-  causedBy?: TypeName;
   operationName: string;
   updates: ChunkUpdateStats[];
 } & CopyStats;
