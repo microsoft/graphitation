@@ -49,6 +49,7 @@ export type MergePolicyError = {
 export type UpdateStats = {
   kind: "UPDATE_STATS";
   causedBy: OperationDebugName;
+  watchersCount: number;
   updateStats: UpdateTreeStats[];
 };
 
