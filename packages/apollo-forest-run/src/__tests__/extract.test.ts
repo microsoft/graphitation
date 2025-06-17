@@ -71,4 +71,28 @@ describe("ForestRun.extract()", () => {
       }
     `);
   });
+
+  test("should extract the cache with optimistic data only", () => {
+    const cache = new ForestRun();
+    const query = gql`
+      query Foo($i: Int = 0) {
+        foo(i: $i)
+      }
+    `;
+    cache.recordOptimisticTransaction(() => {
+      cache.write({ query, result: { foo: 1 } });
+    }, "test");
+
+    expect(cache.extract(true)).toMatchInlineSnapshot(`
+      {
+        "query Foo:1": {
+          "data": null,
+          "optimisticData": {
+            "foo": 1,
+          },
+          "variables": {},
+        },
+      }
+    `);
+  });
 });
