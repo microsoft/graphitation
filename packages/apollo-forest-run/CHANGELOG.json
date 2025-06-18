@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Wed, 18 Jun 2025 11:30:48 GMT",
+      "version": "0.13.3",
+      "tag": "@graphitation/apollo-forest-run_v0.13.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "7d04e70e0813bda1eff5e1e3719d92b3188c1525",
+            "comment": "fix type for ascendants"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 18 Jun 2025 08:27:35 GMT",
       "version": "0.13.2",
       "tag": "@graphitation/apollo-forest-run_v0.13.2",

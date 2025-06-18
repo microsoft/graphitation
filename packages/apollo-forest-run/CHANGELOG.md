@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Wed, 18 Jun 2025 08:27:35 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 18 Jun 2025 11:30:48 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.13.3
+
+Wed, 18 Jun 2025 11:30:48 GMT
+
+### Patches
+
+- fix type for ascendants (pavelglac@microsoft.com)
 
 ## 0.13.2
 
