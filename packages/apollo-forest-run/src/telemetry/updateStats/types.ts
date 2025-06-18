@@ -27,5 +27,5 @@ export type ChunkUpdateStats = {
     fieldsMutated: number;
     itemsMutated: number;
   } & CopyStats;
-  updateAscendantStats?: CopyStats;
+  updateAscendantStats: CopyStats;
 };

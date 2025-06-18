@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "fix type for ascendants",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "pavelglac@microsoft.com",
+  "dependentChangeType": "patch"
+}
