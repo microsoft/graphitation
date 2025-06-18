@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Tue, 17 Jun 2025 14:28:26 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 18 Jun 2025 08:27:35 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.13.2
+
+Wed, 18 Jun 2025 08:27:35 GMT
+
+### Patches
+
+- fix(apollo-forest-run): interface selection should be completed once (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.13.1
 
