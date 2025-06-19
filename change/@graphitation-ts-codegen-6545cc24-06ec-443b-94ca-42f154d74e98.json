@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Codegen support resolver context conditionality and creating groups in input file",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "77059398+vejrj@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}

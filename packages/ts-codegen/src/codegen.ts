@@ -17,9 +17,14 @@ export type SubTypeItem = {
   };
 };
 
+export type GroupItem = {
+  [namespace: string]: string[];
+};
+
 export type SubTypeNamespace = {
   baseContextTypeName?: string;
   baseContextTypePath?: string;
+  groups?: { [group: string]: GroupItem };
   contextTypes: { [namespace: string]: SubTypeItem };
 };
 

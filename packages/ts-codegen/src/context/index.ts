@@ -27,6 +27,7 @@ import {
   createImportDeclaration,
   isRootOperationType,
   buildContextMetadataOutput,
+  getContextKeysFromArgumentNode,
 } from "./utilities";
 import {
   createListType,
@@ -108,8 +109,12 @@ export type ContextMap = {
   [key: string]: ContextMapTypeItem;
 };
 
-export type ContextMapTypeItem = { __context?: string[] } & {
-  [key: string]: string[];
+export type ContextTypeItem = { id: string; optional?: boolean };
+
+export type ContextMapTypeItem = {
+  __context?: ContextTypeItem[];
+} & {
+  [key: string]: ContextTypeItem[];
 };
 
 export class TsCodegenContext {
@@ -169,9 +174,9 @@ export class TsCodegenContext {
 
   public getContextTypes<T>(
     contextRootType: T & {
-      __context?: string[];
+      __context?: ContextTypeItem[];
     },
-  ): string[] | null {
+  ): ContextTypeItem[] | null {
     if (contextRootType) {
       if (contextRootType.__context) {
         return contextRootType.__context;
@@ -180,12 +185,19 @@ export class TsCodegenContext {
     return null;
   }
 
-  public getContextTypeNode(typeNames?: string[] | null) {
+  public getContextTypeNode(typeNames?: ContextTypeItem[] | null) {
     const contextTypeExtensions = this.getContextTypeExtensions();
 
-    if (!typeNames || !typeNames.length || !contextTypeExtensions) {
+    if (!typeNames || !contextTypeExtensions) {
       return this.getContextType().toTypeReference();
     } else {
+      if (typeNames.length === 0 && this.contextDefaultSubTypeContext?.name) {
+        return factory.createTypeReferenceNode(
+          factory.createIdentifier(this.contextDefaultSubTypeContext.name),
+          undefined,
+        );
+      }
+
       const typeNameWithNamespace =
         this.buildContextSubTypeNamespaceObject(typeNames);
 
@@ -204,11 +216,13 @@ export class TsCodegenContext {
                   factory.createIdentifier(namespace),
                   undefined,
                   factory.createTypeLiteralNode(
-                    subTypes.map(({ subType, name }) => {
+                    subTypes.map(({ subType, name, optional }) => {
                       return factory.createPropertySignature(
                         undefined,
                         factory.createIdentifier(`"${name}"`),
-                        undefined,
+                        optional
+                          ? factory.createToken(ts.SyntaxKind.QuestionToken)
+                          : undefined,
                         factory.createTypeReferenceNode(
                           factory.createIdentifier(subType),
                           undefined,
@@ -228,17 +242,19 @@ export class TsCodegenContext {
     return this.options.contextTypeExtensions;
   }
 
-  private buildContextSubTypeNamespaceObject(typeNames: string[]) {
+  private buildContextSubTypeNamespaceObject(
+    contextTypeItems: ContextTypeItem[],
+  ) {
     const contextTypeExtensions = this.getContextTypeExtensions();
 
     if (!contextTypeExtensions || !contextTypeExtensions.contextTypes) {
       throw new Error("Context type extensions are not defined in the options");
     }
 
-    return typeNames.reduce<
-      Record<string, { subType: string; name: string }[]>
-    >((acc, typeName) => {
-      const [namespaceName, subTypeName] = typeName.split(":");
+    return contextTypeItems.reduce<
+      Record<string, { subType: string; name: string; optional: boolean }[]>
+    >((acc, contextTypeItem) => {
+      const [namespaceName, subTypeName] = contextTypeItem.id.split(":");
       if (!acc[namespaceName]) {
         acc[namespaceName] = [];
       }
@@ -268,6 +284,7 @@ export class TsCodegenContext {
       acc[namespaceName].push({
         subType,
         name: subTypeName,
+        optional: contextTypeItem.optional || false,
       });
 
       return acc;
@@ -282,7 +299,7 @@ export class TsCodegenContext {
 
   public initContextMap(
     ancestors: ReadonlyArray<ASTNode | ReadonlyArray<ASTNode>>,
-    values: string[],
+    values: { required?: string[]; optional?: string[] },
   ) {
     if (ancestors.length < 2) {
       throw new Error("Invalid document provided");
@@ -298,7 +315,7 @@ export class TsCodegenContext {
         nonArrayNode?.kind === "UnionTypeDefinition"
       ) {
         if (this.typeContextMap[nonArrayNode.name.value]?.__context) {
-          throw new Error("Type already visited");
+          throw new Error(`Type "${nonArrayNode.name.value}" already visited`);
         }
 
         const typeName = nonArrayNode.name.value;
@@ -306,7 +323,14 @@ export class TsCodegenContext {
           this.typeContextMap[typeName] = {};
         }
 
-        this.typeContextMap[typeName].__context = values;
+        this.typeContextMap[typeName].__context = [
+          ...(values.required
+            ? values.required.map((value) => ({ id: value, optional: false }))
+            : []),
+          ...(values.optional
+            ? values.optional.map((value) => ({ id: value, optional: true }))
+            : []),
+        ];
       } else if (nonArrayNode?.kind === "FieldDefinition") {
         const node = ancestors[ancestors.length - 3];
         const typeName =
@@ -321,7 +345,14 @@ export class TsCodegenContext {
             this.typeContextMap[typeName] = {};
           }
 
-          this.typeContextMap[typeName][nonArrayNode.name.value] = values;
+          this.typeContextMap[typeName][nonArrayNode.name.value] = [
+            ...(values.required
+              ? values.required.map((value) => ({ id: value, optional: false }))
+              : []),
+            ...(values.optional
+              ? values.optional.map((value) => ({ id: value, optional: true }))
+              : []),
+          ];
         }
       }
     }
@@ -351,10 +382,10 @@ export class TsCodegenContext {
     this.resolverTypeMap[typeName].push(fieldName);
   }
 
-  getSubTypeNamesImportMap(subTypes: string[]) {
+  getSubTypeNamesImportMap(subTypes: ContextTypeItem[]) {
     const subTypeMetadata = this.getContextTypeExtensions();
     return subTypes.reduce<Record<string, string[]>>(
-      (acc: Record<string, string[]>, importName: string) => {
+      (acc: Record<string, string[]>, { id: importName }) => {
         const [namespace, subTypeName] = importName.split(":");
         const subType =
           subTypeMetadata?.contextTypes?.[namespace]?.[subTypeName];
@@ -801,39 +832,73 @@ export function extractContext(
           node.name.value === "context" &&
           options.contextTypeExtensions
         ) {
-          const subTypeKeys: Set<string> = new Set();
-          if (
-            node.arguments?.length !== 1 ||
-            node.arguments[0].name.value !== "uses" ||
-            node.arguments[0].value.kind !== "ObjectValue"
-          ) {
-            throw new Error("Invalid context use");
+          let requiredKeys: Set<string> | undefined;
+          let optionalKeys: Set<string> | undefined;
+          if (!node.arguments?.length) {
+            throw new Error(
+              "Invalid context use: No arguments provided. Provide either required or optional arguments",
+            );
           }
 
-          node.arguments[0].value.fields.forEach(({ name, value, kind }) => {
-            if (kind !== "ObjectField") {
-              throw new Error("Invalid context use");
-            }
-            const namespace = name.value;
-            if (value.kind !== "ListValue") {
-              throw new Error(
-                `Namespace "${namespace}" must be list of strings`,
-              );
-            }
+          const required = node.arguments.find(
+            (value) => value.name.value === "required",
+          );
+          const optional = node.arguments.find(
+            (value) => value.name.value === "optional",
+          );
 
-            const namespaceValues: string[] = value.values.map((v) => {
-              if (v.kind !== "StringValue") {
-                throw new Error(
-                  `Namespace "${namespace}" must be list of strings`,
-                );
-              }
-              return v.value;
-            });
+          if (!required && !optional) {
+            throw new Error(
+              "Invalid context use: Required and optional arguments must be provided",
+            );
+          }
 
-            if (!options.contextTypeExtensions?.contextTypes?.[namespace]) {
-              throw new Error(`Namespace "${namespace}" is not supported`);
-            }
+          if (required && required?.value.kind !== "ObjectValue") {
+            throw new Error(
+              `Invalid context use: "required" argument must be an object`,
+            );
+          }
 
+          if (optional && optional?.value.kind !== "ObjectValue") {
+            throw new Error(
+              `Invalid context use: "optional" argument must be an object`,
+            );
+          }
+
+          if (required) {
+            requiredKeys = new Set(
+              new Set(
+                getContextKeysFromArgumentNode(
+                  required,
+                  options.contextTypeExtensions,
+                ),
+              ),
+            );
+          }
+
+          if (optional) {
+            optionalKeys = new Set(
+              new Set(
+                getContextKeysFromArgumentNode(
+                  optional,
+                  options.contextTypeExtensions,
+                ),
+              ),
+            );
+          }
+
+          context.initContextMap(ancestors, {
+            required: requiredKeys ? Array.from(requiredKeys) : undefined,
+            optional: optionalKeys ? Array.from(optionalKeys) : undefined,
+          });
+        } else if (
+          options.contextTypeExtensions?.groups &&
+          options.contextTypeExtensions.groups[node.name.value]
+        ) {
+          const subTypeKeys: Set<string> = new Set();
+          const group = options.contextTypeExtensions.groups[node.name.value];
+
+          for (const [namespace, namespaceValues] of Object.entries(group)) {
             namespaceValues.forEach((namespaceValue) => {
               if (
                 !options.contextTypeExtensions?.contextTypes?.[namespace]?.[
@@ -847,9 +912,10 @@ export function extractContext(
 
               subTypeKeys.add(`${namespace}:${namespaceValue}`);
             });
-          });
-
-          context.initContextMap(ancestors, Array.from(subTypeKeys));
+            context.initContextMap(ancestors, {
+              required: Array.from(subTypeKeys),
+            });
+          }
         }
       },
     },

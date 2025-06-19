@@ -10,6 +10,15 @@ describe(generateTS, () => {
     const contextTypeExtensions = {
       baseContextTypePath: "@package/default-context",
       baseContextTypeName: "DefaultContextType",
+      groups: {
+        UserTestGroup: {
+          managers: ["user", "whatever"],
+        },
+        PostTestGroup: {
+          managers: ["post", "whatever"],
+          workflows: ["post-workflow"],
+        },
+      },
       contextTypes: {
         managers: {
           user: {
@@ -78,6 +87,13 @@ describe(generateTS, () => {
             typeName: 'UserStateMachineType["id-user"]',
           },
         },
+        workflows: {
+          "post-workflow": {
+            importNamespaceName: "PostStateMachineType",
+            importPath: "@package/post-state-machine",
+            typeName: 'PostStateMachineType["post-workflow"]',
+          },
+        },
       },
     };
     test("all possible nullable and non-nullable combinations", () => {
@@ -92,11 +108,11 @@ describe(generateTS, () => {
             }
 
             type Message {
-              id: ID! @context(uses: { managers: ["message"] })
+              id: ID! @context(required: { managers: ["message"] })
             }
 
-            type User @context(uses: { managers: ["user"] }) {
-              id: ID! @context(uses: { managers: ["id-user", "user"] })
+            type User @context(required: { managers: ["user"] }) {
+              id: ID! @context(required: { managers: ["id-user", "user"] })
               name: String
               messagesWithAnswersNonRequired: [[Message]]
               messagesWithAnswersRequired: [[Message]]!
@@ -105,19 +121,27 @@ describe(generateTS, () => {
               messagesWithArrayRequired: [Message]!
               messagesRequired: [Message!]!
               messagesOnlyMessageRequired: [Message!]
-              post: Post @context(uses: { managers: ["post"] })
+              post: Post @context(required: { managers: ["post"] })
               postRequired: Post!
               avatar: Avatar
-              avatarRequired: Avatar!
+                @context(
+                  required: { managers: ["user"] }
+                  optional: { managers: ["node"] }
+                )
+              avatarRequired: Avatar! @context(optional: { managers: ["node"] })
             }
 
             extend type Query {
-              requiredUsers: [User!]!
-              optionalUsers: [User]
+              requiredUsers: [User!]! @UserTestGroup
+              optionalUsers: [User] @UserTestGroup
               optionalUser: User
-              requiredUser: User!
+                @context(
+                  required: { managers: ["user"] }
+                  optional: { managers: ["node"] }
+                )
+              requiredUser: User! @context(optional: { managers: ["node"] })
               requiredPost: Post!
-              optionalPost: Post
+              optionalPost: Post @PostTestGroup
             }
           `,
           {
@@ -134,15 +158,50 @@ describe(generateTS, () => {
               ],
             },
           },
+          "Query": {
+            "optionalPost": {
+              "managers": [
+                "post",
+                "whatever",
+              ],
+              "workflows": [
+                "post-workflow",
+              ],
+            },
+            "optionalUser": {
+              "managers": [
+                "user",
+                "node",
+              ],
+            },
+            "optionalUsers": {
+              "managers": [
+                "user",
+                "whatever",
+              ],
+            },
+            "requiredUser": {
+              "managers": [
+                "node",
+              ],
+            },
+            "requiredUsers": {
+              "managers": [
+                "user",
+                "whatever",
+              ],
+            },
+          },
           "User": {
             "avatar": {
               "managers": [
                 "user",
+                "node",
               ],
             },
             "avatarRequired": {
               "managers": [
-                "user",
+                "node",
               ],
             },
             "id": {
@@ -246,6 +305,8 @@ describe(generateTS, () => {
         import type { MessageStateMachineType } from "@package/message-state-machine";
         import type { UserStateMachineType } from "@package/user-state-machine";
         import type { PostStateMachineType } from "@package/post-state-machine";
+        import type { NodeStateMachineType } from "@package/node-state-machine";
+        import type { whatever } from "@package/whatever-state-machine";
         export declare namespace Post {
             export interface Resolvers {
                 readonly id?: id;
@@ -337,11 +398,12 @@ describe(generateTS, () => {
             export type avatar = (model: Models.User, args: {}, context: DefaultContextType & {
                 managers: {
                     "user": UserStateMachineType["user"];
+                    "node"?: NodeStateMachineType["node"];
                 };
             }, info: ResolveInfo) => PromiseOrValue<NSMsteamsPackagesTestModels.Avatar | null | undefined>;
             export type avatarRequired = (model: Models.User, args: {}, context: DefaultContextType & {
                 managers: {
-                    "user": UserStateMachineType["user"];
+                    "node"?: NodeStateMachineType["node"];
                 };
             }, info: ResolveInfo) => PromiseOrValue<NSMsteamsPackagesTestModels.Avatar>;
         }
@@ -354,12 +416,39 @@ describe(generateTS, () => {
                 readonly requiredPost?: requiredPost;
                 readonly optionalPost?: optionalPost;
             }
-            export type requiredUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.User>>;
-            export type optionalUsers = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.User | null | undefined> | null | undefined>;
-            export type optionalUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
-            export type requiredUser = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.User>;
+            export type requiredUsers = (model: unknown, args: {}, context: DefaultContextType & {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                    "whatever": whatever;
+                };
+            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.User>>;
+            export type optionalUsers = (model: unknown, args: {}, context: DefaultContextType & {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                    "whatever": whatever;
+                };
+            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.User | null | undefined> | null | undefined>;
+            export type optionalUser = (model: unknown, args: {}, context: DefaultContextType & {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                    "node"?: NodeStateMachineType["node"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
+            export type requiredUser = (model: unknown, args: {}, context: DefaultContextType & {
+                managers: {
+                    "node"?: NodeStateMachineType["node"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<Models.User>;
             export type requiredPost = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Post>;
-            export type optionalPost = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
+            export type optionalPost = (model: unknown, args: {}, context: DefaultContextType & {
+                managers: {
+                    "post": PostStateMachineType["post"];
+                    "whatever": whatever;
+                };
+                workflows: {
+                    "post-workflow": PostStateMachineType["post-workflow"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
         }
         "
       `);
@@ -499,11 +588,11 @@ describe(generateTS, () => {
       const { resolvers, models, enums, inputs, contextMappingOutput } =
         runGenerateTest(
           graphql`
-            interface Node @context(uses: { managers: ["node"] }) {
+            interface Node @context(required: { managers: ["node"] }) {
               id: ID!
             }
 
-            interface Persona @context(uses: { managers: ["persona"] }) {
+            interface Persona @context(required: { managers: ["persona"] }) {
               phone: String!
             }
 
@@ -513,7 +602,7 @@ describe(generateTS, () => {
             }
 
             type Admin implements Node & Persona
-              @context(uses: { managers: ["admin"] }) {
+              @context(required: { managers: ["admin"] }) {
               id: ID!
               rank: Int!
             }
@@ -642,11 +731,11 @@ describe(generateTS, () => {
       const { resolvers, models, enums, inputs, contextMappingOutput } =
         runGenerateTest(
           graphql`
-            interface Node @context(uses: { managers: ["node"] }) {
+            interface Node @context(required: { managers: ["node"] }) {
               id: ID!
             }
 
-            interface Persona @context(uses: { managers: ["persona"] }) {
+            interface Persona @context(required: { managers: ["persona"] }) {
               phone: String!
             }
 
@@ -656,7 +745,7 @@ describe(generateTS, () => {
             }
 
             type Admin implements Node & Persona
-              @context(uses: { managers: ["admin"] }) {
+              @context(required: { managers: ["admin"] }) {
               id: ID!
               rank: Int!
             }
@@ -766,12 +855,12 @@ describe(generateTS, () => {
       const { resolvers, models, enums, inputs, contextMappingOutput } =
         runGenerateTest(
           graphql`
-            interface Node @context(uses: { managers: ["node"] }) {
+            interface Node @context(required: { managers: ["node"] }) {
               id: ID!
             }
 
             interface Customer implements Node
-              @context(uses: { managers: ["customer"] }) {
+              @context(required: { managers: ["customer"] }) {
               id: ID!
               name: String!
             }
@@ -874,7 +963,7 @@ describe(generateTS, () => {
         runGenerateTest(
           graphql`
             enum PresenceAvailability
-              @context(uses: { managers: ["shouldnt-apply"] }) {
+              @context(required: { managers: ["shouldnt-apply"] }) {
               Available
               Away
               Offline
@@ -951,11 +1040,11 @@ describe(generateTS, () => {
               id: ID!
             }
 
-            type Admin @context(uses: { managers: ["admin"] }) {
+            type Admin @context(required: { managers: ["admin"] }) {
               id: ID!
             }
 
-            type User @context(uses: { managers: ["user"] }) {
+            type User @context(required: { managers: ["user"] }) {
               id: ID!
             }
 
@@ -965,19 +1054,19 @@ describe(generateTS, () => {
 
             union UserOrAdmin = User | Admin
             union UserOrCustomer
-              @context(uses: { managers: ["user-or-customer"] }) =
+              @context(required: { managers: ["user-or-customer"] }) =
                 User
               | Customer
             union CompanyOrCustomer
-              @context(uses: { managers: ["company-or-customer"] }) =
+              @context(required: { managers: ["company-or-customer"] }) =
                 Company
               | Customer
 
             extend type Query {
               userById(id: ID!): whatever
-                @context(uses: { managers: ["whatever"] })
+                @context(required: { managers: ["whatever"] })
               userByMail(mail: String): whatever
-                @context(uses: { managers: ["different-whatever"] })
+                @context(required: { managers: ["different-whatever"] })
               node(id: ID!): Node
             }
           `,
