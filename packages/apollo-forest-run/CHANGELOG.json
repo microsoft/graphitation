@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Thu, 19 Jun 2025 11:34:51 GMT",
+      "version": "0.14.0",
+      "tag": "@graphitation/apollo-forest-run_v0.14.0",
+      "comments": {
+        "none": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "c3e2871c6ac5869eb991d14e0182b04f5e9e6b07",
+            "comment": "applying package updates manually"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 19 Jun 2025 09:02:13 GMT",
       "version": "0.14.0",
       "tag": "@graphitation/apollo-forest-run_v0.14.0",

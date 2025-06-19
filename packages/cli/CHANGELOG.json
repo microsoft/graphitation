@@ -2,6 +2,27 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Thu, 19 Jun 2025 11:34:51 GMT",
+      "version": "3.2.0",
+      "tag": "@graphitation/cli_v3.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/cli",
+            "commit": "13818159516b7624fa2d779724d0fcc76a594481",
+            "comment": "Codegen support resolver context conditionality and creating groups in input file"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v5.2.0",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 05 Jun 2025 08:39:11 GMT",
       "version": "3.1.2",
       "tag": "@graphitation/cli_v3.1.2",

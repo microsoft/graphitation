@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Thu, 05 Jun 2025 08:39:11 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 19 Jun 2025 11:34:51 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.2.0
+
+Thu, 19 Jun 2025 11:34:51 GMT
+
+### Minor changes
+
+- Codegen support resolver context conditionality and creating groups in input file (77059398+vejrj@users.noreply.github.com)
+- Bump @graphitation/ts-codegen to v5.2.0
 
 ## 3.1.2
 
