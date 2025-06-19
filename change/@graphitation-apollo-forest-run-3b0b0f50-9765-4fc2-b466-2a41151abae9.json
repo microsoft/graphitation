@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "new package release",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "pavelglac@gmail.com",
-  "dependentChangeType": "patch"
-}
