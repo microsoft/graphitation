@@ -1,9 +1,4 @@
-import type { FieldReadFunction } from "@apollo/client/cache/inmemory/policies";
-import type {
-  FieldName,
-  OperationDescriptor,
-  TypeName,
-} from "../descriptor/types";
+import type { FieldName, OperationDescriptor } from "../descriptor/types";
 import type { ObjectDraft, SourceObject } from "../values/types";
 import type { IndexedTree } from "../forest/types";
 import type {
@@ -14,6 +9,8 @@ import type {
   ResultTree,
   Store,
   Transaction,
+  TransformedResult,
+  DirtyNodeMap,
 } from "./types";
 import {
   createDraft,
@@ -23,6 +20,9 @@ import {
   isRootRef,
   TraverseEnv,
   createParentLocator,
+  isNodeValue,
+  isCompositeListValue,
+  isParentObjectRef,
 } from "../values";
 import { applyReadPolicies } from "./policies";
 import { indexTree } from "../forest/indexTree";
@@ -60,17 +60,14 @@ export function read<TData>(
   let readState = resultsMap.get(operationDescriptor);
 
   if (!readState || readState.dirtyNodes.size) {
-    // TODO: more granular updates, as we know all dirty nodes and their dirty fields
-    readState = {
-      outputTree: growOutputTree(
-        env,
-        store,
-        forest,
-        operationDescriptor,
-        optimistic,
-      ),
-      dirtyNodes: new Map(),
-    };
+    readState = growOutputTree(
+      env,
+      store,
+      forest,
+      operationDescriptor,
+      optimistic,
+      readState,
+    );
     normalizeRootLevelTypeName(readState.outputTree);
     resultsMap.set(operationDescriptor, readState);
   }
@@ -116,24 +113,29 @@ function growOutputTree(
   forest: DataForest | OptimisticLayer,
   operation: OperationDescriptor,
   optimistic: boolean,
-) {
-  // See if we can just use primary data tree
-  let dataTree = forest.trees.get(operation.id);
-
+  previous?: TransformedResult,
+): TransformedResult {
+  let dataTree: IndexedTree | undefined = forest.trees.get(operation.id);
+  for (const layer of getEffectiveReadLayers(store, forest, false)) {
+    dataTree = layer.trees.get(operation.id);
+    if (dataTree) {
+      break;
+    }
+  }
   if (!dataTree) {
     dataTree = growDataTree(env, forest, operation);
     addTree(forest, dataTree);
   }
   const tree = applyTransformations(
-    dataTree,
-    env.readPolicies,
-    getEffectiveReadLayers(store, forest, optimistic),
     env,
+    dataTree,
+    getEffectiveReadLayers(store, forest, optimistic),
+    previous,
   );
   indexReadPolicies(env, tree);
 
   if (tree === dataTree) {
-    return tree;
+    return { outputTree: tree, dirtyNodes: new Map() };
   }
 
   // ApolloCompat: this is to throw properly when field policy returns a ref which doesn't exist in cache
@@ -148,7 +150,7 @@ function growOutputTree(
 
   tree.prev = null;
   trackTreeNodes(forest, tree);
-  return tree;
+  return { outputTree: tree, dirtyNodes: new Map() };
 }
 
 function growDataTree(
@@ -193,10 +195,10 @@ function growDataTree(
  * Output tree contains a blend of data from different layers. Data from earlier layers has priority.
  */
 function applyTransformations(
-  inputTree: ResultTree,
-  readPoliciesMap: Map<TypeName, Map<FieldName, FieldReadFunction>>,
-  dataLayers: (OptimisticLayer | DataForest)[],
   env: CacheEnv,
+  inputTree: ResultTree,
+  dataLayers: (OptimisticLayer | DataForest)[],
+  previous?: TransformedResult,
 ): IndexedTree {
   // This effectively disables recycling when optimistic layers are present, which is suboptimal.
   const hasOptimisticLayers = dataLayers.length > 1;
@@ -204,12 +206,21 @@ function applyTransformations(
 
   // TODO: inputTree.incompleteChunks must be updated on write, then we can remove size check
   if (!inputTree.incompleteChunks.size && !hasOptimisticLayers) {
-    // Fast-path: skip optimistic layers
-    return applyReadPolicies(env, dataLayers, readPoliciesMap, inputTree);
+    // Fast-path: skip optimistic transforms
+    return applyReadPolicies(env, dataLayers, env.readPolicies, inputTree);
+  }
+
+  // For dirty nodes we should not recycle existing chunks
+  const dirtyNodes =
+    previous?.dirtyNodes ??
+    resolveAffectedOptimisticNodes(inputTree, dataLayers);
+
+  if (!inputTree.incompleteChunks.size && !dirtyNodes.size) {
+    // Fast-path: skip optimistic transforms
+    return applyReadPolicies(env, dataLayers, env.readPolicies, inputTree);
   }
 
   // Slow-path: apply optimistic layers first
-  // TODO: hydrate dirty fields only!
   const optimisticDraft = hydrateDraft(
     env,
     createDraft(
@@ -219,7 +230,7 @@ function applyTransformations(
       operation.rootType,
     ),
     createChunkProvider(dataLayers),
-    createChunkMatcher(dataLayers),
+    createChunkMatcher(dataLayers, false, dirtyNodes),
   );
   const optimisticTree = indexTree(
     env,
@@ -228,7 +239,7 @@ function applyTransformations(
     optimisticDraft.missingFields,
     inputTree,
   );
-  return applyReadPolicies(env, dataLayers, readPoliciesMap, optimisticTree);
+  return applyReadPolicies(env, dataLayers, env.readPolicies, optimisticTree);
 }
 
 function indexReadPolicies(env: CacheEnv, tree: ResultTree) {
@@ -311,5 +322,71 @@ function reportFirstMissingField(tree: IndexedTree): MissingFieldError {
   );
 }
 
+function resolveAffectedOptimisticNodes(
+  inputTree: ResultTree,
+  dataLayers: (OptimisticLayer | DataForest)[],
+): DirtyNodeMap {
+  if (dataLayers.length <= 1) {
+    return EMPTY_MAP;
+  }
+  const result: DirtyNodeMap = new Map();
+
+  for (let i = 0; i < dataLayers.length - 1; i++) {
+    // Note: last layer is the data layer
+    const optimisticLayer = dataLayers[i];
+    const nodeKeys =
+      inputTree.nodes.size < optimisticLayer.operationsByNodes.size
+        ? inputTree.nodes.keys()
+        : optimisticLayer.operationsByNodes.keys();
+
+    for (const nodeKey of nodeKeys) {
+      if (
+        optimisticLayer.operationsByNodes.has(nodeKey) &&
+        inputTree.nodes.has(nodeKey)
+      ) {
+        result.set(nodeKey, EMPTY_SET as Set<FieldName>);
+      }
+    }
+  }
+  // Add parent nodes to make sure they are not recycled
+  //   (when parents are recycled, nested affected nodes won't be updated properly)
+  appendParentNodes(inputTree, result);
+  return result;
+}
+
+function appendParentNodes(inputTree: ResultTree, dirtyNodes: DirtyNodeMap) {
+  const findParent = createParentLocator(inputTree.dataMap);
+  for (const nodeKey of dirtyNodes.keys()) {
+    const chunks = inputTree.nodes.get(nodeKey);
+    for (const chunk of chunks ?? EMPTY_ARRAY) {
+      let parentInfo = findParent(chunk);
+      while (!isRootRef(parentInfo)) {
+        if (isParentObjectRef(parentInfo) && isNodeValue(parentInfo.parent)) {
+          let dirtyFields = dirtyNodes.get(parentInfo.parent.key);
+          if (dirtyFields && dirtyFields.has(parentInfo.field.name)) {
+            break;
+          }
+          if (!dirtyFields) {
+            dirtyFields = new Set();
+            dirtyNodes.set(parentInfo.parent.key, dirtyFields);
+          }
+          dirtyFields.add(parentInfo.field.name);
+        }
+        if (
+          !isCompositeListValue(parentInfo.parent) &&
+          !isObjectValue(parentInfo.parent)
+        ) {
+          break;
+        }
+        parentInfo = findParent(parentInfo.parent);
+      }
+    }
+  }
+}
+
 const inspect = JSON.stringify.bind(JSON);
 const EMPTY_ARRAY = Object.freeze([]);
+const EMPTY_SET = new Set();
+const EMPTY_MAP = new Map();
+EMPTY_SET.add = () => EMPTY_SET;
+EMPTY_MAP.set = () => EMPTY_MAP;

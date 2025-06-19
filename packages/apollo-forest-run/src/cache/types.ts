@@ -37,9 +37,11 @@ export type ResultTree = DataTree & {
   danglingReferences?: Set<string>; // ApolloCompat
 };
 
+export type DirtyNodeMap = Map<NodeKey, Set<FieldName>>;
+
 export type TransformedResult = {
   outputTree: ResultTree;
-  dirtyNodes: Map<NodeKey, Set<FieldName>>;
+  dirtyNodes: DirtyNodeMap;
 };
 
 export type ExtendedForest = IndexedForest & {
