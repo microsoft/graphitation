@@ -132,9 +132,7 @@ describe(generateTS, () => {
             }
 
             extend type Query {
-              requiredUsers: [User!]!
-                @UserTestGroup
-                @context(optional: { managers: ["node"] })
+              requiredUsers: [User!]! @UserTestGroup
               optionalUsers: [User] @UserTestGroup
               optionalUser: User
                 @context(
@@ -189,7 +187,8 @@ describe(generateTS, () => {
             },
             "requiredUsers": {
               "managers": [
-                "node",
+                "user",
+                "whatever",
               ],
             },
           },
@@ -419,7 +418,8 @@ describe(generateTS, () => {
             }
             export type requiredUsers = (model: unknown, args: {}, context: DefaultContextType & {
                 managers: {
-                    "node"?: NodeStateMachineType["node"];
+                    "user": UserStateMachineType["user"];
+                    "whatever": whatever;
                 };
             }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.User>>;
             export type optionalUsers = (model: unknown, args: {}, context: DefaultContextType & {
