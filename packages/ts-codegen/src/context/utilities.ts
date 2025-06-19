@@ -1,6 +1,8 @@
 import { factory } from "typescript";
 import path from "path";
 import { ContextMap } from ".";
+import { ArgumentNode } from "graphql";
+import { SubTypeNamespace } from "../codegen";
 
 export function createImportDeclaration(
   importNames: string[],
@@ -120,6 +122,48 @@ export function buildContextMetadataOutput(
   }
 
   return metadata;
+}
+
+export function getContextKeysFromArgumentNode(
+  argumentNode: ArgumentNode,
+  contextTypeExtensions: SubTypeNamespace,
+) {
+  if (argumentNode?.value.kind !== "ObjectValue") {
+    throw new Error(`Invalid context use: arguments must be an object`);
+  }
+
+  const output: string[] = [];
+  argumentNode?.value.fields.forEach(({ name, value, kind }) => {
+    if (kind !== "ObjectField") {
+      throw new Error("Invalid context use");
+    }
+    const namespace = name.value;
+    if (value.kind !== "ListValue") {
+      throw new Error(`Namespace "${namespace}" must be list of strings`);
+    }
+
+    const namespaceValues: string[] = value.values.map((v) => {
+      if (v.kind !== "StringValue") {
+        throw new Error(`Namespace "${namespace}" must be list of strings`);
+      }
+      return v.value;
+    });
+
+    if (!contextTypeExtensions?.contextTypes?.[namespace]) {
+      throw new Error(`Namespace "${namespace}" is not supported`);
+    }
+
+    namespaceValues.forEach((namespaceValue) => {
+      if (!contextTypeExtensions?.contextTypes?.[namespace]?.[namespaceValue]) {
+        throw new Error(
+          `Value "${namespaceValue}" in namespace "${namespace}" is not supported`,
+        );
+      }
+
+      output.push(`${namespace}:${namespaceValue}`);
+    });
+  });
+  return output;
 }
 
 function buildContextMetadataOutputItem(
