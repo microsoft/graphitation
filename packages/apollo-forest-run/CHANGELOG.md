@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Wed, 18 Jun 2025 11:30:48 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 19 Jun 2025 09:02:13 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.14.0
+
+Thu, 19 Jun 2025 09:02:13 GMT
+
+### Minor changes
+
+- fix(apollo-forest-run): apply optimistic fragment writes correctly (vladimir.razuvaev@gmail.com)
 
 ## 0.13.3
 

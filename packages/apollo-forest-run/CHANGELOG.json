@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Thu, 19 Jun 2025 09:02:13 GMT",
+      "version": "0.14.0",
+      "tag": "@graphitation/apollo-forest-run_v0.14.0",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "45628230498b3e8dffcdaf010ab5438093a3207a",
+            "comment": "fix(apollo-forest-run): apply optimistic fragment writes correctly"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 18 Jun 2025 11:30:48 GMT",
       "version": "0.13.3",
       "tag": "@graphitation/apollo-forest-run_v0.13.3",
