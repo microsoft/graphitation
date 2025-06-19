@@ -6,6 +6,7 @@ import {
   TsCodegenContext,
   ResolverType,
   InterfaceType,
+  ContextTypeItem,
 } from "./context";
 import {
   getResolverReturnType,
@@ -137,13 +138,9 @@ function generateImports(context: TsCodegenContext) {
 
     const contextImportNames: Set<string> = new Set();
     for (const [, root] of Object.entries(context.getContextMap())) {
-      const rootValue: string[] | undefined = root.__context;
+      const rootValue: ContextTypeItem[] | undefined = root.__context;
       if (rootValue) {
-        if (
-          rootValue.every((importName: string) =>
-            contextImportNames.has(importName),
-          )
-        ) {
+        if (rootValue.every(({ id }) => contextImportNames.has(id))) {
           continue;
         }
 
@@ -156,11 +153,7 @@ function generateImports(context: TsCodegenContext) {
         if (key.startsWith("__")) {
           continue;
         }
-        if (
-          value.every((importName: string) =>
-            contextImportNames.has(importName),
-          )
-        ) {
+        if (value.every(({ id }) => contextImportNames.has(id))) {
           continue;
         }
 

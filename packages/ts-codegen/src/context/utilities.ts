@@ -81,7 +81,7 @@ export function buildContextMetadataOutput(
     if (values === null) {
       if (contextMap[key]?.__context) {
         for (const contextValue of contextMap[key].__context) {
-          const [namespace, subTypeName] = contextValue.split(":");
+          const [namespace, subTypeName] = contextValue.id.split(":");
 
           if (!metadata[key]) {
             metadata[key] = {};
@@ -107,12 +107,12 @@ export function buildContextMetadataOutput(
     for (const value of values) {
       if (contextMap[key][value]) {
         for (const typeValue of contextMap[key][value]) {
-          buildContextMetadataOutputItem(metadata, typeValue, key, value);
+          buildContextMetadataOutputItem(metadata, typeValue.id, key, value);
         }
         continue;
       } else if (contextMap[key].__context) {
         for (const contextValue of contextMap[key].__context) {
-          buildContextMetadataOutputItem(metadata, contextValue, key, value);
+          buildContextMetadataOutputItem(metadata, contextValue.id, key, value);
         }
         continue;
       }
