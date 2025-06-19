@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Wed, 18 Jun 2025 11:30:48 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 19 Jun 2025 09:02:13 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.14.0
+
+Thu, 19 Jun 2025 09:02:13 GMT
+
+### Minor changes
+
+- fix(apollo-forest-run): apply optimistic fragment writes correctly (vladimir.razuvaev@gmail.com)
 
 ## 0.13.3
 
@@ -59,7 +67,7 @@ Mon, 28 Apr 2025 15:16:24 GMT
 
 ### Patches
 
-- fix(apollo-forest-run): use other approach for consistent root-level __typename (vrazuvaev@microsoft.com_msteamsmdb)
+- fix(apollo-forest-run): use other approach for consistent root-level \_\_typename (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.12.1
 
@@ -67,7 +75,7 @@ Fri, 25 Apr 2025 14:47:47 GMT
 
 ### Patches
 
-- fix(apollo-forest-run): keep root-level __typename in sync when reading (vladimir.razuvaev@gmail.com)
+- fix(apollo-forest-run): keep root-level \_\_typename in sync when reading (vladimir.razuvaev@gmail.com)
 
 ## 0.12.0
 
