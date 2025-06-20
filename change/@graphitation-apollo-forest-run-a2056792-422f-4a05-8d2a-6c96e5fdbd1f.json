@@ -1,7 +1,7 @@
 {
-  "type": "patch",
-  "comment": "refactor(apollo-forest-run): cleanup possibleSelection test + refactor fragment detection",
+  "type": "minor",
+  "comment": "refactor(apollo-forest-run): various refactors necessary for future fragment watching",
   "packageName": "@graphitation/apollo-forest-run",
   "email": "vrazuvaev@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
+  "dependentChangeType": "minor"
 }
