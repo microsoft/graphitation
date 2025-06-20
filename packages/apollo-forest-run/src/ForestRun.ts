@@ -10,7 +10,6 @@ import type { OperationDescriptor } from "./descriptor/types";
 import type {
   CacheEnv,
   DataForest,
-  DataTree,
   ModifyResult,
   OptimisticLayer,
   SerializedCache,
@@ -41,7 +40,6 @@ import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { CacheConfig } from "./cache/types";
 import { SourceObject } from "./values/types";
-import type { UpdateForestStats } from "./forest/types";
 import { logUpdateStats } from "./telemetry/updateStats/logUpdateStats";
 
 /**
