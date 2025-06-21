@@ -67,7 +67,7 @@ export function resolveOperationDescriptor(
       resultTreeDescriptors.set(document, resultTreeDescriptor);
     }
     let rootTypeName;
-    if (isFragmentDocument(document)) {
+    if (isFragmentDocument(documentDescriptor)) {
       const fragment = getFragmentNode(documentDescriptor);
       rootTypeName = fragment.typeCondition.name.value;
     }
@@ -133,12 +133,10 @@ export function getOriginalDocument(
   return reverseDocumentCache.get(maybeTransformed) ?? maybeTransformed;
 }
 
-export function isFragmentDocument(document: DocumentNode) {
-  const operationDefinition = document.definitions[0];
-  if (operationDefinition.kind !== "OperationDefinition") {
-    return false;
-  }
+export function isFragmentDocument(descriptor: DocumentDescriptor) {
+  const operationDefinition = descriptor.definition;
   const selections = operationDefinition.selectionSet.selections;
+
   return selections.length === 1 && selections[0].kind === "FragmentSpread";
 }
 

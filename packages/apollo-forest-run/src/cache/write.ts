@@ -302,7 +302,7 @@ function resolveExtraRootNodeType(
     return data["__typename"];
   }
   // Try fragment condition (fragments on abstract types are ignored)
-  if (isFragmentDocument(operationDescriptor.document)) {
+  if (isFragmentDocument(operationDescriptor)) {
     const [fragmentDef] = operationDescriptor.fragmentMap.values();
     const typeName = fragmentDef?.typeCondition.name.value;
     if (!env.possibleTypes?.[typeName]) {
