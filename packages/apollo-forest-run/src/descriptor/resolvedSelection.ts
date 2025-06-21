@@ -21,7 +21,7 @@ import type {
   VariableNode,
 } from "graphql";
 import { valueFromASTUntyped } from "graphql";
-import { isEqual } from "lodash";
+import { equal } from "@wry/equality";
 import { assert } from "../jsutils/assert";
 import { createArgumentDefs } from "./possibleSelection";
 
@@ -242,7 +242,7 @@ export function fieldEntriesAreEqual(
     // Key comparison
     return a.keyArgs === b.keyArgs;
   }
-  if ((a.keyArgs || b.keyArgs) && !isEqual(a.keyArgs, b.keyArgs)) {
+  if ((a.keyArgs || b.keyArgs) && !equal(a.keyArgs, b.keyArgs)) {
     return false;
   }
   return (
@@ -266,7 +266,7 @@ function argumentsAreEqual(
     return false;
   }
   for (const name of keyArgs ?? a.keys()) {
-    if (!isEqual(a.get(name), b.get(name))) {
+    if (!equal(a.get(name), b.get(name))) {
       return false;
     }
   }

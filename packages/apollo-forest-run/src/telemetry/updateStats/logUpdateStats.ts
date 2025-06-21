@@ -1,8 +1,8 @@
-import type { CacheEnv, Write } from "../../cache/types";
+import type { CacheEnv, WriteResult } from "../../cache/types";
 
 export function logUpdateStats(
   env: CacheEnv,
-  writes: Write[],
+  writes: WriteResult[],
   watchers: Set<unknown>,
 ) {
   const { logUpdateStats } = env;
@@ -15,7 +15,7 @@ export function logUpdateStats(
 
     env.notify?.({
       kind: "UPDATE_STATS",
-      causedBy: write.tree.operation.debugName,
+      causedBy: write.incoming.operation.debugName,
       watchersCount: watchers.size,
       updateStats: updateStats as NonNullable<(typeof updateStats)[number]>[],
     });
