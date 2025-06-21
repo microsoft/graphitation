@@ -1,5 +1,5 @@
 import {
-  ASTNode,
+  DocumentNode,
   FieldNode,
   OperationDefinitionNode,
   SelectionNode,
@@ -19,7 +19,7 @@ export function isField(selection: SelectionNode): selection is FieldNode {
 }
 
 export const addTypenameToDocument = Object.assign(
-  function (doc: ASTNode) {
+  function (doc: DocumentNode): DocumentNode {
     return visit(doc, {
       SelectionSet: {
         enter(node, _key, parent) {
