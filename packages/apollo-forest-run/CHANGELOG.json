@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Mon, 23 Jun 2025 11:26:46 GMT",
+      "version": "0.16.0",
+      "tag": "@graphitation/apollo-forest-run_v0.16.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "c18f9c5dea6987a87aa9f805386591195e86dcf8",
+            "comment": "refactor(apollo-forest-run): various refactors necessary for future fragment watching"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 19 Jun 2025 21:09:57 GMT",
       "version": "0.15.0",
       "tag": "@graphitation/apollo-forest-run_v0.15.0",

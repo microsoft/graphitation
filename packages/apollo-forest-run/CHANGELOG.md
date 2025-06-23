@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Thu, 19 Jun 2025 21:09:57 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 23 Jun 2025 11:26:46 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.16.0
+
+Mon, 23 Jun 2025 11:26:46 GMT
+
+### Minor changes
+
+- refactor(apollo-forest-run): various refactors necessary for future fragment watching (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.15.0
 

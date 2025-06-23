@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "refactor(apollo-forest-run): various refactors necessary for future fragment watching",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vrazuvaev@microsoft.com_msteamsmdb",
-  "dependentChangeType": "minor"
-}
