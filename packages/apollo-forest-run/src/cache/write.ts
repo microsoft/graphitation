@@ -1,13 +1,15 @@
 import type { Cache } from "@apollo/client";
-import type { IndexedTree, UpdateForestStats } from "../forest/types";
+import type { IndexedTree } from "../forest/types";
 import type { OperationResult } from "../values/types";
 import type {
   CacheEnv,
   DataForest,
   DataTree,
+  ModifyResult,
   OptimisticLayer,
   Store,
   Transaction,
+  WriteResult,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
 import { assert } from "../jsutils/assert";
@@ -36,12 +38,6 @@ import { getNodeChunks } from "./draftHelpers";
 import { replaceTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
-
-type WriteResult = {
-  affected?: Iterable<OperationDescriptor>;
-  incoming: DataTree;
-  updateStats?: UpdateForestStats;
-};
 
 export function write(
   env: CacheEnv,
@@ -92,7 +88,7 @@ export function write(
   assert(!existingResult?.prev);
 
   if (writeData === existingData && existingResult) {
-    return { incoming: existingResult };
+    return { options, incoming: existingResult, affected: [] };
   }
 
   if (!ROOT_NODES.includes(operationDescriptor.rootNodeKey)) {
@@ -199,8 +195,10 @@ export function write(
   modifiedIncomingResult.prev = null;
 
   return {
+    options,
     incoming: modifiedIncomingResult,
     affected: affectedOperations.keys(),
+    difference,
     updateStats,
   };
 }
@@ -325,3 +323,7 @@ function resolveExtraRootNodeType(
 
 const inspect = JSON.stringify.bind(JSON);
 const EMPTY_ARRAY = Object.freeze([]);
+
+export function isWrite(op: WriteResult | ModifyResult): op is WriteResult {
+  return "incoming" in op; // write has "incoming" tree
+}

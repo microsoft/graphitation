@@ -1,23 +1,26 @@
-import type { CacheEnv, Write } from "../../cache/types";
+import type { CacheEnv, WriteResult, ModifyResult } from "../../cache/types";
+import { isWrite } from "../../cache/write";
 
 export function logUpdateStats(
   env: CacheEnv,
-  writes: Write[],
+  log: (WriteResult | ModifyResult)[],
   watchers: Set<unknown>,
 ) {
-  const { logUpdateStats } = env;
+  if (!env.logUpdateStats) {
+    return;
+  }
 
-  writes.forEach((write) => {
-    const { updateStats } = write;
-    if (!logUpdateStats || !updateStats || updateStats.length === 0) {
+  log.forEach((entry) => {
+    if (!isWrite(entry) || !entry.updateStats?.length) {
       return;
     }
-
     env.notify?.({
       kind: "UPDATE_STATS",
-      causedBy: write.tree.operation.debugName,
+      causedBy: entry.incoming.operation.debugName,
       watchersCount: watchers.size,
-      updateStats: updateStats as NonNullable<(typeof updateStats)[number]>[],
+      updateStats: entry.updateStats as NonNullable<
+        (typeof entry.updateStats)[number]
+      >[],
     });
   });
 }
