@@ -1,4 +1,4 @@
-import type { DocumentNode } from "graphql";
+import type { DocumentNode, DefinitionNode } from "graphql";
 import type { CacheEnv, CacheKey, Store } from "./types";
 import type {
   DocumentDescriptor,
@@ -25,8 +25,9 @@ export const ROOT_NODES = Object.freeze([
   "ROOT_SUBSCRIPTION",
 ]);
 
-const typenameDocumentCache = new WeakMap<DocumentNode, DocumentNode>();
+const documentCache = new WeakMap<DocumentNode, DocumentNode>();
 const reverseDocumentCache = new WeakMap<DocumentNode, DocumentNode>();
+const definitionsCache = new WeakMap<DefinitionNode, DefinitionNode>();
 const resultTreeDescriptors = new WeakMap<DocumentNode, ResultTreeDescriptor>();
 const diffDescriptors = new WeakMap<Cache.DiffOptions, OperationDescriptor>();
 
@@ -66,7 +67,7 @@ export function resolveOperationDescriptor(
       resultTreeDescriptors.set(document, resultTreeDescriptor);
     }
     let rootTypeName;
-    if (isFragmentDocument(documentDescriptor)) {
+    if (isFragmentDocument(document)) {
       const fragment = getFragmentNode(documentDescriptor);
       rootTypeName = fragment.typeCondition.name.value;
     }
@@ -93,17 +94,37 @@ export function resolveOperationDescriptor(
 }
 
 export function transformDocument(document: DocumentNode): DocumentNode {
-  let result = typenameDocumentCache.get(document);
+  let result = documentCache.get(document);
   if (!result) {
-    result = addTypenameToDocument(document);
-    typenameDocumentCache.set(document, result);
+    const definitions = transformDefinitions(document);
+    result =
+      document.definitions === definitions
+        ? document
+        : { ...document, definitions };
+    documentCache.set(document, result);
     // If someone calls transformDocument and then mistakenly passes the
     // result back into an API that also calls transformDocument, make sure
     // we don't keep creating new query documents.
-    typenameDocumentCache.set(result, result);
+    documentCache.set(result, result);
     reverseDocumentCache.set(result, document);
   }
   return result;
+}
+
+function transformDefinitions(document: DocumentNode) {
+  let dirty = false;
+  const definitions = [];
+  for (const definition of document.definitions) {
+    let processed: any = definitionsCache.get(definition);
+    if (!processed) {
+      processed = addTypenameToDocument(definition);
+      definitionsCache.set(definition, processed);
+      definitionsCache.set(processed, processed);
+    }
+    dirty = dirty || processed !== definition;
+    definitions.push(processed);
+  }
+  return dirty ? definitions : document.definitions;
 }
 
 export function getOriginalDocument(
@@ -112,10 +133,12 @@ export function getOriginalDocument(
   return reverseDocumentCache.get(maybeTransformed) ?? maybeTransformed;
 }
 
-export function isFragmentDocument(descriptor: DocumentDescriptor) {
-  const operationDefinition = descriptor.definition;
+export function isFragmentDocument(document: DocumentNode) {
+  const operationDefinition = document.definitions[0];
+  if (operationDefinition.kind !== "OperationDefinition") {
+    return false;
+  }
   const selections = operationDefinition.selectionSet.selections;
-
   return selections.length === 1 && selections[0].kind === "FragmentSpread";
 }
 
@@ -189,7 +212,7 @@ export function resolveResultDescriptor(
   assert(false);
 }
 
-function variablesAreEqual(
+export function variablesAreEqual(
   a: VariableValues,
   b: VariableValues,
   keyVars: string[] | null = null,
