@@ -1,5 +1,5 @@
 import type { Cache } from "@apollo/client";
-import type { IndexedTree } from "../forest/types";
+import type { IndexedTree, UpdateTreeResult } from "../forest/types";
 import type { OperationResult } from "../values/types";
 import type {
   CacheEnv,
@@ -160,7 +160,7 @@ export function write(
   const chunkProvider = (key: NodeKey) =>
     getNodeChunks(getEffectiveReadLayers(store, targetForest, false), key);
 
-  const updateStats = updateAffectedTrees(
+  const allUpdates = updateAffectedTrees(
     env,
     targetForest,
     affectedOperations,
@@ -199,7 +199,7 @@ export function write(
     incoming: modifiedIncomingResult,
     affected: affectedOperations.keys(),
     difference,
-    updateStats,
+    updateStats: allUpdates.map((update) => update.stats ?? null),
   };
 }
 

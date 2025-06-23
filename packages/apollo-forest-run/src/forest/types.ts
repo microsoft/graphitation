@@ -1,4 +1,5 @@
 import {
+  FieldInfo,
   OperationDescriptor,
   OperationId,
   PossibleSelection,
@@ -16,6 +17,7 @@ import {
   ObjectKey,
   ObjectValue,
   OperationResult,
+  ParentLocator,
   SourceCompositeList,
   SourceObject,
   TypeMap,
@@ -61,11 +63,32 @@ export type Draft = SourceObject | SourceCompositeList;
 
 export type UpdateForestStats = (UpdateTreeStats | null)[];
 
-export type UpdateState = {
+// Changed chunks map only contains chunks with immediate changes (i.e. "Replacement", "Filler" + list layout changes).
+//   Does not contain parent chunks which were affected only because some nested chunk has changed.
+//   Note: For now dirty list items are not reported, as it is tricky to report together with list layout shifts (and we don't need it anywhere yet).
+//         In the future we may need to report layout shifts and "Replacement", "Fillter" changes separately.
+export type ChangedChunksMap = Map<ObjectChunk, FieldInfo[]> &
+  Map<CompositeListChunk, null>;
+
+export type UpdateTreeContext = {
+  operation: OperationDescriptor;
   drafts: Map<Source, Draft>;
   missingFields: MissingFieldsMap;
-  indexedTree: IndexedTree;
+  changes: ChangedChunksMap;
+  changedNodes: Set<NodeKey>;
+  affectedNodes: Set<NodeKey>;
+  completeObject: CompleteObjectFn;
+  findParent: ParentLocator;
+  logger: ForestEnv["logger"];
   statsLogger?: UpdateLogger;
+};
+
+export type UpdateTreeResult = {
+  updatedTree: IndexedTree;
+  changes: ChangedChunksMap;
+  changedNodes: Set<NodeKey>; // Directly changed nodes (subset of NodeDifferenceMap keys)
+  affectedNodes: Set<NodeKey>; // Parent nodes updated due to a change in a nested node (if node is both - directly updated and affected by another node update, it will be in both: changedNodes and affectedNodes)
+  stats?: UpdateTreeStats;
 };
 
 export type UpdateObjectResult = {

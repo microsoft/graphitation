@@ -1,15 +1,15 @@
 import { GraphDifference } from "../diff/diffTree";
 import { NodeKey, OperationDescriptor } from "../descriptor/types";
-import { NodeDifferenceMap, updateTree } from "./updateTree";
+import { updateTree } from "./updateTree";
 import { isDirty } from "../diff/difference";
-import { ObjectDifference } from "../diff/types";
+import { NodeDifferenceMap, ObjectDifference } from "../diff/types";
 import {
   resolveNormalizedField,
   resolveSelection,
   fieldEntriesAreEqual,
 } from "../descriptor/resolvedSelection";
 import { assert } from "../jsutils/assert";
-import type { IndexedForest, ForestEnv, UpdateForestStats } from "./types";
+import type { IndexedForest, ForestEnv, UpdateTreeResult } from "./types";
 import { DataForest, OptimisticLayer } from "../cache/types";
 import { replaceTree } from "./addTree";
 import { NodeChunk } from "../values/types";
@@ -26,30 +26,26 @@ export function updateAffectedTrees(
   forest: DataForest | OptimisticLayer,
   affectedOperations: Map<OperationDescriptor, NodeDifferenceMap>,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
-): UpdateForestStats {
+): UpdateTreeResult[] {
   // Note: affectedOperations may contain false-positives (updateTree will ignore those)
-  const forestStats: UpdateForestStats = [];
+  const allUpdated: UpdateTreeResult[] = [];
   for (const [operation, difference] of affectedOperations.entries()) {
     const currentTreeState = forest.trees.get(operation.id);
     assert(currentTreeState);
-    const { indexedTree: nextTreeState, statsLogger } = updateTree(
-      currentTreeState,
-      difference,
-      env,
-      getNodeChunks,
-    );
-    if (!nextTreeState || nextTreeState === currentTreeState) {
+    const result = updateTree(env, currentTreeState, difference, getNodeChunks);
+    if (result.updatedTree === currentTreeState) {
       // nodeDifference may not be overlapping with selections of this tree.
       //   E.g. difference could be for operation { id: "1", firstName: "Changed" }
       //   but current operation is { id: "1", lastName: "Unchanged" }
       continue;
     }
+    allUpdated.push(result);
+
     // Reset previous tree state on commit
-    nextTreeState.prev = null;
-    replaceTree(forest, nextTreeState);
-    forestStats.push(statsLogger?.getStats(operation.debugName) ?? null);
+    result.updatedTree.prev = null;
+    replaceTree(forest, result.updatedTree);
   }
-  return forestStats;
+  return allUpdated;
 }
 
 export function resolveAffectedOperations(
