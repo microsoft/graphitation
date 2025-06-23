@@ -10,13 +10,11 @@ import type { OperationDescriptor } from "./descriptor/types";
 import type {
   CacheEnv,
   DataForest,
-  ModifyResult,
   OptimisticLayer,
   SerializedCache,
   SerializedOperationInfo,
   Store,
   Transaction,
-  WriteResult,
 } from "./cache/types";
 import type { UnexpectedRefetch } from "./telemetry/types";
 import { ApolloCache } from "@apollo/client";
@@ -35,7 +33,7 @@ import {
   resetStore,
 } from "./cache/store";
 import { getDiffDescriptor, transformDocument } from "./cache/descriptor";
-import { write } from "./cache/write";
+import { isWrite, write } from "./cache/write";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { CacheConfig } from "./cache/types";
@@ -221,7 +219,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
         transaction.affectedOperations.add(operation);
       }
       // Incoming operation may not have been updated, but let "watch" decide how to handle it
-      if (isWrite(entry) && entry.incoming) {
+      if (isWrite(entry)) {
         transaction.affectedOperations.add(entry.incoming.operation);
       }
 
@@ -530,11 +528,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
         onWatchUpdated,
         typeof optimistic === "string",
       );
-      logUpdateStats(
-        this.env,
-        activeTransaction.changelog.filter(isWrite),
-        watchesToNotify,
-      );
+      logUpdateStats(this.env, activeTransaction.changelog, watchesToNotify);
     }
     maybeEvictOldData(this.env, this.store);
 
@@ -693,8 +687,4 @@ function logStaleOperations(
       `  Affected operation(s):\n` +
       event.affected.map((op) => `${op[0]} (${op[1]})`).join("\n"),
   );
-}
-
-function isWrite(op: WriteResult | ModifyResult): op is WriteResult {
-  return "incoming" in op; // write has "incoming" tree
 }

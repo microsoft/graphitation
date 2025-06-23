@@ -5,6 +5,7 @@ import type {
   CacheEnv,
   DataForest,
   DataTree,
+  ModifyResult,
   OptimisticLayer,
   Store,
   Transaction,
@@ -322,3 +323,7 @@ function resolveExtraRootNodeType(
 
 const inspect = JSON.stringify.bind(JSON);
 const EMPTY_ARRAY = Object.freeze([]);
+
+export function isWrite(op: WriteResult | ModifyResult): op is WriteResult {
+  return "incoming" in op; // write has "incoming" tree
+}
