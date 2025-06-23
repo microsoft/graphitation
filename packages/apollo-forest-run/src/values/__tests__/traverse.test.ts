@@ -2,6 +2,7 @@ import { generateChunk } from "../../__tests__/helpers/values";
 import {
   createParentLocator,
   descendToChunk,
+  ascendFromChunk,
   findClosestNode,
   getGraphValueReference,
   retrieveEmbeddedValue,
@@ -374,6 +375,141 @@ describe(descendToChunk, () => {
     expect(visited[2][0]).toBe(target);
     expect(visited[2][1]).toBe(branch2);
     expect(visited[2][2]).toBe(branch2.selection.fields.get("target")?.[0]);
+  });
+});
+
+describe(ascendFromChunk, () => {
+  it("ascends from nested child chunk up to root", () => {
+    const query = `{
+      parent {
+        child {
+          grandchild {
+            id
+          }
+        }
+      }
+    }`;
+    const { value: root, dataMap } = generateChunk(query);
+    const findParent = createParentLocator(dataMap);
+
+    const parent = resolveFieldValue(root, "parent") as ObjectChunk;
+    const child = resolveFieldValue(parent, "child") as ObjectChunk;
+    const grandchild = resolveFieldValue(child, "grandchild") as ObjectChunk;
+
+    const env = { findParent };
+
+    const visited: unknown[][] = [];
+    const result = ascendFromChunk(env, grandchild, (value, parent, step) => {
+      visited.push([value, parent, step]);
+    });
+
+    expect(result).toBe(root);
+    expect(visited.length).toBe(3);
+
+    expect(visited[0]?.[0]).toBe(grandchild);
+    expect(visited[0]?.[1]).toBe(child);
+    expect(visited[0]?.[2]).toBe(child.selection.fields.get("grandchild")?.[0]);
+
+    expect(visited[1]?.[0]).toBe(child);
+    expect(visited[1]?.[1]).toBe(parent);
+    expect(visited[1]?.[2]).toBe(parent.selection.fields.get("child")?.[0]);
+
+    expect(visited[2]?.[0]).toBe(parent);
+    expect(visited[2]?.[1]).toBe(root);
+    expect(visited[2]?.[2]).toBe(root.selection.fields.get("parent")?.[0]);
+  });
+
+  it("returns immediately on root chunk", () => {
+    const query = `{ foo }`;
+    const { value: root, dataMap } = generateChunk(query);
+    const findParent = createParentLocator(dataMap);
+
+    const env = { findParent };
+
+    const visited: unknown[][] = [];
+    const result = ascendFromChunk(env, root, (value, parent, step) => {
+      visited.push([value, parent, step]);
+    });
+
+    expect(result).toBe(root);
+    expect(visited.length).toBe(0);
+  });
+
+  it("stops traversal when visit function returns false", () => {
+    const query = `{
+      parent {
+        child {
+          grandchild {
+            id
+          }
+        }
+      }
+    }`;
+    const { value: root, dataMap } = generateChunk(query);
+    const findParent = createParentLocator(dataMap);
+
+    const parent = resolveFieldValue(root, "parent") as ObjectChunk;
+    const child = resolveFieldValue(parent, "child") as ObjectChunk;
+    const grandchild = resolveFieldValue(child, "grandchild") as ObjectChunk;
+
+    const env = { findParent };
+
+    const visited: unknown[][] = [];
+    const result = ascendFromChunk(env, grandchild, (value, parent, step) => {
+      visited.push([value, parent, step]);
+      if (typeof step === "object" && step.name === "child") {
+        return false;
+      }
+    });
+
+    expect(result).toBe(child);
+    expect(visited.length).toBe(2);
+
+    expect(visited[0][0]).toBe(grandchild);
+    expect(visited[0][1]).toBe(child);
+    expect(visited[0][2]).toBe(child.selection.fields.get("grandchild")?.[0]);
+
+    expect(visited[1][0]).toBe(child);
+    expect(visited[1][1]).toBe(parent);
+    expect(visited[1][2]).toBe(parent.selection.fields.get("child")?.[0]);
+  });
+
+  it("ascends through a list", () => {
+    const query = `{
+      parent {
+        items @mock(count: 2) {
+          id
+        }
+      }
+    }`;
+    const { value: root, dataMap } = generateChunk(query);
+    const findParent = createParentLocator(dataMap);
+
+    const parent = resolveFieldValue(root, "parent") as ObjectChunk;
+    const items = resolveFieldValue(parent, "items") as CompositeListChunk;
+    const item1 = resolveListItemChunk(items, 1) as ObjectChunk;
+
+    const env = { findParent };
+
+    const visited: unknown[][] = [];
+    const result = ascendFromChunk(env, item1, (value, parent, step) => {
+      visited.push([value, parent, step]);
+    });
+
+    expect(result).toBe(root);
+    expect(visited.length).toBe(3);
+
+    expect(visited[0][0]).toBe(item1);
+    expect(visited[0][1]).toBe(items);
+    expect(visited[0][2]).toBe(1);
+
+    expect(visited[1][0]).toBe(items);
+    expect(visited[1][1]).toBe(parent);
+    expect(visited[1][2]).toBe(parent.selection.fields.get("items")?.[0]);
+
+    expect(visited[2][0]).toBe(parent);
+    expect(visited[2][1]).toBe(root);
+    expect(visited[2][2]).toBe(root.selection.fields.get("parent")?.[0]);
   });
 });
 
