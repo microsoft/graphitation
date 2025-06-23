@@ -57,7 +57,7 @@ describe(deleteField, () => {
       name: "name",
       dataKey: "name",
       __refs: [],
-      selectedIn: [],
+      watchBoundaries: [],
     };
 
     const result = deleteField(env, user, fakeFieldInfo);
