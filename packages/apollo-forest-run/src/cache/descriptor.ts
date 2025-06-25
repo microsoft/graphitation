@@ -1,7 +1,10 @@
-import type { DocumentNode, DefinitionNode } from "graphql";
+import type {
+  DocumentNode,
+  DefinitionNode,
+  FragmentDefinitionNode,
+} from "graphql";
 import type { CacheEnv, CacheKey, Store } from "./types";
 import type {
-  DocumentDescriptor,
   OperationDescriptor,
   ResultTreeDescriptor,
 } from "../descriptor/types";
@@ -68,7 +71,7 @@ export function resolveOperationDescriptor(
     }
     let rootTypeName;
     if (isFragmentDocument(document)) {
-      const fragment = getFragmentNode(documentDescriptor);
+      const fragment = getFragmentNode(document);
       rootTypeName = fragment.typeCondition.name.value;
     }
     match = describeOperation(
@@ -142,11 +145,21 @@ export function isFragmentDocument(document: DocumentNode) {
   return selections.length === 1 && selections[0].kind === "FragmentSpread";
 }
 
-export function getFragmentNode(descriptor: DocumentDescriptor) {
-  const fragmentSpreadNode = descriptor.definition.selectionSet.selections[0];
+/**
+ * Returns fragment node from a document conforming to Apollo fragment document convention
+ *  (i.e. a one which satisfies isFragmentDocument predicate)
+ */
+export function getFragmentNode(document: DocumentNode) {
+  const operationDefinition = document.definitions[0];
+  assert(operationDefinition.kind === "OperationDefinition");
+  const fragmentSpreadNode = operationDefinition.selectionSet.selections[0];
   assert(fragmentSpreadNode.kind === "FragmentSpread");
 
-  const fragment = descriptor.fragmentMap.get(fragmentSpreadNode.name.value);
+  const fragment = document.definitions.find(
+    (def): def is FragmentDefinitionNode =>
+      def.kind === "FragmentDefinition" &&
+      def.name.value === fragmentSpreadNode.name.value,
+  );
   if (!fragment) {
     throw new Error(`No fragment named ${fragmentSpreadNode.name.value}.`);
   }

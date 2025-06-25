@@ -33,6 +33,7 @@ import { indexTree } from "../forest/indexTree";
 import { createChunkMatcher, createChunkProvider } from "./draftHelpers";
 import {
   getDiffDescriptor,
+  getFragmentNode,
   getOriginalDocument,
   isFragmentDocument,
   transformDocument,
@@ -144,8 +145,7 @@ function readFragment(
     ? transformDocument(options.query)
     : options.query;
 
-  const fragment = document.definitions[1];
-  assert(fragment.kind === "FragmentDefinition");
+  const fragment = getFragmentNode(document);
 
   // Normally, this is a data forest, but when executed within transaction - could be one of the optimistic layers
   const forest = getActiveForest(store, activeTransaction);
