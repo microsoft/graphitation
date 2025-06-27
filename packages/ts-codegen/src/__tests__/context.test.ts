@@ -11,6 +11,7 @@ describe(generateTS, () => {
       baseContextTypePath: "@package/default-context",
       baseContextTypeName: "DefaultContextType",
       groups: {
+        baseContextOnly: {},
         UserTestGroup: {
           managers: ["user", "whatever"],
         },
@@ -140,7 +141,7 @@ describe(generateTS, () => {
                   optional: { managers: ["node"] }
                 )
               requiredUser: User! @context(optional: { managers: ["node"] })
-              requiredPost: Post!
+              requiredPost: Post! @baseContextOnly
               optionalPost: Post @PostTestGroup
             }
           `,
