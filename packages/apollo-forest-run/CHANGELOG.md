@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Mon, 23 Jun 2025 11:26:46 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 27 Jun 2025 17:19:04 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.17.0
+
+Fri, 27 Jun 2025 17:19:04 GMT
+
+### Minor changes
+
+- feat(apollo-forest-run): read and watch fragments (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.16.0
 

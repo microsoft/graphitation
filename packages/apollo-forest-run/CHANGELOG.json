@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Fri, 27 Jun 2025 17:19:04 GMT",
+      "version": "0.17.0",
+      "tag": "@graphitation/apollo-forest-run_v0.17.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "bd834b370ecc1b8289bda078a6109848ca4175e6",
+            "comment": "feat(apollo-forest-run): read and watch fragments"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 23 Jun 2025 11:26:46 GMT",
       "version": "0.16.0",
       "tag": "@graphitation/apollo-forest-run_v0.16.0",
