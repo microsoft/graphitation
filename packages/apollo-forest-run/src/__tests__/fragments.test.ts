@@ -161,6 +161,48 @@ test("fragment read respects include/skip directives", () => {
   expect(result4).not.toBe(foo4);
 });
 
+test("fragment read is resilient to partially missing fields", () => {
+  const query = gql`
+    query ($id: Int!, $fooKey: Int!) {
+      item(id: $id) {
+        id
+        # Note: missing field must have selection to trigger potential error paths
+        missingField {
+          foo
+        }
+        ...FooFragment
+      }
+    }
+    fragment FooFragment on Foo {
+      id
+      foo(key: $fooKey)
+    }
+  `;
+  const fragment: DocumentNode = {
+    kind: "Document",
+    definitions: [query.definitions[1]],
+  };
+  const cache = newForestRun();
+
+  const foo1 = { __typename: "Foo", id: 1, foo: 1 }; // note "missingField"
+  const id = cache.identify(foo1); // the same id for all variants
+
+  cache.write({
+    query,
+    result: { item: foo1 },
+    variables: { id: 1, fooKey: 1 },
+  });
+
+  const result = cache.readFragment({
+    fragment,
+    id,
+    optimistic: true,
+    variables: { fooKey: 1 },
+  });
+
+  expect(result).toEqual(foo1);
+});
+
 describe("fragment watching", () => {
   test("fragment watcher is notified when fragment data changes", () => {
     const query = gql`

@@ -3,7 +3,7 @@ import type {
   OperationDescriptor,
   VariableValues,
 } from "../descriptor/types";
-import type { ObjectDraft, SourceObject } from "../values/types";
+import type { ObjectChunk, ObjectDraft, SourceObject } from "../values/types";
 import type { IndexedTree } from "../forest/types";
 import type {
   CacheEnv,
@@ -145,6 +145,16 @@ function readFragment(
     : options.query;
 
   const fragment = getFragmentNode(document);
+  const chunkMatcher = (chunk: ObjectChunk) => {
+    if (chunk.missingFields?.size) {
+      return false;
+    }
+    const aliases =
+      chunk.selection.spreads?.get(fragment.name.value) ?? EMPTY_ARRAY;
+    return aliases.some(
+      (spread) => !chunk.selection.skippedSpreads?.has(spread),
+    );
+  };
 
   // Normally, this is a data forest, but when executed within transaction - could be one of the optimistic layers
   const forest = getActiveForest(store, activeTransaction);
@@ -166,13 +176,7 @@ function readFragment(
     if (!nodeChunks?.length) {
       continue;
     }
-    const matchingChunk = nodeChunks?.find((chunk) => {
-      const aliases =
-        chunk.selection.spreads?.get(fragment.name.value) ?? EMPTY_ARRAY;
-      return aliases.some(
-        (spread) => !chunk.selection.skippedSpreads?.has(spread),
-      );
-    });
+    const matchingChunk = nodeChunks?.find(chunkMatcher);
     if (matchingChunk) {
       return matchingChunk;
     }
