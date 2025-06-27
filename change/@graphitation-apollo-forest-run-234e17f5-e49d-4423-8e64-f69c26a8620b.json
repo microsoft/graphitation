@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "feat(apollo-forest-run): read and watch fragments",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}

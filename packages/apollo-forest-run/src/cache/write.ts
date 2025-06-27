@@ -1,5 +1,5 @@
 import type { Cache } from "@apollo/client";
-import type { IndexedTree } from "../forest/types";
+import type { IndexedTree, UpdateTreeResult } from "../forest/types";
 import type { OperationResult } from "../values/types";
 import type {
   CacheEnv,
@@ -88,7 +88,14 @@ export function write(
   assert(!existingResult?.prev);
 
   if (writeData === existingData && existingResult) {
-    return { options, incoming: existingResult, affected: [] };
+    return {
+      options,
+      incoming: existingResult,
+      affected: [],
+      difference: undefined,
+      affectedNodes: new Set(),
+      updateStats: [],
+    };
   }
 
   if (!ROOT_NODES.includes(operationDescriptor.rootNodeKey)) {
@@ -160,7 +167,7 @@ export function write(
   const chunkProvider = (key: NodeKey) =>
     getNodeChunks(getEffectiveReadLayers(store, targetForest, false), key);
 
-  const updateStats = updateAffectedTrees(
+  const allUpdates = updateAffectedTrees(
     env,
     targetForest,
     affectedOperations,
@@ -199,7 +206,8 @@ export function write(
     incoming: modifiedIncomingResult,
     affected: affectedOperations.keys(),
     difference,
-    updateStats,
+    affectedNodes: aggregateAllAffectedNodes(difference, allUpdates),
+    updateStats: allUpdates.map((update) => update.stats ?? null),
   };
 }
 
@@ -293,6 +301,22 @@ function shouldCache(
   return operation.cache;
 }
 
+function aggregateAllAffectedNodes(
+  difference: GraphDifference,
+  updates: UpdateTreeResult[],
+): Set<NodeKey> {
+  const accumulator = new Set<NodeKey>([
+    ...difference.newNodes,
+    ...difference.nodeDifference.keys(),
+  ]);
+  for (const { affectedNodes } of updates) {
+    for (const nodeKey of affectedNodes) {
+      accumulator.add(nodeKey);
+    }
+  }
+  return accumulator;
+}
+
 function resolveExtraRootNodeType(
   env: CacheEnv,
   store: Store,
@@ -303,7 +327,7 @@ function resolveExtraRootNodeType(
     return data["__typename"];
   }
   // Try fragment condition (fragments on abstract types are ignored)
-  if (isFragmentDocument(operationDescriptor)) {
+  if (isFragmentDocument(operationDescriptor.document)) {
     const [fragmentDef] = operationDescriptor.fragmentMap.values();
     const typeName = fragmentDef?.typeCondition.name.value;
     if (!env.possibleTypes?.[typeName]) {

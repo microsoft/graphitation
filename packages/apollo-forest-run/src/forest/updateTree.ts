@@ -1,4 +1,3 @@
-/* eslint-disable */
 import type {
   OperationDescriptor,
   PossibleSelections,
@@ -13,20 +12,22 @@ import type {
   ObjectDraft,
   SourceObject,
 } from "../values/types";
-import type { ObjectDifference } from "../diff/types";
+import type { NodeDifferenceMap } from "../diff/types";
 import type {
-  IndexedTree,
   Draft,
-  Source,
-  UpdateState,
   ForestEnv,
+  IndexedTree,
+  UpdateTreeContext,
+  UpdateTreeResult,
 } from "./types";
 import { assert } from "../jsutils/assert";
 import { indexTree } from "./indexTree";
 import { isDirty } from "../diff/difference";
 import {
   createDraft,
+  createParentLocator,
   hydrateDraft,
+  isNodeValue,
   isObjectValue,
   isParentObjectRef,
   isRootRef,
@@ -36,26 +37,40 @@ import {
 import { updateObject } from "./updateObject";
 import { createUpdateLogger } from "../telemetry/updateStats/updateLogger";
 
-export type NodeDifferenceMap = Map<string, ObjectDifference>;
 type ComplexValue = SourceObject | NestedList<SourceObject>;
 
+export { NodeDifferenceMap }; // FIXME
+
 export function updateTree(
+  env: ForestEnv,
   base: IndexedTree,
   differenceMap: NodeDifferenceMap,
-  env: ForestEnv,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
-  state?: UpdateState,
-): UpdateState {
+): UpdateTreeResult {
   const rootChunks = base.nodes.get(base.rootNodeKey);
   assert(rootChunks?.length === 1);
   const rootChunk = rootChunks[0];
-  state ??= {
-    indexedTree: base,
+  const context: UpdateTreeContext = {
+    operation: base.operation,
     drafts: new Map(),
+    changes: new Map(),
+    changedNodes: new Set(),
+    affectedNodes: new Set(),
     missingFields: new Map(),
+    completeObject: completeObject.bind(null, env, base, getNodeChunks),
+    findParent: createParentLocator(base.dataMap),
     statsLogger: createUpdateLogger(env.logUpdateStats),
+    logger: env.logger,
   };
-  const { missingFields, drafts, statsLogger } = state;
+  const {
+    operation,
+    missingFields,
+    drafts,
+    changes,
+    changedNodes,
+    affectedNodes,
+    statsLogger,
+  } = context;
 
   // Preserve existing information about any missing fields.
   // (updated objects will get their own entry in the map, so there won't be collisions)
@@ -85,24 +100,17 @@ export function updateTree(
   const chunkQueue = resolveAffectedChunks(base, differenceMap);
   chunkQueue.sort((a, b) => b.selection.depth - a.selection.depth); // parent is missing for orphan nodes
 
-  let dirty = false;
   for (const chunk of chunkQueue) {
     const difference = differenceMap.get(chunk.key as string);
     assert(difference);
 
     statsLogger?.startChunkUpdate(chunk);
-    const result = updateObject(
-      env,
-      base.dataMap,
-      chunk,
-      difference,
-      completeObject.bind(null, env, base, getNodeChunks),
-      state,
-    );
+    const result = updateObject(context, chunk, difference);
     if (!result) {
       continue;
     }
     assert(result.draft === drafts.get(chunk.data));
+    changedNodes.add(chunk.key as string);
 
     // ApolloCompat: orphan nodes are mutated in place
     // TODO: remove this together with orphan nodes
@@ -116,12 +124,17 @@ export function updateTree(
       });
       continue;
     }
-    createSourceCopiesUpToRoot(env, base, chunk, state);
+    createSourceCopiesUpToRoot(context, base, chunk);
     statsLogger?.finishChunkUpdate();
-    dirty = true;
   }
-  if (!dirty) {
-    return state;
+  if (!changedNodes.size) {
+    return {
+      updatedTree: base,
+      changes,
+      changedNodes,
+      affectedNodes,
+      stats: statsLogger?.getStats(operation.debugName),
+    };
   }
   const rootDraft = drafts.get(rootChunk.data);
   assert(isSourceObject(rootDraft));
@@ -141,7 +154,7 @@ export function updateTree(
       env.keyMap?.set(draft, key);
     }
   }
-  const newIndexedResult = indexTree(
+  const updatedTree = indexTree(
     env,
     base.operation,
     { data: rootDraft },
@@ -149,10 +162,15 @@ export function updateTree(
     base,
   );
   if (env.apolloCompat_keepOrphanNodes) {
-    apolloBackwardsCompatibility_saveOrphanNodes(base, newIndexedResult);
+    apolloBackwardsCompatibility_saveOrphanNodes(base, updatedTree);
   }
-  state.indexedTree = newIndexedResult;
-  return state;
+  return {
+    updatedTree,
+    changes,
+    changedNodes,
+    affectedNodes,
+    stats: statsLogger?.getStats(operation.debugName),
+  };
 }
 
 function resolveAffectedChunks(
@@ -232,14 +250,21 @@ function completeObject(
 }
 
 function createSourceCopiesUpToRoot(
-  env: ForestEnv,
+  context: UpdateTreeContext,
   tree: IndexedTree,
   from: CompositeValueChunk,
-  state: UpdateState,
   isRootCall = true,
+  isIndirectlyAffected = false,
 ): ComplexValue {
-  const { drafts, statsLogger } = state;
+  const { drafts, affectedNodes, statsLogger } = context;
   const parent = from.data ? tree.dataMap.get(from.data) : null;
+
+  if (isIndirectlyAffected && isNodeValue(from)) {
+    // Affected nodes include:
+    // 1. Nodes with difference that were modified (some nodes with normalized difference won't be actually affected by the update due to not having)
+    // 2. Parent nodes affected by the change in nested nodes
+    affectedNodes.add(from.key);
+  }
 
   if (!parent || isRootRef(parent)) {
     assert(isObjectValue(from));
@@ -253,11 +278,11 @@ function createSourceCopiesUpToRoot(
     return data;
   }
   const parentSource = createSourceCopiesUpToRoot(
-    env,
+    context,
     tree,
     parent.parent,
-    state,
     false,
+    true,
   );
   const parentDraft = drafts.get(parentSource);
   assert(parentDraft);

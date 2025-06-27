@@ -3,14 +3,12 @@ import type {
   CompositeListValue,
   CompositeNullChunk,
   CompositeUndefinedChunk,
-  DataMap,
   GraphChunk,
   GraphValue,
   NestedList,
   ObjectChunk,
   ObjectDraft,
   ObjectValue,
-  ParentLocator,
   SourceCompositeList,
   SourceLeafValue,
   SourceNull,
@@ -22,18 +20,12 @@ import type {
   ObjectDifference,
   ValueDifference,
 } from "../diff/types";
+import type { FieldInfo, PossibleSelections } from "../descriptor/types";
 import type {
-  FieldInfo,
-  OperationDescriptor,
-  PossibleSelections,
-} from "../descriptor/types";
-import type {
-  CompleteObjectFn,
   Draft,
-  ForestEnv,
   Source,
   UpdateObjectResult,
-  UpdateState,
+  UpdateTreeContext,
 } from "./types";
 import * as Difference from "../diff/difference";
 import * as Value from "../values";
@@ -41,43 +33,15 @@ import { ValueKind } from "../values/types";
 import { DifferenceKind } from "../diff/types";
 import { assert, assertNever } from "../jsutils/assert";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
-import { createParentLocator } from "../values";
-import type { UpdateLogger } from "../telemetry/updateStats/updateLogger";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const inspect = JSON.stringify.bind(JSON);
 
-type Context = UpdateState & {
-  env: ForestEnv;
-  dataMap: DataMap;
-  base: ObjectChunk;
-  operation: OperationDescriptor;
-  completeObjectFn: CompleteObjectFn;
-  findParent: ParentLocator;
-  statsLogger?: UpdateLogger;
-};
-
 export function updateObject(
-  env: ForestEnv,
-  dataMap: DataMap,
+  context: UpdateTreeContext,
   base: ObjectChunk,
   diff: ObjectDifference,
-  completeObjectFn: CompleteObjectFn,
-  state: UpdateState,
 ): UpdateObjectResult | undefined {
-  const { statsLogger } = state;
-  const context: Context = {
-    env,
-    base,
-    operation: base.operation,
-    drafts: state.drafts,
-    missingFields: state.missingFields,
-    indexedTree: state.indexedTree,
-    dataMap,
-    completeObjectFn,
-    findParent: createParentLocator(dataMap),
-    statsLogger,
-  };
   const draft = updateObjectValue(context, base, diff);
 
   return draft && draft !== base.data
@@ -89,7 +53,7 @@ export function updateObject(
 }
 
 function updateObjectValue(
-  context: Context,
+  context: UpdateTreeContext,
   base: ObjectChunk,
   difference: ObjectDifference,
 ): SourceObject | undefined {
@@ -99,6 +63,7 @@ function updateObjectValue(
   let copy = context.drafts.get(base.data);
   assert(!Array.isArray(copy));
   context.statsLogger?.copyChunkStats(base, copy);
+  let dirtyFields: FieldInfo[] | undefined;
 
   for (const fieldName of difference.dirtyFields) {
     const aliases = base.selection.fields.get(fieldName);
@@ -114,13 +79,14 @@ function updateObjectValue(
       if (!fieldDifference) {
         continue;
       }
+      const fieldDiff = fieldDifference.state;
       const value = Value.resolveFieldChunk(base, fieldInfo);
       const valueIsMissing = Value.isMissingValue(value);
 
-      if (valueIsMissing && !Difference.isFiller(fieldDifference.state)) {
+      if (valueIsMissing && !Difference.isFiller(fieldDiff)) {
         // Inconsistent state - do not update this field
         //   (assuming it will be re-fetched from the server to resolve inconsistency)
-        context.env.logger?.debug(
+        context.logger?.debug(
           base.operation.debugName +
             ` is in inconsistent state at path ` +
             Value.getDataPathForDebugging(context, base)
@@ -130,7 +96,7 @@ function updateObjectValue(
         continue;
       }
 
-      const updated = updateValue(context, value, fieldDifference.state);
+      const updated = updateValue(context, value, fieldDiff);
 
       if (valueIsMissing && updated !== undefined) {
         context.missingFields.get(base.data)?.delete(fieldInfo);
@@ -144,13 +110,25 @@ function updateObjectValue(
       }
       context.statsLogger?.fieldMutation();
       copy[fieldInfo.dataKey] = updated;
+
+      // Record immediately mutated fields (ignore changes caused by nested chunk mutations)
+      if (
+        fieldDiff.kind === DifferenceKind.Replacement ||
+        fieldDiff.kind === DifferenceKind.Filler
+      ) {
+        dirtyFields ??= [];
+        dirtyFields.push(fieldInfo);
+      }
     }
+  }
+  if (dirtyFields?.length) {
+    context.changes.set(base, dirtyFields);
   }
   return copy ?? base.data;
 }
 
 function updateValue(
-  context: Context,
+  context: UpdateTreeContext,
   base: GraphChunk,
   difference: ValueDifference,
 ): SourceValue | undefined {
@@ -182,7 +160,7 @@ function updateValue(
 }
 
 function updateCompositeListValue(
-  context: Context,
+  context: UpdateTreeContext,
   base: CompositeListChunk,
   difference: CompositeListDifference,
 ): NestedList<SourceObject | SourceNull> | undefined {
@@ -191,6 +169,7 @@ function updateCompositeListValue(
   }
   const { drafts, operation, statsLogger } = context;
   const layoutDiff = difference.layout;
+  let dirty = false; // Only dirty on self changes - item replacement/filler, layout changes (ignores child changes)
   let copy = drafts.get(base.data);
   assert(Array.isArray(copy) || copy === undefined);
   statsLogger?.copyChunkStats(base, copy);
@@ -214,8 +193,16 @@ function updateCompositeListValue(
     copy[index] = updatedValue as Draft;
     statsLogger?.itemMutation();
     drafts.set(base.data[index] as Source, updatedValue as Draft);
+    if (
+      itemDiff.kind === DifferenceKind.Replacement ||
+      itemDiff.kind === DifferenceKind.Filler
+    ) {
+      dirty = true;
+    }
   }
-
+  if (dirty) {
+    context.changes.set(base, null);
+  }
   if (!layoutDiff) {
     return copy ?? base.data;
   }
@@ -233,6 +220,9 @@ function updateCompositeListValue(
   const result: NestedList<SourceObject | SourceNull> = new Array(length);
   for (let i = 0; i < length; i++) {
     const itemRef = layoutDiff[i];
+    if (itemRef !== i) {
+      dirty = true;
+    }
     if (typeof itemRef === "number") {
       result[i] =
         drafts.get(base.data[itemRef] as SourceObject) ?? base.data[itemRef];
@@ -243,7 +233,7 @@ function updateCompositeListValue(
       continue;
     }
     if (Value.isObjectValue(itemRef)) {
-      const newValue = context.completeObjectFn(
+      const newValue = context.completeObject(
         itemRef,
         base.possibleSelections,
         operation,
@@ -254,7 +244,7 @@ function updateCompositeListValue(
       continue;
     }
     const op = operation.definition.name?.value;
-    context.env.logger?.warn(
+    context.logger?.warn(
       `Unknown list item kind: ${itemRef.kind} at #${i}\n` +
         `  source list: ${inspect(base.data)})` +
         `  operation: ${op}\n`,
@@ -271,12 +261,18 @@ function updateCompositeListValue(
   } else {
     drafts.set(base.data, result);
   }
+  if (copy.length !== base.data.length) {
+    dirty = true;
+  }
+  if (dirty) {
+    context.changes.set(base, null);
+  }
 
   return copy ?? base.data;
 }
 
 function replaceValue(
-  context: Context,
+  context: UpdateTreeContext,
   base: GraphChunk,
   replacement: GraphValue,
 ): SourceValue | undefined {
@@ -319,7 +315,7 @@ function replaceValue(
 }
 
 function replaceObject(
-  context: Context,
+  context: UpdateTreeContext,
   replacement: ObjectValue,
   possibleSelections: PossibleSelections,
 ): SourceObject {
@@ -344,7 +340,7 @@ function replaceObject(
     }
     return fullMatch;
   }
-  const newValue = context.completeObjectFn(
+  const newValue = context.completeObject(
     replacement,
     possibleSelections,
     context.operation,
@@ -355,7 +351,7 @@ function replaceObject(
 }
 
 function replaceCompositeList(
-  context: Context,
+  context: UpdateTreeContext,
   baseList: CompositeListChunk | CompositeNullChunk | CompositeUndefinedChunk,
   newList: CompositeListValue,
 ): SourceCompositeList | undefined {
@@ -364,7 +360,7 @@ function replaceCompositeList(
   for (let i = 0; i < len; i++) {
     const item = Value.aggregateListItemValue(newList, i);
     if (!Value.isCompositeValue(item) || Value.isMissingValue(item)) {
-      context.env.logger?.warn(
+      context.logger?.warn(
         `Failed list item #${i} replacement, returning source list\n` +
           `  new list: ${inspect(newList.data)}\n` +
           `  source list: ${inspect(baseList.data)}\n` +
@@ -394,7 +390,10 @@ function replaceCompositeList(
   return result;
 }
 
-function accumulateMissingFields(context: Context, value: ObjectDraft) {
+function accumulateMissingFields(
+  context: UpdateTreeContext,
+  value: ObjectDraft,
+) {
   if (value.missingFields?.size) {
     for (const [source, missingFields] of value.missingFields.entries()) {
       context.missingFields.set(source, missingFields);

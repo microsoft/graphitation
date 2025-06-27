@@ -13,6 +13,7 @@ import {
   Context,
 } from "../possibleSelection";
 import { describeDocument } from "../document";
+import { assert } from "../../jsutils/assert";
 
 const commonSelectionKey = null;
 
@@ -102,11 +103,8 @@ describe(describeResultTree, () => {
       Foo: {
         fields: ["bar"],
         fieldsWithSelections: ["bar"],
-        // spreads: ["Foo1", "Foo2"],
+        spreads: ["Foo1", "Foo2"],
       },
-    });
-    expect(printSelectedIn(possible.get("Foo"))).toEqual({
-      bar: ["Foo1", "Foo2"],
     });
     const bar = possible.get("Foo")?.fields.get("bar");
     expect(printPossibleSelections(bar?.[0]?.selection)).toEqual({
@@ -114,15 +112,8 @@ describe(describeResultTree, () => {
       Bar: {
         fields: ["__typename", "baz"],
         fieldsToNormalize: ["__typename", "baz"], // TODO: verify if this is correct
-        // spreads: ["Bar1", "Bar2"],
+        spreads: ["Bar1", "Bar2"],
       },
-    });
-    expect(printSelectedIn(bar?.[0]?.selection?.get(null))).toEqual({
-      baz: ["Foo2"],
-    });
-    expect(printSelectedIn(bar?.[0]?.selection?.get("Bar"))).toEqual({
-      __typename: ["Bar1"],
-      baz: ["Bar2", "Foo2"],
     });
   });
 
@@ -218,7 +209,7 @@ describe(describeResultTree, () => {
       Foo: {
         fields: ["bar"],
         fieldsWithSelections: ["bar"],
-        // spreads: ["Foo"],
+        spreads: ["Foo"],
       },
       null: { fields: [] },
     });
@@ -227,7 +218,7 @@ describe(describeResultTree, () => {
       Bar: {
         fields: ["baz"],
         fieldsWithSelections: ["baz"],
-        // spreads: ["Bar"],
+        spreads: ["Bar"],
       },
     });
     expect(printPossibleSelections(baz?.selection)).toEqual({
@@ -238,7 +229,7 @@ describe(describeResultTree, () => {
       Baz: {
         fields: ["fooBarOverflow", "id"],
         fieldsWithSelections: ["fooBarOverflow"],
-        // spreads: ["Baz"],
+        spreads: ["Baz"],
       },
     });
     expect(printPossibleSelections(fooBarOverflow?.selection)).toEqual({
@@ -285,45 +276,6 @@ describe(describeResultTree, () => {
     });
   });
 
-  it("tracks where each field is selected", () => {
-    const possible = testHelper(`
-      {
-        foo
-        ... on Bar { bar }
-        ...Foo1
-      }
-      fragment Foo1 on Foo {
-         foo
-         ...Foo2
-      }
-      fragment Foo2 on Foo {
-        foo
-        baz
-        ...Bar1
-      }
-      fragment Bar1 on Bar {
-        bar
-      }
-    `);
-    const common = possible?.get(commonSelectionKey);
-    const onFoo = possible?.get("Foo");
-    const onBar = possible?.get("Bar");
-
-    expect(possible?.size).toEqual(3);
-    expect(printSelectedIn(common)).toEqual({
-      foo: [true],
-    });
-    expect(printSelectedIn(onFoo)).toEqual({
-      baz: ["Foo2"],
-      foo: ["Foo1", "Foo2", true],
-    });
-    expect(printSelectedIn(onBar)).toEqual({
-      bar: [true, "Bar1"],
-      foo: [true],
-    });
-  });
-
-  // TODO: track variable usage for every selection
   it("tracks selection spreads", () => {
     const { possibleSelections: possible } = testHelperV2(
       `{
@@ -365,7 +317,7 @@ describe(describeResultTree, () => {
         fields: ["bar", "foo", "some"],
         fieldsToNormalize: ["foo1", "foo2", "foo3", "some"],
         fieldsWithSelections: ["some"],
-        // spreads: ["Foo1", "Foo2", "Foo3"],
+        spreads: ["Foo1", "Foo2", "Foo3"],
       },
     });
     // expect(Object.fromEntries(fragments.entries())).toEqual({
@@ -380,6 +332,118 @@ describe(describeResultTree, () => {
     //     "foo1",
     //   ],
     // });
+  });
+
+  describe("with watch boundaries", () => {
+    it("returns watch boundaries for every field and spread", () => {
+      const possible = testHelper(`
+      {
+        foo
+        ... on Bar { bar }
+        ...Foo1 @nonreactive
+        ...Bar1 @nonreactive
+      }
+      fragment Foo1 on Foo {
+         foo
+         ...Foo2 # not a watch boundary
+      }
+      fragment Foo2 on Foo {
+        foo
+        baz
+        ...Bar1 @nonreactive
+      }
+      fragment Bar1 on Bar {
+        bar
+      }
+    `);
+      const common = possible?.get(commonSelectionKey);
+      const onFoo = possible?.get("Foo");
+      const onBar = possible?.get("Bar");
+
+      expect(possible?.size).toEqual(3);
+      expect(printWatchBoundaries(common)).toEqual({
+        fields: {
+          foo: [""],
+        },
+        spreads: {},
+      });
+      expect(printWatchBoundaries(onFoo)).toEqual({
+        fields: {
+          baz: ["Foo1"],
+          foo: ["Foo1", ""],
+        },
+        spreads: {
+          Foo1: [""],
+          Foo2: ["Foo1"],
+          // Bar1: ["Foo1"], // fragment "Bar1" is on type "Bar", so it shouldn't be included in selection on type "Foo"
+        },
+      });
+      expect(printWatchBoundaries(onBar)).toEqual({
+        fields: {
+          bar: ["", "Bar1"],
+          foo: [""],
+        },
+        spreads: {
+          Bar1: ["Foo1", ""],
+        },
+      });
+    });
+
+    it("returns watch boundaries for recursive fragment spreads", () => {
+      const possible = testHelper(
+        `{
+           ...Foo1 @nonreactive
+           ...Foo2 @nonreactive
+          }
+
+      fragment Foo1 on Foo {
+        bar {
+          ...Bar1 @nonreactive
+        }
+      }
+      fragment Foo2 on Foo {
+        bar {
+          baz
+          ...Bar2 @nonreactive
+        }
+      }
+      fragment Bar1 on Bar {
+        __typename
+        ...Bar2 @nonreactive
+      }
+      fragment Bar2 on Bar {
+        baz
+        ...Bar1 @nonreactive(if: $variable)
+      }
+      `,
+      );
+      expect(printWatchBoundaries(possible.get("Foo"))).toEqual({
+        fields: {
+          bar: ["Foo1", "Foo2"],
+        },
+        spreads: {
+          Foo1: [""],
+          Foo2: [""],
+        },
+      });
+      const bar = possible.get("Foo")?.fields.get("bar");
+      expect(printWatchBoundaries(bar?.[0]?.selection?.get(null))).toEqual({
+        fields: {
+          baz: ["Foo2"],
+        },
+        spreads: {}, // spreads do not exist on untyped selection by their nature
+      });
+      expect(printWatchBoundaries(bar?.[0]?.selection?.get("Bar"))).toEqual({
+        fields: {
+          __typename: ["Bar1"],
+          baz: ["Bar2", "Foo2"],
+        },
+        spreads: {
+          Bar1: ["Foo1", "Bar2"],
+          Bar2: ["Bar1", "Foo2"],
+        },
+      });
+    });
   });
 
   describe("for abstract types", () => {
@@ -427,15 +491,15 @@ describe(describeResultTree, () => {
         null: { fields: ["common"] },
         MyInterface: {
           fields: ["iface"],
-          //  spreads: ["MyIface"]
+          spreads: ["MyIface"],
         },
         Foo: {
           fields: ["foo", "common", "iface"],
-          // spreads: ["Foo", "MyIface"],
+          spreads: ["Foo", "MyIface"],
         },
         Bar: {
           fields: ["bar", "common", "iface"],
-          // spreads: ["MyIface"],
+          spreads: ["MyIface"],
         },
       });
     });
@@ -605,9 +669,9 @@ describe(describeResultTree, () => {
 
       expect(printPossibleSelections(possible)).toEqual({
         null: { fields: ["common"] },
-        MyInterface: { fields: ["iface"] }, // spreads: ["MyIface"] },
-        Foo: { fields: ["iface", "common"] }, // spreads: ["MyIface"] },
-        Bar: { fields: ["iface", "common"] }, // spreads: ["MyIface"] },
+        MyInterface: { fields: ["iface"], spreads: ["MyIface"] },
+        Foo: { fields: ["iface", "common"], spreads: ["MyIface"] },
+        Bar: { fields: ["iface", "common"], spreads: ["MyIface"] },
       });
     });
 
@@ -1110,7 +1174,7 @@ describe(collectSubFields, () => {
     const fieldUsages = fields.map((field) => ({
       node: (parse(`{ ${field} }`).definitions[0] as OperationDefinitionNode)
         .selectionSet.selections[0] as FieldNode,
-      parentSpreads: [],
+      ancestors: [],
     }));
     const fieldInfo = createFieldGroup(fieldUsages[0].node);
     fieldInfo.__refs = fieldUsages;
@@ -1153,7 +1217,9 @@ function printPossibleSelections(selection: PossibleSelections | undefined) {
               fieldsToNormalize: selection.fieldsToNormalize?.map(
                 (f) => f.alias ?? f.name,
               ),
-              spreads: selection.fragmentSpreads,
+              spreads: selection.spreads?.size
+                ? [...selection.spreads.keys()]
+                : undefined,
             }),
           ),
         ]),
@@ -1161,8 +1227,11 @@ function printPossibleSelections(selection: PossibleSelections | undefined) {
     : {};
 }
 
-function printSelectedIn(selection: PossibleSelection | undefined) {
-  return printFieldGroups(selection, true);
+function printWatchBoundaries(selection: PossibleSelection | undefined) {
+  return {
+    fields: printFieldGroups(selection, true),
+    spreads: printSpreadGroups(selection, true),
+  };
 }
 
 function printFieldEntries(selection: PossibleSelections | undefined) {
@@ -1182,22 +1251,18 @@ function printFieldQueue(selection: PossibleSelection | undefined) {
 
 function printFieldGroups(
   selection: PossibleSelection | undefined,
-  printSelectedIn = false,
+  printWatchBoundaries = false,
 ) {
   const fields: Record<string, unknown> = {};
   for (const [fieldName, fieldAliases] of selection?.fields.entries() ?? []) {
     for (const fieldInfo of fieldAliases) {
-      if (fieldInfo.name !== fieldName) {
-        throw new Error(
-          `Fields in map key and value do not match. Key: ${fieldName}, value: ${fieldInfo.name}`,
-        );
-      }
+      assert(fieldInfo.name === fieldName);
       const debugKey = fieldInfo.alias
         ? `${fieldInfo.alias}: ${fieldInfo.name}`
         : fieldInfo.name;
 
-      if (printSelectedIn) {
-        fields[debugKey] = fieldInfo.selectedIn;
+      if (printWatchBoundaries) {
+        fields[debugKey] = fieldInfo.watchBoundaries;
       } else {
         fields[debugKey] = (fieldInfo?.__refs ?? []).map((usage) =>
           print(usage.node).replace(/[\s\n]+/g, " "),
@@ -1206,4 +1271,28 @@ function printFieldGroups(
     }
   }
   return fields;
+}
+
+function printSpreadGroups(
+  selection: PossibleSelection | undefined,
+  printWatchBoundaries = false,
+) {
+  const spreads: Record<string, unknown> = {};
+  for (const [name, spreadAliases] of selection?.spreads?.entries() ?? []) {
+    for (const spreadInfo of spreadAliases) {
+      assert(spreadInfo.name === name);
+      const debugKey = spreadInfo.alias
+        ? `${spreadInfo.alias}: ${spreadInfo.name}`
+        : spreadInfo.name;
+
+      if (printWatchBoundaries) {
+        spreads[debugKey] = spreadInfo.watchBoundaries;
+      } else {
+        spreads[debugKey] = (spreadInfo?.__refs ?? []).map((usage) =>
+          print(usage.node).replace(/[\s\n]+/g, " "),
+        );
+      }
+    }
+  }
+  return spreads;
 }

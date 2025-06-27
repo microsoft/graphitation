@@ -32,7 +32,11 @@ import {
   removeOptimisticLayers,
   resetStore,
 } from "./cache/store";
-import { getDiffDescriptor, transformDocument } from "./cache/descriptor";
+import {
+  getDiffDescriptor,
+  isFragmentDocument,
+  transformDocument,
+} from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
@@ -208,8 +212,10 @@ export class ForestRun extends ApolloCache<SerializedCache> {
     return incoming.nodes.size ? getRef(incoming.rootNodeKey) : undefined;
   }
 
-  private collectAffectedOperations(transaction: Transaction) {
+  private collectAffectedOperationsAndNodes(transaction: Transaction) {
     transaction.affectedOperations ??= new Set();
+    transaction.affectedNodes ??= new Set();
+
     for (const entry of transaction.changelog) {
       // Actual notification will happen on transaction completion (in batch)
       if (entry.options.broadcast === false) {
@@ -221,6 +227,20 @@ export class ForestRun extends ApolloCache<SerializedCache> {
       // Incoming operation may not have been updated, but let "watch" decide how to handle it
       if (isWrite(entry)) {
         transaction.affectedOperations.add(entry.incoming.operation);
+      }
+
+      // Append affected nodes (speeds up fragment watch notifications later)
+      if (isWrite(entry)) {
+        for (const nodeKey of entry.affectedNodes ?? EMPTY_ARRAY) {
+          transaction.affectedNodes.add(nodeKey);
+        }
+      } else {
+        const layerDiff = entry.difference?.values();
+        for (const layerDifferenceMap of layerDiff ?? EMPTY_ARRAY) {
+          for (const nodeKey of layerDifferenceMap.nodeDifference.keys()) {
+            transaction.affectedNodes.add(nodeKey);
+          }
+        }
       }
 
       // ApolloCompat: new watches must be notified immediately after the next write
@@ -319,6 +339,14 @@ export class ForestRun extends ApolloCache<SerializedCache> {
   public watch<TData = any, TVariables = any>(
     watch: Cache.WatchOptions<TData, TVariables>,
   ): () => void {
+    return this.env.optimizeFragmentReads &&
+      isFragmentDocument(watch.query) &&
+      (watch.id || watch.rootId)
+      ? this.watchFragment(watch)
+      : this.watchOperation(watch);
+  }
+
+  private watchOperation(watch: Cache.WatchOptions) {
     const operationDescriptor = getDiffDescriptor(this.env, this.store, watch);
 
     if (watch.immediate /* && !this.transactionStack.length */) {
@@ -336,6 +364,16 @@ export class ForestRun extends ApolloCache<SerializedCache> {
     return () => {
       this.newWatches.delete(watch);
       deleteAccumulated(this.store.watches, operationDescriptor, watch);
+    };
+  }
+
+  private watchFragment(watch: Cache.WatchOptions) {
+    const id = watch.id ?? watch.rootId;
+    assert(id !== undefined);
+    accumulate(this.store.fragmentWatches, id, watch);
+
+    return () => {
+      deleteAccumulated(this.store.fragmentWatches, id, watch);
     };
   }
 
@@ -475,6 +513,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
     const activeTransaction: Transaction = {
       optimisticLayer,
       affectedOperations: null,
+      affectedNodes: null,
       watchesToNotify: null,
       forceOptimistic,
       changelog: [],
@@ -486,7 +525,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
     try {
       result = update(this);
 
-      this.collectAffectedOperations(activeTransaction);
+      this.collectAffectedOperationsAndNodes(activeTransaction);
 
       // This must run within transaction itself, because it runs `diff` under the hood
       // which may need to read results from the active optimistic layer
@@ -536,19 +575,30 @@ export class ForestRun extends ApolloCache<SerializedCache> {
   }
 
   private collectAffectedWatches(
-    activeTransaction: Transaction,
+    transaction: Transaction,
     onWatchUpdated?: Cache.BatchOptions<any>["onWatchUpdated"],
   ): Set<Cache.WatchOptions> | null {
-    if (!activeTransaction.affectedOperations?.size) {
-      return activeTransaction.watchesToNotify ?? null;
+    if (!transaction.affectedOperations?.size) {
+      return transaction.watchesToNotify ?? null;
     }
     // Note: activeTransaction.watchesToNotify may already contain watches delegated by completed nested transactions
     //   so this may not only add watches, but also remove them from accumulator (depending on onWatchUpdated callback)
-    const accumulator = activeTransaction.watchesToNotify ?? new Set();
-    for (const operation of activeTransaction.affectedOperations) {
+    const accumulator = transaction.watchesToNotify ?? new Set();
+    for (const operation of transaction.affectedOperations) {
       for (const watch of this.store.watches.get(operation) ?? EMPTY_ARRAY) {
         const diff = this.diff(watch);
 
+        if (!this.shouldNotifyWatch(watch, diff, onWatchUpdated)) {
+          accumulator.delete(watch);
+        } else {
+          accumulator.add(watch);
+        }
+      }
+    }
+    for (const nodeKey of transaction.affectedNodes ?? EMPTY_ARRAY) {
+      const fragmentWatches = this.store.fragmentWatches.get(nodeKey);
+      for (const watch of fragmentWatches ?? EMPTY_ARRAY) {
+        const diff = this.diff(watch);
         if (!this.shouldNotifyWatch(watch, diff, onWatchUpdated)) {
           accumulator.delete(watch);
         } else {

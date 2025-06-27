@@ -4,8 +4,8 @@ import {
   FragmentDefinitionNode,
   FragmentSpreadNode,
   GraphQLFormattedError,
-  InlineFragmentNode,
   OperationDefinitionNode,
+  SelectionNode,
   ValueNode,
 } from "graphql";
 
@@ -14,18 +14,21 @@ export type FieldName = string;
 export type FieldAlias = string;
 export type DataKey = string;
 export type FragmentName = string;
-export type SelectedInOperation = true;
+export type FragmentAlias = string;
 export type VariableName = string;
-export type SelectedIn = FragmentName | SelectedInOperation;
 export type DeferLabel = string;
 export type VariableValues = { [name: VariableName]: unknown };
 export type NodeKey = string;
 export type OperationId = number;
-
 export type ArgumentValues = Map<string, unknown>;
 export type Directives = Map<string, { args: ArgumentValues }>;
 export type KeySpecifier = readonly string[];
 export type Key = string;
+
+// In Apollo fragment spread with @nonreactive indicates watch boundary (for `watchFragment`).
+// Operations can always be observed with `watchQuery`
+export type OperationWatchBoundary = "";
+export type WatchBoundary = FragmentName | OperationWatchBoundary;
 
 export type NormalizedFieldEntry =
   | string
@@ -73,6 +76,7 @@ export type ResultTreeDescriptor = {
 export type ResolvedSelection = PossibleSelection & {
   normalizedFields?: Map<FieldInfo, NormalizedFieldEntry>;
   skippedFields?: Set<FieldInfo>;
+  skippedSpreads?: Set<SpreadInfo>;
 };
 
 export type OperationDescriptor = {
@@ -101,18 +105,31 @@ export type FieldInfo = {
   args?: Map<string, ValueNode>; // keeping as ValueNode to simplify matching against variables later
   alias?: FieldAlias;
   selection?: PossibleSelections;
-  selectedIn: SelectedIn[];
+  watchBoundaries: WatchBoundary[];
 
   // AST references MUST NOT be used outside indexing. There is no guarantee they will exist.
   // E.g. consider case when "Selection" structures are generated at build time.
-  __refs: ASTReference[];
+  __refs: ASTFieldReference[];
 };
 
-// Note: the same field node may have multiple references via different fragment spreads
-export type ASTReference = {
-  node: FieldNode;
-  parentSpreads: (FragmentSpreadNode | InlineFragmentNode)[];
+export type SpreadInfo = {
+  name: FragmentName;
+  watchBoundaries: WatchBoundary[];
+  alias?: FragmentAlias;
+  __refs: ASTSpreadReference[];
 };
+
+export type ASTFieldReference = {
+  node: FieldNode;
+  ancestors: SelectionNode[];
+};
+
+export type ASTSpreadReference = {
+  node: FragmentSpreadNode;
+  ancestors: SelectionNode[];
+};
+
+export type ASTReference = ASTFieldReference | ASTSpreadReference;
 
 export type PossibleSelections = Map<TypeName | null, PossibleSelection>;
 export type PossibleSelection = {
@@ -121,11 +138,13 @@ export type PossibleSelection = {
   fieldsWithSelections?: FieldName[];
   fieldQueue: FieldInfo[];
   fieldsToNormalize?: FieldInfo[];
-  fieldsWithDirectives?: FieldInfo[];
+  fieldsWithDirectives?: FieldInfo[]; // fields affected by include/skip/defer directives
 
-  fragmentSpreads?: FragmentName[];
-  experimentalAlias?: DataKey;
-  experimentalAliasedFragments?: Map<DataKey, PossibleSelection>;
+  spreads?: FragmentSpreadMap; // e.g. object with selection { foo, ...Bar, ... { ...Baz } } will have ["Bar", "Baz"] here
+  spreadsWithDirectives?: SpreadInfo[];
+
+  experimentalAlias?: FragmentAlias;
+  experimentalAliasedFragments?: Map<FragmentAlias, PossibleSelection>;
 };
 
 export type ResolvedSelections = Map<
@@ -137,4 +156,4 @@ export type PossibleTypes = { [abstractType: TypeName]: TypeName[] };
 
 // e.g. { a: foo { bar }, { b: foo { baz } } -> same canonical name `foo` leads to multiple entries: `a { bar }` and `b { baz }`;
 export type FieldMap = Map<FieldName, FieldInfo[]>;
-export type FragmentSpreadMap = Map<FragmentName, SelectedIn[]>;
+export type FragmentSpreadMap = Map<FragmentName, SpreadInfo[]>;

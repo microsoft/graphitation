@@ -6,6 +6,7 @@ import type {
   FragmentDefinitionNode,
   FragmentSpreadNode,
   InlineFragmentNode,
+  SelectionNode,
   SelectionSetNode,
   ValueNode,
   VariableNode,
@@ -20,9 +21,11 @@ import type {
   PossibleTypes,
   ResultTreeDescriptor,
   FragmentMap,
+  SpreadInfo,
+  WatchBoundary,
 } from "./types";
 import { accumulate, getOrCreate } from "../jsutils/map";
-import { assert } from "../jsutils/assert";
+import { assert, assertNever } from "../jsutils/assert";
 
 export type Context = Readonly<{
   fragmentMap: FragmentMap;
@@ -30,10 +33,15 @@ export type Context = Readonly<{
   inferredPossibleTypes: PossibleTypes;
   fieldsWithArgs: FieldInfo[];
   mergeMemo: Map<PossibleSelection, Set<PossibleSelection>>;
-  copyOnWrite: Set<PossibleSelection | FieldInfo>;
+  copyOnWrite: Set<PossibleSelection | FieldInfo | SpreadInfo>;
 }>;
 
 const EMPTY_ARRAY = Object.freeze([]);
+
+const OPERATION_WATCH_BOUNDARY = "";
+const DEFAULT_WATCH_BOUNDARIES = Object.freeze([
+  OPERATION_WATCH_BOUNDARY,
+]) as WatchBoundary[];
 
 export function describeResultTree(
   doc: DocumentDescriptor,
@@ -67,7 +75,7 @@ function collectPossibleSelections(
   ]);
   collectFields(context, possibleSelections, selectionSet);
   mergeSubSelections(context, possibleSelections);
-  completeSelections(possibleSelections, 0);
+  completeSelections(context, possibleSelections, 0);
 
   return possibleSelections;
 }
@@ -75,14 +83,14 @@ function collectPossibleSelections(
 /**
  * Shallowly collects all subfields of a given field group.
  *
- * A variation of https://spec.graphql.org/draft/#sec-Field-Collection
+ * A variation of https://spec.graphql.org/October2021/#sec-Field-Collection
  *
- * Several key differences from spec:
+ * Several key differences from the spec:
  *
  * 1. Field nodes are grouped at two levels: first - by field name, then - by "response key" (spec groups by "response key" only).
  *    This makes it easier to compare selections across different operations.
  *
- * 2. There is no runtime type, so fields for all possible type combinations are collected (PossibleSelections).
+ * 2. Runtime type is not known at this stage, so fields for all possible type combinations are collected (PossibleSelections).
  *
  * 3. Fields of matching abstract types are not merged into selections of concrete types.
  *    They are merged later via appendUntypedSelection and appendAbstractTypeSelections methods.
@@ -101,14 +109,16 @@ export function collectSubFields(
   const possibleSelections: PossibleSelections = new Map([
     [null, commonSelection],
   ]);
-  for (const fieldUsage of usages) {
-    if (fieldUsage.node.selectionSet) {
-      collectFields(
-        context,
-        possibleSelections,
-        fieldUsage.node.selectionSet,
-        fieldUsage.parentSpreads ? [...fieldUsage.parentSpreads] : [],
-      );
+  for (const { node, ancestors } of usages) {
+    if (node.selectionSet) {
+      // Note: mutating `ancestors` here and passing to `collectFields` without cloning for effiecency.
+      //   Under the hood collectFields treats it as a stack and mutates, but since it is a stack - it is restored by the end of the call.
+      const len = ancestors.length;
+      const last = ancestors[len - 1];
+      ancestors.push(node);
+      collectFields(context, possibleSelections, node.selectionSet, ancestors);
+      ancestors.pop();
+      assert(ancestors.length === len && ancestors[len - 1] === last);
     }
   }
   return possibleSelections;
@@ -118,7 +128,7 @@ function collectFields(
   context: Context,
   selectionsByType: PossibleSelections,
   selectionSet: SelectionSetNode,
-  fragmentStack: (FragmentSpreadNode | InlineFragmentNode)[] = [],
+  ancestorStack: SelectionNode[] = [],
   typeCondition: TypeName | null | undefined = null,
   fragmentAlias?: string,
 ) {
@@ -135,44 +145,55 @@ function collectFields(
     );
     selection.experimentalAlias = fragmentAlias;
   }
-  const parentSpreads = [...fragmentStack];
+  const ancestors = [...ancestorStack];
   for (const node of selectionSet.selections) {
     if (shouldSkip(node)) {
       continue;
     }
     if (node.kind === "Field") {
-      addFieldEntry(context, selection.fields, node, parentSpreads);
+      addFieldEntry(context, selection.fields, node, ancestors);
     } else if (node.kind === "InlineFragment") {
-      fragmentStack.push(node);
+      inferPossibleType(context, typeCondition, getTypeName(node));
+      ancestorStack.push(node);
       collectFields(
         context,
         selectionsByType,
         node.selectionSet,
-        fragmentStack,
+        ancestorStack,
         getTypeName(node) ?? typeCondition, // inherit type for inline fragments without type condition, i.e. ... {}
         // getFragmentAlias(node) ?
       );
-      inferPossibleType(context, typeCondition, getTypeName(node));
-      fragmentStack.pop();
+      ancestorStack.pop();
     } else if (node.kind === "FragmentSpread") {
-      if (fragmentStack.includes(node)) {
+      // Note: currently if selection contains multiple spreads of the same fragment, this fragment will be visited multiple times (unfortunately).
+      // Example:
+      //   { ... FooBar @include(if: $foo), ...FooBar @include(if: $bar) }
+      // This is needed to capture all possible "paths" to fields inside the fragment to account for @include / @skip / @defer on different parent spreads.
+      // It is innefficient but unavoidable today.
+      // TODO: rework this logic by properly capturing and aggregating directives in this function vs. in `completeSelection` and don't visit the same fragment multiple times.
+
+      // Skipping the exact same spread (case of recursive fragments), but not fragment:
+      if (ancestorStack.includes(node)) {
         continue;
       }
       const fragment = context.fragmentMap.get(node.name.value);
       if (!fragment) {
         throw new Error(`No fragment named ${node.name.value}.`);
       }
-      fragmentStack.push(node);
+      addSpreadEntry(context, selectionsByType, fragment, node, ancestors);
+      inferPossibleType(context, typeCondition, getTypeName(fragment));
+      ancestorStack.push(node);
       collectFields(
         context,
         selectionsByType,
         fragment.selectionSet,
-        fragmentStack,
+        ancestorStack,
         getTypeName(fragment),
         getFragmentAlias(node),
       );
-      inferPossibleType(context, typeCondition, getTypeName(fragment));
-      fragmentStack.pop();
+      ancestorStack.pop();
+    } else {
+      assertNever(node);
     }
   }
 }
@@ -279,7 +300,11 @@ function appendAbstractTypeSelections(
   }
 }
 
-function completeSelections(possibleSelections: PossibleSelections, depth = 0) {
+function completeSelections(
+  context: Context,
+  possibleSelections: PossibleSelections,
+  depth = 0,
+) {
   // This runs when all selections already contain all fields
   const next: PossibleSelections[] = [];
   for (const selection of possibleSelections.values()) {
@@ -303,10 +328,10 @@ function completeSelections(possibleSelections: PossibleSelections, depth = 0) {
 
           next.push(fieldInfo.selection);
         }
-        for (const ref of fieldInfo.__refs) {
+        for (const { node, ancestors } of fieldInfo.__refs) {
           if (
-            ref.node.directives?.length ||
-            ref.parentSpreads.some((spread) => spread.directives?.length)
+            node.directives?.length ||
+            ancestors.some((ancestor) => ancestor.directives?.length)
           ) {
             selection.fieldsWithDirectives ??= [];
             if (!selection.fieldsWithDirectives.includes(fieldInfo)) {
@@ -317,17 +342,29 @@ function completeSelections(possibleSelections: PossibleSelections, depth = 0) {
               selection.fieldsToNormalize.push(fieldInfo);
             }
           }
-          const spread = findClosestFragmentSpread(ref.parentSpreads);
-          const selectedIn = spread ? spread.name.value : true;
-          if (!fieldInfo.selectedIn.includes(selectedIn)) {
-            fieldInfo.selectedIn.push(selectedIn);
+          addWatchBoundary(fieldInfo, findClosestWatchBoundary(ancestors));
+        }
+      }
+    }
+    for (const spreadAliases of selection.spreads?.values() ?? EMPTY_ARRAY) {
+      for (const spreadInfo of spreadAliases) {
+        for (const { node, ancestors } of spreadInfo.__refs) {
+          if (
+            node.directives?.length ||
+            ancestors.some((ancestor) => ancestor.directives?.length)
+          ) {
+            selection.spreadsWithDirectives ??= [];
+            if (!selection.spreadsWithDirectives.includes(spreadInfo)) {
+              selection.spreadsWithDirectives.push(spreadInfo);
+            }
           }
+          addWatchBoundary(spreadInfo, findClosestWatchBoundary(ancestors));
         }
       }
     }
   }
   for (const selection of next) {
-    completeSelections(selection, depth + 1);
+    completeSelections(context, selection, depth + 1);
   }
   return possibleSelections;
 }
@@ -443,6 +480,31 @@ function mergeSelectionsImpl(
       );
     }
   }
+  if (source.spreads?.size) {
+    mutableTarget.spreads ??= new Map();
+    for (const [name, spreadAliases] of source.spreads.entries()) {
+      const targetAliases: SpreadInfo[] = getOrCreate(
+        mutableTarget.spreads,
+        name,
+        newEmptyList,
+      );
+      for (const sourceSpread of spreadAliases) {
+        const index = targetAliases.findIndex(
+          (spread) => spread.alias === sourceSpread.alias,
+        );
+        if (index === -1) {
+          targetAliases.push(sourceSpread);
+          context.copyOnWrite.add(sourceSpread);
+          continue;
+        }
+        targetAliases[index] = mergeSpread(
+          context,
+          targetAliases[index],
+          sourceSpread,
+        );
+      }
+    }
+  }
   return mutableTarget;
 }
 
@@ -460,9 +522,10 @@ function mergeField(
     ? copyFieldInfo(context, target)
     : target;
 
+  for (const boundary of source.watchBoundaries) {
+    addWatchBoundary(mutableTarget, boundary);
+  }
   mutableTarget.__refs.push(...source.__refs);
-  mutableTarget.selectedIn.push(...source.selectedIn);
-
   if (!source.selection) {
     assert(!mutableTarget.selection);
     return mutableTarget;
@@ -495,6 +558,19 @@ function mergeField(
   return mutableTarget;
 }
 
+function mergeSpread(
+  context: Context,
+  target: SpreadInfo,
+  source: SpreadInfo,
+): SpreadInfo {
+  assert(target.name === source.name && target.alias === source.alias);
+  const mutableTarget = context.copyOnWrite.has(target)
+    ? copySpreadInfo(context, target)
+    : target;
+  mutableTarget.__refs.push(...source.__refs);
+  return mutableTarget;
+}
+
 function newEmptyList() {
   return [];
 }
@@ -507,7 +583,7 @@ function addFieldEntry(
   context: Context,
   fieldMap: FieldMap,
   node: FieldNode,
-  parentSpreads: (FragmentSpreadNode | InlineFragmentNode)[],
+  ancestors: SelectionNode[],
 ): FieldInfo {
   const fieldAliases = fieldMap.get(node.name.value);
   let fieldGroup = fieldAliases?.find(
@@ -521,7 +597,7 @@ function addFieldEntry(
     accumulate(fieldMap, node.name.value, fieldGroup);
   }
   fieldGroup.__refs ||= [];
-  fieldGroup.__refs.push({ node, parentSpreads });
+  fieldGroup.__refs.push({ node, ancestors });
 
   return fieldGroup;
 }
@@ -530,7 +606,7 @@ export function createFieldGroup(node: FieldNode): FieldInfo {
   const field: FieldInfo = {
     name: node.name.value,
     dataKey: node.alias ? node.alias.value : node.name.value,
-    selectedIn: [],
+    watchBoundaries: EMPTY_ARRAY as unknown as WatchBoundary[], // There are two many fields to create a separate array for each, use `addWatchBoundary` for proper management
     __refs: [],
   };
   if (node.alias) {
@@ -542,6 +618,62 @@ export function createFieldGroup(node: FieldNode): FieldInfo {
   return field;
 }
 
+function addWatchBoundary(
+  container: FieldInfo | SpreadInfo,
+  boundary: WatchBoundary,
+) {
+  if (container.watchBoundaries === (EMPTY_ARRAY as unknown)) {
+    container.watchBoundaries =
+      boundary === OPERATION_WATCH_BOUNDARY
+        ? DEFAULT_WATCH_BOUNDARIES
+        : [boundary];
+    return;
+  }
+  if (container.watchBoundaries === DEFAULT_WATCH_BOUNDARIES) {
+    if (boundary === OPERATION_WATCH_BOUNDARY) {
+      return;
+    }
+    container.watchBoundaries = [...DEFAULT_WATCH_BOUNDARIES, boundary];
+    return;
+  }
+  if (!container.watchBoundaries.includes(boundary)) {
+    container.watchBoundaries.push(boundary);
+  }
+}
+
+function addSpreadEntry(
+  context: Context,
+  selectionsByType: PossibleSelections,
+  fragment: FragmentDefinitionNode,
+  node: FragmentSpreadNode,
+  ancestors: SelectionNode[],
+) {
+  const selection = getOrCreate(
+    selectionsByType,
+    fragment.typeCondition.name.value,
+    createEmptySelection,
+  );
+  if (!selection.spreads) {
+    selection.spreads = new Map();
+  }
+  const spreadAliases = selection.spreads.get(node.name.value);
+  const alias = getFragmentAlias(node);
+  let spreadGroup = spreadAliases?.find((spread) => spread.alias === alias);
+  if (!spreadGroup) {
+    spreadGroup = {
+      name: node.name.value,
+      alias,
+      watchBoundaries: EMPTY_ARRAY as unknown as WatchBoundary[], // use `addWatchBoundary` to manage it
+      __refs: [],
+    };
+    accumulate(selection.spreads, node.name.value, spreadGroup);
+  }
+  spreadGroup.__refs ||= [];
+  spreadGroup.__refs.push({ node, ancestors });
+
+  return spreadGroup;
+}
+
 export function createArgumentDefs(args: ReadonlyArray<ArgumentNode>) {
   return new Map(args.map((arg) => [arg.name.value, arg.value]));
 }
@@ -550,7 +682,11 @@ function copyFieldInfo(context: Context, info: FieldInfo): FieldInfo {
   const copy: FieldInfo = {
     name: info.name,
     dataKey: info.dataKey,
-    selectedIn: [...info.selectedIn],
+    watchBoundaries:
+      info.watchBoundaries === (EMPTY_ARRAY as unknown) ||
+      info.watchBoundaries === DEFAULT_WATCH_BOUNDARIES
+        ? info.watchBoundaries
+        : [...info.watchBoundaries],
     __refs: [...(info.__refs ?? [])],
   };
   if (info.alias) {
@@ -569,6 +705,19 @@ function copyFieldInfo(context: Context, info: FieldInfo): FieldInfo {
     context.fieldsWithArgs.push(copy);
   }
   return copy;
+}
+
+function copySpreadInfo(context: Context, info: SpreadInfo): SpreadInfo {
+  return {
+    name: info.name,
+    alias: info.alias,
+    watchBoundaries:
+      info.watchBoundaries === (EMPTY_ARRAY as unknown) ||
+      info.watchBoundaries === DEFAULT_WATCH_BOUNDARIES
+        ? info.watchBoundaries
+        : [...info.watchBoundaries],
+    __refs: [...(info.__refs ?? [])],
+  };
 }
 
 function copySelection(
@@ -595,8 +744,14 @@ function copySelection(
       context.copyOnWrite.add(subSelection);
     }
   }
-  if (selection.fragmentSpreads) {
-    copy.fragmentSpreads = [...selection.fragmentSpreads];
+  if (selection.spreads) {
+    copy.spreads = new Map();
+    for (const [name, aliases] of selection.spreads.entries()) {
+      copy.spreads.set(name, [...aliases]);
+      for (const alias of aliases) {
+        context.copyOnWrite.add(alias);
+      }
+    }
   }
   return copy;
 }
@@ -653,16 +808,19 @@ function isVariableNode(value: ValueNode | undefined): value is VariableNode {
   return value?.kind === "Variable";
 }
 
-function findClosestFragmentSpread(
-  parentSpreads: (FragmentSpreadNode | InlineFragmentNode)[],
-): FragmentSpreadNode | undefined {
-  for (let i = parentSpreads.length - 1; i >= 0; i--) {
-    const spread = parentSpreads[i];
-    if (spread.kind === "FragmentSpread") {
-      return spread;
+function findClosestWatchBoundary(ancestors: SelectionNode[]): WatchBoundary {
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    const node = ancestors[i];
+    // ApolloCompat:
+    // In Apollo 3.x watch boundary is marked by @nonreactive directive
+    // Note:
+    //   There is additional complication - custom variants: @nonreactive(if: $variable) and @mask(if: $variable)
+    //   Variables are handled at runtime when bubbling to closest boundary
+    if (node.kind === "FragmentSpread" && isPossibleWatchBoundary(node)) {
+      return node.name.value;
     }
   }
-  return undefined;
+  return OPERATION_WATCH_BOUNDARY;
 }
 
 function getTypeName(
@@ -672,3 +830,8 @@ function getTypeName(
     ? (fragment.typeCondition.name.value as TypeName)
     : undefined;
 }
+
+const isPossibleWatchBoundary = (node: FragmentSpreadNode): boolean =>
+  node.directives?.some(
+    (d) => d.name.value === "nonreactive" || d.name.value === "mask",
+  ) ?? false;

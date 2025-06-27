@@ -65,6 +65,15 @@ export function resolveSelection(
         )
       : undefined;
 
+    const skippedSpreads = selection.spreadsWithDirectives?.length
+      ? new Set(
+          [...selection.spreadsWithDirectives.values()].filter(
+            (spread) =>
+              !shouldInclude(spread.__refs, operation.variablesWithDefaults),
+          ),
+        )
+      : undefined;
+
     const fieldQueue = skippedFields?.size
       ? selection.fieldQueue.filter((field) => !skippedFields.has(field))
       : selection.fieldQueue;
@@ -72,12 +81,14 @@ export function resolveSelection(
     resolvedSelection =
       normalizedFields ||
       skippedFields?.size ||
+      skippedSpreads?.size ||
       fieldQueue !== selection.fieldQueue
         ? {
             ...selection,
             fieldQueue,
             normalizedFields,
             skippedFields,
+            skippedSpreads,
           }
         : selection;
 
@@ -302,7 +313,7 @@ function shouldInclude(
   return nodes.some(
     (ref) =>
       shouldIncludeImpl(ref.node, variables) &&
-      ref.parentSpreads.every((spread) => shouldIncludeImpl(spread, variables)),
+      ref.ancestors.every((spread) => shouldIncludeImpl(spread, variables)),
   );
 }
 
