@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Fri, 27 Jun 2025 11:21:36 GMT",
+      "version": "5.2.1",
+      "tag": "@graphitation/ts-codegen_v5.2.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "72095395a56a2f68cff7b3c273ef6bcc1a2003f5",
+            "comment": "Empty group allowed to enable group which will apply just baseContext"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 19 Jun 2025 11:34:51 GMT",
       "version": "5.2.0",
       "tag": "@graphitation/ts-codegen_v5.2.0",

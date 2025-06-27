@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
   "license": "MIT",
-  "version": "2.1.6",
+  "version": "2.1.7",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
@@ -23,7 +23,7 @@
     "@graphql-codegen/plugin-helpers": ">= 1.18.0 < 2"
   },
   "dependencies": {
-    "@graphitation/supermassive": "^3.11.4",
+    "@graphitation/supermassive": "^3.11.5",
     "graphql": "^15.0.0"
   },
   "sideEffects": false,

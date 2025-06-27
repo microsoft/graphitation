@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/cli",
   "license": "MIT",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "bin": {
     "supermassive": "./bin/supermassive.js"
   },
@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@graphitation/supermassive-extractors": "^2.3.0",
-    "@graphitation/ts-codegen": "^5.2.0",
+    "@graphitation/ts-codegen": "^5.2.1",
     "commander": "^8.3.0",
     "fast-glob": "^3.2.12",
     "graphql": "^15.6.1"

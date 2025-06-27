@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Thu, 19 Jun 2025 11:34:51 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 27 Jun 2025 11:21:36 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 5.2.1
+
+Fri, 27 Jun 2025 11:21:36 GMT
+
+### Patches
+
+- Empty group allowed to enable group which will apply just baseContext (77059398+vejrj@users.noreply.github.com)
 
 ## 5.2.0
 
