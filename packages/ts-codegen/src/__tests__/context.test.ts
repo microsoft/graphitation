@@ -11,6 +11,7 @@ describe(generateTS, () => {
       baseContextTypePath: "@package/default-context",
       baseContextTypeName: "DefaultContextType",
       groups: {
+        baseContextOnly: {},
         UserTestGroup: {
           managers: ["user", "whatever"],
         },
@@ -140,7 +141,7 @@ describe(generateTS, () => {
                   optional: { managers: ["node"] }
                 )
               requiredUser: User! @context(optional: { managers: ["node"] })
-              requiredPost: Post!
+              requiredPost: Post! @baseContextOnly
               optionalPost: Post @PostTestGroup
             }
           `,
@@ -439,7 +440,7 @@ describe(generateTS, () => {
                     "node"?: NodeStateMachineType["node"];
                 };
             }, info: ResolveInfo) => PromiseOrValue<Models.User>;
-            export type requiredPost = (model: unknown, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<Models.Post>;
+            export type requiredPost = (model: unknown, args: {}, context: DefaultContextType, info: ResolveInfo) => PromiseOrValue<Models.Post>;
             export type optionalPost = (model: unknown, args: {}, context: DefaultContextType & {
                 managers: {
                     "post": PostStateMachineType["post"];

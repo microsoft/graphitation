@@ -133,7 +133,7 @@ export class TsCodegenContext {
   private legacyInterfaces: Set<string>;
   private iterableTypeUsed: boolean;
   context?: { name: string; from: string };
-  contextDefaultSubTypeContext?: { name: string; from: string };
+  baseSubTypeContext?: { name: string; from: string };
   hasUsedEnumsInModels: boolean;
   hasEnums: boolean;
   hasModels: boolean;
@@ -158,7 +158,7 @@ export class TsCodegenContext {
     this.iterableTypeUsed = false;
 
     if (options.baseContextTypeName && options.baseContextTypePath) {
-      this.contextDefaultSubTypeContext = {
+      this.baseSubTypeContext = {
         name: options.baseContextTypeName,
         from: options.baseContextTypePath,
       };
@@ -191,9 +191,9 @@ export class TsCodegenContext {
     if (!typeNames || !contextTypeExtensions) {
       return this.getContextType().toTypeReference();
     } else {
-      if (typeNames.length === 0 && this.contextDefaultSubTypeContext?.name) {
+      if (typeNames.length === 0 && this.baseSubTypeContext?.name) {
         return factory.createTypeReferenceNode(
-          factory.createIdentifier(this.contextDefaultSubTypeContext.name),
+          factory.createIdentifier(this.baseSubTypeContext.name),
           undefined,
         );
       }
@@ -203,9 +203,9 @@ export class TsCodegenContext {
 
       return factory.createIntersectionTypeNode(
         [
-          this.contextDefaultSubTypeContext?.name &&
+          this.baseSubTypeContext?.name &&
             factory.createTypeReferenceNode(
-              factory.createIdentifier(this.contextDefaultSubTypeContext.name),
+              factory.createIdentifier(this.baseSubTypeContext.name),
               undefined,
             ),
           factory.createTypeLiteralNode(
@@ -897,24 +897,29 @@ export function extractContext(
         ) {
           const subTypeKeys: Set<string> = new Set();
           const group = options.contextTypeExtensions.groups[node.name.value];
-
-          for (const [namespace, namespaceValues] of Object.entries(group)) {
-            namespaceValues.forEach((namespaceValue) => {
-              if (
-                !options.contextTypeExtensions?.contextTypes?.[namespace]?.[
-                  namespaceValue
-                ]
-              ) {
-                throw new Error(
-                  `Value "${namespaceValue}" in namespace "${namespace}" is not supported`,
-                );
-              }
-
-              subTypeKeys.add(`${namespace}:${namespaceValue}`);
-            });
+          if (Object.keys(group).length === 0) {
             context.initContextMap(ancestors, {
-              required: Array.from(subTypeKeys),
+              required: [],
             });
+          } else {
+            for (const [namespace, namespaceValues] of Object.entries(group)) {
+              namespaceValues.forEach((namespaceValue) => {
+                if (
+                  !options.contextTypeExtensions?.contextTypes?.[namespace]?.[
+                    namespaceValue
+                  ]
+                ) {
+                  throw new Error(
+                    `Value "${namespaceValue}" in namespace "${namespace}" is not supported`,
+                  );
+                }
+
+                subTypeKeys.add(`${namespace}:${namespaceValue}`);
+              });
+              context.initContextMap(ancestors, {
+                required: Array.from(subTypeKeys),
+              });
+            }
           }
         }
       },

@@ -124,14 +124,11 @@ function generateImports(context: TsCodegenContext) {
 
   const contextTypeExtensions = context.getContextTypeExtensions();
   if (Object.keys(context.getContextMap()).length && contextTypeExtensions) {
-    if (
-      context.contextDefaultSubTypeContext?.from &&
-      context.contextDefaultSubTypeContext?.name
-    ) {
+    if (context.baseSubTypeContext?.from && context.baseSubTypeContext?.name) {
       importStatements.push(
         createImportDeclaration(
-          [context.contextDefaultSubTypeContext.name],
-          context.contextDefaultSubTypeContext.from,
+          [context.baseSubTypeContext.name],
+          context.baseSubTypeContext.from,
         ),
       );
     }
