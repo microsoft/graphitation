@@ -128,8 +128,9 @@ export type ForestRunAdditionalConfig = {
   logger?: Logger;
   notify?: (event: TelemetryEvent) => void;
 
-  // Telemetry feature flags
+  // Feature flags
   logUpdateStats?: boolean;
+  optimizeFragmentReads?: boolean;
 };
 
 export type CacheConfig = InMemoryCacheConfig & ForestRunAdditionalConfig;
@@ -197,8 +198,9 @@ export type CacheEnv = {
   nonEvictableQueries: Set<string>;
   maxOperationCount: number;
 
-  // Telemetry feature flags
+  // Feature flags
   logUpdateStats: boolean;
+  optimizeFragmentReads: boolean;
 };
 
 export type SerializedOperationKey = string;

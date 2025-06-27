@@ -19,7 +19,7 @@ test("fragment read is served from matching query", () => {
     kind: "Document",
     definitions: [query.definitions[1]],
   };
-  const cache = new ForestRun();
+  const cache = newForestRun();
 
   const foo1 = { __typename: "Foo", id: 1, foo: 1 };
   const foo2 = { __typename: "Foo", id: 1, foo: 2 };
@@ -96,7 +96,7 @@ test("fragment read respects include/skip directives", () => {
     kind: "Document",
     definitions: [query.definitions[1]],
   };
-  const cache = new ForestRun();
+  const cache = newForestRun();
 
   const foo1 = { __typename: "Foo", id: 1, foo: 1 };
   const foo2 = { __typename: "Foo", id: 2, foo: 2 };
@@ -179,7 +179,7 @@ describe("fragment watching", () => {
       kind: "Document",
       definitions: [query.definitions[1]],
     };
-    const cache = new ForestRun();
+    const cache = newForestRun();
 
     const foo1 = { __typename: "Foo", id: 1, foo: "before" };
     const foo2 = { __typename: "Foo", id: 2, foo: "before" };
@@ -274,7 +274,7 @@ describe("fragment watching", () => {
         (d) => d.kind === "FragmentDefinition",
       ),
     };
-    const cache = new ForestRun();
+    const cache = newForestRun();
     const callsA: Array<[any, any]> = [];
     const callsB: Array<[any, any]> = [];
     const item1 = {
@@ -345,7 +345,7 @@ describe("fragment watching", () => {
         (d) => d.kind === "FragmentDefinition",
       ),
     };
-    const cache = new ForestRun();
+    const cache = newForestRun();
     const callsA: Array<[any, any]> = [];
     const callsB: Array<[any, any]> = [];
     const item1 = {
@@ -408,7 +408,7 @@ describe("fragment watching", () => {
         (d) => d.kind === "FragmentDefinition",
       ),
     };
-    const cache = new ForestRun();
+    const cache = newForestRun();
     const calls: Array<[any, any]> = [];
     const parent1 = { __typename: "Item", id: "1", items: ["a", "b"] };
     const parent2 = { __typename: "Item", id: "1", items: ["a", "b", "c"] };
@@ -467,7 +467,7 @@ describe("fragment watching", () => {
         (d) => d.kind === "FragmentDefinition",
       ),
     };
-    const cache = new ForestRun();
+    const cache = newForestRun();
     const callsA: Array<[any, any]> = [];
     const callsB: Array<[any, any]> = [];
     const foo1 = { __typename: "Foo", id: "1", foo: "first" };
@@ -522,7 +522,7 @@ describe("fragment watching", () => {
         (d) => d.kind === "FragmentDefinition",
       ),
     };
-    const cache = new ForestRun();
+    const cache = newForestRun();
     const calls1: Array<[any, any]> = [];
     const calls2: Array<[any, any]> = [];
     const foo1 = { __typename: "Foo", id: "1", foo: "one" };
@@ -588,7 +588,7 @@ describe("fragment watching", () => {
         (d) => d.kind === "FragmentDefinition",
       ),
     };
-    const cache = new ForestRun();
+    const cache = newForestRun();
     const calls: Array<[any, any]> = [];
     const a1 = {
       __typename: "A",
@@ -635,3 +635,7 @@ describe("fragment watching", () => {
     expect((calls[1][0] as any).result.bNode.value).toBe("v2");
   });
 });
+
+function newForestRun() {
+  return new ForestRun({ optimizeFragmentReads: true });
+}

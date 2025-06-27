@@ -339,7 +339,9 @@ export class ForestRun extends ApolloCache<SerializedCache> {
   public watch<TData = any, TVariables = any>(
     watch: Cache.WatchOptions<TData, TVariables>,
   ): () => void {
-    return isFragmentDocument(watch.query) && (watch.id || watch.rootId)
+    return this.env.optimizeFragmentReads &&
+      isFragmentDocument(watch.query) &&
+      (watch.id || watch.rootId)
       ? this.watchFragment(watch)
       : this.watchOperation(watch);
   }

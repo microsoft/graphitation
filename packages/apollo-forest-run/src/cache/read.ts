@@ -55,12 +55,11 @@ export function read<TData>(
   activeTransaction: Transaction | undefined,
   options: Cache.DiffOptions,
 ): Cache.DiffResult<TData> & { dangling?: Set<string> } {
-  if (isFragmentDocument(options.query)) {
-    // FIXME: no variable mapping here
-    const chunk: any = readFragment(env, store, activeTransaction, options);
+  if (env.optimizeFragmentReads && isFragmentDocument(options.query)) {
+    const chunk = readFragment(env, store, activeTransaction, options);
     if (chunk) {
       return {
-        result: chunk.data as any,
+        result: chunk.data as TData,
         complete: !chunk.missingFields?.size,
       };
     }
@@ -78,18 +77,18 @@ export function read<TData>(
   if (outputTree.incompleteChunks.size) {
     store.partialReadResults.add(outputTree.operation);
     return {
-      result: outputTree.result.data,
+      result: outputTree.result.data as TData,
       complete: false,
       missing: [reportFirstMissingField(outputTree)],
       dangling: outputTree.danglingReferences,
-    } as Cache.DiffResult<any>;
+    };
   }
   store.partialReadResults.delete(outputTree.operation);
 
   return {
-    result: outputTree.result.data,
+    result: outputTree.result.data as TData,
     complete: true,
-  } as Cache.DiffResult<any>;
+  };
 }
 
 function readOperation(
