@@ -901,24 +901,25 @@ export function extractContext(
             context.initContextMap(ancestors, {
               required: [],
             });
-          }
-          for (const [namespace, namespaceValues] of Object.entries(group)) {
-            namespaceValues.forEach((namespaceValue) => {
-              if (
-                !options.contextTypeExtensions?.contextTypes?.[namespace]?.[
-                  namespaceValue
-                ]
-              ) {
-                throw new Error(
-                  `Value "${namespaceValue}" in namespace "${namespace}" is not supported`,
-                );
-              }
+          } else {
+            for (const [namespace, namespaceValues] of Object.entries(group)) {
+              namespaceValues.forEach((namespaceValue) => {
+                if (
+                  !options.contextTypeExtensions?.contextTypes?.[namespace]?.[
+                    namespaceValue
+                  ]
+                ) {
+                  throw new Error(
+                    `Value "${namespaceValue}" in namespace "${namespace}" is not supported`,
+                  );
+                }
 
-              subTypeKeys.add(`${namespace}:${namespaceValue}`);
-            });
-            context.initContextMap(ancestors, {
-              required: Array.from(subTypeKeys),
-            });
+                subTypeKeys.add(`${namespace}:${namespaceValue}`);
+              });
+              context.initContextMap(ancestors, {
+                required: Array.from(subTypeKeys),
+              });
+            }
           }
         }
       },
