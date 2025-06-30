@@ -1247,6 +1247,95 @@ describe(generateTS, () => {
         "
       `);
     });
+
+    test("enum is used as @context namespace value", () => {
+      const { resolvers, models, enums, inputs, contextMappingOutput } =
+        runGenerateTest(
+          graphql`
+            enum UserContext {
+              user
+            }
+            type User @context(required: { managers: [user] }) {
+              id: ID!
+            }
+
+            extend type Query {
+              userById(id: ID!): User @context(required: { managers: [user] })
+            }
+          `,
+          {
+            contextTypeExtensions: {
+              contextTypes: contextTypeExtensions.contextTypes,
+            },
+          },
+        );
+      expect(enums).toMatchInlineSnapshot(`
+        "export enum UserContext {
+            user = "user"
+        }
+        "
+      `);
+      expect(contextMappingOutput).toMatchInlineSnapshot(`
+        {
+          "Query": {
+            "userById": {
+              "managers": [
+                "user",
+              ],
+            },
+          },
+          "User": {
+            "id": {
+              "managers": [
+                "user",
+              ],
+            },
+          },
+        }
+      `);
+      expect(inputs).toMatchInlineSnapshot(`undefined`);
+      expect(models).toMatchInlineSnapshot(`
+        "export * from "./enums.interface";
+        // Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)
+        export interface BaseModel {
+            readonly __typename?: string;
+        }
+        export interface User extends BaseModel {
+            readonly __typename?: "User";
+            readonly id: string;
+        }
+        "
+      `);
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from "@graphitation/supermassive";
+        import type { ResolveInfo } from "@graphitation/supermassive";
+        import * as Models from "./models.interface";
+        import type { UserStateMachineType } from "@package/user-state-machine";
+        export declare namespace User {
+            export interface Resolvers {
+                readonly id?: id;
+            }
+            export type id = (model: Models.User, args: {}, context: {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        export declare namespace Query {
+            export interface Resolvers {
+                readonly userById?: userById;
+            }
+            export type userById = (model: unknown, args: {
+                readonly id: string;
+            }, context: {
+                managers: {
+                    "user": UserStateMachineType["user"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
+        }
+        "
+      `);
+    });
   });
 });
 
