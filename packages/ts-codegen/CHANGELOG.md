@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Fri, 27 Jun 2025 11:21:36 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 30 Jun 2025 10:45:07 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 5.2.2
+
+Mon, 30 Jun 2025 10:45:07 GMT
+
+### Patches
+
+- Context directive accepts enum values in namespaces (77059398+vejrj@users.noreply.github.com)
 
 ## 5.2.1
 

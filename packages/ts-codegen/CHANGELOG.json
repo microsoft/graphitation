@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Mon, 30 Jun 2025 10:45:07 GMT",
+      "version": "5.2.2",
+      "tag": "@graphitation/ts-codegen_v5.2.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "0b6a7f56a0be42d8ec60fc75d19652a29142c03d",
+            "comment": "Context directive accepts enum values in namespaces"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 27 Jun 2025 11:21:36 GMT",
       "version": "5.2.1",
       "tag": "@graphitation/ts-codegen_v5.2.1",
