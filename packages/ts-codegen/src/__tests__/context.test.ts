@@ -1336,6 +1336,38 @@ describe(generateTS, () => {
         "
       `);
     });
+
+    test("@context namespace must have the same value type", () => {
+      const errorLogger = console.error;
+      console.error = () => {};
+      try {
+        runGenerateTest(
+          graphql`
+            enum UserContext {
+              user
+            }
+            type User @context(required: { managers: [user, "user-type"] }) {
+              id: ID!
+            }
+
+            extend type Query {
+              userById(id: ID!): User
+            }
+          `,
+          {
+            contextTypeExtensions: {
+              contextTypes: contextTypeExtensions.contextTypes,
+            },
+          },
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(Error);
+        expect(e).toMatchInlineSnapshot(
+          `[Error: Namespace "managers" must be list of same kind values]`,
+        );
+      }
+      console.error = errorLogger;
+    });
   });
 });
 
