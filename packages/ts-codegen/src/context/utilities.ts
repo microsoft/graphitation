@@ -142,10 +142,24 @@ export function getContextKeysFromArgumentNode(
       throw new Error(`Namespace "${namespace}" must be list of strings`);
     }
 
+    let usedValueKind: "StringValue" | "EnumValue" | undefined;
     const namespaceValues: string[] = value.values.map((v) => {
-      if (v.kind !== "StringValue") {
-        throw new Error(`Namespace "${namespace}" must be list of strings`);
+      if (v.kind !== "StringValue" && v.kind !== "EnumValue") {
+        throw new Error(
+          `Namespace "${namespace}" must be list of strings or enum values`,
+        );
       }
+
+      if (usedValueKind && usedValueKind !== v.kind) {
+        throw new Error(
+          `Namespace "${namespace}" must be list of same kind values`,
+        );
+      }
+
+      if (!usedValueKind) {
+        usedValueKind = v.kind;
+      }
+
       return v.value;
     });
 
