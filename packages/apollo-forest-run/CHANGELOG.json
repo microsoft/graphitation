@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Wed, 02 Jul 2025 13:07:00 GMT",
+      "version": "0.17.1",
+      "tag": "@graphitation/apollo-forest-run_v0.17.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "dddf1b314347d2ba3b241ba1e13eda3f554fa12e",
+            "comment": "fix(apollo-forest-run): optimize reads for nonreactive fragments only"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 27 Jun 2025 17:19:04 GMT",
       "version": "0.17.0",
       "tag": "@graphitation/apollo-forest-run_v0.17.0",

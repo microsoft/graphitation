@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Fri, 27 Jun 2025 17:19:04 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 02 Jul 2025 13:07:00 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.17.1
+
+Wed, 02 Jul 2025 13:07:00 GMT
+
+### Patches
+
+- fix(apollo-forest-run): optimize reads for nonreactive fragments only (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.17.0
 
