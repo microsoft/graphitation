@@ -47,7 +47,7 @@ import {
 } from "./store";
 import { assert } from "../jsutils/assert";
 import { addTree, trackTreeNodes } from "../forest/addTree";
-import { FragmentDefinitionNode } from "graphql";
+import { DirectiveNode, FragmentDefinitionNode } from "graphql";
 
 export function read<TData>(
   env: CacheEnv,
@@ -146,13 +146,22 @@ function readFragment(
 
   const fragment = getFragmentNode(document);
   const chunkMatcher = (chunk: ObjectChunk) => {
-    if (chunk.missingFields?.size) {
+    if (chunk.missingFields?.size || chunk.partialFields?.size) {
       return false;
     }
     const aliases =
       chunk.selection.spreads?.get(fragment.name.value) ?? EMPTY_ARRAY;
     return aliases.some(
-      (spread) => !chunk.selection.skippedSpreads?.has(spread),
+      (spread) =>
+        !chunk.selection.skippedSpreads?.has(spread) &&
+        // Note: currently only spreads with @nonreactive directive are supported
+        spread.__refs.some((ref) =>
+          ref.node.directives?.some(
+            (d) =>
+              d.name.value === "nonreactive" &&
+              isConditionallyEnabled(d, chunk.operation.variablesWithDefaults),
+          ),
+        ),
     );
   };
 
@@ -496,6 +505,24 @@ function appendParentNodes(inputTree: ResultTree, dirtyNodes: DirtyNodeMap) {
     }
   }
 }
+
+const isConditionallyEnabled = (
+  directive: DirectiveNode,
+  variables: VariableValues,
+): boolean => {
+  const ifArgument = directive.arguments?.[0];
+  if (!ifArgument) {
+    return true;
+  }
+  assert(ifArgument.name.value === "if");
+  if (ifArgument.value.kind === "BooleanValue") {
+    return ifArgument.value.value;
+  }
+  if (ifArgument.value.kind === "Variable") {
+    return Boolean(variables[ifArgument.value.name.value]);
+  }
+  return false;
+};
 
 const inspect = JSON.stringify.bind(JSON);
 const EMPTY_ARRAY = Object.freeze([]);

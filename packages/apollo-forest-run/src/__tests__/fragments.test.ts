@@ -7,7 +7,7 @@ test("fragment read is served from matching query", () => {
     query ($id: Int!, $fooKey: Int!) {
       item(id: $id) {
         id
-        ...FooFragment
+        ...FooFragment @nonreactive
       }
     }
     fragment FooFragment on Foo {
@@ -78,12 +78,19 @@ test("fragment read is served from matching query", () => {
 
 test("fragment read respects include/skip directives", () => {
   const query = gql`
-    query ($id: Int!, $includedParent: Boolean!, $includedSpread: Boolean!) {
+    query (
+      $id: Int!
+      $includedParent: Boolean!
+      $includedSpread: Boolean!
+      $nonReactive: Boolean! = true
+    ) {
       item(id: $id) {
         id
         foo
         ... @include(if: $includedParent) {
-          ...FooFragment @include(if: $includedSpread)
+          ...FooFragment
+            @include(if: $includedSpread)
+            @nonreactive(if: $nonReactive)
         }
       }
     }
