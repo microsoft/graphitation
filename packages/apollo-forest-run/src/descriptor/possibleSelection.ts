@@ -832,6 +832,4 @@ function getTypeName(
 }
 
 const isPossibleWatchBoundary = (node: FragmentSpreadNode): boolean =>
-  node.directives?.some(
-    (d) => d.name.value === "nonreactive" || d.name.value === "mask",
-  ) ?? false;
+  node.directives?.some((d) => d.name.value === "nonreactive") ?? false;
