@@ -1969,6 +1969,14 @@
   resolved "https://registry.yarnpkg.com/@graphitation/supermassive-ast/-/supermassive-ast-2.0.0.tgz#d49155c6b7213811d99b8609d496d6c460a4d1e2"
   integrity sha512-YXguoTpIMI/ISavl98CrSOLohYVMr3JmPRhT6Qg4q6MfaonSKajvva9OUFOxxEmuAaEXfjhZ33ySWaNSu/XcLQ==
 
+"@graphql-codegen/add@^2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@graphql-codegen/add/-/add-2.0.2.tgz#4acbb95be9ebb859a3cebfe7132fdf49ffe06dd8"
+  integrity sha512-0X1ofeSvAjCNcLar2ZR1EOmm5dvyKJMFbgM+ySf1PaHyoi3yf/xRI2Du81ONzQ733Lhmn3KTX1VKybm/OB1Qtg==
+  dependencies:
+    "@graphql-codegen/plugin-helpers" "^1.18.2"
+    tslib "~2.0.1"
+
 "@graphql-codegen/add@^3.1.0":
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/add/-/add-3.1.0.tgz#cd02fd6d80a7f62839cb27160b62e48366a237c5"
@@ -3888,6 +3896,11 @@
   version "12.20.38"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.20.38.tgz#74801983c0558a7a31a4ead18bce2edded2b0e2f"
   integrity sha512-NxmtBRGipjx1B225OeMdI+CQmLbYqvvmYbukDTJGDgzIDgPQ1EcjGmYxGhOk5hTBqeB558S6RgHSpq2iiqifAQ==
+
+"@types/parse-filepath@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@types/parse-filepath/-/parse-filepath-1.0.0.tgz#e46c92548d928d3215dcad93e04b4a7d9859b86b"
+  integrity sha512-y8m4AfQnSEG3mv16kMvqF0WsnCFaYgG30CU/3+K5FKlNXQ+/9zu/cZPyQ98kZqAYqJV6kJIWLkQw4ccWAKOc/Q==
 
 "@types/parse-json@^4.0.0":
   version "4.0.0"
