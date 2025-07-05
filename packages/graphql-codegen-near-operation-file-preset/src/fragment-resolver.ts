@@ -42,7 +42,7 @@ export type FragmentRegistry = {
  */
 function buildFragmentRegistry(
   { generateFilePath }: DocumentImportResolverOptions,
-  { documents, config }: Types.PresetFnArgs<{}>,
+  { documents, config }: Types.PresetFnArgs<unknown>,
   schemaObject: GraphQLSchema,
 ): FragmentRegistry {
   const baseVisitor = new BaseVisitor<RawConfig, NearOperationFileParsedConfig>(
@@ -100,6 +100,11 @@ function buildFragmentRegistry(
   const duplicateFragmentNames: string[] = [];
   const registry = documents.reduce<FragmentRegistry>(
     (prev: FragmentRegistry, documentRecord) => {
+      if (!documentRecord.document || !documentRecord.document.definitions) {
+        throw new Error(
+          `Document "${documentRecord.location}" does not contain any definitions!`,
+        );
+      }
       const fragments: FragmentDefinitionNode[] =
         documentRecord.document.definitions.filter(
           (d) => d.kind === Kind.FRAGMENT_DEFINITION,
@@ -114,6 +119,12 @@ function buildFragmentRegistry(
           if (!schemaType) {
             throw new Error(
               `Fragment "${fragment.name.value}" is set on non-existing type "${fragment.typeCondition.name.value}"!`,
+            );
+          }
+
+          if (!documentRecord.location) {
+            throw new Error(
+              `Document "${documentRecord.location}" does not have a valid location!`,
             );
           }
 

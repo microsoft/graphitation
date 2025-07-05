@@ -72,6 +72,16 @@ export function resolveDocumentImports<T>(
 
   return documents.map((documentFile) => {
     try {
+      if (
+        !documentFile.document ||
+        !documentFile.document.definitions ||
+        !documentFile.location
+      ) {
+        throw new Error(
+          `Document "${documentFile.location}" does not contain any definitions or location!`,
+        );
+      }
+
       const generatedFilePath = generateFilePath(documentFile.location);
       const importStatements: string[] = [];
       const { externalFragments, fragmentImports } = resolveFragments(
@@ -103,7 +113,7 @@ export function resolveDocumentImports<T>(
         fragmentImports,
         externalFragments,
       };
-    } catch (e) {
+    } catch (e: any) {
       throw new DetailedError(
         `Unable to validate GraphQL document!`,
         `

@@ -1,5 +1,9 @@
 import { Types } from "@graphql-codegen/plugin-helpers";
-import { generateFragmentImportStatement } from "@graphql-codegen/visitor-plugin-common";
+import {
+  FragmentImport,
+  generateFragmentImportStatement,
+  ImportDeclaration,
+} from "@graphql-codegen/visitor-plugin-common";
 import { buildASTSchema, buildSchema, parse, printSchema } from "graphql";
 import { preset } from "../index";
 
@@ -950,7 +954,7 @@ describe("near-operation-file preset", () => {
 
 const getFragmentImportsFromResult = (result: Types.GenerateOptions[]) =>
   result[0].config.fragmentImports
-    .map((importStatement) =>
+    .map((importStatement: ImportDeclaration<FragmentImport>) =>
       generateFragmentImportStatement(importStatement, "both"),
     )
     .join("\n");
