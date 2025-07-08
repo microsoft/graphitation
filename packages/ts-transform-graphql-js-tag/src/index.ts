@@ -37,17 +37,23 @@ export function getTransformer(
 ): ts.TransformerFactory<ts.SourceFile> {
   const transformerContext = createTransformerContext(options);
   return (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
-    return (sourceFile: ts.SourceFile) =>
-      ts.visitEachChild(
+    return (sourceFile: ts.SourceFile) => {
+      // First pass: analyze usage
+      const analysis = analyzeSourceFile(sourceFile, transformerContext);
+      
+      // Second pass: transform with analysis information
+      return ts.visitEachChild(
         sourceFile,
         getVisitor(
           transformerContext,
           context,
           sourceFile,
           inlineAstTaggedTemplateTransformer,
+          analysis,
         ),
         context,
       );
+    };
   };
 }
 
@@ -71,6 +77,7 @@ export function getArtefactImportTransformer(
   const transformerContext = createTransformerContext(options);
   return (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
     return (sourceFile: ts.SourceFile) => {
+      const analysis = analyzeSourceFile(sourceFile, transformerContext);
       const importDeclarations: ts.ImportDeclaration[] = [];
       const outputSourceFile = ts.visitEachChild(
         sourceFile,
@@ -79,6 +86,7 @@ export function getArtefactImportTransformer(
           context,
           sourceFile,
           getImportArtefactTaggedTemplateTransformer(importDeclarations),
+          analysis,
         ),
         context,
       );
@@ -117,13 +125,77 @@ export function createTransformerContext(
   return context;
 }
 
+interface NamespaceAnalysis {
+  namespaceImports: Map<string, ts.ImportDeclaration>; // namespace name -> import node
+  namespaceUsage: Set<string>; // namespace names that are used for non-graphql properties
+  graphqlTagUsage: Set<string>; // template literal names that are used
+}
+
+function analyzeSourceFile(sourceFile: ts.SourceFile, transformerContext: GraphQLTagTransformContext): NamespaceAnalysis {
+  const analysis: NamespaceAnalysis = {
+    namespaceImports: new Map(),
+    namespaceUsage: new Set(),
+    graphqlTagUsage: new Set()
+  };
+
+  function analyze(node: ts.Node): void {
+    // Check for namespace imports
+    if (ts.isImportDeclaration(node)) {
+      const moduleName = node.moduleSpecifier.getText(sourceFile);
+      if (transformerContext.graphqlTagModuleRegexp.test(moduleName) && 
+          node.importClause?.namedBindings && 
+          ts.isNamespaceImport(node.importClause.namedBindings)) {
+        const namespaceName = node.importClause.namedBindings.name.text;
+        analysis.namespaceImports.set(namespaceName, node);
+      }
+    }
+    
+    // Check for tagged template expressions
+    if (ts.isTaggedTemplateExpression(node)) {
+      const tag = node.tag;
+      const tagText = tag.getText();
+      
+      // Check if this is a namespace.graphql usage
+      if (ts.isPropertyAccessExpression(tag)) {
+        const namespaceText = tag.expression.getText();
+        const propertyText = tag.name.text;
+        if (analysis.namespaceImports.has(namespaceText) && 
+            propertyText === transformerContext.graphqlTagModuleExport) {
+          analysis.graphqlTagUsage.add(tagText);
+        }
+      } else {
+        // Direct import usage
+        analysis.graphqlTagUsage.add(tagText);
+      }
+    }
+    
+    // Check for other namespace property access
+    if (ts.isPropertyAccessExpression(node)) {
+      const namespaceText = node.expression.getText();
+      const propertyText = node.name.text;
+      
+      if (analysis.namespaceImports.has(namespaceText) && 
+          propertyText !== transformerContext.graphqlTagModuleExport) {
+        analysis.namespaceUsage.add(namespaceText);
+      }
+    }
+    
+    ts.forEachChild(node, analyze);
+  }
+  
+  analyze(sourceFile);
+  return analysis;
+}
+
 function getVisitor(
   transformerContext: GraphQLTagTransformContext,
   context: ts.TransformationContext,
   sourceFile: ts.SourceFile,
   applyTaggedTemplateTransformer: TaggedTemplateTransformer,
+  analysis: NamespaceAnalysis,
 ): ts.Visitor {
   let templateLiteralName: string | null = null;
+  
   const visitor: ts.Visitor = (
     node: ts.Node,
   ): ts.VisitResult<ts.Node> | undefined => {
@@ -174,8 +246,25 @@ function getVisitor(
                   newImportSpecifiers.push(importSpecifier);
                 }
               }
-            } else {
-              throw new Error("Namespace imports are not supported");
+            } else if (ts.isNamespaceImport(node.importClause.namedBindings)) {
+              // Handle namespace imports like: import * as GraphQLTag from "module"
+              const namespaceIdentifier = node.importClause.namedBindings.name.text;
+              templateLiteralName = `${namespaceIdentifier}.${transformerContext.graphqlTagModuleExport}`;
+              
+              // Decide whether to keep the namespace import based on analysis
+              const hasNonGraphqlUsage = analysis.namespaceUsage.has(namespaceIdentifier);
+              const hasGraphqlUsage = analysis.graphqlTagUsage.has(templateLiteralName);
+              
+              if (hasNonGraphqlUsage) {
+                // Keep the import because other properties are used
+                return node;
+              } else if (hasGraphqlUsage) {
+                // Remove the import because only graphql tag is used and it gets transformed
+                return undefined;
+              } else {
+                // No usage at all, remove the import
+                return undefined;
+              }
             }
           }
           if (newImportSpecifiers.length || node.importClause.name) {

@@ -386,4 +386,95 @@ describe("transformer tests", () => {
       `);
     });
   });
+
+  describe("namespace imports", () => {
+    it("should handle namespace imports without throwing error", () => {
+      expect.assertions(1);
+      const transformer = new Transformer()
+        .addTransformer((_program: ts.Program) => getTransformer({}))
+        .addMock({
+          name: "@graphitation/graphql-js-tag",
+          content: `export const graphql:any = () => {}`,
+        })
+        .setFilePath("/index.tsx");
+
+      const actual = transformer.transform(`
+      import * as GraphQLTag from "@graphitation/graphql-js-tag"
+      `);
+      // Should not throw an error and should produce some output
+      expect(typeof actual).toBe("string");
+    });
+
+    it("should remove unused namespace import", () => {
+      expect.assertions(1);
+      const transformer = new Transformer()
+        .addTransformer((_program: ts.Program) => getTransformer({}))
+        .addMock({
+          name: "@graphitation/graphql-js-tag",
+          content: `export const graphql:any = () => {}`,
+        })
+        .setFilePath("/index.tsx");
+
+      const actual = transformer.transform(`
+      import * as GraphQLTag from "@graphitation/graphql-js-tag"
+      `);
+      expect(actual).toMatchInlineSnapshot(`
+        "export {};
+        "
+      `);
+    });
+
+    it("should handle namespace import with used graphql tag", () => {
+      expect.assertions(1);
+      const transformer = new Transformer()
+        .addTransformer((_program: ts.Program) => getTransformer({}))
+        .addMock({
+          name: "@graphitation/graphql-js-tag",
+          content: `export const graphql:any = () => {}`,
+        })
+        .setFilePath("/index.tsx");
+
+      const actual = transformer.transform(`
+      import * as GraphQLTag from "@graphitation/graphql-js-tag"
+
+      export const query = GraphQLTag.graphql\`
+        query Foo {
+          foo
+        }
+      \`
+      `);
+      expect(actual).toMatchInlineSnapshot(`
+        "export const query = { kind: "Document", definitions: [{ kind: "OperationDefinition", operation: "query", name: { kind: "Name", value: "Foo", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "foo", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
+        "
+      `);
+    });
+
+    it("should handle namespace import with mixed usage", () => {
+      expect.assertions(1);
+      const transformer = new Transformer()
+        .addTransformer((_program: ts.Program) => getTransformer({}))
+        .addMock({
+          name: "@graphitation/graphql-js-tag",
+          content: `export const graphql:any = () => {}, someOtherExport: any = 1;`,
+        })
+        .setFilePath("/index.tsx");
+
+      const actual = transformer.transform(`
+      import * as GraphQLTag from "@graphitation/graphql-js-tag"
+
+      export const query = GraphQLTag.graphql\`
+        query Foo {
+          foo
+        }
+      \`
+      GraphQLTag.someOtherExport;
+      `);
+      expect(actual).toMatchInlineSnapshot(`
+        "import * as GraphQLTag from "@graphitation/graphql-js-tag";
+        export const query = { kind: "Document", definitions: [{ kind: "OperationDefinition", operation: "query", name: { kind: "Name", value: "Foo", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "foo", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) };
+        GraphQLTag.someOtherExport;
+        "
+      `);
+    });
+  });
 });
