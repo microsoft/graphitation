@@ -229,65 +229,67 @@ function getVisitor(
               return undefined;
             }
           }
-        } else {
-          const newImportSpecifiers: Array<ts.ImportSpecifier> = [];
-          if (node.importClause.namedBindings) {
-            if (ts.isNamedImports(node.importClause.namedBindings)) {
-              const importSpecifiers = node.importClause.namedBindings.elements;
-              for (const importSpecifier of importSpecifiers) {
-                if (
-                  importSpecifier.name.text ===
-                  transformerContext.graphqlTagModuleExport
-                ) {
-                  templateLiteralName = importSpecifier.propertyName
-                    ? importSpecifier.propertyName.text
-                    : importSpecifier.name.text;
-                } else {
-                  newImportSpecifiers.push(importSpecifier);
-                }
-              }
-            } else if (ts.isNamespaceImport(node.importClause.namedBindings)) {
-              // Handle namespace imports like: import * as GraphQLTag from "module"
-              const namespaceIdentifier = node.importClause.namedBindings.name.text;
-              templateLiteralName = `${namespaceIdentifier}.${transformerContext.graphqlTagModuleExport}`;
-              
-              // Decide whether to keep the namespace import based on analysis
-              const hasNonGraphqlUsage = analysis.namespaceUsage.has(namespaceIdentifier);
-              const hasGraphqlUsage = analysis.graphqlTagUsage.has(templateLiteralName);
-              
-              if (hasNonGraphqlUsage) {
-                // Keep the import because other properties are used
-                return node;
-              } else if (hasGraphqlUsage) {
-                // Remove the import because only graphql tag is used and it gets transformed
-                return undefined;
+        }
+        
+        // Handle named imports and namespace imports
+        if (node.importClause.namedBindings) {
+          if (ts.isNamedImports(node.importClause.namedBindings)) {
+            const newImportSpecifiers: Array<ts.ImportSpecifier> = [];
+            const importSpecifiers = node.importClause.namedBindings.elements;
+            for (const importSpecifier of importSpecifiers) {
+              if (
+                importSpecifier.name.text ===
+                transformerContext.graphqlTagModuleExport
+              ) {
+                templateLiteralName = importSpecifier.propertyName
+                  ? importSpecifier.propertyName.text
+                  : importSpecifier.name.text;
               } else {
-                // No usage at all, remove the import
-                return undefined;
+                newImportSpecifiers.push(importSpecifier);
               }
             }
-          }
-          if (newImportSpecifiers.length || node.importClause.name) {
-            const result = ts.factory.updateImportDeclaration(
-              node,
-              node.modifiers,
-              ts.factory.updateImportClause(
-                node.importClause,
-                node.importClause.isTypeOnly,
-                node.importClause.name,
-                node.importClause.namedBindings && newImportSpecifiers.length
-                  ? ts.factory.updateNamedImports(
-                      node.importClause.namedBindings,
-                      newImportSpecifiers,
-                    )
-                  : undefined,
-              ),
-              node.moduleSpecifier,
-              node.assertClause,
-            );
-            return result;
-          } else {
-            return undefined;
+            
+            if (newImportSpecifiers.length || node.importClause.name) {
+              const result = ts.factory.updateImportDeclaration(
+                node,
+                node.modifiers,
+                ts.factory.updateImportClause(
+                  node.importClause,
+                  node.importClause.isTypeOnly,
+                  node.importClause.name,
+                  node.importClause.namedBindings && newImportSpecifiers.length
+                    ? ts.factory.updateNamedImports(
+                        node.importClause.namedBindings,
+                        newImportSpecifiers,
+                      )
+                    : undefined,
+                ),
+                node.moduleSpecifier,
+                node.assertClause,
+              );
+              return result;
+            } else {
+              return undefined;
+            }
+          } else if (ts.isNamespaceImport(node.importClause.namedBindings)) {
+            // Handle namespace imports like: import * as GraphQLTag from "module"
+            const namespaceIdentifier = node.importClause.namedBindings.name.text;
+            templateLiteralName = `${namespaceIdentifier}.${transformerContext.graphqlTagModuleExport}`;
+            
+            // Decide whether to keep the namespace import based on analysis
+            const hasNonGraphqlUsage = analysis.namespaceUsage.has(namespaceIdentifier);
+            const hasGraphqlUsage = analysis.graphqlTagUsage.has(templateLiteralName);
+            
+            if (hasNonGraphqlUsage) {
+              // Keep the import because other properties are used
+              return node;
+            } else if (hasGraphqlUsage) {
+              // Remove the import because only graphql tag is used and it gets transformed
+              return undefined;
+            } else {
+              // No usage at all, remove the import
+              return undefined;
+            }
           }
         }
       }
@@ -300,8 +302,10 @@ function getVisitor(
       const isTemplateExpression = ts.isTemplateExpression(template);
       const isTemplateLiteral = ts.isNoSubstitutionTemplateLiteral(template);
 
+      const tagText = tag.getText();
+      
       if (
-        tag.getText() === templateLiteralName &&
+        tagText === templateLiteralName &&
         (isTemplateExpression || isTemplateLiteral)
       ) {
         let source = template.getText().slice(1, -1);
