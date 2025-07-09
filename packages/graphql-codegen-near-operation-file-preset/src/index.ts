@@ -1,7 +1,15 @@
 import { Types, CodegenPlugin } from "@graphql-codegen/plugin-helpers";
 import addPlugin from "@graphql-codegen/add";
 import { join } from "path";
-import { FragmentDefinitionNode, buildASTSchema, GraphQLSchema } from "graphql";
+import {
+  FragmentDefinitionNode,
+  buildASTSchema,
+  GraphQLSchema,
+  visit,
+  visitWithTypeInfo,
+  TypeInfo,
+  OperationDefinitionNode,
+} from "graphql";
 import { appendExtensionToFilePath, defineFilepathSubfolder } from "./utils";
 import {
   resolveDocumentImports,
@@ -126,6 +134,11 @@ export type NearOperationFileConfig = {
    * ```
    */
   importTypesNamespace?: string;
+  supportedResolvers?: string[];
+  availableResolvers?: {
+    [type: string]: string[];
+  };
+  sharedFragmentsDirectoryName?: string;
 };
 
 export type FragmentNameToFile = {
@@ -145,6 +158,7 @@ export const preset: Types.OutputPreset<NearOperationFileConfig> = {
     const baseDir = options.presetConfig.cwd || process.cwd();
     const extension = options.presetConfig.extension || ".generated.ts";
     const folder = options.presetConfig.folder || "";
+    const { supportedResolvers } = options.presetConfig;
     const importTypesNamespace =
       options.presetConfig.importTypesNamespace || "Types";
     const importAllFragmentsFrom: FragmentImportFromFn | string | null =
@@ -181,6 +195,143 @@ export const preset: Types.OutputPreset<NearOperationFileConfig> = {
       typesImport: options.config.useTypeImports ?? false,
     });
 
+    const supportedOperations: string[] = [];
+
+    const typeInfo = new TypeInfo(
+      options.schemaAst || buildASTSchema(options.schema),
+    );
+
+    if (supportedResolvers) {
+      for (const source of sources) {
+        for (const document of source.documents) {
+          if (!document.document) {
+            continue;
+          }
+
+          visit(document.document, {
+            OperationDefinition: (node) => {
+              node.selectionSet.selections.forEach((selection) => {
+                if (
+                  selection.kind === "Field" &&
+                  supportedResolvers.includes(selection.name.value)
+                ) {
+                  if (node.name?.value) {
+                    supportedOperations.push(node.name.value);
+                  }
+                }
+              });
+            },
+          });
+        }
+      }
+    }
+
+    const fieldResolverMap: {
+      [parentType: string]: {
+        nodeType: "operation" | "fragment";
+        type: string;
+        fields?: string[];
+        fragmentSpreads?: string[];
+      };
+    } = {};
+
+    for (const source of sources) {
+      for (const document of source.documents) {
+        if (!document.document) {
+          continue;
+        }
+
+        visit(
+          document.document,
+          visitWithTypeInfo(typeInfo, {
+            FragmentSpread: (node, _key, _parent, path, ancestors) => {
+              const ancestor: unknown = getGrandParent(
+                ancestors as any,
+                path as any,
+              );
+
+              if (
+                isGrandParentFragment(ancestor) ||
+                isGrandParentOperation(ancestor)
+              ) {
+                const nodeType = isGrandParentFragment(ancestor)
+                  ? "fragment"
+                  : "operation";
+
+                if (!ancestor.name) {
+                  return;
+                }
+
+                const fragmentName = ancestor.name.value;
+
+                const parentType = typeInfo.getParentType()?.name;
+                if (!parentType) {
+                  return;
+                }
+                if (!fieldResolverMap[fragmentName]) {
+                  fieldResolverMap[fragmentName] = {
+                    nodeType,
+                    type: parentType,
+                  };
+                }
+
+                if (!fieldResolverMap[fragmentName].fragmentSpreads) {
+                  fieldResolverMap[fragmentName].fragmentSpreads = [];
+                }
+
+                if (
+                  !fieldResolverMap[fragmentName].fragmentSpreads.includes(
+                    node.name.value,
+                  )
+                ) {
+                  fieldResolverMap[fragmentName].fragmentSpreads.push(
+                    node.name.value,
+                  );
+                }
+              }
+            },
+            Field: (node, _key, _parent, path, ancestors) => {
+              const typeName = typeInfo
+                .getType()
+                ?.toString()
+                .replace(/[[\]!]/g, "");
+
+              const ancestor: unknown = getGrandParent(
+                ancestors as any,
+                path as any,
+              );
+              if (
+                isGrandParentFragment(ancestor) ||
+                isGrandParentOperation(ancestor)
+              ) {
+                const nodeType = isGrandParentFragment(ancestor)
+                  ? "fragment"
+                  : "operation";
+
+                const parentType = typeInfo.getParentType()?.name;
+                if (typeName && parentType && node.name.value) {
+                  const key = isGrandParentFragment(ancestor)
+                    ? ancestor.name.value
+                    : parentType;
+
+                  if (!fieldResolverMap[key]) {
+                    fieldResolverMap[key] = { nodeType, type: parentType };
+                  }
+                  if (!fieldResolverMap[key].fields) {
+                    fieldResolverMap[key].fields = [];
+                  }
+                  if (!fieldResolverMap[key].fields.includes(node.name.value)) {
+                    fieldResolverMap[key].fields.push(node.name.value);
+                  }
+                }
+              }
+            },
+          }),
+        );
+      }
+    }
+
+    console.log(fieldResolverMap);
     return sources.map<Types.GenerateOptions>(
       ({ importStatements, externalFragments, fragmentImports, ...source }) => {
         let fragmentImportsArr = fragmentImports;
@@ -233,5 +384,39 @@ export const preset: Types.OutputPreset<NearOperationFileConfig> = {
     );
   },
 };
+
+function getGrandParent(ancestors: unknown[], path: (string | number)[]) {
+  const firstVistitLayerAfterDocument = ancestors[1];
+  if (!Array.isArray(firstVistitLayerAfterDocument)) {
+    return null;
+  }
+
+  if (path[0] !== "definitions" || typeof path[1] !== "number") {
+    return null;
+  }
+
+  return firstVistitLayerAfterDocument[path[1]];
+}
+function isGrandParentFragment(
+  ancestor: unknown,
+): ancestor is FragmentDefinitionNode {
+  return (
+    typeof ancestor === "object" &&
+    ancestor !== null &&
+    "kind" in ancestor &&
+    ancestor.kind === "FragmentDefinition"
+  );
+}
+
+function isGrandParentOperation(
+  ancestor: unknown,
+): ancestor is OperationDefinitionNode {
+  return (
+    typeof ancestor === "object" &&
+    ancestor !== null &&
+    "kind" in ancestor &&
+    ancestor.kind === "OperationDefinition"
+  );
+}
 
 export default preset;
