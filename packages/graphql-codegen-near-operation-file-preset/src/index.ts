@@ -1,6 +1,6 @@
 import { Types, CodegenPlugin } from "@graphql-codegen/plugin-helpers";
 import addPlugin from "@graphql-codegen/add";
-import { join } from "path";
+import path, { join } from "path";
 import { FragmentDefinitionNode, buildASTSchema, GraphQLSchema } from "graphql";
 import { appendExtensionToFilePath, defineFilepathSubfolder } from "./utils";
 import {
@@ -12,7 +12,13 @@ import {
   ImportDeclaration,
   ImportSource,
 } from "@graphql-codegen/visitor-plugin-common";
+import {
+  getDefinitionsMetadata,
+  SupportedOperations,
+} from "./definitions-metadata";
+import { writeFileSync } from "fs";
 
+export type { DefinitionsMetadata } from "./definitions-metadata";
 export { resolveDocumentImports, DocumentImportResolverOptions };
 
 export type FragmentImportFromFn = (
@@ -126,6 +132,18 @@ export type NearOperationFileConfig = {
    * ```
    */
   importTypesNamespace?: string;
+  supportedResolvers?: SupportedResolvers;
+  supportedOperations?: SupportedOperations;
+  sharedFragmentsDirectoryName?: string;
+  usedResolversMetadataDirectoryPath?: string;
+};
+
+export type SupportedResolvers = {
+  supportedResolvers?: {
+    configs?: {
+      value?: { [operation: string]: string[] };
+    }[];
+  };
 };
 
 export type FragmentNameToFile = {
@@ -180,6 +198,28 @@ export const preset: Types.OutputPreset<NearOperationFileConfig> = {
       },
       typesImport: options.config.useTypeImports ?? false,
     });
+
+    const resolverMetadata = getDefinitionsMetadata(sources, options);
+    if (
+      resolverMetadata &&
+      options.presetConfig.usedResolversMetadataDirectoryPath
+    ) {
+      const { schemaMetadata, ...definitionsMetadata } = resolverMetadata;
+      writeFileSync(
+        path.resolve(
+          options.presetConfig.usedResolversMetadataDirectoryPath,
+          "./definitions-metadata.json",
+        ),
+        JSON.stringify(definitionsMetadata, null, 2),
+      );
+      writeFileSync(
+        path.resolve(
+          options.presetConfig.usedResolversMetadataDirectoryPath,
+          "./schema-metadata.json",
+        ),
+        JSON.stringify(schemaMetadata, null, 2),
+      );
+    }
 
     return sources.map<Types.GenerateOptions>(
       ({ importStatements, externalFragments, fragmentImports, ...source }) => {

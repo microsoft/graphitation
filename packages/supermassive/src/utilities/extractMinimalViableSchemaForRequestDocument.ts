@@ -71,6 +71,7 @@ import { Maybe } from "../jsutils/Maybe";
 export type ExtractMinimalViableSchemaResult = {
   definitions: SchemaDefinitions;
   unknownDirectives: DirectiveNode[];
+  fragmentSpreads: string[];
 };
 
 export function extractMinimalViableSchemaForRequestDocument(
@@ -80,6 +81,7 @@ export function extractMinimalViableSchemaForRequestDocument(
   const types: TypeDefinitionsRecord = {};
   const directives: DirectiveDefinitionTuple[] = [];
   const unknownDirectives: DirectiveNode[] = [];
+  const fragmentSpreads: string[] = [];
 
   const typeInfo = new TypeInfo(schema);
   visit(
@@ -128,6 +130,11 @@ export function extractMinimalViableSchemaForRequestDocument(
           addCompositeType(types, type);
         }
       },
+      FragmentSpread(node) {
+        if (!fragmentSpreads.includes(node.name.value)) {
+          fragmentSpreads.push(node.name.value);
+        }
+      },
       Argument() {
         // Perf: no need to visit arguments - they were handled by Field/Directive visitors
         return false;
@@ -135,7 +142,7 @@ export function extractMinimalViableSchemaForRequestDocument(
     }),
   );
   const definitions = directives.length ? { types, directives } : { types };
-  return { definitions, unknownDirectives };
+  return { definitions, unknownDirectives, fragmentSpreads };
 }
 
 function addReferencedOutputType(
