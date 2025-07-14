@@ -127,6 +127,36 @@ describe("transformer tests", () => {
     `);
   });
 
+  it("should throw an error if star import is used and graphql tag is used", () => {
+    const transformer = new Transformer()
+      .addTransformer((_program: ts.Program) =>
+        getTransformer({
+          graphqlTagModuleExport: "gql",
+        }),
+      )
+      .addMock({
+        name: "@graphitation/graphql-js-tag",
+        content: `export const gql:any = () => {}`,
+      })
+      .setFilePath("/index.tsx");
+
+    expect(() =>
+      transformer.transform(`
+        import * as Hooks from "@graphitation/graphql-js-tag"
+        const test = Hooks.gql\`
+          query Foo {
+            foo
+          }
+        \`
+        const ProviderHooks = {
+          ...Hooks,
+        }
+      `),
+    ).toThrow(
+      "Namespace imports are not supported when gql template tags are used. Found * as Hooks in /index.tsx",
+    );
+  });
+
   describe("graphql tag options", () => {
     it("should remove single import", () => {
       expect.assertions(1);
@@ -387,7 +417,7 @@ describe("transformer tests", () => {
     });
   });
   describe("should not apply transformer", () => {
-    it("should allow namespace import when tag is not used", () => {
+    it("should allow star import when tag is not used", () => {
       expect.assertions(1);
       const transformer = new Transformer()
         .addTransformer((_program: ts.Program) => getTransformer({}))
@@ -411,28 +441,6 @@ describe("transformer tests", () => {
       };
       "
     `);
-    });
-
-    it("should keep graphql import", () => {
-      expect.assertions(1);
-      const transformer = new Transformer()
-        .addTransformer((_program: ts.Program) => getTransformer({}))
-        .addMock({
-          name: "@graphitation/graphql-js-tag",
-          content: `export const graphql:any = () => {}`,
-        })
-        .setFilePath("/index.tsx");
-
-      const actual = transformer.transform(`
-      import { graphql } from "@graphitation/graphql-js-tag"
-  
-      export const graphqlTag = graphql
-     `);
-      expect(actual).toMatchInlineSnapshot(`
-        "import { graphql } from "@graphitation/graphql-js-tag";
-        export const graphqlTag = graphql;
-        "
-      `);
     });
   });
 });
