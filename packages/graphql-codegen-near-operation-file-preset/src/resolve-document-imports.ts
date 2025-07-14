@@ -40,7 +40,7 @@ export type DocumentImportResolverOptions = {
   typesImport: boolean;
 };
 
-interface ResolveDocumentImportResult {
+export interface ResolveDocumentImportResult {
   filename: string;
   documents: [Source];
   importStatements: string[];
