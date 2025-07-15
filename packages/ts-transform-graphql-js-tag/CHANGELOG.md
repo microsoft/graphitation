@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-transform-graphql-js-tag
 
-<!-- This log was last generated on Wed, 02 Apr 2025 11:43:32 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 15 Jul 2025 14:18:32 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.6.0
+
+Tue, 15 Jul 2025 14:18:32 GMT
+
+### Minor changes
+
+- allow namespace import if tag is not used (pavelglac@gmail.com)
 
 ## 1.5.0
 

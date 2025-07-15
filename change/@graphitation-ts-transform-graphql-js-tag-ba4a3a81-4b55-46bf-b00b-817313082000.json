@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "allow namespace import if tag is not used",
-  "packageName": "@graphitation/ts-transform-graphql-js-tag",
-  "email": "pavelglac@gmail.com",
-  "dependentChangeType": "patch"
-}
