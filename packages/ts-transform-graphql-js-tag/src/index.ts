@@ -117,6 +117,40 @@ export function createTransformerContext(
   return context;
 }
 
+function checkForGraphQLTemplateUsage(
+  sourceFile: ts.SourceFile,
+  templateLiteralName: string,
+): boolean {
+  let namespaceName: string | null = null;
+
+  function visitNode(node: ts.Node): boolean {
+    if (ts.isImportDeclaration(node)) {
+      if (
+        node.importClause &&
+        node.importClause.namedBindings &&
+        ts.isNamespaceImport(node.importClause.namedBindings)
+      ) {
+        namespaceName = node.importClause.namedBindings.name.text;
+      }
+    }
+
+    if (ts.isTaggedTemplateExpression(node)) {
+      const [tag] = node.getChildren();
+      const tagText = tag.getText();
+      const templateLiteral = namespaceName
+        ? `${namespaceName}.${templateLiteralName}`
+        : templateLiteralName;
+      if (tagText === templateLiteral) {
+        return true;
+      }
+    }
+
+    return ts.forEachChild(node, visitNode) ?? false;
+  }
+
+  return visitNode(sourceFile);
+}
+
 function getVisitor(
   transformerContext: GraphQLTagTransformContext,
   context: ts.TransformationContext,
@@ -175,7 +209,23 @@ function getVisitor(
                 }
               }
             } else {
-              throw new Error("Namespace imports are not supported");
+              const isTemplateUsed = checkForGraphQLTemplateUsage(
+                sourceFile,
+                templateLiteralName ??
+                  transformerContext.graphqlTagModuleExport,
+              );
+              // If no graphql template tag is used, allow namespace imports
+              if (!isTemplateUsed) {
+                return node;
+              } else {
+                throw new Error(
+                  `Namespace imports are not supported when ${
+                    transformerContext.graphqlTagModuleExport
+                  } template tags are used. Found ${node.importClause.namedBindings.getText()} in ${
+                    sourceFile.fileName
+                  }`,
+                );
+              }
             }
           }
           if (newImportSpecifiers.length || node.importClause.name) {

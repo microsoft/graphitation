@@ -127,6 +127,36 @@ describe("transformer tests", () => {
     `);
   });
 
+  it("should throw an error if namespace import is used and graphql tag is used", () => {
+    const transformer = new Transformer()
+      .addTransformer((_program: ts.Program) =>
+        getTransformer({
+          graphqlTagModuleExport: "gql",
+        }),
+      )
+      .addMock({
+        name: "@graphitation/graphql-js-tag",
+        content: `export const gql:any = () => {}`,
+      })
+      .setFilePath("/index.tsx");
+
+    expect(() =>
+      transformer.transform(`
+        import * as Hooks from "@graphitation/graphql-js-tag"
+        const test = Hooks.gql\`
+          query Foo {
+            foo
+          }
+        \`
+        const ProviderHooks = {
+          ...Hooks,
+        }
+      `),
+    ).toThrow(
+      "Namespace imports are not supported when gql template tags are used. Found * as Hooks in /index.tsx",
+    );
+  });
+
   describe("graphql tag options", () => {
     it("should remove single import", () => {
       expect.assertions(1);
@@ -384,6 +414,33 @@ describe("transformer tests", () => {
         export const query = __graphql_tag_import_Foo;
         "
       `);
+    });
+  });
+  describe("should not apply transformer", () => {
+    it("should allow namespace import when tag is not used", () => {
+      expect.assertions(1);
+      const transformer = new Transformer()
+        .addTransformer((_program: ts.Program) => getTransformer({}))
+        .addMock({
+          name: "@graphitation/graphql-js-tag",
+          content: `export default {}`,
+        })
+        .setFilePath("/index.tsx");
+
+      const actual = transformer.transform(`
+        import * as Hooks from "@graphitation/graphql-js-tag"
+
+        const ProviderHooks = {
+          ...Hooks,
+        }
+      `);
+      expect(actual).toMatchInlineSnapshot(`
+      "import * as Hooks from "@graphitation/graphql-js-tag";
+      const ProviderHooks = {
+          ...Hooks,
+      };
+      "
+    `);
     });
   });
 });
