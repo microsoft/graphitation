@@ -127,7 +127,7 @@ describe("transformer tests", () => {
     `);
   });
 
-  it("should throw an error if star import is used and graphql tag is used", () => {
+  it("should throw an error if namespace import is used and graphql tag is used", () => {
     const transformer = new Transformer()
       .addTransformer((_program: ts.Program) =>
         getTransformer({
@@ -417,7 +417,7 @@ describe("transformer tests", () => {
     });
   });
   describe("should not apply transformer", () => {
-    it("should allow star import when tag is not used", () => {
+    it("should allow namespace import when tag is not used", () => {
       expect.assertions(1);
       const transformer = new Transformer()
         .addTransformer((_program: ts.Program) => getTransformer({}))
