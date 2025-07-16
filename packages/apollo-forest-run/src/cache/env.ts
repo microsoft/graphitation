@@ -40,6 +40,7 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
     optimizeFragmentReads: config?.optimizeFragmentReads ?? false,
     nonEvictableQueries: config?.nonEvictableQueries ?? new Set(),
     maxOperationCount: config?.maxOperationCount ?? 1000,
+    partitionConfig: config?.partitionConfig,
     logger: config && "logger" in config ? config.logger : logger,
     notify: config?.notify,
     now: () => ++tick, // Logical time

@@ -33,6 +33,15 @@ import { Logger } from "../jsutils/logger";
 import { GraphDifference, GraphDiffError } from "../diff/diffTree";
 import { ObjectDifference } from "../diff/types";
 
+export type PartitionConfig = {
+  partitions: {
+    [key: string]: {
+      maxOperationCount?: number;
+    };
+  };
+  partitionKey: (operation: OperationDescriptor) => string | undefined;
+};
+
 export type DataTree = IndexedTree & {
   grown?: boolean;
 };
@@ -124,6 +133,7 @@ export type ForestRunAdditionalConfig = {
   autoEvict?: boolean;
   maxOperationCount?: number;
   nonEvictableQueries?: Set<string>;
+  partitionConfig?: PartitionConfig;
   apolloCompat_keepOrphanNodes?: boolean;
   logger?: Logger;
   notify?: (event: TelemetryEvent) => void;
@@ -197,6 +207,7 @@ export type CacheEnv = {
   autoEvict: boolean;
   nonEvictableQueries: Set<string>;
   maxOperationCount: number;
+  partitionConfig?: PartitionConfig;
 
   // Feature flags
   logUpdateStats: boolean;
