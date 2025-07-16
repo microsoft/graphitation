@@ -1,5 +1,24 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Unexpected refetch telemetry should report unexpected refetch telemetry 1`] = `
+[
+  {
+    "affected": [
+      [
+        "query GetUserWithDetails",
+        "user.friends.0.id",
+      ],
+    ],
+    "causedBy": [
+      "query {
+  ...PartialUser
+}",
+    ],
+    "kind": "UNEXPECTED_REFETCH",
+  },
+]
+`;
+
 exports[`Update Stats Telemetry should report update stats telemetry 1`] = `
 [
   {

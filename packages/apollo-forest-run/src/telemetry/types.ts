@@ -6,7 +6,7 @@ import { UpdateTreeStats } from "./updateStats/types";
 //    Events could be sent to the server and may be stored in logs or other storage.
 // 2. Events MUST be serializable with JSON.stringify.
 type OperationDebugName = string;
-type FirstMissingFieldMessage = string;
+type FirstMissingFieldPath = string;
 
 // Event occurs when incoming write causes missing fields in watched operations.
 // This happens due to a mismatching selection in the incoming operation and the affected operation.
@@ -26,7 +26,7 @@ type FirstMissingFieldMessage = string;
 export type UnexpectedRefetch = {
   kind: "UNEXPECTED_REFETCH";
   causedBy: OperationDebugName[];
-  affected: Array<[OperationDebugName, FirstMissingFieldMessage]>;
+  affected: Array<[OperationDebugName, FirstMissingFieldPath]>;
 };
 
 // Event occurs when read policy throws an error

@@ -16,7 +16,6 @@ import type {
   Store,
   Transaction,
 } from "./cache/types";
-import type { UnexpectedRefetch } from "./telemetry/types";
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
 import { accumulate, deleteAccumulated } from "./jsutils/map";
@@ -43,6 +42,7 @@ import { createCacheEnvironment } from "./cache/env";
 import { CacheConfig } from "./cache/types";
 import { SourceObject } from "./values/types";
 import { logUpdateStats } from "./telemetry/updateStats/logUpdateStats";
+import { logStaleOperations } from "./telemetry/logStaleOperations";
 
 /**
  * ForestRun cache aims to be an Apollo cache implementation somewhat compatible with InMemoryCache.
@@ -701,40 +701,4 @@ export class ForestRun extends ApolloCache<SerializedCache> {
 
 function peek<T>(stack: T[]): T | undefined {
   return stack[stack.length - 1];
-}
-
-function logStaleOperations(
-  env: CacheEnv,
-  transaction: Transaction,
-  stale: {
-    operation: OperationDescriptor;
-    diff: Cache.DiffResult<any>;
-  }[],
-) {
-  if (!transaction.changelog.length) {
-    return;
-  }
-  const writes = transaction.changelog.filter((o) => isWrite(o));
-  if (!writes.length) {
-    // Custom cache.modify or cache.evict - expected to evict operations
-    return;
-  }
-  const event: UnexpectedRefetch = {
-    kind: "UNEXPECTED_REFETCH",
-    causedBy: writes.map((write) => write.incoming.operation.debugName),
-    affected: stale.map((op) => [
-      op.operation.debugName,
-      op.diff.missing?.[0]?.message ?? "?",
-    ]),
-  };
-  env?.notify?.(event);
-
-  env.logger?.warn(
-    `Incoming Apollo operation led to missing fields in watched operations (triggering re-fetch)\n` +
-      `  Incoming operation(s):\n` +
-      event.causedBy.join("\n") +
-      `\n` +
-      `  Affected operation(s):\n` +
-      event.affected.map((op) => `${op[0]} (${op[1]})`).join("\n"),
-  );
 }

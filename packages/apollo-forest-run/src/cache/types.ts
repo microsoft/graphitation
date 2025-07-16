@@ -130,6 +130,7 @@ export type ForestRunAdditionalConfig = {
 
   // Feature flags
   logUpdateStats?: boolean;
+  logStaleOperations?: boolean;
   optimizeFragmentReads?: boolean;
 };
 
@@ -200,6 +201,7 @@ export type CacheEnv = {
 
   // Feature flags
   logUpdateStats: boolean;
+  logStaleOperations: boolean;
   optimizeFragmentReads: boolean;
 };
 
