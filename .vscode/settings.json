@@ -5,5 +5,8 @@
   "jestrunner.configPath": "scripts/config/jest.config.js",
   "files.eol": "\n",
   "jest.jestCommandLine": "node node_modules/jest-cli/bin/jest.js --config scripts/config/jest.config.js",
-  "jest.runMode": "on-demand"
+  "jest.runMode": "on-demand",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "never"
+  }
 }
