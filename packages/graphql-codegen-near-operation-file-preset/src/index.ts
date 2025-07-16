@@ -12,9 +12,10 @@ import {
   ImportDeclaration,
   ImportSource,
 } from "@graphql-codegen/visitor-plugin-common";
-import { getResolverMap } from "./resolver-map";
+import { getDefinitionsMetadata } from "./definitions-metadata";
 import { writeFileSync } from "fs";
 
+export type { DefinitionsMetadata } from "./definitions-metadata";
 export { resolveDocumentImports, DocumentImportResolverOptions };
 
 export type FragmentImportFromFn = (
@@ -196,19 +197,19 @@ export const preset: Types.OutputPreset<NearOperationFileConfig> = {
       },
       typesImport: options.config.useTypeImports ?? false,
     });
-    const startTime = performance.now();
-    const output = getResolverMap(sources, options);
-    if (output && options.presetConfig.usedResolversMetadataFilePath) {
+    //const startTime = performance.now();
+    const definitionsMetadata = getDefinitionsMetadata(sources, options);
+    if (
+      definitionsMetadata &&
+      options.presetConfig.usedResolversMetadataFilePath
+    ) {
       writeFileSync(
-        path.resolve(
-          options.presetConfig.usedResolversMetadataFilePath,
-          "resolversMetadata.json",
-        ),
-        JSON.stringify(output, null, 2),
+        path.resolve(options.presetConfig.usedResolversMetadataFilePath),
+        JSON.stringify(definitionsMetadata, null, 2),
       );
     }
-    const endTime = performance.now();
-    console.log("time:", endTime - startTime);
+    //const endTime = performance.now();
+    //console.log("time:", endTime - startTime);
     return sources.map<Types.GenerateOptions>(
       ({ importStatements, externalFragments, fragmentImports, ...source }) => {
         let fragmentImportsArr = fragmentImports;
