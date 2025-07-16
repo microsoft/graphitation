@@ -1,14 +1,7 @@
-import type {
-  Cache,
-} from "@apollo/client";
+import type { Cache } from "@apollo/client";
 import type { OperationDescriptor } from "../descriptor/types";
-import type {
-  CacheEnv,
-
-  Transaction,
-} from "../cache/types";
+import type { CacheEnv, Transaction } from "../cache/types";
 import type { UnexpectedRefetch } from "../telemetry/types";
-;
 import { isWrite } from "../cache/write";
 
 export function logStaleOperations(
