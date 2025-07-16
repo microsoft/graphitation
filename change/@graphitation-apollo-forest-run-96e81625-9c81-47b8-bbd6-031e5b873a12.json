@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "report path in unexpect refetch",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}
