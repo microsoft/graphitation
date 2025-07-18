@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Fri, 18 Jul 2025 08:40:56 GMT",
+      "version": "0.18.0",
+      "tag": "@graphitation/apollo-forest-run_v0.18.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "905362dded53ee68d4ec1454747b7734930ba7af",
+            "comment": "report path in unexpect refetch"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 02 Jul 2025 13:07:00 GMT",
       "version": "0.17.1",
       "tag": "@graphitation/apollo-forest-run_v0.17.1",

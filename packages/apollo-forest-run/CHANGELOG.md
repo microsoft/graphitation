@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Wed, 02 Jul 2025 13:07:00 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 18 Jul 2025 08:40:56 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.18.0
+
+Fri, 18 Jul 2025 08:40:56 GMT
+
+### Minor changes
+
+- report path in unexpect refetch (pavelglac@gmail.com)
 
 ## 0.17.1
 
