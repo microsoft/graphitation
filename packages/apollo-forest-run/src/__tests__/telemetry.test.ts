@@ -1,6 +1,6 @@
 import { gql } from "../__tests__/helpers/descriptor";
 import { ForestRun } from "../ForestRun";
-import { UpdateStats } from "../telemetry/types";
+import { UpdateStats, UnexpectedRefetch } from "../telemetry/types";
 
 describe("Update Stats Telemetry", () => {
   const query = gql`
@@ -145,6 +145,119 @@ describe("Update Stats Telemetry", () => {
     cache.write({
       query: updateMutation,
       result: updatedData,
+    });
+
+    expect(telemetryEvents.length).toEqual(0);
+  });
+});
+
+describe("Unexpected refetch telemetry", () => {
+  const query = gql`
+    query GetUserWithDetails {
+      user {
+        id
+        name
+        friends {
+          id
+          name
+        }
+      }
+    }
+  `;
+
+  const initialData = {
+    user: {
+      __typename: "User",
+      id: "1",
+      name: "Alice",
+      friends: [
+        {
+          __typename: "Friend",
+          id: "2",
+          name: "Bob",
+        },
+      ],
+    },
+  };
+
+  const fragmentWithMissingFields = gql`
+    fragment PartialUser on User {
+      id
+      name
+      friends {
+        name
+      }
+    }
+  `;
+
+  const fragmentData = {
+    __typename: "User",
+    friends: [
+      {
+        __typename: "Friend",
+        name: "Updated Bob",
+      },
+    ],
+  };
+
+  it("should report unexpected refetch telemetry", () => {
+    const telemetryEvents: UnexpectedRefetch[] = [];
+
+    const cache = new ForestRun({
+      notify: (event) => {
+        if (event.kind === "UNEXPECTED_REFETCH") {
+          telemetryEvents.push(event);
+        }
+      },
+      logStaleOperations: true,
+    });
+
+    cache.watch({
+      query: query,
+      optimistic: true,
+      callback: () => {},
+    });
+
+    cache.write({
+      query: query,
+      result: initialData,
+    });
+
+    cache.writeFragment({
+      id: cache.identify({ __typename: "User", id: "1" })!,
+      fragment: fragmentWithMissingFields,
+      data: fragmentData,
+    });
+
+    expect(telemetryEvents).toMatchSnapshot();
+  });
+
+  it("should not report unexpected refetch telemetry when disabled", () => {
+    const telemetryEvents: UnexpectedRefetch[] = [];
+
+    const cache = new ForestRun({
+      notify: (event) => {
+        if (event.kind === "UNEXPECTED_REFETCH") {
+          telemetryEvents.push(event);
+        }
+      },
+    });
+
+    cache.watch({
+      query: query,
+      optimistic: true,
+      callback: () => {},
+    });
+
+    cache.write({
+      query: query,
+      result: initialData,
+    });
+
+    cache.writeFragment({
+      id: cache.identify({ __typename: "User", id: "1" })!,
+      fragment: fragmentWithMissingFields,
+      data: fragmentData,
     });
 
     expect(telemetryEvents.length).toEqual(0);

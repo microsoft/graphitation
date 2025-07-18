@@ -125,4 +125,5 @@ export type ForestEnv = {
 
   // Telemetry feature flags
   logUpdateStats?: boolean;
+  logStaleOperations?: boolean;
 };

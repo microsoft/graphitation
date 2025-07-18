@@ -408,11 +408,7 @@ function reportFirstMissingField(tree: IndexedTree): MissingFieldError {
     findParent: createParentLocator(tree.dataMap),
   };
   const [chunk] = tree.incompleteChunks;
-  const path: Record<string, unknown> = {};
-  const tail = getDataPathForDebugging(pathEnv, chunk).reduce(
-    (acc, segment) => (acc[segment] = {}),
-    path,
-  );
+  const path = getDataPathForDebugging(pathEnv, chunk);
 
   let message;
   if (isObjectValue(chunk)) {
@@ -424,7 +420,7 @@ function reportFirstMissingField(tree: IndexedTree): MissingFieldError {
       (chunk.key
         ? chunk.key + ` object`
         : `object ` + inspect(chunk.data, null, 2));
-    tail[missingField.name] = message;
+    path.push(missingField.name);
   } else {
     assert(chunk.missingItems?.size);
     const [missingIndex] = chunk.missingItems;
@@ -433,12 +429,12 @@ function reportFirstMissingField(tree: IndexedTree): MissingFieldError {
       inspect(chunk.data, null, 2) +
       `\n` +
       `It could have been deleted using cache.modify, cache.evict or written incorrectly with manual cache.write`;
-    tail[missingIndex] = message;
+    path.push(missingIndex);
   }
 
   return new MissingFieldError(
     message,
-    path as MissingFieldError["path"],
+    path,
     getOriginalDocument(tree.operation.document),
     tree.operation.variables,
   );

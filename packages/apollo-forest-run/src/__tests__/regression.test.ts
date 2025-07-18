@@ -56,12 +56,10 @@ test("properly invalidates nodes added via cache redirects", () => {
   // Sanity-checks
   expect(foo1Diff.result).toEqual({ foo1: partialFoo });
   expect(foo1Diff.complete).toEqual(false);
-  // @ts-expect-error NoImplicitAny is fine here
-  expect(foo1Diff.missing?.[0]?.path?.["foo1"]?.["foo"]).toBeDefined();
+  expect(foo1Diff.missing?.[0]?.path).toEqual(["foo1", "foo"]);
   expect(foo2Diff.result).toEqual({ foo2: partialFoo });
   expect(foo2Diff.complete).toEqual(false);
-  // @ts-expect-error NoImplicitAny is fine here
-  expect(foo2Diff.missing?.[0]?.path?.["foo2"]?.["foo"]).toBeDefined();
+  expect(foo2Diff.missing?.[0]?.path).toEqual(["foo2", "foo"]);
 
   // Actual seen failures
   expect(foo1DiffAfter.result).toEqual({ foo1: fullFoo });
@@ -381,14 +379,7 @@ test("should properly report missing field error on incorrect merge policy", () 
     complete: false,
     missing: [
       {
-        path: {
-          fooConnection: {
-            pageInfo: {
-              startCursor:
-                "Can't find field 'startCursor' on object {\n  \"hasNextPage\": true\n}",
-            },
-          },
-        },
+        path: ["fooConnection", "pageInfo", "startCursor"],
       },
     ],
   });
