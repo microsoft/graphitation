@@ -83,12 +83,10 @@ export function evictOldData(env: CacheEnv, store: Store): OperationId[] {
     Object.keys(env.partitionConfig?.partitions ?? {}),
   );
 
-  let nonEvictable = 0;
   const DEFAULT_PARTITION = "__default__";
 
   for (const tree of dataForest.trees.values()) {
     if (!canEvict(env, store, tree)) {
-      nonEvictable++;
       continue; // Skip non-evictable operations entirely
     }
 
@@ -114,17 +112,6 @@ export function evictOldData(env: CacheEnv, store: Store): OperationId[] {
       env.maxOperationCount;
 
     if (evictableOperationIds.length <= maxCount) {
-      console.log(
-        `Evicting no operations from partition '${partition}' (${[
-          `evictable: ${evictableOperationIds.length}`,
-          partition === DEFAULT_PARTITION
-            ? `non-evictable: ${nonEvictable}`
-            : null,
-          `max: ${maxCount}`,
-        ]
-          .filter(Boolean)
-          .join(", ")})`,
-      );
       continue; // No eviction needed for this partition
     }
 
@@ -133,28 +120,10 @@ export function evictOldData(env: CacheEnv, store: Store): OperationId[] {
       (a, b) => (atime.get(a) ?? 0) - (atime.get(b) ?? 0),
     );
 
-    const evictCount = Math.max(
-      0,
-      evictableOperationIds.length -
-        (partition === DEFAULT_PARTITION ? maxCount - nonEvictable : maxCount),
-    );
-
-    console.log(
-      `Evicting ${evictCount} operations from partition '${partition}' (${[
-        `evictable: ${evictableOperationIds.length}`,
-        partition === DEFAULT_PARTITION
-          ? `non-evictable: ${nonEvictable}`
-          : null,
-        `max: ${maxCount}`,
-      ]
-        .filter(Boolean)
-        .join(", ")})`,
-    );
+    const evictCount = Math.max(0, evictableOperationIds.length - maxCount);
 
     toEvict.push(...evictableOperationIds.slice(0, evictCount));
   }
-
-  console.log(`Evicting ${toEvict.length} operations from the store`);
 
   // Remove evicted operations
   for (const opId of toEvict) {
