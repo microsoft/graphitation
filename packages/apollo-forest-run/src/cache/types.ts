@@ -39,7 +39,7 @@ export type PartitionConfig = {
       maxOperationCount?: number;
     };
   };
-  partitionKey: (operation: OperationDescriptor) => string | undefined;
+  partitionKey: (operation: IndexedTree) => string | undefined;
 };
 
 export type DataTree = IndexedTree & {

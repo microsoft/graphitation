@@ -90,7 +90,7 @@ export function evictOldData(env: CacheEnv, store: Store): OperationId[] {
       continue; // Skip non-evictable operations entirely
     }
 
-    let partition = partitionKey?.(tree.operation);
+    let partition = partitionKey?.(tree);
     if (!partition || !configuredPartitionKeys.has(partition)) {
       partition = DEFAULT_PARTITION; // Default partition if not specified or not configured
     }

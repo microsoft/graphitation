@@ -152,7 +152,7 @@ it("allows partitioned eviction", () => {
     maxOperationCount: 1,
     autoEvict: false,
     partitionConfig: {
-      partitionKey: (o) => o.debugName,
+      partitionKey: (o) => o.operation.debugName,
       partitions: {
         "query a": { maxOperationCount: 1 },
         "query b": { maxOperationCount: 2 },
