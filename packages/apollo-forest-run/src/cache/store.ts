@@ -91,7 +91,13 @@ export function evictOldData(env: CacheEnv, store: Store): OperationId[] {
     }
 
     let partition = partitionKey?.(tree);
-    if (!partition || !configuredPartitionKeys.has(partition)) {
+    if (partition == null) {
+      partition = DEFAULT_PARTITION; // Default partition if not specified or not configured
+    } else if (!configuredPartitionKeys.has(partition)) {
+      env.logger?.warnOnce(
+        "partition_not_configured",
+        `Partition "${partition}" is not configured in partitionConfig. Using default partition instead.`,
+      );
       partition = DEFAULT_PARTITION; // Default partition if not specified or not configured
     }
     let partitionOps = partitionsOps.get(partition);
@@ -122,7 +128,10 @@ export function evictOldData(env: CacheEnv, store: Store): OperationId[] {
 
     const evictCount = Math.max(0, evictableOperationIds.length - maxCount);
 
-    toEvict.push(...evictableOperationIds.slice(0, evictCount));
+    // Keep only the ones to evict without array copying w/ slice
+    evictableOperationIds.length = evictCount;
+
+    toEvict.push(...evictableOperationIds);
   }
 
   // Remove evicted operations

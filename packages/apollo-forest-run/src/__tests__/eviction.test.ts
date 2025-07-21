@@ -151,7 +151,7 @@ it("allows partitioned eviction", () => {
   const cache = new ForestRun({
     maxOperationCount: 1,
     autoEvict: false,
-    partitionConfig: {
+    unstable_partitionConfig: {
       partitionKey: (o) => o.operation.debugName,
       partitions: {
         "query a": { maxOperationCount: 1 },
@@ -257,4 +257,49 @@ it("allows partitioned eviction", () => {
   expect(resultC1).toEqual(null);
   expect(resultD0).toEqual(null);
   expect(resultD1).toEqual({ qux: 1 });
+});
+
+it("should warn exactly once for the same warning", () => {
+  const mockConsole = {
+    ...console,
+    warn: jest.fn(),
+  };
+
+  const cache = new ForestRun({
+    maxOperationCount: 1,
+    autoEvict: false,
+    logger: mockConsole,
+    unstable_partitionConfig: {
+      partitionKey: (o) => o.operation.debugName,
+      partitions: {},
+    },
+  });
+
+  cache.write({
+    query: gql`
+      query TestA {
+        test
+      }
+    `,
+    result: { test: "value" },
+  });
+
+  cache.write({
+    query: gql`
+      query TestB {
+        test
+      }
+    `,
+    result: { test: "new value" },
+  });
+
+  cache.gc();
+
+  expect(mockConsole.warn).toHaveBeenCalledTimes(1);
+  expect(mockConsole.warn).toHaveBeenCalledWith(
+    "partition_not_configured",
+    'Partition "query TestA" is not configured in partitionConfig. Using default partition instead.',
+  );
+
+  // notably: "query TestB" is NOT logged
 });

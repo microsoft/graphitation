@@ -29,17 +29,17 @@ import type {
   FieldReadFunction,
 } from "@apollo/client/cache/inmemory/policies";
 import type { TelemetryEvent } from "../telemetry/types";
-import { Logger } from "../jsutils/logger";
+import { ExtendedLogger, Logger } from "../jsutils/logger";
 import { GraphDifference, GraphDiffError } from "../diff/diffTree";
 import { ObjectDifference } from "../diff/types";
 
 export type PartitionConfig = {
   partitions: {
     [key: string]: {
-      maxOperationCount?: number;
+      maxOperationCount: number;
     };
   };
-  partitionKey: (operation: IndexedTree) => string | undefined;
+  partitionKey: (operation: IndexedTree) => string | null;
 };
 
 export type DataTree = IndexedTree & {
@@ -133,7 +133,7 @@ export type ForestRunAdditionalConfig = {
   autoEvict?: boolean;
   maxOperationCount?: number;
   nonEvictableQueries?: Set<string>;
-  partitionConfig?: PartitionConfig;
+  unstable_partitionConfig?: PartitionConfig;
   apolloCompat_keepOrphanNodes?: boolean;
   logger?: Logger;
   notify?: (event: TelemetryEvent) => void;
@@ -187,7 +187,7 @@ export type CacheEnv = {
   ) => Key | KeySpecifier | undefined;
 
   notify?: (event: TelemetryEvent) => void;
-  logger?: Logger;
+  logger?: ExtendedLogger;
 
   // ApolloCompat:
   //   Apollo can track dirty entries in results of read operations even if some "key" fields are missing in selection
