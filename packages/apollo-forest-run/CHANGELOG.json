@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Tue, 22 Jul 2025 13:29:50 GMT",
+      "version": "0.19.0",
+      "tag": "@graphitation/apollo-forest-run_v0.19.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "joe@joeflateau.net",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "d717f69e9fb5e14a012f85fb479e7298e1e135fa",
+            "comment": "feat(apollo-forest-run): add partitioning for evictions"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 18 Jul 2025 08:40:56 GMT",
       "version": "0.18.0",
       "tag": "@graphitation/apollo-forest-run_v0.18.0",

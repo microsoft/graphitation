@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "feat(apollo-forest-run): add partitioning for evictions",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "joe@joeflateau.net",
-  "dependentChangeType": "patch"
-}

@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Fri, 18 Jul 2025 08:40:56 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 22 Jul 2025 13:29:50 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.19.0
+
+Tue, 22 Jul 2025 13:29:50 GMT
+
+### Minor changes
+
+- feat(apollo-forest-run): add partitioning for evictions (joe@joeflateau.net)
 
 ## 0.18.0
 
