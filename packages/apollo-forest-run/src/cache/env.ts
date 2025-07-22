@@ -11,7 +11,7 @@ import {
 } from "../descriptor/types";
 import { getMergePolicyFn, getReadPolicyFn } from "./policies";
 import { SourceObject } from "../values/types";
-import { logger } from "../jsutils/logger";
+import { createExtendedLogger, logger } from "../jsutils/logger";
 
 export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
   const possibleTypes = config?.possibleTypes;
@@ -41,7 +41,10 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
     optimizeFragmentReads: config?.optimizeFragmentReads ?? false,
     nonEvictableQueries: config?.nonEvictableQueries ?? new Set(),
     maxOperationCount: config?.maxOperationCount ?? 1000,
-    logger: config && "logger" in config ? config.logger : logger,
+    partitionConfig: config?.unstable_partitionConfig,
+    logger: createExtendedLogger(
+      config && "logger" in config ? config.logger : logger,
+    ),
     notify: config?.notify,
     now: () => ++tick, // Logical time
     genId: () => ++id,

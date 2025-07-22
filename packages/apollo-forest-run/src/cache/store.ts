@@ -76,25 +76,71 @@ export function maybeEvictOldData(env: CacheEnv, store: Store): OperationId[] {
 export function evictOldData(env: CacheEnv, store: Store): OperationId[] {
   assert(env.maxOperationCount);
   const { dataForest, atime } = store;
-  let nonEvictable = 0;
-  const toEvict: number[] = [];
+
+  const partitionsOps = new Map<string, OperationId[]>();
+  const partitionKey = env.partitionConfig?.partitionKey;
+  const configuredPartitionKeys = new Set(
+    Object.keys(env.partitionConfig?.partitions ?? {}),
+  );
+
+  const DEFAULT_PARTITION = "__default__";
+
   for (const tree of dataForest.trees.values()) {
     if (!canEvict(env, store, tree)) {
-      nonEvictable++;
-      continue;
+      continue; // Skip non-evictable operations entirely
     }
-    toEvict.push(tree.operation.id);
+
+    let partition = partitionKey?.(tree);
+    if (partition == null) {
+      partition = DEFAULT_PARTITION; // Default partition if not specified or not configured
+    } else if (!configuredPartitionKeys.has(partition)) {
+      env.logger?.warnOnce(
+        "partition_not_configured",
+        `Partition "${partition}" is not configured in partitionConfig. Using default partition instead.`,
+      );
+      partition = DEFAULT_PARTITION; // Default partition if not specified or not configured
+    }
+    let partitionOps = partitionsOps.get(partition);
+    if (!partitionOps) {
+      partitionOps = [];
+      partitionsOps.set(partition, partitionOps);
+    }
+
+    partitionOps.push(tree.operation.id);
   }
-  toEvict.sort((a, b) => (atime.get(a) ?? 0) - (atime.get(b) ?? 0));
-  toEvict.length = Math.max(
-    0,
-    dataForest.trees.size - (env.maxOperationCount + nonEvictable),
-  );
+
+  const toEvict: OperationId[] = [];
+
+  // Process each partition
+  for (const [partition, evictableOperationIds] of partitionsOps) {
+    const maxCount =
+      env.partitionConfig?.partitions[partition]?.maxOperationCount ??
+      env.maxOperationCount;
+
+    if (evictableOperationIds.length <= maxCount) {
+      continue; // No eviction needed for this partition
+    }
+
+    // Sort by access time (LRU) and determine how many to evict
+    evictableOperationIds.sort(
+      (a, b) => (atime.get(a) ?? 0) - (atime.get(b) ?? 0),
+    );
+
+    const evictCount = Math.max(0, evictableOperationIds.length - maxCount);
+
+    // Keep only the ones to evict without array copying w/ slice
+    evictableOperationIds.length = evictCount;
+
+    toEvict.push(...evictableOperationIds);
+  }
+
+  // Remove evicted operations
   for (const opId of toEvict) {
     const tree = store.dataForest.trees.get(opId);
     assert(tree);
     removeDataTree(store, tree);
   }
+
   return toEvict;
 }
 
