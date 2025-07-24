@@ -1,0 +1,56 @@
+query NestedQuery($id: ID!) {
+  node(id: $id) {
+    id
+    __typename
+    ... on Organization {
+      name
+      description
+      teams {
+        id
+        name
+        members {
+          id
+          name
+          role
+          user {
+            id
+            email
+            profile {
+              avatar
+              bio
+            }
+            permissions {
+              id
+              name
+              scope
+              resource {
+                id
+                type
+                name
+              }
+            }
+          }
+        }
+        projects {
+          id
+          name
+          status
+          tasks {
+            id
+            title
+            status
+            assignee {
+              id
+              name
+            }
+            dependencies {
+              id
+              title
+              status
+            }
+          }
+        }
+      }
+    }
+  }
+}

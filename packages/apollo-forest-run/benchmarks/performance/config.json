@@ -1,0 +1,14 @@
+{
+  "iterations": 3,
+  "warmupIterations": 1,
+  "operationsPerIteration": 100,
+  "maxOperationCount": 50,
+  "confidence": {
+    "level": 0.95,
+    "minSamples": 3,
+    "maxSamples": 10
+  },
+  "queries": {
+    "simple": "simple-query.graphql"
+  }
+}
