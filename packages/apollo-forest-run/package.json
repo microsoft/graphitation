@@ -15,14 +15,19 @@
     "test:own": "monorepo-scripts test",
     "test:apollo": "node ./scripts/run-apollo-tests.js",
     "types": "monorepo-scripts types",
+    "benchmark": "node ./benchmarks/performance/index.js",
+    "benchmark:memory": "node ./benchmarks/memory/bench.js",
     "just": "monorepo-scripts"
   },
   "devDependencies": {
     "@types/jest": "^26.0.22",
+    "@types/benchmark": "^2.1.0",
     "@apollo/client": ">= ^3.3.0 < 3.7.0",
+    "benchmark": "^2.1.4",
     "graphql": "^15.0.0",
     "lodash": "^4.17.21",
     "monorepo-scripts": "*",
+    "ts-node": "^10.0.0",
     "tslib": "^2.4.0",
     "typescript": "^5.5.3"
   },

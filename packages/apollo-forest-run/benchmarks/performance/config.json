@@ -1,0 +1,16 @@
+{
+  "iterations": 10,
+  "warmupIterations": 3,
+  "operationsPerIteration": 1000,
+  "maxOperationCount": 100,
+  "confidence": {
+    "level": 0.95,
+    "minSamples": 5,
+    "maxSamples": 50
+  },
+  "queries": {
+    "simple": "simple-query.graphql",
+    "complex": "complex-query.graphql",
+    "nested": "nested-query.graphql"
+  }
+}

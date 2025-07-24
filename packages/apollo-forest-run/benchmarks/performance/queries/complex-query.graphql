@@ -1,0 +1,37 @@
+query ComplexQuery($id: ID!, $filter: String, $first: Int) {
+  node(id: $id) {
+    id
+    __typename
+    ... on User {
+      name
+      email
+      profile {
+        avatar
+        bio
+        lastSeen
+      }
+      posts(filter: $filter, first: $first) {
+        edges {
+          node {
+            id
+            title
+            content
+            createdAt
+            author {
+              id
+              name
+            }
+            comments {
+              id
+              text
+              author {
+                id
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
