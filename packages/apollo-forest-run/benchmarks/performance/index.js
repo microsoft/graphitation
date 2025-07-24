@@ -100,30 +100,154 @@ function generateRandomString(length) {
 function createTestData(queryKey, iteration) {
   const baseId = `${queryKey}_${iteration}_${generateRandomString(8)}`;
   
-  if (queryKey === "simple") {
-    return {
-      variables: { id: baseId },
-      result: {
-        __typename: "Query",
-        node: {
-          __typename: "Node",
-          id: baseId,
+  switch (queryKey) {
+    case "simple":
+      return {
+        variables: { id: baseId },
+        result: {
+          __typename: "Query",
+          node: {
+            __typename: "Node",
+            id: baseId,
+          },
         },
-      },
-    };
+      };
+    
+    case "complex":
+      return {
+        variables: { 
+          id: baseId, 
+          filter: "recent", 
+          first: 10 
+        },
+        result: {
+          __typename: "Query",
+          node: {
+            __typename: "User",
+            id: baseId,
+            name: `User ${iteration}`,
+            email: `user${iteration}@example.com`,
+            profile: {
+              __typename: "Profile",
+              avatar: `avatar_${iteration}.jpg`,
+              bio: `Bio for user ${iteration}`,
+              lastSeen: new Date().toISOString(),
+            },
+            posts: {
+              __typename: "PostConnection",
+              edges: Array.from({ length: 3 }, (_, i) => ({
+                __typename: "PostEdge",
+                node: {
+                  __typename: "Post",
+                  id: `post_${baseId}_${i}`,
+                  title: `Post ${i} by User ${iteration}`,
+                  content: `Content for post ${i}`,
+                  createdAt: new Date().toISOString(),
+                  author: {
+                    __typename: "User",
+                    id: baseId,
+                    name: `User ${iteration}`,
+                  },
+                  comments: Array.from({ length: 2 }, (_, j) => ({
+                    __typename: "Comment",
+                    id: `comment_${baseId}_${i}_${j}`,
+                    text: `Comment ${j} on post ${i}`,
+                    author: {
+                      __typename: "User",
+                      id: `commenter_${baseId}_${j}`,
+                      name: `Commenter ${j}`,
+                    },
+                  })),
+                },
+              })),
+            },
+          },
+        },
+      };
+    
+    case "nested":
+      return {
+        variables: { id: baseId },
+        result: {
+          __typename: "Query",
+          node: {
+            __typename: "Organization",
+            id: baseId,
+            name: `Organization ${iteration}`,
+            description: `Description for org ${iteration}`,
+            teams: Array.from({ length: 2 }, (_, teamIdx) => ({
+              __typename: "Team",
+              id: `team_${baseId}_${teamIdx}`,
+              name: `Team ${teamIdx}`,
+              members: Array.from({ length: 3 }, (_, memberIdx) => ({
+                __typename: "TeamMember",
+                id: `member_${baseId}_${teamIdx}_${memberIdx}`,
+                name: `Member ${memberIdx}`,
+                role: "Developer",
+                user: {
+                  __typename: "User",
+                  id: `user_${baseId}_${teamIdx}_${memberIdx}`,
+                  email: `member${memberIdx}@team${teamIdx}.com`,
+                  profile: {
+                    __typename: "Profile",
+                    avatar: `member_${memberIdx}.jpg`,
+                    bio: `Member ${memberIdx} bio`,
+                  },
+                  permissions: Array.from({ length: 2 }, (_, permIdx) => ({
+                    __typename: "Permission",
+                    id: `perm_${baseId}_${teamIdx}_${memberIdx}_${permIdx}`,
+                    name: `permission_${permIdx}`,
+                    scope: "read",
+                    resource: {
+                      __typename: "Resource",
+                      id: `resource_${baseId}_${permIdx}`,
+                      type: "project",
+                      name: `Resource ${permIdx}`,
+                    },
+                  })),
+                },
+              })),
+              projects: Array.from({ length: 2 }, (_, projIdx) => ({
+                __typename: "Project",
+                id: `project_${baseId}_${teamIdx}_${projIdx}`,
+                name: `Project ${projIdx}`,
+                status: "active",
+                tasks: Array.from({ length: 3 }, (_, taskIdx) => ({
+                  __typename: "Task",
+                  id: `task_${baseId}_${teamIdx}_${projIdx}_${taskIdx}`,
+                  title: `Task ${taskIdx}`,
+                  status: "todo",
+                  assignee: {
+                    __typename: "User",
+                    id: `user_${baseId}_${teamIdx}_0`,
+                    name: "Member 0",
+                  },
+                  dependencies: Array.from({ length: 1 }, (_, depIdx) => ({
+                    __typename: "Task",
+                    id: `dep_${baseId}_${teamIdx}_${projIdx}_${taskIdx}_${depIdx}`,
+                    title: `Dependency ${depIdx}`,
+                    status: "done",
+                  })),
+                })),
+              })),
+            })),
+          },
+        },
+      };
+    
+    default:
+      // Default to simple for unknown query types
+      return {
+        variables: { id: baseId },
+        result: {
+          __typename: "Query",
+          node: {
+            __typename: "Node",
+            id: baseId,
+          },
+        },
+      };
   }
-  
-  // Default to simple for now
-  return {
-    variables: { id: baseId },
-    result: {
-      __typename: "Query",
-      node: {
-        __typename: "Node",
-        id: baseId,
-      },
-    },
-  };
 }
 
 // Benchmark operations
