@@ -7,6 +7,13 @@ import {
 import { buildASTSchema, buildSchema, parse, printSchema } from "graphql";
 import { preset } from "../index";
 
+jest.mock("fs", () => {
+  return {
+    ...jest.requireActual("fs"),
+    writeFileSync: jest.fn(),
+  };
+});
+
 describe("near-operation-file preset", () => {
   const schemaDocumentNode = parse(/* GraphQL */ `
     type Query {

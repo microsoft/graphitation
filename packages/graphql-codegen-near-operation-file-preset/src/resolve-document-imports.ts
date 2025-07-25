@@ -114,6 +114,7 @@ export function resolveDocumentImports<T>(
         externalFragments,
       };
     } catch (e: any) {
+      console.log(e);
       throw new DetailedError(
         `Unable to validate GraphQL document!`,
         `

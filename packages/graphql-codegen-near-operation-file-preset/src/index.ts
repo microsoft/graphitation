@@ -197,7 +197,7 @@ export const preset: Types.OutputPreset<NearOperationFileConfig> = {
       },
       typesImport: options.config.useTypeImports ?? false,
     });
-    //const startTime = performance.now();
+
     const definitionsMetadata = getDefinitionsMetadata(sources, options);
     if (
       definitionsMetadata &&
@@ -208,8 +208,7 @@ export const preset: Types.OutputPreset<NearOperationFileConfig> = {
         JSON.stringify(definitionsMetadata, null, 2),
       );
     }
-    //const endTime = performance.now();
-    //console.log("time:", endTime - startTime);
+
     return sources.map<Types.GenerateOptions>(
       ({ importStatements, externalFragments, fragmentImports, ...source }) => {
         let fragmentImportsArr = fragmentImports;

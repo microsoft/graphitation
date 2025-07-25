@@ -1,14 +1,11 @@
-import {
-  FragmentDefinitionNode,
-  buildASTSchema,
-  visit,
-  visitWithTypeInfo,
-  TypeInfo,
-  OperationDefinitionNode,
-  FieldNode,
-  DocumentNode,
-} from "graphql";
+import { buildASTSchema, visit } from "graphql";
 import { Types } from "@graphql-codegen/plugin-helpers";
+import {
+  extractMinimalViableSchemaForRequestDocument,
+  type ExtractMinimalViableSchemaResult,
+  //mergeSchemaDefinitions,
+  // /decodeASTSchema,
+} from "@graphitation/supermassive";
 import { NearOperationFileConfig, SupportedResolvers } from ".";
 import { ResolveDocumentImportResult } from "./resolve-document-imports";
 
@@ -18,28 +15,12 @@ export type ResolversPerOperation = {
   };
 };
 
-type Field = {
-  name: string;
-  fieldParentType: string;
-};
-
 export type DefinitionsMetadata = {
   resolversPerOperation?: ResolversPerOperation;
-  operationDefinitions?: DefinitionsMap;
-  fragmentDefinitions?: DefinitionsMap;
+  resolverMetadata?: Record<string, string[]>;
   supportedOperations?: {
     [rootOperationType: string]: string[];
   };
-};
-
-type Definition = {
-  type?: string;
-  fields: Field[];
-  fragmentSpreads: string[];
-};
-
-export type DefinitionsMap = {
-  [parentType: string]: Definition;
 };
 
 export function getDefinitionsMetadata(
@@ -48,14 +29,11 @@ export function getDefinitionsMetadata(
 ) {
   const { supportedResolvers, usedResolversMetadataFilePath } =
     options.presetConfig;
+  const schema = options.schemaAst || buildASTSchema(options.schema);
   if (usedResolversMetadataFilePath) {
     const supportedOperations: {
       [rootOperationType: string]: string[];
     } = {};
-
-    const typeInfo = new TypeInfo(
-      options.schemaAst || buildASTSchema(options.schema),
-    );
 
     if (supportedResolvers) {
       for (const source of sources) {
@@ -75,9 +53,7 @@ export function getDefinitionsMetadata(
                     node.operation,
                   )
                 ) {
-                  const operation =
-                    node.operation.charAt(0).toUpperCase() +
-                    node.operation.slice(1);
+                  const { operation } = node;
                   if (!supportedOperations[operation]) {
                     supportedOperations[operation] = [];
                   }
@@ -97,9 +73,14 @@ export function getDefinitionsMetadata(
     }
 
     const resolversPerOperation: ResolversPerOperation = {};
-
-    const operationDefinitions: DefinitionsMap = {};
-    const fragmentDefinitions: DefinitionsMap = {};
+    const operationDefinitions: Record<
+      string,
+      ExtractMinimalViableSchemaResult
+    > = {};
+    const fragmentDefinitions: Record<
+      string,
+      ExtractMinimalViableSchemaResult
+    > = {};
 
     for (const source of sources) {
       for (const document of source.documents) {
@@ -107,149 +88,78 @@ export function getDefinitionsMetadata(
           continue;
         }
 
-        visit(
-          document.document,
-          visitWithTypeInfo(typeInfo, {
-            FragmentSpread: (node, _key, _parent, path, ancestors) => {
-              const operationOrFragmentNode = getFragmentOrOperationDefinition(
-                ancestors as any,
-                path as any,
-              );
-
-              if (operationOrFragmentNode) {
-                if (!operationOrFragmentNode.name) {
-                  return;
-                }
-                const parentType = typeInfo.getParentType()?.name;
-
-                if (!parentType) {
-                  return;
-                }
-
-                if (isOperationDefinitionNode(operationOrFragmentNode)) {
-                  const parentFieldDefinitionNode =
-                    getParentFieldDefinitionNode(ancestors as any, path as any);
-
-                  if (parentFieldDefinitionNode) {
-                    const key = parentFieldDefinitionNode.name.value;
-
-                    const definition = operationDefinitions[key];
-                    operationDefinitions[key] = addFieldToDefinition(
-                      parentType,
-                      node.name.value,
-                      "ADD_FRAGMENT_SPREAD",
-                      definition,
-                    );
-                  }
-                } else if (isFragmentDefinitionNode(operationOrFragmentNode)) {
-                  const key = operationOrFragmentNode.name.value;
-
-                  const definition = fragmentDefinitions[key];
-                  fragmentDefinitions[key] = addFieldToDefinition(
-                    parentType,
-                    node.name.value,
-                    "ADD_FRAGMENT_SPREAD",
-                    definition,
-                  );
-                }
+        for (const definition of document.document.definitions) {
+          switch (definition.kind) {
+            case "OperationDefinition": {
+              if (!definition.name) {
+                throw Error("Operation should have a name");
               }
-            },
-            Field: (node, _key, _parent, path, ancestors) => {
-              const operationOrFragmentNode = getFragmentOrOperationDefinition(
-                ancestors as any,
-                path as any,
-              );
-              if (operationOrFragmentNode) {
-                const parentType = typeInfo.getParentType()?.name;
 
-                if (!parentType) {
-                  return;
-                }
-
-                if (
-                  ["Query", "Mutation", "Subscription"].includes(parentType) &&
-                  operationOrFragmentNode.name?.value
-                ) {
-                  if (!resolversPerOperation[parentType]) {
-                    resolversPerOperation[parentType] = {};
-                  }
-
-                  if (
-                    !resolversPerOperation[parentType][
-                      operationOrFragmentNode.name.value
-                    ]
-                  ) {
-                    resolversPerOperation[parentType][
-                      operationOrFragmentNode.name.value
-                    ] = [];
-                  }
-
-                  const operationResolverList =
-                    resolversPerOperation[parentType][
-                      operationOrFragmentNode.name.value
-                    ];
-
-                  if (!operationResolverList.includes(node.name.value)) {
-                    operationResolverList.push(node.name.value);
-                    return;
-                  }
-                }
-
-                if (node.name.value) {
-                  if (isOperationDefinitionNode(operationOrFragmentNode)) {
-                    const parentFieldDefinitionNode =
-                      getParentFieldDefinitionNode(
-                        ancestors as any,
-                        path as any,
-                      );
-
-                    if (parentFieldDefinitionNode) {
-                      const key = parentFieldDefinitionNode.name.value;
-
-                      const definition = operationDefinitions[key];
-                      operationDefinitions[key] = addFieldToDefinition(
-                        parentType,
-                        node.name.value,
-                        "ADD_FIELD",
-                        definition,
-                      );
-                    }
-                  } else if (
-                    isFragmentDefinitionNode(operationOrFragmentNode)
-                  ) {
-                    const key = operationOrFragmentNode.name.value;
-
-                    const definition = fragmentDefinitions[key];
-                    fragmentDefinitions[key] = addFieldToDefinition(
-                      parentType,
-                      node.name.value,
-                      "ADD_FIELD",
-                      definition,
-                    );
-                  }
-                }
+              if (
+                !supportedOperations[definition.operation]?.includes(
+                  definition.name.value,
+                )
+              ) {
+                break;
               }
-            },
-          }),
-        );
+
+              operationDefinitions[definition.name.value] =
+                extractMinimalViableSchemaForRequestDocument(schema, {
+                  kind: "Document",
+                  definitions: [definition],
+                });
+              break;
+            }
+            case "FragmentDefinition": {
+              fragmentDefinitions[definition.name.value] =
+                extractMinimalViableSchemaForRequestDocument(schema, {
+                  kind: "Document",
+                  definitions: [definition],
+                });
+
+              break;
+            }
+            default: {
+              break;
+            }
+          }
+        }
       }
     }
 
+    const { fragmentSpreadMap } = getTraverseMetadata(
+      operationDefinitions,
+      fragmentDefinitions,
+    );
+
+    const usedFragmentDefinitions: Record<
+      string,
+      ExtractMinimalViableSchemaResult
+    > = {};
+
+    for (const [key, value] of Object.entries(fragmentDefinitions)) {
+      for (const fragmentSpreadValues of Object.values(fragmentSpreadMap)) {
+        if (fragmentSpreadValues.includes(key)) {
+          usedFragmentDefinitions[key] = value;
+        }
+      }
+    }
+
+    const resolverMetadata = getResolverMetadata(
+      operationDefinitions,
+      usedFragmentDefinitions,
+    );
     const output: DefinitionsMetadata = {};
     if (Object.keys(resolversPerOperation).length) {
       output.resolversPerOperation = resolversPerOperation;
     }
 
-    if (Object.keys(operationDefinitions).length) {
-      output.operationDefinitions = operationDefinitions;
-    }
-
-    if (Object.keys(fragmentDefinitions).length) {
-      output.fragmentDefinitions = fragmentDefinitions;
-    }
-
     if (Object.keys(supportedOperations).length) {
       output.supportedOperations = supportedOperations;
+    }
+
+    if (Object.keys(resolverMetadata).length) {
+      output.resolverMetadata = resolverMetadata;
     }
 
     return output;
@@ -257,117 +167,197 @@ export function getDefinitionsMetadata(
 
   return null;
 }
-function getDefinition(definition?: Definition): Definition {
-  if (!definition) {
-    return {
-      fields: [],
-      fragmentSpreads: [],
-    };
-  }
-  return definition;
-}
 
-function addFieldToDefinition(
-  parentType: string,
-  name: string,
-  actionType: "ADD_FIELD" | "ADD_FRAGMENT_SPREAD",
-  def?: Definition,
+const TypeKind = {
+  SCALAR: 1,
+  OBJECT: 2,
+  INTERFACE: 3,
+  UNION: 4,
+  ENUM: 5,
+  INPUT: 6,
+} as const;
+
+function getResolverMetadata(
+  operationDefinitions: Record<string, ExtractMinimalViableSchemaResult>,
+  fragmentDefinitions: Record<string, ExtractMinimalViableSchemaResult>,
 ) {
-  const definition = getDefinition(def);
-  if (actionType === "ADD_FIELD") {
-    if (
-      !definition.fields.find((value) => {
-        return value.name === name && value.fieldParentType === parentType;
-      })
-    ) {
-      definition.fields.push({
-        name: name,
-        fieldParentType: parentType,
-      });
-    }
-  } else if (actionType === "ADD_FRAGMENT_SPREAD") {
-    if (!definition.fragmentSpreads.includes(name)) {
-      definition.fragmentSpreads.push(name);
+  const output: Record<string, string[]> = {};
+
+  const interfaceFields: Record<string, string[]> = {};
+  for (const [, { definitions }] of Object.entries(operationDefinitions)) {
+    for (const [type, [typeKind, fields]] of Object.entries(
+      definitions.types,
+    )) {
+      if (typeKind === TypeKind.INTERFACE) {
+        for (const field of Object.keys(fields ?? {})) {
+          interfaceFields[type] ??= [];
+          if (!interfaceFields[type].includes(field)) {
+            interfaceFields[type].push(field);
+          }
+        }
+      }
     }
   }
-  return definition;
+
+  for (const [, { definitions }] of Object.entries(operationDefinitions)) {
+    for (const [type, [typeKind, fields, interfaces]] of Object.entries(
+      definitions.types,
+    )) {
+      if (typeKind === TypeKind.ENUM) {
+        continue;
+      }
+      if (typeKind === TypeKind.UNION) {
+        output[type] ??= [];
+        if (!output[type].includes("__resolveType")) {
+          output[type].push("__resolveType");
+        }
+        continue;
+      }
+
+      if (typeKind === TypeKind.INTERFACE) {
+        output[type] ??= [];
+        if (!output[type].includes("__resolveType")) {
+          output[type].push("__resolveType");
+        }
+        continue;
+      }
+
+      for (const field of Object.keys(fields ?? {})) {
+        output[type] ??= [];
+        if (!output[type].includes(field)) {
+          output[type].push(field);
+        }
+      }
+
+      if (interfaces?.length) {
+        for (const interfaceName of interfaces) {
+          const fields = interfaceFields[interfaceName];
+          if (!fields) {
+            continue;
+          }
+          for (const field of fields) {
+            output[type] ??= [];
+            if (!output[type].includes(field)) {
+              output[type].push(field);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  for (const [, { definitions }] of Object.entries(fragmentDefinitions)) {
+    for (const [type, [typeKind, fields]] of Object.entries(
+      definitions.types,
+    )) {
+      if (typeKind === 4) {
+        output[type] ??= [];
+        if (!output[type].includes("__resolveType")) {
+          output[type].push("__resolveType");
+        }
+        continue;
+      }
+
+      for (const field of Object.keys(fields ?? {})) {
+        output[type] ??= [];
+        if (!output[type].includes(field)) {
+          output[type].push(field);
+        }
+      }
+    }
+  }
+
+  return output;
 }
 
-function getFragmentOrOperationDefinition(
-  ancestors: unknown[],
-  path: (string | number)[],
+function getTraverseMetadata(
+  operationDefinitions: Record<string, ExtractMinimalViableSchemaResult>,
+  fragmentDefinitions: Record<string, ExtractMinimalViableSchemaResult>,
 ) {
-  // It's one of the document's definitions
-  if (path[0] !== "definitions" || typeof path[1] !== "number") {
-    return null;
-  }
-  const documentDefinition: unknown = ancestors[0];
+  const fragmentSpreadMap: Record<string, string[]> = {};
+  const fragmentSpreadsUsed: Record<string, boolean> = {};
+  for (const [definitionName, { fragmentSpreads }] of Object.entries(
+    operationDefinitions,
+  )) {
+    fragmentSpreads.map((value) => {
+      fragmentSpreadMap[definitionName] ??= [];
 
-  if (!isDocument(documentDefinition)) {
-    return null;
-  }
-
-  const definitionNode = documentDefinition.definitions[path[1]];
-
-  if (
-    isOperationDefinitionNode(definitionNode) ||
-    isFragmentDefinitionNode(definitionNode)
-  ) {
-    return definitionNode;
+      fragmentSpreadMap[definitionName].push(value);
+      if (fragmentSpreadsUsed[value] === undefined) {
+        fragmentSpreadsUsed[value] = false;
+      }
+    });
   }
 
-  return null;
-}
-
-function getParentFieldDefinitionNode(
-  ancestors: unknown[],
-  path: (string | number)[],
-): FieldNode | null {
-  if (
-    typeof path[path.length - 1] !== "number" ||
-    path[path.length - 2] !== "selections" ||
-    path[path.length - 3] !== "selectionSet"
-  ) {
-    return null;
-  }
-
-  const parentAncestor = ancestors[ancestors.length - 2] as any;
-
-  if (!parentAncestor || parentAncestor?.kind !== "Field") {
-    return null;
-  }
-
-  return parentAncestor;
-}
-
-function isDocument(node: unknown): node is DocumentNode {
-  return (
-    typeof node === "object" &&
-    node !== null &&
-    "kind" in node &&
-    node.kind === "Document"
+  collectFragmentSpreads(
+    fragmentDefinitions,
+    fragmentSpreadMap,
+    fragmentSpreadsUsed,
   );
+
+  // Validation that everyFragment in spread visited its implementation
+  for (const [key, value] of Object.entries(fragmentSpreadsUsed)) {
+    if (!value) {
+      throw new Error(`Fragment "${key}" was not visited`);
+    }
+
+    if (!fragmentSpreadMap[key]) {
+      console.log(fragmentSpreadMap, fragmentSpreadsUsed);
+      throw new Error(`Something wrong during visit of fragment ${key}`);
+    }
+  }
+
+  return {
+    fragmentSpreadMap,
+  };
 }
 
-function isFragmentDefinitionNode(
-  definitionNode: unknown,
-): definitionNode is FragmentDefinitionNode {
-  return (
-    typeof definitionNode === "object" &&
-    definitionNode !== null &&
-    "kind" in definitionNode &&
-    definitionNode.kind === "FragmentDefinition"
-  );
-}
+function collectFragmentSpreads(
+  fragmentDefinitions: Record<string, ExtractMinimalViableSchemaResult>,
+  fragmentSpreadMap: Record<string, string[]>,
+  fragmentSpreadsUsed: Record<string, boolean>,
+) {
+  if (Object.values(fragmentSpreadsUsed).every(Boolean)) {
+    return;
+  }
 
-function isOperationDefinitionNode(
-  definitionNode: unknown,
-): definitionNode is OperationDefinitionNode {
-  return (
-    typeof definitionNode === "object" &&
-    definitionNode !== null &&
-    "kind" in definitionNode &&
-    definitionNode.kind === "OperationDefinition"
+  const localFragmentSpreads = new Set<string>();
+  for (const [key, value] of Object.entries(fragmentSpreadsUsed)) {
+    if (value) {
+      continue;
+    }
+
+    const definition = fragmentDefinitions[key];
+    fragmentSpreadsUsed[key] = true;
+    if (!definition.fragmentSpreads.length) {
+      fragmentSpreadMap[key] ??= [];
+    }
+
+    for (const fragmentSpread of definition.fragmentSpreads) {
+      localFragmentSpreads.add(fragmentSpread);
+
+      fragmentSpreadMap[key] ??= [];
+
+      fragmentSpreadMap[key].push(fragmentSpread);
+    }
+  }
+
+  if (!localFragmentSpreads.size) {
+    return;
+  }
+
+  for (const localFragmentSpread of localFragmentSpreads) {
+    if (typeof fragmentSpreadsUsed[localFragmentSpread] === "boolean") {
+      continue;
+    }
+
+    fragmentSpreadsUsed[localFragmentSpread] = false;
+  }
+
+  return collectFragmentSpreads(
+    fragmentDefinitions,
+    fragmentSpreadMap,
+    fragmentSpreadsUsed,
   );
 }
 
