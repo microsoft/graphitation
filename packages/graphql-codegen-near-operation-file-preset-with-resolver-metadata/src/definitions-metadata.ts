@@ -158,9 +158,14 @@ export function getDefinitionsMetadata(
       }
     }
 
+    const mergedDefinitions = mergeSchemaDefinitions({ types: {} }, [
+      ...Object.values(operationDefinitions).map((item) => item.definitions),
+      ...Object.values(usedFragmentDefinitions).map((item) => item.definitions),
+    ]);
+
     const resolverMetadata = getResolverMetadata(
       operationDefinitions,
-      usedFragmentDefinitions,
+      mergedDefinitions,
     );
     const output: DefinitionsMetadata = {};
 
@@ -172,10 +177,7 @@ export function getDefinitionsMetadata(
       output.resolverMetadata = resolverMetadata;
     }
 
-    output.schemaMetadata = mergeSchemaDefinitions({ types: {} }, [
-      ...Object.values(operationDefinitions).map((item) => item.definitions),
-      ...Object.values(usedFragmentDefinitions).map((item) => item.definitions),
-    ]);
+    output.schemaMetadata = mergedDefinitions;
 
     return output;
   }
@@ -194,7 +196,7 @@ const TypeKind = {
 
 function getResolverMetadata(
   operationDefinitions: Record<string, ExtractMinimalViableSchemaResult>,
-  fragmentDefinitions: Record<string, ExtractMinimalViableSchemaResult>,
+  mergedDefinitions: SchemaDefinitions,
 ) {
   const resolverMetadata: Record<string, string[]> = {};
 
@@ -214,59 +216,50 @@ function getResolverMetadata(
     }
   }
 
-  const convertDefinitionsToResolverMetadataFormat = (
-    inputDefinitions: Record<string, ExtractMinimalViableSchemaResult>,
-  ) => {
-    for (const [, { definitions }] of Object.entries(inputDefinitions)) {
-      for (const [type, [typeKind, fields, interfaces]] of Object.entries(
-        definitions.types,
-      )) {
-        if (typeKind === TypeKind.ENUM) {
-          continue;
-        }
-        if (typeKind === TypeKind.UNION) {
-          resolverMetadata[type] ??= [];
-          if (!resolverMetadata[type].includes("__resolveType")) {
-            resolverMetadata[type].push("__resolveType");
-          }
-          continue;
-        }
+  for (const [type, [typeKind, fields, interfaces]] of Object.entries(
+    mergedDefinitions.types,
+  )) {
+    if (typeKind === TypeKind.ENUM) {
+      continue;
+    }
+    if (typeKind === TypeKind.UNION) {
+      resolverMetadata[type] ??= [];
+      if (!resolverMetadata[type].includes("__resolveType")) {
+        resolverMetadata[type].push("__resolveType");
+      }
+      continue;
+    }
 
-        if (typeKind === TypeKind.INTERFACE) {
-          resolverMetadata[type] ??= [];
-          if (!resolverMetadata[type].includes("__resolveType")) {
-            resolverMetadata[type].push("__resolveType");
-          }
+    if (typeKind === TypeKind.INTERFACE) {
+      resolverMetadata[type] ??= [];
+      if (!resolverMetadata[type].includes("__resolveType")) {
+        resolverMetadata[type].push("__resolveType");
+      }
+      continue;
+    }
+
+    for (const field of Object.keys(fields ?? {})) {
+      resolverMetadata[type] ??= [];
+      if (!resolverMetadata[type].includes(field)) {
+        resolverMetadata[type].push(field);
+      }
+    }
+
+    if (interfaces?.length) {
+      for (const interfaceName of interfaces) {
+        const fields = interfaceFields[interfaceName];
+        if (!fields) {
           continue;
         }
-
-        for (const field of Object.keys(fields ?? {})) {
+        for (const field of fields) {
           resolverMetadata[type] ??= [];
           if (!resolverMetadata[type].includes(field)) {
             resolverMetadata[type].push(field);
           }
         }
-
-        if (interfaces?.length) {
-          for (const interfaceName of interfaces) {
-            const fields = interfaceFields[interfaceName];
-            if (!fields) {
-              continue;
-            }
-            for (const field of fields) {
-              resolverMetadata[type] ??= [];
-              if (!resolverMetadata[type].includes(field)) {
-                resolverMetadata[type].push(field);
-              }
-            }
-          }
-        }
       }
     }
-  };
-
-  convertDefinitionsToResolverMetadataFormat(operationDefinitions);
-  convertDefinitionsToResolverMetadataFormat(fragmentDefinitions);
+  }
 
   return resolverMetadata;
 }
