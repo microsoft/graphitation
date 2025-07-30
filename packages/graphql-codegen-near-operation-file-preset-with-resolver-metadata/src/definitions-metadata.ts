@@ -1,4 +1,4 @@
-import { buildASTSchema, DocumentNode, visit } from "graphql";
+import { buildASTSchema, DocumentNode } from "graphql";
 import { Types } from "@graphql-codegen/plugin-helpers";
 import {
   extractMinimalViableSchemaForRequestDocument,
@@ -41,50 +41,34 @@ export function getDefinitionsMetadata(
           continue;
         }
 
-        visit(document, {
-          FragmentDefinition() {
-            return false;
-          },
-          EnumTypeDefinition() {
-            return false;
-          },
-          InterfaceTypeDefinition() {
-            return false;
-          },
-          ObjectTypeDefinition() {
-            return false;
-          },
-          UnionTypeDefinition() {
-            return false;
-          },
-          Argument() {
-            return false;
-          },
-          OperationDefinition: (node) => {
-            node.selectionSet.selections.forEach((selection) => {
+        for (const definition of document.definitions) {
+          if (definition.kind === "OperationDefinition") {
+            definition.selectionSet.selections.forEach((selection) => {
               if (
                 selection.kind === "Field" &&
                 existsInSupportedResolvers(
                   supportedResolvers,
                   selection.name.value,
-                  node.operation,
+                  definition.operation,
                 )
               ) {
-                const { operation } = node;
+                const { operation } = definition;
                 if (!supportedOperations[operation]) {
                   supportedOperations[operation] = [];
                 }
 
                 if (
-                  node.name?.value &&
-                  !supportedOperations[operation].includes(node.name.value)
+                  definition.name?.value &&
+                  !supportedOperations[operation].includes(
+                    definition.name.value,
+                  )
                 ) {
-                  supportedOperations[operation].push(node.name?.value);
+                  supportedOperations[operation].push(definition.name?.value);
                 }
               }
             });
-          },
-        });
+          }
+        }
       }
     }
 
