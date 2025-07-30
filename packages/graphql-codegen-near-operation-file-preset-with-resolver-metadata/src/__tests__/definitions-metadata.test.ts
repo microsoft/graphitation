@@ -2,6 +2,7 @@ import { buildASTSchema, DocumentNode, parse } from "graphql";
 import { Source } from "@graphql-tools/utils";
 import { preset } from "../index";
 
+// eslint-disable-next-line no-var
 var mockWriteFileSync: jest.Mock;
 
 jest.mock("fs", () => {
