@@ -42,6 +42,24 @@ export function getDefinitionsMetadata(
         }
 
         visit(document, {
+          FragmentDefinition() {
+            return false;
+          },
+          EnumTypeDefinition() {
+            return false;
+          },
+          InterfaceTypeDefinition() {
+            return false;
+          },
+          ObjectTypeDefinition() {
+            return false;
+          },
+          UnionTypeDefinition() {
+            return false;
+          },
+          Argument() {
+            return false;
+          },
           OperationDefinition: (node) => {
             node.selectionSet.selections.forEach((selection) => {
               if (
