@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Wrapping near-operation-file preset and adding resolvers metadata",
+  "packageName": "@graphitation/graphql-codegen-near-operation-file-preset-with-resolver-metadata",
+  "email": "77059398+vejrj@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}
