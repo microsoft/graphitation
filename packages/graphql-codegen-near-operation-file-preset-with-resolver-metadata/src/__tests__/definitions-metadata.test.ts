@@ -205,6 +205,11 @@ describe("resolve-document-imports", () => {
           }
 
           fragment ChatMessageFragment on ChatMessageConnection {
+            ... on IConnection {
+              pageInfo {
+                startCursor
+              }
+            }
             edges {
               node {
                 id
@@ -244,7 +249,8 @@ describe("resolve-document-imports", () => {
             "test33"
           ],
           "ChatMessageConnection": [
-            "edges"
+            "edges",
+            "pageInfo"
           ],
           "ChatMessageEdge": [
             "node"
@@ -258,6 +264,12 @@ describe("resolve-document-imports", () => {
           "User": [
             "id",
             "username"
+          ],
+          "IConnection": [
+            "__resolveType"
+          ],
+          "PageInfo": [
+            "startCursor"
           ]
         }
       }"

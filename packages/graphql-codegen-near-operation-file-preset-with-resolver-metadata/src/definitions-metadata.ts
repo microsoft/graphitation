@@ -163,10 +163,7 @@ export function getDefinitionsMetadata(
       ...Object.values(usedFragmentDefinitions).map((item) => item.definitions),
     ]);
 
-    const resolverMetadata = getResolverMetadata(
-      operationDefinitions,
-      mergedDefinitions,
-    );
+    const resolverMetadata = getResolverMetadata(mergedDefinitions);
     const output: DefinitionsMetadata = {};
 
     if (Object.keys(supportedOperations).length) {
@@ -194,23 +191,18 @@ const TypeKind = {
   INPUT: 6,
 } as const;
 
-function getResolverMetadata(
-  operationDefinitions: Record<string, ExtractMinimalViableSchemaResult>,
-  mergedDefinitions: SchemaDefinitions,
-) {
+function getResolverMetadata(mergedDefinitions: SchemaDefinitions) {
   const resolverMetadata: Record<string, string[]> = {};
 
   const interfaceFields: Record<string, string[]> = {};
-  for (const [, { definitions }] of Object.entries(operationDefinitions)) {
-    for (const [type, [typeKind, fields]] of Object.entries(
-      definitions.types,
-    )) {
-      if (typeKind === TypeKind.INTERFACE) {
-        for (const field of Object.keys(fields ?? {})) {
-          interfaceFields[type] ??= [];
-          if (!interfaceFields[type].includes(field)) {
-            interfaceFields[type].push(field);
-          }
+  for (const [type, [typeKind, fields]] of Object.entries(
+    mergedDefinitions.types,
+  )) {
+    if (typeKind === TypeKind.INTERFACE) {
+      for (const field of Object.keys(fields ?? {})) {
+        interfaceFields[type] ??= [];
+        if (!interfaceFields[type].includes(field)) {
+          interfaceFields[type].push(field);
         }
       }
     }
