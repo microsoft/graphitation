@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Forking GraphQL codegen near-operation-preset and adding resolver metadata",
+  "packageName": "@graphitation/graphql-codegen-near-operation-file-preset",
+  "email": "77059398+vejrj@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}
