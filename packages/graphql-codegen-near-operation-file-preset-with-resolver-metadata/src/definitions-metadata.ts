@@ -1,4 +1,4 @@
-import { buildASTSchema, visit } from "graphql";
+import { buildASTSchema, DocumentNode, visit } from "graphql";
 import { Types } from "@graphql-codegen/plugin-helpers";
 import {
   extractMinimalViableSchemaForRequestDocument,
@@ -7,7 +7,6 @@ import {
   type ExtractMinimalViableSchemaResult,
 } from "@graphitation/supermassive";
 import { NearOperationFileConfig, SupportedResolvers } from ".";
-import { ResolveDocumentImportResult } from "./resolve-document-imports";
 
 export type ResolversPerOperation = {
   [key: string]: {
@@ -23,7 +22,7 @@ export type DefinitionsMetadata = {
 };
 
 export function getDefinitionsMetadata(
-  sources: ResolveDocumentImportResult[],
+  documents: DocumentNode[],
   options: Types.PresetFnArgs<NearOperationFileConfig>,
 ) {
   const {
@@ -37,39 +36,37 @@ export function getDefinitionsMetadata(
       configSupportedOperations || {};
 
     if (!Object.keys(supportedOperations).length && supportedResolvers) {
-      for (const source of sources) {
-        for (const document of source.documents) {
-          if (!document.document) {
-            continue;
-          }
-
-          visit(document.document, {
-            OperationDefinition: (node) => {
-              node.selectionSet.selections.forEach((selection) => {
-                if (
-                  selection.kind === "Field" &&
-                  existsInSupportedResolvers(
-                    supportedResolvers,
-                    selection.name.value,
-                    node.operation,
-                  )
-                ) {
-                  const { operation } = node;
-                  if (!supportedOperations[operation]) {
-                    supportedOperations[operation] = [];
-                  }
-
-                  if (
-                    node.name?.value &&
-                    !supportedOperations[operation].includes(node.name.value)
-                  ) {
-                    supportedOperations[operation].push(node.name?.value);
-                  }
-                }
-              });
-            },
-          });
+      for (const document of documents) {
+        if (!document) {
+          continue;
         }
+
+        visit(document, {
+          OperationDefinition: (node) => {
+            node.selectionSet.selections.forEach((selection) => {
+              if (
+                selection.kind === "Field" &&
+                existsInSupportedResolvers(
+                  supportedResolvers,
+                  selection.name.value,
+                  node.operation,
+                )
+              ) {
+                const { operation } = node;
+                if (!supportedOperations[operation]) {
+                  supportedOperations[operation] = [];
+                }
+
+                if (
+                  node.name?.value &&
+                  !supportedOperations[operation].includes(node.name.value)
+                ) {
+                  supportedOperations[operation].push(node.name?.value);
+                }
+              }
+            });
+          },
+        });
       }
     }
 
@@ -82,46 +79,44 @@ export function getDefinitionsMetadata(
       ExtractMinimalViableSchemaResult
     > = {};
 
-    for (const source of sources) {
-      for (const document of source.documents) {
-        if (!document.document) {
-          continue;
-        }
+    for (const document of documents) {
+      if (!document) {
+        continue;
+      }
 
-        for (const definition of document.document.definitions) {
-          switch (definition.kind) {
-            case "OperationDefinition": {
-              if (!definition.name) {
-                throw Error("Operation should have a name");
-              }
+      for (const definition of document.definitions) {
+        switch (definition.kind) {
+          case "OperationDefinition": {
+            if (!definition.name) {
+              throw Error("Operation should have a name");
+            }
 
-              if (
-                !supportedOperations[definition.operation]?.includes(
-                  definition.name.value,
-                )
-              ) {
-                break;
-              }
-
-              operationDefinitions[definition.name.value] =
-                extractMinimalViableSchemaForRequestDocument(schema, {
-                  kind: "Document",
-                  definitions: [definition],
-                });
+            if (
+              !supportedOperations[definition.operation]?.includes(
+                definition.name.value,
+              )
+            ) {
               break;
             }
-            case "FragmentDefinition": {
-              fragmentDefinitions[definition.name.value] =
-                extractMinimalViableSchemaForRequestDocument(schema, {
-                  kind: "Document",
-                  definitions: [definition],
-                });
 
-              break;
-            }
-            default: {
-              break;
-            }
+            operationDefinitions[definition.name.value] =
+              extractMinimalViableSchemaForRequestDocument(schema, {
+                kind: "Document",
+                definitions: [definition],
+              });
+            break;
+          }
+          case "FragmentDefinition": {
+            fragmentDefinitions[definition.name.value] =
+              extractMinimalViableSchemaForRequestDocument(schema, {
+                kind: "Document",
+                definitions: [definition],
+              });
+
+            break;
+          }
+          default: {
+            break;
           }
         }
       }

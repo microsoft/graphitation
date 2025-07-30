@@ -1,15 +1,10 @@
-import { Types, CodegenPlugin } from "@graphql-codegen/plugin-helpers";
-import addPlugin from "@graphql-codegen/add";
-import path, { join } from "path";
-import { FragmentDefinitionNode, buildASTSchema, GraphQLSchema } from "graphql";
-import { appendExtensionToFilePath, defineFilepathSubfolder } from "./utils";
-import {
-  resolveDocumentImports,
-  DocumentImportResolverOptions,
-} from "./resolve-document-imports";
+import { Types } from "@graphql-codegen/plugin-helpers";
+import { preset as nearOperationPreset } from "@graphql-codegen/near-operation-file-preset";
+import path from "path";
+import { Source } from "@graphql-tools/utils";
+import { DocumentNode } from "graphql";
 import {
   FragmentImport,
-  ImportDeclaration,
   ImportSource,
 } from "@graphql-codegen/visitor-plugin-common";
 import {
@@ -19,7 +14,6 @@ import {
 import { writeFileSync } from "fs";
 
 export type { DefinitionsMetadata } from "./definitions-metadata";
-export { resolveDocumentImports, DocumentImportResolverOptions };
 
 export type FragmentImportFromFn = (
   source: ImportSource<FragmentImport>,
@@ -146,28 +140,8 @@ export type SupportedResolvers = {
   };
 };
 
-export type FragmentNameToFile = {
-  [fragmentName: string]: {
-    location: string;
-    importsNames: string[];
-    onType: string;
-    node: FragmentDefinitionNode;
-  };
-};
-
 export const preset: Types.OutputPreset<NearOperationFileConfig> = {
   buildGeneratesSection: (options) => {
-    const schemaObject: GraphQLSchema = options.schemaAst
-      ? options.schemaAst
-      : buildASTSchema(options.schema, options.config as any);
-    const baseDir = options.presetConfig.cwd || process.cwd();
-    const extension = options.presetConfig.extension || ".generated.ts";
-    const folder = options.presetConfig.folder || "";
-    const importTypesNamespace =
-      options.presetConfig.importTypesNamespace || "Types";
-    const importAllFragmentsFrom: FragmentImportFromFn | string | null =
-      options.presetConfig.importAllFragmentsFrom || null;
-
     const baseTypesPath = options.presetConfig.baseTypesPath;
 
     if (!baseTypesPath) {
@@ -176,30 +150,23 @@ export const preset: Types.OutputPreset<NearOperationFileConfig> = {
       );
     }
 
-    const shouldAbsolute = !baseTypesPath.startsWith("~");
+    const documents: DocumentNode[] = options.documents.map(
+      (documentFile: Source) => {
+        if (
+          !documentFile.document ||
+          !documentFile.document.definitions ||
+          !documentFile.location
+        ) {
+          throw new Error(
+            `Document "${documentFile.location}" does not contain any definitions or location!`,
+          );
+        }
 
-    const pluginMap: { [name: string]: CodegenPlugin } = {
-      ...options.pluginMap,
-      add: addPlugin,
-    };
-
-    const sources = resolveDocumentImports(options, schemaObject, {
-      baseDir,
-      generateFilePath(location: string) {
-        const newFilePath = defineFilepathSubfolder(location, folder);
-
-        return appendExtensionToFilePath(newFilePath, extension);
+        return documentFile.document;
       },
-      schemaTypesSource: {
-        path: shouldAbsolute
-          ? join(options.baseOutputDir, baseTypesPath)
-          : baseTypesPath,
-        namespace: importTypesNamespace,
-      },
-      typesImport: options.config.useTypeImports ?? false,
-    });
+    );
 
-    const resolverMetadata = getDefinitionsMetadata(sources, options);
+    const resolverMetadata = getDefinitionsMetadata(documents, options);
     if (
       resolverMetadata &&
       options.presetConfig.usedResolversMetadataDirectoryPath
@@ -221,56 +188,7 @@ export const preset: Types.OutputPreset<NearOperationFileConfig> = {
       );
     }
 
-    return sources.map<Types.GenerateOptions>(
-      ({ importStatements, externalFragments, fragmentImports, ...source }) => {
-        let fragmentImportsArr = fragmentImports;
-
-        if (importAllFragmentsFrom) {
-          fragmentImportsArr = fragmentImports.map<
-            ImportDeclaration<FragmentImport>
-          >((t) => {
-            const newImportSource: ImportSource<FragmentImport> =
-              typeof importAllFragmentsFrom === "string"
-                ? { ...t.importSource, path: importAllFragmentsFrom }
-                : importAllFragmentsFrom(t.importSource, source.filename);
-
-            return {
-              ...t,
-              importSource: newImportSource || t.importSource,
-            };
-          });
-        }
-
-        const plugins = [
-          // TODO/NOTE I made globalNamespace include schema types - is that correct?
-          ...(options.config.globalNamespace
-            ? []
-            : importStatements.map((importStatement) => ({
-                add: { content: importStatement },
-              }))),
-          ...options.plugins,
-        ];
-        const config = {
-          ...options.config,
-          // This is set here in order to make sure the fragment spreads sub types
-          // are exported from operations file
-          exportFragmentSpreadSubTypes: true,
-          namespacedImportName: importTypesNamespace,
-          externalFragments,
-          fragmentImports: fragmentImportsArr,
-        };
-
-        return {
-          ...source,
-          plugins,
-          pluginMap,
-          config,
-          schema: options.schema,
-          schemaAst: schemaObject,
-          skipDocumentsValidation: true,
-        };
-      },
-    );
+    return nearOperationPreset.buildGeneratesSection(options);
   },
 };
 
