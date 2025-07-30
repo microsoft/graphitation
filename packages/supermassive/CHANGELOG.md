@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Thu, 29 May 2025 15:22:30 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 30 Jul 2025 14:39:20 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.11.7
+
+Wed, 30 Jul 2025 14:39:20 GMT
+
+### Patches
+
+- FragmentSpread is added into extractMinimalViableSchemaForRequestDocument (77059398+vejrj@users.noreply.github.com)
 
 ## 3.11.0
 

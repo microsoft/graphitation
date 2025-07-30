@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Wed, 30 Jul 2025 14:39:20 GMT",
+      "version": "3.11.7",
+      "tag": "@graphitation/supermassive_v3.11.7",
+      "comments": {
+        "patch": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/supermassive",
+            "commit": "561d8e4ca9100fb1e5355671e44fa19d7f48c32d",
+            "comment": "FragmentSpread is added into extractMinimalViableSchemaForRequestDocument"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 29 May 2025 15:22:30 GMT",
       "version": "3.11.0",
       "tag": "@graphitation/supermassive_v3.11.0",
