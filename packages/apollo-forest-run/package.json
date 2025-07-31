@@ -21,9 +21,7 @@
   },
   "devDependencies": {
     "@types/jest": "^26.0.22",
-    "@types/benchmark": "^2.1.0",
     "@apollo/client": ">= ^3.3.0 < 3.7.0",
-    "benchmark": "^2.1.4",
     "graphql": "^15.0.0",
     "lodash": "^4.17.21",
     "monorepo-scripts": "*",
