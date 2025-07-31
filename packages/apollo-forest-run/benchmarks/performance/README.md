@@ -42,10 +42,61 @@ The `queries/` directory contains GraphQL queries of varying complexity:
 - **complex-query.graphql**: User query with nested posts, comments, and profile data
 - **nested-query.graphql**: Organization query with deeply nested teams, members, and projects
 
-You can easily add new queries by:
-1. Adding a `.graphql` file to the `queries/` directory
-2. Updating the `queries` section in `config.json`
-3. Optionally updating the test data generator in `index.js` for custom data structures
+### Adding New Queries
+
+The benchmark system uses **dynamic mock data generation** that automatically analyzes GraphQL query structure and generates appropriate test data. This means you can easily add new queries without hardcoding response structures:
+
+1. **Add a GraphQL file**: Create a new `.graphql` file in the `queries/` directory
+2. **Update config**: Add the query to the `queries` section in `config.json`
+3. **Run benchmark**: The system automatically generates mock data that matches your query structure
+
+**Example**: To add a product query:
+
+```graphql
+# queries/product-query.graphql
+query ProductQuery($id: ID!) {
+  node(id: $id) {
+    id
+    __typename
+    ... on Product {
+      name
+      price
+      category {
+        id
+        name
+      }
+      reviews {
+        id
+        rating
+        comment
+        author {
+          id
+          name
+        }
+      }
+    }
+  }
+}
+```
+
+```json
+// config.json
+{
+  "queries": {
+    "simple": "simple-query.graphql",
+    "complex": "complex-query.graphql", 
+    "nested": "nested-query.graphql",
+    "product": "product-query.graphql"  // Add your new query
+  }
+}
+```
+
+The mock data generator will automatically:
+- Parse the GraphQL query structure
+- Generate appropriate field values based on field names and types
+- Create realistic test data (products, prices, reviews, etc.)
+- Handle arrays, nested objects, and fragments
+- Ensure consistent data across test runs
 
 ## Running Benchmarks
 
@@ -108,9 +159,14 @@ Generally:
 
 To add a new query type:
 
-1. Create a new `.graphql` file in `queries/`
-2. Add it to `config.json` queries section
-3. Update the `createTestData()` function in `index.js` to generate appropriate test data for your query structure
-4. Run the benchmark to see results
+1. **Create GraphQL file**: Add a new `.graphql` file in the `queries/` directory
+2. **Update configuration**: Add it to the `queries` section in `config.json`  
+3. **Run benchmark**: The dynamic mock data generator automatically handles the new query
 
-The system automatically handles the new query type and generates comparison results.
+**No manual data generation needed!** The system automatically:
+- Analyzes your GraphQL query structure
+- Generates realistic mock data that matches field names and types
+- Handles complex nested structures, arrays, and fragments
+- Creates consistent test data for reliable benchmarking
+
+This makes adding new benchmark scenarios as simple as writing a GraphQL query.

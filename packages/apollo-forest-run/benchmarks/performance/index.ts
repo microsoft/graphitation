@@ -3,6 +3,7 @@ import * as path from "path";
 import { gql, InMemoryCache } from "@apollo/client";
 import { ForestRun } from "../../src/ForestRun";
 import NiceBenchmark, { BenchmarkSuiteResult } from "./nice-benchmark";
+import { generateQueryMockData } from "./mock-data-generator";
 
 interface BenchmarkConfig {
   iterations: number;
@@ -32,13 +33,15 @@ interface BenchmarkReport {
 const configPath = path.join(__dirname, "config.json");
 const config: BenchmarkConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
 
-// Load queries
+// Load queries and prepare mock data generators
 const queries: Record<string, any> = {};
+const queryStrings: Record<string, string> = {};
 const queriesDir = path.join(__dirname, "queries");
 
 Object.entries(config.queries).forEach(([key, filename]) => {
   const queryPath = path.join(queriesDir, filename);
   const queryString = fs.readFileSync(queryPath, "utf-8");
+  queryStrings[key] = queryString;
   queries[key] = gql(queryString);
 });
 
@@ -56,157 +59,31 @@ function createInMemoryCache() {
   });
 }
 
-// Generate test data
-function generateRandomString(length: number): string {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
-
+// Generate test data dynamically based on GraphQL query structure
 function createTestData(queryKey: string, iteration: number) {
-  const baseId = `${queryKey}_${iteration}_${generateRandomString(8)}`;
+  const queryString = queryStrings[queryKey];
   
-  switch (queryKey) {
-    case "simple":
-      return {
-        variables: { id: baseId },
-        result: {
-          __typename: "Query",
-          node: {
-            __typename: "Node",
-            id: baseId,
-          },
-        },
-      };
-    
-    case "complex":
-      return {
-        variables: { 
-          id: baseId, 
-          filter: "recent", 
-          first: 10 
-        },
-        result: {
-          __typename: "Query",
-          node: {
-            __typename: "User",
-            id: baseId,
-            name: `User ${iteration}`,
-            email: `user${iteration}@example.com`,
-            profile: {
-              __typename: "Profile",
-              avatar: `avatar_${iteration}.jpg`,
-              bio: `Bio for user ${iteration}`,
-              lastSeen: new Date().toISOString(),
-            },
-            posts: {
-              __typename: "PostConnection",
-              edges: Array.from({ length: 3 }, (_, i) => ({
-                __typename: "PostEdge",
-                node: {
-                  __typename: "Post",
-                  id: `post_${baseId}_${i}`,
-                  title: `Post ${i} by User ${iteration}`,
-                  content: `Content for post ${i}`,
-                  createdAt: new Date().toISOString(),
-                  author: {
-                    __typename: "User",
-                    id: baseId,
-                    name: `User ${iteration}`,
-                  },
-                  comments: Array.from({ length: 2 }, (_, j) => ({
-                    __typename: "Comment",
-                    id: `comment_${baseId}_${i}_${j}`,
-                    text: `Comment ${j} on post ${i}`,
-                    author: {
-                      __typename: "User",
-                      id: `commenter_${baseId}_${j}`,
-                      name: `Commenter ${j}`,
-                    },
-                  })),
-                },
-              })),
-            },
-          },
-        },
-      };
-    
-    case "nested":
-      return {
-        variables: { id: baseId },
-        result: {
-          __typename: "Query",
-          node: {
-            __typename: "Organization",
-            id: baseId,
-            name: `Organization ${iteration}`,
-            description: `Description for org ${iteration}`,
-            teams: Array.from({ length: 2 }, (_, teamIdx) => ({
-              __typename: "Team",
-              id: `team_${baseId}_${teamIdx}`,
-              name: `Team ${teamIdx}`,
-              members: Array.from({ length: 3 }, (_, memberIdx) => ({
-                __typename: "TeamMember",
-                id: `member_${baseId}_${teamIdx}_${memberIdx}`,
-                name: `Member ${memberIdx}`,
-                role: "Developer",
-                user: {
-                  __typename: "User",
-                  id: `user_${baseId}_${teamIdx}_${memberIdx}`,
-                  email: `member${memberIdx}@team${teamIdx}.com`,
-                  profile: {
-                    __typename: "Profile",
-                    avatar: `member_${memberIdx}.jpg`,
-                    bio: `Member ${memberIdx} bio`,
-                  },
-                  permissions: Array.from({ length: 2 }, (_, permIdx) => ({
-                    __typename: "Permission",
-                    id: `perm_${baseId}_${teamIdx}_${memberIdx}_${permIdx}`,
-                    name: `permission_${permIdx}`,
-                    scope: "read",
-                    resource: {
-                      __typename: "Resource",
-                      id: `resource_${baseId}_${permIdx}`,
-                      type: "project",
-                      name: `Resource ${permIdx}`,
-                    },
-                  })),
-                },
-              })),
-              projects: Array.from({ length: 2 }, (_, projIdx) => ({
-                __typename: "Project",
-                id: `project_${baseId}_${teamIdx}_${projIdx}`,
-                name: `Project ${projIdx}`,
-                status: "active",
-                tasks: Array.from({ length: 3 }, (_, taskIdx) => ({
-                  __typename: "Task",
-                  id: `task_${baseId}_${teamIdx}_${projIdx}_${taskIdx}`,
-                  title: `Task ${taskIdx}`,
-                  status: "todo",
-                  assignee: {
-                    __typename: "User",
-                    id: `user_${baseId}_${teamIdx}_0`,
-                    name: "Member 0",
-                  },
-                  dependencies: Array.from({ length: 1 }, (_, depIdx) => ({
-                    __typename: "Task",
-                    id: `dep_${baseId}_${teamIdx}_${projIdx}_${taskIdx}_${depIdx}`,
-                    title: `Dependency ${depIdx}`,
-                    status: "done",
-                  })),
-                })),
-              })),
-            })),
-          },
-        },
-      };
-    
-    default:
-      throw new Error(`Unknown query key: ${queryKey}`);
+  if (!queryString) {
+    throw new Error(`Query not found: ${queryKey}`);
   }
+
+  // Generate unique variables for this iteration
+  const baseVariables: Record<string, any> = {};
+  
+  // Add iteration-specific uniqueness to ID variables
+  const iterationId = `${queryKey}_${iteration}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  // Generate mock data using the dynamic generator
+  const { variables, result } = generateQueryMockData(queryString, { 
+    id: iterationId,
+    ...baseVariables 
+  }, {
+    seed: iteration, // Use iteration as seed for deterministic but varied data
+    arrayLength: 3,
+    stringLength: 10,
+  });
+
+  return { variables, result };
 }
 
 // Benchmark operations
