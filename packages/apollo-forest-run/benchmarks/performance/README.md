@@ -13,7 +13,7 @@ The benchmark system measures seven types of cache operations across various sce
 - **Cache Hit Operations**: Reading exact cached data matches
 - **Multiple Observers**: Performance when multiple observers read the same cached data
 
-Each operation is tested against different query complexities with **high statistical confidence** (typically <5% margin of error).
+Each operation is tested against different query complexities with **configurable statistical confidence** (typically <5% margin of error).
 
 ## ⚡ High-Confidence Statistical Measurements
 
@@ -26,23 +26,29 @@ The benchmark system is designed for **maximum statistical reliability**:
 - **Outlier filtering**: IQR-based outlier removal for stable results
 - **Up to 1000 samples** for complex scenarios requiring high precision
 
-### 📊 Statistical Accuracy
-- **Margin of error typically <5%** (vs common 10%+ in other tools)
-- **95% confidence intervals** with robust standard error calculation
-- **Real-time confidence reporting** showing actual confidence levels achieved
-- **Millisecond precision timing** using `process.hrtime.bigint()`
+### 📊 Configurable Statistical Accuracy
+- **Configurable confidence levels**: Set via command line or config file
+- **Appropriate z-scores**: Automatically calculated for your confidence level
+- **Real-time confidence reporting**: Shows actual confidence levels achieved
+- **Millisecond precision timing**: Using `process.hrtime.bigint()`
+
+**Confidence Level Options:**
+- **90% confidence** → z = 1.645 (faster benchmarks, lower precision)
+- **95% confidence** → z = 1.96 (default, balanced precision/speed)
+- **99% confidence** → z = 2.576 (high precision, longer benchmarks)
+- **99.9% confidence** → z = 3.291 (maximum precision, longest benchmarks)
 
 ### 📈 Example Output
 ```
 === user-profile - Write Operations ===
   Warming up ForestRun Write...
   Measuring ForestRun Write...
-ForestRun Write: 0.845ms ±2.31% (387 runs sampled, 97.7% confidence)
+ForestRun Write: 0.845ms ±2.31% (387 runs sampled, 95% confidence)
 
 === user-profile - Cache Hit Operations ===  
   Warming up ForestRun Cache Hit...
   Measuring ForestRun Cache Hit...
-ForestRun Cache Hit: 0.198ms ±1.84% (456 runs sampled, 98.2% confidence)
+ForestRun Cache Hit: 0.198ms ±1.84% (456 runs sampled, 95% confidence)
 ```
 
 ## Configuration
@@ -54,6 +60,7 @@ The benchmark behavior is controlled by `config.json`:
   "iterations": 3,                 // Number of benchmark iterations  
   "operationsPerIteration": 50,    // Cache operations per test iteration
   "maxOperationCount": 100,        // Max operations for ForestRun cache
+  "confidenceLevel": 95,           // Statistical confidence level (90, 95, 99, 99.9)
   "queries": {                     // Queries to test
     "simple": "simple-query.graphql",
     "user-profile": "user-profile.graphql", 
@@ -128,12 +135,46 @@ The system automatically generates appropriate mock data that matches the query 
 ### Local Development
 
 ```bash
-# Run benchmarks with high confidence measurements
+# Run benchmarks with default 95% confidence
 yarn benchmark
+
+# Run benchmarks with 99% confidence (higher precision, takes longer)
+yarn benchmark --confidence 99
+
+# Run benchmarks with 90% confidence (faster, lower precision)  
+yarn benchmark --confidence 90
+
+# Show help with all options
+yarn benchmark --help
 
 # Run memory benchmarks (existing)
 yarn benchmark:memory
 ```
+
+### Command Line Options
+
+The benchmark system supports configurable confidence levels:
+
+```bash
+# Using yarn (recommended)
+yarn benchmark --confidence 99     # 99% confidence level
+yarn benchmark -c 90               # 90% confidence level (shorthand)
+yarn benchmark --help              # Show help
+
+# Direct script execution
+./benchmarks/performance/benchmark-wrapper.sh --confidence 99
+./benchmarks/performance/benchmark-wrapper.sh -c 90  
+./benchmarks/performance/benchmark-wrapper.sh --help
+```
+
+**Confidence Level Trade-offs:**
+
+| Level | Z-Score | Precision | Speed | Use Case |
+|-------|---------|-----------|-------|----------|
+| 90%   | 1.645   | Good      | Fast  | Quick testing, development |
+| 95%   | 1.96    | High      | Medium| Production benchmarks (default) |
+| 99%   | 2.576   | Very High | Slow  | Critical performance analysis |
+| 99.9% | 3.291   | Maximum   | Slowest | Research, publication-quality results |
 
 ### GitHub Actions
 

@@ -8,6 +8,7 @@ export interface BenchmarkResult {
   min: number; // Minimum execution time in milliseconds
   max: number; // Maximum execution time in milliseconds
   variance: number;
+  confidenceLevel: number; // Target confidence level used
 }
 
 export interface BenchmarkSuiteResult {
@@ -24,17 +25,54 @@ interface BenchmarkFunction {
   fn: () => Promise<void> | void;
 }
 
+interface BenchmarkOptions {
+  confidenceLevel?: number; // Target confidence level (e.g., 95 for 95% confidence)
+}
+
 export default class NiceBenchmark {
   private name: string;
   private benchmarks: BenchmarkFunction[] = [];
   private results: BenchmarkResult[] = [];
+  private confidenceLevel: number = 95; // Default 95% confidence
 
-  constructor(name: string) {
+  constructor(name: string, options?: BenchmarkOptions) {
     this.name = name;
+    if (options?.confidenceLevel) {
+      this.confidenceLevel = options.confidenceLevel;
+    }
   }
 
   add(name: string, fn: () => Promise<void> | void) {
     this.benchmarks.push({ name, fn });
+  }
+
+  // Calculate z-score for given confidence level
+  private getZScore(confidenceLevel: number): number {
+    // Convert confidence level to alpha (significance level)
+    const alpha = (100 - confidenceLevel) / 100;
+    const alphaHalf = alpha / 2;
+    
+    // Common confidence levels and their z-scores
+    const zScores: Record<number, number> = {
+      90: 1.645,
+      95: 1.96,
+      99: 2.576,
+      99.9: 3.291
+    };
+    
+    // Return exact match if available
+    if (zScores[confidenceLevel]) {
+      return zScores[confidenceLevel];
+    }
+    
+    // For other confidence levels, use approximation
+    // This is a simplified inverse normal approximation
+    if (confidenceLevel >= 99.9) return 3.291;
+    if (confidenceLevel >= 99) return 2.576;
+    if (confidenceLevel >= 95) return 1.96;
+    if (confidenceLevel >= 90) return 1.645;
+    if (confidenceLevel >= 80) return 1.282;
+    return 1.645; // Default to 90% for lower confidence levels
   }
 
   private async measureFunction(name: string, fn: () => Promise<void> | void, minSamples = 200, minTime = 10000): Promise<BenchmarkResult> {
@@ -83,9 +121,11 @@ export default class NiceBenchmark {
     const standardDeviation = Math.sqrt(variance);
     const standardError = standardDeviation / Math.sqrt(usedSamples.length);
     
-    // Relative margin of error as percentage (using 95% confidence interval)
-    // With more samples, this should be much lower
-    const rme = (standardError / mean) * 100 * 1.96;
+    // Get z-score for the specified confidence level
+    const zScore = this.getZScore(this.confidenceLevel);
+    
+    // Relative margin of error as percentage using specified confidence level
+    const rme = (standardError / mean) * 100 * zScore;
     
     // Min and max times from used samples
     const min = Math.min(...usedSamples);
@@ -99,6 +139,7 @@ export default class NiceBenchmark {
       min,
       max,
       variance,
+      confidenceLevel: this.confidenceLevel,
     };
   }
 
@@ -110,11 +151,10 @@ export default class NiceBenchmark {
       const result = await this.measureFunction(benchmark.name, benchmark.fn);
       this.results.push(result);
       
-      // Format output to show timing with improved confidence
+      // Format output to show timing with specified confidence level
       const meanTime = result.mean.toFixed(3);
       const marginOfError = result.rme.toFixed(2);
-      const confidenceLevel = 100 - result.rme;
-      console.log(`${result.name}: ${meanTime}ms ±${marginOfError}% (${result.samples} runs sampled, ${confidenceLevel.toFixed(1)}% confidence)`);
+      console.log(`${result.name}: ${meanTime}ms ±${marginOfError}% (${result.samples} runs sampled, ${result.confidenceLevel}% confidence)`);
     }
 
     // Find fastest and slowest (by mean time - lower is faster)

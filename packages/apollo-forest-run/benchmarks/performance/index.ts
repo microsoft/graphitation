@@ -9,6 +9,7 @@ interface BenchmarkConfig {
   iterations: number;
   operationsPerIteration: number;
   maxOperationCount: number;
+  confidenceLevel: number;
   queries: Record<string, string>;
 }
 
@@ -33,12 +34,45 @@ interface BenchmarkReport {
 const configPath = path.join(__dirname, "config.json");
 const config: BenchmarkConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
 
+// Parse command line arguments for confidence level override
+function parseCommandLineArgs(): { confidenceLevel?: number } {
+  const args = process.argv.slice(2);
+  const result: { confidenceLevel?: number } = {};
+  
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '--confidence' || arg === '-c') {
+      const nextArg = args[i + 1];
+      if (nextArg && !isNaN(Number(nextArg))) {
+        const confidence = Number(nextArg);
+        if (confidence > 0 && confidence < 100) {
+          result.confidenceLevel = confidence;
+          i++; // Skip the next argument as it's the confidence value
+        } else {
+          console.warn(`Warning: Invalid confidence level ${confidence}. Must be between 0 and 100.`);
+        }
+      } else {
+        console.warn('Warning: --confidence requires a numeric value');
+      }
+    }
+  }
+  
+  return result;
+}
+
+// Override config with command line arguments
+const cliArgs = parseCommandLineArgs();
+const finalConfig: BenchmarkConfig = {
+  ...config,
+  confidenceLevel: cliArgs.confidenceLevel ?? config.confidenceLevel
+};
+
 // Load queries
 const queries: Record<string, any> = {};
 const queryStrings: Record<string, string> = {};
 const queriesDir = path.join(__dirname, "queries");
 
-Object.entries(config.queries).forEach(([key, filename]) => {
+Object.entries(finalConfig.queries).forEach(([key, filename]) => {
   const queryPath = path.join(queriesDir, filename);
   const queryString = fs.readFileSync(queryPath, "utf-8");
   queryStrings[key] = queryString;
@@ -48,7 +82,7 @@ Object.entries(config.queries).forEach(([key, filename]) => {
 // Create ForestRun cache instance
 function createCache() {
   return new ForestRun({ 
-    maxOperationCount: config.maxOperationCount,
+    maxOperationCount: finalConfig.maxOperationCount,
     resultCacheMaxSize: 0 
   });
 }
@@ -65,13 +99,15 @@ function createTestData(queryKey: string, iteration: number) {
 
 // Benchmark write operations
 async function benchmarkWrites(queryKey: string): Promise<BenchmarkSuiteResult> {
-  const suite = new NiceBenchmark(`${queryKey} - Write Operations`);
+  const suite = new NiceBenchmark(`${queryKey} - Write Operations`, { 
+    confidenceLevel: finalConfig.confidenceLevel 
+  });
   
   suite.add("ForestRun Write", async () => {
     const cache = createCache();
     const query = queries[queryKey];
     
-    for (let i = 0; i < config.operationsPerIteration; i++) {
+    for (let i = 0; i < finalConfig.operationsPerIteration; i++) {
       const { variables, result } = createTestData(queryKey, i);
       cache.writeQuery({ query, variables, data: result });
     }
@@ -82,13 +118,15 @@ async function benchmarkWrites(queryKey: string): Promise<BenchmarkSuiteResult> 
 
 // Benchmark read operations
 async function benchmarkReads(queryKey: string): Promise<BenchmarkSuiteResult> {
-  const suite = new NiceBenchmark(`${queryKey} - Read Operations`);
+  const suite = new NiceBenchmark(`${queryKey} - Read Operations`, { 
+    confidenceLevel: finalConfig.confidenceLevel 
+  });
   
   // Pre-populate cache
   const cache = createCache();
   const query = queries[queryKey];
   
-  const testData = Array.from({ length: config.operationsPerIteration }, (_, i) => 
+  const testData = Array.from({ length: finalConfig.operationsPerIteration }, (_, i) => 
     createTestData(queryKey, i)
   );
   
@@ -108,13 +146,15 @@ async function benchmarkReads(queryKey: string): Promise<BenchmarkSuiteResult> {
 
 // Benchmark empty cache read operations (cache misses)
 async function benchmarkEmptyReads(queryKey: string): Promise<BenchmarkSuiteResult> {
-  const suite = new NiceBenchmark(`${queryKey} - Empty Cache Reads (Cache Miss)`);
+  const suite = new NiceBenchmark(`${queryKey} - Empty Cache Reads (Cache Miss)`, { 
+    confidenceLevel: finalConfig.confidenceLevel 
+  });
   
   suite.add("ForestRun Empty Read", async () => {
     const cache = createCache();
     const query = queries[queryKey];
     
-    for (let i = 0; i < config.operationsPerIteration; i++) {
+    for (let i = 0; i < finalConfig.operationsPerIteration; i++) {
       const { variables } = createTestData(queryKey, i);
       try {
         cache.readQuery({ query, variables });
@@ -129,7 +169,9 @@ async function benchmarkEmptyReads(queryKey: string): Promise<BenchmarkSuiteResu
 
 // Benchmark cache miss vs hit scenarios
 async function benchmarkCacheMiss(queryKey: string): Promise<BenchmarkSuiteResult> {
-  const suite = new NiceBenchmark(`${queryKey} - Cache Miss Operations`);
+  const suite = new NiceBenchmark(`${queryKey} - Cache Miss Operations`, { 
+    confidenceLevel: finalConfig.confidenceLevel 
+  });
   
   suite.add("ForestRun Cache Miss", async () => {
     const cache = createCache();
@@ -142,7 +184,7 @@ async function benchmarkCacheMiss(queryKey: string): Promise<BenchmarkSuiteResul
     }
     
     // Try to read different data (cache miss)
-    for (let i = 1000; i < 1000 + config.operationsPerIteration; i++) {
+    for (let i = 1000; i < 1000 + finalConfig.operationsPerIteration; i++) {
       const { variables } = createTestData(queryKey, i);
       try {
         cache.readQuery({ query, variables });
@@ -157,14 +199,16 @@ async function benchmarkCacheMiss(queryKey: string): Promise<BenchmarkSuiteResul
 
 // Benchmark cache hit scenarios
 async function benchmarkCacheHit(queryKey: string): Promise<BenchmarkSuiteResult> {
-  const suite = new NiceBenchmark(`${queryKey} - Cache Hit Operations`);
+  const suite = new NiceBenchmark(`${queryKey} - Cache Hit Operations`, { 
+    confidenceLevel: finalConfig.confidenceLevel 
+  });
   
   suite.add("ForestRun Cache Hit", async () => {
     const cache = createCache();
     const query = queries[queryKey];
     
     // Populate cache with data we'll query
-    const testData = Array.from({ length: config.operationsPerIteration }, (_, i) => 
+    const testData = Array.from({ length: finalConfig.operationsPerIteration }, (_, i) => 
       createTestData(queryKey, i)
     );
     
@@ -183,7 +227,9 @@ async function benchmarkCacheHit(queryKey: string): Promise<BenchmarkSuiteResult
 
 // Benchmark multiple observers scenario
 async function benchmarkMultipleObservers(queryKey: string): Promise<BenchmarkSuiteResult> {
-  const suite = new NiceBenchmark(`${queryKey} - Multiple Observers`);
+  const suite = new NiceBenchmark(`${queryKey} - Multiple Observers`, { 
+    confidenceLevel: finalConfig.confidenceLevel 
+  });
   
   suite.add("ForestRun Multiple Observers", async () => {
     const cache = createCache();
@@ -197,7 +243,7 @@ async function benchmarkMultipleObservers(queryKey: string): Promise<BenchmarkSu
     cache.writeQuery({ query, variables, data: result });
     
     // Simulate multiple observers reading the same data
-    for (let i = 0; i < config.operationsPerIteration; i++) {
+    for (let i = 0; i < finalConfig.operationsPerIteration; i++) {
       for (let observer = 0; observer < observerCount; observer++) {
         cache.readQuery({ query, variables });
       }
@@ -207,20 +253,22 @@ async function benchmarkMultipleObservers(queryKey: string): Promise<BenchmarkSu
   return suite.run();
 }
 async function benchmarkUpdates(queryKey: string): Promise<BenchmarkSuiteResult> {
-  const suite = new NiceBenchmark(`${queryKey} - Update Operations`);
+  const suite = new NiceBenchmark(`${queryKey} - Update Operations`, { 
+    confidenceLevel: finalConfig.confidenceLevel 
+  });
   
   suite.add("ForestRun Update", async () => {
     const cache = createCache();
     const query = queries[queryKey];
     
     // Write initial data
-    for (let i = 0; i < config.operationsPerIteration; i++) {
+    for (let i = 0; i < finalConfig.operationsPerIteration; i++) {
       const { variables, result } = createTestData(queryKey, i);
       cache.writeQuery({ query, variables, data: result });
     }
     
     // Update data
-    for (let i = 0; i < config.operationsPerIteration; i++) {
+    for (let i = 0; i < finalConfig.operationsPerIteration; i++) {
       const { variables, result } = createTestData(queryKey, i + 1000);
       cache.writeQuery({ query, variables, data: result });
     }
@@ -232,10 +280,14 @@ async function benchmarkUpdates(queryKey: string): Promise<BenchmarkSuiteResult>
 // Main benchmark runner
 async function runBenchmarks(): Promise<BenchmarkReport> {
   console.log("🚀 ForestRun Performance Benchmarks");
-  console.log(`Configuration: ${JSON.stringify(config, null, 2)}\n`);
+  console.log(`Configuration: ${JSON.stringify(finalConfig, null, 2)}\n`);
+  
+  if (cliArgs.confidenceLevel && cliArgs.confidenceLevel !== config.confidenceLevel) {
+    console.log(`📊 Confidence level overridden: ${config.confidenceLevel}% → ${cliArgs.confidenceLevel}%\n`);
+  }
   
   const results: BenchmarkReport['results'] = [];
-  const queryKeys = Object.keys(config.queries);
+  const queryKeys = Object.keys(finalConfig.queries);
   
   for (const queryKey of queryKeys) {
     console.log(`\n📊 Benchmarking: ${queryKey}`);
@@ -277,7 +329,7 @@ async function runBenchmarks(): Promise<BenchmarkReport> {
   
   const report: BenchmarkReport = {
     timestamp: Date.now(),
-    config,
+    config: finalConfig,
     results,
   };
   
@@ -305,6 +357,28 @@ async function runBenchmarks(): Promise<BenchmarkReport> {
 
 // CLI interface
 if (require.main === module) {
+  // Show help if requested
+  if (process.argv.includes('--help') || process.argv.includes('-h')) {
+    console.log(`
+🚀 ForestRun Performance Benchmarks
+
+Usage: yarn benchmark [options]
+
+Options:
+  --confidence, -c <level>  Set confidence level (e.g., 90, 95, 99)
+                           Default: ${config.confidenceLevel}%
+  --help, -h               Show this help message
+
+Examples:
+  yarn benchmark                    # Use default ${config.confidenceLevel}% confidence
+  yarn benchmark --confidence 99   # Use 99% confidence level
+  yarn benchmark -c 90             # Use 90% confidence level
+
+Configuration can also be set in config.json
+    `);
+    process.exit(0);
+  }
+  
   runBenchmarks().catch(console.error);
 }
 

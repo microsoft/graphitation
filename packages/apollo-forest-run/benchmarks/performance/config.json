@@ -2,6 +2,7 @@
   "iterations": 3,
   "operationsPerIteration": 50,
   "maxOperationCount": 100,
+  "confidenceLevel": 90,
   "queries": {
     "simple": "simple-query.graphql",
     "user-profile": "user-profile.graphql",
