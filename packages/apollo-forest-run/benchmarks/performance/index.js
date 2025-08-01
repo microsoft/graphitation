@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { gql, InMemoryCache } = require("@apollo/client");
+const { gql } = require("@apollo/client");
 const { ForestRun } = require("../../lib/ForestRun");
 
 // Simple benchmark class
@@ -69,25 +69,228 @@ class NiceBenchmark {
       console.log(`${result.name} x ${opsPerSec} ops/sec ±${marginOfError}% (${result.samples} runs sampled)`);
     }
 
-    // Find fastest and slowest
+    // Find fastest
     let fastest = this.results[0];
-    let slowest = this.results[0];
     
     for (const result of this.results) {
       if (result.hz > fastest.hz) fastest = result;
-      if (result.hz < slowest.hz) slowest = result;
     }
 
-    const benchmarkResult = {
+    return {
       suiteName: this.name,
-      results: this.results,
+      benchmarks: this.results,
       timestamp: Date.now(),
-      fastest: fastest.name,
-      slowest: slowest.name,
+      fastest: [fastest.name],
+    };
+  }
+}
+
+// Simple mock data generator
+class MockDataGenerator {
+  constructor() {
+    this.idCounter = 0;
+  }
+
+  generateId() {
+    return `id_${++this.idCounter}_${Date.now()}`;
+  }
+
+  generateString(fieldName) {
+    const patterns = {
+      name: () => `Mock Name ${this.idCounter}`,
+      title: () => `Mock Title ${this.idCounter}`,
+      email: () => `user${this.idCounter}@example.com`,
+      content: () => `Mock content for ${fieldName} ${this.idCounter}`,
+      bio: () => `Mock bio ${this.idCounter}`,
+      comment: () => `Mock comment ${this.idCounter}`,
+      avatar: () => `https://example.com/avatar${this.idCounter}.jpg`,
     };
 
-    console.log(`Fastest is ${fastest.name}`);
-    return benchmarkResult;
+    const generator = patterns[fieldName.toLowerCase()] || (() => `Mock ${fieldName} ${this.idCounter}`);
+    return generator();
+  }
+
+  generateNumber(fieldName) {
+    const patterns = {
+      price: () => Math.floor(Math.random() * 1000) + 1,
+      rating: () => Math.floor(Math.random() * 5) + 1,
+      likes: () => Math.floor(Math.random() * 100),
+      age: () => Math.floor(Math.random() * 80) + 18,
+    };
+
+    const generator = patterns[fieldName.toLowerCase()] || (() => Math.floor(Math.random() * 100));
+    return generator();
+  }
+
+  generateFieldValue(fieldName) {
+    // Handle common field name patterns
+    if (fieldName === 'id' || fieldName.endsWith('Id')) {
+      return this.generateId();
+    }
+    
+    if (fieldName === '__typename') {
+      return 'MockType';
+    }
+
+    if (fieldName.includes('At') || fieldName.includes('Date')) {
+      return new Date().toISOString();
+    }
+
+    if (fieldName === 'cursor') {
+      return `cursor_${this.idCounter}`;
+    }
+
+    if (fieldName === 'hasNextPage') {
+      return Math.random() > 0.5;
+    }
+
+    if (fieldName === 'endCursor') {
+      return `end_cursor_${this.idCounter}`;
+    }
+
+    // Handle numeric fields
+    if (['price', 'rating', 'likes', 'age', 'first', 'count'].includes(fieldName.toLowerCase())) {
+      return this.generateNumber(fieldName);
+    }
+
+    // Default to string
+    return this.generateString(fieldName);
+  }
+
+  // Simple mock data for common query patterns
+  generateMockData(queryKey, iteration) {
+    const baseId = this.generateId();
+    const arrayLength = 3;
+    
+    // Generate basic mock structure based on query name
+    if (queryKey.includes('user') || queryKey.includes('profile')) {
+      return {
+        variables: { userId: baseId },
+        result: {
+          __typename: "Query",
+          user: {
+            __typename: "User",
+            id: baseId,
+            name: this.generateString('name'),
+            email: this.generateString('email'),
+            profile: {
+              __typename: "Profile",
+              bio: this.generateString('bio'),
+              avatar: this.generateString('avatar'),
+              createdAt: this.generateFieldValue('createdAt'),
+            },
+            posts: Array.from({ length: arrayLength }, () => ({
+              __typename: "Post",
+              id: this.generateId(),
+              title: this.generateString('title'),
+              content: this.generateString('content'),
+              createdAt: this.generateFieldValue('createdAt'),
+              likes: this.generateNumber('likes'),
+            })),
+          },
+        },
+      };
+    }
+    
+    if (queryKey.includes('post')) {
+      return {
+        variables: { first: 10, after: null },
+        result: {
+          __typename: "Query",
+          posts: {
+            __typename: "PostConnection",
+            edges: Array.from({ length: arrayLength }, () => ({
+              __typename: "PostEdge",
+              node: {
+                __typename: "Post",
+                id: this.generateId(),
+                title: this.generateString('title'),
+                content: this.generateString('content'),
+                author: {
+                  __typename: "User",
+                  id: this.generateId(),
+                  name: this.generateString('name'),
+                },
+                comments: Array.from({ length: 2 }, () => ({
+                  __typename: "Comment",
+                  id: this.generateId(),
+                  content: this.generateString('content'),
+                  author: {
+                    __typename: "User",
+                    id: this.generateId(),
+                    name: this.generateString('name'),
+                  },
+                })),
+              },
+              cursor: this.generateFieldValue('cursor'),
+            })),
+            pageInfo: {
+              __typename: "PageInfo",
+              hasNextPage: this.generateFieldValue('hasNextPage'),
+              endCursor: this.generateFieldValue('endCursor'),
+            },
+          },
+        },
+      };
+    }
+    
+    if (queryKey.includes('deep') || queryKey.includes('nesting')) {
+      return {
+        variables: { id: baseId },
+        result: {
+          __typename: "Query",
+          organization: {
+            __typename: "Organization",
+            id: baseId,
+            name: this.generateString('name'),
+            departments: Array.from({ length: arrayLength }, () => ({
+              __typename: "Department",
+              id: this.generateId(),
+              name: this.generateString('name'),
+              teams: Array.from({ length: arrayLength }, () => ({
+                __typename: "Team",
+                id: this.generateId(),
+                name: this.generateString('name'),
+                members: Array.from({ length: arrayLength }, () => ({
+                  __typename: "Member",
+                  id: this.generateId(),
+                  name: this.generateString('name'),
+                  role: 'Developer',
+                  projects: Array.from({ length: 2 }, () => ({
+                    __typename: "Project",
+                    id: this.generateId(),
+                    name: this.generateString('name'),
+                    tasks: Array.from({ length: 2 }, () => ({
+                      __typename: "Task",
+                      id: this.generateId(),
+                      title: this.generateString('title'),
+                      status: 'active',
+                      assignee: {
+                        __typename: "User",
+                        id: this.generateId(),
+                        name: this.generateString('name'),
+                      },
+                    })),
+                  })),
+                })),
+              })),
+            })),
+          },
+        },
+      };
+    }
+    
+    // Default simple mock
+    return {
+      variables: { id: baseId },
+      result: {
+        __typename: "Query",
+        node: {
+          __typename: "Node",
+          id: baseId,
+        },
+      },
+    };
   }
 }
 
@@ -105,224 +308,44 @@ Object.entries(config.queries).forEach(([key, filename]) => {
   queries[key] = gql(queryString);
 });
 
-// Create cache instances
-function createForestRun() {
+// Create ForestRun cache instance
+function createCache() {
   return new ForestRun({ 
     maxOperationCount: config.maxOperationCount,
     resultCacheMaxSize: 0 
   });
 }
 
-function createInMemoryCache() {
-  return new InMemoryCache({ 
-    resultCacheMaxSize: 0 
-  });
-}
-
 // Generate test data
-function generateRandomString(length) {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
+const mockGenerator = new MockDataGenerator();
 
 function createTestData(queryKey, iteration) {
-  const baseId = `${queryKey}_${iteration}_${generateRandomString(8)}`;
-  
-  switch (queryKey) {
-    case "simple":
-      return {
-        variables: { id: baseId },
-        result: {
-          __typename: "Query",
-          node: {
-            __typename: "Node",
-            id: baseId,
-          },
-        },
-      };
-    
-    case "complex":
-      return {
-        variables: { 
-          id: baseId, 
-          filter: "recent", 
-          first: 10 
-        },
-        result: {
-          __typename: "Query",
-          node: {
-            __typename: "User",
-            id: baseId,
-            name: `User ${iteration}`,
-            email: `user${iteration}@example.com`,
-            profile: {
-              __typename: "Profile",
-              avatar: `avatar_${iteration}.jpg`,
-              bio: `Bio for user ${iteration}`,
-              lastSeen: new Date().toISOString(),
-            },
-            posts: {
-              __typename: "PostConnection",
-              edges: Array.from({ length: 3 }, (_, i) => ({
-                __typename: "PostEdge",
-                node: {
-                  __typename: "Post",
-                  id: `post_${baseId}_${i}`,
-                  title: `Post ${i} by User ${iteration}`,
-                  content: `Content for post ${i}`,
-                  createdAt: new Date().toISOString(),
-                  author: {
-                    __typename: "User",
-                    id: baseId,
-                    name: `User ${iteration}`,
-                  },
-                  comments: Array.from({ length: 2 }, (_, j) => ({
-                    __typename: "Comment",
-                    id: `comment_${baseId}_${i}_${j}`,
-                    text: `Comment ${j} on post ${i}`,
-                    author: {
-                      __typename: "User",
-                      id: `commenter_${baseId}_${j}`,
-                      name: `Commenter ${j}`,
-                    },
-                  })),
-                },
-              })),
-            },
-          },
-        },
-      };
-    
-    case "nested":
-      return {
-        variables: { id: baseId },
-        result: {
-          __typename: "Query",
-          node: {
-            __typename: "Organization",
-            id: baseId,
-            name: `Organization ${iteration}`,
-            description: `Description for org ${iteration}`,
-            teams: Array.from({ length: 2 }, (_, teamIdx) => ({
-              __typename: "Team",
-              id: `team_${baseId}_${teamIdx}`,
-              name: `Team ${teamIdx}`,
-              members: Array.from({ length: 3 }, (_, memberIdx) => ({
-                __typename: "TeamMember",
-                id: `member_${baseId}_${teamIdx}_${memberIdx}`,
-                name: `Member ${memberIdx}`,
-                role: "Developer",
-                user: {
-                  __typename: "User",
-                  id: `user_${baseId}_${teamIdx}_${memberIdx}`,
-                  email: `member${memberIdx}@team${teamIdx}.com`,
-                  profile: {
-                    __typename: "Profile",
-                    avatar: `member_${memberIdx}.jpg`,
-                    bio: `Member ${memberIdx} bio`,
-                  },
-                  permissions: Array.from({ length: 2 }, (_, permIdx) => ({
-                    __typename: "Permission",
-                    id: `perm_${baseId}_${teamIdx}_${memberIdx}_${permIdx}`,
-                    name: `permission_${permIdx}`,
-                    scope: "read",
-                    resource: {
-                      __typename: "Resource",
-                      id: `resource_${baseId}_${permIdx}`,
-                      type: "project",
-                      name: `Resource ${permIdx}`,
-                    },
-                  })),
-                },
-              })),
-              projects: Array.from({ length: 2 }, (_, projIdx) => ({
-                __typename: "Project",
-                id: `project_${baseId}_${teamIdx}_${projIdx}`,
-                name: `Project ${projIdx}`,
-                status: "active",
-                tasks: Array.from({ length: 3 }, (_, taskIdx) => ({
-                  __typename: "Task",
-                  id: `task_${baseId}_${teamIdx}_${projIdx}_${taskIdx}`,
-                  title: `Task ${taskIdx}`,
-                  status: "todo",
-                  assignee: {
-                    __typename: "User",
-                    id: `user_${baseId}_${teamIdx}_0`,
-                    name: "Member 0",
-                  },
-                  dependencies: Array.from({ length: 1 }, (_, depIdx) => ({
-                    __typename: "Task",
-                    id: `dep_${baseId}_${teamIdx}_${projIdx}_${taskIdx}_${depIdx}`,
-                    title: `Dependency ${depIdx}`,
-                    status: "done",
-                  })),
-                })),
-              })),
-            })),
-          },
-        },
-      };
-    
-    default:
-      // Default to simple for unknown query types
-      return {
-        variables: { id: baseId },
-        result: {
-          __typename: "Query",
-          node: {
-            __typename: "Node",
-            id: baseId,
-          },
-        },
-      };
-  }
+  return mockGenerator.generateMockData(queryKey, iteration);
 }
 
-// Benchmark operations
+// Benchmark write operations
 async function benchmarkWrites(queryKey) {
-  const suite = new NiceBenchmark(`Write Operations - ${queryKey}`);
+  const suite = new NiceBenchmark(`${queryKey} - Write Operations`);
   
-  suite.add("ForestRun - Write", async () => {
-    const cache = createForestRun();
+  suite.add("ForestRun Write", async () => {
+    const cache = createCache();
     const query = queries[queryKey];
     
     for (let i = 0; i < config.operationsPerIteration; i++) {
       const { variables, result } = createTestData(queryKey, i);
-      cache.writeQuery({
-        query,
-        variables,
-        data: result,
-      });
-    }
-  });
-  
-  suite.add("InMemoryCache - Write", async () => {
-    const cache = createInMemoryCache();
-    const query = queries[queryKey];
-    
-    for (let i = 0; i < config.operationsPerIteration; i++) {
-      const { variables, result } = createTestData(queryKey, i);
-      cache.writeQuery({
-        query,
-        variables,
-        data: result,
-      });
+      cache.writeQuery({ query, variables, data: result });
     }
   });
   
   return suite.run();
 }
 
+// Benchmark read operations
 async function benchmarkReads(queryKey) {
-  const suite = new NiceBenchmark(`Read Operations - ${queryKey}`);
+  const suite = new NiceBenchmark(`${queryKey} - Read Operations`);
   
-  // Pre-populate caches
-  const forestRunCache = createForestRun();
-  const inMemoryCache = createInMemoryCache();
+  // Pre-populate cache
+  const cache = createCache();
   const query = queries[queryKey];
   
   const testData = [];
@@ -330,26 +353,15 @@ async function benchmarkReads(queryKey) {
     testData.push(createTestData(queryKey, i));
   }
   
-  // Populate both caches with the same data
+  // Populate cache
   testData.forEach(({ variables, result }) => {
-    forestRunCache.writeQuery({ query, variables, data: result });
-    inMemoryCache.writeQuery({ query, variables, data: result });
+    cache.writeQuery({ query, variables, data: result });
   });
   
-  suite.add("ForestRun - Read", async () => {
+  suite.add("ForestRun Read", async () => {
     testData.forEach(({ variables }) => {
       try {
-        forestRunCache.readQuery({ query, variables });
-      } catch (error) {
-        // Ignore read errors for benchmarking
-      }
-    });
-  });
-  
-  suite.add("InMemoryCache - Read", async () => {
-    testData.forEach(({ variables }) => {
-      try {
-        inMemoryCache.readQuery({ query, variables });
+        cache.readQuery({ query, variables });
       } catch (error) {
         // Ignore read errors for benchmarking
       }
@@ -359,11 +371,12 @@ async function benchmarkReads(queryKey) {
   return suite.run();
 }
 
+// Benchmark update operations
 async function benchmarkUpdates(queryKey) {
-  const suite = new NiceBenchmark(`Update Operations - ${queryKey}`);
+  const suite = new NiceBenchmark(`${queryKey} - Update Operations`);
   
-  suite.add("ForestRun - Update", async () => {
-    const cache = createForestRun();
+  suite.add("ForestRun Update", async () => {
+    const cache = createCache();
     const query = queries[queryKey];
     
     // Write initial data
@@ -374,24 +387,7 @@ async function benchmarkUpdates(queryKey) {
     
     // Update data
     for (let i = 0; i < config.operationsPerIteration; i++) {
-      const { variables, result } = createTestData(queryKey, i + 1000); // Different data
-      cache.writeQuery({ query, variables, data: result });
-    }
-  });
-  
-  suite.add("InMemoryCache - Update", async () => {
-    const cache = createInMemoryCache();
-    const query = queries[queryKey];
-    
-    // Write initial data
-    for (let i = 0; i < config.operationsPerIteration; i++) {
-      const { variables, result } = createTestData(queryKey, i);
-      cache.writeQuery({ query, variables, data: result });
-    }
-    
-    // Update data
-    for (let i = 0; i < config.operationsPerIteration; i++) {
-      const { variables, result } = createTestData(queryKey, i + 1000); // Different data
+      const { variables, result } = createTestData(queryKey, i + 1000);
       cache.writeQuery({ query, variables, data: result });
     }
   });
@@ -401,72 +397,54 @@ async function benchmarkUpdates(queryKey) {
 
 // Main benchmark runner
 async function runBenchmarks() {
-  console.log("🚀 Starting ForestRun Performance Benchmarks");
+  console.log("🚀 ForestRun Performance Benchmarks");
   console.log(`Configuration: ${JSON.stringify(config, null, 2)}\n`);
   
-  const suites = [];
+  const results = [];
   const queryKeys = Object.keys(config.queries);
   
   for (const queryKey of queryKeys) {
-    console.log(`\n📊 Benchmarking query: ${queryKey}`);
+    console.log(`\n📊 Benchmarking: ${queryKey}`);
     
-    // Run write benchmarks
     const writeResults = await benchmarkWrites(queryKey);
-    suites.push(writeResults);
+    console.log(`  Write: ${writeResults.fastest[0]} - ${writeResults.benchmarks[0].hz.toFixed(2)} ops/sec`);
     
-    // Run read benchmarks
     const readResults = await benchmarkReads(queryKey);
-    suites.push(readResults);
+    console.log(`  Read:  ${readResults.fastest[0]} - ${readResults.benchmarks[0].hz.toFixed(2)} ops/sec`);
     
-    // Run update benchmarks
     const updateResults = await benchmarkUpdates(queryKey);
-    suites.push(updateResults);
+    console.log(`  Update: ${updateResults.fastest[0]} - ${updateResults.benchmarks[0].hz.toFixed(2)} ops/sec`);
+    
+    results.push({
+      queryName: queryKey,
+      operations: {
+        write: writeResults,
+        read: readResults,
+        update: updateResults,
+      },
+    });
   }
-  
-  // Generate summary
-  const forestRunFaster = [];
-  const inMemoryCacheFaster = [];
-  
-  suites.forEach(suite => {
-    if (suite.fastest.includes("ForestRun")) {
-      forestRunFaster.push(suite.suiteName);
-    } else if (suite.fastest.includes("InMemoryCache")) {
-      inMemoryCacheFaster.push(suite.suiteName);
-    }
-  });
   
   const report = {
     timestamp: Date.now(),
     config,
-    suites,
-    summary: {
-      forestRunFaster,
-      inMemoryCacheFaster,
-      totalTests: suites.length,
-    },
+    results,
   };
   
   // Print summary
-  console.log("\n📈 Benchmark Summary");
-  console.log("==================");
-  console.log(`Total benchmark suites: ${report.summary.totalTests}`);
-  console.log(`ForestRun faster in: ${forestRunFaster.length} suites`);
-  console.log(`InMemoryCache faster in: ${inMemoryCacheFaster.length} suites`);
-  
-  if (forestRunFaster.length > 0) {
-    console.log("\n🏆 ForestRun was faster in:");
-    forestRunFaster.forEach(suite => console.log(`  - ${suite}`));
-  }
-  
-  if (inMemoryCacheFaster.length > 0) {
-    console.log("\n🥈 InMemoryCache was faster in:");
-    inMemoryCacheFaster.forEach(suite => console.log(`  - ${suite}`));
-  }
+  console.log("\n📈 Performance Summary");
+  console.log("====================");
+  results.forEach(({ queryName, operations }) => {
+    console.log(`${queryName}:`);
+    console.log(`  Write: ${operations.write.benchmarks[0].hz.toFixed(2)} ops/sec`);
+    console.log(`  Read:  ${operations.read.benchmarks[0].hz.toFixed(2)} ops/sec`);
+    console.log(`  Update: ${operations.update.benchmarks[0].hz.toFixed(2)} ops/sec`);
+  });
   
   // Save report
   const reportPath = path.join(__dirname, `benchmark-report-${Date.now()}.json`);
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
-  console.log(`\n💾 Full report saved to: ${reportPath}`);
+  console.log(`\n💾 Report saved to: ${reportPath}`);
   
   return report;
 }

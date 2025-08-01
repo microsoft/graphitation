@@ -1,39 +1,35 @@
 import * as fs from "fs";
 import * as path from "path";
-import { gql, InMemoryCache } from "@apollo/client";
+import { gql } from "@apollo/client";
 import { ForestRun } from "../../src/ForestRun";
 import NiceBenchmark, { BenchmarkSuiteResult } from "./nice-benchmark";
 import { generateQueryMockData } from "./mock-data-generator";
 
 interface BenchmarkConfig {
   iterations: number;
-  warmupIterations: number;
   operationsPerIteration: number;
   maxOperationCount: number;
-  confidence: {
-    level: number;
-    minSamples: number;
-    maxSamples: number;
-  };
   queries: Record<string, string>;
 }
 
 interface BenchmarkReport {
   timestamp: number;
   config: BenchmarkConfig;
-  suites: BenchmarkSuiteResult[];
-  summary: {
-    forestRunFaster: string[];
-    inMemoryCacheFaster: string[];
-    totalTests: number;
-  };
+  results: {
+    queryName: string;
+    operations: {
+      write: BenchmarkSuiteResult;
+      read: BenchmarkSuiteResult;
+      update: BenchmarkSuiteResult;
+    };
+  }[];
 }
 
 // Load configuration
 const configPath = path.join(__dirname, "config.json");
 const config: BenchmarkConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
 
-// Load queries and prepare mock data generators
+// Load queries
 const queries: Record<string, any> = {};
 const queryStrings: Record<string, string> = {};
 const queriesDir = path.join(__dirname, "queries");
@@ -45,120 +41,73 @@ Object.entries(config.queries).forEach(([key, filename]) => {
   queries[key] = gql(queryString);
 });
 
-// Create cache instances
-function createForestRun() {
+// Create ForestRun cache instance
+function createCache() {
   return new ForestRun({ 
     maxOperationCount: config.maxOperationCount,
     resultCacheMaxSize: 0 
   });
 }
 
-function createInMemoryCache() {
-  return new InMemoryCache({ 
-    resultCacheMaxSize: 0 
-  });
-}
-
-// Generate test data dynamically based on GraphQL query structure
+// Generate test data for a query
 function createTestData(queryKey: string, iteration: number) {
   const queryString = queryStrings[queryKey];
-  
-  if (!queryString) {
-    throw new Error(`Query not found: ${queryKey}`);
-  }
-
-  // Generate unique variables for this iteration
-  const baseVariables: Record<string, any> = {};
-  
-  // Add iteration-specific uniqueness to ID variables
-  const iterationId = `${queryKey}_${iteration}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  
-  // Generate mock data using the dynamic generator
-  const { variables, result } = generateQueryMockData(queryString, { 
-    id: iterationId,
-    ...baseVariables 
-  }, {
-    seed: iteration, // Use iteration as seed for deterministic but varied data
+  const { variables, result } = generateQueryMockData(queryString, {}, {
+    seed: iteration,
     arrayLength: 3,
-    stringLength: 10,
   });
-
   return { variables, result };
 }
 
-// Benchmark operations
+// Benchmark write operations
 async function benchmarkWrites(queryKey: string): Promise<BenchmarkSuiteResult> {
-  const suite = new NiceBenchmark(`Write Operations - ${queryKey}`);
+  const suite = new NiceBenchmark(`${queryKey} - Write Operations`);
   
-  suite.add("ForestRun - Write", async () => {
-    const cache = createForestRun();
+  suite.add("ForestRun Write", async () => {
+    const cache = createCache();
     const query = queries[queryKey];
     
     for (let i = 0; i < config.operationsPerIteration; i++) {
       const { variables, result } = createTestData(queryKey, i);
-      cache.writeQuery({
-        query,
-        variables,
-        data: result,
-      });
-    }
-  });
-  
-  suite.add("InMemoryCache - Write", async () => {
-    const cache = createInMemoryCache();
-    const query = queries[queryKey];
-    
-    for (let i = 0; i < config.operationsPerIteration; i++) {
-      const { variables, result } = createTestData(queryKey, i);
-      cache.writeQuery({
-        query,
-        variables,
-        data: result,
-      });
+      cache.writeQuery({ query, variables, data: result });
     }
   });
   
   return suite.run();
 }
 
+// Benchmark read operations
 async function benchmarkReads(queryKey: string): Promise<BenchmarkSuiteResult> {
-  const suite = new NiceBenchmark(`Read Operations - ${queryKey}`);
+  const suite = new NiceBenchmark(`${queryKey} - Read Operations`);
   
-  // Pre-populate caches
-  const forestRunCache = createForestRun();
-  const inMemoryCache = createInMemoryCache();
+  // Pre-populate cache
+  const cache = createCache();
   const query = queries[queryKey];
   
   const testData = Array.from({ length: config.operationsPerIteration }, (_, i) => 
     createTestData(queryKey, i)
   );
   
-  // Populate both caches with the same data
+  // Populate cache
   testData.forEach(({ variables, result }) => {
-    forestRunCache.writeQuery({ query, variables, data: result });
-    inMemoryCache.writeQuery({ query, variables, data: result });
+    cache.writeQuery({ query, variables, data: result });
   });
   
-  suite.add("ForestRun - Read", async () => {
+  suite.add("ForestRun Read", async () => {
     testData.forEach(({ variables }) => {
-      forestRunCache.readQuery({ query, variables });
-    });
-  });
-  
-  suite.add("InMemoryCache - Read", async () => {
-    testData.forEach(({ variables }) => {
-      inMemoryCache.readQuery({ query, variables });
+      cache.readQuery({ query, variables });
     });
   });
   
   return suite.run();
 }
 
+// Benchmark update operations
 async function benchmarkUpdates(queryKey: string): Promise<BenchmarkSuiteResult> {
-  const suite = new NiceBenchmark(`Update Operations - ${queryKey}`);
+  const suite = new NiceBenchmark(`${queryKey} - Update Operations`);
   
-  suite.add("ForestRun - Update", async () => {
-    const cache = createForestRun();
+  suite.add("ForestRun Update", async () => {
+    const cache = createCache();
     const query = queries[queryKey];
     
     // Write initial data
@@ -169,24 +118,7 @@ async function benchmarkUpdates(queryKey: string): Promise<BenchmarkSuiteResult>
     
     // Update data
     for (let i = 0; i < config.operationsPerIteration; i++) {
-      const { variables, result } = createTestData(queryKey, i + 1000); // Different data
-      cache.writeQuery({ query, variables, data: result });
-    }
-  });
-  
-  suite.add("InMemoryCache - Update", async () => {
-    const cache = createInMemoryCache();
-    const query = queries[queryKey];
-    
-    // Write initial data
-    for (let i = 0; i < config.operationsPerIteration; i++) {
-      const { variables, result } = createTestData(queryKey, i);
-      cache.writeQuery({ query, variables, data: result });
-    }
-    
-    // Update data
-    for (let i = 0; i < config.operationsPerIteration; i++) {
-      const { variables, result } = createTestData(queryKey, i + 1000); // Different data
+      const { variables, result } = createTestData(queryKey, i + 1000);
       cache.writeQuery({ query, variables, data: result });
     }
   });
@@ -196,72 +128,54 @@ async function benchmarkUpdates(queryKey: string): Promise<BenchmarkSuiteResult>
 
 // Main benchmark runner
 async function runBenchmarks(): Promise<BenchmarkReport> {
-  console.log("🚀 Starting ForestRun Performance Benchmarks");
+  console.log("🚀 ForestRun Performance Benchmarks");
   console.log(`Configuration: ${JSON.stringify(config, null, 2)}\n`);
   
-  const suites: BenchmarkSuiteResult[] = [];
+  const results: BenchmarkReport['results'] = [];
   const queryKeys = Object.keys(config.queries);
   
   for (const queryKey of queryKeys) {
-    console.log(`\n📊 Benchmarking query: ${queryKey}`);
+    console.log(`\n📊 Benchmarking: ${queryKey}`);
     
-    // Run write benchmarks
     const writeResults = await benchmarkWrites(queryKey);
-    suites.push(writeResults);
+    console.log(`  Write: ${writeResults.fastest[0]} - ${writeResults.benchmarks[0].opsPerSec.toFixed(2)} ops/sec`);
     
-    // Run read benchmarks
     const readResults = await benchmarkReads(queryKey);
-    suites.push(readResults);
+    console.log(`  Read:  ${readResults.fastest[0]} - ${readResults.benchmarks[0].opsPerSec.toFixed(2)} ops/sec`);
     
-    // Run update benchmarks
     const updateResults = await benchmarkUpdates(queryKey);
-    suites.push(updateResults);
+    console.log(`  Update: ${updateResults.fastest[0]} - ${updateResults.benchmarks[0].opsPerSec.toFixed(2)} ops/sec`);
+    
+    results.push({
+      queryName: queryKey,
+      operations: {
+        write: writeResults,
+        read: readResults,
+        update: updateResults,
+      },
+    });
   }
-  
-  // Generate summary
-  const forestRunFaster: string[] = [];
-  const inMemoryCacheFaster: string[] = [];
-  
-  suites.forEach(suite => {
-    if (suite.fastest.includes("ForestRun")) {
-      forestRunFaster.push(suite.suiteName);
-    } else if (suite.fastest.includes("InMemoryCache")) {
-      inMemoryCacheFaster.push(suite.suiteName);
-    }
-  });
   
   const report: BenchmarkReport = {
     timestamp: Date.now(),
     config,
-    suites,
-    summary: {
-      forestRunFaster,
-      inMemoryCacheFaster,
-      totalTests: suites.length,
-    },
+    results,
   };
   
   // Print summary
-  console.log("\n📈 Benchmark Summary");
-  console.log("==================");
-  console.log(`Total benchmark suites: ${report.summary.totalTests}`);
-  console.log(`ForestRun faster in: ${forestRunFaster.length} suites`);
-  console.log(`InMemoryCache faster in: ${inMemoryCacheFaster.length} suites`);
-  
-  if (forestRunFaster.length > 0) {
-    console.log("\n🏆 ForestRun was faster in:");
-    forestRunFaster.forEach(suite => console.log(`  - ${suite}`));
-  }
-  
-  if (inMemoryCacheFaster.length > 0) {
-    console.log("\n🥈 InMemoryCache was faster in:");
-    inMemoryCacheFaster.forEach(suite => console.log(`  - ${suite}`));
-  }
+  console.log("\n📈 Performance Summary");
+  console.log("====================");
+  results.forEach(({ queryName, operations }) => {
+    console.log(`${queryName}:`);
+    console.log(`  Write: ${operations.write.benchmarks[0].opsPerSec.toFixed(2)} ops/sec`);
+    console.log(`  Read:  ${operations.read.benchmarks[0].opsPerSec.toFixed(2)} ops/sec`);
+    console.log(`  Update: ${operations.update.benchmarks[0].opsPerSec.toFixed(2)} ops/sec`);
+  });
   
   // Save report
   const reportPath = path.join(__dirname, `benchmark-report-${Date.now()}.json`);
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
-  console.log(`\n💾 Full report saved to: ${reportPath}`);
+  console.log(`\n💾 Report saved to: ${reportPath}`);
   
   return report;
 }
