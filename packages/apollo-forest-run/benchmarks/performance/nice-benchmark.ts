@@ -2,19 +2,21 @@
 
 export interface BenchmarkResult {
   name: string;
-  hz: number; // Operations per second
+  mean: number; // Mean execution time in milliseconds
   rme: number; // Relative margin of error (%)
   samples: number;
-  mean: number; // Mean execution time in seconds
+  min: number; // Minimum execution time in milliseconds
+  max: number; // Maximum execution time in milliseconds
   variance: number;
 }
 
 export interface BenchmarkSuiteResult {
   suiteName: string;
   results: BenchmarkResult[];
+  benchmarks: BenchmarkResult[]; // Alias for backward compatibility
   timestamp: number;
-  fastest: string;
-  slowest: string;
+  fastest: string[];
+  slowest: string[];
 }
 
 interface BenchmarkFunction {
@@ -45,8 +47,8 @@ export default class NiceBenchmark {
       await fn();
       const end = process.hrtime.bigint();
       
-      // Convert nanoseconds to seconds
-      const duration = Number(end - start) / 1e9;
+      // Convert nanoseconds to milliseconds
+      const duration = Number(end - start) / 1e6;
       samples.push(duration);
 
       // Don't run too many samples to avoid excessive execution time
@@ -62,15 +64,17 @@ export default class NiceBenchmark {
     // Relative margin of error as percentage (using 95% confidence interval)
     const rme = (standardError / mean) * 100 * 1.96;
     
-    // Operations per second
-    const hz = 1 / mean;
+    // Min and max times
+    const min = Math.min(...samples);
+    const max = Math.max(...samples);
 
     return {
       name,
-      hz,
+      mean,
       rme,
       samples: samples.length,
-      mean,
+      min,
+      max,
       variance,
     };
   }
@@ -83,27 +87,28 @@ export default class NiceBenchmark {
       const result = await this.measureFunction(benchmark.name, benchmark.fn);
       this.results.push(result);
       
-      // Format output similar to benchmark.js
-      const opsPerSec = result.hz.toLocaleString('en-US', { maximumFractionDigits: 2 });
+      // Format output to show timing instead of ops/sec
+      const meanTime = result.mean.toFixed(3);
       const marginOfError = result.rme.toFixed(2);
-      console.log(`${result.name} x ${opsPerSec} ops/sec ±${marginOfError}% (${result.samples} runs sampled)`);
+      console.log(`${result.name}: ${meanTime}ms ±${marginOfError}% (${result.samples} runs sampled)`);
     }
 
-    // Find fastest and slowest
+    // Find fastest and slowest (by mean time - lower is faster)
     let fastest = this.results[0];
     let slowest = this.results[0];
     
     for (const result of this.results) {
-      if (result.hz > fastest.hz) fastest = result;
-      if (result.hz < slowest.hz) slowest = result;
+      if (result.mean < fastest.mean) fastest = result;
+      if (result.mean > slowest.mean) slowest = result;
     }
 
     const benchmarkResult: BenchmarkSuiteResult = {
       suiteName: this.name,
       results: this.results,
+      benchmarks: this.results, // Alias for backward compatibility
       timestamp: Date.now(),
-      fastest: fastest.name,
-      slowest: slowest.name,
+      fastest: [fastest.name],
+      slowest: [slowest.name],
     };
 
     console.log(`Fastest is ${fastest.name}`);

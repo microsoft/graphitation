@@ -1,0 +1,100 @@
+query PaginatedBlogPosts($first: Int!, $after: String, $category: String) {
+  posts(first: $first, after: $after, category: $category) {
+    totalCount
+    edges {
+      node {
+        id
+        slug
+        title
+        excerpt
+        content
+        publishedAt
+        updatedAt
+        readingTime
+        featured
+        viewCount
+        category {
+          id
+          name
+          slug
+          description
+        }
+        author {
+          id
+          username
+          displayName
+          bio
+          avatar
+          social {
+            twitter
+            github
+            linkedin
+          }
+          followersCount
+          followingCount
+        }
+        tags {
+          id
+          name
+          slug
+          color
+          postCount
+        }
+        comments(first: 10) {
+          totalCount
+          edges {
+            node {
+              id
+              content
+              createdAt
+              author {
+                id
+                username
+                displayName
+                avatar
+              }
+              replies(first: 3) {
+                totalCount
+                edges {
+                  node {
+                    id
+                    content
+                    createdAt
+                    author {
+                      id
+                      username
+                      displayName
+                      avatar
+                    }
+                  }
+                  cursor
+                }
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+              }
+              likesCount
+              liked
+            }
+            cursor
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+        likesCount
+        liked
+        bookmarked
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+  }
+}
