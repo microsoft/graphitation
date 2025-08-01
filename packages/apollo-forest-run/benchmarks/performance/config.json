@@ -1,6 +1,6 @@
 {
   "iterations": 3,
-  "operationsPerIteration": 100,
+  "operationsPerIteration": 50,
   "maxOperationCount": 100,
   "queries": {
     "simple": "simple-query.graphql",
