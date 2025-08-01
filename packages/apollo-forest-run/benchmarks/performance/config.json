@@ -1,17 +1,13 @@
 {
-  "iterations": 10,
-  "warmupIterations": 3,
+  "iterations": 5,
   "operationsPerIteration": 1000,
   "maxOperationCount": 100,
-  "confidence": {
-    "level": 0.95,
-    "minSamples": 5,
-    "maxSamples": 50
-  },
   "queries": {
     "simple": "simple-query.graphql",
-    "complex": "complex-query.graphql",
-    "nested": "nested-query.graphql",
+    "user-profile": "user-profile.graphql",
+    "posts-list": "posts-list.graphql",
+    "fragment-query": "fragment-query.graphql",
+    "deep-nesting": "deep-nesting.graphql",
     "product": "product-query.graphql"
   }
 }

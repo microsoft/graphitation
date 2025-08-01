@@ -1,0 +1,28 @@
+query PostsList($first: Int, $after: String) {
+  posts(first: $first, after: $after) {
+    edges {
+      node {
+        id
+        title
+        content
+        author {
+          id
+          name
+        }
+        comments(first: 5) {
+          id
+          content
+          author {
+            id
+            name
+          }
+        }
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
