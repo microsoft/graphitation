@@ -2,164 +2,52 @@ import { DocumentNode, FieldNode, SelectionSetNode, InlineFragmentNode, Kind, Op
 import { gql } from "@apollo/client";
 
 /**
- * Simple GraphQL mock data generator that analyzes query structure
- * and generates appropriate mock data.
+ * Dynamic GraphQL mock data generator that analyzes query structure
+ * and generates appropriate mock data without hardcoding response structures.
+ * 
+ * Inspired by gqlc-bench's approach to dynamic data generation.
  */
 
 interface MockOptions {
   seed?: number;
   arrayLength?: number;
+  stringLength?: number;
+}
+
+interface TypeGenerators {
+  [key: string]: (fieldName: string, options: MockOptions) => any;
 }
 
 class GraphQLMockDataGenerator {
   private options: MockOptions;
+  private typeGenerators: TypeGenerators;
   private idCounter: number = 0;
 
   constructor(options: MockOptions = {}) {
     this.options = {
       seed: 12345,
       arrayLength: 3,
+      stringLength: 10,
       ...options,
+    };
+
+    // Setup deterministic random generation
+    this.setupTypeGenerators();
+  }
+
+  private setupTypeGenerators(): void {
+    this.typeGenerators = {
+      ID: (fieldName: string) => `${fieldName}_${this.generateId()}`,
+      String: (fieldName: string) => this.generateString(fieldName),
+      Int: (fieldName: string) => this.generateInt(fieldName),
+      Float: (fieldName: string) => this.generateFloat(fieldName),
+      Boolean: (fieldName: string) => this.generateBoolean(fieldName),
+      DateTime: (fieldName: string) => new Date().toISOString(),
     };
   }
 
   private generateId(): string {
-    return `id_${++this.idCounter}_${this.options.seed}`;
-  }
-
-  private generateString(fieldName: string): string {
-    const patterns: Record<string, () => string> = {
-      name: () => `Mock Name ${this.idCounter}`,
-      title: () => `Mock Title ${this.idCounter}`,
-      email: () => `user${this.idCounter}@example.com`,
-      content: () => `Mock content for ${fieldName} ${this.idCounter}`,
-      bio: () => `Mock bio ${this.idCounter}`,
-      comment: () => `Mock comment ${this.idCounter}`,
-      avatar: () => `https://example.com/avatar${this.idCounter}.jpg`,
-    };
-
-    const generator = patterns[fieldName.toLowerCase()] || (() => `Mock ${fieldName} ${this.idCounter}`);
-    return generator();
-  }
-
-  private generateNumber(fieldName: string): number {
-    const patterns: Record<string, () => number> = {
-      price: () => Math.floor(Math.random() * 1000) + 1,
-      rating: () => Math.floor(Math.random() * 5) + 1,
-      likes: () => Math.floor(Math.random() * 100),
-      age: () => Math.floor(Math.random() * 80) + 18,
-    };
-
-    const generator = patterns[fieldName.toLowerCase()] || (() => Math.floor(Math.random() * 100));
-    return generator();
-  }
-
-  private generateFieldValue(fieldName: string, fieldType?: string): any {
-    // Handle common field name patterns
-    if (fieldName === 'id' || fieldName.endsWith('Id')) {
-      return this.generateId();
-    }
-    
-    if (fieldName === '__typename') {
-      return 'MockType';
-    }
-
-    if (fieldName.includes('At') || fieldName.includes('Date')) {
-      return new Date().toISOString();
-    }
-
-    if (fieldName === 'cursor') {
-      return `cursor_${this.idCounter}`;
-    }
-
-    if (fieldName === 'hasNextPage') {
-      return Math.random() > 0.5;
-    }
-
-    if (fieldName === 'endCursor') {
-      return `end_cursor_${this.idCounter}`;
-    }
-
-    // Handle numeric fields
-    if (['price', 'rating', 'likes', 'age', 'first', 'count'].includes(fieldName.toLowerCase())) {
-      return this.generateNumber(fieldName);
-    }
-
-    // Default to string
-    return this.generateString(fieldName);
-  }
-
-  private processSelectionSet(selectionSet: SelectionSetNode): any {
-    const result: any = {};
-
-    selectionSet.selections.forEach(selection => {
-      if (selection.kind === Kind.FIELD) {
-        const field = selection as FieldNode;
-        const fieldName = field.name.value;
-
-        if (field.selectionSet) {
-          if (fieldName === 'edges') {
-            // Handle GraphQL connection pattern
-            result[fieldName] = Array.from({ length: this.options.arrayLength! }, () => ({
-              node: this.processSelectionSet(field.selectionSet!),
-              cursor: this.generateFieldValue('cursor')
-            }));
-          } else if (fieldName === 'pageInfo') {
-            result[fieldName] = this.processSelectionSet(field.selectionSet!);
-          } else if (this.isArrayField(fieldName)) {
-            // Handle array fields
-            result[fieldName] = Array.from({ length: this.options.arrayLength! }, () => 
-              this.processSelectionSet(field.selectionSet!)
-            );
-          } else {
-            // Handle object fields
-            result[fieldName] = this.processSelectionSet(field.selectionSet!);
-          }
-        } else {
-          // Handle scalar fields
-          result[fieldName] = this.generateFieldValue(fieldName);
-        }
-      } else if (selection.kind === Kind.INLINE_FRAGMENT) {
-        const fragment = selection as InlineFragmentNode;
-        if (fragment.selectionSet) {
-          Object.assign(result, this.processSelectionSet(fragment.selectionSet));
-        }
-      }
-    });
-
-    return result;
-  }
-
-  private isArrayField(fieldName: string): boolean {
-    const arrayFields = ['posts', 'comments', 'reviews', 'users', 'departments', 'teams', 'members', 'projects', 'tasks'];
-    return arrayFields.includes(fieldName.toLowerCase()) || fieldName.endsWith('s');
-  }
-
-  generateMockData(queryString: string, variables: any = {}): { variables: any; result: any } {
-    const document = gql(queryString);
-    const operation = document.definitions[0] as OperationDefinitionNode;
-    
-    if (!operation.selectionSet) {
-      throw new Error('Query must have a selection set');
-    }
-
-    const result = this.processSelectionSet(operation.selectionSet);
-    
-    return {
-      variables: { id: this.generateId(), ...variables },
-      result
-    };
-  }
-}
-
-export function generateQueryMockData(
-  queryString: string, 
-  variables: any = {}, 
-  options: MockOptions = {}
-): { variables: any; result: any } {
-  const generator = new GraphQLMockDataGenerator(options);
-  return generator.generateMockData(queryString, variables);
-}
+    return `${Date.now()}_${++this.idCounter}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   private generateString(fieldName: string): string {

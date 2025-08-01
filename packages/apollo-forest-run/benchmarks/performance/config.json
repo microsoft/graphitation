@@ -1,6 +1,6 @@
 {
-  "iterations": 5,
-  "operationsPerIteration": 1000,
+  "iterations": 3,
+  "operationsPerIteration": 100,
   "maxOperationCount": 100,
   "queries": {
     "simple": "simple-query.graphql",
@@ -8,6 +8,9 @@
     "posts-list": "posts-list.graphql",
     "fragment-query": "fragment-query.graphql",
     "deep-nesting": "deep-nesting.graphql",
-    "product": "product-query.graphql"
+    "product": "product-query.graphql",
+    "complex-nested": "complex-nested.graphql",
+    "fragmented-posts": "fragmented-posts.graphql",
+    "paginated-blog": "paginated-blog.graphql"
   }
 }
