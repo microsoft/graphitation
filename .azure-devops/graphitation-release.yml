@@ -40,8 +40,6 @@ extends:
           Build.SDL.<ESLint>.Enabled: true
         jobs:
           - job: Release
-            variables:
-              - group: oss-secrets
             pool:
               name: Azure-Pipelines-1ESPT-ExDShared
               image: ubuntu-latest
