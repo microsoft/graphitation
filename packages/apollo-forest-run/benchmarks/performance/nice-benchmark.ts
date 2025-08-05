@@ -8,6 +8,7 @@ export interface BenchmarkResult {
   min: number; // Minimum execution time in milliseconds
   max: number; // Maximum execution time in milliseconds
   variance: number;
+  confidenceLevel: number; // Actual confidence level achieved
 }
 
 export interface BenchmarkSuiteResult {
@@ -118,6 +119,7 @@ export default class NiceBenchmark {
       min,
       max,
       variance,
+      confidenceLevel: this.confidenceLevel,
     };
   }
 
