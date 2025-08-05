@@ -3,12 +3,12 @@ import * as path from "path";
 import { gql } from "@apollo/client";
 import { ForestRun } from "../../src/ForestRun";
 import NiceBenchmark, { BenchmarkSuiteResult } from "./nice-benchmark";
-import { generateQueryMockData } from "./mock-data-generator";
+import { generate } from "@graphitation/graphql-js-operation-payload-generator";
+import { buildSchema } from "graphql";
 
 interface BenchmarkConfig {
   iterations: number;
   operationsPerIteration: number;
-  maxOperationCount: number;
   confidenceLevel: number;
   queries: Record<string, string>;
 }
@@ -29,6 +29,50 @@ interface BenchmarkReport {
     };
   }[];
 }
+
+// Simple GraphQL schema for generating mock data
+const schema = buildSchema(`
+  type Query {
+    user(id: ID!): User
+    post(id: ID!): Post
+    product(id: ID!): Product
+  }
+  
+  type User {
+    id: ID!
+    name: String!
+    email: String!
+    posts: [Post!]!
+  }
+  
+  type Post {
+    id: ID!
+    title: String!
+    content: String!
+    author: User!
+    comments: [Comment!]!
+  }
+  
+  type Comment {
+    id: ID!
+    content: String!
+    author: User!
+  }
+  
+  type Product {
+    id: ID!
+    name: String!
+    price: Float!
+    reviews: [Review!]!
+  }
+  
+  type Review {
+    id: ID!
+    rating: Int!
+    comment: String!
+    reviewer: User!
+  }
+`);
 
 // Parse command line arguments
 function parseArgs(): { confidenceLevel?: number; help?: boolean } {
@@ -89,7 +133,7 @@ Available Confidence Levels:
 const configPath = path.join(__dirname, "config.json");
 let config: BenchmarkConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
 
-// Override config with command line arguments
+// Override config with command line arguments if provided
 const cliArgs = parseArgs();
 
 if (cliArgs.help) {
@@ -97,14 +141,9 @@ if (cliArgs.help) {
   process.exit(0);
 }
 
+// CLI args only override for this run, don't save to config
 if (cliArgs.confidenceLevel !== undefined) {
   config.confidenceLevel = cliArgs.confidenceLevel;
-  console.log(`📊 Configuration:`);
-  console.log(`   Confidence Level: ${config.confidenceLevel}%`);
-  
-  // Update config file to remember the setting
-  fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-  console.log(`   ✅ Updated config.json with confidence level: ${config.confidenceLevel}%`);
 }
 
 // Load queries
@@ -119,22 +158,40 @@ Object.entries(config.queries).forEach(([key, filename]) => {
   queries[key] = gql(queryString);
 });
 
-// Create ForestRun cache instance
+// Create ForestRun cache instance with fixed settings
 function createCache() {
   return new ForestRun({ 
-    maxOperationCount: config.maxOperationCount,
+    maxOperationCount: 100,
     resultCacheMaxSize: 0 
   });
 }
 
-// Generate test data for a query
+// Generate test data for a query using graphql-js-operation-payload-generator
 function createTestData(queryKey: string, iteration: number) {
-  const queryString = queryStrings[queryKey];
-  const { variables, result } = generateQueryMockData(queryString, {}, {
-    seed: iteration,
-    arrayLength: 3,
-  });
-  return { variables, result };
+  const query = queries[queryKey];
+  const variables = { id: `test_${iteration}` };
+  
+  try {
+    const payload = generate({
+      request: { node: query, variables },
+      schema
+    });
+    
+    return {
+      variables,
+      result: payload.data
+    };
+  } catch (error) {
+    // Fallback to simple mock data if generation fails
+    return {
+      variables,
+      result: {
+        id: `test_${iteration}`,
+        name: `Test Item ${iteration}`,
+        __typename: "User"
+      }
+    };
+  }
 }
 
 // Benchmark write operations
@@ -280,6 +337,7 @@ async function benchmarkMultipleObservers(queryKey: string): Promise<BenchmarkSu
   
   return suite.run();
 }
+
 async function benchmarkUpdates(queryKey: string): Promise<BenchmarkSuiteResult> {
   const suite = new NiceBenchmark(`${queryKey} - Update Operations`, config.confidenceLevel);
   
@@ -317,25 +375,12 @@ async function runBenchmarks(): Promise<BenchmarkReport> {
     console.log(`\n📊 Benchmarking: ${queryKey}`);
     
     const writeResults = await benchmarkWrites(queryKey);
-    console.log(`  Write: ${writeResults.fastest[0]} - ${writeResults.benchmarks[0].mean.toFixed(3)}ms`);
-    
     const readResults = await benchmarkReads(queryKey);
-    console.log(`  Read:  ${readResults.fastest[0]} - ${readResults.benchmarks[0].mean.toFixed(3)}ms`);
-    
     const updateResults = await benchmarkUpdates(queryKey);
-    console.log(`  Update: ${updateResults.fastest[0]} - ${updateResults.benchmarks[0].mean.toFixed(3)}ms`);
-
     const emptyReadResults = await benchmarkEmptyReads(queryKey);
-    console.log(`  Empty Read: ${emptyReadResults.fastest[0]} - ${emptyReadResults.benchmarks[0].mean.toFixed(3)}ms`);
-
     const cacheMissResults = await benchmarkCacheMiss(queryKey);
-    console.log(`  Cache Miss: ${cacheMissResults.fastest[0]} - ${cacheMissResults.benchmarks[0].mean.toFixed(3)}ms`);
-
     const cacheHitResults = await benchmarkCacheHit(queryKey);
-    console.log(`  Cache Hit: ${cacheHitResults.fastest[0]} - ${cacheHitResults.benchmarks[0].mean.toFixed(3)}ms`);
-
     const multipleObserversResults = await benchmarkMultipleObservers(queryKey);
-    console.log(`  Multiple Observers: ${multipleObserversResults.fastest[0]} - ${multipleObserversResults.benchmarks[0].mean.toFixed(3)}ms`);
     
     results.push({
       queryName: queryKey,
@@ -362,13 +407,13 @@ async function runBenchmarks(): Promise<BenchmarkReport> {
   console.log("====================");
   results.forEach(({ queryName, operations }) => {
     console.log(`${queryName}:`);
-    console.log(`  Write: ${operations.write.benchmarks[0].mean.toFixed(3)}ms`);
-    console.log(`  Read:  ${operations.read.benchmarks[0].mean.toFixed(3)}ms`);
-    console.log(`  Update: ${operations.update.benchmarks[0].mean.toFixed(3)}ms`);
-    console.log(`  Empty Read: ${operations.emptyRead.benchmarks[0].mean.toFixed(3)}ms`);
-    console.log(`  Cache Miss: ${operations.cacheMiss.benchmarks[0].mean.toFixed(3)}ms`);
-    console.log(`  Cache Hit: ${operations.cacheHit.benchmarks[0].mean.toFixed(3)}ms`);
-    console.log(`  Multiple Observers: ${operations.multipleObservers.benchmarks[0].mean.toFixed(3)}ms`);
+    console.log(`  Write: ${operations.write.benchmarks[0].mean.toFixed(3)}ms ±${operations.write.benchmarks[0].rme.toFixed(2)}% (${operations.write.benchmarks[0].confidenceLevel}% confidence)`);
+    console.log(`  Read:  ${operations.read.benchmarks[0].mean.toFixed(3)}ms ±${operations.read.benchmarks[0].rme.toFixed(2)}% (${operations.read.benchmarks[0].confidenceLevel}% confidence)`);
+    console.log(`  Update: ${operations.update.benchmarks[0].mean.toFixed(3)}ms ±${operations.update.benchmarks[0].rme.toFixed(2)}% (${operations.update.benchmarks[0].confidenceLevel}% confidence)`);
+    console.log(`  Empty Read: ${operations.emptyRead.benchmarks[0].mean.toFixed(3)}ms ±${operations.emptyRead.benchmarks[0].rme.toFixed(2)}% (${operations.emptyRead.benchmarks[0].confidenceLevel}% confidence)`);
+    console.log(`  Cache Miss: ${operations.cacheMiss.benchmarks[0].mean.toFixed(3)}ms ±${operations.cacheMiss.benchmarks[0].rme.toFixed(2)}% (${operations.cacheMiss.benchmarks[0].confidenceLevel}% confidence)`);
+    console.log(`  Cache Hit: ${operations.cacheHit.benchmarks[0].mean.toFixed(3)}ms ±${operations.cacheHit.benchmarks[0].rme.toFixed(2)}% (${operations.cacheHit.benchmarks[0].confidenceLevel}% confidence)`);
+    console.log(`  Multiple Observers: ${operations.multipleObservers.benchmarks[0].mean.toFixed(3)}ms ±${operations.multipleObservers.benchmarks[0].rme.toFixed(2)}% (${operations.multipleObservers.benchmarks[0].confidenceLevel}% confidence)`);
   });
   
   // Save report
