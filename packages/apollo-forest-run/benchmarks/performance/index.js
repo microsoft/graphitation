@@ -30,20 +30,46 @@ class MockForestRun {
 // Use mock ForestRun for now
 const ForestRun = MockForestRun;
 
+// Helper function to get z-score for different confidence levels
+function getZScore(confidenceLevel) {
+  switch (confidenceLevel) {
+    case 90: return 1.645;
+    case 95: return 1.96;
+    case 99: return 2.576;
+    case 99.9: return 3.291;
+    default:
+      // For other confidence levels, use normal distribution approximation
+      if (confidenceLevel < 90) return 1.645;
+      if (confidenceLevel < 95) return 1.96;
+      if (confidenceLevel < 99) return 2.576;
+      return 3.291;
+  }
+}
+
 // Simple benchmark class
 class NiceBenchmark {
-  constructor(name) {
+  constructor(name, confidenceLevel = 95) {
     this.name = name;
     this.benchmarks = [];
     this.results = [];
+    this.confidenceLevel = confidenceLevel || 95;
   }
 
   add(name, fn) {
     this.benchmarks.push({ name, fn });
   }
 
-  async measureFunction(name, fn, minSamples = 5, minTime = 1000) {
+  async measureFunction(name, fn, minSamples = 200, minTime = 10000) {
     const samples = [];
+    const warmupSamples = 20; // Warmup runs to eliminate JIT compilation effects
+    
+    // Warmup phase - don't record these samples
+    console.log(`  Warming up ${name}...`);
+    for (let i = 0; i < warmupSamples; i++) {
+      await fn();
+    }
+    
+    console.log(`  Measuring ${name}...`);
     const startTime = Date.now();
 
     // Run at least minSamples times or until minTime milliseconds have passed
@@ -56,28 +82,42 @@ class NiceBenchmark {
       const duration = Number(end - start) / 1e6;
       samples.push(duration);
 
-      // Don't run too many samples to avoid excessive execution time
-      if (samples.length >= 100) break;
+      // Allow more samples for better statistical confidence
+      if (samples.length >= 1000) break;
     }
 
+    // Remove outliers using the IQR method for more stable results
+    const sortedSamples = [...samples].sort((a, b) => a - b);
+    const q1 = sortedSamples[Math.floor(sortedSamples.length * 0.25)];
+    const q3 = sortedSamples[Math.floor(sortedSamples.length * 0.75)];
+    const iqr = q3 - q1;
+    const lowerBound = q1 - 1.5 * iqr;
+    const upperBound = q3 + 1.5 * iqr;
+    
+    const filteredSamples = samples.filter(sample => sample >= lowerBound && sample <= upperBound);
+    
+    // Use filtered samples for calculations if we have enough, otherwise use all samples
+    const usedSamples = filteredSamples.length >= Math.min(50, samples.length * 0.8) ? filteredSamples : samples;
+
     // Calculate statistics
-    const mean = samples.reduce((sum, time) => sum + time, 0) / samples.length;
-    const variance = samples.reduce((sum, time) => sum + Math.pow(time - mean, 2), 0) / samples.length;
+    const mean = usedSamples.reduce((sum, time) => sum + time, 0) / usedSamples.length;
+    const variance = usedSamples.reduce((sum, time) => sum + Math.pow(time - mean, 2), 0) / usedSamples.length;
     const standardDeviation = Math.sqrt(variance);
-    const standardError = standardDeviation / Math.sqrt(samples.length);
+    const standardError = standardDeviation / Math.sqrt(usedSamples.length);
     
-    // Relative margin of error as percentage (using 95% confidence interval)
-    const rme = (standardError / mean) * 100 * 1.96;
+    // Use configurable confidence level
+    const zScore = getZScore(this.confidenceLevel);
+    const rme = (standardError / mean) * 100 * zScore;
     
-    // Min and max times
-    const min = Math.min(...samples);
-    const max = Math.max(...samples);
+    // Min and max times from used samples
+    const min = Math.min(...usedSamples);
+    const max = Math.max(...usedSamples);
 
     return {
       name,
       mean,
       rme,
-      samples: samples.length,
+      samples: usedSamples.length,
       min,
       max,
       variance,
@@ -92,10 +132,10 @@ class NiceBenchmark {
       const result = await this.measureFunction(benchmark.name, benchmark.fn);
       this.results.push(result);
       
-      // Format output to show timing instead of ops/sec
+      // Format output to show timing with configured confidence level
       const meanTime = result.mean.toFixed(3);
       const marginOfError = result.rme.toFixed(2);
-      console.log(`${result.name}: ${meanTime}ms ±${marginOfError}% (${result.samples} runs sampled)`);
+      console.log(`${result.name}: ${meanTime}ms ±${marginOfError}% (${result.samples} runs sampled, ${this.confidenceLevel}% confidence)`);
     }
 
     // Find fastest (by mean time - lower is faster)
@@ -323,9 +363,82 @@ class MockDataGenerator {
   }
 }
 
+// Parse command line arguments
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const result = {};
+  
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    
+    if (arg === '--help' || arg === '-h') {
+      result.help = true;
+    } else if (arg === '--confidence' || arg === '-c') {
+      const nextArg = args[i + 1];
+      if (nextArg && !nextArg.startsWith('-')) {
+        const confidence = parseFloat(nextArg);
+        if (!isNaN(confidence) && confidence > 0 && confidence <= 100) {
+          result.confidenceLevel = confidence;
+          i++; // Skip the next argument since we used it
+        } else {
+          console.error(`Error: Invalid confidence level "${nextArg}". Must be a number between 0 and 100.`);
+          process.exit(1);
+        }
+      } else {
+        console.error(`Error: --confidence requires a value.`);
+        process.exit(1);
+      }
+    }
+  }
+  
+  return result;
+}
+
+function showHelp() {
+  console.log(`
+🚀 ForestRun Performance Benchmarks
+
+Usage: yarn benchmark [options]
+
+Options:
+  --confidence, -c <level>  Set confidence level (90, 95, 99, 99.9)
+                           Default: 95
+  --help, -h               Show this help message
+
+Examples:
+  yarn benchmark                    # Use default 95% confidence
+  yarn benchmark --confidence 99   # Use 99% confidence (high precision)
+  yarn benchmark -c 90             # Use 90% confidence (faster)
+
+Available Confidence Levels:
+  90%   → z = 1.645 (faster benchmarks, good precision)
+  95%   → z = 1.96  (default, balanced precision/speed)
+  99%   → z = 2.576 (high precision, longer benchmarks)
+  99.9% → z = 3.291 (maximum precision, research-quality)
+`);
+}
+
 // Load configuration
 const configPath = path.join(__dirname, "config.json");
-const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+let config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+
+// Override config with command line arguments
+const cliArgs = parseArgs();
+
+if (cliArgs.help) {
+  showHelp();
+  process.exit(0);
+}
+
+if (cliArgs.confidenceLevel !== undefined) {
+  config.confidenceLevel = cliArgs.confidenceLevel;
+  console.log(`📊 Configuration:`);
+  console.log(`   Confidence Level: ${config.confidenceLevel}%`);
+  
+  // Update config file to remember the setting
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+  console.log(`   ✅ Updated config.json with confidence level: ${config.confidenceLevel}%`);
+}
 
 // Load queries
 const queries = {};
@@ -354,7 +467,7 @@ function createTestData(queryKey, iteration) {
 
 // Benchmark write operations
 async function benchmarkWrites(queryKey) {
-  const suite = new NiceBenchmark(`${queryKey} - Write Operations`);
+  const suite = new NiceBenchmark(`${queryKey} - Write Operations`, config.confidenceLevel);
   
   suite.add("ForestRun Write", async () => {
     const cache = createCache();
@@ -371,7 +484,7 @@ async function benchmarkWrites(queryKey) {
 
 // Benchmark read operations
 async function benchmarkReads(queryKey) {
-  const suite = new NiceBenchmark(`${queryKey} - Read Operations`);
+  const suite = new NiceBenchmark(`${queryKey} - Read Operations`, config.confidenceLevel);
   
   // Pre-populate cache
   const cache = createCache();
@@ -402,7 +515,7 @@ async function benchmarkReads(queryKey) {
 
 // Benchmark update operations
 async function benchmarkUpdates(queryKey) {
-  const suite = new NiceBenchmark(`${queryKey} - Update Operations`);
+  const suite = new NiceBenchmark(`${queryKey} - Update Operations`, config.confidenceLevel);
   
   suite.add("ForestRun Update", async () => {
     const cache = createCache();
@@ -426,7 +539,7 @@ async function benchmarkUpdates(queryKey) {
 
 // Benchmark empty cache read operations (cache misses)
 async function benchmarkEmptyReads(queryKey) {
-  const suite = new NiceBenchmark(`${queryKey} - Empty Cache Reads (Cache Miss)`);
+  const suite = new NiceBenchmark(`${queryKey} - Empty Cache Reads (Cache Miss)`, config.confidenceLevel);
   
   suite.add("ForestRun Empty Read", async () => {
     const cache = createCache();
@@ -447,7 +560,7 @@ async function benchmarkEmptyReads(queryKey) {
 
 // Benchmark cache miss vs hit scenarios
 async function benchmarkCacheMiss(queryKey) {
-  const suite = new NiceBenchmark(`${queryKey} - Cache Miss Operations`);
+  const suite = new NiceBenchmark(`${queryKey} - Cache Miss Operations`, config.confidenceLevel);
   
   suite.add("ForestRun Cache Miss", async () => {
     const cache = createCache();
@@ -475,7 +588,7 @@ async function benchmarkCacheMiss(queryKey) {
 
 // Benchmark cache hit scenarios
 async function benchmarkCacheHit(queryKey) {
-  const suite = new NiceBenchmark(`${queryKey} - Cache Hit Operations`);
+  const suite = new NiceBenchmark(`${queryKey} - Cache Hit Operations`, config.confidenceLevel);
   
   suite.add("ForestRun Cache Hit", async () => {
     const cache = createCache();
@@ -506,7 +619,7 @@ async function benchmarkCacheHit(queryKey) {
 
 // Benchmark multiple observers scenario
 async function benchmarkMultipleObservers(queryKey) {
-  const suite = new NiceBenchmark(`${queryKey} - Multiple Observers`);
+  const suite = new NiceBenchmark(`${queryKey} - Multiple Observers`, config.confidenceLevel);
   
   suite.add("ForestRun Multiple Observers", async () => {
     const cache = createCache();
@@ -537,7 +650,9 @@ async function benchmarkMultipleObservers(queryKey) {
 // Main benchmark runner
 async function runBenchmarks() {
   console.log("🚀 ForestRun Performance Benchmarks");
-  console.log(`Configuration: ${JSON.stringify(config, null, 2)}\n`);
+  console.log(`📊 Configuration:`);
+  console.log(`   Confidence Level: ${config.confidenceLevel}%`);
+  console.log("");
   
   const results = [];
   const queryKeys = Object.keys(config.queries);
