@@ -8,7 +8,6 @@ export interface BenchmarkResult {
   min: number; // Minimum execution time in milliseconds
   max: number; // Maximum execution time in milliseconds
   variance: number;
-  confidenceLevel: number; // Target confidence level used
 }
 
 export interface BenchmarkSuiteResult {
@@ -25,54 +24,36 @@ interface BenchmarkFunction {
   fn: () => Promise<void> | void;
 }
 
-interface BenchmarkOptions {
-  confidenceLevel?: number; // Target confidence level (e.g., 95 for 95% confidence)
+// Helper function to get z-score for different confidence levels
+function getZScore(confidenceLevel: number): number {
+  switch (confidenceLevel) {
+    case 90: return 1.645;
+    case 95: return 1.96;
+    case 99: return 2.576;
+    case 99.9: return 3.291;
+    default:
+      // For other confidence levels, use normal distribution approximation
+      // This is a simplified approach - for production use, you'd want a proper inverse normal function
+      if (confidenceLevel < 90) return 1.645;
+      if (confidenceLevel < 95) return 1.96;
+      if (confidenceLevel < 99) return 2.576;
+      return 3.291;
+  }
 }
 
 export default class NiceBenchmark {
   private name: string;
   private benchmarks: BenchmarkFunction[] = [];
   private results: BenchmarkResult[] = [];
-  private confidenceLevel: number = 95; // Default 95% confidence
+  private confidenceLevel: number;
 
-  constructor(name: string, options?: BenchmarkOptions) {
+  constructor(name: string, confidenceLevel: number = 95) {
     this.name = name;
-    if (options?.confidenceLevel) {
-      this.confidenceLevel = options.confidenceLevel;
-    }
+    this.confidenceLevel = confidenceLevel;
   }
 
   add(name: string, fn: () => Promise<void> | void) {
     this.benchmarks.push({ name, fn });
-  }
-
-  // Calculate z-score for given confidence level
-  private getZScore(confidenceLevel: number): number {
-    // Convert confidence level to alpha (significance level)
-    const alpha = (100 - confidenceLevel) / 100;
-    const alphaHalf = alpha / 2;
-    
-    // Common confidence levels and their z-scores
-    const zScores: Record<number, number> = {
-      90: 1.645,
-      95: 1.96,
-      99: 2.576,
-      99.9: 3.291
-    };
-    
-    // Return exact match if available
-    if (zScores[confidenceLevel]) {
-      return zScores[confidenceLevel];
-    }
-    
-    // For other confidence levels, use approximation
-    // This is a simplified inverse normal approximation
-    if (confidenceLevel >= 99.9) return 3.291;
-    if (confidenceLevel >= 99) return 2.576;
-    if (confidenceLevel >= 95) return 1.96;
-    if (confidenceLevel >= 90) return 1.645;
-    if (confidenceLevel >= 80) return 1.282;
-    return 1.645; // Default to 90% for lower confidence levels
   }
 
   private async measureFunction(name: string, fn: () => Promise<void> | void, minSamples = 200, minTime = 10000): Promise<BenchmarkResult> {
@@ -121,10 +102,8 @@ export default class NiceBenchmark {
     const standardDeviation = Math.sqrt(variance);
     const standardError = standardDeviation / Math.sqrt(usedSamples.length);
     
-    // Get z-score for the specified confidence level
-    const zScore = this.getZScore(this.confidenceLevel);
-    
-    // Relative margin of error as percentage using specified confidence level
+    // Use configurable confidence level
+    const zScore = getZScore(this.confidenceLevel);
     const rme = (standardError / mean) * 100 * zScore;
     
     // Min and max times from used samples
@@ -139,7 +118,6 @@ export default class NiceBenchmark {
       min,
       max,
       variance,
-      confidenceLevel: this.confidenceLevel,
     };
   }
 
@@ -151,10 +129,10 @@ export default class NiceBenchmark {
       const result = await this.measureFunction(benchmark.name, benchmark.fn);
       this.results.push(result);
       
-      // Format output to show timing with specified confidence level
+      // Format output to show timing with configured confidence level
       const meanTime = result.mean.toFixed(3);
       const marginOfError = result.rme.toFixed(2);
-      console.log(`${result.name}: ${meanTime}ms ±${marginOfError}% (${result.samples} runs sampled, ${result.confidenceLevel}% confidence)`);
+      console.log(`${result.name}: ${meanTime}ms ±${marginOfError}% (${result.samples} runs sampled, ${this.confidenceLevel}% confidence)`);
     }
 
     // Find fastest and slowest (by mean time - lower is faster)

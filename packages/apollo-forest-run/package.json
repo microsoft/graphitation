@@ -15,7 +15,7 @@
     "test:own": "monorepo-scripts test",
     "test:apollo": "node ./scripts/run-apollo-tests.js",
     "types": "monorepo-scripts types",
-    "benchmark": "./benchmarks/performance/benchmark-wrapper.sh",
+    "benchmark": "node ./benchmarks/performance/index.js",
     "benchmark:memory": "node ./benchmarks/memory/bench.js",
     "just": "monorepo-scripts"
   },
