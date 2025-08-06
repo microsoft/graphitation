@@ -128,11 +128,63 @@ The system automatically generates appropriate mock data that matches the query 
 ### Local Development
 
 ```bash
-# Run benchmarks with high confidence measurements
-yarn benchmark
+# Run benchmarks with configurable confidence levels
+yarn benchmark                    # Uses config.json confidence level
+yarn benchmark --confidence 99   # 99% confidence (high precision)
+yarn benchmark -c 90             # 90% confidence (faster)
+yarn benchmark --help            # Show all options
+
+# Compare benchmark reports
+yarn benchmark:compare --help                                    # Show comparison options
+yarn benchmark:compare                                          # Auto-detect latest 2 reports
+yarn benchmark:compare -b baseline.json -c current.json         # Compare specific files
+yarn benchmark:compare -b baseline.json -c current.json -f markdown  # Markdown output
 
 # Run memory benchmarks (existing)
 yarn benchmark:memory
+```
+
+### Benchmark Comparison
+
+The `compare-reports.ts` script can compare two benchmark reports and show performance changes:
+
+```bash
+# Auto-detect the latest two reports and compare them
+yarn benchmark:compare
+
+# Compare specific reports with text output
+yarn benchmark:compare --baseline baseline-report.json --current current-report.json
+
+# Generate markdown comparison for GitHub/documentation
+yarn benchmark:compare --baseline baseline-report.json --current current-report.json --format markdown
+
+# Generate JSON comparison for programmatic use
+yarn benchmark:compare --baseline baseline-report.json --current current-report.json --format json
+```
+
+The comparison tool shows:
+- **Summary statistics**: Number of improvements, regressions, and no-change operations
+- **Detailed comparisons**: Operation-by-operation performance changes
+- **Threshold-based categorization**: >5% change considered significant, >10% considered major
+- **Multiple output formats**: Text (default), Markdown, or JSON
+
+Example comparison output:
+```
+📊 ForestRun Benchmark Comparison
+================================
+
+Summary:
+  Total Queries: 6
+  Total Operations: 42
+  Improvements (>5% faster): 8
+  Regressions (>5% slower): 2
+  No significant change (±5%): 32
+  Significant changes (>10%): 3
+
+🏆 Improvements (Faster):
+  user-profile - read: 0.245ms → 0.198ms (-19.2%)
+  simple - cacheHit: 0.156ms → 0.142ms (-9.0%)
+  ...
 ```
 
 ### GitHub Actions
