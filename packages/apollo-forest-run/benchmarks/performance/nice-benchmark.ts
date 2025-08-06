@@ -72,21 +72,14 @@ export default class NiceBenchmark {
     const maxSamples = 1000; // Maximum total samples
     
     // Warmup phase - don't record these samples
-    console.log(`  Warming up ${name}...`);
     for (let i = 0; i < warmupSamples; i++) {
       await fn();
     }
     
-    console.log(`  Measuring ${name} (target: ${this.targetConfidence}% confidence)...`);
-    
     let currentConfidence = 0; // Start with 0% confidence
-    let batchCount = 0;
     
     // Run in batches until we achieve target confidence
     while (currentConfidence < this.targetConfidence && samples.length < maxSamples) {
-      batchCount++;
-      console.log(`    Running batch ${batchCount} (${batchSize} samples)...`);
-      
       // Run a batch of samples
       for (let i = 0; i < batchSize; i++) {
         const start = process.hrtime.bigint();
@@ -103,7 +96,6 @@ export default class NiceBenchmark {
         const stats = new Stats(samples);
         const relativeMarginOfError = percentRelativeMarginOfError(stats);
         currentConfidence = 100 - relativeMarginOfError;
-        console.log(`    Current confidence: ${currentConfidence.toFixed(1)}% (${samples.length} samples)`);
       }
     }
 
@@ -126,8 +118,6 @@ export default class NiceBenchmark {
     const relativeMarginOfError = percentRelativeMarginOfError(stats);
     const finalConfidence = 100 - relativeMarginOfError;
 
-    console.log(`    Final confidence: ${finalConfidence.toFixed(1)}% (±${relativeMarginOfError.toFixed(2)}% margin of error)`);
-
     return {
       name,
       mean,
@@ -138,17 +128,11 @@ export default class NiceBenchmark {
   }
 
   async run(options?: any): Promise<BenchmarkSuiteResult> {
-    console.log(`\n=== ${this.name} ===`);
     this.results = [];
 
     for (const benchmark of this.benchmarks) {
       const result = await this.measureFunction(benchmark.name, benchmark.fn);
       this.results.push(result);
-      
-      // Format output to show timing with confidence level
-      const meanTime = result.mean.toFixed(3);
-      const marginOfError = result.rme.toFixed(2);
-      console.log(`${result.name}: ${meanTime}ms ±${marginOfError}% (${result.samples} runs sampled, ${result.confidence.toFixed(1)}% confidence)`);
     }
 
     const benchmarkResult: BenchmarkSuiteResult = {
