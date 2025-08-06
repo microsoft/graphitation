@@ -59,98 +59,19 @@ jobs:
       - name: Compare benchmarks (PR only)
         if: github.event_name == 'pull_request'
         run: |
-          cd packages/apollo-forest-run
+          cd packages/apollo-forest-run/benchmarks/performance
           
           # Check if baseline exists
-          if [ -f "../../baseline/benchmark-report-"*.json ]; then
-            BASELINE_FILE=$(ls ../../baseline/benchmark-report-*.json | head -n1)
+          if [ -f "../../../../baseline/benchmark-report-"*.json ]; then
+            BASELINE_FILE=$(ls ../../../../baseline/benchmark-report-*.json | head -n1)
             CURRENT_FILE="${{ steps.benchmark.outputs.report_file }}"
             
-            echo "## 📊 ForestRun Benchmark Comparison" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            
-            # Create comparison using Node.js
-            node -e "
-              const fs = require('fs');
-              const baseline = JSON.parse(fs.readFileSync('$BASELINE_FILE', 'utf8'));
-              const current = JSON.parse(fs.readFileSync('$CURRENT_FILE', 'utf8'));
-              
-              console.log('### Summary');
-              console.log('');
-              console.log('| Metric | Baseline (main) | Current (PR) | Change |');
-              console.log('|--------|----------------|--------------|---------|');
-              
-              // Compare summaries
-              const baselineForestFaster = baseline.summary.forestRunFaster.length;
-              const currentForestFaster = current.summary.forestRunFaster.length;
-              const baselineInMemoryFaster = baseline.summary.inMemoryCacheFaster.length;
-              const currentInMemoryFaster = current.summary.inMemoryCacheFaster.length;
-              
-              const forestChange = currentForestFaster - baselineForestFaster;
-              const inMemoryChange = currentInMemoryFaster - baselineInMemoryFaster;
-              
-              console.log(\`| ForestRun faster in | \${baselineForestFaster} suites | \${currentForestFaster} suites | \${forestChange >= 0 ? '+' : ''}\${forestChange} |\`);
-              console.log(\`| InMemoryCache faster in | \${baselineInMemoryFaster} suites | \${currentInMemoryFaster} suites | \${inMemoryChange >= 0 ? '+' : ''}\${inMemoryChange} |\`);
-              console.log('');
-              
-              // Detailed comparison
-              console.log('### Detailed Results');
-              console.log('');
-              
-              baseline.suites.forEach((baseSuite, index) => {
-                const currentSuite = current.suites[index];
-                if (!currentSuite || baseSuite.suiteName !== currentSuite.suiteName) return;
-                
-                console.log(\`#### \${baseSuite.suiteName}\`);
-                console.log('');
-                console.log('| Implementation | Baseline (ops/sec) | Current (ops/sec) | Change |');
-                console.log('|----------------|-------------------|------------------|---------|');
-                
-                baseSuite.results.forEach((baseResult, idx) => {
-                  const currentResult = currentSuite.results[idx];
-                  if (!currentResult || baseResult.name !== currentResult.name) return;
-                  
-                  const change = ((currentResult.hz - baseResult.hz) / baseResult.hz * 100).toFixed(2);
-                  const changeDisplay = change >= 0 ? \`+\${change}%\` : \`\${change}%\`;
-                  
-                  console.log(\`| \${baseResult.name} | \${baseResult.hz.toFixed(2)} | \${currentResult.hz.toFixed(2)} | \${changeDisplay} |\`);
-                });
-                
-                console.log('');
-                console.log(\`**Baseline fastest:** \${baseSuite.fastest}\`);
-                console.log(\`**Current fastest:** \${currentSuite.fastest}\`);
-                console.log('');
-              });
-            " >> $GITHUB_STEP_SUMMARY
+            # Use the comparison script to generate markdown output
+            npx ts-node --compiler-options '{"module":"commonjs"}' compare-reports.ts --baseline "$BASELINE_FILE" --current "$CURRENT_FILE" --format markdown >> $GITHUB_STEP_SUMMARY
           else
             echo "## 📊 ForestRun Benchmark Results" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "⚠️ No baseline benchmark found. This is the first benchmark run." >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            
-            # Show current results
-            CURRENT_FILE="${{ steps.benchmark.outputs.report_file }}"
-            node -e "
-              const fs = require('fs');
-              const current = JSON.parse(fs.readFileSync('$CURRENT_FILE', 'utf8'));
-              
-              console.log('### Current Results');
-              console.log('');
-              console.log(\`- Total benchmark suites: \${current.summary.totalTests}\`);
-              console.log(\`- ForestRun faster in: \${current.summary.forestRunFaster.length} suites\`);
-              console.log(\`- InMemoryCache faster in: \${current.summary.inMemoryCacheFaster.length} suites\`);
-              console.log('');
-              
-              if (current.summary.forestRunFaster.length > 0) {
-                console.log('**🏆 ForestRun was faster in:**');
-                current.summary.forestRunFaster.forEach(suite => console.log(\`- \${suite}\`));
-                console.log('');
-              }
-              
-              if (current.summary.inMemoryCacheFaster.length > 0) {
-                console.log('**🥈 InMemoryCache was faster in:**');
-                current.summary.inMemoryCacheFaster.forEach(suite => console.log(\`- \${suite}\`));
-                console.log('');
-              }
-            " >> $GITHUB_STEP_SUMMARY
+            echo "Run the benchmarks on the main branch first to establish a baseline for comparison." >> $GITHUB_STEP_SUMMARY
           fi

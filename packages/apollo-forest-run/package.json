@@ -17,6 +17,7 @@
     "types": "monorepo-scripts types",
     "benchmark": "ts-node --compiler-options '{\"module\":\"commonjs\"}' ./benchmarks/performance/index.ts",
     "benchmark:memory": "node ./benchmarks/memory/bench.js",
+    "benchmark:compare": "ts-node --compiler-options '{\"module\":\"commonjs\"}' ./benchmarks/performance/compare-reports.ts",
     "just": "monorepo-scripts"
   },
   "devDependencies": {
