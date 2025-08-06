@@ -42,6 +42,31 @@ function getZScore(confidenceLevel: number): number {
   }
 }
 
+// Helper function to calculate actual confidence level achieved from z-score
+function getConfidenceFromZScore(zScore: number): number {
+  if (zScore >= 3.291) return 99.9;
+  if (zScore >= 2.576) return 99;
+  if (zScore >= 1.96) return 95;
+  if (zScore >= 1.645) return 90;
+  // For lower z-scores, interpolate or return lower confidence
+  return Math.max(80, 90 * (zScore / 1.645));
+}
+
+// Calculate actual confidence level achieved with current statistics
+function calculateActualConfidence(samples: number[], mean: number): number {
+  if (samples.length < 10) return 0; // Need minimum samples for meaningful confidence
+  
+  const variance = samples.reduce((sum, time) => sum + Math.pow(time - mean, 2), 0) / samples.length;
+  const standardDeviation = Math.sqrt(variance);
+  const standardError = standardDeviation / Math.sqrt(samples.length);
+  
+  // Calculate what z-score would give us a reasonable margin of error (e.g., 5%)
+  const targetMarginOfError = 5; // 5% margin of error
+  const zScore = (targetMarginOfError * mean) / (standardError * 100);
+  
+  return getConfidenceFromZScore(zScore);
+}
+
 export default class NiceBenchmark {
   private name: string;
   private benchmarks: BenchmarkFunction[] = [];
@@ -57,9 +82,11 @@ export default class NiceBenchmark {
     this.benchmarks.push({ name, fn });
   }
 
-  private async measureFunction(name: string, fn: () => Promise<void> | void, minSamples = 200, minTime = 10000): Promise<BenchmarkResult> {
+  private async measureFunction(name: string, fn: () => Promise<void> | void): Promise<BenchmarkResult> {
     const samples: number[] = [];
     const warmupSamples = 20; // Warmup runs to eliminate JIT compilation effects
+    const batchSize = 50; // Run 50 samples at a time
+    const maxSamples = 1000; // Maximum total samples
     
     // Warmup phase - don't record these samples
     console.log(`  Warming up ${name}...`);
@@ -67,21 +94,33 @@ export default class NiceBenchmark {
       await fn();
     }
     
-    console.log(`  Measuring ${name}...`);
-    const startTime = Date.now();
-
-    // Run at least minSamples times or until minTime milliseconds have passed
-    while (samples.length < minSamples || (Date.now() - startTime) < minTime) {
-      const start = process.hrtime.bigint();
-      await fn();
-      const end = process.hrtime.bigint();
+    console.log(`  Measuring ${name} (target: ${this.confidenceLevel}% confidence)...`);
+    
+    let currentConfidence = 0;
+    let batchCount = 0;
+    
+    // Run in batches until we achieve target confidence or reach max samples
+    while (currentConfidence < this.confidenceLevel && samples.length < maxSamples) {
+      batchCount++;
+      console.log(`    Running batch ${batchCount} (${batchSize} samples)...`);
       
-      // Convert nanoseconds to milliseconds
-      const duration = Number(end - start) / 1e6;
-      samples.push(duration);
-
-      // Allow more samples for better statistical confidence
-      if (samples.length >= 1000) break;
+      // Run a batch of samples
+      for (let i = 0; i < batchSize; i++) {
+        const start = process.hrtime.bigint();
+        await fn();
+        const end = process.hrtime.bigint();
+        
+        // Convert nanoseconds to milliseconds
+        const duration = Number(end - start) / 1e6;
+        samples.push(duration);
+      }
+      
+      // Calculate current confidence after this batch
+      if (samples.length >= 50) { // Need minimum samples for meaningful confidence calculation
+        const mean = samples.reduce((sum, time) => sum + time, 0) / samples.length;
+        currentConfidence = calculateActualConfidence(samples, mean);
+        console.log(`    Current confidence: ${currentConfidence.toFixed(1)}% (${samples.length} samples)`);
+      }
     }
 
     // Remove outliers using the IQR method for more stable results
@@ -97,19 +136,22 @@ export default class NiceBenchmark {
     // Use filtered samples for calculations if we have enough, otherwise use all samples
     const usedSamples = filteredSamples.length >= Math.min(50, samples.length * 0.8) ? filteredSamples : samples;
     
-    // Calculate statistics
+    // Calculate final statistics
     const mean = usedSamples.reduce((sum, time) => sum + time, 0) / usedSamples.length;
     const variance = usedSamples.reduce((sum, time) => sum + Math.pow(time - mean, 2), 0) / usedSamples.length;
     const standardDeviation = Math.sqrt(variance);
     const standardError = standardDeviation / Math.sqrt(usedSamples.length);
     
-    // Use configurable confidence level
-    const zScore = getZScore(this.confidenceLevel);
+    // Calculate final confidence and margin of error
+    const finalConfidence = calculateActualConfidence(usedSamples, mean);
+    const zScore = getZScore(finalConfidence);
     const rme = (standardError / mean) * 100 * zScore;
     
     // Min and max times from used samples
     const min = Math.min(...usedSamples);
     const max = Math.max(...usedSamples);
+
+    console.log(`    Final confidence achieved: ${finalConfidence.toFixed(1)}%`);
 
     return {
       name,
@@ -119,7 +161,7 @@ export default class NiceBenchmark {
       min,
       max,
       variance,
-      confidenceLevel: this.confidenceLevel,
+      confidenceLevel: finalConfidence, // Report actual confidence achieved
     };
   }
 
@@ -131,10 +173,10 @@ export default class NiceBenchmark {
       const result = await this.measureFunction(benchmark.name, benchmark.fn);
       this.results.push(result);
       
-      // Format output to show timing with configured confidence level
+      // Format output to show timing with actual confidence level achieved
       const meanTime = result.mean.toFixed(3);
       const marginOfError = result.rme.toFixed(2);
-      console.log(`${result.name}: ${meanTime}ms ±${marginOfError}% (${result.samples} runs sampled, ${this.confidenceLevel}% confidence)`);
+      console.log(`${result.name}: ${meanTime}ms ±${marginOfError}% (${result.samples} runs sampled, ${result.confidenceLevel.toFixed(1)}% confidence)`);
     }
 
     // Find fastest and slowest (by mean time - lower is faster)
