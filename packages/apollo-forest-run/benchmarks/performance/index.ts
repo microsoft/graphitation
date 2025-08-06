@@ -407,13 +407,13 @@ async function runBenchmarks(): Promise<BenchmarkReport> {
   console.log("====================");
   results.forEach(({ queryName, operations }) => {
     console.log(`${queryName}:`);
-    console.log(`  Write: ${operations.write.benchmarks[0].mean.toFixed(3)}ms ±${operations.write.benchmarks[0].rme.toFixed(2)}% (${operations.write.benchmarks[0].confidenceLevel.toFixed(1)}% confidence)`);
-    console.log(`  Read:  ${operations.read.benchmarks[0].mean.toFixed(3)}ms ±${operations.read.benchmarks[0].rme.toFixed(2)}% (${operations.read.benchmarks[0].confidenceLevel.toFixed(1)}% confidence)`);
-    console.log(`  Update: ${operations.update.benchmarks[0].mean.toFixed(3)}ms ±${operations.update.benchmarks[0].rme.toFixed(2)}% (${operations.update.benchmarks[0].confidenceLevel.toFixed(1)}% confidence)`);
-    console.log(`  Empty Read: ${operations.emptyRead.benchmarks[0].mean.toFixed(3)}ms ±${operations.emptyRead.benchmarks[0].rme.toFixed(2)}% (${operations.emptyRead.benchmarks[0].confidenceLevel.toFixed(1)}% confidence)`);
-    console.log(`  Cache Miss: ${operations.cacheMiss.benchmarks[0].mean.toFixed(3)}ms ±${operations.cacheMiss.benchmarks[0].rme.toFixed(2)}% (${operations.cacheMiss.benchmarks[0].confidenceLevel.toFixed(1)}% confidence)`);
-    console.log(`  Cache Hit: ${operations.cacheHit.benchmarks[0].mean.toFixed(3)}ms ±${operations.cacheHit.benchmarks[0].rme.toFixed(2)}% (${operations.cacheHit.benchmarks[0].confidenceLevel.toFixed(1)}% confidence)`);
-    console.log(`  Multiple Observers: ${operations.multipleObservers.benchmarks[0].mean.toFixed(3)}ms ±${operations.multipleObservers.benchmarks[0].rme.toFixed(2)}% (${operations.multipleObservers.benchmarks[0].confidenceLevel.toFixed(1)}% confidence)`);
+    console.log(`  Write: ${operations.write.results[0].mean.toFixed(3)}ms ±${operations.write.results[0].rme.toFixed(2)}% (${operations.write.results[0].confidenceLevel}% confidence)`);
+    console.log(`  Read:  ${operations.read.results[0].mean.toFixed(3)}ms ±${operations.read.results[0].rme.toFixed(2)}% (${operations.read.results[0].confidenceLevel}% confidence)`);
+    console.log(`  Update: ${operations.update.results[0].mean.toFixed(3)}ms ±${operations.update.results[0].rme.toFixed(2)}% (${operations.update.results[0].confidenceLevel}% confidence)`);
+    console.log(`  Empty Read: ${operations.emptyRead.results[0].mean.toFixed(3)}ms ±${operations.emptyRead.results[0].rme.toFixed(2)}% (${operations.emptyRead.results[0].confidenceLevel}% confidence)`);
+    console.log(`  Cache Miss: ${operations.cacheMiss.results[0].mean.toFixed(3)}ms ±${operations.cacheMiss.results[0].rme.toFixed(2)}% (${operations.cacheMiss.results[0].confidenceLevel}% confidence)`);
+    console.log(`  Cache Hit: ${operations.cacheHit.results[0].mean.toFixed(3)}ms ±${operations.cacheHit.results[0].rme.toFixed(2)}% (${operations.cacheHit.results[0].confidenceLevel}% confidence)`);
+    console.log(`  Multiple Observers: ${operations.multipleObservers.results[0].mean.toFixed(3)}ms ±${operations.multipleObservers.results[0].rme.toFixed(2)}% (${operations.multipleObservers.results[0].confidenceLevel}% confidence)`);
   });
   
   // Save report
