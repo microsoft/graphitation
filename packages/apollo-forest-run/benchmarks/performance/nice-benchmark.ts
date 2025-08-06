@@ -5,10 +5,7 @@ export interface BenchmarkResult {
   mean: number; // Mean execution time in milliseconds
   rme: number; // Relative margin of error (%)
   samples: number;
-  min: number; // Minimum execution time in milliseconds
-  max: number; // Maximum execution time in milliseconds
-  variance: number;
-  confidenceLevel: number; // Actual confidence level achieved
+  confidence: number; // Actual confidence level achieved (%)
 }
 
 export interface BenchmarkSuiteResult {
@@ -21,71 +18,47 @@ interface BenchmarkFunction {
   fn: () => Promise<void> | void;
 }
 
-// Helper function to get t-score for different confidence levels and degrees of freedom
-function getTScore(confidenceLevel: number, degreesOfFreedom: number): number {
-  // For sample sizes >= 30, t-distribution approaches normal distribution
-  // For smaller samples, we use approximated t-values
-  
-  if (degreesOfFreedom >= 30) {
-    // Use z-scores for large samples
-    switch (confidenceLevel) {
-      case 90: return 1.645;
-      case 95: return 1.96;
-      case 99: return 2.576;
-      case 99.9: return 3.291;
-      default:
-        if (confidenceLevel <= 90) return 1.645;
-        if (confidenceLevel <= 95) return 1.96;
-        if (confidenceLevel <= 99) return 2.576;
-        return 3.291;
-    }
+// Simple statistics class with the methods requested by the user
+class Stats {
+  private samples: number[];
+
+  constructor(samples: number[]) {
+    this.samples = [...samples]; // Copy to avoid mutation
   }
-  
-  // Simplified t-values for small samples (approximation)
-  // In practice, you'd use a proper t-table or statistical library
-  const zScore = (() => {
-    switch (confidenceLevel) {
-      case 90: return 1.645;
-      case 95: return 1.96;
-      case 99: return 2.576;
-      case 99.9: return 3.291;
-      default:
-        if (confidenceLevel <= 90) return 1.645;
-        if (confidenceLevel <= 95) return 1.96;
-        if (confidenceLevel <= 99) return 2.576;
-        return 3.291;
-    }
-  })();
-  
-  // Adjust for small sample size (t-distribution has heavier tails)
-  const adjustment = 1 + (2.5 / degreesOfFreedom);
-  return zScore * adjustment;
+
+  // Arithmetic mean
+  amean(): number {
+    return this.samples.reduce((sum, val) => sum + val, 0) / this.samples.length;
+  }
+
+  // Margin of error (absolute)
+  moe(): number {
+    if (this.samples.length < 2) return 0;
+    
+    const mean = this.amean();
+    const variance = this.samples.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (this.samples.length - 1);
+    const standardDeviation = Math.sqrt(variance);
+    const standardError = standardDeviation / Math.sqrt(this.samples.length);
+    
+    // Use 1.96 (95% confidence z-score) as a simple baseline
+    return 1.96 * standardError;
+  }
 }
 
-// Calculate margin of error as percentage of mean
-function calculateMarginOfError(samples: number[], mean: number, confidenceLevel: number): number {
-  if (samples.length < 2) return 100; // Can't calculate with less than 2 samples
-  
-  const variance = samples.reduce((sum, time) => sum + Math.pow(time - mean, 2), 0) / (samples.length - 1);
-  const standardDeviation = Math.sqrt(variance);
-  const standardError = standardDeviation / Math.sqrt(samples.length);
-  
-  const tScore = getTScore(confidenceLevel, samples.length - 1);
-  const marginOfErrorAbsolute = tScore * standardError;
-  
-  // Return as percentage of mean
-  return (marginOfErrorAbsolute / mean) * 100;
+// Calculate relative margin of error as percentage using the user's formula
+function percentRelativeMarginOfError(stats: Stats) {
+  return (stats.moe() / stats.amean()) * 100;
 }
 
 export default class NiceBenchmark {
   private name: string;
   private benchmarks: BenchmarkFunction[] = [];
   private results: BenchmarkResult[] = [];
-  private confidenceLevel: number;
+  private targetConfidence: number;
 
-  constructor(name: string, confidenceLevel: number = 95) {
+  constructor(name: string, targetConfidence: number = 95) {
     this.name = name;
-    this.confidenceLevel = confidenceLevel;
+    this.targetConfidence = targetConfidence;
   }
 
   add(name: string, fn: () => Promise<void> | void) {
@@ -97,7 +70,6 @@ export default class NiceBenchmark {
     const warmupSamples = 20; // Warmup runs to eliminate JIT compilation effects
     const batchSize = 50; // Run 50 samples at a time
     const maxSamples = 1000; // Maximum total samples
-    const targetMarginOfError = 5; // Target 5% margin of error
     
     // Warmup phase - don't record these samples
     console.log(`  Warming up ${name}...`);
@@ -105,13 +77,13 @@ export default class NiceBenchmark {
       await fn();
     }
     
-    console.log(`  Measuring ${name} (target: ${this.confidenceLevel}% confidence, ≤${targetMarginOfError}% margin of error)...`);
+    console.log(`  Measuring ${name} (target: ${this.targetConfidence}% confidence)...`);
     
-    let currentMarginOfError = 100; // Start with 100% margin of error
+    let currentConfidence = 0; // Start with 0% confidence
     let batchCount = 0;
     
-    // Run in batches until we achieve target confidence with reasonable margin of error
-    while (currentMarginOfError > targetMarginOfError && samples.length < maxSamples) {
+    // Run in batches until we achieve target confidence
+    while (currentConfidence < this.targetConfidence && samples.length < maxSamples) {
       batchCount++;
       console.log(`    Running batch ${batchCount} (${batchSize} samples)...`);
       
@@ -126,11 +98,12 @@ export default class NiceBenchmark {
         samples.push(duration);
       }
       
-      // Calculate current margin of error after this batch
+      // Calculate current confidence after this batch
       if (samples.length >= 10) { // Need minimum samples for meaningful calculation
-        const mean = samples.reduce((sum, time) => sum + time, 0) / samples.length;
-        currentMarginOfError = calculateMarginOfError(samples, mean, this.confidenceLevel);
-        console.log(`    Current margin of error: ±${currentMarginOfError.toFixed(2)}% (${samples.length} samples)`);
+        const stats = new Stats(samples);
+        const relativeMarginOfError = percentRelativeMarginOfError(stats);
+        currentConfidence = 100 - relativeMarginOfError;
+        console.log(`    Current confidence: ${currentConfidence.toFixed(1)}% (${samples.length} samples)`);
       }
     }
 
@@ -147,29 +120,20 @@ export default class NiceBenchmark {
     // Use filtered samples for calculations if we have enough, otherwise use all samples
     const usedSamples = filteredSamples.length >= Math.min(50, samples.length * 0.8) ? filteredSamples : samples;
     
-    // Calculate final statistics
-    const mean = usedSamples.reduce((sum, time) => sum + time, 0) / usedSamples.length;
-    const variance = usedSamples.reduce((sum, time) => sum + Math.pow(time - mean, 2), 0) / (usedSamples.length - 1);
-    const standardDeviation = Math.sqrt(variance);
-    
-    // Calculate final margin of error
-    const finalMarginOfError = calculateMarginOfError(usedSamples, mean, this.confidenceLevel);
-    
-    // Min and max times from used samples
-    const min = Math.min(...usedSamples);
-    const max = Math.max(...usedSamples);
+    // Calculate final statistics using the new Stats class
+    const stats = new Stats(usedSamples);
+    const mean = stats.amean();
+    const relativeMarginOfError = percentRelativeMarginOfError(stats);
+    const finalConfidence = 100 - relativeMarginOfError;
 
-    console.log(`    Final margin of error: ±${finalMarginOfError.toFixed(2)}% at ${this.confidenceLevel}% confidence`);
+    console.log(`    Final confidence: ${finalConfidence.toFixed(1)}% (±${relativeMarginOfError.toFixed(2)}% margin of error)`);
 
     return {
       name,
       mean,
-      rme: finalMarginOfError,
+      rme: relativeMarginOfError,
       samples: usedSamples.length,
-      min,
-      max,
-      variance,
-      confidenceLevel: this.confidenceLevel, // Report requested confidence level
+      confidence: finalConfidence,
     };
   }
 
@@ -184,7 +148,7 @@ export default class NiceBenchmark {
       // Format output to show timing with confidence level
       const meanTime = result.mean.toFixed(3);
       const marginOfError = result.rme.toFixed(2);
-      console.log(`${result.name}: ${meanTime}ms ±${marginOfError}% (${result.samples} runs sampled, ${result.confidenceLevel}% confidence)`);
+      console.log(`${result.name}: ${meanTime}ms ±${marginOfError}% (${result.samples} runs sampled, ${result.confidence.toFixed(1)}% confidence)`);
     }
 
     const benchmarkResult: BenchmarkSuiteResult = {

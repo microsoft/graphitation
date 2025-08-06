@@ -181,13 +181,13 @@ function compareReports(baseline: BenchmarkReport, current: BenchmarkReport): Co
             mean: baselineMean,
             rme: baselineOp.results[0].rme,
             samples: baselineOp.results[0].samples,
-            confidence: baselineOp.results[0].confidenceLevel
+            confidence: baselineOp.results[0].confidence
           },
           current: {
             mean: currentMean,
             rme: currentOp.results[0].rme,
             samples: currentOp.results[0].samples,
-            confidence: currentOp.results[0].confidenceLevel
+            confidence: currentOp.results[0].confidence
           },
           changePercent,
           changeDescription
