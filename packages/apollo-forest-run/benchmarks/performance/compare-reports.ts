@@ -160,9 +160,9 @@ function compareReports(baseline: BenchmarkReport, current: BenchmarkReport): Co
       const baselineOp = baselineResult.operations[operation];
       const currentOp = currentResult.operations[operation];
       
-      if (baselineOp.benchmarks[0] && currentOp.benchmarks[0]) {
-        const baselineMean = baselineOp.benchmarks[0].mean;
-        const currentMean = currentOp.benchmarks[0].mean;
+      if (baselineOp.results[0] && currentOp.results[0]) {
+        const baselineMean = baselineOp.results[0].mean;
+        const currentMean = currentOp.results[0].mean;
         const changePercent = ((currentMean - baselineMean) / baselineMean) * 100;
         
         let changeDescription: string;
@@ -179,15 +179,15 @@ function compareReports(baseline: BenchmarkReport, current: BenchmarkReport): Co
           operation,
           baseline: {
             mean: baselineMean,
-            rme: baselineOp.benchmarks[0].rme,
-            samples: baselineOp.benchmarks[0].samples,
-            confidence: baselineOp.benchmarks[0].confidenceLevel
+            rme: baselineOp.results[0].rme,
+            samples: baselineOp.results[0].samples,
+            confidence: baselineOp.results[0].confidenceLevel
           },
           current: {
             mean: currentMean,
-            rme: currentOp.benchmarks[0].rme,
-            samples: currentOp.benchmarks[0].samples,
-            confidence: currentOp.benchmarks[0].confidenceLevel
+            rme: currentOp.results[0].rme,
+            samples: currentOp.results[0].samples,
+            confidence: currentOp.results[0].confidenceLevel
           },
           changePercent,
           changeDescription
