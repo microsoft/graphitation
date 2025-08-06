@@ -367,33 +367,44 @@ async function runBenchmarks(): Promise<BenchmarkReport> {
   console.log(`   Confidence Level: ${config.confidenceLevel}%`);
   console.log("");
   
-  const results: BenchmarkReport['results'] = [];
   const queryKeys = Object.keys(config.queries);
   
-  for (const queryKey of queryKeys) {
-    console.log(`\n📊 Benchmarking: ${queryKey}`);
-    
-    const writeResults = await benchmarkWrites(queryKey);
-    const readResults = await benchmarkReads(queryKey);
-    const updateResults = await benchmarkUpdates(queryKey);
-    const emptyReadResults = await benchmarkEmptyReads(queryKey);
-    const cacheMissResults = await benchmarkCacheMiss(queryKey);
-    const cacheHitResults = await benchmarkCacheHit(queryKey);
-    const multipleObserversResults = await benchmarkMultipleObservers(queryKey);
-    
-    results.push({
-      queryName: queryKey,
-      operations: {
-        write: writeResults,
-        read: readResults,
-        update: updateResults,
-        emptyRead: emptyReadResults,
-        cacheMiss: cacheMissResults,
-        cacheHit: cacheHitResults,
-        multipleObservers: multipleObserversResults,
-      },
-    });
-  }
+  // Run all queries in parallel to utilize multiple CPU cores
+  const results = await Promise.all(
+    queryKeys.map(async (queryKey) => {
+      // Run all operations for this query in parallel as well
+      const [
+        writeResults,
+        readResults, 
+        updateResults,
+        emptyReadResults,
+        cacheMissResults,
+        cacheHitResults,
+        multipleObserversResults
+      ] = await Promise.all([
+        benchmarkWrites(queryKey),
+        benchmarkReads(queryKey),
+        benchmarkUpdates(queryKey),
+        benchmarkEmptyReads(queryKey),
+        benchmarkCacheMiss(queryKey),
+        benchmarkCacheHit(queryKey),
+        benchmarkMultipleObservers(queryKey)
+      ]);
+      
+      return {
+        queryName: queryKey,
+        operations: {
+          write: writeResults,
+          read: readResults,
+          update: updateResults,
+          emptyRead: emptyReadResults,
+          cacheMiss: cacheMissResults,
+          cacheHit: cacheHitResults,
+          multipleObservers: multipleObserversResults,
+        },
+      };
+    })
+  );
   
   const report: BenchmarkReport = {
     config,
