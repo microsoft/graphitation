@@ -1,6 +1,5 @@
 {
   "iterations": 3,
-  "operationsPerIteration": 100,
   "confidenceLevel": 99.5,
   "queries": {
     "simple": "simple-query.graphql",

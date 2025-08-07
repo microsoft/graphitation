@@ -7,7 +7,6 @@ import * as os from "os";
 
 interface BenchmarkConfig {
   iterations: number;
-  operationsPerIteration: number;
   confidenceLevel: number;
   queries: Record<string, string>;
 }
@@ -126,14 +125,14 @@ async function benchmarkWrites(
     config.confidenceLevel,
   );
 
-  suite.add("ForestRun Write", async () => {
-    const cache = createCache();
-    const query = queries[queryKey];
-    const { variables, result } = getTestData(queryKey);
+  // Pre-create test data outside of measurement
+  const query = queries[queryKey];
+  const { variables, result } = getTestData(queryKey);
 
-    for (let i = 0; i < config.operationsPerIteration; i++) {
-      cache.writeQuery({ query, variables, data: result });
-    }
+  suite.add("ForestRun Write", () => {
+    const cache = createCache();
+    // Measure only the core writeQuery operation
+    cache.writeQuery({ query, variables, data: result });
   });
 
   return suite.run();
@@ -146,18 +145,17 @@ async function benchmarkReads(queryKey: string): Promise<BenchmarkSuiteResult> {
     config.confidenceLevel,
   );
 
-  // Pre-populate cache
+  // Pre-populate cache and prepare test data outside of measurement
   const cache = createCache();
   const query = queries[queryKey];
   const { variables, result } = getTestData(queryKey);
 
-  // Populate cache
+  // Populate cache once
   cache.writeQuery({ query, variables, data: result });
 
-  suite.add("ForestRun Read", async () => {
-    for (let i = 0; i < config.operationsPerIteration; i++) {
-      cache.readQuery({ query, variables });
-    }
+  suite.add("ForestRun Read", () => {
+    // Measure only the core readQuery operation
+    cache.readQuery({ query, variables });
   });
 
   return suite.run();
@@ -172,17 +170,17 @@ async function benchmarkEmptyReads(
     config.confidenceLevel,
   );
 
-  suite.add("ForestRun Empty Read", async () => {
-    const cache = createCache();
-    const query = queries[queryKey];
-    const { variables } = getTestData(queryKey);
+  // Pre-create cache and test data outside of measurement
+  const cache = createCache();
+  const query = queries[queryKey];
+  const { variables } = getTestData(queryKey);
 
-    for (let i = 0; i < config.operationsPerIteration; i++) {
-      try {
-        cache.readQuery({ query, variables });
-      } catch (e) {
-        // Expected - cache miss
-      }
+  suite.add("ForestRun Empty Read", () => {
+    // Measure only the core readQuery operation on empty cache
+    try {
+      cache.readQuery({ query, variables });
+    } catch (e) {
+      // Expected - cache miss
     }
   });
 
@@ -198,22 +196,23 @@ async function benchmarkCacheMiss(
     config.confidenceLevel,
   );
 
-  suite.add("ForestRun Cache Miss", async () => {
-    const cache = createCache();
-    const query = queries[queryKey];
-    const { variables, result } = getTestData(queryKey);
+  // Pre-prepare cache and test data outside of measurement
+  const cache = createCache();
+  const query = queries[queryKey];
+  const { variables, result } = getTestData(queryKey);
 
-    // Populate cache with the known data
-    cache.writeQuery({ query, variables, data: result });
+  // Populate cache with the known data once
+  cache.writeQuery({ query, variables, data: result });
 
-    // Try to read different data (cache miss) by using different variables
-    const missVariables = { id: "different_id_not_in_cache" };
-    for (let i = 0; i < config.operationsPerIteration; i++) {
-      try {
-        cache.readQuery({ query, variables: missVariables });
-      } catch (e) {
-        // Expected - cache miss
-      }
+  // Prepare different variables for cache miss
+  const missVariables = { id: "different_id_not_in_cache" };
+
+  suite.add("ForestRun Cache Miss", () => {
+    // Measure only the core readQuery operation (cache miss)
+    try {
+      cache.readQuery({ query, variables: missVariables });
+    } catch (e) {
+      // Expected - cache miss
     }
   });
 
@@ -229,18 +228,17 @@ async function benchmarkCacheHit(
     config.confidenceLevel,
   );
 
-  suite.add("ForestRun Cache Hit", async () => {
-    const cache = createCache();
-    const query = queries[queryKey];
-    const { variables, result } = getTestData(queryKey);
+  // Pre-prepare cache and test data outside of measurement
+  const cache = createCache();
+  const query = queries[queryKey];
+  const { variables, result } = getTestData(queryKey);
 
-    // Populate cache with data we'll query
-    cache.writeQuery({ query, variables, data: result });
+  // Populate cache with data we'll query once
+  cache.writeQuery({ query, variables, data: result });
 
-    // Read the same data (cache hits)
-    for (let i = 0; i < config.operationsPerIteration; i++) {
-      cache.readQuery({ query, variables });
-    }
+  suite.add("ForestRun Cache Hit", () => {
+    // Measure only the core readQuery operation (cache hit)
+    cache.readQuery({ query, variables });
   });
 
   return suite.run();
@@ -256,21 +254,41 @@ async function benchmarkMultipleObservers(
     config.confidenceLevel,
   );
 
-  suite.add(`ForestRun ${observerCount} Observers`, async () => {
-    const cache = createCache();
-    const query = queries[queryKey];
-    const { variables, result } = getTestData(queryKey);
+  // Pre-prepare cache and test data outside of measurement
+  const cache = createCache();
+  const query = queries[queryKey];
+  const { variables, result } = getTestData(queryKey);
 
-    // Write data once
+  // Write initial data once
+  cache.writeQuery({ query, variables, data: result });
+
+  // Setup observers (watchers) outside of measurement
+  const unsubscribeFunctions: Array<() => void> = [];
+  
+  for (let observer = 0; observer < observerCount; observer++) {
+    const unsubscribe = cache.watch({
+      query,
+      variables,
+      optimistic: true,
+      callback: () => {
+        // Observer callback - called when cache updates
+      },
+    });
+    unsubscribeFunctions.push(unsubscribe);
+  }
+
+  suite.add(`ForestRun ${observerCount} Observers`, () => {
+    // Measure only the cache update operation with active observers
     cache.writeQuery({ query, variables, data: result });
-
-    // Simulate multiple observers reading the same data
-    for (let i = 0; i < config.operationsPerIteration; i++) {
-      for (let observer = 0; observer < observerCount; observer++) {
-        cache.readQuery({ query, variables });
-      }
-    }
   });
+
+  // Cleanup observers after benchmark
+  const originalRun = suite.run.bind(suite);
+  suite.run = async (options?: unknown) => {
+    const result = await originalRun(options);
+    unsubscribeFunctions.forEach(unsub => unsub());
+    return result;
+  };
 
   return suite.run();
 }
@@ -283,18 +301,17 @@ async function benchmarkUpdates(
     config.confidenceLevel,
   );
 
-  suite.add("ForestRun Update", async () => {
-    const cache = createCache();
-    const query = queries[queryKey];
-    const { variables, result } = getTestData(queryKey);
+  // Pre-prepare cache and test data outside of measurement
+  const cache = createCache();
+  const query = queries[queryKey];
+  const { variables, result } = getTestData(queryKey);
 
-    // Write initial data
+  // Write initial data once
+  cache.writeQuery({ query, variables, data: result });
+
+  suite.add("ForestRun Update", () => {
+    // Measure only the core writeQuery operation (update/overwrite)
     cache.writeQuery({ query, variables, data: result });
-
-    // Update data (overwrite with same data for consistency)
-    for (let i = 0; i < config.operationsPerIteration; i++) {
-      cache.writeQuery({ query, variables, data: result });
-    }
   });
 
   return suite.run();
