@@ -1,0 +1,85 @@
+name: ForestRun Performance Benchmarks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/apollo-forest-run/**'
+      - 'packages/apollo-forest-run-benchmarks/**'
+  pull_request:
+    paths:
+      - 'packages/apollo-forest-run/**'
+      - 'packages/apollo-forest-run-benchmarks/**'
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build ForestRun and Benchmarks
+        run: |
+          npx lage build --scope @graphitation/apollo-forest-run
+          npx lage build --scope @graphitation/apollo-forest-run-benchmarks
+
+      - name: Run performance benchmarks
+        id: benchmark
+        run: |
+          cd packages/apollo-forest-run-benchmarks
+          yarn benchmark
+          # Find the most recent benchmark report
+          REPORT_FILE=$(ls src/benchmark-report-*.json | sort -r | head -n1)
+          echo "report_file=$REPORT_FILE" >> $GITHUB_OUTPUT
+
+      - name: Upload benchmark results (main branch)
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-main
+          path: packages/apollo-forest-run-benchmarks/${{ steps.benchmark.outputs.report_file }}
+          retention-days: 30
+
+      - name: Download baseline benchmark (PR only)
+        if: github.event_name == 'pull_request'
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-results-main
+          path: baseline/
+        continue-on-error: true
+
+      - name: Compare benchmarks (PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          cd packages/apollo-forest-run-benchmarks/src
+          
+          # Check if baseline exists
+          if [ -f "../../../baseline/benchmark-report-"*.json ]; then
+            BASELINE_FILE=$(ls ../../../baseline/benchmark-report-*.json | head -n1)
+            CURRENT_FILE="${{ steps.benchmark.outputs.report_file }}"
+            
+            # Use the comparison script to generate markdown output for PR comment
+            COMPARISON_OUTPUT=$(npx ts-node --compiler-options '{"module":"commonjs"}' compare-reports.ts --baseline "$BASELINE_FILE" --current "$CURRENT_FILE" --format markdown)
+            
+            # Write to GitHub step summary
+            echo "$COMPARISON_OUTPUT" >> $GITHUB_STEP_SUMMARY
+            
+          else
+            echo "## 📊 ForestRun Benchmark Results" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ No baseline benchmark found. This is the first benchmark run." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Run the benchmarks on the main branch first to establish a baseline for comparison." >> $GITHUB_STEP_SUMMARY
+          fi
