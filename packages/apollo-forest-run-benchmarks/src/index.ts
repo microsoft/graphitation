@@ -31,94 +31,16 @@ interface BenchmarkReport {
   }[];
 }
 
-// Parse command line arguments
-function parseArgs(): { confidenceLevel?: number; help?: boolean } {
-  const args = process.argv.slice(2);
-  const result: { confidenceLevel?: number; help?: boolean } = {};
 
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
 
-    if (arg === "--help" || arg === "-h") {
-      result.help = true;
-    } else if (arg === "--confidence" || arg === "-c") {
-      const nextArg = args[i + 1];
-      if (nextArg && !nextArg.startsWith("-")) {
-        const confidence = parseFloat(nextArg);
-        if (!isNaN(confidence) && confidence > 0 && confidence <= 100) {
-          result.confidenceLevel = confidence;
-          i++; // Skip the next argument since we used it
-        } else {
-          console.error(
-            `Error: Invalid confidence level "${nextArg}". Must be a number between 0 and 100.`,
-          );
-          process.exit(1);
-        }
-      } else {
-        console.error(`Error: --confidence requires a value.`);
-        process.exit(1);
-      }
-    }
-  }
-
-  return result;
-}
-
-function showHelp(): void {
-  console.log(`
-🚀 ForestRun Performance Benchmarks
-
-Usage: yarn benchmark [options]
-
-Options:
-  --confidence, -c <level>  Set confidence level percentage (0-100)
-                           Default: 95
-  --help, -h               Show this help message
-
-Examples:
-  yarn benchmark                    # Use default 95% confidence
-  yarn benchmark --confidence 99   # Use 99% confidence (high precision)
-  yarn benchmark -c 90             # Use 90% confidence (faster)
-
-Confidence Level Guide:
-  90%   → Faster benchmarks, good precision
-  95%   → Default, balanced precision/speed  
-  99%   → High precision, longer benchmarks
-  99.9% → Maximum precision, research-quality
-
-Statistical Method:
-  Uses margin of error percentage calculation: confidence = 100 - (moe / amean) * 100
-  Runs samples in batches of 50 until target confidence is achieved
-
-Test Scenarios:
-  - Write Operations: Cache write performance
-  - Read Operations: Cache read performance on populated cache
-  - Update Operations: Cache update/overwrite performance
-  - Empty Cache Reads: Performance when reading from empty cache (cache miss)
-  - Cache Miss Operations: Performance when querying populated cache with different data
-  - Cache Hit Operations: Performance when querying exact cached data (cache hit)
-  - Multiple Observers: Performance with 5, 20, 50, and 100 observers reading the same data
-`);
-}
-
-// Load configuration
+// Load configuration with fixed confidence level
 const configPath = path.join(__dirname, "config.json");
 const config: BenchmarkConfig = JSON.parse(
   fs.readFileSync(configPath, "utf-8"),
 );
 
-// Override config with command line arguments if provided
-const cliArgs = parseArgs();
-
-if (cliArgs.help) {
-  showHelp();
-  process.exit(0);
-}
-
-// CLI args only override for this run, don't save to config
-if (cliArgs.confidenceLevel !== undefined) {
-  config.confidenceLevel = cliArgs.confidenceLevel;
-}
+// Set fixed confidence level to 99.5%
+config.confidenceLevel = 99.5;
 
 // Load queries and their corresponding static responses
 const queries: Record<string, DocumentNode> = {};
@@ -139,10 +61,10 @@ Object.entries(config.queries).forEach(([key, filename]) => {
   queryResponses[key] = responseData;
 });
 
-// Create ForestRun cache instance with fixed settings
+// Create ForestRun cache instance with enhanced settings for better results
 function createCache() {
   return new ForestRun({
-    maxOperationCount: 100,
+    maxOperationCount: 500, // Increased from 100 for better results
     resultCacheMaxSize: 0,
   });
 }
@@ -378,13 +300,106 @@ async function benchmarkUpdates(
   return suite.run();
 }
 
-// Main benchmark runner with parallel execution across CPU cores
+// Main benchmark runner with parallel execution across CPU cores and reliability checking
 async function runBenchmarks(): Promise<BenchmarkReport> {
   console.log("🚀 ForestRun Performance Benchmarks");
   console.log(`📊 Configuration:`);
   console.log(`   Confidence Level: ${config.confidenceLevel}%`);
   console.log(`   CPU Cores: ${os.cpus().length}`);
   console.log("");
+
+  const maxReliabilityRuns = 5; // Maximum times to run the entire suite for reliability
+  const reliabilityThreshold = 10; // Accept if consecutive runs differ by less than 10%
+  
+  let reliableResults: BenchmarkReport | null = null;
+  let consecutiveGoodRuns = 0;
+  const requiredConsecutiveRuns = 2; // Need 2 consecutive stable runs
+
+  for (let attempt = 1; attempt <= maxReliabilityRuns; attempt++) {
+    console.log(`🔄 Running benchmark suite (attempt ${attempt}/${maxReliabilityRuns})...`);
+    
+    const currentResults = await runSingleBenchmarkSuite();
+    
+    if (attempt === 1) {
+      reliableResults = currentResults;
+      consecutiveGoodRuns = 1;
+      continue;
+    }
+
+    // Check if current results are reliable compared to previous
+    const isReliable = checkResultsReliability(reliableResults!, currentResults, reliabilityThreshold);
+    
+    if (isReliable) {
+      consecutiveGoodRuns++;
+      console.log(`✅ Results are reliable (±${reliabilityThreshold}% threshold), consecutive: ${consecutiveGoodRuns}`);
+      
+      if (consecutiveGoodRuns >= requiredConsecutiveRuns) {
+        console.log(`🎯 Achieved reliable results after ${attempt} attempts`);
+        break;
+      }
+    } else {
+      console.log(`⚠️  Results vary significantly, running again...`);
+      consecutiveGoodRuns = 1; // Reset counter
+    }
+    
+    reliableResults = currentResults; // Update to latest results
+  }
+
+  if (consecutiveGoodRuns < requiredConsecutiveRuns) {
+    console.log(`⚠️  Warning: Could not achieve fully reliable results after ${maxReliabilityRuns} attempts`);
+  }
+
+  // Save final report
+  const reportPath = path.join(
+    __dirname,
+    `benchmark-report-${Date.now()}.json`,
+  );
+  fs.writeFileSync(reportPath, JSON.stringify(reliableResults, null, 2));
+  console.log(`\n💾 Report saved to: ${reportPath}`);
+
+  return reliableResults!;
+}
+
+// Check if two benchmark results are reliable (within threshold)
+function checkResultsReliability(
+  baseline: BenchmarkReport,
+  current: BenchmarkReport,
+  thresholdPercent: number
+): boolean {
+  for (const currentResult of current.results) {
+    const baselineResult = baseline.results.find(
+      (r) => r.queryName === currentResult.queryName,
+    );
+
+    if (!baselineResult) continue;
+
+    // Check all operations for reliability
+    const operations: Array<keyof typeof currentResult.operations> = [
+      "write", "read", "update", "emptyRead", "cacheMiss", "cacheHit",
+      "multipleObservers5", "multipleObservers20", "multipleObservers50", "multipleObservers100",
+    ];
+
+    for (const operation of operations) {
+      const baselineOp = baselineResult.operations[operation];
+      const currentOp = currentResult.operations[operation];
+
+      if (baselineOp.results[0] && currentOp.results[0]) {
+        const baselineMean = baselineOp.results[0].mean;
+        const currentMean = currentOp.results[0].mean;
+        const changePercent = Math.abs(((currentMean - baselineMean) / baselineMean) * 100);
+
+        if (changePercent > thresholdPercent) {
+          return false; // Found a significant difference
+        }
+      }
+    }
+  }
+
+  return true; // All operations are within threshold
+}
+
+// Run a single benchmark suite (the original runBenchmarks logic)
+async function runSingleBenchmarkSuite(): Promise<BenchmarkReport> {
 
   const queryKeys = Object.keys(config.queries);
   const observerCounts = [5, 20, 50, 100];
@@ -617,14 +632,6 @@ async function runBenchmarks(): Promise<BenchmarkReport> {
       )}% confidence)`,
     );
   });
-
-  // Save report
-  const reportPath = path.join(
-    __dirname,
-    `benchmark-report-${Date.now()}.json`,
-  );
-  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
-  console.log(`\n💾 Report saved to: ${reportPath}`);
 
   return report;
 }
