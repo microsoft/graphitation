@@ -136,7 +136,10 @@ function compareReports(
       "emptyRead",
       "cacheMiss",
       "cacheHit",
-      "multipleObservers",
+      "multipleObservers5",
+      "multipleObservers20",
+      "multipleObservers50",
+      "multipleObservers100",
     ];
 
     for (const operation of operations) {

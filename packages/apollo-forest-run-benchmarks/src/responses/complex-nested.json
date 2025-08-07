@@ -1,0 +1,209 @@
+{
+  "organization": {
+    "__typename": "Organization",
+    "id": "org_complex_123",
+    "name": "GlobalTech Solutions",
+    "description": "Leading technology company specializing in cloud solutions and enterprise software",
+    "createdAt": "2018-03-15T09:00:00Z",
+    "departments": {
+      "__typename": "DepartmentConnection",
+      "edges": [
+        {
+          "__typename": "DepartmentEdge",
+          "node": {
+            "__typename": "Department",
+            "id": "dept_engineering",
+            "name": "Engineering",
+            "budget": 2500000.00,
+            "teams": [
+              {
+                "__typename": "Team",
+                "id": "team_frontend",
+                "name": "Frontend Development",
+                "description": "Responsible for user-facing applications and interfaces",
+                "members": [
+                  {
+                    "__typename": "TeamMember",
+                    "id": "member_1",
+                    "name": "Alexandra Thompson",
+                    "email": "alexandra.thompson@globaltech.com",
+                    "role": "Senior Frontend Engineer",
+                    "avatar": "https://avatars.globaltech.com/alexandra-thompson.jpg",
+                    "projects": [
+                      {
+                        "__typename": "Project",
+                        "id": "proj_dashboard_v2",
+                        "title": "Dashboard v2.0 Redesign",
+                        "status": "IN_PROGRESS",
+                        "priority": "HIGH",
+                        "assignedAt": "2023-10-01T10:00:00Z",
+                        "dueDate": "2024-02-15T17:00:00Z",
+                        "tags": ["frontend", "react", "typescript", "ui/ux"],
+                        "progress": 65,
+                        "tasks": [
+                          {
+                            "__typename": "Task",
+                            "id": "task_nav_redesign",
+                            "title": "Implement new navigation system",
+                            "completed": true,
+                            "priority": "HIGH",
+                            "assignee": {
+                              "__typename": "TeamMember",
+                              "id": "member_1",
+                              "name": "Alexandra Thompson",
+                              "email": "alexandra.thompson@globaltech.com"
+                            }
+                          },
+                          {
+                            "__typename": "Task",
+                            "id": "task_responsive_grid",
+                            "title": "Create responsive grid layout",
+                            "completed": false,
+                            "priority": "MEDIUM",
+                            "assignee": {
+                              "__typename": "TeamMember",
+                              "id": "member_1",
+                              "name": "Alexandra Thompson",
+                              "email": "alexandra.thompson@globaltech.com"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "__typename": "Project",
+                        "id": "proj_mobile_app",
+                        "title": "Mobile App Development",
+                        "status": "PLANNING",
+                        "priority": "MEDIUM",
+                        "assignedAt": "2023-11-15T14:30:00Z",
+                        "dueDate": "2024-06-30T17:00:00Z",
+                        "tags": ["mobile", "react-native", "ios", "android"],
+                        "progress": 10,
+                        "tasks": [
+                          {
+                            "__typename": "Task",
+                            "id": "task_wireframes",
+                            "title": "Create wireframes and mockups",
+                            "completed": false,
+                            "priority": "HIGH",
+                            "assignee": {
+                              "__typename": "TeamMember",
+                              "id": "member_1",
+                              "name": "Alexandra Thompson",
+                              "email": "alexandra.thompson@globaltech.com"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "__typename": "TeamMember",
+                    "id": "member_2",
+                    "name": "Marcus Chen",
+                    "email": "marcus.chen@globaltech.com",
+                    "role": "Frontend Engineer",
+                    "avatar": "https://avatars.globaltech.com/marcus-chen.jpg",
+                    "projects": [
+                      {
+                        "__typename": "Project",
+                        "id": "proj_component_library",
+                        "title": "Design System Component Library",
+                        "status": "IN_PROGRESS",
+                        "priority": "MEDIUM",
+                        "assignedAt": "2023-09-20T08:00:00Z",
+                        "dueDate": "2024-01-31T17:00:00Z",
+                        "tags": ["components", "storybook", "design-system"],
+                        "progress": 40,
+                        "tasks": [
+                          {
+                            "__typename": "Task",
+                            "id": "task_button_components",
+                            "title": "Build button component variants",
+                            "completed": true,
+                            "priority": "HIGH",
+                            "assignee": {
+                              "__typename": "TeamMember",
+                              "id": "member_2",
+                              "name": "Marcus Chen",
+                              "email": "marcus.chen@globaltech.com"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "__typename": "Team",
+                "id": "team_backend",
+                "name": "Backend Development",
+                "description": "Server-side applications, APIs, and database management",
+                "members": [
+                  {
+                    "__typename": "TeamMember",
+                    "id": "member_3",
+                    "name": "Sarah Williams",
+                    "email": "sarah.williams@globaltech.com",
+                    "role": "Senior Backend Engineer",
+                    "avatar": "https://avatars.globaltech.com/sarah-williams.jpg",
+                    "projects": [
+                      {
+                        "__typename": "Project",
+                        "id": "proj_api_optimization",
+                        "title": "API Performance Optimization",
+                        "status": "IN_PROGRESS",
+                        "priority": "HIGH",
+                        "assignedAt": "2023-10-10T11:00:00Z",
+                        "dueDate": "2024-01-15T17:00:00Z",
+                        "tags": ["performance", "graphql", "caching", "optimization"],
+                        "progress": 75,
+                        "tasks": [
+                          {
+                            "__typename": "Task",
+                            "id": "task_query_optimization",
+                            "title": "Optimize database queries",
+                            "completed": true,
+                            "priority": "HIGH",
+                            "assignee": {
+                              "__typename": "TeamMember",
+                              "id": "member_3",
+                              "name": "Sarah Williams",
+                              "email": "sarah.williams@globaltech.com"
+                            }
+                          },
+                          {
+                            "__typename": "Task",
+                            "id": "task_caching_layer",
+                            "title": "Implement Redis caching layer",
+                            "completed": false,
+                            "priority": "MEDIUM",
+                            "assignee": {
+                              "__typename": "TeamMember",
+                              "id": "member_3",
+                              "name": "Sarah Williams",
+                              "email": "sarah.williams@globaltech.com"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "cursor": "ZGVwdF9lbmdpbmVlcmluZw=="
+        }
+      ],
+      "pageInfo": {
+        "__typename": "PageInfo",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "ZGVwdF9lbmdpbmVlcmluZw==",
+        "endCursor": "ZGVwdF9lbmdpbmVlcmluZw=="
+      }
+    }
+  }
+}

@@ -30,7 +30,6 @@
   "dependencies": {
     "@apollo/client": ">= ^3.3.0 < 3.7.0",
     "@graphitation/apollo-forest-run": "*",
-    "@graphitation/graphql-js-operation-payload-generator": "*",
     "graphql": "^15.0.0"
   },
   "sideEffects": false
