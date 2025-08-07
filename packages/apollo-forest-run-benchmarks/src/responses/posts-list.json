@@ -1,0 +1,76 @@
+{
+  "posts": {
+    "__typename": "PostConnection",
+    "edges": [
+      {
+        "__typename": "PostEdge",
+        "node": {
+          "__typename": "Post",
+          "id": "post_100",
+          "title": "Understanding GraphQL Performance",
+          "content": "A deep dive into GraphQL performance optimization techniques and best practices for high-traffic applications.",
+          "author": {
+            "__typename": "User",
+            "id": "author_1",
+            "name": "Alice Johnson"
+          },
+          "comments": [
+            {
+              "__typename": "Comment",
+              "id": "comment_1",
+              "content": "Great insights on GraphQL performance!",
+              "author": {
+                "__typename": "User",
+                "id": "commenter_1",
+                "name": "Bob Smith"
+              }
+            },
+            {
+              "__typename": "Comment",
+              "id": "comment_2",
+              "content": "The caching strategies mentioned here are really useful.",
+              "author": {
+                "__typename": "User",
+                "id": "commenter_2",
+                "name": "Carol Wilson"
+              }
+            }
+          ]
+        },
+        "cursor": "YXJyYXljb25uZWN0aW9uOjEwMA=="
+      },
+      {
+        "__typename": "PostEdge",
+        "node": {
+          "__typename": "Post",
+          "id": "post_101",
+          "title": "Building Real-time GraphQL Applications",
+          "content": "Learn how to implement real-time features using GraphQL subscriptions and WebSocket connections.",
+          "author": {
+            "__typename": "User",
+            "id": "author_2",
+            "name": "David Chen"
+          },
+          "comments": [
+            {
+              "__typename": "Comment",
+              "id": "comment_3",
+              "content": "Subscriptions are a game-changer for real-time apps!",
+              "author": {
+                "__typename": "User",
+                "id": "commenter_3",
+                "name": "Eve Rodriguez"
+              }
+            }
+          ]
+        },
+        "cursor": "YXJyYXljb25uZWN0aW9uOjEwMQ=="
+      }
+    ],
+    "pageInfo": {
+      "__typename": "PageInfo",
+      "hasNextPage": true,
+      "endCursor": "YXJyYXljb25uZWN0aW9uOjEwMQ=="
+    }
+  }
+}

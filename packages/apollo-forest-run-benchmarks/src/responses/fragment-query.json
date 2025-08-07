@@ -1,0 +1,49 @@
+{
+  "post": {
+    "__typename": "Post",
+    "id": "post_789",
+    "title": "Mastering GraphQL Fragments",
+    "content": "Fragments are a powerful feature in GraphQL that allow you to reuse parts of queries and mutations. This comprehensive guide covers everything you need to know about fragments, from basic usage to advanced patterns.",
+    "author": {
+      "__typename": "User",
+      "id": "author_789",
+      "name": "Sarah Mitchell",
+      "email": "sarah.mitchell@example.com"
+    },
+    "comments": [
+      {
+        "__typename": "Comment",
+        "id": "comment_10",
+        "content": "Fragments really help keep queries organized and maintainable!",
+        "author": {
+          "__typename": "User",
+          "id": "commenter_10",
+          "name": "Mike Thompson",
+          "email": "mike.thompson@example.com"
+        }
+      },
+      {
+        "__typename": "Comment",
+        "id": "comment_11",
+        "content": "Great explanation of fragment composition. Very helpful!",
+        "author": {
+          "__typename": "User",
+          "id": "commenter_11",
+          "name": "Lisa Park",
+          "email": "lisa.park@example.com"
+        }
+      },
+      {
+        "__typename": "Comment",
+        "id": "comment_12",
+        "content": "The examples make it easy to understand how to use fragments effectively.",
+        "author": {
+          "__typename": "User",
+          "id": "commenter_12",
+          "name": "James Wilson",
+          "email": "james.wilson@example.com"
+        }
+      }
+    ]
+  }
+}

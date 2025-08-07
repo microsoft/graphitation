@@ -3,8 +3,6 @@ import * as path from "path";
 import { gql, DocumentNode } from "@apollo/client";
 import { ForestRun } from "@graphitation/apollo-forest-run";
 import NiceBenchmark, { BenchmarkSuiteResult } from "./nice-benchmark";
-import { generate } from "@graphitation/graphql-js-operation-payload-generator";
-import { buildSchema } from "graphql";
 import * as os from "os";
 
 interface BenchmarkConfig {
@@ -25,54 +23,13 @@ interface BenchmarkReport {
       emptyRead: BenchmarkSuiteResult;
       cacheMiss: BenchmarkSuiteResult;
       cacheHit: BenchmarkSuiteResult;
-      multipleObservers: BenchmarkSuiteResult;
+      multipleObservers5: BenchmarkSuiteResult;
+      multipleObservers20: BenchmarkSuiteResult;
+      multipleObservers50: BenchmarkSuiteResult;
+      multipleObservers100: BenchmarkSuiteResult;
     };
   }[];
 }
-
-// Simple GraphQL schema for generating mock data
-const schema = buildSchema(`
-  type Query {
-    user(id: ID!): User
-    post(id: ID!): Post
-    product(id: ID!): Product
-  }
-  
-  type User {
-    id: ID!
-    name: String!
-    email: String!
-    posts: [Post!]!
-  }
-  
-  type Post {
-    id: ID!
-    title: String!
-    content: String!
-    author: User!
-    comments: [Comment!]!
-  }
-  
-  type Comment {
-    id: ID!
-    content: String!
-    author: User!
-  }
-  
-  type Product {
-    id: ID!
-    name: String!
-    price: Float!
-    reviews: [Review!]!
-  }
-  
-  type Review {
-    id: ID!
-    rating: Int!
-    comment: String!
-    reviewer: User!
-  }
-`);
 
 // Parse command line arguments
 function parseArgs(): { confidenceLevel?: number; help?: boolean } {
@@ -132,6 +89,15 @@ Confidence Level Guide:
 Statistical Method:
   Uses margin of error percentage calculation: confidence = 100 - (moe / amean) * 100
   Runs samples in batches of 50 until target confidence is achieved
+
+Test Scenarios:
+  - Write Operations: Cache write performance
+  - Read Operations: Cache read performance on populated cache
+  - Update Operations: Cache update/overwrite performance
+  - Empty Cache Reads: Performance when reading from empty cache (cache miss)
+  - Cache Miss Operations: Performance when querying populated cache with different data
+  - Cache Hit Operations: Performance when querying exact cached data (cache hit)
+  - Multiple Observers: Performance with 5, 20, 50, and 100 observers reading the same data
 `);
 }
 
@@ -154,16 +120,23 @@ if (cliArgs.confidenceLevel !== undefined) {
   config.confidenceLevel = cliArgs.confidenceLevel;
 }
 
-// Load queries
+// Load queries and their corresponding static responses
 const queries: Record<string, DocumentNode> = {};
 const queryStrings: Record<string, string> = {};
+const queryResponses: Record<string, any> = {};
 const queriesDir = path.join(__dirname, "queries");
+const responsesDir = path.join(__dirname, "responses");
 
 Object.entries(config.queries).forEach(([key, filename]) => {
   const queryPath = path.join(queriesDir, filename);
+  const responsePath = path.join(responsesDir, filename.replace('.graphql', '.json'));
+  
   const queryString = fs.readFileSync(queryPath, "utf-8");
+  const responseData = JSON.parse(fs.readFileSync(responsePath, "utf-8"));
+  
   queryStrings[key] = queryString;
   queries[key] = gql(queryString);
+  queryResponses[key] = responseData;
 });
 
 // Create ForestRun cache instance with fixed settings
@@ -174,32 +147,15 @@ function createCache() {
   });
 }
 
-// Generate test data for a query using graphql-js-operation-payload-generator
-function createTestData(queryKey: string, iteration: number) {
-  const query = queries[queryKey];
-  const variables = { id: `test_${iteration}` };
-
-  try {
-    const payload = generate({
-      request: { node: query, variables },
-      schema,
-    });
-
-    return {
-      variables,
-      result: payload.data,
-    };
-  } catch (error) {
-    // Fallback to simple mock data if generation fails
-    return {
-      variables,
-      result: {
-        id: `test_${iteration}`,
-        name: `Test Item ${iteration}`,
-        __typename: "User",
-      },
-    };
-  }
+// Get consistent test data for a query (same data for all tests)
+function getTestData(queryKey: string) {
+  const baseVariables = { id: "test_consistent_id" };
+  const result = queryResponses[queryKey];
+  
+  return {
+    variables: baseVariables,
+    result: result,
+  };
 }
 
 // Simple worker pool for CPU-bound parallel execution
@@ -251,9 +207,9 @@ async function benchmarkWrites(
   suite.add("ForestRun Write", async () => {
     const cache = createCache();
     const query = queries[queryKey];
+    const { variables, result } = getTestData(queryKey);
 
     for (let i = 0; i < config.operationsPerIteration; i++) {
-      const { variables, result } = createTestData(queryKey, i);
       cache.writeQuery({ query, variables, data: result });
     }
   });
@@ -271,21 +227,15 @@ async function benchmarkReads(queryKey: string): Promise<BenchmarkSuiteResult> {
   // Pre-populate cache
   const cache = createCache();
   const query = queries[queryKey];
-
-  const testData = Array.from(
-    { length: config.operationsPerIteration },
-    (_, i) => createTestData(queryKey, i),
-  );
+  const { variables, result } = getTestData(queryKey);
 
   // Populate cache
-  testData.forEach(({ variables, result }) => {
-    cache.writeQuery({ query, variables, data: result });
-  });
+  cache.writeQuery({ query, variables, data: result });
 
   suite.add("ForestRun Read", async () => {
-    testData.forEach(({ variables }) => {
+    for (let i = 0; i < config.operationsPerIteration; i++) {
       cache.readQuery({ query, variables });
-    });
+    }
   });
 
   return suite.run();
@@ -303,9 +253,9 @@ async function benchmarkEmptyReads(
   suite.add("ForestRun Empty Read", async () => {
     const cache = createCache();
     const query = queries[queryKey];
+    const { variables } = getTestData(queryKey);
 
     for (let i = 0; i < config.operationsPerIteration; i++) {
-      const { variables } = createTestData(queryKey, i);
       try {
         cache.readQuery({ query, variables });
       } catch (e) {
@@ -329,18 +279,16 @@ async function benchmarkCacheMiss(
   suite.add("ForestRun Cache Miss", async () => {
     const cache = createCache();
     const query = queries[queryKey];
+    const { variables, result } = getTestData(queryKey);
 
-    // Populate some data (not the data we'll query)
-    for (let i = 0; i < 50; i++) {
-      const { variables, result } = createTestData(queryKey, i);
-      cache.writeQuery({ query, variables, data: result });
-    }
+    // Populate cache with the known data
+    cache.writeQuery({ query, variables, data: result });
 
-    // Try to read different data (cache miss)
-    for (let i = 1000; i < 1000 + config.operationsPerIteration; i++) {
-      const { variables } = createTestData(queryKey, i);
+    // Try to read different data (cache miss) by using different variables
+    const missVariables = { id: "different_id_not_in_cache" };
+    for (let i = 0; i < config.operationsPerIteration; i++) {
       try {
-        cache.readQuery({ query, variables });
+        cache.readQuery({ query, variables: missVariables });
       } catch (e) {
         // Expected - cache miss
       }
@@ -362,42 +310,34 @@ async function benchmarkCacheHit(
   suite.add("ForestRun Cache Hit", async () => {
     const cache = createCache();
     const query = queries[queryKey];
+    const { variables, result } = getTestData(queryKey);
 
     // Populate cache with data we'll query
-    const testData = Array.from(
-      { length: config.operationsPerIteration },
-      (_, i) => createTestData(queryKey, i),
-    );
-
-    testData.forEach(({ variables, result }) => {
-      cache.writeQuery({ query, variables, data: result });
-    });
+    cache.writeQuery({ query, variables, data: result });
 
     // Read the same data (cache hits)
-    testData.forEach(({ variables }) => {
+    for (let i = 0; i < config.operationsPerIteration; i++) {
       cache.readQuery({ query, variables });
-    });
+    }
   });
 
   return suite.run();
 }
 
-// Benchmark multiple observers scenario
+// Benchmark multiple observers scenario with configurable observer count
 async function benchmarkMultipleObservers(
   queryKey: string,
+  observerCount: number,
 ): Promise<BenchmarkSuiteResult> {
   const suite = new NiceBenchmark(
-    `${queryKey} - Multiple Observers`,
+    `${queryKey} - Multiple Observers (${observerCount})`,
     config.confidenceLevel,
   );
 
-  suite.add("ForestRun Multiple Observers", async () => {
+  suite.add(`ForestRun ${observerCount} Observers`, async () => {
     const cache = createCache();
     const query = queries[queryKey];
-
-    // Simulate multiple observers watching the same queries
-    const observerCount = 5;
-    const { variables, result } = createTestData(queryKey, 0);
+    const { variables, result } = getTestData(queryKey);
 
     // Write data once
     cache.writeQuery({ query, variables, data: result });
@@ -424,16 +364,13 @@ async function benchmarkUpdates(
   suite.add("ForestRun Update", async () => {
     const cache = createCache();
     const query = queries[queryKey];
+    const { variables, result } = getTestData(queryKey);
 
     // Write initial data
-    for (let i = 0; i < config.operationsPerIteration; i++) {
-      const { variables, result } = createTestData(queryKey, i);
-      cache.writeQuery({ query, variables, data: result });
-    }
+    cache.writeQuery({ query, variables, data: result });
 
-    // Update data
+    // Update data (overwrite with same data for consistency)
     for (let i = 0; i < config.operationsPerIteration; i++) {
-      const { variables, result } = createTestData(queryKey, i + 1000);
       cache.writeQuery({ query, variables, data: result });
     }
   });
@@ -450,6 +387,7 @@ async function runBenchmarks(): Promise<BenchmarkReport> {
   console.log("");
 
   const queryKeys = Object.keys(config.queries);
+  const observerCounts = [5, 20, 50, 100];
 
   // Create all benchmark tasks to run in parallel
   const benchmarkTasks: Array<
@@ -498,13 +436,19 @@ async function runBenchmarks(): Promise<BenchmarkReport> {
           operation: "cacheHit",
           result,
         })),
-      () =>
-        benchmarkMultipleObservers(queryKey).then((result) => ({
-          queryKey,
-          operation: "multipleObservers",
-          result,
-        })),
     );
+
+    // Add multiple observer benchmarks for different observer counts
+    for (const observerCount of observerCounts) {
+      benchmarkTasks.push(
+        () =>
+          benchmarkMultipleObservers(queryKey, observerCount).then((result) => ({
+            queryKey,
+            operation: `multipleObservers${observerCount}`,
+            result,
+          })),
+      );
+    }
   }
 
   // Execute benchmarks in parallel across CPU cores
@@ -527,8 +471,17 @@ async function runBenchmarks(): Promise<BenchmarkReport> {
       (r) => r.operation === "cacheMiss",
     );
     const cacheHitResult = queryResults.find((r) => r.operation === "cacheHit");
-    const multipleObserversResult = queryResults.find(
-      (r) => r.operation === "multipleObservers",
+    const multipleObservers5Result = queryResults.find(
+      (r) => r.operation === "multipleObservers5",
+    );
+    const multipleObservers20Result = queryResults.find(
+      (r) => r.operation === "multipleObservers20",
+    );
+    const multipleObservers50Result = queryResults.find(
+      (r) => r.operation === "multipleObservers50",
+    );
+    const multipleObservers100Result = queryResults.find(
+      (r) => r.operation === "multipleObservers100",
     );
 
     if (
@@ -538,7 +491,10 @@ async function runBenchmarks(): Promise<BenchmarkReport> {
       !emptyReadResult ||
       !cacheMissResult ||
       !cacheHitResult ||
-      !multipleObserversResult
+      !multipleObservers5Result ||
+      !multipleObservers20Result ||
+      !multipleObservers50Result ||
+      !multipleObservers100Result
     ) {
       throw new Error(`Missing benchmark results for query: ${queryKey}`);
     }
@@ -552,7 +508,10 @@ async function runBenchmarks(): Promise<BenchmarkReport> {
         emptyRead: emptyReadResult.result,
         cacheMiss: cacheMissResult.result,
         cacheHit: cacheHitResult.result,
-        multipleObservers: multipleObserversResult.result,
+        multipleObservers5: multipleObservers5Result.result,
+        multipleObservers20: multipleObservers20Result.result,
+        multipleObservers50: multipleObservers50Result.result,
+        multipleObservers100: multipleObservers100Result.result,
       },
     };
   });
@@ -622,11 +581,38 @@ async function runBenchmarks(): Promise<BenchmarkReport> {
       )}% confidence)`,
     );
     console.log(
-      `  Multiple Observers: ${operations.multipleObservers.results[0].mean.toFixed(
+      `  5 Observers: ${operations.multipleObservers5.results[0].mean.toFixed(
         3,
-      )}ms ±${operations.multipleObservers.results[0].rme.toFixed(2)}% (${
-        operations.multipleObservers.results[0].samples
-      } runs sampled, ${operations.multipleObservers.results[0].confidence.toFixed(
+      )}ms ±${operations.multipleObservers5.results[0].rme.toFixed(2)}% (${
+        operations.multipleObservers5.results[0].samples
+      } runs sampled, ${operations.multipleObservers5.results[0].confidence.toFixed(
+        1,
+      )}% confidence)`,
+    );
+    console.log(
+      `  20 Observers: ${operations.multipleObservers20.results[0].mean.toFixed(
+        3,
+      )}ms ±${operations.multipleObservers20.results[0].rme.toFixed(2)}% (${
+        operations.multipleObservers20.results[0].samples
+      } runs sampled, ${operations.multipleObservers20.results[0].confidence.toFixed(
+        1,
+      )}% confidence)`,
+    );
+    console.log(
+      `  50 Observers: ${operations.multipleObservers50.results[0].mean.toFixed(
+        3,
+      )}ms ±${operations.multipleObservers50.results[0].rme.toFixed(2)}% (${
+        operations.multipleObservers50.results[0].samples
+      } runs sampled, ${operations.multipleObservers50.results[0].confidence.toFixed(
+        1,
+      )}% confidence)`,
+    );
+    console.log(
+      `  100 Observers: ${operations.multipleObservers100.results[0].mean.toFixed(
+        3,
+      )}ms ±${operations.multipleObservers100.results[0].rme.toFixed(2)}% (${
+        operations.multipleObservers100.results[0].samples
+      } runs sampled, ${operations.multipleObservers100.results[0].confidence.toFixed(
         1,
       )}% confidence)`,
     );
