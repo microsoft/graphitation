@@ -33,7 +33,7 @@ class Stats {
     );
   }
 
-  // Margin of error (absolute)
+  // Margin of error (absolute) for 99.5% confidence level
   moe(): number {
     if (this.samples.length < 2) return 0;
 
@@ -44,8 +44,8 @@ class Stats {
     const standardDeviation = Math.sqrt(variance);
     const standardError = standardDeviation / Math.sqrt(this.samples.length);
 
-    // Use 1.96 (95% confidence) as a simple baseline for margin of error calculation
-    return 1.96 * standardError;
+    // Use 2.807 (99.5% confidence) for proper margin of error calculation
+    return 2.807 * standardError;
   }
 }
 
