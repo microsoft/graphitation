@@ -76,6 +76,7 @@ export default class NiceBenchmark {
     const samples: number[] = [];
     const warmupSamples = 20; // Warmup runs to eliminate JIT compilation effects
     const batchSize = 50; // Run 50 samples at a time
+    const minSamples = 200; // Minimum 200 samples as requested
     const maxSamples = 1000; // Maximum total samples
 
     // Warmup phase - don't record these samples
@@ -85,9 +86,9 @@ export default class NiceBenchmark {
 
     let currentConfidence = 0; // Start with 0% confidence
 
-    // Run in batches until we achieve target confidence
+    // Run in batches until we achieve target confidence or minimum samples
     while (
-      currentConfidence < this.targetConfidence &&
+      (currentConfidence < this.targetConfidence || samples.length < minSamples) &&
       samples.length < maxSamples
     ) {
       // Run a batch of samples
@@ -102,8 +103,8 @@ export default class NiceBenchmark {
       }
 
       // Calculate current confidence after this batch
-      if (samples.length >= 10) {
-        // Need minimum samples for meaningful calculation
+      if (samples.length >= minSamples) {
+        // Only calculate confidence after minimum samples
         const stats = new Stats(samples);
         const relativeMarginOfError = percentRelativeMarginOfError(stats);
         currentConfidence = 100 - relativeMarginOfError;
