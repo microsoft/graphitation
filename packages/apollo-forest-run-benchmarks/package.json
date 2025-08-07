@@ -1,0 +1,37 @@
+{
+  "name": "@graphitation/apollo-forest-run-benchmarks",
+  "license": "MIT",
+  "version": "0.1.0",
+  "main": "./src/index.ts",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/graphitation.git",
+    "directory": "packages/apollo-forest-run-benchmarks"
+  },
+  "scripts": {
+    "build": "monorepo-scripts build",
+    "lint": "monorepo-scripts lint",
+    "test": "monorepo-scripts test",
+    "types": "monorepo-scripts types",
+    "benchmark": "ts-node --compiler-options '{\"module\":\"commonjs\"}' ./src/index.ts",
+    "benchmark:compare": "ts-node --compiler-options '{\"module\":\"commonjs\"}' ./src/compare-reports.ts",
+    "just": "monorepo-scripts"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.22",
+    "@types/yargs": "^17.0.24",
+    "monorepo-scripts": "*",
+    "ts-node": "^10.0.0",
+    "tslib": "^2.4.0",
+    "typescript": "^5.5.3",
+    "yargs": "^17.7.2"
+  },
+  "dependencies": {
+    "@apollo/client": ">= ^3.3.0 < 3.7.0",
+    "@graphitation/apollo-forest-run": "*",
+    "@graphitation/graphql-js-operation-payload-generator": "*",
+    "graphql": "^15.0.0"
+  },
+  "sideEffects": false
+}

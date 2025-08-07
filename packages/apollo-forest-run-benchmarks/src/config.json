@@ -1,0 +1,10 @@
+{
+  "iterations": 3,
+  "operationsPerIteration": 50,
+  "confidenceLevel": 95,
+  "queries": {
+    "simple": "simple-query.graphql",
+    "user-profile": "user-profile.graphql",
+    "posts-list": "posts-list.graphql"
+  }
+}

@@ -5,9 +5,11 @@ on:
     branches: [main]
     paths:
       - 'packages/apollo-forest-run/**'
+      - 'packages/apollo-forest-run-benchmarks/**'
   pull_request:
     paths:
       - 'packages/apollo-forest-run/**'
+      - 'packages/apollo-forest-run-benchmarks/**'
 
 jobs:
   benchmark:
@@ -28,16 +30,18 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Build ForestRun
-        run: npx lage build --scope @graphitation/apollo-forest-run
+      - name: Build ForestRun and Benchmarks
+        run: |
+          npx lage build --scope @graphitation/apollo-forest-run
+          npx lage build --scope @graphitation/apollo-forest-run-benchmarks
 
       - name: Run performance benchmarks
         id: benchmark
         run: |
-          cd packages/apollo-forest-run
+          cd packages/apollo-forest-run-benchmarks
           yarn benchmark
           # Find the most recent benchmark report
-          REPORT_FILE=$(ls benchmarks/performance/benchmark-report-*.json | sort -r | head -n1)
+          REPORT_FILE=$(ls src/benchmark-report-*.json | sort -r | head -n1)
           echo "report_file=$REPORT_FILE" >> $GITHUB_OUTPUT
 
       - name: Upload benchmark results (main branch)
@@ -45,7 +49,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: benchmark-results-main
-          path: packages/apollo-forest-run/${{ steps.benchmark.outputs.report_file }}
+          path: packages/apollo-forest-run-benchmarks/${{ steps.benchmark.outputs.report_file }}
           retention-days: 30
 
       - name: Download baseline benchmark (PR only)
@@ -59,15 +63,19 @@ jobs:
       - name: Compare benchmarks (PR only)
         if: github.event_name == 'pull_request'
         run: |
-          cd packages/apollo-forest-run/benchmarks/performance
+          cd packages/apollo-forest-run-benchmarks/src
           
           # Check if baseline exists
-          if [ -f "../../../../baseline/benchmark-report-"*.json ]; then
-            BASELINE_FILE=$(ls ../../../../baseline/benchmark-report-*.json | head -n1)
+          if [ -f "../../../baseline/benchmark-report-"*.json ]; then
+            BASELINE_FILE=$(ls ../../../baseline/benchmark-report-*.json | head -n1)
             CURRENT_FILE="${{ steps.benchmark.outputs.report_file }}"
             
-            # Use the comparison script to generate markdown output
-            npx ts-node --compiler-options '{"module":"commonjs"}' compare-reports.ts --baseline "$BASELINE_FILE" --current "$CURRENT_FILE" --format markdown >> $GITHUB_STEP_SUMMARY
+            # Use the comparison script to generate markdown output for PR comment
+            COMPARISON_OUTPUT=$(npx ts-node --compiler-options '{"module":"commonjs"}' compare-reports.ts --baseline "$BASELINE_FILE" --current "$CURRENT_FILE" --format markdown)
+            
+            # Write to GitHub step summary
+            echo "$COMPARISON_OUTPUT" >> $GITHUB_STEP_SUMMARY
+            
           else
             echo "## 📊 ForestRun Benchmark Results" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY

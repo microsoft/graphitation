@@ -1,0 +1,281 @@
+{
+  "config": {
+    "iterations": 3,
+    "operationsPerIteration": 50,
+    "confidenceLevel": 95,
+    "queries": {
+      "simple": "simple-query.graphql",
+      "user-profile": "user-profile.graphql",
+      "posts-list": "posts-list.graphql"
+    }
+  },
+  "results": [
+    {
+      "queryName": "simple",
+      "operations": {
+        "write": {
+          "suiteName": "simple - Write Operations",
+          "results": [
+            {
+              "name": "ForestRun Write",
+              "mean": 12.277644139999998,
+              "rme": 2.681225690249769,
+              "samples": 50,
+              "confidence": 97.31877430975022
+            }
+          ]
+        },
+        "read": {
+          "suiteName": "simple - Read Operations",
+          "results": [
+            {
+              "name": "ForestRun Read",
+              "mean": 9.181829693877548,
+              "rme": 2.7759583302760964,
+              "samples": 49,
+              "confidence": 97.2240416697239
+            }
+          ]
+        },
+        "update": {
+          "suiteName": "simple - Update Operations",
+          "results": [
+            {
+              "name": "ForestRun Update",
+              "mean": 11.096042027777779,
+              "rme": 1.6979466962519687,
+              "samples": 144,
+              "confidence": 98.30205330374802
+            }
+          ]
+        },
+        "emptyRead": {
+          "suiteName": "simple - Empty Cache Reads (Cache Miss)",
+          "results": [
+            {
+              "name": "ForestRun Empty Read",
+              "mean": 14.132388119999996,
+              "rme": 2.4790810520457187,
+              "samples": 50,
+              "confidence": 97.52091894795429
+            }
+          ]
+        },
+        "cacheMiss": {
+          "suiteName": "simple - Cache Miss Operations",
+          "results": [
+            {
+              "name": "ForestRun Cache Miss",
+              "mean": 17.498888040816325,
+              "rme": 1.7879310750473918,
+              "samples": 49,
+              "confidence": 98.2120689249526
+            }
+          ]
+        },
+        "cacheHit": {
+          "suiteName": "simple - Cache Hit Operations",
+          "results": [
+            {
+              "name": "ForestRun Cache Hit",
+              "mean": 15.748776459999995,
+              "rme": 2.6661873524087176,
+              "samples": 50,
+              "confidence": 97.33381264759129
+            }
+          ]
+        },
+        "multipleObservers": {
+          "suiteName": "simple - Multiple Observers",
+          "results": [
+            {
+              "name": "ForestRun Multiple Observers",
+              "mean": 12.22299896,
+              "rme": 2.3418305830158714,
+              "samples": 50,
+              "confidence": 97.65816941698412
+            }
+          ]
+        }
+      }
+    },
+    {
+      "queryName": "user-profile",
+      "operations": {
+        "write": {
+          "suiteName": "user-profile - Write Operations",
+          "results": [
+            {
+              "name": "ForestRun Write",
+              "mean": 9.169347900000002,
+              "rme": 2.810245977926891,
+              "samples": 50,
+              "confidence": 97.1897540220731
+            }
+          ]
+        },
+        "read": {
+          "suiteName": "user-profile - Read Operations",
+          "results": [
+            {
+              "name": "ForestRun Read",
+              "mean": 11.10812205594405,
+              "rme": 1.654870523760598,
+              "samples": 143,
+              "confidence": 98.3451294762394
+            }
+          ]
+        },
+        "update": {
+          "suiteName": "user-profile - Update Operations",
+          "results": [
+            {
+              "name": "ForestRun Update",
+              "mean": 14.135797142857145,
+              "rme": 2.5001709785830113,
+              "samples": 49,
+              "confidence": 97.49982902141699
+            }
+          ]
+        },
+        "emptyRead": {
+          "suiteName": "user-profile - Empty Cache Reads (Cache Miss)",
+          "results": [
+            {
+              "name": "ForestRun Empty Read",
+              "mean": 17.62180457142857,
+              "rme": 1.9609316106727555,
+              "samples": 49,
+              "confidence": 98.03906838932724
+            }
+          ]
+        },
+        "cacheMiss": {
+          "suiteName": "user-profile - Cache Miss Operations",
+          "results": [
+            {
+              "name": "ForestRun Cache Miss",
+              "mean": 15.776909448979588,
+              "rme": 2.6460583065072765,
+              "samples": 49,
+              "confidence": 97.35394169349273
+            }
+          ]
+        },
+        "cacheHit": {
+          "suiteName": "user-profile - Cache Hit Operations",
+          "results": [
+            {
+              "name": "ForestRun Cache Hit",
+              "mean": 12.18318236,
+              "rme": 2.540534748001813,
+              "samples": 50,
+              "confidence": 97.45946525199818
+            }
+          ]
+        },
+        "multipleObservers": {
+          "suiteName": "user-profile - Multiple Observers",
+          "results": [
+            {
+              "name": "ForestRun Multiple Observers",
+              "mean": 9.080960319999999,
+              "rme": 3.5803120628108775,
+              "samples": 50,
+              "confidence": 96.41968793718912
+            }
+          ]
+        }
+      }
+    },
+    {
+      "queryName": "posts-list",
+      "operations": {
+        "write": {
+          "suiteName": "posts-list - Write Operations",
+          "results": [
+            {
+              "name": "ForestRun Write",
+              "mean": 11.105167461538457,
+              "rme": 1.6948405713132595,
+              "samples": 143,
+              "confidence": 98.30515942868674
+            }
+          ]
+        },
+        "read": {
+          "suiteName": "posts-list - Read Operations",
+          "results": [
+            {
+              "name": "ForestRun Read",
+              "mean": 14.131826755102042,
+              "rme": 2.501624371724779,
+              "samples": 49,
+              "confidence": 97.49837562827523
+            }
+          ]
+        },
+        "update": {
+          "suiteName": "posts-list - Update Operations",
+          "results": [
+            {
+              "name": "ForestRun Update",
+              "mean": 17.62142706122449,
+              "rme": 1.9022806717044944,
+              "samples": 49,
+              "confidence": 98.09771932829551
+            }
+          ]
+        },
+        "emptyRead": {
+          "suiteName": "posts-list - Empty Cache Reads (Cache Miss)",
+          "results": [
+            {
+              "name": "ForestRun Empty Read",
+              "mean": 15.777951816326526,
+              "rme": 2.67589260298233,
+              "samples": 49,
+              "confidence": 97.32410739701767
+            }
+          ]
+        },
+        "cacheMiss": {
+          "suiteName": "posts-list - Cache Miss Operations",
+          "results": [
+            {
+              "name": "ForestRun Cache Miss",
+              "mean": 12.243622224489794,
+              "rme": 2.559838495818554,
+              "samples": 49,
+              "confidence": 97.44016150418145
+            }
+          ]
+        },
+        "cacheHit": {
+          "suiteName": "posts-list - Cache Hit Operations",
+          "results": [
+            {
+              "name": "ForestRun Cache Hit",
+              "mean": 9.036334920000002,
+              "rme": 4.4039297773283925,
+              "samples": 50,
+              "confidence": 95.59607022267161
+            }
+          ]
+        },
+        "multipleObservers": {
+          "suiteName": "posts-list - Multiple Observers",
+          "results": [
+            {
+              "name": "ForestRun Multiple Observers",
+              "mean": 11.091212335664336,
+              "rme": 1.6755083993292226,
+              "samples": 143,
+              "confidence": 98.32449160067078
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -28,19 +28,23 @@ class Stats {
 
   // Arithmetic mean
   amean(): number {
-    return this.samples.reduce((sum, val) => sum + val, 0) / this.samples.length;
+    return (
+      this.samples.reduce((sum, val) => sum + val, 0) / this.samples.length
+    );
   }
 
   // Margin of error (absolute)
   moe(): number {
     if (this.samples.length < 2) return 0;
-    
+
     const mean = this.amean();
-    const variance = this.samples.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (this.samples.length - 1);
+    const variance =
+      this.samples.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+      (this.samples.length - 1);
     const standardDeviation = Math.sqrt(variance);
     const standardError = standardDeviation / Math.sqrt(this.samples.length);
-    
-    // Use 1.96 (95% confidence z-score) as a simple baseline
+
+    // Use 1.96 (95% confidence) as a simple baseline for margin of error calculation
     return 1.96 * standardError;
   }
 }
@@ -56,7 +60,7 @@ export default class NiceBenchmark {
   private results: BenchmarkResult[] = [];
   private targetConfidence: number;
 
-  constructor(name: string, targetConfidence: number = 95) {
+  constructor(name: string, targetConfidence = 95) {
     this.name = name;
     this.targetConfidence = targetConfidence;
   }
@@ -65,34 +69,41 @@ export default class NiceBenchmark {
     this.benchmarks.push({ name, fn });
   }
 
-  private async measureFunction(name: string, fn: () => Promise<void> | void): Promise<BenchmarkResult> {
+  private async measureFunction(
+    name: string,
+    fn: () => Promise<void> | void,
+  ): Promise<BenchmarkResult> {
     const samples: number[] = [];
     const warmupSamples = 20; // Warmup runs to eliminate JIT compilation effects
     const batchSize = 50; // Run 50 samples at a time
     const maxSamples = 1000; // Maximum total samples
-    
+
     // Warmup phase - don't record these samples
     for (let i = 0; i < warmupSamples; i++) {
       await fn();
     }
-    
+
     let currentConfidence = 0; // Start with 0% confidence
-    
+
     // Run in batches until we achieve target confidence
-    while (currentConfidence < this.targetConfidence && samples.length < maxSamples) {
+    while (
+      currentConfidence < this.targetConfidence &&
+      samples.length < maxSamples
+    ) {
       // Run a batch of samples
       for (let i = 0; i < batchSize; i++) {
         const start = process.hrtime.bigint();
         await fn();
         const end = process.hrtime.bigint();
-        
+
         // Convert nanoseconds to milliseconds
         const duration = Number(end - start) / 1e6;
         samples.push(duration);
       }
-      
+
       // Calculate current confidence after this batch
-      if (samples.length >= 10) { // Need minimum samples for meaningful calculation
+      if (samples.length >= 10) {
+        // Need minimum samples for meaningful calculation
         const stats = new Stats(samples);
         const relativeMarginOfError = percentRelativeMarginOfError(stats);
         currentConfidence = 100 - relativeMarginOfError;
@@ -106,12 +117,17 @@ export default class NiceBenchmark {
     const iqr = q3 - q1;
     const lowerBound = q1 - 1.5 * iqr;
     const upperBound = q3 + 1.5 * iqr;
-    
-    const filteredSamples = samples.filter(sample => sample >= lowerBound && sample <= upperBound);
-    
+
+    const filteredSamples = samples.filter(
+      (sample) => sample >= lowerBound && sample <= upperBound,
+    );
+
     // Use filtered samples for calculations if we have enough, otherwise use all samples
-    const usedSamples = filteredSamples.length >= Math.min(50, samples.length * 0.8) ? filteredSamples : samples;
-    
+    const usedSamples =
+      filteredSamples.length >= Math.min(50, samples.length * 0.8)
+        ? filteredSamples
+        : samples;
+
     // Calculate final statistics using the new Stats class
     const stats = new Stats(usedSamples);
     const mean = stats.amean();
@@ -127,7 +143,7 @@ export default class NiceBenchmark {
     };
   }
 
-  async run(options?: any): Promise<BenchmarkSuiteResult> {
+  async run(_options?: unknown): Promise<BenchmarkSuiteResult> {
     this.results = [];
 
     for (const benchmark of this.benchmarks) {
