@@ -4,9 +4,10 @@ import * as fs from "fs";
 import * as path from "path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { BenchmarkReport } from "./index";
+import { BenchmarkReport } from "./types";
 
 interface ComparisonResult {
+  cacheConfig: string;
   queryName: string;
   operation: string;
   baseline: {
@@ -14,15 +15,16 @@ interface ComparisonResult {
     rme: number;
     samples: number;
     confidence: number;
-  };
+  } | null;
   current: {
     mean: number;
     rme: number;
     samples: number;
     confidence: number;
-  };
-  changePercent: number;
+  } | null;
+  changePercent: number | null; // null => cannot compute
   changeDescription: string;
+  status: 'improvement' | 'regression' | 'no-change' | 'new' | 'removed' | 'n/a';
 }
 
 interface ComparisonSummary {
@@ -32,6 +34,12 @@ interface ComparisonSummary {
   regressions: ComparisonResult[];
   noChange: ComparisonResult[];
   significantChanges: ComparisonResult[];
+  byConfig: Record<string, {
+    improvements: ComparisonResult[];
+    regressions: ComparisonResult[];
+    noChange: ComparisonResult[];
+    significantChanges: ComparisonResult[];
+  }>;
 }
 
 // Configure yargs with proper types and validation
@@ -112,91 +120,81 @@ function loadReport(filePath: string): BenchmarkReport {
   }
 }
 
-function compareReports(
-  baseline: BenchmarkReport,
-  current: BenchmarkReport,
-): ComparisonSummary {
+function compareReports(baseline: BenchmarkReport, current: BenchmarkReport): ComparisonSummary {
   const comparisons: ComparisonResult[] = [];
 
-  for (const currentResult of current.results) {
-    const baselineResult = baseline.results.find(
-      (r) => r.queryName === currentResult.queryName,
-    );
+  const allCacheConfigs = new Set<string>();
+  baseline.cacheConfigResults.forEach(c => allCacheConfigs.add(c.configuration.name));
+  current.cacheConfigResults.forEach(c => allCacheConfigs.add(c.configuration.name));
 
-    if (!baselineResult) {
-      // New query in current report - skip comparison
-      continue;
-    }
+  for (const cacheConfigName of allCacheConfigs) {
+    const baseCfg = baseline.cacheConfigResults.find(c => c.configuration.name === cacheConfigName);
+    const curCfg = current.cacheConfigResults.find(c => c.configuration.name === cacheConfigName);
+    const allQueryNames = new Set<string>();
+    baseCfg?.queryResults.forEach(q => allQueryNames.add(q.queryName));
+    curCfg?.queryResults.forEach(q => allQueryNames.add(q.queryName));
 
-    // Compare each operation type
-    const operations: Array<keyof typeof currentResult.operations> = [
-      "write",
-      "read",
-      "update",
-      "emptyRead",
-      "cacheMiss",
-      "cacheHit",
-      "multipleObservers5",
-      "multipleObservers20",
-      "multipleObservers50",
-      "multipleObservers100",
-    ];
+    for (const queryName of allQueryNames) {
+      const baseQuery = baseCfg?.queryResults.find(q => q.queryName === queryName);
+      const curQuery = curCfg?.queryResults.find(q => q.queryName === queryName);
+      const opKeys = new Set<string>();
+      baseQuery && Object.keys(baseQuery.operations).forEach(k => opKeys.add(k));
+      curQuery && Object.keys(curQuery.operations).forEach(k => opKeys.add(k));
 
-    for (const operation of operations) {
-      const baselineOp = baselineResult.operations[operation];
-      const currentOp = currentResult.operations[operation];
-
-      if (baselineOp.results[0] && currentOp.results[0]) {
-        const baselineMean = baselineOp.results[0].mean;
-        const currentMean = currentOp.results[0].mean;
-        const changePercent =
-          ((currentMean - baselineMean) / baselineMean) * 100;
-
-        let changeDescription: string;
-        if (Math.abs(changePercent) < 5) {
-          changeDescription = "no significant change";
-        } else if (changePercent < 0) {
-          changeDescription = "improvement (faster)";
-        } else {
-          changeDescription = "regression (slower)";
+      for (const opKey of opKeys) {
+        const baseOp = baseQuery?.operations[opKey]?.results[0];
+        const curOp = curQuery?.operations[opKey]?.results[0];
+        let changePercent: number | null = null;
+        let changeDescription = 'n/a';
+        let status: ComparisonResult['status'] = 'n/a';
+        if (baseOp && curOp) {
+          changePercent = ((curOp.mean - baseOp.mean) / baseOp.mean) * 100;
+          if (Math.abs(changePercent) < 5) { changeDescription = 'no significant change'; status = 'no-change'; }
+          else if (changePercent < 0) { changeDescription = 'improvement (faster)'; status = 'improvement'; }
+          else { changeDescription = 'regression (slower)'; status = 'regression'; }
+        } else if (!baseOp && curOp) {
+          changeDescription = 'new'; status = 'new';
+        } else if (baseOp && !curOp) {
+          changeDescription = 'removed'; status = 'removed';
         }
-
         comparisons.push({
-          queryName: currentResult.queryName,
-          operation,
-          baseline: {
-            mean: baselineMean,
-            rme: baselineOp.results[0].rme,
-            samples: baselineOp.results[0].samples,
-            confidence: baselineOp.results[0].confidence,
-          },
-          current: {
-            mean: currentMean,
-            rme: currentOp.results[0].rme,
-            samples: currentOp.results[0].samples,
-            confidence: currentOp.results[0].confidence,
-          },
-          changePercent,
-          changeDescription,
+          cacheConfig: cacheConfigName,
+            queryName,
+            operation: opKey,
+            baseline: baseOp ? { mean: baseOp.mean, rme: baseOp.rme, samples: baseOp.samples, confidence: baseOp.confidence } : null,
+            current: curOp ? { mean: curOp.mean, rme: curOp.rme, samples: curOp.samples, confidence: curOp.confidence } : null,
+            changePercent,
+            changeDescription,
+            status,
         });
       }
     }
   }
 
-  const improvements = comparisons.filter((c) => c.changePercent < -5);
-  const regressions = comparisons.filter((c) => c.changePercent > 5);
-  const noChange = comparisons.filter((c) => Math.abs(c.changePercent) <= 5);
-  const significantChanges = comparisons.filter(
-    (c) => Math.abs(c.changePercent) > 10,
-  );
+  const improvements = comparisons.filter(c => c.status === 'improvement');
+  const regressions = comparisons.filter(c => c.status === 'regression');
+  const noChange = comparisons.filter(c => c.status === 'no-change');
+  const significantChanges = comparisons.filter(c => c.changePercent !== null && Math.abs(c.changePercent) > 10);
+
+  const byConfig: Record<string, { improvements: ComparisonResult[]; regressions: ComparisonResult[]; noChange: ComparisonResult[]; significantChanges: ComparisonResult[]; }> = {};
+  for (const cfg of Array.from(allCacheConfigs)) {
+    const cfgComparisons = comparisons.filter(c => c.cacheConfig === cfg);
+    byConfig[cfg] = {
+      improvements: cfgComparisons.filter(c => c.status === 'improvement'),
+      regressions: cfgComparisons.filter(c => c.status === 'regression'),
+      noChange: cfgComparisons.filter(c => c.status === 'no-change'),
+      significantChanges: cfgComparisons.filter(c => c.changePercent !== null && Math.abs(c.changePercent) > 10),
+    };
+  }
 
   return {
-    totalQueries: current.results.length,
+    totalQueries: current.cacheConfigResults.reduce((s,c)=> s + c.queryResults.length, 0),
     totalOperations: comparisons.length,
     improvements,
     regressions,
     noChange,
     significantChanges,
+    byConfig,
   };
 }
 
@@ -208,7 +206,7 @@ function formatAsMarkdown(
   const lines = [
     "## 📊 ForestRun Benchmark Comparison",
     "",
-    "### Summary",
+    "### Overall Summary",
     "",
     `| Metric | Count |`,
     `|--------|-------|`,
@@ -221,71 +219,100 @@ function formatAsMarkdown(
     "",
   ];
 
-  if (summary.improvements.length > 0) {
-    lines.push("### 🏆 Improvements (Faster)", "");
-    lines.push("| Query | Operation | Baseline | Current | Change |");
-    lines.push("|-------|-----------|----------|---------|---------|");
-
-    summary.improvements
-      .sort((a, b) => a.changePercent - b.changePercent) // Most improved first
-      .forEach((comp) => {
-        lines.push(
-          `| ${comp.queryName} | ${
-            comp.operation
-          } | ${comp.baseline.mean.toFixed(3)}ms | ${comp.current.mean.toFixed(
-            3,
-          )}ms | ${comp.changePercent.toFixed(1)}% |`,
-        );
-      });
-
-    lines.push("");
-  }
-
-  if (summary.regressions.length > 0) {
-    lines.push("### 🐌 Regressions (Slower)", "");
-    lines.push("| Query | Operation | Baseline | Current | Change |");
-    lines.push("|-------|-----------|----------|---------|---------|");
-
-    summary.regressions
-      .sort((a, b) => b.changePercent - a.changePercent) // Most regressed first
-      .forEach((comp) => {
-        lines.push(
-          `| ${comp.queryName} | ${
-            comp.operation
-          } | ${comp.baseline.mean.toFixed(3)}ms | ${comp.current.mean.toFixed(
-            3,
-          )}ms | +${comp.changePercent.toFixed(1)}% |`,
-        );
-      });
-
-    lines.push("");
-  }
-
-  lines.push("### 📈 All Results", "");
-  lines.push("| Query | Operation | Baseline | Current | Change | Status |");
-  lines.push("|-------|-----------|----------|---------|---------|---------|");
-
-  [...summary.improvements, ...summary.regressions, ...summary.noChange]
-    .sort(
-      (a, b) =>
-        a.queryName.localeCompare(b.queryName) ||
-        a.operation.localeCompare(b.operation),
-    )
-    .forEach((comp) => {
-      const changeStr =
-        comp.changePercent >= 0
-          ? `+${comp.changePercent.toFixed(1)}%`
-          : `${comp.changePercent.toFixed(1)}%`;
-      const status =
-        comp.changePercent < -5 ? "🏆" : comp.changePercent > 5 ? "🐌" : "➡️";
+  // Add per-configuration summaries
+  const configNames = Object.keys(summary.byConfig);
+  if (configNames.length > 1) {
+    lines.push("### Per-Configuration Summary", "");
+    lines.push("| Cache Config | Improvements | Regressions | No Change | Significant Changes |");
+    lines.push("|--------------|--------------|-------------|-----------|---------------------|");
+    
+    configNames.forEach(configName => {
+      const configSummary = summary.byConfig[configName];
       lines.push(
-        `| ${comp.queryName} | ${comp.operation} | ${comp.baseline.mean.toFixed(
-          3,
-        )}ms ±${comp.baseline.rme.toFixed(1)}% | ${comp.current.mean.toFixed(
-          3,
-        )}ms ±${comp.current.rme.toFixed(1)}% | ${changeStr} | ${status} |`,
+        `| ${configName} | ${configSummary.improvements.length} | ${configSummary.regressions.length} | ${configSummary.noChange.length} | ${configSummary.significantChanges.length} |`
       );
     });
+    lines.push("");
+  }
+
+  // Overall improvements
+  if (summary.improvements.length > 0) {
+    lines.push("### 🏆 Overall Improvements (Faster)", "");
+    lines.push("| Cache Config | Query | Operation | Baseline | Current | Change |");
+    lines.push("|--------------|-------|-----------|----------|---------|---------|");
+
+    summary.improvements
+      .sort((a, b) => (a.changePercent ?? 0) - (b.changePercent ?? 0)) // Most improved first
+      .forEach((comp) => {
+        if (!comp.baseline || !comp.current || comp.changePercent == null) return;
+        lines.push(`| ${comp.cacheConfig} | ${comp.queryName} | ${comp.operation} | ${comp.baseline.mean.toFixed(3)}ms | ${comp.current.mean.toFixed(3)}ms | ${comp.changePercent.toFixed(1)}% |`);
+      });
+
+    lines.push("");
+  }
+
+  // Overall regressions
+  if (summary.regressions.length > 0) {
+    lines.push("### 🐌 Overall Regressions (Slower)", "");
+    lines.push("| Cache Config | Query | Operation | Baseline | Current | Change |");
+    lines.push("|--------------|-------|-----------|----------|---------|---------|");
+
+    summary.regressions
+      .sort((a, b) => (b.changePercent ?? 0) - (a.changePercent ?? 0)) // Most regressed first
+      .forEach((comp) => {
+        if (!comp.baseline || !comp.current || comp.changePercent == null) return;
+        lines.push(`| ${comp.cacheConfig} | ${comp.queryName} | ${comp.operation} | ${comp.baseline.mean.toFixed(3)}ms | ${comp.current.mean.toFixed(3)}ms | +${comp.changePercent.toFixed(1)}% |`);
+      });
+
+    lines.push("");
+  }
+
+  // Per-configuration detailed results
+  configNames.forEach(configName => {
+    const configSummary = summary.byConfig[configName];
+    lines.push(`### 🔧 ${configName} Configuration Results`, "");
+    
+    if (configSummary.improvements.length > 0) {
+      lines.push("#### 🏆 Improvements", "");
+      lines.push("| Query | Operation | Baseline | Current | Change |");
+      lines.push("|-------|-----------|----------|---------|---------|");
+      
+      configSummary.improvements
+        .sort((a, b) => (a.changePercent ?? 0) - (b.changePercent ?? 0))
+        .forEach((comp) => {
+          if (!comp.baseline || !comp.current || comp.changePercent == null) return;
+          lines.push(`| ${comp.queryName} | ${comp.operation} | ${comp.baseline.mean.toFixed(3)}ms | ${comp.current.mean.toFixed(3)}ms | ${comp.changePercent.toFixed(1)}% |`);
+        });
+      lines.push("");
+    }
+    
+    if (configSummary.regressions.length > 0) {
+      lines.push("#### 🐌 Regressions", "");
+      lines.push("| Query | Operation | Baseline | Current | Change |");
+      lines.push("|-------|-----------|----------|---------|---------|");
+      
+      configSummary.regressions
+        .sort((a, b) => (b.changePercent ?? 0) - (a.changePercent ?? 0))
+        .forEach((comp) => {
+          if (!comp.baseline || !comp.current || comp.changePercent == null) return;
+          lines.push(`| ${comp.queryName} | ${comp.operation} | ${comp.baseline.mean.toFixed(3)}ms | ${comp.current.mean.toFixed(3)}ms | +${comp.changePercent.toFixed(1)}% |`);
+        });
+      lines.push("");
+    }
+  });
+
+  // Overall detailed results table
+  lines.push("### 📈 All Results", "");
+  lines.push("| Cache Config | Query | Operation | Baseline | Current | Change | Status |");
+  lines.push("|--------------|-------|-----------|----------|---------|---------|---------|");
+
+  comparisonsSorted(summary).forEach(comp => {
+    const baselineStr = comp.baseline ? `${comp.baseline.mean.toFixed(3)}ms ±${comp.baseline.rme.toFixed(1)}%` : '-';
+    const currentStr = comp.current ? `${comp.current.mean.toFixed(3)}ms ±${comp.current.rme.toFixed(1)}%` : '-';
+    const changeStr = comp.changePercent === null ? '-' : (comp.changePercent >= 0 ? `+${comp.changePercent.toFixed(1)}%` : `${comp.changePercent.toFixed(1)}%`);
+    const statusEmoji = comp.status === 'improvement' ? '🏆' : comp.status === 'regression' ? '🐌' : comp.status === 'no-change' ? '➡️' : comp.status === 'new' ? '�' : comp.status === 'removed' ? '❌' : '';
+    lines.push(`| ${comp.cacheConfig} | ${comp.queryName} | ${comp.operation} | ${baselineStr} | ${currentStr} | ${changeStr} | ${statusEmoji} |`);
+  });
 
   return lines.join("\n");
 }
@@ -299,7 +326,7 @@ function formatAsText(
     "📊 ForestRun Benchmark Comparison",
     "=".repeat(35),
     "",
-    "Summary:",
+    "Overall Summary:",
     `  Total Queries: ${summary.totalQueries}`,
     `  Total Operations: ${summary.totalOperations}`,
     `  Improvements (>5% faster): ${summary.improvements.length}`,
@@ -309,39 +336,80 @@ function formatAsText(
     "",
   ];
 
+  // Per-configuration summary
+  const configNames = Object.keys(summary.byConfig);
+  if (configNames.length > 1) {
+    lines.push("Per-Configuration Summary:");
+    configNames.forEach(configName => {
+      const configSummary = summary.byConfig[configName];
+      lines.push(`  ${configName}:`);
+      lines.push(`    Improvements: ${configSummary.improvements.length}`);
+      lines.push(`    Regressions: ${configSummary.regressions.length}`);
+      lines.push(`    No change: ${configSummary.noChange.length}`);
+      lines.push(`    Significant changes: ${configSummary.significantChanges.length}`);
+    });
+    lines.push("");
+  }
+
   if (summary.improvements.length > 0) {
-    lines.push("🏆 Improvements (Faster):");
+    lines.push("🏆 Overall Improvements (Faster):");
     summary.improvements
-      .sort((a, b) => a.changePercent - b.changePercent)
+      .sort((a, b) => (a.changePercent ?? 0) - (b.changePercent ?? 0))
       .forEach((comp) => {
-        lines.push(
-          `  ${comp.queryName} - ${
-            comp.operation
-          }: ${comp.baseline.mean.toFixed(3)}ms → ${comp.current.mean.toFixed(
-            3,
-          )}ms (${comp.changePercent.toFixed(1)}%)`,
-        );
+        if (!comp.baseline || !comp.current || comp.changePercent == null) return;
+        lines.push(`  [${comp.cacheConfig}] ${comp.queryName} - ${comp.operation}: ${comp.baseline.mean.toFixed(3)}ms → ${comp.current.mean.toFixed(3)}ms (${comp.changePercent.toFixed(1)}%)`);
       });
     lines.push("");
   }
 
   if (summary.regressions.length > 0) {
-    lines.push("🐌 Regressions (Slower):");
+    lines.push("🐌 Overall Regressions (Slower):");
     summary.regressions
-      .sort((a, b) => b.changePercent - a.changePercent)
+      .sort((a, b) => (b.changePercent ?? 0) - (a.changePercent ?? 0))
       .forEach((comp) => {
-        lines.push(
-          `  ${comp.queryName} - ${
-            comp.operation
-          }: ${comp.baseline.mean.toFixed(3)}ms → ${comp.current.mean.toFixed(
-            3,
-          )}ms (+${comp.changePercent.toFixed(1)}%)`,
-        );
+        if (!comp.baseline || !comp.current || comp.changePercent == null) return;
+        lines.push(`  [${comp.cacheConfig}] ${comp.queryName} - ${comp.operation}: ${comp.baseline.mean.toFixed(3)}ms → ${comp.current.mean.toFixed(3)}ms (+${comp.changePercent.toFixed(1)}%)`);
       });
     lines.push("");
   }
 
+  // Per-configuration detailed results
+  configNames.forEach(configName => {
+    const configSummary = summary.byConfig[configName];
+    lines.push(`🔧 ${configName} Configuration:`);
+    
+    if (configSummary.improvements.length > 0) {
+      lines.push("  🏆 Improvements:");
+      configSummary.improvements
+        .sort((a, b) => (a.changePercent ?? 0) - (b.changePercent ?? 0))
+        .forEach((comp) => {
+          if (!comp.baseline || !comp.current || comp.changePercent == null) return;
+          lines.push(`    ${comp.queryName} - ${comp.operation}: ${comp.baseline.mean.toFixed(3)}ms → ${comp.current.mean.toFixed(3)}ms (${comp.changePercent.toFixed(1)}%)`);
+        });
+    }
+    
+    if (configSummary.regressions.length > 0) {
+      lines.push("  🐌 Regressions:");
+      configSummary.regressions
+        .sort((a, b) => (b.changePercent ?? 0) - (a.changePercent ?? 0))
+        .forEach((comp) => {
+          if (!comp.baseline || !comp.current || comp.changePercent == null) return;
+          lines.push(`    ${comp.queryName} - ${comp.operation}: ${comp.baseline.mean.toFixed(3)}ms → ${comp.current.mean.toFixed(3)}ms (+${comp.changePercent.toFixed(1)}%)`);
+        });
+    }
+    lines.push("");
+  });
+
   return lines.join("\n");
+}
+
+function comparisonsSorted(summary: ComparisonSummary): ComparisonResult[] {
+  const all = [
+    ...summary.improvements,
+    ...summary.regressions,
+    ...summary.noChange,
+  ];
+  return all.sort((a,b)=> a.cacheConfig.localeCompare(b.cacheConfig) || a.queryName.localeCompare(b.queryName) || a.operation.localeCompare(b.operation));
 }
 
 function main(): void {

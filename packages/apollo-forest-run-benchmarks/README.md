@@ -1,52 +1,50 @@
-# ForestRun Benchmarks
+# Apollo ForestRun Benchmarks
 
-A comprehensive performance benchmark suite for the ForestRun GraphQL cache implementation.
+A comprehensive benchmarking suite for evaluating Apollo ForestRun cache performance with statistical confidence.
 
 ## Features
 
-- **Lean Statistical Confidence Calculation**: Uses margin-of-error based approach with configurable confidence levels
-- **Simplified Parallel Execution**: Distributes benchmark tasks across CPU cores for faster execution  
-- **Comprehensive Cache Scenarios**: Tests write, read, update, cache miss, cache hit, and multiple observer patterns
-- **Diverse GraphQL Query Patterns**: 9 different query types from simple to complex nested structures
-- **Automatic Mock Data Generation**: Uses @graphitation/graphql-js-operation-payload-generator
-- **Standalone Comparison Tool**: Compare benchmark results with multiple output formats
+- **Confidence-Driven Measurement**: Configure target confidence percentage instead of raw error tolerances
+- **Automatic Outlier Filtering**: IQR-based outlier removal for stable, reliable results
+- **Reliability Testing**: Multi-run stability verification to ensure consistent performance
+- **Auto-Discovery**: Automatically finds GraphQL queries and response fixtures
+- **Modular Architecture**: Clean separation of concerns across measurement, aggregation, and reporting
 
-## Usage
-
-### Running Benchmarks
+## Quick Start
 
 ```bash
-# Use default 95% confidence
+# Run benchmarks with default settings (99% confidence target)
 yarn benchmark
 
-# High precision (99% confidence) 
-yarn benchmark --confidence 99
-
-# Faster benchmarks (90% confidence)
-yarn benchmark -c 90
-
-# Show help
-yarn benchmark --help
+# Compare benchmark reports
+yarn benchmark:compare --baseline report1.json --current report2.json
 ```
 
-### Comparing Results
+## Configuration
 
-```bash
-# Auto-detect latest two reports
-yarn benchmark:compare
+Key settings in `src/config.ts`:
 
-# Compare specific files
-yarn benchmark:compare -b baseline.json -c current.json
+- `targetConfidencePercent`: Statistical confidence level (99 = stop when confidence ≥ 99%)
+- `observerCounts`: Number of cache observers to test [0, 50, 100]
+- `reliability.thresholdPercent`: Variation threshold for stability (1%)
+- `maxSamplesPerBenchmark`: Sample limit per test (2000)
 
-# Generate markdown for GitHub
-yarn benchmark:compare -f markdown
+## Architecture
 
-# JSON output for programmatic use
-yarn benchmark:compare -f json
+- **Stats Class**: Centralized statistical calculations with IQR outlier filtering
+- **Adaptive Sampling**: Continues until target confidence is reached or sample limit hit
+- **Multi-Run Reliability**: Aggregates across multiple runs for stable results
+- **Clean Aggregation**: Merges raw samples and recomputes statistics accurately
 
-# Show comparison help
-yarn benchmark:compare --help
-```
+## Results
+
+Each benchmark provides:
+
+- Mean execution time (ms)
+- Relative margin of error (%)
+- Statistical confidence (%)
+- Effective sample count (post-filtering)
+- Raw filtered samples for further analysis
 
 ## Configuration
 
@@ -88,8 +86,9 @@ Edit `src/config.json` to modify:
 ## Output
 
 Each benchmark result shows:
+
 - Mean execution time in milliseconds
-- Relative margin of error percentage  
+- Relative margin of error percentage
 - Number of samples collected
 - Actual confidence level achieved
 
