@@ -10,6 +10,8 @@ describe(generateTS, () => {
     const contextTypeExtensions = {
       baseContextTypePath: "@package/default-context",
       baseContextTypeName: "DefaultContextType",
+      legacyBaseContextTypePath: "@package/default-context",
+      legacyBaseContextTypeName: "DefaultLegacyContextType",
       groups: {
         baseContextOnly: {},
         UserTestGroup: {
@@ -122,7 +124,8 @@ describe(generateTS, () => {
               messagesWithArrayRequired: [Message]!
               messagesRequired: [Message!]!
               messagesOnlyMessageRequired: [Message!]
-              post: Post @context(required: { managers: ["post"] })
+              post: Post
+                @context(required: { managers: ["post"] }, useLegacy: true)
               postRequired: Post!
               avatar: Avatar
                 @context(
@@ -139,6 +142,7 @@ describe(generateTS, () => {
                 @context(
                   required: { managers: ["user"] }
                   optional: { managers: ["node"] }
+                  useLegacy: true
                 )
               requiredUser: User! @context(optional: { managers: ["node"] })
               requiredPost: Post! @baseContextOnly
@@ -294,162 +298,6 @@ describe(generateTS, () => {
             readonly postRequired: Post;
             readonly avatar?: NSMsteamsPackagesTestModels.Avatar | null;
             readonly avatarRequired: NSMsteamsPackagesTestModels.Avatar;
-        }
-        "
-      `);
-      expect(resolvers).toMatchInlineSnapshot(`
-        "import type { models as NSMsteamsPackagesTestModels } from "@msteams/packages-test";
-        import type { PromiseOrValue, IterableOrAsyncIterable } from "@graphitation/supermassive";
-        import type { ResolveInfo } from "@graphitation/supermassive";
-        import * as Models from "./models.interface";
-        import type { DefaultContextType } from "@package/default-context";
-        import type { MessageStateMachineType } from "@package/message-state-machine";
-        import type { UserStateMachineType } from "@package/user-state-machine";
-        import type { PostStateMachineType } from "@package/post-state-machine";
-        import type { NodeStateMachineType } from "@package/node-state-machine";
-        import type { whatever } from "@package/whatever-state-machine";
-        export declare namespace Post {
-            export interface Resolvers {
-                readonly id?: id;
-            }
-            export type id = (model: Models.Post, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
-        }
-        export declare namespace Message {
-            export interface Resolvers {
-                readonly id?: id;
-            }
-            export type id = (model: Models.Message, args: {}, context: DefaultContextType & {
-                managers: {
-                    "message": MessageStateMachineType["message"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<string>;
-        }
-        export declare namespace User {
-            export interface Resolvers {
-                readonly id?: id;
-                readonly name?: name;
-                readonly messagesWithAnswersNonRequired?: messagesWithAnswersNonRequired;
-                readonly messagesWithAnswersRequired?: messagesWithAnswersRequired;
-                readonly messagesWithAnswersAllRequired?: messagesWithAnswersAllRequired;
-                readonly messagesNonRequired?: messagesNonRequired;
-                readonly messagesWithArrayRequired?: messagesWithArrayRequired;
-                readonly messagesRequired?: messagesRequired;
-                readonly messagesOnlyMessageRequired?: messagesOnlyMessageRequired;
-                readonly post?: post;
-                readonly postRequired?: postRequired;
-                readonly avatar?: avatar;
-                readonly avatarRequired?: avatarRequired;
-            }
-            export type id = (model: Models.User, args: {}, context: DefaultContextType & {
-                managers: {
-                    "id-user": UserStateMachineType["id-user"];
-                    "user": UserStateMachineType["user"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<string>;
-            export type name = (model: Models.User, args: {}, context: DefaultContextType & {
-                managers: {
-                    "user": UserStateMachineType["user"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
-            export type messagesWithAnswersNonRequired = (model: Models.User, args: {}, context: DefaultContextType & {
-                managers: {
-                    "user": UserStateMachineType["user"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<IterableOrAsyncIterable<Models.Message | null | undefined> | null | undefined> | null | undefined>;
-            export type messagesWithAnswersRequired = (model: Models.User, args: {}, context: DefaultContextType & {
-                managers: {
-                    "user": UserStateMachineType["user"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<IterableOrAsyncIterable<Models.Message | null | undefined> | null | undefined>>;
-            export type messagesWithAnswersAllRequired = (model: Models.User, args: {}, context: DefaultContextType & {
-                managers: {
-                    "user": UserStateMachineType["user"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<IterableOrAsyncIterable<Models.Message>>>;
-            export type messagesNonRequired = (model: Models.User, args: {}, context: DefaultContextType & {
-                managers: {
-                    "user": UserStateMachineType["user"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Message | null | undefined> | null | undefined>;
-            export type messagesWithArrayRequired = (model: Models.User, args: {}, context: DefaultContextType & {
-                managers: {
-                    "user": UserStateMachineType["user"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Message | null | undefined>>;
-            export type messagesRequired = (model: Models.User, args: {}, context: DefaultContextType & {
-                managers: {
-                    "user": UserStateMachineType["user"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Message>>;
-            export type messagesOnlyMessageRequired = (model: Models.User, args: {}, context: DefaultContextType & {
-                managers: {
-                    "user": UserStateMachineType["user"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Message> | null | undefined>;
-            export type post = (model: Models.User, args: {}, context: DefaultContextType & {
-                managers: {
-                    "post": PostStateMachineType["post"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
-            export type postRequired = (model: Models.User, args: {}, context: DefaultContextType & {
-                managers: {
-                    "user": UserStateMachineType["user"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<Models.Post>;
-            export type avatar = (model: Models.User, args: {}, context: DefaultContextType & {
-                managers: {
-                    "user": UserStateMachineType["user"];
-                    "node"?: NodeStateMachineType["node"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<NSMsteamsPackagesTestModels.Avatar | null | undefined>;
-            export type avatarRequired = (model: Models.User, args: {}, context: DefaultContextType & {
-                managers: {
-                    "node"?: NodeStateMachineType["node"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<NSMsteamsPackagesTestModels.Avatar>;
-        }
-        export declare namespace Query {
-            export interface Resolvers {
-                readonly requiredUsers?: requiredUsers;
-                readonly optionalUsers?: optionalUsers;
-                readonly optionalUser?: optionalUser;
-                readonly requiredUser?: requiredUser;
-                readonly requiredPost?: requiredPost;
-                readonly optionalPost?: optionalPost;
-            }
-            export type requiredUsers = (model: unknown, args: {}, context: DefaultContextType & {
-                managers: {
-                    "user": UserStateMachineType["user"];
-                    "whatever": whatever;
-                };
-            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.User>>;
-            export type optionalUsers = (model: unknown, args: {}, context: DefaultContextType & {
-                managers: {
-                    "user": UserStateMachineType["user"];
-                    "whatever": whatever;
-                };
-            }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.User | null | undefined> | null | undefined>;
-            export type optionalUser = (model: unknown, args: {}, context: DefaultContextType & {
-                managers: {
-                    "user": UserStateMachineType["user"];
-                    "node"?: NodeStateMachineType["node"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
-            export type requiredUser = (model: unknown, args: {}, context: DefaultContextType & {
-                managers: {
-                    "node"?: NodeStateMachineType["node"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<Models.User>;
-            export type requiredPost = (model: unknown, args: {}, context: DefaultContextType, info: ResolveInfo) => PromiseOrValue<Models.Post>;
-            export type optionalPost = (model: unknown, args: {}, context: DefaultContextType & {
-                managers: {
-                    "post": PostStateMachineType["post"];
-                    "whatever": whatever;
-                };
-                workflows: {
-                    "post-workflow": PostStateMachineType["post-workflow"];
-                };
-            }, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
         }
         "
       `);

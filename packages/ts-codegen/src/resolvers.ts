@@ -124,34 +124,44 @@ function generateImports(context: TsCodegenContext) {
 
   const contextTypeExtensions = context.getContextTypeExtensions();
   if (Object.keys(context.getContextMap()).length && contextTypeExtensions) {
-    if (context.baseSubTypeContext?.from && context.baseSubTypeContext?.name) {
-      importStatements.push(
-        createImportDeclaration(
-          [context.baseSubTypeContext.name],
-          context.baseSubTypeContext.from,
-        ),
-      );
-    }
-
     const contextImportNames: Set<string> = new Set();
+    let baseContextUsed = false;
+    let legacyBaseContextUsed = false;
     for (const [, root] of Object.entries(context.getContextMap())) {
-      const rootValue: ContextTypeItem[] | undefined = root.__context;
+      const rootValue: ContextTypeItem | undefined = root.__context;
       if (rootValue) {
-        if (rootValue.every(({ id }) => contextImportNames.has(id))) {
+        if (rootValue.values.every(({ id }) => contextImportNames.has(id))) {
           continue;
         }
 
-        const imports = context.getSubTypeNamesImportMap(rootValue);
+        if (rootValue.isLegacy) {
+          legacyBaseContextUsed = true;
+        } else {
+          baseContextUsed = true;
+        }
+
+        const contextTypesImportMap =
+          context.getSubTypeNamesImportMap(rootValue);
+
         importStatements.push(
-          ...getContextImportIdentifiers(imports, contextImportNames),
+          ...getContextImportIdentifiers(
+            contextTypesImportMap,
+            contextImportNames,
+          ),
         );
       }
       for (const [key, value] of Object.entries(root)) {
         if (key.startsWith("__")) {
           continue;
         }
-        if (value.every(({ id }) => contextImportNames.has(id))) {
+        if (value.values.every(({ id }) => contextImportNames.has(id))) {
           continue;
+        }
+
+        if (value.isLegacy) {
+          legacyBaseContextUsed = true;
+        } else {
+          baseContextUsed = true;
         }
 
         const imports = context.getSubTypeNamesImportMap(value);
@@ -160,6 +170,24 @@ function generateImports(context: TsCodegenContext) {
           ...getContextImportIdentifiers(imports, contextImportNames),
         );
       }
+    }
+
+    if (baseContextUsed && context.baseContext) {
+      importStatements.push(
+        createImportDeclaration(
+          [context.baseContext.name],
+          context.baseContext.from,
+        ),
+      );
+    }
+
+    if (legacyBaseContextUsed && context.legacyBaseContext) {
+      importStatements.push(
+        createImportDeclaration(
+          [context.legacyBaseContext.name],
+          context.legacyBaseContext.from,
+        ),
+      );
     }
   }
 
