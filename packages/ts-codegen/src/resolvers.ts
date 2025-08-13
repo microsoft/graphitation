@@ -86,7 +86,7 @@ export function generateResolvers(
   return source;
 }
 
-function convertImportKeyValuesPairsToImportDeclarations(
+function convertImportKeyValuePairsToImportDeclarations(
   importKeyValuesPairs: Record<string, string[]>,
 ) {
   const importDeclarations: ImportDeclaration[] = [];
@@ -172,21 +172,24 @@ function generateImports(context: TsCodegenContext) {
           importKeyValuesPairs[importPath].push(...importNames);
         }
       }
-      for (const [key, value] of Object.entries(root)) {
+      for (const [key, contextTypeItem] of Object.entries(root)) {
         if (key.startsWith("__")) {
           continue;
         }
-        if (value.values.every(({ id }) => contextImportNames.has(id))) {
+        if (
+          contextTypeItem.values.every(({ id }) => contextImportNames.has(id))
+        ) {
           continue;
         }
 
-        if (value.isLegacy) {
+        if (contextTypeItem.isLegacy) {
           legacyBaseContextUsed = true;
         } else {
           baseContextUsed = true;
         }
 
-        const contextTypesImportMap = context.getSubTypeNamesImportMap(value);
+        const contextTypesImportMap =
+          context.getSubTypeNamesImportMap(contextTypeItem);
 
         for (const [importPath, importNames] of Object.entries(
           getContextImportIdentifiers(
@@ -232,7 +235,7 @@ function generateImports(context: TsCodegenContext) {
       }
     }
     importStatements.push(
-      ...convertImportKeyValuesPairsToImportDeclarations(importKeyValuesPairs),
+      ...convertImportKeyValuePairsToImportDeclarations(importKeyValuesPairs),
     );
   }
 

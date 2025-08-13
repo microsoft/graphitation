@@ -111,14 +111,14 @@ export type ContextMap = {
   [key: string]: ContextMapTypeItem;
 };
 
-export type ContextTypeItemValues = {
+export type ContextTypeItemValue = {
   id: string;
   optional?: boolean;
 };
 
 export type ContextTypeItem = {
   isLegacy: boolean;
-  values: ContextTypeItemValues[];
+  values: ContextTypeItemValue[];
 };
 
 export type ContextMapTypeItem = {
@@ -278,7 +278,7 @@ export class TsCodegenContext {
   }
 
   private buildContextSubTypeNamespaceObject(
-    contextTypeItemValues: ContextTypeItemValues[],
+    contextTypeItemValues: ContextTypeItemValue[],
   ) {
     const contextTypeExtensions = this.getContextTypeExtensions();
 
