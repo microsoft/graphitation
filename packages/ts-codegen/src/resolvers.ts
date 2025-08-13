@@ -1,4 +1,4 @@
-import ts, { factory } from "typescript";
+import ts, { factory, ImportDeclaration } from "typescript";
 import {
   Field,
   ObjectType,
@@ -14,16 +14,13 @@ import {
   createUnionResolveType,
   createInterfaceResolveType,
 } from "./utilities";
-import {
-  createImportDeclaration,
-  isRootOperationType,
-} from "./context/utilities";
+import { isRootOperationType } from "./context/utilities";
 
 function getContextImportIdentifiers(
   imports: Record<string, string[]>,
   contextImportNames: Set<string>,
 ) {
-  const statements = [];
+  const importKeyValuesPairs: Record<string, string[]> = {};
 
   for (const [importPath, importNames] of Object.entries(imports)) {
     const importIndentifiers = importNames
@@ -32,32 +29,18 @@ function getContextImportIdentifiers(
           return;
         }
         contextImportNames.add(importName);
-        return factory.createImportSpecifier(
-          false,
-          undefined,
-          factory.createIdentifier(importName),
-        );
+        return importName;
       })
-      .filter(Boolean) as ts.ImportSpecifier[];
+      .filter(Boolean) as string[];
 
     if (!importIndentifiers.length) {
       continue;
     }
 
-    statements.push(
-      factory.createImportDeclaration(
-        undefined,
-        factory.createImportClause(
-          true,
-          undefined,
-          factory.createNamedImports(importIndentifiers),
-        ),
-        factory.createStringLiteral(importPath),
-      ),
-    );
+    importKeyValuesPairs[importPath] ??= importIndentifiers;
   }
 
-  return statements;
+  return importKeyValuesPairs;
 }
 
 const getResolverTypes = (context: TsCodegenContext): ResolverType[] => {
@@ -103,6 +86,36 @@ export function generateResolvers(
   return source;
 }
 
+function convertImportKeyValuesPairsToImportDeclarations(
+  importKeyValuesPairs: Record<string, string[]>,
+) {
+  const importDeclarations: ImportDeclaration[] = [];
+  for (const [importPath, importNames] of Object.entries(
+    importKeyValuesPairs,
+  )) {
+    importDeclarations.push(
+      factory.createImportDeclaration(
+        undefined,
+        factory.createImportClause(
+          true,
+          undefined,
+          factory.createNamedImports(
+            importNames.map((importName) =>
+              factory.createImportSpecifier(
+                false,
+                undefined,
+                factory.createIdentifier(importName),
+              ),
+            ),
+          ),
+        ),
+        factory.createStringLiteral(importPath),
+      ),
+    );
+  }
+  return importDeclarations;
+}
+
 function generateImports(context: TsCodegenContext) {
   const importStatements: ts.Statement[] = [
     ...(context.getAllImportDeclarations("RESOLVERS") as ts.Statement[]),
@@ -121,6 +134,8 @@ function generateImports(context: TsCodegenContext) {
       ),
     );
   }
+
+  const importKeyValuesPairs: Record<string, string[]> = {};
 
   const contextTypeExtensions = context.getContextTypeExtensions();
   if (Object.keys(context.getContextMap()).length && contextTypeExtensions) {
@@ -143,12 +158,19 @@ function generateImports(context: TsCodegenContext) {
         const contextTypesImportMap =
           context.getSubTypeNamesImportMap(rootValue);
 
-        importStatements.push(
-          ...getContextImportIdentifiers(
+        for (const [importPath, importNames] of Object.entries(
+          getContextImportIdentifiers(
             contextTypesImportMap,
             contextImportNames,
           ),
-        );
+        )) {
+          if (!importKeyValuesPairs[importPath]) {
+            importKeyValuesPairs[importPath] = importNames;
+            continue;
+          }
+
+          importKeyValuesPairs[importPath].push(...importNames);
+        }
       }
       for (const [key, value] of Object.entries(root)) {
         if (key.startsWith("__")) {
@@ -164,31 +186,54 @@ function generateImports(context: TsCodegenContext) {
           baseContextUsed = true;
         }
 
-        const imports = context.getSubTypeNamesImportMap(value);
+        const contextTypesImportMap = context.getSubTypeNamesImportMap(value);
 
-        importStatements.push(
-          ...getContextImportIdentifiers(imports, contextImportNames),
-        );
+        for (const [importPath, importNames] of Object.entries(
+          getContextImportIdentifiers(
+            contextTypesImportMap,
+            contextImportNames,
+          ),
+        )) {
+          if (!importKeyValuesPairs[importPath]) {
+            importKeyValuesPairs[importPath] = importNames;
+            continue;
+          }
+
+          importKeyValuesPairs[importPath].push(...importNames);
+        }
       }
     }
 
     if (baseContextUsed && context.baseContext) {
-      importStatements.push(
-        createImportDeclaration(
-          [context.baseContext.name],
-          context.baseContext.from,
-        ),
-      );
+      if (context.baseContext.from) {
+        if (!importKeyValuesPairs[context.baseContext.from]) {
+          importKeyValuesPairs[context.baseContext.from] = [
+            context.baseContext.name,
+          ];
+        } else {
+          importKeyValuesPairs[context.baseContext.from].push(
+            context.baseContext.name,
+          );
+        }
+      }
     }
 
     if (legacyBaseContextUsed && context.legacyBaseContext) {
-      importStatements.push(
-        createImportDeclaration(
-          [context.legacyBaseContext.name],
-          context.legacyBaseContext.from,
-        ),
-      );
+      if (context.legacyBaseContext.from) {
+        if (!importKeyValuesPairs[context.legacyBaseContext.from]) {
+          importKeyValuesPairs[context.legacyBaseContext.from] = [
+            context.legacyBaseContext.name,
+          ];
+        } else {
+          importKeyValuesPairs[context.legacyBaseContext.from].push(
+            context.legacyBaseContext.name,
+          );
+        }
+      }
     }
+    importStatements.push(
+      ...convertImportKeyValuesPairsToImportDeclarations(importKeyValuesPairs),
+    );
   }
 
   return importStatements;
