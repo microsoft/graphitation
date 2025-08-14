@@ -16,14 +16,14 @@ import {
 } from "./utilities";
 import { isRootOperationType } from "./context/utilities";
 
-function getContextImportIdentifiers(
+function getDeduplicatedContextImportNames(
   imports: Record<string, string[]>,
   contextImportNames: Set<string>,
 ) {
   const importKeyValuesPairs: Record<string, string[]> = {};
 
   for (const [importPath, importNames] of Object.entries(imports)) {
-    const importIndentifiers = importNames
+    const importIdentifiers = importNames
       .map((importName: string) => {
         if (contextImportNames.has(importName)) {
           return;
@@ -33,11 +33,11 @@ function getContextImportIdentifiers(
       })
       .filter(Boolean) as string[];
 
-    if (!importIndentifiers.length) {
+    if (!importIdentifiers.length) {
       continue;
     }
 
-    importKeyValuesPairs[importPath] ??= importIndentifiers;
+    importKeyValuesPairs[importPath] ??= importIdentifiers;
   }
 
   return importKeyValuesPairs;
@@ -135,107 +135,98 @@ function generateImports(context: TsCodegenContext) {
     );
   }
 
-  const importKeyValuesPairs: Record<string, string[]> = {};
+  const groupedContextImportKeyValuesPairs: Record<string, string[]> = {};
 
   const contextTypeExtensions = context.getContextTypeExtensions();
   if (Object.keys(context.getContextMap()).length && contextTypeExtensions) {
-    const contextImportNames: Set<string> = new Set();
+    const uniqueContextImportNames: Set<string> = new Set();
     let baseContextUsed = false;
     let legacyBaseContextUsed = false;
-    for (const [, root] of Object.entries(context.getContextMap())) {
-      const rootValue: ContextTypeItem | undefined = root.__context;
-      if (rootValue) {
-        if (rootValue.values.every(({ id }) => contextImportNames.has(id))) {
+
+    const addContextTypeItemToGroupedContextImportKeyValuesPairs = (
+      contextTypeItem: ContextTypeItem,
+    ) => {
+      if (contextTypeItem.isLegacy) {
+        legacyBaseContextUsed = true;
+      } else {
+        baseContextUsed = true;
+      }
+
+      const importKeyValuePairs =
+        context.convertContextTypeItemToImportKeyValuePairs(contextTypeItem);
+
+      for (const [importPath, importNames] of Object.entries(
+        getDeduplicatedContextImportNames(
+          importKeyValuePairs,
+          uniqueContextImportNames,
+        ),
+      )) {
+        if (!groupedContextImportKeyValuesPairs[importPath]) {
+          groupedContextImportKeyValuesPairs[importPath] = importNames;
           continue;
         }
 
-        if (rootValue.isLegacy) {
-          legacyBaseContextUsed = true;
-        } else {
-          baseContextUsed = true;
+        groupedContextImportKeyValuesPairs[importPath].push(...importNames);
+      }
+    };
+
+    for (const [, root] of Object.entries(context.getContextMap())) {
+      const rootValue: ContextTypeItem | undefined = root.__context;
+      if (rootValue) {
+        if (
+          rootValue.values.every(({ id }) => uniqueContextImportNames.has(id))
+        ) {
+          continue;
         }
 
-        const contextTypesImportMap =
-          context.getSubTypeNamesImportMap(rootValue);
-
-        for (const [importPath, importNames] of Object.entries(
-          getContextImportIdentifiers(
-            contextTypesImportMap,
-            contextImportNames,
-          ),
-        )) {
-          if (!importKeyValuesPairs[importPath]) {
-            importKeyValuesPairs[importPath] = importNames;
-            continue;
-          }
-
-          importKeyValuesPairs[importPath].push(...importNames);
-        }
+        addContextTypeItemToGroupedContextImportKeyValuesPairs(rootValue);
       }
       for (const [key, contextTypeItem] of Object.entries(root)) {
         if (key.startsWith("__")) {
           continue;
         }
         if (
-          contextTypeItem.values.every(({ id }) => contextImportNames.has(id))
+          contextTypeItem.values.every(({ id }) =>
+            uniqueContextImportNames.has(id),
+          )
         ) {
           continue;
         }
 
-        if (contextTypeItem.isLegacy) {
-          legacyBaseContextUsed = true;
-        } else {
-          baseContextUsed = true;
-        }
-
-        const contextTypesImportMap =
-          context.getSubTypeNamesImportMap(contextTypeItem);
-
-        for (const [importPath, importNames] of Object.entries(
-          getContextImportIdentifiers(
-            contextTypesImportMap,
-            contextImportNames,
-          ),
-        )) {
-          if (!importKeyValuesPairs[importPath]) {
-            importKeyValuesPairs[importPath] = importNames;
-            continue;
-          }
-
-          importKeyValuesPairs[importPath].push(...importNames);
-        }
+        addContextTypeItemToGroupedContextImportKeyValuesPairs(contextTypeItem);
       }
     }
 
+    const setBaseContextToKeyValuePairs = (baseContext: {
+      name: string;
+      from: string;
+    }) => {
+      if (!groupedContextImportKeyValuesPairs[baseContext.from]) {
+        groupedContextImportKeyValuesPairs[baseContext.from] = [
+          baseContext.name,
+        ];
+      } else {
+        groupedContextImportKeyValuesPairs[baseContext.from].push(
+          baseContext.name,
+        );
+      }
+    };
+
     if (baseContextUsed && context.baseContext) {
-      if (context.baseContext.from) {
-        if (!importKeyValuesPairs[context.baseContext.from]) {
-          importKeyValuesPairs[context.baseContext.from] = [
-            context.baseContext.name,
-          ];
-        } else {
-          importKeyValuesPairs[context.baseContext.from].push(
-            context.baseContext.name,
-          );
-        }
+      if (context.baseContext) {
+        setBaseContextToKeyValuePairs(context.baseContext);
       }
     }
 
     if (legacyBaseContextUsed && context.legacyBaseContext) {
-      if (context.legacyBaseContext.from) {
-        if (!importKeyValuesPairs[context.legacyBaseContext.from]) {
-          importKeyValuesPairs[context.legacyBaseContext.from] = [
-            context.legacyBaseContext.name,
-          ];
-        } else {
-          importKeyValuesPairs[context.legacyBaseContext.from].push(
-            context.legacyBaseContext.name,
-          );
-        }
+      if (context.legacyBaseContext) {
+        setBaseContextToKeyValuePairs(context.legacyBaseContext);
       }
     }
     importStatements.push(
-      ...convertImportKeyValuePairsToImportDeclarations(importKeyValuesPairs),
+      ...convertImportKeyValuePairsToImportDeclarations(
+        groupedContextImportKeyValuesPairs,
+      ),
     );
   }
 

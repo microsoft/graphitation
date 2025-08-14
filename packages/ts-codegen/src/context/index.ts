@@ -225,15 +225,17 @@ export class TsCodegenContext {
   public getContextTypeNode(contextTypeItem?: ContextTypeItem | null) {
     const contextTypeExtensions = this.getContextTypeExtensions();
 
+    // When there is no @context we want to show default context
     if (!contextTypeItem || !contextTypeExtensions) {
       return this.getContextType().toTypeReference();
     } else {
-      const contextTypeNode = this.getBaseContextTypeNode(
+      const baseContextTypeNode = this.getBaseContextTypeNode(
         contextTypeItem.isLegacy,
       );
 
-      if (contextTypeItem.values.length === 0 && contextTypeNode) {
-        return contextTypeNode;
+      // When we don't have anything in required or optional params in @context, but we still want to show baseContext
+      if (contextTypeItem.values.length === 0 && baseContextTypeNode) {
+        return baseContextTypeNode;
       }
 
       const typeNameWithNamespace = this.buildContextSubTypeNamespaceObject(
@@ -242,7 +244,7 @@ export class TsCodegenContext {
 
       return factory.createIntersectionTypeNode(
         [
-          contextTypeNode,
+          baseContextTypeNode,
           factory.createTypeLiteralNode(
             Object.entries(typeNameWithNamespace).map(
               ([namespace, subTypes]) => {
@@ -419,8 +421,11 @@ export class TsCodegenContext {
     this.resolverTypeMap[typeName].push(fieldName);
   }
 
-  getSubTypeNamesImportMap(contextTypeItem: ContextTypeItem) {
+  convertContextTypeItemToImportKeyValuePairs(
+    contextTypeItem: ContextTypeItem,
+  ) {
     const subTypeMetadata = this.getContextTypeExtensions();
+
     return contextTypeItem.values.reduce<Record<string, string[]>>(
       (acc: Record<string, string[]>, { id: importName }) => {
         const [namespace, subTypeName] = importName.split(":");
