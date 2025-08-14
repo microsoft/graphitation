@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Thu, 14 Aug 2025 10:10:19 GMT",
+      "version": "5.3.0",
+      "tag": "@graphitation/ts-codegen_v5.3.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "8b7ff82169db5d38bcb72c31eff88c3e5607d743",
+            "comment": " Legacy context type supported + context type imports grouped"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 30 Jun 2025 10:45:07 GMT",
       "version": "5.2.2",
       "tag": "@graphitation/ts-codegen_v5.2.2",

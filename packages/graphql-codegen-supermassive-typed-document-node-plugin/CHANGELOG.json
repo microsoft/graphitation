@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
   "entries": [
     {
+      "date": "Thu, 14 Aug 2025 10:10:19 GMT",
+      "version": "1.1.10",
+      "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v1.1.10",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "comment": "Bump @graphitation/supermassive to v3.11.8",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 30 Jul 2025 14:39:20 GMT",
       "version": "1.1.9",
       "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v1.1.9",
