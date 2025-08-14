@@ -60,6 +60,8 @@ export type TsCodegenContextOptions = {
   legacyNoModelsForObjects: boolean;
   baseContextTypePath?: string;
   baseContextTypeName?: string;
+  legacyBaseContextTypeName?: string;
+  legacyBaseContextPath?: string;
   contextTypeExtensions?: SubTypeNamespace;
   useStringUnionsInsteadOfEnums: boolean;
   enumNamesToMigrate: string[] | null;
@@ -109,12 +111,20 @@ export type ContextMap = {
   [key: string]: ContextMapTypeItem;
 };
 
-export type ContextTypeItem = { id: string; optional?: boolean };
+export type ContextTypeItemValue = {
+  id: string;
+  optional?: boolean;
+};
+
+export type ContextTypeItem = {
+  isLegacy: boolean;
+  values: ContextTypeItemValue[];
+};
 
 export type ContextMapTypeItem = {
-  __context?: ContextTypeItem[];
+  __context?: ContextTypeItem;
 } & {
-  [key: string]: ContextTypeItem[];
+  [key: string]: ContextTypeItem;
 };
 
 export class TsCodegenContext {
@@ -133,7 +143,8 @@ export class TsCodegenContext {
   private legacyInterfaces: Set<string>;
   private iterableTypeUsed: boolean;
   context?: { name: string; from: string };
-  baseSubTypeContext?: { name: string; from: string };
+  baseContext?: { name: string; from: string };
+  legacyBaseContext?: { name: string; from: string };
   hasUsedEnumsInModels: boolean;
   hasEnums: boolean;
   hasModels: boolean;
@@ -158,9 +169,16 @@ export class TsCodegenContext {
     this.iterableTypeUsed = false;
 
     if (options.baseContextTypeName && options.baseContextTypePath) {
-      this.baseSubTypeContext = {
+      this.baseContext = {
         name: options.baseContextTypeName,
         from: options.baseContextTypePath,
+      };
+    }
+
+    if (options.legacyBaseContextTypeName && options.legacyBaseContextPath) {
+      this.legacyBaseContext = {
+        name: options.legacyBaseContextTypeName,
+        from: options.legacyBaseContextPath,
       };
     }
 
@@ -174,9 +192,9 @@ export class TsCodegenContext {
 
   public getContextTypes<T>(
     contextRootType: T & {
-      __context?: ContextTypeItem[];
+      __context?: ContextTypeItem;
     },
-  ): ContextTypeItem[] | null {
+  ): ContextTypeItem | null {
     if (contextRootType) {
       if (contextRootType.__context) {
         return contextRootType.__context;
@@ -185,29 +203,48 @@ export class TsCodegenContext {
     return null;
   }
 
-  public getContextTypeNode(typeNames?: ContextTypeItem[] | null) {
-    const contextTypeExtensions = this.getContextTypeExtensions();
-
-    if (!typeNames || !contextTypeExtensions) {
-      return this.getContextType().toTypeReference();
-    } else {
-      if (typeNames.length === 0 && this.baseSubTypeContext?.name) {
-        return factory.createTypeReferenceNode(
-          factory.createIdentifier(this.baseSubTypeContext.name),
-          undefined,
+  private getBaseContextTypeNode(useLegacyContext?: boolean) {
+    let baseContextTypeName = this.baseContext?.name;
+    if (useLegacyContext) {
+      if (!this.legacyBaseContext?.name) {
+        throw new Error(
+          "useLegacy was used but legacy base context was not defined",
         );
       }
+      baseContextTypeName = this.legacyBaseContext?.name;
+    }
 
-      const typeNameWithNamespace =
-        this.buildContextSubTypeNamespaceObject(typeNames);
+    if (baseContextTypeName) {
+      return factory.createTypeReferenceNode(
+        factory.createIdentifier(baseContextTypeName),
+        undefined,
+      );
+    }
+  }
+
+  public getContextTypeNode(contextTypeItem?: ContextTypeItem | null) {
+    const contextTypeExtensions = this.getContextTypeExtensions();
+
+    // When there is no @context we want to show default context
+    if (!contextTypeItem || !contextTypeExtensions) {
+      return this.getContextType().toTypeReference();
+    } else {
+      const baseContextTypeNode = this.getBaseContextTypeNode(
+        contextTypeItem.isLegacy,
+      );
+
+      // When we don't have anything in required or optional params in @context, but we still want to show baseContext
+      if (contextTypeItem.values.length === 0 && baseContextTypeNode) {
+        return baseContextTypeNode;
+      }
+
+      const typeNameWithNamespace = this.buildContextSubTypeNamespaceObject(
+        contextTypeItem.values,
+      );
 
       return factory.createIntersectionTypeNode(
         [
-          this.baseSubTypeContext?.name &&
-            factory.createTypeReferenceNode(
-              factory.createIdentifier(this.baseSubTypeContext.name),
-              undefined,
-            ),
+          baseContextTypeNode,
           factory.createTypeLiteralNode(
             Object.entries(typeNameWithNamespace).map(
               ([namespace, subTypes]) => {
@@ -243,7 +280,7 @@ export class TsCodegenContext {
   }
 
   private buildContextSubTypeNamespaceObject(
-    contextTypeItems: ContextTypeItem[],
+    contextTypeItemValues: ContextTypeItemValue[],
   ) {
     const contextTypeExtensions = this.getContextTypeExtensions();
 
@@ -251,13 +288,11 @@ export class TsCodegenContext {
       throw new Error("Context type extensions are not defined in the options");
     }
 
-    return contextTypeItems.reduce<
+    return contextTypeItemValues.reduce<
       Record<string, { subType: string; name: string; optional: boolean }[]>
     >((acc, contextTypeItem) => {
       const [namespaceName, subTypeName] = contextTypeItem.id.split(":");
-      if (!acc[namespaceName]) {
-        acc[namespaceName] = [];
-      }
+      acc[namespaceName] ??= [];
 
       const namespace = contextTypeExtensions.contextTypes[namespaceName];
 
@@ -299,7 +334,11 @@ export class TsCodegenContext {
 
   public initContextMap(
     ancestors: ReadonlyArray<ASTNode | ReadonlyArray<ASTNode>>,
-    values: { required?: string[]; optional?: string[] },
+    values: {
+      required?: string[];
+      optional?: string[];
+      useLegacyContext?: boolean;
+    },
   ) {
     if (ancestors.length < 2) {
       throw new Error("Invalid document provided");
@@ -319,18 +358,15 @@ export class TsCodegenContext {
         }
 
         const typeName = nonArrayNode.name.value;
-        if (!this.typeContextMap[typeName]) {
-          this.typeContextMap[typeName] = {};
-        }
+        this.typeContextMap[typeName] ??= {};
 
-        this.typeContextMap[typeName].__context = [
-          ...(values.required
-            ? values.required.map((value) => ({ id: value, optional: false }))
-            : []),
-          ...(values.optional
-            ? values.optional.map((value) => ({ id: value, optional: true }))
-            : []),
-        ];
+        this.typeContextMap[typeName].__context = {
+          isLegacy: Boolean(values.useLegacyContext),
+          values: [
+            ...this.getContextMapItemValues(values.required, false),
+            ...this.getContextMapItemValues(values.optional, true),
+          ],
+        };
       } else if (nonArrayNode?.kind === "FieldDefinition") {
         const node = ancestors[ancestors.length - 3];
         const typeName =
@@ -341,21 +377,27 @@ export class TsCodegenContext {
             : null;
 
         if (typeName) {
-          if (!this.typeContextMap[typeName]) {
-            this.typeContextMap[typeName] = {};
-          }
+          this.typeContextMap[typeName] ??= {};
 
-          this.typeContextMap[typeName][nonArrayNode.name.value] = [
-            ...(values.required
-              ? values.required.map((value) => ({ id: value, optional: false }))
-              : []),
-            ...(values.optional
-              ? values.optional.map((value) => ({ id: value, optional: true }))
-              : []),
-          ];
+          this.typeContextMap[typeName][nonArrayNode.name.value] = {
+            isLegacy: Boolean(values.useLegacyContext),
+            values: [
+              ...this.getContextMapItemValues(values.required, false),
+              ...this.getContextMapItemValues(values.optional, true),
+            ],
+          };
         }
       }
     }
+  }
+
+  getContextMapItemValues(values: string[] | undefined, optional: boolean) {
+    return values
+      ? values.map((value) => ({
+          id: value,
+          optional: optional,
+        }))
+      : [];
   }
 
   getMetadataObject() {
@@ -375,16 +417,16 @@ export class TsCodegenContext {
       return;
     }
 
-    if (!this.resolverTypeMap[typeName]) {
-      this.resolverTypeMap[typeName] = [];
-    }
-
+    this.resolverTypeMap[typeName] ??= [];
     this.resolverTypeMap[typeName].push(fieldName);
   }
 
-  getSubTypeNamesImportMap(subTypes: ContextTypeItem[]) {
+  convertContextTypeItemToImportKeyValuePairs(
+    contextTypeItem: ContextTypeItem,
+  ) {
     const subTypeMetadata = this.getContextTypeExtensions();
-    return subTypes.reduce<Record<string, string[]>>(
+
+    return contextTypeItem.values.reduce<Record<string, string[]>>(
       (acc: Record<string, string[]>, { id: importName }) => {
         const [namespace, subTypeName] = importName.split(":");
         const subType =
@@ -399,9 +441,7 @@ export class TsCodegenContext {
         const { importPath, importNamespaceName } = subType;
 
         if (importPath) {
-          if (!acc[importPath]) {
-            acc[importPath] = [];
-          }
+          acc[importPath] ??= [];
           acc[importPath].push(importNamespaceName || subTypeName);
         }
         return acc;
@@ -847,6 +887,10 @@ export function extractContext(
             (value) => value.name.value === "optional",
           );
 
+          const useLegacyContext = Boolean(
+            node.arguments.find((value) => value.name.value === "useLegacy"),
+          );
+
           if (!required && !optional) {
             throw new Error(
               "Invalid context use: Required and optional arguments must be provided",
@@ -890,6 +934,7 @@ export function extractContext(
           context.initContextMap(ancestors, {
             required: requiredKeys ? Array.from(requiredKeys) : undefined,
             optional: optionalKeys ? Array.from(optionalKeys) : undefined,
+            useLegacyContext,
           });
         } else if (
           options.contextTypeExtensions?.groups &&

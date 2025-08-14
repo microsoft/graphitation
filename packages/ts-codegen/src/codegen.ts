@@ -24,6 +24,8 @@ export type GroupItem = {
 export type SubTypeNamespace = {
   baseContextTypeName?: string;
   baseContextTypePath?: string;
+  legacyBaseContextTypeName?: string;
+  legacyBaseContextTypePath?: string;
   groups?: { [group: string]: GroupItem };
   contextTypes: { [namespace: string]: SubTypeItem };
 };
@@ -124,6 +126,12 @@ export function generateTS(
           contextTypeExtensions?.baseContextTypePath,
         ),
         baseContextTypeName: contextTypeExtensions?.baseContextTypeName,
+        legacyBaseContextPath: getContextPath(
+          outputPath,
+          contextTypeExtensions?.legacyBaseContextTypePath,
+        ),
+        legacyBaseContextTypeName:
+          contextTypeExtensions?.legacyBaseContextTypeName,
       },
       document,
       outputPath,

@@ -1,4 +1,4 @@
-import ts, { factory } from "typescript";
+import ts, { factory, ImportDeclaration } from "typescript";
 import {
   Field,
   ObjectType,
@@ -14,50 +14,33 @@ import {
   createUnionResolveType,
   createInterfaceResolveType,
 } from "./utilities";
-import {
-  createImportDeclaration,
-  isRootOperationType,
-} from "./context/utilities";
+import { isRootOperationType } from "./context/utilities";
 
-function getContextImportIdentifiers(
+function getDeduplicatedContextImportNames(
   imports: Record<string, string[]>,
   contextImportNames: Set<string>,
 ) {
-  const statements = [];
+  const importKeyValuesPairs: Record<string, string[]> = {};
 
   for (const [importPath, importNames] of Object.entries(imports)) {
-    const importIndentifiers = importNames
+    const importIdentifiers = importNames
       .map((importName: string) => {
         if (contextImportNames.has(importName)) {
           return;
         }
         contextImportNames.add(importName);
-        return factory.createImportSpecifier(
-          false,
-          undefined,
-          factory.createIdentifier(importName),
-        );
+        return importName;
       })
-      .filter(Boolean) as ts.ImportSpecifier[];
+      .filter(Boolean) as string[];
 
-    if (!importIndentifiers.length) {
+    if (!importIdentifiers.length) {
       continue;
     }
 
-    statements.push(
-      factory.createImportDeclaration(
-        undefined,
-        factory.createImportClause(
-          true,
-          undefined,
-          factory.createNamedImports(importIndentifiers),
-        ),
-        factory.createStringLiteral(importPath),
-      ),
-    );
+    importKeyValuesPairs[importPath] ??= importIdentifiers;
   }
 
-  return statements;
+  return importKeyValuesPairs;
 }
 
 const getResolverTypes = (context: TsCodegenContext): ResolverType[] => {
@@ -103,6 +86,36 @@ export function generateResolvers(
   return source;
 }
 
+function convertImportKeyValuePairsToImportDeclarations(
+  importKeyValuesPairs: Record<string, string[]>,
+) {
+  const importDeclarations: ImportDeclaration[] = [];
+  for (const [importPath, importNames] of Object.entries(
+    importKeyValuesPairs,
+  )) {
+    importDeclarations.push(
+      factory.createImportDeclaration(
+        undefined,
+        factory.createImportClause(
+          true,
+          undefined,
+          factory.createNamedImports(
+            importNames.map((importName) =>
+              factory.createImportSpecifier(
+                false,
+                undefined,
+                factory.createIdentifier(importName),
+              ),
+            ),
+          ),
+        ),
+        factory.createStringLiteral(importPath),
+      ),
+    );
+  }
+  return importDeclarations;
+}
+
 function generateImports(context: TsCodegenContext) {
   const importStatements: ts.Statement[] = [
     ...(context.getAllImportDeclarations("RESOLVERS") as ts.Statement[]),
@@ -122,45 +135,99 @@ function generateImports(context: TsCodegenContext) {
     );
   }
 
+  const groupedContextImportKeyValuesPairs: Record<string, string[]> = {};
+
   const contextTypeExtensions = context.getContextTypeExtensions();
   if (Object.keys(context.getContextMap()).length && contextTypeExtensions) {
-    if (context.baseSubTypeContext?.from && context.baseSubTypeContext?.name) {
-      importStatements.push(
-        createImportDeclaration(
-          [context.baseSubTypeContext.name],
-          context.baseSubTypeContext.from,
-        ),
-      );
-    }
+    const uniqueContextImportNames: Set<string> = new Set();
+    let baseContextUsed = false;
+    let legacyBaseContextUsed = false;
 
-    const contextImportNames: Set<string> = new Set();
-    for (const [, root] of Object.entries(context.getContextMap())) {
-      const rootValue: ContextTypeItem[] | undefined = root.__context;
-      if (rootValue) {
-        if (rootValue.every(({ id }) => contextImportNames.has(id))) {
+    const addContextTypeItemToGroupedContextImportKeyValuesPairs = (
+      contextTypeItem: ContextTypeItem,
+    ) => {
+      if (contextTypeItem.isLegacy) {
+        legacyBaseContextUsed = true;
+      } else {
+        baseContextUsed = true;
+      }
+
+      const importKeyValuePairs =
+        context.convertContextTypeItemToImportKeyValuePairs(contextTypeItem);
+
+      for (const [importPath, importNames] of Object.entries(
+        getDeduplicatedContextImportNames(
+          importKeyValuePairs,
+          uniqueContextImportNames,
+        ),
+      )) {
+        if (!groupedContextImportKeyValuesPairs[importPath]) {
+          groupedContextImportKeyValuesPairs[importPath] = importNames;
           continue;
         }
 
-        const imports = context.getSubTypeNamesImportMap(rootValue);
-        importStatements.push(
-          ...getContextImportIdentifiers(imports, contextImportNames),
-        );
+        groupedContextImportKeyValuesPairs[importPath].push(...importNames);
       }
-      for (const [key, value] of Object.entries(root)) {
+    };
+
+    for (const [, root] of Object.entries(context.getContextMap())) {
+      const rootValue: ContextTypeItem | undefined = root.__context;
+      if (rootValue) {
+        if (
+          rootValue.values.every(({ id }) => uniqueContextImportNames.has(id))
+        ) {
+          continue;
+        }
+
+        addContextTypeItemToGroupedContextImportKeyValuesPairs(rootValue);
+      }
+      for (const [key, contextTypeItem] of Object.entries(root)) {
         if (key.startsWith("__")) {
           continue;
         }
-        if (value.every(({ id }) => contextImportNames.has(id))) {
+        if (
+          contextTypeItem.values.every(({ id }) =>
+            uniqueContextImportNames.has(id),
+          )
+        ) {
           continue;
         }
 
-        const imports = context.getSubTypeNamesImportMap(value);
-
-        importStatements.push(
-          ...getContextImportIdentifiers(imports, contextImportNames),
-        );
+        addContextTypeItemToGroupedContextImportKeyValuesPairs(contextTypeItem);
       }
     }
+
+    const setBaseContextToKeyValuePairs = (baseContext: {
+      name: string;
+      from: string;
+    }) => {
+      if (!groupedContextImportKeyValuesPairs[baseContext.from]) {
+        groupedContextImportKeyValuesPairs[baseContext.from] = [
+          baseContext.name,
+        ];
+      } else {
+        groupedContextImportKeyValuesPairs[baseContext.from].push(
+          baseContext.name,
+        );
+      }
+    };
+
+    if (baseContextUsed && context.baseContext) {
+      if (context.baseContext) {
+        setBaseContextToKeyValuePairs(context.baseContext);
+      }
+    }
+
+    if (legacyBaseContextUsed && context.legacyBaseContext) {
+      if (context.legacyBaseContext) {
+        setBaseContextToKeyValuePairs(context.legacyBaseContext);
+      }
+    }
+    importStatements.push(
+      ...convertImportKeyValuePairsToImportDeclarations(
+        groupedContextImportKeyValuesPairs,
+      ),
+    );
   }
 
   return importStatements;

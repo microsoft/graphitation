@@ -10,6 +10,8 @@ describe(generateTS, () => {
     const contextTypeExtensions = {
       baseContextTypePath: "@package/default-context",
       baseContextTypeName: "DefaultContextType",
+      legacyBaseContextTypePath: "@package/default-context",
+      legacyBaseContextTypeName: "DefaultLegacyContextType",
       groups: {
         baseContextOnly: {},
         UserTestGroup: {
@@ -26,6 +28,11 @@ describe(generateTS, () => {
             importNamespaceName: "UserStateMachineType",
             importPath: "@package/user-state-machine",
             typeName: 'UserStateMachineType["user"]',
+          },
+          secondUser: {
+            importNamespaceName: "SecondUserStateMachineType",
+            importPath: "@package/user-state-machine",
+            typeName: 'UserStateMachineType["secondUser"]',
           },
           whatever: {
             importPath: "@package/whatever-state-machine",
@@ -106,6 +113,7 @@ describe(generateTS, () => {
             type Post
               @model(from: "./post-model.interface", tsType: "PostModel") {
               id: ID!
+              author: User @context(required: { managers: ["secondUser"] })
             }
 
             type Message {
@@ -122,7 +130,8 @@ describe(generateTS, () => {
               messagesWithArrayRequired: [Message]!
               messagesRequired: [Message!]!
               messagesOnlyMessageRequired: [Message!]
-              post: Post @context(required: { managers: ["post"] })
+              post: Post
+                @context(required: { managers: ["post"] }, useLegacy: true)
               postRequired: Post!
               avatar: Avatar
                 @context(
@@ -139,6 +148,7 @@ describe(generateTS, () => {
                 @context(
                   required: { managers: ["user"] }
                   optional: { managers: ["node"] }
+                  useLegacy: true
                 )
               requiredUser: User! @context(optional: { managers: ["node"] })
               requiredPost: Post! @baseContextOnly
@@ -156,6 +166,13 @@ describe(generateTS, () => {
             "id": {
               "managers": [
                 "message",
+              ],
+            },
+          },
+          "Post": {
+            "author": {
+              "managers": [
+                "secondUser",
               ],
             },
           },
@@ -302,17 +319,23 @@ describe(generateTS, () => {
         import type { PromiseOrValue, IterableOrAsyncIterable } from "@graphitation/supermassive";
         import type { ResolveInfo } from "@graphitation/supermassive";
         import * as Models from "./models.interface";
-        import type { DefaultContextType } from "@package/default-context";
+        import type { SecondUserStateMachineType, UserStateMachineType } from "@package/user-state-machine";
         import type { MessageStateMachineType } from "@package/message-state-machine";
-        import type { UserStateMachineType } from "@package/user-state-machine";
         import type { PostStateMachineType } from "@package/post-state-machine";
         import type { NodeStateMachineType } from "@package/node-state-machine";
         import type { whatever } from "@package/whatever-state-machine";
+        import type { DefaultContextType, DefaultLegacyContextType } from "@package/default-context";
         export declare namespace Post {
             export interface Resolvers {
                 readonly id?: id;
+                readonly author?: author;
             }
             export type id = (model: Models.Post, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+            export type author = (model: Models.Post, args: {}, context: DefaultContextType & {
+                managers: {
+                    "secondUser": UserStateMachineType["secondUser"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<Models.User | null | undefined>;
         }
         export declare namespace Message {
             export interface Resolvers {
@@ -386,7 +409,7 @@ describe(generateTS, () => {
                     "user": UserStateMachineType["user"];
                 };
             }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.Message> | null | undefined>;
-            export type post = (model: Models.User, args: {}, context: DefaultContextType & {
+            export type post = (model: Models.User, args: {}, context: DefaultLegacyContextType & {
                 managers: {
                     "post": PostStateMachineType["post"];
                 };
@@ -429,7 +452,7 @@ describe(generateTS, () => {
                     "whatever": whatever;
                 };
             }, info: ResolveInfo) => PromiseOrValue<IterableOrAsyncIterable<Models.User | null | undefined> | null | undefined>;
-            export type optionalUser = (model: unknown, args: {}, context: DefaultContextType & {
+            export type optionalUser = (model: unknown, args: {}, context: DefaultLegacyContextType & {
                 managers: {
                     "user": UserStateMachineType["user"];
                     "node"?: NodeStateMachineType["node"];
