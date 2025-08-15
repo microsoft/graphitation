@@ -13,6 +13,7 @@ import { enableNodeWatchQueryTransform } from "./compilerTransforms/enableNodeWa
 import { annotateFragmentReferenceTransform } from "./compilerTransforms/annotateFragmentReferenceTransform";
 import { emitApolloClientConnectionTransform } from "./compilerTransforms/emitApolloClientConnectionTransform";
 import { retainConnectionDirectiveTransform } from "./compilerTransforms/retainConnectionDirectiveTransform";
+import { withArtifacts } from "./relayCompilerLanguagePluginWithArtifacts";
 
 function wrapTransform(
   transformName: string,
@@ -122,6 +123,11 @@ async function main() {
           }
         },
       },
+      graphQLFilesOutputDir: {
+        demandOption: false,
+        default: "",
+        type: "string",
+      },
     })
     .help().argv;
 
@@ -137,10 +143,14 @@ async function main() {
   }
 
   const ductTapeCompilerLanguagePlugin = await pluginFactory(argv);
+  const ductTapeCompilerLanguagePluginWithArtifacts = withArtifacts(
+    ductTapeCompilerLanguagePlugin,
+    argv,
+  );
 
-  return relayCompiler({
+  const result = await relayCompiler({
     ...argv,
-    language: ductTapeCompilerLanguagePlugin,
+    language: ductTapeCompilerLanguagePluginWithArtifacts,
     extensions: ["ts", "tsx"], // FIXME: Why is this not taken from the language plugin?
     include: argv.include || ["**"],
     exclude: [
@@ -154,6 +164,10 @@ async function main() {
     noFutureProofEnums: true,
     customScalars: {},
   });
+  const now = performance.now();
+  await ductTapeCompilerLanguagePluginWithArtifacts.flush();
+  console.debug("GraphQL files flushing time (ms): ", performance.now() - now);
+  return result;
 }
 
 main().catch((error) => {
