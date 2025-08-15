@@ -1,7 +1,5 @@
-import type {
-  ForestRunAdditionalConfig,
-  ForestRun,
-} from "@graphitation/apollo-forest-run";
+import type { ForestRunAdditionalConfig } from "@graphitation/apollo-forest-run";
+import { TestConfig } from "./config";
 
 export interface CacheConfiguration {
   name: string;
@@ -9,8 +7,7 @@ export interface CacheConfiguration {
   options: ForestRunAdditionalConfig;
 }
 
-export interface Config {
-  queries: Record<string, string>;
+export interface ConfigTemplate {
   cacheConfigurations: CacheConfiguration[];
   observerCounts: number[];
   // Desired statistical confidence percentage (e.g. 99 => stop when RME <= 1)
@@ -19,29 +16,14 @@ export interface Config {
   warmupSamples: number;
   batchSize: number;
   reliability: {
-    thresholdPercent: number;
     maxAttempts: number;
-    requiredConsecutive: number;
+    minAttempts: number;
   };
-}
-
-export interface BenchmarkResultPoint {
-  name: string; // scenario label
-  mean: number; // average execution time in ms
-  rme: number; // relative margin of error in %
-  samples: number; // effective sample count after outlier filtering
-  confidence: number; // statistical confidence percentage (100 - rme)
-  rawSamples: number[]; // filtered samples used for calculations
-}
-
-export interface BenchmarkSuiteResult {
-  suiteName: string;
-  results: BenchmarkResultPoint[];
 }
 
 export interface CacheConfigQueryOperations {
   queryName: string;
-  operations: Record<string, BenchmarkSuiteResult>; // key pattern: `${operation}_${observerCount}`
+  operations: Record<string, number[]>;
 }
 
 export interface CacheConfigResults {
@@ -50,29 +32,27 @@ export interface CacheConfigResults {
 }
 
 export interface BenchmarkReport {
-  config: Config;
+  config: TestConfig;
   cacheConfigResults: CacheConfigResults[];
 }
 
-export type OperationType = "read" | "write" | "update";
-
-export interface ScenarioContext {
-  cache: ForestRun;
-  query: any; // DocumentNode (kept as any to avoid pulling apollo types here)
-  variables: Record<string, any>;
-  data: any; // result data object
+export interface ScenarioContext extends OperationData {
+  cacheConfig: CacheConfiguration;
   observerCount: number;
-  operation: OperationType;
 }
+export type SampleFunction = () => number;
 
-export interface ScenarioDefinition {
-  id: string; // stable id e.g. read_0, write_20
-  label: string; // human readable label
-  operation: OperationType;
-  observerCount: number;
-  // prepare runs outside timed region (populate cache, install watchers)
-  prepare(ctx: ScenarioContext): {
-    run(): void | Promise<void>;
-    cleanup?(): void | Promise<void>;
+export type Scenario = {
+  name: string;
+  observerCounts?: readonly number[];
+  prepare: (ctx: ScenarioContext) => {
+    run: () => void;
   };
+};
+
+export interface OperationData {
+  name: string;
+  query: any;
+  data: any;
+  variables: Record<string, any>;
 }

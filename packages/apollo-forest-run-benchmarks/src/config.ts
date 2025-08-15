@@ -1,9 +1,59 @@
 import fs from "fs";
 import path from "path";
 import { gql } from "@apollo/client";
-import { Config } from "./types";
+import type { ConfigTemplate, OperationData } from "./types";
 
-// Auto-discover GraphQL queries from queries/ directory (filename without extension used as key)
+export const OPERATIONS: OperationData[] = [];
+
+export const CONFIG = {
+  cacheConfigurations: [
+    {
+      name: "Default",
+      description: "Default ForestRun configuration",
+      options: {},
+    },
+    {
+      name: "Telemetry enabled",
+      description: "Enable telemetry for cache operations",
+      options: { logStaleOperations: true, logUpdateStats: true },
+    },
+    {
+      name: "Variable-Based Partitioning",
+      description:
+        "Partitioned eviction based on variable patterns (divisible by 2, 3)",
+      options: {
+        unstable_partitionConfig: {
+          partitionKey: (operation) => {
+            const id = operation.operation.variables?.id;
+            const numericId = typeof id === "string" ? parseInt(id, 10) : id;
+
+            if (typeof numericId === "number") {
+              if (numericId % 2 === 0) return "even";
+              if (numericId % 3 === 0) return "divisible_by_3";
+            }
+
+            return null;
+          },
+          partitions: {
+            even: { maxOperationCount: 2 },
+            divisible_by_3: { maxOperationCount: 1 },
+          },
+        },
+      },
+    },
+  ],
+  observerCounts: [0, 50],
+  targetConfidencePercent: 99.9,
+  maxSamplesPerBenchmark: 250,
+  warmupSamples: 20,
+  batchSize: 200,
+  reliability: { maxAttempts: 20, minAttempts: 2 },
+} as const satisfies ConfigTemplate;
+
+export type CacheConfig = (typeof CONFIG.cacheConfigurations)[number];
+export type TestConfig = typeof CONFIG;
+
+const responsesDir = path.join(__dirname, "responses");
 const queriesDir = path.join(__dirname, "queries");
 const discoveredQueries: Record<string, string> = Object.fromEntries(
   fs
@@ -12,47 +62,17 @@ const discoveredQueries: Record<string, string> = Object.fromEntries(
     .map((f) => [f.replace(/\.graphql$/, ""), f]),
 );
 
-export const CONFIG: Config = {
-  queries: discoveredQueries,
-  cacheConfigurations: [
-    {
-      name: "Default",
-      description: "Default ForestRun configuration",
-      options: {},
-    },
-    {
-      name: "Telemetry: Unexpected refetch",
-      description: "Telemetry for unexpected refetches",
-      options: { logStaleOperations: true },
-    },
-  ],
-  observerCounts: [0, 50, 100],
-  targetConfidencePercent: 99.85,
-  maxSamplesPerBenchmark: 2000,
-  warmupSamples: 20,
-  batchSize: 200,
-  reliability: { thresholdPercent: 1, maxAttempts: 5, requiredConsecutive: 2 },
-};
-
-export const QUERIES: Record<
-  string,
-  {
-    query: any;
-    response: any;
-  }
-> = {};
-const responsesDir = path.join(__dirname, "responses");
-for (const [key, filename] of Object.entries(CONFIG.queries)) {
+for (const [key, filename] of Object.entries(discoveredQueries)) {
   const source = fs.readFileSync(path.join(queriesDir, filename), "utf-8");
   const jsonPath = path.join(
     responsesDir,
     filename.replace(/\.graphql$/, ".json"),
   );
 
-  QUERIES[key] = {
+  OPERATIONS.push({
+    name: key,
     query: gql(source),
-    response: fs.existsSync(jsonPath)
-      ? JSON.parse(fs.readFileSync(jsonPath, "utf-8"))
-      : {},
-  };
+    data: JSON.parse(fs.readFileSync(jsonPath, "utf-8")),
+    variables: {},
+  });
 }

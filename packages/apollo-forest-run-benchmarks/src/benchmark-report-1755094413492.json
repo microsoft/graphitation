@@ -1,0 +1,1171 @@
+{
+  "config": {
+    "cacheConfigurations": [
+      {
+        "name": "Default",
+        "description": "Default ForestRun configuration",
+        "options": {}
+      },
+      {
+        "name": "Telemetry enabled",
+        "description": "Enable telemetry for cache operations",
+        "options": {
+          "logStaleOperations": true,
+          "logUpdateStats": true
+        }
+      },
+      {
+        "name": "Variable-Based Partitioning",
+        "description": "Partitioned eviction based on variable patterns (divisible by 2, 3)",
+        "options": {
+          "unstable_partitionConfig": {
+            "partitions": {
+              "even": {
+                "maxOperationCount": 2
+              },
+              "divisible_by_3": {
+                "maxOperationCount": 1
+              }
+            }
+          }
+        }
+      }
+    ],
+    "observerCounts": [
+      0,
+      50
+    ],
+    "targetConfidencePercent": 99.9,
+    "maxSamplesPerBenchmark": 250,
+    "warmupSamples": 20,
+    "batchSize": 200,
+    "reliability": {
+      "thresholdPercent": 1,
+      "maxAttempts": 20,
+      "minAttempts": 2
+    }
+  },
+  "cacheConfigResults": [
+    {
+      "configuration": {
+        "name": "Default",
+        "description": "Default ForestRun configuration",
+        "options": {}
+      },
+      "queryResults": [
+        {
+          "queryName": "complex-nested",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.80474870871161,
+              "mean": 0.007134697390077607
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.77089783113847,
+              "mean": 0.001999398130841109
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.8915723283793,
+              "mean": 0.03108326885406453
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.84365641596045,
+              "mean": 0.05033222114920316
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.81116933234932,
+              "mean": 0.00225622549019606
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.84166141799855,
+              "mean": 0.00669158735213835
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.45411389584626,
+              "mean": 0.000602376882094047
+            }
+          }
+        },
+        {
+          "queryName": "deep-nesting",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.81107342409469,
+              "mean": 0.007101985391463123
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.7631947262024,
+              "mean": 0.0016272221454880092
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.90388107854213,
+              "mean": 0.02973829898074758
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.89331547267801,
+              "mean": 0.04901398576914384
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.80184700187787,
+              "mean": 0.0018696192325262924
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.84648307826302,
+              "mean": 0.006331929592959282
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.15327807394878,
+              "mean": 0.0012193734177215075
+            }
+          }
+        },
+        {
+          "queryName": "fragment-query",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.76995170591334,
+              "mean": 0.0038906446375485803
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.76643452421361,
+              "mean": 0.0016535309633027573
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.87417080679228,
+              "mean": 0.013219553110262787
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.8404082920438,
+              "mean": 0.029146590529876056
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.82689837903085,
+              "mean": 0.0018763999089046039
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.83128810882633,
+              "mean": 0.006388235099337788
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.44206752254536,
+              "mean": 0.0004770926675663643
+            }
+          }
+        },
+        {
+          "queryName": "fragmented-posts",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.8074014803277,
+              "mean": 0.005701976944573796
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.80461275866135,
+              "mean": 0.0023162067843866016
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.89762595090993,
+              "mean": 0.025663138808301702
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.84129010911545,
+              "mean": 0.04356376570104278
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.83485908751159,
+              "mean": 0.0025791938091937797
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.86743400410565,
+              "mean": 0.007007963417305675
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.38023075019231,
+              "mean": 0.0005522833971615176
+            }
+          }
+        },
+        {
+          "queryName": "paginated-blog",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.79383262589542,
+              "mean": 0.0074898649693112196
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.73428861791253,
+              "mean": 0.0023263204077110713
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.89811298082152,
+              "mean": 0.03988621420518596
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.86233829941818,
+              "mean": 0.05980791501154722
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.83480249659719,
+              "mean": 0.002570058758068122
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.8599194773812,
+              "mean": 0.006990703414416429
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.33557617966288,
+              "mean": 0.000589231319188191
+            }
+          }
+        },
+        {
+          "queryName": "posts-list",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.80021186413997,
+              "mean": 0.004467804514672678
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.81684377513,
+              "mean": 0.0018632729468599292
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.89115455978674,
+              "mean": 0.018046299432562224
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.86952647850177,
+              "mean": 0.03443327845845386
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.83789828893273,
+              "mean": 0.002120469660460002
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.86217465582627,
+              "mean": 0.00656901061755145
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.45599370568284,
+              "mean": 0.00048490324052944425
+            }
+          }
+        },
+        {
+          "queryName": "product-query",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.83252832576657,
+              "mean": 0.0047307670629678856
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.80604378322786,
+              "mean": 0.0015582042346713495
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.90604229357321,
+              "mean": 0.018682583206439094
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.89169405458557,
+              "mean": 0.03549723606776634
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.83847594667654,
+              "mean": 0.0017964477868500537
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.85882195272912,
+              "mean": 0.006268781209221442
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.38783218849215,
+              "mean": 0.000851709398007801
+            }
+          }
+        },
+        {
+          "queryName": "simple-query",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.72682157939752,
+              "mean": 0.0025962328926003187
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.78117870969801,
+              "mean": 0.0015214703331812075
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.79357884310286,
+              "mean": 0.005653685046728962
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.84815102495008,
+              "mean": 0.020054148164827697
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.85739022455232,
+              "mean": 0.0017123266783676911
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.86334871144871,
+              "mean": 0.006170358681318648
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.45098342417057,
+              "mean": 0.0007104665924276154
+            }
+          }
+        },
+        {
+          "queryName": "user-profile",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.7673073919771,
+              "mean": 0.0031013492854049386
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.80748044415814,
+              "mean": 0.0015716398946675311
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.86667750155172,
+              "mean": 0.009581461402344615
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.8637071565228,
+              "mean": 0.024521041120650594
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.85211836249738,
+              "mean": 0.0018183671373556353
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.85549976029836,
+              "mean": 0.006274047482963298
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.49890317060266,
+              "mean": 0.0004702139973082232
+            }
+          }
+        }
+      ]
+    },
+    {
+      "configuration": {
+        "name": "Telemetry enabled",
+        "description": "Enable telemetry for cache operations",
+        "options": {
+          "logStaleOperations": true,
+          "logUpdateStats": true
+        }
+      },
+      "queryResults": [
+        {
+          "queryName": "complex-nested",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.83632580462715,
+              "mean": 0.007061681350626107
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.79348724919025,
+              "mean": 0.0019866787634408366
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.90344259141078,
+              "mean": 0.031105109641255613
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.87672062928542,
+              "mean": 0.05019583731069291
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.81614102893106,
+              "mean": 0.002256455417739284
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.85538592430973,
+              "mean": 0.006681244683232616
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.39540819927352,
+              "mean": 0.0006083905444768103
+            }
+          }
+        },
+        {
+          "queryName": "deep-nesting",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.82816394141466,
+              "mean": 0.007061347259658576
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.78501549939058,
+              "mean": 0.0016261530841962856
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.90990591774376,
+              "mean": 0.029767124353496748
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.8960306362834,
+              "mean": 0.04898308107492581
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.81981632038263,
+              "mean": 0.001870533111849425
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.8755215849831,
+              "mean": 0.006306550238198396
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.16762252704272,
+              "mean": 0.0012283689482470745
+            }
+          }
+        },
+        {
+          "queryName": "fragment-query",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.78541256634962,
+              "mean": 0.003891279647964769
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.7534803969587,
+              "mean": 0.0016619102705080296
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.8773776267943,
+              "mean": 0.013260557301899204
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.88384001760699,
+              "mean": 0.029007444195428098
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.83784786879461,
+              "mean": 0.0018899476170030228
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.84707474608886,
+              "mean": 0.006380368351357356
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.46689631488981,
+              "mean": 0.00047299556442671466
+            }
+          }
+        },
+        {
+          "queryName": "fragmented-posts",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.81968878401806,
+              "mean": 0.005714891843575417
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.81621339571971,
+              "mean": 0.002311107788440089
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.89168882342916,
+              "mean": 0.0257874794396746
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.8581984937525,
+              "mean": 0.043405106789413055
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.85287679889545,
+              "mean": 0.002591565891472843
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.87090619398964,
+              "mean": 0.006996425863991138
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.41181181388455,
+              "mean": 0.000550439190628332
+            }
+          }
+        },
+        {
+          "queryName": "paginated-blog",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.78176933430255,
+              "mean": 0.007520881648629976
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.79434016408946,
+              "mean": 0.002307879039497322
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.89822809823329,
+              "mean": 0.039870536964980614
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.857957358694,
+              "mean": 0.05975056183418265
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.83499890486279,
+              "mean": 0.002587543630214178
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.86120349849969,
+              "mean": 0.006991237555555578
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.41213094705375,
+              "mean": 0.0005816349547998251
+            }
+          }
+        },
+        {
+          "queryName": "posts-list",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.81139304846663,
+              "mean": 0.004461181135409758
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.79414334374563,
+              "mean": 0.0018738911951059892
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.8749105410321,
+              "mean": 0.01810460839642119
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.84481230794286,
+              "mean": 0.034567980710421116
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.84219025194342,
+              "mean": 0.002123990748709115
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.86343319671705,
+              "mean": 0.006570382295508778
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.55838893269765,
+              "mean": 0.00047773394495413386
+            }
+          }
+        },
+        {
+          "queryName": "product-query",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.81877859071864,
+              "mean": 0.004731312793034171
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.80224143025848,
+              "mean": 0.001564148707840535
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.90264567271815,
+              "mean": 0.018714185894645293
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.8865135060548,
+              "mean": 0.03549152385279404
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.82896090864843,
+              "mean": 0.0018125802605432127
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.86890706915217,
+              "mean": 0.006260733274060946
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.45667471707057,
+              "mean": 0.0008460799478600993
+            }
+          }
+        },
+        {
+          "queryName": "simple-query",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.70879427570621,
+              "mean": 0.00260836410376255
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.78251291113122,
+              "mean": 0.0015292504961411312
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.82440807817754,
+              "mean": 0.00566174819039261
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.85368395538889,
+              "mean": 0.02003018165507958
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.85672434846553,
+              "mean": 0.0017159584059233362
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.84919229305412,
+              "mean": 0.006180699241603454
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.53696554525793,
+              "mean": 0.0007049158938969145
+            }
+          }
+        },
+        {
+          "queryName": "user-profile",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.78628764578299,
+              "mean": 0.003090122159090888
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.79532081967263,
+              "mean": 0.0015790927252985788
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.85996807588423,
+              "mean": 0.00961938633348073
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.86651691845576,
+              "mean": 0.02453480289210229
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.83978723051298,
+              "mean": 0.0018237896081772101
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.85465762544118,
+              "mean": 0.006276252326336294
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.58555869723509,
+              "mean": 0.0004656031409168211
+            }
+          }
+        }
+      ]
+    },
+    {
+      "configuration": {
+        "name": "Variable-Based Partitioning",
+        "description": "Partitioned eviction based on variable patterns (divisible by 2, 3)",
+        "options": {
+          "unstable_partitionConfig": {
+            "partitions": {
+              "even": {
+                "maxOperationCount": 2
+              },
+              "divisible_by_3": {
+                "maxOperationCount": 1
+              }
+            }
+          }
+        }
+      },
+      "queryResults": [
+        {
+          "queryName": "complex-nested",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.83966765059223,
+              "mean": 0.007045958814556549
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.8011877172432,
+              "mean": 0.0019838103292737666
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.91518284419489,
+              "mean": 0.031046152542372883
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.86522471637205,
+              "mean": 0.050184355450236785
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.79967660193147,
+              "mean": 0.00225968500720806
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.84913998813066,
+              "mean": 0.006687708650519079
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.44682753185549,
+              "mean": 0.0007192177419354744
+            }
+          }
+        },
+        {
+          "queryName": "deep-nesting",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.85066765542625,
+              "mean": 0.007028519677996445
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.78602984078591,
+              "mean": 0.0016247760652765004
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.91302452367495,
+              "mean": 0.029726615282392056
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.88955053735198,
+              "mean": 0.049025694343065494
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.82022563337928,
+              "mean": 0.0018644555457746732
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.85790666729511,
+              "mean": 0.006313086985688737
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.33987003070433,
+              "mean": 0.0041533102828917945
+            }
+          }
+        },
+        {
+          "queryName": "fragment-query",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.79655683718596,
+              "mean": 0.0038653428196146985
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.76819010632357,
+              "mean": 0.0016498188437775718
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.89098677025663,
+              "mean": 0.013213438822246513
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.88609272377931,
+              "mean": 0.028959497637795317
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.85246933402931,
+              "mean": 0.0018772900612960008
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.85447972160662,
+              "mean": 0.006354858506944441
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.57138101415714,
+              "mean": 0.0005980538370720205
+            }
+          }
+        },
+        {
+          "queryName": "fragmented-posts",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.82162793100998,
+              "mean": 0.00570045429986492
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.82411580713897,
+              "mean": 0.0023079926404995575
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.88571197157509,
+              "mean": 0.025740569508804396
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.85966938236292,
+              "mean": 0.043386447296058644
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.85488251963288,
+              "mean": 0.002579195604873804
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.87704211224286,
+              "mean": 0.0069822682873412175
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.54597003958085,
+              "mean": 0.0006677075983717685
+            }
+          }
+        },
+        {
+          "queryName": "paginated-blog",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.82357085494228,
+              "mean": 0.007469139105274862
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.77915872615121,
+              "mean": 0.0023033160705991833
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.90284766310879,
+              "mean": 0.03988275448150683
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.86010854525529,
+              "mean": 0.05971077183229071
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.8329772559969,
+              "mean": 0.0025821013885827505
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.86685614972048,
+              "mean": 0.00697760470907857
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.39896735362626,
+              "mean": 0.0007360873452544631
+            }
+          }
+        },
+        {
+          "queryName": "posts-list",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.8251814935456,
+              "mean": 0.004448965417867428
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.81004216109311,
+              "mean": 0.001865497015255391
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.89459789300606,
+              "mean": 0.01805019436367698
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.87406048093223,
+              "mean": 0.03437878589306023
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.83373326576863,
+              "mean": 0.0021192260661444464
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.8628537779807,
+              "mean": 0.006556654307524542
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.6174067810155,
+              "mean": 0.0006112267922794167
+            }
+          }
+        },
+        {
+          "queryName": "product-query",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.80929618650423,
+              "mean": 0.004735041647906368
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.79588328086977,
+              "mean": 0.0015652316371681152
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.9073664869148,
+              "mean": 0.018706805095818905
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.89963315281965,
+              "mean": 0.035422274994383295
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.82081455631734,
+              "mean": 0.00180691276459272
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.87026970484497,
+              "mean": 0.006258400043224587
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.53495876415712,
+              "mean": 0.003066232389870184
+            }
+          }
+        },
+        {
+          "queryName": "simple-query",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.76298635582303,
+              "mean": 0.0025888420026007747
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.80753804373516,
+              "mean": 0.0015182895419187474
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.85475421675353,
+              "mean": 0.005630096993636132
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.86441118161355,
+              "mean": 0.020001194196428495
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.84698799084715,
+              "mean": 0.0017118183947200107
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.86596709936012,
+              "mean": 0.006156312703583034
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.63160935859136,
+              "mean": 0.002655538528705513
+            }
+          }
+        },
+        {
+          "queryName": "user-profile",
+          "operations": {
+            "read_0": {
+              "samples": 5000,
+              "confidence": 99.78752767737154,
+              "mean": 0.0030802818594104163
+            },
+            "read_50": {
+              "samples": 5000,
+              "confidence": 99.78347414446232,
+              "mean": 0.0015771114887831326
+            },
+            "write_0": {
+              "samples": 5000,
+              "confidence": 99.88071583524123,
+              "mean": 0.009571247992863522
+            },
+            "write_50": {
+              "samples": 5000,
+              "confidence": 99.87349505475248,
+              "mean": 0.024449810625143096
+            },
+            "update_0": {
+              "samples": 5000,
+              "confidence": 99.84585901584228,
+              "mean": 0.0018127739072554276
+            },
+            "update_50": {
+              "samples": 5000,
+              "confidence": 99.84852741932683,
+              "mean": 0.0062661974677920935
+            },
+            "eviction_0": {
+              "samples": 5000,
+              "confidence": 99.70065289649348,
+              "mean": 0.0005806245839804939
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
