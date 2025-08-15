@@ -1,3 +1,8 @@
+import fs from "fs";
+import path from "path";
+import { getReliabilityStats } from "./reliability";
+import { BenchmarkReport } from "./types";
+
 export const log = {
   start() {
     console.log("🚀 Starting benchmark runs");
@@ -19,4 +24,24 @@ export const log = {
   reportSaved(path: string) {
     console.log(`💾 Report saved: ${path}`);
   },
+  noResults() {
+    console.log("❌ No results to report");
+  },
+};
+
+export const printResult = (result: BenchmarkReport | undefined) => {
+  if (!result) {
+    log.noResults();
+    return;
+  }
+
+  const reportPath = path.join(
+    __dirname,
+    `benchmark-report-${Date.now()}.json`,
+  );
+  fs.writeFileSync(
+    reportPath,
+    JSON.stringify(getReliabilityStats(result), null, 2),
+  );
+  log.reportSaved(reportPath);
 };

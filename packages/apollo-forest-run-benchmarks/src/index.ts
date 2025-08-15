@@ -1,54 +1,48 @@
-import fs from "fs";
-import path from "path";
-import { SimpleWorkerPool } from "./worker-pool";
 import { benchmarkOperation } from "./scenario-runner";
-import { calculateAggregatedResults } from "./aggregation";
-import { checkResultsReliabilityAgainstAll } from "./reliability";
-import { log } from "./logger";
-import { CONFIG } from "./config";
-import {
-  BenchmarkReport,
-  CacheConfigResults,
-  CacheConfiguration,
-  BenchmarkSuiteResult,
-} from "./types";
+import { checkResultsReliability } from "./reliability";
+import { log, printResult } from "./logger";
+import { type CacheConfig, CONFIG, OPERATIONS } from "./config";
+import { BenchmarkReport, CacheConfigResults } from "./types";
+import { scenarios } from "./scenarios";
 
-async function runSingleBenchmarkSuite(
-  cacheConfig: CacheConfiguration,
-): Promise<BenchmarkReport> {
-  const queryKeys = Object.keys(CONFIG.queries);
-  const tasks: Array<
-    () => Promise<{
-      queryKey: string;
-      operation: string;
-      result: BenchmarkSuiteResult;
-    }>
-  > = [];
-  for (const q of queryKeys) {
-    for (const op of ["read", "write", "update"] as const) {
-      for (const observerCount of CONFIG.observerCounts) {
-        tasks.push(() =>
-          benchmarkOperation(q, op, observerCount, cacheConfig).then(
-            (result: BenchmarkSuiteResult) => ({
-              queryKey: q,
-              operation: `${op}_${observerCount}`,
-              result,
-            }),
-          ),
+function runSingleBenchmarkSuite(cacheConfig: CacheConfig): BenchmarkReport {
+  const results: Array<{
+    operationName: string;
+    scenario: string;
+    result: number[];
+  }> = [];
+
+  for (const operation of OPERATIONS) {
+    for (const scenario of scenarios) {
+      const observerCounts =
+        "observerCounts" in scenario
+          ? scenario.observerCounts
+          : CONFIG.observerCounts;
+
+      for (const observerCount of observerCounts) {
+        const result = benchmarkOperation(
+          operation,
+          scenario,
+          observerCount,
+          cacheConfig,
         );
+        results.push({
+          operationName: operation.name,
+          scenario: `${scenario.name}_${observerCount}`,
+          result,
+        });
       }
     }
   }
-  const pool = new SimpleWorkerPool();
-  const results = await pool.execute(tasks);
-  const queryResults = queryKeys.map((q) => {
-    const operations: Record<string, BenchmarkSuiteResult> = {};
+
+  const queryResults = OPERATIONS.map((op) => {
+    const operations: Record<string, number[]> = {};
     results
-      .filter((r) => r.queryKey === q)
+      .filter((r) => r.operationName === op.name)
       .forEach((r) => {
-        operations[r.operation] = r.result;
+        operations[r.scenario] = r.result;
       });
-    return { queryName: q, operations };
+    return { queryName: op.name, operations };
   });
   return {
     config: CONFIG,
@@ -56,60 +50,43 @@ async function runSingleBenchmarkSuite(
   };
 }
 
-async function runAllCacheConfigSuites(): Promise<BenchmarkReport> {
+function runAllCacheConfigSuites(): BenchmarkReport {
   const cacheConfigResults: CacheConfigResults[] = [];
   for (const cfg of CONFIG.cacheConfigurations) {
-    const rep = await runSingleBenchmarkSuite(cfg);
+    const rep = runSingleBenchmarkSuite(cfg);
     cacheConfigResults.push(...rep.cacheConfigResults);
   }
   return { config: CONFIG, cacheConfigResults };
 }
 
-async function runBenchmarks(): Promise<BenchmarkReport> {
-  const { thresholdPercent, maxAttempts, requiredConsecutive } =
-    CONFIG.reliability;
-  const allRuns: BenchmarkReport[] = [];
-  let consecutive = 0;
+function runBenchmarks(): void {
+  const { maxAttempts } = CONFIG.reliability;
+  let result: BenchmarkReport | undefined = undefined;
   log.start();
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     log.attempt(attempt);
-    const current = await runAllCacheConfigSuites();
-    if (attempt === 1) {
-      allRuns.push(current);
-      consecutive = 1;
-      continue;
-    }
-    const isStable = checkResultsReliabilityAgainstAll(
-      allRuns,
-      current,
-      thresholdPercent,
+    const currentResult = runAllCacheConfigSuites();
+
+    const { isStable, result: mergedResult } = checkResultsReliability(
+      currentResult,
+      result,
     );
-    allRuns.push(current);
-    if (isStable) {
-      consecutive++;
-      log.stable(consecutive, requiredConsecutive);
-      if (consecutive >= requiredConsecutive) break;
+
+    result = mergedResult;
+
+    if (isStable && attempt > CONFIG.reliability.minAttempts) {
+      log.aggregated(
+        result.cacheConfigResults.length,
+        currentResult.cacheConfigResults.length,
+      );
+      console.log(`Stability achieved`);
+      break;
     } else {
-      log.variation();
-      consecutive = 1; // reset stability counter
+      console.log(`Instability detected`);
     }
   }
-  const finalReport = calculateAggregatedResults(allRuns);
-  log.aggregated(allRuns.length, finalReport.cacheConfigResults.length);
-  const reportPath = path.join(
-    __dirname,
-    `benchmark-report-${Date.now()}.json`,
-  );
-  fs.writeFileSync(reportPath, JSON.stringify(finalReport, null, 2));
-  log.reportSaved(reportPath);
-  return finalReport;
+
+  printResult(result);
 }
 
-if (require.main === module) {
-  runBenchmarks().catch((e) => {
-    console.error(e);
-    process.exitCode = 1;
-  });
-}
-
-export { runBenchmarks, benchmarkOperation };
+runBenchmarks();

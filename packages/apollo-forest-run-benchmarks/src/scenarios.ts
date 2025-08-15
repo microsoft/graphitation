@@ -1,20 +1,9 @@
-import { ScenarioDefinition, ScenarioContext, OperationType } from "./types";
+import { ForestRun } from "@graphitation/apollo-forest-run";
+import { Scenario, ScenarioContext } from "./types";
 
-export interface MakeScenarioOptions {
-  operation: OperationType;
-  observerCount: number;
-  prepareOverride?: (ctx: ScenarioContext) => {
-    run(): void;
-    cleanup?(): void;
-  };
-}
-
-const defaultPrepare = (ctx: ScenarioContext) => {
-  const { cache, query, variables, data } = ctx;
+const addObservers = (ctx: ScenarioContext, cache: ForestRun) => {
+  const { query, variables } = ctx;
   const unsubscribes: Array<() => void> = [];
-  if (ctx.operation === "read" || ctx.operation === "update") {
-    cache.writeQuery({ query, variables, data });
-  }
   for (let i = 0; i < ctx.observerCount; i++) {
     const unsub = cache.watch({
       query,
@@ -24,36 +13,76 @@ const defaultPrepare = (ctx: ScenarioContext) => {
     });
     unsubscribes.push(unsub);
   }
-  return {
-    run() {
-      switch (ctx.operation) {
-        case "read":
-          cache.readQuery({ query, variables });
-          break;
-        case "write":
-          cache.writeQuery({ query, variables, data });
-          break;
-        case "update":
-          cache.writeQuery({ query, variables, data });
-          break;
-      }
-    },
-    cleanup() {
-      unsubscribes.forEach((u) => u());
-    },
-  };
+  return unsubscribes;
 };
 
-export function makeScenario(
-  operation: OperationType,
-  observerCount: number,
-  prepare = defaultPrepare,
-): ScenarioDefinition {
-  return {
-    id: `${operation}_${observerCount}`,
-    label: `${operation} with ${observerCount} observers`,
-    operation,
-    observerCount,
-    prepare,
-  };
-}
+export const scenarios = [
+  {
+    name: "read",
+    prepare: (ctx: ScenarioContext) => {
+      const { query, variables, data, cacheConfig } = ctx;
+      const cache = new ForestRun(cacheConfig.options);
+      const unsubscribes = addObservers(ctx, cache);
+
+      cache.writeQuery({ query, variables, data });
+
+      return {
+        name: "read",
+        run() {
+          cache.readQuery({ query, variables });
+        },
+      };
+    },
+  },
+  {
+    name: "write",
+    prepare: (ctx: ScenarioContext) => {
+      const { query, variables, data, cacheConfig } = ctx;
+      const cache = new ForestRun(cacheConfig.options);
+      const unsubscribes = addObservers(ctx, cache);
+
+      return {
+        name: "write",
+        run() {
+          cache.writeQuery({ query, variables, data });
+        },
+      };
+    },
+  },
+  {
+    name: "update",
+    prepare: (ctx: ScenarioContext) => {
+      const { query, variables, data, cacheConfig } = ctx;
+      const cache = new ForestRun(cacheConfig.options);
+      const unsubscribes = addObservers(ctx, cache);
+
+      cache.writeQuery({ query, variables, data });
+
+      return {
+        run() {
+          cache.writeQuery({ query, variables, data });
+        },
+      };
+    },
+  },
+  {
+    name: "eviction",
+    observerCounts: [0], // Eviction performance doesn't depend on observers
+    prepare: (ctx: ScenarioContext) => {
+      const { query, variables, data, cacheConfig } = ctx;
+      const cache = new ForestRun(cacheConfig.options);
+      for (let i = 0; i < 10; i++) {
+        cache.writeQuery({
+          query,
+          variables: { ...variables, id: i.toString() },
+          data: { ...data, id: i + data.id },
+        });
+      }
+      return {
+        run() {
+          cache.gc();
+        },
+      };
+    },
+  },
+] as const satisfies Scenario[];
