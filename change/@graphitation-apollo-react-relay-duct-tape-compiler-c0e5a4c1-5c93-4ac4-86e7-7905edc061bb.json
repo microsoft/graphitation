@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "feat(apollo-react-relay-duct-tape-compiler): emit operation text for build-time analysis",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape-compiler",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
