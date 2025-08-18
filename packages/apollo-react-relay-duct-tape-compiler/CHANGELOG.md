@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape-compiler
 
-<!-- This log was last generated on Thu, 14 Aug 2025 10:10:19 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 18 Aug 2025 17:22:58 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.8.0
+
+Mon, 18 Aug 2025 17:22:58 GMT
+
+### Minor changes
+
+- feat(apollo-react-relay-duct-tape-compiler): emit operation text for build-time analysis (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 1.7.10
 
