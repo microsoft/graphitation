@@ -50,7 +50,8 @@ describe("formatModule", () => {
         },
       ),
     ).toMatchInlineSnapshot(`
-      "/* tslint:disable */
+      "// @apollo-react-relay-duct-tape
+      /* tslint:disable */
       /* eslint-disable */
       // @ts-nocheck
 
@@ -87,7 +88,8 @@ describe("formatModule", () => {
         },
       ),
     ).toMatchInlineSnapshot(`
-      "/* tslint:disable */
+      "// @apollo-react-relay-duct-tape
+      /* tslint:disable */
       /* eslint-disable */
       // @ts-nocheck
 
@@ -160,7 +162,8 @@ describe("formatModule", () => {
         },
       ),
     ).toMatchInlineSnapshot(`
-      "/* tslint:disable */
+      "// @apollo-react-relay-duct-tape
+      /* tslint:disable */
       /* eslint-disable */
       // @ts-nocheck
 
@@ -245,7 +248,8 @@ describe("formatModule", () => {
         },
       ),
     ).toMatchInlineSnapshot(`
-      "/* tslint:disable */
+      "// @apollo-react-relay-duct-tape
+      /* tslint:disable */
       /* eslint-disable */
       // @ts-nocheck
 
@@ -333,7 +337,8 @@ describe("formatModule", () => {
         },
       ),
     ).toMatchInlineSnapshot(`
-      "/* tslint:disable */
+      "// @apollo-react-relay-duct-tape
+      /* tslint:disable */
       /* eslint-disable */
       // @ts-nocheck
 
@@ -449,7 +454,8 @@ describe("formatModule", () => {
           },
         ),
       ).toMatchInlineSnapshot(`
-        "/* tslint:disable */
+        "// @apollo-react-relay-duct-tape
+        /* tslint:disable */
         /* eslint-disable */
         // @ts-nocheck
 
@@ -534,7 +540,8 @@ describe("formatModule", () => {
           },
         ),
       ).toMatchInlineSnapshot(`
-        "/* tslint:disable */
+        "// @apollo-react-relay-duct-tape
+        /* tslint:disable */
         /* eslint-disable */
         // @ts-nocheck
 
@@ -577,7 +584,8 @@ describe("formatModule", () => {
           },
         ),
       ).toMatchInlineSnapshot(`
-        "/* tslint:disable */
+        "// @apollo-react-relay-duct-tape
+        /* tslint:disable */
         /* eslint-disable */
         // @ts-nocheck
 
@@ -617,7 +625,8 @@ describe("formatModule", () => {
         },
       ),
     ).toMatchInlineSnapshot(`
-      "/* tslint:disable */
+      "// @apollo-react-relay-duct-tape
+      /* tslint:disable */
       /* eslint-disable */
       // @ts-nocheck
 
@@ -707,7 +716,8 @@ describe("formatModule", () => {
         },
       ),
     ).toMatchInlineSnapshot(`
-      "/* tslint:disable */
+      "// @apollo-react-relay-duct-tape
+      /* tslint:disable */
       /* eslint-disable */
       // @ts-nocheck
 
@@ -728,6 +738,105 @@ describe("formatModule", () => {
               "name": {
                 "kind": "Name",
                 "value": "MessageComponent_message"
+              },
+              "selectionSet": {
+                "kind": "SelectionSet",
+                "selections": [
+                  {
+                    "kind": "Field",
+                    "name": {
+                      "kind": "Name",
+                      "value": "user"
+                    },
+                    "arguments": [
+                      {
+                        "kind": "Argument",
+                        "name": (v0/*: any*/),
+                        "value": {
+                          "kind": "IntValue",
+                          "value": "42"
+                        }
+                      }
+                    ],
+                    "selectionSet": {
+                      "kind": "SelectionSet",
+                      "selections": [
+                        {
+                          "kind": "Field",
+                          "name": (v0/*: any*/)
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      };
+      })();
+
+      export default documents;"
+    `);
+  });
+
+  it("adds document text when unstable_emitExecutionDocumentText is set", async () => {
+    expect(
+      await formatModule(
+        {
+          emitDocuments: true,
+          unstable_emitExecutionDocumentText: true,
+        },
+        {
+          definition: {
+            kind: "Request",
+            root: {
+              kind: "Root",
+              operation: "query",
+            },
+          } as Request,
+          typeText: `export type UserComponentQuery = {};`,
+          docText: `
+            query UserComponentQuery {
+              user(id: 42) {
+                id
+              }
+            }
+          `,
+        },
+      ),
+    ).toMatchInlineSnapshot(`
+      "// @apollo-react-relay-duct-tape
+      /* tslint:disable */
+      /* eslint-disable */
+      // @ts-nocheck
+
+      export type UserComponentQuery = {};
+
+
+      // Note: executionDocumentText is necessary for Lazy AST and build-time operations analysis
+      const executionDocumentText = \`query UserComponentQuery {
+        user(id: 42) {
+          id
+        }
+      }\`;
+
+
+      export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = (function(){
+      var v0 = {
+        "kind": "Name",
+        "value": "id"
+      };
+      return {
+        "executionQueryDocument": {
+          "kind": "Document",
+          "definitions": [
+            {
+              "kind": "OperationDefinition",
+              "operation": "query",
+              "name": {
+                "kind": "Name",
+                "value": "UserComponentQuery"
               },
               "selectionSet": {
                 "kind": "SelectionSet",

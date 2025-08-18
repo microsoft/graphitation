@@ -122,6 +122,11 @@ async function main() {
           }
         },
       },
+      unstable_emitExecutionDocumentText: {
+        demandOption: false,
+        default: false,
+        type: "boolean",
+      },
     })
     .help().argv;
 

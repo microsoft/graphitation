@@ -22,10 +22,18 @@ export interface FormatModuleOptions {
   emitSupermassiveDocuments: boolean;
   supermassiveDocumentNodeOutputType: SupermassiveOutputType;
   schema: string;
+  unstable_emitExecutionDocumentText: boolean;
 }
 
 function printDocumentComment(document: DocumentNode) {
   return `/*\n${print(document).trim()}\n*/`;
+}
+
+function printDocument(document: DocumentNode) {
+  return `
+// Note: executionDocumentText is necessary for Lazy AST and build-time operations analysis
+const executionDocumentText = \`${print(document).trim()}\`;
+`;
 }
 
 export async function formatModuleFactory(
@@ -108,7 +116,12 @@ export async function formatModuleFactory(
     const components = [
       typeText,
       exports &&
+        options.unstable_emitExecutionDocumentText &&
+        exports.executionQueryDocument &&
+        printDocument(exports.executionQueryDocument),
+      exports &&
         options.emitQueryDebugComments &&
+        !options.unstable_emitExecutionDocumentText &&
         exports.executionQueryDocument &&
         printDocumentComment(exports.executionQueryDocument),
       exports &&
@@ -119,7 +132,8 @@ export async function formatModuleFactory(
       reExportWatchNodeQuery && printWatchNodeQueryReExport(definition),
     ].filter(Boolean) as string[];
 
-    return `/* tslint:disable */
+    return `// @apollo-react-relay-duct-tape
+/* tslint:disable */
 /* eslint-disable */
 // @ts-nocheck
 ${hash ? `/* ${hash} */\n` : ""}
