@@ -3,6 +3,7 @@ import {
   PluginInitializer,
 } from "relay-compiler/lib/language/RelayLanguagePluginInterface";
 import { writeFile } from "fs/promises";
+import { existsSync, mkdirSync } from "fs";
 import { dirname, isAbsolute, join } from "path";
 import invariant from "invariant";
 
@@ -18,10 +19,10 @@ type EmitArtifactState = {
   options: Options;
   buffer: { file: string; data: string }[];
   activeFlushes: Set<Promise<unknown>>;
-  totalTime: number;
+  ensuredDirs: Set<string>;
 };
 
-const BATCH_SIZE = 8;
+const READ_BATCH_SIZE = 8; // How many operations to read before flushing writes
 const WRITE_RETRY_TIMEOUT_MS = 1000;
 
 /**
@@ -31,11 +32,16 @@ export function withArtifacts(
   plugin: PluginInitializer,
   options: Options,
 ): PluginWithArtifactsInitializer {
+  if (!options.graphQLFilesOutputDir) {
+    const init = () => plugin();
+    init.flush = async () => {};
+    return init;
+  }
   const state: EmitArtifactState = {
     options,
     buffer: [],
     activeFlushes: new Set(),
-    totalTime: 0.0,
+    ensuredDirs: new Set(),
   };
   const initializer: PluginWithArtifactsInitializer = () => {
     const pluginWithoutArtifacts = plugin();
@@ -45,6 +51,7 @@ export function withArtifacts(
         processEntry(state, entry);
         return pluginWithoutArtifacts.formatModule(entry);
       },
+      isGeneratedFile: () => true,
     };
   };
   initializer.flush = async () => {
@@ -71,10 +78,12 @@ function processEntry(
 
     buffer.push({
       file: resolvePath(sourcePath, moduleName, state.options),
-      data: docText,
+      data:
+        `# Extracted by @graphitation/apollo-react-relay-duct-tape-compiler from:\n#   ${sourcePath}\n` +
+        docText,
     });
   }
-  if (buffer.length >= BATCH_SIZE) {
+  if (buffer.length >= READ_BATCH_SIZE) {
     flushBuffer(state);
   }
 }
@@ -102,17 +111,26 @@ function resolvePath(
 }
 
 async function flushBuffer(state: EmitArtifactState) {
-  const start = performance.now();
-  const promises = state.buffer.map((e) => writeWithRetry(e.file, e.data));
+  const promises = state.buffer.map((entry) => writeWithRetry(state, entry));
   state.buffer.length = 0;
   const promise = Promise.all(promises);
   state.activeFlushes.add(promise);
   await promise;
-  state.totalTime += performance.now() - start;
   state.activeFlushes.delete(promise);
 }
 
-async function writeWithRetry(file: string, data: string) {
+async function writeWithRetry(
+  state: EmitArtifactState,
+  { file, data }: { file: string; data: string },
+) {
+  // Ensure dir exists once per session
+  const dir = dirname(file);
+  if (!state.ensuredDirs.has(dir)) {
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+    state.ensuredDirs.add(dir);
+  }
   try {
     await writeFile(file, data);
   } catch (e) {
