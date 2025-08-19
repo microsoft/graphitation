@@ -84,27 +84,23 @@ const config = {
           //     },
           //   ],
           // },
-          {
-            title: "Community",
-            items: [
-              // {
-              //   label: "Stack Overflow",
-              //   href: "https://stackoverflow.com/questions/tagged/docusaurus",
-              // },
-              // {
-              //   label: "Discord",
-              //   href: "https://discordapp.com/invite/docusaurus",
-              // },
-              // {
-              //   label: "Twitter",
-              //   href: "https://twitter.com/docusaurus",
-              // },
-              {
-                label: "Teams",
-                href: "https://teams.microsoft.com/l/channel/19%3a487e60012b034c9e91db26c1fc0906d1%40thread.tacv2/GraphQL%2520(IDataClient)?groupId=505d3b35-052e-4bb7-a1f4-d1cdaec5f6a7&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47",
-              },
-            ],
-          },
+          // {
+          //   title: "Community",
+          //   items: [
+          //     {
+          //       label: "Stack Overflow",
+          //       href: "https://stackoverflow.com/questions/tagged/docusaurus",
+          //     },
+          //     {
+          //       label: "Discord",
+          //       href: "https://discordapp.com/invite/docusaurus",
+          //     },
+          //     {
+          //       label: "Twitter",
+          //       href: "https://twitter.com/docusaurus",
+          //     },
+          //   ],
+          // },
           // {
           //   title: "More",
           //   items: [
