@@ -1,4 +1,5 @@
 import { CONFIG } from "./config";
+import type { SampleFunction } from "./types";
 
 export class Stats {
   public samples: number[];
@@ -44,8 +45,6 @@ export class Stats {
   }
 }
 
-type SampleFunction = () => number;
-
 export class BenchmarkSuite {
   private sampleFunction: SampleFunction;
 
@@ -53,25 +52,20 @@ export class BenchmarkSuite {
     this.sampleFunction = sampleFunction;
   }
 
-  private measure(sampleFunction: SampleFunction): number[] {
+  run(): number[] {
     const samples: number[] = [];
     for (let i = 0; i < CONFIG.warmupSamples; i++) {
-      sampleFunction();
+      this.sampleFunction();
     }
     const targetConfidence = CONFIG.targetConfidencePercent;
     while (samples.length < CONFIG.maxSamplesPerBenchmark) {
       for (let i = 0; i < CONFIG.batchSize; i++) {
-        samples.push(sampleFunction());
+        samples.push(this.sampleFunction());
       }
       const { confidence } = new Stats(samples);
       if (confidence >= targetConfidence) break;
     }
     const { samples: filteredSamples } = new Stats(samples);
     return filteredSamples;
-  }
-
-  run(): number[] {
-    const result = this.measure(this.sampleFunction);
-    return result;
   }
 }

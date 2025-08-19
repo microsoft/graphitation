@@ -14,8 +14,9 @@
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
     "types": "monorepo-scripts types",
-    "benchmark": "ts-node --compiler-options '{\"module\":\"commonjs\"}' ./src/index.ts",
-    "benchmark:compare": "ts-node --compiler-options '{\"module\":\"commonjs\"}' ./src/compare-reports.ts",
+    "benchmark": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' node --expose-gc -r ts-node/register ./src/index.ts",
+    "benchmark:summarize": "ts-node --compiler-options '{\"module\":\"commonjs\"}' ./src/analyze-results.ts",
+    "clone": "./scripts/clone-caches.sh",
     "just": "monorepo-scripts"
   },
   "devDependencies": {

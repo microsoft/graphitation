@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { getReliabilityStats } from "./reliability";
-import { BenchmarkReport } from "./types";
+import { getSummary } from "./reliability";
 
 export const log = {
   start() {
@@ -29,8 +28,8 @@ export const log = {
   },
 };
 
-export const printResult = (result: BenchmarkReport | undefined) => {
-  if (!result) {
+export const printResult = (results: any) => {
+  if (!results || (Array.isArray(results) && results.length === 0)) {
     log.noResults();
     return;
   }
@@ -39,9 +38,6 @@ export const printResult = (result: BenchmarkReport | undefined) => {
     __dirname,
     `benchmark-report-${Date.now()}.json`,
   );
-  fs.writeFileSync(
-    reportPath,
-    JSON.stringify(getReliabilityStats(result), null, 2),
-  );
+  fs.writeFileSync(reportPath, JSON.stringify(getSummary(results), null, 2));
   log.reportSaved(reportPath);
 };

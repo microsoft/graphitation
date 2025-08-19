@@ -1,92 +1,98 @@
+import type { CacheConfig } from "./config";
+
 import { benchmarkOperation } from "./scenario-runner";
-import { checkResultsReliability } from "./reliability";
+import { checkResultsReliability, groupResults } from "./reliability";
 import { log, printResult } from "./logger";
-import { type CacheConfig, CONFIG, OPERATIONS } from "./config";
-import { BenchmarkReport, CacheConfigResults } from "./types";
+import { CONFIG, OPERATIONS } from "./config";
 import { scenarios } from "./scenarios";
+import type { ForestRunAdditionalConfig } from "@graphitation/apollo-forest-run";
+import { ForestRun as BaselineForestRun } from "./forest-runs/baseline";
+// @ts-ignore
+import { ForestRun as CurrentForestRun } from "./forest-runs/current";
 
-function runSingleBenchmarkSuite(cacheConfig: CacheConfig): BenchmarkReport {
-  const results: Array<{
-    operationName: string;
-    scenario: string;
-    result: number[];
-  }> = [];
+export interface ResultIdentifier {
+  cacheConfig: CacheConfig["name"];
+  cacheFactory: ReturnType<typeof getCacheFactories>[number]["name"];
+}
 
-  for (const operation of OPERATIONS) {
-    for (const scenario of scenarios) {
-      const observerCounts =
-        "observerCounts" in scenario
-          ? scenario.observerCounts
-          : CONFIG.observerCounts;
+export interface Result extends ResultIdentifier {
+  scenario: `${(typeof scenarios)[number]["name"]}_${number}`;
+  measurements: number[];
+  operationName: string;
+}
 
-      for (const observerCount of observerCounts) {
-        const result = benchmarkOperation(
-          operation,
-          scenario,
-          observerCount,
-          cacheConfig,
-        );
-        results.push({
-          operationName: operation.name,
-          scenario: `${scenario.name}_${observerCount}`,
-          result,
-        });
+const getCacheFactories = (config: ForestRunAdditionalConfig = {}) => {
+  return [
+    {
+      name: "baseline",
+      factory: () => new BaselineForestRun(config as any),
+    },
+    {
+      name: "current",
+      factory: () => new CurrentForestRun(config),
+    },
+  ] as unknown as any;
+};
+
+function runBenchmarkSuite() {
+  const results: Result[] = [];
+
+  for (const cfg of CONFIG.cacheConfigurations) {
+    for (const operation of OPERATIONS) {
+      for (const scenario of scenarios) {
+        for (const observerCount of CONFIG.observerCounts) {
+          for (const cacheFactory of getCacheFactories(cfg.options)) {
+            const measurements = benchmarkOperation(
+              operation,
+              scenario,
+              observerCount,
+              cacheFactory.factory,
+            );
+            results.push({
+              cacheConfig: cfg.name,
+              cacheFactory: cacheFactory.name,
+              operationName: operation.name,
+              scenario: `${scenario.name}_${observerCount}`,
+              measurements,
+            });
+          }
+        }
       }
     }
   }
 
-  const queryResults = OPERATIONS.map((op) => {
-    const operations: Record<string, number[]> = {};
-    results
-      .filter((r) => r.operationName === op.name)
-      .forEach((r) => {
-        operations[r.scenario] = r.result;
-      });
-    return { queryName: op.name, operations };
-  });
-  return {
-    config: CONFIG,
-    cacheConfigResults: [{ configuration: cacheConfig, queryResults }],
-  };
+  return results;
 }
 
-function runAllCacheConfigSuites(): BenchmarkReport {
-  const cacheConfigResults: CacheConfigResults[] = [];
-  for (const cfg of CONFIG.cacheConfigurations) {
-    const rep = runSingleBenchmarkSuite(cfg);
-    cacheConfigResults.push(...rep.cacheConfigResults);
-  }
-  return { config: CONFIG, cacheConfigResults };
+export interface BenchmarkResult {
+  [scenarioName: string]: Result[];
 }
 
 function runBenchmarks(): void {
   const { maxAttempts } = CONFIG.reliability;
-  let result: BenchmarkReport | undefined = undefined;
+  let prevBenchmarks: BenchmarkResult[] = [];
   log.start();
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     log.attempt(attempt);
-    const currentResult = runAllCacheConfigSuites();
+    const currentResult = runBenchmarkSuite();
 
-    const { isStable, result: mergedResult } = checkResultsReliability(
-      currentResult,
-      result,
+    const groupedResults = groupResults(currentResult);
+
+    const { isStable } = checkResultsReliability(
+      groupedResults,
+      prevBenchmarks,
     );
 
-    result = mergedResult;
+    prevBenchmarks.push(groupedResults);
 
     if (isStable && attempt > CONFIG.reliability.minAttempts) {
-      log.aggregated(
-        result.cacheConfigResults.length,
-        currentResult.cacheConfigResults.length,
-      );
-      console.log(`Stability achieved`);
       break;
-    } else {
-      console.log(`Instability detected`);
     }
   }
 
-  printResult(result);
+  if (prevBenchmarks) {
+    printResult(prevBenchmarks);
+  }
 }
 
 runBenchmarks();

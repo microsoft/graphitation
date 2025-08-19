@@ -20,9 +20,9 @@ export const scenarios = [
   {
     name: "read",
     prepare: (ctx: ScenarioContext) => {
-      const { query, variables, data, cacheConfig } = ctx;
-      const cache = new ForestRun(cacheConfig.options);
-      const unsubscribes = addObservers(ctx, cache);
+      const { query, variables, data, cacheFactory } = ctx;
+      const cache = cacheFactory();
+      addObservers(ctx, cache);
 
       cache.writeQuery({ query, variables, data });
 
@@ -37,9 +37,9 @@ export const scenarios = [
   {
     name: "write",
     prepare: (ctx: ScenarioContext) => {
-      const { query, variables, data, cacheConfig } = ctx;
-      const cache = new ForestRun(cacheConfig.options);
-      const unsubscribes = addObservers(ctx, cache);
+      const { query, variables, data, cacheFactory } = ctx;
+      const cache = cacheFactory();
+      addObservers(ctx, cache);
 
       return {
         name: "write",
@@ -52,35 +52,15 @@ export const scenarios = [
   {
     name: "update",
     prepare: (ctx: ScenarioContext) => {
-      const { query, variables, data, cacheConfig } = ctx;
-      const cache = new ForestRun(cacheConfig.options);
-      const unsubscribes = addObservers(ctx, cache);
+      const { query, variables, data, cacheFactory } = ctx;
+      const cache = cacheFactory();
+      addObservers(ctx, cache);
 
       cache.writeQuery({ query, variables, data });
 
       return {
         run() {
           cache.writeQuery({ query, variables, data });
-        },
-      };
-    },
-  },
-  {
-    name: "eviction",
-    observerCounts: [0], // Eviction performance doesn't depend on observers
-    prepare: (ctx: ScenarioContext) => {
-      const { query, variables, data, cacheConfig } = ctx;
-      const cache = new ForestRun(cacheConfig.options);
-      for (let i = 0; i < 10; i++) {
-        cache.writeQuery({
-          query,
-          variables: { ...variables, id: i.toString() },
-          data: { ...data, id: i + data.id },
-        });
-      }
-      return {
-        run() {
-          cache.gc();
         },
       };
     },
