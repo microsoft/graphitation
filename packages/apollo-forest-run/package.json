@@ -15,7 +15,6 @@
     "test:own": "monorepo-scripts test",
     "test:apollo": "node ./scripts/run-apollo-tests.js",
     "types": "monorepo-scripts types",
-    "benchmark:memory": "node ./benchmarks/memory/bench.js",
     "just": "monorepo-scripts"
   },
   "devDependencies": {
@@ -24,7 +23,6 @@
     "graphql": "^15.0.0",
     "lodash": "^4.17.21",
     "monorepo-scripts": "*",
-    "ts-node": "^10.0.0",
     "tslib": "^2.4.0",
     "typescript": "^5.5.3"
   },
