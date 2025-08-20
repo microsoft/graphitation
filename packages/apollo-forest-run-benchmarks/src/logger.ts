@@ -1,11 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { getSummary, analyzeSignificantChanges } from "./reliability";
-import type {
-  ChangeReport,
-  SignificantChange,
-  SummaryReport,
-} from "./reliability";
+import type { ChangeReport } from "./reliability";
 import { CONFIG } from "./config";
 
 export const log = {

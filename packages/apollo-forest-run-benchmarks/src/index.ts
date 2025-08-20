@@ -1,5 +1,5 @@
 import type { CacheConfig } from "./config";
-
+import fs from "fs";
 import { isResultReliable, groupResults, getSummary } from "./reliability";
 import { log } from "./logger";
 import { analyzeResults } from "./analyze-results";
@@ -39,7 +39,7 @@ const getCacheFactories = (config: ForestRunAdditionalConfig = {}) => {
     },
     {
       name: "current",
-      factory: () => new CurrentForestRun(config),
+      factory: () => new CurrentForestRun(config as any),
     },
   ] as unknown as {
     name: "baseline" | "current";
@@ -102,6 +102,7 @@ function runBenchmarks(): void {
 
   const summary = getSummary(prevBenchmarks);
   analyzeResults(summary);
+  fs.writeFileSync("benchmark-summary.json", JSON.stringify(summary, null, 2));
 }
 
 runBenchmarks();
