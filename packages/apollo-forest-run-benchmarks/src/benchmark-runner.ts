@@ -1,5 +1,7 @@
+import type { ForestRun } from "@graphitation/apollo-forest-run";
+import type { Scenario, OperationData } from "./types";
+
 import { CONFIG } from "./config";
-import type { SampleFunction } from "./types";
 
 export class Stats {
   public samples: number[];
@@ -45,27 +47,41 @@ export class Stats {
   }
 }
 
-export class BenchmarkSuite {
-  private sampleFunction: SampleFunction;
+export function benchmarkOperation(
+  operation: OperationData,
+  scenario: Scenario,
+  observerCount: number,
+  cacheFactory: (config?: any) => ForestRun,
+): number[] {
+  const task = () => {
+    const prepared = scenario.prepare({
+      observerCount,
+      cacheFactory,
+      ...operation,
+    });
+    const start = process.hrtime.bigint();
+    prepared.run();
+    const end = process.hrtime.bigint();
+    return Number(end - start) / 1e6; // ms
+  };
 
-  constructor(sampleFunction: SampleFunction) {
-    this.sampleFunction = sampleFunction;
+  // Run warmup samples
+  const samples: number[] = [];
+  for (let i = 0; i < CONFIG.warmupSamples; i++) {
+    task();
   }
 
-  run(): number[] {
-    const samples: number[] = [];
-    for (let i = 0; i < CONFIG.warmupSamples; i++) {
-      this.sampleFunction();
+  // Collect samples until we reach target confidence
+  const targetConfidence = CONFIG.targetConfidencePercent;
+  while (samples.length < CONFIG.maxSamplesPerBenchmark) {
+    for (let i = 0; i < CONFIG.batchSize; i++) {
+      samples.push(task());
     }
-    const targetConfidence = CONFIG.targetConfidencePercent;
-    while (samples.length < CONFIG.maxSamplesPerBenchmark) {
-      for (let i = 0; i < CONFIG.batchSize; i++) {
-        samples.push(this.sampleFunction());
-      }
-      const { confidence } = new Stats(samples);
-      if (confidence >= targetConfidence) break;
-    }
-    const { samples: filteredSamples } = new Stats(samples);
-    return filteredSamples;
+    const { confidence } = new Stats(samples);
+    if (confidence >= targetConfidence) break;
   }
+
+  const { samples: filteredSamples } = new Stats(samples);
+
+  return filteredSamples;
 }

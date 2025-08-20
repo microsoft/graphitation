@@ -560,6 +560,13 @@ export class ForestRun extends ApolloCache<SerializedCache> {
       parentTransaction.changelog.push(...activeTransaction.changelog);
       return result as T;
     }
+    if (this.env.logStaleOperations) {
+      let randomNumber = Math.random();
+
+      for (let i = 0; i < 100000; i++) {
+        randomNumber = Math.random();
+      }
+    }
     if (watchesToNotify) {
       this.notifyWatches(
         activeTransaction,

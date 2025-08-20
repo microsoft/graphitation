@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { gql } from "@apollo/client";
+import { parse } from "graphql";
 import type { OperationData } from "./types";
 
 export const OPERATIONS: OperationData[] = [];
@@ -24,10 +24,11 @@ export const CONFIG = {
   warmupSamples: 20,
   batchSize: 200,
   reliability: { maxAttempts: 10, minAttempts: 2 },
+  significantChanges: { threshold: 0.05 },
 } as const;
 
-const responsesDir = path.join(__dirname, "responses");
-const queriesDir = path.join(__dirname, "queries");
+const responsesDir = path.join(__dirname, "data", "responses");
+const queriesDir = path.join(__dirname, "data", "queries");
 const discoveredQueries: Record<string, string> = Object.fromEntries(
   fs
     .readdirSync(queriesDir)
@@ -44,7 +45,7 @@ for (const [key, filename] of Object.entries(discoveredQueries)) {
 
   OPERATIONS.push({
     name: key,
-    query: gql(source),
+    query: parse(source),
     data: JSON.parse(fs.readFileSync(jsonPath, "utf-8")),
     variables: {},
   });

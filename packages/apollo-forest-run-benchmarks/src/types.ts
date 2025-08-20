@@ -29,7 +29,6 @@ export interface ScenarioContext extends OperationData {
   observerCount: number;
   cacheFactory: (config?: ForestRunAdditionalConfig) => ForestRun;
 }
-export type SampleFunction = () => number;
 
 export type Scenario = {
   name: string;

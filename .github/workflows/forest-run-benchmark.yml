@@ -4,17 +4,21 @@ on:
   push:
     branches: [main]
     paths:
-      - 'packages/apollo-forest-run/**'
-      - 'packages/apollo-forest-run-benchmarks/**'
+      - "packages/apollo-forest-run/**"
+      - "packages/apollo-forest-run-benchmarks/**"
   pull_request:
     paths:
-      - 'packages/apollo-forest-run/**'
-      - 'packages/apollo-forest-run-benchmarks/**'
+      - "packages/apollo-forest-run/**"
+      - "packages/apollo-forest-run-benchmarks/**"
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   benchmark:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -24,62 +28,98 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'yarn'
+          node-version: "18"
+          cache: "yarn"
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Build ForestRun and Benchmarks
-        run: |
-          npx lage build --scope @graphitation/apollo-forest-run
-          npx lage build --scope @graphitation/apollo-forest-run-benchmarks
+      - name: Change directory
+        run: cd packages/apollo-forest-run-benchmarks
 
-      - name: Run performance benchmarks
-        id: benchmark
+      - name: Clone caches
+        run: |
+          cd packages/apollo-forest-run-benchmarks
+          yarn clone
+
+      - name: Run benchmarks
         run: |
           cd packages/apollo-forest-run-benchmarks
           yarn benchmark
-          # Find the most recent benchmark report
-          REPORT_FILE=$(ls src/benchmark-report-*.json | sort -r | head -n1)
-          echo "report_file=$REPORT_FILE" >> $GITHUB_OUTPUT
+        env:
+          CI: true
 
-      - name: Upload benchmark results (main branch)
-        if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
-        with:
-          name: benchmark-results-main
-          path: packages/apollo-forest-run-benchmarks/${{ steps.benchmark.outputs.report_file }}
-          retention-days: 30
-
-      - name: Download baseline benchmark (PR only)
+      - name: Comment benchmark results on PR
         if: github.event_name == 'pull_request'
-        uses: actions/download-artifact@v4
+        uses: actions/github-script@v7
         with:
-          name: benchmark-results-main
-          path: baseline/
-        continue-on-error: true
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const { execSync } = require('child_process');
 
-      - name: Compare benchmarks (PR only)
-        if: github.event_name == 'pull_request'
-        run: |
-          cd packages/apollo-forest-run-benchmarks/src
-          
-          # Check if baseline exists
-          if [ -f "../../../baseline/benchmark-report-"*.json ]; then
-            BASELINE_FILE=$(ls ../../../baseline/benchmark-report-*.json | head -n1)
-            CURRENT_FILE="${{ steps.benchmark.outputs.report_file }}"
-            
-            # Use the comparison script to generate markdown output for PR comment
-            COMPARISON_OUTPUT=$(npx ts-node --compiler-options '{"module":"commonjs"}' compare-reports.ts --baseline "$BASELINE_FILE" --current "$CURRENT_FILE" --format markdown)
-            
-            # Write to GitHub step summary
-            echo "$COMPARISON_OUTPUT" >> $GITHUB_STEP_SUMMARY
-            
-          else
-            echo "## 📊 ForestRun Benchmark Results" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "⚠️ No baseline benchmark found. This is the first benchmark run." >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Run the benchmarks on the main branch first to establish a baseline for comparison." >> $GITHUB_STEP_SUMMARY
-          fi
+            // Find the most recent markdown report file
+            const benchmarkDir = 'packages/apollo-forest-run-benchmarks';
+            let reportPath = null;
+
+            try {
+              const files = fs.readdirSync(benchmarkDir);
+              const markdownFiles = files
+                .filter(file => file.startsWith('benchmark-analysis-') && file.endsWith('.md'))
+                .map(file => ({
+                  name: file,
+                  path: path.join(benchmarkDir, file),
+                  mtime: fs.statSync(path.join(benchmarkDir, file)).mtime
+                }))
+                .sort((a, b) => b.mtime - a.mtime);
+              
+              if (markdownFiles.length > 0) {
+                reportPath = markdownFiles[0].path;
+              }
+            } catch (error) {
+              console.log('Error finding markdown files:', error.message);
+            }
+
+            if (reportPath && fs.existsSync(reportPath)) {
+              const markdownContent = fs.readFileSync(reportPath, 'utf8');
+              
+              // Find existing benchmark comment to update or create new one
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              });
+              
+              const botComment = comments.find(comment => 
+                comment.user.type === 'Bot' && 
+                comment.body.includes('📊 Benchmark Analysis Report')
+              );
+              
+              const commentBody = `<!-- benchmark-report -->
+            ${markdownContent}
+
+            ---
+            *Updated: ${new Date().toISOString()}*`;
+              
+              if (botComment) {
+                // Update existing comment
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                  body: commentBody
+                });
+                console.log('Updated existing benchmark comment');
+              } else {
+                // Create new comment
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: commentBody
+                });
+                console.log('Created new benchmark comment');
+              }
+            } else {
+              console.log('No benchmark report markdown file found in', benchmarkDir);
+            }

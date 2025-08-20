@@ -10,25 +10,22 @@
     "directory": "packages/apollo-forest-run-benchmarks"
   },
   "scripts": {
-    "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
     "types": "monorepo-scripts types",
     "benchmark": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' node --expose-gc -r ts-node/register ./src/index.ts",
     "benchmark:summarize": "ts-node --compiler-options '{\"module\":\"commonjs\"}' ./src/analyze-results.ts",
+    "benchmark:ci": "CI_MARKDOWN=true TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' node --expose-gc -r ts-node/register ./src/index.ts",
     "clone": "./scripts/clone-caches.sh",
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.22",
     "@types/node": "^12.0.0",
-    "monorepo-scripts": "*",
     "ts-node": "^10.0.0",
     "tslib": "^2.4.0",
     "typescript": "^5.5.3"
   },
   "dependencies": {
-    "@apollo/client": ">= ^3.3.0 < 3.7.0",
     "@graphitation/apollo-forest-run": "*",
     "graphql": "^15.0.0"
   },

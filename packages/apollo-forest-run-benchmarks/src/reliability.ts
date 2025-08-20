@@ -15,10 +15,6 @@ export const groupResults = (results: Result[]): BenchmarkResult => {
   }, {} as BenchmarkResult);
 };
 
-/**
- * Merges multiple benchmark runs, excluding the least reliable ones if there are more than 2 runs.
- * For runs with more than 2 results, it excludes the one with the lowest average confidence.
- */
 export const mergeBenchmarks = (
   benchmarkRuns: BenchmarkResult[],
 ): BenchmarkResult => {
@@ -30,100 +26,93 @@ export const mergeBenchmarks = (
 
   for (const scenarioName of Object.keys(benchmarkRuns[0])) {
     merged[scenarioName] = [];
-    for (const run of benchmarkRuns) {
-      const scenarioResults = run[scenarioName];
+    for (const result of benchmarkRuns[0][scenarioName]) {
+      const mergedResult: Result = {
+        cacheConfig: result.cacheConfig,
+        cacheFactory: result.cacheFactory,
+        operationName: result.operationName,
+        scenario: result.scenario,
+        measurements: [],
+      };
 
-      for (const result of scenarioResults) {
-        const mergedResult: Result = {
-          cacheConfig: result.cacheConfig,
-          cacheFactory: result.cacheFactory,
-          operationName: result.operationName,
-          scenario: result.scenario,
-          measurements: [],
-        };
+      const measurements: {
+        confidence: number;
+        measurements: number[];
+      }[] = [];
 
-        const measurements: {
-          confidence: number;
-          measurements: number[];
-        }[] = [];
-        for (const sc of benchmarkRuns) {
-          const scenarioResults = sc[scenarioName];
-          for (const res of scenarioResults) {
-            const stats = new Stats(res.measurements);
-            measurements.push({
-              confidence: stats.confidence,
-              measurements: stats.samples,
-            });
+      for (const sc of benchmarkRuns) {
+        const scenarioResults = sc[scenarioName];
+        for (const res of scenarioResults) {
+          if (
+            res.cacheConfig !== mergedResult.cacheConfig ||
+            res.cacheFactory !== mergedResult.cacheFactory ||
+            res.operationName !== mergedResult.operationName
+          ) {
+            continue; // Skip mismatched results
           }
+          const stats = new Stats(res.measurements);
+          measurements.push({
+            confidence: stats.confidence,
+            measurements: stats.samples,
+          });
         }
-
-        measurements.sort((a, b) => a.confidence - b.confidence).shift();
-        const mergedMeasurement = measurements
-          .map((m) => m.measurements)
-          .flat();
-        mergedResult.measurements = mergedMeasurement;
-        merged[scenarioName].push(mergedResult);
       }
+
+      measurements.sort((a, b) => a.confidence - b.confidence).shift();
+      const mergedMeasurement = measurements.map((m) => m.measurements).flat();
+      mergedResult.measurements = mergedMeasurement;
+      merged[scenarioName].push(mergedResult);
     }
   }
 
   return merged;
 };
 
-export const checkResultsReliability = (
+export const isResultReliable = (
   current: BenchmarkResult,
-  previousRuns?: BenchmarkResult[],
-) => {
-  if (!previousRuns || previousRuns.length === 0) {
-    // First run, no previous results to compare against
-    return { isStable: true };
-  }
+  previousRuns: BenchmarkResult[] = [],
+): boolean => {
+  const allruns = [...previousRuns, current];
+  const mergedBenchmarks = mergeBenchmarks(allruns);
 
-  const mergedPrevious = mergeBenchmarks(previousRuns);
-
-  let isStable = true;
-  for (const suiteName of Object.keys(current)) {
-    const currentSuite = current[suiteName];
-    const previousSuite = mergedPrevious[suiteName];
-
-    if (!previousSuite) {
-      isStable = false;
-      continue;
-    }
-
-    // Compare current and merged previous results for this suite
-    for (const currentResult of currentSuite) {
-      const previousResult = previousSuite.find(
-        (r) =>
-          r.cacheConfig === currentResult.cacheConfig &&
-          r.cacheFactory === currentResult.cacheFactory,
-      );
-      if (!previousResult) {
-        // If there's no previous result, we can't determine stability
-        isStable = false;
-        continue;
-      }
-      // Check if the results are within the acceptable range
+  let isReliable = true;
+  for (const suiteName of Object.keys(mergedBenchmarks)) {
+    for (const currentResult of mergedBenchmarks[suiteName]) {
       const { confidence } = new Stats(currentResult.measurements);
       if (confidence < CONFIG.targetConfidencePercent) {
-        isStable = false;
+        isReliable = false;
+        break;
       }
     }
   }
 
-  return {
-    isStable,
-  };
+  return isReliable;
 };
 
+export type ScenarioSummary = BenchmarkStats & ResultIdentifier;
 export interface SummaryReport {
-  [scenarioName: string]: (BenchmarkStats & ResultIdentifier)[];
+  [scenarioName: string]: ScenarioSummary[];
+}
+
+export interface SignificantChange {
+  scenarioName: string;
+  operationName: string;
+  baselineMean: number;
+  currentMean: number;
+  percentChange: number;
+  cacheConfig: string;
+  cacheFactory: string;
+  isImprovement: boolean;
+}
+
+export interface ChangeReport {
+  significantChanges: SignificantChange[];
+  totalScenarios: number;
+  changedScenarios: number;
 }
 
 export const getSummary = (results: (BenchmarkResult | BenchmarkResult)[]) => {
   const report: SummaryReport = {};
-
-  // Handle both single result and array of results
 
   const benchmarkResult = mergeBenchmarks(results);
 
@@ -144,4 +133,69 @@ export const getSummary = (results: (BenchmarkResult | BenchmarkResult)[]) => {
   }
 
   return report;
+};
+
+export const analyzeSignificantChanges = (
+  summary: SummaryReport,
+): ChangeReport => {
+  const significantChanges: SignificantChange[] = [];
+  const threshold = CONFIG.significantChanges.threshold;
+
+  let totalScenarios = 0;
+  let changedScenarios = 0;
+
+  for (const [scenarioName, scenarioResults] of Object.entries(summary)) {
+    totalScenarios++;
+
+    // Find the baseline result (baseline factory + Default cache config)
+    const baseline = scenarioResults.find(
+      (result) =>
+        result.cacheFactory === "baseline" && result.cacheConfig === "Default",
+    );
+
+    if (!baseline) {
+      continue; // Skip if no baseline found
+    }
+
+    let hasSignificantChange = false;
+
+    // Compare all other results against the baseline
+    for (const result of scenarioResults) {
+      // Skip comparing baseline with itself
+      if (result === baseline) {
+        continue;
+      }
+
+      const percentChange = (result.mean - baseline.mean) / baseline.mean;
+      const absoluteChange = Math.abs(percentChange);
+
+      if (absoluteChange >= threshold) {
+        hasSignificantChange = true;
+
+        // Extract operation name from scenario name
+        const operationName = scenarioName.split("_")[0];
+
+        significantChanges.push({
+          scenarioName,
+          operationName,
+          baselineMean: baseline.mean,
+          currentMean: result.mean,
+          percentChange,
+          cacheConfig: result.cacheConfig,
+          cacheFactory: result.cacheFactory,
+          isImprovement: percentChange < 0, // Lower mean time is better (improvement)
+        });
+      }
+    }
+
+    if (hasSignificantChange) {
+      changedScenarios++;
+    }
+  }
+
+  return {
+    significantChanges,
+    totalScenarios,
+    changedScenarios,
+  };
 };

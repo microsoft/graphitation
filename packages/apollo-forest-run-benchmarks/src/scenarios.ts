@@ -1,5 +1,5 @@
-import { ForestRun } from "@graphitation/apollo-forest-run";
-import { Scenario, ScenarioContext } from "./types";
+import type { ForestRun } from "@graphitation/apollo-forest-run";
+import type { Scenario, ScenarioContext } from "./types";
 
 const addObservers = (ctx: ScenarioContext, cache: ForestRun) => {
   const { query, variables } = ctx;

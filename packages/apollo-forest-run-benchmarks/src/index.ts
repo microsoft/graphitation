@@ -1,14 +1,24 @@
 import type { CacheConfig } from "./config";
 
-import { benchmarkOperation } from "./scenario-runner";
-import { checkResultsReliability, groupResults } from "./reliability";
-import { log, printResult } from "./logger";
+import { isResultReliable, groupResults, getSummary } from "./reliability";
+import { log } from "./logger";
+import { analyzeResults } from "./analyze-results";
 import { CONFIG, OPERATIONS } from "./config";
 import { scenarios } from "./scenarios";
-import type { ForestRunAdditionalConfig } from "@graphitation/apollo-forest-run";
+import type {
+  ForestRunAdditionalConfig,
+  ForestRun,
+} from "@graphitation/apollo-forest-run";
+import { benchmarkOperation } from "./benchmark-runner";
+
+// @ts-ignore
 import { ForestRun as BaselineForestRun } from "./forest-runs/baseline";
 // @ts-ignore
 import { ForestRun as CurrentForestRun } from "./forest-runs/current";
+
+// Export analysis functions for external usage
+export { analyzeSignificantChanges, getSummary } from "./reliability";
+export { generateMarkdownReport, printSignificantChanges } from "./logger";
 
 export interface ResultIdentifier {
   cacheConfig: CacheConfig["name"];
@@ -31,7 +41,10 @@ const getCacheFactories = (config: ForestRunAdditionalConfig = {}) => {
       name: "current",
       factory: () => new CurrentForestRun(config),
     },
-  ] as unknown as any;
+  ] as unknown as {
+    name: "baseline" | "current";
+    factory: (config?: ForestRunAdditionalConfig) => ForestRun;
+  }[];
 };
 
 function runBenchmarkSuite() {
@@ -78,21 +91,17 @@ function runBenchmarks(): void {
 
     const groupedResults = groupResults(currentResult);
 
-    const { isStable } = checkResultsReliability(
-      groupedResults,
-      prevBenchmarks,
-    );
+    const isReliable = isResultReliable(groupedResults, prevBenchmarks);
 
     prevBenchmarks.push(groupedResults);
 
-    if (isStable && attempt > CONFIG.reliability.minAttempts) {
+    if (isReliable && attempt > CONFIG.reliability.minAttempts) {
       break;
     }
   }
 
-  if (prevBenchmarks) {
-    printResult(prevBenchmarks);
-  }
+  const summary = getSummary(prevBenchmarks);
+  analyzeResults(summary);
 }
 
 runBenchmarks();
