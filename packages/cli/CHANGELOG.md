@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Thu, 14 Aug 2025 10:10:19 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 22 Aug 2025 16:00:19 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.3.0
+
+Fri, 22 Aug 2025 16:00:19 GMT
+
+### Minor changes
+
+- support legacy base context in groups (77059398+vejrj@users.noreply.github.com)
+- Bump @graphitation/ts-codegen to v5.4.0
 
 ## 3.2.3
 

@@ -2,6 +2,27 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Fri, 22 Aug 2025 16:00:19 GMT",
+      "version": "3.3.0",
+      "tag": "@graphitation/cli_v3.3.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/cli",
+            "commit": "16cfeab5c87c2241be73a2a4a56428c1a3a6e4d0",
+            "comment": "support legacy base context in groups"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v5.4.0",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 14 Aug 2025 10:10:19 GMT",
       "version": "3.2.3",
       "tag": "@graphitation/cli_v3.2.3",
