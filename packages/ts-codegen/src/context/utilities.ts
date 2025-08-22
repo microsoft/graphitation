@@ -1,8 +1,8 @@
 import { factory } from "typescript";
 import path from "path";
 import { ContextMap } from ".";
-import { ArgumentNode } from "graphql";
-import { SubTypeNamespace } from "../codegen";
+import { ArgumentNode, DirectiveNode } from "graphql";
+import { ContextTypeExtension } from "../types";
 
 export function createImportDeclaration(
   importNames: string[],
@@ -124,9 +124,62 @@ export function buildContextMetadataOutput(
   return metadata;
 }
 
-export function getContextKeysFromArgumentNode(
+export function getRequiredAndOptionalArguments(
+  node: DirectiveNode,
+  contextTypeExtensions: ContextTypeExtension,
+) {
+  if (!node.arguments?.length) {
+    throw new Error(
+      "Invalid context use: No arguments provided. Provide either required or optional arguments",
+    );
+  }
+
+  let requiredKeys: Set<string> | undefined;
+  let optionalKeys: Set<string> | undefined;
+
+  const required = node.arguments.find(
+    (value) => value.name.value === "required",
+  );
+  const optional = node.arguments.find(
+    (value) => value.name.value === "optional",
+  );
+
+  if (!required && !optional) {
+    throw new Error(
+      "Invalid context use: Required and optional arguments must be provided",
+    );
+  }
+
+  if (required && required?.value.kind !== "ObjectValue") {
+    throw new Error(
+      `Invalid context use: "required" argument must be an object`,
+    );
+  }
+
+  if (optional && optional?.value.kind !== "ObjectValue") {
+    throw new Error(
+      `Invalid context use: "optional" argument must be an object`,
+    );
+  }
+
+  if (required) {
+    requiredKeys = new Set(
+      new Set(getContextKeysFromArgumentNode(required, contextTypeExtensions)),
+    );
+  }
+
+  if (optional) {
+    optionalKeys = new Set(
+      new Set(getContextKeysFromArgumentNode(optional, contextTypeExtensions)),
+    );
+  }
+
+  return { requiredKeys, optionalKeys };
+}
+
+function getContextKeysFromArgumentNode(
   argumentNode: ArgumentNode,
-  contextTypeExtensions: SubTypeNamespace,
+  contextTypeExtensions: ContextTypeExtension,
 ) {
   if (argumentNode?.value.kind !== "ObjectValue") {
     throw new Error(`Invalid context use: arguments must be an object`);

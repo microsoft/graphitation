@@ -27,7 +27,7 @@ import {
   createImportDeclaration,
   isRootOperationType,
   buildContextMetadataOutput,
-  getContextKeysFromArgumentNode,
+  getRequiredAndOptionalArguments,
 } from "./utilities";
 import {
   createListType,
@@ -37,7 +37,7 @@ import {
 } from "../utilities";
 import { IMPORT_DIRECTIVE_NAME, processImportDirective } from "./import";
 import { MODEL_DIRECTIVE_NAME, processModelDirective } from "./model";
-import { SubTypeNamespace } from "../codegen";
+import { ContextTypeExtension } from "../types";
 
 export type TsCodegenContextOptions = {
   moduleRoot: string;
@@ -62,7 +62,7 @@ export type TsCodegenContextOptions = {
   baseContextTypeName?: string;
   legacyBaseContextTypeName?: string;
   legacyBaseContextPath?: string;
-  contextTypeExtensions?: SubTypeNamespace;
+  contextTypeExtensions?: ContextTypeExtension;
   useStringUnionsInsteadOfEnums: boolean;
   enumNamesToMigrate: string[] | null;
   enumNamesToKeep: string[] | null;
@@ -238,7 +238,7 @@ export class TsCodegenContext {
         return baseContextTypeNode;
       }
 
-      const typeNameWithNamespace = this.buildContextSubTypeNamespaceObject(
+      const typeNameWithNamespace = this.buildContextContextTypeExtensionObject(
         contextTypeItem.values,
       );
 
@@ -279,7 +279,7 @@ export class TsCodegenContext {
     return this.options.contextTypeExtensions;
   }
 
-  private buildContextSubTypeNamespaceObject(
+  private buildContextContextTypeExtensionObject(
     contextTypeItemValues: ContextTypeItemValue[],
   ) {
     const contextTypeExtensions = this.getContextTypeExtensions();
@@ -872,64 +872,21 @@ export function extractContext(
           node.name.value === "context" &&
           options.contextTypeExtensions
         ) {
-          let requiredKeys: Set<string> | undefined;
-          let optionalKeys: Set<string> | undefined;
           if (!node.arguments?.length) {
             throw new Error(
               "Invalid context use: No arguments provided. Provide either required or optional arguments",
             );
           }
 
-          const required = node.arguments.find(
-            (value) => value.name.value === "required",
-          );
-          const optional = node.arguments.find(
-            (value) => value.name.value === "optional",
-          );
-
           const useLegacyContext = Boolean(
             node.arguments.find((value) => value.name.value === "useLegacy"),
           );
 
-          if (!required && !optional) {
-            throw new Error(
-              "Invalid context use: Required and optional arguments must be provided",
+          const { requiredKeys, optionalKeys } =
+            getRequiredAndOptionalArguments(
+              node,
+              options.contextTypeExtensions,
             );
-          }
-
-          if (required && required?.value.kind !== "ObjectValue") {
-            throw new Error(
-              `Invalid context use: "required" argument must be an object`,
-            );
-          }
-
-          if (optional && optional?.value.kind !== "ObjectValue") {
-            throw new Error(
-              `Invalid context use: "optional" argument must be an object`,
-            );
-          }
-
-          if (required) {
-            requiredKeys = new Set(
-              new Set(
-                getContextKeysFromArgumentNode(
-                  required,
-                  options.contextTypeExtensions,
-                ),
-              ),
-            );
-          }
-
-          if (optional) {
-            optionalKeys = new Set(
-              new Set(
-                getContextKeysFromArgumentNode(
-                  optional,
-                  options.contextTypeExtensions,
-                ),
-              ),
-            );
-          }
 
           context.initContextMap(ancestors, {
             required: requiredKeys ? Array.from(requiredKeys) : undefined,
@@ -941,13 +898,18 @@ export function extractContext(
           options.contextTypeExtensions.groups[node.name.value]
         ) {
           const subTypeKeys: Set<string> = new Set();
-          const group = options.contextTypeExtensions.groups[node.name.value];
-          if (Object.keys(group).length === 0) {
+          const { required: groupItems, isLegacy: useLegacyContext } =
+            options.contextTypeExtensions.groups[node.name.value];
+
+          if (!groupItems || Object.keys(groupItems).length === 0) {
             context.initContextMap(ancestors, {
               required: [],
+              useLegacyContext,
             });
           } else {
-            for (const [namespace, namespaceValues] of Object.entries(group)) {
+            for (const [namespace, namespaceValues] of Object.entries(
+              groupItems,
+            )) {
               namespaceValues.forEach((namespaceValue) => {
                 if (
                   !options.contextTypeExtensions?.contextTypes?.[namespace]?.[
@@ -963,6 +925,7 @@ export function extractContext(
               });
               context.initContextMap(ancestors, {
                 required: Array.from(subTypeKeys),
+                useLegacyContext,
               });
             }
           }
