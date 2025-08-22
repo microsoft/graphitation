@@ -2,7 +2,7 @@ import ts from "typescript";
 import { parse } from "graphql";
 import { blankGraphQLTag as graphql } from "../utilities";
 import { generateTS } from "..";
-import { SubTypeNamespace } from "../codegen";
+import { ContextTypeExtension } from "../types";
 import { OutputMetadata } from "../context/utilities";
 
 describe(generateTS, () => {
@@ -15,11 +15,22 @@ describe(generateTS, () => {
       groups: {
         baseContextOnly: {},
         UserTestGroup: {
-          managers: ["user", "whatever"],
+          required: {
+            managers: ["user", "whatever"],
+          },
         },
         PostTestGroup: {
-          managers: ["post", "whatever"],
-          workflows: ["post-workflow"],
+          required: {
+            managers: ["post", "whatever"],
+            workflows: ["post-workflow"],
+          },
+        },
+        PostTestGroupWithLegacyContext: {
+          isLegacy: true,
+          required: {
+            managers: ["post", "whatever"],
+            workflows: ["post-workflow"],
+          },
         },
       },
       contextTypes: {
@@ -153,6 +164,7 @@ describe(generateTS, () => {
               requiredUser: User! @context(optional: { managers: ["node"] })
               requiredPost: Post! @baseContextOnly
               optionalPost: Post @PostTestGroup
+              legacyPost: Post @PostTestGroupWithLegacyContext
             }
           `,
           {
@@ -177,6 +189,15 @@ describe(generateTS, () => {
             },
           },
           "Query": {
+            "legacyPost": {
+              "managers": [
+                "post",
+                "whatever",
+              ],
+              "workflows": [
+                "post-workflow",
+              ],
+            },
             "optionalPost": {
               "managers": [
                 "post",
@@ -439,6 +460,7 @@ describe(generateTS, () => {
                 readonly requiredUser?: requiredUser;
                 readonly requiredPost?: requiredPost;
                 readonly optionalPost?: optionalPost;
+                readonly legacyPost?: legacyPost;
             }
             export type requiredUsers = (model: unknown, args: {}, context: DefaultContextType & {
                 managers: {
@@ -465,6 +487,15 @@ describe(generateTS, () => {
             }, info: ResolveInfo) => PromiseOrValue<Models.User>;
             export type requiredPost = (model: unknown, args: {}, context: DefaultContextType, info: ResolveInfo) => PromiseOrValue<Models.Post>;
             export type optionalPost = (model: unknown, args: {}, context: DefaultContextType & {
+                managers: {
+                    "post": PostStateMachineType["post"];
+                    "whatever": whatever;
+                };
+                workflows: {
+                    "post-workflow": PostStateMachineType["post-workflow"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
+            export type legacyPost = (model: unknown, args: {}, context: DefaultLegacyContextType & {
                 managers: {
                     "post": PostStateMachineType["post"];
                     "whatever": whatever;
@@ -1407,7 +1438,7 @@ function runGenerateTest(
     enumNamesToMigrate?: string[];
     enumNamesToKeep?: string[];
     modelScope?: string;
-    contextTypeExtensions?: SubTypeNamespace;
+    contextTypeExtensions?: ContextTypeExtension;
   } = {},
 ): {
   enums?: string;

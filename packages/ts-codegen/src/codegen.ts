@@ -8,27 +8,7 @@ import { generateLegacyResolvers } from "./legacyResolvers";
 import { generateEnums } from "./enums";
 import { OutputMetadata } from "./context/utilities";
 import { getContextPath } from "./utilities";
-
-export type SubTypeItem = {
-  [subType: string]: {
-    importNamespaceName?: string;
-    importPath: string;
-    typeName: string;
-  };
-};
-
-export type GroupItem = {
-  [namespace: string]: string[];
-};
-
-export type SubTypeNamespace = {
-  baseContextTypeName?: string;
-  baseContextTypePath?: string;
-  legacyBaseContextTypeName?: string;
-  legacyBaseContextTypePath?: string;
-  groups?: { [group: string]: GroupItem };
-  contextTypes: { [namespace: string]: SubTypeItem };
-};
+import { ContextTypeExtension } from "./types";
 
 export interface GenerateTSOptions {
   outputPath: string;
@@ -43,7 +23,7 @@ export interface GenerateTSOptions {
   generateOnlyEnums?: boolean;
   enumNamesToMigrate?: string[];
   enumNamesToKeep?: string[];
-  contextTypeExtensions?: SubTypeNamespace;
+  contextTypeExtensions?: ContextTypeExtension;
   /**
    * Enable the generation of the resolver map as the default export in the resolvers file.
    *

@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "support legacy base context in groups",
+  "packageName": "@graphitation/cli",
+  "email": "77059398+vejrj@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}

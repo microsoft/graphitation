@@ -17,3 +17,29 @@ export type DefinitionModel = {
   modelScope: string | null;
   on: "ObjectTypeDefinition" | "ScalarTypeDefinition";
 };
+
+type ContextSubTypeItem = {
+  [subType: string]: {
+    importNamespaceName?: string;
+    importPath: string;
+    typeName: string;
+  };
+};
+
+type ContextGroupItem = {
+  [namespace: string]: string[];
+};
+
+type ContextGroup = {
+  required?: ContextGroupItem;
+  isLegacy?: boolean;
+};
+
+export type ContextTypeExtension = {
+  baseContextTypeName?: string;
+  baseContextTypePath?: string;
+  legacyBaseContextTypeName?: string;
+  legacyBaseContextTypePath?: string;
+  groups?: { [group: string]: ContextGroup };
+  contextTypes: { [namespace: string]: ContextSubTypeItem };
+};

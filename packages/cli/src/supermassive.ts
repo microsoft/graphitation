@@ -7,7 +7,7 @@ import { extractImplicitTypesToTypescript } from "@graphitation/supermassive-ext
 import { parse } from "graphql";
 import { generateTS } from "@graphitation/ts-codegen";
 import * as glob from "fast-glob";
-import type { SubTypeNamespace } from "@graphitation/ts-codegen";
+import type { ContextTypeExtension } from "@graphitation/ts-codegen";
 
 type GenerateInterfacesOptions = {
   outputDir?: string;
@@ -72,7 +72,7 @@ export function supermassive(): Command {
     )
     .option(
       "--context-type-extensions-file [contextTypeExtensionsFile]",
-      "Describes context types and their import paths. Used to generate resolver context type extensions. The file must be defined in the following format: { baseContextTypePath?: string, baseContextTypeName?: string, groups?: { [groupName]: { [namespace: string]]: string[] }}, contextTypes: { required? :{ [namespace: string]: { [type: string]: { importNamespaceName?: string, importPath: string, typeName: string }}}}",
+      "Describes context types and their import paths. Used to generate resolver context type extensions. The file must be defined in the following format: { baseContextTypePath?: string, baseContextTypeName?: string, groups?: { [groupName]: { isLegacy?: boolean, required?: {[namespace: string]]: string[] }}}, contextTypes: { required? :{ [namespace: string]: { [type: string]: { importNamespaceName?: string, importPath: string, typeName: string }}}}",
     )
     .option(
       "--generate-resolver-map",
@@ -144,7 +144,7 @@ async function generateInterfaces(
     }
     const content = await fs.readFile(fullPath, { encoding: "utf-8" });
     const document = parse(content);
-    let contextTypeExtensions: SubTypeNamespace | undefined;
+    let contextTypeExtensions: ContextTypeExtension | undefined;
 
     const outputPath = path.join(
       path.dirname(fullPath),
