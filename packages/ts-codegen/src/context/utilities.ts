@@ -124,7 +124,7 @@ export function buildContextMetadataOutput(
   return metadata;
 }
 
-export function getRequiredAndOptionalArguments(
+export function getRequiredAndOptionalContextArguments(
   node: DirectiveNode,
   contextTypeExtensions: ContextTypeExtension,
 ) {

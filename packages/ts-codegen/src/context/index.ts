@@ -27,7 +27,7 @@ import {
   createImportDeclaration,
   isRootOperationType,
   buildContextMetadataOutput,
-  getRequiredAndOptionalArguments,
+  getRequiredAndOptionalContextArguments,
 } from "./utilities";
 import {
   createListType,
@@ -883,7 +883,7 @@ export function extractContext(
           );
 
           const { requiredKeys, optionalKeys } =
-            getRequiredAndOptionalArguments(
+            getRequiredAndOptionalContextArguments(
               node,
               options.contextTypeExtensions,
             );
