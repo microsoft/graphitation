@@ -26,7 +26,7 @@ describe(generateTS, () => {
           },
         },
         PostTestGroupWithLegacyContext: {
-          isLegacy: true,
+          useLegacy: true,
           required: {
             managers: ["post", "whatever"],
             workflows: ["post-workflow"],
