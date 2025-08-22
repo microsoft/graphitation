@@ -32,7 +32,7 @@ type ContextGroupItem = {
 
 type ContextGroup = {
   required?: ContextGroupItem;
-  isLegacy?: boolean;
+  useLegacy?: boolean;
 };
 
 export type ContextTypeExtension = {

@@ -898,7 +898,7 @@ export function extractContext(
           options.contextTypeExtensions.groups[node.name.value]
         ) {
           const subTypeKeys: Set<string> = new Set();
-          const { required: groupItems, isLegacy: useLegacyContext } =
+          const { required: groupItems, useLegacy: useLegacyContext } =
             options.contextTypeExtensions.groups[node.name.value];
 
           if (!groupItems || Object.keys(groupItems).length === 0) {
