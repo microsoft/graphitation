@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Fri, 22 Aug 2025 16:00:19 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 22 Aug 2025 16:40:17 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.3.1
+
+Fri, 22 Aug 2025 16:40:17 GMT
+
+### Patches
+
+- [HOTFIX] group isLegacy param renamed to useLegacy (77059398+vejrj@users.noreply.github.com)
+- Bump @graphitation/ts-codegen to v5.4.1
 
 ## 3.3.0
 
