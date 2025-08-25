@@ -1,7 +1,5 @@
 import type { ForestRun } from "@graphitation/apollo-forest-run";
 import type { Scenario, ScenarioContext } from "./types";
-import { do_not_optimize } from "./utils/do-not-optimize";
-
 const addWatchers = (ctx: ScenarioContext, cache: ForestRun) => {
   const { query, variables } = ctx;
   const unsubscribes: Array<() => void> = [];
@@ -28,10 +26,8 @@ export const scenarios = [
       cache.writeQuery({ query, variables, data });
 
       return {
-        name: "read",
         run() {
-          const result = cache.readQuery({ query, variables });
-          return do_not_optimize(result);
+          return cache.readQuery({ query, variables });
         },
       };
     },
@@ -44,10 +40,8 @@ export const scenarios = [
       addWatchers(ctx, cache);
 
       return {
-        name: "write",
         run() {
-          const result = cache.writeQuery({ query, variables, data });
-          return do_not_optimize(result);
+          return cache.writeQuery({ query, variables, data });
         },
       };
     },
@@ -63,8 +57,7 @@ export const scenarios = [
 
       return {
         run() {
-          const result = cache.writeQuery({ query, variables, data });
-          return do_not_optimize(result);
+          return cache.writeQuery({ query, variables, data });
         },
       };
     },
