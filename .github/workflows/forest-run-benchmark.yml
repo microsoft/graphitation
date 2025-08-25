@@ -1,0 +1,125 @@
+name: ForestRun Performance Benchmarks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/apollo-forest-run/**"
+      - "packages/apollo-forest-run-benchmarks/**"
+  pull_request:
+    paths:
+      - "packages/apollo-forest-run/**"
+      - "packages/apollo-forest-run-benchmarks/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Change directory
+        run: cd packages/apollo-forest-run-benchmarks
+
+      - name: Clone caches
+        run: |
+          cd packages/apollo-forest-run-benchmarks
+          yarn clone
+
+      - name: Run benchmarks
+        run: |
+          cd packages/apollo-forest-run-benchmarks
+          yarn benchmark
+        env:
+          CI: true
+
+      - name: Comment benchmark results on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const { execSync } = require('child_process');
+
+            // Find the most recent markdown report file
+            const benchmarkDir = 'packages/apollo-forest-run-benchmarks';
+            let reportPath = null;
+
+            try {
+              const files = fs.readdirSync(benchmarkDir);
+              const markdownFiles = files
+                .filter(file => file.startsWith('benchmark-analysis-') && file.endsWith('.md'))
+                .map(file => ({
+                  name: file,
+                  path: path.join(benchmarkDir, file),
+                  mtime: fs.statSync(path.join(benchmarkDir, file)).mtime
+                }))
+                .sort((a, b) => b.mtime - a.mtime);
+              
+              if (markdownFiles.length > 0) {
+                reportPath = markdownFiles[0].path;
+              }
+            } catch (error) {
+              console.log('Error finding markdown files:', error.message);
+            }
+
+            if (reportPath && fs.existsSync(reportPath)) {
+              const markdownContent = fs.readFileSync(reportPath, 'utf8');
+              
+              // Find existing benchmark comment on this PR to update or create new one
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+              });
+              
+              const botComment = comments.find(comment => 
+                comment.user.type === 'Bot' && 
+                comment.body.includes('📊 Benchmark Analysis Report')
+              );
+              
+              const commentBody = `<!-- benchmark-report -->
+            ${markdownContent}
+
+            ---
+            *Updated: ${new Date().toISOString()}*`;
+              
+              if (botComment) {
+                // Update existing comment
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                  body: commentBody
+                });
+                console.log('Updated existing benchmark comment');
+              } else {
+                // Create new comment on PR
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.payload.pull_request.number,
+                  body: commentBody
+                });
+                console.log('Created new benchmark comment on PR');
+              }
+            } else {
+              console.log('No benchmark report markdown file found in', benchmarkDir);
+            }
