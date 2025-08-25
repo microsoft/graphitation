@@ -1,13 +1,12 @@
 import type { Result } from "./index";
 
-import { CONFIG, OPERATIONS } from "./config";
+import { CONFIG } from "./config";
 import { scenarios } from "./scenarios";
 import { benchmarkOperation } from "./benchmark-runner";
+import { OPERATIONS } from "./utils/get-operations";
 
 function runBenchmarkForJob() {
-  const jobArg = process.argv[2];
-  const job = JSON.parse(jobArg);
-  const { cacheFactory, cacheConfig } = job;
+  const { cacheFactory, cacheConfig } = JSON.parse(process.argv[2]);
 
   if (global.gc) {
     global.gc();
@@ -30,7 +29,7 @@ function runBenchmarkForJob() {
           cacheFactory: cacheFactory.name,
           operationName: operation.name,
           scenario: `${scenario.name}_${observerCount}`,
-          measurements: samples,
+          samples,
           executionTime,
         });
       }

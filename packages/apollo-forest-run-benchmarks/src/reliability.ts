@@ -32,12 +32,12 @@ export const mergeBenchmarks = (
         cacheFactory: result.cacheFactory,
         operationName: result.operationName,
         scenario: result.scenario,
-        measurements: [],
+        samples: [],
         executionTime: 0,
       };
 
       const measurements: {
-        measurements: number[];
+        samples: number[];
         executionTime: number;
       }[] = [];
 
@@ -51,9 +51,9 @@ export const mergeBenchmarks = (
           ) {
             continue; // Skip mismatched results
           }
-          const stats = new Stats(res.measurements, res.executionTime);
+          const stats = new Stats(res.samples, res.executionTime);
           measurements.push({
-            measurements: stats.samples,
+            samples: stats.samples,
             executionTime: res.executionTime,
           });
         }
@@ -62,18 +62,18 @@ export const mergeBenchmarks = (
       measurements
         .sort((a, b) => {
           const { tasksPerMs: ATasksPerMs } = new Stats(
-            a.measurements,
+            a.samples,
             a.executionTime,
           );
           const { tasksPerMs: BTasksPerMs } = new Stats(
-            b.measurements,
+            b.samples,
             b.executionTime,
           );
           return BTasksPerMs - ATasksPerMs;
         })
         .shift();
-      const mergedMeasurement = measurements.map((m) => m.measurements).flat();
-      mergedResult.measurements = mergedMeasurement;
+      const mergedMeasurement = measurements.map((m) => m.samples).flat();
+      mergedResult.samples = mergedMeasurement;
       mergedResult.executionTime =
         measurements.reduce((sum, m) => sum + m.executionTime, 0) /
         measurements.length;
@@ -95,7 +95,7 @@ export const isResultReliable = (
   for (const suiteName of Object.keys(mergedBenchmarks)) {
     for (const currentResult of mergedBenchmarks[suiteName]) {
       const { confidence } = new Stats(
-        currentResult.measurements,
+        currentResult.samples,
         currentResult.executionTime,
       );
       if (confidence < CONFIG.targetConfidencePercent) {
@@ -142,18 +142,20 @@ export const getSummary = (results: (BenchmarkResult | BenchmarkResult)[]) => {
     for (const {
       cacheConfig,
       cacheFactory,
-      measurements,
+      samples,
       executionTime,
     } of scenarioResults) {
-      const { confidence, samples, arithmeticMean, tasksPerMs } = new Stats(
-        measurements,
-        executionTime,
-      );
+      const {
+        confidence,
+        samples: sampleCount,
+        arithmeticMean,
+        tasksPerMs,
+      } = new Stats(samples, executionTime);
       report[scenarioName].push({
         cacheConfig,
         cacheFactory,
         confidence,
-        samples: samples.length,
+        samples: sampleCount.length,
         mean: arithmeticMean,
         tasksPerMs,
       });

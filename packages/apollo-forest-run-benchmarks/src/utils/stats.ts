@@ -1,6 +1,7 @@
 export class Stats {
   public samples: number[];
   public tasksPerMs: number;
+
   constructor(samples: number[], executionTime: number) {
     this.samples = this.applyIQR(samples);
     this.tasksPerMs = samples.length / executionTime;

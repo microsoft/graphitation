@@ -15,7 +15,7 @@ export interface ResultIdentifier {
 
 export interface Result extends ResultIdentifier {
   scenario: `${(typeof scenarios)[number]["name"]}_${number}`;
-  measurements: number[];
+  samples: number[];
   executionTime: number;
   operationName: string;
 }
@@ -25,7 +25,6 @@ interface BenchmarkJob {
   cacheConfig: CacheConfig;
 }
 
-// Generate all combinations of cache factories and configurations
 const benchmarkJobs: BenchmarkJob[] = [];
 for (const cacheFactory of CACHE_FACTORIES) {
   for (const cacheConfig of CONFIG.cacheConfigurations) {
@@ -33,9 +32,6 @@ for (const cacheFactory of CACHE_FACTORIES) {
   }
 }
 
-/**
- * Run benchmark for a single cache implementation + configuration in an isolated process
- */
 function runBenchmarkInIsolatedProcess(job: BenchmarkJob): Promise<Result[]> {
   return new Promise((resolve) => {
     const workerScript = path.join(__dirname, "benchmark-worker.ts");
@@ -53,7 +49,7 @@ function runBenchmarkInIsolatedProcess(job: BenchmarkJob): Promise<Result[]> {
           ...process.env,
           TS_NODE_COMPILER_OPTIONS: '{"module":"commonjs"}',
         },
-        stdio: ["pipe", "pipe"],
+        stdio: ["pipe", "pipe", "pipe"],
       },
     );
 
@@ -61,6 +57,10 @@ function runBenchmarkInIsolatedProcess(job: BenchmarkJob): Promise<Result[]> {
 
     child.stdout.on("data", (data) => {
       stdout += data.toString();
+    });
+
+    child.stderr.on("data", (data) => {
+      console.error(`Worker stderr: ${data}`);
     });
 
     child.on("close", () => {

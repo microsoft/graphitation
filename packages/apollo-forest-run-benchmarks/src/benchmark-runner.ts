@@ -6,6 +6,14 @@ import type { Scenario, OperationData, RunStats } from "./types";
 
 import { CONFIG } from "./config";
 
+const hasEnoughSamples = (stats: number[], startedAt: number) => {
+  const { minExecutionTime, minSamples } = CONFIG;
+  return (
+    stats.length >= minSamples &&
+    performance.now() - startedAt >= minExecutionTime
+  );
+};
+
 export function benchmarkOperation(
   operation: OperationData,
   scenario: Scenario,
@@ -13,6 +21,7 @@ export function benchmarkOperation(
   cacheFactory: typeof ForestRun,
   configuration: ForestRunAdditionalConfig,
 ): RunStats {
+  const { warmupSamples, batchSize } = CONFIG;
   const task = () => {
     const prepared = scenario.prepare({
       observerCount,
@@ -27,16 +36,13 @@ export function benchmarkOperation(
   };
 
   const samples: number[] = [];
-  for (let i = 0; i < CONFIG.warmupSamples; i++) {
+  for (let i = 0; i < warmupSamples; i++) {
     task();
   }
 
   const iterationStart = performance.now();
-  while (
-    performance.now() - iterationStart < CONFIG.minExecutionTime ||
-    samples.length < CONFIG.minSamples
-  ) {
-    for (let i = 0; i < CONFIG.batchSize; i++) {
+  while (!hasEnoughSamples(samples, iterationStart)) {
+    for (let i = 0; i < batchSize; i++) {
       samples.push(task());
     }
   }
