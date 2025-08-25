@@ -2,7 +2,7 @@ import type {
   ForestRun,
   ForestRunAdditionalConfig,
 } from "@graphitation/apollo-forest-run";
-import type { Scenario, OperationData, RunStats } from "./types";
+import type { Scenario, OperationData } from "./types";
 
 import { CONFIG } from "./config";
 
@@ -22,13 +22,16 @@ export function benchmarkOperation(
   configuration: ForestRunAdditionalConfig,
 ): number[] {
   const { warmupSamples, batchSize } = CONFIG;
+
+  // Prepare once outside of timing loop
+  const prepared = scenario.prepare({
+    observerCount,
+    cacheFactory,
+    configuration,
+    ...operation,
+  });
+
   const task = () => {
-    const prepared = scenario.prepare({
-      observerCount,
-      cacheFactory,
-      configuration,
-      ...operation,
-    });
     const start = process.hrtime.bigint();
     prepared.run();
     const end = process.hrtime.bigint();

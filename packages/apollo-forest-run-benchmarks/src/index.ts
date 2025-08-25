@@ -109,4 +109,4 @@ async function runBenchmarks(): Promise<void> {
   fs.writeFileSync("benchmark-summary.json", JSON.stringify(summary, null, 2));
 }
 
-runBenchmarks().catch(console.error);
+runBenchmarks();

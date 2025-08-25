@@ -7,16 +7,16 @@ import { OPERATIONS } from "./utils/get-operations";
 
 function runBenchmarkForJob() {
   const { cacheFactory, cacheConfig } = JSON.parse(process.argv[2]);
-
-  if (global.gc) {
-    global.gc();
-  }
-
   const { ForestRun } = require(cacheFactory.importPath);
   const results: Result[] = [];
   for (const operation of OPERATIONS) {
     for (const scenario of scenarios) {
       for (const observerCount of CONFIG.observerCounts) {
+        // Minor GC between scenarios
+        if (global.gc) {
+          global.gc();
+        }
+
         const samples = benchmarkOperation(
           operation,
           scenario,
