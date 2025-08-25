@@ -21,12 +21,23 @@ export const CONFIG = {
   observerCounts: [0, 50],
   targetConfidencePercent: 99.9,
   minSamples: 400,
-  minExecutionTime: 200, //ms
+  minExecutionTime: 150, //ms
   warmupSamples: 50,
   batchSize: 200,
   reliability: { maxAttempts: 10, minAttempts: 3 },
   significantChanges: { threshold: 0.05 },
 } as const;
+
+export const CACHE_FACTORIES = [
+  {
+    name: "baseline",
+    importPath: "./forest-runs/baseline",
+  },
+  {
+    name: "current",
+    importPath: "./forest-runs/current",
+  },
+] as const;
 
 const responsesDir = path.join(__dirname, "data", "responses");
 const queriesDir = path.join(__dirname, "data", "queries");

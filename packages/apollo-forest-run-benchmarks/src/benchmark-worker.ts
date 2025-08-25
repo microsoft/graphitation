@@ -1,10 +1,10 @@
 import type { Result } from "./index";
-import { CONFIG, OPERATIONS } from "./config";
 
+import { CONFIG, OPERATIONS } from "./config";
 import { scenarios } from "./scenarios";
 import { benchmarkOperation } from "./benchmark-runner";
 
-async function runBenchmarkForJob() {
+function runBenchmarkForJob() {
   const jobArg = process.argv[2];
   const job = JSON.parse(jobArg);
   const { cacheFactory, cacheConfig } = job;
@@ -18,7 +18,7 @@ async function runBenchmarkForJob() {
   for (const operation of OPERATIONS) {
     for (const scenario of scenarios) {
       for (const observerCount of CONFIG.observerCounts) {
-        const measurements = benchmarkOperation(
+        const { samples, executionTime } = benchmarkOperation(
           operation,
           scenario,
           observerCount,
@@ -30,8 +30,8 @@ async function runBenchmarkForJob() {
           cacheFactory: cacheFactory.name,
           operationName: operation.name,
           scenario: `${scenario.name}_${observerCount}`,
-          measurements: measurements.samples,
-          executionTime: measurements.executionTime,
+          measurements: samples,
+          executionTime,
         });
       }
     }

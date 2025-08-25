@@ -33,7 +33,6 @@ export interface ScenarioContext extends OperationData {
 
 export type Scenario = {
   name: string;
-  observerCounts?: readonly number[];
   prepare: (ctx: ScenarioContext) => {
     run: () => void;
   };

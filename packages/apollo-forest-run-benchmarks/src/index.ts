@@ -1,16 +1,12 @@
-import type { CacheConfig } from "./config";
+import { CACHE_FACTORIES, CacheConfig } from "./config";
 import fs from "fs";
 import { isResultReliable, groupResults, getSummary } from "./reliability";
-import { log } from "./logger";
+import { log } from "./utils/logger";
 import { analyzeResults } from "./analyze-results";
 import { CONFIG } from "./config";
 import { scenarios } from "./scenarios";
 import { spawn } from "child_process";
 import path from "path";
-
-// Export analysis functions for external usage
-export { analyzeSignificantChanges, getSummary } from "./reliability";
-export { generateMarkdownReport, printSignificantChanges } from "./logger";
 
 export interface ResultIdentifier {
   cacheConfig: CacheConfig["name"];
@@ -25,24 +21,13 @@ export interface Result extends ResultIdentifier {
 }
 
 interface BenchmarkJob {
-  cacheFactory: (typeof cacheFactories)[number];
+  cacheFactory: (typeof CACHE_FACTORIES)[number];
   cacheConfig: CacheConfig;
 }
 
-const cacheFactories = [
-  {
-    name: "baseline",
-    importPath: "./forest-runs/baseline",
-  },
-  {
-    name: "current",
-    importPath: "./forest-runs/current",
-  },
-] as const;
-
 // Generate all combinations of cache factories and configurations
 const benchmarkJobs: BenchmarkJob[] = [];
-for (const cacheFactory of cacheFactories) {
+for (const cacheFactory of CACHE_FACTORIES) {
   for (const cacheConfig of CONFIG.cacheConfigurations) {
     benchmarkJobs.push({ cacheFactory, cacheConfig });
   }
@@ -68,7 +53,7 @@ function runBenchmarkInIsolatedProcess(job: BenchmarkJob): Promise<Result[]> {
           ...process.env,
           TS_NODE_COMPILER_OPTIONS: '{"module":"commonjs"}',
         },
-        stdio: ["pipe", "pipe", "pipe"],
+        stdio: ["pipe", "pipe"],
       },
     );
 
@@ -76,10 +61,6 @@ function runBenchmarkInIsolatedProcess(job: BenchmarkJob): Promise<Result[]> {
 
     child.stdout.on("data", (data) => {
       stdout += data.toString();
-    });
-
-    child.stderr.on("data", (data) => {
-      console.error(`stderr: ${data}`);
     });
 
     child.on("close", () => {
@@ -92,7 +73,6 @@ function runBenchmarkInIsolatedProcess(job: BenchmarkJob): Promise<Result[]> {
 async function runBenchmarkSuite(): Promise<Result[]> {
   const allResults: Result[] = [];
 
-  // Run benchmark for each combination of cache factory + config in complete isolation
   for (const job of benchmarkJobs) {
     console.log(
       `\n=== Running benchmarks for ${job.cacheFactory.name} with ${job.cacheConfig.name} in isolated process ===`,

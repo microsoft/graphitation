@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
-import { getSummary, analyzeSignificantChanges } from "./reliability";
-import type { ChangeReport } from "./reliability";
-import { CONFIG } from "./config";
+import { getSummary, analyzeSignificantChanges } from "../reliability";
+import type { ChangeReport } from "../reliability";
+import { CONFIG } from "../config";
 
 export const log = {
   start() {
@@ -28,22 +28,6 @@ export const log = {
   noResults() {
     console.log("❌ No results to report");
   },
-};
-
-export const printResult = (results: any) => {
-  if (!results || (Array.isArray(results) && results.length === 0)) {
-    log.noResults();
-    return;
-  }
-
-  const summary = getSummary(results);
-  const changeReport = analyzeSignificantChanges(summary);
-
-  printSignificantChanges(changeReport);
-
-  const markdownReport = generateMarkdownReport(changeReport);
-  saveMarkdownReport(markdownReport);
-  saveJsonReport(changeReport);
 };
 
 export const printSignificantChanges = (changeReport: ChangeReport) => {

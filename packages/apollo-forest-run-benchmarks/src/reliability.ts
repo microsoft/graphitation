@@ -1,7 +1,7 @@
 import type { BenchmarkStats } from "./types";
 import type { BenchmarkResult, Result, ResultIdentifier } from "./index";
 
-import { Stats } from "./benchmark-runner";
+import { Stats } from "./utils/stats";
 import { CONFIG } from "./config";
 
 export const groupResults = (results: Result[]): BenchmarkResult => {
@@ -37,7 +37,6 @@ export const mergeBenchmarks = (
       };
 
       const measurements: {
-        confidence: number;
         measurements: number[];
         executionTime: number;
       }[] = [];
@@ -54,14 +53,25 @@ export const mergeBenchmarks = (
           }
           const stats = new Stats(res.measurements, res.executionTime);
           measurements.push({
-            confidence: stats.confidence,
             measurements: stats.samples,
             executionTime: res.executionTime,
           });
         }
       }
 
-      measurements.sort((a, b) => a.confidence - b.confidence).shift();
+      measurements
+        .sort((a, b) => {
+          const { tasksPerMs: ATasksPerMs } = new Stats(
+            a.measurements,
+            a.executionTime,
+          );
+          const { tasksPerMs: BTasksPerMs } = new Stats(
+            b.measurements,
+            b.executionTime,
+          );
+          return BTasksPerMs - ATasksPerMs;
+        })
+        .shift();
       const mergedMeasurement = measurements.map((m) => m.measurements).flat();
       mergedResult.measurements = mergedMeasurement;
       mergedResult.executionTime =

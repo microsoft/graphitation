@@ -4,7 +4,7 @@ import {
   generateMarkdownReport,
   printSignificantChanges,
   saveMarkdownReport,
-} from "./logger";
+} from "./utils/logger";
 
 export const analyzeResults = (summary: SummaryReport) => {
   const changeReport = analyzeSignificantChanges(summary);
