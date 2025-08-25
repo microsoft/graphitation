@@ -12,7 +12,6 @@ function runBenchmarkForJob() {
   for (const operation of OPERATIONS) {
     for (const scenario of scenarios) {
       for (const observerCount of CONFIG.observerCounts) {
-        // Minor GC between scenarios
         if (global.gc) {
           global.gc();
         }

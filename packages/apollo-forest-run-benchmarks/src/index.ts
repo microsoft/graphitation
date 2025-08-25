@@ -36,7 +36,13 @@ function runBenchmarkInIsolatedProcess(job: BenchmarkJob): Promise<Result[]> {
     const workerScript = path.join(__dirname, "benchmark-worker.ts");
     const child = spawn(
       process.execPath,
-      ["-r", "ts-node/register", workerScript, JSON.stringify(job)],
+      [
+        "--expose-gc",
+        "-r",
+        "ts-node/register",
+        workerScript,
+        JSON.stringify(job),
+      ],
       {
         env: {
           ...process.env,
@@ -102,6 +108,8 @@ async function runBenchmarks(): Promise<void> {
     if (isReliable && attempt > CONFIG.reliability.minAttempts) {
       break;
     }
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
 
   const summary = getSummary(prevBenchmarks);
