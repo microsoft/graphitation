@@ -97,6 +97,10 @@ async function runBenchmarks(): Promise<void> {
   log.start();
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     log.attempt(attempt);
+    if (global.gc) {
+      global.gc();
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
     const currentResult = await runBenchmarkSuite();
 
     const groupedResults = groupResults(currentResult);
@@ -108,10 +112,6 @@ async function runBenchmarks(): Promise<void> {
     if (isReliable && attempt > CONFIG.reliability.minAttempts) {
       break;
     }
-    if (global.gc) {
-      global.gc();
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500));
   }
 
   const summary = getSummary(prevBenchmarks);

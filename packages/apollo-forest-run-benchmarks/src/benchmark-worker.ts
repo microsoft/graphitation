@@ -12,6 +12,10 @@ async function runBenchmarkForJob() {
   for (const operation of OPERATIONS) {
     for (const scenario of scenarios) {
       for (const observerCount of CONFIG.observerCounts) {
+        if (global.gc) {
+          global.gc();
+        }
+        await new Promise((resolve) => setTimeout(resolve, 50));
         const samples = benchmarkOperation(
           operation,
           scenario,
@@ -26,10 +30,6 @@ async function runBenchmarkForJob() {
           scenario: `${scenario.name}_${observerCount}`,
           samples,
         });
-        if (global.gc) {
-          global.gc();
-        }
-        await new Promise((resolve) => setTimeout(resolve, 50));
       }
     }
   }
