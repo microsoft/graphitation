@@ -37,13 +37,7 @@ function runBenchmarkInIsolatedProcess(job: BenchmarkJob): Promise<Result[]> {
     const workerScript = path.join(__dirname, "benchmark-worker.ts");
     const child = spawn(
       process.execPath,
-      [
-        "--expose-gc",
-        "-r",
-        "ts-node/register",
-        workerScript,
-        JSON.stringify(job),
-      ],
+      ["-r", "ts-node/register", workerScript, JSON.stringify(job)],
       {
         env: {
           ...process.env,
@@ -98,12 +92,9 @@ async function runBenchmarks(): Promise<void> {
   log.start();
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     log.attempt(attempt);
-    await garbageCollect();
 
     const currentResult = await runBenchmarkSuite();
-
     const groupedResults = groupResults(currentResult);
-
     const isReliable = isResultReliable(groupedResults, prevBenchmarks);
 
     prevBenchmarks.push(groupedResults);
