@@ -31,7 +31,7 @@ async function runBenchmarkForJob() {
           operationName: operation.name,
           scenario: `${scenario.name}_${observerCount}`,
           measurements: measurements.samples,
-          tasksPerMs: measurements.tasksPerMs,
+          executionTime: measurements.executionTime,
         });
       }
     }

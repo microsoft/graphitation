@@ -1,6 +1,6 @@
 import type { ForestRun } from "@graphitation/apollo-forest-run";
 import type { Scenario, ScenarioContext } from "./types";
-import { do_not_optimize } from "mitata";
+import { do_not_optimize } from "./do-no-optimaze";
 
 const addWatchers = (ctx: ScenarioContext, cache: ForestRun) => {
   const { query, variables } = ctx;

@@ -20,7 +20,7 @@ export interface ResultIdentifier {
 export interface Result extends ResultIdentifier {
   scenario: `${(typeof scenarios)[number]["name"]}_${number}`;
   measurements: number[];
-  tasksPerMs: number;
+  executionTime: number;
   operationName: string;
 }
 

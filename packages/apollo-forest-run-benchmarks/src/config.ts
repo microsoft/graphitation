@@ -15,15 +15,16 @@ export const CONFIG = {
     {
       name: "Telemetry enabled",
       description: "Enable telemetry for cache operations",
-      options: { nothing: false },
+      options: { logStaleOperations: true, logUpdateStats: true },
     },
   ],
   observerCounts: [0, 50],
   targetConfidencePercent: 99.9,
-  minSamples: 500,
+  minSamples: 400,
+  minExecutionTime: 200, //ms
   warmupSamples: 50,
-  batchSize: 250,
-  reliability: { maxAttempts: 10, minAttempts: 2 },
+  batchSize: 200,
+  reliability: { maxAttempts: 10, minAttempts: 3 },
   significantChanges: { threshold: 0.05 },
 } as const;
 

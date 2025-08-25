@@ -46,6 +46,11 @@ export interface OperationData {
   variables: Record<string, any>;
 }
 
+export interface RunStats {
+  samples: number[];
+  executionTime: number;
+}
+
 export interface BenchmarkStats {
   confidence: number;
   samples: number;

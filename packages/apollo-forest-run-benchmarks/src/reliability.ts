@@ -33,13 +33,13 @@ export const mergeBenchmarks = (
         operationName: result.operationName,
         scenario: result.scenario,
         measurements: [],
-        tasksPerMs: 0,
+        executionTime: 0,
       };
 
       const measurements: {
         confidence: number;
         measurements: number[];
-        tasksPerMs: number;
+        executionTime: number;
       }[] = [];
 
       for (const sc of benchmarkRuns) {
@@ -52,11 +52,11 @@ export const mergeBenchmarks = (
           ) {
             continue; // Skip mismatched results
           }
-          const stats = new Stats(res.measurements);
+          const stats = new Stats(res.measurements, res.executionTime);
           measurements.push({
             confidence: stats.confidence,
             measurements: stats.samples,
-            tasksPerMs: res.tasksPerMs,
+            executionTime: res.executionTime,
           });
         }
       }
@@ -64,8 +64,8 @@ export const mergeBenchmarks = (
       measurements.sort((a, b) => a.confidence - b.confidence).shift();
       const mergedMeasurement = measurements.map((m) => m.measurements).flat();
       mergedResult.measurements = mergedMeasurement;
-      mergedResult.tasksPerMs =
-        measurements.reduce((sum, m) => sum + m.tasksPerMs, 0) /
+      mergedResult.executionTime =
+        measurements.reduce((sum, m) => sum + m.executionTime, 0) /
         measurements.length;
       merged[scenarioName].push(mergedResult);
     }
@@ -84,7 +84,10 @@ export const isResultReliable = (
   let isReliable = true;
   for (const suiteName of Object.keys(mergedBenchmarks)) {
     for (const currentResult of mergedBenchmarks[suiteName]) {
-      const { confidence } = new Stats(currentResult.measurements);
+      const { confidence } = new Stats(
+        currentResult.measurements,
+        currentResult.executionTime,
+      );
       if (confidence < CONFIG.targetConfidencePercent) {
         isReliable = false;
         break;
@@ -130,9 +133,12 @@ export const getSummary = (results: (BenchmarkResult | BenchmarkResult)[]) => {
       cacheConfig,
       cacheFactory,
       measurements,
-      tasksPerMs,
+      executionTime,
     } of scenarioResults) {
-      const { confidence, samples, arithmeticMean } = new Stats(measurements);
+      const { confidence, samples, arithmeticMean, tasksPerMs } = new Stats(
+        measurements,
+        executionTime,
+      );
       report[scenarioName].push({
         cacheConfig,
         cacheFactory,

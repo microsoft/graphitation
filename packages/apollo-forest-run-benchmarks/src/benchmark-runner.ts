@@ -2,15 +2,17 @@ import type {
   ForestRun,
   ForestRunAdditionalConfig,
 } from "@graphitation/apollo-forest-run";
-import type { Scenario, OperationData } from "./types";
+import type { Scenario, OperationData, RunStats } from "./types";
 
 import { CONFIG } from "./config";
-import { do_not_optimize } from "mitata";
+import { do_not_optimize } from "./do-no-optimaze";
 
 export class Stats {
   public samples: number[];
-  constructor(samples: number[]) {
+  public tasksPerMs: number;
+  constructor(samples: number[], executionTime: number) {
     this.samples = this.applyIQR(samples);
+    this.tasksPerMs = samples.length / executionTime;
   }
 
   private applyIQR(values: number[]): number[] {
@@ -57,10 +59,7 @@ export function benchmarkOperation(
   observerCount: number,
   cacheFactory: typeof ForestRun,
   configuration: ForestRunAdditionalConfig,
-): {
-  samples: number[];
-  tasksPerMs: number;
-} {
+): RunStats {
   const task = () => {
     const prepared = scenario.prepare({
       observerCount,
@@ -81,7 +80,7 @@ export function benchmarkOperation(
 
   const iterationStart = performance.now();
   while (
-    performance.now() - iterationStart < 500 &&
+    performance.now() - iterationStart < CONFIG.minExecutionTime ||
     samples.length < CONFIG.minSamples
   ) {
     for (let i = 0; i < CONFIG.batchSize; i++) {
@@ -91,6 +90,6 @@ export function benchmarkOperation(
 
   return {
     samples,
-    tasksPerMs: 0,
+    executionTime: performance.now() - iterationStart,
   };
 }
