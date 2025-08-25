@@ -4,6 +4,7 @@ import { CONFIG } from "./config";
 import { scenarios } from "./scenarios";
 import { benchmarkOperation } from "./benchmark-runner";
 import { OPERATIONS } from "./utils/get-operations";
+import { garbageCollect } from "./utils/garbage-collection";
 
 async function runBenchmarkForJob() {
   const { cacheFactory, cacheConfig } = JSON.parse(process.argv[2]);
@@ -12,10 +13,8 @@ async function runBenchmarkForJob() {
   for (const operation of OPERATIONS) {
     for (const scenario of scenarios) {
       for (const observerCount of CONFIG.observerCounts) {
-        if (global.gc) {
-          global.gc();
-        }
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        await garbageCollect();
+
         const samples = benchmarkOperation(
           operation,
           scenario,

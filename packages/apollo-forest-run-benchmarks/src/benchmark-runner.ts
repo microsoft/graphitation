@@ -23,13 +23,15 @@ export function benchmarkOperation(
   configuration: ForestRunAdditionalConfig,
 ): number[] {
   const { warmupSamples, batchSize } = CONFIG;
+  const scenarioContext = {
+    observerCount,
+    cacheFactory,
+    configuration,
+    ...operation,
+  };
+
   const task = () => {
-    const prepared = scenario.prepare({
-      observerCount,
-      cacheFactory,
-      configuration,
-      ...operation,
-    });
+    const prepared = scenario.prepare(scenarioContext);
     const start = process.hrtime.bigint();
     prepared.run();
     const end = process.hrtime.bigint();

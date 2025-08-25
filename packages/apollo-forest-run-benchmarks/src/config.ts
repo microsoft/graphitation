@@ -15,11 +15,11 @@ export const CONFIG = {
   ],
   observerCounts: [0, 50],
   targetConfidencePercent: 99.9,
-  minSamples: 600,
-  minExecutionTime: 200, //ms
+  minSamples: 400,
+  minExecutionTime: 100, //ms
   warmupSamples: 50,
-  batchSize: 200,
-  reliability: { maxAttempts: 10, minAttempts: 3 },
+  batchSize: 100,
+  reliability: { maxAttempts: 15, minAttempts: 3 },
   significantChanges: { threshold: 0.05 },
 } as const;
 

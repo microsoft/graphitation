@@ -7,6 +7,7 @@ import { CONFIG } from "./config";
 import { scenarios } from "./scenarios";
 import { spawn } from "child_process";
 import path from "path";
+import { garbageCollect } from "./utils/garbage-collection";
 
 export interface ResultIdentifier {
   cacheConfig: CacheConfig["name"];
@@ -97,10 +98,8 @@ async function runBenchmarks(): Promise<void> {
   log.start();
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     log.attempt(attempt);
-    if (global.gc) {
-      global.gc();
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await garbageCollect();
+
     const currentResult = await runBenchmarkSuite();
 
     const groupedResults = groupResults(currentResult);

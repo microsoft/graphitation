@@ -40,16 +40,15 @@ const getReliableMeasurementsForScenario = (
     }
   }
 
-  if (measurements.length === 0) {
-    return { samples: [] };
+  if (measurements.length > 5) {
+    measurements.sort((a, b) => {
+      const { tasksPerMs: ATasksPerMs } = new Stats(a.samples);
+      const { tasksPerMs: BTasksPerMs } = new Stats(b.samples);
+      return BTasksPerMs - ATasksPerMs;
+    });
+    measurements.shift();
+    measurements.pop();
   }
-
-  measurements.sort((a, b) => {
-    const { tasksPerMs: ATasksPerMs } = new Stats(a.samples);
-    const { tasksPerMs: BTasksPerMs } = new Stats(b.samples);
-    return BTasksPerMs - ATasksPerMs;
-  });
-  measurements.shift();
 
   const mergedMeasurement = measurements.map((m) => m.samples).flat();
 
