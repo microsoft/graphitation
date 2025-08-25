@@ -5,17 +5,13 @@ import { scenarios } from "./scenarios";
 import { benchmarkOperation } from "./benchmark-runner";
 import { OPERATIONS } from "./utils/get-operations";
 
-function runBenchmarkForJob() {
+async function runBenchmarkForJob() {
   const { cacheFactory, cacheConfig } = JSON.parse(process.argv[2]);
   const { ForestRun } = require(cacheFactory.importPath);
   const results: Result[] = [];
   for (const operation of OPERATIONS) {
     for (const scenario of scenarios) {
       for (const observerCount of CONFIG.observerCounts) {
-        if (global.gc) {
-          global.gc();
-        }
-
         const samples = benchmarkOperation(
           operation,
           scenario,
@@ -30,11 +26,17 @@ function runBenchmarkForJob() {
           scenario: `${scenario.name}_${observerCount}`,
           samples,
         });
+        if (global.gc) {
+          global.gc();
+        }
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
     }
   }
 
-  console.log(JSON.stringify(results));
+  return results;
 }
 
-runBenchmarkForJob();
+runBenchmarkForJob().then((results) => {
+  console.log(JSON.stringify(results));
+});

@@ -108,7 +108,9 @@ async function runBenchmarks(): Promise<void> {
     if (isReliable && attempt > CONFIG.reliability.minAttempts) {
       break;
     }
-
+    if (global.gc) {
+      global.gc();
+    }
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
 

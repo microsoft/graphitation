@@ -10,7 +10,7 @@ export const CONFIG = {
     {
       name: "Telemetry enabled",
       description: "Enable telemetry for cache operations",
-      options: { logStaleOperations: true, logUpdateStats: true },
+      options: {},
     },
   ],
   observerCounts: [0, 50],
