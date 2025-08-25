@@ -17,7 +17,7 @@ function runBenchmarkForJob() {
   for (const operation of OPERATIONS) {
     for (const scenario of scenarios) {
       for (const observerCount of CONFIG.observerCounts) {
-        const { samples, executionTime } = benchmarkOperation(
+        const samples = benchmarkOperation(
           operation,
           scenario,
           observerCount,
@@ -30,7 +30,6 @@ function runBenchmarkForJob() {
           operationName: operation.name,
           scenario: `${scenario.name}_${observerCount}`,
           samples,
-          executionTime,
         });
       }
     }

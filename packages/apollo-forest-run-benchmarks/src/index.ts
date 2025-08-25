@@ -16,7 +16,6 @@ export interface ResultIdentifier {
 export interface Result extends ResultIdentifier {
   scenario: `${(typeof scenarios)[number]["name"]}_${number}`;
   samples: number[];
-  executionTime: number;
   operationName: string;
 }
 
@@ -37,13 +36,7 @@ function runBenchmarkInIsolatedProcess(job: BenchmarkJob): Promise<Result[]> {
     const workerScript = path.join(__dirname, "benchmark-worker.ts");
     const child = spawn(
       process.execPath,
-      [
-        "--expose-gc",
-        "-r",
-        "ts-node/register",
-        workerScript,
-        JSON.stringify(job),
-      ],
+      ["-r", "ts-node/register", workerScript, JSON.stringify(job)],
       {
         env: {
           ...process.env,

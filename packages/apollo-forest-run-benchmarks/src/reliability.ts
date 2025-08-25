@@ -15,6 +15,47 @@ export const groupResults = (results: Result[]): BenchmarkResult => {
   }, {} as BenchmarkResult);
 };
 
+// add this helper above mergeBenchmarks
+const getReliableMeasurementsForScenario = (
+  scenarioName: string,
+  templateResult: Result,
+  benchmarkRuns: BenchmarkResult[],
+): { samples: number[] } => {
+  const measurements: { samples: number[] }[] = [];
+
+  for (const sc of benchmarkRuns) {
+    const scenarioResults = sc[scenarioName] ?? [];
+    for (const res of scenarioResults) {
+      if (
+        res.cacheConfig !== templateResult.cacheConfig ||
+        res.cacheFactory !== templateResult.cacheFactory ||
+        res.operationName !== templateResult.operationName
+      ) {
+        continue;
+      }
+      const { samples } = new Stats(res.samples);
+      measurements.push({
+        samples,
+      });
+    }
+  }
+
+  if (measurements.length === 0) {
+    return { samples: [] };
+  }
+
+  measurements.sort((a, b) => {
+    const { tasksPerMs: ATasksPerMs } = new Stats(a.samples);
+    const { tasksPerMs: BTasksPerMs } = new Stats(b.samples);
+    return BTasksPerMs - ATasksPerMs;
+  });
+  measurements.shift();
+
+  const mergedMeasurement = measurements.map((m) => m.samples).flat();
+
+  return { samples: mergedMeasurement };
+};
+
 export const mergeBenchmarks = (
   benchmarkRuns: BenchmarkResult[],
 ): BenchmarkResult => {
@@ -27,56 +68,16 @@ export const mergeBenchmarks = (
   for (const scenarioName of Object.keys(benchmarkRuns[0])) {
     merged[scenarioName] = [];
     for (const result of benchmarkRuns[0][scenarioName]) {
+      const { samples } = getReliableMeasurementsForScenario(
+        scenarioName,
+        result,
+        benchmarkRuns,
+      );
       const mergedResult: Result = {
-        cacheConfig: result.cacheConfig,
-        cacheFactory: result.cacheFactory,
-        operationName: result.operationName,
-        scenario: result.scenario,
-        samples: [],
-        executionTime: 0,
+        ...result,
+        samples,
       };
 
-      const measurements: {
-        samples: number[];
-        executionTime: number;
-      }[] = [];
-
-      for (const sc of benchmarkRuns) {
-        const scenarioResults = sc[scenarioName];
-        for (const res of scenarioResults) {
-          if (
-            res.cacheConfig !== mergedResult.cacheConfig ||
-            res.cacheFactory !== mergedResult.cacheFactory ||
-            res.operationName !== mergedResult.operationName
-          ) {
-            continue; // Skip mismatched results
-          }
-          const stats = new Stats(res.samples, res.executionTime);
-          measurements.push({
-            samples: stats.samples,
-            executionTime: res.executionTime,
-          });
-        }
-      }
-
-      measurements
-        .sort((a, b) => {
-          const { tasksPerMs: ATasksPerMs } = new Stats(
-            a.samples,
-            a.executionTime,
-          );
-          const { tasksPerMs: BTasksPerMs } = new Stats(
-            b.samples,
-            b.executionTime,
-          );
-          return BTasksPerMs - ATasksPerMs;
-        })
-        .shift();
-      const mergedMeasurement = measurements.map((m) => m.samples).flat();
-      mergedResult.samples = mergedMeasurement;
-      mergedResult.executionTime =
-        measurements.reduce((sum, m) => sum + m.executionTime, 0) /
-        measurements.length;
       merged[scenarioName].push(mergedResult);
     }
   }
@@ -94,10 +95,7 @@ export const isResultReliable = (
   let isReliable = true;
   for (const suiteName of Object.keys(mergedBenchmarks)) {
     for (const currentResult of mergedBenchmarks[suiteName]) {
-      const { confidence } = new Stats(
-        currentResult.samples,
-        currentResult.executionTime,
-      );
+      const { confidence } = new Stats(currentResult.samples);
       if (confidence < CONFIG.targetConfidencePercent) {
         isReliable = false;
         break;
@@ -139,18 +137,13 @@ export const getSummary = (results: (BenchmarkResult | BenchmarkResult)[]) => {
     benchmarkResult,
   )) {
     report[scenarioName] = [];
-    for (const {
-      cacheConfig,
-      cacheFactory,
-      samples,
-      executionTime,
-    } of scenarioResults) {
+    for (const { cacheConfig, cacheFactory, samples } of scenarioResults) {
       const {
         confidence,
         samples: sampleCount,
         arithmeticMean,
         tasksPerMs,
-      } = new Stats(samples, executionTime);
+      } = new Stats(samples);
       report[scenarioName].push({
         cacheConfig,
         cacheFactory,

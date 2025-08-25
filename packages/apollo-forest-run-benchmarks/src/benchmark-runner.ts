@@ -20,7 +20,7 @@ export function benchmarkOperation(
   observerCount: number,
   cacheFactory: typeof ForestRun,
   configuration: ForestRunAdditionalConfig,
-): RunStats {
+): number[] {
   const { warmupSamples, batchSize } = CONFIG;
   const task = () => {
     const prepared = scenario.prepare({
@@ -32,7 +32,7 @@ export function benchmarkOperation(
     const start = process.hrtime.bigint();
     prepared.run();
     const end = process.hrtime.bigint();
-    return Number(end - start) / 1000000; // ms
+    return Number(end - start); // nano
   };
 
   const samples: number[] = [];
@@ -47,8 +47,5 @@ export function benchmarkOperation(
     }
   }
 
-  return {
-    samples,
-    executionTime: performance.now() - iterationStart,
-  };
+  return samples;
 }

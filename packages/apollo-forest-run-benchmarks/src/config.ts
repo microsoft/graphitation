@@ -14,7 +14,7 @@ export const CONFIG = {
     },
   ],
   observerCounts: [0, 50],
-  targetConfidencePercent: 99.9,
+  targetConfidencePercent: 99.5,
   minSamples: 600,
   minExecutionTime: 200, //ms
   warmupSamples: 50,

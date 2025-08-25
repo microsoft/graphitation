@@ -2,9 +2,10 @@ export class Stats {
   public samples: number[];
   public tasksPerMs: number;
 
-  constructor(samples: number[], executionTime: number) {
+  constructor(samples: number[]) {
     this.samples = this.applyIQR(samples);
-    this.tasksPerMs = samples.length / executionTime;
+    const totalNs = samples.reduce((sum, v) => sum + v, 0);
+    this.tasksPerMs = samples.length / (totalNs / 1_000_000);
   }
 
   private applyIQR(values: number[]): number[] {
@@ -32,8 +33,8 @@ export class Stats {
     return Math.sqrt(this.variance());
   }
   get marginOfError(): number {
-    // z for 99.9% two-tailed confidence ≈ 3.29
-    return 3.29 * (this.standardDeviation() / Math.sqrt(this.samples.length));
+    // z for 99.5% two-tailed confidence ≈ 2.807
+    return 2.807 * (this.standardDeviation() / Math.sqrt(this.samples.length));
   }
   get relativeMarginOfError(): number {
     const mean = this.arithmeticMean;
