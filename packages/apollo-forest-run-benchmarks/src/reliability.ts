@@ -33,11 +33,13 @@ export const mergeBenchmarks = (
         operationName: result.operationName,
         scenario: result.scenario,
         measurements: [],
+        tasksPerMs: 0,
       };
 
       const measurements: {
         confidence: number;
         measurements: number[];
+        tasksPerMs: number;
       }[] = [];
 
       for (const sc of benchmarkRuns) {
@@ -54,6 +56,7 @@ export const mergeBenchmarks = (
           measurements.push({
             confidence: stats.confidence,
             measurements: stats.samples,
+            tasksPerMs: res.tasksPerMs,
           });
         }
       }
@@ -61,6 +64,9 @@ export const mergeBenchmarks = (
       measurements.sort((a, b) => a.confidence - b.confidence).shift();
       const mergedMeasurement = measurements.map((m) => m.measurements).flat();
       mergedResult.measurements = mergedMeasurement;
+      mergedResult.tasksPerMs =
+        measurements.reduce((sum, m) => sum + m.tasksPerMs, 0) /
+        measurements.length;
       merged[scenarioName].push(mergedResult);
     }
   }
@@ -120,7 +126,12 @@ export const getSummary = (results: (BenchmarkResult | BenchmarkResult)[]) => {
     benchmarkResult,
   )) {
     report[scenarioName] = [];
-    for (const { cacheConfig, cacheFactory, measurements } of scenarioResults) {
+    for (const {
+      cacheConfig,
+      cacheFactory,
+      measurements,
+      tasksPerMs,
+    } of scenarioResults) {
       const { confidence, samples, arithmeticMean } = new Stats(measurements);
       report[scenarioName].push({
         cacheConfig,
@@ -128,6 +139,7 @@ export const getSummary = (results: (BenchmarkResult | BenchmarkResult)[]) => {
         confidence,
         samples: samples.length,
         mean: arithmeticMean,
+        tasksPerMs,
       });
     }
   }
@@ -150,7 +162,8 @@ export const analyzeSignificantChanges = (
     // Find the baseline result (baseline factory + Default cache config)
     const baseline = scenarioResults.find(
       (result) =>
-        result.cacheFactory === "baseline" && result.cacheConfig === "Default",
+        result.cacheFactory === "baseline" &&
+        (result.cacheConfig as string) === "Default",
     );
 
     if (!baseline) {

@@ -1,7 +1,8 @@
 import type { ForestRun } from "@graphitation/apollo-forest-run";
 import type { Scenario, ScenarioContext } from "./types";
+import { do_not_optimize } from "mitata";
 
-const addObservers = (ctx: ScenarioContext, cache: ForestRun) => {
+const addWatchers = (ctx: ScenarioContext, cache: ForestRun) => {
   const { query, variables } = ctx;
   const unsubscribes: Array<() => void> = [];
   for (let i = 0; i < ctx.observerCount; i++) {
@@ -20,16 +21,17 @@ export const scenarios = [
   {
     name: "read",
     prepare: (ctx: ScenarioContext) => {
-      const { query, variables, data, cacheFactory } = ctx;
-      const cache = cacheFactory();
-      addObservers(ctx, cache);
+      const { query, variables, data, cacheFactory, configuration } = ctx;
+      const cache = new cacheFactory(configuration);
+      addWatchers(ctx, cache);
 
       cache.writeQuery({ query, variables, data });
 
       return {
         name: "read",
         run() {
-          cache.readQuery({ query, variables });
+          const result = cache.readQuery({ query, variables });
+          return do_not_optimize(result);
         },
       };
     },
@@ -37,14 +39,15 @@ export const scenarios = [
   {
     name: "write",
     prepare: (ctx: ScenarioContext) => {
-      const { query, variables, data, cacheFactory } = ctx;
-      const cache = cacheFactory();
-      addObservers(ctx, cache);
+      const { query, variables, data, cacheFactory, configuration } = ctx;
+      const cache = new cacheFactory(configuration);
+      addWatchers(ctx, cache);
 
       return {
         name: "write",
         run() {
-          cache.writeQuery({ query, variables, data });
+          const result = cache.writeQuery({ query, variables, data });
+          return do_not_optimize(result);
         },
       };
     },
@@ -52,15 +55,16 @@ export const scenarios = [
   {
     name: "update",
     prepare: (ctx: ScenarioContext) => {
-      const { query, variables, data, cacheFactory } = ctx;
-      const cache = cacheFactory();
-      addObservers(ctx, cache);
+      const { query, variables, data, cacheFactory, configuration } = ctx;
+      const cache = new cacheFactory(configuration);
+      addWatchers(ctx, cache);
 
       cache.writeQuery({ query, variables, data });
 
       return {
         run() {
-          cache.writeQuery({ query, variables, data });
+          const result = cache.writeQuery({ query, variables, data });
+          return do_not_optimize(result);
         },
       };
     },

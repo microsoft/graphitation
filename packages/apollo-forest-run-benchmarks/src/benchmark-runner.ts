@@ -1,7 +1,11 @@
-import type { ForestRun } from "@graphitation/apollo-forest-run";
+import type {
+  ForestRun,
+  ForestRunAdditionalConfig,
+} from "@graphitation/apollo-forest-run";
 import type { Scenario, OperationData } from "./types";
 
 import { CONFIG } from "./config";
+import { do_not_optimize } from "mitata";
 
 export class Stats {
   public samples: number[];
@@ -51,37 +55,42 @@ export function benchmarkOperation(
   operation: OperationData,
   scenario: Scenario,
   observerCount: number,
-  cacheFactory: (config?: any) => ForestRun,
-): number[] {
+  cacheFactory: typeof ForestRun,
+  configuration: ForestRunAdditionalConfig,
+): {
+  samples: number[];
+  tasksPerMs: number;
+} {
   const task = () => {
     const prepared = scenario.prepare({
       observerCount,
       cacheFactory,
+      configuration,
       ...operation,
     });
-    const start = process.hrtime.bigint();
-    prepared.run();
-    const end = process.hrtime.bigint();
-    return Number(end - start) / 1e6; // ms
+    const start = performance.now();
+    const result = do_not_optimize(prepared.run());
+    const end = performance.now();
+    return end - start; // ms
   };
 
-  // Run warmup samples
   const samples: number[] = [];
   for (let i = 0; i < CONFIG.warmupSamples; i++) {
     task();
   }
 
-  // Collect samples until we reach target confidence
-  const targetConfidence = CONFIG.targetConfidencePercent;
-  while (samples.length < CONFIG.maxSamplesPerBenchmark) {
+  const iterationStart = performance.now();
+  while (
+    performance.now() - iterationStart < 500 &&
+    samples.length < CONFIG.minSamples
+  ) {
     for (let i = 0; i < CONFIG.batchSize; i++) {
       samples.push(task());
     }
-    const { confidence } = new Stats(samples);
-    if (confidence >= targetConfidence) break;
   }
 
-  const { samples: filteredSamples } = new Stats(samples);
-
-  return filteredSamples;
+  return {
+    samples,
+    tasksPerMs: 0,
+  };
 }

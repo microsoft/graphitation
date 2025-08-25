@@ -27,7 +27,8 @@ export interface BenchmarkReport {
 
 export interface ScenarioContext extends OperationData {
   observerCount: number;
-  cacheFactory: (config?: ForestRunAdditionalConfig) => ForestRun;
+  cacheFactory: typeof ForestRun;
+  configuration: ForestRunAdditionalConfig;
 }
 
 export type Scenario = {
@@ -49,4 +50,5 @@ export interface BenchmarkStats {
   confidence: number;
   samples: number;
   mean: number;
+  tasksPerMs: number;
 }

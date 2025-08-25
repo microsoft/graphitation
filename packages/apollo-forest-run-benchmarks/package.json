@@ -3,6 +3,7 @@
   "license": "MIT",
   "version": "0.1.0",
   "main": "./src/index.ts",
+  "type": "commonjs",
   "private": true,
   "repository": {
     "type": "git",
@@ -10,6 +11,7 @@
     "directory": "packages/apollo-forest-run-benchmarks"
   },
   "scripts": {
+    "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
     "types": "monorepo-scripts types",
@@ -27,7 +29,8 @@
   },
   "dependencies": {
     "@graphitation/apollo-forest-run": "*",
-    "graphql": "^15.0.0"
+    "graphql": "^15.0.0",
+    "mitata": "^1.0.34"
   },
   "sideEffects": false
 }
