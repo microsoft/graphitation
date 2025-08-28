@@ -11,13 +11,13 @@
     "directory": "packages/apollo-forest-run-benchmarks"
   },
   "scripts": {
-    "build": "monorepo-scripts build",
+    "build": "monorepo-scripts build && cp -r src/data lib/ && cp -r src/forest-runs lib/",
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
     "types": "monorepo-scripts types",
-    "benchmark": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' node --expose-gc -r ts-node/register ./src/index.ts",
-    "benchmark:summarize": "ts-node --compiler-options '{\"module\":\"commonjs\"}' ./src/analyze-results.ts",
-    "benchmark:ci": "CI_MARKDOWN=true TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' node --expose-gc -r ts-node/register ./src/index.ts",
+    "benchmark": "yarn build && node --expose-gc ./lib/index.js",
+    "benchmark:summarize": "yarn build && node ./lib/analyze-results.js",
+    "benchmark:ci": "yarn build && CI_MARKDOWN=true node --expose-gc ./lib/index.js",
     "clone": "./scripts/clone-caches.sh",
     "just": "monorepo-scripts"
   },

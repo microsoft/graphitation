@@ -2,7 +2,7 @@ import type {
   ForestRun,
   ForestRunAdditionalConfig,
 } from "@graphitation/apollo-forest-run";
-import type { Scenario, OperationData, RunStats } from "./types";
+import type { Scenario, OperationData } from "./types";
 import { do_not_optimize } from "./utils/do-not-optimize";
 
 import { CONFIG } from "./config";

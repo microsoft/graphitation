@@ -1,4 +1,17 @@
-import type { OperationData } from "./types";
+import type { ForestRunAdditionalConfig } from "@graphitation/apollo-forest-run";
+
+interface CacheConfigTemplate extends ForestRunAdditionalConfig {
+  name: string;
+  description: string;
+  options: ForestRunAdditionalConfig;
+}
+
+export type CacheConfig = (typeof CONFIG.cacheConfigurations)[number];
+export type TestConfig = typeof CONFIG;
+export interface ResultIdentifier {
+  cacheConfig: CacheConfig["name"];
+  cacheFactory: (typeof CACHE_FACTORIES)[number]["name"];
+}
 
 export const CONFIG = {
   cacheConfigurations: [
@@ -10,9 +23,9 @@ export const CONFIG = {
     {
       name: "Telemetry enabled",
       description: "Enable telemetry for cache operations",
-      options: {},
+      options: { logStaleOperations: true, logUpdateStats: true },
     },
-  ],
+  ] satisfies CacheConfigTemplate[],
   observerCounts: [0, 50],
   targetConfidencePercent: 99.9,
   minSamples: 400,
@@ -33,6 +46,3 @@ export const CACHE_FACTORIES = [
     importPath: "./forest-runs/current",
   },
 ] as const;
-
-export type CacheConfig = (typeof CONFIG.cacheConfigurations)[number];
-export type TestConfig = typeof CONFIG;

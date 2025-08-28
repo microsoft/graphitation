@@ -1,4 +1,5 @@
 import type { Result } from "./index";
+import type { CACHE_FACTORIES, CacheConfig } from "./config";
 
 import { CONFIG } from "./config";
 import { scenarios } from "./scenarios";
@@ -7,7 +8,14 @@ import { OPERATIONS } from "./utils/get-operations";
 import { garbageCollect } from "./utils/garbage-collection";
 
 async function runBenchmarkForJob() {
-  const { cacheFactory, cacheConfig } = JSON.parse(process.argv[2]);
+  const {
+    cacheFactory,
+    cacheConfig,
+  }: {
+    cacheFactory: (typeof CACHE_FACTORIES)[number];
+    cacheConfig: CacheConfig;
+  } = JSON.parse(process.argv[2]);
+
   const { ForestRun } = require(cacheFactory.importPath);
   const results: Result[] = [];
   for (const operation of OPERATIONS) {

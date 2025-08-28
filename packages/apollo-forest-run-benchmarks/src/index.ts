@@ -1,4 +1,6 @@
-import { CACHE_FACTORIES, CacheConfig } from "./config";
+import type { CacheConfig, ResultIdentifier } from "./config";
+
+import { CACHE_FACTORIES } from "./config";
 import fs from "fs";
 import { isResultReliable, groupResults, getSummary } from "./reliability";
 import { log } from "./utils/logger";
@@ -7,12 +9,6 @@ import { CONFIG } from "./config";
 import { scenarios } from "./scenarios";
 import { spawn } from "child_process";
 import path from "path";
-import { garbageCollect } from "./utils/garbage-collection";
-
-export interface ResultIdentifier {
-  cacheConfig: CacheConfig["name"];
-  cacheFactory: string;
-}
 
 export interface Result extends ResultIdentifier {
   scenario: `${(typeof scenarios)[number]["name"]}_${number}`;
@@ -34,18 +30,18 @@ for (const cacheFactory of CACHE_FACTORIES) {
 
 function runBenchmarkInIsolatedProcess(job: BenchmarkJob): Promise<Result[]> {
   return new Promise((resolve) => {
-    const workerScript = path.join(__dirname, "benchmark-worker.ts");
-    const child = spawn(
-      process.execPath,
-      ["-r", "ts-node/register", workerScript, JSON.stringify(job)],
-      {
-        env: {
-          ...process.env,
-          TS_NODE_COMPILER_OPTIONS: '{"module":"commonjs"}',
-        },
-        stdio: ["pipe", "pipe", "pipe"],
-      },
+    const workerScript = path.join(
+      __dirname,
+      "..",
+      "lib",
+      "benchmark-worker.js",
     );
+    const child = spawn(process.execPath, [workerScript, JSON.stringify(job)], {
+      env: {
+        ...process.env,
+      },
+      stdio: ["pipe", "pipe", "pipe"],
+    });
 
     let stdout = "";
 
