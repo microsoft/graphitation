@@ -1,5 +1,4 @@
-import type { SummaryReport } from "./reliability/reliability";
-import { analyzeSignificantChanges } from "./summary/summary";
+import { analyzeSignificantChanges, SummaryReport } from "./summary/summary";
 import {
   generateMarkdownReport,
   printSignificantChanges,

@@ -3,13 +3,13 @@ import type { CacheConfig, WorkerResult, SuiteRawResult } from "./types";
 import fs from "fs";
 import path from "path";
 import { CACHE_FACTORIES } from "./config";
-import { getSummary } from "./reliability/reliability";
 import { log } from "./utils/logger";
 import { analyzeResults } from "./analyze-results";
 import { CONFIG } from "./config";
 import { spawn } from "child_process";
 import { mergeResults } from "./utils/merge";
 import { isReliable } from "./utils/reliability";
+import { getSummary } from "./summary/summary";
 
 interface BaseSuite {
   cacheFactory: (typeof CACHE_FACTORIES)[number];
