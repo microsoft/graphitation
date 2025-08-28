@@ -1,13 +1,10 @@
-export class Stats {
+import type { Sample } from "../types";
+
+export class BaseStats {
   public samples: number[];
-  public rawSamples: number[];
-  public tasksPerMs: number;
 
   constructor(samples: number[]) {
-    this.rawSamples = [...samples];
-    this.samples = this.applyOutlierFiltering(samples);
-    const totalNs = this.samples.reduce((sum, v) => sum + v, 0);
-    this.tasksPerMs = this.samples.length / (totalNs / 1_000_000);
+    this.samples = this.applyOutlierFiltering(samples.filter((s) => s >= 0));
   }
 
   private applyOutlierFiltering(values: number[]): number[] {
@@ -77,16 +74,24 @@ export class Stats {
   get confidence(): number {
     return 100 - this.relativeMarginOfError;
   }
+}
 
-  // Additional statistical measures for better analysis
-  get coefficientOfVariation(): number {
-    const mean = this.arithmeticMean;
-    return mean === 0 ? 0 : (this.standardDeviation() / mean) * 100;
+export class ExecutionStats extends BaseStats {
+  public tasksPerMs: number;
+
+  constructor(samples: number[]) {
+    super(samples);
+    const totalNs = this.samples.reduce((sum, v) => sum + v, 0);
+    this.tasksPerMs = this.samples.length / (totalNs / 1_000_000);
   }
+}
 
-  get outlierRatio(): number {
-    return (
-      (this.rawSamples.length - this.samples.length) / this.rawSamples.length
-    );
+export class Stats {
+  public execution: ExecutionStats;
+  public memory: BaseStats;
+
+  constructor(runSamples: Sample[]) {
+    this.execution = new ExecutionStats(runSamples.map((s) => s.time));
+    this.memory = new BaseStats(runSamples.map((s) => s.memory));
   }
 }

@@ -1,5 +1,5 @@
-import type { SummaryReport } from "./reliability";
-import { analyzeSignificantChanges } from "./reliability";
+import type { SummaryReport } from "./reliability/reliability";
+import { analyzeSignificantChanges } from "./summary/summary";
 import {
   generateMarkdownReport,
   printSignificantChanges,
@@ -13,8 +13,5 @@ export const analyzeResults = (summary: SummaryReport) => {
   const markdownReport = generateMarkdownReport(changeReport);
   saveMarkdownReport(markdownReport);
 
-  return {
-    changeReport,
-    markdownReport,
-  };
+  return changeReport;
 };

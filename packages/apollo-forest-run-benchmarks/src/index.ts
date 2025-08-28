@@ -1,47 +1,48 @@
-import type { CacheConfig, ResultIdentifier } from "./config";
+import type { CacheConfig, WorkerResult, SuiteRawResult } from "./types";
 
-import { CACHE_FACTORIES } from "./config";
 import fs from "fs";
-import { isResultReliable, groupResults, getSummary } from "./reliability";
+import path from "path";
+import { CACHE_FACTORIES } from "./config";
+import { getSummary } from "./reliability/reliability";
 import { log } from "./utils/logger";
 import { analyzeResults } from "./analyze-results";
 import { CONFIG } from "./config";
-import { scenarios } from "./scenarios";
 import { spawn } from "child_process";
-import path from "path";
+import { mergeResults } from "./utils/merge";
+import { isReliable } from "./utils/reliability";
 
-export interface Result extends ResultIdentifier {
-  scenario: `${(typeof scenarios)[number]["name"]}_${number}`;
-  samples: number[];
-  operationName: string;
-}
-
-interface BenchmarkJob {
+interface BaseSuite {
   cacheFactory: (typeof CACHE_FACTORIES)[number];
   cacheConfig: CacheConfig;
 }
 
-const benchmarkJobs: BenchmarkJob[] = [];
+const BASE_SUITES: BaseSuite[] = [];
+
 for (const cacheFactory of CACHE_FACTORIES) {
   for (const cacheConfig of CONFIG.cacheConfigurations) {
-    benchmarkJobs.push({ cacheFactory, cacheConfig });
+    BASE_SUITES.push({ cacheFactory, cacheConfig });
   }
 }
 
-function runBenchmarkInIsolatedProcess(job: BenchmarkJob): Promise<Result[]> {
+const spawnProcess = (job: BaseSuite): Promise<WorkerResult> => {
   return new Promise((resolve) => {
-    const workerScript = path.join(
-      __dirname,
-      "..",
-      "lib",
-      "benchmark-worker.js",
-    );
-    const child = spawn(process.execPath, [workerScript, JSON.stringify(job)], {
-      env: {
-        ...process.env,
+    const workerScript = path.join(__dirname, "..", "lib", "suite-worker.js");
+    const child = spawn(
+      process.execPath,
+      [
+        "--max-old-space-size=1000",
+        "--max-semi-space-size=512",
+        "--noconcurrent_sweeping",
+        workerScript,
+        JSON.stringify(job),
+      ],
+      {
+        env: {
+          ...process.env,
+        },
+        stdio: ["pipe", "pipe"],
       },
-      stdio: ["pipe", "pipe", "pipe"],
-    });
+    );
 
     let stdout = "";
 
@@ -49,60 +50,56 @@ function runBenchmarkInIsolatedProcess(job: BenchmarkJob): Promise<Result[]> {
       stdout += data.toString();
     });
 
-    child.stderr.on("data", (data) => {
-      console.error(`Worker stderr: ${data}`);
-    });
-
     child.on("close", () => {
       const results = JSON.parse(stdout.trim());
       resolve(results);
     });
   });
-}
+};
 
-async function runBenchmarkSuite(): Promise<Result[]> {
-  const allResults: Result[] = [];
+const runBaseSuites = async (): Promise<WorkerResult[]> => {
+  const allResults: WorkerResult[] = [];
 
-  for (const job of benchmarkJobs) {
+  for (const suite of BASE_SUITES) {
     console.log(
-      `\n=== Running benchmarks for ${job.cacheFactory.name} with ${job.cacheConfig.name} in isolated process ===`,
+      `\n=== Running benchmarks for ${suite.cacheFactory.name} with ${suite.cacheConfig.name} in isolated process ===`,
     );
 
-    const jobResults = await runBenchmarkInIsolatedProcess(job);
-    allResults.push(...jobResults);
+    const result = await spawnProcess(suite);
+    allResults.push(result);
     console.log(
-      `Completed ${job.cacheFactory.name}/${job.cacheConfig.name} with ${jobResults.length} results`,
+      `Completed ${suite.cacheFactory.name}/${suite.cacheConfig.name} with ${result.results.length} results`,
     );
   }
 
   return allResults;
-}
+};
 
-export interface BenchmarkResult {
-  [scenarioName: string]: Result[];
-}
-
-async function runBenchmarks(): Promise<void> {
+const runBenchmarks = async (): Promise<void> => {
   const { maxAttempts } = CONFIG.reliability;
-  let prevBenchmarks: BenchmarkResult[] = [];
+  let prevSuites: SuiteRawResult[] = [];
   log.start();
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     log.attempt(attempt);
 
-    const currentResult = await runBenchmarkSuite();
-    const groupedResults = groupResults(currentResult);
-    const isReliable = isResultReliable(groupedResults, prevBenchmarks);
+    const results = await runBaseSuites();
+    const groupedResult = mergeResults(results);
+    const isSuiteReliable = isReliable(groupedResult, prevSuites);
 
-    prevBenchmarks.push(groupedResults);
+    prevSuites.push(groupedResult);
 
-    if (isReliable && attempt > CONFIG.reliability.minAttempts) {
+    if (isSuiteReliable && attempt > CONFIG.reliability.minAttempts) {
       break;
     }
   }
 
-  const summary = getSummary(prevBenchmarks);
-  analyzeResults(summary);
+  const summary = getSummary(prevSuites);
+  const report = analyzeResults(summary);
   fs.writeFileSync("benchmark-summary.json", JSON.stringify(summary, null, 2));
-}
+  fs.writeFileSync(
+    "benchmark-summary-report.json",
+    JSON.stringify(report, null, 2),
+  );
+};
 
 runBenchmarks();

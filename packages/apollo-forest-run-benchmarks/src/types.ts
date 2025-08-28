@@ -2,29 +2,21 @@ import type {
   ForestRun,
   ForestRunAdditionalConfig,
 } from "@graphitation/apollo-forest-run";
-import { TestConfig } from "./config";
+import type { scenarios } from "./scenarios";
+import type { CACHE_FACTORIES, CONFIG } from "./config";
 
-interface CacheConfiguration {
+export interface CacheConfiguration {
   name: string;
   description: string;
   options: ForestRunAdditionalConfig;
 }
 
-interface CacheConfigQueryOperations {
-  queryName: string;
-  operations: Record<string, number[]>;
+export interface OperationData {
+  name: string;
+  query: any;
+  data: any;
+  variables: Record<string, any>;
 }
-
-interface Results {
-  configuration: CacheConfiguration;
-  queryResults: CacheConfigQueryOperations[];
-}
-
-export interface BenchmarkReport {
-  config: TestConfig;
-  cacheConfigResults: Results[];
-}
-
 export interface ScenarioContext extends OperationData {
   observerCount: number;
   cacheFactory: typeof ForestRun;
@@ -38,21 +30,54 @@ export type Scenario = {
   };
 };
 
-export interface OperationData {
-  name: string;
-  query: any;
-  data: any;
-  variables: Record<string, any>;
+export interface Sample {
+  time: number;
+  memory: number;
 }
 
-export interface RunStats {
-  samples: number[];
-  executionTime: number;
-}
-
-export interface BenchmarkStats {
+export interface BenchStats extends Omit<BenchBase, "benchId"> {
   confidence: number;
   samples: number;
   mean: number;
   tasksPerMs: number;
+  memoryStats: number;
+  gcStats?: {
+    runs: number;
+    totalMemoryFreed: number;
+    avgMemoryFreed: number;
+  };
+}
+export type BenchId =
+  `${string}_${(typeof scenarios)[number]["name"]}_${number}`;
+export interface BenchBase {
+  cacheConfig: CacheConfig["name"];
+  cacheFactory: (typeof CACHE_FACTORIES)[number]["name"];
+  benchId: BenchId;
+}
+
+export interface BenchRaw extends BenchBase {
+  samples: Sample[];
+}
+
+export interface Bench extends BenchBase {
+  memorySamples: number[];
+  executionSamples: number[];
+}
+
+export type CacheConfig = (typeof CONFIG.cacheConfigurations)[number];
+export type TestConfig = typeof CONFIG;
+export interface SuiteRawResult {
+  [scenarioId: BenchId]: BenchRaw[];
+}
+
+export interface SuiteResult {
+  [scenarioId: BenchId]: Bench[];
+}
+
+export interface WorkerResult {
+  results: BenchRaw[];
+  gcStats: {
+    runs: number;
+    totalMemoryFreed: number;
+  };
 }

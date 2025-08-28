@@ -2,12 +2,11 @@ import type {
   ForestRun,
   ForestRunAdditionalConfig,
 } from "@graphitation/apollo-forest-run";
-import type { Scenario, OperationData } from "./types";
-import { do_not_optimize } from "./utils/do-not-optimize";
+import type { Scenario, OperationData, Sample } from "../types";
 
-import { CONFIG } from "./config";
+import { CONFIG } from "../config";
 
-const hasEnoughSamples = (stats: number[], startedAt: number) => {
+const hasEnoughSamples = (stats: unknown[], startedAt: number): boolean => {
   const { minExecutionTime, minSamples } = CONFIG;
   return (
     stats.length >= minSamples &&
@@ -15,13 +14,13 @@ const hasEnoughSamples = (stats: number[], startedAt: number) => {
   );
 };
 
-export function benchmarkOperation(
+export const benchmarkRunner = (
   operation: OperationData,
   scenario: Scenario,
   observerCount: number,
   cacheFactory: typeof ForestRun,
   configuration: ForestRunAdditionalConfig,
-): number[] {
+): Sample[] => {
   const { warmupSamples, batchSize } = CONFIG;
 
   const task = () => {
@@ -31,15 +30,25 @@ export function benchmarkOperation(
       configuration,
       ...operation,
     });
-    const start = process.hrtime.bigint();
+    const memoryStart = process.memoryUsage().heapUsed;
+    const timeStart = process.hrtime.bigint();
+
     prepared.run();
-    const end = process.hrtime.bigint();
-    return Number(end - start); // nano
+
+    const timeEnd = process.hrtime.bigint();
+    const memoryEnd = process.memoryUsage().heapUsed;
+
+    return {
+      time: Number(timeEnd - timeStart), // nanoseconds
+      memory: memoryEnd - memoryStart, // bytes
+    };
   };
 
-  const samples: number[] = [];
+  const samples: Sample[] = [];
+
+  // Warmup phase
   for (let i = 0; i < warmupSamples; i++) {
-    do_not_optimize(task());
+    task();
   }
 
   const iterationStart = performance.now();
@@ -50,4 +59,4 @@ export function benchmarkOperation(
   }
 
   return samples;
-}
+};
