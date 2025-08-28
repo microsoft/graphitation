@@ -26,10 +26,10 @@ export const CONFIG = {
 export const CACHE_FACTORIES = [
   {
     name: "baseline",
-    importPath: "./forest-runs/baseline",
+    importPath: "../forest-runs/baseline",
   },
   {
     name: "current",
-    importPath: "./forest-runs/current",
+    importPath: "../forest-runs/current",
   },
 ] as const;
