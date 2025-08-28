@@ -1,13 +1,3 @@
-export const garbageCollect = (): number => {
-  const memoryStart = process.memoryUsage().heapUsed;
-  if (global.gc) {
-    global.gc();
-  }
-  const memoryEnd = process.memoryUsage().heapUsed;
-
-  return memoryStart - memoryEnd;
-};
-
 export class GarbageCollector {
   private stats: number[] = [];
 
