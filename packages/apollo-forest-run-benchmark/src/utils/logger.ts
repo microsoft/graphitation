@@ -1,7 +1,5 @@
 import type { SignificantChange, SummaryChangeReport } from "../types";
 
-import fs from "fs";
-import path from "path";
 import { CONFIG } from "../config";
 
 const EMOJIS = {
