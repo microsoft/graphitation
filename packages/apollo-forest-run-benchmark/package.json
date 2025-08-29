@@ -20,7 +20,7 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@types/node": "^12.0.0",
+    "@types/node": "*",
     "typescript": "^5.5.3"
   },
   "dependencies": {
