@@ -47,8 +47,7 @@ export interface BenchStats extends Omit<BenchBase, "benchId"> {
     avgMemoryFreed: number;
   };
 }
-export type BenchId =
-  `${string}_${(typeof scenarios)[number]["name"]}_${number}`;
+type BenchId = `${string}_${(typeof scenarios)[number]["name"]}_${number}`;
 export interface BenchBase {
   cacheConfig: CacheConfig["name"];
   cacheFactory: (typeof CACHE_FACTORIES)[number]["name"];
@@ -80,4 +79,19 @@ export interface WorkerResult {
     runs: number;
     totalMemoryFreed: number;
   };
+}
+
+export interface SummaryReport {
+  [scenarioName: BenchId]: BenchStats[];
+}
+
+export interface SummaryChangeReport {
+  sameConfig: SignificantChange[];
+  baseline: SignificantChange[];
+}
+
+export interface SignificantChange {
+  benchId: BenchId;
+  baseline: BenchStats;
+  current: BenchStats;
 }

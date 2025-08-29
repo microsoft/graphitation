@@ -1,11 +1,11 @@
-import type { SummaryReport } from "./summary/summary";
+import type { SummaryReport } from "../types";
 
-import { analyzeSignificantChanges } from "./summary/summary";
+import { analyzeSignificantChanges } from "./summary";
 import {
   generateMarkdownReport,
   printSignificantChanges,
   saveMarkdownReport,
-} from "./utils/logger";
+} from "../utils/logger";
 
 export const analyzeResults = (summary: SummaryReport) => {
   const changeReport = analyzeSignificantChanges(summary);

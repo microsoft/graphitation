@@ -1,333 +1,188 @@
+import type { SignificantChange, SummaryChangeReport } from "../types";
+
 import fs from "fs";
 import path from "path";
 import { CONFIG } from "../config";
-import { SignificantChange } from "../summary/summary";
+
+const EMOJIS = {
+  // General
+  rocket: "🚀",
+  repeat: "🔁",
+  floppy: "💾",
+  chart: "📊",
+  magnifying: "🔍",
+  target: "🎯",
+  ruler: "📏",
+  checkmark: "✅",
+  page: "📄",
+  cross: "❌",
+
+  // Performance indicators
+  execution: "📈",
+  memory: "🧮",
+  good: "🟢",
+  bad: "🔴",
+
+  // Separators
+  equals: "=",
+  arrow: "→",
+} as const;
 
 export const log = {
   start() {
-    console.log("🚀 Starting benchmark runs");
+    console.log(`${EMOJIS.rocket} Starting benchmark runs`);
   },
   attempt(n: number) {
-    console.log(`🔁 Attempt ${n}`);
+    console.log(`${EMOJIS.repeat} Attempt ${n}`);
   },
   reportSaved(path: string) {
-    console.log(`💾 Report saved: ${path}`);
+    console.log(`${EMOJIS.floppy} Report saved: ${path}`);
+  },
+
+  summary: {
+    start() {
+      console.log("\n" + EMOJIS.equals.repeat(60));
+      console.log(`${EMOJIS.chart} BENCHMARK ANALYSIS SUMMARY`);
+      console.log(EMOJIS.equals.repeat(60));
+    },
   },
 };
 
-export const printSignificantChanges = (changeReport: {
-  sameConfig: SignificantChange[];
-  baseline: SignificantChange[];
-}) => {
+const printChangeDetails = (
+  change: SignificantChange,
+  isBaselineComparison = false,
+) => {
+  const executionPercentChange =
+    ((change.current.mean - change.baseline.mean) / change.baseline.mean) * 100;
+  const memoryPercentChange =
+    ((change.current.memoryStats - change.baseline.memoryStats) /
+      change.baseline.memoryStats) *
+    100;
+
+  const configText = `${change.current.cacheConfig}/${change.current.cacheFactory}`;
+
+  console.log(`${EMOJIS.chart} ${change.benchId} - ${configText}`);
+
+  const statsLines = [];
+
+  // Only show execution changes if above threshold
+  if (
+    Math.abs(executionPercentChange) >=
+    CONFIG.significantChanges.threshold * 100
+  ) {
+    const executionIcon = executionPercentChange < 0 ? EMOJIS.good : EMOJIS.bad;
+    const executionWord = executionPercentChange < 0 ? "faster" : "slower";
+    statsLines.push(
+      `${EMOJIS.execution}${executionIcon} ${change.baseline.mean.toFixed(
+        2,
+      )}ms ${EMOJIS.arrow} ${change.current.mean.toFixed(
+        2,
+      )}ms ${executionWord} (${Math.abs(executionPercentChange).toFixed(1)}%)`,
+    );
+  }
+
+  // Only show memory changes if above threshold
+  if (
+    Math.abs(memoryPercentChange) >=
+    CONFIG.significantChanges.threshold * 100
+  ) {
+    const memoryIcon = memoryPercentChange < 0 ? EMOJIS.good : EMOJIS.bad;
+    const memoryWord = memoryPercentChange < 0 ? "less" : "more";
+    statsLines.push(
+      `${EMOJIS.memory}${memoryIcon} ${change.baseline.memoryStats.toFixed(
+        2,
+      )} ${EMOJIS.arrow} ${change.current.memoryStats.toFixed(
+        2,
+      )} ${memoryWord} (${Math.abs(memoryPercentChange).toFixed(1)}%)`,
+    );
+  }
+
+  // Print each stat on separate lines
+  statsLines.forEach((line) => console.log(`   ${line}`));
+
+  console.log();
+};
+
+export const printSignificantChanges = (changeReport: SummaryChangeReport) => {
   const { sameConfig, baseline } = changeReport;
   const totalChanges = sameConfig.length + baseline.length;
 
-  console.log("\n" + "=".repeat(60));
-  console.log("📊 BENCHMARK ANALYSIS SUMMARY");
-  console.log("=".repeat(60));
+  log.summary.start();
 
   if (totalChanges === 0) {
-    console.log("✅ No significant performance changes detected");
+    console.log(
+      `${EMOJIS.checkmark} No significant performance changes detected`,
+    );
     return;
   }
 
-  console.log(`🔍 Found ${totalChanges} significant change(s)`);
+  console.log(
+    `${EMOJIS.magnifying} Found ${totalChanges} significant change(s)`,
+  );
   console.log();
 
-  // Print same config comparisons first (more important)
   if (sameConfig.length > 0) {
     console.log(
-      "🎯 SAME CONFIGURATION COMPARISONS (vs baseline with same config):",
+      `${EMOJIS.target} SAME CONFIGURATION COMPARISONS (current vs baseline):`,
     );
-    console.log(`   ${sameConfig.length} change(s) detected`);
     console.log();
-
-    // Group by improvement/regression (considering both execution and memory)
-    const sameConfigImprovements = sameConfig.filter((change) => {
-      const executionImprovement = change.current.mean < change.baseline.mean;
-      const memoryImprovement =
-        change.current.memoryStats < change.baseline.memoryStats;
-      // Consider it an improvement if either execution or memory improved (or both)
-      return executionImprovement || memoryImprovement;
-    });
-    const sameConfigRegressions = sameConfig.filter((change) => {
-      const executionRegression = change.current.mean > change.baseline.mean;
-      const memoryRegression =
-        change.current.memoryStats > change.baseline.memoryStats;
-      const executionImprovement = change.current.mean < change.baseline.mean;
-      const memoryImprovement =
-        change.current.memoryStats < change.baseline.memoryStats;
-      // Consider it a regression if there are regressions and no improvements
-      return (
-        (executionRegression || memoryRegression) &&
-        !(executionImprovement || memoryImprovement)
-      );
-    });
-
-    if (sameConfigImprovements.length > 0) {
-      console.log("   🚀 IMPROVEMENTS:");
-      sameConfigImprovements.forEach((change) => {
-        const executionPercentChange = Math.abs(
-          ((change.current.mean - change.baseline.mean) /
-            change.baseline.mean) *
-            100,
-        );
-        const memoryPercentChange = Math.abs(
-          ((change.current.memoryStats - change.baseline.memoryStats) /
-            change.baseline.memoryStats) *
-            100,
-        );
-
-        console.log(
-          `      ✅ ${change.benchId} - ${change.current.cacheConfig}/${change.current.cacheFactory}`,
-        );
-
-        // Check what type of improvement this is
-        const hasExecutionImprovement =
-          change.current.mean < change.baseline.mean;
-        const hasMemoryImprovement =
-          change.current.memoryStats < change.baseline.memoryStats;
-
-        if (hasExecutionImprovement && hasMemoryImprovement) {
-          console.log(
-            `         ⚡ Execution: ${executionPercentChange.toFixed(
-              1,
-            )}% faster | 🧠 Memory: ${memoryPercentChange.toFixed(1)}% less`,
-          );
-        } else if (hasExecutionImprovement) {
-          console.log(
-            `         ⚡ Execution: ${executionPercentChange.toFixed(
-              1,
-            )}% faster`,
-          );
-        } else if (hasMemoryImprovement) {
-          console.log(
-            `         🧠 Memory: ${memoryPercentChange.toFixed(1)}% less`,
-          );
-        }
-
-        console.log(
-          `         Time: ${change.baseline.mean.toFixed(
-            2,
-          )}ms → ${change.current.mean.toFixed(2)}ms`,
-        );
-        console.log(
-          `         Memory: ${change.baseline.memoryStats.toFixed(
-            2,
-          )} → ${change.current.memoryStats.toFixed(2)}`,
-        );
-        console.log();
-      });
-    }
-
-    if (sameConfigRegressions.length > 0) {
-      console.log("   ⚠️ REGRESSIONS:");
-      sameConfigRegressions.forEach((change) => {
-        const executionPercentChange =
-          ((change.current.mean - change.baseline.mean) /
-            change.baseline.mean) *
-          100;
-        const memoryPercentChange =
-          ((change.current.memoryStats - change.baseline.memoryStats) /
-            change.baseline.memoryStats) *
-          100;
-
-        console.log(
-          `      ❌ ${change.benchId} - ${change.current.cacheConfig}/${change.current.cacheFactory}`,
-        );
-
-        // Check what type of regression this is
-        const hasExecutionRegression =
-          change.current.mean > change.baseline.mean;
-        const hasMemoryRegression =
-          change.current.memoryStats > change.baseline.memoryStats;
-
-        if (hasExecutionRegression && hasMemoryRegression) {
-          console.log(
-            `         ⚡ Execution: ${executionPercentChange.toFixed(
-              1,
-            )}% slower | 🧠 Memory: ${memoryPercentChange.toFixed(1)}% more`,
-          );
-        } else if (hasExecutionRegression) {
-          console.log(
-            `         ⚡ Execution: ${executionPercentChange.toFixed(
-              1,
-            )}% slower`,
-          );
-        } else if (hasMemoryRegression) {
-          console.log(
-            `         🧠 Memory: ${memoryPercentChange.toFixed(1)}% more`,
-          );
-        }
-
-        console.log(
-          `         Time: ${change.baseline.mean.toFixed(
-            2,
-          )}ms → ${change.current.mean.toFixed(2)}ms`,
-        );
-        console.log(
-          `         Memory: ${change.baseline.memoryStats.toFixed(
-            2,
-          )} → ${change.current.memoryStats.toFixed(2)}`,
-        );
-        console.log();
-      });
-    }
+    sameConfig.forEach((change) => printChangeDetails(change, false));
   }
 
-  // Print baseline comparisons (vs default baseline)
   if (baseline.length > 0) {
-    console.log("📏 CONFIGURATION IMPACT ANALYSIS (vs Default config):");
-    console.log(
-      `   ${baseline.length} configuration(s) with significant performance differences`,
-    );
-    console.log(
-      "   This shows how each cache configuration performs compared to the Default configuration",
-    );
+    console.log(`${EMOJIS.ruler} CONFIGURATION IMPACT ANALYSIS:`);
     console.log();
-
-    // Group by improvement/regression (considering both execution and memory)
-    const baselineImprovements = baseline.filter((change) => {
-      const executionImprovement = change.current.mean < change.baseline.mean;
-      const memoryImprovement =
-        change.current.memoryStats < change.baseline.memoryStats;
-      // Consider it an improvement if either execution or memory improved (or both)
-      return executionImprovement || memoryImprovement;
-    });
-    const baselineRegressions = baseline.filter((change) => {
-      const executionRegression = change.current.mean > change.baseline.mean;
-      const memoryRegression =
-        change.current.memoryStats > change.baseline.memoryStats;
-      const executionImprovement = change.current.mean < change.baseline.mean;
-      const memoryImprovement =
-        change.current.memoryStats < change.baseline.memoryStats;
-      // Consider it a regression if there are regressions and no improvements
-      return (
-        (executionRegression || memoryRegression) &&
-        !(executionImprovement || memoryImprovement)
-      );
-    });
-
-    if (baselineImprovements.length > 0) {
-      console.log("   🚀 IMPROVEMENTS:");
-      baselineImprovements.forEach((change) => {
-        const executionPercentChange = Math.abs(
-          ((change.current.mean - change.baseline.mean) /
-            change.baseline.mean) *
-            100,
-        );
-        const memoryPercentChange = Math.abs(
-          ((change.current.memoryStats - change.baseline.memoryStats) /
-            change.baseline.memoryStats) *
-            100,
-        );
-
-        console.log(
-          `      ✅ ${change.benchId} - ${change.current.cacheConfig}/${change.current.cacheFactory}`,
-        );
-
-        // Check what type of improvement this is
-        const hasExecutionImprovement =
-          change.current.mean < change.baseline.mean;
-        const hasMemoryImprovement =
-          change.current.memoryStats < change.baseline.memoryStats;
-
-        if (hasExecutionImprovement && hasMemoryImprovement) {
-          console.log(
-            `         ⚡ Execution: ${executionPercentChange.toFixed(
-              1,
-            )}% faster | 🧠 Memory: ${memoryPercentChange.toFixed(
-              1,
-            )}% less with ${change.current.cacheConfig} config`,
-          );
-        } else if (hasExecutionImprovement) {
-          console.log(
-            `         ⚡ Execution: ${executionPercentChange.toFixed(
-              1,
-            )}% faster with ${change.current.cacheConfig} config`,
-          );
-        } else if (hasMemoryImprovement) {
-          console.log(
-            `         🧠 Memory: ${memoryPercentChange.toFixed(1)}% less with ${
-              change.current.cacheConfig
-            } config`,
-          );
-        }
-
-        console.log(
-          `         Time: ${change.baseline.mean.toFixed(
-            2,
-          )}ms → ${change.current.mean.toFixed(2)}ms`,
-        );
-        console.log(
-          `         Memory: ${change.baseline.memoryStats.toFixed(
-            2,
-          )} → ${change.current.memoryStats.toFixed(2)}`,
-        );
-        console.log();
-      });
-    }
-
-    if (baselineRegressions.length > 0) {
-      console.log("   ⚠️ REGRESSIONS:");
-      baselineRegressions.forEach((change) => {
-        const executionPercentChange =
-          ((change.current.mean - change.baseline.mean) /
-            change.baseline.mean) *
-          100;
-        const memoryPercentChange =
-          ((change.current.memoryStats - change.baseline.memoryStats) /
-            change.baseline.memoryStats) *
-          100;
-
-        console.log(
-          `      ❌ ${change.benchId} - ${change.current.cacheConfig}/${change.current.cacheFactory}`,
-        );
-
-        // Check what type of regression this is
-        const hasExecutionRegression =
-          change.current.mean > change.baseline.mean;
-        const hasMemoryRegression =
-          change.current.memoryStats > change.baseline.memoryStats;
-
-        if (hasExecutionRegression && hasMemoryRegression) {
-          console.log(
-            `         ⚡ Execution: ${executionPercentChange.toFixed(
-              1,
-            )}% slower | 🧠 Memory: ${memoryPercentChange.toFixed(
-              1,
-            )}% more with ${change.current.cacheConfig} config`,
-          );
-        } else if (hasExecutionRegression) {
-          console.log(
-            `         ⚡ Execution: ${executionPercentChange.toFixed(
-              1,
-            )}% slower with ${change.current.cacheConfig} config`,
-          );
-        } else if (hasMemoryRegression) {
-          console.log(
-            `         🧠 Memory: ${memoryPercentChange.toFixed(1)}% more with ${
-              change.current.cacheConfig
-            } config`,
-          );
-        }
-
-        console.log(
-          `         Time: ${change.baseline.mean.toFixed(
-            2,
-          )}ms → ${change.current.mean.toFixed(2)}ms`,
-        );
-        console.log(
-          `         Memory: ${change.baseline.memoryStats.toFixed(
-            2,
-          )} → ${change.current.memoryStats.toFixed(2)}`,
-        );
-        console.log();
-      });
-    }
+    baseline.forEach((change) => printChangeDetails(change, true));
   }
 
-  console.log("=".repeat(60));
+  console.log(EMOJIS.equals.repeat(60));
+};
+
+const generateMarkdownChangeRow = (
+  change: SignificantChange,
+  isBaselineComparison = false,
+): string => {
+  const executionPercentChange =
+    ((change.current.mean - change.baseline.mean) / change.baseline.mean) * 100;
+  const memoryPercentChange =
+    ((change.current.memoryStats - change.baseline.memoryStats) /
+      change.baseline.memoryStats) *
+    100;
+
+  const configText = change.current.cacheConfig;
+  const factoryText = change.current.cacheFactory;
+
+  // Generate execution change text
+  let executionChange = "";
+  if (
+    Math.abs(executionPercentChange) >=
+    CONFIG.significantChanges.threshold * 100
+  ) {
+    const executionIcon = executionPercentChange < 0 ? EMOJIS.good : EMOJIS.bad;
+    const executionWord = executionPercentChange < 0 ? "faster" : "slower";
+    executionChange = `${executionIcon} ${change.baseline.mean.toFixed(2)}ms ${
+      EMOJIS.arrow
+    } ${change.current.mean.toFixed(2)}ms ${executionWord} (${Math.abs(
+      executionPercentChange,
+    ).toFixed(1)}%)`;
+  }
+
+  // Generate memory change text
+  let memoryChange = "";
+  if (
+    Math.abs(memoryPercentChange) >=
+    CONFIG.significantChanges.threshold * 100
+  ) {
+    const memoryIcon = memoryPercentChange < 0 ? EMOJIS.good : EMOJIS.bad;
+    const memoryWord = memoryPercentChange < 0 ? "less" : "more";
+    memoryChange = `${memoryIcon} ${change.baseline.memoryStats.toFixed(2)} ${
+      EMOJIS.arrow
+    } ${change.current.memoryStats.toFixed(2)} ${memoryWord} (${Math.abs(
+      memoryPercentChange,
+    ).toFixed(1)}%)`;
+  }
+
+  return `| ${change.benchId} | ${configText} | ${factoryText} | ${executionChange} | ${memoryChange} |\n`;
 };
 
 export const generateMarkdownReport = (changeReport: {
@@ -335,248 +190,48 @@ export const generateMarkdownReport = (changeReport: {
   baseline: SignificantChange[];
 }): string => {
   const { sameConfig, baseline } = changeReport;
-  const totalChanges = sameConfig.length + baseline.length;
 
-  let markdown = "# 📊 Benchmark Analysis Report\n\n";
+  let markdown = `# ${EMOJIS.chart} Benchmark Analysis Report\n\n`;
 
-  if (totalChanges === 0) {
-    markdown += "✅ **No significant performance changes detected**\n\n";
-    return markdown;
+  if (sameConfig.length === 0) {
+    markdown += `${EMOJIS.checkmark} **No significant performance changes detected**\n\n`;
+  } else {
+    markdown += `${EMOJIS.magnifying} Found **${sameConfig.length}** significant change(s)\n\n`;
   }
 
-  markdown += `🔍 Found **${totalChanges}** significant change(s)\n\n`;
-
-  // Same Configuration Comparisons (more important)
+  // Same Configuration Comparisons
   if (sameConfig.length > 0) {
-    markdown += "## 🎯 Same Configuration Comparisons\n\n";
+    markdown += `## ${EMOJIS.target} Same Configuration Comparisons\n\n`;
     markdown +=
       "*Comparing against baseline with the same cache configuration*\n\n";
 
-    // Group by improvement/regression
-    const sameConfigImprovements = sameConfig.filter((change) => {
-      const executionImprovement = change.current.mean < change.baseline.mean;
-      const memoryImprovement =
-        change.current.memoryStats < change.baseline.memoryStats;
-      return executionImprovement || memoryImprovement;
+    markdown +=
+      "| Benchmark ID | Configuration | Factory | Execution | Memory |\n";
+    markdown +=
+      "|--------------|---------------|---------|-----------|--------|\n";
+
+    sameConfig.forEach((change) => {
+      markdown += generateMarkdownChangeRow(change, false);
     });
-    const sameConfigRegressions = sameConfig.filter((change) => {
-      const executionRegression = change.current.mean > change.baseline.mean;
-      const memoryRegression =
-        change.current.memoryStats > change.baseline.memoryStats;
-      const executionImprovement = change.current.mean < change.baseline.mean;
-      const memoryImprovement =
-        change.current.memoryStats < change.baseline.memoryStats;
-      return (
-        (executionRegression || memoryRegression) &&
-        !(executionImprovement || memoryImprovement)
-      );
-    });
-
-    if (sameConfigImprovements.length > 0) {
-      markdown += "### 🚀 Improvements\n\n";
-      markdown +=
-        "| Benchmark ID | Configuration | Execution | Memory | Before (Time) | After (Time) | Before (Memory) | After (Memory) |\n";
-      markdown +=
-        "|--------------|---------------|-----------|--------|---------------|--------------|-----------------|----------------|\n";
-
-      sameConfigImprovements.forEach((change) => {
-        const executionPercentChange = Math.abs(
-          ((change.current.mean - change.baseline.mean) /
-            change.baseline.mean) *
-            100,
-        );
-        const memoryPercentChange = Math.abs(
-          ((change.current.memoryStats - change.baseline.memoryStats) /
-            change.baseline.memoryStats) *
-            100,
-        );
-
-        const hasExecutionImprovement =
-          change.current.mean < change.baseline.mean;
-        const hasMemoryImprovement =
-          change.current.memoryStats < change.baseline.memoryStats;
-
-        const executionChange = hasExecutionImprovement
-          ? `⚡ -${executionPercentChange.toFixed(1)}%`
-          : "";
-        const memoryChange = hasMemoryImprovement
-          ? `🧠 -${memoryPercentChange.toFixed(1)}%`
-          : "";
-        const config = `${change.current.cacheConfig}/${change.current.cacheFactory}`;
-
-        markdown += `| ${
-          change.benchId
-        } | ${config} | ${executionChange} | ${memoryChange} | ${change.baseline.mean.toFixed(
-          2,
-        )}ms | ${change.current.mean.toFixed(
-          2,
-        )}ms | ${change.baseline.memoryStats.toFixed(
-          2,
-        )} | ${change.current.memoryStats.toFixed(2)} |\n`;
-      });
-      markdown += "\n";
-    }
-
-    if (sameConfigRegressions.length > 0) {
-      markdown += "### ⚠️ Regressions\n\n";
-      markdown +=
-        "| Benchmark ID | Configuration | Execution | Memory | Before (Time) | After (Time) | Before (Memory) | After (Memory) |\n";
-      markdown +=
-        "|--------------|---------------|-----------|--------|---------------|--------------|-----------------|----------------|\n";
-
-      sameConfigRegressions.forEach((change) => {
-        const executionPercentChange =
-          ((change.current.mean - change.baseline.mean) /
-            change.baseline.mean) *
-          100;
-        const memoryPercentChange =
-          ((change.current.memoryStats - change.baseline.memoryStats) /
-            change.baseline.memoryStats) *
-          100;
-
-        const hasExecutionRegression =
-          change.current.mean > change.baseline.mean;
-        const hasMemoryRegression =
-          change.current.memoryStats > change.baseline.memoryStats;
-
-        const executionChange = hasExecutionRegression
-          ? `⚡ +${executionPercentChange.toFixed(1)}%`
-          : "";
-        const memoryChange = hasMemoryRegression
-          ? `🧠 +${memoryPercentChange.toFixed(1)}%`
-          : "";
-        const config = `${change.current.cacheConfig}/${change.current.cacheFactory}`;
-
-        markdown += `| ${
-          change.benchId
-        } | ${config} | ${executionChange} | ${memoryChange} | ${change.baseline.mean.toFixed(
-          2,
-        )}ms | ${change.current.mean.toFixed(
-          2,
-        )}ms | ${change.baseline.memoryStats.toFixed(
-          2,
-        )} | ${change.current.memoryStats.toFixed(2)} |\n`;
-      });
-      markdown += "\n";
-    }
+    markdown += "\n";
   }
 
-  // Configuration Impact Analysis (in expandable section)
+  // Configuration Impact Analysis (expandable) - always show if we have baseline data
   if (baseline.length > 0) {
     markdown += "<details>\n";
+    markdown += `<summary>${EMOJIS.ruler} Configuration Impact Analysis</summary>\n\n`;
     markdown +=
-      "<summary>📏 Configuration Impact Analysis (vs Default Configuration)</summary>\n\n";
+      "*How each cache configuration performs compared to the default configuration and baseline factory*\n\n";
+
     markdown +=
-      "*How each cache configuration performs compared to the Default configuration*\n\n";
+      "| Benchmark ID | Configuration | Factory | Execution | Memory |\n";
+    markdown +=
+      "|--------------|---------------|---------|-----------|--------|\n";
 
-    // Group by improvement/regression
-    const baselineImprovements = baseline.filter((change) => {
-      const executionImprovement = change.current.mean < change.baseline.mean;
-      const memoryImprovement =
-        change.current.memoryStats < change.baseline.memoryStats;
-      return executionImprovement || memoryImprovement;
+    baseline.forEach((change) => {
+      markdown += generateMarkdownChangeRow(change, true);
     });
-    const baselineRegressions = baseline.filter((change) => {
-      const executionRegression = change.current.mean > change.baseline.mean;
-      const memoryRegression =
-        change.current.memoryStats > change.baseline.memoryStats;
-      const executionImprovement = change.current.mean < change.baseline.mean;
-      const memoryImprovement =
-        change.current.memoryStats < change.baseline.memoryStats;
-      return (
-        (executionRegression || memoryRegression) &&
-        !(executionImprovement || memoryImprovement)
-      );
-    });
-
-    if (baselineImprovements.length > 0) {
-      markdown += "### 🚀 Configurations with Better Performance\n\n";
-      markdown +=
-        "| Benchmark ID | Configuration | Execution | Memory | Before (Time) | After (Time) | Before (Memory) | After (Memory) |\n";
-      markdown +=
-        "|--------------|---------------|-----------|--------|---------------|--------------|-----------------|----------------|\n";
-
-      baselineImprovements.forEach((change) => {
-        const executionPercentChange = Math.abs(
-          ((change.current.mean - change.baseline.mean) /
-            change.baseline.mean) *
-            100,
-        );
-        const memoryPercentChange = Math.abs(
-          ((change.current.memoryStats - change.baseline.memoryStats) /
-            change.baseline.memoryStats) *
-            100,
-        );
-
-        const hasExecutionImprovement =
-          change.current.mean < change.baseline.mean;
-        const hasMemoryImprovement =
-          change.current.memoryStats < change.baseline.memoryStats;
-
-        const executionChange = hasExecutionImprovement
-          ? `⚡ -${executionPercentChange.toFixed(1)}%`
-          : "";
-        const memoryChange = hasMemoryImprovement
-          ? `🧠 -${memoryPercentChange.toFixed(1)}%`
-          : "";
-        const config = `${change.current.cacheConfig}/${change.current.cacheFactory}`;
-
-        markdown += `| ${
-          change.benchId
-        } | ${config} | ${executionChange} | ${memoryChange} | ${change.baseline.mean.toFixed(
-          2,
-        )}ms | ${change.current.mean.toFixed(
-          2,
-        )}ms | ${change.baseline.memoryStats.toFixed(
-          2,
-        )} | ${change.current.memoryStats.toFixed(2)} |\n`;
-      });
-      markdown += "\n";
-    }
-
-    if (baselineRegressions.length > 0) {
-      markdown += "### ⚠️ Configurations with Worse Performance\n\n";
-      markdown +=
-        "| Benchmark ID | Configuration | Execution | Memory | Before (Time) | After (Time) | Before (Memory) | After (Memory) |\n";
-      markdown +=
-        "|--------------|---------------|-----------|--------|---------------|--------------|-----------------|----------------|\n";
-
-      baselineRegressions.forEach((change) => {
-        const executionPercentChange =
-          ((change.current.mean - change.baseline.mean) /
-            change.baseline.mean) *
-          100;
-        const memoryPercentChange =
-          ((change.current.memoryStats - change.baseline.memoryStats) /
-            change.baseline.memoryStats) *
-          100;
-
-        const hasExecutionRegression =
-          change.current.mean > change.baseline.mean;
-        const hasMemoryRegression =
-          change.current.memoryStats > change.baseline.memoryStats;
-
-        const executionChange = hasExecutionRegression
-          ? `⚡ +${executionPercentChange.toFixed(1)}%`
-          : "";
-        const memoryChange = hasMemoryRegression
-          ? `🧠 +${memoryPercentChange.toFixed(1)}%`
-          : "";
-        const config = `${change.current.cacheConfig}/${change.current.cacheFactory}`;
-
-        markdown += `| ${
-          change.benchId
-        } | ${config} | ${executionChange} | ${memoryChange} | ${change.baseline.mean.toFixed(
-          2,
-        )}ms | ${change.current.mean.toFixed(
-          2,
-        )}ms | ${change.baseline.memoryStats.toFixed(
-          2,
-        )} | ${change.current.memoryStats.toFixed(2)} |\n`;
-      });
-      markdown += "\n";
-    }
-
+    markdown += "\n";
     markdown += "</details>\n\n";
   }
 
@@ -595,9 +250,9 @@ export const saveMarkdownReport = (markdownReport: string) => {
 
   try {
     fs.writeFileSync(filePath, markdownReport);
-    console.log(`📄 Markdown report saved: ${filePath}`);
+    console.log(`${EMOJIS.page} Markdown report saved: ${filePath}`);
   } catch (error) {
-    console.error(`❌ Failed to save markdown report: ${error}`);
+    console.error(`${EMOJIS.cross} Failed to save markdown report: ${error}`);
   }
 };
 
@@ -611,8 +266,8 @@ export const saveJsonReport = (changeReport: {
 
   try {
     fs.writeFileSync(filePath, JSON.stringify(changeReport, null, 2));
-    console.log(`📄 JSON report saved: ${filePath}`);
+    console.log(`${EMOJIS.page} JSON report saved: ${filePath}`);
   } catch (error) {
-    console.error(`❌ Failed to save JSON report: ${error}`);
+    console.error(`${EMOJIS.cross} Failed to save JSON report: ${error}`);
   }
 };

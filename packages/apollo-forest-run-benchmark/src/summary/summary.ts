@@ -1,25 +1,14 @@
 import type {
   BenchStats,
   SuiteRawResult,
-  BenchBase,
-  Bench,
-  BenchId,
   SuiteResult,
+  SummaryReport,
+  SummaryChangeReport,
 } from "../types";
 
 import { BaseStats, ExecutionStats } from "../utils/stats";
 import { CONFIG } from "../config";
 import { mergeSuites } from "../utils/merge";
-
-export interface SummaryReport {
-  [scenarioName: BenchId]: BenchStats[];
-}
-
-export interface SignificantChange {
-  benchId: BenchId;
-  baseline: BenchStats;
-  current: BenchStats;
-}
 
 const THRESHOLD = CONFIG.significantChanges.threshold;
 
@@ -83,41 +72,28 @@ const isChange = (baseline: BenchStats, current: BenchStats): boolean => {
 };
 
 export const analyzeSignificantChanges = (summary: SummaryReport) => {
-  const changes: {
-    sameConfig: SignificantChange[];
-    baseline: SignificantChange[];
-  } = {
+  const changes: SummaryChangeReport = {
     sameConfig: [],
     baseline: [],
   };
 
-  for (const [benchId, scenarioResults] of Object.entries(summary) as [
+  for (const [benchId, benchResults] of Object.entries(summary) as [
     keyof SummaryReport,
     SummaryReport[keyof SummaryReport],
   ][]) {
-    // Find the baseline result (baseline factory + Default cache config)
-    const defaultBaseline = scenarioResults.find(
-      (result) =>
-        result.cacheFactory === "baseline" && result.cacheConfig === "Default",
-    )!;
+    const defaultBaseline = benchResults.find(
+      (bench) =>
+        bench.cacheFactory === "baseline" && bench.cacheConfig === "Default",
+    );
 
-    // Compare all other results against the baseline
-    for (const result of scenarioResults) {
-      // Skip comparing baseline with itself
-      if (
-        result.cacheFactory === "baseline" &&
-        result.cacheConfig === "Default"
-      ) {
-        continue;
-      }
-
-      const configBaseline = scenarioResults.find(
+    for (const result of benchResults) {
+      const configBaseline = benchResults.find(
         (bench) =>
           bench.cacheFactory === "baseline" &&
           bench.cacheConfig === result.cacheConfig,
       );
 
-      // For same config comparisons: compare non-baseline factories against baseline factory with same config
+      // Compare against the same config and baseline factory. Detect overall changes
       if (configBaseline && result.cacheFactory !== "baseline") {
         const hasConfigChange = isChange(configBaseline, result);
         if (hasConfigChange) {
@@ -129,9 +105,8 @@ export const analyzeSignificantChanges = (summary: SummaryReport) => {
         }
       }
 
-      // For baseline comparisons: compare non-default configurations against default baseline
-      // This shows the performance impact of choosing a specific cache configuration
-      if (result.cacheConfig !== "Default") {
+      // Compare against default config and baseline factory. Detect cache config impact
+      if (defaultBaseline && result.cacheConfig !== "Default") {
         const hasDefaultChange = isChange(defaultBaseline, result);
         if (hasDefaultChange) {
           changes.baseline.push({

@@ -11,7 +11,7 @@
     "directory": "packages/apollo-forest-run-benchmark"
   },
   "scripts": {
-    "build": "monorepo-scripts build",
+    "build": "rm -rf ./lib && monorepo-scripts build",
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
     "types": "monorepo-scripts types",

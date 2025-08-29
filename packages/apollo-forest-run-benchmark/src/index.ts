@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 import { CACHE_FACTORIES } from "./config";
 import { log } from "./utils/logger";
-import { analyzeResults } from "./analyze-results";
+import { analyzeResults } from "./summary/analyze-results";
 import { CONFIG } from "./config";
 import { spawn } from "child_process";
 import { mergeResults } from "./utils/merge";
@@ -80,7 +80,7 @@ const runBaseSuites = async (): Promise<WorkerResult[]> => {
 
 const runBenchmarks = async (): Promise<void> => {
   const { maxAttempts } = CONFIG.reliability;
-  let prevSuites: SuiteRawResult[] = [];
+  const prevSuites: SuiteRawResult[] = [];
   log.start();
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     log.attempt(attempt);
