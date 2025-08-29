@@ -4,15 +4,21 @@ import { analyzeSignificantChanges } from "./summary";
 import {
   generateMarkdownReport,
   printSignificantChanges,
-  saveMarkdownReport,
 } from "../utils/logger";
+import { saveResultFile } from "../utils/file";
 
 export const analyzeResults = (summary: SummaryReport) => {
   const changeReport = analyzeSignificantChanges(summary);
+  const markdownReport = generateMarkdownReport(changeReport);
+
   printSignificantChanges(changeReport);
 
-  const markdownReport = generateMarkdownReport(changeReport);
-  saveMarkdownReport(markdownReport);
+  saveResultFile("benchmark.md", markdownReport);
+  saveResultFile("benchmark.json", JSON.stringify(summary, null, 2));
 
-  return changeReport;
+  if (process.env.CI === "true") {
+    console.log("::BEGIN_BENCHMARK_REPORT::");
+    console.log(markdownReport);
+    console.log("::END_BENCHMARK_REPORT::");
+  }
 };

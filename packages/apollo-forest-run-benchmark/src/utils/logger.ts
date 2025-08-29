@@ -236,32 +236,3 @@ export const generateMarkdownReport = (changeReport: {
 
   return markdown;
 };
-
-export const saveMarkdownReport = (markdownReport: string) => {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const filename = `benchmark-analysis-${timestamp}.md`;
-  const filePath = path.resolve(filename);
-
-  try {
-    fs.writeFileSync(filePath, markdownReport);
-    console.log(`${EMOJIS.page} Markdown report saved: ${filePath}`);
-  } catch (error) {
-    console.error(`${EMOJIS.cross} Failed to save markdown report: ${error}`);
-  }
-};
-
-export const saveJsonReport = (changeReport: {
-  sameConfig: SignificantChange[];
-  baseline: SignificantChange[];
-}) => {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const filename = `benchmark-analysis-${timestamp}.json`;
-  const filePath = path.resolve(filename);
-
-  try {
-    fs.writeFileSync(filePath, JSON.stringify(changeReport, null, 2));
-    console.log(`${EMOJIS.page} JSON report saved: ${filePath}`);
-  } catch (error) {
-    console.error(`${EMOJIS.cross} Failed to save JSON report: ${error}`);
-  }
-};
