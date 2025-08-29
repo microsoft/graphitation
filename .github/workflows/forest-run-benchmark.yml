@@ -69,7 +69,6 @@ jobs:
               console.log('No benchmark report generated');
               return;
             }
-            }
 
             // Find existing benchmark comment on this PR to update or create new one
             const { data: comments } = await github.rest.issues.listComments({
