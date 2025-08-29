@@ -27,12 +27,21 @@ for (const cacheFactory of CACHE_FACTORIES) {
 const spawnProcess = (job: BaseSuite): Promise<WorkerResult> => {
   return new Promise((resolve) => {
     const workerScript = path.join(__dirname, "runners", "suite-worker.js");
-    const child = spawn(process.execPath, [workerScript, JSON.stringify(job)], {
-      env: {
-        ...process.env,
+    const child = spawn(
+      process.execPath,
+      [
+        "--noconcurrent_sweeping",
+        "--noconcurrent_recompilation",
+        workerScript,
+        JSON.stringify(job),
+      ],
+      {
+        env: {
+          ...process.env,
+        },
+        stdio: ["pipe", "pipe", "pipe"],
       },
-      stdio: ["pipe", "pipe", "pipe"],
-    });
+    );
 
     let stdout = "";
 

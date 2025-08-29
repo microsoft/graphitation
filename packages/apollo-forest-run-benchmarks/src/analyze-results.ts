@@ -1,4 +1,6 @@
-import { analyzeSignificantChanges, SummaryReport } from "./summary/summary";
+import type { SummaryReport } from "./summary/summary";
+
+import { analyzeSignificantChanges } from "./summary/summary";
 import {
   generateMarkdownReport,
   printSignificantChanges,

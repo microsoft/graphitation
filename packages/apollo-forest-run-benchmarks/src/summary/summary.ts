@@ -21,11 +21,7 @@ export interface SignificantChange {
   current: BenchStats;
 }
 
-export interface ChangeReport {
-  significantChanges: SignificantChange[];
-  totalScenarios: number;
-  changedScenarios: number;
-}
+const THRESHOLD = CONFIG.significantChanges.threshold;
 
 export const getSummary = (results: SuiteRawResult[]) => {
   const summary: SummaryReport = {};
@@ -62,7 +58,6 @@ export const getSummary = (results: SuiteRawResult[]) => {
   return summary;
 };
 
-const THRESHOLD = CONFIG.significantChanges.threshold;
 export const isMemoryChange = (
   baseline: BenchStats,
   current: BenchStats,
@@ -108,28 +103,43 @@ export const analyzeSignificantChanges = (summary: SummaryReport) => {
 
     // Compare all other results against the baseline
     for (const result of scenarioResults) {
+      // Skip comparing baseline with itself
+      if (
+        result.cacheFactory === "baseline" &&
+        result.cacheConfig === "Default"
+      ) {
+        continue;
+      }
+
       const configBaseline = scenarioResults.find(
         (bench) =>
           bench.cacheFactory === "baseline" &&
-          bench.cacheConfig !== result.cacheConfig,
-      )!;
-      const hasDefaultChange = isChange(defaultBaseline, result);
-      const hasConfigChange = isChange(configBaseline, result);
+          bench.cacheConfig === result.cacheConfig,
+      );
 
-      if (hasDefaultChange) {
-        changes.baseline.push({
-          benchId,
-          baseline: defaultBaseline,
-          current: result,
-        });
+      // For same config comparisons: compare non-baseline factories against baseline factory with same config
+      if (configBaseline && result.cacheFactory !== "baseline") {
+        const hasConfigChange = isChange(configBaseline, result);
+        if (hasConfigChange) {
+          changes.sameConfig.push({
+            benchId,
+            baseline: configBaseline,
+            current: result,
+          });
+        }
       }
 
-      if (hasConfigChange) {
-        changes.sameConfig.push({
-          benchId,
-          baseline: configBaseline,
-          current: result,
-        });
+      // For baseline comparisons: compare non-default configurations against default baseline
+      // This shows the performance impact of choosing a specific cache configuration
+      if (result.cacheConfig !== "Default") {
+        const hasDefaultChange = isChange(defaultBaseline, result);
+        if (hasDefaultChange) {
+          changes.baseline.push({
+            benchId,
+            baseline: defaultBaseline,
+            current: result,
+          });
+        }
       }
     }
   }

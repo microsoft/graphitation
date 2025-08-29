@@ -177,8 +177,13 @@ export const printSignificantChanges = (changeReport: {
 
   // Print baseline comparisons (vs default baseline)
   if (baseline.length > 0) {
-    console.log("📏 BASELINE COMPARISONS (vs default baseline):");
-    console.log(`   ${baseline.length} change(s) detected`);
+    console.log("📏 CONFIGURATION IMPACT ANALYSIS (vs Default config):");
+    console.log(
+      `   ${baseline.length} configuration(s) with significant performance differences`,
+    );
+    console.log(
+      "   This shows how each cache configuration performs compared to the Default configuration",
+    );
     console.log();
 
     // Group by improvement/regression (considering both execution and memory)
@@ -233,19 +238,19 @@ export const printSignificantChanges = (changeReport: {
               1,
             )}% faster | 🧠 Memory: ${memoryPercentChange.toFixed(
               1,
-            )}% less than default baseline`,
+            )}% less with ${change.current.cacheConfig} config`,
           );
         } else if (hasExecutionImprovement) {
           console.log(
             `         ⚡ Execution: ${executionPercentChange.toFixed(
               1,
-            )}% faster than default baseline`,
+            )}% faster with ${change.current.cacheConfig} config`,
           );
         } else if (hasMemoryImprovement) {
           console.log(
-            `         🧠 Memory: ${memoryPercentChange.toFixed(
-              1,
-            )}% less than default baseline`,
+            `         🧠 Memory: ${memoryPercentChange.toFixed(1)}% less with ${
+              change.current.cacheConfig
+            } config`,
           );
         }
 
@@ -291,19 +296,19 @@ export const printSignificantChanges = (changeReport: {
               1,
             )}% slower | 🧠 Memory: ${memoryPercentChange.toFixed(
               1,
-            )}% more than default baseline`,
+            )}% more with ${change.current.cacheConfig} config`,
           );
         } else if (hasExecutionRegression) {
           console.log(
             `         ⚡ Execution: ${executionPercentChange.toFixed(
               1,
-            )}% slower than default baseline`,
+            )}% slower with ${change.current.cacheConfig} config`,
           );
         } else if (hasMemoryRegression) {
           console.log(
-            `         🧠 Memory: ${memoryPercentChange.toFixed(
-              1,
-            )}% more than default baseline`,
+            `         🧠 Memory: ${memoryPercentChange.toFixed(1)}% more with ${
+              change.current.cacheConfig
+            } config`,
           );
         }
 
@@ -456,13 +461,13 @@ export const generateMarkdownReport = (changeReport: {
     }
   }
 
-  // Baseline Comparisons (in expandable section)
+  // Configuration Impact Analysis (in expandable section)
   if (baseline.length > 0) {
     markdown += "<details>\n";
     markdown +=
-      "<summary>📏 Baseline Comparisons (vs Default Baseline)</summary>\n\n";
+      "<summary>📏 Configuration Impact Analysis (vs Default Configuration)</summary>\n\n";
     markdown +=
-      "*Comparing against baseline factory with Default cache configuration*\n\n";
+      "*How each cache configuration performs compared to the Default configuration*\n\n";
 
     // Group by improvement/regression
     const baselineImprovements = baseline.filter((change) => {
@@ -485,7 +490,7 @@ export const generateMarkdownReport = (changeReport: {
     });
 
     if (baselineImprovements.length > 0) {
-      markdown += "### 🚀 Improvements vs Default Baseline\n\n";
+      markdown += "### 🚀 Configurations with Better Performance\n\n";
       markdown +=
         "| Benchmark ID | Configuration | Execution | Memory | Before (Time) | After (Time) | Before (Memory) | After (Memory) |\n";
       markdown +=
@@ -530,7 +535,7 @@ export const generateMarkdownReport = (changeReport: {
     }
 
     if (baselineRegressions.length > 0) {
-      markdown += "### ⚠️ Regressions vs Default Baseline\n\n";
+      markdown += "### ⚠️ Configurations with Worse Performance\n\n";
       markdown +=
         "| Benchmark ID | Configuration | Execution | Memory | Before (Time) | After (Time) | Before (Memory) | After (Memory) |\n";
       markdown +=
