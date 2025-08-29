@@ -1,15 +1,15 @@
-name: ForestRun Performance Benchmarks
+name: ForestRun Performance Benchmark
 
 on:
   push:
     branches: [main]
     paths:
       - "packages/apollo-forest-run/**"
-      - "packages/apollo-forest-run-benchmarks/**"
+      - "packages/apollo-forest-run-benchmark/**"
   pull_request:
     paths:
       - "packages/apollo-forest-run/**"
-      - "packages/apollo-forest-run-benchmarks/**"
+      - "packages/apollo-forest-run-benchmark/**"
 
 permissions:
   contents: read
@@ -28,23 +28,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "20"
           cache: "yarn"
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Change directory
-        run: cd packages/apollo-forest-run-benchmarks
-
       - name: Clone caches
         run: |
-          cd packages/apollo-forest-run-benchmarks
+          cd packages/apollo-forest-run-benchmark
           yarn clone
 
       - name: Run benchmarks
         run: |
-          cd packages/apollo-forest-run-benchmarks
+          cd packages/apollo-forest-run-benchmark
           yarn benchmark
         env:
           CI: true
@@ -59,7 +56,7 @@ jobs:
             const { execSync } = require('child_process');
 
             // Find the most recent markdown report file
-            const benchmarkDir = 'packages/apollo-forest-run-benchmarks';
+            const benchmarkDir = 'packages/apollo-forest-run-benchmark';
             let reportPath = null;
 
             try {
