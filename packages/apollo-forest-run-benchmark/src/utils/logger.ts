@@ -123,22 +123,19 @@ export const printSignificantChanges = (changeReport: SummaryChangeReport) => {
       `${EMOJIS.target} SAME CONFIGURATION COMPARISONS (current vs baseline):`,
     );
     console.log();
-    sameConfig.forEach((change) => printChangeDetails(change, false));
+    sameConfig.forEach((change) => printChangeDetails(change));
   }
 
   if (baseline.length > 0) {
     console.log(`${EMOJIS.ruler} CONFIGURATION IMPACT ANALYSIS:`);
     console.log();
-    baseline.forEach((change) => printChangeDetails(change, true));
+    baseline.forEach((change) => printChangeDetails(change));
   }
 
   console.log(EMOJIS.equals.repeat(60));
 };
 
-const generateMarkdownChangeRow = (
-  change: SignificantChange,
-  isBaselineComparison = false,
-): string => {
+const generateMarkdownChangeRow = (change: SignificantChange): string => {
   const executionPercentChange =
     ((change.current.mean - change.baseline.mean) / change.baseline.mean) * 100;
   const memoryPercentChange =
@@ -208,7 +205,7 @@ export const generateMarkdownReport = (changeReport: {
       "|--------------|---------------|---------|-----------|--------|\n";
 
     sameConfig.forEach((change) => {
-      markdown += generateMarkdownChangeRow(change, false);
+      markdown += generateMarkdownChangeRow(change);
     });
     markdown += "\n";
   }
@@ -226,7 +223,7 @@ export const generateMarkdownReport = (changeReport: {
       "|--------------|---------------|---------|-----------|--------|\n";
 
     baseline.forEach((change) => {
-      markdown += generateMarkdownChangeRow(change, true);
+      markdown += generateMarkdownChangeRow(change);
     });
     markdown += "\n";
     markdown += "</details>\n\n";

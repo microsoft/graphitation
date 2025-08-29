@@ -40,9 +40,21 @@ jobs:
           yarn clone
 
       - name: Run benchmarks
+        id: benchmark
         run: |
           cd packages/apollo-forest-run-benchmark
-          yarn benchmark
+          output=$(yarn benchmark 2>&1)
+          echo "$output"
+
+          # Extract markdown report from output
+          if echo "$output" | grep -q "::BEGIN_BENCHMARK_REPORT::"; then
+            markdown=$(echo "$output" | sed -n '/::BEGIN_BENCHMARK_REPORT::/,/::END_BENCHMARK_REPORT::/p' | sed '1d;$d')
+            echo "benchmark-report<<EOF" >> $GITHUB_OUTPUT
+            echo "$markdown" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "No benchmark report found in output"
+          fi
         env:
           CI: true
 
@@ -51,72 +63,48 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const fs = require('fs');
-            const path = require('path');
-            const { execSync } = require('child_process');
+            const markdownContent = `${{ steps.benchmark.outputs.benchmark-report }}`.trim();
 
-            // Find the most recent markdown report file
-            const benchmarkDir = 'packages/apollo-forest-run-benchmark';
-            let reportPath = null;
-
-            try {
-              const files = fs.readdirSync(benchmarkDir);
-              const markdownFiles = files
-                .filter(file => file.startsWith('benchmark-analysis-') && file.endsWith('.md'))
-                .map(file => ({
-                  name: file,
-                  path: path.join(benchmarkDir, file),
-                  mtime: fs.statSync(path.join(benchmarkDir, file)).mtime
-                }))
-                .sort((a, b) => b.mtime - a.mtime);
-              
-              if (markdownFiles.length > 0) {
-                reportPath = markdownFiles[0].path;
-              }
-            } catch (error) {
-              console.log('Error finding markdown files:', error.message);
+            if (!markdownContent || markdownContent === '') {
+              console.log('No benchmark report generated');
+              return;
+            }
             }
 
-            if (reportPath && fs.existsSync(reportPath)) {
-              const markdownContent = fs.readFileSync(reportPath, 'utf8');
-              
-              // Find existing benchmark comment on this PR to update or create new one
-              const { data: comments } = await github.rest.issues.listComments({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.pull_request.number,
-              });
-              
-              const botComment = comments.find(comment => 
-                comment.user.type === 'Bot' && 
-                comment.body.includes('📊 Benchmark Analysis Report')
-              );
-              
-              const commentBody = `<!-- benchmark-report -->
+            // Find existing benchmark comment on this PR to update or create new one
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('📊 Benchmark Analysis Report')
+            );
+
+            const commentBody = `<!-- benchmark-report -->
             ${markdownContent}
 
             ---
             *Updated: ${new Date().toISOString()}*`;
-              
-              if (botComment) {
-                // Update existing comment
-                await github.rest.issues.updateComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: botComment.id,
-                  body: commentBody
-                });
-                console.log('Updated existing benchmark comment');
-              } else {
-                // Create new comment on PR
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.payload.pull_request.number,
-                  body: commentBody
-                });
-                console.log('Created new benchmark comment on PR');
-              }
+
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+              console.log('Updated existing benchmark comment');
             } else {
-              console.log('No benchmark report markdown file found in', benchmarkDir);
+              // Create new comment on PR
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: commentBody
+              });
+              console.log('Created new benchmark comment on PR');
             }
