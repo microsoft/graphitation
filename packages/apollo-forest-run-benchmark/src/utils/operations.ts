@@ -5,8 +5,8 @@ import type { OperationData } from "../types";
 
 export const OPERATIONS: OperationData[] = [];
 
-const responsesDir = path.join(__dirname, "..", "data", "responses");
-const queriesDir = path.join(__dirname, "..", "data", "queries");
+const responsesDir = path.join(__dirname, "..", "..", "data", "responses");
+const queriesDir = path.join(__dirname, "..", "..", "data", "queries");
 const discoveredQueries: Record<string, string> = Object.fromEntries(
   fs.readdirSync(queriesDir).map((f) => [f.replace(/\.graphql$/, ""), f]),
 );

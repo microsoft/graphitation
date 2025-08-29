@@ -19,7 +19,7 @@ yarn build
 
 # Step 2: Copy the built lib folder to forest-runs as 'current'
 echo "Copying local build to forest-runs/current..."
-cd "$BENCHMARKS_DIR/src"
+cd "$BENCHMARKS_DIR"
 mkdir -p forest-runs
 cd forest-runs
 rm -rf current
@@ -40,8 +40,7 @@ tar -xzf graphitation-apollo-forest-run-*.tgz
 
 # Copy the lib folder from npm package to forest-runs/baseline (replacing existing if any)
 echo "Copying npm version to forest-runs/baseline..."
-cd "$BENCHMARKS_DIR/src"
-mkdir -p forest-runs
+cd "$BENCHMARKS_DIR"
 cd forest-runs
 rm -rf baseline
 cp -r "$TEMP_DIR/package/lib" baseline

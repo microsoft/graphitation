@@ -1,5 +1,5 @@
 {
-  "name": "@graphitation/apollo-forest-run-benchmarks",
+  "name": "@graphitation/apollo-forest-run-benchmark",
   "license": "MIT",
   "version": "0.1.0",
   "main": "./src/index.ts",
@@ -8,29 +8,24 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/graphitation.git",
-    "directory": "packages/apollo-forest-run-benchmarks"
+    "directory": "packages/apollo-forest-run-benchmark"
   },
   "scripts": {
-    "build": "monorepo-scripts build && cp -r src/data lib/ && cp -r src/forest-runs lib/",
+    "build": "monorepo-scripts build",
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
     "types": "monorepo-scripts types",
     "benchmark": "yarn build && node --expose-gc ./lib/index.js",
-    "benchmark:summarize": "yarn build && node ./lib/analyze-results.js",
-    "benchmark:ci": "yarn build && CI_MARKDOWN=true node --expose-gc ./lib/index.js",
     "clone": "./scripts/clone-caches.sh",
     "just": "monorepo-scripts"
   },
   "devDependencies": {
     "@types/node": "^12.0.0",
-    "ts-node": "^10.0.0",
-    "tslib": "^2.4.0",
     "typescript": "^5.5.3"
   },
   "dependencies": {
     "@graphitation/apollo-forest-run": "*",
-    "graphql": "^15.0.0",
-    "mitata": "^1.0.34"
+    "graphql": "^15.0.0"
   },
   "sideEffects": false
 }
