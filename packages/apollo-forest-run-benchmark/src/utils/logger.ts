@@ -48,10 +48,7 @@ export const log = {
   },
 };
 
-const printChangeDetails = (
-  change: SignificantChange,
-  isBaselineComparison = false,
-) => {
+const printChangeDetails = (change: SignificantChange) => {
   const executionPercentChange =
     ((change.current.mean - change.baseline.mean) / change.baseline.mean) * 100;
   const memoryPercentChange =

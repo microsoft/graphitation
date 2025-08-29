@@ -3,7 +3,11 @@ import type { CacheConfig, WorkerResult, SuiteRawResult } from "./types";
 import fs from "fs";
 import path from "path";
 import { CACHE_FACTORIES } from "./config";
-import { log } from "./utils/logger";
+import {
+  log,
+  printSignificantChanges,
+  generateMarkdownReport,
+} from "./utils/logger";
 import { analyzeResults } from "./summary/analyze-results";
 import { CONFIG } from "./config";
 import { spawn } from "child_process";
@@ -98,11 +102,25 @@ const runBenchmarks = async (): Promise<void> => {
 
   const summary = getSummary(prevSuites);
   const report = analyzeResults(summary);
+
   fs.writeFileSync("benchmark-summary.json", JSON.stringify(summary, null, 2));
   fs.writeFileSync(
     "benchmark-summary-report.json",
     JSON.stringify(report, null, 2),
   );
+
+  // Print results to console
+  printSignificantChanges(report);
+
+  // If running in CI, output markdown report to stdout for GitHub Actions
+  if (process.env.CI === "true") {
+    const markdownReport = generateMarkdownReport(report);
+
+    // Fallback: output to stdout with special markers for parsing
+    console.log("::BEGIN_BENCHMARK_REPORT::");
+    console.log(markdownReport);
+    console.log("::END_BENCHMARK_REPORT::");
+  }
 };
 
 runBenchmarks();
