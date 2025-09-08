@@ -14,13 +14,16 @@ export const CONFIG = {
     },
   ] as const satisfies CacheConfiguration[],
   observerCounts: [0, 50],
-  targetConfidencePercent: 99.9,
-  minSamples: 300,
-  minExecutionTime: 200, //ms
-  warmupSamples: 50,
-  batchSize: 100,
-  reliability: { maxAttempts: 8, minAttempts: 3 },
-  significantChanges: { threshold: 0.05 },
+  sampling: {
+    minSamples: 300,
+    minExecutionTime: 200, //ms
+    warmupSamples: 50,
+    batchSize: 100,
+  },
+  reliability: {
+    epochs: 8,
+    stabilityThreshold: 0.05,
+  },
 } as const;
 
 export const CACHE_FACTORIES = [

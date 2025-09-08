@@ -7,7 +7,6 @@ import { analyzeResults } from "./summary/analyze-results";
 import { CONFIG } from "./config";
 import { spawn } from "child_process";
 import { mergeResults } from "./utils/merge";
-import { isReliable } from "./utils/reliability";
 import { getSummary } from "./summary/summary";
 
 interface BaseSuite {
@@ -78,21 +77,16 @@ const runBaseSuites = async (): Promise<WorkerResult[]> => {
 };
 
 const runBenchmarks = async (): Promise<void> => {
-  const { maxAttempts } = CONFIG.reliability;
+  const { epochs } = CONFIG.reliability;
   const prevSuites: SuiteRawResult[] = [];
   log.start();
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+  for (let attempt = 1; attempt <= epochs; attempt++) {
     log.attempt(attempt);
 
     const results = await runBaseSuites();
     const groupedResult = mergeResults(results);
-    const isSuiteReliable = isReliable(groupedResult, prevSuites);
 
     prevSuites.push(groupedResult);
-
-    if (isSuiteReliable && attempt > CONFIG.reliability.minAttempts) {
-      break;
-    }
   }
 
   const summary = getSummary(prevSuites);

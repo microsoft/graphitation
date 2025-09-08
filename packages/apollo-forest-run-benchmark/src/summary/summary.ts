@@ -6,11 +6,11 @@ import type {
   SummaryChangeReport,
 } from "../types";
 
-import { BaseStats, ExecutionStats } from "../utils/stats";
+import { Stats, ExecutionStats } from "../utils/stats";
 import { CONFIG } from "../config";
 import { mergeSuites } from "../utils/merge";
 
-const THRESHOLD = CONFIG.significantChanges.threshold;
+const THRESHOLD = CONFIG.reliability.stabilityThreshold;
 
 export const getSummary = (results: SuiteRawResult[]) => {
   const summary: SummaryReport = {};
@@ -29,7 +29,7 @@ export const getSummary = (results: SuiteRawResult[]) => {
       benchId,
     } of benchResults) {
       const execution = new ExecutionStats(executionSamples);
-      const memory = new BaseStats(memorySamples);
+      const memory = new Stats(memorySamples);
 
       summary[benchId].push({
         cacheConfig,

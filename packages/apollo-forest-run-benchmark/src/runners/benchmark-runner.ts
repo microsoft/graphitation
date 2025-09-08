@@ -7,7 +7,7 @@ import type { Scenario, OperationData, Sample } from "../types";
 import { CONFIG } from "../config";
 
 const hasEnoughSamples = (stats: unknown[], startedAt: number): boolean => {
-  const { minExecutionTime, minSamples } = CONFIG;
+  const { minExecutionTime, minSamples } = CONFIG.sampling;
   return (
     stats.length >= minSamples &&
     performance.now() - startedAt >= minExecutionTime
@@ -21,7 +21,7 @@ export const benchmarkRunner = (
   cacheFactory: typeof ForestRun,
   configuration: ForestRunAdditionalConfig,
 ): Sample[] => {
-  const { warmupSamples, batchSize } = CONFIG;
+  const { warmupSamples, batchSize } = CONFIG.sampling;
 
   const task = () => {
     const prepared = scenario.prepare({

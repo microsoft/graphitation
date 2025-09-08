@@ -1,6 +1,4 @@
-import type { Sample } from "../types";
-
-export class BaseStats {
+export class Stats {
   public samples: number[];
 
   constructor(samples: number[]) {
@@ -76,22 +74,12 @@ export class BaseStats {
   }
 }
 
-export class ExecutionStats extends BaseStats {
+export class ExecutionStats extends Stats {
   public tasksPerMs: number;
 
   constructor(samples: number[]) {
     super(samples);
     const totalNs = this.samples.reduce((sum, v) => sum + v, 0);
     this.tasksPerMs = this.samples.length / (totalNs / 1_000_000);
-  }
-}
-
-export class Stats {
-  public execution: ExecutionStats;
-  public memory: BaseStats;
-
-  constructor(runSamples: Sample[]) {
-    this.execution = new ExecutionStats(runSamples.map((s) => s.time));
-    this.memory = new BaseStats(runSamples.map((s) => s.memory));
   }
 }

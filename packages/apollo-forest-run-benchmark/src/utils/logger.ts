@@ -63,7 +63,7 @@ const printChangeDetails = (change: SignificantChange) => {
   // Only show execution changes if above threshold
   if (
     Math.abs(executionPercentChange) >=
-    CONFIG.significantChanges.threshold * 100
+    CONFIG.reliability.stabilityThreshold * 100
   ) {
     const executionIcon = executionPercentChange < 0 ? EMOJIS.good : EMOJIS.bad;
     const executionWord = executionPercentChange < 0 ? "faster" : "slower";
@@ -79,7 +79,7 @@ const printChangeDetails = (change: SignificantChange) => {
   // Only show memory changes if above threshold
   if (
     Math.abs(memoryPercentChange) >=
-    CONFIG.significantChanges.threshold * 100
+    CONFIG.reliability.stabilityThreshold * 100
   ) {
     const memoryIcon = memoryPercentChange < 0 ? EMOJIS.good : EMOJIS.bad;
     const memoryWord = memoryPercentChange < 0 ? "less" : "more";
@@ -148,7 +148,7 @@ const generateMarkdownChangeRow = (change: SignificantChange): string => {
   let executionChange = "";
   if (
     Math.abs(executionPercentChange) >=
-    CONFIG.significantChanges.threshold * 100
+    CONFIG.reliability.stabilityThreshold * 100
   ) {
     const executionIcon = executionPercentChange < 0 ? EMOJIS.good : EMOJIS.bad;
     const executionWord = executionPercentChange < 0 ? "faster" : "slower";
@@ -163,7 +163,7 @@ const generateMarkdownChangeRow = (change: SignificantChange): string => {
   let memoryChange = "";
   if (
     Math.abs(memoryPercentChange) >=
-    CONFIG.significantChanges.threshold * 100
+    CONFIG.reliability.stabilityThreshold * 100
   ) {
     const memoryIcon = memoryPercentChange < 0 ? EMOJIS.good : EMOJIS.bad;
     const memoryWord = memoryPercentChange < 0 ? "less" : "more";
@@ -229,7 +229,7 @@ export const generateMarkdownReport = (changeReport: {
 
   markdown += "---\n";
   markdown += `*Threshold: ${(
-    CONFIG.significantChanges.threshold * 100
+    CONFIG.reliability.stabilityThreshold * 100
   ).toFixed(1)}% change*\n`;
 
   return markdown;

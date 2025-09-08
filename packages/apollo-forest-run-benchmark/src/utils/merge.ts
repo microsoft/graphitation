@@ -6,7 +6,7 @@ import type {
   SuiteResult,
 } from "../types";
 
-import { BaseStats, ExecutionStats } from "./stats";
+import { Stats, ExecutionStats } from "./stats";
 
 const getSortedBenchSamples = (
   benchData: BenchRaw,
@@ -40,8 +40,8 @@ const getSortedBenchSamples = (
   });
 
   memorySamples.sort((a, b) => {
-    const { arithmeticMean: AMean } = new BaseStats(a);
-    const { arithmeticMean: BMean } = new BaseStats(b);
+    const { arithmeticMean: AMean } = new Stats(a);
+    const { arithmeticMean: BMean } = new Stats(b);
     return BMean - AMean;
   });
 
