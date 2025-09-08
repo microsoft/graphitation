@@ -26,6 +26,21 @@ const EMOJIS = {
   arrow: "→",
 } as const;
 
+const THRESHOLD_PERCENTAGE = CONFIG.reliability.stabilityThreshold * 100;
+
+const getChangeText = (oldValue: number, newValue: number, unit: string) => {
+  const percentChange = ((newValue - oldValue) / oldValue) * 100;
+  const changeIcon = percentChange < 0 ? EMOJIS.good : EMOJIS.bad;
+
+  if (Math.abs(percentChange) >= THRESHOLD_PERCENTAGE) {
+    return `${changeIcon} ${oldValue.toFixed(2)} ${unit} ${
+      EMOJIS.arrow
+    } ${newValue.toFixed(2)} ${unit} (${percentChange.toFixed(1)}%)`;
+  }
+
+  return "";
+};
+
 export const log = {
   start() {
     console.log(`${EMOJIS.rocket} Starting benchmark runs`);
@@ -36,144 +51,105 @@ export const log = {
   reportSaved(path: string) {
     console.log(`${EMOJIS.floppy} Report saved: ${path}`);
   },
-
+  emptyLine() {
+    console.log("");
+  },
   summary: {
-    start() {
+    headline(changesCount: number) {
       console.log("\n" + EMOJIS.equals.repeat(60));
       console.log(`${EMOJIS.chart} BENCHMARK ANALYSIS SUMMARY`);
       console.log(EMOJIS.equals.repeat(60));
+
+      if (changesCount === 0) {
+        console.log(
+          `${EMOJIS.checkmark} No significant performance changes detected`,
+        );
+        return;
+      } else {
+        console.log(
+          `${EMOJIS.magnifying} Found ${changesCount} significant change(s)`,
+        );
+      }
+
+      log.emptyLine();
+    },
+    changeHeader(benchId: string, configText: string) {
+      console.log(`${EMOJIS.chart} ${benchId} - ${configText}`);
+    },
+    change(change: SignificantChange) {
+      const configName = change.current.cacheConfig;
+      this.changeHeader(change.benchId, configName);
+      this.metricDiff(
+        change.baseline.mean,
+        change.current.mean,
+        "ns",
+        EMOJIS.execution,
+      );
+      this.metricDiff(
+        change.baseline.memoryStats,
+        change.current.memoryStats,
+        "bytes",
+        EMOJIS.memory,
+      );
+
+      log.emptyLine();
+    },
+    metricDiff(
+      oldValue: number,
+      newValue: number,
+      unit: string,
+      icon: (typeof EMOJIS)[keyof typeof EMOJIS],
+    ) {
+      const percentChange = ((newValue - oldValue) / oldValue) * 100;
+
+      if (Math.abs(percentChange) >= THRESHOLD_PERCENTAGE) {
+        console.log(`   ${icon} ${getChangeText(oldValue, newValue, unit)}`);
+      }
     },
   },
-};
-
-const printChangeDetails = (change: SignificantChange) => {
-  const executionPercentChange =
-    ((change.current.mean - change.baseline.mean) / change.baseline.mean) * 100;
-  const memoryPercentChange =
-    ((change.current.memoryStats - change.baseline.memoryStats) /
-      change.baseline.memoryStats) *
-    100;
-
-  const configText = change.current.cacheConfig;
-
-  console.log(`${EMOJIS.chart} ${change.benchId} - ${configText}`);
-
-  const statsLines = [];
-
-  // Only show execution changes if above threshold
-  if (
-    Math.abs(executionPercentChange) >=
-    CONFIG.reliability.stabilityThreshold * 100
-  ) {
-    const executionIcon = executionPercentChange < 0 ? EMOJIS.good : EMOJIS.bad;
-    const executionWord = executionPercentChange < 0 ? "faster" : "slower";
-    statsLines.push(
-      `${EMOJIS.execution}${executionIcon} ${change.baseline.mean.toFixed(
-        2,
-      )}ns ${EMOJIS.arrow} ${change.current.mean.toFixed(
-        2,
-      )}ns ${executionWord} (${Math.abs(executionPercentChange).toFixed(1)}%)`,
-    );
-  }
-
-  // Only show memory changes if above threshold
-  if (
-    Math.abs(memoryPercentChange) >=
-    CONFIG.reliability.stabilityThreshold * 100
-  ) {
-    const memoryIcon = memoryPercentChange < 0 ? EMOJIS.good : EMOJIS.bad;
-    const memoryWord = memoryPercentChange < 0 ? "less" : "more";
-    statsLines.push(
-      `${EMOJIS.memory}${memoryIcon} ${change.baseline.memoryStats.toFixed(
-        2,
-      )} ${EMOJIS.arrow} ${change.current.memoryStats.toFixed(
-        2,
-      )} ${memoryWord} (${Math.abs(memoryPercentChange).toFixed(1)}%)`,
-    );
-  }
-
-  // Print each stat on separate lines
-  statsLines.forEach((line) => console.log(`   ${line}`));
-
-  console.log();
 };
 
 export const printSignificantChanges = (changeReport: SummaryChangeReport) => {
   const { sameConfig, baseline } = changeReport;
   const totalChanges = sameConfig.length + baseline.length;
 
-  log.summary.start();
+  log.summary.headline(totalChanges);
 
   if (totalChanges === 0) {
-    console.log(
-      `${EMOJIS.checkmark} No significant performance changes detected`,
-    );
     return;
   }
-
-  console.log(
-    `${EMOJIS.magnifying} Found ${totalChanges} significant change(s)`,
-  );
-  console.log();
 
   if (sameConfig.length > 0) {
     console.log(
       `${EMOJIS.target} SAME CONFIGURATION COMPARISONS (current vs baseline):`,
     );
-    console.log();
-    sameConfig.forEach((change) => printChangeDetails(change));
+    log.emptyLine();
+    sameConfig.forEach((change) => log.summary.change(change));
   }
 
   if (baseline.length > 0) {
     console.log(`${EMOJIS.ruler} CONFIGURATION IMPACT ANALYSIS:`);
-    console.log();
-    baseline.forEach((change) => printChangeDetails(change));
+    log.emptyLine();
+    baseline.forEach((change) => log.summary.change(change));
   }
 
   console.log(EMOJIS.equals.repeat(60));
 };
 
 const generateMarkdownChangeRow = (change: SignificantChange): string => {
-  const executionPercentChange =
-    ((change.current.mean - change.baseline.mean) / change.baseline.mean) * 100;
-  const memoryPercentChange =
-    ((change.current.memoryStats - change.baseline.memoryStats) /
-      change.baseline.memoryStats) *
-    100;
+  const configName = change.current.cacheConfig;
+  const executionText = getChangeText(
+    change.baseline.mean,
+    change.current.mean,
+    "ns",
+  );
+  const memoryText = getChangeText(
+    change.baseline.memoryStats,
+    change.current.memoryStats,
+    "bytes",
+  );
 
-  const configText = change.current.cacheConfig;
-
-  // Generate execution change text
-  let executionChange = "";
-  if (
-    Math.abs(executionPercentChange) >=
-    CONFIG.reliability.stabilityThreshold * 100
-  ) {
-    const executionIcon = executionPercentChange < 0 ? EMOJIS.good : EMOJIS.bad;
-    const executionWord = executionPercentChange < 0 ? "faster" : "slower";
-    executionChange = `${executionIcon} ${change.baseline.mean.toFixed(2)}ns ${
-      EMOJIS.arrow
-    } ${change.current.mean.toFixed(2)}ns ${executionWord} (${Math.abs(
-      executionPercentChange,
-    ).toFixed(1)}%)`;
-  }
-
-  // Generate memory change text
-  let memoryChange = "";
-  if (
-    Math.abs(memoryPercentChange) >=
-    CONFIG.reliability.stabilityThreshold * 100
-  ) {
-    const memoryIcon = memoryPercentChange < 0 ? EMOJIS.good : EMOJIS.bad;
-    const memoryWord = memoryPercentChange < 0 ? "less" : "more";
-    memoryChange = `${memoryIcon} ${change.baseline.memoryStats.toFixed(2)} ${
-      EMOJIS.arrow
-    } ${change.current.memoryStats.toFixed(2)} ${memoryWord} (${Math.abs(
-      memoryPercentChange,
-    ).toFixed(1)}%)`;
-  }
-
-  return `| ${change.benchId} | ${configText} | ${executionChange} | ${memoryChange} |\n`;
+  return `| ${change.benchId} | ${configName} | ${executionText} | ${memoryText} |\n`;
 };
 
 export const generateMarkdownReport = (changeReport: {
@@ -190,7 +166,6 @@ export const generateMarkdownReport = (changeReport: {
     markdown += `${EMOJIS.magnifying} Found **${sameConfig.length}** significant change(s)\n\n`;
   }
 
-  // Same Configuration Comparisons
   if (sameConfig.length > 0) {
     markdown += `## ${EMOJIS.target} Same Configuration Comparisons\n\n`;
     markdown +=
@@ -205,7 +180,6 @@ export const generateMarkdownReport = (changeReport: {
     markdown += "\n";
   }
 
-  // Configuration Impact Analysis (expandable) - always show if we have baseline data
   if (baseline.length > 0) {
     markdown += "<details>\n";
     markdown += `<summary>${EMOJIS.ruler} Configuration Impact Analysis</summary>\n\n`;
@@ -223,9 +197,7 @@ export const generateMarkdownReport = (changeReport: {
   }
 
   markdown += "---\n";
-  markdown += `*Threshold: ${(
-    CONFIG.reliability.stabilityThreshold * 100
-  ).toFixed(1)}% change*\n`;
+  markdown += `*Threshold: ${THRESHOLD_PERCENTAGE}% change*\n`;
 
   return markdown;
 };
