@@ -54,7 +54,7 @@ const printChangeDetails = (change: SignificantChange) => {
       change.baseline.memoryStats) *
     100;
 
-  const configText = `${change.current.cacheConfig}/${change.current.cacheFactory}`;
+  const configText = change.current.cacheConfig;
 
   console.log(`${EMOJIS.chart} ${change.benchId} - ${configText}`);
 
@@ -70,9 +70,9 @@ const printChangeDetails = (change: SignificantChange) => {
     statsLines.push(
       `${EMOJIS.execution}${executionIcon} ${change.baseline.mean.toFixed(
         2,
-      )}ms ${EMOJIS.arrow} ${change.current.mean.toFixed(
+      )}ns ${EMOJIS.arrow} ${change.current.mean.toFixed(
         2,
-      )}ms ${executionWord} (${Math.abs(executionPercentChange).toFixed(1)}%)`,
+      )}ns ${executionWord} (${Math.abs(executionPercentChange).toFixed(1)}%)`,
     );
   }
 
@@ -142,7 +142,6 @@ const generateMarkdownChangeRow = (change: SignificantChange): string => {
     100;
 
   const configText = change.current.cacheConfig;
-  const factoryText = change.current.cacheFactory;
 
   // Generate execution change text
   let executionChange = "";
@@ -152,9 +151,9 @@ const generateMarkdownChangeRow = (change: SignificantChange): string => {
   ) {
     const executionIcon = executionPercentChange < 0 ? EMOJIS.good : EMOJIS.bad;
     const executionWord = executionPercentChange < 0 ? "faster" : "slower";
-    executionChange = `${executionIcon} ${change.baseline.mean.toFixed(2)}ms ${
+    executionChange = `${executionIcon} ${change.baseline.mean.toFixed(2)}ns ${
       EMOJIS.arrow
-    } ${change.current.mean.toFixed(2)}ms ${executionWord} (${Math.abs(
+    } ${change.current.mean.toFixed(2)}ns ${executionWord} (${Math.abs(
       executionPercentChange,
     ).toFixed(1)}%)`;
   }
@@ -174,7 +173,7 @@ const generateMarkdownChangeRow = (change: SignificantChange): string => {
     ).toFixed(1)}%)`;
   }
 
-  return `| ${change.benchId} | ${configText} | ${factoryText} | ${executionChange} | ${memoryChange} |\n`;
+  return `| ${change.benchId} | ${configText} | ${executionChange} | ${memoryChange} |\n`;
 };
 
 export const generateMarkdownReport = (changeReport: {
@@ -197,10 +196,8 @@ export const generateMarkdownReport = (changeReport: {
     markdown +=
       "*Comparing against baseline with the same cache configuration*\n\n";
 
-    markdown +=
-      "| Benchmark ID | Configuration | Factory | Execution | Memory |\n";
-    markdown +=
-      "|--------------|---------------|---------|-----------|--------|\n";
+    markdown += "| Benchmark ID | Configuration | Execution | Memory |\n";
+    markdown += "|--------------|---------------|-----------|--------|\n";
 
     sameConfig.forEach((change) => {
       markdown += generateMarkdownChangeRow(change);
@@ -213,12 +210,10 @@ export const generateMarkdownReport = (changeReport: {
     markdown += "<details>\n";
     markdown += `<summary>${EMOJIS.ruler} Configuration Impact Analysis</summary>\n\n`;
     markdown +=
-      "*How each cache configuration performs compared to the default configuration and baseline factory*\n\n";
+      "*How cache configuration impacts performance compared to the baseline*\n\n";
 
-    markdown +=
-      "| Benchmark ID | Configuration | Factory | Execution | Memory |\n";
-    markdown +=
-      "|--------------|---------------|---------|-----------|--------|\n";
+    markdown += "| Benchmark ID | Configuration | Execution | Memory |\n";
+    markdown += "|--------------|---------------|-----------|--------|\n";
 
     baseline.forEach((change) => {
       markdown += generateMarkdownChangeRow(change);

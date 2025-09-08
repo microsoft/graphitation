@@ -93,10 +93,10 @@ export const analyzeSignificantChanges = (summary: SummaryReport) => {
           bench.cacheConfig === result.cacheConfig,
       );
 
-      // Compare against the same config and baseline factory. Detect overall changes
+      // Compare against the same config and baseline factory. Detect impact of changes in the branch.
       if (configBaseline && result.cacheFactory !== "baseline") {
-        const hasConfigChange = isChange(configBaseline, result);
-        if (hasConfigChange) {
+        const hasChange = isChange(configBaseline, result);
+        if (hasChange) {
           changes.sameConfig.push({
             benchId,
             baseline: configBaseline,
@@ -105,10 +105,14 @@ export const analyzeSignificantChanges = (summary: SummaryReport) => {
         }
       }
 
-      // Compare against default config and baseline factory. Detect cache config impact
-      if (defaultBaseline && result.cacheConfig !== "Default") {
-        const hasDefaultChange = isChange(defaultBaseline, result);
-        if (hasDefaultChange) {
+      // Compare against default config and baseline factory. Detect config changes (eg. enabling telemetry).
+      if (
+        defaultBaseline &&
+        result.cacheConfig !== "Default" &&
+        result.cacheFactory !== "baseline"
+      ) {
+        const hasChange = isChange(defaultBaseline, result);
+        if (hasChange) {
           changes.baseline.push({
             benchId,
             baseline: defaultBaseline,

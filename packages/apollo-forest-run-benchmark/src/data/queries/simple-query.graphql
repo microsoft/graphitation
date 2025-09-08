@@ -1,6 +1,0 @@
-query SimpleQuery($id: ID!) {
-  node(id: $id) {
-    id
-    __typename
-  }
-}
