@@ -18,8 +18,8 @@ export interface OperationData {
   variables: Record<string, any>;
 }
 export interface ScenarioContext extends OperationData {
-  observerCount: number;
-  cacheFactory: typeof ForestRun;
+  watcherCount: number;
+  CacheFactory: typeof ForestRun;
   configuration: ForestRunAdditionalConfig;
 }
 

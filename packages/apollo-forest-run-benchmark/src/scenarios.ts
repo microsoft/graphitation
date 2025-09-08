@@ -3,7 +3,7 @@ import type { Scenario, ScenarioContext } from "./types";
 const addWatchers = (ctx: ScenarioContext, cache: ForestRun) => {
   const { query, variables } = ctx;
   const unsubscribes: Array<() => void> = [];
-  for (let i = 0; i < ctx.observerCount; i++) {
+  for (let i = 0; i < ctx.watcherCount; i++) {
     const unsub = cache.watch({
       query,
       variables,
@@ -19,8 +19,8 @@ export const scenarios = [
   {
     name: "read",
     prepare: (ctx: ScenarioContext) => {
-      const { query, variables, data, cacheFactory, configuration } = ctx;
-      const cache = new cacheFactory(configuration);
+      const { query, variables, data, CacheFactory, configuration } = ctx;
+      const cache = new CacheFactory(configuration);
       addWatchers(ctx, cache);
 
       cache.writeQuery({ query, variables, data });
@@ -35,8 +35,8 @@ export const scenarios = [
   {
     name: "write",
     prepare: (ctx: ScenarioContext) => {
-      const { query, variables, data, cacheFactory, configuration } = ctx;
-      const cache = new cacheFactory(configuration);
+      const { query, variables, data, CacheFactory, configuration } = ctx;
+      const cache = new CacheFactory(configuration);
       addWatchers(ctx, cache);
 
       return {
@@ -49,8 +49,8 @@ export const scenarios = [
   {
     name: "update",
     prepare: (ctx: ScenarioContext) => {
-      const { query, variables, data, cacheFactory, configuration } = ctx;
-      const cache = new cacheFactory(configuration);
+      const { query, variables, data, CacheFactory, configuration } = ctx;
+      const cache = new CacheFactory(configuration);
       addWatchers(ctx, cache);
 
       cache.writeQuery({ query, variables, data });

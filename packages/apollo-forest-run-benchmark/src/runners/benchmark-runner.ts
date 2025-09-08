@@ -17,16 +17,16 @@ const hasEnoughSamples = (stats: unknown[], startedAt: number): boolean => {
 export const benchmarkRunner = (
   operation: OperationData,
   scenario: Scenario,
-  observerCount: number,
-  cacheFactory: typeof ForestRun,
+  watcherCount: number,
+  CacheFactory: typeof ForestRun,
   configuration: ForestRunAdditionalConfig,
 ): Sample[] => {
   const { warmupSamples, batchSize } = CONFIG.sampling;
 
   const task = () => {
     const prepared = scenario.prepare({
-      observerCount,
-      cacheFactory,
+      watcherCount,
+      CacheFactory,
       configuration,
       ...operation,
     });

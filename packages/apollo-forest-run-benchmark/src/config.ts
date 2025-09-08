@@ -13,7 +13,7 @@ export const CONFIG = {
       options: { logStaleOperations: true, logUpdateStats: true },
     },
   ] as const satisfies CacheConfiguration[],
-  observerCounts: [0, 50],
+  watcherCounts: [0, 50],
   sampling: {
     minSamples: 300,
     minExecutionTime: 200, //ms
