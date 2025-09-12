@@ -1,34 +1,16 @@
-query ComplexNested {
+query AddTask {
   organization {
     id
-    name
-    description
-    createdAt
     departments {
       edges {
         node {
           id
-          name
-          budget
           teams {
             id
-            name
-            description
             members {
               id
-              name
-              email
-              role
-              avatar
               projects {
                 id
-                title
-                status
-                priority
-                assignedAt
-                dueDate
-                tags
-                progress
                 tasks {
                   id
                   title
@@ -44,13 +26,6 @@ query ComplexNested {
             }
           }
         }
-        cursor
-      }
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-        startCursor
-        endCursor
       }
     }
   }

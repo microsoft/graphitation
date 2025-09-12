@@ -48,25 +48,32 @@ Significant changes are those exceeding the configured threshold (default 5%).
 
 ### New Queries
 
-Create a `.graphql` file in `data/queries/` and a matching `.json` response in `data/responses/` (same base name). They are auto-discovered at startup (`utils/operations.ts`). Variables currently default to `{}`; extend loader if needed.
+Create a `.graphql` file in `data/queries/` and matching `.json` response files in `data/responses/`. The response files can have the same base name as the query, or include additional variants with suffixes (e.g., `my-query-variant.json`). All are auto-discovered at startup (`utils/operations.ts`).
 
 ```
 data/
 ├── queries/
 │   └── my-new-query.graphql
 └── responses/
-    └── my-new-query.json
+    ├── my-new-query.json
+    ├── my-new-query-variant1.json
+    └── my-new-query-variant2.json
 ```
+
+The operations loader makes all queries and their response data available to scenarios via the `operations` object.
 
 ### New Scenarios
 
 Edit `src/scenarios.ts` and add a new object with a `prepare` function returning `{ run() { ... } }`.
+
+Each scenario manually selects the specific query and response data it needs from the `operations` object passed in the context.
 
 Guidelines:
 
 - Do one logical cache operation per `run()` (keep it small / deterministic)
 - Initialize watchers via helper if needed to include subscription overhead
 - Pre-populate cache inside `prepare` (not inside `run`) unless testing raw write cost
+- Select the specific query and data variant needed for your scenario
 
 Example skeleton:
 
@@ -74,13 +81,21 @@ Example skeleton:
 {
   name: "my-scenario",
   prepare: (ctx) => {
-    const { CacheFactory, configuration, query, variables, data } = ctx;
+    const { operations, CacheFactory, configuration, watcherCount } = ctx;
     const cache = new CacheFactory(configuration);
-    // optional: preload
-    cache.writeQuery({ query, variables, data });
+
+    // Manually select the query and data for this scenario
+    const { query, data } = operations["my-new-query"];
+
+    // Add watchers if needed
+    addWatchers(watcherCount, cache, query);
+
+    // Optional: preload cache
+    cache.writeQuery({ query, data: data["my-new-query"] });
+
     return {
       run() {
-        return cache.readQuery({ query, variables });
+        return cache.readQuery({ query });
       },
     };
   },
@@ -173,8 +188,7 @@ Cache configurations and watcher counts are also declared here. Reduce `epochs`,
 
 For every combination of:
 
-- Operation (auto-discovered from `data/queries/*.graphql` + matching response JSON)
-- Scenario (`read`, `write`, `update` in `src/scenarios.ts`)
+- Scenario (defined in `src/scenarios.ts` - each scenario selects its own query and data)
 - Watcher count (from `CONFIG.watcherCounts`)
 - Cache configuration (from `CONFIG.cacheConfigurations`)
 - Cache factory (`baseline`, `current`)
@@ -229,7 +243,7 @@ Do NOT commit these reduced values.
 | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | Do I need to build manually before running?     | No, `yarn benchmark` runs `yarn build` first.                                                                   |
 | How is the baseline chosen?                     | Latest npm version fetched by `scripts/clone-caches.sh` (edit to pin).                                          |
-| Can I run only one scenario?                    | Not yet; the runner iterates all combinations. You can temporarily comment scenarios in `src/scenarios.ts`.     |
+| Can I run only one scenario?                    | Not yet; the runner iterates all scenarios. You can temporarily comment scenarios in `src/scenarios.ts`.        |
 | What does `confidence` mean?                    | 100 − relative margin of error (z=3.29). Higher = more stable distribution.                                     |
 | Why no variance / p95 reported?                 | Simplicity: mean + threshold work well for internal regression gating. Extend `utils/stats.ts` if needed.       |
 | Memory numbers look negative / zero sometimes?  | Negative samples are filtered; only non‑negative retained. Very small deltas may fall below noise.              |
@@ -242,8 +256,8 @@ Do NOT commit these reduced values.
 | Term     | Description                                                                   |
 | -------- | ----------------------------------------------------------------------------- |
 | Factory  | Source of the cache implementation (`baseline` npm vs `current` local build)  |
-| Bench    | Unique combination of: operation + scenario + watcherCount                    |
-| Scenario | Operation pattern (`read`, `write`, `update`, or custom)                      |
+| Bench    | Unique combination of: scenario + watcherCount                                |
+| Scenario | Operation pattern that selects its own query and data for testing             |
 | Watcher  | A operation watcher established via `cache.watch()` to measure overhead       |
 | Epoch    | One full sweep over all benches (multiple epochs reduce statistical variance) |
 

@@ -7,21 +7,16 @@ export const CONFIG = {
       description: "Default ForestRun configuration",
       options: {},
     },
-    {
-      name: "Telemetry enabled",
-      description: "Enable telemetry for cache operations",
-      options: { logStaleOperations: true, logUpdateStats: true },
-    },
   ] as const satisfies CacheConfiguration[],
   watcherCounts: [0, 50],
   sampling: {
-    minSamples: 300,
+    minSamples: 200,
     minExecutionTime: 200, //ms
-    warmupSamples: 50,
-    batchSize: 100,
+    warmupSamples: 25,
+    batchSize: 50,
   },
   reliability: {
-    epochs: 8,
+    epochs: 6,
     stabilityThreshold: 0.05,
   },
 } as const;

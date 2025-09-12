@@ -2,6 +2,7 @@ import type {
   ForestRun,
   ForestRunAdditionalConfig,
 } from "@graphitation/apollo-forest-run";
+import type { CacheConfig as ForestRunCacheConfig } from "@graphitation/apollo-forest-run/src/cache/types";
 import type { scenarios } from "./scenarios";
 import type { CACHE_FACTORIES, CONFIG } from "./config";
 
@@ -14,13 +15,17 @@ export interface CacheConfiguration {
 export interface OperationData {
   name: string;
   query: any;
-  data: any;
-  variables: Record<string, any>;
+  data: Record<string, any>;
 }
-export interface ScenarioContext extends OperationData {
+
+export interface ScenarioOperations {
+  operations: Record<string, OperationData>;
+}
+
+export interface ScenarioContext extends ScenarioOperations {
   watcherCount: number;
   CacheFactory: typeof ForestRun;
-  configuration: ForestRunAdditionalConfig;
+  configuration: ForestRunCacheConfig;
 }
 
 export type Scenario = {
@@ -47,7 +52,7 @@ export interface BenchStats extends Omit<BenchBase, "benchId"> {
     avgMemoryFreed: number;
   };
 }
-type BenchId = `${string}_${(typeof scenarios)[number]["name"]}_${number}`;
+type BenchId = `${(typeof scenarios)[number]["name"]}_${number}`;
 export interface BenchBase {
   cacheConfig: CacheConfig["name"];
   cacheFactory: (typeof CACHE_FACTORIES)[number]["name"];

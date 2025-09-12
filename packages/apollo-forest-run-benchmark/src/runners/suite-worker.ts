@@ -21,24 +21,22 @@ export const runBenchmark = () => {
   const results: BenchRaw[] = [];
   const gc = new GarbageCollector();
 
-  for (const operation of OPERATIONS) {
-    for (const scenario of scenarios) {
-      for (const watcherCount of CONFIG.watcherCounts) {
-        gc.collect();
-        const runStats = benchmarkRunner(
-          operation,
-          scenario,
-          watcherCount,
-          ForestRun,
-          cacheConfig.options,
-        );
-        results.push({
-          cacheConfig: cacheConfig.name,
-          cacheFactory: cacheFactory.name,
-          benchId: `${operation.name}_${scenario.name}_${watcherCount}`,
-          samples: runStats,
-        });
-      }
+  for (const scenario of scenarios) {
+    for (const watcherCount of CONFIG.watcherCounts) {
+      gc.collect();
+      const runStats = benchmarkRunner(
+        OPERATIONS,
+        scenario,
+        watcherCount,
+        ForestRun,
+        cacheConfig.options,
+      );
+      results.push({
+        cacheConfig: cacheConfig.name,
+        cacheFactory: cacheFactory.name,
+        benchId: `${scenario.name}_${watcherCount}`,
+        samples: runStats,
+      });
     }
   }
 

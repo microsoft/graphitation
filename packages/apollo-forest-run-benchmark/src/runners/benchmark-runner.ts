@@ -15,7 +15,7 @@ const hasEnoughSamples = (stats: unknown[], startedAt: number): boolean => {
 };
 
 export const benchmarkRunner = (
-  operation: OperationData,
+  operations: Record<string, OperationData>,
   scenario: Scenario,
   watcherCount: number,
   CacheFactory: typeof ForestRun,
@@ -28,7 +28,7 @@ export const benchmarkRunner = (
       watcherCount,
       CacheFactory,
       configuration,
-      ...operation,
+      operations,
     });
     const memoryStart = process.memoryUsage().heapUsed;
     const timeStart = process.hrtime.bigint();
