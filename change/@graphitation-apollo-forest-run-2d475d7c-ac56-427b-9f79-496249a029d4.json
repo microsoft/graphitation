@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Update @apollo/client to a semver version",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "dake.3601@gmail.com",
+  "dependentChangeType": "patch"
+}

@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Update @graphql-codegen/visitor-plugin-common to a semver version",
+  "packageName": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+  "email": "dake.3601@gmail.com",
+  "dependentChangeType": "patch"
+}
