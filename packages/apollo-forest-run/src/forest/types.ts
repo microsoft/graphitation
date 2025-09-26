@@ -9,6 +9,7 @@ import {
 import {
   CompositeListChunk,
   DataMap,
+  GraphChunk,
   MissingFieldsMap,
   NodeKey,
   NodeMap,
@@ -20,6 +21,7 @@ import {
   ParentLocator,
   SourceCompositeList,
   SourceObject,
+  SourceValue,
   TypeMap,
 } from "../values/types";
 import { TelemetryEvent } from "../telemetry/types";
@@ -63,11 +65,16 @@ export type Draft = SourceObject | SourceCompositeList;
 
 export type UpdateForestStats = (UpdateTreeStats | null)[];
 
+export type FieldChange = FieldInfo & {
+  oldValue: GraphChunk;
+  newValue: SourceValue | undefined;
+};
+
 // Changed chunks map only contains chunks with immediate changes (i.e. "Replacement", "Filler" + list layout changes).
 //   Does not contain parent chunks which were affected only because some nested chunk has changed.
 //   Note: For now dirty list items are not reported, as it is tricky to report together with list layout shifts (and we don't need it anywhere yet).
 //         In the future we may need to report layout shifts and "Replacement", "Fillter" changes separately.
-export type ChangedChunksMap = Map<ObjectChunk, FieldInfo[]> &
+export type ChangedChunksMap = Map<ObjectChunk, FieldChange[]> &
   Map<CompositeListChunk, null>;
 
 export type UpdateTreeContext = {

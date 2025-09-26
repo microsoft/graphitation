@@ -23,6 +23,7 @@ import type {
 import type { FieldInfo, PossibleSelections } from "../descriptor/types";
 import type {
   Draft,
+  FieldChange,
   Source,
   UpdateObjectResult,
   UpdateTreeContext,
@@ -63,7 +64,7 @@ function updateObjectValue(
   let copy = context.drafts.get(base.data);
   assert(!Array.isArray(copy));
   context.statsLogger?.copyChunkStats(base, copy);
-  let dirtyFields: FieldInfo[] | undefined;
+  let dirtyFields: FieldChange[] | undefined;
 
   for (const fieldName of difference.dirtyFields) {
     const aliases = base.selection.fields.get(fieldName);
@@ -117,7 +118,11 @@ function updateObjectValue(
         fieldDiff.kind === DifferenceKind.Filler
       ) {
         dirtyFields ??= [];
-        dirtyFields.push(fieldInfo);
+        dirtyFields.push({
+          ...fieldInfo,
+          oldValue: value,
+          newValue: updated,
+        });
       }
     }
   }
