@@ -518,7 +518,9 @@ function diffCompositeListLayout(
       }
       return layout;
     }
-    return !itemDiffRequired ? "BREAK" : undefined;
+    // Always proceed with item diffing to detect dirty items
+    // (even when no layout changes are detected)
+    return undefined;
   }
   // TODO: lastDirtyIndex to isolate changed segment (prepend case)
 

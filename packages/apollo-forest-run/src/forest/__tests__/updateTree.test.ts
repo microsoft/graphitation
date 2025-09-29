@@ -1745,31 +1745,32 @@ describe("change reporting", () => {
     });
   });
 
-  test("debug entity list changes", () => {
-    const base = completeObject({
+  test("compare entity vs plain object behavior", () => {
+    // Entity case (should work)
+    const entityBase = completeObject({
       entityList: ["a", "b"].map(keyToEntity),
     });
-    const model = completeObject({
-      entityList: ["a", "c"].map(keyToEntity), // replace item at index 1
+    const entityModel = completeObject({
+      entityList: ["a", "c"].map(keyToEntity),
     });
-
-    console.log("Base entity list item 1:", JSON.stringify(base.entityList[1]));
-    console.log("Model entity list item 1:", JSON.stringify(model.entityList[1]));
-
-    const { changes, difference } = diffAndUpdate(base, model);
-
-    console.log("Entity Difference:", JSON.stringify(difference, null, 2));
-
-    const listChunks = [...changes.keys()].filter((chunk) =>
-      Array.isArray(chunk.data),
-    );
-    console.log("Entity List chunks found:", listChunks.length);
+    const entityResult = diffAndUpdate(entityBase, entityModel);
     
-    if (listChunks.length > 0) {
-      const [listChunk] = listChunks;
-      const changeInfo = changes.get(listChunk);
-      console.log("Entity Change info:", changeInfo);
-    }
+    // Plain object case (currently doesn't work)
+    const plainBase = completeObject({
+      plainObjectList: ["a", "b"].map((foo) => plainObjectFoo({ foo })),
+    });
+    const plainModel = completeObject({
+      plainObjectList: ["a", "c"].map((foo) => plainObjectFoo({ foo })),
+    });
+    const plainResult = diffAndUpdate(plainBase, plainModel);
+
+    console.log("Entity result - nodeDifference keys:", Object.keys(entityResult.difference.nodeDifference));
+    console.log("Entity result - newNodes:", entityResult.difference.newNodes);
+    console.log("Entity result - changes:", entityResult.changes.size);
+    
+    console.log("Plain result - nodeDifference keys:", Object.keys(plainResult.difference.nodeDifference));
+    console.log("Plain result - newNodes:", plainResult.difference.newNodes);
+    console.log("Plain result - changes:", plainResult.changes.size);
   });
 
   test("reports both layout changes and dirty items for entity lists", () => {
