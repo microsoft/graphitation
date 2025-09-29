@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@types/jest": "^26.0.22",
-    "@apollo/client": ">= ^3.3.0 < 3.7.0",
+    "@apollo/client": ">= 3.3.0 < 3.7.0",
     "graphql": "^15.0.0",
     "lodash": "^4.17.21",
     "monorepo-scripts": "*",
@@ -48,6 +48,6 @@
   "dependencies": {},
   "peerDependencies": {
     "graphql": "^15.0.0 || ^16.0.0 || ^17.0.0",
-    "@apollo/client": ">= ^3.6.0 < 3.7.0"
+    "@apollo/client": ">= 3.6.0 < 3.7.0"
   }
 }
