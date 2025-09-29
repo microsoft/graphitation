@@ -63,12 +63,19 @@ export type Draft = SourceObject | SourceCompositeList;
 
 export type UpdateForestStats = (UpdateTreeStats | null)[];
 
+// Information about changes to a list chunk
+export type ListChangeInfo = {
+  // Layout changes (reordering, additions, removals)
+  layout?: boolean;
+  // Dirty items (replacements, fillers at specific indexes)
+  dirtyItems?: Set<number>;
+};
+
 // Changed chunks map only contains chunks with immediate changes (i.e. "Replacement", "Filler" + list layout changes).
 //   Does not contain parent chunks which were affected only because some nested chunk has changed.
-//   Note: For now dirty list items are not reported, as it is tricky to report together with list layout shifts (and we don't need it anywhere yet).
-//         In the future we may need to report layout shifts and "Replacement", "Fillter" changes separately.
+//   Note: Now supports reporting both layout shifts and dirty list items separately.
 export type ChangedChunksMap = Map<ObjectChunk, FieldInfo[]> &
-  Map<CompositeListChunk, null>;
+  Map<CompositeListChunk, ListChangeInfo | null>;
 
 export type UpdateTreeContext = {
   operation: OperationDescriptor;

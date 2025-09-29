@@ -1745,20 +1745,53 @@ describe("change reporting", () => {
     });
   });
 
-  test("does not report change in list of plain objects when there are no layout changes", () => {
-    const baseList = ["a", "b"].map((foo) => plainObjectFoo({ foo }));
-    const modelList = ["a", "c"].map((foo) => plainObjectFoo({ foo }));
+  test("debug entity list changes", () => {
+    const base = completeObject({
+      entityList: ["a", "b"].map(keyToEntity),
+    });
+    const model = completeObject({
+      entityList: ["a", "c"].map(keyToEntity), // replace item at index 1
+    });
 
-    const base = completeObject({ plainObjectList: baseList });
-    const model = completeObject({ plainObjectList: modelList });
+    console.log("Base entity list item 1:", JSON.stringify(base.entityList[1]));
+    console.log("Model entity list item 1:", JSON.stringify(model.entityList[1]));
 
+    const { changes, difference } = diffAndUpdate(base, model);
+
+    console.log("Entity Difference:", JSON.stringify(difference, null, 2));
+
+    const listChunks = [...changes.keys()].filter((chunk) =>
+      Array.isArray(chunk.data),
+    );
+    console.log("Entity List chunks found:", listChunks.length);
+    
+    if (listChunks.length > 0) {
+      const [listChunk] = listChunks;
+      const changeInfo = changes.get(listChunk);
+      console.log("Entity Change info:", changeInfo);
+    }
+  });
+
+  test("reports both layout changes and dirty items for entity lists", () => {
+    const base = completeObject({
+      entityList: ["a", "b", "c"].map(keyToEntity),
+    });
+    const model = completeObject({
+      entityList: ["b", "d", "a"].map(keyToEntity), // reorder + replace
+    });
     const { changes } = diffAndUpdate(base, model);
 
     const listChunks = [...changes.keys()].filter((chunk) =>
       Array.isArray(chunk.data),
     );
-    expect(listChunks.length).toEqual(0);
-    expect(changes.size).toBeGreaterThan(0);
+    expect(listChunks.length).toEqual(1);
+    
+    const [listChunk] = listChunks;
+    const changeInfo = changes.get(listChunk);
+    expect(changeInfo).toEqual({
+      layout: true, // layout changed due to reordering
+      dirtyItems: new Set([1]), // index 1 changed from entity "c" to entity "d"
+    });
   });
 
   it.each([

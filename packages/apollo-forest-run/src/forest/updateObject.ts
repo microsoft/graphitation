@@ -170,6 +170,8 @@ function updateCompositeListValue(
   const { drafts, operation, statsLogger } = context;
   const layoutDiff = difference.layout;
   let dirty = false; // Only dirty on self changes - item replacement/filler, layout changes (ignores child changes)
+  let layoutChanged = false; // Track layout changes separately
+  let dirtyItemIndexes: Set<number> | undefined; // Track dirty item indexes
   let copy = drafts.get(base.data);
   assert(Array.isArray(copy) || copy === undefined);
   statsLogger?.copyChunkStats(base, copy);
@@ -198,12 +200,16 @@ function updateCompositeListValue(
       itemDiff.kind === DifferenceKind.Filler
     ) {
       dirty = true;
+      // Track this as a dirty item
+      dirtyItemIndexes ??= new Set();
+      dirtyItemIndexes.add(index);
     }
   }
-  if (dirty) {
-    context.changes.set(base, null);
-  }
   if (!layoutDiff) {
+    // Only dirty items, no layout changes
+    if (dirty) {
+      context.changes.set(base, { dirtyItems: dirtyItemIndexes });
+    }
     return copy ?? base.data;
   }
 
@@ -221,7 +227,7 @@ function updateCompositeListValue(
   for (let i = 0; i < length; i++) {
     const itemRef = layoutDiff[i];
     if (itemRef !== i) {
-      dirty = true;
+      layoutChanged = true;
     }
     if (typeof itemRef === "number") {
       result[i] =
@@ -262,10 +268,16 @@ function updateCompositeListValue(
     drafts.set(base.data, result);
   }
   if (copy.length !== base.data.length) {
-    dirty = true;
+    layoutChanged = true;
   }
-  if (dirty) {
-    context.changes.set(base, null);
+  
+  // Report both layout changes and dirty items
+  if (layoutChanged || dirty) {
+    const changeInfo = {
+      ...(layoutChanged && { layout: true }),
+      ...(dirtyItemIndexes && { dirtyItems: dirtyItemIndexes }),
+    };
+    context.changes.set(base, changeInfo);
   }
 
   return copy ?? base.data;
