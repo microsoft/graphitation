@@ -1,0 +1,72 @@
+fragment UserInfo on User {
+  id
+  name
+  email
+  avatar
+  createdAt
+  lastLoginAt
+}
+
+fragment PostInfo on Post {
+  id
+  title
+  content
+  createdAt
+  updatedAt
+  published
+  tags
+  viewCount
+  likeCount
+}
+
+fragment CommentInfo on Comment {
+  id
+  content
+  createdAt
+  author {
+    ...UserInfo
+  }
+  replies {
+    id
+    content
+    createdAt
+    author {
+      ...UserInfo
+    }
+  }
+}
+
+query FragmentedPostsQuery($userId: ID!, $first: Int, $after: String) {
+  user(id: $userId) {
+    ...UserInfo
+    posts(first: $first, after: $after) {
+      edges {
+        node {
+          ...PostInfo
+          author {
+            ...UserInfo
+          }
+          comments(first: 5) {
+            edges {
+              node {
+                ...CommentInfo
+              }
+              cursor
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+}

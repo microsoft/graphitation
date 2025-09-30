@@ -12,3 +12,9 @@ examples/apollo-watch-fragments/public/bundle.js
 
 examples/supermassive-todomvc/**/*.d.ts*
 relay-preload-hooks.ts
+
+# Benchmark reports
+packages/apollo-forest-run/benchmarks/performance/benchmark-report-*.json
+
+# Compiled TypeScript files in benchmarks
+packages/apollo-forest-run/benchmarks/performance/compiled
