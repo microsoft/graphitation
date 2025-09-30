@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
   "entries": [
     {
+      "date": "Tue, 30 Sep 2025 06:26:46 GMT",
+      "version": "1.1.13",
+      "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v1.1.13",
+      "comments": {
+        "patch": [
+          {
+            "author": "dake.3601@gmail.com",
+            "package": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
+            "commit": "7767bbf232a282fd3fdca57535024b373c36ad93",
+            "comment": "Update @graphql-codegen/visitor-plugin-common to a semver version"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 22 Aug 2025 16:40:17 GMT",
       "version": "1.1.12",
       "tag": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin_v1.1.12",

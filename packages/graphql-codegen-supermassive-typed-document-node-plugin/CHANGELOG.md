@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-supermassive-typed-document-node-plugin
 
-<!-- This log was last generated on Fri, 22 Aug 2025 16:40:17 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 30 Sep 2025 06:26:46 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.1.13
+
+Tue, 30 Sep 2025 06:26:46 GMT
+
+### Patches
+
+- Update @graphql-codegen/visitor-plugin-common to a semver version (dake.3601@gmail.com)
 
 ## 1.1.12
 

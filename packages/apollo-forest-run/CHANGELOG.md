@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Tue, 22 Jul 2025 13:29:50 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 30 Sep 2025 06:26:46 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.19.1
+
+Tue, 30 Sep 2025 06:26:46 GMT
+
+### Patches
+
+- Update @apollo/client to a semver version (dake.3601@gmail.com)
 
 ## 0.19.0
 

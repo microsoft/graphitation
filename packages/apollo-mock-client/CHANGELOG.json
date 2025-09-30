@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-mock-client",
   "entries": [
     {
+      "date": "Tue, 30 Sep 2025 06:26:46 GMT",
+      "version": "0.12.1",
+      "tag": "@graphitation/apollo-mock-client_v0.12.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "dake.3601@gmail.com",
+            "package": "@graphitation/apollo-mock-client",
+            "commit": "7767bbf232a282fd3fdca57535024b373c36ad93",
+            "comment": "Update @apollo/client to a semver version"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 02 Apr 2025 11:43:32 GMT",
       "version": "0.12.0",
       "tag": "@graphitation/apollo-mock-client_v0.12.0",

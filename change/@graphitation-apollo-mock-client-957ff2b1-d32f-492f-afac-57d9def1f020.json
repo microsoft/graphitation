@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Update @apollo/client to a semver version",
-  "packageName": "@graphitation/apollo-mock-client",
-  "email": "dake.3601@gmail.com",
-  "dependentChangeType": "patch"
-}

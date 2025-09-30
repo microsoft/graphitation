@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Tue, 30 Sep 2025 06:26:46 GMT",
+      "version": "0.19.1",
+      "tag": "@graphitation/apollo-forest-run_v0.19.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "dake.3601@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "7767bbf232a282fd3fdca57535024b373c36ad93",
+            "comment": "Update @apollo/client to a semver version"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 22 Jul 2025 13:29:50 GMT",
       "version": "0.19.0",
       "tag": "@graphitation/apollo-forest-run_v0.19.0",
