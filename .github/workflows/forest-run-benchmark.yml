@@ -1,11 +1,6 @@
 name: ForestRun Performance Benchmark
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "packages/apollo-forest-run/**"
-      - "packages/apollo-forest-run-benchmark/**"
   pull_request:
     paths:
       - "packages/apollo-forest-run/**"
