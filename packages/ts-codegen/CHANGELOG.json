@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Thu, 02 Oct 2025 09:46:49 GMT",
+      "version": "5.4.2",
+      "tag": "@graphitation/ts-codegen_v5.4.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "7c5b6e61470ed5fb71c01e428b2685f4903a251e",
+            "comment": "Empty groups are now put into metadata"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 22 Aug 2025 16:40:17 GMT",
       "version": "5.4.1",
       "tag": "@graphitation/ts-codegen_v5.4.1",

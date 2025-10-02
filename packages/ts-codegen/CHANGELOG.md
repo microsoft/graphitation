@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Fri, 22 Aug 2025 16:40:17 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 02 Oct 2025 09:46:49 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 5.4.2
+
+Thu, 02 Oct 2025 09:46:49 GMT
+
+### Patches
+
+- Empty groups are now put into metadata (77059398+vejrj@users.noreply.github.com)
 
 ## 5.4.1
 
