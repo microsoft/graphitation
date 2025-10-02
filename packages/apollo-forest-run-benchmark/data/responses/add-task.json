@@ -1,0 +1,51 @@
+{
+    "organization": {
+        "__typename": "Organization",
+        "id": "org_complex_123",
+        "departments": {
+            "__typename": "DepartmentConnection",
+            "edges": [
+                {
+                    "__typename": "DepartmentEdge",
+                    "node": {
+                        "__typename": "Department",
+                        "id": "dept_engineering",
+                        "teams": [
+                            {
+                                "__typename": "Team",
+                                "id": "team_frontend",
+                                "members": [
+                                    {
+                                        "__typename": "TeamMember",
+                                        "id": "member_1",
+                                        "projects": [
+                                            {
+                                                "__typename": "Project",
+                                                "id": "proj_dashboard_v2",
+                                                "tasks": [
+                                                    {
+                                                        "__typename": "Task",
+                                                        "id": "task_middle_new",
+                                                        "title": "NEW TASK: Implement user authentication",
+                                                        "completed": false,
+                                                        "priority": "HIGH",
+                                                        "assignee": {
+                                                            "__typename": "TeamMember",
+                                                            "id": "member_1",
+                                                            "name": "Alexandra Thompson",
+                                                            "email": "alexandra.thompson@globaltech.com"
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+}

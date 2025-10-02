@@ -1,0 +1,32 @@
+query AddTask {
+  organization {
+    id
+    departments {
+      edges {
+        node {
+          id
+          teams {
+            id
+            members {
+              id
+              projects {
+                id
+                tasks {
+                  id
+                  title
+                  completed
+                  priority
+                  assignee {
+                    id
+                    name
+                    email
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
