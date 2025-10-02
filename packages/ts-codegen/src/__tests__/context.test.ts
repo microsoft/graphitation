@@ -134,6 +134,7 @@ describe(generateTS, () => {
             type User @context(required: { managers: ["user"] }) {
               id: ID! @context(required: { managers: ["id-user", "user"] })
               name: String
+              username: String @baseContextOnly
               messagesWithAnswersNonRequired: [[Message]]
               messagesWithAnswersRequired: [[Message]]!
               messagesWithAnswersAllRequired: [[Message!]!]!
@@ -219,6 +220,7 @@ describe(generateTS, () => {
                 "whatever",
               ],
             },
+            "requiredPost": {},
             "requiredUser": {
               "managers": [
                 "node",
@@ -299,6 +301,7 @@ describe(generateTS, () => {
                 "user",
               ],
             },
+            "username": {},
           },
         }
       `);
@@ -321,6 +324,7 @@ describe(generateTS, () => {
             readonly __typename?: "User";
             readonly id: string;
             readonly name?: string | null;
+            readonly username?: string | null;
             readonly messagesWithAnswersNonRequired?: ReadonlyArray<ReadonlyArray<Message | null> | null> | null;
             readonly messagesWithAnswersRequired: ReadonlyArray<ReadonlyArray<Message | null> | null>;
             readonly messagesWithAnswersAllRequired: ReadonlyArray<ReadonlyArray<Message>>;
@@ -372,6 +376,7 @@ describe(generateTS, () => {
             export interface Resolvers {
                 readonly id?: id;
                 readonly name?: name;
+                readonly username?: username;
                 readonly messagesWithAnswersNonRequired?: messagesWithAnswersNonRequired;
                 readonly messagesWithAnswersRequired?: messagesWithAnswersRequired;
                 readonly messagesWithAnswersAllRequired?: messagesWithAnswersAllRequired;
@@ -395,6 +400,7 @@ describe(generateTS, () => {
                     "user": UserStateMachineType["user"];
                 };
             }, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
+            export type username = (model: Models.User, args: {}, context: DefaultContextType, info: ResolveInfo) => PromiseOrValue<string | null | undefined>;
             export type messagesWithAnswersNonRequired = (model: Models.User, args: {}, context: DefaultContextType & {
                 managers: {
                     "user": UserStateMachineType["user"];

@@ -108,11 +108,17 @@ export function buildContextMetadataOutput(
 
     for (const value of values) {
       if (contextMap[key][value]) {
+        metadata[key] ??= {};
+        metadata[key][value] ??= {};
+
         for (const typeValue of contextMap[key][value].values) {
           buildContextMetadataOutputItem(metadata, typeValue.id, key, value);
         }
         continue;
       } else if (contextMap[key].__context) {
+        metadata[key] ??= {};
+        metadata[key][value] ??= {};
+
         for (const contextValue of contextMap[key].__context.values) {
           buildContextMetadataOutputItem(metadata, contextValue.id, key, value);
         }
@@ -239,19 +245,11 @@ function buildContextMetadataOutputItem(
   key: string,
   value: string,
 ) {
-  const [namespace, subTypeName] = contextKey.split(":");
-
-  if (!metadata[key]) {
-    metadata[key] = {};
-  }
-
-  if (!metadata[key][value]) {
-    metadata[key][value] = {};
-  }
-
   if (Array.isArray(metadata[key][value])) {
     throw Error("Invalid context metadata");
   }
+
+  const [namespace, subTypeName] = contextKey.split(":");
 
   if (!metadata[key][value][namespace]) {
     metadata[key][value][namespace] = [];
