@@ -2,8 +2,13 @@ import * as React from "react";
 import { CacheObjectWithSize } from "./types";
 import { useStyles } from "./apollo-cache-items.styles";
 import { Button, mergeClasses, Text } from "@fluentui/react-components";
-import { Open20Filled, Delete20Regular } from "@fluentui/react-icons";
+import {
+  Open20Filled,
+  Delete20Regular,
+  History20Regular,
+} from "@fluentui/react-icons";
 import { Dialog } from "./../../components";
+import { ApolloCacheHistory } from "./apollo-cache-history";
 
 interface IApolloCacheItems {
   cacheObjectsWithSize: CacheObjectWithSize[];
@@ -13,6 +18,9 @@ interface IApolloCacheItems {
 export const ApolloCacheItems = React.memo(
   ({ cacheObjectsWithSize, removeCacheItem }: IApolloCacheItems) => {
     const [detailsValue, setDetailsValue] = React.useState<
+      CacheObjectWithSize | undefined
+    >(undefined);
+    const [historyValue, setHistoryValue] = React.useState<
       CacheObjectWithSize | undefined
     >(undefined);
     const classes = useStyles();
@@ -25,17 +33,37 @@ export const ApolloCacheItems = React.memo(
       setDetailsValue(undefined);
     };
 
+    const closeHistory = () => {
+      setHistoryValue(undefined);
+    };
+
     const buildApolloCacheItems =
       (
         removeCacheItem: (key: string) => void,
         setDetailsValue: (value: CacheObjectWithSize) => void,
+        setHistoryValue: (value: CacheObjectWithSize) => void,
       ) =>
-      (item: CacheObjectWithSize, index: number) =>
-        (
+      (item: CacheObjectWithSize, index: number) => {
+        const hasHistory = item.value?.hasHistory === true;
+        return (
           <div className={classes.itemContainer} key={`${item.key}-${index}`}>
             <div className={classes.keyColumn}>{item.key}</div>
             <div>{item.valueSize} B</div>
-            <div>
+            <div className={classes.actionColumn}>
+              {hasHistory && (
+                <Button
+                  title="Show history"
+                  className={mergeClasses(
+                    classes.actionButton,
+                    classes.historyButton,
+                  )}
+                  onClick={() => {
+                    setHistoryValue(item);
+                  }}
+                >
+                  <History20Regular />
+                </Button>
+              )}
               <Button
                 title="Show details"
                 className={mergeClasses(
@@ -64,6 +92,7 @@ export const ApolloCacheItems = React.memo(
             </div>
           </div>
         );
+      };
 
     return (
       <div className={classes.root}>
@@ -76,10 +105,17 @@ export const ApolloCacheItems = React.memo(
           </Text>
         </div>
         {cacheObjectsWithSize.map(
-          buildApolloCacheItems(removeCacheItem, setDetailsValue),
+          buildApolloCacheItems(
+            removeCacheItem,
+            setDetailsValue,
+            setHistoryValue,
+          ),
         )}
         {detailsValue ? (
           <Dialog value={detailsValue} onClose={closeDetails} />
+        ) : null}
+        {historyValue ? (
+          <ApolloCacheHistory item={historyValue} onClose={closeHistory} />
         ) : null}
       </div>
     );

@@ -9,3 +9,5 @@ export type {
   TelemetryEvent,
 } from "./telemetry/types";
 export type { ForestRunAdditionalConfig } from "./cache/types";
+
+export { OPERATION_HISTORY_SYMBOL } from "./descriptor/operation";
