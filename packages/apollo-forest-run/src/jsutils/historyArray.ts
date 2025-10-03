@@ -29,18 +29,20 @@ export class HistoryArray {
     if (!this.isEnabled || this.maxSize <= 0) {
       return;
     }
-    const item = {
+    const item: HistoryEntry = {
       timestamp: Date.now(),
       missingFields: updatedTree.missingFields,
       current: {
-        result: this.isDataHistoryEnabled ? currentTree.result : {},
+        result: this.isDataHistoryEnabled ? currentTree.result : undefined,
       },
       incoming: {
-        result: this.isDataHistoryEnabled ? incomingResult?.result : {},
+        result: this.isDataHistoryEnabled ? incomingResult?.result : undefined,
         operation: incomingResult?.operation,
       },
       updated: {
-        result: this.isDataHistoryEnabled ? updatedTree.updatedTree.result : {},
+        result: this.isDataHistoryEnabled
+          ? updatedTree.updatedTree.result
+          : undefined,
         changes: updatedTree.changes,
       },
     };

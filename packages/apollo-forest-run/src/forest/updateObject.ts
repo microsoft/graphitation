@@ -193,7 +193,7 @@ function updateCompositeListValue(
   const layoutDiff = difference.layout;
   let dirty = false; // Only dirty on self changes - item replacement/filler, layout changes (ignores child changes)
   let copy = drafts.get(base.data);
-  const dirtyItemIndexes: any[] = []; // Track dirty item indexes
+  const dirtyItemIndexes: any[] = [];
   assert(Array.isArray(copy) || copy === undefined);
   statsLogger?.copyChunkStats(base, copy);
 

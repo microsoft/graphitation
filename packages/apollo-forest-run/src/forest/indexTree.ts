@@ -37,6 +37,7 @@ import {
   isSourceObject,
   markAsPartial,
 } from "../values";
+import { OPERATION_HISTORY_SYMBOL } from "../descriptor/operation";
 
 type Context = {
   env: ForestEnv;
@@ -102,10 +103,15 @@ export function indexTree(
     rootRef,
   );
 
-  const historySize = operation.historySize ?? env.defaultHistorySize;
-  const history =
-    previousTreeState?.history ??
-    new HistoryArray(historySize, env.enableHistory, env.enableDataHistory);
+  let history: HistoryArray | null = null;
+  if (env.enableHistory) {
+    const historySize = operation.historySize ?? env.defaultHistorySize;
+    history =
+      previousTreeState?.history ??
+      new HistoryArray(historySize, env.enableHistory, env.enableDataHistory);
+
+    result.data[OPERATION_HISTORY_SYMBOL] = history;
+  }
 
   return {
     operation,
