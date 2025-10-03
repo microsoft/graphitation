@@ -48,11 +48,6 @@ export const useStyles = makeStyles({
     ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalM),
     backgroundColor: tokens.colorNeutralBackground2,
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    ...shorthands.border(
-      tokens.strokeWidthThin,
-      "solid",
-      tokens.colorNeutralStroke2,
-    ),
   },
   operationVariables: {
     fontFamily: tokens.fontFamilyMonospace,
@@ -102,50 +97,51 @@ export const useStyles = makeStyles({
     ...shorthands.margin(tokens.spacingVerticalXS, 0),
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
     cursor: "pointer",
-    ...shorthands.transition("background-color", "0.2s"),
+    display: "flex",
+    flexDirection: "column",
+    ...shorthands.gap(tokens.spacingVerticalXXS),
+    ...shorthands.borderLeft("3px", "solid", "transparent"),
     "&:hover": {
       backgroundColor: tokens.colorNeutralBackground1Hover,
+      ...shorthands.borderLeft("3px", "solid", tokens.colorNeutralStroke1Hover),
     },
   },
   timelineItemActive: {
     backgroundColor: tokens.colorBrandBackground2,
+    ...shorthands.borderLeft("3px", "solid", tokens.colorBrandStroke1),
     "&:hover": {
       backgroundColor: tokens.colorBrandBackground2Hover,
+      ...shorthands.borderLeft("3px", "solid", tokens.colorBrandStroke1),
     },
   },
   timelineItemIncomplete: {
     backgroundColor: "rgba(255, 200, 100, 0.15)",
-    ...shorthands.borderLeft(
-      "3px",
-      "solid",
-      tokens.colorPaletteYellowBackground3,
-    ),
-    "&:hover": {
-      backgroundColor: "rgba(255, 200, 100, 0.25)",
-    },
   },
-  timelineItemHeader: {
+  timelineItemContent: {
     display: "flex",
-    alignItems: "center",
-    ...shorthands.gap(tokens.spacingHorizontalXS),
+    flexDirection: "column",
+    ...shorthands.gap(tokens.spacingVerticalXXS),
   },
   timelineItemTime: {
-    color: tokens.colorNeutralForeground3,
-    marginLeft: "24px",
+    color: tokens.colorNeutralForeground2,
+    fontSize: tokens.fontSizeBase200,
+    fontFamily: tokens.fontFamilyMonospace,
   },
   operationName: {
     color: tokens.colorBrandForeground1,
-    marginLeft: "24px",
+    fontSize: tokens.fontSizeBase200,
     fontFamily: tokens.fontFamilyMonospace,
-  },
-  incompleteWarning: {
-    color: tokens.colorPaletteYellowForeground1,
-    marginLeft: "24px",
     fontWeight: tokens.fontWeightSemibold,
+  },
+  missingFieldsTag: {
+    color: tokens.colorPaletteYellowForeground1,
+    fontSize: tokens.fontSizeBase100,
+    fontWeight: tokens.fontWeightSemibold,
+    marginTop: tokens.spacingVerticalXXS,
   },
   detailsPanel: {
     overflowY: "auto",
-    ...shorthands.padding(tokens.spacingVerticalL, tokens.spacingHorizontalL),
+    ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalL),
   },
   emptyState: {
     display: "flex",
@@ -157,7 +153,39 @@ export const useStyles = makeStyles({
   detailsContent: {
     display: "flex",
     flexDirection: "column",
-    ...shorthands.gap(tokens.spacingVerticalL),
+    ...shorthands.gap(tokens.spacingVerticalM),
+  },
+  operationHeader: {
+    display: "flex",
+    flexDirection: "column",
+    ...shorthands.gap(tokens.spacingVerticalS),
+    ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalM),
+    backgroundColor: tokens.colorNeutralBackground2,
+    ...shorthands.borderRadius(tokens.borderRadiusMedium),
+  },
+  operationTitle: {
+    display: "flex",
+    flexDirection: "column",
+    ...shorthands.gap(tokens.spacingVerticalXXS),
+  },
+  operationTimestamp: {
+    color: tokens.colorNeutralForeground3,
+    fontFamily: tokens.fontFamilyMonospace,
+  },
+  operationVariablesBox: {
+    display: "flex",
+    flexDirection: "column",
+    ...shorthands.gap(tokens.spacingVerticalXXS),
+    marginTop: tokens.spacingVerticalXS,
+  },
+  variablesCode: {
+    fontFamily: tokens.fontFamilyMonospace,
+    fontSize: tokens.fontSizeBase100,
+    ...shorthands.padding(tokens.spacingVerticalXS, tokens.spacingHorizontalS),
+    backgroundColor: tokens.colorNeutralBackground1,
+    ...shorthands.borderRadius(tokens.borderRadiusSmall),
+    ...shorthands.overflow("auto"),
+    maxHeight: "200px",
   },
   detailSection: {
     ...shorthands.padding(tokens.spacingVerticalM, 0),
@@ -198,128 +226,174 @@ export const useStyles = makeStyles({
     transform: "rotate(90deg)",
   },
   sectionContent: {
-    ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalL),
+    ...shorthands.padding(tokens.spacingVerticalS, 0),
   },
   changesGroup: {
-    marginBottom: tokens.spacingVerticalL,
+    marginBottom: tokens.spacingVerticalM,
   },
   changesLabel: {
     display: "block",
-    marginBottom: tokens.spacingVerticalM,
+    marginBottom: tokens.spacingVerticalS,
     color: tokens.colorBrandForeground1,
-  },
-  changeItem: {
-    ...shorthands.margin(tokens.spacingVerticalS, 0),
-    ...shorthands.padding(tokens.spacingVerticalS),
-    ...shorthands.border(
+    fontSize: tokens.fontSizeBase300,
+    ...shorthands.padding(tokens.spacingVerticalS, 0),
+    ...shorthands.borderBottom(
       tokens.strokeWidthThin,
       "solid",
       tokens.colorNeutralStroke1,
     ),
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    backgroundColor: tokens.colorNeutralBackground2,
   },
-  changeItemHeader: {
-    width: "100%",
-    justifyContent: "flex-start",
-    ...shorthands.padding(0),
-    ...shorthands.gap(tokens.spacingHorizontalXS),
-    minHeight: "auto",
+  // New row-based change item design
+  changeItemRow: {
+    display: "flex",
+    flexDirection: "column",
+    ...shorthands.margin(tokens.spacingVerticalXS, 0),
+    ...shorthands.padding(tokens.spacingVerticalXS, 0),
+    ...shorthands.borderBottom(
+      tokens.strokeWidthThin,
+      "solid",
+      tokens.colorNeutralStroke2,
+    ),
   },
-  changeChevron: {
-    ...shorthands.transition("transform", "0.2s"),
+  changeItemRowHeader: {
+    display: "flex",
+    alignItems: "center",
+    ...shorthands.gap(tokens.spacingHorizontalS),
+    ...shorthands.padding(tokens.spacingVerticalXS, 0),
+    cursor: "pointer",
+    "&:hover": {
+      backgroundColor: tokens.colorNeutralBackground1Hover,
+    },
+  },
+  changeRowChevron: {
     fontSize: "16px",
+    color: tokens.colorNeutralForeground3,
+    ...shorthands.transition("transform", "0.2s"),
+    flexShrink: 0,
   },
-  fieldName: {
+  changeFieldName: {
     fontFamily: tokens.fontFamilyMonospace,
     fontWeight: tokens.fontWeightSemibold,
     color: tokens.colorNeutralForeground1,
+    minWidth: "120px",
   },
-  changeType: {
+  changeTypeLabel: {
     color: tokens.colorNeutralForeground3,
-    fontStyle: "italic",
-  },
-  changePreview: {
-    color: tokens.colorNeutralForeground2,
-    fontSize: tokens.fontSizeBase200,
-    marginLeft: tokens.spacingHorizontalS,
-  },
-  changeDetails: {
-    marginTop: tokens.spacingVerticalM,
-    marginLeft: tokens.spacingHorizontalL,
-    ...shorthands.padding(tokens.spacingVerticalM),
-    backgroundColor: tokens.colorNeutralBackground1,
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
-  },
-  metadataSection: {
-    ...shorthands.padding(tokens.spacingVerticalS),
-    ...shorthands.margin(tokens.spacingVerticalS, 0),
-    ...shorthands.borderRadius(tokens.borderRadiusSmall),
-    backgroundColor: "rgba(255, 200, 100, 0.1)",
-    ...shorthands.border(
-      tokens.strokeWidthThin,
-      "solid",
-      "rgba(255, 200, 100, 0.3)",
+    fontSize: tokens.fontSizeBase100,
+    ...shorthands.padding(
+      tokens.spacingVerticalXXS,
+      tokens.spacingHorizontalXS,
     ),
+    backgroundColor: tokens.colorNeutralBackground3,
+    ...shorthands.borderRadius(tokens.borderRadiusSmall),
+    flexShrink: 0,
   },
-  warningText: {
-    color: tokens.colorPaletteYellowForeground1,
-    display: "block",
-    marginBottom: tokens.spacingVerticalXS,
+  changePreviewText: {
+    color: tokens.colorNeutralForeground2,
+    fontFamily: tokens.fontFamilyMonospace,
+    flexGrow: 1,
   },
-  valueComparison: {
+  changeExpandedContent: {
+    ...shorthands.padding(
+      tokens.spacingVerticalS,
+      0,
+      tokens.spacingVerticalS,
+      "24px",
+    ),
     display: "flex",
-    ...shorthands.gap(tokens.spacingHorizontalL),
+    flexDirection: "column",
+    ...shorthands.gap(tokens.spacingVerticalXS),
   },
-  oldValue: {
-    ...shorthands.flex(1),
-    ...shorthands.padding(tokens.spacingVerticalS),
-    backgroundColor: "rgba(255, 100, 100, 0.1)",
+  valueComparisonInline: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    ...shorthands.gap(tokens.spacingHorizontalM),
+  },
+  valueLabel: {
+    color: tokens.colorNeutralForeground3,
+    marginBottom: tokens.spacingVerticalXXS,
+  },
+  valueCodeInline: {
+    fontFamily: tokens.fontFamilyMonospace,
+    fontSize: tokens.fontSizeBase100,
+    ...shorthands.padding(tokens.spacingVerticalXS, tokens.spacingHorizontalS),
+    backgroundColor: tokens.colorNeutralBackground2,
     ...shorthands.borderRadius(tokens.borderRadiusSmall),
+    ...shorthands.overflow("auto"),
+    maxHeight: "150px",
   },
-  newValue: {
-    ...shorthands.flex(1),
-    ...shorthands.padding(tokens.spacingVerticalS),
-    backgroundColor: "rgba(100, 255, 100, 0.1)",
+  arrayWarningInfo: {
+    ...shorthands.padding(tokens.spacingVerticalXS, tokens.spacingHorizontalS),
+    backgroundColor: "rgba(255, 200, 100, 0.1)",
     ...shorthands.borderRadius(tokens.borderRadiusSmall),
+    ...shorthands.borderLeft("2px", "solid", tokens.colorPaletteYellowBorder2),
   },
-  fillerValue: {
-    ...shorthands.padding(tokens.spacingVerticalS),
-    backgroundColor: "rgba(100, 150, 255, 0.1)",
+  arrayItemRow: {
+    ...shorthands.padding(tokens.spacingVerticalXS, tokens.spacingHorizontalS),
+    backgroundColor: tokens.colorNeutralBackground2,
+    ...shorthands.borderRadius(tokens.borderRadiusSmall),
+    display: "flex",
+    flexDirection: "column",
+    ...shorthands.gap(tokens.spacingVerticalXXS),
+  },
+  arrayItemRowIncomplete: {
+    backgroundColor: "rgba(255, 200, 100, 0.2)",
+    ...shorthands.borderLeft("3px", "solid", tokens.colorPaletteYellowBorder2),
+  },
+  itemMissingFields: {
+    fontSize: tokens.fontSizeBase100,
+    color: tokens.colorPaletteYellowForeground1,
+    marginTop: tokens.spacingVerticalXXS,
+  },
+  missingFieldName: {
+    fontFamily: tokens.fontFamilyMonospace,
+  },
+  warningBadge: {
+    color: tokens.colorPaletteYellowForeground1,
+    fontSize: tokens.fontSizeBase100,
+    ...shorthands.padding(
+      tokens.spacingVerticalXXS,
+      tokens.spacingHorizontalXS,
+    ),
+    backgroundColor: "rgba(255, 200, 100, 0.15)",
     ...shorthands.borderRadius(tokens.borderRadiusSmall),
   },
   inlineCode: {
     fontFamily: tokens.fontFamilyMonospace,
     fontSize: tokens.fontSizeBase200,
-    ...shorthands.padding(tokens.spacingVerticalXS),
+    ...shorthands.padding(tokens.spacingVerticalS),
     whiteSpace: "pre-wrap",
     wordBreak: "break-word",
     marginTop: tokens.spacingVerticalXS,
   },
-  arrayItemChange: {
-    ...shorthands.padding(tokens.spacingVerticalS),
-    ...shorthands.margin(tokens.spacingVerticalXS, 0),
-    ...shorthands.borderRadius(tokens.borderRadiusSmall),
-    backgroundColor: tokens.colorNeutralBackground3,
-  },
   codeBlock: {
     fontFamily: tokens.fontFamilyMonospace,
     fontSize: tokens.fontSizeBase200,
-    ...shorthands.padding(tokens.spacingVerticalM),
+    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalM),
     backgroundColor: tokens.colorNeutralBackground3,
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
     ...shorthands.overflow("auto"),
-    maxHeight: "400px",
+    maxHeight: "500px",
+    ...shorthands.border(
+      tokens.strokeWidthThin,
+      "solid",
+      tokens.colorNeutralStroke2,
+    ),
   },
   noChanges: {
     color: tokens.colorNeutralForeground3,
     fontStyle: "italic",
+    fontSize: tokens.fontSizeBase200,
+    ...shorthands.padding(tokens.spacingVerticalM),
   },
   missingSectionTitle: {
     color: tokens.colorPaletteYellowForeground1,
+    display: "flex",
+    alignItems: "center",
+    ...shorthands.gap(tokens.spacingHorizontalXS),
   },
   missingFieldsItem: {
-    ...shorthands.padding(tokens.spacingVerticalM),
+    ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalM),
     ...shorthands.margin(tokens.spacingVerticalS, 0),
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
     backgroundColor: "rgba(255, 200, 100, 0.1)",
@@ -332,18 +406,20 @@ export const useStyles = makeStyles({
   missingFieldsList: {
     display: "flex",
     flexWrap: "wrap",
-    ...shorthands.gap(tokens.spacingHorizontalXS),
+    ...shorthands.gap(tokens.spacingHorizontalS),
     marginTop: tokens.spacingVerticalS,
   },
   missingFieldChip: {
-    ...shorthands.padding(tokens.spacingVerticalXXS, tokens.spacingHorizontalS),
+    ...shorthands.padding(tokens.spacingVerticalXS, tokens.spacingHorizontalS),
     backgroundColor: tokens.colorPaletteYellowBackground1,
-    ...shorthands.borderRadius(tokens.borderRadiusSmall),
+    ...shorthands.borderRadius(tokens.borderRadiusMedium),
     ...shorthands.border(
       tokens.strokeWidthThin,
       "solid",
-      tokens.colorPaletteYellowBorder1,
+      tokens.colorPaletteYellowBorder2,
     ),
+    fontFamily: tokens.fontFamilyMonospace,
+    fontSize: tokens.fontSizeBase200,
   },
   // Diff viewer styles
   diffViewerContainer: {
@@ -361,7 +437,7 @@ export const useStyles = makeStyles({
     alignItems: "center",
     justifyContent: "space-between",
     ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalM),
-    backgroundColor: tokens.colorNeutralBackground2,
+    backgroundColor: tokens.colorNeutralBackground3,
     ...shorthands.borderBottom(
       tokens.strokeWidthThin,
       "solid",
@@ -369,7 +445,7 @@ export const useStyles = makeStyles({
     ),
   },
   diffViewerContent: {
-    maxHeight: "500px",
+    maxHeight: "600px",
     overflowY: "auto",
     backgroundColor: tokens.colorNeutralBackground1,
     fontFamily: tokens.fontFamilyMonospace,
@@ -377,56 +453,49 @@ export const useStyles = makeStyles({
   },
   diffLine: {
     display: "flex",
-    ...shorthands.padding(tokens.spacingVerticalXXS, tokens.spacingHorizontalS),
+    ...shorthands.padding(tokens.spacingVerticalXS, tokens.spacingHorizontalM),
     whiteSpace: "pre",
     fontFamily: "inherit",
     fontSize: "inherit",
   },
   diffLineNumber: {
-    minWidth: "40px",
+    minWidth: "50px",
     textAlign: "right",
     marginRight: tokens.spacingHorizontalM,
     color: tokens.colorNeutralForeground3,
     userSelect: "none",
   },
   diffLineContent: {
-    flex: "1",
+    ...shorthands.flex(1),
     whiteSpace: "pre-wrap",
     wordBreak: "break-all",
   },
   diffLineAdded: {
     backgroundColor: "rgba(46, 160, 67, 0.15)",
-    ...shorthands.borderLeft(
-      "3px",
-      "solid",
-      tokens.colorPaletteGreenForeground1,
-    ),
+    ...shorthands.borderLeft("3px", "solid", tokens.colorPaletteGreenBorder2),
   },
   diffLineDeleted: {
     backgroundColor: "rgba(229, 83, 75, 0.15)",
-    ...shorthands.borderLeft("3px", "solid", tokens.colorPaletteRedForeground1),
+    ...shorthands.borderLeft("3px", "solid", tokens.colorPaletteRedBorder2),
   },
   diffLineModified: {
     backgroundColor: "rgba(245, 159, 0, 0.15)",
-    ...shorthands.borderLeft(
-      "3px",
-      "solid",
-      tokens.colorPaletteYellowForeground1,
-    ),
+    ...shorthands.borderLeft("3px", "solid", tokens.colorPaletteYellowBorder2),
   },
   diffLineUnchanged: {
     backgroundColor: tokens.colorNeutralBackground1,
-    color: tokens.colorNeutralForeground3,
+    color: tokens.colorNeutralForeground2,
   },
   diffStats: {
     display: "flex",
-    ...shorthands.gap(tokens.spacingHorizontalM),
-    fontSize: tokens.fontSizeBase200,
+    ...shorthands.gap(tokens.spacingHorizontalL),
+    fontSize: tokens.fontSizeBase300,
+    fontWeight: tokens.fontWeightSemibold,
   },
   diffStatItem: {
     display: "flex",
     alignItems: "center",
-    ...shorthands.gap(tokens.spacingHorizontalXXS),
+    ...shorthands.gap(tokens.spacingHorizontalXS),
   },
   diffStatAdded: {
     color: tokens.colorPaletteGreenForeground1,
@@ -437,7 +506,9 @@ export const useStyles = makeStyles({
   diffStatModified: {
     color: tokens.colorPaletteYellowForeground1,
   },
-  diffButton: {
-    marginTop: tokens.spacingVerticalS,
+  diffToggle: {
+    marginBottom: tokens.spacingVerticalS,
+    display: "flex",
+    alignItems: "center",
   },
 });

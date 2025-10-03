@@ -29,15 +29,11 @@ import { Logger } from "../jsutils/logger";
 import { UpdateTreeStats } from "../telemetry/updateStats/types";
 import { UpdateLogger } from "../telemetry/updateStats/updateLogger";
 import { HistoryArray } from "../jsutils/historyArray";
-import type { OPERATION_HISTORY_SYMBOL } from "../descriptor/operation";
 import type * as DifferenceKind from "../diff/differenceKind";
 
 export type IndexedTree = {
   operation: OperationDescriptor;
-  result: OperationResult & {
-    [OPERATION_HISTORY_SYMBOL]?: UpdateTreeResult[]; // Expose history for debugging (read-only)
-    [key: symbol]: any;
-  };
+  result: OperationResult;
   rootNodeKey: NodeKey;
   nodes: NodeMap;
   typeMap: TypeMap;
@@ -54,8 +50,8 @@ export type IndexedTree = {
   // Error states
   incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
 
-  // Operation history for debugging (stores references to changelog entries)
-  history: HistoryArray;
+  // Operation history for debugging
+  history: HistoryArray | null;
 
   // ApolloCompat
   danglingReferences?: Set<NodeKey>;
@@ -65,15 +61,15 @@ export type HistoryEntry = {
   timestamp: number;
   missingFields: MissingFieldsMap;
   current: {
-    result: OperationResult;
+    result: OperationResult | undefined;
   };
   incoming: {
     result?: OperationResult;
-    operation?: OperationDescriptor;
+    operation?: OperationDescriptor | undefined;
   };
   updated: {
     changes: ChangedChunksMap;
-    result: OperationResult;
+    result: OperationResult | undefined;
   };
 };
 
