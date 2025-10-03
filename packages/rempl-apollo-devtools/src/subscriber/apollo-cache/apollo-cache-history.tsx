@@ -5,6 +5,7 @@ import {
   Text,
   Title1,
   Title3,
+  Switch,
   mergeClasses,
 } from "@fluentui/react-components";
 import { Dismiss20Regular, ChevronRight20Regular } from "@fluentui/react-icons";
@@ -157,6 +158,12 @@ export const ApolloCacheHistory = React.memo(
                 {history.map((entry, index) => {
                   const hasIncompleteData =
                     entry.missingFields && entry.missingFields.length > 0;
+                  const missingFieldsCount = hasIncompleteData
+                    ? entry.missingFields.reduce(
+                        (sum, mf) => sum + mf.fields.length,
+                        0,
+                      )
+                    : 0;
                   return (
                     <div
                       key={index}
@@ -168,13 +175,9 @@ export const ApolloCacheHistory = React.memo(
                       )}
                       onClick={() => setSelectedEntryIndex(index)}
                     >
-                      <div className={classes.timelineItemHeader}>
-                        <ChevronRight20Regular />
-                        <Text weight="semibold">
-                          Update #{index + 1}
-                          {hasIncompleteData && " ⚠️"}
-                        </Text>
-                      </div>
+                      <Text weight="semibold" size={300}>
+                        Update #{index + 1}
+                      </Text>
                       <Text size={200} className={classes.timelineItemTime}>
                         {new Date(entry.timestamp).toLocaleTimeString()}
                       </Text>
@@ -185,8 +188,8 @@ export const ApolloCacheHistory = React.memo(
                         </Text>
                       )}
                       {hasIncompleteData && (
-                        <Text size={200} className={classes.incompleteWarning}>
-                          Incomplete
+                        <Text size={100} className={classes.missingFieldsTag}>
+                          {missingFieldsCount} missing fields
                         </Text>
                       )}
                     </div>
@@ -242,34 +245,37 @@ const HistoryDetails = React.memo(({ entry, classes }: HistoryDetailsProps) => {
 
   return (
     <div className={classes.detailsContent}>
-      <div className={classes.detailSection}>
+      {/* Operation Header */}
+      {entry.incoming?.operation && (
+        <div className={classes.operationHeader}>
+          <div className={classes.operationTitle}>
+            <Text size={400} weight="semibold">
+              {entry.incoming.operation.definition?.name?.value ||
+                "Anonymous Operation"}
+            </Text>
+            <Text size={200} className={classes.operationTimestamp}>
+              {new Date(entry.timestamp).toLocaleString()}
+            </Text>
+          </div>
+          {entry.incoming.operation.variables &&
+            Object.keys(entry.incoming.operation.variables).length > 0 && (
+              <div className={classes.operationVariablesBox}>
+                <Text size={200} weight="semibold">
+                  Variables:
+                </Text>
+                <pre className={classes.variablesCode}>
+                  {JSON.stringify(entry.incoming.operation.variables, null, 2)}
+                </pre>
+              </div>
+            )}
+        </div>
+      )}
+
+      {!entry.incoming?.operation && (
         <Text size={300} weight="semibold" className={classes.timestamp}>
           {new Date(entry.timestamp).toLocaleString()}
         </Text>
-        {entry.incoming?.operation && (
-          <>
-            <Text size={200} className={classes.operationInfo}>
-              Operation:{" "}
-              {entry.incoming.operation.definition?.name?.value || "Anonymous"}
-            </Text>
-            {entry.incoming.operation.variables &&
-              Object.keys(entry.incoming.operation.variables).length > 0 && (
-                <div className={classes.variablesSection}>
-                  <Text size={200} weight="semibold">
-                    Variables:
-                  </Text>
-                  <pre className={classes.inlineCode}>
-                    {JSON.stringify(
-                      entry.incoming.operation.variables,
-                      null,
-                      2,
-                    )}
-                  </pre>
-                </div>
-              )}
-          </>
-        )}
-      </div>
+      )}
 
       {/* Changes Section */}
       <div className={classes.section}>
@@ -293,7 +299,7 @@ const HistoryDetails = React.memo(({ entry, classes }: HistoryDetailsProps) => {
           <div className={classes.sectionContent}>
             {changes.fieldChanges.length > 0 && (
               <div className={classes.changesGroup}>
-                <Text weight="semibold" className={classes.changesLabel}>
+                <Text weight="semibold" size={300}>
                   Field Changes:
                 </Text>
                 {changes.fieldChanges.map((change, idx) => (
@@ -307,7 +313,7 @@ const HistoryDetails = React.memo(({ entry, classes }: HistoryDetailsProps) => {
             )}
             {changes.arrayChanges.length > 0 && (
               <div className={classes.changesGroup}>
-                <Text weight="semibold" className={classes.changesLabel}>
+                <Text weight="semibold" size={300}>
                   Array Changes:
                 </Text>
                 {changes.arrayChanges.map((change, idx) => (
@@ -325,6 +331,82 @@ const HistoryDetails = React.memo(({ entry, classes }: HistoryDetailsProps) => {
                   No detailed changes recorded
                 </Text>
               )}
+          </div>
+        )}
+      </div>
+
+      {/* New State Section with Diff Toggle */}
+      <div className={classes.section}>
+        <Button
+          appearance="transparent"
+          onClick={() => toggleSection("updated")}
+          className={classes.sectionHeader}
+        >
+          <ChevronRight20Regular
+            className={mergeClasses(
+              classes.chevron,
+              expandedSections.has("updated") && classes.chevronExpanded,
+            )}
+          />
+          <Title3>New State</Title3>
+        </Button>
+        {expandedSections.has("updated") && (
+          <div className={classes.sectionContent}>
+            <DiffViewer
+              oldData={entry.current.result}
+              newData={entry.updated.result}
+              classes={classes}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Incoming Data Section */}
+      {entry.incoming?.result && (
+        <div className={classes.section}>
+          <Button
+            appearance="transparent"
+            onClick={() => toggleSection("incoming")}
+            className={classes.sectionHeader}
+          >
+            <ChevronRight20Regular
+              className={mergeClasses(
+                classes.chevron,
+                expandedSections.has("incoming") && classes.chevronExpanded,
+              )}
+            />
+            <Title3>Incoming Data</Title3>
+          </Button>
+          {expandedSections.has("incoming") && (
+            <div className={classes.sectionContent}>
+              <pre className={classes.codeBlock}>
+                {JSON.stringify(entry.incoming.result, null, 2)}
+              </pre>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Previous State Section */}
+      <div className={classes.section}>
+        <Button
+          appearance="transparent"
+          onClick={() => toggleSection("current")}
+          className={classes.sectionHeader}
+        >
+          <ChevronRight20Regular
+            className={mergeClasses(
+              classes.chevron,
+              expandedSections.has("current") && classes.chevronExpanded,
+            )}
+          />
+          <Title3>Previous State</Title3>
+        </Button>
+        {expandedSections.has("current") && (
+          <div className={classes.sectionContent}>
+            <pre className={classes.codeBlock}>
+              {JSON.stringify(entry.current.result, null, 2)}
+            </pre>
           </div>
         )}
       </div>
@@ -369,85 +451,6 @@ const HistoryDetails = React.memo(({ entry, classes }: HistoryDetailsProps) => {
           )}
         </div>
       )}
-
-      {/* Current State Section */}
-      <div className={classes.section}>
-        <Button
-          appearance="transparent"
-          onClick={() => toggleSection("current")}
-          className={classes.sectionHeader}
-        >
-          <ChevronRight20Regular
-            className={mergeClasses(
-              classes.chevron,
-              expandedSections.has("current") && classes.chevronExpanded,
-            )}
-          />
-          <Title3>Previous State</Title3>
-        </Button>
-        {expandedSections.has("current") && (
-          <div className={classes.sectionContent}>
-            <pre className={classes.codeBlock}>
-              {JSON.stringify(entry.current.result, null, 2)}
-            </pre>
-          </div>
-        )}
-      </div>
-
-      {/* Updated State Section */}
-      <div className={classes.section}>
-        <Button
-          appearance="transparent"
-          onClick={() => toggleSection("updated")}
-          className={classes.sectionHeader}
-        >
-          <ChevronRight20Regular
-            className={mergeClasses(
-              classes.chevron,
-              expandedSections.has("updated") && classes.chevronExpanded,
-            )}
-          />
-          <Title3>New State</Title3>
-        </Button>
-        {expandedSections.has("updated") && (
-          <div className={classes.sectionContent}>
-            <pre className={classes.codeBlock}>
-              {JSON.stringify(entry.updated.result, null, 2)}
-            </pre>
-            <DiffViewer
-              oldData={entry.current.result}
-              newData={entry.updated.result}
-              classes={classes}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Incoming Data Section */}
-      {entry.incoming?.result && (
-        <div className={classes.section}>
-          <Button
-            appearance="transparent"
-            onClick={() => toggleSection("incoming")}
-            className={classes.sectionHeader}
-          >
-            <ChevronRight20Regular
-              className={mergeClasses(
-                classes.chevron,
-                expandedSections.has("incoming") && classes.chevronExpanded,
-              )}
-            />
-            <Title3>Incoming Data</Title3>
-          </Button>
-          {expandedSections.has("incoming") && (
-            <div className={classes.sectionContent}>
-              <pre className={classes.codeBlock}>
-                {JSON.stringify(entry.incoming.result, null, 2)}
-              </pre>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 });
@@ -459,77 +462,74 @@ interface FieldChangeItemProps {
 
 const FieldChangeItem = React.memo(
   ({ change, classes }: FieldChangeItemProps) => {
-    const [isExpanded, setIsExpanded] = useState(true); // Expand by default to show old/new values
+    const [isExpanded, setIsExpanded] = useState(false); // Collapsed by default
 
     // Generate a preview of the change for the header
     const changePreview = React.useMemo(() => {
       if (change.kind === 0 && change.oldValue !== undefined) {
         const oldPreview = getValuePreview(change.oldValue);
         const newPreview = getValuePreview(change.newValue);
-        return `: ${oldPreview} → ${newPreview}`;
+        return `${oldPreview} → ${newPreview}`;
       } else if (change.kind === 1) {
         const newPreview = getValuePreview(change.newValue);
-        return `: ${newPreview}`;
+        return newPreview;
       } else if (change.kind === 2 && change.newSize !== undefined) {
-        return `: array resized to ${change.newSize} items`;
+        return `resized to ${change.newSize} items`;
       }
       return "";
     }, [change]);
 
+    const fieldName =
+      change.fieldName ||
+      change.fieldInfo?.name ||
+      change.field ||
+      "Unknown field";
+
+    const changeTypeLabel =
+      change.kind === 0 ? "modified" : change.kind === 1 ? "filled" : "array";
+
     return (
-      <div className={classes.changeItem}>
-        <Button
-          appearance="subtle"
+      <div className={classes.changeItemRow}>
+        <div
+          className={classes.changeItemRowHeader}
           onClick={() => setIsExpanded(!isExpanded)}
-          className={classes.changeItemHeader}
         >
           <ChevronRight20Regular
             className={mergeClasses(
-              classes.changeChevron,
+              classes.changeRowChevron,
               isExpanded && classes.chevronExpanded,
             )}
           />
-          <Text size={200}>
-            <span className={classes.fieldName}>
-              {change.fieldName ||
-                change.fieldInfo?.name ||
-                change.field ||
-                "Unknown field"}
-            </span>
-            {change.kind === 0 && (
-              <span className={classes.changeType}> (modified)</span>
-            )}
-            {change.kind === 1 && (
-              <span className={classes.changeType}> (filled)</span>
-            )}
-            {change.kind === 2 && (
-              <span className={classes.changeType}> (array changed)</span>
-            )}
-            {!isExpanded && changePreview && (
-              <span className={classes.changePreview}>{changePreview}</span>
-            )}
+          <Text size={200} className={classes.changeFieldName}>
+            {fieldName}
           </Text>
-        </Button>
+          <Text size={100} className={classes.changeTypeLabel}>
+            {changeTypeLabel}
+          </Text>
+          <Text size={200} className={classes.changePreviewText}>
+            {changePreview}
+          </Text>
+        </div>
 
         {isExpanded && (
-          <div className={classes.changeDetails}>
+          <div className={classes.changeExpandedContent}>
             {change.kind === 0 && (
-              <div className={classes.valueComparison}>
-                <div className={classes.oldValue}>
-                  <Text size={200} weight="semibold">
+              <div className={classes.valueComparisonInline}>
+                <div>
+                  <Text size={100} className={classes.valueLabel}>
                     Old:
                   </Text>
-                  <pre className={classes.inlineCode}>
+                  <pre className={classes.valueCodeInline}>
                     {change.oldValue !== undefined
                       ? formatValue(change.oldValue)
                       : "(no old value)"}
                   </pre>
                 </div>
-                <div className={classes.newValue}>
-                  <Text size={200} weight="semibold">
+                <div>
+                  <Text size={100} className={classes.valueLabel}>
                     New:
                   </Text>
-                  <pre className={classes.inlineCode}>
+                  <pre className={classes.valueCodeInline}>
                     {change.newValue !== undefined
                       ? formatValue(change.newValue)
                       : "(no new value)"}
@@ -538,29 +538,19 @@ const FieldChangeItem = React.memo(
               </div>
             )}
             {change.kind === 1 && (
-              <div className={classes.fillerValue}>
-                <Text size={200} weight="semibold">
+              <div>
+                <Text size={100} className={classes.valueLabel}>
                   Value:
                 </Text>
-                <pre className={classes.inlineCode}>
+                <pre className={classes.valueCodeInline}>
                   {change.newValue !== undefined
                     ? formatValue(change.newValue)
                     : "(no value)"}
                 </pre>
               </div>
             )}
-            {change.kind === 2 && (
-              <div className={classes.fillerValue}>
-                <Text size={200} weight="semibold">
-                  Array Change:
-                </Text>
-                {change.newSize !== undefined && (
-                  <Text size={200}>New size: {change.newSize} items</Text>
-                )}
-                {!change.newSize && (
-                  <Text size={200}>Array structure modified</Text>
-                )}
-              </div>
+            {change.kind === 2 && change.newSize !== undefined && (
+              <Text size={200}>New array size: {change.newSize} items</Text>
             )}
           </div>
         )}
@@ -582,49 +572,52 @@ const ArrayChangeItem = React.memo(
       change.chunk?.missingItems && change.chunk.missingItems.length > 0;
     const hasPartialItems =
       change.chunk?.partialItems && change.chunk.partialItems.length > 0;
+    const itemCount = change.items ? change.items.length : 0;
 
     return (
-      <div className={classes.changeItem}>
-        <Button
-          appearance="subtle"
+      <div className={classes.changeItemRow}>
+        <div
+          className={classes.changeItemRowHeader}
           onClick={() => setIsExpanded(!isExpanded)}
-          className={classes.changeItemHeader}
         >
           <ChevronRight20Regular
             className={mergeClasses(
-              classes.changeChevron,
+              classes.changeRowChevron,
               isExpanded && classes.chevronExpanded,
             )}
           />
-          <Text size={200}>
-            <span className={classes.fieldName}>
-              Array modified
-              {change.chunk?.type && ` (${change.chunk.type}[])`}
-            </span>
-            {change.items && change.items.length > 0 && (
-              <span className={classes.changeType}>
-                {" "}
-                ({change.items.length} items changed)
-              </span>
-            )}
+          <Text size={200} className={classes.changeFieldName}>
+            Array modified
+            {change.chunk?.type && ` (${change.chunk.type}[])`}
           </Text>
-        </Button>
+          <Text size={100} className={classes.changeTypeLabel}>
+            array
+          </Text>
+          {itemCount > 0 && (
+            <Text size={200} className={classes.changePreviewText}>
+              {itemCount} items changed
+            </Text>
+          )}
+          {(hasMissingItems || hasPartialItems) && (
+            <Text size={100} className={classes.warningBadge}>
+              ⚠️ incomplete
+            </Text>
+          )}
+        </div>
 
         {isExpanded && (
-          <div className={classes.changeDetails}>
+          <div className={classes.changeExpandedContent}>
             {/* Display missing/partial items info */}
             {(hasMissingItems || hasPartialItems) && (
-              <div className={classes.metadataSection}>
+              <div className={classes.arrayWarningInfo}>
                 {hasMissingItems && (
-                  <Text size={200} className={classes.warningText}>
-                    ⚠️ Missing items at indexes:{" "}
-                    {change.chunk.missingItems.join(", ")}
+                  <Text size={200}>
+                    Missing items: {change.chunk.missingItems.join(", ")}
                   </Text>
                 )}
                 {hasPartialItems && (
-                  <Text size={200} className={classes.warningText}>
-                    ⚠️ Partial items at indexes:{" "}
-                    {change.chunk.partialItems.join(", ")}
+                  <Text size={200}>
+                    Partial items: {change.chunk.partialItems.join(", ")}
                   </Text>
                 )}
               </div>
@@ -633,49 +626,46 @@ const ArrayChangeItem = React.memo(
             {/* Display item changes */}
             {change.items && change.items.length > 0 ? (
               change.items.map((item: any, idx: number) => (
-                <div key={idx} className={classes.arrayItemChange}>
+                <div
+                  key={idx}
+                  className={mergeClasses(
+                    classes.arrayItemRow,
+                    item.missingFields &&
+                      item.missingFields.length > 0 &&
+                      classes.arrayItemRowIncomplete,
+                  )}
+                >
                   <Text size={200} weight="semibold">
                     Index {item.index}
                   </Text>
                   {item.data && (
-                    <>
-                      <Text size={200}>Data:</Text>
-                      <pre className={classes.inlineCode}>
-                        {formatValue(item.data)}
-                      </pre>
-                    </>
+                    <pre className={classes.valueCodeInline}>
+                      {formatValue(item.data)}
+                    </pre>
                   )}
                   {item.missingFields && item.missingFields.length > 0 && (
-                    <div className={classes.metadataSection}>
-                      <Text size={200} className={classes.warningText}>
-                        ⚠️ Missing fields in this item:
+                    <div className={classes.itemMissingFields}>
+                      <Text size={100} weight="semibold">
+                        ⚠️ Missing fields:
                       </Text>
                       {item.missingFields.map(
                         (missing: any, missingIdx: number) => (
-                          <div
-                            key={missingIdx}
-                            className={classes.missingFieldsItem}
-                          >
-                            <Text weight="semibold" size={200}>
-                              {missing.objectIdentifier}
+                          <div key={missingIdx}>
+                            <Text size={100} weight="semibold">
+                              {missing.objectIdentifier}:
                             </Text>
-                            <div className={classes.missingFieldsList}>
-                              {missing.fields.map(
-                                (field: any, fieldIdx: number) => (
-                                  <div
-                                    key={fieldIdx}
-                                    className={classes.missingFieldChip}
-                                  >
-                                    <Text
-                                      size={200}
-                                      className={classes.fieldName}
-                                    >
-                                      {field.name}
-                                    </Text>
-                                  </div>
-                                ),
-                              )}
-                            </div>
+                            {missing.fields.map(
+                              (field: any, fieldIdx: number) => (
+                                <Text
+                                  key={fieldIdx}
+                                  size={100}
+                                  className={classes.missingFieldName}
+                                >
+                                  {field.name}
+                                  {fieldIdx < missing.fields.length - 1 && ", "}
+                                </Text>
+                              ),
+                            )}
                           </div>
                         ),
                       )}
@@ -684,7 +674,7 @@ const ArrayChangeItem = React.memo(
                 </div>
               ))
             ) : (
-              <Text size={200}>Layout or length changed</Text>
+              <Text size={200}>Array structure or length modified</Text>
             )}
           </div>
         )}
@@ -734,65 +724,71 @@ const DiffViewer = React.memo(
 
     return (
       <>
-        <Button
-          appearance="primary"
-          onClick={() => setShowDiff(!showDiff)}
-          className={classes.diffButton}
-        >
-          {showDiff ? "Hide Diff View" : "Show Diff View"}
-        </Button>
+        <div className={classes.diffToggle}>
+          <Switch
+            checked={showDiff}
+            onChange={(_, data) => setShowDiff(data.checked)}
+            label="Show diff view"
+          />
+        </div>
 
-        {showDiff && diffLines && (
-          <div className={classes.diffViewerContainer}>
-            <div className={classes.diffViewerHeader}>
-              <Text weight="semibold">Changes</Text>
-              <div className={classes.diffStats}>
-                {stats.added > 0 && (
-                  <div className={classes.diffStatItem}>
-                    <Text className={classes.diffStatAdded}>
-                      +{stats.added} added
-                    </Text>
+        {showDiff ? (
+          diffLines && (
+            <div className={classes.diffViewerContainer}>
+              <div className={classes.diffViewerHeader}>
+                <Text weight="semibold">Changes</Text>
+                <div className={classes.diffStats}>
+                  {stats.added > 0 && (
+                    <div className={classes.diffStatItem}>
+                      <Text className={classes.diffStatAdded}>
+                        +{stats.added}
+                      </Text>
+                    </div>
+                  )}
+                  {stats.deleted > 0 && (
+                    <div className={classes.diffStatItem}>
+                      <Text className={classes.diffStatDeleted}>
+                        -{stats.deleted}
+                      </Text>
+                    </div>
+                  )}
+                  {stats.modified > 0 && (
+                    <div className={classes.diffStatItem}>
+                      <Text className={classes.diffStatModified}>
+                        ~{stats.modified}
+                      </Text>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className={classes.diffViewerContent}>
+                {diffLines.map((line: DiffLine, idx: number) => (
+                  <div
+                    key={idx}
+                    className={mergeClasses(
+                      classes.diffLine,
+                      line.type === "added" && classes.diffLineAdded,
+                      line.type === "deleted" && classes.diffLineDeleted,
+                      line.type === "modified" && classes.diffLineModified,
+                      line.type === "unchanged" && classes.diffLineUnchanged,
+                    )}
+                  >
+                    <span className={classes.diffLineNumber}>
+                      {line.lineNumber || ""}
+                    </span>
+                    <span className={classes.diffLineContent}>
+                      {line.prefix}
+                      {line.content}
+                    </span>
                   </div>
-                )}
-                {stats.deleted > 0 && (
-                  <div className={classes.diffStatItem}>
-                    <Text className={classes.diffStatDeleted}>
-                      -{stats.deleted} deleted
-                    </Text>
-                  </div>
-                )}
-                {stats.modified > 0 && (
-                  <div className={classes.diffStatItem}>
-                    <Text className={classes.diffStatModified}>
-                      ~{stats.modified} modified
-                    </Text>
-                  </div>
-                )}
+                ))}
               </div>
             </div>
-            <div className={classes.diffViewerContent}>
-              {diffLines.map((line: DiffLine, idx: number) => (
-                <div
-                  key={idx}
-                  className={mergeClasses(
-                    classes.diffLine,
-                    line.type === "added" && classes.diffLineAdded,
-                    line.type === "deleted" && classes.diffLineDeleted,
-                    line.type === "modified" && classes.diffLineModified,
-                    line.type === "unchanged" && classes.diffLineUnchanged,
-                  )}
-                >
-                  <span className={classes.diffLineNumber}>
-                    {line.lineNumber || ""}
-                  </span>
-                  <span className={classes.diffLineContent}>
-                    {line.prefix}
-                    {line.content}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          )
+        ) : (
+          <pre className={classes.codeBlock}>
+            {JSON.stringify(newData, null, 2)}
+          </pre>
         )}
       </>
     );
