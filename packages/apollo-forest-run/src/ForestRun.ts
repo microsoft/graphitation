@@ -396,6 +396,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
       op: OperationDescriptor,
       data: SourceObject | null = null,
       optimisticData: SourceObject | null = null,
+      hasHistory = false,
     ): SerializedOperationInfo => {
       const key = data ?? optimisticData;
       assert(key);
@@ -407,6 +408,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
           data,
           variables: op.variables,
           optimisticData,
+          hasHistory,
         };
         this.extractedObjects.set(key, entry);
       }
@@ -415,19 +417,24 @@ export class ForestRun extends ApolloCache<SerializedCache> {
 
     const output: SerializedCache = {};
     for (const [_, tree] of dataForest.trees.entries()) {
+      const historyLength = tree.history.getAll()?.length ?? 0;
       output[key(tree.operation)] = stableConvert(
         tree.operation,
         tree.result.data,
+        null,
+        historyLength > 0,
       );
     }
     if (optimistic) {
       for (const layer of this.store.optimisticLayers) {
         for (const [id, optimisticTree] of layer.trees.entries()) {
           const tree = dataForest.trees.get(id);
+          const historyLength = tree?.history.getAll()?.length ?? 0;
           output[key(optimisticTree.operation)] = stableConvert(
             optimisticTree.operation,
             tree?.result.data ?? null,
             optimisticTree.result.data,
+            historyLength > 0,
           );
         }
       }

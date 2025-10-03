@@ -19,13 +19,18 @@ export const useStyles = makeStyles({
   },
   itemContainer: {
     display: "grid",
-    gridTemplateColumns: "auto 80px 100px",
+    gridTemplateColumns: "auto 80px 146px",
     alignItems: "center",
     ...shorthands.padding("10px"),
     ...shorthands.borderBottom("1px", "solid", "#F5F5F5"),
     "&:hover": {
       backgroundColor: "#F5F5F6",
     },
+  },
+  actionColumn: {
+    display: "flex",
+    justifyContent: "flex-end",
+    columnGap: "6px",
   },
   keyColumn: {
     ...shorthands.overflow("hidden"),
@@ -41,10 +46,17 @@ export const useStyles = makeStyles({
   detailsButton: {
     backgroundColor: "#e6f8e8",
     color: "#97D4A9",
-    marginRight: "7px",
     "&:hover": {
       backgroundColor: "#cef0d2",
       color: "#7fae8d",
+    },
+  },
+  historyButton: {
+    backgroundColor: "#e6f3f8",
+    color: "#6AAEDB",
+    "&:hover": {
+      backgroundColor: "#d0e8f4",
+      color: "#5a97bd",
     },
   },
   removeButton: {

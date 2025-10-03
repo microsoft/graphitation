@@ -142,6 +142,11 @@ export type ForestRunAdditionalConfig = {
   logUpdateStats?: boolean;
   logStaleOperations?: boolean;
   optimizeFragmentReads?: boolean;
+
+  // History configuration
+  enableHistory?: boolean;
+  enableDataHistory?: boolean;
+  defaultHistorySize?: number;
 };
 
 export type CacheConfig = InMemoryCacheConfig & ForestRunAdditionalConfig;
@@ -214,6 +219,11 @@ export type CacheEnv = {
   logUpdateStats: boolean;
   logStaleOperations: boolean;
   optimizeFragmentReads: boolean;
+
+  // History configuration
+  enableHistory: boolean;
+  enableDataHistory: boolean;
+  defaultHistorySize: number;
 };
 
 export type SerializedOperationKey = string;
@@ -221,6 +231,7 @@ export type SerializedOperationInfo = {
   data: SourceObject | null;
   optimisticData: SourceObject | null;
   variables: Record<string, unknown>;
+  hasHistory: boolean;
 };
 export type SerializedCache = Record<
   SerializedOperationKey,
