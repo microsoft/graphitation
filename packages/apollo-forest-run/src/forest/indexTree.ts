@@ -109,8 +109,6 @@ export function indexTree(
     history =
       previousTreeState?.history ??
       new HistoryArray(historySize, env.enableHistory, env.enableDataHistory);
-
-    result.data[OPERATION_HISTORY_SYMBOL] = history;
   }
 
   return {
