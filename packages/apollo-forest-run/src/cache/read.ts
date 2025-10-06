@@ -48,6 +48,7 @@ import {
 import { assert } from "../jsutils/assert";
 import { addTree, trackTreeNodes } from "../forest/addTree";
 import { DirectiveNode, FragmentDefinitionNode } from "graphql";
+import { OPERATION_HISTORY_SYMBOL } from "../descriptor/operation";
 
 export function read<TData>(
   env: CacheEnv,
@@ -130,6 +131,10 @@ function readOperation(
   // Safeguard: make sure previous state doesn't leak outside write operation
   assert(!outputTree?.prev);
 
+  if (env.enableHistory) {
+    readState.outputTree.result.data[OPERATION_HISTORY_SYMBOL] =
+      readState.outputTree.history;
+  }
   return readState;
 }
 
