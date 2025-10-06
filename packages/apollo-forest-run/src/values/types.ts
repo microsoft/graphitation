@@ -33,7 +33,7 @@ export type SourceCustomScalar = Brand<unknown, typeof CustomScalarBrand>;
 export type SourceObject = Brand<
   {
     __typename?: TypeName;
-    [OPERATION_HISTORY_SYMBOL]?: HistoryArray;
+    [OPERATION_HISTORY_SYMBOL]: HistoryArray | null;
     [name: string]: SourceValue | undefined;
   }, // There could be cases of missing fields for defer/include/skip and some Apollo quirks with missing fields
   typeof ObjectBrand

@@ -1,8 +1,11 @@
 import type {
+  ChangedChunksMap,
   HistoryEntry,
   IndexedTree,
   UpdateTreeResult,
 } from "../forest/types";
+import type { VariableValues } from "../descriptor/types";
+import type { MissingFieldsMap } from "../values/types";
 
 export class HistoryArray {
   private items: HistoryEntry[] = [];
@@ -55,7 +58,36 @@ export class HistoryArray {
     }
   }
 
-  getAll() {
-    return this.items;
+  // TODO: Add some meaningful transformation
+  get summary() {
+    if (this.items.length === 0) {
+      return null;
+    }
+
+    const summaryArray: {
+      timestamp: number;
+      operation: {
+        debugName: string;
+        variablesWithDefaults: VariableValues;
+      };
+      missingFields: MissingFieldsMap;
+      changes: ChangedChunksMap;
+    }[] = [];
+
+    for (const change of this.items) {
+      summaryArray.push({
+        timestamp: change.timestamp,
+        operation: {
+          debugName:
+            change.incoming?.operation?.debugName || "Anonymous Operation",
+          variablesWithDefaults:
+            change.incoming?.operation?.variablesWithDefaults || {},
+        },
+        missingFields: change.missingFields,
+        changes: change.updated?.changes || [],
+      });
+    }
+
+    return summaryArray;
   }
 }
