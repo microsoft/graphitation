@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Fix TypeScript 5.9 printer API compatibility by using printFile() instead of printNode(EmitHint.SourceFile)",
+  "packageName": "@graphitation/cli",
+  "email": "sverre.johansen@microsoft.com",
+  "dependentChangeType": "patch"
+}

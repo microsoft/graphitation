@@ -1,6 +1,7 @@
 import path from "path";
 import fs from "fs/promises";
 import fsSync from "fs";
+import os from "os";
 import ts from "typescript";
 import { program, Command } from "commander";
 import { extractImplicitTypesToTypescript } from "@graphitation/supermassive-extractors";
@@ -229,14 +230,16 @@ async function generateInterfaces(
     await fs.mkdir(outputPath, { recursive: true });
 
     const printer = ts.createPrinter();
-    const outputs = result.files.map((file) =>
-      fs.writeFile(
+    const outputs = result.files.map((file) => {
+      const printed = file.statements
+        .map((stmt) => printer.printNode(ts.EmitHint.Unspecified, stmt, file))
+        .join(os.EOL) + os.EOL;
+      return fs.writeFile(
         path.join(outputPath, file.fileName),
-        PREPEND_TO_INTERFACES +
-          printer.printNode(ts.EmitHint.SourceFile, file, file),
+        PREPEND_TO_INTERFACES + printed,
         { encoding: "utf-8" },
-      ),
-    );
+      );
+    });
 
     if (result.contextMappingOutput) {
       outputs.push(
@@ -277,10 +280,15 @@ async function typeDefsToImplicitResolversImpl(
       path.basename(fullPath, path.extname(fullPath)) + ".ts",
     );
     const printer = ts.createPrinter();
+    const dummySourceFile = ts.createSourceFile(
+      tsFileName,
+      "",
+      ts.ScriptTarget.Latest,
+    );
 
     await fs.writeFile(
       tsFileName,
-      printer.printNode(ts.EmitHint.SourceFile, tsContents, tsContents),
+      printer.printNode(ts.EmitHint.Unspecified, tsContents, dummySourceFile),
       { encoding: "utf-8" },
     );
   }

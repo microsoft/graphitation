@@ -52,4 +52,22 @@ describe(supermassive, () => {
       ).toMatchSnapshot();
     }
   });
+
+  it("should work with TypeScript 5.9+ printer API (regression test)", async () => {
+    // This test verifies the fix for TypeScript 5.9 compatibility
+    // TypeScript 5.9 made the printer stricter about EmitHint.SourceFile validation
+    // This would throw "Debug Failure. Expected a SourceFile node" before the fix
+    const program = supermassive();
+    await program.parseAsync([
+      "node",
+      "supermassive",
+      "generate-interfaces",
+      path.join(__dirname, "./fixtures/schema.graphql"),
+      "--output-dir=../__generated__",
+    ]);
+
+    // If we got here without throwing, the fix works
+    const files = await fs.readdir(path.join(__dirname, "./__generated__"));
+    expect(files.length).toBeGreaterThan(0);
+  });
 });
