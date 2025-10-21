@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useApolloClient } from "@apollo/client/react";
 import { useQuery, gql, useMutation } from "@apollo/client";
 import { ChatRenderer } from "./chat-renderer";
 
@@ -29,76 +28,29 @@ const REMOVE_MESSAGE = gql`
 `;
 
 const ChatContainer = () => {
-  const client = useApolloClient();
-  const cache = client.cache as any;
-  const { data } = useQuery(CHAT);
+  const { data, refetch } = useQuery(CHAT);
   const [addMessage] = useMutation(ADD_MESSAGES);
   const [removeMessage] = useMutation(REMOVE_MESSAGE);
 
-  const addMessageFunction = React.useCallback((message: string) => {
-    addMessage({
-      variables: { message },
-      update(cache, mutationResult) {
-        cache.modify({
-          fields: {
-            chat: (previous, { toReference }) => {
-              return [
-                ...(previous?.messages || []),
-                toReference(mutationResult.data.addMessage),
-              ];
-            },
-          },
-        });
-      },
-    });
-  }, []);
-
-  const removeMessageFunction = React.useCallback((id: string) => {
-    removeMessage({
-      variables: { id },
-      update(cache) {
-        cache.modify({
-          fields: {
-            chat: (previous) => {
-              return [
-                previous.messages.filter(
-                  ({ messageId }: { messageId: string }) => messageId !== id,
-                ),
-              ];
-            },
-          },
-        });
-        const normalizedId = cache.identify({ id, __typename: "Message" });
-        cache.evict({ id: normalizedId });
-        cache.gc();
-      },
-    });
-  }, []);
-
-  React.useEffect(() => {
-    const defaultData = ["test2", "test", "test", "test", "test2"];
-    for (const message of defaultData) {
-      addMessage({
+  const addMessageFunction = React.useCallback(
+    async (message: string) => {
+      await addMessage({
         variables: { message },
-        update(cache, mutationResult) {
-          cache.modify({
-            fields: {
-              chat: (previous, { toReference }) => {
-                return [
-                  ...(previous?.messages || []),
-                  toReference(mutationResult.data.addMessage),
-                ];
-              },
-            },
-          });
-        },
       });
-    }
-  }, []);
+      refetch();
+    },
+    [addMessage, refetch],
+  );
 
-  if (!cache) {
-    return null;
-  }
+  const removeMessageFunction = React.useCallback(
+    async (id: string) => {
+      await removeMessage({
+        variables: { id },
+      });
+      refetch();
+    },
+    [removeMessage, refetch],
+  );
 
   return (
     <div>

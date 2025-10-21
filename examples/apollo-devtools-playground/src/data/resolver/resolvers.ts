@@ -24,6 +24,14 @@ export const messageResolver = (
   return context.message(id);
 };
 
+export const updateMessageResolver = (
+  _: object,
+  { id, message }: any,
+  context: IGraphQLContext,
+) => {
+  return context.updateMessage(id, message);
+};
+
 export const removeMessageResolver = (
   _: object,
   { id }: any,

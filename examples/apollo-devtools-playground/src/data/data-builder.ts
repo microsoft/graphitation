@@ -2,9 +2,10 @@ import {
   ApolloClient,
   from,
   NormalizedCacheObject,
-  InMemoryCache,
   Resolvers as ApolloResolvers,
 } from "@apollo/client";
+
+import { ForestRun } from "@graphitation/apollo-forest-run";
 
 import { makeExecutableSchema } from "@graphql-tools/schema";
 
@@ -12,6 +13,7 @@ import {
   messageResolver,
   addMessageResolver,
   removeMessageResolver,
+  updateMessageResolver,
   chatResolver,
 } from "./resolver/resolvers";
 
@@ -26,7 +28,7 @@ export const buildClient: () => ApolloClient<NormalizedCacheObject> = () => {
   });
 
   return new ApolloClient({
-    cache: new InMemoryCache({}),
+    cache: new ForestRun({}),
     connectToDevTools: true,
     link: from([
       new SchemaLink({
@@ -45,6 +47,7 @@ const queryResolvers = {
 const mutationResolvers = {
   addMessage: addMessageResolver,
   removeMessage: removeMessageResolver,
+  updateMessage: updateMessageResolver,
 };
 
 const buildResolvers: () => ApolloResolvers = () => {

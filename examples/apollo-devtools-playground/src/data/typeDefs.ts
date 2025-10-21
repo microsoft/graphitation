@@ -16,6 +16,7 @@ type Query {
 type Mutation {
   addMessage(message: String!): Message!
   removeMessage(id: ID!): Boolean!
+  updateMessage(id: ID!, message: String!): Message!
 }
 `;
 
