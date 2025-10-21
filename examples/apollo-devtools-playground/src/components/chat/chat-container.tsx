@@ -32,15 +32,23 @@ const ChatContainer = () => {
   const [addMessage] = useMutation(ADD_MESSAGES);
   const [removeMessage] = useMutation(REMOVE_MESSAGE);
 
-  const addMessageFunction = React.useCallback(
-    async (message: string) => {
-      await addMessage({
-        variables: { message },
-      });
-      refetch();
-    },
-    [addMessage, refetch],
-  );
+  const addMessageFunction = React.useCallback((message: string) => {
+    addMessage({
+      variables: { message },
+      update(cache, mutationResult) {
+        cache.modify({
+          fields: {
+            chat: (previous, { toReference }) => {
+              return [
+                ...(previous?.messages || []),
+                toReference(mutationResult.data.addMessage),
+              ];
+            },
+          },
+        });
+      },
+    });
+  }, []);
 
   const removeMessageFunction = React.useCallback(
     async (id: string) => {
