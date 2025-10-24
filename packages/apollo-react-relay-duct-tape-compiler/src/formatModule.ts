@@ -61,12 +61,10 @@ export async function formatModuleFactory(
 
   function generateExports(
     moduleName: string,
-    docText: string,
+    optimizedDocument: DocumentNode,
     emitNarrowObservables: boolean,
   ) {
     const exports: CompiledArtefactModule = {};
-    const originalDocument = parse(docText, { noLocation: true });
-    const optimizedDocument = optimizeDocumentNode(originalDocument);
 
     if (!emitNarrowObservables) {
       exports.executionQueryDocument = optimizedDocument;
@@ -100,11 +98,16 @@ export async function formatModuleFactory(
   }
 
   return ({ docText, hash, moduleName, typeText, definition }) => {
+    const optimizedDocument =
+      docText &&
+      (options.emitDocuments || options.unstable_emitExecutionDocumentText)
+        ? optimizeDocumentNode(parse(docText, { noLocation: true }))
+        : null;
     const exports = options.emitDocuments
-      ? docText &&
+      ? optimizedDocument &&
         generateExports(
           moduleName,
-          docText,
+          optimizedDocument,
           options.emitNarrowObservables &&
             definition.kind === "Request" &&
             definition.root.operation === "query",
@@ -115,10 +118,9 @@ export async function formatModuleFactory(
 
     const components = [
       typeText,
-      exports &&
-        options.unstable_emitExecutionDocumentText &&
-        exports.executionQueryDocument &&
-        printDocument(exports.executionQueryDocument),
+      options.unstable_emitExecutionDocumentText &&
+        optimizedDocument &&
+        printDocument(optimizedDocument),
       exports &&
         options.emitQueryDebugComments &&
         !options.unstable_emitExecutionDocumentText &&

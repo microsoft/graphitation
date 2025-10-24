@@ -780,103 +780,149 @@ describe("formatModule", () => {
     `);
   });
 
-  it("adds document text when unstable_emitExecutionDocumentText is set", async () => {
-    expect(
-      await formatModule(
-        {
-          emitDocuments: true,
-          unstable_emitExecutionDocumentText: true,
-        },
-        {
-          definition: {
-            kind: "Request",
-            root: {
-              kind: "Root",
-              operation: "query",
-            },
-          } as Request,
-          typeText: `export type UserComponentQuery = {};`,
-          docText: `
+  describe("--unstable_emitExecutionDocumentText=true", () => {
+    it("adds document text with --emitDocuments=true", async () => {
+      expect(
+        await formatModule(
+          {
+            emitDocuments: true,
+            unstable_emitExecutionDocumentText: true,
+          },
+          {
+            definition: {
+              kind: "Request",
+              root: {
+                kind: "Root",
+                operation: "query",
+              },
+            } as Request,
+            typeText: `export type UserComponentQuery = {};`,
+            docText: `
             query UserComponentQuery {
               user(id: 42) {
                 id
               }
             }
           `,
-        },
-      ),
-    ).toMatchInlineSnapshot(`
-      "// @apollo-react-relay-duct-tape
-      /* tslint:disable */
-      /* eslint-disable */
-      // @ts-nocheck
+          },
+        ),
+      ).toMatchInlineSnapshot(`
+        "// @apollo-react-relay-duct-tape
+        /* tslint:disable */
+        /* eslint-disable */
+        // @ts-nocheck
 
-      export type UserComponentQuery = {};
-
-
-      // Note: executionDocumentText is necessary for Lazy AST and build-time operations analysis
-      const executionDocumentText = \`query UserComponentQuery {
-        user(id: 42) {
-          id
-        }
-      }\`;
+        export type UserComponentQuery = {};
 
 
-      export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = (function(){
-      var v0 = {
-        "kind": "Name",
-        "value": "id"
-      };
-      return {
-        "executionQueryDocument": {
-          "kind": "Document",
-          "definitions": [
-            {
-              "kind": "OperationDefinition",
-              "operation": "query",
-              "name": {
-                "kind": "Name",
-                "value": "UserComponentQuery"
-              },
-              "selectionSet": {
-                "kind": "SelectionSet",
-                "selections": [
-                  {
-                    "kind": "Field",
-                    "name": {
-                      "kind": "Name",
-                      "value": "user"
-                    },
-                    "arguments": [
-                      {
-                        "kind": "Argument",
-                        "name": (v0/*: any*/),
-                        "value": {
-                          "kind": "IntValue",
-                          "value": "42"
-                        }
-                      }
-                    ],
-                    "selectionSet": {
-                      "kind": "SelectionSet",
-                      "selections": [
+        // Note: executionDocumentText is necessary for Lazy AST and build-time operations analysis
+        const executionDocumentText = \`query UserComponentQuery {
+          user(id: 42) {
+            id
+          }
+        }\`;
+
+
+        export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = (function(){
+        var v0 = {
+          "kind": "Name",
+          "value": "id"
+        };
+        return {
+          "executionQueryDocument": {
+            "kind": "Document",
+            "definitions": [
+              {
+                "kind": "OperationDefinition",
+                "operation": "query",
+                "name": {
+                  "kind": "Name",
+                  "value": "UserComponentQuery"
+                },
+                "selectionSet": {
+                  "kind": "SelectionSet",
+                  "selections": [
+                    {
+                      "kind": "Field",
+                      "name": {
+                        "kind": "Name",
+                        "value": "user"
+                      },
+                      "arguments": [
                         {
-                          "kind": "Field",
-                          "name": (v0/*: any*/)
+                          "kind": "Argument",
+                          "name": (v0/*: any*/),
+                          "value": {
+                            "kind": "IntValue",
+                            "value": "42"
+                          }
                         }
-                      ]
+                      ],
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "selections": [
+                          {
+                            "kind": "Field",
+                            "name": (v0/*: any*/)
+                          }
+                        ]
+                      }
                     }
-                  }
-                ]
+                  ]
+                }
+              }
+            ]
+          }
+        };
+        })();
+
+        export default documents;"
+        `);
+    });
+
+    it("adds document text even with --emitDocuments=false", async () => {
+      expect(
+        await formatModule(
+          {
+            emitDocuments: false,
+            unstable_emitExecutionDocumentText: true,
+          },
+          {
+            definition: {
+              kind: "Request",
+              root: {
+                kind: "Root",
+                operation: "query",
+              },
+            } as Request,
+            typeText: `export type UserComponentQuery = {};`,
+            docText: `
+            query UserComponentQuery {
+              user(id: 42) {
+                id
               }
             }
-          ]
-        }
-      };
-      })();
+          `,
+          },
+        ),
+      ).toMatchInlineSnapshot(`
+        "// @apollo-react-relay-duct-tape
+        /* tslint:disable */
+        /* eslint-disable */
+        // @ts-nocheck
 
-      export default documents;"
-    `);
+        export type UserComponentQuery = {};
+
+
+        // Note: executionDocumentText is necessary for Lazy AST and build-time operations analysis
+        const executionDocumentText = \`query UserComponentQuery {
+          user(id: 42) {
+            id
+          }
+        }\`;
+        "
+      `);
+    });
   });
 
   it.todo("reducing watch query to node fragment");
