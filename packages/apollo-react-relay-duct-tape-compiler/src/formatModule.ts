@@ -61,9 +61,11 @@ export async function formatModuleFactory(
 
   function generateExports(
     moduleName: string,
-    optimizedDocument: DocumentNode,
+    docText: string,
     emitNarrowObservables: boolean,
   ) {
+    const originalDocument = parse(docText, { noLocation: true });
+    const optimizedDocument = optimizeDocumentNode(originalDocument);
     const exports: CompiledArtefactModule = {};
 
     if (!emitNarrowObservables) {
@@ -98,29 +100,26 @@ export async function formatModuleFactory(
   }
 
   return ({ docText, hash, moduleName, typeText, definition }) => {
-    const optimizedDocument =
-      docText &&
-      (options.emitDocuments || options.unstable_emitExecutionDocumentText)
-        ? optimizeDocumentNode(parse(docText, { noLocation: true }))
+    const exports =
+      options.emitDocuments || options.unstable_emitExecutionDocumentText
+        ? docText &&
+          generateExports(
+            moduleName,
+            docText,
+            options.emitNarrowObservables &&
+              definition.kind === "Request" &&
+              definition.root.operation === "query",
+          )
         : null;
-    const exports = options.emitDocuments
-      ? optimizedDocument &&
-        generateExports(
-          moduleName,
-          optimizedDocument,
-          options.emitNarrowObservables &&
-            definition.kind === "Request" &&
-            definition.root.operation === "query",
-        )
-      : null;
     const reExportWatchNodeQuery =
       options.emitDocuments && definition.kind === "Fragment";
 
     const components = [
       typeText,
-      options.unstable_emitExecutionDocumentText &&
-        optimizedDocument &&
-        printDocument(optimizedDocument),
+      exports &&
+        options.unstable_emitExecutionDocumentText &&
+        exports.executionQueryDocument &&
+        printDocument(exports.executionQueryDocument),
       exports &&
         options.emitQueryDebugComments &&
         !options.unstable_emitExecutionDocumentText &&
@@ -130,7 +129,7 @@ export async function formatModuleFactory(
         options.emitQueryDebugComments &&
         exports.watchQueryDocument &&
         printDocumentComment(exports.watchQueryDocument),
-      exports && printExports(exports),
+      exports && options.emitDocuments && printExports(exports),
       reExportWatchNodeQuery && printWatchNodeQueryReExport(definition),
     ].filter(Boolean) as string[];
 
