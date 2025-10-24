@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "fix(apollo-react-relay-duct-tape-compiler): strip fragment refs from emitted source text when emitNarrowObservables=true",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape-compiler",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
