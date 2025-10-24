@@ -64,9 +64,9 @@ export async function formatModuleFactory(
     docText: string,
     emitNarrowObservables: boolean,
   ) {
+    const exports: CompiledArtefactModule = {};
     const originalDocument = parse(docText, { noLocation: true });
     const optimizedDocument = optimizeDocumentNode(originalDocument);
-    const exports: CompiledArtefactModule = {};
 
     if (!emitNarrowObservables) {
       exports.executionQueryDocument = optimizedDocument;
