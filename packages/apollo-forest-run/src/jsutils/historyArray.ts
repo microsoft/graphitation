@@ -6,6 +6,7 @@ import type {
 } from "../forest/types";
 import type { VariableValues } from "../descriptor/types";
 import type { MissingFieldsMap } from "../values/types";
+import { getDataPathForDebugging, createParentLocator } from "../values";
 
 export class HistoryArray {
   private items: HistoryEntry[] = [];
@@ -32,22 +33,37 @@ export class HistoryArray {
     if (!this.isEnabled || this.maxSize <= 0) {
       return;
     }
+    const changedFields: Array<any> = [];
+
+    const findParent = createParentLocator(currentTree.dataMap);
+
+    for (const [chunk, fieldChanges] of updatedTree.changes) {
+      const chunkPath = getDataPathForDebugging({ findParent }, chunk);
+
+      for (const fieldChange of fieldChanges) {
+        const fieldPath = [
+          ...chunkPath,
+          fieldChange?.fieldInfo?.dataKey ?? fieldChange.index,
+        ];
+
+        changedFields.push({
+          path: fieldPath,
+          ...fieldChange,
+        });
+      }
+    }
+
     const item: HistoryEntry = {
       timestamp: Date.now(),
       missingFields: updatedTree.missingFields,
-      current: {
-        result: this.isDataHistoryEnabled ? currentTree.result : undefined,
-      },
-      incoming: {
-        result: this.isDataHistoryEnabled ? incomingResult?.result : undefined,
-        operation: incomingResult?.operation,
-      },
-      updated: {
-        result: this.isDataHistoryEnabled
-          ? updatedTree.updatedTree.result
-          : undefined,
-        changes: updatedTree.changes,
-      },
+      changes: changedFields,
+      data: this.isDataHistoryEnabled
+        ? {
+            current: currentTree.result,
+            incoming: incomingResult?.result,
+            updated: updatedTree.updatedTree.result,
+          }
+        : undefined,
     };
 
     if (this.items.length <= this.maxSize) {
@@ -75,7 +91,11 @@ export class HistoryArray {
         variablesWithDefaults: VariableValues;
       };
       missingFields: MissingFieldsMap;
-      changes: ChangedChunksMap;
+      changes: Array<{
+        path: (string | number)[];
+        fieldName: string;
+        changeKind: "Replacement" | "Filler" | "CompositeListDifference";
+      }>;
     }[] = [];
 
     for (const change of this.items) {
@@ -88,7 +108,7 @@ export class HistoryArray {
             change.incoming?.operation?.variablesWithDefaults || {},
         },
         missingFields: change.missingFields,
-        changes: change.updated?.changes || [],
+        changes: change.updated.changes,
       });
     }
 

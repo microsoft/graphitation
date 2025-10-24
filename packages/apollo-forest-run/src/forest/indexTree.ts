@@ -105,7 +105,7 @@ export function indexTree(
 
   let history: HistoryArray | null = null;
   if (env.enableHistory) {
-    const historySize = operation.historySize ?? env.defaultHistorySize;
+    const historySize = operation.historySize ?? env.defaultHistorySize ?? 0;
     history =
       previousTreeState?.history ??
       new HistoryArray(historySize, env.enableHistory, env.enableDataHistory);

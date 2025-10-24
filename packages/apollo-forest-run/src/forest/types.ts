@@ -30,6 +30,7 @@ import { UpdateTreeStats } from "../telemetry/updateStats/types";
 import { UpdateLogger } from "../telemetry/updateStats/updateLogger";
 import { HistoryArray } from "../jsutils/historyArray";
 import type * as DifferenceKind from "../diff/differenceKind";
+import { CompositeListLayoutChange } from "../diff/types";
 
 export type IndexedTree = {
   operation: OperationDescriptor;
@@ -68,7 +69,7 @@ export type HistoryEntry = {
     operation?: OperationDescriptor | undefined;
   };
   updated: {
-    changes: ChangedChunksMap;
+    changes: any;
     result: OperationResult | undefined;
   };
 };
@@ -98,7 +99,7 @@ export type FieldChange = (
     }
   | {
       kind: typeof DifferenceKind.CompositeListDifference;
-      newSize: number | undefined;
+      itemChanges: CompositeListLayoutChange[] | undefined;
     }
 ) & {
   fieldInfo: FieldInfo;
@@ -127,6 +128,7 @@ export type UpdateTreeContext = {
   completeObject: CompleteObjectFn;
   findParent: ParentLocator;
   env: ForestEnv;
+  childChanges: any[];
   statsLogger?: UpdateLogger;
 };
 
@@ -175,7 +177,8 @@ export type ForestEnv = {
   logStaleOperations?: boolean;
 
   // History configuration
-  enableHistory: boolean;
-  enableDataHistory: boolean;
-  defaultHistorySize: number;
+  enableHistory?: boolean;
+  enableDataHistory?: boolean;
+  defaultHistorySize?: number;
+  storeFieldPaths?: boolean; // Store computed field paths in history (more memory, faster summary generation)
 };

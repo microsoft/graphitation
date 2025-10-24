@@ -78,6 +78,7 @@ export function createCompositeListDifference(): CompositeListDifference {
     dirtyItems: undefined,
     layout: undefined,
     deletedKeys: undefined,
+    itemsChanges: [],
     errors: undefined,
   };
 }

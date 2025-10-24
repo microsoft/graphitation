@@ -29,6 +29,7 @@ import type {
   UpdateTreeContext,
 } from "./types";
 import * as Difference from "../diff/difference";
+import * as ChangeKind from "../diff/itemChangeKind";
 import * as Value from "../values";
 import { ValueKind } from "../values/types";
 import { DifferenceKind } from "../diff/types";
@@ -64,7 +65,7 @@ function updateObjectValue(
   let copy = context.drafts.get(base.data);
   assert(!Array.isArray(copy));
   context.statsLogger?.copyChunkStats(base, copy);
-  let dirtyFields: FieldChange[] | undefined;
+  const changes: FieldChange[] = [];
 
   for (const fieldName of difference.dirtyFields) {
     const aliases = base.selection.fields.get(fieldName);
@@ -116,16 +117,14 @@ function updateObjectValue(
 
       switch (fieldDiff.kind) {
         case DifferenceKind.Filler:
-          dirtyFields ??= [];
-          dirtyFields.push({
+          changes.push({
             kind: fieldDiff.kind,
             fieldInfo,
             newValue: enableDataHistory ? updated : undefined,
           });
           break;
         case DifferenceKind.Replacement:
-          dirtyFields ??= [];
-          dirtyFields.push({
+          changes.push({
             kind: fieldDiff.kind,
             fieldInfo,
             oldValue: enableDataHistory ? fieldDiff.oldValue : undefined,
@@ -133,19 +132,20 @@ function updateObjectValue(
           });
           break;
         case DifferenceKind.CompositeListDifference:
-          dirtyFields ??= [];
-          dirtyFields.push({
+          changes.push({
             kind: fieldDiff.kind,
             fieldInfo,
-            newSize: fieldDiff.layout?.length,
+            itemChanges: enableDataHistory ? context.childChanges : undefined,
           });
+          context.childChanges = [];
           break;
       }
     }
   }
-  if (dirtyFields?.length) {
-    context.changes.set(base, dirtyFields);
+  if (changes.length) {
+    context.changes.set(base, changes);
   }
+
   return copy ?? base.data;
 }
 
@@ -193,7 +193,7 @@ function updateCompositeListValue(
   const layoutDiff = difference.layout;
   let dirty = false; // Only dirty on self changes - item replacement/filler, layout changes (ignores child changes)
   let copy = drafts.get(base.data);
-  const dirtyItemIndexes: any[] = [];
+  const arrayChanges = difference.itemsChanges;
   assert(Array.isArray(copy) || copy === undefined);
   statsLogger?.copyChunkStats(base, copy);
 
@@ -222,9 +222,6 @@ function updateCompositeListValue(
     ) {
       dirty = true;
     }
-  }
-  if (dirty) {
-    context.changes.set(base, null);
   }
   if (!layoutDiff) {
     return copy ?? base.data;
@@ -264,7 +261,8 @@ function updateCompositeListValue(
       assert(newValue.data);
       accumulateMissingFields(context, newValue);
       result[i] = newValue.data;
-      dirtyItemIndexes.push({
+      arrayChanges.push({
+        kind: ChangeKind.ItemAdd,
         index: i,
         data: newValue.data,
         missingFields: newValue.missingFields,
@@ -293,7 +291,7 @@ function updateCompositeListValue(
     dirty = true;
   }
   if (dirty) {
-    context.changes.set(base, dirtyItemIndexes);
+    context.childChanges = arrayChanges;
   }
 
   return copy ?? base.data;
