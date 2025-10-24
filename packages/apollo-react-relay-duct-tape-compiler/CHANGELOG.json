@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape-compiler",
   "entries": [
     {
+      "date": "Fri, 24 Oct 2025 13:30:18 GMT",
+      "version": "1.8.5",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.8.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "commit": "e895b703b9ff21a433ab185b6f9e03a9d5910cee",
+            "comment": "fix(apollo-react-relay-duct-tape-compiler): strip fragment refs from emitted source text when emitNarrowObservables=true"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 24 Oct 2025 10:48:23 GMT",
       "version": "1.8.4",
       "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.8.4",

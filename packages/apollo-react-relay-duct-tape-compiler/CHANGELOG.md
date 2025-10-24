@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape-compiler
 
-<!-- This log was last generated on Fri, 24 Oct 2025 10:48:23 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 24 Oct 2025 13:30:18 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.8.5
+
+Fri, 24 Oct 2025 13:30:18 GMT
+
+### Patches
+
+- fix(apollo-react-relay-duct-tape-compiler): strip fragment refs from emitted source text when emitNarrowObservables=true (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 1.8.4
 
