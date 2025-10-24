@@ -923,6 +923,161 @@ describe("formatModule", () => {
         "
       `);
     });
+
+    it("strips fragment refs when --emitNarrowObservables=true", async () => {
+      expect(
+        await formatModule(
+          {
+            emitDocuments: true,
+            emitNarrowObservables: true,
+            unstable_emitExecutionDocumentText: true,
+          },
+          {
+            definition: {
+              kind: "Request",
+              root: {
+                kind: "Root",
+                operation: "query",
+              },
+            } as Request,
+            typeText: `export type UserComponentQuery = {};`,
+            docText: `
+              query UserComponentQuery {
+                user(id: 42) {
+                  id
+                  ... on Node {
+                    __fragments
+                  }
+                }
+              }
+            `,
+          },
+        ),
+      ).toMatchInlineSnapshot(`
+        "// @apollo-react-relay-duct-tape
+        /* tslint:disable */
+        /* eslint-disable */
+        // @ts-nocheck
+
+        export type UserComponentQuery = {};
+
+
+        // Note: executionDocumentText is necessary for Lazy AST and build-time operations analysis
+        const executionDocumentText = \`query UserComponentQuery {
+          user(id: 42) {
+            id
+          }
+        }\`;
+
+
+        export const documents: import("@graphitation/apollo-react-relay-duct-tape-compiler").CompiledArtefactModule = (function(){
+        var v0 = {
+          "kind": "Name",
+          "value": "UserComponentQuery"
+        },
+        v1 = {
+          "kind": "Name",
+          "value": "user"
+        },
+        v2 = {
+          "kind": "Name",
+          "value": "id"
+        },
+        v3 = [
+          {
+            "kind": "Argument",
+            "name": (v2/*: any*/),
+            "value": {
+              "kind": "IntValue",
+              "value": "42"
+            }
+          }
+        ],
+        v4 = {
+          "kind": "Field",
+          "name": (v2/*: any*/)
+        };
+        return {
+          "executionQueryDocument": {
+            "kind": "Document",
+            "definitions": [
+              {
+                "kind": "OperationDefinition",
+                "operation": "query",
+                "name": (v0/*: any*/),
+                "selectionSet": {
+                  "kind": "SelectionSet",
+                  "selections": [
+                    {
+                      "kind": "Field",
+                      "name": (v1/*: any*/),
+                      "arguments": (v3/*: any*/),
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "selections": [
+                          (v4/*: any*/)
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "watchQueryDocument": {
+            "kind": "Document",
+            "definitions": [
+              {
+                "kind": "OperationDefinition",
+                "operation": "query",
+                "name": (v0/*: any*/),
+                "selectionSet": {
+                  "kind": "SelectionSet",
+                  "selections": [
+                    {
+                      "kind": "Field",
+                      "name": (v1/*: any*/),
+                      "arguments": (v3/*: any*/),
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "selections": [
+                          (v4/*: any*/),
+                          {
+                            "kind": "InlineFragment",
+                            "typeCondition": {
+                              "kind": "NamedType",
+                              "name": {
+                                "kind": "Name",
+                                "value": "Node"
+                              }
+                            },
+                            "selectionSet": {
+                              "kind": "SelectionSet",
+                              "selections": [
+                                {
+                                  "kind": "Field",
+                                  "name": {
+                                    "kind": "Name",
+                                    "value": "__fragments"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        };
+        })();
+
+        export default documents;"
+      `);
+    });
   });
 
   it.todo("reducing watch query to node fragment");
