@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "fix(apollo-react-relay-duct-tape-compiler): decouple emitExecutionDocumentText from emitDocument",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape-compiler",
-  "email": "vrazuvaev@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}
