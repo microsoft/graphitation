@@ -23,11 +23,13 @@ import type {
 import type { FieldInfo, PossibleSelections } from "../descriptor/types";
 import type {
   Draft,
+  FieldChange,
   Source,
   UpdateObjectResult,
   UpdateTreeContext,
 } from "./types";
 import * as Difference from "../diff/difference";
+import * as ChangeKind from "../diff/itemChangeKind";
 import * as Value from "../values";
 import { ValueKind } from "../values/types";
 import { DifferenceKind } from "../diff/types";
@@ -63,7 +65,7 @@ function updateObjectValue(
   let copy = context.drafts.get(base.data);
   assert(!Array.isArray(copy));
   context.statsLogger?.copyChunkStats(base, copy);
-  let dirtyFields: FieldInfo[] | undefined;
+  const changes: FieldChange[] = [];
 
   for (const fieldName of difference.dirtyFields) {
     const aliases = base.selection.fields.get(fieldName);
@@ -86,7 +88,7 @@ function updateObjectValue(
       if (valueIsMissing && !Difference.isFiller(fieldDiff)) {
         // Inconsistent state - do not update this field
         //   (assuming it will be re-fetched from the server to resolve inconsistency)
-        context.logger?.debug(
+        context.env.logger?.debug(
           base.operation.debugName +
             ` is in inconsistent state at path ` +
             Value.getDataPathForDebugging(context, base)
@@ -111,19 +113,39 @@ function updateObjectValue(
       context.statsLogger?.fieldMutation();
       copy[fieldInfo.dataKey] = updated;
 
-      // Record immediately mutated fields (ignore changes caused by nested chunk mutations)
-      if (
-        fieldDiff.kind === DifferenceKind.Replacement ||
-        fieldDiff.kind === DifferenceKind.Filler
-      ) {
-        dirtyFields ??= [];
-        dirtyFields.push(fieldInfo);
+      const { enableDataHistory } = context.env;
+
+      switch (fieldDiff.kind) {
+        case DifferenceKind.Filler:
+          changes.push({
+            kind: fieldDiff.kind,
+            fieldInfo,
+            newValue: enableDataHistory ? updated : undefined,
+          });
+          break;
+        case DifferenceKind.Replacement:
+          changes.push({
+            kind: fieldDiff.kind,
+            fieldInfo,
+            oldValue: enableDataHistory ? fieldDiff.oldValue : undefined,
+            newValue: enableDataHistory ? updated : undefined,
+          });
+          break;
+        case DifferenceKind.CompositeListDifference:
+          changes.push({
+            kind: fieldDiff.kind,
+            fieldInfo,
+            itemChanges: enableDataHistory ? context.childChanges : undefined,
+          });
+          context.childChanges = [];
+          break;
       }
     }
   }
-  if (dirtyFields?.length) {
-    context.changes.set(base, dirtyFields);
+  if (changes.length) {
+    context.changes.set(base, changes);
   }
+
   return copy ?? base.data;
 }
 
@@ -171,6 +193,7 @@ function updateCompositeListValue(
   const layoutDiff = difference.layout;
   let dirty = false; // Only dirty on self changes - item replacement/filler, layout changes (ignores child changes)
   let copy = drafts.get(base.data);
+  const arrayChanges = difference.itemsChanges;
   assert(Array.isArray(copy) || copy === undefined);
   statsLogger?.copyChunkStats(base, copy);
 
@@ -199,9 +222,6 @@ function updateCompositeListValue(
     ) {
       dirty = true;
     }
-  }
-  if (dirty) {
-    context.changes.set(base, null);
   }
   if (!layoutDiff) {
     return copy ?? base.data;
@@ -241,10 +261,16 @@ function updateCompositeListValue(
       assert(newValue.data);
       accumulateMissingFields(context, newValue);
       result[i] = newValue.data;
+      arrayChanges.push({
+        kind: ChangeKind.ItemAdd,
+        index: i,
+        data: newValue.data,
+        missingFields: newValue.missingFields,
+      });
       continue;
     }
     const op = operation.definition.name?.value;
-    context.logger?.warn(
+    context.env.logger?.warn(
       `Unknown list item kind: ${itemRef.kind} at #${i}\n` +
         `  source list: ${inspect(base.data)})` +
         `  operation: ${op}\n`,
@@ -265,7 +291,7 @@ function updateCompositeListValue(
     dirty = true;
   }
   if (dirty) {
-    context.changes.set(base, null);
+    context.childChanges = arrayChanges;
   }
 
   return copy ?? base.data;
@@ -360,7 +386,7 @@ function replaceCompositeList(
   for (let i = 0; i < len; i++) {
     const item = Value.aggregateListItemValue(newList, i);
     if (!Value.isCompositeValue(item) || Value.isMissingValue(item)) {
-      context.logger?.warn(
+      context.env.logger?.warn(
         `Failed list item #${i} replacement, returning source list\n` +
           `  new list: ${inspect(newList.data)}\n` +
           `  source list: ${inspect(baseList.data)}\n` +

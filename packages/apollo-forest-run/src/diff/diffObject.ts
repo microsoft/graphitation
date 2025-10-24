@@ -19,11 +19,14 @@ import type {
   ObjectDifference,
   ObjectDiffState,
   ValueDifference,
+  CompositeListLayoutChangeItemRemoved,
+  CompositeListLayoutChange,
 } from "./types";
 import * as Value from "../values";
 import * as Difference from "./difference";
 import { DiffErrorKind } from "./types";
 import { ValueKind } from "../values/types";
+import * as ChangeKind from "./itemChangeKind";
 
 /**
  * Compares base object version with model version and returns a normalized Difference object,
@@ -420,8 +423,15 @@ function diffCompositeListValue(
     return undefined;
   }
 
-  const layoutDiffResult =
-    diff?.layout ?? diffCompositeListLayout(context, base, model);
+  let layoutDiffResult: any = diff?.layout;
+  let itemsChanges: CompositeListLayoutChange[] = [];
+
+  if (!layoutDiffResult) {
+    const { deletedItems: newDeletedItems, layout: newLayout } =
+      diffCompositeListLayout(context, base, model);
+    itemsChanges = newDeletedItems;
+    layoutDiffResult = newLayout;
+  }
 
   if (layoutDiffResult === "BREAK") {
     // Fast-path, no further diffing necessary
@@ -432,6 +442,7 @@ function diffCompositeListValue(
   if (layoutDiffResult) {
     diff = diff ?? Difference.createCompositeListDifference();
     diff.layout = layoutDiffResult;
+    diff.itemsChanges = itemsChanges;
   }
 
   for (const index of itemQueue) {
@@ -478,7 +489,10 @@ function diffCompositeListLayout(
   context: DiffContext,
   base: CompositeListValue,
   model: CompositeListValue,
-): CompositeListLayoutDifference | undefined | "BREAK" {
+): {
+  deletedItems: CompositeListLayoutChange[];
+  layout: CompositeListLayoutDifference | undefined | "BREAK";
+} {
   // What constitutes layout change?
   // - Change of "keyed object" position in the list
   // - Change of list length
@@ -489,6 +503,11 @@ function diffCompositeListLayout(
 
   const baseChunk = Value.isAggregate(base) ? base.chunks[0] : base;
   const modelChunk = Value.isAggregate(model) ? model.chunks[0] : model;
+  const unusedBaseIndixes = new Set<number>();
+  const itemChanges: CompositeListLayoutChange[] = [];
+  for (let i = 0; i < baseLen; i++) {
+    unusedBaseIndixes.add(i);
+  }
 
   let itemDiffRequired = false;
   let firstDirtyIndex = -1;
@@ -508,17 +527,32 @@ function diffCompositeListLayout(
       firstDirtyIndex = i;
       break;
     }
+    unusedBaseIndixes.delete(i);
   }
   // Fast-path: no layout difference found
   if (firstDirtyIndex === -1) {
+    const deletedItems: CompositeListLayoutChangeItemRemoved[] = [];
+    for (const index of unusedBaseIndixes) {
+      deletedItems.push({
+        kind: ChangeKind.ItemRemove,
+        oldIndex: index,
+        data: baseChunk.data[index],
+      });
+    }
     if (baseLen > modelLen) {
       const layout: CompositeListLayoutDifference = [];
       for (let i = 0; i < modelLen; i++) {
         layout.push(i);
       }
-      return layout;
+      return {
+        deletedItems,
+        layout,
+      };
     }
-    return !itemDiffRequired ? "BREAK" : undefined;
+    return {
+      deletedItems,
+      layout: !itemDiffRequired ? "BREAK" : undefined,
+    };
   }
   // TODO: lastDirtyIndex to isolate changed segment (prepend case)
 
@@ -527,12 +561,19 @@ function diffCompositeListLayout(
     layout.push(i);
   }
   let plainObjectLookupStartIndex = firstDirtyIndex;
-  for (let i = firstDirtyIndex; i < modelLen; i++) {
-    if (modelChunk.data[i] === null) {
+  for (let index = firstDirtyIndex; index < modelLen; index++) {
+    if (modelChunk.data[index] === null) {
       layout.push(null);
+      if (baseChunk.data[index] !== null) {
+        itemChanges.push({
+          kind: ChangeKind.ItemAdd,
+          index,
+          data: null,
+        });
+      }
       continue;
     }
-    const modelKey = resolveItemKey(env, modelChunk, i);
+    const modelKey = resolveItemKey(env, modelChunk, index);
     const lookupStartIndex =
       modelKey === false ? plainObjectLookupStartIndex : 0; // TODO: should be firstDirtyIndex; (0 is necessary only for cases when array contains duplicates - we should detect such arrays when indexing and special-case it instead)
 
@@ -545,8 +586,17 @@ function diffCompositeListLayout(
     );
     if (baseIndex !== -1) {
       layout.push(baseIndex);
+      unusedBaseIndixes.delete(baseIndex);
+      if (index !== baseIndex) {
+        itemChanges.push({
+          kind: ChangeKind.ItemIndexChange,
+          index,
+          oldIndex: baseIndex,
+          data: baseChunk.data[baseIndex],
+        });
+      }
     } else {
-      const value = Value.aggregateListItemValue(model, i);
+      const value = Value.aggregateListItemValue(model, index);
       if (Value.isCompositeNullValue(value)) {
         layout.push(null);
       } else if (
@@ -556,13 +606,24 @@ function diffCompositeListLayout(
         layout.push(value);
       } else {
         throw new Error(
-          `Unexpected list item value at index #${i}\n` +
+          `Unexpected list item value at index #${index}\n` +
             `  original list: ${JSON.stringify(model.data)}`,
         );
       }
     }
   }
-  return layout;
+
+  for (const oldIndex of unusedBaseIndixes) {
+    itemChanges.push({
+      kind: ChangeKind.ItemRemove,
+      oldIndex,
+      data: baseChunk.data[oldIndex],
+    });
+  }
+  return {
+    deletedItems: itemChanges,
+    layout,
+  };
 }
 
 function resolveItemKey(
