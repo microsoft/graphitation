@@ -110,7 +110,6 @@ function updateObjectValue(
   let copy = context.drafts.get(base.data);
   assert(!Array.isArray(copy));
   context.statsLogger?.copyChunkStats(base, copy);
-  const changes: FieldChange[] = [];
 
   for (const fieldName of difference.dirtyFields) {
     const aliases = base.selection.fields.get(fieldName);
@@ -308,9 +307,7 @@ function updateCompositeListValue(
   if (copy.length !== base.data.length) {
     dirty = true;
   }
-  if (dirty) {
-    context.childChanges = arrayChanges;
-  }
+  context.childChanges = arrayChanges;
 
   return copy ?? base.data;
 }

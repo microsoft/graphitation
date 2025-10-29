@@ -129,7 +129,7 @@ export type CompositeListDifference = {
   itemState: Map<number, ValueDifference>;
   dirtyItems?: Set<number>;
   layout?: CompositeListLayoutDifference;
-  itemsChanges: CompositeListLayoutChange[] | undefined;
+  itemsChanges: CompositeListLayoutChange[];
   errors?: DiffError[];
 };
 

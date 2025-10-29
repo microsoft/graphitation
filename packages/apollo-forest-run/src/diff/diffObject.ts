@@ -423,10 +423,7 @@ function diffCompositeListValue(
     return undefined;
   }
 
-  const itemsChanges: CompositeListLayoutChange[] | undefined = context.env
-    .enableHistory
-    ? []
-    : undefined;
+  const itemsChanges: CompositeListLayoutChange[] = [];
   const layoutDiffResult =
     diff?.layout ?? diffCompositeListLayout(context, base, model, itemsChanges);
 
@@ -486,7 +483,7 @@ function diffCompositeListLayout(
   context: DiffContext,
   base: CompositeListValue,
   model: CompositeListValue,
-  listContext?: CompositeListLayoutChange[],
+  listContext: CompositeListLayoutChange[],
 ): CompositeListLayoutDifference | undefined | "BREAK" {
   // What constitutes layout change?
   // - Change of "keyed object" position in the list
@@ -527,7 +524,7 @@ function diffCompositeListLayout(
   // Fast-path: no layout difference found
   if (firstDirtyIndex === -1) {
     for (const index of unusedBaseIndixes) {
-      listContext?.push(
+      listContext.push(
         LayoutChange.createItemRemoved(index, baseChunk.data[index], env),
       );
     }
@@ -570,7 +567,7 @@ function diffCompositeListLayout(
       layout.push(baseIndex);
       unusedBaseIndixes.delete(baseIndex);
       if (i !== baseIndex) {
-        listContext?.push(
+        listContext.push(
           LayoutChange.createIndexChange(
             i,
             baseIndex,
@@ -598,7 +595,7 @@ function diffCompositeListLayout(
   }
 
   for (const oldIndex of unusedBaseIndixes) {
-    listContext?.push(
+    listContext.push(
       LayoutChange.createItemRemoved(oldIndex, baseChunk.data[oldIndex], env),
     );
   }
