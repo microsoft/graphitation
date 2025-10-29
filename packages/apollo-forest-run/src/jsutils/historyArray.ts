@@ -77,13 +77,4 @@ export class HistoryArray {
   getAll() {
     return this.items;
   }
-
-  // TODO: Add some meaningful transformation
-  get summary() {
-    if (this.items.length === 0) {
-      return null;
-    }
-
-    return null;
-  }
 }
