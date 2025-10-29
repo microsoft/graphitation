@@ -37,7 +37,6 @@ import {
   isSourceObject,
   markAsPartial,
 } from "../values";
-import { OPERATION_HISTORY_SYMBOL } from "../descriptor/operation";
 
 type Context = {
   env: ForestEnv;
