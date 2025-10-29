@@ -28,6 +28,7 @@ const defaultRootNodeKeys: Record<
   mutation: "ROOT_MUTATION",
   subscription: "ROOT_SUBSCRIPTION",
 };
+export const OPERATION_HISTORY_SYMBOL = Symbol("Tree history");
 
 export function describeOperation(
   env: OperationEnv,
@@ -65,6 +66,7 @@ export function describeOperation(
     rootNodeKey: effectiveRootNodeKey,
     selections: new Map(),
     keyVariables: getKeyVars(documentDescriptor.definition),
+    historySize: getHistorySize(documentDescriptor.definition),
     variablesKey:
       variablesKey ??
       createVariablesKey(variableDefinitions, variablesWithDefaults),
@@ -128,6 +130,24 @@ function getKeyVars(doc: OperationDefinitionNode): VariableName[] | null {
     );
   }
   return value as string[];
+}
+
+function getHistorySize(doc: OperationDefinitionNode): number | null {
+  const directive = doc.directives?.find((d) => d.name.value === "cache");
+  const astValue = directive?.arguments?.find(
+    (arg) => arg.name.value === "history",
+  )?.value;
+  if (!astValue) {
+    return null;
+  }
+  const value = valueFromASTUntyped(astValue);
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
+    throw new Error(
+      "Could not extract history. Expected directive format: @cache(history: 2), " +
+        `got ${JSON.stringify(value)} in place of history`,
+    );
+  }
+  return value;
 }
 
 export function createVariablesKey(

@@ -9,6 +9,7 @@ import {
 import {
   CompositeListChunk,
   DataMap,
+  GraphValue,
   MissingFieldsMap,
   NodeKey,
   NodeMap,
@@ -20,12 +21,16 @@ import {
   ParentLocator,
   SourceCompositeList,
   SourceObject,
+  SourceValue,
   TypeMap,
 } from "../values/types";
 import { TelemetryEvent } from "../telemetry/types";
 import { Logger } from "../jsutils/logger";
 import { UpdateTreeStats } from "../telemetry/updateStats/types";
 import { UpdateLogger } from "../telemetry/updateStats/updateLogger";
+import { HistoryArray } from "../jsutils/historyArray";
+import type * as DifferenceKind from "../diff/differenceKind";
+import { CompositeListLayoutChange } from "../diff/types";
 
 export type IndexedTree = {
   operation: OperationDescriptor;
@@ -46,8 +51,30 @@ export type IndexedTree = {
   // Error states
   incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
 
+  // Operation history for debugging
+  history: HistoryArray | null;
+
   // ApolloCompat
   danglingReferences?: Set<NodeKey>;
+};
+
+export type FieldChangeWithPath = FieldChange & {
+  path: ReadonlyArray<string | number>;
+};
+
+export type HistoryEntry = {
+  timestamp: number;
+  operationName: string;
+  variables: Record<string, unknown>;
+  changes: ReadonlyArray<FieldChangeWithPath>;
+  missingFields: MissingFieldsMap;
+  data:
+    | {
+        current?: OperationResult;
+        incoming?: OperationResult;
+        updated?: OperationResult;
+      }
+    | undefined;
 };
 
 export type IndexedForest = {
@@ -63,12 +90,36 @@ export type Draft = SourceObject | SourceCompositeList;
 
 export type UpdateForestStats = (UpdateTreeStats | null)[];
 
+export type FieldChange = (
+  | {
+      kind: typeof DifferenceKind.Filler;
+      newValue: SourceValue | undefined;
+    }
+  | {
+      kind: typeof DifferenceKind.Replacement;
+      oldValue: GraphValue | undefined;
+      newValue: SourceValue | undefined;
+    }
+  | {
+      kind: typeof DifferenceKind.CompositeListDifference;
+      itemChanges: CompositeListLayoutChange[] | undefined;
+    }
+) & {
+  fieldInfo: FieldInfo;
+};
+
 // Changed chunks map only contains chunks with immediate changes (i.e. "Replacement", "Filler" + list layout changes).
 //   Does not contain parent chunks which were affected only because some nested chunk has changed.
 //   Note: For now dirty list items are not reported, as it is tricky to report together with list layout shifts (and we don't need it anywhere yet).
 //         In the future we may need to report layout shifts and "Replacement", "Fillter" changes separately.
-export type ChangedChunksMap = Map<ObjectChunk, FieldInfo[]> &
-  Map<CompositeListChunk, null>;
+export type ChangedChunksMap = Map<ObjectChunk, FieldChange[]> &
+  Map<
+    CompositeListChunk,
+    {
+      index: number;
+      value: ObjectDraft;
+    }[]
+  >;
 
 export type UpdateTreeContext = {
   operation: OperationDescriptor;
@@ -79,7 +130,8 @@ export type UpdateTreeContext = {
   affectedNodes: Set<NodeKey>;
   completeObject: CompleteObjectFn;
   findParent: ParentLocator;
-  logger: ForestEnv["logger"];
+  env: ForestEnv;
+  childChanges: any[];
   statsLogger?: UpdateLogger;
 };
 
@@ -88,6 +140,7 @@ export type UpdateTreeResult = {
   changes: ChangedChunksMap;
   changedNodes: Set<NodeKey>; // Directly changed nodes (subset of NodeDifferenceMap keys)
   affectedNodes: Set<NodeKey>; // Parent nodes updated due to a change in a nested node (if node is both - directly updated and affected by another node update, it will be in both: changedNodes and affectedNodes)
+  missingFields: MissingFieldsMap;
   stats?: UpdateTreeStats;
 };
 
@@ -111,7 +164,6 @@ export type ForestEnv = {
 
   logger?: Logger;
   notify?: (event: TelemetryEvent) => void;
-
   // ApolloCompat:
   //   Apollo can track dirty entries in results of read operations even if some "key" fields are missing in selection
   //   by maintaining optimism dependency graph between main store and read results.
@@ -126,4 +178,9 @@ export type ForestEnv = {
   // Telemetry feature flags
   logUpdateStats?: boolean;
   logStaleOperations?: boolean;
+
+  // History feature flags
+  enableHistory?: boolean; // Enable operation history tracking (minimal overhead when enabled)
+  enableDataHistory?: boolean; // Store full data snapshots in history (high memory overhead)
+  defaultHistorySize?: number; // Maximum number of history entries to store
 };

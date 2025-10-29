@@ -172,6 +172,7 @@ export function write(
     targetForest,
     affectedOperations,
     chunkProvider,
+    modifiedIncomingResult,
   );
 
   if (!existingResult && shouldCache(targetForest, operationDescriptor)) {
