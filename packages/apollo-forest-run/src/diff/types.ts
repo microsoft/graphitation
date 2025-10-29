@@ -25,9 +25,9 @@ export type DiffEnv = {
     //   parentFieldName: string
   ) => string | number;
 
-  // History feature flags (inherited from ForestEnv)
-  enableHistory?: boolean;
-  enableDataHistory?: boolean;
+  // History options
+  enableHistory: boolean;
+  enableDataHistory: boolean;
 };
 
 export type DiffContext = {
@@ -129,8 +129,7 @@ export type CompositeListDifference = {
   itemState: Map<number, ValueDifference>;
   dirtyItems?: Set<number>;
   layout?: CompositeListLayoutDifference;
-  deletedKeys?: string[];
-  itemsChanges: CompositeListLayoutChange[];
+  itemsChanges: CompositeListLayoutChange[] | undefined;
   errors?: DiffError[];
 };
 

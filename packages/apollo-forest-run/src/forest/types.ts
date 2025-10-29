@@ -131,7 +131,7 @@ export type UpdateTreeContext = {
   completeObject: CompleteObjectFn;
   findParent: ParentLocator;
   env: ForestEnv;
-  childChanges: any[];
+  childChanges: CompositeListLayoutChange[];
   statsLogger?: UpdateLogger;
 };
 
