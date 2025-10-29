@@ -76,37 +76,95 @@ export class ApolloCachePublisher {
     return history.map((entry, index) => {
       const serialized: any = {
         timestamp: entry.timestamp,
+        operationName: entry.operationName || "Anonymous Operation",
+        variables: entry.variables || {},
+        changes: entry.changes ? this.serializeFieldChanges(entry.changes) : [],
         missingFields: this.serializeMissingFields(entry.missingFields),
         current: {
-          result: entry.current?.result,
+          result: entry.data?.current,
         },
         incoming: {
-          result: entry.incoming?.result,
-          operation: entry.incoming?.operation
-            ? {
-                debugName: entry.incoming.operation.debugName,
-                definition: entry.incoming.operation.definition,
-                variables: entry.incoming.operation.variables,
-                variablesWithDefaults:
-                  entry.incoming.operation.variablesWithDefaults,
-              }
-            : // Fallback to tree operation for the first entry if no incoming operation
-            index === 0 && treeOperation
+          result: entry.data?.incoming,
+          operation: treeOperation
             ? {
                 debugName: treeOperation.debugName,
                 definition: treeOperation.definition,
-                variables: treeOperation.variables,
+                variables: entry.variables || treeOperation.variables,
                 variablesWithDefaults: treeOperation.variablesWithDefaults,
               }
             : undefined,
         },
         updated: {
-          result: entry.updated?.result,
-          changes: this.serializeChanges(entry.updated?.changes),
+          result: entry.data?.updated,
+          changes: entry.changes || [],
         },
       };
+
+      console.log("[Publisher] Serialized entry:", serialized);
       return serialized;
     });
+  }
+
+  private serializeFieldChanges(changes: any[]): any[] {
+    if (!Array.isArray(changes)) {
+      return [];
+    }
+
+    return changes.map((change: any) => {
+      const serialized: any = {
+        kind: change.kind,
+        path: change.path || [],
+        fieldInfo: change.fieldInfo
+          ? {
+              name: change.fieldInfo.name,
+              dataKey: change.fieldInfo.dataKey,
+            }
+          : undefined,
+      };
+
+      // Add kind-specific fields
+      if (change.kind === 1) {
+        // Filler
+        serialized.newValue = this.serializeGraphValue(change.newValue);
+      } else if (change.kind === 0) {
+        // Replacement
+        serialized.oldValue = this.serializeGraphValue(change.oldValue);
+        serialized.newValue = this.serializeGraphValue(change.newValue);
+      } else if (change.kind === 3) {
+        // CompositeListDifference
+        serialized.itemChanges = change.itemChanges
+          ? this.serializeLayoutChanges(change.itemChanges)
+          : undefined;
+      }
+
+      // Handle list item changes (index-based changes)
+      if (change.index !== undefined) {
+        serialized.index = change.index;
+      }
+      if (change.data !== undefined) {
+        serialized.data = change.data;
+      }
+      if (change.missingFields !== undefined) {
+        serialized.missingFields = this.serializeMissingFields(
+          change.missingFields,
+        );
+      }
+
+      return serialized;
+    });
+  }
+
+  private serializeLayoutChanges(itemChanges: any[]): any[] {
+    if (!Array.isArray(itemChanges)) {
+      return [];
+    }
+
+    return itemChanges.map((change: any) => ({
+      kind: change.kind,
+      index: change.index,
+      oldIndex: change.oldIndex,
+      data: change.data,
+    }));
   }
 
   private serializeMissingFields(missingFieldsMap: any): any {
@@ -157,73 +215,6 @@ export class ApolloCachePublisher {
     // Fallback to object keys
     const keys = Object.keys(obj).slice(0, 3).join(", ");
     return `{ ${keys} }`;
-  }
-
-  private serializeChanges(changesMap: any): any {
-    if (!changesMap) {
-      return null;
-    }
-
-    // Convert Map to array of serialized entries for JSON serialization
-    if (changesMap instanceof Map) {
-      const result: any[] = [];
-      changesMap.forEach((value, key) => {
-        // Key is ObjectChunk or CompositeListChunk - serialize relevant properties
-        const serializedKey = {
-          kind: key.kind,
-          operation: key.operation?.debugName,
-          key: key.key || undefined,
-          type: key.type || undefined,
-          missingItems: key.missingItems
-            ? Array.from(key.missingItems)
-            : undefined,
-          partialItems: key.partialItems
-            ? Array.from(key.partialItems)
-            : undefined,
-        };
-
-        // Value is either FieldChange[] for objects or array with list item changes
-        let serializedValue;
-        if (Array.isArray(value)) {
-          if (value.length > 0 && value[0]?.fieldInfo) {
-            // Object changes: array of FieldChange with fieldInfo
-            serializedValue = value.map((change: any) => ({
-              kind: change.kind,
-              fieldName: change.fieldInfo?.name,
-              dataKey: change.fieldInfo?.dataKey,
-              oldValue: this.serializeGraphValue(change.oldValue),
-              newValue: this.serializeGraphValue(change.newValue),
-              newSize: change.newSize,
-            }));
-          } else if (value.length > 0 && "index" in value[0]) {
-            // List item changes: array of { index: number, data: ObjectDraft, missingFields?: MissingFieldsMap }
-            serializedValue = value.map((item: any) => ({
-              index: item.index,
-              data: this.serializeObjectDraft(item.data),
-              missingFields: item.missingFields
-                ? this.serializeMissingFields(item.missingFields)
-                : undefined,
-            }));
-          } else {
-            // Empty array or unknown format
-            serializedValue = value;
-          }
-        } else if (value === null) {
-          // List layout change without specific items
-          serializedValue = null;
-        } else {
-          serializedValue = value;
-        }
-
-        result.push({
-          chunk: serializedKey,
-          changes: serializedValue,
-        });
-      });
-      return result;
-    }
-
-    return changesMap;
   }
 
   private serializeGraphValue(value: any): any {

@@ -139,6 +139,11 @@ export const useStyles = makeStyles({
     fontWeight: tokens.fontWeightSemibold,
     marginTop: tokens.spacingVerticalXXS,
   },
+  changeCountTag: {
+    fontSize: tokens.fontSizeBase100,
+    color: tokens.colorNeutralForeground3,
+    marginTop: tokens.spacingVerticalXXS,
+  },
   detailsPanel: {
     overflowY: "auto",
     ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalL),

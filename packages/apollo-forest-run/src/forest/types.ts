@@ -58,20 +58,23 @@ export type IndexedTree = {
   danglingReferences?: Set<NodeKey>;
 };
 
+export type FieldChangeWithPath = FieldChange & {
+  path: ReadonlyArray<string | number>;
+};
+
 export type HistoryEntry = {
   timestamp: number;
+  operationName: string;
+  variables: Record<string, unknown>;
+  changes: ReadonlyArray<FieldChangeWithPath>;
   missingFields: MissingFieldsMap;
-  current: {
-    result: OperationResult | undefined;
-  };
-  incoming: {
-    result?: OperationResult;
-    operation?: OperationDescriptor | undefined;
-  };
-  updated: {
-    changes: any;
-    result: OperationResult | undefined;
-  };
+  data:
+    | {
+        current?: OperationResult;
+        incoming?: OperationResult;
+        updated?: OperationResult;
+      }
+    | undefined;
 };
 
 export type IndexedForest = {
@@ -176,9 +179,8 @@ export type ForestEnv = {
   logUpdateStats?: boolean;
   logStaleOperations?: boolean;
 
-  // History configuration
-  enableHistory?: boolean;
-  enableDataHistory?: boolean;
-  defaultHistorySize?: number;
-  storeFieldPaths?: boolean; // Store computed field paths in history (more memory, faster summary generation)
+  // History feature flags
+  enableHistory?: boolean; // Enable operation history tracking (minimal overhead when enabled)
+  enableDataHistory?: boolean; // Store full data snapshots in history (high memory overhead)
+  defaultHistorySize?: number; // Maximum number of history entries to store
 };

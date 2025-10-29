@@ -14,6 +14,19 @@ import { ApolloCacheContext } from "../contexts/apollo-cache-context";
 
 interface HistoryEntry {
   timestamp: number;
+  operationName: string;
+  variables: Record<string, unknown>;
+  changes: Array<{
+    kind: number; // 0=Replacement, 1=Filler, 3=CompositeListDifference
+    path: ReadonlyArray<string | number>;
+    fieldInfo?: { name: string; dataKey: string };
+    oldValue?: any;
+    newValue?: any;
+    itemChanges?: any[];
+    index?: number;
+    data?: any;
+    missingFields?: any;
+  }>;
   missingFields?: Array<{
     objectIdentifier: string;
     fields: Array<{ name: string; dataKey: string }>;
@@ -26,8 +39,8 @@ interface HistoryEntry {
     operation?: any;
   };
   updated: {
-    changes: any;
     result: any;
+    changes: any[];
   };
 }
 
@@ -67,6 +80,11 @@ export const ApolloCacheHistory = React.memo(
           const fetchedHistory = await getOperationHistory(item.key);
 
           if (fetchedHistory && Array.isArray(fetchedHistory)) {
+            console.log("[Subscriber] Received history:", fetchedHistory);
+            console.log(
+              "[Subscriber] First entry changes:",
+              fetchedHistory[0]?.changes,
+            );
             setHistory(fetchedHistory as HistoryEntry[]);
           } else {
             setHistory([]);
@@ -159,11 +177,12 @@ export const ApolloCacheHistory = React.memo(
                   const hasIncompleteData =
                     entry.missingFields && entry.missingFields.length > 0;
                   const missingFieldsCount = hasIncompleteData
-                    ? entry.missingFields.reduce(
+                    ? entry.missingFields!.reduce(
                         (sum, mf) => sum + mf.fields.length,
                         0,
                       )
                     : 0;
+                  const changeCount = entry.changes?.length || 0;
                   return (
                     <div
                       key={index}
@@ -181,10 +200,12 @@ export const ApolloCacheHistory = React.memo(
                       <Text size={200} className={classes.timelineItemTime}>
                         {new Date(entry.timestamp).toLocaleTimeString()}
                       </Text>
-                      {entry.incoming?.operation && (
-                        <Text size={200} className={classes.operationName}>
-                          {entry.incoming.operation.definition?.name?.value ||
-                            "Anonymous Operation"}
+                      <Text size={200} className={classes.operationName}>
+                        {entry.operationName || "Anonymous Operation"}
+                      </Text>
+                      {changeCount > 0 && (
+                        <Text size={100} className={classes.changeCountTag}>
+                          {changeCount} changes
                         </Text>
                       )}
                       {hasIncompleteData && (
@@ -240,42 +261,35 @@ const HistoryDetails = React.memo(({ entry, classes }: HistoryDetailsProps) => {
   };
 
   const changes = useMemo(() => {
-    return extractChanges(entry.updated.changes);
+    console.log("[Subscriber] Extracting changes from:", entry.changes);
+    const result = extractChangesFromFlat(entry.changes || []);
+    console.log("[Subscriber] Extracted changes:", result);
+    return result;
   }, [entry]);
 
   return (
     <div className={classes.detailsContent}>
       {/* Operation Header */}
-      {entry.incoming?.operation && (
-        <div className={classes.operationHeader}>
-          <div className={classes.operationTitle}>
-            <Text size={400} weight="semibold">
-              {entry.incoming.operation.definition?.name?.value ||
-                "Anonymous Operation"}
-            </Text>
-            <Text size={200} className={classes.operationTimestamp}>
-              {new Date(entry.timestamp).toLocaleString()}
-            </Text>
-          </div>
-          {entry.incoming.operation.variables &&
-            Object.keys(entry.incoming.operation.variables).length > 0 && (
-              <div className={classes.operationVariablesBox}>
-                <Text size={200} weight="semibold">
-                  Variables:
-                </Text>
-                <pre className={classes.variablesCode}>
-                  {JSON.stringify(entry.incoming.operation.variables, null, 2)}
-                </pre>
-              </div>
-            )}
+      <div className={classes.operationHeader}>
+        <div className={classes.operationTitle}>
+          <Text size={400} weight="semibold">
+            {entry.operationName || "Anonymous Operation"}
+          </Text>
+          <Text size={200} className={classes.operationTimestamp}>
+            {new Date(entry.timestamp).toLocaleString()}
+          </Text>
         </div>
-      )}
-
-      {!entry.incoming?.operation && (
-        <Text size={300} weight="semibold" className={classes.timestamp}>
-          {new Date(entry.timestamp).toLocaleString()}
-        </Text>
-      )}
+        {entry.variables && Object.keys(entry.variables).length > 0 && (
+          <div className={classes.operationVariablesBox}>
+            <Text size={200} weight="semibold">
+              Variables:
+            </Text>
+            <pre className={classes.variablesCode}>
+              {JSON.stringify(entry.variables, null, 2)}
+            </pre>
+          </div>
+        )}
+      </div>
 
       {/* Changes Section */}
       <div className={classes.section}>
@@ -291,8 +305,8 @@ const HistoryDetails = React.memo(({ entry, classes }: HistoryDetailsProps) => {
             )}
           />
           <Title3>
-            Changes ({changes.fieldChanges.length} fields,{" "}
-            {changes.arrayChanges.length} arrays)
+            Changes ({changes.fieldChanges.length} field changes,{" "}
+            {changes.listChanges.length} list changes)
           </Title3>
         </Button>
         {expandedSections.has("changes") && (
@@ -311,22 +325,18 @@ const HistoryDetails = React.memo(({ entry, classes }: HistoryDetailsProps) => {
                 ))}
               </div>
             )}
-            {changes.arrayChanges.length > 0 && (
+            {changes.listChanges.length > 0 && (
               <div className={classes.changesGroup}>
                 <Text weight="semibold" size={300}>
-                  Array Changes:
+                  List Changes:
                 </Text>
-                {changes.arrayChanges.map((change, idx) => (
-                  <ArrayChangeItem
-                    key={idx}
-                    change={change}
-                    classes={classes}
-                  />
+                {changes.listChanges.map((change, idx) => (
+                  <ListChangeItem key={idx} change={change} classes={classes} />
                 ))}
               </div>
             )}
             {changes.fieldChanges.length === 0 &&
-              changes.arrayChanges.length === 0 && (
+              changes.listChanges.length === 0 && (
                 <Text size={200} className={classes.noChanges}>
                   No detailed changes recorded
                 </Text>
@@ -439,7 +449,7 @@ const HistoryDetails = React.memo(({ entry, classes }: HistoryDetailsProps) => {
                   <div className={classes.missingFieldsList}>
                     {missing.fields.map((field, fieldIdx) => (
                       <div key={fieldIdx} className={classes.missingFieldChip}>
-                        <Text size={200} className={classes.fieldName}>
+                        <Text size={200} className={classes.missingFieldName}>
                           {field.name}
                         </Text>
                       </div>
@@ -467,26 +477,26 @@ const FieldChangeItem = React.memo(
     // Generate a preview of the change for the header
     const changePreview = React.useMemo(() => {
       if (change.kind === 0 && change.oldValue !== undefined) {
+        // Replacement
         const oldPreview = getValuePreview(change.oldValue);
         const newPreview = getValuePreview(change.newValue);
         return `${oldPreview} → ${newPreview}`;
       } else if (change.kind === 1) {
+        // Filler
         const newPreview = getValuePreview(change.newValue);
-        return newPreview;
-      } else if (change.kind === 2 && change.newSize !== undefined) {
-        return `resized to ${change.newSize} items`;
+        return `filled with ${newPreview}`;
       }
       return "";
     }, [change]);
 
+    const fieldPath = change.path?.join(".") || "unknown";
     const fieldName =
-      change.fieldName ||
       change.fieldInfo?.name ||
-      change.field ||
-      "Unknown field";
+      change.path?.[change.path.length - 1] ||
+      "unknown";
 
     const changeTypeLabel =
-      change.kind === 0 ? "modified" : change.kind === 1 ? "filled" : "array";
+      change.kind === 0 ? "modified" : change.kind === 1 ? "filled" : "unknown";
 
     return (
       <div className={classes.changeItemRow}>
@@ -501,7 +511,7 @@ const FieldChangeItem = React.memo(
             )}
           />
           <Text size={200} className={classes.changeFieldName}>
-            {fieldName}
+            {fieldPath}
           </Text>
           <Text size={100} className={classes.changeTypeLabel}>
             {changeTypeLabel}
@@ -549,9 +559,6 @@ const FieldChangeItem = React.memo(
                 </pre>
               </div>
             )}
-            {change.kind === 2 && change.newSize !== undefined && (
-              <Text size={200}>New array size: {change.newSize} items</Text>
-            )}
           </div>
         )}
       </div>
@@ -559,20 +566,17 @@ const FieldChangeItem = React.memo(
   },
 );
 
-interface ArrayChangeItemProps {
+interface ListChangeItemProps {
   change: any;
   classes: ReturnType<typeof useStyles>;
 }
 
-const ArrayChangeItem = React.memo(
-  ({ change, classes }: ArrayChangeItemProps) => {
+const ListChangeItem = React.memo(
+  ({ change, classes }: ListChangeItemProps) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
-    const hasMissingItems =
-      change.chunk?.missingItems && change.chunk.missingItems.length > 0;
-    const hasPartialItems =
-      change.chunk?.partialItems && change.chunk.partialItems.length > 0;
-    const itemCount = change.items ? change.items.length : 0;
+    const fieldPath = change.path?.join(".") || "unknown";
+    const itemChangeCount = change.itemChanges?.length || 0;
 
     return (
       <div className={classes.changeItemRow}>
@@ -587,94 +591,45 @@ const ArrayChangeItem = React.memo(
             )}
           />
           <Text size={200} className={classes.changeFieldName}>
-            Array modified
-            {change.chunk?.type && ` (${change.chunk.type}[])`}
+            {fieldPath}
           </Text>
           <Text size={100} className={classes.changeTypeLabel}>
-            array
+            list
           </Text>
-          {itemCount > 0 && (
+          {itemChangeCount > 0 && (
             <Text size={200} className={classes.changePreviewText}>
-              {itemCount} items changed
-            </Text>
-          )}
-          {(hasMissingItems || hasPartialItems) && (
-            <Text size={100} className={classes.warningBadge}>
-              ⚠️ incomplete
+              {itemChangeCount} item changes
             </Text>
           )}
         </div>
 
         {isExpanded && (
           <div className={classes.changeExpandedContent}>
-            {/* Display missing/partial items info */}
-            {(hasMissingItems || hasPartialItems) && (
-              <div className={classes.arrayWarningInfo}>
-                {hasMissingItems && (
-                  <Text size={200}>
-                    Missing items: {change.chunk.missingItems.join(", ")}
-                  </Text>
-                )}
-                {hasPartialItems && (
-                  <Text size={200}>
-                    Partial items: {change.chunk.partialItems.join(", ")}
-                  </Text>
-                )}
+            {change.itemChanges && change.itemChanges.length > 0 ? (
+              <div>
+                {change.itemChanges.map((item: any, idx: number) => (
+                  <div key={idx} className={classes.arrayItemRow}>
+                    <Text size={200} weight="semibold">
+                      {item.kind === 1
+                        ? `Item removed (previously at index ${item.oldIndex})`
+                        : item.kind === 0
+                        ? `Item added at index ${item.index}`
+                        : item.kind === 2
+                        ? `Item moved from ${item.oldIndex} to ${item.index}`
+                        : `Item changed at index ${
+                            item.index || item.oldIndex
+                          }`}
+                    </Text>
+                    {item.data && (
+                      <pre className={classes.valueCodeInline}>
+                        {formatValue(item.data)}
+                      </pre>
+                    )}
+                  </div>
+                ))}
               </div>
-            )}
-
-            {/* Display item changes */}
-            {change.items && change.items.length > 0 ? (
-              change.items.map((item: any, idx: number) => (
-                <div
-                  key={idx}
-                  className={mergeClasses(
-                    classes.arrayItemRow,
-                    item.missingFields &&
-                      item.missingFields.length > 0 &&
-                      classes.arrayItemRowIncomplete,
-                  )}
-                >
-                  <Text size={200} weight="semibold">
-                    Index {item.index}
-                  </Text>
-                  {item.data && (
-                    <pre className={classes.valueCodeInline}>
-                      {formatValue(item.data)}
-                    </pre>
-                  )}
-                  {item.missingFields && item.missingFields.length > 0 && (
-                    <div className={classes.itemMissingFields}>
-                      <Text size={100} weight="semibold">
-                        ⚠️ Missing fields:
-                      </Text>
-                      {item.missingFields.map(
-                        (missing: any, missingIdx: number) => (
-                          <div key={missingIdx}>
-                            <Text size={100} weight="semibold">
-                              {missing.objectIdentifier}:
-                            </Text>
-                            {missing.fields.map(
-                              (field: any, fieldIdx: number) => (
-                                <Text
-                                  key={fieldIdx}
-                                  size={100}
-                                  className={classes.missingFieldName}
-                                >
-                                  {field.name}
-                                  {fieldIdx < missing.fields.length - 1 && ", "}
-                                </Text>
-                              ),
-                            )}
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))
             ) : (
-              <Text size={200}>Array structure or length modified</Text>
+              <Text size={200}>List structure modified (no item details)</Text>
             )}
           </div>
         )}
@@ -917,6 +872,31 @@ function computeLCS(oldLines: string[], newLines: string[]): LCSMatch[] {
   }
 
   return matches;
+}
+
+function extractChangesFromFlat(changes: any[]): {
+  fieldChanges: any[];
+  listChanges: any[];
+} {
+  const fieldChanges: any[] = [];
+  const listChanges: any[] = [];
+
+  if (!Array.isArray(changes)) {
+    return { fieldChanges, listChanges };
+  }
+
+  for (const change of changes) {
+    // kind: 0 = Replacement, 1 = Filler, 3 = CompositeListDifference
+    if (change.kind === 0 || change.kind === 1) {
+      // Field-level changes
+      fieldChanges.push(change);
+    } else if (change.kind === 3) {
+      // List changes (CompositeListDifference)
+      listChanges.push(change);
+    }
+  }
+
+  return { fieldChanges, listChanges };
 }
 
 function extractChanges(changesMap: any): {

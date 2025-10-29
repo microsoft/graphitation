@@ -1,11 +1,8 @@
 import type {
-  ChangedChunksMap,
   HistoryEntry,
   IndexedTree,
   UpdateTreeResult,
 } from "../forest/types";
-import type { VariableValues } from "../descriptor/types";
-import type { MissingFieldsMap } from "../values/types";
 import { getDataPathForDebugging, createParentLocator } from "../values";
 
 export class HistoryArray {
@@ -57,6 +54,9 @@ export class HistoryArray {
       timestamp: Date.now(),
       missingFields: updatedTree.missingFields,
       changes: changedFields,
+      operationName:
+        incomingResult?.operation?.debugName ?? "Anonymous Operation",
+      variables: incomingResult?.operation?.variables || {},
       data: this.isDataHistoryEnabled
         ? {
             current: currentTree.result,
@@ -84,34 +84,6 @@ export class HistoryArray {
       return null;
     }
 
-    const summaryArray: {
-      timestamp: number;
-      operation: {
-        debugName: string;
-        variablesWithDefaults: VariableValues;
-      };
-      missingFields: MissingFieldsMap;
-      changes: Array<{
-        path: (string | number)[];
-        fieldName: string;
-        changeKind: "Replacement" | "Filler" | "CompositeListDifference";
-      }>;
-    }[] = [];
-
-    for (const change of this.items) {
-      summaryArray.push({
-        timestamp: change.timestamp,
-        operation: {
-          debugName:
-            change.incoming?.operation?.debugName || "Anonymous Operation",
-          variablesWithDefaults:
-            change.incoming?.operation?.variablesWithDefaults || {},
-        },
-        missingFields: change.missingFields,
-        changes: change.updated.changes,
-      });
-    }
-
-    return summaryArray;
+    return null;
   }
 }

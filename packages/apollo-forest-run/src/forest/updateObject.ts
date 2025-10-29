@@ -29,8 +29,8 @@ import type {
   UpdateTreeContext,
 } from "./types";
 import * as Difference from "../diff/difference";
-import * as ChangeKind from "../diff/itemChangeKind";
 import * as Value from "../values";
+import * as LayoutChange from "../diff/layoutChange";
 import { ValueKind } from "../values/types";
 import { DifferenceKind } from "../diff/types";
 import { assert, assertNever } from "../jsutils/assert";
@@ -38,6 +38,51 @@ import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const inspect = JSON.stringify.bind(JSON);
+
+export function recordFieldChange(
+  context: UpdateTreeContext,
+  base: ObjectChunk,
+  fieldInfo: FieldInfo,
+  fieldDiff: ValueDifference,
+  updated: SourceValue | undefined,
+): void {
+  const { enableHistory, enableDataHistory } = context.env;
+  if (!enableHistory) {
+    return;
+  }
+
+  let changes = context.changes.get(base);
+  if (!changes) {
+    changes = [];
+    context.changes.set(base, changes);
+  }
+
+  switch (fieldDiff.kind) {
+    case DifferenceKind.Filler:
+      changes.push({
+        kind: fieldDiff.kind,
+        fieldInfo,
+        newValue: enableDataHistory ? updated : undefined,
+      });
+      break;
+    case DifferenceKind.Replacement:
+      changes.push({
+        kind: fieldDiff.kind,
+        fieldInfo,
+        oldValue: enableDataHistory ? fieldDiff.oldValue : undefined,
+        newValue: enableDataHistory ? updated : undefined,
+      });
+      break;
+    case DifferenceKind.CompositeListDifference:
+      changes.push({
+        kind: fieldDiff.kind,
+        fieldInfo,
+        itemChanges: enableDataHistory ? context.childChanges : undefined,
+      });
+      context.childChanges = [];
+      break;
+  }
+}
 
 export function updateObject(
   context: UpdateTreeContext,
@@ -113,37 +158,8 @@ function updateObjectValue(
       context.statsLogger?.fieldMutation();
       copy[fieldInfo.dataKey] = updated;
 
-      const { enableDataHistory } = context.env;
-
-      switch (fieldDiff.kind) {
-        case DifferenceKind.Filler:
-          changes.push({
-            kind: fieldDiff.kind,
-            fieldInfo,
-            newValue: enableDataHistory ? updated : undefined,
-          });
-          break;
-        case DifferenceKind.Replacement:
-          changes.push({
-            kind: fieldDiff.kind,
-            fieldInfo,
-            oldValue: enableDataHistory ? fieldDiff.oldValue : undefined,
-            newValue: enableDataHistory ? updated : undefined,
-          });
-          break;
-        case DifferenceKind.CompositeListDifference:
-          changes.push({
-            kind: fieldDiff.kind,
-            fieldInfo,
-            itemChanges: enableDataHistory ? context.childChanges : undefined,
-          });
-          context.childChanges = [];
-          break;
-      }
+      recordFieldChange(context, base, fieldInfo, fieldDiff, updated);
     }
-  }
-  if (changes.length) {
-    context.changes.set(base, changes);
   }
 
   return copy ?? base.data;
@@ -261,12 +277,14 @@ function updateCompositeListValue(
       assert(newValue.data);
       accumulateMissingFields(context, newValue);
       result[i] = newValue.data;
-      arrayChanges.push({
-        kind: ChangeKind.ItemAdd,
-        index: i,
-        data: newValue.data,
-        missingFields: newValue.missingFields,
-      });
+      arrayChanges.push(
+        LayoutChange.createItemAdded(
+          i,
+          newValue.data,
+          context.env,
+          newValue.missingFields,
+        ),
+      );
       continue;
     }
     const op = operation.definition.name?.value;

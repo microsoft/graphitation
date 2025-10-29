@@ -24,6 +24,10 @@ export type DiffEnv = {
     //   parentType: TypeName
     //   parentFieldName: string
   ) => string | number;
+
+  // History feature flags (inherited from ForestEnv)
+  enableHistory?: boolean;
+  enableDataHistory?: boolean;
 };
 
 export type DiffContext = {
@@ -116,7 +120,8 @@ export type CompositeListLayoutIndexChange = {
 export type CompositeListLayoutChange =
   | CompositeListLayoutChangeItemRemoved
   | CompositeListLayoutIndexChange
-  | CompositeListLayoutItemAdded;
+  | CompositeListLayoutItemAdded
+  | undefined;
 
 export type CompositeListDifference = {
   readonly kind: typeof DifferenceKind.CompositeListDifference;

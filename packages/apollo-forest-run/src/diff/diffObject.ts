@@ -24,9 +24,9 @@ import type {
 } from "./types";
 import * as Value from "../values";
 import * as Difference from "./difference";
+import * as LayoutChange from "./layoutChange";
 import { DiffErrorKind } from "./types";
 import { ValueKind } from "../values/types";
-import * as ChangeKind from "./itemChangeKind";
 
 /**
  * Compares base object version with model version and returns a normalized Difference object,
@@ -531,13 +531,12 @@ function diffCompositeListLayout(
   }
   // Fast-path: no layout difference found
   if (firstDirtyIndex === -1) {
-    const deletedItems: CompositeListLayoutChangeItemRemoved[] = [];
+    const deletedItems: (CompositeListLayoutChangeItemRemoved | undefined)[] =
+      [];
     for (const index of unusedBaseIndixes) {
-      deletedItems.push({
-        kind: ChangeKind.ItemRemove,
-        oldIndex: index,
-        data: baseChunk.data[index],
-      });
+      deletedItems.push(
+        LayoutChange.createItemRemoved(index, baseChunk.data[index], env),
+      );
     }
     if (baseLen > modelLen) {
       const layout: CompositeListLayoutDifference = [];
@@ -565,11 +564,7 @@ function diffCompositeListLayout(
     if (modelChunk.data[index] === null) {
       layout.push(null);
       if (baseChunk.data[index] !== null) {
-        itemChanges.push({
-          kind: ChangeKind.ItemAdd,
-          index,
-          data: null,
-        });
+        itemChanges.push(LayoutChange.createItemAdded(index, null, env));
       }
       continue;
     }
@@ -588,12 +583,14 @@ function diffCompositeListLayout(
       layout.push(baseIndex);
       unusedBaseIndixes.delete(baseIndex);
       if (index !== baseIndex) {
-        itemChanges.push({
-          kind: ChangeKind.ItemIndexChange,
-          index,
-          oldIndex: baseIndex,
-          data: baseChunk.data[baseIndex],
-        });
+        itemChanges.push(
+          LayoutChange.createIndexChange(
+            index,
+            baseIndex,
+            baseChunk.data[baseIndex],
+            env,
+          ),
+        );
       }
     } else {
       const value = Value.aggregateListItemValue(model, index);
@@ -614,11 +611,9 @@ function diffCompositeListLayout(
   }
 
   for (const oldIndex of unusedBaseIndixes) {
-    itemChanges.push({
-      kind: ChangeKind.ItemRemove,
-      oldIndex,
-      data: baseChunk.data[oldIndex],
-    });
+    itemChanges.push(
+      LayoutChange.createItemRemoved(oldIndex, baseChunk.data[oldIndex], env),
+    );
   }
   return {
     deletedItems: itemChanges,
