@@ -1660,7 +1660,7 @@ describe("diff against base with missing fields", () => {
     const forestEnv = {
       objectKey: (obj: any) => obj.id,
     };
-    const diffEnv = {};
+    const diffEnv = { enableHistory: false, enableDataHistory: false };
     const doc = gql`
       query ($arg: String) {
         foo(arg: $arg)
@@ -1724,6 +1724,8 @@ function diff(
 ) {
   const env = {
     objectKey: (obj: any) => obj.id,
+    enableHistory: false,
+    enableDataHistory: false,
     ...testEnv,
   };
   const baseOperation = createTestOperation(completeObjectDoc, baseVariables);

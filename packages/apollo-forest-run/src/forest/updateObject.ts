@@ -47,9 +47,6 @@ export function recordFieldChange(
   updated: SourceValue | undefined,
 ): void {
   const { enableHistory, enableDataHistory } = context.env;
-  if (!enableHistory) {
-    return;
-  }
 
   let changes = context.changes.get(base);
   if (!changes) {
@@ -276,7 +273,7 @@ function updateCompositeListValue(
       assert(newValue.data);
       accumulateMissingFields(context, newValue);
       result[i] = newValue.data;
-      arrayChanges.push(
+      arrayChanges?.push(
         LayoutChange.createItemAdded(
           i,
           newValue.data,
@@ -307,7 +304,7 @@ function updateCompositeListValue(
   if (copy.length !== base.data.length) {
     dirty = true;
   }
-  context.childChanges = arrayChanges;
+  context.childChanges = arrayChanges ?? [];
 
   return copy ?? base.data;
 }

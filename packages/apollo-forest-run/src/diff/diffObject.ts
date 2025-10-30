@@ -423,7 +423,10 @@ function diffCompositeListValue(
     return undefined;
   }
 
-  const itemsChanges: CompositeListLayoutChange[] = [];
+  const itemsChanges: CompositeListLayoutChange[] | undefined = context.env
+    .enableHistory
+    ? []
+    : undefined;
   const layoutDiffResult =
     diff?.layout ?? diffCompositeListLayout(context, base, model, itemsChanges);
 
@@ -483,7 +486,7 @@ function diffCompositeListLayout(
   context: DiffContext,
   base: CompositeListValue,
   model: CompositeListValue,
-  listContext: CompositeListLayoutChange[],
+  listContext?: CompositeListLayoutChange[],
 ): CompositeListLayoutDifference | undefined | "BREAK" {
   // What constitutes layout change?
   // - Change of "keyed object" position in the list
@@ -496,7 +499,6 @@ function diffCompositeListLayout(
   const baseChunk = Value.isAggregate(base) ? base.chunks[0] : base;
   const modelChunk = Value.isAggregate(model) ? model.chunks[0] : model;
   const unusedBaseIndixes = new Set<number>();
-  const itemChanges: CompositeListLayoutChange[] = [];
   for (let i = 0; i < baseLen; i++) {
     unusedBaseIndixes.add(i);
   }
@@ -524,7 +526,7 @@ function diffCompositeListLayout(
   // Fast-path: no layout difference found
   if (firstDirtyIndex === -1) {
     for (const index of unusedBaseIndixes) {
-      listContext.push(
+      listContext?.push(
         LayoutChange.createItemRemoved(index, baseChunk.data[index], env),
       );
     }
@@ -548,7 +550,7 @@ function diffCompositeListLayout(
     if (modelChunk.data[i] === null) {
       layout.push(null);
       if (baseChunk.data[i] !== null) {
-        itemChanges.push(LayoutChange.createItemAdded(i, null, env));
+        listContext?.push(LayoutChange.createItemAdded(i, null, env));
       }
       continue;
     }
@@ -567,7 +569,7 @@ function diffCompositeListLayout(
       layout.push(baseIndex);
       unusedBaseIndixes.delete(baseIndex);
       if (i !== baseIndex) {
-        listContext.push(
+        listContext?.push(
           LayoutChange.createIndexChange(
             i,
             baseIndex,
@@ -595,7 +597,7 @@ function diffCompositeListLayout(
   }
 
   for (const oldIndex of unusedBaseIndixes) {
-    listContext.push(
+    listContext?.push(
       LayoutChange.createItemRemoved(oldIndex, baseChunk.data[oldIndex], env),
     );
   }

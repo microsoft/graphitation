@@ -77,7 +77,7 @@ export function createCompositeListDifference(): CompositeListDifference {
     itemQueue: new Set(),
     dirtyItems: undefined,
     layout: undefined,
-    itemsChanges: [],
+    itemsChanges: undefined,
     errors: undefined,
   };
 }

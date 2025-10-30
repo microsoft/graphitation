@@ -1662,11 +1662,11 @@ describe("change reporting", () => {
 
     const [[first, firstFields], [second, secondFields]] = changes.entries();
     expect(firstFields?.length).toEqual(1);
-    expect(firstFields?.[0]?.name).toEqual("foo");
+    expect(firstFields?.[0]?.fieldInfo.name).toEqual("foo");
     expect(first.data).toBe(base.plainObject);
 
     expect(secondFields?.length).toEqual(1);
-    expect(secondFields?.[0]?.name).toEqual("scalar");
+    expect(secondFields?.[0]?.fieldInfo.name).toEqual("scalar");
     expect(second.data).toBe(base);
   });
 
@@ -1683,7 +1683,7 @@ describe("change reporting", () => {
 
     const [[first, firstFields]] = changes.entries();
     expect(firstFields?.length).toEqual(1);
-    expect(firstFields?.[0]?.name).toEqual("foo");
+    expect(firstFields?.[0]?.fieldInfo.name).toEqual("foo");
     expect(first.data).toBe(base.plainObject);
   });
 
@@ -1710,7 +1710,7 @@ describe("change reporting", () => {
       // Expected to report as a change in parent object field
       const [[first, firstFields]] = changes.entries();
       expect(firstFields?.length).toEqual(1);
-      expect(firstFields?.[0]?.name).toEqual("scalarList");
+      expect(firstFields?.[0]?.fieldInfo.name).toEqual("scalarList");
       expect(first.data).toBe(base);
     });
   });
@@ -1998,6 +1998,8 @@ function prepareDiffTrees(
   const env: DiffEnv & ForestEnv = {
     objectKey: (obj) => obj.id as string,
     logUpdateStats: false,
+    enableHistory: false,
+    enableDataHistory: false,
     ...(testEnv ?? {}),
   };
   const baseTree = isTree(base)
