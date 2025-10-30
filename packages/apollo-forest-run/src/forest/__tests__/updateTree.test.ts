@@ -1662,12 +1662,12 @@ describe("change reporting", () => {
 
     const [[first, firstFields], [second, secondFields]] = changes.entries();
     expect(firstFields?.length).toEqual(1);
-    expect(firstFields?.[0]?.fieldInfo.name).toEqual("foo");
-    expect(first.data).toBe(base.plainObject);
+    expect(firstFields?.[0]?.fieldInfo.name).toEqual("scalar");
+    expect(first.data).toBe(base);
 
     expect(secondFields?.length).toEqual(1);
-    expect(secondFields?.[0]?.fieldInfo.name).toEqual("scalar");
-    expect(second.data).toBe(base);
+    expect(secondFields?.[0]?.fieldInfo.name).toEqual("foo");
+    expect(second.data).toBe(base.plainObject);
   });
 
   test("does not report parent as changed on nested chunk change", () => {

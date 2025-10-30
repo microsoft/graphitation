@@ -19,6 +19,7 @@ describe("ForestRun.extract()", () => {
           "data": {
             "foo": 0,
           },
+          "hasHistory": false,
           "optimisticData": null,
           "variables": {},
         },
@@ -26,6 +27,7 @@ describe("ForestRun.extract()", () => {
           "data": {
             "foo": 1,
           },
+          "hasHistory": false,
           "optimisticData": null,
           "variables": {
             "i": 1,
@@ -54,6 +56,7 @@ describe("ForestRun.extract()", () => {
           "data": {
             "foo": 0,
           },
+          "hasHistory": false,
           "optimisticData": {
             "foo": 2,
           },
@@ -63,6 +66,7 @@ describe("ForestRun.extract()", () => {
           "data": {
             "foo": 1,
           },
+          "hasHistory": false,
           "optimisticData": null,
           "variables": {
             "i": 1,
@@ -87,6 +91,7 @@ describe("ForestRun.extract()", () => {
       {
         "query Foo:1": {
           "data": null,
+          "hasHistory": false,
           "optimisticData": {
             "foo": 1,
           },
