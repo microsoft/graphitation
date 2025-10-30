@@ -11,7 +11,6 @@ export const CONFIG = {
       name: "Enable History with data",
       description: "Enable history tracking with data for ForestRun",
       options: {
-        enableDataHistory: true,
         enableHistory: true,
         defaultHistorySize: 1,
       },
