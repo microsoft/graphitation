@@ -8,14 +8,6 @@ export const CONFIG = {
       options: {},
     },
     {
-      name: "Enable History",
-      description: "Enable history tracking for ForestRun",
-      options: {
-        enableHistory: true,
-        defaultHistorySize: 1,
-      },
-    },
-    {
       name: "Enable History with data",
       description: "Enable history tracking with data for ForestRun",
       options: {
@@ -25,7 +17,7 @@ export const CONFIG = {
       },
     },
   ] as const satisfies CacheConfiguration[],
-  watcherCounts: [0, 50],
+  watcherCounts: [0, 25, 50],
   sampling: {
     minSamples: 200,
     minExecutionTime: 200, //ms
