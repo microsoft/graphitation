@@ -6,10 +6,13 @@ import {
   ObjectValue,
   SourceObject,
   SourceCompositeList,
+  NestedList,
+  MissingFieldsMap,
 } from "../values/types";
 import { FieldInfo, NormalizedFieldEntry } from "../descriptor/types";
 import * as DifferenceKind from "./differenceKind";
 import * as DiffErrorKind from "./diffErrorKind";
+import * as ChangeKind from "./itemChangeKind";
 
 export type DiffEnv = {
   allowMissingFields?: boolean;
@@ -21,6 +24,10 @@ export type DiffEnv = {
     //   parentType: TypeName
     //   parentFieldName: string
   ) => string | number;
+
+  // History options
+  enableHistory: boolean;
+  enableDataHistory: boolean;
 };
 
 export type DiffContext = {
@@ -90,13 +97,39 @@ export type FieldEntryDifference = {
   state: ValueDifference;
 };
 
+export type CompositeListLayoutItemAdded = {
+  kind: typeof ChangeKind.ItemAdd;
+  index: number;
+  missingFields?: MissingFieldsMap | undefined;
+  data?: SourceObject | NestedList<SourceObject> | null;
+};
+
+export type CompositeListLayoutChangeItemRemoved = {
+  kind: typeof ChangeKind.ItemRemove;
+  oldIndex: number;
+  data?: SourceObject | NestedList<SourceObject>;
+};
+
+export type CompositeListLayoutIndexChange = {
+  kind: typeof ChangeKind.ItemIndexChange;
+  index: number;
+  oldIndex: number;
+  data?: SourceObject | NestedList<SourceObject>;
+};
+
+export type CompositeListLayoutChange =
+  | CompositeListLayoutChangeItemRemoved
+  | CompositeListLayoutIndexChange
+  | CompositeListLayoutItemAdded
+  | undefined;
+
 export type CompositeListDifference = {
   readonly kind: typeof DifferenceKind.CompositeListDifference;
   itemQueue: Set<number>;
   itemState: Map<number, ValueDifference>;
   dirtyItems?: Set<number>;
   layout?: CompositeListLayoutDifference;
-  deletedKeys?: string[];
+  itemsChanges: CompositeListLayoutChange[];
   errors?: DiffError[];
 };
 

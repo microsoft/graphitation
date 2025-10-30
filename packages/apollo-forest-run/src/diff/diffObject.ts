@@ -19,9 +19,12 @@ import type {
   ObjectDifference,
   ObjectDiffState,
   ValueDifference,
+  CompositeListLayoutChangeItemRemoved,
+  CompositeListLayoutChange,
 } from "./types";
 import * as Value from "../values";
 import * as Difference from "./difference";
+import * as LayoutChange from "./layoutChange";
 import { DiffErrorKind } from "./types";
 import { ValueKind } from "../values/types";
 
@@ -420,8 +423,9 @@ function diffCompositeListValue(
     return undefined;
   }
 
+  const itemsChanges: CompositeListLayoutChange[] = [];
   const layoutDiffResult =
-    diff?.layout ?? diffCompositeListLayout(context, base, model);
+    diff?.layout ?? diffCompositeListLayout(context, base, model, itemsChanges);
 
   if (layoutDiffResult === "BREAK") {
     // Fast-path, no further diffing necessary
@@ -432,6 +436,7 @@ function diffCompositeListValue(
   if (layoutDiffResult) {
     diff = diff ?? Difference.createCompositeListDifference();
     diff.layout = layoutDiffResult;
+    diff.itemsChanges = itemsChanges;
   }
 
   for (const index of itemQueue) {
@@ -478,6 +483,7 @@ function diffCompositeListLayout(
   context: DiffContext,
   base: CompositeListValue,
   model: CompositeListValue,
+  listContext: CompositeListLayoutChange[],
 ): CompositeListLayoutDifference | undefined | "BREAK" {
   // What constitutes layout change?
   // - Change of "keyed object" position in the list
@@ -489,6 +495,11 @@ function diffCompositeListLayout(
 
   const baseChunk = Value.isAggregate(base) ? base.chunks[0] : base;
   const modelChunk = Value.isAggregate(model) ? model.chunks[0] : model;
+  const unusedBaseIndixes = new Set<number>();
+  const itemChanges: CompositeListLayoutChange[] = [];
+  for (let i = 0; i < baseLen; i++) {
+    unusedBaseIndixes.add(i);
+  }
 
   let itemDiffRequired = false;
   let firstDirtyIndex = -1;
@@ -508,9 +519,15 @@ function diffCompositeListLayout(
       firstDirtyIndex = i;
       break;
     }
+    unusedBaseIndixes.delete(i);
   }
   // Fast-path: no layout difference found
   if (firstDirtyIndex === -1) {
+    for (const index of unusedBaseIndixes) {
+      listContext.push(
+        LayoutChange.createItemRemoved(index, baseChunk.data[index], env),
+      );
+    }
     if (baseLen > modelLen) {
       const layout: CompositeListLayoutDifference = [];
       for (let i = 0; i < modelLen; i++) {
@@ -530,6 +547,9 @@ function diffCompositeListLayout(
   for (let i = firstDirtyIndex; i < modelLen; i++) {
     if (modelChunk.data[i] === null) {
       layout.push(null);
+      if (baseChunk.data[i] !== null) {
+        itemChanges.push(LayoutChange.createItemAdded(i, null, env));
+      }
       continue;
     }
     const modelKey = resolveItemKey(env, modelChunk, i);
@@ -545,6 +565,17 @@ function diffCompositeListLayout(
     );
     if (baseIndex !== -1) {
       layout.push(baseIndex);
+      unusedBaseIndixes.delete(baseIndex);
+      if (i !== baseIndex) {
+        listContext.push(
+          LayoutChange.createIndexChange(
+            i,
+            baseIndex,
+            baseChunk.data[baseIndex],
+            env,
+          ),
+        );
+      }
     } else {
       const value = Value.aggregateListItemValue(model, i);
       if (Value.isCompositeNullValue(value)) {
@@ -561,6 +592,12 @@ function diffCompositeListLayout(
         );
       }
     }
+  }
+
+  for (const oldIndex of unusedBaseIndixes) {
+    listContext.push(
+      LayoutChange.createItemRemoved(oldIndex, baseChunk.data[oldIndex], env),
+    );
   }
   return layout;
 }

@@ -4,12 +4,24 @@ var { resolve } = require("path");
 
 if (require.main === module) {
   (async () => {
-    const __APOLLO_DEVTOOLS_SUBSCRIBER__ = (
-      await esbuild.build({
-        entryPoints: ["src/subscriber/index.tsx"],
-        write: false,
-        minify: false,
+    return [
+      esbuild.buildSync({
+        entryPoints: ["src/publisher/index.ts"],
+        write: true,
         bundle: true,
+        minify: true,
+        sourcemap: true,
+        outfile:
+          "../../examples/apollo-devtools-playground/public/apollo-devtools-publisher.js",
+        format: "iife",
+      }),
+      esbuild.buildSync({
+        entryPoints: ["src/subscriber/index.tsx"],
+        write: true,
+        minify: true,
+        bundle: true,
+        outfile:
+          "../../examples/apollo-devtools-playground/public/apollo-devtools-subscriber.js",
         format: "iife",
         sourcemap: true,
         define: {
@@ -26,23 +38,7 @@ if (require.main === module) {
             ),
           ),
         },
-      })
-    ).outputFiles[0].text;
-
-    return esbuild.build({
-      entryPoints: ["src/publisher/index.ts"],
-      write: true,
-      bundle: true,
-      minify: false,
-      sourcemap: false,
-      outfile:
-        "../../examples/apollo-devtools-playground/public/apollo-devtools.js",
-      format: "iife",
-      define: {
-        __APOLLO_DEVTOOLS_SUBSCRIBER__: JSON.stringify(
-          __APOLLO_DEVTOOLS_SUBSCRIBER__,
-        ),
-      },
-    });
+      }),
+    ];
   })();
 }

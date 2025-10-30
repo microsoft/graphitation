@@ -15,6 +15,7 @@ import {
   removeMessageResolver,
   updateMessageResolver,
   chatResolver,
+  shuffleMessagesResolver,
 } from "./resolver/resolvers";
 
 import createGraphQLContext, { IGraphQLContext } from "./graphql-context";
@@ -28,7 +29,11 @@ export const buildClient: () => ApolloClient<NormalizedCacheObject> = () => {
   });
 
   return new ApolloClient({
-    cache: new ForestRun({}),
+    cache: new ForestRun({
+      enableHistory: true,
+      enableDataHistory: true,
+      defaultHistorySize: 50,
+    }),
     connectToDevTools: true,
     link: from([
       new SchemaLink({
@@ -48,6 +53,7 @@ const mutationResolvers = {
   addMessage: addMessageResolver,
   removeMessage: removeMessageResolver,
   updateMessage: updateMessageResolver,
+  shuffleMessages: shuffleMessagesResolver,
 };
 
 const buildResolvers: () => ApolloResolvers = () => {

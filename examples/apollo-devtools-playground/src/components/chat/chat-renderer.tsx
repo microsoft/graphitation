@@ -7,12 +7,14 @@ interface IChatRenderer {
   ids: string[];
   removeMessage: (id: string) => void;
   addMessage: (message: string) => void;
+  shuffleMessages: () => void;
 }
 
 export const ChatRenderer = ({
   ids,
   removeMessage,
   addMessage,
+  shuffleMessages,
 }: IChatRenderer) => {
   const [messageText, setMessageText] = React.useState("");
   const styles = useChatRendererStyles();
@@ -32,6 +34,7 @@ export const ChatRenderer = ({
           }}
         />
         <Button onClick={() => addMessage(messageText)}>Add Message</Button>
+        <Button onClick={() => shuffleMessages()}>Shuffle Messages</Button>
       </div>
       <Messages ids={ids} removeMessage={removeMessage} />
     </>

@@ -25,6 +25,7 @@ import { ValueKind } from "../values/types";
 import { resolveSelection } from "../descriptor/resolvedSelection";
 import { accumulate } from "../jsutils/map";
 import { assert } from "../jsutils/assert";
+import { HistoryArray } from "../jsutils/historyArray";
 import {
   createCompositeListChunk,
   createCompositeNullChunk,
@@ -100,6 +101,15 @@ export function indexTree(
     operation.possibleSelections,
     rootRef,
   );
+
+  let history: HistoryArray | null = null;
+  if (env.enableHistory) {
+    const historySize = operation.historySize ?? env.defaultHistorySize ?? 0;
+    history =
+      previousTreeState?.history ??
+      new HistoryArray(historySize, env.enableHistory, env.enableDataHistory);
+  }
+
   return {
     operation,
     result,
@@ -109,6 +119,7 @@ export function indexTree(
     dataMap: context.dataMap,
     incompleteChunks: context.incompleteChunks,
     prev: previousTreeState,
+    history,
   };
 }
 

@@ -10,10 +10,10 @@ export const chatResolver = (
 
 export const addMessageResolver = (
   _: object,
-  { message }: any,
+  { text }: any,
   context: IGraphQLContext,
 ) => {
-  return context.addMessage(message);
+  return context.addMessage(text);
 };
 
 export const messageResolver = (
@@ -26,10 +26,10 @@ export const messageResolver = (
 
 export const updateMessageResolver = (
   _: object,
-  { id, message }: any,
+  { id, text }: any,
   context: IGraphQLContext,
 ) => {
-  return context.updateMessage(id, message);
+  return context.updateMessage(id, text);
 };
 
 export const removeMessageResolver = (
@@ -38,4 +38,12 @@ export const removeMessageResolver = (
   context: IGraphQLContext,
 ) => {
   return context.removeMessage(id);
+};
+
+export const shuffleMessagesResolver = (
+  _: object,
+  parameters: any,
+  context: IGraphQLContext,
+) => {
+  return context.shuffleMessages();
 };

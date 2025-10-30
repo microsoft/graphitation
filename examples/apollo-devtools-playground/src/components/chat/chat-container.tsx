@@ -6,6 +6,7 @@ const CHAT = gql`
   query Chat {
     chat {
       messages {
+        text
         id
       }
     }
@@ -13,10 +14,10 @@ const CHAT = gql`
 `;
 
 const ADD_MESSAGES = gql`
-  mutation addMessage($message: String!) {
-    addMessage(message: $message) {
+  mutation addMessage($text: String!) {
+    addMessage(text: $text) {
       id
-      message
+      text
     }
   }
 `;
@@ -27,15 +28,22 @@ const REMOVE_MESSAGE = gql`
   }
 `;
 
+const SHUFFLE_MESSAGES = gql`
+  mutation shuffleMessages {
+    shuffleMessages
+  }
+`;
+
 const ChatContainer = () => {
   const { data, refetch } = useQuery(CHAT);
   const [addMessage] = useMutation(ADD_MESSAGES);
   const [removeMessage] = useMutation(REMOVE_MESSAGE);
+  const [shuffleMessages] = useMutation(SHUFFLE_MESSAGES);
 
   const addMessageFunction = React.useCallback(
-    async (message: string) => {
+    async (text: string) => {
       await addMessage({
-        variables: { message },
+        variables: { text },
       });
       refetch();
     },
@@ -52,12 +60,22 @@ const ChatContainer = () => {
     [removeMessage, refetch],
   );
 
+  const shuffleMessagesFunction = React.useCallback(async () => {
+    await shuffleMessages();
+    refetch();
+  }, [shuffleMessages, refetch]);
+
   return (
     <div>
       <ChatRenderer
-        ids={data?.chat?.messages?.map(({ id }: { id: string }) => id) || []}
+        ids={
+          data?.chat?.messages?.map(
+            (message: { id: string } | null) => message?.id,
+          ) || []
+        }
         removeMessage={removeMessageFunction}
         addMessage={addMessageFunction}
+        shuffleMessages={shuffleMessagesFunction}
       />
     </div>
   );

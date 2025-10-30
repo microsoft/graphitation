@@ -9,7 +9,7 @@
     "directory": "packages/apollo-devtools"
   },
   "scripts": {
-    "playground": "watch 'node scripts/playground' ./src & (cd ../../examples/apollo-devtools-playground && yarn && yarn start)",
+    "playground": "watch 'node scripts/playground' ./src & yarn workspace graphql-playground start",
     "build": "node scripts/build-single-bundle && node scripts/build-separated-bundles",
     "watch": "watch 'node scripts/build.js'",
     "lint": "monorepo-scripts lint",

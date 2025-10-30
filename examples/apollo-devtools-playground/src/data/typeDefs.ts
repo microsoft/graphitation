@@ -1,7 +1,7 @@
 const typeDefs = `
 type Message {
   id: ID!
-  message: String!
+  text: String!
 }
 
 type Chat {
@@ -14,9 +14,10 @@ type Query {
 }
 
 type Mutation {
-  addMessage(message: String!): Message!
+  addMessage(text: String!): Message!
   removeMessage(id: ID!): Boolean!
-  updateMessage(id: ID!, message: String!): Message!
+  updateMessage(id: ID!, text: String!): Message!
+  shuffleMessages: Boolean!
 }
 `;
 
