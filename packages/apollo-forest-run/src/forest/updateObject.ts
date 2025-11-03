@@ -208,7 +208,6 @@ function updateCompositeListValue(
   const layoutDiff = difference.layout;
   let dirty = false; // Only dirty on self changes - item replacement/filler, layout changes (ignores child changes)
   let copy = drafts.get(base.data);
-  const arrayChanges = difference.itemsChanges;
   assert(Array.isArray(copy) || copy === undefined);
   statsLogger?.copyChunkStats(base, copy);
 
@@ -276,7 +275,7 @@ function updateCompositeListValue(
       assert(newValue.data);
       accumulateMissingFields(context, newValue);
       result[i] = newValue.data;
-      arrayChanges.push(
+      context.childChanges.push(
         LayoutChange.createItemAdded(
           i,
           newValue.data,
@@ -307,7 +306,6 @@ function updateCompositeListValue(
   if (copy.length !== base.data.length) {
     dirty = true;
   }
-  context.childChanges = arrayChanges;
 
   return copy ?? base.data;
 }
