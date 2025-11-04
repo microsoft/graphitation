@@ -496,7 +496,6 @@ function diffCompositeListLayout(
   const baseChunk = Value.isAggregate(base) ? base.chunks[0] : base;
   const modelChunk = Value.isAggregate(model) ? model.chunks[0] : model;
   const unusedBaseIndixes = new Set<number>();
-  const itemChanges: CompositeListLayoutChange[] = [];
   for (let i = 0; i < baseLen; i++) {
     unusedBaseIndixes.add(i);
   }
@@ -548,7 +547,7 @@ function diffCompositeListLayout(
     if (modelChunk.data[i] === null) {
       layout.push(null);
       if (baseChunk.data[i] !== null) {
-        itemChanges.push(LayoutChange.createItemAdded(i, null, env));
+        listContext.push(LayoutChange.createItemAdded(i, null, env));
       }
       continue;
     }

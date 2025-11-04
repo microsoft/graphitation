@@ -37,6 +37,13 @@ export function invalidateReadResults(
 
       if (results) {
         markChangedNodesAsDirty(results, nodeDiffs, incomingResult);
+        if (shouldPushOptimisticHistory(env, targetForest)) {
+          results.outputTree.history?.addOptimisticHistoryEntry(
+            results.outputTree,
+            nodeDiffs,
+            incomingResult,
+          );
+        }
       }
       if (optimisticResults) {
         markChangedNodesAsDirty(optimisticResults, nodeDiffs, incomingResult);
@@ -174,6 +181,13 @@ function markChangedNodesAsDirty(
       currentDirtyFields.add(field.name);
     }
   }
+}
+
+function shouldPushOptimisticHistory(
+  env: CacheEnv,
+  targetForest: DataForest | OptimisticLayer,
+): boolean {
+  return env.enableHistory && targetForest.layerTag !== null;
 }
 
 const EMPTY_ARRAY = Object.freeze([]);

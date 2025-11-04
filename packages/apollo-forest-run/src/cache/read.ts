@@ -137,7 +137,7 @@ function readOperation(
       OPERATION_HISTORY_SYMBOL,
       {
         get() {
-          return readState.outputTree.history?.getAll() ?? [];
+          return readState.outputTree.history?.items;
         },
         enumerable: false,
         configurable: true,

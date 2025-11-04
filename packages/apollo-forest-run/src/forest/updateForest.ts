@@ -47,7 +47,11 @@ export function updateAffectedTrees(
     }
     allUpdated.push(result);
 
-    result.updatedTree.history?.push(currentTreeState, result, incomingResult);
+    result.updatedTree.history.addHistoryEntry(
+      currentTreeState,
+      result,
+      incomingResult,
+    );
     // Reset previous tree state on commit
     result.updatedTree.prev = null;
     replaceTree(forest, result.updatedTree);

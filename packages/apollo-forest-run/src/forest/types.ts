@@ -5,6 +5,7 @@ import {
   PossibleSelection,
   PossibleSelections,
   TypeName,
+  VariableValues,
 } from "../descriptor/types";
 import {
   CompositeListChunk,
@@ -30,7 +31,7 @@ import { UpdateTreeStats } from "../telemetry/updateStats/types";
 import { UpdateLogger } from "../telemetry/updateStats/updateLogger";
 import { HistoryArray } from "../jsutils/historyArray";
 import type * as DifferenceKind from "../diff/differenceKind";
-import { CompositeListLayoutChange } from "../diff/types";
+import { CompositeListLayoutChange, NodeDifferenceMap } from "../diff/types";
 
 export type IndexedTree = {
   operation: OperationDescriptor;
@@ -52,7 +53,7 @@ export type IndexedTree = {
   incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
 
   // Operation history for debugging
-  history: HistoryArray | null;
+  history: HistoryArray;
 
   // ApolloCompat
   danglingReferences?: Set<NodeKey>;
@@ -62,12 +63,12 @@ export type FieldChangeWithPath = FieldChange & {
   path: ReadonlyArray<string | number>;
 };
 
-export type HistoryEntry = {
+type HistoryEntryBase = {
   timestamp: number;
-  operationName: string;
-  variables: Record<string, unknown>;
-  changes: ReadonlyArray<FieldChangeWithPath>;
-  missingFields: MissingFieldsMap;
+  modifyingOperation: {
+    name: string;
+    variables: VariableValues;
+  };
   data:
     | {
         current?: OperationResult;
@@ -77,18 +78,19 @@ export type HistoryEntry = {
     | undefined;
 };
 
-export type IndexedForest = {
-  trees: Map<OperationId, IndexedTree>;
-  extraRootIds: Map<NodeKey, TypeName>;
-  operationsByNodes: Map<NodeKey, Set<OperationId>>; // May contain false positives
-  operationsWithErrors: Set<OperationDescriptor>; // May contain false positives
-  deletedNodes: Set<NodeKey>;
+export type RegularHistoryEntry = {
+  kind: "Regular";
+  changes: ReadonlyArray<FieldChangeWithPath>;
+  missingFields: MissingFieldsMap;
 };
 
-export type Source = Readonly<SourceObject | SourceCompositeList>;
-export type Draft = SourceObject | SourceCompositeList;
+export type OptimisticHistoryEntry = {
+  kind: "Optimistic";
+  nodeDiffs: NodeDifferenceMap;
+};
 
-export type UpdateForestStats = (UpdateTreeStats | null)[];
+export type HistoryEntry = (RegularHistoryEntry | OptimisticHistoryEntry) &
+  HistoryEntryBase;
 
 export type FieldChange = (
   | {
@@ -107,6 +109,19 @@ export type FieldChange = (
 ) & {
   fieldInfo: FieldInfo;
 };
+
+export type IndexedForest = {
+  trees: Map<OperationId, IndexedTree>;
+  extraRootIds: Map<NodeKey, TypeName>;
+  operationsByNodes: Map<NodeKey, Set<OperationId>>; // May contain false positives
+  operationsWithErrors: Set<OperationDescriptor>; // May contain false positives
+  deletedNodes: Set<NodeKey>;
+};
+
+export type Source = Readonly<SourceObject | SourceCompositeList>;
+export type Draft = SourceObject | SourceCompositeList;
+
+export type UpdateForestStats = (UpdateTreeStats | null)[];
 
 // Changed chunks map only contains chunks with immediate changes (i.e. "Replacement", "Filler" + list layout changes).
 //   Does not contain parent chunks which were affected only because some nested chunk has changed.

@@ -417,7 +417,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
 
     const output: SerializedCache = {};
     for (const [_, tree] of dataForest.trees.entries()) {
-      const historyLength = tree.history.getAll()?.length ?? 0;
+      const historyLength = tree.history?.items?.length ?? 0;
       output[key(tree.operation)] = stableConvert(
         tree.operation,
         tree.result.data,
@@ -429,7 +429,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
       for (const layer of this.store.optimisticLayers) {
         for (const [id, optimisticTree] of layer.trees.entries()) {
           const tree = dataForest.trees.get(id);
-          const historyLength = tree?.history.getAll()?.length ?? 0;
+          const historyLength = tree?.history?.items?.length ?? 0;
           output[key(optimisticTree.operation)] = stableConvert(
             optimisticTree.operation,
             tree?.result.data ?? null,

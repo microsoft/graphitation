@@ -102,14 +102,6 @@ export function indexTree(
     rootRef,
   );
 
-  let history: HistoryArray | null = null;
-  if (env.enableHistory) {
-    const historySize = operation.historySize ?? env.defaultHistorySize ?? 0;
-    history =
-      previousTreeState?.history ??
-      new HistoryArray(historySize, env.enableHistory, env.enableDataHistory);
-  }
-
   return {
     operation,
     result,
@@ -119,7 +111,7 @@ export function indexTree(
     dataMap: context.dataMap,
     incompleteChunks: context.incompleteChunks,
     prev: previousTreeState,
-    history,
+    history: previousTreeState?.history ?? new HistoryArray(operation, env),
   };
 }
 
