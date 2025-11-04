@@ -12,10 +12,13 @@ import { Dismiss20Regular, ChevronRight20Regular } from "@fluentui/react-icons";
 import { CacheObjectWithSize } from "./types";
 import { ApolloCacheContext } from "../contexts/apollo-cache-context";
 
-interface HistoryEntry {
+interface RegularHistoryEntry {
   timestamp: number;
-  operationName: string;
-  variables: Record<string, unknown>;
+  kind: "Regular";
+  modifyingOperation: {
+    name: string;
+    variables: Record<string, unknown>;
+  };
   changes: Array<{
     kind: number; // 0=Replacement, 1=Filler, 3=CompositeListDifference
     path: ReadonlyArray<string | number>;
@@ -43,6 +46,50 @@ interface HistoryEntry {
     changes: any[];
   };
 }
+
+interface OptimisticHistoryEntry {
+  timestamp: number;
+  kind: "Optimistic";
+  modifyingOperation: {
+    name: string;
+    variables: Record<string, unknown>;
+  };
+  nodeDiffs: Array<
+    [
+      string,
+      {
+        kind: number;
+        dirtyFields?: string[]; // Serialized as array from Set
+        complete?: boolean;
+        fieldState?: Array<
+          [
+            string,
+            {
+              fieldEntry?: any;
+              kind: number;
+              oldValue?: any;
+              newValue?: any;
+            },
+          ]
+        >;
+      },
+    ]
+  >; // Serialized as array of tuples from Map
+  missingFields?: Array<{
+    objectIdentifier: string;
+    fields: Array<{ name: string; dataKey: string }>;
+  }>;
+  current: {
+    result: any;
+  };
+  incoming: {
+    result?: any;
+    operation?: any;
+  };
+  // No "updated" for optimistic entries
+}
+
+type HistoryEntry = RegularHistoryEntry | OptimisticHistoryEntry;
 
 interface ApolloCacheHistoryProps {
   item: CacheObjectWithSize | undefined;
@@ -182,7 +229,17 @@ export const ApolloCacheHistory = React.memo(
                         0,
                       )
                     : 0;
-                  const changeCount = entry.changes?.length || 0;
+
+                  // Use type guard to determine change count
+                  let changeCount = 0;
+                  if (entry.kind === "Optimistic") {
+                    // OptimisticHistoryEntry - nodeDiffs is array of tuples
+                    changeCount = entry.nodeDiffs.length;
+                  } else {
+                    // RegularHistoryEntry
+                    changeCount = entry.changes.length;
+                  }
+
                   return (
                     <div
                       key={index}
@@ -191,6 +248,8 @@ export const ApolloCacheHistory = React.memo(
                         selectedEntryIndex === index &&
                           classes.timelineItemActive,
                         hasIncompleteData && classes.timelineItemIncomplete,
+                        entry.kind === "Optimistic" &&
+                          classes.timelineItemOptimistic,
                       )}
                       onClick={() => setSelectedEntryIndex(index)}
                     >
@@ -201,11 +260,17 @@ export const ApolloCacheHistory = React.memo(
                         {new Date(entry.timestamp).toLocaleTimeString()}
                       </Text>
                       <Text size={200} className={classes.operationName}>
-                        {entry.operationName || "Anonymous Operation"}
+                        {entry.modifyingOperation?.name ||
+                          "Anonymous Operation"}
                       </Text>
                       {changeCount > 0 && (
                         <Text size={100} className={classes.changeCountTag}>
                           {changeCount} changes
+                        </Text>
+                      )}
+                      {entry.kind === "Optimistic" && (
+                        <Text size={100} className={classes.optimisticTag}>
+                          Optimistic
                         </Text>
                       )}
                       {hasIncompleteData && (
@@ -243,11 +308,19 @@ interface HistoryDetailsProps {
 
 const HistoryDetails = React.memo(({ entry, classes }: HistoryDetailsProps) => {
   const [expandedSections, setExpandedSections] = useState<
-    Set<"changes" | "current" | "incoming" | "updated" | "missing">
-  >(new Set(["changes"]));
+    Set<
+      "changes" | "current" | "incoming" | "updated" | "missing" | "nodeDiffs"
+    >
+  >(new Set(["changes", "nodeDiffs"]));
 
   const toggleSection = (
-    section: "changes" | "current" | "incoming" | "updated" | "missing",
+    section:
+      | "changes"
+      | "current"
+      | "incoming"
+      | "updated"
+      | "missing"
+      | "nodeDiffs",
   ) => {
     setExpandedSections((prev) => {
       const next = new Set(prev);
@@ -261,9 +334,43 @@ const HistoryDetails = React.memo(({ entry, classes }: HistoryDetailsProps) => {
   };
 
   const changes = useMemo(() => {
-    console.log("[Subscriber] Extracting changes from:", entry.changes);
-    const result = extractChangesFromFlat(entry.changes || []);
-    console.log("[Subscriber] Extracted changes:", result);
+    // Use type guard to handle regular vs optimistic updates
+    if (entry.kind === "Regular") {
+      // RegularHistoryEntry with changes array
+      console.log(
+        "[Subscriber] Extracting changes from changes array:",
+        entry.changes,
+      );
+      const result = extractChangesFromFlat(entry.changes);
+      console.log("[Subscriber] Extracted changes:", result);
+      return result;
+    }
+
+    // OptimisticHistoryEntry with nodeDiffs (serialized as array of tuples)
+    console.log(
+      "[Subscriber] Extracting changes from nodeDiffs:",
+      entry.nodeDiffs,
+    );
+
+    // nodeDiffs is already an array of tuples from serialization
+    const nodeDiffsArray = entry.nodeDiffs;
+
+    const changesArray: any[] = [];
+    nodeDiffsArray.forEach(([nodeKey, diff]) => {
+      if (diff.dirtyFields) {
+        // dirtyFields is already an array (serialized from Set)
+        diff.dirtyFields.forEach((fieldName: string) => {
+          changesArray.push({
+            kind: diff.kind || 0,
+            path: [nodeKey, fieldName],
+            fieldInfo: { name: fieldName, dataKey: fieldName },
+          });
+        });
+      }
+    });
+
+    const result = extractChangesFromFlat(changesArray);
+    console.log("[Subscriber] Extracted changes from nodeDiffs:", result);
     return result;
   }, [entry]);
 
@@ -272,106 +379,233 @@ const HistoryDetails = React.memo(({ entry, classes }: HistoryDetailsProps) => {
       {/* Operation Header */}
       <div className={classes.operationHeader}>
         <div className={classes.operationTitle}>
-          <Text size={400} weight="semibold">
-            {entry.operationName || "Anonymous Operation"}
-          </Text>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Text size={400} weight="semibold">
+              {entry.modifyingOperation?.name || "Anonymous Operation"}
+            </Text>
+            {entry.kind === "Optimistic" && (
+              <span className={classes.optimisticBadge}>Optimistic</span>
+            )}
+          </div>
           <Text size={200} className={classes.operationTimestamp}>
             {new Date(entry.timestamp).toLocaleString()}
           </Text>
         </div>
-        {entry.variables && Object.keys(entry.variables).length > 0 && (
-          <div className={classes.operationVariablesBox}>
-            <Text size={200} weight="semibold">
-              Variables:
-            </Text>
-            <pre className={classes.variablesCode}>
-              {JSON.stringify(entry.variables, null, 2)}
-            </pre>
-          </div>
-        )}
+        {entry.modifyingOperation?.variables &&
+          Object.keys(entry.modifyingOperation.variables).length > 0 && (
+            <div className={classes.operationVariablesBox}>
+              <Text size={200} weight="semibold">
+                Variables:
+              </Text>
+              <pre className={classes.variablesCode}>
+                {JSON.stringify(entry.modifyingOperation.variables, null, 2)}
+              </pre>
+            </div>
+          )}
       </div>
 
-      {/* Changes Section */}
-      <div className={classes.section}>
-        <Button
-          appearance="transparent"
-          onClick={() => toggleSection("changes")}
-          className={classes.sectionHeader}
-        >
-          <ChevronRight20Regular
-            className={mergeClasses(
-              classes.chevron,
-              expandedSections.has("changes") && classes.chevronExpanded,
+      {/* Render different sections based on entry type */}
+      {entry.kind === "Regular" ? (
+        <>
+          {/* Changes Section - Regular Updates */}
+          <div className={classes.section}>
+            <Button
+              appearance="transparent"
+              onClick={() => toggleSection("changes")}
+              className={classes.sectionHeader}
+            >
+              <ChevronRight20Regular
+                className={mergeClasses(
+                  classes.chevron,
+                  expandedSections.has("changes") && classes.chevronExpanded,
+                )}
+              />
+              <Title3>
+                Changes ({changes.fieldChanges.length} field changes,{" "}
+                {changes.listChanges.length} list changes)
+              </Title3>
+            </Button>
+            {expandedSections.has("changes") && (
+              <div className={classes.sectionContent}>
+                {changes.fieldChanges.length > 0 && (
+                  <div className={classes.changesGroup}>
+                    <Text weight="semibold" size={300}>
+                      Field Changes:
+                    </Text>
+                    {changes.fieldChanges.map((change, idx) => (
+                      <FieldChangeItem
+                        key={idx}
+                        change={change}
+                        classes={classes}
+                      />
+                    ))}
+                  </div>
+                )}
+                {changes.listChanges.length > 0 && (
+                  <div className={classes.changesGroup}>
+                    <Text weight="semibold" size={300}>
+                      List Changes:
+                    </Text>
+                    {changes.listChanges.map((change, idx) => (
+                      <ListChangeItem
+                        key={idx}
+                        change={change}
+                        classes={classes}
+                      />
+                    ))}
+                  </div>
+                )}
+                {changes.fieldChanges.length === 0 &&
+                  changes.listChanges.length === 0 && (
+                    <Text size={200} className={classes.noChanges}>
+                      No detailed changes recorded
+                    </Text>
+                  )}
+              </div>
             )}
-          />
-          <Title3>
-            Changes ({changes.fieldChanges.length} field changes,{" "}
-            {changes.listChanges.length} list changes)
-          </Title3>
-        </Button>
-        {expandedSections.has("changes") && (
-          <div className={classes.sectionContent}>
-            {changes.fieldChanges.length > 0 && (
-              <div className={classes.changesGroup}>
-                <Text weight="semibold" size={300}>
-                  Field Changes:
-                </Text>
-                {changes.fieldChanges.map((change, idx) => (
-                  <FieldChangeItem
-                    key={idx}
-                    change={change}
-                    classes={classes}
-                  />
+          </div>
+
+          {/* New State Section - Regular Updates Only */}
+          <div className={classes.section}>
+            <Button
+              appearance="transparent"
+              onClick={() => toggleSection("updated")}
+              className={classes.sectionHeader}
+            >
+              <ChevronRight20Regular
+                className={mergeClasses(
+                  classes.chevron,
+                  expandedSections.has("updated") && classes.chevronExpanded,
+                )}
+              />
+              <Title3>New State</Title3>
+            </Button>
+            {expandedSections.has("updated") && (
+              <div className={classes.sectionContent}>
+                <DiffViewer
+                  oldData={entry.current.result}
+                  newData={entry.updated.result}
+                  classes={classes}
+                />
+              </div>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Node Diffs Section - Optimistic Updates */}
+          <div className={classes.section}>
+            <Button
+              appearance="transparent"
+              onClick={() => toggleSection("nodeDiffs")}
+              className={classes.sectionHeader}
+            >
+              <ChevronRight20Regular
+                className={mergeClasses(
+                  classes.chevron,
+                  expandedSections.has("nodeDiffs") && classes.chevronExpanded,
+                )}
+              />
+              <Title3>
+                Node Differences ({entry.nodeDiffs.length} nodes affected)
+              </Title3>
+            </Button>
+            {expandedSections.has("nodeDiffs") && (
+              <div className={classes.sectionContent}>
+                {entry.nodeDiffs.map(([nodeKey, diff], idx) => (
+                  <div key={idx} className={classes.changesGroup}>
+                    <Text weight="semibold" size={300}>
+                      Node: {nodeKey}
+                    </Text>
+                    <div style={{ marginLeft: "16px", marginTop: "4px" }}>
+                      <Text size={200} style={{ color: "#666" }}>
+                        Kind: {diff.kind}, Complete:{" "}
+                        {diff.complete ? "Yes" : "No"}
+                      </Text>
+                    </div>
+
+                    {/* Display field changes with old/new values */}
+                    {diff.fieldState && diff.fieldState.length > 0 && (
+                      <div style={{ marginLeft: "16px", marginTop: "12px" }}>
+                        <Text weight="semibold" size={200}>
+                          Field Changes:
+                        </Text>
+                        {diff.fieldState.map(([fieldKey, state], fieldIdx) => (
+                          <div
+                            key={fieldIdx}
+                            style={{
+                              marginTop: "8px",
+                              paddingLeft: "12px",
+                              borderLeft: "2px solid #e0e0e0",
+                            }}
+                          >
+                            <Text
+                              size={200}
+                              weight="semibold"
+                              style={{ color: "#0078d4" }}
+                            >
+                              {fieldKey}
+                            </Text>
+                            <div
+                              style={{
+                                marginTop: "4px",
+                                display: "flex",
+                                gap: "16px",
+                              }}
+                            >
+                              <div style={{ flex: 1 }}>
+                                <Text
+                                  size={100}
+                                  style={{ color: "#666", display: "block" }}
+                                >
+                                  Old Value:
+                                </Text>
+                                <pre
+                                  className={classes.codeBlock}
+                                  style={{ fontSize: "11px", marginTop: "4px" }}
+                                >
+                                  {JSON.stringify(state.oldValue, null, 2)}
+                                </pre>
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <Text
+                                  size={100}
+                                  style={{ color: "#666", display: "block" }}
+                                >
+                                  New Value:
+                                </Text>
+                                <pre
+                                  className={classes.codeBlock}
+                                  style={{ fontSize: "11px", marginTop: "4px" }}
+                                >
+                                  {JSON.stringify(state.newValue, null, 2)}
+                                </pre>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Fallback to dirty fields if no fieldState */}
+                    {(!diff.fieldState || diff.fieldState.length === 0) &&
+                      diff.dirtyFields &&
+                      diff.dirtyFields.length > 0 && (
+                        <div style={{ marginLeft: "16px", marginTop: "8px" }}>
+                          <Text size={200}>
+                            Dirty Fields: {diff.dirtyFields.join(", ")}
+                          </Text>
+                        </div>
+                      )}
+                  </div>
                 ))}
               </div>
             )}
-            {changes.listChanges.length > 0 && (
-              <div className={classes.changesGroup}>
-                <Text weight="semibold" size={300}>
-                  List Changes:
-                </Text>
-                {changes.listChanges.map((change, idx) => (
-                  <ListChangeItem key={idx} change={change} classes={classes} />
-                ))}
-              </div>
-            )}
-            {changes.fieldChanges.length === 0 &&
-              changes.listChanges.length === 0 && (
-                <Text size={200} className={classes.noChanges}>
-                  No detailed changes recorded
-                </Text>
-              )}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
-      {/* New State Section with Diff Toggle */}
-      <div className={classes.section}>
-        <Button
-          appearance="transparent"
-          onClick={() => toggleSection("updated")}
-          className={classes.sectionHeader}
-        >
-          <ChevronRight20Regular
-            className={mergeClasses(
-              classes.chevron,
-              expandedSections.has("updated") && classes.chevronExpanded,
-            )}
-          />
-          <Title3>New State</Title3>
-        </Button>
-        {expandedSections.has("updated") && (
-          <div className={classes.sectionContent}>
-            <DiffViewer
-              oldData={entry.current.result}
-              newData={entry.updated.result}
-              classes={classes}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Incoming Data Section */}
+      {/* Incoming Data Section - Both types */}
       {entry.incoming?.result && (
         <div className={classes.section}>
           <Button

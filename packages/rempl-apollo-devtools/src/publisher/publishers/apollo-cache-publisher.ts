@@ -48,8 +48,8 @@ export class ApolloCachePublisher {
                 treeKey === operationKey ||
                 operationKey.startsWith(treeKey)
               ) {
-                if (tree.history && typeof tree.history.getAll === "function") {
-                  const history = tree.history.getAll();
+                if (tree.history) {
+                  const history = tree.history.items;
                   if (history && history.length > 0) {
                     // Transform to JSON-friendly format and include tree operation data
                     return this.serializeHistory(history, tree.operation);
@@ -76,10 +76,11 @@ export class ApolloCachePublisher {
     return history.map((entry, index) => {
       const serialized: any = {
         timestamp: entry.timestamp,
-        operationName: entry.operationName || "Anonymous Operation",
-        variables: entry.variables || {},
-        changes: entry.changes ? this.serializeFieldChanges(entry.changes) : [],
-        missingFields: this.serializeMissingFields(entry.missingFields),
+        kind: entry.kind,
+        modifyingOperation: entry.modifyingOperation || {
+          name: "Anonymous Operation",
+          variables: {},
+        },
         current: {
           result: entry.data?.current,
         },
@@ -89,20 +90,87 @@ export class ApolloCachePublisher {
             ? {
                 debugName: treeOperation.debugName,
                 definition: treeOperation.definition,
-                variables: entry.variables || treeOperation.variables,
+                variables:
+                  entry.modifyingOperation?.variables ||
+                  treeOperation.variables,
                 variablesWithDefaults: treeOperation.variablesWithDefaults,
               }
             : undefined,
         },
-        updated: {
+      };
+
+      // Handle regular entries with changes array
+      if (entry.kind === "Regular" && entry.changes) {
+        serialized.changes = this.serializeFieldChanges(entry.changes);
+        serialized.missingFields = this.serializeMissingFields(
+          entry.missingFields,
+        );
+        serialized.updated = {
           result: entry.data?.updated,
           changes: entry.changes || [],
-        },
-      };
+        };
+      }
+
+      // Handle optimistic entries with nodeDiffs
+      if (entry.kind === "Optimistic" && entry.nodeDiffs) {
+        serialized.nodeDiffs = this.serializeNodeDiffs(entry.nodeDiffs);
+        // No "updated" for optimistic entries
+      }
 
       console.log("[Publisher] Serialized entry:", serialized);
       return serialized;
     });
+  }
+
+  private serializeNodeDiffs(
+    nodeDiffs: Map<string, any>,
+  ): Array<[string, any]> {
+    // Convert Map to array of tuples for JSON serialization
+    const result: Array<[string, any]> = [];
+
+    nodeDiffs.forEach((diff, nodeKey) => {
+      console.log("[Publisher] Serializing nodeDiff for node:", nodeKey, diff);
+
+      const serializedDiff: any = {
+        kind: diff.kind,
+        complete: diff.complete,
+      };
+
+      // Convert Set to Array for dirtyFields
+      if (diff.dirtyFields) {
+        serializedDiff.dirtyFields = Array.from(diff.dirtyFields);
+      }
+
+      // Serialize fieldState Map to array of tuples with old/new values
+      if (diff.fieldState && diff.fieldState instanceof Map) {
+        serializedDiff.fieldState = [];
+        diff.fieldState.forEach((state: any, fieldKey: string) => {
+          console.log("[Publisher] Field state for", fieldKey, ":", state);
+
+          const serializedState: any = {
+            kind: state.kind,
+          };
+
+          // The state might have different structures depending on kind
+          if (state.oldValue !== undefined) {
+            serializedState.oldValue = this.serializeGraphValue(state.oldValue);
+          }
+          if (state.newValue !== undefined) {
+            serializedState.newValue = this.serializeGraphValue(state.newValue);
+          }
+          if (state.fieldEntry !== undefined) {
+            serializedState.fieldEntry = state.fieldEntry;
+          }
+
+          serializedDiff.fieldState.push([fieldKey, serializedState]);
+        });
+      }
+
+      console.log("[Publisher] Serialized diff:", serializedDiff);
+      result.push([nodeKey, serializedDiff]);
+    });
+
+    return result;
   }
 
   private serializeFieldChanges(changes: any[]): any[] {

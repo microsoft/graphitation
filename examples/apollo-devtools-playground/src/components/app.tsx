@@ -2,6 +2,8 @@ import * as React from "react";
 import { ApolloProvider } from "@apollo/client";
 import { buildClient } from "data/data-builder";
 import ChatContainer from "./chat/chat-container";
+import { UserPreferenceTest } from "./user-preference-test";
+import { OptimisticUpdateDemo } from "./optimistic-update-demo";
 import { FluentProvider, teamsLightTheme } from "@fluentui/react-components";
 
 const client = buildClient();
@@ -20,6 +22,8 @@ const App = () => {
   return (
     <FluentProvider theme={teamsLightTheme}>
       <ApolloProvider client={client}>
+        <OptimisticUpdateDemo />
+        <UserPreferenceTest />
         <ChatContainer />
       </ApolloProvider>
     </FluentProvider>

@@ -8,9 +8,18 @@ type Chat {
   messages: [Message]!
 }
 
+type UserPreference {
+  id: ID!
+  theme: String
+  language: String
+  notifications: Boolean
+  privacy: String
+}
+
 type Query {
   message(id: ID!): Message!
   chat: Chat!
+  userPreference: UserPreference!
 }
 
 type Mutation {

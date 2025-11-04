@@ -5,6 +5,14 @@ type Message = {
   text: string;
 };
 
+type UserPreference = {
+  id: string;
+  theme?: string;
+  language?: string;
+  notifications?: boolean;
+  privacy?: string;
+};
+
 export type Chat = {
   messages: Message[];
 };
@@ -16,6 +24,7 @@ export interface IGraphQLContext {
   chat: () => Chat;
   removeMessage: (id: string) => boolean;
   shuffleMessages: () => boolean;
+  userPreference: () => Promise<UserPreference>;
 }
 
 const createGraphQLContext: () => IGraphQLContext = () => {
@@ -67,5 +76,16 @@ class GraphQLContext implements IGraphQLContext {
     }
     GraphQLContext.messages = messages;
     return true;
+  };
+  userPreference = async (): Promise<UserPreference> => {
+    // Simulate a slow async operation (3 seconds)
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    return {
+      id: "user-pref-1",
+      theme: "dark",
+      language: "en",
+      notifications: true,
+      privacy: "public",
+    };
   };
 }

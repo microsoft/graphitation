@@ -42,6 +42,7 @@ export function invalidateReadResults(
             results.outputTree,
             nodeDiffs,
             incomingResult,
+            difference.newNodes,
           );
         }
       }

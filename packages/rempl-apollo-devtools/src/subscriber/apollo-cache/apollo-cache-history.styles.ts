@@ -144,6 +144,36 @@ export const useStyles = makeStyles({
     color: tokens.colorNeutralForeground3,
     marginTop: tokens.spacingVerticalXXS,
   },
+  optimisticTag: {
+    fontSize: tokens.fontSizeBase100,
+    color: tokens.colorBrandForeground1,
+    fontWeight: tokens.fontWeightSemibold,
+    marginTop: tokens.spacingVerticalXXS,
+    ...shorthands.padding(
+      tokens.spacingVerticalXXS,
+      tokens.spacingHorizontalXS,
+    ),
+    backgroundColor: "rgba(0, 120, 212, 0.15)",
+    ...shorthands.borderRadius(tokens.borderRadiusSmall),
+  },
+  timelineItemOptimistic: {
+    backgroundColor: "rgba(0, 120, 212, 0.08)",
+    ...shorthands.borderLeft("3px", "solid", tokens.colorBrandStroke1),
+  },
+  optimisticBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    ...shorthands.padding(
+      tokens.spacingVerticalXXS,
+      tokens.spacingHorizontalXS,
+    ),
+    backgroundColor: "rgba(0, 120, 212, 0.15)",
+    color: tokens.colorBrandForeground1,
+    ...shorthands.borderRadius(tokens.borderRadiusSmall),
+    fontSize: tokens.fontSizeBase200,
+    fontWeight: tokens.fontWeightSemibold,
+    marginLeft: tokens.spacingHorizontalS,
+  },
   detailsPanel: {
     overflowY: "auto",
     ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalL),

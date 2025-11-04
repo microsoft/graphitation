@@ -16,6 +16,7 @@ import {
   updateMessageResolver,
   chatResolver,
   shuffleMessagesResolver,
+  userPreferenceResolver,
 } from "./resolver/resolvers";
 
 import createGraphQLContext, { IGraphQLContext } from "./graphql-context";
@@ -47,6 +48,7 @@ export const buildClient: () => ApolloClient<NormalizedCacheObject> = () => {
 const queryResolvers = {
   message: messageResolver,
   chat: chatResolver,
+  userPreference: userPreferenceResolver,
 };
 
 const mutationResolvers = {

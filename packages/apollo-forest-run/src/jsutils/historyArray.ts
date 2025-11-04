@@ -73,13 +73,11 @@ export class HistoryArray {
       const chunkPath = getDataPathForDebugging({ findParent }, chunk);
 
       for (const fieldChange of fieldChanges) {
+        const { fieldInfo, ...restOfFieldChange } = fieldChange;
         changedFields.push({
-          path: [
-            ...chunkPath,
-            fieldChange?.fieldInfo?.dataKey ?? fieldChange.index,
-          ],
-          ...fieldChange,
-        });
+          path: [...chunkPath, fieldInfo.dataKey],
+          ...restOfFieldChange,
+        } as unknown as any); // TODO: fix typing here
       }
     }
 
@@ -95,7 +93,8 @@ export class HistoryArray {
   addOptimisticHistoryEntry(
     currentTree: IndexedTree,
     nodeDiffs: NodeDifferenceMap,
-    incomingResult?: IndexedTree,
+    incomingResult: IndexedTree | undefined,
+    updatedNodes: string[],
   ): void {
     if (!this.isEnabled) {
       return;
@@ -103,7 +102,8 @@ export class HistoryArray {
 
     const item: OptimisticHistoryEntry = {
       kind: "Optimistic",
-      nodeDiffs,
+      nodeDiffs: this.isDataHistoryEnabled ? nodeDiffs : undefined,
+      updatedNodes,
     };
 
     this.pushHistoryEntry(item, currentTree, incomingResult);
