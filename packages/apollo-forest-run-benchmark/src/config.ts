@@ -8,10 +8,19 @@ export const CONFIG = {
       options: {},
     },
     {
-      name: "Enable History with data",
-      description: "Enable history tracking with data for ForestRun",
+      name: "Enable History with size 1",
+      description: "History enabled with a size of 1",
       options: {
         enableHistory: true,
+        defaultHistorySize: 1,
+      },
+    },
+    {
+      name: "Enable Rich History",
+      description: "History enabled with rich data snapshots",
+      options: {
+        enableHistory: true,
+        enableRichHistory: true,
         defaultHistorySize: 1,
       },
     },

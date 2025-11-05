@@ -4,7 +4,7 @@ import type {
   OptimisticHistoryEntry,
   IndexedTree,
   UpdateTreeResult,
-  FieldChangeWithPath,
+  HistoryChange,
   ForestEnv,
 } from "../forest/types";
 import type { NodeDifferenceMap } from "../diff/types";
@@ -17,14 +17,14 @@ export class HistoryArray {
   private head = 0;
   private maxSize: number;
   private isEnabled: boolean;
-  private isDataHistoryEnabled: boolean;
+  private isRichHistoryEnabled: boolean;
 
   constructor(operation: OperationDescriptor, env: ForestEnv) {
     const historySize = operation.historySize ?? env.defaultHistorySize ?? 0;
 
     this.maxSize = historySize;
-    this.isEnabled = (env.enableDataHistory ?? false) && historySize > 0;
-    this.isDataHistoryEnabled = env.enableDataHistory ?? false;
+    this.isEnabled = (env.enableRichHistory ?? false) && historySize > 0;
+    this.isRichHistoryEnabled = env.enableRichHistory ?? false;
   }
 
   private pushHistoryEntry(
@@ -40,7 +40,7 @@ export class HistoryArray {
         name: incomingTree?.operation?.debugName ?? "Anonymous Operation",
         variables: incomingTree?.operation?.variables || {},
       },
-      data: this.isDataHistoryEnabled
+      data: this.isRichHistoryEnabled
         ? {
             current: currentTree.result,
             incoming: incomingTree?.result,
@@ -57,6 +57,17 @@ export class HistoryArray {
     }
   }
 
+  private getChunkPath(
+    currentTree: IndexedTree,
+    chunk: any,
+  ): (string | number)[] {
+    if (!this.isRichHistoryEnabled) {
+      return ["Enable enableRichHistory for full path"];
+    }
+    const findParent = createParentLocator(currentTree.dataMap);
+    return getDataPathForDebugging({ findParent }, chunk);
+  }
+
   addHistoryEntry(
     currentTree: IndexedTree,
     updatedTree: UpdateTreeResult,
@@ -65,19 +76,17 @@ export class HistoryArray {
     if (!this.isEnabled) {
       return;
     }
-    const changedFields: FieldChangeWithPath[] = [];
-
-    const findParent = createParentLocator(currentTree.dataMap);
+    const changedFields: HistoryChange[] = [];
 
     for (const [chunk, fieldChanges] of updatedTree.changes) {
-      const chunkPath = getDataPathForDebugging({ findParent }, chunk);
+      const chunkPath = this.getChunkPath(currentTree, chunk);
 
       for (const fieldChange of fieldChanges) {
         const { fieldInfo, ...restOfFieldChange } = fieldChange;
         changedFields.push({
           path: [...chunkPath, fieldInfo.dataKey],
           ...restOfFieldChange,
-        } as unknown as any); // TODO: fix typing here
+        });
       }
     }
 
@@ -102,7 +111,7 @@ export class HistoryArray {
 
     const item: OptimisticHistoryEntry = {
       kind: "Optimistic",
-      nodeDiffs: this.isDataHistoryEnabled ? nodeDiffs : undefined,
+      nodeDiffs: this.isRichHistoryEnabled ? nodeDiffs : undefined,
       updatedNodes,
     };
 

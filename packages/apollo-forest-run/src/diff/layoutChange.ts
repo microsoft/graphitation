@@ -23,7 +23,7 @@ export function createItemRemoved(
   return {
     kind: ChangeKind.ItemRemove,
     oldIndex,
-    data: env.enableDataHistory ? data : undefined,
+    data: env.enableRichHistory ? data : undefined,
   };
 }
 
@@ -39,8 +39,8 @@ export function createItemAdded(
   return {
     kind: ChangeKind.ItemAdd,
     index,
-    data: env.enableDataHistory ? data : undefined,
-    missingFields: env.enableDataHistory ? missingFields : undefined,
+    data: env.enableRichHistory ? data : undefined,
+    missingFields: env.enableRichHistory ? missingFields : undefined,
   };
 }
 
@@ -57,6 +57,6 @@ export function createIndexChange(
     kind: ChangeKind.ItemIndexChange,
     index,
     oldIndex,
-    data: env.enableDataHistory ? data : undefined,
+    data: env.enableRichHistory ? data : undefined,
   };
 }

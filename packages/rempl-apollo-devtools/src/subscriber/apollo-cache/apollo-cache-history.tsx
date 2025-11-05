@@ -20,7 +20,7 @@ interface RegularHistoryEntry {
     variables: Record<string, unknown>;
   };
   changes: Array<{
-    kind: number; // 0=Replacement, 1=Filler, 3=CompositeListDifference
+    kind: string; // "Replacement", "Filler", "CompositeListDifference"
     path: ReadonlyArray<string | number>;
     fieldInfo?: { name: string; dataKey: string };
     oldValue?: any;
@@ -361,7 +361,7 @@ const HistoryDetails = React.memo(({ entry, classes }: HistoryDetailsProps) => {
         // dirtyFields is already an array (serialized from Set)
         diff.dirtyFields.forEach((fieldName: string) => {
           changesArray.push({
-            kind: diff.kind || 0,
+            kind: diff.kind || "Replacement",
             path: [nodeKey, fieldName],
             fieldInfo: { name: fieldName, dataKey: fieldName },
           });
@@ -710,12 +710,12 @@ const FieldChangeItem = React.memo(
 
     // Generate a preview of the change for the header
     const changePreview = React.useMemo(() => {
-      if (change.kind === 0 && change.oldValue !== undefined) {
+      if (change.kind === "Replacement" && change.oldValue !== undefined) {
         // Replacement
         const oldPreview = getValuePreview(change.oldValue);
         const newPreview = getValuePreview(change.newValue);
         return `${oldPreview} → ${newPreview}`;
-      } else if (change.kind === 1) {
+      } else if (change.kind === "Filler") {
         // Filler
         const newPreview = getValuePreview(change.newValue);
         return `filled with ${newPreview}`;
@@ -730,7 +730,11 @@ const FieldChangeItem = React.memo(
       "unknown";
 
     const changeTypeLabel =
-      change.kind === 0 ? "modified" : change.kind === 1 ? "filled" : "unknown";
+      change.kind === "Replacement"
+        ? "modified"
+        : change.kind === "Filler"
+        ? "filled"
+        : "unknown";
 
     return (
       <div className={classes.changeItemRow}>
@@ -757,7 +761,7 @@ const FieldChangeItem = React.memo(
 
         {isExpanded && (
           <div className={classes.changeExpandedContent}>
-            {change.kind === 0 && (
+            {change.kind === "Replacement" && (
               <div className={classes.valueComparisonInline}>
                 <div>
                   <Text size={100} className={classes.valueLabel}>
@@ -781,7 +785,7 @@ const FieldChangeItem = React.memo(
                 </div>
               </div>
             )}
-            {change.kind === 1 && (
+            {change.kind === "Filler" && (
               <div>
                 <Text size={100} className={classes.valueLabel}>
                   Value:
@@ -844,11 +848,11 @@ const ListChangeItem = React.memo(
                 {change.itemChanges.map((item: any, idx: number) => (
                   <div key={idx} className={classes.arrayItemRow}>
                     <Text size={200} weight="semibold">
-                      {item.kind === 1
+                      {item.kind === "ItemRemove"
                         ? `Item removed (previously at index ${item.oldIndex})`
-                        : item.kind === 0
+                        : item.kind === "ItemAdd"
                         ? `Item added at index ${item.index}`
-                        : item.kind === 2
+                        : item.kind === "ItemIndexChange"
                         ? `Item moved from ${item.oldIndex} to ${item.index}`
                         : `Item changed at index ${
                             item.index || item.oldIndex
@@ -1120,11 +1124,11 @@ function extractChangesFromFlat(changes: any[]): {
   }
 
   for (const change of changes) {
-    // kind: 0 = Replacement, 1 = Filler, 3 = CompositeListDifference
-    if (change.kind === 0 || change.kind === 1) {
+    // kind: "Replacement", "Filler", or "CompositeListDifference"
+    if (change.kind === "Replacement" || change.kind === "Filler") {
       // Field-level changes
       fieldChanges.push(change);
-    } else if (change.kind === 3) {
+    } else if (change.kind === "CompositeListDifference") {
       // List changes (CompositeListDifference)
       listChanges.push(change);
     }

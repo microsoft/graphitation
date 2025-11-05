@@ -191,14 +191,14 @@ export class ApolloCachePublisher {
       };
 
       // Add kind-specific fields
-      if (change.kind === 1) {
+      if (change.kind === "Filler") {
         // Filler
         serialized.newValue = this.serializeGraphValue(change.newValue);
-      } else if (change.kind === 0) {
+      } else if (change.kind === "Replacement") {
         // Replacement
         serialized.oldValue = this.serializeGraphValue(change.oldValue);
         serialized.newValue = this.serializeGraphValue(change.newValue);
-      } else if (change.kind === 3) {
+      } else if (change.kind === "CompositeListDifference") {
         // CompositeListDifference
         serialized.itemChanges = change.itemChanges
           ? this.serializeLayoutChanges(change.itemChanges)

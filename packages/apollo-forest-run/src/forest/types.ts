@@ -59,8 +59,8 @@ export type IndexedTree = {
   danglingReferences?: Set<NodeKey>;
 };
 
-export type FieldChangeWithPath = FieldChange & {
-  path: ReadonlyArray<string | number>;
+export type HistoryChange = Omit<FieldChange, "fieldInfo"> & {
+  path: (string | number)[];
 };
 
 type HistoryEntryBase = {
@@ -80,7 +80,7 @@ type HistoryEntryBase = {
 
 export type RegularHistoryEntry = {
   kind: "Regular";
-  changes: ReadonlyArray<FieldChangeWithPath>;
+  changes: HistoryChange[];
   missingFields: MissingFieldsMap;
 };
 
@@ -92,6 +92,19 @@ export type OptimisticHistoryEntry = {
 
 export type HistoryEntry = (RegularHistoryEntry | OptimisticHistoryEntry) &
   HistoryEntryBase;
+
+export type IndexedForest = {
+  trees: Map<OperationId, IndexedTree>;
+  extraRootIds: Map<NodeKey, TypeName>;
+  operationsByNodes: Map<NodeKey, Set<OperationId>>; // May contain false positives
+  operationsWithErrors: Set<OperationDescriptor>; // May contain false positives
+  deletedNodes: Set<NodeKey>;
+};
+
+export type Source = Readonly<SourceObject | SourceCompositeList>;
+export type Draft = SourceObject | SourceCompositeList;
+
+export type UpdateForestStats = (UpdateTreeStats | null)[];
 
 export type FieldChange = (
   | {
@@ -110,19 +123,6 @@ export type FieldChange = (
 ) & {
   fieldInfo: FieldInfo;
 };
-
-export type IndexedForest = {
-  trees: Map<OperationId, IndexedTree>;
-  extraRootIds: Map<NodeKey, TypeName>;
-  operationsByNodes: Map<NodeKey, Set<OperationId>>; // May contain false positives
-  operationsWithErrors: Set<OperationDescriptor>; // May contain false positives
-  deletedNodes: Set<NodeKey>;
-};
-
-export type Source = Readonly<SourceObject | SourceCompositeList>;
-export type Draft = SourceObject | SourceCompositeList;
-
-export type UpdateForestStats = (UpdateTreeStats | null)[];
 
 // Changed chunks map only contains chunks with immediate changes (i.e. "Replacement", "Filler" + list layout changes).
 //   Does not contain parent chunks which were affected only because some nested chunk has changed.
@@ -193,6 +193,6 @@ export type ForestEnv = {
 
   // History feature flags
   enableHistory?: boolean; // Enable operation history tracking (minimal overhead when enabled)
-  enableDataHistory?: boolean; // Store full data snapshots in history (high memory overhead)
+  enableRichHistory?: boolean; // Store full data snapshots in history (high memory overhead)
   defaultHistorySize?: number; // Maximum number of history entries to store
 };

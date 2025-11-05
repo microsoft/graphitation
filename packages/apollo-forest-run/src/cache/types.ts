@@ -145,7 +145,7 @@ export type ForestRunAdditionalConfig = {
 
   // History configuration
   enableHistory?: boolean;
-  enableDataHistory?: boolean;
+  enableRichHistory?: boolean;
   defaultHistorySize?: number;
 };
 
@@ -222,7 +222,7 @@ export type CacheEnv = {
 
   // History configuration
   enableHistory: boolean;
-  enableDataHistory: boolean;
+  enableRichHistory: boolean;
   defaultHistorySize: number;
 };
 

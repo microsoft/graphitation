@@ -41,7 +41,7 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
 
     // History configuration
     enableHistory: config?.enableHistory ?? false,
-    enableDataHistory: config?.enableDataHistory ?? false,
+    enableRichHistory: config?.enableRichHistory ?? false,
     defaultHistorySize: config?.defaultHistorySize ?? 0,
 
     optimizeFragmentReads: config?.optimizeFragmentReads ?? false,

@@ -46,7 +46,7 @@ export function recordFieldChange(
   fieldDiff: ValueDifference,
   updated: SourceValue | undefined,
 ): void {
-  const { enableHistory, enableDataHistory } = context.env;
+  const { enableHistory, enableRichHistory } = context.env;
   if (!enableHistory) {
     return;
   }
@@ -62,22 +62,22 @@ export function recordFieldChange(
       changes.push({
         kind: fieldDiff.kind,
         fieldInfo,
-        newValue: enableDataHistory ? updated : undefined,
+        newValue: enableRichHistory ? updated : undefined,
       });
       break;
     case DifferenceKind.Replacement:
       changes.push({
         kind: fieldDiff.kind,
         fieldInfo,
-        oldValue: enableDataHistory ? fieldDiff.oldValue : undefined,
-        newValue: enableDataHistory ? updated : undefined,
+        oldValue: enableRichHistory ? fieldDiff.oldValue : undefined,
+        newValue: enableRichHistory ? updated : undefined,
       });
       break;
     case DifferenceKind.CompositeListDifference:
       changes.push({
         kind: fieldDiff.kind,
         fieldInfo,
-        itemChanges: enableDataHistory ? context.childChanges : undefined,
+        itemChanges: enableRichHistory ? context.childChanges : undefined,
       });
       context.childChanges = [];
       break;

@@ -27,7 +27,7 @@ export type DiffEnv = {
 
   // History options
   enableHistory: boolean;
-  enableDataHistory: boolean;
+  enableRichHistory: boolean;
 };
 
 export type DiffContext = {
