@@ -130,18 +130,84 @@ export function buildContextMetadataOutput(
   return metadata;
 }
 
-export function getRequiredAndOptionalContextArguments(
+export function getExtendsGroupContextArguments(
   node: DirectiveNode,
   contextTypeExtensions: ContextTypeExtension,
 ) {
   if (!node.arguments?.length) {
     throw new Error(
-      "Invalid context use: No arguments provided. Provide either required or optional arguments",
+      "Invalid context use: No arguments provided. Provide either required, optional or extends arguments",
+    );
+  }
+
+  const extendsGroup = node.arguments.find(
+    (value) => value.name.value === "extends",
+  );
+
+  const extendGroupValue = extendsGroup?.value;
+  if (extendsGroup) {
+    if (extendGroupValue?.kind !== "StringValue") {
+      throw new Error(
+        `Invalid context use: "extends" argument must be an object`,
+      );
+    }
+
+    const group = contextTypeExtensions?.groups?.[extendGroupValue?.value];
+    if (!group) {
+      throw new Error(`Invalid context use: "extends" group doesn't exist`);
+    }
+
+    const subTypeKeys: Set<string> = new Set();
+    const { required: groupItems, useLegacy: useLegacyContext } = group;
+
+    if (!groupItems || Object.keys(groupItems).length === 0) {
+      return {
+        required: [],
+        useLegacyContext,
+      };
+    } else {
+      for (const [namespace, namespaceValues] of Object.entries(groupItems)) {
+        namespaceValues.forEach((namespaceValue) => {
+          if (
+            !contextTypeExtensions?.contextTypes?.[namespace]?.[namespaceValue]
+          ) {
+            throw new Error(
+              `Value "${namespaceValue}" in namespace "${namespace}" is not supported`,
+            );
+          }
+
+          subTypeKeys.add(getNamespaceValueKey(namespace, namespaceValue));
+        });
+      }
+
+      return {
+        required: Array.from(subTypeKeys),
+        useLegacyContext,
+      };
+    }
+  }
+}
+
+function getNamespaceValueKey(namespace: string, namespaceValue: string) {
+  return `${namespace}:${namespaceValue}`;
+}
+export function getRequiredAndOptionalContextArguments(
+  node: DirectiveNode,
+  contextTypeExtensions: ContextTypeExtension,
+  contextGroupRequiredArgument?: string[],
+) {
+  if (!node.arguments?.length) {
+    throw new Error(
+      "Invalid context use: No arguments provided. Provide either required, optional or extends arguments",
     );
   }
 
   let requiredKeys: Set<string> | undefined;
   let optionalKeys: Set<string> | undefined;
+
+  const extendsGroup = node.arguments.find(
+    (value) => value.name.value === "extends",
+  );
 
   const required = node.arguments.find(
     (value) => value.name.value === "required",
@@ -150,9 +216,9 @@ export function getRequiredAndOptionalContextArguments(
     (value) => value.name.value === "optional",
   );
 
-  if (!required && !optional) {
+  if (!required && !optional && !extendsGroup) {
     throw new Error(
-      "Invalid context use: Required and optional arguments must be provided",
+      "Invalid context use: required, optional or extends arguments must be provided",
     );
   }
 
@@ -174,6 +240,16 @@ export function getRequiredAndOptionalContextArguments(
     );
   }
 
+  if (contextGroupRequiredArgument) {
+    if (!requiredKeys) {
+      requiredKeys = new Set();
+    }
+
+    contextGroupRequiredArgument.forEach((value) => {
+      requiredKeys?.add(value);
+    });
+  }
+
   if (optional) {
     optionalKeys = new Set(
       new Set(getContextKeysFromArgumentNode(optional, contextTypeExtensions)),
@@ -181,6 +257,23 @@ export function getRequiredAndOptionalContextArguments(
   }
 
   return { requiredKeys, optionalKeys };
+}
+
+export function getUseLegacyContextValue(
+  rootUseLegacyContext?: boolean,
+  groupUseLegacyContext?: boolean,
+) {
+  if (
+    typeof rootUseLegacyContext === "boolean" &&
+    typeof groupUseLegacyContext === "boolean" &&
+    rootUseLegacyContext !== groupUseLegacyContext
+  ) {
+    throw new Error(
+      "useLegacy argument must has the same value as it is in the group in 'extends'",
+    );
+  }
+
+  return Boolean(rootUseLegacyContext || groupUseLegacyContext);
 }
 
 function getContextKeysFromArgumentNode(
@@ -233,7 +326,7 @@ function getContextKeysFromArgumentNode(
         );
       }
 
-      output.push(`${namespace}:${namespaceValue}`);
+      output.push(getNamespaceValueKey(namespace, namespaceValue));
     });
   });
   return output;
