@@ -12,6 +12,13 @@ export const CONFIG = {
       description: "History enabled with a size of 1",
       options: {
         enableHistory: true,
+      },
+    },
+    {
+      name: "Enable History with size 1",
+      description: "History enabled with a size of 1",
+      options: {
+        enableHistory: true,
         defaultHistorySize: 1,
       },
     },

@@ -49,7 +49,7 @@ export class ApolloCachePublisher {
                 operationKey.startsWith(treeKey)
               ) {
                 if (tree.history) {
-                  const history = tree.history.items;
+                  const history = tree.history.read();
                   if (history && history.length > 0) {
                     // Transform to JSON-friendly format and include tree operation data
                     return this.serializeHistory(history, tree.operation);

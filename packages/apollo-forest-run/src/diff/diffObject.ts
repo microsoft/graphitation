@@ -524,7 +524,12 @@ function diffCompositeListLayout(
   if (firstDirtyIndex === -1) {
     for (const index of unusedBaseIndixes) {
       listContext.push(
-        LayoutChange.createItemRemoved(index, baseChunk.data[index], env),
+        LayoutChange.createItemRemoved(
+          index,
+          baseChunk.data[index],
+          env,
+          baseChunk,
+        ),
       );
     }
     if (baseLen > modelLen) {
@@ -547,7 +552,9 @@ function diffCompositeListLayout(
     if (modelChunk.data[i] === null) {
       layout.push(null);
       if (baseChunk.data[i] !== null) {
-        listContext.push(LayoutChange.createItemAdded(i, null, env));
+        listContext.push(
+          LayoutChange.createItemAdded(i, null, env, modelChunk),
+        );
       }
       continue;
     }
@@ -572,6 +579,7 @@ function diffCompositeListLayout(
             baseIndex,
             baseChunk.data[baseIndex],
             env,
+            baseChunk,
           ),
         );
       }
@@ -595,7 +603,12 @@ function diffCompositeListLayout(
 
   for (const oldIndex of unusedBaseIndixes) {
     listContext.push(
-      LayoutChange.createItemRemoved(oldIndex, baseChunk.data[oldIndex], env),
+      LayoutChange.createItemRemoved(
+        oldIndex,
+        baseChunk.data[oldIndex],
+        env,
+        baseChunk,
+      ),
     );
   }
   return layout;

@@ -188,7 +188,7 @@ function shouldPushOptimisticHistory(
   env: CacheEnv,
   targetForest: DataForest | OptimisticLayer,
 ): boolean {
-  return env.enableHistory && targetForest.layerTag !== null;
+  return targetForest.layerTag !== null;
 }
 
 const EMPTY_ARRAY = Object.freeze([]);

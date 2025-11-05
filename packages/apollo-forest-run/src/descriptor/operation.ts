@@ -66,7 +66,9 @@ export function describeOperation(
     rootNodeKey: effectiveRootNodeKey,
     selections: new Map(),
     keyVariables: getKeyVars(documentDescriptor.definition),
-    historySize: getHistorySize(documentDescriptor.definition),
+    historySize:
+      getHistorySize(documentDescriptor.definition, variables) ??
+      env.defaultHistorySize,
     variablesKey:
       variablesKey ??
       createVariablesKey(variableDefinitions, variablesWithDefaults),
@@ -132,7 +134,10 @@ function getKeyVars(doc: OperationDefinitionNode): VariableName[] | null {
   return value as string[];
 }
 
-function getHistorySize(doc: OperationDefinitionNode): number | null {
+function getHistorySize(
+  doc: OperationDefinitionNode,
+  varibles: VariableValues,
+): number | null {
   const directive = doc.directives?.find((d) => d.name.value === "cache");
   const astValue = directive?.arguments?.find(
     (arg) => arg.name.value === "history",
@@ -140,8 +145,8 @@ function getHistorySize(doc: OperationDefinitionNode): number | null {
   if (!astValue) {
     return null;
   }
-  const value = valueFromASTUntyped(astValue);
-  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
+  const value = valueFromASTUntyped(astValue, varibles);
+  if (typeof value !== "number" || !Number.isInteger(value)) {
     throw new Error(
       "Could not extract history. Expected directive format: @cache(history: 2), " +
         `got ${JSON.stringify(value)} in place of history`,

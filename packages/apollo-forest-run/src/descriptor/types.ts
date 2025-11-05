@@ -58,6 +58,8 @@ export type OperationEnv = {
     directives?: Directives,
     source?: OperationDescriptor | undefined,
   ) => Key | KeySpecifier | undefined;
+
+  defaultHistorySize: number;
 };
 
 export type DocumentDescriptor = {
@@ -95,7 +97,7 @@ export type OperationDescriptor = {
   rootNodeKey: NodeKey; // e.g. ROOT_QUERY | ROOT_MUTATION, etc
   selections: Map<PossibleSelections, Map<TypeName | null, ResolvedSelection>>;
   cache: boolean;
-  historySize: number | null; // Size of operation history to keep from @cache(history: N) directive
+  historySize: number; // Size of operation history to keep from @cache(history: N) directive
 };
 
 export type FormattedError = GraphQLFormattedError;

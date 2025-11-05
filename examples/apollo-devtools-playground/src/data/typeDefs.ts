@@ -1,4 +1,8 @@
 const typeDefs = `
+directive @cache(
+  history: Int
+) on QUERY | MUTATION | SUBSCRIPTION
+
 type Message {
   id: ID!
   text: String!

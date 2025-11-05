@@ -2,6 +2,7 @@ import type {
   SourceObject,
   SourceCompositeList,
   MissingFieldsMap,
+  CompositeListChunk,
 } from "../values/types";
 import type {
   CompositeListLayoutChangeItemRemoved,
@@ -16,8 +17,10 @@ export function createItemRemoved(
   oldIndex: number,
   data: SourceObject | SourceCompositeList,
   env: DiffEnv | ForestEnv,
+  chunk: CompositeListChunk,
 ): CompositeListLayoutChangeItemRemoved | undefined {
-  if (!env.enableHistory) {
+  const historySize = chunk.operation.historySize;
+  if (!historySize) {
     return undefined;
   }
   return {
@@ -31,9 +34,11 @@ export function createItemAdded(
   index: number,
   data: SourceObject | SourceCompositeList | null,
   env: DiffEnv | ForestEnv,
+  chunk: CompositeListChunk,
   missingFields?: MissingFieldsMap,
 ): CompositeListLayoutChange | undefined {
-  if (!env.enableHistory) {
+  const historySize = chunk?.operation.historySize ?? 0;
+  if (!historySize) {
     return undefined;
   }
   return {
@@ -49,8 +54,10 @@ export function createIndexChange(
   oldIndex: number,
   data: SourceObject | SourceCompositeList,
   env: DiffEnv | ForestEnv,
+  chunk: CompositeListChunk,
 ): CompositeListLayoutIndexChange | undefined {
-  if (!env.enableHistory) {
+  const historySize = chunk.operation.historySize;
+  if (!historySize) {
     return undefined;
   }
   return {

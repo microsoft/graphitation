@@ -3,7 +3,7 @@ import { useQuery, gql, useMutation } from "@apollo/client";
 import { ChatRenderer } from "./chat-renderer";
 
 const CHAT = gql`
-  query Chat {
+  query Chat($history: Int) @cache(history: $history) {
     chat {
       messages {
         text
@@ -35,7 +35,9 @@ const SHUFFLE_MESSAGES = gql`
 `;
 
 const ChatContainer = () => {
-  const { data, refetch } = useQuery(CHAT);
+  const { data, refetch, ...rest } = useQuery(CHAT, {
+    variables: { history: 5 },
+  });
   const [addMessage] = useMutation(ADD_MESSAGES);
   const [removeMessage] = useMutation(REMOVE_MESSAGE);
   const [shuffleMessages] = useMutation(SHUFFLE_MESSAGES);

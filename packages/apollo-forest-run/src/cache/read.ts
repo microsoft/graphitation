@@ -131,13 +131,13 @@ function readOperation(
   // Safeguard: make sure previous state doesn't leak outside write operation
   assert(!outputTree?.prev);
 
-  if (env.enableHistory && readState.outputTree.history) {
+  if (readState.outputTree.operation.historySize) {
     Object.defineProperty(
       readState.outputTree.result.data,
       OPERATION_HISTORY_SYMBOL,
       {
         get() {
-          return readState.outputTree.history?.items;
+          return readState.outputTree.history.read();
         },
         enumerable: false,
         configurable: true,

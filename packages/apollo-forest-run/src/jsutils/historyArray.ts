@@ -13,17 +13,17 @@ import type { OperationDescriptor } from "../descriptor/types";
 import { getDataPathForDebugging, createParentLocator } from "../values";
 
 export class HistoryArray {
-  public items: HistoryEntry[] = [];
+  private items: HistoryEntry[] = [];
   private head = 0;
   private maxSize: number;
   private isEnabled: boolean;
   private isRichHistoryEnabled: boolean;
 
   constructor(operation: OperationDescriptor, env: ForestEnv) {
-    const historySize = operation.historySize ?? env.defaultHistorySize ?? 0;
+    const historySize = operation.historySize;
 
     this.maxSize = historySize;
-    this.isEnabled = (env.enableRichHistory ?? false) && historySize > 0;
+    this.isEnabled = historySize > 0;
     this.isRichHistoryEnabled = env.enableRichHistory ?? false;
   }
 
@@ -116,5 +116,9 @@ export class HistoryArray {
     };
 
     this.pushHistoryEntry(item, currentTree, incomingResult);
+  }
+
+  read(): HistoryEntry[] {
+    return this.items.sort((a, b) => a.timestamp - b.timestamp);
   }
 }

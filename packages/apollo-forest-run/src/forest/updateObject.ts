@@ -46,8 +46,8 @@ export function recordFieldChange(
   fieldDiff: ValueDifference,
   updated: SourceValue | undefined,
 ): void {
-  const { enableHistory, enableRichHistory } = context.env;
-  if (!enableHistory) {
+  const { enableRichHistory } = context.env;
+  if (base.operation.historySize) {
     return;
   }
 
@@ -280,6 +280,7 @@ function updateCompositeListValue(
           i,
           newValue.data,
           context.env,
+          base,
           newValue.missingFields,
         ),
       );
