@@ -47,7 +47,7 @@ export function recordFieldChange(
   updated: SourceValue | undefined,
 ): void {
   const { enableRichHistory } = context.env;
-  if (base.operation.historySize) {
+  if (!base.operation.historySize) {
     return;
   }
 

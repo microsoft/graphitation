@@ -26,7 +26,6 @@ export type DiffEnv = {
   ) => string | number;
 
   // History options
-  enableHistory: boolean;
   enableRichHistory: boolean;
 };
 

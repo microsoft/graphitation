@@ -40,7 +40,6 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
     logStaleOperations: config?.logStaleOperations ?? false,
 
     // History configuration
-    enableHistory: config?.enableHistory ?? false,
     enableRichHistory: config?.enableRichHistory ?? false,
     defaultHistorySize: config?.defaultHistorySize ?? 0,
 

@@ -111,7 +111,8 @@ export function indexTree(
     dataMap: context.dataMap,
     incompleteChunks: context.incompleteChunks,
     prev: previousTreeState,
-    history: previousTreeState?.history ?? new HistoryArray(operation, env),
+    history:
+      previousTreeState?.history ?? new HistoryArray(operation.historySize),
   };
 }
 

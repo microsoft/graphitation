@@ -21,7 +21,7 @@ export function createItemRemoved(
 ): CompositeListLayoutChangeItemRemoved | undefined {
   const historySize = chunk.operation.historySize;
   if (!historySize) {
-    return undefined;
+    return;
   }
   return {
     kind: ChangeKind.ItemRemove,
@@ -39,7 +39,7 @@ export function createItemAdded(
 ): CompositeListLayoutChange | undefined {
   const historySize = chunk?.operation.historySize ?? 0;
   if (!historySize) {
-    return undefined;
+    return;
   }
   return {
     kind: ChangeKind.ItemAdd,
@@ -58,7 +58,7 @@ export function createIndexChange(
 ): CompositeListLayoutIndexChange | undefined {
   const historySize = chunk.operation.historySize;
   if (!historySize) {
-    return undefined;
+    return;
   }
   return {
     kind: ChangeKind.ItemIndexChange,

@@ -18,6 +18,7 @@ import type {
 import { DataForest, OptimisticLayer } from "../cache/types";
 import { replaceTree } from "./addTree";
 import { NodeChunk } from "../values/types";
+import { createRegularHistoryEntry } from "../jsutils/historyArray";
 
 export const ROOT_NODES = Object.freeze([
   "ROOT_QUERY",
@@ -47,11 +48,14 @@ export function updateAffectedTrees(
     }
     allUpdated.push(result);
 
-    result.updatedTree.history.addHistoryEntry(
+    const entry = createRegularHistoryEntry(
       currentTreeState,
       result,
       incomingResult,
+      env,
     );
+    result.updatedTree.history.push(entry);
+
     // Reset previous tree state on commit
     result.updatedTree.prev = null;
     replaceTree(forest, result.updatedTree);

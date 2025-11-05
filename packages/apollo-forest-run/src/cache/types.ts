@@ -144,7 +144,6 @@ export type ForestRunAdditionalConfig = {
   optimizeFragmentReads?: boolean;
 
   // History configuration
-  enableHistory?: boolean;
   enableRichHistory?: boolean;
   defaultHistorySize?: number;
 };
@@ -221,7 +220,6 @@ export type CacheEnv = {
   optimizeFragmentReads: boolean;
 
   // History configuration
-  enableHistory: boolean;
   enableRichHistory: boolean;
   defaultHistorySize: number;
 };

@@ -22,8 +22,8 @@ const App = () => {
   return (
     <FluentProvider theme={teamsLightTheme}>
       <ApolloProvider client={client}>
-        {/* <OptimisticUpdateDemo />
-        <UserPreferenceTest /> */}
+        <OptimisticUpdateDemo />
+        <UserPreferenceTest />
         <ChatContainer />
       </ApolloProvider>
     </FluentProvider>

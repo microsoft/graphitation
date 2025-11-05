@@ -137,7 +137,9 @@ function readOperation(
       OPERATION_HISTORY_SYMBOL,
       {
         get() {
-          return readState.outputTree.history.read();
+          return readState.outputTree.history.items.sort(
+            (a, b) => a.timestamp - b.timestamp,
+          );
         },
         enumerable: false,
         configurable: true,

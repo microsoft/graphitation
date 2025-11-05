@@ -192,7 +192,6 @@ export type ForestEnv = {
   logStaleOperations?: boolean;
 
   // History feature flags
-  enableHistory?: boolean; // Enable operation history tracking (minimal overhead when enabled)
   enableRichHistory?: boolean; // Store full data snapshots in history (high memory overhead)
   defaultHistorySize?: number; // Maximum number of history entries to store
 };

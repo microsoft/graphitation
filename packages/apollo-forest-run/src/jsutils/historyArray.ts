@@ -1,53 +1,27 @@
 import type {
   HistoryEntry,
-  RegularHistoryEntry,
-  OptimisticHistoryEntry,
   IndexedTree,
   UpdateTreeResult,
   HistoryChange,
   ForestEnv,
 } from "../forest/types";
 import type { NodeDifferenceMap } from "../diff/types";
-import type { OperationDescriptor } from "../descriptor/types";
 
 import { getDataPathForDebugging, createParentLocator } from "../values";
 
 export class HistoryArray {
-  private items: HistoryEntry[] = [];
+  public items: HistoryEntry[] = [];
   private head = 0;
   private maxSize: number;
-  private isEnabled: boolean;
-  private isRichHistoryEnabled: boolean;
 
-  constructor(operation: OperationDescriptor, env: ForestEnv) {
-    const historySize = operation.historySize;
-
-    this.maxSize = historySize;
-    this.isEnabled = historySize > 0;
-    this.isRichHistoryEnabled = env.enableRichHistory ?? false;
+  constructor(maxSize: number) {
+    this.maxSize = maxSize;
   }
 
-  private pushHistoryEntry(
-    baseEntry: RegularHistoryEntry | OptimisticHistoryEntry,
-    currentTree: IndexedTree,
-    incomingTree: IndexedTree | undefined,
-    updatedTree?: UpdateTreeResult,
-  ): void {
-    const entry: HistoryEntry = {
-      ...baseEntry,
-      timestamp: Date.now(),
-      modifyingOperation: {
-        name: incomingTree?.operation?.debugName ?? "Anonymous Operation",
-        variables: incomingTree?.operation?.variables || {},
-      },
-      data: this.isRichHistoryEnabled
-        ? {
-            current: currentTree.result,
-            incoming: incomingTree?.result,
-            updated: updatedTree?.updatedTree.result,
-          }
-        : undefined,
-    };
+  push(entry: HistoryEntry | undefined): void {
+    if (this.maxSize === 0 || !entry) {
+      return;
+    }
 
     if (this.items.length < this.maxSize) {
       this.items.push(entry);
@@ -56,30 +30,35 @@ export class HistoryArray {
       this.head = (this.head + 1) % this.maxSize;
     }
   }
+}
 
-  private getChunkPath(
-    currentTree: IndexedTree,
-    chunk: any,
-  ): (string | number)[] {
-    if (!this.isRichHistoryEnabled) {
-      return ["Enable enableRichHistory for full path"];
-    }
-    const findParent = createParentLocator(currentTree.dataMap);
-    return getDataPathForDebugging({ findParent }, chunk);
+function getChunkPath(
+  currentTree: IndexedTree,
+  chunk: any,
+  enableRichHistory: boolean,
+): (string | number)[] {
+  if (!enableRichHistory) {
+    return ["Enable enableRichHistory for full path"];
   }
+  const findParent = createParentLocator(currentTree.dataMap);
+  return getDataPathForDebugging({ findParent }, chunk);
+}
 
-  addHistoryEntry(
-    currentTree: IndexedTree,
-    updatedTree: UpdateTreeResult,
-    incomingTree?: IndexedTree,
-  ): void {
-    if (!this.isEnabled) {
-      return;
-    }
+export function createRegularHistoryEntry(
+  currentTree: IndexedTree,
+  updatedTree: UpdateTreeResult,
+  incomingTree: IndexedTree | undefined,
+  env: ForestEnv,
+): HistoryEntry | undefined {
+  if (currentTree.operation.historySize) {
     const changedFields: HistoryChange[] = [];
 
     for (const [chunk, fieldChanges] of updatedTree.changes) {
-      const chunkPath = this.getChunkPath(currentTree, chunk);
+      const chunkPath = getChunkPath(
+        currentTree,
+        chunk,
+        env.enableRichHistory ?? false,
+      );
 
       for (const fieldChange of fieldChanges) {
         const { fieldInfo, ...restOfFieldChange } = fieldChange;
@@ -90,35 +69,50 @@ export class HistoryArray {
       }
     }
 
-    const item: RegularHistoryEntry = {
+    return {
       kind: "Regular",
       missingFields: updatedTree.missingFields,
       changes: changedFields,
+      timestamp: Date.now(),
+      modifyingOperation: {
+        name: incomingTree?.operation?.debugName ?? "Anonymous Operation",
+        variables: incomingTree?.operation?.variables || {},
+      },
+      data: env.enableRichHistory
+        ? {
+            current: currentTree.result,
+            incoming: incomingTree?.result,
+            updated: updatedTree.updatedTree.result,
+          }
+        : undefined,
     };
-
-    this.pushHistoryEntry(item, currentTree, incomingTree, updatedTree);
   }
+}
 
-  addOptimisticHistoryEntry(
-    currentTree: IndexedTree,
-    nodeDiffs: NodeDifferenceMap,
-    incomingResult: IndexedTree | undefined,
-    updatedNodes: string[],
-  ): void {
-    if (!this.isEnabled) {
-      return;
-    }
-
-    const item: OptimisticHistoryEntry = {
+export function createOptimisticHistoryEntry(
+  currentTree: IndexedTree,
+  nodeDiffs: NodeDifferenceMap,
+  incomingTree: IndexedTree | undefined,
+  updatedNodes: string[],
+  env: ForestEnv,
+): HistoryEntry | undefined {
+  if (currentTree.operation.historySize) {
+    return {
       kind: "Optimistic",
-      nodeDiffs: this.isRichHistoryEnabled ? nodeDiffs : undefined,
+      nodeDiffs: env.enableRichHistory ? nodeDiffs : undefined,
       updatedNodes,
+      timestamp: Date.now(),
+      modifyingOperation: {
+        name: incomingTree?.operation?.debugName ?? "Anonymous Operation",
+        variables: incomingTree?.operation?.variables || {},
+      },
+      data: env.enableRichHistory
+        ? {
+            current: currentTree.result,
+            incoming: incomingTree?.result,
+            updated: undefined,
+          }
+        : undefined,
     };
-
-    this.pushHistoryEntry(item, currentTree, incomingResult);
-  }
-
-  read(): HistoryEntry[] {
-    return this.items.sort((a, b) => a.timestamp - b.timestamp);
   }
 }
