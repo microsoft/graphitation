@@ -8,22 +8,14 @@ export const CONFIG = {
       options: {},
     },
     {
-      name: "Enable History with size 1",
+      name: "History with size 1",
       description: "History enabled with a size of 1",
       options: {
         defaultHistorySize: 1,
       },
     },
-    {
-      name: "Enable Rich History",
-      description: "History enabled with rich data snapshots",
-      options: {
-        enableRichHistory: true,
-        defaultHistorySize: 1,
-      },
-    },
   ] as const satisfies CacheConfiguration[],
-  watcherCounts: [0, 25, 50],
+  watcherCounts: [0, 1, 25],
   sampling: {
     minSamples: 200,
     minExecutionTime: 200, //ms
