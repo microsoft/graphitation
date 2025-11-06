@@ -2,6 +2,21 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Thu, 06 Nov 2025 11:02:27 GMT",
+      "version": "3.3.3",
+      "tag": "@graphitation/cli_v3.3.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v5.5.0",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 02 Oct 2025 09:46:49 GMT",
       "version": "3.3.2",
       "tag": "@graphitation/cli_v3.3.2",

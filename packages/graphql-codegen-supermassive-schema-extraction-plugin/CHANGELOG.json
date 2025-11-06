@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
   "entries": [
     {
+      "date": "Thu, 06 Nov 2025 11:02:27 GMT",
+      "version": "2.1.14",
+      "tag": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin_v2.1.14",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
+            "comment": "Bump @graphitation/supermassive to v3.11.12",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 02 Oct 2025 09:46:49 GMT",
       "version": "2.1.13",
       "tag": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin_v2.1.13",

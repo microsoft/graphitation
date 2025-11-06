@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Thu, 06 Nov 2025 11:02:27 GMT",
+      "version": "5.5.0",
+      "tag": "@graphitation/ts-codegen_v5.5.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "91affba265ba1506712c3efe16fd6d6e17d45999",
+            "comment": "Context groups won't be standalone directives but they will be specified in 'extends' argument"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 02 Oct 2025 09:46:49 GMT",
       "version": "5.4.2",
       "tag": "@graphitation/ts-codegen_v5.4.2",

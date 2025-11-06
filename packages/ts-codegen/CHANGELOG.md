@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Thu, 02 Oct 2025 09:46:49 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 06 Nov 2025 11:02:27 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 5.5.0
+
+Thu, 06 Nov 2025 11:02:27 GMT
+
+### Minor changes
+
+- Context groups won't be standalone directives but they will be specified in 'extends' argument (77059398+vejrj@users.noreply.github.com)
 
 ## 5.4.2
 
