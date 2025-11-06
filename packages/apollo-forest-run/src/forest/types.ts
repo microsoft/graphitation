@@ -52,7 +52,7 @@ export type IndexedTree = {
   // Error states
   incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
 
-  // Operation history for debugging
+  // Tree changes
   history: HistoryArray;
 
   // ApolloCompat
@@ -71,12 +71,15 @@ type HistoryEntryBase = {
   };
   data:
     | {
-        current?: OperationResult;
-        incoming?: OperationResult;
+        current: OperationResult;
+        incoming: OperationResult | undefined;
         updated?: OperationResult;
       }
     | undefined;
 };
+
+export type HistoryEntry = (RegularHistoryEntry | OptimisticHistoryEntry) &
+  HistoryEntryBase;
 
 export type RegularHistoryEntry = {
   kind: "Regular";
@@ -89,9 +92,6 @@ export type OptimisticHistoryEntry = {
   nodeDiffs: NodeDifferenceMap | undefined;
   updatedNodes: string[];
 };
-
-export type HistoryEntry = (RegularHistoryEntry | OptimisticHistoryEntry) &
-  HistoryEntryBase;
 
 export type IndexedForest = {
   trees: Map<OperationId, IndexedTree>;
@@ -106,28 +106,32 @@ export type Draft = SourceObject | SourceCompositeList;
 
 export type UpdateForestStats = (UpdateTreeStats | null)[];
 
-export type FieldChange = (
-  | {
-      kind: typeof DifferenceKind.Filler;
-      newValue: SourceValue | undefined;
-    }
-  | {
-      kind: typeof DifferenceKind.Replacement;
-      oldValue: GraphValue | undefined;
-      newValue: SourceValue | undefined;
-    }
-  | {
-      kind: typeof DifferenceKind.CompositeListDifference;
-      itemChanges: CompositeListLayoutChange[] | undefined;
-    }
-) & {
+type FillerChange = {
+  kind: typeof DifferenceKind.Filler;
   fieldInfo: FieldInfo;
+  newValue: SourceValue | undefined;
 };
+
+type ReplacementChange = {
+  kind: typeof DifferenceKind.Replacement;
+  fieldInfo: FieldInfo;
+  oldValue: GraphValue | undefined;
+  newValue: SourceValue | undefined;
+};
+
+type CompositeListDifferenceChange = {
+  kind: typeof DifferenceKind.CompositeListDifference;
+  fieldInfo: FieldInfo;
+  itemChanges: CompositeListLayoutChange[] | undefined;
+};
+
+export type FieldChange =
+  | FillerChange
+  | ReplacementChange
+  | CompositeListDifferenceChange;
 
 // Changed chunks map only contains chunks with immediate changes (i.e. "Replacement", "Filler" + list layout changes).
 //   Does not contain parent chunks which were affected only because some nested chunk has changed.
-//   Note: For now dirty list items are not reported, as it is tricky to report together with list layout shifts (and we don't need it anywhere yet).
-//         In the future we may need to report layout shifts and "Replacement", "Fillter" changes separately.
 export type ChangedChunksMap = Map<
   ObjectChunk | CompositeListChunk,
   FieldChange[]
@@ -192,6 +196,6 @@ export type ForestEnv = {
   logStaleOperations?: boolean;
 
   // History feature flags
-  enableRichHistory?: boolean; // Store full data snapshots in history (high memory overhead)
-  defaultHistorySize?: number; // Maximum number of history entries to store
+  enableRichHistory?: boolean; // Store full data snapshots in history and full paths for changes
+  defaultHistorySize?: number; // Default history size for operations without explicit historySize set via directive
 };

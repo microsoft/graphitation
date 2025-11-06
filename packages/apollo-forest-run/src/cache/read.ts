@@ -134,7 +134,6 @@ function readOperation(
           );
         },
         enumerable: false,
-        configurable: true,
       });
     }
 

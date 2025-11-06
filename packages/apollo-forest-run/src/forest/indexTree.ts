@@ -101,7 +101,6 @@ export function indexTree(
     operation.possibleSelections,
     rootRef,
   );
-
   return {
     operation,
     result,

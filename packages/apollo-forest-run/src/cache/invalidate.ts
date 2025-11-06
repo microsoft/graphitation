@@ -13,7 +13,7 @@ import { isNodeValue, isObjectValue } from "../values/predicates";
 import { assert } from "../jsutils/assert";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { hasFieldEntry } from "../values/resolve";
-import { createOptimisticHistoryEntry } from "../jsutils/historyArray";
+import { createOptimisticHistoryEntry } from "../values/history";
 
 export function invalidateReadResults(
   env: CacheEnv,
