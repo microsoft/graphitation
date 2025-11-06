@@ -125,8 +125,7 @@ function readOperation(
     );
     normalizeRootLevelTypeName(readState.outputTree);
 
-    // Only define the history property once when the tree is created/updated
-    if (readState.outputTree.operation.historySize) {
+    if (readState.outputTree.history.items.length) {
       const outputTree = readState.outputTree;
       Object.defineProperty(outputTree.result.data, OPERATION_HISTORY_SYMBOL, {
         get() {
