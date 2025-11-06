@@ -1,3 +1,4 @@
+// Note: this utility is vibe-coded. Use at your own risk! :)
 import {
   SchemaDefinitions,
   DirectiveDefinitionTuple,
@@ -9,6 +10,7 @@ import {
   getDirectiveName,
   getEnumValues,
   getFieldTypeReference,
+  getFieldArgs,
   getFields,
   getInputObjectFields,
   getInputValueTypeReference,
@@ -35,11 +37,13 @@ import { inspect } from "../jsutils/inspect";
  *
  * @param minuend - The schema definitions to subtract from
  * @param subtrahend - The schema definitions to subtract
+ * @param strict - If true, throws errors on items in subtrahend that are not in minuend; if false, ignores them
  * @returns A new SchemaDefinitions with elements from minuend not in subtrahend
  */
 export function subtractSchemaDefinitions(
   minuend: SchemaDefinitions,
   subtrahend: SchemaDefinitions,
+  strict = false,
 ): SchemaDefinitions {
   const result: SchemaDefinitions = {
     types: {},
@@ -48,7 +52,7 @@ export function subtractSchemaDefinitions(
 
   // Subtract types
   if (minuend.types && subtrahend.types) {
-    result.types = subtractTypes(minuend.types, subtrahend.types);
+    result.types = subtractTypes(minuend.types, subtrahend.types, strict);
   } else if (minuend.types) {
     result.types = { ...minuend.types };
   }
@@ -58,6 +62,7 @@ export function subtractSchemaDefinitions(
     result.directives = subtractDirectives(
       minuend.directives,
       subtrahend.directives,
+      strict,
     );
   } else if (minuend.directives) {
     result.directives = [...minuend.directives];
@@ -72,6 +77,7 @@ export function subtractSchemaDefinitions(
 function subtractTypes(
   minuend: TypeDefinitionsRecord,
   subtrahend: TypeDefinitionsRecord,
+  strict: boolean,
 ): TypeDefinitionsRecord {
   const result: TypeDefinitionsRecord = {};
 
@@ -95,7 +101,12 @@ function subtractTypes(
     }
 
     // Handle different type kinds
-    const subtractedType = subtractType(typeName, minuendDef, subtrahendDef);
+    const subtractedType = subtractType(
+      typeName,
+      minuendDef,
+      subtrahendDef,
+      strict,
+    );
     if (subtractedType) {
       result[typeName] = subtractedType;
     }
@@ -104,7 +115,10 @@ function subtractTypes(
   // Check for types in subtrahend that don't exist in minuend
   for (const typeName of Object.keys(subtrahend)) {
     if (!(typeName in minuend)) {
-      throw new Error(`Type ${typeName} does not exist in minuend`);
+      if (strict) {
+        throw new Error(`Type ${typeName} does not exist in minuend`);
+      }
+      // In non-strict mode, ignore missing types
     }
   }
 
@@ -118,6 +132,7 @@ function subtractType(
   typeName: string,
   minuendDef: TypeDefinitionTuple,
   subtrahendDef: TypeDefinitionTuple,
+  strict: boolean,
 ): TypeDefinitionTuple | null {
   if (
     isObjectTypeDefinition(minuendDef) &&
@@ -127,6 +142,7 @@ function subtractType(
       typeName,
       getFields(minuendDef),
       getFields(subtrahendDef),
+      strict,
     );
     if (Object.keys(subtractedFields).length === 0) {
       return null; // All fields removed
@@ -146,6 +162,7 @@ function subtractType(
       typeName,
       getFields(minuendDef),
       getFields(subtrahendDef),
+      strict,
     );
     if (Object.keys(subtractedFields).length === 0) {
       return null; // All fields removed
@@ -165,6 +182,7 @@ function subtractType(
       typeName,
       getInputObjectFields(minuendDef),
       getInputObjectFields(subtrahendDef),
+      strict,
     );
     if (Object.keys(subtractedFields).length === 0) {
       return null; // All fields removed
@@ -180,6 +198,7 @@ function subtractType(
       typeName,
       getUnionTypeMembers(minuendDef),
       getUnionTypeMembers(subtrahendDef),
+      strict,
     );
     if (subtractedMembers.length === 0) {
       return null; // All members removed
@@ -192,6 +211,7 @@ function subtractType(
       typeName,
       getEnumValues(minuendDef),
       getEnumValues(subtrahendDef),
+      strict,
     );
     if (subtractedValues.length === 0) {
       return null; // All values removed
@@ -217,6 +237,7 @@ function subtractFields(
   typeName: string,
   minuendFields: FieldDefinitionRecord,
   subtrahendFields: FieldDefinitionRecord,
+  strict: boolean,
 ): FieldDefinitionRecord {
   const result: FieldDefinitionRecord = {};
 
@@ -240,15 +261,58 @@ function subtractFields(
       );
     }
 
-    // Field exists in subtrahend, remove it (ignore arguments)
+    // Validate field arguments match exactly
+    const minuendArgs = getFieldArgs(minuendField);
+    const subtrahendArgs = getFieldArgs(subtrahendField);
+
+    // Both must have same argument structure
+    if (!minuendArgs && !subtrahendArgs) {
+      // Both have no arguments, field can be subtracted
+    } else if (!minuendArgs || !subtrahendArgs) {
+      // One has args, other doesn't - not exact match
+      throw new Error(
+        `Field arguments must match exactly for subtraction. Field ${typeName}.${fieldName} has different argument structures.`,
+      );
+    } else {
+      // Both have arguments, compare them
+      const minuendArgKeys = Object.keys(minuendArgs).sort();
+      const subtrahendArgKeys = Object.keys(subtrahendArgs).sort();
+
+      if (
+        minuendArgKeys.length !== subtrahendArgKeys.length ||
+        !minuendArgKeys.every((key, index) => key === subtrahendArgKeys[index])
+      ) {
+        throw new Error(
+          `Field arguments must match exactly for subtraction. Field ${typeName}.${fieldName} has different argument keys.`,
+        );
+      }
+
+      // Check each argument type matches
+      for (const argName of minuendArgKeys) {
+        const minuendArgType = getInputValueTypeReference(minuendArgs[argName]);
+        const subtrahendArgType = getInputValueTypeReference(
+          subtrahendArgs[argName],
+        );
+        if (minuendArgType !== subtrahendArgType) {
+          throw new Error(
+            `Field arguments must match exactly for subtraction. Field ${typeName}.${fieldName} argument ${argName} has different types.`,
+          );
+        }
+      }
+    }
+
+    // Field exists in subtrahend and matches exactly, remove it
   }
 
   // Check for fields in subtrahend that don't exist in minuend
   for (const fieldName of Object.keys(subtrahendFields)) {
     if (!(fieldName in minuendFields)) {
-      throw new Error(
-        `Field ${typeName}.${fieldName} does not exist in minuend`,
-      );
+      if (strict) {
+        throw new Error(
+          `Field ${typeName}.${fieldName} does not exist in minuend`,
+        );
+      }
+      // In non-strict mode, ignore missing fields
     }
   }
 
@@ -262,6 +326,7 @@ function subtractInputFields(
   typeName: string,
   minuendFields: InputValueDefinitionRecord,
   subtrahendFields: InputValueDefinitionRecord,
+  strict: boolean,
 ): InputValueDefinitionRecord {
   const result: InputValueDefinitionRecord = {};
 
@@ -291,9 +356,12 @@ function subtractInputFields(
   // Check for fields in subtrahend that don't exist in minuend
   for (const fieldName of Object.keys(subtrahendFields)) {
     if (!(fieldName in minuendFields)) {
-      throw new Error(
-        `Input field ${typeName}.${fieldName} does not exist in minuend`,
-      );
+      if (strict) {
+        throw new Error(
+          `Input field ${typeName}.${fieldName} does not exist in minuend`,
+        );
+      }
+      // In non-strict mode, ignore missing fields
     }
   }
 
@@ -307,27 +375,38 @@ function subtractUnionMembers(
   typeName: string,
   minuendMembers: string[],
   subtrahendMembers: string[],
+  strict: boolean,
 ): string[] {
-  const result: string[] = [];
+  // Union types must match exactly for subtraction
+  const minuendSet = new Set(minuendMembers);
   const subtrahendSet = new Set(subtrahendMembers);
 
-  for (const member of minuendMembers) {
-    if (!subtrahendSet.has(member)) {
-      result.push(member);
-    }
+  // Check if they have the same members
+  if (
+    minuendMembers.length === subtrahendMembers.length &&
+    minuendMembers.every((member) => subtrahendSet.has(member))
+  ) {
+    // Exact match - remove the entire union
+    return [];
   }
 
   // Check for members in subtrahend that don't exist in minuend
-  const minuendSet = new Set(minuendMembers);
   for (const member of subtrahendMembers) {
     if (!minuendSet.has(member)) {
-      throw new Error(
-        `Union ${typeName}: member ${member} does not exist in minuend`,
-      );
+      if (strict) {
+        throw new Error(
+          `Union ${typeName}: member ${member} does not exist in minuend`,
+        );
+      }
+      // In non-strict mode, ignore missing members and keep the original union
+      return minuendMembers;
     }
   }
 
-  return result;
+  // If we get here, all subtrahend members exist in minuend but they don't match exactly
+  throw new Error(
+    `Union types must match exactly for subtraction. Union ${typeName} has different member sets.`,
+  );
 }
 
 /**
@@ -337,27 +416,38 @@ function subtractEnumValues(
   typeName: string,
   minuendValues: string[],
   subtrahendValues: string[],
+  strict: boolean,
 ): string[] {
-  const result: string[] = [];
+  // Enum types must match exactly for subtraction
+  const minuendSet = new Set(minuendValues);
   const subtrahendSet = new Set(subtrahendValues);
 
-  for (const value of minuendValues) {
-    if (!subtrahendSet.has(value)) {
-      result.push(value);
-    }
+  // Check if they have the same values
+  if (
+    minuendValues.length === subtrahendValues.length &&
+    minuendValues.every((value) => subtrahendSet.has(value))
+  ) {
+    // Exact match - remove the entire enum
+    return [];
   }
 
   // Check for values in subtrahend that don't exist in minuend
-  const minuendSet = new Set(minuendValues);
   for (const value of subtrahendValues) {
     if (!minuendSet.has(value)) {
-      throw new Error(
-        `Enum ${typeName}: value ${value} does not exist in minuend`,
-      );
+      if (strict) {
+        throw new Error(
+          `Enum ${typeName}: value ${value} does not exist in minuend`,
+        );
+      }
+      // In non-strict mode, ignore missing values and keep the original enum
+      return minuendValues;
     }
   }
 
-  return result;
+  // If we get here, all subtrahend values exist in minuend but they don't match exactly
+  throw new Error(
+    `Enum types must match exactly for subtraction. Enum ${typeName} has different value sets.`,
+  );
 }
 
 /**
@@ -366,6 +456,7 @@ function subtractEnumValues(
 function subtractDirectives(
   minuendDirectives: DirectiveDefinitionTuple[],
   subtrahendDirectives: DirectiveDefinitionTuple[],
+  strict: boolean,
 ): DirectiveDefinitionTuple[] {
   const result: DirectiveDefinitionTuple[] = [];
 
@@ -391,29 +482,39 @@ function subtractDirectives(
     }
 
     if (!minuendArgs || !subtrahendArgs) {
-      // One has args, other doesn't - keep if minuend has more
-      if (minuendArgs) {
-        result.push(minuendDirective);
+      // One has args, other doesn't - arguments don't match exactly
+      throw new Error(
+        `Directive arguments must match exactly for subtraction. Directive ${minuendName} has different argument structures.`,
+      );
+    }
+
+    // Both have arguments, check if they match exactly
+    const minuendArgKeys = Object.keys(minuendArgs).sort();
+    const subtrahendArgKeys = Object.keys(subtrahendArgs).sort();
+
+    if (
+      minuendArgKeys.length !== subtrahendArgKeys.length ||
+      !minuendArgKeys.every((key, index) => key === subtrahendArgKeys[index])
+    ) {
+      throw new Error(
+        `Directive arguments must match exactly for subtraction. Directive ${minuendName} has different argument keys.`,
+      );
+    }
+
+    // Check each argument type matches
+    for (const argName of minuendArgKeys) {
+      const minuendArgType = getInputValueTypeReference(minuendArgs[argName]);
+      const subtrahendArgType = getInputValueTypeReference(
+        subtrahendArgs[argName],
+      );
+      if (minuendArgType !== subtrahendArgType) {
+        throw new Error(
+          `Directive arguments must match exactly for subtraction. Directive ${minuendName} argument ${argName} has different types.`,
+        );
       }
-      continue;
     }
 
-    // Both have arguments, subtract them
-    const subtractedArgs = subtractDirectiveArgs(
-      minuendName,
-      minuendArgs,
-      subtrahendArgs,
-    );
-
-    if (Object.keys(subtractedArgs).length > 0) {
-      // Has remaining arguments, keep directive with remaining args
-      result.push([
-        minuendName,
-        minuendDirective[1],
-        subtractedArgs,
-      ] as DirectiveDefinitionTuple);
-    }
-    // If no arguments remain, directive is fully subtracted
+    // Arguments match exactly, remove entire directive
   }
 
   // Check for directives in subtrahend that don't exist in minuend
@@ -423,52 +524,12 @@ function subtractDirectives(
       (d) => getDirectiveName(d) === subtrahendName,
     );
     if (!exists) {
-      throw new Error(`Directive ${subtrahendName} does not exist in minuend`);
-    }
-  }
-
-  return result;
-}
-
-/**
- * Subtracts directive arguments.
- */
-function subtractDirectiveArgs(
-  directiveName: string,
-  minuendArgs: InputValueDefinitionRecord,
-  subtrahendArgs: InputValueDefinitionRecord,
-): InputValueDefinitionRecord {
-  const result: InputValueDefinitionRecord = {};
-
-  for (const [argName, minuendArg] of Object.entries(minuendArgs)) {
-    const subtrahendArg = subtrahendArgs[argName];
-
-    if (!subtrahendArg) {
-      // Argument doesn't exist in subtrahend, keep it
-      result[argName] = minuendArg;
-      continue;
-    }
-
-    // Validate argument types match
-    const minuendType = getInputValueTypeReference(minuendArg);
-    const subtrahendType = getInputValueTypeReference(subtrahendArg);
-    if (minuendType !== subtrahendType) {
-      throw new Error(
-        `Directive ${directiveName}: argument ${argName} has different type: ${inspect(
-          minuendType,
-        )} vs ${inspect(subtrahendType)}`,
-      );
-    }
-
-    // Argument exists in subtrahend, remove it
-  }
-
-  // Check for arguments in subtrahend that don't exist in minuend
-  for (const argName of Object.keys(subtrahendArgs)) {
-    if (!(argName in minuendArgs)) {
-      throw new Error(
-        `Directive ${directiveName}: argument ${argName} does not exist in minuend`,
-      );
+      if (strict) {
+        throw new Error(
+          `Directive ${subtrahendName} does not exist in minuend`,
+        );
+      }
+      // In non-strict mode, ignore missing directives
     }
   }
 

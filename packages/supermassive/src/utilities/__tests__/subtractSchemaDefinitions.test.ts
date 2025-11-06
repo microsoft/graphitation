@@ -11,7 +11,7 @@ import {
 
 describe("subtractSchemaDefinitions", () => {
   describe("complete type removal", () => {
-    it("should remove entire type when it exists in subtrahend", () => {
+    it("should remove entire type when it is fully covered by subtrahend", () => {
       const minuend: SchemaDefinitions = {
         types: {
           User: createObjectTypeDefinition({
@@ -243,7 +243,7 @@ describe("subtractSchemaDefinitions", () => {
   });
 
   describe("field arguments handling", () => {
-    it("should ignore field arguments and subtract entire field if it exists", () => {
+    it("should throw when field arguments don't match exactly", () => {
       const minuend: SchemaDefinitions = {
         types: {
           Query: createObjectTypeDefinition({
@@ -274,9 +274,45 @@ describe("subtractSchemaDefinitions", () => {
         directives: [],
       };
 
+      expect(() => subtractSchemaDefinitions(minuend, subtrahend)).toThrow(
+        /Field arguments must match exactly for subtraction/,
+      );
+    });
+
+    it("should remove field when arguments match exactly", () => {
+      const minuend: SchemaDefinitions = {
+        types: {
+          Query: createObjectTypeDefinition({
+            users: [
+              "User",
+              {
+                limit: "Int",
+                offset: "Int",
+              },
+            ],
+            posts: ["Post", {}],
+          }),
+        },
+        directives: [],
+      };
+
+      const subtrahend: SchemaDefinitions = {
+        types: {
+          Query: createObjectTypeDefinition({
+            users: [
+              "User",
+              {
+                limit: "Int",
+                offset: "Int",
+              },
+            ],
+          }),
+        },
+        directives: [],
+      };
+
       const result = subtractSchemaDefinitions(minuend, subtrahend);
 
-      // users field should be removed entirely, regardless of arguments
       expect(result.types.Query).toEqual(
         createObjectTypeDefinition({
           posts: ["Post", {}],
@@ -343,7 +379,7 @@ describe("subtractSchemaDefinitions", () => {
   });
 
   describe("union types", () => {
-    it("should subtract union members", () => {
+    it("should throw when union types don't match exactly", () => {
       const minuend: SchemaDefinitions = {
         types: {
           SearchResult: createUnionTypeDefinition(["User", "Post", "Comment"]),
@@ -358,14 +394,12 @@ describe("subtractSchemaDefinitions", () => {
         directives: [],
       };
 
-      const result = subtractSchemaDefinitions(minuend, subtrahend);
-
-      expect(result.types.SearchResult).toEqual(
-        createUnionTypeDefinition(["User", "Comment"]),
+      expect(() => subtractSchemaDefinitions(minuend, subtrahend)).toThrow(
+        /Union types must match exactly for subtraction/,
       );
     });
 
-    it("should remove union type if all members are subtracted", () => {
+    it("should remove union type if it matches exactly", () => {
       const minuend: SchemaDefinitions = {
         types: {
           SearchResult: createUnionTypeDefinition(["User", "Post"]),
@@ -384,30 +418,10 @@ describe("subtractSchemaDefinitions", () => {
 
       expect(result.types.SearchResult).toBeUndefined();
     });
-
-    it("should throw when trying to subtract member that doesn't exist", () => {
-      const minuend: SchemaDefinitions = {
-        types: {
-          SearchResult: createUnionTypeDefinition(["User", "Post", "Comment"]),
-        },
-        directives: [],
-      };
-
-      const subtrahend: SchemaDefinitions = {
-        types: {
-          SearchResult: createUnionTypeDefinition(["Article"]),
-        },
-        directives: [],
-      };
-
-      expect(() => subtractSchemaDefinitions(minuend, subtrahend)).toThrow(
-        /Union SearchResult: member Article does not exist in minuend/,
-      );
-    });
   });
 
   describe("enum types", () => {
-    it("should subtract enum values", () => {
+    it("should throw when enum types don't match exactly", () => {
       const minuend: SchemaDefinitions = {
         types: {
           Role: createEnumTypeDefinition([
@@ -427,14 +441,12 @@ describe("subtractSchemaDefinitions", () => {
         directives: [],
       };
 
-      const result = subtractSchemaDefinitions(minuend, subtrahend);
-
-      expect(result.types.Role).toEqual(
-        createEnumTypeDefinition(["ADMIN", "USER"]),
+      expect(() => subtractSchemaDefinitions(minuend, subtrahend)).toThrow(
+        /Enum types must match exactly for subtraction/,
       );
     });
 
-    it("should remove enum type if all values are subtracted", () => {
+    it("should remove enum type if it matches exactly", () => {
       const minuend: SchemaDefinitions = {
         types: {
           Role: createEnumTypeDefinition(["ADMIN", "USER"]),
@@ -452,26 +464,6 @@ describe("subtractSchemaDefinitions", () => {
       const result = subtractSchemaDefinitions(minuend, subtrahend);
 
       expect(result.types.Role).toBeUndefined();
-    });
-
-    it("should throw when trying to subtract value that doesn't exist", () => {
-      const minuend: SchemaDefinitions = {
-        types: {
-          Role: createEnumTypeDefinition(["ADMIN", "USER"]),
-        },
-        directives: [],
-      };
-
-      const subtrahend: SchemaDefinitions = {
-        types: {
-          Role: createEnumTypeDefinition(["GUEST"]),
-        },
-        directives: [],
-      };
-
-      expect(() => subtractSchemaDefinitions(minuend, subtrahend)).toThrow(
-        /Enum Role: value GUEST does not exist in minuend/,
-      );
     });
   });
 
@@ -523,7 +515,7 @@ describe("subtractSchemaDefinitions", () => {
       ]);
     });
 
-    it("should handle directive argument subtraction", () => {
+    it("should throw when directive arguments don't match exactly", () => {
       const minuend: SchemaDefinitions = {
         types: {},
         directives: [
@@ -551,17 +543,43 @@ describe("subtractSchemaDefinitions", () => {
         ],
       };
 
+      expect(() => subtractSchemaDefinitions(minuend, subtrahend)).toThrow(
+        /Directive arguments must match exactly for subtraction/,
+      );
+    });
+
+    it("should remove directive arguments when they match exactly", () => {
+      const minuend: SchemaDefinitions = {
+        types: {},
+        directives: [
+          [
+            "auth",
+            [4, 12],
+            {
+              requires: "Role",
+              scopes: "String",
+            },
+          ],
+        ],
+      };
+
+      const subtrahend: SchemaDefinitions = {
+        types: {},
+        directives: [
+          [
+            "auth",
+            [4, 12],
+            {
+              requires: "Role",
+              scopes: "String",
+            },
+          ],
+        ],
+      };
+
       const result = subtractSchemaDefinitions(minuend, subtrahend);
 
-      expect(result.directives).toEqual([
-        [
-          "auth",
-          [4, 12],
-          {
-            requires: "Role",
-          },
-        ],
-      ]);
+      expect(result.directives).toEqual([]);
     });
 
     it("should remove directive if all arguments are subtracted", () => {
@@ -664,126 +682,296 @@ describe("subtractSchemaDefinitions", () => {
     });
   });
 
-  describe("validation errors", () => {
-    it("should throw when subtrahend has field not in minuend", () => {
-      const minuend: SchemaDefinitions = {
-        types: {
-          User: createObjectTypeDefinition({
+  describe("strict mode", () => {
+    describe("validation errors", () => {
+      it("should throw when subtrahend has field not in minuend", () => {
+        const minuend: SchemaDefinitions = {
+          types: {
+            User: createObjectTypeDefinition({
+              id: "ID",
+              name: "String",
+            }),
+          },
+          directives: [],
+        };
+
+        const subtrahend: SchemaDefinitions = {
+          types: {
+            User: createObjectTypeDefinition({
+              email: "String", // Field doesn't exist in minuend
+            }),
+          },
+          directives: [],
+        };
+
+        expect(() =>
+          subtractSchemaDefinitions(minuend, subtrahend, true),
+        ).toThrow(/Field User.email does not exist in minuend/);
+      });
+
+      it("should throw when subtrahend has input field not in minuend", () => {
+        const minuend: SchemaDefinitions = {
+          types: {
+            UserInput: createInputObjectTypeDefinition({
+              name: "String",
+            }),
+          },
+          directives: [],
+        };
+
+        const subtrahend: SchemaDefinitions = {
+          types: {
+            UserInput: createInputObjectTypeDefinition({
+              email: "String", // Field doesn't exist in minuend
+            }),
+          },
+          directives: [],
+        };
+
+        expect(() =>
+          subtractSchemaDefinitions(minuend, subtrahend, true),
+        ).toThrow(/Input field UserInput.email does not exist in minuend/);
+      });
+
+      it("should throw when subtrahend has type not in minuend", () => {
+        const minuend: SchemaDefinitions = {
+          types: {
+            User: createObjectTypeDefinition({
+              id: "ID",
+            }),
+          },
+          directives: [],
+        };
+
+        const subtrahend: SchemaDefinitions = {
+          types: {
+            Post: createObjectTypeDefinition({
+              title: "String",
+            }),
+          },
+          directives: [],
+        };
+
+        expect(() =>
+          subtractSchemaDefinitions(minuend, subtrahend, true),
+        ).toThrow(/Type Post does not exist in minuend/);
+      });
+
+      it("should throw when subtrahend has directive not in minuend", () => {
+        const minuend: SchemaDefinitions = {
+          types: {},
+          directives: [["auth", [4, 12]]],
+        };
+
+        const subtrahend: SchemaDefinitions = {
+          types: {},
+          directives: [["deprecated", [12]]],
+        };
+
+        expect(() =>
+          subtractSchemaDefinitions(minuend, subtrahend, true),
+        ).toThrow(/Directive deprecated does not exist in minuend/);
+      });
+
+      it("should throw when trying to subtract union member that doesn't exist", () => {
+        const minuend: SchemaDefinitions = {
+          types: {
+            SearchResult: createUnionTypeDefinition([
+              "User",
+              "Post",
+              "Comment",
+            ]),
+          },
+          directives: [],
+        };
+
+        const subtrahend: SchemaDefinitions = {
+          types: {
+            SearchResult: createUnionTypeDefinition(["Article"]),
+          },
+          directives: [],
+        };
+
+        expect(() =>
+          subtractSchemaDefinitions(minuend, subtrahend, true),
+        ).toThrow(
+          /Union SearchResult: member Article does not exist in minuend/,
+        );
+      });
+
+      it("should throw when trying to subtract enum value that doesn't exist", () => {
+        const minuend: SchemaDefinitions = {
+          types: {
+            Role: createEnumTypeDefinition(["ADMIN", "USER"]),
+          },
+          directives: [],
+        };
+
+        const subtrahend: SchemaDefinitions = {
+          types: {
+            Role: createEnumTypeDefinition(["GUEST"]),
+          },
+          directives: [],
+        };
+
+        expect(() =>
+          subtractSchemaDefinitions(minuend, subtrahend, true),
+        ).toThrow(/Enum Role: value GUEST does not exist in minuend/);
+      });
+    });
+  });
+
+  describe("non-strict mode", () => {
+    describe("ignores items in subtrahend not present in minuend", () => {
+      it("should ignore field not in minuend", () => {
+        const minuend: SchemaDefinitions = {
+          types: {
+            User: createObjectTypeDefinition({
+              id: "ID",
+              name: "String",
+            }),
+          },
+          directives: [],
+        };
+
+        const subtrahend: SchemaDefinitions = {
+          types: {
+            User: createObjectTypeDefinition({
+              email: "String", // Field doesn't exist in minuend
+            }),
+          },
+          directives: [],
+        };
+
+        const result = subtractSchemaDefinitions(minuend, subtrahend, false);
+
+        expect(result.types.User).toEqual(
+          createObjectTypeDefinition({
             id: "ID",
             name: "String",
           }),
-        },
-        directives: [],
-      };
+        );
+      });
 
-      const subtrahend: SchemaDefinitions = {
-        types: {
-          User: createObjectTypeDefinition({
-            email: "String", // Field doesn't exist in minuend
-          }),
-        },
-        directives: [],
-      };
+      it("should ignore input field not in minuend", () => {
+        const minuend: SchemaDefinitions = {
+          types: {
+            UserInput: createInputObjectTypeDefinition({
+              name: "String",
+            }),
+          },
+          directives: [],
+        };
 
-      expect(() => subtractSchemaDefinitions(minuend, subtrahend)).toThrow(
-        /Field User.email does not exist in minuend/,
-      );
-    });
+        const subtrahend: SchemaDefinitions = {
+          types: {
+            UserInput: createInputObjectTypeDefinition({
+              email: "String", // Field doesn't exist in minuend
+            }),
+          },
+          directives: [],
+        };
 
-    it("should throw when subtrahend has input field not in minuend", () => {
-      const minuend: SchemaDefinitions = {
-        types: {
-          UserInput: createInputObjectTypeDefinition({
+        const result = subtractSchemaDefinitions(minuend, subtrahend, false);
+
+        expect(result.types.UserInput).toEqual(
+          createInputObjectTypeDefinition({
             name: "String",
           }),
-        },
-        directives: [],
-      };
+        );
+      });
 
-      const subtrahend: SchemaDefinitions = {
-        types: {
-          UserInput: createInputObjectTypeDefinition({
-            email: "String", // Field doesn't exist in minuend
-          }),
-        },
-        directives: [],
-      };
+      it("should ignore type not in minuend", () => {
+        const minuend: SchemaDefinitions = {
+          types: {
+            User: createObjectTypeDefinition({
+              id: "ID",
+            }),
+          },
+          directives: [],
+        };
 
-      expect(() => subtractSchemaDefinitions(minuend, subtrahend)).toThrow(
-        /Input field UserInput.email does not exist in minuend/,
-      );
-    });
+        const subtrahend: SchemaDefinitions = {
+          types: {
+            Post: createObjectTypeDefinition({
+              title: "String",
+            }),
+          },
+          directives: [],
+        };
 
-    it("should throw when subtrahend has directive argument not in minuend", () => {
-      const minuend: SchemaDefinitions = {
-        types: {},
-        directives: [
-          [
-            "auth",
-            [4, 12],
-            {
-              requires: "Role",
-            },
-          ],
-        ],
-      };
+        const result = subtractSchemaDefinitions(minuend, subtrahend, false);
 
-      const subtrahend: SchemaDefinitions = {
-        types: {},
-        directives: [
-          [
-            "auth",
-            [4, 12],
-            {
-              scopes: "String", // Argument doesn't exist in minuend
-            },
-          ],
-        ],
-      };
-
-      expect(() => subtractSchemaDefinitions(minuend, subtrahend)).toThrow(
-        /Directive auth: argument scopes does not exist in minuend/,
-      );
-    });
-
-    it("should throw when subtrahend has type not in minuend", () => {
-      const minuend: SchemaDefinitions = {
-        types: {
-          User: createObjectTypeDefinition({
+        expect(result.types.User).toEqual(
+          createObjectTypeDefinition({
             id: "ID",
           }),
-        },
-        directives: [],
-      };
+        );
+      });
 
-      const subtrahend: SchemaDefinitions = {
-        types: {
-          Post: createObjectTypeDefinition({
-            title: "String",
-          }),
-        },
-        directives: [],
-      };
+      it("should ignore directive not in minuend", () => {
+        const minuend: SchemaDefinitions = {
+          types: {},
+          directives: [["auth", [4, 12]]],
+        };
 
-      expect(() => subtractSchemaDefinitions(minuend, subtrahend)).toThrow(
-        /Type Post does not exist in minuend/,
-      );
-    });
+        const subtrahend: SchemaDefinitions = {
+          types: {},
+          directives: [["deprecated", [12]]],
+        };
 
-    it("should throw when subtrahend has directive not in minuend", () => {
-      const minuend: SchemaDefinitions = {
-        types: {},
-        directives: [["auth", [4, 12]]],
-      };
+        const result = subtractSchemaDefinitions(minuend, subtrahend, false);
 
-      const subtrahend: SchemaDefinitions = {
-        types: {},
-        directives: [["deprecated", [12]]],
-      };
+        expect(result.directives).toEqual([["auth", [4, 12]]]);
+      });
 
-      expect(() => subtractSchemaDefinitions(minuend, subtrahend)).toThrow(
-        /Directive deprecated does not exist in minuend/,
-      );
+      it("should ignore union member that doesn't exist", () => {
+        const minuend: SchemaDefinitions = {
+          types: {
+            SearchResult: createUnionTypeDefinition([
+              "User",
+              "Post",
+              "Comment",
+            ]),
+          },
+          directives: [],
+        };
+
+        const subtrahend: SchemaDefinitions = {
+          types: {
+            SearchResult: createUnionTypeDefinition(["Article"]),
+          },
+          directives: [],
+        };
+
+        const result = subtractSchemaDefinitions(minuend, subtrahend, false);
+
+        expect(result.types.SearchResult).toEqual(
+          createUnionTypeDefinition(["User", "Post", "Comment"]),
+        );
+      });
+
+      it("should ignore enum value that doesn't exist", () => {
+        const minuend: SchemaDefinitions = {
+          types: {
+            Role: createEnumTypeDefinition(["ADMIN", "USER"]),
+          },
+          directives: [],
+        };
+
+        const subtrahend: SchemaDefinitions = {
+          types: {
+            Role: createEnumTypeDefinition(["GUEST"]),
+          },
+          directives: [],
+        };
+
+        const result = subtractSchemaDefinitions(minuend, subtrahend, false);
+
+        expect(result.types.Role).toEqual(
+          createEnumTypeDefinition(["ADMIN", "USER"]),
+        );
+      });
     });
   });
 
@@ -820,7 +1008,7 @@ describe("subtractSchemaDefinitions", () => {
           User: createObjectTypeDefinition({
             email: "String",
           }),
-          Role: createEnumTypeDefinition(["USER"]),
+          Role: createEnumTypeDefinition(["ADMIN", "USER"]),
         },
         directives: [],
       };
@@ -845,7 +1033,7 @@ describe("subtractSchemaDefinitions", () => {
           title: "String",
         }),
       );
-      expect(result.types.Role).toEqual(createEnumTypeDefinition(["ADMIN"]));
+      expect(result.types.Role).toBeUndefined();
       expect(result.directives).toEqual([["auth", [12]]]);
     });
 
