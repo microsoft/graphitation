@@ -124,6 +124,21 @@ function readOperation(
       readState,
     );
     normalizeRootLevelTypeName(readState.outputTree);
+
+    // Only define the history property once when the tree is created/updated
+    if (readState.outputTree.operation.historySize) {
+      const outputTree = readState.outputTree;
+      Object.defineProperty(outputTree.result.data, OPERATION_HISTORY_SYMBOL, {
+        get() {
+          return outputTree.history.items.sort(
+            (a, b) => a.timestamp - b.timestamp,
+          );
+        },
+        enumerable: false,
+        configurable: true,
+      });
+    }
+
     resultsMap.set(operationDescriptor, readState);
   }
   const { outputTree } = readState;
@@ -131,21 +146,6 @@ function readOperation(
   // Safeguard: make sure previous state doesn't leak outside write operation
   assert(!outputTree?.prev);
 
-  if (readState.outputTree.operation.historySize) {
-    Object.defineProperty(
-      readState.outputTree.result.data,
-      OPERATION_HISTORY_SYMBOL,
-      {
-        get() {
-          return readState.outputTree.history.items.sort(
-            (a, b) => a.timestamp - b.timestamp,
-          );
-        },
-        enumerable: false,
-        configurable: true,
-      },
-    );
-  }
   return readState;
 }
 
