@@ -28,6 +28,8 @@ import {
   isRootOperationType,
   buildContextMetadataOutput,
   getRequiredAndOptionalContextArguments,
+  getExtendsGroupContextArguments,
+  getUseLegacyContextValue,
 } from "./utilities";
 import {
   createListType,
@@ -878,57 +880,39 @@ export function extractContext(
             );
           }
 
-          const useLegacyContext = Boolean(
-            node.arguments.find((value) => value.name.value === "useLegacy"),
+          const useLegacyContextArgument = node.arguments.find(
+            (value) => value.name.value === "useLegacy",
+          )?.value;
+
+          if (
+            useLegacyContextArgument &&
+            useLegacyContextArgument.kind !== "BooleanValue"
+          ) {
+            throw new Error(`useLegacy must be Boolean`);
+          }
+
+          const groupContextParameters = getExtendsGroupContextArguments(
+            node,
+            options.contextTypeExtensions,
           );
 
           const { requiredKeys, optionalKeys } =
             getRequiredAndOptionalContextArguments(
               node,
               options.contextTypeExtensions,
+              groupContextParameters?.required,
             );
 
           context.initContextMap(ancestors, {
             required: requiredKeys ? Array.from(requiredKeys) : undefined,
             optional: optionalKeys ? Array.from(optionalKeys) : undefined,
-            useLegacyContext,
+            useLegacyContext: getUseLegacyContextValue(
+              useLegacyContextArgument
+                ? Boolean(useLegacyContextArgument.value)
+                : undefined,
+              groupContextParameters?.useLegacyContext,
+            ),
           });
-        } else if (
-          options.contextTypeExtensions?.groups &&
-          options.contextTypeExtensions.groups[node.name.value]
-        ) {
-          const subTypeKeys: Set<string> = new Set();
-          const { required: groupItems, useLegacy: useLegacyContext } =
-            options.contextTypeExtensions.groups[node.name.value];
-
-          if (!groupItems || Object.keys(groupItems).length === 0) {
-            context.initContextMap(ancestors, {
-              required: [],
-              useLegacyContext,
-            });
-          } else {
-            for (const [namespace, namespaceValues] of Object.entries(
-              groupItems,
-            )) {
-              namespaceValues.forEach((namespaceValue) => {
-                if (
-                  !options.contextTypeExtensions?.contextTypes?.[namespace]?.[
-                    namespaceValue
-                  ]
-                ) {
-                  throw new Error(
-                    `Value "${namespaceValue}" in namespace "${namespace}" is not supported`,
-                  );
-                }
-
-                subTypeKeys.add(`${namespace}:${namespaceValue}`);
-              });
-              context.initContextMap(ancestors, {
-                required: Array.from(subTypeKeys),
-                useLegacyContext,
-              });
-            }
-          }
         }
       },
     },

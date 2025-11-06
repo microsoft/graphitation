@@ -134,7 +134,7 @@ describe(generateTS, () => {
             type User @context(required: { managers: ["user"] }) {
               id: ID! @context(required: { managers: ["id-user", "user"] })
               name: String
-              username: String @baseContextOnly
+              username: String @context(extends: "baseContextOnly")
               messagesWithAnswersNonRequired: [[Message]]
               messagesWithAnswersRequired: [[Message]]!
               messagesWithAnswersAllRequired: [[Message!]!]!
@@ -154,8 +154,8 @@ describe(generateTS, () => {
             }
 
             extend type Query {
-              requiredUsers: [User!]! @UserTestGroup
-              optionalUsers: [User] @UserTestGroup
+              requiredUsers: [User!]! @context(extends: "UserTestGroup")
+              optionalUsers: [User] @context(extends: "UserTestGroup")
               optionalUser: User
                 @context(
                   required: { managers: ["user"] }
@@ -163,9 +163,16 @@ describe(generateTS, () => {
                   useLegacy: true
                 )
               requiredUser: User! @context(optional: { managers: ["node"] })
-              requiredPost: Post! @baseContextOnly
-              optionalPost: Post @PostTestGroup
-              legacyPost: Post @PostTestGroupWithLegacyContext
+              requiredPost: Post! @context(extends: "baseContextOnly")
+              optionalPost: Post @context(extends: "PostTestGroup")
+              legacyPost: Post
+                @context(extends: "PostTestGroupWithLegacyContext")
+
+              refactoredLegacyPost: Post
+                @context(
+                  extends: "PostTestGroupWithLegacyContext"
+                  required: { managers: ["node"] }
+                )
             }
           `,
           {
@@ -218,6 +225,16 @@ describe(generateTS, () => {
               "managers": [
                 "user",
                 "whatever",
+              ],
+            },
+            "refactoredLegacyPost": {
+              "managers": [
+                "node",
+                "post",
+                "whatever",
+              ],
+              "workflows": [
+                "post-workflow",
               ],
             },
             "requiredPost": {},
@@ -467,6 +484,7 @@ describe(generateTS, () => {
                 readonly requiredPost?: requiredPost;
                 readonly optionalPost?: optionalPost;
                 readonly legacyPost?: legacyPost;
+                readonly refactoredLegacyPost?: refactoredLegacyPost;
             }
             export type requiredUsers = (model: unknown, args: {}, context: DefaultContextType & {
                 managers: {
@@ -503,6 +521,16 @@ describe(generateTS, () => {
             }, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
             export type legacyPost = (model: unknown, args: {}, context: DefaultLegacyContextType & {
                 managers: {
+                    "post": PostStateMachineType["post"];
+                    "whatever": whatever;
+                };
+                workflows: {
+                    "post-workflow": PostStateMachineType["post-workflow"];
+                };
+            }, info: ResolveInfo) => PromiseOrValue<Models.Post | null | undefined>;
+            export type refactoredLegacyPost = (model: unknown, args: {}, context: DefaultLegacyContextType & {
+                managers: {
+                    "node": NodeStateMachineType["node"];
                     "post": PostStateMachineType["post"];
                     "whatever": whatever;
                 };
