@@ -12,3 +12,4 @@ examples/apollo-watch-fragments/public/bundle.js
 
 examples/supermassive-todomvc/**/*.d.ts*
 relay-preload-hooks.ts
+package-lock.json
