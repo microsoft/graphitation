@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Wed, 30 Jul 2025 14:39:20 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 07 Nov 2025 11:36:34 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.12.0
+
+Fri, 07 Nov 2025 11:36:34 GMT
+
+### Minor changes
+
+- feat: subtract schema definitions (AI-assisted) (vladimir.razuvaev@gmail.com)
 
 ## 3.11.7
 

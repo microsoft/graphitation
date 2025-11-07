@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Fri, 07 Nov 2025 11:36:34 GMT",
+      "version": "3.12.0",
+      "tag": "@graphitation/supermassive_v3.12.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vladimir.razuvaev@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "82da98c1c5801759bccc5bbf6fd070eb9457b2ed",
+            "comment": "feat: subtract schema definitions (AI-assisted)"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 30 Jul 2025 14:39:20 GMT",
       "version": "3.11.7",
       "tag": "@graphitation/supermassive_v3.11.7",
