@@ -31,7 +31,6 @@ export const buildClient: () => ApolloClient<NormalizedCacheObject> = () => {
 
   return new ApolloClient({
     cache: new ForestRun({
-      enableHistory: true,
       enableRichHistory: true,
       defaultHistorySize: 50,
     }),
