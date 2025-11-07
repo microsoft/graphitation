@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "feat: subtract schema definitions (AI-assisted)",
+  "packageName": "@graphitation/supermassive",
+  "email": "vladimir.razuvaev@gmail.com",
+  "dependentChangeType": "patch"
+}
