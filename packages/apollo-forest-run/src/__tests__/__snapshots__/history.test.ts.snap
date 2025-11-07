@@ -1,0 +1,271 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`enableRichHistory: false should capture list changes in history entries 1`] = `
+[
+  {
+    "changes": [
+      {
+        "itemChanges": [
+          {
+            "data": undefined,
+            "index": 0,
+            "kind": "ItemIndexChange",
+            "oldIndex": 2,
+          },
+          {
+            "data": undefined,
+            "index": 2,
+            "kind": "ItemIndexChange",
+            "oldIndex": 0,
+          },
+          {
+            "data": undefined,
+            "kind": "ItemRemove",
+            "oldIndex": 1,
+          },
+          {
+            "data": undefined,
+            "index": 1,
+            "kind": "ItemAdd",
+            "missingFields": undefined,
+          },
+        ],
+        "kind": "CompositeListDifference",
+        "path": [
+          "Enable enableRichHistory for full path",
+          "todos",
+        ],
+      },
+    ],
+    "data": undefined,
+    "kind": "Regular",
+    "missingFields": Map {},
+    "modifyingOperation": {
+      "name": "query GetTodoHistory",
+      "variables": {},
+    },
+    "timestamp": 1577836800000,
+  },
+]
+`;
+
+exports[`enableRichHistory: false should capture value changes in history entries 1`] = `
+[
+  {
+    "changes": [
+      {
+        "kind": "Replacement",
+        "newValue": undefined,
+        "oldValue": undefined,
+        "path": [
+          "Enable enableRichHistory for full path",
+          "name",
+        ],
+      },
+    ],
+    "data": undefined,
+    "kind": "Regular",
+    "missingFields": Map {},
+    "modifyingOperation": {
+      "name": "query GetUserHistory",
+      "variables": {},
+    },
+    "timestamp": 1577836800000,
+  },
+]
+`;
+
+exports[`enableRichHistory: true should capture list changes in history entries 1`] = `
+[
+  {
+    "changes": [
+      {
+        "itemChanges": [
+          {
+            "data": {
+              "__typename": "Todo",
+              "id": "3",
+              "text": "Ship product",
+            },
+            "index": 0,
+            "kind": "ItemIndexChange",
+            "oldIndex": 2,
+          },
+          {
+            "data": {
+              "__typename": "Todo",
+              "id": "1",
+              "text": "Write tests",
+            },
+            "index": 2,
+            "kind": "ItemIndexChange",
+            "oldIndex": 0,
+          },
+          {
+            "data": {
+              "__typename": "Todo",
+              "id": "2",
+              "text": "Fix bug",
+            },
+            "kind": "ItemRemove",
+            "oldIndex": 1,
+          },
+          {
+            "data": {
+              "__typename": "Todo",
+              "id": "4",
+              "text": "Plan next sprint",
+            },
+            "index": 1,
+            "kind": "ItemAdd",
+            "missingFields": undefined,
+          },
+        ],
+        "kind": "CompositeListDifference",
+        "path": [
+          "user",
+          "todos",
+        ],
+      },
+    ],
+    "data": {
+      "current": {
+        "data": {
+          "user": {
+            "__typename": "User",
+            "id": "1",
+            "todos": [
+              {
+                "__typename": "Todo",
+                "id": "1",
+                "text": "Write tests",
+              },
+              {
+                "__typename": "Todo",
+                "id": "2",
+                "text": "Fix bug",
+              },
+              {
+                "__typename": "Todo",
+                "id": "3",
+                "text": "Ship product",
+              },
+            ],
+          },
+        },
+      },
+      "incoming": {
+        "data": {
+          "user": {
+            "__typename": "User",
+            "id": "1",
+            "todos": [
+              {
+                "__typename": "Todo",
+                "id": "3",
+                "text": "Ship product",
+              },
+              {
+                "__typename": "Todo",
+                "id": "4",
+                "text": "Plan next sprint",
+              },
+              {
+                "__typename": "Todo",
+                "id": "1",
+                "text": "Write tests",
+              },
+            ],
+          },
+        },
+      },
+      "updated": {
+        "data": {
+          "user": {
+            "__typename": "User",
+            "id": "1",
+            "todos": [
+              {
+                "__typename": "Todo",
+                "id": "3",
+                "text": "Ship product",
+              },
+              {
+                "__typename": "Todo",
+                "id": "4",
+                "text": "Plan next sprint",
+              },
+              {
+                "__typename": "Todo",
+                "id": "1",
+                "text": "Write tests",
+              },
+            ],
+          },
+        },
+      },
+    },
+    "kind": "Regular",
+    "missingFields": Map {},
+    "modifyingOperation": {
+      "name": "query GetTodoHistory",
+      "variables": {},
+    },
+    "timestamp": 1577836800000,
+  },
+]
+`;
+
+exports[`enableRichHistory: true should capture value changes in history entries 1`] = `
+[
+  {
+    "changes": [
+      {
+        "kind": "Replacement",
+        "newValue": "Alice v2",
+        "oldValue": "Alice v1",
+        "path": [
+          "user",
+          "name",
+        ],
+      },
+    ],
+    "data": {
+      "current": {
+        "data": {
+          "user": {
+            "__typename": "User",
+            "id": "1",
+            "name": "Alice v1",
+          },
+        },
+      },
+      "incoming": {
+        "data": {
+          "user": {
+            "__typename": "User",
+            "id": "1",
+            "name": "Alice v2",
+          },
+        },
+      },
+      "updated": {
+        "data": {
+          "user": {
+            "__typename": "User",
+            "id": "1",
+            "name": "Alice v2",
+          },
+        },
+      },
+    },
+    "kind": "Regular",
+    "missingFields": Map {},
+    "modifyingOperation": {
+      "name": "query GetUserHistory",
+      "variables": {},
+    },
+    "timestamp": 1577836800000,
+  },
+]
+`;

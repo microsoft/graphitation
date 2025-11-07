@@ -115,7 +115,7 @@ type FillerChange = {
 type ReplacementChange = {
   kind: typeof DifferenceKind.Replacement;
   fieldInfo: FieldInfo;
-  oldValue: GraphValue | undefined;
+  oldValue: SourceValue | undefined;
   newValue: SourceValue | undefined;
 };
 

@@ -125,8 +125,12 @@ function readOperation(
     );
     normalizeRootLevelTypeName(readState.outputTree);
 
-    if (readState.outputTree.history.items.length) {
+    if (
+      readState.outputTree.history.items.length &&
+      !readState.outputTree.result.data[OPERATION_HISTORY_SYMBOL]
+    ) {
       const outputTree = readState.outputTree;
+
       Object.defineProperty(outputTree.result.data, OPERATION_HISTORY_SYMBOL, {
         get() {
           return outputTree.history.items.sort(

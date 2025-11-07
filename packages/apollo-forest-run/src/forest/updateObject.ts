@@ -69,7 +69,9 @@ export function recordFieldChange(
       changes.push({
         kind: fieldDiff.kind,
         fieldInfo,
-        oldValue: enableRichHistory ? fieldDiff.oldValue : undefined,
+        oldValue: enableRichHistory
+          ? getSourceValue(fieldDiff.oldValue)
+          : undefined,
         newValue: enableRichHistory ? updated : undefined,
       });
       break;
@@ -77,7 +79,7 @@ export function recordFieldChange(
       changes.push({
         kind: fieldDiff.kind,
         fieldInfo,
-        itemChanges: enableRichHistory ? context.childChanges : undefined,
+        itemChanges: context.childChanges,
       });
       context.childChanges = [];
       break;
@@ -210,6 +212,8 @@ function updateCompositeListValue(
   let copy = drafts.get(base.data);
   assert(Array.isArray(copy) || copy === undefined);
   statsLogger?.copyChunkStats(base, copy);
+  context.childChanges =
+    base.operation.historySize > 0 ? [...difference.itemsChanges] : [];
 
   // Applying item changes _before_ layout changes (i.e. before item paths change)
   for (const index of difference.dirtyItems ?? EMPTY_ARRAY) {
