@@ -62,51 +62,30 @@ const useStyles = makeStyles({
     backgroundColor: "rgba(229, 83, 75, 0.15)",
     color: tokens.colorPaletteRedForeground1,
   },
-  fieldChanges: {
+  fieldsList: {
     display: "flex",
-    flexDirection: "column",
-    ...shorthands.gap(tokens.spacingVerticalM),
+    flexWrap: "wrap",
+    ...shorthands.gap(tokens.spacingHorizontalS),
+    marginTop: tokens.spacingVerticalS,
   },
-  fieldChangeItem: {
-    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalM),
-    backgroundColor: tokens.colorNeutralBackground2,
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
-  },
-  fieldName: {
-    fontFamily: tokens.fontFamilyMonospace,
-    fontWeight: tokens.fontWeightSemibold,
-    color: tokens.colorNeutralForeground1,
-    fontSize: tokens.fontSizeBase300,
-    marginBottom: tokens.spacingVerticalXS,
-  },
-  fieldValue: {
+  fieldTag: {
     fontFamily: tokens.fontFamilyMonospace,
     fontSize: tokens.fontSizeBase200,
-    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS),
+    ...shorthands.padding(tokens.spacingVerticalXXS, tokens.spacingHorizontalS),
     backgroundColor: tokens.colorNeutralBackground3,
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    ...shorthands.overflow("auto"),
-    maxHeight: "300px",
+    ...shorthands.borderRadius(tokens.borderRadiusSmall),
     ...shorthands.border(
       tokens.strokeWidthThin,
       "solid",
       tokens.colorNeutralStroke2,
     ),
-    whiteSpace: "pre",
-  },
-  dirtyFields: {
-    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalM),
-    backgroundColor: tokens.colorNeutralBackground2,
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    marginTop: tokens.spacingVerticalS,
-  },
-  dirtyFieldsLabel: {
-    fontWeight: tokens.fontWeightSemibold,
-    marginBottom: tokens.spacingVerticalXS,
-  },
-  dirtyFieldsValue: {
-    fontFamily: tokens.fontFamilyMonospace,
     color: tokens.colorNeutralForeground2,
+  },
+  fieldsLabel: {
+    fontWeight: tokens.fontWeightSemibold,
+    fontSize: tokens.fontSizeBase300,
+    color: tokens.colorNeutralForeground1,
+    marginBottom: tokens.spacingVerticalXS,
   },
 });
 
@@ -163,29 +142,29 @@ const NodeDiffItem: React.FC<NodeDiffItemProps> = ({ nodeDiff, classes }) => {
 
       {/* Field Changes */}
       {hasFieldState && (
-        <div className={classes.fieldChanges}>
-          {nodeDiff.fieldState!.map((fieldState, idx) => (
-            <div key={idx} className={classes.fieldChangeItem}>
-              <Text className={classes.fieldName}>{fieldState.fieldKey}</Text>
-              <pre className={classes.fieldValue}>
-                {formatValue(
-                  fieldState.newValue !== undefined
-                    ? fieldState.newValue
-                    : fieldState.oldValue,
-                )}
-              </pre>
-            </div>
-          ))}
+        <div>
+          <Text className={classes.fieldsLabel}>Changed Fields:</Text>
+          <div className={classes.fieldsList}>
+            {nodeDiff.fieldState!.map((fieldState, idx) => (
+              <Text key={idx} className={classes.fieldTag}>
+                {fieldState.fieldKey}
+              </Text>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Dirty Fields (when no field state) */}
       {!hasFieldState && hasDirtyFields && (
-        <div className={classes.dirtyFields}>
-          <Text className={classes.dirtyFieldsLabel}>Dirty Fields:</Text>
-          <Text className={classes.dirtyFieldsValue}>
-            {nodeDiff.dirtyFields!.join(", ")}
-          </Text>
+        <div>
+          <Text className={classes.fieldsLabel}>Dirty Fields:</Text>
+          <div className={classes.fieldsList}>
+            {nodeDiff.dirtyFields!.map((field, idx) => (
+              <Text key={idx} className={classes.fieldTag}>
+                {field}
+              </Text>
+            ))}
+          </div>
         </div>
       )}
 
@@ -198,14 +177,3 @@ const NodeDiffItem: React.FC<NodeDiffItemProps> = ({ nodeDiff, classes }) => {
     </div>
   );
 };
-
-// Helper function to format values
-function formatValue(value: unknown): string {
-  if (value === undefined) return "undefined";
-  if (value === null) return "null";
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-}

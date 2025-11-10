@@ -333,19 +333,24 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       </div>
       <div className={classes.changeMap}>
         <div className={classes.changeMapBar} onClick={handleMapClick}>
-          {allChangeLines.map((change, idx) => {
-            const position = (change.lineIndex / totalLines) * 100;
+          {changeGroups.map((group, idx) => {
+            const startPosition = (group.startLine / totalLines) * 100;
+            const endPosition = ((group.endLine + 1) / totalLines) * 100;
+            const width = Math.max(endPosition - startPosition, 0.3); // Minimum 0.3% width
 
             return (
               <div
                 key={idx}
                 className={mergeClasses(
                   classes.changeMarker,
-                  change.type === "added"
+                  group.type === "added" || group.type === "mixed"
                     ? classes.addedMarker
                     : classes.removedMarker,
                 )}
-                style={{ left: `${position}%` }}
+                style={{
+                  left: `${startPosition}%`,
+                  width: `${width}%`,
+                }}
               />
             );
           })}
@@ -463,28 +468,65 @@ function formatValue(value: unknown): string {
   }
 }
 
-// Simple diff algorithm - shows ALL lines with changes highlighted
+// LCS (Longest Common Subsequence) algorithm for better diff matching
+function computeLCS(
+  oldLines: string[],
+  newLines: string[],
+): Array<{ oldIndex: number; newIndex: number }> {
+  const m = oldLines.length;
+  const n = newLines.length;
+
+  // Build LCS table
+  const lcs: number[][] = Array(m + 1)
+    .fill(0)
+    .map(() => Array(n + 1).fill(0));
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (oldLines[i - 1] === newLines[j - 1]) {
+        lcs[i][j] = lcs[i - 1][j - 1] + 1;
+      } else {
+        lcs[i][j] = Math.max(lcs[i - 1][j], lcs[i][j - 1]);
+      }
+    }
+  }
+
+  // Backtrack to find the actual LCS
+  const matches: Array<{ oldIndex: number; newIndex: number }> = [];
+  let i = m;
+  let j = n;
+
+  while (i > 0 && j > 0) {
+    if (oldLines[i - 1] === newLines[j - 1]) {
+      matches.unshift({ oldIndex: i - 1, newIndex: j - 1 });
+      i--;
+      j--;
+    } else if (lcs[i - 1][j] > lcs[i][j - 1]) {
+      i--;
+    } else {
+      j--;
+    }
+  }
+
+  return matches;
+}
+
+// Simple diff algorithm using LCS - shows ALL lines with changes highlighted
 function computeDiff(oldText: string, newText: string): DiffHunk[] {
   const oldLines = oldText.split("\n");
   const newLines = newText.split("\n");
 
-  // Build a single hunk with ALL lines
+  // Use LCS to find matching lines
+  const lcs = computeLCS(oldLines, newLines);
+
   const allLines: DiffLine[] = [];
   let oldIdx = 0;
   let newIdx = 0;
 
-  while (oldIdx < oldLines.length || newIdx < newLines.length) {
-    if (oldIdx >= oldLines.length) {
-      // Rest are additions
-      allLines.push({
-        type: "added",
-        oldLineNum: null,
-        newLineNum: newIdx + 1,
-        content: newLines[newIdx],
-      });
-      newIdx++;
-    } else if (newIdx >= newLines.length) {
-      // Rest are deletions
+  // Build diff from LCS
+  for (const match of lcs) {
+    // Add deleted lines (in old but not in match)
+    while (oldIdx < match.oldIndex) {
       allLines.push({
         type: "removed",
         oldLineNum: oldIdx + 1,
@@ -492,70 +534,50 @@ function computeDiff(oldText: string, newText: string): DiffHunk[] {
         content: oldLines[oldIdx],
       });
       oldIdx++;
-    } else if (oldLines[oldIdx] === newLines[newIdx]) {
-      // Lines match - context (show all context lines)
-      allLines.push({
-        type: "context",
-        oldLineNum: oldIdx + 1,
-        newLineNum: newIdx + 1,
-        content: oldLines[oldIdx],
-      });
-      oldIdx++;
-      newIdx++;
-    } else {
-      // Lines differ - try to find best match
-      const oldLine = oldLines[oldIdx];
-      const newLine = newLines[newIdx];
-
-      // Look ahead to see if we can find a match
-      let foundMatch = false;
-      const lookAhead = 5;
-
-      for (let i = 1; i <= lookAhead && !foundMatch; i++) {
-        if (oldIdx + i < oldLines.length && oldLines[oldIdx + i] === newLine) {
-          // Found match in old - lines were removed
-          allLines.push({
-            type: "removed",
-            oldLineNum: oldIdx + 1,
-            newLineNum: null,
-            content: oldLines[oldIdx],
-          });
-          oldIdx++;
-          foundMatch = true;
-        } else if (
-          newIdx + i < newLines.length &&
-          newLines[newIdx + i] === oldLine
-        ) {
-          // Found match in new - lines were added
-          allLines.push({
-            type: "added",
-            oldLineNum: null,
-            newLineNum: newIdx + 1,
-            content: newLines[newIdx],
-          });
-          newIdx++;
-          foundMatch = true;
-        }
-      }
-
-      if (!foundMatch) {
-        // No match found - treat as replacement
-        allLines.push({
-          type: "removed",
-          oldLineNum: oldIdx + 1,
-          newLineNum: null,
-          content: oldLines[oldIdx],
-        });
-        allLines.push({
-          type: "added",
-          oldLineNum: null,
-          newLineNum: newIdx + 1,
-          content: newLines[newIdx],
-        });
-        oldIdx++;
-        newIdx++;
-      }
     }
+
+    // Add added lines (in new but not in match)
+    while (newIdx < match.newIndex) {
+      allLines.push({
+        type: "added",
+        oldLineNum: null,
+        newLineNum: newIdx + 1,
+        content: newLines[newIdx],
+      });
+      newIdx++;
+    }
+
+    // Add unchanged line (in both)
+    allLines.push({
+      type: "context",
+      oldLineNum: oldIdx + 1,
+      newLineNum: newIdx + 1,
+      content: newLines[match.newIndex],
+    });
+    oldIdx++;
+    newIdx++;
+  }
+
+  // Add remaining deleted lines
+  while (oldIdx < oldLines.length) {
+    allLines.push({
+      type: "removed",
+      oldLineNum: oldIdx + 1,
+      newLineNum: null,
+      content: oldLines[oldIdx],
+    });
+    oldIdx++;
+  }
+
+  // Add remaining added lines
+  while (newIdx < newLines.length) {
+    allLines.push({
+      type: "added",
+      oldLineNum: null,
+      newLineNum: newIdx + 1,
+      content: newLines[newIdx],
+    });
+    newIdx++;
   }
 
   // Return single hunk with all lines
@@ -564,7 +586,6 @@ function computeDiff(oldText: string, newText: string): DiffHunk[] {
   }
 
   const firstLine = allLines[0];
-  const lastLine = allLines[allLines.length - 1];
 
   return [
     {

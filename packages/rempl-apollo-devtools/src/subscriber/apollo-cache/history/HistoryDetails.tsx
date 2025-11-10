@@ -28,56 +28,66 @@ const useStyles = makeStyles({
     ...shorthands.gap(tokens.spacingVerticalL),
   },
   header: {
-    ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalM),
-    backgroundColor: tokens.colorNeutralBackground2,
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    ...shorthands.border(
+    display: "flex",
+    flexDirection: "column",
+    ...shorthands.gap(tokens.spacingVerticalS),
+    paddingBottom: tokens.spacingVerticalM,
+    ...shorthands.borderBottom(
       tokens.strokeWidthThin,
       "solid",
       tokens.colorNeutralStroke2,
     ),
   },
-  headerTitle: {
+  headerTop: {
     display: "flex",
-    alignItems: "center",
-    ...shorthands.gap(tokens.spacingHorizontalS),
-    marginBottom: tokens.spacingVerticalXS,
+    alignItems: "baseline",
+    ...shorthands.gap(tokens.spacingHorizontalM),
+    flexWrap: "wrap",
+  },
+  operationName: {
+    fontSize: tokens.fontSizeBase500,
+    fontWeight: tokens.fontWeightSemibold,
+    color: tokens.colorNeutralForeground1,
+  },
+  badge: {
+    display: "inline-block",
+    ...shorthands.padding("2px", tokens.spacingHorizontalXS),
+    ...shorthands.borderRadius(tokens.borderRadiusSmall),
+    fontSize: "10px",
+    fontWeight: tokens.fontWeightSemibold,
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
   },
   optimisticBadge: {
-    ...shorthands.padding(tokens.spacingVerticalXXS, tokens.spacingHorizontalS),
-    backgroundColor: "rgba(0, 120, 212, 0.2)",
+    backgroundColor: "rgba(0, 120, 212, 0.15)",
     color: tokens.colorBrandForeground1,
-    ...shorthands.borderRadius(tokens.borderRadiusSmall),
-    fontSize: tokens.fontSizeBase200,
-    fontWeight: tokens.fontWeightSemibold,
   },
-  timestamp: {
+  metaRow: {
+    display: "flex",
+    alignItems: "center",
+    ...shorthands.gap(tokens.spacingHorizontalL),
+    flexWrap: "wrap",
+  },
+  metaItem: {
+    fontSize: tokens.fontSizeBase200,
     color: tokens.colorNeutralForeground3,
+    whiteSpace: "nowrap",
+  },
+  metaLabel: {
+    fontWeight: tokens.fontWeightSemibold,
+    color: tokens.colorNeutralForeground2,
+    marginRight: tokens.spacingHorizontalXXS,
+  },
+  variablesInline: {
     fontFamily: tokens.fontFamilyMonospace,
     fontSize: tokens.fontSizeBase200,
-  },
-  variablesBox: {
-    marginTop: tokens.spacingVerticalS,
-    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS),
-    backgroundColor: tokens.colorNeutralBackground2,
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
-  },
-  variablesLabel: {
-    marginBottom: tokens.spacingVerticalXS,
-  },
-  codeBlock: {
-    fontFamily: tokens.fontFamilyMonospace,
-    fontSize: tokens.fontSizeBase200,
-    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS),
-    backgroundColor: tokens.colorNeutralBackground3,
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    ...shorthands.overflow("auto"),
-    maxHeight: "400px",
-    ...shorthands.border(
-      tokens.strokeWidthThin,
-      "solid",
-      tokens.colorNeutralStroke2,
+    color: tokens.colorNeutralForeground3,
+    ...shorthands.padding(
+      tokens.spacingVerticalXXS,
+      tokens.spacingHorizontalXS,
     ),
+    backgroundColor: tokens.colorNeutralBackground3,
+    ...shorthands.borderRadius(tokens.borderRadiusSmall),
   },
   section: {
     display: "flex",
@@ -166,7 +176,7 @@ export const HistoryDetails: React.FC<HistoryDetailsProps> = ({ entry }) => {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(["changes", "nodeDiffs"]),
   );
-  const [showDiff, setShowDiff] = useState(false);
+  const [showDiff, setShowDiff] = useState(true);
 
   const toggleSection = (section: string) => {
     setExpandedSections((prev) => {
@@ -190,33 +200,48 @@ export const HistoryDetails: React.FC<HistoryDetailsProps> = ({ entry }) => {
   return (
     <div className={classes.container}>
       <div className={classes.content}>
-        {/* Header */}
+        {/* Cleaner Header */}
         <div className={classes.header}>
-          <div className={classes.headerTitle}>
-            <Text size={500} weight="semibold">
+          {/* Operation name and badge */}
+          <div className={classes.headerTop}>
+            <Text className={classes.operationName}>
               {entry.modifyingOperation?.name || "Anonymous Operation"}
             </Text>
             {entry.kind === "Optimistic" && (
-              <span className={classes.optimisticBadge}>Optimistic</span>
+              <span className={`${classes.badge} ${classes.optimisticBadge}`}>
+                Optimistic
+              </span>
             )}
           </div>
-          <Text className={classes.timestamp}>
-            {new Date(entry.timestamp).toLocaleString()}
-          </Text>
-          {hasVariables && (
-            <div className={classes.variablesBox}>
-              <Text
-                size={300}
-                weight="semibold"
-                className={classes.variablesLabel}
-              >
-                Variables:
+
+          {/* Metadata row with variables inline */}
+          <div className={classes.metaRow}>
+            <Text className={classes.metaItem}>
+              <span className={classes.metaLabel}>Time:</span>
+              {new Date(entry.timestamp).toLocaleTimeString()}
+            </Text>
+            {entry.kind === "Regular" && entry.changes && (
+              <Text className={classes.metaItem}>
+                <span className={classes.metaLabel}>Changes:</span>
+                {entry.changes.length} field
+                {entry.changes.length !== 1 ? "s" : ""}
               </Text>
-              <pre className={classes.codeBlock}>
-                {JSON.stringify(entry.modifyingOperation.variables, null, 2)}
-              </pre>
-            </div>
-          )}
+            )}
+            {entry.kind === "Optimistic" && entry.nodeDiffs && (
+              <Text className={classes.metaItem}>
+                <span className={classes.metaLabel}>Nodes:</span>
+                {entry.nodeDiffs.length} modified
+              </Text>
+            )}
+            {hasVariables && (
+              <Text className={classes.metaItem}>
+                <span className={classes.metaLabel}>Variables:</span>
+                <span className={classes.variablesInline}>
+                  {JSON.stringify(entry.modifyingOperation.variables)}
+                </span>
+              </Text>
+            )}
+          </div>
         </div>
 
         {/* Changes or Node Diffs */}

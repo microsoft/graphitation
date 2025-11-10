@@ -7,7 +7,8 @@ import {
   mergeClasses,
 } from "@fluentui/react-components";
 import { ChevronRight20Regular } from "@fluentui/react-icons";
-import type { FieldChange, ListItemChange } from "../../../history/types";
+import type { FieldChange } from "../../../history/types";
+import { ArrayDiffViewer } from "./ArrayDiffViewer";
 
 const useStyles = makeStyles({
   container: {
@@ -120,25 +121,6 @@ const useStyles = makeStyles({
       tokens.colorNeutralStroke2,
     ),
   },
-  listItemsContainer: {
-    display: "flex",
-    flexDirection: "column",
-    ...shorthands.gap(tokens.spacingVerticalS),
-  },
-  listItem: {
-    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS),
-    backgroundColor: tokens.colorNeutralBackground2,
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    ...shorthands.border(
-      tokens.strokeWidthThin,
-      "solid",
-      tokens.colorNeutralStroke2,
-    ),
-  },
-  listItemHeader: {
-    fontWeight: tokens.fontWeightSemibold,
-    marginBottom: tokens.spacingVerticalXS,
-  },
 });
 
 interface FieldChangesListProps {
@@ -197,7 +179,7 @@ const FieldChangeItem: React.FC<FieldChangeItemProps> = ({
   const getChangeLabel = () => {
     switch (changeKind) {
       case "Filler":
-        return "New";
+        return "Filled";
       case "Replacement":
         return "Modified";
       case "CompositeListDifference":
@@ -268,39 +250,18 @@ const FieldChangeItem: React.FC<FieldChangeItemProps> = ({
             </div>
           )}
           {changeKind === "CompositeListDifference" && change.itemChanges && (
-            <ListItemChanges items={change.itemChanges} classes={classes} />
+            <ArrayDiffViewer
+              itemChanges={change.itemChanges}
+              oldValue={
+                Array.isArray(change.oldValue) ? change.oldValue : undefined
+              }
+              newValue={
+                Array.isArray(change.newValue) ? change.newValue : undefined
+              }
+            />
           )}
         </div>
       )}
-    </div>
-  );
-};
-
-interface ListItemChangesProps {
-  items: ListItemChange[];
-  classes: ReturnType<typeof useStyles>;
-}
-
-const ListItemChanges: React.FC<ListItemChangesProps> = ({
-  items,
-  classes,
-}) => {
-  if (items.length === 0) {
-    return <Text>List structure changed (no item details available)</Text>;
-  }
-
-  return (
-    <div className={classes.listItemsContainer}>
-      {items.map((item, index) => (
-        <div key={index} className={classes.listItem}>
-          <Text className={classes.listItemHeader}>
-            {getListItemChangeDescription(item)}
-          </Text>
-          {item.data !== undefined && (
-            <pre className={classes.codeBlock}>{formatValue(item.data)}</pre>
-          )}
-        </div>
-      ))}
     </div>
   );
 };
@@ -332,20 +293,5 @@ function formatValue(value: unknown): string {
     return JSON.stringify(value, null, 2);
   } catch {
     return String(value);
-  }
-}
-
-function getListItemChangeDescription(item: ListItemChange): string {
-  switch (item.kind) {
-    case "ItemAdd":
-      return `Item added at index ${item.index}`;
-    case "ItemRemove":
-      return `Item removed from index ${item.oldIndex}`;
-    case "ItemIndexChange":
-      return `Item moved from index ${item.oldIndex} to ${item.index}`;
-    case "ItemUpdate":
-      return `Item updated at index ${item.index || item.oldIndex}`;
-    default:
-      return `Item changed`;
   }
 }
