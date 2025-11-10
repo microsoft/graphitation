@@ -8,7 +8,7 @@ import {
   History20Regular,
 } from "@fluentui/react-icons";
 import { Dialog } from "./../../components";
-import { ApolloCacheHistory } from "./apollo-cache-history";
+import { HistoryDialog } from "./history";
 
 interface IApolloCacheItems {
   cacheObjectsWithSize: CacheObjectWithSize[];
@@ -115,7 +115,7 @@ export const ApolloCacheItems = React.memo(
           <Dialog value={detailsValue} onClose={closeDetails} />
         ) : null}
         {historyValue ? (
-          <ApolloCacheHistory item={historyValue} onClose={closeHistory} />
+          <HistoryDialog item={historyValue} onClose={closeHistory} />
         ) : null}
       </div>
     );
