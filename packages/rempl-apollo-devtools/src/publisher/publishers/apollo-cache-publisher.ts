@@ -60,7 +60,13 @@ export class ApolloCachePublisher {
                   );
                   if (history && history.length > 0) {
                     // Transform to JSON-friendly format and include tree operation data
-                    return this.serializeHistory(history, tree.operation);
+                    return {
+                      history: this.serializeHistory(history, tree.operation),
+                      operation: {
+                        name: tree.operation.debugName || "Anonymous Operation",
+                        variables: tree.operation.variables || {},
+                      },
+                    };
                   }
                 }
               }
@@ -88,12 +94,27 @@ export class ApolloCachePublisher {
     treeOperation?: any,
   ): HistoryEntry[] {
     return history.map((entry) => {
+      // Merge operation variables from tree operation if available
+      let modifyingOperation = entry.modifyingOperation || {
+        name: "Anonymous Operation",
+        variables: {},
+      };
+
+      // If we have tree operation data and the entry doesn't have variables, use tree's variables
+      if (treeOperation) {
+        modifyingOperation = {
+          name:
+            modifyingOperation.name ||
+            treeOperation.debugName ||
+            "Anonymous Operation",
+          variables:
+            modifyingOperation.variables || treeOperation.variables || {},
+        };
+      }
+
       const base = {
         timestamp: entry.timestamp,
-        modifyingOperation: entry.modifyingOperation || {
-          name: "Anonymous Operation",
-          variables: {},
-        },
+        modifyingOperation,
         data: entry.data
           ? {
               current: entry.data.current,

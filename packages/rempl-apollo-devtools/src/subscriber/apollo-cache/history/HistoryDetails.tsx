@@ -48,6 +48,8 @@ const useStyles = makeStyles({
     fontSize: tokens.fontSizeBase500,
     fontWeight: tokens.fontWeightSemibold,
     color: tokens.colorNeutralForeground1,
+    wordBreak: "break-word",
+    overflowWrap: "break-word",
   },
   badge: {
     display: "inline-block",
@@ -64,30 +66,44 @@ const useStyles = makeStyles({
   },
   metaRow: {
     display: "flex",
-    alignItems: "center",
+    alignItems: "flex-start",
     ...shorthands.gap(tokens.spacingHorizontalL),
-    flexWrap: "wrap",
+    flexWrap: "nowrap",
+    maxWidth: "100%",
   },
   metaItem: {
     fontSize: tokens.fontSizeBase200,
     color: tokens.colorNeutralForeground3,
-    whiteSpace: "nowrap",
+    display: "flex",
+    alignItems: "flex-start",
+    ...shorthands.gap(tokens.spacingHorizontalXXS),
+    minWidth: 0,
+    flexShrink: 0,
   },
   metaLabel: {
     fontWeight: tokens.fontWeightSemibold,
     color: tokens.colorNeutralForeground2,
-    marginRight: tokens.spacingHorizontalXXS,
+    whiteSpace: "nowrap",
+    flexShrink: 0,
+  },
+  variablesContainer: {
+    display: "block",
+    minWidth: 0,
+    flexGrow: 1,
+    maxWidth: "800px",
+    marginTop: "4px",
   },
   variablesInline: {
     fontFamily: tokens.fontFamilyMonospace,
     fontSize: tokens.fontSizeBase200,
-    color: tokens.colorNeutralForeground3,
-    ...shorthands.padding(
-      tokens.spacingVerticalXXS,
-      tokens.spacingHorizontalXS,
-    ),
+    color: tokens.colorNeutralForeground2,
+    ...shorthands.padding(tokens.spacingVerticalXS, tokens.spacingHorizontalS),
     backgroundColor: tokens.colorNeutralBackground3,
     ...shorthands.borderRadius(tokens.borderRadiusSmall),
+    whiteSpace: "pre-wrap",
+    wordBreak: "break-all",
+    maxHeight: "100px",
+    overflowY: "auto",
   },
   section: {
     display: "flex",
@@ -234,12 +250,18 @@ export const HistoryDetails: React.FC<HistoryDetailsProps> = ({ entry }) => {
               </Text>
             )}
             {hasVariables && (
-              <Text className={classes.metaItem}>
+              <div className={classes.metaItem}>
                 <span className={classes.metaLabel}>Variables:</span>
-                <span className={classes.variablesInline}>
-                  {JSON.stringify(entry.modifyingOperation.variables)}
-                </span>
-              </Text>
+                <div className={classes.variablesContainer}>
+                  <pre className={classes.variablesInline}>
+                    {JSON.stringify(
+                      entry.modifyingOperation.variables,
+                      null,
+                      2,
+                    )}
+                  </pre>
+                </div>
+              </div>
             )}
           </div>
         </div>

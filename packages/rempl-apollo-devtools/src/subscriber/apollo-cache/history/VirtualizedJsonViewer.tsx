@@ -14,6 +14,7 @@ const useStyles = makeStyles({
       "solid",
       tokens.colorNeutralStroke2,
     ),
+    overflowX: "auto",
   },
   line: {
     whiteSpace: "pre",

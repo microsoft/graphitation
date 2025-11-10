@@ -5,9 +5,9 @@ import {
   tokens,
   Text,
   Switch,
-  Tooltip,
+  Button,
 } from "@fluentui/react-components";
-import { ArrowDown20Regular } from "@fluentui/react-icons";
+import { ArrowDown20Regular, Navigation20Regular } from "@fluentui/react-icons";
 import type { ListItemChange } from "../../../history/types";
 
 const useStyles = makeStyles({
@@ -39,19 +39,15 @@ const useStyles = makeStyles({
   listItemText: {
     fontFamily: tokens.fontFamilyBase,
   },
-  // Visual diff styles
   visualContainer: {
     display: "flex",
     flexDirection: "column",
     ...shorthands.gap(tokens.spacingVerticalS),
-    position: "relative",
-    ...shorthands.overflow("visible"),
   },
   indexRow: {
     display: "flex",
     flexDirection: "column",
     ...shorthands.gap(tokens.spacingVerticalXS),
-    ...shorthands.overflow("visible"),
   },
   rowLabel: {
     fontWeight: tokens.fontWeightSemibold,
@@ -60,10 +56,7 @@ const useStyles = makeStyles({
     marginBottom: tokens.spacingVerticalXS,
   },
   scrollableContainer: {
-    position: "relative",
-    ...shorthands.overflow("visible"),
     overflowX: "auto",
-    overflowY: "visible",
     ...shorthands.borderRadius(tokens.borderRadiusSmall),
     backgroundColor: tokens.colorNeutralBackground1,
     ...shorthands.padding(tokens.spacingVerticalS),
@@ -73,7 +66,7 @@ const useStyles = makeStyles({
     flexWrap: "nowrap",
     ...shorthands.gap(tokens.spacingHorizontalM),
     alignItems: "flex-start",
-    minHeight: "120px",
+    minHeight: "100px",
   },
   indexBox: {
     display: "flex",
@@ -82,41 +75,19 @@ const useStyles = makeStyles({
     ...shorthands.gap(tokens.spacingVerticalXXS),
     minWidth: "180px",
     flexShrink: 0,
-    position: "relative",
     cursor: "pointer",
+    position: "relative",
     ...shorthands.margin(0, tokens.spacingHorizontalXS),
-  },
-  indexBoxUnchanged: {
-    minWidth: "80px",
-    cursor: "default",
   },
   ellipsisIndicator: {
     display: "flex",
-    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    minWidth: "60px",
+    minWidth: "40px",
     flexShrink: 0,
-    ...shorthands.margin(0, tokens.spacingHorizontalXS),
-    fontSize: tokens.fontSizeBase400,
+    fontSize: tokens.fontSizeBase500,
     color: tokens.colorNeutralForeground3,
     fontWeight: tokens.fontWeightSemibold,
-  },
-  noteIndicator: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: "150px",
-    flexShrink: 0,
-    ...shorthands.margin(0, tokens.spacingHorizontalXS),
-    fontSize: tokens.fontSizeBase200,
-    color: tokens.colorNeutralForeground4,
-    fontStyle: "italic",
-    ...shorthands.padding(tokens.spacingVerticalS),
-    cursor: "help",
-    textDecorationLine: "underline",
-    textDecorationStyle: "dotted",
   },
   indexLabel: {
     fontSize: tokens.fontSizeBase100,
@@ -158,24 +129,15 @@ const useStyles = makeStyles({
     width: "max-content",
     maxWidth: "600px",
     ...shorthands.overflow("auto"),
-    fontSize: tokens.fontSizeBase300,
-    lineHeight: tokens.lineHeightBase300,
   },
   indexContentCollapsed: {
     textAlign: "center",
     whiteSpace: "nowrap",
     textOverflow: "ellipsis",
-    width: "100%",
     display: "-webkit-box",
     WebkitLineClamp: "2",
     WebkitBoxOrient: "vertical",
     ...shorthands.overflow("hidden"),
-  },
-  // States for index boxes
-  unchanged: {
-    backgroundColor: tokens.colorNeutralBackground3,
-    ...shorthands.borderColor(tokens.colorNeutralStroke2),
-    opacity: 0.7,
   },
   removed: {
     backgroundColor: "rgba(196, 49, 75, 0.1)",
@@ -188,7 +150,16 @@ const useStyles = makeStyles({
   moved: {
     backgroundColor: "rgba(0, 120, 212, 0.1)",
     ...shorthands.borderColor(tokens.colorBrandStroke1),
-    cursor: "pointer",
+  },
+  movedHovered: {
+    backgroundColor: "rgba(0, 120, 212, 0.25)",
+    ...shorthands.borderColor(tokens.colorBrandStroke1),
+    boxShadow: tokens.shadow8,
+    transform: "scale(1.02)",
+  },
+  updated: {
+    backgroundColor: "rgba(245, 159, 0, 0.1)",
+    ...shorthands.borderColor(tokens.colorPaletteYellowBorder1),
   },
   stateLabel: {
     fontSize: "9px",
@@ -197,7 +168,6 @@ const useStyles = makeStyles({
     ...shorthands.borderRadius(tokens.borderRadiusSmall),
     textTransform: "uppercase",
     letterSpacing: "0.3px",
-    lineHeight: "12px",
   },
   labelRemoved: {
     color: tokens.colorPaletteRedForeground1,
@@ -210,6 +180,10 @@ const useStyles = makeStyles({
   labelMoved: {
     color: tokens.colorBrandForeground1,
     backgroundColor: "rgba(0, 120, 212, 0.2)",
+  },
+  labelUpdated: {
+    color: tokens.colorPaletteYellowForeground1,
+    backgroundColor: "rgba(245, 159, 0, 0.2)",
   },
   arrow: {
     color: tokens.colorBrandForeground1,
@@ -225,14 +199,46 @@ const useStyles = makeStyles({
     whiteSpace: "nowrap",
     fontWeight: tokens.fontWeightSemibold,
   },
-  svgArrowContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    pointerEvents: "none",
-    zIndex: 5,
+  navigationMap: {
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "center",
+    ...shorthands.gap(tokens.spacingHorizontalXXS, tokens.spacingVerticalXXS),
+    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS),
+    backgroundColor: tokens.colorNeutralBackground2,
+    ...shorthands.borderRadius(tokens.borderRadiusSmall),
+  },
+  navButton: {
+    minWidth: "auto",
+    ...shorthands.padding("2px", tokens.spacingHorizontalXXS),
+    fontSize: tokens.fontSizeBase100,
+    height: "22px",
+  },
+  navLabel: {
+    fontSize: tokens.fontSizeBase200,
+    fontWeight: tokens.fontWeightSemibold,
+    color: tokens.colorNeutralForeground2,
+    display: "flex",
+    alignItems: "center",
+    ...shorthands.gap(tokens.spacingHorizontalXXS),
+  },
+  noChangesMessage: {
+    ...shorthands.padding(tokens.spacingVerticalL),
+    textAlign: "center",
+    color: tokens.colorNeutralForeground3,
+    fontStyle: "italic",
+  },
+  disclaimerNote: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: "150px",
+    flexShrink: 0,
+    fontSize: tokens.fontSizeBase100,
+    color: tokens.colorNeutralForeground4,
+    fontStyle: "italic",
+    ...shorthands.padding(tokens.spacingVerticalXS),
+    ...shorthands.margin(0, tokens.spacingHorizontalXS),
   },
 });
 
@@ -242,12 +248,12 @@ interface ArrayDiffViewerProps {
   newValue?: unknown[];
 }
 
-// Helper to build index mapping
-interface IndexMapping {
-  oldIndex: number | null; // null means added
-  newIndex: number | null; // null means removed
-  state: "unchanged" | "added" | "removed" | "moved";
+interface IndexItem {
+  index: number;
+  state: "added" | "removed" | "moved" | "updated";
   data?: unknown;
+  oldIndex?: number; // for moved items
+  newIndex?: number; // for moved items
 }
 
 export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
@@ -257,11 +263,35 @@ export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
 }) => {
   const classes = useStyles();
   const [showVisual, setShowVisual] = useState(true);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [hoveredOldIndex, setHoveredOldIndex] = useState<number | null>(null);
+  const [hoveredNewIndex, setHoveredNewIndex] = useState<number | null>(null);
   const [expandedOldIndex, setExpandedOldIndex] = useState<number | null>(null);
   const [expandedNewIndex, setExpandedNewIndex] = useState<number | null>(null);
   const oldContainerRef = useRef<HTMLDivElement>(null);
   const newContainerRef = useRef<HTMLDivElement>(null);
+  const oldIndexRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const newIndexRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+
+  const scrollToIndex = (index: number, isOld: boolean) => {
+    const refs = isOld ? oldIndexRefs.current : newIndexRefs.current;
+    const container = isOld ? oldContainerRef.current : newContainerRef.current;
+    const element = refs.get(index);
+
+    if (element && container) {
+      const containerRect = container.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      const scrollLeft =
+        element.offsetLeft -
+        container.offsetLeft -
+        containerRect.width / 2 +
+        elementRect.width / 2;
+
+      container.scrollTo({
+        left: scrollLeft,
+        behavior: "smooth",
+      });
+    }
+  };
 
   const formatValueForDisplay = (value: unknown): string => {
     if (value === undefined) return "undefined";
@@ -301,14 +331,7 @@ export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
           stats.removed++;
           break;
         case "ItemIndexChange":
-          // Only count as "moved" if the index change is significant (not just a +/-1 shift)
-          // This filters out items that just shifted due to insertions/deletions
-          if (change.index !== undefined && change.oldIndex !== undefined) {
-            const indexDiff = Math.abs(change.index - change.oldIndex);
-            if (indexDiff > 1) {
-              stats.moved++;
-            }
-          }
+          stats.moved++;
           break;
         case "ItemUpdate":
           stats.updated++;
@@ -337,6 +360,87 @@ export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
         return "Item changed";
     }
   };
+
+  // Build old and new arrays with only changed items
+  const oldItems: IndexItem[] = [];
+  const newItems: IndexItem[] = [];
+
+  itemChanges.forEach((change) => {
+    if (change.kind === "ItemRemove" && change.oldIndex !== undefined) {
+      oldItems.push({
+        index: change.oldIndex,
+        state: "removed",
+        data: change.data ?? oldValue?.[change.oldIndex],
+      });
+    } else if (
+      change.kind === "ItemIndexChange" &&
+      change.oldIndex !== undefined &&
+      change.index !== undefined
+    ) {
+      oldItems.push({
+        index: change.oldIndex,
+        state: "moved",
+        data: change.data ?? oldValue?.[change.oldIndex],
+        newIndex: change.index,
+      });
+      newItems.push({
+        index: change.index,
+        state: "moved",
+        data: change.data ?? newValue?.[change.index],
+        oldIndex: change.oldIndex,
+      });
+    } else if (change.kind === "ItemUpdate") {
+      const idx = change.index ?? change.oldIndex;
+      if (idx !== undefined) {
+        oldItems.push({
+          index: idx,
+          state: "updated",
+          data: oldValue?.[idx],
+        });
+        newItems.push({
+          index: idx,
+          state: "updated",
+          data: change.data ?? newValue?.[idx],
+        });
+      }
+    } else if (change.kind === "ItemAdd" && change.index !== undefined) {
+      newItems.push({
+        index: change.index,
+        state: "added",
+        data: change.data ?? newValue?.[change.index],
+      });
+    }
+  });
+
+  // Sort items by index
+  const sortedOldItems = oldItems.sort((a, b) => a.index - b.index);
+  const sortedNewItems = newItems.sort((a, b) => a.index - b.index);
+
+  // Add gaps between non-consecutive indices
+  const addGaps = (items: IndexItem[]): (IndexItem | "gap")[] => {
+    if (items.length === 0) return [];
+
+    const result: (IndexItem | "gap")[] = [];
+
+    // Add gap at the beginning if first item doesn't start at index 0
+    if (items[0].index > 0) {
+      result.push("gap");
+    }
+
+    items.forEach((item, i) => {
+      if (i > 0) {
+        const prevIndex = items[i - 1].index;
+        if (item.index - prevIndex > 1) {
+          result.push("gap");
+        }
+      }
+      result.push(item);
+    });
+    return result;
+  };
+
+  const oldItemsWithGaps = addGaps(sortedOldItems);
+  const newItemsWithGaps = addGaps(sortedNewItems);
 
   if (!showVisual) {
     return (
@@ -373,198 +477,8 @@ export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
     );
   }
 
-  // Build index mappings for visual view
-  // We need to figure out the maximum index in both old and new arrays
-  const maxOldIndex = Math.max(
-    ...(oldValue ? [oldValue.length - 1] : []),
-    ...itemChanges
-      .filter((c) => c.oldIndex !== undefined)
-      .map((c) => c.oldIndex!),
-    -1,
-  );
-
-  const maxNewIndex = Math.max(
-    ...(newValue ? [newValue.length - 1] : []),
-    ...itemChanges.filter((c) => c.index !== undefined).map((c) => c.index!),
-    -1,
-  );
-
-  // For additions, we know items before that index existed in old array
-  // For example, if item added at index 3, indices 0,1,2 must have existed
-  itemChanges.forEach((change) => {
-    if (change.kind === "ItemAdd" && change.index !== undefined) {
-      // All indices before this one must have existed in old array
-      for (let i = 0; i < change.index; i++) {
-        if (maxOldIndex < i) {
-          // Extend maxOldIndex to include these implicit unchanged items
-          // This is handled by the loop below
-        }
-      }
-    }
-  });
-
-  // Determine the true maximum old index considering implicit unchanged items
-  const implicitMaxOldIndex = Math.max(
-    maxOldIndex,
-    ...itemChanges
-      .filter((c) => c.kind === "ItemAdd" && c.index !== undefined)
-      .map((c) => c.index! - 1),
-    -1,
-  );
-
-  // Create a map to track all index transformations
-  const indexMap = new Map<number, IndexMapping>();
-
-  // Initialize with all possible old indices
-  for (let i = 0; i <= implicitMaxOldIndex; i++) {
-    indexMap.set(i, {
-      oldIndex: i,
-      newIndex: i, // Assume same position initially
-      state: "unchanged",
-      data: oldValue?.[i] ?? newValue?.[i],
-    });
-  }
-
-  // Track which new indices are handled
-  const handledNewIndices = new Set<number>();
-
-  // Apply changes to update the mappings
-  itemChanges.forEach((change) => {
-    switch (change.kind) {
-      case "ItemRemove":
-        if (change.oldIndex !== undefined) {
-          const mapping = indexMap.get(change.oldIndex) || {
-            oldIndex: change.oldIndex,
-            newIndex: null,
-            state: "removed" as const,
-            data: change.data ?? oldValue?.[change.oldIndex],
-          };
-          mapping.state = "removed";
-          mapping.newIndex = null;
-          mapping.data = change.data ?? oldValue?.[change.oldIndex];
-          indexMap.set(change.oldIndex, mapping);
-        }
-        break;
-
-      case "ItemAdd":
-        if (change.index !== undefined) {
-          handledNewIndices.add(change.index);
-
-          // Find if there's already a mapping for this position
-          let foundExisting = false;
-          for (const [key, mapping] of indexMap.entries()) {
-            if (
-              mapping.newIndex === change.index &&
-              mapping.state === "unchanged"
-            ) {
-              // This was an unchanged item, but now it's being pushed aside by an addition
-              // Don't modify it, the addition is separate
-              foundExisting = false;
-              break;
-            }
-          }
-
-          // Create a new entry for this addition (no old index)
-          const newKey = implicitMaxOldIndex + 1 + change.index;
-          indexMap.set(newKey, {
-            oldIndex: null,
-            newIndex: change.index,
-            state: "added",
-            data: change.data ?? newValue?.[change.index],
-          });
-        }
-        break;
-
-      case "ItemIndexChange":
-        if (change.oldIndex !== undefined && change.index !== undefined) {
-          handledNewIndices.add(change.index);
-          const mapping = indexMap.get(change.oldIndex) || {
-            oldIndex: change.oldIndex,
-            newIndex: change.index,
-            state: "moved" as const,
-            data: change.data ?? newValue?.[change.index],
-          };
-          mapping.newIndex = change.index;
-          mapping.state = "moved";
-          mapping.data = change.data ?? newValue?.[change.index];
-          indexMap.set(change.oldIndex, mapping);
-        }
-        break;
-
-      case "ItemUpdate":
-        if (change.index !== undefined || change.oldIndex !== undefined) {
-          const idx = change.index ?? change.oldIndex!;
-          handledNewIndices.add(idx);
-          const mapping = indexMap.get(idx) || {
-            oldIndex: idx,
-            newIndex: idx,
-            state: "unchanged" as const,
-            data: change.data ?? newValue?.[idx],
-          };
-          mapping.data = change.data ?? newValue?.[idx];
-          indexMap.set(idx, mapping);
-        }
-        break;
-    }
-  });
-
-  // Convert map to sorted array
-  const mappings = Array.from(indexMap.values()).filter(
-    (m) => m.oldIndex !== null || m.newIndex !== null,
-  );
-
-  // Sort by old index first, then by new index
-  mappings.sort((a, b) => {
-    if (a.oldIndex !== null && b.oldIndex !== null) {
-      return a.oldIndex - b.oldIndex;
-    }
-    if (a.oldIndex !== null) return -1;
-    if (b.oldIndex !== null) return 1;
-    if (a.newIndex !== null && b.newIndex !== null) {
-      return a.newIndex - b.newIndex;
-    }
-    return 0;
-  });
-
-  // Helper to add ellipsis between non-consecutive unchanged indices
-  const addEllipsisToList = (
-    items: IndexMapping[],
-    indexKey: "oldIndex" | "newIndex",
-  ) => {
-    const result: (
-      | IndexMapping
-      | { type: "ellipsis"; beforeIndex: number }
-      | { type: "note" }
-    )[] = [];
-    let lastIndex = -1;
-
-    items.forEach((item) => {
-      const currentIndex = item[indexKey];
-      if (currentIndex !== null) {
-        // Check if there's a gap and previous/current are unchanged
-        if (lastIndex !== -1 && currentIndex - lastIndex > 1) {
-          const prevItem = result[result.length - 1];
-          if (
-            prevItem &&
-            "state" in prevItem &&
-            prevItem.state === "unchanged" &&
-            item.state === "unchanged"
-          ) {
-            result.push({ type: "ellipsis", beforeIndex: currentIndex });
-          }
-        }
-        result.push(item);
-        lastIndex = currentIndex;
-      }
-    });
-
-    // Always add a note at the end to indicate there may be more items
-    if (result.length > 0) {
-      result.push({ type: "note" });
-    }
-
-    return result;
-  };
+  const hasOldChanges = oldItemsWithGaps.length > 0;
+  const hasNewChanges = newItemsWithGaps.length > 0;
 
   return (
     <div className={classes.container}>
@@ -577,121 +491,182 @@ export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
         />
       </div>
 
+      {/* Navigation Map */}
+      {(sortedOldItems.length > 3 || sortedNewItems.length > 3) && (
+        <div className={classes.navigationMap}>
+          <Text className={classes.navLabel}>
+            <Navigation20Regular />
+            Quick Navigation:
+          </Text>
+          {hasOldChanges && sortedOldItems.length > 0 && (
+            <>
+              <Text
+                style={{
+                  fontSize: tokens.fontSizeBase100,
+                  color: tokens.colorNeutralForeground3,
+                }}
+              >
+                Old:
+              </Text>
+              {sortedOldItems.map((item) => (
+                <Button
+                  key={`nav-old-${item.index}`}
+                  size="small"
+                  appearance={
+                    item.state === "removed"
+                      ? "primary"
+                      : item.state === "moved"
+                      ? "outline"
+                      : "subtle"
+                  }
+                  className={classes.navButton}
+                  onClick={() => scrollToIndex(item.index, true)}
+                  title={`Scroll to index ${item.index} (${item.state})`}
+                >
+                  [{item.index}]
+                </Button>
+              ))}
+            </>
+          )}
+          {hasNewChanges && sortedNewItems.length > 0 && (
+            <>
+              <Text
+                style={{
+                  fontSize: tokens.fontSizeBase100,
+                  color: tokens.colorNeutralForeground3,
+                  marginLeft: tokens.spacingHorizontalM,
+                }}
+              >
+                New:
+              </Text>
+              {sortedNewItems.map((item) => (
+                <Button
+                  key={`nav-new-${item.index}`}
+                  size="small"
+                  appearance={
+                    item.state === "added"
+                      ? "primary"
+                      : item.state === "moved"
+                      ? "outline"
+                      : "subtle"
+                  }
+                  className={classes.navButton}
+                  onClick={() => scrollToIndex(item.index, false)}
+                  title={`Scroll to index ${item.index} (${item.state})`}
+                >
+                  [{item.index}]
+                </Button>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+
       <div className={classes.visualContainer}>
-        {/* Old indices row */}
+        {/* Old Array */}
         <div className={classes.indexRow}>
           <Text className={classes.rowLabel}>Old Array (Before):</Text>
           <div className={classes.scrollableContainer} ref={oldContainerRef}>
-            <div className={classes.indexBoxesContainer}>
-              {addEllipsisToList(
-                mappings.filter((m) => m.oldIndex !== null),
-                "oldIndex",
-              ).map((item, idx) => {
-                if ("type" in item && item.type === "ellipsis") {
+            {!hasOldChanges ? (
+              <div className={classes.noChangesMessage}>
+                All items unchanged
+              </div>
+            ) : (
+              <div className={classes.indexBoxesContainer}>
+                {oldItemsWithGaps.map((item, idx) => {
+                  if (item === "gap") {
+                    return (
+                      <div
+                        key={`gap-old-${idx}`}
+                        className={classes.ellipsisIndicator}
+                      >
+                        ⋯
+                      </div>
+                    );
+                  }
+
+                  const isExpanded = expandedOldIndex === item.index;
+
                   return (
                     <div
-                      key={`ellipsis-old-${idx}`}
-                      className={classes.ellipsisIndicator}
-                    >
-                      ⋯
-                    </div>
-                  );
-                }
-
-                if ("type" in item && item.type === "note") {
-                  return (
-                    <Tooltip
-                      key={`note-old-${idx}`}
-                      content="Only changed items are reported. The actual array may contain additional unchanged items beyond the last displayed index."
-                      relationship="description"
-                    >
-                      <div className={classes.noteIndicator}>
-                        (may have more)
-                      </div>
-                    </Tooltip>
-                  );
-                }
-
-                const mapping = item as IndexMapping;
-                const hasData = mapping.data !== undefined;
-                const isExpanded = expandedOldIndex === mapping.oldIndex;
-                const isUnchanged = mapping.state === "unchanged";
-
-                return (
-                  <div
-                    key={`old-${idx}`}
-                    className={`${classes.indexBox} ${
-                      isUnchanged ? classes.indexBoxUnchanged : ""
-                    }`}
-                    onMouseEnter={() =>
-                      !isUnchanged &&
-                      mapping.state === "moved" &&
-                      setHoveredIndex(mapping.oldIndex)
-                    }
-                    onMouseLeave={() => setHoveredIndex(null)}
-                    onClick={() => {
-                      if (hasData) {
-                        setExpandedOldIndex(
-                          isExpanded ? null : mapping.oldIndex,
-                        );
+                      key={`old-${item.index}`}
+                      className={classes.indexBox}
+                      ref={(el) => {
+                        if (el) oldIndexRefs.current.set(item.index, el);
+                      }}
+                      onMouseEnter={() => {
+                        if (item.state === "moved") {
+                          setHoveredOldIndex(item.index);
+                          setHoveredNewIndex(item.newIndex ?? null);
+                        }
+                      }}
+                      onMouseLeave={() => {
+                        setHoveredOldIndex(null);
+                        setHoveredNewIndex(null);
+                      }}
+                      onClick={() =>
+                        setExpandedOldIndex(isExpanded ? null : item.index)
                       }
-                    }}
-                    style={{ cursor: hasData ? "pointer" : "default" }}
-                  >
-                    <div className={classes.indexLabel}>
-                      <Text>[{mapping.oldIndex}]</Text>
-                      {!isUnchanged && (
+                    >
+                      <div className={classes.indexLabel}>
+                        <Text>[{item.index}]</Text>
                         <Text
                           className={`${classes.stateLabel} ${
-                            mapping.state === "removed"
+                            item.state === "removed"
                               ? classes.labelRemoved
-                              : mapping.state === "moved"
+                              : item.state === "moved"
                               ? classes.labelMoved
+                              : item.state === "updated"
+                              ? classes.labelUpdated
                               : ""
                           }`}
                         >
-                          {mapping.state === "removed" ? "removed" : "moved"}
+                          {item.state}
                         </Text>
-                      )}
+                      </div>
+                      <div
+                        className={`${classes.indexContent} ${
+                          isExpanded
+                            ? classes.indexContentExpanded
+                            : classes.indexContentCollapsed
+                        } ${
+                          item.state === "removed"
+                            ? classes.removed
+                            : item.state === "moved"
+                            ? hoveredOldIndex === item.index
+                              ? classes.movedHovered
+                              : classes.moved
+                            : item.state === "updated"
+                            ? classes.updated
+                            : ""
+                        }`}
+                      >
+                        {isExpanded
+                          ? formatValueForDisplay(item.data)
+                          : formatDataPreview(item.data)}
+                      </div>
+                      {hoveredOldIndex === item.index &&
+                        item.state === "moved" &&
+                        item.newIndex !== undefined && (
+                          <Text className={classes.hoverInfo}>
+                            → moves to [{item.newIndex}]
+                          </Text>
+                        )}
                     </div>
-                    <div
-                      className={`${classes.indexContent} ${
-                        isExpanded
-                          ? classes.indexContentExpanded
-                          : classes.indexContentCollapsed
-                      } ${
-                        mapping.state === "unchanged"
-                          ? classes.unchanged
-                          : mapping.state === "removed"
-                          ? classes.removed
-                          : mapping.state === "moved"
-                          ? classes.moved
-                          : ""
-                      }`}
-                    >
-                      {isExpanded
-                        ? formatValueForDisplay(mapping.data)
-                        : mapping.state === "unchanged" &&
-                          mapping.data === undefined
-                        ? "unchanged"
-                        : formatDataPreview(mapping.data)}
-                    </div>
-                    {!isUnchanged &&
-                      hoveredIndex === mapping.oldIndex &&
-                      mapping.state === "moved" &&
-                      mapping.newIndex !== null && (
-                        <Text className={classes.hoverInfo}>
-                          → moves to [{mapping.newIndex}]
-                        </Text>
-                      )}
+                  );
+                })}
+                {/* Disclaimer note */}
+                {oldItemsWithGaps.length > 0 && (
+                  <div className={classes.disclaimerNote}>
+                    (may have more unchanged items)
                   </div>
-                );
-              })}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Arrows for moved items */}
+        {/* Arrow */}
         <div
           style={{
             display: "flex",
@@ -702,21 +677,16 @@ export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
           <ArrowDown20Regular className={classes.arrow} />
         </div>
 
-        {/* New indices row */}
+        {/* New Array */}
         <div className={classes.indexRow}>
           <Text className={classes.rowLabel}>New Array (After):</Text>
           <div className={classes.scrollableContainer} ref={newContainerRef}>
             <div className={classes.indexBoxesContainer}>
-              {addEllipsisToList(
-                mappings
-                  .filter((m) => m.newIndex !== null)
-                  .sort((a, b) => a.newIndex! - b.newIndex!),
-                "newIndex",
-              ).map((item, idx) => {
-                if ("type" in item && item.type === "ellipsis") {
+              {newItemsWithGaps.map((item, idx) => {
+                if (item === "gap") {
                   return (
                     <div
-                      key={`ellipsis-new-${idx}`}
+                      key={`gap-new-${idx}`}
                       className={classes.ellipsisIndicator}
                     >
                       ⋯
@@ -724,61 +694,44 @@ export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
                   );
                 }
 
-                if ("type" in item && item.type === "note") {
-                  return (
-                    <Tooltip
-                      key={`note-new-${idx}`}
-                      content="Only changed items are reported. The actual array may contain additional unchanged items beyond the last displayed index."
-                      relationship="description"
-                    >
-                      <div className={classes.noteIndicator}>
-                        (may have more)
-                      </div>
-                    </Tooltip>
-                  );
-                }
-
-                const mapping = item as IndexMapping;
-                const hasData = mapping.data !== undefined;
-                const isExpanded = expandedNewIndex === mapping.newIndex;
-                const isUnchanged = mapping.state === "unchanged";
+                const isExpanded = expandedNewIndex === item.index;
 
                 return (
                   <div
-                    key={`new-${idx}`}
-                    className={`${classes.indexBox} ${
-                      isUnchanged ? classes.indexBoxUnchanged : ""
-                    }`}
-                    onMouseEnter={() =>
-                      !isUnchanged &&
-                      mapping.state === "moved" &&
-                      setHoveredIndex(mapping.oldIndex)
-                    }
-                    onMouseLeave={() => setHoveredIndex(null)}
-                    onClick={() => {
-                      if (hasData) {
-                        setExpandedNewIndex(
-                          isExpanded ? null : mapping.newIndex,
-                        );
+                    key={`new-${item.index}`}
+                    className={classes.indexBox}
+                    ref={(el) => {
+                      if (el) newIndexRefs.current.set(item.index, el);
+                    }}
+                    onMouseEnter={() => {
+                      if (item.state === "moved") {
+                        setHoveredOldIndex(item.oldIndex ?? null);
+                        setHoveredNewIndex(item.index);
                       }
                     }}
-                    style={{ cursor: hasData ? "pointer" : "default" }}
+                    onMouseLeave={() => {
+                      setHoveredOldIndex(null);
+                      setHoveredNewIndex(null);
+                    }}
+                    onClick={() =>
+                      setExpandedNewIndex(isExpanded ? null : item.index)
+                    }
                   >
                     <div className={classes.indexLabel}>
-                      <Text>[{mapping.newIndex}]</Text>
-                      {!isUnchanged && (
-                        <Text
-                          className={`${classes.stateLabel} ${
-                            mapping.state === "added"
-                              ? classes.labelAdded
-                              : mapping.state === "moved"
-                              ? classes.labelMoved
-                              : ""
-                          }`}
-                        >
-                          {mapping.state === "added" ? "added" : "moved"}
-                        </Text>
-                      )}
+                      <Text>[{item.index}]</Text>
+                      <Text
+                        className={`${classes.stateLabel} ${
+                          item.state === "added"
+                            ? classes.labelAdded
+                            : item.state === "moved"
+                            ? classes.labelMoved
+                            : item.state === "updated"
+                            ? classes.labelUpdated
+                            : ""
+                        }`}
+                      >
+                        {item.state}
+                      </Text>
                     </div>
                     <div
                       className={`${classes.indexContent} ${
@@ -786,33 +739,37 @@ export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
                           ? classes.indexContentExpanded
                           : classes.indexContentCollapsed
                       } ${
-                        mapping.state === "unchanged"
-                          ? classes.unchanged
-                          : mapping.state === "added"
+                        item.state === "added"
                           ? classes.added
-                          : mapping.state === "moved"
-                          ? classes.moved
+                          : item.state === "moved"
+                          ? hoveredNewIndex === item.index
+                            ? classes.movedHovered
+                            : classes.moved
+                          : item.state === "updated"
+                          ? classes.updated
                           : ""
                       }`}
                     >
                       {isExpanded
-                        ? formatValueForDisplay(mapping.data)
-                        : mapping.state === "unchanged" &&
-                          mapping.data === undefined
-                        ? "unchanged"
-                        : formatDataPreview(mapping.data)}
+                        ? formatValueForDisplay(item.data)
+                        : formatDataPreview(item.data)}
                     </div>
-                    {!isUnchanged &&
-                      hoveredIndex === mapping.oldIndex &&
-                      mapping.state === "moved" &&
-                      mapping.oldIndex !== null && (
+                    {hoveredNewIndex === item.index &&
+                      item.state === "moved" &&
+                      item.oldIndex !== undefined && (
                         <Text className={classes.hoverInfo}>
-                          ← from [{mapping.oldIndex}]
+                          ← from [{item.oldIndex}]
                         </Text>
                       )}
                   </div>
                 );
               })}
+              {/* Disclaimer note */}
+              {newItemsWithGaps.length > 0 && (
+                <div className={classes.disclaimerNote}>
+                  (may have more unchanged items)
+                </div>
+              )}
             </div>
           </div>
         </div>

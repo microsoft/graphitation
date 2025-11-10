@@ -96,11 +96,16 @@ const useStyles = makeStyles({
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
     ...shorthands.gap(tokens.spacingHorizontalM),
+    width: "100%",
+    minWidth: 0,
   },
   valueBox: {
     display: "flex",
     flexDirection: "column",
     ...shorthands.gap(tokens.spacingVerticalXS),
+    minWidth: 0,
+    maxWidth: "100%",
+    ...shorthands.overflow("hidden"),
   },
   valueLabel: {
     fontSize: tokens.fontSizeBase200,
@@ -113,13 +118,20 @@ const useStyles = makeStyles({
     ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS),
     backgroundColor: tokens.colorNeutralBackground3,
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    ...shorthands.overflow("auto"),
     maxHeight: "300px",
+    overflowY: "auto",
+    overflowX: "hidden",
     ...shorthands.border(
       tokens.strokeWidthThin,
       "solid",
       tokens.colorNeutralStroke2,
     ),
+    whiteSpace: "pre-wrap",
+    wordBreak: "break-word",
+    overflowWrap: "anywhere",
+    minWidth: 0,
+    maxWidth: "100%",
+    boxSizing: "border-box",
   },
 });
 
@@ -289,6 +301,23 @@ function formatValuePreview(value: unknown): string {
 function formatValue(value: unknown): string {
   if (value === undefined) return "undefined";
   if (value === null) return "null";
+
+  // If it's a string, check if it's JSON
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      // If successfully parsed and it's an object or array, format it
+      if (typeof parsed === "object" && parsed !== null) {
+        return JSON.stringify(parsed, null, 2);
+      }
+    } catch {
+      // Not JSON, return the string as-is
+      return value;
+    }
+    return value;
+  }
+
+  // For objects, arrays, and other types, stringify with formatting
   try {
     return JSON.stringify(value, null, 2);
   } catch {
