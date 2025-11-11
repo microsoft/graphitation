@@ -11,7 +11,6 @@ import { ArrowUpload20Regular, Dismiss20Regular } from "@fluentui/react-icons";
 import type { HistoryEntry } from "../../../history/types";
 import { HistoryTimeline } from "./HistoryTimeline";
 import { HistoryDetails } from "./HistoryDetails";
-import { EmptySelectionState } from "./EmptyStates";
 
 const useStyles = makeStyles({
   root: {
@@ -159,12 +158,8 @@ export const ImportHistoryPage: React.FC = () => {
     setError(null);
   };
 
-  const selectedEntry =
-    selectedEntryIndex !== null && history[selectedEntryIndex]
-      ? history[selectedEntryIndex]
-      : null;
-
   if (history.length > 0) {
+    const selectedEntry = selectedEntryIndex ?? history.length - 1;
     return (
       <div className={classes.root}>
         <div className={classes.innerContainer}>
@@ -175,11 +170,7 @@ export const ImportHistoryPage: React.FC = () => {
               onSelectEntry={setSelectedEntryIndex}
             />
             <div className={classes.detailsPanel}>
-              {selectedEntry ? (
-                <HistoryDetails entry={selectedEntry} />
-              ) : (
-                <EmptySelectionState />
-              )}
+              <HistoryDetails entry={history[selectedEntry]} />
             </div>
           </div>
         </div>

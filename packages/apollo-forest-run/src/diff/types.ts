@@ -129,6 +129,7 @@ export type CompositeListDifference = {
   dirtyItems?: Set<number>;
   layout?: CompositeListLayoutDifference;
   itemsChanges: CompositeListLayoutChange[];
+  previousLength: number | undefined;
   errors?: DiffError[];
 };
 

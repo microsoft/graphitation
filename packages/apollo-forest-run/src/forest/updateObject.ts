@@ -23,7 +23,6 @@ import type {
 import type { FieldInfo, PossibleSelections } from "../descriptor/types";
 import type {
   Draft,
-  FieldChange,
   Source,
   UpdateObjectResult,
   UpdateTreeContext,
@@ -80,6 +79,8 @@ export function recordFieldChange(
         kind: fieldDiff.kind,
         fieldInfo,
         itemChanges: context.childChanges,
+        previousLength: fieldDiff.previousLength,
+        currentLength: Array.isArray(updated) ? updated.length : undefined,
       });
       context.childChanges = [];
       break;

@@ -123,6 +123,8 @@ type CompositeListDifferenceChange = {
   kind: typeof DifferenceKind.CompositeListDifference;
   fieldInfo: FieldInfo;
   itemChanges: CompositeListLayoutChange[] | undefined;
+  previousLength: number | undefined;
+  currentLength: number | undefined;
 };
 
 export type FieldChange =

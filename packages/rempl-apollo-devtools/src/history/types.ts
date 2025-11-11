@@ -1,9 +1,72 @@
 /**
- * Type definitions for Apollo Forest Run cache history
+ * Type definitions for Apollo Forest Run cache history in DevTools
  *
- * These types represent the history entries tracked by the Apollo Forest Run cache,
- * showing how the cache changes over time as operations execute.
+ * This file imports core types from Forest-Run and adds DevTools-specific
+ * serialization types for transmitting history data over the wire.
  */
+
+import type {
+  HistoryEntry as ForestRunHistoryEntry,
+  RegularHistoryEntry as ForestRunRegularHistoryEntry,
+  OptimisticHistoryEntry as ForestRunOptimisticHistoryEntry,
+  HistoryChange as ForestRunHistoryChange,
+  FieldChange as ForestRunFieldChange,
+  CompositeListLayoutChange,
+} from "@graphitation/apollo-forest-run";
+
+// Re-export Forest-Run types that are used as-is
+export type { CompositeListLayoutChange };
+
+/**
+ * Serialized version of FieldChange for transmission to DevTools
+ * Uses simple string literals instead of numeric enums for kind
+ */
+export interface FieldChange {
+  /** Type of change */
+  kind: "Filler" | "Replacement" | "CompositeListDifference";
+
+  /** Path to the field (e.g., ["ROOT_QUERY", "user", "name"]) */
+  path: (string | number)[];
+
+  /** Field metadata */
+  fieldInfo?: {
+    name: string;
+    dataKey: string;
+  };
+
+  /** Previous value (for Replacement changes) */
+  oldValue?: unknown;
+
+  /** New value (for Filler and Replacement changes) */
+  newValue?: unknown;
+
+  /** Layout changes for lists (for CompositeListDifference changes) */
+  itemChanges?: ListItemChange[];
+
+  /** Previous length of the array (for CompositeListDifference changes) */
+  previousLength?: number;
+
+  /** Current length of the array (for CompositeListDifference changes) */
+  currentLength?: number;
+}
+
+/**
+ * Serialized version of CompositeListLayoutChange for DevTools
+ * Uses simple string literals instead of numeric enums for kind
+ */
+export interface ListItemChange {
+  /** Type of list change */
+  kind: "ItemAdd" | "ItemRemove" | "ItemIndexChange" | "ItemUpdate";
+
+  /** Current index in the list */
+  index?: number;
+
+  /** Previous index (for moves and removes) */
+  oldIndex?: number;
+
+  /** The item data */
+  data?: unknown;
+}
 
 /**
  * Base structure shared by all history entries
@@ -59,49 +122,6 @@ export interface OptimisticHistoryEntry extends HistoryEntryBase {
  * Union type for all history entry types
  */
 export type HistoryEntry = RegularHistoryEntry | OptimisticHistoryEntry;
-
-/**
- * Represents a single field change in the cache
- */
-export interface FieldChange {
-  /** Type of change */
-  kind: "Filler" | "Replacement" | "CompositeListDifference";
-
-  /** Path to the field (e.g., ["ROOT_QUERY", "user", "name"]) */
-  path: (string | number)[];
-
-  /** Field metadata */
-  fieldInfo?: {
-    name: string;
-    dataKey: string;
-  };
-
-  /** Previous value (for Replacement changes) */
-  oldValue?: unknown;
-
-  /** New value (for Filler and Replacement changes) */
-  newValue?: unknown;
-
-  /** Layout changes for lists (for CompositeListDifference changes) */
-  itemChanges?: ListItemChange[];
-}
-
-/**
- * Represents a change to a list item
- */
-export interface ListItemChange {
-  /** Type of list change */
-  kind: "ItemAdd" | "ItemRemove" | "ItemIndexChange" | "ItemUpdate";
-
-  /** Current index in the list */
-  index?: number;
-
-  /** Previous index (for moves and removes) */
-  oldIndex?: number;
-
-  /** The item data */
-  data?: unknown;
-}
 
 /**
  * Represents differences in a cache node during optimistic updates

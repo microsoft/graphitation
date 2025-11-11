@@ -434,7 +434,7 @@ function diffCompositeListValue(
   const itemQueue = diff?.itemQueue ?? model.data.keys();
 
   if (layoutDiffResult) {
-    diff = diff ?? Difference.createCompositeListDifference();
+    diff = diff ?? Difference.createCompositeListDifference(base.data.length);
     diff.layout = layoutDiffResult;
     diff.itemsChanges = itemsChanges;
   }

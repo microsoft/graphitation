@@ -66,6 +66,7 @@ export class ApolloCachePublisher {
                         name: tree.operation.debugName || "Anonymous Operation",
                         variables: tree.operation.variables || {},
                       },
+                      totalCount: tree.history.totalEntries || history.length,
                     };
                   }
                 }
@@ -158,6 +159,8 @@ export class ApolloCachePublisher {
       oldValue: change.oldValue,
       newValue: change.newValue,
       itemChanges: change.itemChanges,
+      previousLength: change.previousLength,
+      currentLength: change.currentLength,
     }));
   }
 

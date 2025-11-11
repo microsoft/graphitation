@@ -3,6 +3,8 @@ import type { HistoryEntry } from "../forest/types";
 export class HistoryArray {
   public items: HistoryEntry[] = [];
   private head = 0;
+  // Total number of entries ever added (including overwritten ones)
+  public totalEntries = 0;
   private maxSize: number;
 
   constructor(maxSize: number) {
@@ -14,6 +16,7 @@ export class HistoryArray {
       return;
     }
 
+    this.totalEntries++;
     if (this.items.length < this.maxSize) {
       this.items.push(entry);
     } else {

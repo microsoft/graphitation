@@ -1,26 +1,6 @@
 import React, { useMemo } from "react";
 import { FixedSizeList as List } from "react-window";
-import { makeStyles, shorthands, tokens } from "@fluentui/react-components";
-
-const useStyles = makeStyles({
-  container: {
-    fontFamily: tokens.fontFamilyMonospace,
-    fontSize: tokens.fontSizeBase200,
-    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS),
-    backgroundColor: tokens.colorNeutralBackground3,
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    ...shorthands.border(
-      tokens.strokeWidthThin,
-      "solid",
-      tokens.colorNeutralStroke2,
-    ),
-    overflowX: "auto",
-  },
-  line: {
-    whiteSpace: "pre",
-    ...shorthands.padding(0, tokens.spacingHorizontalS),
-  },
-});
+import { useVirtualizedJsonViewerStyles } from "./VirtualizedJsonViewer.styles";
 
 interface VirtualizedJsonViewerProps {
   data: unknown;
@@ -31,7 +11,7 @@ export const VirtualizedJsonViewer: React.FC<VirtualizedJsonViewerProps> = ({
   data,
   maxHeight = 400,
 }) => {
-  const classes = useStyles();
+  const classes = useVirtualizedJsonViewerStyles();
 
   const lines = useMemo(() => {
     return JSON.stringify(data, null, 2).split("\n");

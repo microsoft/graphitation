@@ -133,9 +133,12 @@ function readOperation(
 
       Object.defineProperty(outputTree.result.data, OPERATION_HISTORY_SYMBOL, {
         get() {
-          return outputTree.history.items.sort(
-            (a, b) => a.timestamp - b.timestamp,
-          );
+          return {
+            totalEntries: outputTree.history.totalEntries,
+            history: outputTree.history.items.sort(
+              (a, b) => a.timestamp - b.timestamp,
+            ),
+          };
         },
         enumerable: false,
       });

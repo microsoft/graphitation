@@ -70,7 +70,9 @@ export function allFieldEntriesComplete(
   return fieldDiff.every((entryDiff) => isComplete(entryDiff.state));
 }
 
-export function createCompositeListDifference(): CompositeListDifference {
+export function createCompositeListDifference(
+  previousLength?: number,
+): CompositeListDifference {
   return {
     kind: DifferenceKind.CompositeListDifference,
     itemState: new Map(),
@@ -78,6 +80,7 @@ export function createCompositeListDifference(): CompositeListDifference {
     dirtyItems: undefined,
     layout: undefined,
     itemsChanges: [],
+    previousLength,
     errors: undefined,
   };
 }
