@@ -75,14 +75,12 @@ function extractArrayChanges(
   return changes;
 }
 
-export function createRegularHistoryEntry(
+function getChanges(
   currentTree: IndexedTree,
   updatedTree: UpdateTreeResult,
-  incomingTree: IndexedTree | undefined,
   env: ForestEnv,
-): HistoryChange {
-  const changedFields: HistoryFieldChange[] = [];
-
+): HistoryFieldChange[] {
+  const changes: HistoryFieldChange[] = [];
   for (const entry of updatedTree.changes) {
     const tuple = entry as ChangedChunksTuple;
     const chunkPath = getChunkPath(
@@ -94,24 +92,24 @@ export function createRegularHistoryEntry(
     if (isCompositeListEntryTuple(tuple)) {
       const [chunk, fieldChanges] = tuple;
       const layout = fieldChanges.layout;
-      const test = extractArrayChanges(
-        layout,
+      const itemChanges = extractArrayChanges(
+        layout ?? [],
         chunk.data,
         fieldChanges.deletedKeys,
         env,
       );
-      changedFields.push({
+      changes.push({
         path: chunkPath,
         kind: fieldChanges.kind,
-        itemChanges: test,
+        itemChanges,
         previousLength: chunk.data.length,
-        currentLength: layout.length,
+        currentLength: layout?.length ?? 0,
       });
     } else {
       const [_chunk, fieldChanges] = tuple;
       for (const fieldChange of fieldChanges) {
         const { fieldInfo, ...restOfFieldChange } = fieldChange;
-        changedFields.push({
+        changes.push({
           path: [...chunkPath, fieldInfo.dataKey],
           ...restOfFieldChange,
         });
@@ -119,10 +117,20 @@ export function createRegularHistoryEntry(
     }
   }
 
+  return changes;
+}
+
+export function createRegularHistoryEntry(
+  currentTree: IndexedTree,
+  updatedTree: UpdateTreeResult,
+  incomingTree: IndexedTree | undefined,
+  env: ForestEnv,
+): HistoryChange {
+  const changes = getChanges(currentTree, updatedTree, env);
   return {
     kind: "Regular",
     missingFields: updatedTree.missingFields,
-    changes: changedFields,
+    changes,
     timestamp: Date.now(),
     modifyingOperation: {
       name: incomingTree?.operation?.debugName ?? "Anonymous Operation",

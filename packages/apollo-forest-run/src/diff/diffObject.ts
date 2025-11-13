@@ -423,7 +423,7 @@ function diffCompositeListValue(
   let layoutDiffResult = diff?.layout;
   let deletedKeys: Set<number> | undefined;
 
-  if (layoutDiffResult !== undefined) {
+  if (layoutDiffResult === undefined) {
     const layoutDiff = diffCompositeListLayout(context, base, model);
 
     switch (layoutDiff) {
@@ -438,16 +438,16 @@ function diffCompositeListValue(
     }
   }
 
+  const itemQueue = diff?.itemQueue ?? model.data.keys();
+
   if (layoutDiffResult) {
     diff = diff ?? Difference.createCompositeListDifference();
     diff.layout = layoutDiffResult;
     diff.deletedKeys = deletedKeys;
   }
 
-  const itemQueue = diff?.itemQueue ?? model.data.keys();
-
   for (const index of itemQueue) {
-    const baseItemIndex = diff?.layout ? diff.layout[index] : index;
+    const baseItemIndex = layoutDiffResult ? layoutDiffResult[index] : index;
     const baseItemValue =
       typeof baseItemIndex === "number"
         ? Value.aggregateListItemValue(base, baseItemIndex)

@@ -103,7 +103,7 @@ export type CompositeListLayoutItemAdded = {
   data?: SourceObject | NestedList<SourceObject> | null;
 };
 
-export type CompositeListLayoutChangeItemRemoved = {
+export type CompositeListLayoutItemRemoved = {
   kind: typeof ChangeKind.ItemRemove;
   oldIndex: number;
   data?: SourceObject | NestedList<SourceObject>;
@@ -117,7 +117,7 @@ export type CompositeListLayoutIndexChange = {
 };
 
 export type CompositeListLayoutChange =
-  | CompositeListLayoutChangeItemRemoved
+  | CompositeListLayoutItemRemoved
   | CompositeListLayoutIndexChange
   | CompositeListLayoutItemAdded
   | undefined;

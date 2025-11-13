@@ -137,11 +137,9 @@ function updateObjectValue(
       }
     }
   }
-
   if (dirtyFields?.length) {
     context.changes.set(base, dirtyFields);
   }
-
   return copy ?? base.data;
 }
 
@@ -217,6 +215,13 @@ function updateCompositeListValue(
     ) {
       dirty = true;
     }
+  }
+  if (dirty) {
+    context.changes.set(base, {
+      kind: difference.kind,
+      layout: layoutDiff,
+      deletedKeys: difference.deletedKeys,
+    });
   }
   if (!layoutDiff) {
     return copy ?? base.data;

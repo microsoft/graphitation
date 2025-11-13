@@ -32,7 +32,7 @@ import { UpdateLogger } from "../telemetry/updateStats/updateLogger";
 import { CircularBuffer } from "../jsutils/circularBuffer";
 import type * as DifferenceKind from "../diff/differenceKind";
 import {
-  CompositeListLayoutChange as CompositeListLayoutChangeAA,
+  CompositeListLayoutChange,
   CompositeListLayoutDifference,
   NodeDifferenceMap,
 } from "../diff/types";
@@ -126,7 +126,7 @@ export type ReplacementEntry = {
 
 export type CompositeListDifferenceEntry = {
   kind: typeof DifferenceKind.CompositeListDifference;
-  layout: CompositeListLayoutDifference;
+  layout: CompositeListLayoutDifference | undefined;
   deletedKeys?: Set<number>;
 };
 
@@ -139,7 +139,7 @@ export type ReplacementChange = Omit<ReplacementEntry, "fieldInfo"> &
   PathChange;
 export type CompositeListDifferenceChange = {
   kind: typeof DifferenceKind.CompositeListDifference;
-  itemChanges: CompositeListLayoutChangeAA[];
+  itemChanges: CompositeListLayoutChange[];
   previousLength: number;
   currentLength: number;
 } & PathChange;
