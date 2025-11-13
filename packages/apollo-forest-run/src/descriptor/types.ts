@@ -97,7 +97,7 @@ export type OperationDescriptor = {
   rootNodeKey: NodeKey; // e.g. ROOT_QUERY | ROOT_MUTATION, etc
   selections: Map<PossibleSelections, Map<TypeName | null, ResolvedSelection>>;
   cache: boolean;
-  historySize: number; // Size of operation history to keep from @cache(history: N) directive
+  historySize: number; // Size of operation history to keep
 };
 
 export type FormattedError = GraphQLFormattedError;

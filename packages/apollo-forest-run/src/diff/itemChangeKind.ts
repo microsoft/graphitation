@@ -1,3 +1,3 @@
-export const ItemAdd = "ItemAdd",
-  ItemRemove = "ItemRemove",
-  ItemIndexChange = "ItemIndexChange";
+export const ItemAdd = 0,
+  ItemRemove = 1,
+  ItemIndexChange = 2;

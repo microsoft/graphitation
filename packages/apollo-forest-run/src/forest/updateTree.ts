@@ -60,7 +60,6 @@ export function updateTree(
     completeObject: completeObject.bind(null, env, base, getNodeChunks),
     findParent: createParentLocator(base.dataMap),
     statsLogger: createUpdateLogger(env.logUpdateStats),
-    childChanges: [],
     env,
   };
   const {

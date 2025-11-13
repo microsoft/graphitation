@@ -135,9 +135,7 @@ function readOperation(
         get() {
           return {
             totalEntries: outputTree.history.totalEntries,
-            history: outputTree.history.items.sort(
-              (a, b) => a.timestamp - b.timestamp,
-            ),
+            history: Array.from(outputTree.history),
           };
         },
         enumerable: false,

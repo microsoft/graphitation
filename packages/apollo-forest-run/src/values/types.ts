@@ -9,7 +9,7 @@ import {
   ResolvedSelection,
   ArgumentValues,
 } from "../descriptor/types";
-import type { HistoryEntry } from "../forest/types";
+import type { HistoryChange } from "../forest/types";
 import * as ValueKind from "./valueKind";
 
 declare const OpaqueSymbol: unique symbol;
@@ -33,7 +33,7 @@ export type SourceCustomScalar = Brand<unknown, typeof CustomScalarBrand>;
 export type SourceObject = Brand<
   {
     __typename?: TypeName;
-    [OPERATION_HISTORY_SYMBOL]?: HistoryEntry[];
+    [OPERATION_HISTORY_SYMBOL]?: HistoryChange[];
     [name: string]: SourceValue | undefined;
   }, // There could be cases of missing fields for defer/include/skip and some Apollo quirks with missing fields
   typeof ObjectBrand

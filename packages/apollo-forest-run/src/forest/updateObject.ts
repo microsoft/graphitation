@@ -23,13 +23,14 @@ import type {
 import type { FieldInfo, PossibleSelections } from "../descriptor/types";
 import type {
   Draft,
+  FillerEntry,
+  ReplacementEntry,
   Source,
   UpdateObjectResult,
   UpdateTreeContext,
 } from "./types";
 import * as Difference from "../diff/difference";
 import * as Value from "../values";
-import * as LayoutChange from "../diff/layoutChange";
 import { ValueKind } from "../values/types";
 import { DifferenceKind } from "../diff/types";
 import { assert, assertNever } from "../jsutils/assert";
@@ -37,55 +38,6 @@ import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const inspect = JSON.stringify.bind(JSON);
-
-export function recordFieldChange(
-  context: UpdateTreeContext,
-  base: ObjectChunk,
-  fieldInfo: FieldInfo,
-  fieldDiff: ValueDifference,
-  updated: SourceValue | undefined,
-): void {
-  const { enableRichHistory } = context.env;
-  if (!base.operation.historySize) {
-    return;
-  }
-
-  let changes = context.changes.get(base);
-  if (!changes) {
-    changes = [];
-    context.changes.set(base, changes);
-  }
-
-  switch (fieldDiff.kind) {
-    case DifferenceKind.Filler:
-      changes.push({
-        kind: fieldDiff.kind,
-        fieldInfo,
-        newValue: enableRichHistory ? updated : undefined,
-      });
-      break;
-    case DifferenceKind.Replacement:
-      changes.push({
-        kind: fieldDiff.kind,
-        fieldInfo,
-        oldValue: enableRichHistory
-          ? getSourceValue(fieldDiff.oldValue)
-          : undefined,
-        newValue: enableRichHistory ? updated : undefined,
-      });
-      break;
-    case DifferenceKind.CompositeListDifference:
-      changes.push({
-        kind: fieldDiff.kind,
-        fieldInfo,
-        itemChanges: context.childChanges,
-        previousLength: fieldDiff.previousLength,
-        currentLength: Array.isArray(updated) ? updated.length : undefined,
-      });
-      context.childChanges = [];
-      break;
-  }
-}
 
 export function updateObject(
   context: UpdateTreeContext,
@@ -113,6 +65,7 @@ function updateObjectValue(
   let copy = context.drafts.get(base.data);
   assert(!Array.isArray(copy));
   context.statsLogger?.copyChunkStats(base, copy);
+  let dirtyFields: (FillerEntry | ReplacementEntry)[] | undefined;
 
   for (const fieldName of difference.dirtyFields) {
     const aliases = base.selection.fields.get(fieldName);
@@ -160,8 +113,33 @@ function updateObjectValue(
       context.statsLogger?.fieldMutation();
       copy[fieldInfo.dataKey] = updated;
 
-      recordFieldChange(context, base, fieldInfo, fieldDiff, updated);
+      // Record immediately mutated fields (ignore changes caused by nested chunk mutations)
+      switch (fieldDiff.kind) {
+        case DifferenceKind.Filler:
+          dirtyFields ??= [];
+          dirtyFields.push({
+            kind: fieldDiff.kind,
+            fieldInfo,
+            newValue: context.env.enableRichHistory ? updated : undefined,
+          });
+          break;
+        case DifferenceKind.Replacement:
+          dirtyFields ??= [];
+          dirtyFields.push({
+            kind: fieldDiff.kind,
+            fieldInfo,
+            oldValue: context.env.enableRichHistory
+              ? getSourceValue(fieldDiff.oldValue)
+              : undefined,
+            newValue: context.env.enableRichHistory ? updated : undefined,
+          });
+          break;
+      }
     }
+  }
+
+  if (dirtyFields?.length) {
+    context.changes.set(base, dirtyFields);
   }
 
   return copy ?? base.data;
@@ -213,8 +191,6 @@ function updateCompositeListValue(
   let copy = drafts.get(base.data);
   assert(Array.isArray(copy) || copy === undefined);
   statsLogger?.copyChunkStats(base, copy);
-  context.childChanges =
-    base.operation.historySize > 0 ? [...difference.itemsChanges] : [];
 
   // Applying item changes _before_ layout changes (i.e. before item paths change)
   for (const index of difference.dirtyItems ?? EMPTY_ARRAY) {
@@ -280,15 +256,6 @@ function updateCompositeListValue(
       assert(newValue.data);
       accumulateMissingFields(context, newValue);
       result[i] = newValue.data;
-      context.childChanges.push(
-        LayoutChange.createItemAdded(
-          i,
-          newValue.data,
-          context.env,
-          base,
-          newValue.missingFields,
-        ),
-      );
       continue;
     }
     const op = operation.definition.name?.value;
@@ -311,6 +278,14 @@ function updateCompositeListValue(
   }
   if (copy.length !== base.data.length) {
     dirty = true;
+  }
+
+  if (dirty) {
+    context.changes.set(base, {
+      kind: difference.kind,
+      layout: layoutDiff,
+      deletedKeys: difference.deletedKeys,
+    });
   }
 
   return copy ?? base.data;

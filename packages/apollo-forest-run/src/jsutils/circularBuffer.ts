@@ -1,7 +1,5 @@
-import type { HistoryEntry } from "../forest/types";
-
-export class HistoryArray {
-  public items: HistoryEntry[] = [];
+export class CircularBuffer<TItem> implements Iterable<TItem> {
+  public items: TItem[] = [];
   private head = 0;
   // Total number of entries ever added (including overwritten ones)
   public totalEntries = 0;
@@ -11,8 +9,8 @@ export class HistoryArray {
     this.maxSize = maxSize;
   }
 
-  push(entry: HistoryEntry | undefined): void {
-    if (this.maxSize === 0 || !entry) {
+  push(entry: TItem): void {
+    if (this.maxSize === 0) {
       return;
     }
 
@@ -22,6 +20,12 @@ export class HistoryArray {
     } else {
       this.items[this.head] = entry;
       this.head = (this.head + 1) % this.maxSize;
+    }
+  }
+
+  *[Symbol.iterator](): Iterator<TItem> {
+    for (let i = 0; i < this.items.length; i++) {
+      yield this.items[(this.head + i) % this.items.length];
     }
   }
 }

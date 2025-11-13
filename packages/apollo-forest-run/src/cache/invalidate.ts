@@ -38,7 +38,7 @@ export function invalidateReadResults(
 
       if (results) {
         markChangedNodesAsDirty(results, nodeDiffs, incomingResult);
-        if (shouldPushOptimisticHistory(targetForest)) {
+        if (shouldPushOptimisticHistory(targetForest, results.outputTree)) {
           results.outputTree.history.push(
             createOptimisticHistoryEntry(
               results.outputTree,
@@ -190,8 +190,9 @@ function markChangedNodesAsDirty(
 
 function shouldPushOptimisticHistory(
   targetForest: DataForest | OptimisticLayer,
+  outputTree: IndexedTree,
 ): boolean {
-  return targetForest.layerTag !== null;
+  return targetForest.layerTag !== null && !!outputTree.operation.historySize;
 }
 
 const EMPTY_ARRAY = Object.freeze([]);

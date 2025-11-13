@@ -48,9 +48,16 @@ export function updateAffectedTrees(
     }
     allUpdated.push(result);
 
-    result.updatedTree.history.push(
-      createRegularHistoryEntry(currentTreeState, result, incomingResult, env),
-    );
+    if (currentTreeState.operation.historySize) {
+      result.updatedTree.history.push(
+        createRegularHistoryEntry(
+          currentTreeState,
+          result,
+          incomingResult,
+          env,
+        ),
+      );
+    }
 
     // Reset previous tree state on commit
     result.updatedTree.prev = null;

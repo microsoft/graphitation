@@ -29,9 +29,13 @@ import { TelemetryEvent } from "../telemetry/types";
 import { Logger } from "../jsutils/logger";
 import { UpdateTreeStats } from "../telemetry/updateStats/types";
 import { UpdateLogger } from "../telemetry/updateStats/updateLogger";
-import { HistoryArray } from "../jsutils/historyArray";
+import { CircularBuffer } from "../jsutils/circularBuffer";
 import type * as DifferenceKind from "../diff/differenceKind";
-import { CompositeListLayoutChange, NodeDifferenceMap } from "../diff/types";
+import {
+  CompositeListLayoutChange as CompositeListLayoutChangeAA,
+  CompositeListLayoutDifference,
+  NodeDifferenceMap,
+} from "../diff/types";
 
 export type IndexedTree = {
   operation: OperationDescriptor;
@@ -53,17 +57,18 @@ export type IndexedTree = {
   incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
 
   // Tree changes
-  history: HistoryArray;
+  history: CircularBuffer<HistoryChange>;
 
   // ApolloCompat
   danglingReferences?: Set<NodeKey>;
 };
 
-export type HistoryChange = Omit<FieldChange, "fieldInfo"> & {
-  path: (string | number)[];
-};
+export type HistoryFieldChange =
+  | FillerChange
+  | ReplacementChange
+  | CompositeListDifferenceChange;
 
-type HistoryEntryBase = {
+type HistoryChangeBase = {
   timestamp: number;
   modifyingOperation: {
     name: string;
@@ -78,16 +83,16 @@ type HistoryEntryBase = {
     | undefined;
 };
 
-export type HistoryEntry = (RegularHistoryEntry | OptimisticHistoryEntry) &
-  HistoryEntryBase;
+export type HistoryChange = (RegularHistoryChange | OptimisticHistoryChange) &
+  HistoryChangeBase;
 
-export type RegularHistoryEntry = {
+export type RegularHistoryChange = {
   kind: "Regular";
-  changes: HistoryChange[];
+  changes: HistoryFieldChange[];
   missingFields: MissingFieldsMap;
 };
 
-export type OptimisticHistoryEntry = {
+export type OptimisticHistoryChange = {
   kind: "Optimistic";
   nodeDiffs: NodeDifferenceMap | undefined;
   updatedNodes: string[];
@@ -106,39 +111,51 @@ export type Draft = SourceObject | SourceCompositeList;
 
 export type UpdateForestStats = (UpdateTreeStats | null)[];
 
-type FillerChange = {
+export type FillerEntry = {
   kind: typeof DifferenceKind.Filler;
   fieldInfo: FieldInfo;
   newValue: SourceValue | undefined;
 };
 
-type ReplacementChange = {
+export type ReplacementEntry = {
   kind: typeof DifferenceKind.Replacement;
   fieldInfo: FieldInfo;
   oldValue: SourceValue | undefined;
   newValue: SourceValue | undefined;
 };
 
-type CompositeListDifferenceChange = {
+export type CompositeListDifferenceEntry = {
   kind: typeof DifferenceKind.CompositeListDifference;
-  fieldInfo: FieldInfo;
-  itemChanges: CompositeListLayoutChange[] | undefined;
-  previousLength: number | undefined;
-  currentLength: number | undefined;
+  layout: CompositeListLayoutDifference;
+  deletedKeys?: Set<number>;
 };
 
-export type FieldChange =
-  | FillerChange
-  | ReplacementChange
-  | CompositeListDifferenceChange;
+type PathChange = {
+  path: (string | number)[];
+};
+
+export type FillerChange = Omit<FillerEntry, "fieldInfo"> & PathChange;
+export type ReplacementChange = Omit<ReplacementEntry, "fieldInfo"> &
+  PathChange;
+export type CompositeListDifferenceChange = {
+  kind: typeof DifferenceKind.CompositeListDifference;
+  itemChanges: CompositeListLayoutChangeAA[];
+  previousLength: number;
+  currentLength: number;
+} & PathChange;
 
 // Changed chunks map only contains chunks with immediate changes (i.e. "Replacement", "Filler" + list layout changes).
 //   Does not contain parent chunks which were affected only because some nested chunk has changed.
-export type ChangedChunksMap = Map<
-  ObjectChunk | CompositeListChunk,
-  FieldChange[]
->;
 
+export type ChangedChunksTuple =
+  | [CompositeListChunk, CompositeListDifferenceEntry]
+  | [ObjectChunk, (FillerEntry | ReplacementEntry)[]];
+
+export type ChangedChunksMap = Map<
+  CompositeListChunk,
+  CompositeListDifferenceEntry
+> &
+  Map<ObjectChunk, (FillerEntry | ReplacementEntry)[]>;
 export type UpdateTreeContext = {
   operation: OperationDescriptor;
   drafts: Map<Source, Draft>;
@@ -149,7 +166,6 @@ export type UpdateTreeContext = {
   completeObject: CompleteObjectFn;
   findParent: ParentLocator;
   env: ForestEnv;
-  childChanges: CompositeListLayoutChange[];
   statsLogger?: UpdateLogger;
 };
 
