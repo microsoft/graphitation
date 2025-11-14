@@ -33,6 +33,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 }) => {
   const classes = useDiffViewerStyles();
   const listRef = useRef<List>(null);
+  const nonVirtualizedContainerRef = useRef<HTMLDivElement>(null);
   const [currentChangeIndex, setCurrentChangeIndex] = useState(0);
 
   const { hunks, totalLines, changeGroups, allChangeLines } = useMemo(() => {
@@ -105,26 +106,6 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     };
   }, [oldValue, newValue]);
 
-  const scrollToChange = (index: number) => {
-    if (index >= 0 && index < changeGroups.length) {
-      setCurrentChangeIndex(index);
-      const group = changeGroups[index];
-      listRef.current?.scrollToItem(group.startLine, "center");
-    }
-  };
-
-  const goToNextChange = () => {
-    if (currentChangeIndex < changeGroups.length - 1) {
-      scrollToChange(currentChangeIndex + 1);
-    }
-  };
-
-  const goToPreviousChange = () => {
-    if (currentChangeIndex > 0) {
-      scrollToChange(currentChangeIndex - 1);
-    }
-  };
-
   if (hunks.length === 0) {
     return (
       <div className={classes.diffContainer}>
@@ -159,17 +140,76 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   // Disable virtualization to support text wrapping with variable line heights
   const useVirtualization = false;
 
+  const scrollToLineIndex = (lineNumber: number) => {
+    const safeLineNumber = Math.min(
+      Math.max(Math.round(lineNumber), 1),
+      totalLines,
+    );
+
+    if (useVirtualization) {
+      listRef.current?.scrollToItem(safeLineNumber, "center");
+      return;
+    }
+
+    const container = nonVirtualizedContainerRef.current;
+    if (!container) return;
+
+    const target = container.querySelector<HTMLElement>(
+      `[data-line-index='${safeLineNumber}']`,
+    );
+    if (!target) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const targetOffset =
+      targetRect.top - containerRect.top + container.scrollTop;
+    const centeredOffset =
+      targetOffset - container.clientHeight / 2 + targetRect.height / 2;
+
+    container.scrollTo({
+      top: Math.max(centeredOffset, 0),
+      behavior: "smooth",
+    });
+  };
+
+  const scrollToChange = (index: number) => {
+    if (index >= 0 && index < changeGroups.length) {
+      setCurrentChangeIndex(index);
+      const group = changeGroups[index];
+      scrollToLineIndex(group.startLine);
+    }
+  };
+
+  const goToNextChange = () => {
+    if (currentChangeIndex < changeGroups.length - 1) {
+      scrollToChange(currentChangeIndex + 1);
+    }
+  };
+
+  const goToPreviousChange = () => {
+    if (currentChangeIndex > 0) {
+      scrollToChange(currentChangeIndex - 1);
+    }
+  };
+
   // Handle click on change map to scroll to that position
   const handleMapClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!listRef.current) return;
-
     const rect = event.currentTarget.getBoundingClientRect();
     const clickX = event.clientX - rect.left;
     const percentage = clickX / rect.width;
-    const targetLine = Math.floor(percentage * totalLines);
+    const targetLine = Math.min(
+      Math.max(Math.round(percentage * totalLines), 1),
+      totalLines,
+    );
 
-    // Scroll directly to the clicked position
-    listRef.current.scrollToItem(targetLine, "center");
+    scrollToLineIndex(targetLine);
+
+    const groupIndex = changeGroups.findIndex(
+      (group) => targetLine >= group.startLine && targetLine <= group.endLine,
+    );
+    if (groupIndex !== -1) {
+      setCurrentChangeIndex(groupIndex);
+    }
   };
 
   // Create navigation bar
@@ -223,24 +263,34 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   );
 
   if (!useVirtualization) {
+    let renderedLineIndex = 0;
     return (
       <div className={classes.diffContainer}>
         {navigationBar}
         <div
           className={classes.diffContent}
           style={{ maxHeight: `${maxHeight}px` }}
+          ref={nonVirtualizedContainerRef}
         >
-          {hunks.map((hunk, hunkIdx) => (
-            <div key={hunkIdx}>
-              {hunk.lines.map((line, lineIdx) => (
-                <DiffLineComponent
-                  key={lineIdx}
-                  line={line}
-                  classes={classes}
-                />
-              ))}
-            </div>
-          ))}
+          {hunks.map((hunk, hunkIdx) => {
+            renderedLineIndex += 1; // account for hunk header
+            return (
+              <div key={hunkIdx}>
+                {hunk.lines.map((line, lineIdx) => {
+                  const lineIndex = renderedLineIndex;
+                  renderedLineIndex += 1;
+                  return (
+                    <DiffLineComponent
+                      key={lineIdx}
+                      line={line}
+                      classes={classes}
+                      lineIndex={lineIndex}
+                    />
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
       </div>
     );
@@ -286,11 +336,13 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 interface DiffLineComponentProps {
   line: DiffLine;
   classes: ReturnType<typeof useDiffViewerStyles>;
+  lineIndex?: number;
 }
 
 const DiffLineComponent: React.FC<DiffLineComponentProps> = ({
   line,
   classes,
+  lineIndex,
 }) => {
   return (
     <div
@@ -300,6 +352,7 @@ const DiffLineComponent: React.FC<DiffLineComponentProps> = ({
         line.type === "added" && classes.lineAdded,
         line.type === "removed" && classes.lineRemoved,
       )}
+      data-line-index={lineIndex}
     >
       <span className={classes.lineNumber}>
         {line.oldLineNum !== null ? line.oldLineNum : ""}
