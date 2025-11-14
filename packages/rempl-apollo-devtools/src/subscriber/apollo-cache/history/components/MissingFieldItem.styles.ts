@@ -5,15 +5,14 @@ export const useMissingFieldItemStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
     ...shorthands.gap(tokens.spacingVerticalXS),
-    ...shorthands.padding(tokens.spacingVerticalS, 0),
-    ...shorthands.borderBottom(
+    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalM),
+    backgroundColor: tokens.colorStatusWarningBackground1,
+    ...shorthands.borderRadius(tokens.borderRadiusMedium),
+    ...shorthands.border(
       tokens.strokeWidthThin,
       "solid",
-      tokens.colorNeutralStroke2,
+      tokens.colorStatusWarningBorder1,
     ),
-    "&:last-child": {
-      borderBottomWidth: 0,
-    },
   },
   identifier: {
     fontWeight: tokens.fontWeightSemibold,
@@ -25,6 +24,5 @@ export const useMissingFieldItemStyles = makeStyles({
     display: "flex",
     ...shorthands.gap(tokens.spacingHorizontalXS),
     flexWrap: "wrap",
-    ...shorthands.padding(0, 0, 0, tokens.spacingHorizontalM),
   },
 });

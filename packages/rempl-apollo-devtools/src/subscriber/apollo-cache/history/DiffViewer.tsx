@@ -156,8 +156,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   const maxHeight = 600;
   const listHeight = Math.min(totalLines * lineHeight, maxHeight);
 
-  // Use virtualization only if we have many lines
-  const useVirtualization = totalLines > 30;
+  // Disable virtualization to support text wrapping with variable line heights
+  const useVirtualization = false;
 
   // Handle click on change map to scroll to that position
   const handleMapClick = (event: React.MouseEvent<HTMLDivElement>) => {

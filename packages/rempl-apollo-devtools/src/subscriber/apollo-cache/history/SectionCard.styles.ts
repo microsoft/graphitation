@@ -1,0 +1,136 @@
+import { makeStyles, shorthands, tokens } from "@fluentui/react-components";
+
+export const useSectionCardStyles = makeStyles({
+  card: {
+    display: "flex",
+    flexDirection: "column",
+    ...shorthands.gap(tokens.spacingVerticalS),
+    backgroundColor: tokens.colorNeutralBackground2,
+    ...shorthands.borderRadius(tokens.borderRadiusLarge),
+    ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalM),
+    ...shorthands.border(
+      tokens.strokeWidthThin,
+      "solid",
+      tokens.colorNeutralStroke2,
+    ),
+  },
+  header: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    ...shorthands.gap(tokens.spacingHorizontalS),
+    ...shorthands.padding(tokens.spacingVerticalS, 0),
+    cursor: "pointer",
+    userSelect: "none",
+    backgroundColor: "transparent",
+    width: "100%",
+    textAlign: "left",
+    color: "inherit",
+    ...shorthands.borderRadius(tokens.borderRadiusMedium),
+    ...shorthands.border(0, "solid", "transparent"),
+    selectors: {
+      "&:hover svg": {
+        color: tokens.colorBrandForeground1,
+      },
+    },
+    "&:focus-visible": {
+      boxShadow: tokens.shadow4,
+      outlineStyle: "solid",
+      outlineWidth: tokens.strokeWidthThin,
+      outlineColor: tokens.colorBrandStroke1,
+    },
+  },
+  staticHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    ...shorthands.gap(tokens.spacingHorizontalS),
+    ...shorthands.padding(tokens.spacingVerticalS, 0),
+    width: "100%",
+  },
+  nestedHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    ...shorthands.gap(tokens.spacingHorizontalS),
+    ...shorthands.padding(tokens.spacingVerticalXS, 0),
+    width: "100%",
+    cursor: "pointer",
+    userSelect: "none",
+    backgroundColor: "transparent",
+    textAlign: "left",
+    color: "inherit",
+    ...shorthands.borderRadius(tokens.borderRadiusMedium),
+    ...shorthands.border(0, "solid", "transparent"),
+    selectors: {
+      "&:hover svg": {
+        color: tokens.colorBrandForeground1,
+      },
+    },
+    "&:focus-visible": {
+      boxShadow: tokens.shadow4,
+      outlineStyle: "solid",
+      outlineWidth: tokens.strokeWidthThin,
+      outlineColor: tokens.colorBrandStroke1,
+    },
+  },
+  headerContent: {
+    display: "flex",
+    alignItems: "center",
+    ...shorthands.gap(tokens.spacingHorizontalS),
+    flexGrow: 1,
+    minWidth: 0,
+  },
+  headerAction: {
+    display: "flex",
+    alignItems: "center",
+    flexShrink: 0,
+  },
+  title: {
+    fontWeight: tokens.fontWeightSemibold,
+    color: tokens.colorNeutralForeground1,
+    fontSize: tokens.fontSizeBase400,
+  },
+  badge: {
+    marginLeft: tokens.spacingHorizontalXS,
+    fontSize: tokens.fontSizeBase200,
+    color: tokens.colorNeutralForeground3,
+  },
+  chevron: {
+    fontSize: "16px",
+    color: tokens.colorNeutralForeground3,
+    ...shorthands.transition("transform", "0.2s", "ease-in-out"),
+    flexShrink: 0,
+  },
+  chevronExpanded: {
+    transform: "rotate(90deg)",
+  },
+  content: {
+    display: "flex",
+    flexDirection: "column",
+    ...shorthands.gap(tokens.spacingVerticalM),
+    ...shorthands.padding(tokens.spacingVerticalS, 0),
+  },
+  nestedCard: {
+    display: "flex",
+    flexDirection: "column",
+    ...shorthands.gap(tokens.spacingVerticalXXS),
+    ...shorthands.borderTop(
+      tokens.strokeWidthThin,
+      "solid",
+      tokens.colorNeutralStroke2,
+    ),
+    ...shorthands.padding(tokens.spacingVerticalM, 0, 0, 0),
+    flexGrow: 1,
+    minWidth: 0,
+  },
+  nestedCardFirst: {
+    ...shorthands.borderTop("0", "none", "transparent"),
+    paddingTop: 0,
+  },
+  nestedTitle: {
+    fontWeight: tokens.fontWeightSemibold,
+    color: tokens.colorNeutralForeground1,
+    fontSize: tokens.fontSizeBase300,
+  },
+});

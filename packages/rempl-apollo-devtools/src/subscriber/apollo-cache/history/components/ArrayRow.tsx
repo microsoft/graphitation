@@ -15,6 +15,7 @@ interface ArrayRowProps {
   onSetHovered: (oldIndex: number | null, newIndex: number | null) => void;
   containerRef: RefObject<HTMLDivElement>;
   indexRefs: Map<number, HTMLDivElement>;
+  headerAction?: React.ReactNode;
 }
 
 export const ArrayRow: React.FC<ArrayRowProps> = ({
@@ -28,6 +29,7 @@ export const ArrayRow: React.FC<ArrayRowProps> = ({
   onSetHovered,
   containerRef,
   indexRefs,
+  headerAction,
 }) => {
   const classes = useArrayDiffViewerStyles();
 
@@ -37,7 +39,10 @@ export const ArrayRow: React.FC<ArrayRowProps> = ({
 
   return (
     <div className={classes.indexRow}>
-      <Text className={classes.rowLabel}>{label}</Text>
+      <div className={classes.rowLabel}>
+        <Text>{label}</Text>
+        {headerAction && <div>{headerAction}</div>}
+      </div>
       <div className={classes.scrollableContainer} ref={containerRef}>
         {!hasItems ? (
           <div className={classes.noChangesMessage}>

@@ -17,18 +17,39 @@ const useStyles = makeStyles({
   header: {
     display: "flex",
     alignItems: "center",
+    justifyContent: "space-between",
     ...shorthands.gap(tokens.spacingHorizontalS),
     cursor: "pointer",
-    ...shorthands.padding(tokens.spacingVerticalXS, 0),
+    ...shorthands.padding(tokens.spacingVerticalS, 0),
     userSelect: "none",
-    "&:hover": {
-      "& $chevron": {
+    backgroundColor: "transparent",
+    width: "100%",
+    textAlign: "left",
+    color: "inherit",
+    ...shorthands.borderRadius(tokens.borderRadiusMedium),
+    ...shorthands.border(0, "solid", "transparent"),
+    selectors: {
+      "&:hover svg": {
         color: tokens.colorBrandForeground1,
       },
     },
+    "&:focus-visible": {
+      boxShadow: tokens.shadow4,
+      outlineStyle: "solid",
+      outlineWidth: tokens.strokeWidthThin,
+      outlineColor: tokens.colorBrandStroke1,
+    },
+    "&:disabled": {
+      cursor: "default",
+      opacity: 0.6,
+    },
   },
-  headerDisabled: {
-    cursor: "default",
+  headerContent: {
+    display: "flex",
+    alignItems: "center",
+    ...shorthands.gap(tokens.spacingHorizontalS),
+    flexGrow: 1,
+    minWidth: 0,
   },
   chevron: {
     fontSize: "16px",
@@ -76,31 +97,24 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   const classes = useStyles();
 
   const header = (
-    <div
-      className={mergeClasses(
-        classes.header,
-        disabled && classes.headerDisabled,
-      )}
-      onClick={disabled ? undefined : onToggle}
-      role="button"
-      tabIndex={disabled ? -1 : 0}
-      onKeyDown={(e) => {
-        if (!disabled && (e.key === "Enter" || e.key === " ")) {
-          e.preventDefault();
-          onToggle();
-        }
-      }}
+    <button
+      type="button"
+      className={classes.header}
+      onClick={onToggle}
+      disabled={disabled}
       aria-expanded={isExpanded}
     >
+      <span className={classes.headerContent}>
+        <Text className={classes.title}>{title}</Text>
+        {badge && <span className={classes.badge}>{badge}</span>}
+      </span>
       <ChevronRight20Regular
         className={mergeClasses(
           classes.chevron,
           isExpanded && classes.chevronExpanded,
         )}
       />
-      <Text className={classes.title}>{title}</Text>
-      {badge && <span className={classes.badge}>{badge}</span>}
-    </div>
+    </button>
   );
 
   if (renderHeaderOnly) {

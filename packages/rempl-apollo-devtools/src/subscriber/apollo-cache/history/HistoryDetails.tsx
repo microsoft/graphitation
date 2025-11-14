@@ -1,13 +1,18 @@
-import React, { useState } from "react";
-import { Switch } from "@fluentui/react-components";
+import React, { useState, useMemo } from "react";
+import {
+  Switch,
+  Text,
+  Tooltip,
+  mergeClasses,
+} from "@fluentui/react-components";
+import { Warning16Filled, ChevronRight20Regular } from "@fluentui/react-icons";
 import type { HistoryEntry } from "../../../history/types";
-import { CollapsibleSection, usePanelStyles } from "./shared";
-import { useCollapsibleSections } from "./hooks";
 import { OperationMetadata, MissingFieldItem } from "./components";
 import { FieldChangesList } from "./FieldChangesList";
 import { NodeDiffsList } from "./NodeDiffsList";
 import { VirtualizedJsonViewer } from "./VirtualizedJsonViewer";
 import { DiffViewer } from "./DiffViewer";
+import { SectionCard } from "./SectionCard";
 import { useHistoryDetailsStyles } from "./HistoryDetails.styles";
 
 export interface HistoryDetailsProps {
@@ -16,10 +21,8 @@ export interface HistoryDetailsProps {
 
 export const HistoryDetails: React.FC<HistoryDetailsProps> = ({ entry }) => {
   const classes = useHistoryDetailsStyles();
-  const [showDiff, setShowDiff] = useState(false);
-  const { isExpanded, toggle } = useCollapsibleSections({
-    initialExpanded: ["changes", "nodeDiffs"],
-  });
+  const [showDiff, setShowDiff] = useState(true);
+  const [isMissingExpanded, setIsMissingExpanded] = useState(true);
 
   const hasOperationName = entry.modifyingOperation.name;
   const hasVariables =
@@ -27,6 +30,41 @@ export const HistoryDetails: React.FC<HistoryDetailsProps> = ({ entry }) => {
     Object.keys(entry.modifyingOperation.variables).length > 0;
   const hasMissingFields =
     entry.missingFields && entry.missingFields.length > 0;
+  const missingFieldsCount = useMemo(() => {
+    if (!hasMissingFields) {
+      return 0;
+    }
+
+    return entry.missingFields!.reduce(
+      (acc, item) => acc + item.fields.length,
+      0,
+    );
+  }, [entry.missingFields, hasMissingFields]);
+
+  const missingObjectsCount = hasMissingFields
+    ? entry.missingFields!.length
+    : 0;
+
+  const data = entry.data;
+  const updatedValue = data?.updated;
+  const incomingValue = data?.incoming;
+  const currentValue = data?.current;
+
+  const showUpdatedSection =
+    entry.kind === "Regular" && updatedValue !== undefined;
+  const showIncomingSection = incomingValue !== undefined;
+  const showCurrentSection = currentValue !== undefined;
+  const hasDataSnapshots =
+    showUpdatedSection || showIncomingSection || showCurrentSection;
+  const fieldChangeCount = entry.kind === "Regular" ? entry.changes.length : 0;
+  const fieldChangeLabel = `${fieldChangeCount} ${
+    fieldChangeCount === 1 ? "change" : "changes"
+  }`;
+  const nodeDiffCount =
+    entry.kind === "Optimistic" ? entry.nodeDiffs.length : 0;
+  const nodeDiffLabel = `${nodeDiffCount} ${
+    nodeDiffCount === 1 ? "node difference" : "node differences"
+  }`;
 
   return (
     <div className={classes.root}>
@@ -46,117 +84,125 @@ export const HistoryDetails: React.FC<HistoryDetailsProps> = ({ entry }) => {
             />
           </div>
 
+          {hasMissingFields && (
+            <div className={classes.warningBanner} role="alert">
+              <button
+                type="button"
+                className={classes.warningBannerToggle}
+                onClick={() => setIsMissingExpanded((prev) => !prev)}
+                aria-expanded={isMissingExpanded}
+              >
+                <div className={classes.warningBannerHeader}>
+                  <div className={classes.warningBannerHeaderLeft}>
+                    <Warning16Filled className={classes.warningIcon} />
+                    <Tooltip
+                      content="If an operation reads missing data it will trigger a refetch"
+                      relationship="description"
+                    >
+                      <Text weight="semibold">
+                        {missingFieldsCount} missing field
+                        {missingFieldsCount === 1 ? "" : "s"} across{" "}
+                        {missingObjectsCount} object
+                        {missingObjectsCount === 1 ? "" : "s"}
+                      </Text>
+                    </Tooltip>
+                  </div>
+                  <ChevronRight20Regular
+                    className={mergeClasses(
+                      classes.warningChevron,
+                      isMissingExpanded && classes.warningChevronExpanded,
+                    )}
+                  />
+                </div>
+              </button>
+
+              {isMissingExpanded && (
+                <div className={classes.warningBannerContent}>
+                  <div className={classes.missingFieldsSection}>
+                    {entry.missingFields!.map((missing, idx) => (
+                      <MissingFieldItem key={idx} missing={missing} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Changes or Node Diffs */}
           {entry.kind === "Regular" ? (
-            <div className={classes.section}>
-              <CollapsibleSection
-                title={`Field Changes (${entry.changes.length})`}
-                isExpanded={isExpanded("changes")}
-                onToggle={() => toggle("changes")}
-              >
-                <FieldChangesList changes={entry.changes} />
-              </CollapsibleSection>
-            </div>
+            <SectionCard
+              title="Field Changes"
+              badge={fieldChangeLabel}
+              defaultExpanded={true}
+            >
+              <FieldChangesList changes={entry.changes} />
+            </SectionCard>
           ) : (
-            <div className={classes.section}>
-              <CollapsibleSection
-                title={`Node Differences (${entry.nodeDiffs.length})`}
-                isExpanded={isExpanded("nodeDiffs")}
-                onToggle={() => toggle("nodeDiffs")}
-              >
-                <NodeDiffsList nodeDiffs={entry.nodeDiffs} />
-              </CollapsibleSection>
-            </div>
+            <SectionCard
+              title="Node Differences"
+              badge={nodeDiffLabel}
+              defaultExpanded={true}
+            >
+              <NodeDiffsList nodeDiffs={entry.nodeDiffs} />
+            </SectionCard>
           )}
 
           {/* Data Snapshots */}
-          {entry.data && (
-            <>
-              {/* Updated/New State (Regular only) - FIRST */}
-              {entry.kind === "Regular" && entry.data.updated !== undefined && (
-                <div className={classes.section}>
-                  <div className={classes.sectionHeaderWithSwitch}>
-                    <div
-                      className={classes.sectionHeaderLeft}
-                      onClick={() => toggle("updated")}
-                    >
-                      <CollapsibleSection
-                        title="New State"
-                        isExpanded={isExpanded("updated")}
-                        onToggle={() => toggle("updated")}
-                        renderHeaderOnly
-                      >
-                        {null}
-                      </CollapsibleSection>
-                    </div>
-                    {entry.data.current !== undefined && (
-                      <Switch
-                        checked={showDiff}
-                        onChange={(e, data) => setShowDiff(data.checked)}
-                        label="Show Diff"
-                      />
-                    )}
-                  </div>
-                  {isExpanded("updated") && (
-                    <div>
-                      {showDiff && entry.data.current !== undefined ? (
+          {hasDataSnapshots && (
+            <SectionCard
+              title="Data Snapshots"
+              collapsible={false}
+              headerAction={
+                showCurrentSection && showUpdatedSection ? (
+                  <Switch
+                    checked={showDiff}
+                    onChange={(e, data) => setShowDiff(data.checked)}
+                    label="Diff view"
+                    title="Toggle to view a diff of the current data versus the previous data"
+                  />
+                ) : undefined
+              }
+            >
+              {showUpdatedSection && (
+                <SectionCard
+                  title="Data after update"
+                  defaultExpanded={true}
+                  variant="nested"
+                  isFirstChild={true}
+                >
+                  {updatedValue !== undefined && (
+                    <>
+                      {showDiff &&
+                      showCurrentSection &&
+                      currentValue !== undefined ? (
                         <DiffViewer
-                          oldValue={entry.data.current}
-                          newValue={entry.data.updated}
+                          oldValue={currentValue}
+                          newValue={updatedValue}
                         />
                       ) : (
-                        <VirtualizedJsonViewer data={entry.data.updated} />
+                        <VirtualizedJsonViewer data={updatedValue} />
                       )}
-                    </div>
+                    </>
                   )}
-                </div>
+                </SectionCard>
               )}
 
-              {/* Incoming Data - SECOND */}
-              {entry.data.incoming !== undefined && (
-                <div className={classes.section}>
-                  <CollapsibleSection
-                    title="Incoming Data"
-                    isExpanded={isExpanded("incoming")}
-                    onToggle={() => toggle("incoming")}
-                  >
-                    <VirtualizedJsonViewer data={entry.data.incoming} />
-                  </CollapsibleSection>
-                </div>
+              {showIncomingSection && (
+                <SectionCard title="Incoming Data" variant="nested">
+                  {incomingValue !== undefined && (
+                    <VirtualizedJsonViewer data={incomingValue} />
+                  )}
+                </SectionCard>
               )}
 
-              {/* Previous State - THIRD */}
-              {entry.data.current !== undefined && (
-                <div className={classes.section}>
-                  <CollapsibleSection
-                    title="Previous State"
-                    isExpanded={isExpanded("current")}
-                    onToggle={() => toggle("current")}
-                  >
-                    <VirtualizedJsonViewer data={entry.data.current} />
-                  </CollapsibleSection>
-                </div>
+              {showCurrentSection && (
+                <SectionCard title="Data before update" variant="nested">
+                  {currentValue !== undefined && (
+                    <VirtualizedJsonViewer data={currentValue} />
+                  )}
+                </SectionCard>
               )}
-            </>
-          )}
-
-          {/* Missing Fields Warning */}
-          {hasMissingFields && (
-            <div className={classes.section}>
-              <CollapsibleSection
-                title={`⚠️ Missing Fields (${
-                  entry.missingFields!.length
-                } objects)`}
-                isExpanded={isExpanded("missing")}
-                onToggle={() => toggle("missing")}
-              >
-                <div className={classes.missingFieldsSection}>
-                  {entry.missingFields!.map((missing, idx) => (
-                    <MissingFieldItem key={idx} missing={missing} />
-                  ))}
-                </div>
-              </CollapsibleSection>
-            </div>
+            </SectionCard>
           )}
         </div>
       </div>

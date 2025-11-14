@@ -9,6 +9,13 @@ export const useArrayDiffViewerStyles = makeStyles({
   summaryRow: {
     display: "flex",
     alignItems: "center",
+    justifyContent: "space-between",
+    ...shorthands.gap(tokens.spacingHorizontalM),
+    marginBottom: tokens.spacingVerticalS,
+  },
+  summaryControls: {
+    display: "flex",
+    alignItems: "center",
     ...shorthands.gap(tokens.spacingHorizontalM),
   },
   summary: {
@@ -40,10 +47,18 @@ export const useArrayDiffViewerStyles = makeStyles({
     ...shorthands.gap(tokens.spacingVerticalXS),
   },
   rowLabel: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
     fontWeight: tokens.fontWeightSemibold,
     fontSize: tokens.fontSizeBase300,
     color: tokens.colorNeutralForeground2,
     marginBottom: tokens.spacingVerticalXS,
+  },
+  arrayDescription: {
+    fontSize: tokens.fontSizeBase200,
+    color: tokens.colorNeutralForeground3,
+    fontStyle: "italic",
   },
   scrollableContainer: {
     overflowX: "auto",
@@ -63,11 +78,15 @@ export const useArrayDiffViewerStyles = makeStyles({
     flexDirection: "column",
     alignItems: "center",
     ...shorthands.gap(tokens.spacingVerticalXXS),
-    minWidth: "180px",
+    minWidth: "160px",
     flexShrink: 0,
     cursor: "pointer",
     position: "relative",
     ...shorthands.margin(0, tokens.spacingHorizontalXS),
+  },
+  unchangedBox: {
+    minWidth: "60px",
+    cursor: "default",
   },
   ellipsisIndicator: {
     display: "flex",
@@ -91,6 +110,8 @@ export const useArrayDiffViewerStyles = makeStyles({
     alignItems: "center",
     ...shorthands.gap(tokens.spacingHorizontalXXS),
     justifyContent: "center",
+    minHeight: "24px",
+    height: "24px",
   },
   indexContent: {
     ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS),
@@ -110,6 +131,14 @@ export const useArrayDiffViewerStyles = makeStyles({
     "&:hover": {
       transform: "translateY(-2px)",
       boxShadow: tokens.shadow4,
+    },
+  },
+  unchangedContent: {
+    cursor: "default",
+    pointerEvents: "none",
+    "&:hover": {
+      transform: "none",
+      boxShadow: "none",
     },
   },
   indexContentExpanded: {
@@ -147,10 +176,6 @@ export const useArrayDiffViewerStyles = makeStyles({
     boxShadow: tokens.shadow8,
     transform: "scale(1.02)",
   },
-  updated: {
-    backgroundColor: "rgba(245, 159, 0, 0.1)",
-    ...shorthands.borderColor(tokens.colorPaletteYellowBorder1),
-  },
   stateLabel: {
     fontSize: "9px",
     fontWeight: tokens.fontWeightSemibold,
@@ -170,10 +195,6 @@ export const useArrayDiffViewerStyles = makeStyles({
   labelMoved: {
     color: tokens.colorBrandForeground1,
     backgroundColor: "rgba(0, 120, 212, 0.2)",
-  },
-  labelUpdated: {
-    color: tokens.colorPaletteYellowForeground1,
-    backgroundColor: "rgba(245, 159, 0, 0.2)",
   },
   arrow: {
     color: tokens.colorBrandForeground1,

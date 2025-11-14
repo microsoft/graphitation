@@ -35,8 +35,6 @@ export const ArrayIndexItem: React.FC<ArrayIndexItemProps> = ({
         return classes.labelRemoved;
       case "moved":
         return classes.labelMoved;
-      case "updated":
-        return classes.labelUpdated;
       default:
         return "";
     }
@@ -56,8 +54,6 @@ export const ArrayIndexItem: React.FC<ArrayIndexItemProps> = ({
       baseClasses.push(
         hoveredIndex === item.index ? classes.movedHovered : classes.moved,
       );
-    } else if (item.state === "updated") {
-      baseClasses.push(classes.updated);
     }
 
     return baseClasses.join(" ");
@@ -70,11 +66,13 @@ export const ArrayIndexItem: React.FC<ArrayIndexItemProps> = ({
 
   return (
     <div
-      className={classes.indexBox}
+      className={`${classes.indexBox} ${
+        item.state === "unchanged" ? classes.unchangedBox : ""
+      }`}
       ref={setRef}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      onClick={onClick}
+      onMouseEnter={item.state !== "unchanged" ? onMouseEnter : undefined}
+      onMouseLeave={item.state !== "unchanged" ? onMouseLeave : undefined}
+      onClick={item.state !== "unchanged" ? onClick : undefined}
     >
       <div className={classes.indexLabel}>
         <Text>[{item.index}]</Text>
@@ -95,7 +93,7 @@ export const ArrayIndexItem: React.FC<ArrayIndexItemProps> = ({
       )}
       {item.state === "unchanged" && (
         <div
-          className={`${classes.indexContent} ${classes.indexContentCollapsed}`}
+          className={`${classes.indexContent} ${classes.indexContentCollapsed} ${classes.unchangedContent}`}
         >
           <em style={{ color: "#666" }}>unchanged</em>
         </div>

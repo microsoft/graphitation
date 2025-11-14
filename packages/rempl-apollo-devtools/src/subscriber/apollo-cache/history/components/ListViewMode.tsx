@@ -16,24 +16,28 @@ export const ListViewMode: React.FC<ListViewModeProps> = ({ itemChanges }) => {
 
   return (
     <div className={classes.listItemsContainer}>
-      {itemChanges.map((change, index) => (
-        <div key={index} className={classes.listItem}>
-          <Text className={classes.listItemText}>
-            {getListItemChangeDescription(change)}
-          </Text>
-          {change.data !== undefined && (
-            <pre
-              style={{
-                margin: "4px 0 0 0",
-                fontSize: "12px",
-                fontFamily: tokens.fontFamilyMonospace,
-              }}
-            >
-              {formatValueForDisplay(change.data)}
-            </pre>
-          )}
-        </div>
-      ))}
+      {itemChanges.map((change, index) => {
+        if (!change) return null;
+
+        return (
+          <div key={index} className={classes.listItem}>
+            <Text className={classes.listItemText}>
+              {getListItemChangeDescription(change)}
+            </Text>
+            {change.data !== undefined && (
+              <pre
+                style={{
+                  margin: "4px 0 0 0",
+                  fontSize: "12px",
+                  fontFamily: tokens.fontFamilyMonospace,
+                }}
+              >
+                {formatValueForDisplay(change.data)}
+              </pre>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };

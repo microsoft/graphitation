@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Text, mergeClasses } from "@fluentui/react-components";
 import { ChevronRight20Regular } from "@fluentui/react-icons";
 import type { FieldChange } from "../../../history/types";
+import { DifferenceKind } from "../../../history/types";
 import { ArrayDiffViewer } from "./ArrayDiffViewer";
 import { useFieldChangesListStyles } from "./FieldChangesList.styles";
 
@@ -47,11 +48,11 @@ const FieldChangeItem: React.FC<FieldChangeItemProps> = ({
 
   const getBadgeClass = () => {
     switch (changeKind) {
-      case "Filler":
+      case DifferenceKind.Filler:
         return classes.badgeFiller;
-      case "Replacement":
+      case DifferenceKind.Replacement:
         return classes.badgeReplacement;
-      case "CompositeListDifference":
+      case DifferenceKind.CompositeListDifference:
         return classes.badgeList;
       default:
         return classes.badgeReplacement;
@@ -60,26 +61,29 @@ const FieldChangeItem: React.FC<FieldChangeItemProps> = ({
 
   const getChangeLabel = () => {
     switch (changeKind) {
-      case "Filler":
+      case DifferenceKind.Filler:
         return "Filled";
-      case "Replacement":
+      case DifferenceKind.Replacement:
         return "Modified";
-      case "CompositeListDifference":
+      case DifferenceKind.CompositeListDifference:
         return "List Change";
       default:
-        return changeKind;
+        return String(changeKind);
     }
   };
 
   const getPreviewText = () => {
-    if (changeKind === "Replacement") {
-      return `${formatValuePreview(change.oldValue)} → ${formatValuePreview(
-        change.newValue,
-      )}`;
-    } else if (changeKind === "Filler") {
-      return `Added: ${formatValuePreview(change.newValue)}`;
-    } else if (changeKind === "CompositeListDifference") {
-      const itemCount = change.itemChanges?.length || 0;
+    if (change.kind === DifferenceKind.Replacement) {
+      const replacementChange = change as any;
+      return `${formatValuePreview(
+        replacementChange.oldValue,
+      )} → ${formatValuePreview(replacementChange.newValue)}`;
+    } else if (change.kind === DifferenceKind.Filler) {
+      const fillerChange = change as any;
+      return `Added: ${formatValuePreview(fillerChange.newValue)}`;
+    } else if (change.kind === DifferenceKind.CompositeListDifference) {
+      const listChange = change as any;
+      const itemCount = listChange.itemChanges?.length || 0;
       return `${itemCount} item ${itemCount === 1 ? "change" : "changes"}`;
     }
     return "";
@@ -91,12 +95,6 @@ const FieldChangeItem: React.FC<FieldChangeItemProps> = ({
         className={classes.changeHeader}
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <ChevronRight20Regular
-          className={mergeClasses(
-            classes.chevron,
-            isExpanded && classes.chevronExpanded,
-          )}
-        />
         <Text className={classes.fieldPath}>{fieldPath}</Text>
         <Text
           className={mergeClasses(classes.changeKindBadge, getBadgeClass())}
@@ -104,44 +102,44 @@ const FieldChangeItem: React.FC<FieldChangeItemProps> = ({
           {getChangeLabel()}
         </Text>
         <Text className={classes.previewText}>{getPreviewText()}</Text>
+        <ChevronRight20Regular
+          className={mergeClasses(
+            classes.chevron,
+            isExpanded && classes.chevronExpanded,
+          )}
+        />
       </div>
       {isExpanded && (
         <div className={classes.changeContent}>
-          {changeKind === "Replacement" && (
+          {change.kind === DifferenceKind.Replacement && (
             <div className={classes.valueComparison}>
               <div className={classes.valueBox}>
                 <Text className={classes.valueLabel}>Previous Value</Text>
                 <pre className={classes.codeBlock}>
-                  {formatValue(change.oldValue)}
+                  {formatValue((change as any).oldValue)}
                 </pre>
               </div>
               <div className={classes.valueBox}>
                 <Text className={classes.valueLabel}>New Value</Text>
                 <pre className={classes.codeBlock}>
-                  {formatValue(change.newValue)}
+                  {formatValue((change as any).newValue)}
                 </pre>
               </div>
             </div>
           )}
-          {changeKind === "Filler" && (
+          {change.kind === DifferenceKind.Filler && (
             <div className={classes.valueBox}>
               <Text className={classes.valueLabel}>Value</Text>
               <pre className={classes.codeBlock}>
-                {formatValue(change.newValue)}
+                {formatValue((change as any).newValue)}
               </pre>
             </div>
           )}
-          {changeKind === "CompositeListDifference" && change.itemChanges && (
+          {change.kind === DifferenceKind.CompositeListDifference && (
             <ArrayDiffViewer
-              itemChanges={change.itemChanges}
-              oldValue={
-                Array.isArray(change.oldValue) ? change.oldValue : undefined
-              }
-              newValue={
-                Array.isArray(change.newValue) ? change.newValue : undefined
-              }
-              previousLength={change.previousLength}
-              currentLength={change.currentLength}
+              itemChanges={(change as any).itemChanges}
+              previousLength={(change as any).previousLength}
+              currentLength={(change as any).currentLength}
             />
           )}
         </div>

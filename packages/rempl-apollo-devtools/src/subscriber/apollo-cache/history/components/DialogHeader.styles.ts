@@ -2,10 +2,9 @@ import { makeStyles, shorthands, tokens } from "@fluentui/react-components";
 
 export const useDialogHeaderStyles = makeStyles({
   header: {
-    display: "grid",
-    gridTemplateColumns: "1fr auto",
-    alignItems: "center",
-    ...shorthands.gap(tokens.spacingHorizontalM),
+    display: "flex",
+    flexDirection: "column",
+    ...shorthands.gap(tokens.spacingVerticalXS),
     ...shorthands.padding(tokens.spacingVerticalL, tokens.spacingHorizontalL),
     ...shorthands.borderBottom(
       tokens.strokeWidthThin,
@@ -13,13 +12,7 @@ export const useDialogHeaderStyles = makeStyles({
       tokens.colorNeutralStroke1,
     ),
     backgroundColor: tokens.colorNeutralBackground2,
-  },
-  headerContent: {
-    display: "flex",
-    flexDirection: "column",
-    ...shorthands.gap(tokens.spacingVerticalXS),
-    minWidth: 0,
-    flexGrow: 1,
+    position: "relative",
   },
   operationKey: {
     fontFamily: tokens.fontFamilyMonospace,
@@ -32,6 +25,9 @@ export const useDialogHeaderStyles = makeStyles({
     color: tokens.colorNeutralForeground1,
   },
   closeButton: {
+    position: "absolute",
+    top: tokens.spacingVerticalM,
+    right: tokens.spacingHorizontalM,
     minWidth: "auto",
   },
 });

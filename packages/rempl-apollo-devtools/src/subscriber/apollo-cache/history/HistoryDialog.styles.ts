@@ -16,8 +16,9 @@ export const useHistoryDialogStyles = makeStyles({
   dialog: {
     backgroundColor: tokens.colorNeutralBackground1,
     ...shorthands.borderRadius(tokens.borderRadiusLarge),
+    width: "min(1400px, 95vw)",
     maxWidth: "95vw",
-    width: "1400px",
+    height: "90vh",
     maxHeight: "90vh",
     display: "grid",
     gridTemplateRows: "auto 1fr",
@@ -28,10 +29,13 @@ export const useHistoryDialogStyles = makeStyles({
     display: "grid",
     gridTemplateColumns: "300px 1fr",
     ...shorthands.overflow("hidden"),
-    height: "80vh",
+    minHeight: 0,
+    minWidth: 0,
   },
   detailsPanel: {
+    display: "flex",
+    flexDirection: "column",
     ...shorthands.overflow("hidden"),
-    height: "100%",
+    minHeight: 0,
   },
 });

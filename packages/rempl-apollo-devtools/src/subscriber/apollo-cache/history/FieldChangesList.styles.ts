@@ -36,8 +36,9 @@ export const useFieldChangesListStyles = makeStyles({
   chevron: {
     fontSize: "16px",
     color: tokens.colorNeutralForeground3,
-    ...shorthands.transition("transform", "0.2s"),
+    ...shorthands.transition("transform", "0.2s", "ease-in-out"),
     flexShrink: 0,
+    marginLeft: "auto",
   },
   chevronExpanded: {
     transform: "rotate(90deg)",

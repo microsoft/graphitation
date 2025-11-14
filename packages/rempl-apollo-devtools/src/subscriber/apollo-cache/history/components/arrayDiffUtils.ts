@@ -1,4 +1,5 @@
 import type { ListItemChange } from "../../../../history/types";
+import { ItemChangeKind } from "../../../../history/types";
 
 export interface IndexItem {
   index: number;
@@ -36,20 +37,19 @@ export const formatDataPreview = (data: unknown): string => {
 };
 
 export const getSummary = (itemChanges: ListItemChange[]): string => {
-  const stats = { added: 0, removed: 0, moved: 0, updated: 0 };
+  const stats = { added: 0, removed: 0, moved: 0 };
   itemChanges.forEach((change) => {
+    if (!change) return;
+
     switch (change.kind) {
-      case "ItemAdd":
+      case ItemChangeKind.ItemAdd:
         stats.added++;
         break;
-      case "ItemRemove":
+      case ItemChangeKind.ItemRemove:
         stats.removed++;
         break;
-      case "ItemIndexChange":
+      case ItemChangeKind.ItemIndexChange:
         stats.moved++;
-        break;
-      case "ItemUpdate":
-        stats.updated++;
         break;
     }
   });
@@ -57,22 +57,21 @@ export const getSummary = (itemChanges: ListItemChange[]): string => {
   if (stats.added > 0) parts.push(`${stats.added} added`);
   if (stats.removed > 0) parts.push(`${stats.removed} removed`);
   if (stats.moved > 0) parts.push(`${stats.moved} moved`);
-  if (stats.updated > 0) parts.push(`${stats.updated} updated`);
   return parts.join(", ");
 };
 
 export const getListItemChangeDescription = (
   change: ListItemChange,
 ): string => {
+  if (!change) return "Item changed";
+
   switch (change.kind) {
-    case "ItemAdd":
+    case ItemChangeKind.ItemAdd:
       return `Item added at index ${change.index}`;
-    case "ItemRemove":
+    case ItemChangeKind.ItemRemove:
       return `Item removed from index ${change.oldIndex}`;
-    case "ItemIndexChange":
+    case ItemChangeKind.ItemIndexChange:
       return `Item moved from index ${change.oldIndex} to ${change.index}`;
-    case "ItemUpdate":
-      return `Item updated at index ${change.index ?? change.oldIndex}`;
     default:
       return "Item changed";
   }
@@ -80,8 +79,6 @@ export const getListItemChangeDescription = (
 
 export const buildIndexItems = (
   itemChanges: ListItemChange[],
-  oldValue?: unknown[],
-  newValue?: unknown[],
   previousLength?: number,
   currentLength?: number,
 ): { oldItems: IndexItem[]; newItems: IndexItem[] } => {
@@ -93,70 +90,64 @@ export const buildIndexItems = (
   const newChangesMap = new Map<number, ListItemChange>();
 
   itemChanges.forEach((change) => {
-    if (change.kind === "ItemRemove" && change.oldIndex !== undefined) {
+    if (!change) return;
+
+    if (
+      change.kind === ItemChangeKind.ItemRemove &&
+      change.oldIndex !== undefined
+    ) {
       oldChangesMap.set(change.oldIndex, change);
-    } else if (change.kind === "ItemIndexChange") {
+    } else if (change.kind === ItemChangeKind.ItemIndexChange) {
       if (change.oldIndex !== undefined) {
         oldChangesMap.set(change.oldIndex, change);
       }
       if (change.index !== undefined) {
         newChangesMap.set(change.index, change);
       }
-    } else if (change.kind === "ItemUpdate") {
-      const idx = change.index ?? change.oldIndex;
-      if (idx !== undefined) {
-        oldChangesMap.set(idx, change);
-        newChangesMap.set(idx, change);
-      }
-    } else if (change.kind === "ItemAdd" && change.index !== undefined) {
+    } else if (
+      change.kind === ItemChangeKind.ItemAdd &&
+      change.index !== undefined
+    ) {
       newChangesMap.set(change.index, change);
     }
   });
 
   // Build old items - only include items that have changes
   oldChangesMap.forEach((change, index) => {
-    if (change.kind === "ItemRemove") {
+    if (!change) return;
+
+    if (change.kind === ItemChangeKind.ItemRemove) {
       oldItems.push({
         index,
         state: "removed",
-        data: change.data ?? oldValue?.[index],
+        data: change.data,
       });
-    } else if (change.kind === "ItemIndexChange") {
+    } else if (change.kind === ItemChangeKind.ItemIndexChange) {
       oldItems.push({
         index,
         state: "moved",
-        data: change.data ?? oldValue?.[index],
+        data: change.data,
         newIndex: change.index,
-      });
-    } else if (change.kind === "ItemUpdate") {
-      oldItems.push({
-        index,
-        state: "updated",
-        data: oldValue?.[index],
       });
     }
   });
 
   // Build new items - only include items that have changes
   newChangesMap.forEach((change, index) => {
-    if (change.kind === "ItemAdd") {
+    if (!change) return;
+
+    if (change.kind === ItemChangeKind.ItemAdd) {
       newItems.push({
         index,
         state: "added",
-        data: change.data ?? newValue?.[index],
+        data: change.data,
       });
-    } else if (change.kind === "ItemIndexChange") {
+    } else if (change.kind === ItemChangeKind.ItemIndexChange) {
       newItems.push({
         index,
         state: "moved",
-        data: change.data ?? newValue?.[index],
+        data: change.data,
         oldIndex: change.oldIndex,
-      });
-    } else if (change.kind === "ItemUpdate") {
-      newItems.push({
-        index,
-        state: "updated",
-        data: newValue?.[index],
       });
     }
   });

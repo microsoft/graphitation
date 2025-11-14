@@ -20,7 +20,6 @@ export const useDiffViewerStyles = makeStyles({
   diffLine: {
     display: "flex",
     minHeight: "20px",
-    lineHeight: "20px",
     ...shorthands.padding(0, tokens.spacingHorizontalS),
     fontFamily: tokens.fontFamilyMonospace,
     fontSize: tokens.fontSizeBase200,

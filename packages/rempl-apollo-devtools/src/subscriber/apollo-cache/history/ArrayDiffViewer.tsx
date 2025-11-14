@@ -13,16 +13,12 @@ import { ArrayRow } from "./components/ArrayRow";
 
 interface ArrayDiffViewerProps {
   itemChanges: ListItemChange[];
-  oldValue?: unknown[];
-  newValue?: unknown[];
   previousLength?: number;
   currentLength?: number;
 }
 
 export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
   itemChanges,
-  oldValue,
-  newValue,
   previousLength,
   currentLength,
 }) => {
@@ -42,8 +38,6 @@ export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
   // Build old and new index items
   const { oldItems, newItems } = buildIndexItems(
     itemChanges,
-    oldValue,
-    newValue,
     previousLength,
     currentLength,
   );
@@ -72,12 +66,15 @@ export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
     return (
       <div className={classes.container}>
         <div className={classes.summaryRow}>
-          <Text className={classes.summary}>{summary}</Text>
-          <Switch
-            label="Show visual diff"
-            checked={showVisual}
-            onChange={(_, data) => setShowVisual(data.checked)}
-          />
+          <div />
+          <div className={classes.summaryControls}>
+            <Text className={classes.summary}>{summary}</Text>
+            <Switch
+              label="Diff view"
+              checked={showVisual}
+              onChange={(_, data) => setShowVisual(data.checked)}
+            />
+          </div>
         </div>
         <ListViewMode itemChanges={itemChanges} />
       </div>
@@ -86,15 +83,6 @@ export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
 
   return (
     <div className={classes.container}>
-      <div className={classes.summaryRow}>
-        <Text className={classes.summary}>{summary}</Text>
-        <Switch
-          label="Show visual diff"
-          checked={showVisual}
-          onChange={(_, data) => setShowVisual(data.checked)}
-        />
-      </div>
-
       <div className={classes.visualContainer}>
         <ArrayRow
           label="Old Array (Before):"
@@ -107,6 +95,16 @@ export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
           onSetHovered={handleSetHovered}
           containerRef={oldContainerRef}
           indexRefs={oldIndexRefs.current}
+          headerAction={
+            <div className={classes.summaryControls}>
+              <Text className={classes.summary}>{summary}</Text>
+              <Switch
+                label="Diff view"
+                checked={showVisual}
+                onChange={(_, data) => setShowVisual(data.checked)}
+              />
+            </div>
+          }
         />
 
         {/* Arrow */}

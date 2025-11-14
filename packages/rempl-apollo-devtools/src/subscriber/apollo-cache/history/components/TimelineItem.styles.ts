@@ -15,6 +15,10 @@ export const useTimelineItemStyles = makeStyles({
       backgroundColor: tokens.colorNeutralBackground1Hover,
       ...shorthands.borderLeft("3px", "solid", tokens.colorBrandStroke1),
     },
+    "&:focus-visible": {
+      ...shorthands.borderLeft("3px", "solid", tokens.colorBrandStroke1),
+      boxShadow: tokens.shadow4,
+    },
   },
   itemActive: {
     backgroundColor: tokens.colorBrandBackground2,
@@ -40,6 +44,7 @@ export const useTimelineItemStyles = makeStyles({
   itemWithMissingFields: {
     backgroundColor: "rgba(245, 159, 0, 0.05)",
     ...shorthands.borderLeft("3px", "solid", tokens.colorPaletteYellowBorder1),
+    boxShadow: `inset 0 0 0 1px ${tokens.colorStatusWarningBorder1}`,
     "&:hover": {
       backgroundColor: "rgba(245, 159, 0, 0.08)",
     },

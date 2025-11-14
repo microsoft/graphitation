@@ -98,6 +98,7 @@ export const ImportHistoryPage: React.FC = () => {
   const [jsonInput, setJsonInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [totalEntries, setTotalEntries] = useState<number>(0);
   const [selectedEntryIndex, setSelectedEntryIndex] = useState<number | null>(
     null,
   );
@@ -113,21 +114,36 @@ export const ImportHistoryPage: React.FC = () => {
     try {
       const parsed = JSON.parse(jsonInput);
 
-      // Validate it's an array
-      if (!Array.isArray(parsed)) {
-        setError("History data must be an array of entries");
+      // Validate it has the required structure
+      if (typeof parsed !== "object" || parsed === null) {
+        setError(
+          'History data must be an object with "totalEntries" and "history" fields',
+        );
+        return;
+      }
+
+      if (!("history" in parsed) || !Array.isArray(parsed.history)) {
+        setError('History data must have a "history" array field');
+        return;
+      }
+
+      if (
+        !("totalEntries" in parsed) ||
+        typeof parsed.totalEntries !== "number"
+      ) {
+        setError('History data must have a "totalEntries" number field');
         return;
       }
 
       // Basic validation of entries
-      if (parsed.length === 0) {
+      if (parsed.history.length === 0) {
         setError("History array is empty");
         return;
       }
 
       // Validate each entry has required fields
-      for (let i = 0; i < parsed.length; i++) {
-        const entry = parsed[i];
+      for (let i = 0; i < parsed.history.length; i++) {
+        const entry = parsed.history[i];
         if (!entry.timestamp || !entry.kind || !entry.modifyingOperation) {
           setError(
             `Invalid history entry at index ${i}: missing required fields (timestamp, kind, modifyingOperation)`,
@@ -137,10 +153,11 @@ export const ImportHistoryPage: React.FC = () => {
       }
 
       // Import successful
-      setHistory(parsed as HistoryEntry[]);
+      setHistory(parsed.history as HistoryEntry[]);
+      setTotalEntries(parsed.totalEntries);
       // Auto-select the most recent entry
-      if (parsed.length > 0) {
-        setSelectedEntryIndex(parsed.length - 1);
+      if (parsed.history.length > 0) {
+        setSelectedEntryIndex(parsed.history.length - 1);
       }
     } catch (e) {
       if (e instanceof Error) {
@@ -153,6 +170,7 @@ export const ImportHistoryPage: React.FC = () => {
 
   const handleClear = () => {
     setHistory([]);
+    setTotalEntries(0);
     setSelectedEntryIndex(null);
     setJsonInput("");
     setError(null);
@@ -166,6 +184,7 @@ export const ImportHistoryPage: React.FC = () => {
           <div className={classes.historyView}>
             <HistoryTimeline
               history={history}
+              totalCount={totalEntries}
               selectedIndex={selectedEntryIndex}
               onSelectEntry={setSelectedEntryIndex}
             />

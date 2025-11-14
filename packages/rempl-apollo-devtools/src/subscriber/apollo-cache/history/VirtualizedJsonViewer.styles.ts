@@ -12,10 +12,10 @@ export const useVirtualizedJsonViewerStyles = makeStyles({
       "solid",
       tokens.colorNeutralStroke2,
     ),
-    overflowX: "auto",
-  },
-  line: {
-    whiteSpace: "pre",
-    ...shorthands.padding(0, tokens.spacingHorizontalS),
+    overflowX: "hidden",
+    whiteSpace: "pre-wrap",
+    overflowWrap: "break-word",
+    wordBreak: "break-all",
+    ...shorthands.margin(0),
   },
 });

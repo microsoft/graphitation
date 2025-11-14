@@ -11,6 +11,7 @@ export const useHistoryTimelineStyles = makeStyles({
     flexDirection: "column",
     ...shorthands.overflow("hidden"),
     height: "100%",
+    minHeight: 0,
   },
   header: {
     ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalM),
@@ -25,5 +26,6 @@ export const useHistoryTimelineStyles = makeStyles({
     overflowY: "auto",
     ...shorthands.padding(tokens.spacingVerticalS),
     ...shorthands.flex(1),
+    minHeight: 0,
   },
 });
