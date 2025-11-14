@@ -69,9 +69,9 @@ export const HistoryDetails: React.FC<HistoryDetailsProps> = ({ entry }) => {
   return (
     <div className={classes.root}>
       <div className={classes.scrollContainer}>
-        <div className={classes.content}>
+        <div className={classes.contentInner}>
           {/* Header */}
-          <div className={classes.header}>
+          <div className={classes.tabList}>
             {/* Metadata */}
             <OperationMetadata
               operationName={

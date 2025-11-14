@@ -1,4 +1,10 @@
 import { makeStyles, shorthands, tokens } from "@fluentui/react-components";
+import {
+  SPACING_SM,
+  SPACING_LG,
+  SPACING_MD,
+  SPACING_XS,
+} from "./shared/styles/spacing";
 
 export const useHistoryDetailsStyles = makeStyles({
   root: {
@@ -10,52 +16,49 @@ export const useHistoryDetailsStyles = makeStyles({
   scrollContainer: {
     ...shorthands.flex(1),
     overflowY: "auto",
-    ...shorthands.padding(tokens.spacingHorizontalM),
+    overflowX: "hidden",
+    ...shorthands.padding(SPACING_LG),
     minHeight: 0,
   },
-  content: {
+  contentInner: {
     display: "flex",
     flexDirection: "column",
-    ...shorthands.gap(tokens.spacingVerticalM),
-    ...shorthands.padding(
-      tokens.spacingVerticalM,
-      0,
-      tokens.spacingVerticalXXL,
-      0,
-    ),
+    ...shorthands.gap(SPACING_LG),
+    ...shorthands.padding(SPACING_MD, 0, "32px", 0),
   },
-  header: {
+  tabList: {
     display: "flex",
-    flexDirection: "column",
-    ...shorthands.gap(tokens.spacingVerticalS),
-    ...shorthands.padding(0, 0, tokens.spacingVerticalL, 0),
-    ...shorthands.borderBottom(
+    ...shorthands.gap(SPACING_SM),
+    ...shorthands.padding(SPACING_SM, SPACING_SM),
+    ...shorthands.borderRadius(tokens.borderRadiusMedium),
+    ...shorthands.border(
       tokens.strokeWidthThin,
       "solid",
-      tokens.colorNeutralStroke1,
+      tokens.colorNeutralStroke2,
     ),
   },
   badges: {
     display: "flex",
-    ...shorthands.gap(tokens.spacingHorizontalS),
+    ...shorthands.gap(SPACING_SM),
     flexWrap: "wrap",
   },
   section: {
     display: "flex",
     flexDirection: "column",
-    ...shorthands.gap(tokens.spacingVerticalXS),
+    ...shorthands.gap(SPACING_XS),
   },
   sectionHeaderWithSwitch: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    ...shorthands.gap(tokens.spacingHorizontalM),
+    ...shorthands.gap(SPACING_LG),
     width: "100%",
+    minWidth: 0,
   },
   missingFieldsSection: {
     display: "flex",
     flexDirection: "column",
-    ...shorthands.gap(tokens.spacingVerticalM),
+    ...shorthands.gap(SPACING_MD),
   },
   warningBanner: {
     display: "flex",

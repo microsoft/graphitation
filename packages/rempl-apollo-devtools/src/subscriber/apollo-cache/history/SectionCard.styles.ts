@@ -1,13 +1,14 @@
 import { makeStyles, shorthands, tokens } from "@fluentui/react-components";
+import { SPACING_MD, SPACING_SM, SPACING_XS } from "./shared/styles/spacing";
 
 export const useSectionCardStyles = makeStyles({
   card: {
     display: "flex",
     flexDirection: "column",
-    ...shorthands.gap(tokens.spacingVerticalS),
+    ...shorthands.gap(SPACING_SM),
     backgroundColor: tokens.colorNeutralBackground2,
     ...shorthands.borderRadius(tokens.borderRadiusLarge),
-    ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalM),
+    ...shorthands.padding(SPACING_MD, SPACING_MD),
     ...shorthands.border(
       tokens.strokeWidthThin,
       "solid",
@@ -18,8 +19,8 @@ export const useSectionCardStyles = makeStyles({
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    ...shorthands.gap(tokens.spacingHorizontalS),
-    ...shorthands.padding(tokens.spacingVerticalS, 0),
+    ...shorthands.gap(SPACING_SM),
+    ...shorthands.padding(SPACING_SM, 0),
     cursor: "pointer",
     userSelect: "none",
     backgroundColor: "transparent",
@@ -28,6 +29,7 @@ export const useSectionCardStyles = makeStyles({
     color: "inherit",
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
     ...shorthands.border(0, "solid", "transparent"),
+    minWidth: 0,
     selectors: {
       "&:hover svg": {
         color: tokens.colorBrandForeground1,
@@ -44,16 +46,17 @@ export const useSectionCardStyles = makeStyles({
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    ...shorthands.gap(tokens.spacingHorizontalS),
-    ...shorthands.padding(tokens.spacingVerticalS, 0),
+    ...shorthands.gap(SPACING_SM),
+    ...shorthands.padding(SPACING_SM, 0),
     width: "100%",
+    minWidth: 0,
   },
   nestedHeader: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    ...shorthands.gap(tokens.spacingHorizontalS),
-    ...shorthands.padding(tokens.spacingVerticalXS, 0),
+    ...shorthands.gap(SPACING_SM),
+    ...shorthands.padding(SPACING_XS, 0),
     width: "100%",
     cursor: "pointer",
     userSelect: "none",
@@ -62,6 +65,7 @@ export const useSectionCardStyles = makeStyles({
     color: "inherit",
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
     ...shorthands.border(0, "solid", "transparent"),
+    minWidth: 0,
     selectors: {
       "&:hover svg": {
         color: tokens.colorBrandForeground1,
@@ -77,7 +81,7 @@ export const useSectionCardStyles = makeStyles({
   headerContent: {
     display: "flex",
     alignItems: "center",
-    ...shorthands.gap(tokens.spacingHorizontalS),
+    ...shorthands.gap(SPACING_SM),
     flexGrow: 1,
     minWidth: 0,
   },
@@ -90,14 +94,18 @@ export const useSectionCardStyles = makeStyles({
     fontWeight: tokens.fontWeightSemibold,
     color: tokens.colorNeutralForeground1,
     fontSize: tokens.fontSizeBase400,
+    ...shorthands.overflow("hidden"),
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   },
   badge: {
-    marginLeft: tokens.spacingHorizontalXS,
+    marginLeft: SPACING_XS,
     fontSize: tokens.fontSizeBase200,
     color: tokens.colorNeutralForeground3,
+    flexShrink: 0,
   },
   chevron: {
-    fontSize: "16px",
+    fontSize: tokens.fontSizeBase400,
     color: tokens.colorNeutralForeground3,
     ...shorthands.transition("transform", "0.2s", "ease-in-out"),
     flexShrink: 0,
@@ -108,19 +116,19 @@ export const useSectionCardStyles = makeStyles({
   content: {
     display: "flex",
     flexDirection: "column",
-    ...shorthands.gap(tokens.spacingVerticalM),
-    ...shorthands.padding(tokens.spacingVerticalS, 0),
+    ...shorthands.gap(SPACING_MD),
+    ...shorthands.padding(SPACING_SM, 0),
   },
   nestedCard: {
     display: "flex",
     flexDirection: "column",
-    ...shorthands.gap(tokens.spacingVerticalXXS),
+    ...shorthands.gap(SPACING_XS),
     ...shorthands.borderTop(
       tokens.strokeWidthThin,
       "solid",
       tokens.colorNeutralStroke2,
     ),
-    ...shorthands.padding(tokens.spacingVerticalM, 0, 0, 0),
+    ...shorthands.padding(SPACING_MD, 0, 0, 0),
     flexGrow: 1,
     minWidth: 0,
   },
@@ -132,5 +140,8 @@ export const useSectionCardStyles = makeStyles({
     fontWeight: tokens.fontWeightSemibold,
     color: tokens.colorNeutralForeground1,
     fontSize: tokens.fontSizeBase300,
+    ...shorthands.overflow("hidden"),
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   },
 });

@@ -1,22 +1,23 @@
 import { makeStyles, shorthands, tokens } from "@fluentui/react-components";
+import { SPACING_LG, SPACING_XS, SPACING_SM } from "./shared/styles/spacing";
 
 export const useArrayDiffViewerStyles = makeStyles({
   container: {
     display: "flex",
     flexDirection: "column",
-    ...shorthands.gap(tokens.spacingVerticalS),
+    ...shorthands.gap(SPACING_SM),
   },
   summaryRow: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    ...shorthands.gap(tokens.spacingHorizontalM),
-    marginBottom: tokens.spacingVerticalS,
+    ...shorthands.gap(SPACING_LG),
+    marginBottom: SPACING_SM,
   },
   summaryControls: {
     display: "flex",
     alignItems: "center",
-    ...shorthands.gap(tokens.spacingHorizontalM),
+    ...shorthands.gap(SPACING_LG),
   },
   summary: {
     fontSize: tokens.fontSizeBase200,
@@ -39,21 +40,21 @@ export const useArrayDiffViewerStyles = makeStyles({
   visualContainer: {
     display: "flex",
     flexDirection: "column",
-    ...shorthands.gap(tokens.spacingVerticalS),
+    ...shorthands.gap(SPACING_SM),
   },
   indexRow: {
     display: "flex",
     flexDirection: "column",
-    ...shorthands.gap(tokens.spacingVerticalXS),
+    ...shorthands.gap(SPACING_XS),
   },
   rowLabel: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     fontWeight: tokens.fontWeightSemibold,
-    fontSize: tokens.fontSizeBase300,
+    fontSize: tokens.fontSizeBase200,
     color: tokens.colorNeutralForeground2,
-    marginBottom: tokens.spacingVerticalXS,
+    marginBottom: SPACING_XS,
   },
   arrayDescription: {
     fontSize: tokens.fontSizeBase200,
@@ -64,28 +65,27 @@ export const useArrayDiffViewerStyles = makeStyles({
     overflowX: "auto",
     ...shorthands.borderRadius(tokens.borderRadiusSmall),
     backgroundColor: tokens.colorNeutralBackground1,
-    ...shorthands.padding(tokens.spacingVerticalS),
+    ...shorthands.padding(SPACING_SM),
   },
   indexBoxesContainer: {
     display: "flex",
     flexWrap: "nowrap",
-    ...shorthands.gap(tokens.spacingHorizontalM),
+    ...shorthands.gap(SPACING_SM),
     alignItems: "flex-start",
-    minHeight: "100px",
+    minHeight: "clamp(80px, calc(51.11px + 3.85vh), 100px)",
   },
   indexBox: {
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
-    ...shorthands.gap(tokens.spacingVerticalXXS),
-    minWidth: "160px",
+    alignItems: "stretch",
+    ...shorthands.gap(SPACING_XS),
+    minWidth: "clamp(120px, calc(65.78px + 7.24vw), 160px)",
     flexShrink: 0,
     cursor: "pointer",
     position: "relative",
-    ...shorthands.margin(0, tokens.spacingHorizontalXS),
   },
   unchangedBox: {
-    minWidth: "60px",
+    minWidth: "50px",
     cursor: "default",
   },
   ellipsisIndicator: {
@@ -102,19 +102,16 @@ export const useArrayDiffViewerStyles = makeStyles({
     fontSize: tokens.fontSizeBase100,
     fontWeight: tokens.fontWeightSemibold,
     color: tokens.colorNeutralForeground3,
-    ...shorthands.padding(
-      tokens.spacingVerticalXXS,
-      tokens.spacingHorizontalXS,
-    ),
+    ...shorthands.padding("2px", SPACING_SM),
     display: "flex",
     alignItems: "center",
-    ...shorthands.gap(tokens.spacingHorizontalXXS),
+    ...shorthands.gap(SPACING_XS),
     justifyContent: "center",
     minHeight: "24px",
     height: "24px",
   },
   indexContent: {
-    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS),
+    ...shorthands.padding(SPACING_SM, SPACING_SM),
     ...shorthands.borderRadius(tokens.borderRadiusSmall),
     ...shorthands.border(
       tokens.strokeWidthThin,
@@ -125,7 +122,6 @@ export const useArrayDiffViewerStyles = makeStyles({
     fontFamily: tokens.fontFamilyMonospace,
     textAlign: "left",
     minHeight: "32px",
-    width: "100%",
     ...shorthands.overflow("hidden"),
     ...shorthands.transition("all", "0.2s"),
     "&:hover": {

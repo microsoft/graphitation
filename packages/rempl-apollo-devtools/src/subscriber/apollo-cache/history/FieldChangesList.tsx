@@ -92,7 +92,7 @@ const FieldChangeItem: React.FC<FieldChangeItemProps> = ({
   return (
     <div className={classes.changeItem}>
       <div
-        className={classes.changeHeader}
+        className={classes.fieldItem}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <Text className={classes.fieldPath}>{fieldPath}</Text>

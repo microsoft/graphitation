@@ -1,13 +1,19 @@
 import { makeStyles, shorthands, tokens } from "@fluentui/react-components";
+import {
+  SPACING_SM,
+  SPACING_LG,
+  SPACING_MD,
+  SPACING_XS,
+} from "./shared/styles/spacing";
 
 export const useFieldChangesListStyles = makeStyles({
   container: {
     display: "flex",
     flexDirection: "column",
-    ...shorthands.gap(tokens.spacingVerticalS),
+    ...shorthands.gap(SPACING_SM),
   },
   emptyState: {
-    ...shorthands.padding(tokens.spacingVerticalL),
+    ...shorthands.padding("12px"),
     textAlign: "center",
     color: tokens.colorNeutralForeground3,
     fontStyle: "italic",
@@ -21,20 +27,22 @@ export const useFieldChangesListStyles = makeStyles({
     ),
     ...shorthands.overflow("hidden"),
   },
-  changeHeader: {
+  fieldItem: {
     display: "flex",
     alignItems: "center",
-    ...shorthands.gap(tokens.spacingHorizontalS),
-    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalM),
+    justifyContent: "space-between",
+    ...shorthands.gap(SPACING_SM),
+    ...shorthands.padding(SPACING_SM, SPACING_MD),
     cursor: "pointer",
     backgroundColor: tokens.colorNeutralBackground2,
     ...shorthands.transition("background-color", "0.15s"),
+    minWidth: 0,
     "&:hover": {
       backgroundColor: tokens.colorNeutralBackground2Hover,
     },
   },
   chevron: {
-    fontSize: "16px",
+    fontSize: tokens.fontSizeBase400,
     color: tokens.colorNeutralForeground3,
     ...shorthands.transition("transform", "0.2s", "ease-in-out"),
     flexShrink: 0,
@@ -48,16 +56,18 @@ export const useFieldChangesListStyles = makeStyles({
     fontWeight: tokens.fontWeightSemibold,
     color: tokens.colorNeutralForeground1,
     ...shorthands.flex(1),
-    fontSize: tokens.fontSizeBase300,
+    fontSize: tokens.fontSizeBase200,
+    ...shorthands.overflow("hidden"),
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    minWidth: 0,
   },
   changeKindBadge: {
     fontSize: tokens.fontSizeBase100,
-    ...shorthands.padding(
-      tokens.spacingVerticalXXS,
-      tokens.spacingHorizontalXS,
-    ),
+    ...shorthands.padding("2px", SPACING_SM),
     ...shorthands.borderRadius(tokens.borderRadiusSmall),
     fontWeight: tokens.fontWeightSemibold,
+    flexShrink: 0,
   },
   badgeFiller: {
     backgroundColor: "rgba(16, 124, 16, 0.15)",
@@ -74,26 +84,30 @@ export const useFieldChangesListStyles = makeStyles({
   previewText: {
     color: tokens.colorNeutralForeground2,
     fontSize: tokens.fontSizeBase200,
-    maxWidth: "300px",
     ...shorthands.overflow("hidden"),
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
+    flexShrink: 1,
+    minWidth: 0,
   },
   changeContent: {
-    ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalM),
+    ...shorthands.padding(SPACING_MD, SPACING_MD),
+  },
+  detailsContainer: {
+    ...shorthands.padding(SPACING_MD, SPACING_MD),
     backgroundColor: tokens.colorNeutralBackground1,
   },
   valueComparison: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    ...shorthands.gap(tokens.spacingHorizontalM),
+    gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+    ...shorthands.gap(SPACING_LG),
     width: "100%",
     minWidth: 0,
   },
   valueBox: {
     display: "flex",
     flexDirection: "column",
-    ...shorthands.gap(tokens.spacingVerticalXS),
+    ...shorthands.gap(SPACING_XS),
     minWidth: 0,
     maxWidth: "100%",
     ...shorthands.overflow("hidden"),

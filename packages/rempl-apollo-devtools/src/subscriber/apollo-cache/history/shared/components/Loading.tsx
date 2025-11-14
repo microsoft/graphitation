@@ -23,29 +23,14 @@ const useStyles = makeStyles({
   },
 });
 
-export interface LoadingProps {
+export const Loading: React.FC<{
   label?: string;
-  size?:
-    | "tiny"
-    | "extra-small"
-    | "small"
-    | "medium"
-    | "large"
-    | "extra-large"
-    | "huge";
-  className?: string;
-}
-
-export const Loading: React.FC<LoadingProps> = ({
-  label,
-  size = "medium",
-  className,
-}) => {
+}> = ({ label }) => {
   const classes = useStyles();
 
   return (
-    <div className={`${classes.container} ${className || ""}`}>
-      <Spinner size={size} />
+    <div className={classes.container}>
+      <Spinner size="medium" />
       {label && <Text className={classes.label}>{label}</Text>}
     </div>
   );

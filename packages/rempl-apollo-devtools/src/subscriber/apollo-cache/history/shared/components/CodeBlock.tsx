@@ -6,7 +6,6 @@ const useStyles = makeStyles({
     fontFamily: tokens.fontFamilyMonospace,
     fontSize: tokens.fontSizeBase200,
     ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS),
-    backgroundColor: tokens.colorNeutralBackground3,
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
     ...shorthands.border(
       tokens.strokeWidthThin,

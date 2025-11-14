@@ -27,10 +27,14 @@ export const useHistoryDialogStyles = makeStyles({
   },
   contentContainer: {
     display: "grid",
-    gridTemplateColumns: "300px 1fr",
+    gridTemplateColumns: "clamp(220px, calc(154px + 8.89vw), 320px) 1fr",
     ...shorthands.overflow("hidden"),
     minHeight: 0,
     minWidth: 0,
+    "@media (max-width: 839px)": {
+      gridTemplateColumns: "1fr",
+      gridTemplateRows: "auto 1fr",
+    },
   },
   detailsPanel: {
     display: "flex",

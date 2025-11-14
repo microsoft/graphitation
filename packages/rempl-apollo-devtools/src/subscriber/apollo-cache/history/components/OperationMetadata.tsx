@@ -17,6 +17,8 @@ export const OperationMetadata: React.FC<OperationMetadataProps> = ({
   const classes = useOperationMetadataStyles();
 
   const hasVariables = variables && Object.keys(variables).length > 0;
+  const variablesString = hasVariables ? JSON.stringify(variables) : "";
+  const shouldInlineVariables = variablesString.length <= 50;
 
   if (!operationName && !hasVariables) {
     return null;
@@ -40,7 +42,11 @@ export const OperationMetadata: React.FC<OperationMetadataProps> = ({
       {hasVariables && (
         <div className={classes.metaItem}>
           <span className={classes.label}>Variables:</span>
-          <CodeBlock value={variables} language="json" maxHeight="200px" />
+          {shouldInlineVariables ? (
+            <Text className={classes.inlineVariables}>{variablesString}</Text>
+          ) : (
+            <CodeBlock value={variables} language="json" maxHeight="200px" />
+          )}
         </div>
       )}
     </div>

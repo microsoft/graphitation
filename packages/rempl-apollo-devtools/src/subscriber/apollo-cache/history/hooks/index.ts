@@ -5,13 +5,4 @@ export type {
 } from "./useHistoryData";
 
 export { useHistorySelection } from "./useHistorySelection";
-export type {
-  UseHistorySelectionResult,
-  UseHistorySelectionOptions,
-} from "./useHistorySelection";
-
-export { useCollapsibleSections } from "./useCollapsibleSections";
-export type {
-  UseCollapsibleSectionsResult,
-  UseCollapsibleSectionsOptions,
-} from "./useCollapsibleSections";
+export type { UseHistorySelectionOptions } from "./useHistorySelection";

@@ -36,16 +36,14 @@ export const DialogHeader: React.FC<DialogHeaderProps> = ({
     <div className={classes.header}>
       <Title1>{titleText}</Title1>
       {operationInfo && (
-        <>
+        <div className={classes.operationRow}>
           <Text className={classes.operationName}>{operationInfo.name}</Text>
           {hasVariables && (
-            <CodeBlock
-              value={operationInfo.variables}
-              language="json"
-              maxHeight="80px"
-            />
+            <Text className={classes.variables}>
+              {JSON.stringify(operationInfo.variables)}
+            </Text>
           )}
-        </>
+        </div>
       )}
       {operationKey && !operationInfo && (
         <Text className={classes.operationKey}>{operationKey}</Text>

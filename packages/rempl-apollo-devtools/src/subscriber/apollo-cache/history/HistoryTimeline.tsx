@@ -19,8 +19,6 @@ export const HistoryTimeline: React.FC<HistoryTimelineProps> = ({
 }) => {
   const classes = useHistoryTimelineStyles();
 
-  // Calculate the starting update number
-  // If totalCount > history.length, we're showing the last N updates
   const startingUpdateNumber =
     totalCount > history.length ? totalCount - history.length + 1 : 1;
 

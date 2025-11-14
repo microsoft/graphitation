@@ -1,31 +1,39 @@
-import { makeStyles, shorthands, tokens } from "@fluentui/react-components";
+import { makeStyles, shorthands } from "@fluentui/react-components";
+import { SPACING_LG, SPACING_SM, SPACING_MD } from "./shared/styles/spacing";
 
 export const useHistoryTimelineStyles = makeStyles({
   container: {
-    ...shorthands.borderRight(
-      tokens.strokeWidthThin,
-      "solid",
-      tokens.colorNeutralStroke1,
-    ),
     display: "flex",
     flexDirection: "column",
     ...shorthands.overflow("hidden"),
     height: "100%",
+    width: "100%",
     minHeight: 0,
+    minWidth: 0,
+    "@media (max-width: 839px)": {
+      flexDirection: "row",
+      height: "auto",
+    },
   },
   header: {
-    ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalM),
-    ...shorthands.borderBottom(
-      tokens.strokeWidthThin,
-      "solid",
-      tokens.colorNeutralStroke1,
-    ),
-    backgroundColor: tokens.colorNeutralBackground2,
+    ...shorthands.padding(SPACING_MD, SPACING_LG),
+    "@media (max-width: 839px)": {
+      flexShrink: 0,
+    },
   },
   list: {
     overflowY: "auto",
-    ...shorthands.padding(tokens.spacingVerticalS),
+    overflowX: "hidden",
+    ...shorthands.padding(SPACING_SM),
     ...shorthands.flex(1),
     minHeight: 0,
+    "@media (max-width: 839px)": {
+      overflowY: "hidden",
+      overflowX: "auto",
+      display: "flex",
+      flexDirection: "row",
+      ...shorthands.gap(SPACING_SM),
+      alignItems: "stretch",
+    },
   },
 });

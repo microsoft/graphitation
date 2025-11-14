@@ -8,7 +8,6 @@ import {
 } from "@fluentui/react-components";
 import { Warning16Filled } from "@fluentui/react-icons";
 import type { HistoryEntry } from "../../../../history/types";
-import { formatTime } from "../shared/utils";
 import { useTimelineItemStyles } from "./TimelineItem.styles";
 
 export interface TimelineItemProps {
@@ -53,7 +52,9 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
     >
       <div className={classes.itemHeader}>
         <Text className={classes.itemTitle}>Update #{index}</Text>
-        <Text className={classes.itemTime}>{formatTime(entry.timestamp)}</Text>
+        <Text className={classes.itemTime}>
+          {new Date(entry.timestamp).toLocaleTimeString()}
+        </Text>
       </div>
       <Text
         className={classes.operationName}
