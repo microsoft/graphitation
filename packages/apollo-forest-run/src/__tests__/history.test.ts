@@ -56,9 +56,9 @@ describe("History size handling", () => {
       query: USER_QUERY,
       optimistic: true,
     });
-    const history = data[OPERATION_HISTORY_SYMBOL];
+    const historyEntry = data[OPERATION_HISTORY_SYMBOL];
 
-    expect(history).toBeUndefined();
+    expect(historyEntry).toBeUndefined();
   });
 
   test("should store history up to overwrittenHistorySize when partition is not present", () => {
@@ -84,9 +84,9 @@ describe("History size handling", () => {
       query: USER_QUERY,
       optimistic: true,
     });
-    const history = data[OPERATION_HISTORY_SYMBOL];
+    const historyEntry = data[OPERATION_HISTORY_SYMBOL];
 
-    expect(history.length).toBe(2);
+    expect(historyEntry.history.length).toBe(2);
   });
 
   test("should store history up to partition-specified history size", () => {

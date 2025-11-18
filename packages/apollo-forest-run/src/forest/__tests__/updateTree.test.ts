@@ -16,12 +16,13 @@ import {
   createTestForest,
   createTestTree,
 } from "../../__tests__/helpers/forest";
-import { IndexedTree, ForestEnv } from "../types";
+import { IndexedTree, ForestEnv, ChangedChunksTuple } from "../types";
 import { SourceObject } from "../../values/types";
 import { VariableValues } from "../../descriptor/types";
 import { diffTree, GraphDifference } from "../../diff/diffTree";
 import { cloneDeep, maybeDeepFreeze } from "@apollo/client/utilities";
 import { DiffEnv } from "../../diff/types";
+import { isCompositeListEntryTuple } from "../../values/predicates";
 
 test("no-op when there are no changes", () => {
   const before = completeObject();
@@ -1660,14 +1661,27 @@ describe("change reporting", () => {
 
     expect(changes.size).toEqual(2);
 
-    const [[first, firstFields], [second, secondFields]] = changes.entries();
+    const [firstEntry, secondEntry] =
+      changes.entries() as unknown as ChangedChunksTuple[];
+
+    if (isCompositeListEntryTuple(firstEntry)) {
+      throw new Error("Expected firstEntry to be an ObjectChunk");
+    }
+
+    if (isCompositeListEntryTuple(secondEntry)) {
+      throw new Error("Expected secondEntry to be an ObjectChunk");
+    }
+
+    const [firstChunk, firstFields] = firstEntry;
+    const [secondChunk, secondFields] = secondEntry;
+
     expect(firstFields?.length).toEqual(1);
-    expect(firstFields?.[0]?.name).toEqual("foo");
-    expect(first.data).toBe(base.plainObject);
+    expect(firstFields?.[0]?.fieldInfo?.name).toEqual("foo");
+    expect(firstChunk.data).toBe(base.plainObject);
 
     expect(secondFields?.length).toEqual(1);
-    expect(secondFields?.[0]?.name).toEqual("scalar");
-    expect(second.data).toBe(base);
+    expect(secondFields?.[0]?.fieldInfo?.name).toEqual("scalar");
+    expect(secondChunk.data).toBe(base);
   });
 
   test("does not report parent as changed on nested chunk change", () => {
@@ -1681,10 +1695,15 @@ describe("change reporting", () => {
 
     expect(changes.size).toEqual(1);
 
-    const [[first, firstFields]] = changes.entries();
-    expect(firstFields?.length).toEqual(1);
-    expect(firstFields?.[0]?.name).toEqual("foo");
-    expect(first.data).toBe(base.plainObject);
+    const [firstEntry] = changes.entries() as unknown as ChangedChunksTuple[];
+
+    if (isCompositeListEntryTuple(firstEntry)) {
+      throw new Error("Expected changed chunk to be an ObjectChunk");
+    }
+    const [chunk, fields] = firstEntry;
+    expect(fields?.length).toEqual(1);
+    expect(fields?.[0]?.fieldInfo?.name).toEqual("foo");
+    expect(chunk.data).toBe(base.plainObject);
   });
 
   describe("reports changes in lists of scalars", () => {
@@ -1708,10 +1727,15 @@ describe("change reporting", () => {
       expect(changes.size).toEqual(1);
 
       // Expected to report as a change in parent object field
-      const [[first, firstFields]] = changes.entries();
-      expect(firstFields?.length).toEqual(1);
-      expect(firstFields?.[0]?.name).toEqual("scalarList");
-      expect(first.data).toBe(base);
+      const [firstEntry] = changes.entries() as unknown as ChangedChunksTuple[];
+      const [chunk, fields] = firstEntry as unknown as [any, any[]];
+
+      if (isCompositeListEntryTuple(firstEntry)) {
+        throw new Error("Expected firstEntry to be an ObjectChunk");
+      }
+      expect(fields?.length).toEqual(1);
+      expect(fields?.[0]?.fieldInfo?.name).toEqual("scalarList");
+      expect(chunk.data).toBe(base);
     });
   });
 
