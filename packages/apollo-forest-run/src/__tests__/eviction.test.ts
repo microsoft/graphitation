@@ -28,6 +28,17 @@ it("allows disabling automatic eviction", () => {
   const cache = new ForestRun({
     maxOperationCount: 1,
     autoEvict: false,
+    historyConfig: {
+      enableRichHistory: false,
+      partitions: {
+        default: 1,
+        fragmented: 10,
+      },
+      partitionKey: (() => null) satisfies (
+        operation: any,
+        variables: any,
+      ) => "default" | "fragmented" | null,
+    },
   });
   const query = gql`
     query ($i: Int) {

@@ -15,8 +15,9 @@ import type {
   TypeName,
   OperationId,
   NormalizedFieldEntry,
+  VariableValues,
 } from "../descriptor/types";
-import type { DocumentNode } from "graphql";
+import type { DocumentNode, OperationDefinitionNode } from "graphql";
 import type {
   Key,
   KeySpecifier,
@@ -40,6 +41,20 @@ export type PartitionConfig = {
     };
   };
   partitionKey: (operation: IndexedTree) => string | null;
+};
+
+export type HistoryPartitions = Record<string, number>;
+
+export type HistoryConfig<
+  TPartitions extends HistoryPartitions = HistoryPartitions,
+> = {
+  overwrittenHistorySize?: number;
+  enableRichHistory?: boolean;
+  partitions?: TPartitions;
+  partitionKey?: (
+    operation: OperationDefinitionNode,
+    variables: VariableValues,
+  ) => Extract<keyof TPartitions, string> | null;
 };
 
 export type DataTree = IndexedTree & {
@@ -129,7 +144,9 @@ export type ModifyResult = {
   difference?: LayerDifferenceMap;
 };
 
-export type ForestRunAdditionalConfig = {
+export type ForestRunAdditionalConfig<
+  TPartitions extends HistoryPartitions = any,
+> = {
   autoEvict?: boolean;
   maxOperationCount?: number;
   nonEvictableQueries?: Set<string>;
@@ -143,14 +160,13 @@ export type ForestRunAdditionalConfig = {
   logStaleOperations?: boolean;
   optimizeFragmentReads?: boolean;
 
-  // History configuration
-  enableRichHistory?: boolean;
-  defaultHistorySize?: number;
+  historyConfig?: HistoryConfig<TPartitions>;
 };
 
-export type CacheConfig = InMemoryCacheConfig & ForestRunAdditionalConfig;
+export type CacheConfig<TPartitions extends HistoryPartitions = any> =
+  InMemoryCacheConfig & ForestRunAdditionalConfig<TPartitions>;
 
-export type CacheEnv = {
+export type CacheEnv<TPartitions extends HistoryPartitions = any> = {
   addTypename?: boolean; // ApolloCompat
   apolloCompat_keepOrphanNodes?: boolean;
 
@@ -218,10 +234,7 @@ export type CacheEnv = {
   logUpdateStats: boolean;
   logStaleOperations: boolean;
   optimizeFragmentReads: boolean;
-
-  // History configuration
-  enableRichHistory: boolean;
-  defaultHistorySize: number;
+  historyConfig?: HistoryConfig<TPartitions>;
 };
 
 export type SerializedOperationKey = string;

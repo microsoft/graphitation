@@ -35,7 +35,7 @@ export const gql = (x: TemplateStringsArray) => parseOnce(x[0] ?? "");
 export function createTestOperation(
   documentOrString: DocumentNode | string,
   variables: VariableValues | undefined = undefined,
-  context: OperationEnv = { defaultHistorySize: 0 },
+  context: OperationEnv = { overwrittenHistorySize: 0 },
 ): OperationDescriptor {
   const document =
     typeof documentOrString === "string"

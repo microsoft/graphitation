@@ -11,7 +11,9 @@ export const CONFIG = {
       name: "History with size 1",
       description: "History enabled with a size of 1",
       options: {
-        defaultHistorySize: 1,
+        historyConfig: {
+          overwrittenHistorySize: 1,
+        },
       },
     },
   ] as const satisfies CacheConfiguration[],

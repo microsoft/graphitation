@@ -8,6 +8,7 @@ import {
   SelectionNode,
   ValueNode,
 } from "graphql";
+import { HistoryConfig } from "../cache/types";
 
 export type TypeName = string;
 export type FieldName = string;
@@ -59,7 +60,8 @@ export type OperationEnv = {
     source?: OperationDescriptor | undefined,
   ) => Key | KeySpecifier | undefined;
 
-  defaultHistorySize: number;
+  historyConfig?: HistoryConfig;
+  overwrittenHistorySize?: number;
 };
 
 export type DocumentDescriptor = {

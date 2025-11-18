@@ -10,6 +10,7 @@ import {
   MissingFieldsMap,
 } from "../values/types";
 import { FieldInfo, NormalizedFieldEntry } from "../descriptor/types";
+import type { HistoryConfig } from "../cache/types";
 import * as DifferenceKind from "./differenceKind";
 import * as DiffErrorKind from "./diffErrorKind";
 import * as ChangeKind from "./itemChangeKind";
@@ -25,8 +26,8 @@ export type DiffEnv = {
     //   parentFieldName: string
   ) => string | number;
 
-  // History options
-  enableRichHistory: boolean;
+  // History configuration
+  historyConfig?: HistoryConfig;
 };
 
 export type DiffContext = {

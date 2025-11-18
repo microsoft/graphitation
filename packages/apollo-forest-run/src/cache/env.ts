@@ -40,8 +40,7 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
     logStaleOperations: config?.logStaleOperations ?? false,
 
     // History configuration
-    enableRichHistory: config?.enableRichHistory ?? false,
-    defaultHistorySize: config?.defaultHistorySize ?? 0,
+    historyConfig: config?.historyConfig,
 
     optimizeFragmentReads: config?.optimizeFragmentReads ?? false,
     nonEvictableQueries: config?.nonEvictableQueries ?? new Set(),

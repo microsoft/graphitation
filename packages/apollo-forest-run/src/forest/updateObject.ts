@@ -120,7 +120,9 @@ function updateObjectValue(
           dirtyFields.push({
             kind: fieldDiff.kind,
             fieldInfo,
-            newValue: context.env.enableRichHistory ? updated : undefined,
+            newValue: context.env.historyConfig?.enableRichHistory
+              ? updated
+              : undefined,
           });
           break;
         case DifferenceKind.Replacement:
@@ -128,10 +130,12 @@ function updateObjectValue(
           dirtyFields.push({
             kind: fieldDiff.kind,
             fieldInfo,
-            oldValue: context.env.enableRichHistory
+            oldValue: context.env.historyConfig?.enableRichHistory
               ? getSourceValue(fieldDiff.oldValue)
               : undefined,
-            newValue: context.env.enableRichHistory ? updated : undefined,
+            newValue: context.env.historyConfig?.enableRichHistory
+              ? updated
+              : undefined,
           });
           break;
       }

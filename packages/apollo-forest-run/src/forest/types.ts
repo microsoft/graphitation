@@ -36,6 +36,7 @@ import {
   CompositeListLayoutDifference,
   NodeDifferenceMap,
 } from "../diff/types";
+import { HistoryConfig } from "../cache/types";
 
 export type IndexedTree = {
   operation: OperationDescriptor;
@@ -214,6 +215,5 @@ export type ForestEnv = {
   logStaleOperations?: boolean;
 
   // History feature flags
-  enableRichHistory?: boolean; // Store full data snapshots in history and full paths for changes
-  defaultHistorySize?: number; // Default history size for operations without explicit historySize set via directive
+  historyConfig?: HistoryConfig;
 };

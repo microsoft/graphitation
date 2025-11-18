@@ -34,7 +34,7 @@ function extractArrayChanges(
   deletedKeys: Set<number> | undefined,
   env: ForestEnv,
 ): CompositeListLayoutChange[] {
-  const { enableRichHistory } = env;
+  const enableRichHistory = env.historyConfig?.enableRichHistory ?? false;
   const changes: CompositeListLayoutChange[] = [];
   for (let index = 0; index < layout.length; index++) {
     const layoutValue = layout[index];
@@ -86,7 +86,7 @@ function getChanges(
     const chunkPath = getChunkPath(
       currentTree,
       entry[0],
-      env.enableRichHistory ?? false,
+      env.historyConfig?.enableRichHistory ?? false,
     );
 
     if (isCompositeListEntryTuple(tuple)) {
@@ -136,7 +136,7 @@ export function createRegularHistoryEntry(
       name: incomingTree?.operation?.debugName ?? "Anonymous Operation",
       variables: incomingTree?.operation?.variables || {},
     },
-    data: env.enableRichHistory
+    data: env.historyConfig?.enableRichHistory
       ? {
           current: currentTree.result,
           incoming: incomingTree?.result,
@@ -155,14 +155,14 @@ export function createOptimisticHistoryEntry(
 ): HistoryChange {
   return {
     kind: "Optimistic",
-    nodeDiffs: env.enableRichHistory ? nodeDiffs : undefined,
+    nodeDiffs: env.historyConfig?.enableRichHistory ? nodeDiffs : undefined,
     updatedNodes,
     timestamp: Date.now(),
     modifyingOperation: {
       name: incomingTree?.operation?.debugName ?? "Anonymous Operation",
       variables: incomingTree?.operation?.variables || {},
     },
-    data: env.enableRichHistory
+    data: env.historyConfig?.enableRichHistory
       ? {
           current: currentTree.result,
           incoming: incomingTree?.result,

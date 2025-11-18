@@ -66,9 +66,9 @@ export function describeOperation(
     rootNodeKey: effectiveRootNodeKey,
     selections: new Map(),
     keyVariables: getKeyVars(documentDescriptor.definition),
-    historySize:
-      getHistorySize(documentDescriptor.definition, variables) ??
-      env.defaultHistorySize,
+    historySize: env.historyConfig
+      ? getHistorySize(documentDescriptor.definition, variables, env)
+      : 0,
     variablesKey:
       variablesKey ??
       createVariablesKey(variableDefinitions, variablesWithDefaults),
@@ -136,23 +136,32 @@ function getKeyVars(doc: OperationDefinitionNode): VariableName[] | null {
 
 function getHistorySize(
   doc: OperationDefinitionNode,
-  varibles: VariableValues,
-): number | null {
-  const directive = doc.directives?.find((d) => d.name.value === "cache");
-  const astValue = directive?.arguments?.find(
-    (arg) => arg.name.value === "history",
-  )?.value;
-  if (!astValue) {
-    return null;
+  variables: VariableValues,
+  env: OperationEnv,
+): number {
+  const { historyConfig } = env;
+
+  // Priority 1: If overwrittenHistorySize is set, use it (overrides partitioning)
+  if (typeof historyConfig?.overwrittenHistorySize === "number") {
+    return historyConfig.overwrittenHistorySize;
   }
-  const value = valueFromASTUntyped(astValue, varibles);
-  if (typeof value !== "number" || !Number.isInteger(value)) {
-    throw new Error(
-      "Could not extract history. Expected directive format: @cache(history: 2), " +
-        `got ${JSON.stringify(value)} in place of history`,
-    );
+
+  // Priority 2: If partitions are configured, use partition-based history size
+  if (
+    historyConfig &&
+    historyConfig?.partitions &&
+    historyConfig.partitionKey
+  ) {
+    const partitionKey = historyConfig.partitionKey(doc, variables);
+    if (!partitionKey) {
+      return 0;
+    }
+
+    const partitionSize = historyConfig.partitions[partitionKey];
+    return typeof partitionSize === "number" ? partitionSize : 0;
   }
-  return value;
+
+  return 0;
 }
 
 export function createVariablesKey(

@@ -8,8 +8,10 @@ import type { DocumentNode } from "graphql";
 import { equal } from "@wry/equality";
 import type { OperationDescriptor } from "./descriptor/types";
 import type {
+  CacheConfig,
   CacheEnv,
   DataForest,
+  HistoryPartitions,
   OptimisticLayer,
   SerializedCache,
   SerializedOperationInfo,
@@ -39,7 +41,6 @@ import {
 import { isWrite, write } from "./cache/write";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
-import { CacheConfig } from "./cache/types";
 import { SourceObject } from "./values/types";
 import { logUpdateStats } from "./telemetry/updateStats/logUpdateStats";
 import { logStaleOperations } from "./telemetry/logStaleOperations";
@@ -89,9 +90,11 @@ const REFS_POOL = new Map(
 );
 const getRef = (ref: string) => REFS_POOL.get(ref) ?? { __ref: ref };
 
-export class ForestRun extends ApolloCache<SerializedCache> {
+export class ForestRun<
+  TPartitions extends HistoryPartitions = any,
+> extends ApolloCache<SerializedCache> {
   public rawConfig: InMemoryCacheConfig;
-  protected env: CacheEnv;
+  protected env: CacheEnv<TPartitions>;
   protected store: Store;
 
   protected transactionStack: Transaction[] = [];
@@ -109,7 +112,7 @@ export class ForestRun extends ApolloCache<SerializedCache> {
   protected invalidatedDiffs = new WeakSet<Cache.DiffResult<any>>();
   protected extractedObjects = new WeakMap<any, SerializedOperationInfo>();
 
-  public constructor(public config?: CacheConfig) {
+  public constructor(public config?: CacheConfig<TPartitions>) {
     super();
     this.env = createCacheEnvironment(config);
     this.store = createStore(this.env);

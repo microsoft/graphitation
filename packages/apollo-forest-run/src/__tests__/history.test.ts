@@ -14,16 +14,6 @@ const USER_QUERY = gql`
   }
 `;
 
-const USER_QUERY_WITH_CACHE_DIRECTIVE = gql`
-  query GetUserHistory($historySize: Int) @cache(history: $historySize) {
-    user {
-      __typename
-      id
-      name
-    }
-  }
-`;
-
 const TODO_QUERY = gql`
   query GetTodoHistory {
     user {
@@ -51,7 +41,7 @@ const createTodo = (id: string, text: string) => ({
 });
 
 describe("History size handling", () => {
-  test("should not store history when no directive is present and defaultHistorySize is undefined", () => {
+  test("should not store history when partition is not present and overwrittenHistorySize is undefined", () => {
     const cache = new ForestRun();
 
     cache.write({
@@ -71,8 +61,12 @@ describe("History size handling", () => {
     expect(history).toBeUndefined();
   });
 
-  test("should store history up to defaultHistorySize when no directive is present", () => {
-    const cache = new ForestRun({ defaultHistorySize: 2 });
+  test("should store history up to overwrittenHistorySize when partition is not present", () => {
+    const cache = new ForestRun({
+      historyConfig: {
+        overwrittenHistorySize: 2,
+      },
+    });
 
     cache.write({
       query: USER_QUERY,
@@ -95,38 +89,88 @@ describe("History size handling", () => {
     expect(history.length).toBe(2);
   });
 
-  test("should store history up to directive-specified history size", () => {
-    const cache = new ForestRun({ defaultHistorySize: 2 });
+  test("should store history up to partition-specified history size", () => {
+    const cache = new ForestRun({
+      historyConfig: {
+        partitions: {
+          default: 1,
+        },
+        // @ts-expect-error We allow only keys present in partitions
+        partitionKey() {
+          if (false) {
+            return "nonexistent";
+          }
+          return "default";
+        },
+      },
+    });
 
     cache.write({
-      query: USER_QUERY_WITH_CACHE_DIRECTIVE,
-      variables: { historySize: 1 },
+      query: USER_QUERY,
       result: { user: createUser("Alice v1") },
     });
     cache.write({
-      query: USER_QUERY_WITH_CACHE_DIRECTIVE,
-      variables: { historySize: 1 },
+      query: USER_QUERY,
       result: { user: createUser("Alice v2") },
     });
     cache.write({
       query: USER_QUERY,
-      variables: { historySize: 1 },
       result: { user: createUser("Alice v3") },
     });
     const data: any = cache.read({
-      query: USER_QUERY_WITH_CACHE_DIRECTIVE,
-      variables: { historySize: 1 },
+      query: USER_QUERY,
       optimistic: true,
     });
-    const history = data[OPERATION_HISTORY_SYMBOL];
+    const historyEntry = data[OPERATION_HISTORY_SYMBOL];
 
-    expect(history.length).toBe(1);
+    expect(historyEntry.history.length).toBe(1);
+    expect(historyEntry.totalEntries).toBe(2);
+  });
+
+  test("should store history up to overwrittenHistorySize when both partition and overwrittenHistorySize are present", () => {
+    const cache = new ForestRun({
+      historyConfig: {
+        overwrittenHistorySize: 2,
+        partitions: {
+          default: 1,
+        },
+        partitionKey() {
+          return "default";
+        },
+      },
+    });
+
+    cache.write({
+      query: USER_QUERY,
+      result: { user: createUser("Alice v1") },
+    });
+    cache.write({
+      query: USER_QUERY,
+      result: { user: createUser("Alice v2") },
+    });
+    cache.write({
+      query: USER_QUERY,
+      result: { user: createUser("Alice v3") },
+    });
+    const data: any = cache.read({
+      query: USER_QUERY,
+      optimistic: true,
+    });
+    const historyEntry = data[OPERATION_HISTORY_SYMBOL];
+
+    expect(historyEntry.history.length).toBe(2);
+    expect(historyEntry.totalEntries).toBe(2);
   });
 });
 
 describe.each([true, false])("enableRichHistory: %p", (enableRichHistory) => {
   test("should capture value changes in history entries", () => {
-    const cache = new ForestRun({ enableRichHistory, defaultHistorySize: 1 });
+    const cache = new ForestRun({
+      historyConfig: {
+        enableRichHistory,
+        overwrittenHistorySize: 1,
+      },
+    });
 
     cache.write({
       query: USER_QUERY,
@@ -147,8 +191,10 @@ describe.each([true, false])("enableRichHistory: %p", (enableRichHistory) => {
 
   test("should capture list changes in history entries", () => {
     const cache = new ForestRun({
-      enableRichHistory,
-      defaultHistorySize: 1,
+      historyConfig: {
+        enableRichHistory,
+        overwrittenHistorySize: 1,
+      },
     });
 
     const writeTodos = (todos: unknown[]) => {
