@@ -10,7 +10,6 @@ import {
 import {
   CompositeListChunk,
   DataMap,
-  GraphValue,
   MissingFieldsMap,
   NodeKey,
   NodeMap,

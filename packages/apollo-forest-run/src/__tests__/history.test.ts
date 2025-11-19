@@ -97,6 +97,7 @@ describe("History size handling", () => {
         },
         // @ts-expect-error We allow only keys present in partitions
         partitionKey() {
+          // eslint-disable-next-line
           if (false) {
             return "nonexistent";
           }
