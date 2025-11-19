@@ -8,8 +8,8 @@ export const CONFIG = {
       options: {},
     },
     {
-      name: "Default",
-      description: "Default ForestRun configuration",
+      name: "History configured",
+      description: "ForestRun configuration with history tracking enabled",
       options: {
         historyConfig: { overwrittenHistorySize: 1 },
       },
