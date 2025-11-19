@@ -48,6 +48,9 @@ function extractArrayChanges(
           data: enableRichHistory ? oldData[layoutValue] : undefined,
         });
       }
+      // Value was null and remains null, no change
+    } else if (layoutValue === null && oldData[index] === null) {
+      continue;
     } else {
       changes.push({
         kind: ChangeKind.ItemAdd,
