@@ -48,6 +48,7 @@ import {
 import { assert } from "../jsutils/assert";
 import { addTree, trackTreeNodes } from "../forest/addTree";
 import { DirectiveNode, FragmentDefinitionNode } from "graphql";
+import { OPERATION_HISTORY_SYMBOL } from "../descriptor/operation";
 
 export function read<TData>(
   env: CacheEnv,
@@ -123,6 +124,24 @@ function readOperation(
       readState,
     );
     normalizeRootLevelTypeName(readState.outputTree);
+
+    if (
+      readState.outputTree.history.items.length &&
+      !readState.outputTree.result.data[OPERATION_HISTORY_SYMBOL]
+    ) {
+      const outputTree = readState.outputTree;
+
+      Object.defineProperty(outputTree.result.data, OPERATION_HISTORY_SYMBOL, {
+        get() {
+          return {
+            totalEntries: outputTree.history.totalEntries,
+            history: Array.from(outputTree.history),
+          };
+        },
+        enumerable: false,
+      });
+    }
+
     resultsMap.set(operationDescriptor, readState);
   }
   const { outputTree } = readState;

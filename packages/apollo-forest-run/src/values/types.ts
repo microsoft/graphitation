@@ -1,4 +1,5 @@
 // a: foo(bar:$bar) -> foo(bar:"something")
+import { OPERATION_HISTORY_SYMBOL } from "../descriptor/operation";
 import {
   FieldInfo,
   OperationDescriptor,
@@ -8,6 +9,7 @@ import {
   ResolvedSelection,
   ArgumentValues,
 } from "../descriptor/types";
+import type { HistoryChange } from "../forest/types";
 import * as ValueKind from "./valueKind";
 
 declare const OpaqueSymbol: unique symbol;
@@ -29,7 +31,11 @@ export type SourceScalar = Brand<
 >;
 export type SourceCustomScalar = Brand<unknown, typeof CustomScalarBrand>;
 export type SourceObject = Brand<
-  { __typename?: TypeName; [name: string]: SourceValue | undefined }, // There could be cases of missing fields for defer/include/skip and some Apollo quirks with missing fields
+  {
+    __typename?: TypeName;
+    [OPERATION_HISTORY_SYMBOL]?: HistoryChange[];
+    [name: string]: SourceValue | undefined;
+  }, // There could be cases of missing fields for defer/include/skip and some Apollo quirks with missing fields
   typeof ObjectBrand
 >;
 export type SourceCompositeList = NestedList<SourceObject | SourceNull>;

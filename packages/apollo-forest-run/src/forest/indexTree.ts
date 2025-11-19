@@ -25,6 +25,7 @@ import { ValueKind } from "../values/types";
 import { resolveSelection } from "../descriptor/resolvedSelection";
 import { accumulate } from "../jsutils/map";
 import { assert } from "../jsutils/assert";
+import { CircularBuffer } from "../jsutils/circularBuffer";
 import {
   createCompositeListChunk,
   createCompositeNullChunk,
@@ -109,6 +110,8 @@ export function indexTree(
     dataMap: context.dataMap,
     incompleteChunks: context.incompleteChunks,
     prev: previousTreeState,
+    history:
+      previousTreeState?.history ?? new CircularBuffer(operation.historySize),
   };
 }
 

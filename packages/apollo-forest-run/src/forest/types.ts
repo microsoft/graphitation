@@ -5,10 +5,12 @@ import {
   PossibleSelection,
   PossibleSelections,
   TypeName,
+  VariableValues,
 } from "../descriptor/types";
 import {
   CompositeListChunk,
   DataMap,
+  GraphValue,
   MissingFieldsMap,
   NodeKey,
   NodeMap,
@@ -20,12 +22,21 @@ import {
   ParentLocator,
   SourceCompositeList,
   SourceObject,
+  SourceValue,
   TypeMap,
 } from "../values/types";
 import { TelemetryEvent } from "../telemetry/types";
 import { Logger } from "../jsutils/logger";
 import { UpdateTreeStats } from "../telemetry/updateStats/types";
 import { UpdateLogger } from "../telemetry/updateStats/updateLogger";
+import { CircularBuffer } from "../jsutils/circularBuffer";
+import type * as DifferenceKind from "../diff/differenceKind";
+import {
+  CompositeListLayoutChange,
+  CompositeListLayoutDifference,
+  NodeDifferenceMap,
+} from "../diff/types";
+import { HistoryConfig } from "../cache/types";
 
 export type IndexedTree = {
   operation: OperationDescriptor;
@@ -46,8 +57,46 @@ export type IndexedTree = {
   // Error states
   incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
 
+  // Tree changes
+  history: CircularBuffer<HistoryChange>;
+
   // ApolloCompat
   danglingReferences?: Set<NodeKey>;
+};
+
+export type HistoryFieldChange =
+  | FillerChange
+  | ReplacementChange
+  | CompositeListDifferenceChange;
+
+type HistoryChangeBase = {
+  timestamp: number;
+  modifyingOperation: {
+    name: string;
+    variables: VariableValues;
+  };
+  data:
+    | {
+        current: OperationResult;
+        incoming: OperationResult | undefined;
+        updated?: OperationResult;
+      }
+    | undefined;
+};
+
+export type HistoryChange = (RegularHistoryChange | OptimisticHistoryChange) &
+  HistoryChangeBase;
+
+export type RegularHistoryChange = {
+  kind: "Regular";
+  changes: HistoryFieldChange[];
+  missingFields: MissingFieldsMap;
+};
+
+export type OptimisticHistoryChange = {
+  kind: "Optimistic";
+  nodeDiffs: NodeDifferenceMap | undefined;
+  updatedNodes: string[];
 };
 
 export type IndexedForest = {
@@ -63,13 +112,51 @@ export type Draft = SourceObject | SourceCompositeList;
 
 export type UpdateForestStats = (UpdateTreeStats | null)[];
 
+export type FillerEntry = {
+  kind: typeof DifferenceKind.Filler;
+  fieldInfo: FieldInfo;
+  newValue: SourceValue | undefined;
+};
+
+export type ReplacementEntry = {
+  kind: typeof DifferenceKind.Replacement;
+  fieldInfo: FieldInfo;
+  oldValue: SourceValue | undefined;
+  newValue: SourceValue | undefined;
+};
+
+export type CompositeListDifferenceEntry = {
+  kind: typeof DifferenceKind.CompositeListDifference;
+  layout: CompositeListLayoutDifference | undefined;
+  deletedKeys?: Set<number>;
+};
+
+type PathChange = {
+  path: (string | number)[];
+};
+
+export type FillerChange = Omit<FillerEntry, "fieldInfo"> & PathChange;
+export type ReplacementChange = Omit<ReplacementEntry, "fieldInfo"> &
+  PathChange;
+export type CompositeListDifferenceChange = {
+  kind: typeof DifferenceKind.CompositeListDifference;
+  itemChanges: CompositeListLayoutChange[];
+  previousLength: number;
+  currentLength: number;
+} & PathChange;
+
 // Changed chunks map only contains chunks with immediate changes (i.e. "Replacement", "Filler" + list layout changes).
 //   Does not contain parent chunks which were affected only because some nested chunk has changed.
-//   Note: For now dirty list items are not reported, as it is tricky to report together with list layout shifts (and we don't need it anywhere yet).
-//         In the future we may need to report layout shifts and "Replacement", "Fillter" changes separately.
-export type ChangedChunksMap = Map<ObjectChunk, FieldInfo[]> &
-  Map<CompositeListChunk, null>;
 
+export type ChangedChunksTuple =
+  | [CompositeListChunk, CompositeListDifferenceEntry]
+  | [ObjectChunk, (FillerEntry | ReplacementEntry)[]];
+
+export type ChangedChunksMap = Map<
+  CompositeListChunk,
+  CompositeListDifferenceEntry
+> &
+  Map<ObjectChunk, (FillerEntry | ReplacementEntry)[]>;
 export type UpdateTreeContext = {
   operation: OperationDescriptor;
   drafts: Map<Source, Draft>;
@@ -79,7 +166,7 @@ export type UpdateTreeContext = {
   affectedNodes: Set<NodeKey>;
   completeObject: CompleteObjectFn;
   findParent: ParentLocator;
-  logger: ForestEnv["logger"];
+  env: ForestEnv;
   statsLogger?: UpdateLogger;
 };
 
@@ -88,6 +175,7 @@ export type UpdateTreeResult = {
   changes: ChangedChunksMap;
   changedNodes: Set<NodeKey>; // Directly changed nodes (subset of NodeDifferenceMap keys)
   affectedNodes: Set<NodeKey>; // Parent nodes updated due to a change in a nested node (if node is both - directly updated and affected by another node update, it will be in both: changedNodes and affectedNodes)
+  missingFields: MissingFieldsMap;
   stats?: UpdateTreeStats;
 };
 
@@ -126,4 +214,7 @@ export type ForestEnv = {
   // Telemetry feature flags
   logUpdateStats?: boolean;
   logStaleOperations?: boolean;
+
+  // History feature flags
+  historyConfig?: HistoryConfig;
 };
