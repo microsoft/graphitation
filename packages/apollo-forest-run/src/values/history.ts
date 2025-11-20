@@ -5,16 +5,21 @@ import type {
   HistoryFieldChange,
   ForestEnv,
   ChangedChunksTuple,
+  HistoryChangeSerialized,
 } from "../forest/types";
 import type {
   CompositeListLayoutChange,
   CompositeListLayoutDifference,
   NodeDifferenceMap,
+  ObjectDifference,
 } from "../diff/types";
 import { createParentLocator, getDataPathForDebugging } from "./traverse";
-import { SourceCompositeList } from "./types";
-import * as ChangeKind from "../diff/itemChangeKind";
+import { MissingFieldsArray, SourceCompositeList, SourceObject } from "./types";
 import { isCompositeListEntryTuple } from "./predicates";
+
+import * as ChangeKind from "../diff/itemChangeKind";
+import * as DifferenceKind from "../diff/differenceKind";
+import { OPERATION_HISTORY_SYMBOL } from "../descriptor/operation";
 
 function getChunkPath(
   currentTree: IndexedTree,
@@ -155,7 +160,7 @@ export function createOptimisticHistoryEntry(
 ): HistoryChange {
   return {
     kind: "Optimistic",
-    nodeDiffs: env.historyConfig?.enableRichHistory ? nodeDiffs : undefined,
+    nodeDiffs,
     updatedNodes,
     timestamp: Date.now(),
     modifyingOperation: {
@@ -170,4 +175,109 @@ export function createOptimisticHistoryEntry(
         }
       : undefined,
   };
+}
+
+function serializeHistory(history: HistoryChange[]): HistoryChangeSerialized[] {
+  return history.map((entry) => {
+    if (entry.kind === "Regular") {
+      const missingFields: MissingFieldsArray = [];
+      for (const [object, fields] of entry.missingFields) {
+        missingFields.push({
+          object,
+          fields: Array.from(fields),
+        });
+      }
+
+      return {
+        ...entry,
+        missingFields,
+      };
+    } else {
+      const nodeDiffs: { nodeKey: string; diff: ObjectDifference }[] = [];
+      if (entry.nodeDiffs) {
+        for (const [nodeKey, diff] of entry.nodeDiffs) {
+          nodeDiffs.push({ nodeKey, diff });
+        }
+      }
+
+      return {
+        ...entry,
+        nodeDiffs,
+      };
+    }
+  });
+}
+
+export function stripDataFromHistory(
+  history: HistoryChangeSerialized[],
+): Omit<HistoryChangeSerialized, "data">[] {
+  return history.map((entry) => {
+    const { data, ...entryRest } = entry;
+
+    if (entry.kind === "Regular") {
+      return {
+        ...entryRest,
+        changes: entry.changes.map((change) => {
+          switch (change.kind) {
+            case DifferenceKind.Replacement: {
+              const { oldValue, newValue, ...changeRest } = change;
+              return changeRest;
+            }
+            case DifferenceKind.Filler: {
+              const { newValue, ...changeRest } = change;
+              return changeRest;
+            }
+            case DifferenceKind.CompositeListDifference:
+              return {
+                ...change,
+                itemChanges: change.itemChanges.map((itemChange) => {
+                  const { data, ...itemRest } = itemChange;
+                  return itemRest;
+                }),
+              };
+          }
+        }),
+      };
+    } else {
+      const nodeDiffs: {
+        nodeKey: string;
+        diff: Pick<ObjectDifference, "kind" | "dirtyFields" | "errors">;
+      }[] = [];
+
+      if (entry.nodeDiffs) {
+        for (const item of entry.nodeDiffs) {
+          const { nodeKey, diff } = item;
+          const { kind, dirtyFields, errors } = diff;
+          nodeDiffs.push({ nodeKey, diff: { kind, dirtyFields, errors } });
+        }
+      }
+
+      return {
+        ...entryRest,
+        nodeDiffs,
+      };
+    }
+  });
+}
+
+export function appendHistoryToData(tree: IndexedTree): void {
+  Object.defineProperty(tree.result.data, OPERATION_HISTORY_SYMBOL, {
+    get() {
+      const history = serializeHistory(Array.from(tree.history));
+      const historyObj = {
+        totalEntries: tree.history.totalEntries,
+        history,
+      };
+
+      Object.defineProperty(historyObj, "historyWithoutData", {
+        get() {
+          return stripDataFromHistory(history);
+        },
+        enumerable: false,
+      });
+
+      return historyObj;
+    },
+    enumerable: false,
+  });
 }

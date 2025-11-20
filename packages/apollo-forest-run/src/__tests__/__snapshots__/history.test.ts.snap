@@ -40,7 +40,7 @@ exports[`enableRichHistory: false should capture list changes in history entries
       ],
       "data": undefined,
       "kind": "Regular",
-      "missingFields": Map {},
+      "missingFields": [],
       "modifyingOperation": {
         "name": "query GetTodoHistory",
         "variables": {},
@@ -50,6 +50,1958 @@ exports[`enableRichHistory: false should capture list changes in history entries
   ],
   "totalEntries": 1,
 }
+`;
+
+exports[`enableRichHistory: false should capture list changes in history entries 2`] = `
+[
+  {
+    "changes": [
+      {
+        "currentLength": 3,
+        "itemChanges": [
+          {
+            "index": 0,
+            "kind": 2,
+            "oldIndex": 2,
+          },
+          {
+            "index": 1,
+            "kind": 0,
+          },
+          {
+            "index": 2,
+            "kind": 2,
+            "oldIndex": 0,
+          },
+          {
+            "kind": 1,
+            "oldIndex": 1,
+          },
+        ],
+        "kind": 3,
+        "path": [
+          "Enable enableRichHistory for full path",
+        ],
+        "previousLength": 3,
+      },
+    ],
+    "kind": "Regular",
+    "missingFields": [],
+    "modifyingOperation": {
+      "name": "query GetTodoHistory",
+      "variables": {},
+    },
+    "timestamp": 1577836800000,
+  },
+]
+`;
+
+exports[`enableRichHistory: false should capture missing fields in history entries 1`] = `
+[
+  {
+    "history": [
+      {
+        "changes": [
+          {
+            "currentLength": 2,
+            "itemChanges": [
+              {
+                "data": undefined,
+                "index": 1,
+                "kind": 0,
+              },
+            ],
+            "kind": 3,
+            "path": [
+              "Enable enableRichHistory for full path",
+            ],
+            "previousLength": 1,
+          },
+        ],
+        "data": undefined,
+        "kind": "Regular",
+        "missingFields": [
+          {
+            "fields": [
+              {
+                "__refs": [
+                  {
+                    "ancestors": [
+                      {
+                        "alias": undefined,
+                        "arguments": [],
+                        "directives": [],
+                        "kind": "Field",
+                        "loc": undefined,
+                        "name": {
+                          "kind": "Name",
+                          "loc": undefined,
+                          "value": "user",
+                        },
+                        "selectionSet": {
+                          "kind": "SelectionSet",
+                          "loc": undefined,
+                          "selections": [
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "__typename",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "id",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "todos",
+                              },
+                              "selectionSet": {
+                                "kind": "SelectionSet",
+                                "loc": undefined,
+                                "selections": [
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "__typename",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "id",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "text",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "completed",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        "alias": undefined,
+                        "arguments": [],
+                        "directives": [],
+                        "kind": "Field",
+                        "loc": undefined,
+                        "name": {
+                          "kind": "Name",
+                          "loc": undefined,
+                          "value": "todos",
+                        },
+                        "selectionSet": {
+                          "kind": "SelectionSet",
+                          "loc": undefined,
+                          "selections": [
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "__typename",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "id",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "text",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "completed",
+                              },
+                              "selectionSet": undefined,
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                    "node": {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "completed",
+                      },
+                      "selectionSet": undefined,
+                    },
+                  },
+                ],
+                "dataKey": "completed",
+                "name": "completed",
+                "selection": undefined,
+                "watchBoundaries": [
+                  "",
+                ],
+              },
+            ],
+            "object": {
+              "__typename": "Todo",
+              "id": "1",
+              "text": "Write tests",
+            },
+          },
+          {
+            "fields": [
+              {
+                "__refs": [
+                  {
+                    "ancestors": [
+                      {
+                        "alias": undefined,
+                        "arguments": [],
+                        "directives": [],
+                        "kind": "Field",
+                        "loc": undefined,
+                        "name": {
+                          "kind": "Name",
+                          "loc": undefined,
+                          "value": "user",
+                        },
+                        "selectionSet": {
+                          "kind": "SelectionSet",
+                          "loc": undefined,
+                          "selections": [
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "__typename",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "id",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "todos",
+                              },
+                              "selectionSet": {
+                                "kind": "SelectionSet",
+                                "loc": undefined,
+                                "selections": [
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "__typename",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "id",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "text",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "completed",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        "alias": undefined,
+                        "arguments": [],
+                        "directives": [],
+                        "kind": "Field",
+                        "loc": undefined,
+                        "name": {
+                          "kind": "Name",
+                          "loc": undefined,
+                          "value": "todos",
+                        },
+                        "selectionSet": {
+                          "kind": "SelectionSet",
+                          "loc": undefined,
+                          "selections": [
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "__typename",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "id",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "text",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "completed",
+                              },
+                              "selectionSet": undefined,
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                    "node": {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "__typename",
+                      },
+                      "selectionSet": undefined,
+                    },
+                  },
+                ],
+                "dataKey": "__typename",
+                "name": "__typename",
+                "selection": undefined,
+                "watchBoundaries": [
+                  "",
+                ],
+              },
+              {
+                "__refs": [
+                  {
+                    "ancestors": [
+                      {
+                        "alias": undefined,
+                        "arguments": [],
+                        "directives": [],
+                        "kind": "Field",
+                        "loc": undefined,
+                        "name": {
+                          "kind": "Name",
+                          "loc": undefined,
+                          "value": "user",
+                        },
+                        "selectionSet": {
+                          "kind": "SelectionSet",
+                          "loc": undefined,
+                          "selections": [
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "__typename",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "id",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "todos",
+                              },
+                              "selectionSet": {
+                                "kind": "SelectionSet",
+                                "loc": undefined,
+                                "selections": [
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "__typename",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "id",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "text",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "completed",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        "alias": undefined,
+                        "arguments": [],
+                        "directives": [],
+                        "kind": "Field",
+                        "loc": undefined,
+                        "name": {
+                          "kind": "Name",
+                          "loc": undefined,
+                          "value": "todos",
+                        },
+                        "selectionSet": {
+                          "kind": "SelectionSet",
+                          "loc": undefined,
+                          "selections": [
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "__typename",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "id",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "text",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "completed",
+                              },
+                              "selectionSet": undefined,
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                    "node": {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "text",
+                      },
+                      "selectionSet": undefined,
+                    },
+                  },
+                ],
+                "dataKey": "text",
+                "name": "text",
+                "selection": undefined,
+                "watchBoundaries": [
+                  "",
+                ],
+              },
+              {
+                "__refs": [
+                  {
+                    "ancestors": [
+                      {
+                        "alias": undefined,
+                        "arguments": [],
+                        "directives": [],
+                        "kind": "Field",
+                        "loc": undefined,
+                        "name": {
+                          "kind": "Name",
+                          "loc": undefined,
+                          "value": "user",
+                        },
+                        "selectionSet": {
+                          "kind": "SelectionSet",
+                          "loc": undefined,
+                          "selections": [
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "__typename",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "id",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "todos",
+                              },
+                              "selectionSet": {
+                                "kind": "SelectionSet",
+                                "loc": undefined,
+                                "selections": [
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "__typename",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "id",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "text",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "completed",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        "alias": undefined,
+                        "arguments": [],
+                        "directives": [],
+                        "kind": "Field",
+                        "loc": undefined,
+                        "name": {
+                          "kind": "Name",
+                          "loc": undefined,
+                          "value": "todos",
+                        },
+                        "selectionSet": {
+                          "kind": "SelectionSet",
+                          "loc": undefined,
+                          "selections": [
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "__typename",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "id",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "text",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "completed",
+                              },
+                              "selectionSet": undefined,
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                    "node": {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "completed",
+                      },
+                      "selectionSet": undefined,
+                    },
+                  },
+                ],
+                "dataKey": "completed",
+                "name": "completed",
+                "selection": undefined,
+                "watchBoundaries": [
+                  "",
+                ],
+              },
+            ],
+            "object": {
+              "id": "5",
+            },
+          },
+        ],
+        "modifyingOperation": {
+          "name": "query GetTodoHistory",
+          "variables": {},
+        },
+        "timestamp": 1577836800000,
+      },
+    ],
+    "totalEntries": 1,
+  },
+]
+`;
+
+exports[`enableRichHistory: false should capture missing fields in history entries 2`] = `
+[
+  [
+    {
+      "changes": [
+        {
+          "currentLength": 2,
+          "itemChanges": [
+            {
+              "index": 1,
+              "kind": 0,
+            },
+          ],
+          "kind": 3,
+          "path": [
+            "Enable enableRichHistory for full path",
+          ],
+          "previousLength": 1,
+        },
+      ],
+      "kind": "Regular",
+      "missingFields": [
+        {
+          "fields": [
+            {
+              "__refs": [
+                {
+                  "ancestors": [
+                    {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "user",
+                      },
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "loc": undefined,
+                        "selections": [
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "__typename",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "id",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "todos",
+                            },
+                            "selectionSet": {
+                              "kind": "SelectionSet",
+                              "loc": undefined,
+                              "selections": [
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "__typename",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "id",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "text",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "completed",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "todos",
+                      },
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "loc": undefined,
+                        "selections": [
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "__typename",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "id",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "text",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "completed",
+                            },
+                            "selectionSet": undefined,
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                  "node": {
+                    "alias": undefined,
+                    "arguments": [],
+                    "directives": [],
+                    "kind": "Field",
+                    "loc": undefined,
+                    "name": {
+                      "kind": "Name",
+                      "loc": undefined,
+                      "value": "completed",
+                    },
+                    "selectionSet": undefined,
+                  },
+                },
+              ],
+              "dataKey": "completed",
+              "name": "completed",
+              "selection": undefined,
+              "watchBoundaries": [
+                "",
+              ],
+            },
+          ],
+          "object": {
+            "__typename": "Todo",
+            "id": "1",
+            "text": "Write tests",
+          },
+        },
+        {
+          "fields": [
+            {
+              "__refs": [
+                {
+                  "ancestors": [
+                    {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "user",
+                      },
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "loc": undefined,
+                        "selections": [
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "__typename",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "id",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "todos",
+                            },
+                            "selectionSet": {
+                              "kind": "SelectionSet",
+                              "loc": undefined,
+                              "selections": [
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "__typename",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "id",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "text",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "completed",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "todos",
+                      },
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "loc": undefined,
+                        "selections": [
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "__typename",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "id",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "text",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "completed",
+                            },
+                            "selectionSet": undefined,
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                  "node": {
+                    "alias": undefined,
+                    "arguments": [],
+                    "directives": [],
+                    "kind": "Field",
+                    "loc": undefined,
+                    "name": {
+                      "kind": "Name",
+                      "loc": undefined,
+                      "value": "__typename",
+                    },
+                    "selectionSet": undefined,
+                  },
+                },
+              ],
+              "dataKey": "__typename",
+              "name": "__typename",
+              "selection": undefined,
+              "watchBoundaries": [
+                "",
+              ],
+            },
+            {
+              "__refs": [
+                {
+                  "ancestors": [
+                    {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "user",
+                      },
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "loc": undefined,
+                        "selections": [
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "__typename",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "id",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "todos",
+                            },
+                            "selectionSet": {
+                              "kind": "SelectionSet",
+                              "loc": undefined,
+                              "selections": [
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "__typename",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "id",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "text",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "completed",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "todos",
+                      },
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "loc": undefined,
+                        "selections": [
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "__typename",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "id",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "text",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "completed",
+                            },
+                            "selectionSet": undefined,
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                  "node": {
+                    "alias": undefined,
+                    "arguments": [],
+                    "directives": [],
+                    "kind": "Field",
+                    "loc": undefined,
+                    "name": {
+                      "kind": "Name",
+                      "loc": undefined,
+                      "value": "text",
+                    },
+                    "selectionSet": undefined,
+                  },
+                },
+              ],
+              "dataKey": "text",
+              "name": "text",
+              "selection": undefined,
+              "watchBoundaries": [
+                "",
+              ],
+            },
+            {
+              "__refs": [
+                {
+                  "ancestors": [
+                    {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "user",
+                      },
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "loc": undefined,
+                        "selections": [
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "__typename",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "id",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "todos",
+                            },
+                            "selectionSet": {
+                              "kind": "SelectionSet",
+                              "loc": undefined,
+                              "selections": [
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "__typename",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "id",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "text",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "completed",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "todos",
+                      },
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "loc": undefined,
+                        "selections": [
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "__typename",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "id",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "text",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "completed",
+                            },
+                            "selectionSet": undefined,
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                  "node": {
+                    "alias": undefined,
+                    "arguments": [],
+                    "directives": [],
+                    "kind": "Field",
+                    "loc": undefined,
+                    "name": {
+                      "kind": "Name",
+                      "loc": undefined,
+                      "value": "completed",
+                    },
+                    "selectionSet": undefined,
+                  },
+                },
+              ],
+              "dataKey": "completed",
+              "name": "completed",
+              "selection": undefined,
+              "watchBoundaries": [
+                "",
+              ],
+            },
+          ],
+          "object": {
+            "id": "5",
+          },
+        },
+      ],
+      "modifyingOperation": {
+        "name": "query GetTodoHistory",
+        "variables": {},
+      },
+      "timestamp": 1577836800000,
+    },
+  ],
+]
+`;
+
+exports[`enableRichHistory: false should capture optimistic updates in history entries 1`] = `
+[
+  {
+    "history": [
+      {
+        "data": undefined,
+        "kind": "Optimistic",
+        "modifyingOperation": {
+          "name": "query GetUserHistory",
+          "variables": {},
+        },
+        "nodeDiffs": [
+          {
+            "diff": {
+              "dirtyFields": Set {
+                "name",
+              },
+              "errors": undefined,
+              "fieldQueue": Set {},
+              "fieldState": Map {
+                "name" => {
+                  "fieldEntry": "name",
+                  "kind": 4,
+                  "state": {
+                    "kind": 0,
+                    "newValue": "Alice (optimistic)",
+                    "oldValue": "Alice",
+                  },
+                },
+              },
+              "kind": 2,
+            },
+            "nodeKey": "User:1",
+          },
+        ],
+        "timestamp": 1577836800000,
+        "updatedNodes": [
+          "ROOT_QUERY",
+          "User:1",
+        ],
+      },
+      {
+        "changes": [
+          {
+            "kind": 0,
+            "newValue": undefined,
+            "oldValue": undefined,
+            "path": [
+              "Enable enableRichHistory for full path",
+              "name",
+            ],
+          },
+        ],
+        "data": undefined,
+        "kind": "Regular",
+        "missingFields": [],
+        "modifyingOperation": {
+          "name": "query GetUserHistory",
+          "variables": {},
+        },
+        "timestamp": 1577836800000,
+      },
+    ],
+    "totalEntries": 2,
+  },
+]
+`;
+
+exports[`enableRichHistory: false should capture optimistic updates in history entries 2`] = `
+[
+  [
+    {
+      "kind": "Optimistic",
+      "modifyingOperation": {
+        "name": "query GetUserHistory",
+        "variables": {},
+      },
+      "nodeDiffs": [
+        {
+          "diff": {
+            "dirtyFields": Set {
+              "name",
+            },
+            "errors": undefined,
+            "kind": 2,
+          },
+          "nodeKey": "User:1",
+        },
+      ],
+      "timestamp": 1577836800000,
+      "updatedNodes": [
+        "ROOT_QUERY",
+        "User:1",
+      ],
+    },
+    {
+      "changes": [
+        {
+          "kind": 0,
+          "path": [
+            "Enable enableRichHistory for full path",
+            "name",
+          ],
+        },
+      ],
+      "kind": "Regular",
+      "missingFields": [],
+      "modifyingOperation": {
+        "name": "query GetUserHistory",
+        "variables": {},
+      },
+      "timestamp": 1577836800000,
+    },
+  ],
+]
 `;
 
 exports[`enableRichHistory: false should capture value changes in history entries 1`] = `
@@ -69,7 +2021,7 @@ exports[`enableRichHistory: false should capture value changes in history entrie
       ],
       "data": undefined,
       "kind": "Regular",
-      "missingFields": Map {},
+      "missingFields": [],
       "modifyingOperation": {
         "name": "query GetUserHistory",
         "variables": {},
@@ -79,6 +2031,29 @@ exports[`enableRichHistory: false should capture value changes in history entrie
   ],
   "totalEntries": 1,
 }
+`;
+
+exports[`enableRichHistory: false should capture value changes in history entries 2`] = `
+[
+  {
+    "changes": [
+      {
+        "kind": 0,
+        "path": [
+          "Enable enableRichHistory for full path",
+          "name",
+        ],
+      },
+    ],
+    "kind": "Regular",
+    "missingFields": [],
+    "modifyingOperation": {
+      "name": "query GetUserHistory",
+      "variables": {},
+    },
+    "timestamp": 1577836800000,
+  },
+]
 `;
 
 exports[`enableRichHistory: true should capture list changes in history entries 1`] = `
@@ -214,7 +2189,7 @@ exports[`enableRichHistory: true should capture list changes in history entries 
         },
       },
       "kind": "Regular",
-      "missingFields": Map {},
+      "missingFields": [],
       "modifyingOperation": {
         "name": "query GetTodoHistory",
         "variables": {},
@@ -224,6 +2199,2063 @@ exports[`enableRichHistory: true should capture list changes in history entries 
   ],
   "totalEntries": 1,
 }
+`;
+
+exports[`enableRichHistory: true should capture list changes in history entries 2`] = `
+[
+  {
+    "changes": [
+      {
+        "currentLength": 3,
+        "itemChanges": [
+          {
+            "index": 0,
+            "kind": 2,
+            "oldIndex": 2,
+          },
+          {
+            "index": 1,
+            "kind": 0,
+          },
+          {
+            "index": 2,
+            "kind": 2,
+            "oldIndex": 0,
+          },
+          {
+            "kind": 1,
+            "oldIndex": 1,
+          },
+        ],
+        "kind": 3,
+        "path": [
+          "user",
+          "todos",
+        ],
+        "previousLength": 3,
+      },
+    ],
+    "kind": "Regular",
+    "missingFields": [],
+    "modifyingOperation": {
+      "name": "query GetTodoHistory",
+      "variables": {},
+    },
+    "timestamp": 1577836800000,
+  },
+]
+`;
+
+exports[`enableRichHistory: true should capture missing fields in history entries 1`] = `
+[
+  {
+    "history": [
+      {
+        "changes": [
+          {
+            "currentLength": 2,
+            "itemChanges": [
+              {
+                "data": {
+                  "id": "5",
+                },
+                "index": 1,
+                "kind": 0,
+              },
+            ],
+            "kind": 3,
+            "path": [
+              "user",
+              "todos",
+            ],
+            "previousLength": 1,
+          },
+        ],
+        "data": {
+          "current": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "todos": [
+                  {
+                    "__typename": "Todo",
+                    "id": "1",
+                    "text": "Write tests",
+                  },
+                ],
+              },
+            },
+          },
+          "incoming": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "todos": [
+                  {
+                    "__typename": "Todo",
+                    "id": "1",
+                    "text": "Write tests",
+                  },
+                  {
+                    "id": "5",
+                  },
+                ],
+              },
+            },
+          },
+          "updated": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "todos": [
+                  {
+                    "__typename": "Todo",
+                    "id": "1",
+                    "text": "Write tests",
+                  },
+                  {
+                    "id": "5",
+                  },
+                ],
+              },
+            },
+          },
+        },
+        "kind": "Regular",
+        "missingFields": [
+          {
+            "fields": [
+              {
+                "__refs": [
+                  {
+                    "ancestors": [
+                      {
+                        "alias": undefined,
+                        "arguments": [],
+                        "directives": [],
+                        "kind": "Field",
+                        "loc": undefined,
+                        "name": {
+                          "kind": "Name",
+                          "loc": undefined,
+                          "value": "user",
+                        },
+                        "selectionSet": {
+                          "kind": "SelectionSet",
+                          "loc": undefined,
+                          "selections": [
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "__typename",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "id",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "todos",
+                              },
+                              "selectionSet": {
+                                "kind": "SelectionSet",
+                                "loc": undefined,
+                                "selections": [
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "__typename",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "id",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "text",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "completed",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        "alias": undefined,
+                        "arguments": [],
+                        "directives": [],
+                        "kind": "Field",
+                        "loc": undefined,
+                        "name": {
+                          "kind": "Name",
+                          "loc": undefined,
+                          "value": "todos",
+                        },
+                        "selectionSet": {
+                          "kind": "SelectionSet",
+                          "loc": undefined,
+                          "selections": [
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "__typename",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "id",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "text",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "completed",
+                              },
+                              "selectionSet": undefined,
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                    "node": {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "completed",
+                      },
+                      "selectionSet": undefined,
+                    },
+                  },
+                ],
+                "dataKey": "completed",
+                "name": "completed",
+                "selection": undefined,
+                "watchBoundaries": [
+                  "",
+                ],
+              },
+            ],
+            "object": {
+              "__typename": "Todo",
+              "id": "1",
+              "text": "Write tests",
+            },
+          },
+          {
+            "fields": [
+              {
+                "__refs": [
+                  {
+                    "ancestors": [
+                      {
+                        "alias": undefined,
+                        "arguments": [],
+                        "directives": [],
+                        "kind": "Field",
+                        "loc": undefined,
+                        "name": {
+                          "kind": "Name",
+                          "loc": undefined,
+                          "value": "user",
+                        },
+                        "selectionSet": {
+                          "kind": "SelectionSet",
+                          "loc": undefined,
+                          "selections": [
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "__typename",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "id",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "todos",
+                              },
+                              "selectionSet": {
+                                "kind": "SelectionSet",
+                                "loc": undefined,
+                                "selections": [
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "__typename",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "id",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "text",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "completed",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        "alias": undefined,
+                        "arguments": [],
+                        "directives": [],
+                        "kind": "Field",
+                        "loc": undefined,
+                        "name": {
+                          "kind": "Name",
+                          "loc": undefined,
+                          "value": "todos",
+                        },
+                        "selectionSet": {
+                          "kind": "SelectionSet",
+                          "loc": undefined,
+                          "selections": [
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "__typename",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "id",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "text",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "completed",
+                              },
+                              "selectionSet": undefined,
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                    "node": {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "__typename",
+                      },
+                      "selectionSet": undefined,
+                    },
+                  },
+                ],
+                "dataKey": "__typename",
+                "name": "__typename",
+                "selection": undefined,
+                "watchBoundaries": [
+                  "",
+                ],
+              },
+              {
+                "__refs": [
+                  {
+                    "ancestors": [
+                      {
+                        "alias": undefined,
+                        "arguments": [],
+                        "directives": [],
+                        "kind": "Field",
+                        "loc": undefined,
+                        "name": {
+                          "kind": "Name",
+                          "loc": undefined,
+                          "value": "user",
+                        },
+                        "selectionSet": {
+                          "kind": "SelectionSet",
+                          "loc": undefined,
+                          "selections": [
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "__typename",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "id",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "todos",
+                              },
+                              "selectionSet": {
+                                "kind": "SelectionSet",
+                                "loc": undefined,
+                                "selections": [
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "__typename",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "id",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "text",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "completed",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        "alias": undefined,
+                        "arguments": [],
+                        "directives": [],
+                        "kind": "Field",
+                        "loc": undefined,
+                        "name": {
+                          "kind": "Name",
+                          "loc": undefined,
+                          "value": "todos",
+                        },
+                        "selectionSet": {
+                          "kind": "SelectionSet",
+                          "loc": undefined,
+                          "selections": [
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "__typename",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "id",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "text",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "completed",
+                              },
+                              "selectionSet": undefined,
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                    "node": {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "text",
+                      },
+                      "selectionSet": undefined,
+                    },
+                  },
+                ],
+                "dataKey": "text",
+                "name": "text",
+                "selection": undefined,
+                "watchBoundaries": [
+                  "",
+                ],
+              },
+              {
+                "__refs": [
+                  {
+                    "ancestors": [
+                      {
+                        "alias": undefined,
+                        "arguments": [],
+                        "directives": [],
+                        "kind": "Field",
+                        "loc": undefined,
+                        "name": {
+                          "kind": "Name",
+                          "loc": undefined,
+                          "value": "user",
+                        },
+                        "selectionSet": {
+                          "kind": "SelectionSet",
+                          "loc": undefined,
+                          "selections": [
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "__typename",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "id",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "todos",
+                              },
+                              "selectionSet": {
+                                "kind": "SelectionSet",
+                                "loc": undefined,
+                                "selections": [
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "__typename",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "id",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "text",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                  {
+                                    "alias": undefined,
+                                    "arguments": [],
+                                    "directives": [],
+                                    "kind": "Field",
+                                    "loc": undefined,
+                                    "name": {
+                                      "kind": "Name",
+                                      "loc": undefined,
+                                      "value": "completed",
+                                    },
+                                    "selectionSet": undefined,
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        "alias": undefined,
+                        "arguments": [],
+                        "directives": [],
+                        "kind": "Field",
+                        "loc": undefined,
+                        "name": {
+                          "kind": "Name",
+                          "loc": undefined,
+                          "value": "todos",
+                        },
+                        "selectionSet": {
+                          "kind": "SelectionSet",
+                          "loc": undefined,
+                          "selections": [
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "__typename",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "id",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "text",
+                              },
+                              "selectionSet": undefined,
+                            },
+                            {
+                              "alias": undefined,
+                              "arguments": [],
+                              "directives": [],
+                              "kind": "Field",
+                              "loc": undefined,
+                              "name": {
+                                "kind": "Name",
+                                "loc": undefined,
+                                "value": "completed",
+                              },
+                              "selectionSet": undefined,
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                    "node": {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "completed",
+                      },
+                      "selectionSet": undefined,
+                    },
+                  },
+                ],
+                "dataKey": "completed",
+                "name": "completed",
+                "selection": undefined,
+                "watchBoundaries": [
+                  "",
+                ],
+              },
+            ],
+            "object": {
+              "id": "5",
+            },
+          },
+        ],
+        "modifyingOperation": {
+          "name": "query GetTodoHistory",
+          "variables": {},
+        },
+        "timestamp": 1577836800000,
+      },
+    ],
+    "totalEntries": 1,
+  },
+]
+`;
+
+exports[`enableRichHistory: true should capture missing fields in history entries 2`] = `
+[
+  [
+    {
+      "changes": [
+        {
+          "currentLength": 2,
+          "itemChanges": [
+            {
+              "index": 1,
+              "kind": 0,
+            },
+          ],
+          "kind": 3,
+          "path": [
+            "user",
+            "todos",
+          ],
+          "previousLength": 1,
+        },
+      ],
+      "kind": "Regular",
+      "missingFields": [
+        {
+          "fields": [
+            {
+              "__refs": [
+                {
+                  "ancestors": [
+                    {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "user",
+                      },
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "loc": undefined,
+                        "selections": [
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "__typename",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "id",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "todos",
+                            },
+                            "selectionSet": {
+                              "kind": "SelectionSet",
+                              "loc": undefined,
+                              "selections": [
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "__typename",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "id",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "text",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "completed",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "todos",
+                      },
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "loc": undefined,
+                        "selections": [
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "__typename",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "id",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "text",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "completed",
+                            },
+                            "selectionSet": undefined,
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                  "node": {
+                    "alias": undefined,
+                    "arguments": [],
+                    "directives": [],
+                    "kind": "Field",
+                    "loc": undefined,
+                    "name": {
+                      "kind": "Name",
+                      "loc": undefined,
+                      "value": "completed",
+                    },
+                    "selectionSet": undefined,
+                  },
+                },
+              ],
+              "dataKey": "completed",
+              "name": "completed",
+              "selection": undefined,
+              "watchBoundaries": [
+                "",
+              ],
+            },
+          ],
+          "object": {
+            "__typename": "Todo",
+            "id": "1",
+            "text": "Write tests",
+          },
+        },
+        {
+          "fields": [
+            {
+              "__refs": [
+                {
+                  "ancestors": [
+                    {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "user",
+                      },
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "loc": undefined,
+                        "selections": [
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "__typename",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "id",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "todos",
+                            },
+                            "selectionSet": {
+                              "kind": "SelectionSet",
+                              "loc": undefined,
+                              "selections": [
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "__typename",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "id",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "text",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "completed",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "todos",
+                      },
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "loc": undefined,
+                        "selections": [
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "__typename",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "id",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "text",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "completed",
+                            },
+                            "selectionSet": undefined,
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                  "node": {
+                    "alias": undefined,
+                    "arguments": [],
+                    "directives": [],
+                    "kind": "Field",
+                    "loc": undefined,
+                    "name": {
+                      "kind": "Name",
+                      "loc": undefined,
+                      "value": "__typename",
+                    },
+                    "selectionSet": undefined,
+                  },
+                },
+              ],
+              "dataKey": "__typename",
+              "name": "__typename",
+              "selection": undefined,
+              "watchBoundaries": [
+                "",
+              ],
+            },
+            {
+              "__refs": [
+                {
+                  "ancestors": [
+                    {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "user",
+                      },
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "loc": undefined,
+                        "selections": [
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "__typename",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "id",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "todos",
+                            },
+                            "selectionSet": {
+                              "kind": "SelectionSet",
+                              "loc": undefined,
+                              "selections": [
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "__typename",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "id",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "text",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "completed",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "todos",
+                      },
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "loc": undefined,
+                        "selections": [
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "__typename",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "id",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "text",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "completed",
+                            },
+                            "selectionSet": undefined,
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                  "node": {
+                    "alias": undefined,
+                    "arguments": [],
+                    "directives": [],
+                    "kind": "Field",
+                    "loc": undefined,
+                    "name": {
+                      "kind": "Name",
+                      "loc": undefined,
+                      "value": "text",
+                    },
+                    "selectionSet": undefined,
+                  },
+                },
+              ],
+              "dataKey": "text",
+              "name": "text",
+              "selection": undefined,
+              "watchBoundaries": [
+                "",
+              ],
+            },
+            {
+              "__refs": [
+                {
+                  "ancestors": [
+                    {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "user",
+                      },
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "loc": undefined,
+                        "selections": [
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "__typename",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "id",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "todos",
+                            },
+                            "selectionSet": {
+                              "kind": "SelectionSet",
+                              "loc": undefined,
+                              "selections": [
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "__typename",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "id",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "text",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                                {
+                                  "alias": undefined,
+                                  "arguments": [],
+                                  "directives": [],
+                                  "kind": "Field",
+                                  "loc": undefined,
+                                  "name": {
+                                    "kind": "Name",
+                                    "loc": undefined,
+                                    "value": "completed",
+                                  },
+                                  "selectionSet": undefined,
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      "alias": undefined,
+                      "arguments": [],
+                      "directives": [],
+                      "kind": "Field",
+                      "loc": undefined,
+                      "name": {
+                        "kind": "Name",
+                        "loc": undefined,
+                        "value": "todos",
+                      },
+                      "selectionSet": {
+                        "kind": "SelectionSet",
+                        "loc": undefined,
+                        "selections": [
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "__typename",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "id",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "text",
+                            },
+                            "selectionSet": undefined,
+                          },
+                          {
+                            "alias": undefined,
+                            "arguments": [],
+                            "directives": [],
+                            "kind": "Field",
+                            "loc": undefined,
+                            "name": {
+                              "kind": "Name",
+                              "loc": undefined,
+                              "value": "completed",
+                            },
+                            "selectionSet": undefined,
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                  "node": {
+                    "alias": undefined,
+                    "arguments": [],
+                    "directives": [],
+                    "kind": "Field",
+                    "loc": undefined,
+                    "name": {
+                      "kind": "Name",
+                      "loc": undefined,
+                      "value": "completed",
+                    },
+                    "selectionSet": undefined,
+                  },
+                },
+              ],
+              "dataKey": "completed",
+              "name": "completed",
+              "selection": undefined,
+              "watchBoundaries": [
+                "",
+              ],
+            },
+          ],
+          "object": {
+            "id": "5",
+          },
+        },
+      ],
+      "modifyingOperation": {
+        "name": "query GetTodoHistory",
+        "variables": {},
+      },
+      "timestamp": 1577836800000,
+    },
+  ],
+]
+`;
+
+exports[`enableRichHistory: true should capture optimistic updates in history entries 1`] = `
+[
+  {
+    "history": [
+      {
+        "data": {
+          "current": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "name": "Alice",
+              },
+            },
+          },
+          "incoming": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "name": "Alice (optimistic)",
+              },
+            },
+          },
+          "updated": undefined,
+        },
+        "kind": "Optimistic",
+        "modifyingOperation": {
+          "name": "query GetUserHistory",
+          "variables": {},
+        },
+        "nodeDiffs": [
+          {
+            "diff": {
+              "dirtyFields": Set {
+                "name",
+              },
+              "errors": undefined,
+              "fieldQueue": Set {},
+              "fieldState": Map {
+                "name" => {
+                  "fieldEntry": "name",
+                  "kind": 4,
+                  "state": {
+                    "kind": 0,
+                    "newValue": "Alice (optimistic)",
+                    "oldValue": "Alice",
+                  },
+                },
+              },
+              "kind": 2,
+            },
+            "nodeKey": "User:1",
+          },
+        ],
+        "timestamp": 1577836800000,
+        "updatedNodes": [
+          "ROOT_QUERY",
+          "User:1",
+        ],
+      },
+      {
+        "changes": [
+          {
+            "kind": 0,
+            "newValue": "Alice v2",
+            "oldValue": "Alice",
+            "path": [
+              "user",
+              "name",
+            ],
+          },
+        ],
+        "data": {
+          "current": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "name": "Alice",
+              },
+            },
+          },
+          "incoming": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "name": "Alice v2",
+              },
+            },
+          },
+          "updated": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "name": "Alice v2",
+              },
+            },
+          },
+        },
+        "kind": "Regular",
+        "missingFields": [],
+        "modifyingOperation": {
+          "name": "query GetUserHistory",
+          "variables": {},
+        },
+        "timestamp": 1577836800000,
+      },
+    ],
+    "totalEntries": 2,
+  },
+]
+`;
+
+exports[`enableRichHistory: true should capture optimistic updates in history entries 2`] = `
+[
+  [
+    {
+      "kind": "Optimistic",
+      "modifyingOperation": {
+        "name": "query GetUserHistory",
+        "variables": {},
+      },
+      "nodeDiffs": [
+        {
+          "diff": {
+            "dirtyFields": Set {
+              "name",
+            },
+            "errors": undefined,
+            "kind": 2,
+          },
+          "nodeKey": "User:1",
+        },
+      ],
+      "timestamp": 1577836800000,
+      "updatedNodes": [
+        "ROOT_QUERY",
+        "User:1",
+      ],
+    },
+    {
+      "changes": [
+        {
+          "kind": 0,
+          "path": [
+            "user",
+            "name",
+          ],
+        },
+      ],
+      "kind": "Regular",
+      "missingFields": [],
+      "modifyingOperation": {
+        "name": "query GetUserHistory",
+        "variables": {},
+      },
+      "timestamp": 1577836800000,
+    },
+  ],
+]
 `;
 
 exports[`enableRichHistory: true should capture value changes in history entries 1`] = `
@@ -271,7 +4303,7 @@ exports[`enableRichHistory: true should capture value changes in history entries
         },
       },
       "kind": "Regular",
-      "missingFields": Map {},
+      "missingFields": [],
       "modifyingOperation": {
         "name": "query GetUserHistory",
         "variables": {},
@@ -281,4 +4313,27 @@ exports[`enableRichHistory: true should capture value changes in history entries
   ],
   "totalEntries": 1,
 }
+`;
+
+exports[`enableRichHistory: true should capture value changes in history entries 2`] = `
+[
+  {
+    "changes": [
+      {
+        "kind": 0,
+        "path": [
+          "user",
+          "name",
+        ],
+      },
+    ],
+    "kind": "Regular",
+    "missingFields": [],
+    "modifyingOperation": {
+      "name": "query GetUserHistory",
+      "variables": {},
+    },
+    "timestamp": 1577836800000,
+  },
+]
 `;
