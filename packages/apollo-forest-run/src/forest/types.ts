@@ -10,6 +10,7 @@ import {
 import {
   CompositeListChunk,
   DataMap,
+  MissingFieldsArray,
   MissingFieldsMap,
   NodeKey,
   NodeMap,
@@ -27,6 +28,7 @@ import {
 import { TelemetryEvent } from "../telemetry/types";
 import { Logger } from "../jsutils/logger";
 import { UpdateTreeStats } from "../telemetry/updateStats/types";
+import { ObjectDifference } from "../diff/types";
 import { UpdateLogger } from "../telemetry/updateStats/updateLogger";
 import { CircularBuffer } from "../jsutils/circularBuffer";
 import type * as DifferenceKind from "../diff/differenceKind";
@@ -84,6 +86,29 @@ type HistoryChangeBase = {
 };
 
 export type HistoryChange = (RegularHistoryChange | OptimisticHistoryChange) &
+  HistoryChangeBase;
+
+type OptimisticHistoryChangeSerialized = Omit<
+  OptimisticHistoryChange,
+  "nodeDiffs"
+> & {
+  nodeDiffs: {
+    nodeKey: string;
+    diff: ObjectDifference;
+  }[];
+};
+
+type RegularHistoryChangeSerialized = Omit<
+  RegularHistoryChange,
+  "missingFields"
+> & {
+  missingFields: MissingFieldsArray;
+};
+
+export type HistoryChangeSerialized = (
+  | RegularHistoryChangeSerialized
+  | OptimisticHistoryChangeSerialized
+) &
   HistoryChangeBase;
 
 export type RegularHistoryChange = {

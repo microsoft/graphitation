@@ -120,8 +120,7 @@ export type CompositeListLayoutIndexChange = {
 export type CompositeListLayoutChange =
   | CompositeListLayoutItemRemoved
   | CompositeListLayoutIndexChange
-  | CompositeListLayoutItemAdded
-  | undefined;
+  | CompositeListLayoutItemAdded;
 
 export type CompositeListDifference = {
   readonly kind: typeof DifferenceKind.CompositeListDifference;

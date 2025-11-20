@@ -28,6 +28,21 @@ const TODO_QUERY = gql`
   }
 `;
 
+const TODO_QUERY_WITH_COMPLETED = gql`
+  query GetTodoHistoryWithCompleted {
+    user {
+      __typename
+      id
+      todos {
+        __typename
+        id
+        text
+        completed
+      }
+    }
+  }
+`;
+
 const createUser = (name: string) => ({
   __typename: "User" as const,
   id: "1",
@@ -165,6 +180,18 @@ describe("History size handling", () => {
 });
 
 describe.each([true, false])("enableRichHistory: %p", (enableRichHistory) => {
+  const writeTodos = (todos: unknown[], cache: ForestRun) => {
+    cache.write({
+      query: TODO_QUERY,
+      result: {
+        user: {
+          __typename: "User",
+          id: "1",
+          todos,
+        },
+      },
+    });
+  };
   test("should capture value changes in history entries", () => {
     const cache = new ForestRun({
       historyConfig: {
@@ -188,6 +215,7 @@ describe.each([true, false])("enableRichHistory: %p", (enableRichHistory) => {
     const history = data[OPERATION_HISTORY_SYMBOL];
 
     expect(history).toMatchSnapshot();
+    expect(history.historyWithoutData).toMatchSnapshot();
   });
 
   test("should capture list changes in history entries", () => {
@@ -198,30 +226,23 @@ describe.each([true, false])("enableRichHistory: %p", (enableRichHistory) => {
       },
     });
 
-    const writeTodos = (todos: unknown[]) => {
-      cache.write({
-        query: TODO_QUERY,
-        result: {
-          user: {
-            __typename: "User",
-            id: "1",
-            todos,
-          },
-        },
-      });
-    };
+    writeTodos(
+      [
+        createTodo("1", "Write tests"),
+        createTodo("2", "Fix bug"),
+        createTodo("3", "Ship product"),
+      ],
+      cache,
+    );
 
-    writeTodos([
-      createTodo("1", "Write tests"),
-      createTodo("2", "Fix bug"),
-      createTodo("3", "Ship product"),
-    ]);
-
-    writeTodos([
-      createTodo("3", "Ship product"),
-      createTodo("4", "Plan next sprint"),
-      createTodo("1", "Write tests"),
-    ]);
+    writeTodos(
+      [
+        createTodo("3", "Ship product"),
+        createTodo("4", "Plan next sprint"),
+        createTodo("1", "Write tests"),
+      ],
+      cache,
+    );
 
     const data: any = cache.read({
       query: TODO_QUERY,
@@ -231,5 +252,86 @@ describe.each([true, false])("enableRichHistory: %p", (enableRichHistory) => {
     const history = data[OPERATION_HISTORY_SYMBOL];
 
     expect(history).toMatchSnapshot();
+    expect(history.historyWithoutData).toMatchSnapshot();
+  });
+
+  test("should capture optimistic updates in history entries", () => {
+    const cache = new ForestRun({
+      historyConfig: {
+        enableRichHistory,
+        overwrittenHistorySize: 2,
+      },
+    });
+    const historyEntries: any[] = [];
+    const historyWithoutData: any[] = [];
+    cache.watch({
+      query: USER_QUERY,
+      optimistic: true,
+      callback: (data) => {
+        const history = data.result[OPERATION_HISTORY_SYMBOL];
+        if (history) {
+          historyEntries.push(history);
+          historyWithoutData.push(history.historyWithoutData);
+        }
+      },
+    });
+    cache.write({
+      query: USER_QUERY,
+      result: { user: createUser("Alice") },
+    });
+
+    cache.recordOptimisticTransaction(() => {
+      cache.writeQuery({
+        query: USER_QUERY,
+        data: { user: createUser("Alice (optimistic)") },
+      });
+    }, "test-optimistic");
+
+    cache.write({
+      query: USER_QUERY,
+      result: { user: createUser("Alice v2") },
+    });
+
+    expect(historyEntries).toMatchSnapshot();
+    expect(historyWithoutData).toMatchSnapshot();
+  });
+
+  test("should capture missing fields in history entries", () => {
+    const cache = new ForestRun({
+      historyConfig: {
+        enableRichHistory,
+        overwrittenHistorySize: 1,
+      },
+    });
+
+    const historyEntries: any[] = [];
+    const historyWithoutData: any[] = [];
+
+    cache.watch({
+      query: TODO_QUERY_WITH_COMPLETED,
+      optimistic: true,
+      callback: (data) => {
+        const history = data.result[OPERATION_HISTORY_SYMBOL];
+        if (history) {
+          historyEntries.push(history);
+          historyWithoutData.push(history.historyWithoutData);
+        }
+      },
+    });
+
+    writeTodos([createTodo("1", "Write tests")], cache);
+
+    writeTodos(
+      [
+        createTodo("1", "Write tests"),
+        {
+          id: "5",
+        }, // missing text field
+      ],
+      cache,
+    );
+
+    expect(historyEntries).toMatchSnapshot();
+    expect(historyWithoutData).toMatchSnapshot();
   });
 });

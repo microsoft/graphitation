@@ -49,6 +49,7 @@ import { assert } from "../jsutils/assert";
 import { addTree, trackTreeNodes } from "../forest/addTree";
 import { DirectiveNode, FragmentDefinitionNode } from "graphql";
 import { OPERATION_HISTORY_SYMBOL } from "../descriptor/operation";
+import { appendHistoryToData } from "../values/history";
 
 export function read<TData>(
   env: CacheEnv,
@@ -131,15 +132,7 @@ function readOperation(
     ) {
       const outputTree = readState.outputTree;
 
-      Object.defineProperty(outputTree.result.data, OPERATION_HISTORY_SYMBOL, {
-        get() {
-          return {
-            totalEntries: outputTree.history.totalEntries,
-            history: Array.from(outputTree.history),
-          };
-        },
-        enumerable: false,
-      });
+      appendHistoryToData(outputTree);
     }
 
     resultsMap.set(operationDescriptor, readState);
