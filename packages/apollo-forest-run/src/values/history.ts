@@ -188,7 +188,12 @@ function serializeHistory(history: HistoryChange[]): HistoryChangeSerialized[] {
         missingFields.push({
           object,
           fields: Array.from(fields).map((field) => {
-            const { __refs, selection, watchBoundaries, ...rest } = field;
+            const {
+              __refs,
+              selection: _selection,
+              watchBoundaries: _watchBoundaries,
+              ...rest
+            } = field;
             return rest;
           }),
         });
@@ -218,7 +223,7 @@ export function stripDataFromHistory(
   history: HistoryChangeSerialized[],
 ): Omit<HistoryChangeSerialized, "data">[] {
   return history.map((entry) => {
-    const { data, ...entryRest } = entry;
+    const { data: _data, ...entryRest } = entry;
 
     if (entry.kind === "Regular") {
       return {
@@ -226,18 +231,22 @@ export function stripDataFromHistory(
         changes: entry.changes.map((change) => {
           switch (change.kind) {
             case DifferenceKind.Replacement: {
-              const { oldValue, newValue, ...changeRest } = change;
+              const {
+                oldValue: _oldValue,
+                newValue: _newValue,
+                ...changeRest
+              } = change;
               return changeRest;
             }
             case DifferenceKind.Filler: {
-              const { newValue, ...changeRest } = change;
+              const { newValue: _newValue, ...changeRest } = change;
               return changeRest;
             }
             case DifferenceKind.CompositeListDifference:
               return {
                 ...change,
                 itemChanges: change.itemChanges.map((itemChange) => {
-                  const { data, ...itemRest } = itemChange;
+                  const { data: _data, ...itemRest } = itemChange;
                   return itemRest;
                 }),
               };
