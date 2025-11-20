@@ -9,10 +9,16 @@ import {
   fieldEntriesAreEqual,
 } from "../descriptor/resolvedSelection";
 import { assert } from "../jsutils/assert";
-import type { IndexedForest, ForestEnv, UpdateTreeResult } from "./types";
+import type {
+  IndexedForest,
+  ForestEnv,
+  UpdateTreeResult,
+  IndexedTree,
+} from "./types";
 import { DataForest, OptimisticLayer } from "../cache/types";
 import { replaceTree } from "./addTree";
 import { NodeChunk } from "../values/types";
+import { createRegularHistoryEntry } from "../values/history";
 
 export const ROOT_NODES = Object.freeze([
   "ROOT_QUERY",
@@ -26,6 +32,7 @@ export function updateAffectedTrees(
   forest: DataForest | OptimisticLayer,
   affectedOperations: Map<OperationDescriptor, NodeDifferenceMap>,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
+  incomingResult?: IndexedTree,
 ): UpdateTreeResult[] {
   // Note: affectedOperations may contain false-positives (updateTree will ignore those)
   const allUpdated: UpdateTreeResult[] = [];
@@ -40,6 +47,17 @@ export function updateAffectedTrees(
       continue;
     }
     allUpdated.push(result);
+
+    if (currentTreeState.operation.historySize) {
+      result.updatedTree.history.push(
+        createRegularHistoryEntry(
+          currentTreeState,
+          result,
+          incomingResult,
+          env,
+        ),
+      );
+    }
 
     // Reset previous tree state on commit
     result.updatedTree.prev = null;

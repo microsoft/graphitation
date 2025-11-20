@@ -9,6 +9,7 @@ import {
   DataWhisker24Regular,
   Alert24Regular,
   ContentView32Regular,
+  ArrowUpload24Regular,
 } from "@fluentui/react-icons";
 import { mergeClasses, Text, Badge } from "@fluentui/react-components";
 import { useArrowNavigationGroup } from "@fluentui/react-tabster";
@@ -63,6 +64,11 @@ const menuElements = (props: MenuProps) => [
     url: "graphiql",
     name: "GraphiQL",
     icon: <Flowchart24Regular />,
+  },
+  {
+    url: "import-history",
+    name: "Import History",
+    icon: <ArrowUpload24Regular />,
   },
 ];
 

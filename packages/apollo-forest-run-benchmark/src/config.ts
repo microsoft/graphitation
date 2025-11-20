@@ -7,8 +7,17 @@ export const CONFIG = {
       description: "Default ForestRun configuration",
       options: {},
     },
+    {
+      name: "History with size 1",
+      description: "History enabled with a size of 1",
+      options: {
+        historyConfig: {
+          overwrittenHistorySize: 1,
+        },
+      },
+    },
   ] as const satisfies CacheConfiguration[],
-  watcherCounts: [0, 50],
+  watcherCounts: [0, 1, 25],
   sampling: {
     minSamples: 200,
     minExecutionTime: 200, //ms

@@ -38,6 +38,10 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
     autoEvict: config?.autoEvict ?? true,
     logUpdateStats: config?.logUpdateStats ?? false,
     logStaleOperations: config?.logStaleOperations ?? false,
+
+    // History configuration
+    historyConfig: config?.historyConfig,
+
     optimizeFragmentReads: config?.optimizeFragmentReads ?? false,
     nonEvictableQueries: config?.nonEvictableQueries ?? new Set(),
     maxOperationCount: config?.maxOperationCount ?? 1000,

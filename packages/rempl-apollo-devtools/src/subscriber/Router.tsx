@@ -14,6 +14,7 @@ import RecentActivityContainer from "./apollo-recent-activity/recent-activity-co
 import { OperationsTrackerContainer } from "./apollo-operations-tracker";
 import { ApolloGlobalOperationsContext } from "./contexts/apollo-global-operations-context";
 import { ApolloGlobalOperations } from "../types";
+import { ImportHistoryPage } from "./apollo-cache/history/ImportHistoryPage";
 
 function getCacheDataCount(cacheContextData: ApolloCacheContextType) {
   if (!cacheContextData?.cache) return 0;
@@ -64,6 +65,9 @@ const Router = React.memo(() => {
           </Route>
           <Route path="/graphiql">
             <GraphiQLRenderer />
+          </Route>
+          <Route path="/import-history">
+            <ImportHistoryPage />
           </Route>
           <Route path="/">
             <ApolloCache />
