@@ -325,9 +325,9 @@ export type OperationResult = {
 };
 
 export type MissingFieldsMap = Map<SourceObject, Set<FieldInfo>>;
-export type MissingFieldsArray = {
+export type MissingFieldsSerialized = {
   object: SourceObject;
-  fields: FieldInfo[];
+  fields: Omit<FieldInfo, "__refs" | "selection" | "watchBoundaries">[];
 }[];
 
 export type IncompleteLists = Map<SourceCompositeList, Set<number>>;

@@ -10,7 +10,7 @@ import {
 import {
   CompositeListChunk,
   DataMap,
-  MissingFieldsArray,
+  MissingFieldsSerialized,
   MissingFieldsMap,
   NodeKey,
   NodeMap,
@@ -102,7 +102,7 @@ type RegularHistoryChangeSerialized = Omit<
   RegularHistoryChange,
   "missingFields"
 > & {
-  missingFields: MissingFieldsArray;
+  missingFields: MissingFieldsSerialized;
 };
 
 export type HistoryChangeSerialized = (

@@ -14,7 +14,7 @@ import type {
   ObjectDifference,
 } from "../diff/types";
 import { createParentLocator, getDataPathForDebugging } from "./traverse";
-import { MissingFieldsArray, SourceCompositeList, SourceObject } from "./types";
+import { MissingFieldsSerialized, SourceCompositeList } from "./types";
 import { isCompositeListEntryTuple } from "./predicates";
 
 import * as ChangeKind from "../diff/itemChangeKind";
@@ -183,11 +183,14 @@ export function createOptimisticHistoryEntry(
 function serializeHistory(history: HistoryChange[]): HistoryChangeSerialized[] {
   return history.map((entry) => {
     if (entry.kind === "Regular") {
-      const missingFields: MissingFieldsArray = [];
+      const missingFields: MissingFieldsSerialized = [];
       for (const [object, fields] of entry.missingFields) {
         missingFields.push({
           object,
-          fields: Array.from(fields),
+          fields: Array.from(fields).map((field) => {
+            const { __refs, selection, watchBoundaries, ...rest } = field;
+            return rest;
+          }),
         });
       }
 
