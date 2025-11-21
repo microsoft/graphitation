@@ -16,9 +16,14 @@ export type {
   RegularHistoryChange,
   OptimisticHistoryChange,
   HistoryChange,
+  HistoryChangeSerialized,
+  SerializedNodeDifference,
+  HistoryFieldChange,
 } from "./forest/types";
 
 export type { CompositeListLayoutChange } from "./diff/types";
 
 export * as DifferenceKind from "./diff/differenceKind";
 export * as ItemChangeKind from "./diff/itemChangeKind";
+
+export { serializeHistory } from "./values/history";

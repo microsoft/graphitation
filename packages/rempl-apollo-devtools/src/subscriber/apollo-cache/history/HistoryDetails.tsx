@@ -5,7 +5,11 @@ import {
   Tooltip,
   mergeClasses,
 } from "@fluentui/react-components";
-import { Warning16Filled, ChevronRight20Regular } from "@fluentui/react-icons";
+import {
+  Warning16Filled,
+  ChevronRight20Regular,
+  Info16Regular,
+} from "@fluentui/react-icons";
 import type { HistoryEntry } from "../../../history/types";
 import { OperationMetadata, MissingFieldItem } from "./components";
 import { FieldChangesList } from "./FieldChangesList";
@@ -29,20 +33,22 @@ export const HistoryDetails: React.FC<HistoryDetailsProps> = ({ entry }) => {
     entry.modifyingOperation.variables &&
     Object.keys(entry.modifyingOperation.variables).length > 0;
   const hasMissingFields =
-    entry.missingFields && entry.missingFields.length > 0;
+    entry.kind === "Regular" &&
+    entry.missingFields &&
+    entry.missingFields.length > 0;
   const missingFieldsCount = useMemo(() => {
     if (!hasMissingFields) {
       return 0;
     }
 
-    return entry.missingFields!.reduce(
-      (acc, item) => acc + item.fields.length,
+    return (entry as any).missingFields!.reduce(
+      (acc: any, item: any) => acc + item.fields.length,
       0,
     );
-  }, [entry.missingFields, hasMissingFields]);
+  }, [entry, hasMissingFields]);
 
   const missingObjectsCount = hasMissingFields
-    ? entry.missingFields!.length
+    ? (entry as any).missingFields!.length
     : 0;
 
   const data = entry.data;
@@ -139,7 +145,21 @@ export const HistoryDetails: React.FC<HistoryDetailsProps> = ({ entry }) => {
             </SectionCard>
           ) : (
             <SectionCard
-              title="Node Differences"
+              title={
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  Node Differences
+                  <Tooltip
+                    content="Optimistic updates may contain changes that are not fully applied to the cache if they don't match the query structure."
+                    relationship="description"
+                  >
+                    <span style={{ display: "inline-flex", cursor: "help" }}>
+                      <Info16Regular />
+                    </span>
+                  </Tooltip>
+                </div>
+              }
               badge={nodeDiffLabel}
               defaultExpanded={true}
             >

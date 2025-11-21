@@ -11,10 +11,16 @@ export const MissingFieldItem: React.FC<MissingFieldItemProps> = ({
   missing,
 }) => {
   const classes = useMissingFieldItemStyles();
+  const object = missing.object as any;
+  const identifier =
+    typeof object === "string"
+      ? object
+      : object.__ref ||
+        (object.id ? `${object.__typename}:${object.id}` : "Unknown Object");
 
   return (
     <div className={classes.container}>
-      <Text className={classes.identifier}>{missing.objectIdentifier}</Text>
+      <Text className={classes.identifier}>{identifier}</Text>
       <div className={classes.fieldsContainer}>
         {missing.fields.map((field, idx) => (
           <Tag

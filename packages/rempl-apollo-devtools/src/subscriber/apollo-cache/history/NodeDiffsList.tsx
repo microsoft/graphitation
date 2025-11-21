@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Text, mergeClasses, tokens } from "@fluentui/react-components";
+import { ChevronRight20Regular } from "@fluentui/react-icons";
 import type { NodeDiff } from "../../../history/types";
+import { DifferenceKind } from "../../../history/types";
 import { useNodeDiffsListStyles } from "./NodeDiffsList.styles";
+import { FieldChangeItem } from "./components/FieldChangeItem";
 
 interface NodeDiffsListProps {
   nodeDiffs: NodeDiff[];
@@ -33,25 +36,15 @@ interface NodeDiffItemProps {
 }
 
 const NodeDiffItem: React.FC<NodeDiffItemProps> = ({ nodeDiff, classes }) => {
-  const hasFieldState = nodeDiff.fieldState && nodeDiff.fieldState.length > 0;
-  const hasDirtyFields =
-    nodeDiff.dirtyFields && nodeDiff.dirtyFields.length > 0;
+  const { diff } = nodeDiff;
+  const hasFieldState = diff.fieldState && diff.fieldState.length > 0;
+  const hasDirtyFields = diff.dirtyFields && diff.dirtyFields.length > 0;
 
   return (
     <div className={classes.nodeDiffItem}>
       {/* Node Header */}
       <div className={classes.nodeHeader}>
         <Text className={classes.nodeKey}>{nodeDiff.nodeKey}</Text>
-        {nodeDiff.complete !== undefined && (
-          <Text
-            className={mergeClasses(
-              classes.completeBadge,
-              nodeDiff.complete ? classes.completeTrue : classes.completeFalse,
-            )}
-          >
-            {nodeDiff.complete ? "Complete" : "Incomplete"}
-          </Text>
-        )}
       </div>
 
       {/* Field Changes */}
@@ -59,11 +52,24 @@ const NodeDiffItem: React.FC<NodeDiffItemProps> = ({ nodeDiff, classes }) => {
         <div>
           <Text className={classes.fieldsLabel}>Changed Fields:</Text>
           <div className={classes.fieldsList}>
-            {nodeDiff.fieldState!.map((fieldState, idx) => (
-              <Text key={idx} className={classes.fieldTag}>
-                {fieldState.fieldKey}
-              </Text>
-            ))}
+            {diff.fieldState!.map((fieldState, idx) => {
+              const value = fieldState.value;
+              const diffs = Array.isArray(value) ? value : [value];
+              return (
+                <div key={idx}>
+                  {diffs.map((d, i) => {
+                    // We adapt the NodeDiff state to look like a FieldChange
+                    // so we can reuse the FieldChangeItem component.
+                    // The 'kind' property is included in 'd.state'.
+                    const change = {
+                      path: [fieldState.key],
+                      ...d.state,
+                    };
+                    return <FieldChangeItem key={i} change={change as any} />;
+                  })}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -73,7 +79,7 @@ const NodeDiffItem: React.FC<NodeDiffItemProps> = ({ nodeDiff, classes }) => {
         <div>
           <Text className={classes.fieldsLabel}>Dirty Fields:</Text>
           <div className={classes.fieldsList}>
-            {nodeDiff.dirtyFields!.map((field, idx) => (
+            {diff.dirtyFields!.map((field, idx) => (
               <Text key={idx} className={classes.fieldTag}>
                 {field}
               </Text>

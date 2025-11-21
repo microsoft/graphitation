@@ -4,7 +4,7 @@ import { ChevronRight20Regular } from "@fluentui/react-icons";
 import { useSectionCardStyles } from "./SectionCard.styles";
 
 export interface SectionCardProps {
-  title: string;
+  title: React.ReactNode;
   badge?: string;
   /** If true, section starts expanded (only for collapsible sections) */
   defaultExpanded?: boolean;

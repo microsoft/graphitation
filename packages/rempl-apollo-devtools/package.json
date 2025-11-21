@@ -18,6 +18,7 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
+    "@graphitation/apollo-forest-run": "^0.19.1",
     "@apollo/client": "~3.6.0",
     "@emotion/react": "^11.8.1",
     "@fluentui/react-components": "^9.18.9",

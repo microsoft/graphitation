@@ -33,7 +33,11 @@ export type SourceCustomScalar = Brand<unknown, typeof CustomScalarBrand>;
 export type SourceObject = Brand<
   {
     __typename?: TypeName;
-    [OPERATION_HISTORY_SYMBOL]?: HistoryChangeSerialized[];
+    [OPERATION_HISTORY_SYMBOL]?: {
+      totalEntries: number;
+      history: HistoryChangeSerialized[];
+      historyWithoutData: HistoryChangeSerialized[];
+    }[];
     [name: string]: SourceValue | undefined;
   }, // There could be cases of missing fields for defer/include/skip and some Apollo quirks with missing fields
   typeof ObjectBrand
@@ -325,9 +329,9 @@ export type OperationResult = {
 };
 
 export type MissingFieldsMap = Map<SourceObject, Set<FieldInfo>>;
-export type MissingFieldsArray = {
+export type MissingFieldsSerialized = {
   object: SourceObject;
-  fields: FieldInfo[];
+  fields: Omit<FieldInfo, "__refs" | "selection" | "watchBoundaries">[];
 }[];
 
 export type IncompleteLists = Map<SourceCompositeList, Set<number>>;

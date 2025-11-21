@@ -1,4 +1,9 @@
 import { makeStyles, shorthands, tokens } from "@fluentui/react-components";
+import {
+  SPACING_SM,
+  SPACING_MD,
+  SPACING_XS,
+} from "./shared/styles/spacing";
 
 export const useNodeDiffsListStyles = makeStyles({
   container: {
@@ -54,29 +59,32 @@ export const useNodeDiffsListStyles = makeStyles({
     backgroundColor: "rgba(229, 83, 75, 0.15)",
     color: tokens.colorPaletteRedForeground1,
   },
+  fieldsLabel: {
+    display: "block",
+    fontWeight: tokens.fontWeightSemibold,
+    marginBottom: tokens.spacingVerticalS,
+    fontSize: tokens.fontSizeBase200,
+    color: tokens.colorNeutralForeground2,
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
+  },
   fieldsList: {
     display: "flex",
-    flexWrap: "wrap",
-    ...shorthands.gap(tokens.spacingHorizontalS),
-    marginTop: tokens.spacingVerticalS,
+    flexDirection: "column",
+    ...shorthands.gap(tokens.spacingVerticalS),
   },
   fieldTag: {
+    display: "flex",
+    flexDirection: "column",
+    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalM),
+    backgroundColor: tokens.colorNeutralBackground2,
+    ...shorthands.borderRadius(tokens.borderRadiusMedium),
     fontFamily: tokens.fontFamilyMonospace,
     fontSize: tokens.fontSizeBase200,
-    ...shorthands.padding(tokens.spacingVerticalXXS, tokens.spacingHorizontalS),
-    backgroundColor: tokens.colorNeutralBackground3,
-    ...shorthands.borderRadius(tokens.borderRadiusSmall),
     ...shorthands.border(
       tokens.strokeWidthThin,
       "solid",
       tokens.colorNeutralStroke2,
     ),
-    color: tokens.colorNeutralForeground2,
-  },
-  fieldsLabel: {
-    fontWeight: tokens.fontWeightSemibold,
-    fontSize: tokens.fontSizeBase300,
-    color: tokens.colorNeutralForeground1,
-    marginBottom: tokens.spacingVerticalXS,
   },
 });

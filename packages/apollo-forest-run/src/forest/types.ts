@@ -10,8 +10,7 @@ import {
 import {
   CompositeListChunk,
   DataMap,
-  GraphValue,
-  MissingFieldsArray,
+  MissingFieldsSerialized,
   MissingFieldsMap,
   NodeKey,
   NodeMap,
@@ -37,6 +36,7 @@ import {
   CompositeListLayoutChange,
   CompositeListLayoutDifference,
   NodeDifferenceMap,
+  FieldEntryDifference,
 } from "../diff/types";
 import { HistoryConfig } from "../cache/types";
 
@@ -89,21 +89,33 @@ type HistoryChangeBase = {
 export type HistoryChange = (RegularHistoryChange | OptimisticHistoryChange) &
   HistoryChangeBase;
 
-type OptimisticHistoryChangeSerialized = Omit<
+export type SerializedNodeDifference = {
+  nodeKey: string;
+  diff: Omit<
+    ObjectDifference,
+    "fieldState" | "fieldQueue" | "dirtyFields"
+  > & {
+    fieldState: {
+      key: string;
+      value: FieldEntryDifference | FieldEntryDifference[];
+    }[];
+    fieldQueue: string[];
+    dirtyFields?: string[];
+  };
+};
+
+export type OptimisticHistoryChangeSerialized = Omit<
   OptimisticHistoryChange,
   "nodeDiffs"
 > & {
-  nodeDiffs: {
-    nodeKey: string;
-    diff: ObjectDifference;
-  }[];
+  nodeDiffs: SerializedNodeDifference[];
 };
 
 type RegularHistoryChangeSerialized = Omit<
   RegularHistoryChange,
   "missingFields"
 > & {
-  missingFields: MissingFieldsArray;
+  missingFields: MissingFieldsSerialized;
 };
 
 export type HistoryChangeSerialized = (
@@ -224,6 +236,7 @@ export type ForestEnv = {
 
   logger?: Logger;
   notify?: (event: TelemetryEvent) => void;
+
   // ApolloCompat:
   //   Apollo can track dirty entries in results of read operations even if some "key" fields are missing in selection
   //   by maintaining optimism dependency graph between main store and read results.
