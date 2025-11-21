@@ -11,7 +11,7 @@ import type {
   CompositeListLayoutChange,
   CompositeListLayoutDifference,
   NodeDifferenceMap,
-  ObjectDifference,
+  SerializedNodeDifference,
 } from "../diff/types";
 import { createParentLocator, getDataPathForDebugging } from "./traverse";
 import { MissingFieldsSerialized, SourceCompositeList } from "./types";
@@ -180,7 +180,9 @@ export function createOptimisticHistoryEntry(
   };
 }
 
-function serializeHistory(history: HistoryChange[]): HistoryChangeSerialized[] {
+export function serializeHistory(
+  history: HistoryChange[],
+): HistoryChangeSerialized[] {
   return history.map((entry) => {
     if (entry.kind === "Regular") {
       const missingFields: MissingFieldsSerialized = [];
@@ -204,10 +206,22 @@ function serializeHistory(history: HistoryChange[]): HistoryChangeSerialized[] {
         missingFields,
       };
     } else {
-      const nodeDiffs: { nodeKey: string; diff: ObjectDifference }[] = [];
+      const nodeDiffs: SerializedNodeDifference[] = [];
       if (entry.nodeDiffs) {
         for (const [nodeKey, diff] of entry.nodeDiffs) {
-          nodeDiffs.push({ nodeKey, diff });
+          const { fieldState, fieldQueue, dirtyFields, ...restDiff } = diff;
+          const serializedDiff = {
+            ...restDiff,
+            fieldState: Array.from(fieldState.entries()).map(
+              ([key, value]) => ({
+                key,
+                value,
+              }),
+            ),
+            fieldQueue: Array.from(fieldQueue),
+            dirtyFields: dirtyFields ? Array.from(dirtyFields) : undefined,
+          };
+          nodeDiffs.push({ nodeKey, diff: serializedDiff });
         }
       }
 
@@ -219,9 +233,7 @@ function serializeHistory(history: HistoryChange[]): HistoryChangeSerialized[] {
   });
 }
 
-export function stripDataFromHistory(
-  history: HistoryChangeSerialized[],
-): Omit<HistoryChangeSerialized, "data">[] {
+export function stripDataFromHistory(history: HistoryChangeSerialized[]) {
   return history.map((entry) => {
     const { data: _data, ...entryRest } = entry;
 
@@ -254,10 +266,7 @@ export function stripDataFromHistory(
         }),
       };
     } else {
-      const nodeDiffs: {
-        nodeKey: string;
-        diff: Pick<ObjectDifference, "kind" | "dirtyFields" | "errors">;
-      }[] = [];
+      const nodeDiffs = [];
 
       if (entry.nodeDiffs) {
         for (const item of entry.nodeDiffs) {

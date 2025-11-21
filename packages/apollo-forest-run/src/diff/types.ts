@@ -91,6 +91,18 @@ export type ObjectDifference = {
   errors?: DiffError[];
 };
 
+export type SerializedObjectDifference = {
+  readonly kind: typeof DifferenceKind.ObjectDifference;
+
+  fieldState: {
+    key: string;
+    value: FieldEntryDifference | FieldEntryDifference[];
+  }[];
+  fieldQueue: string[];
+  dirtyFields?: string[];
+  errors?: DiffError[];
+};
+
 export type FieldEntryDifference = {
   readonly kind: typeof DifferenceKind.FieldEntryDifference;
   fieldEntry: NormalizedFieldEntry;
@@ -153,4 +165,8 @@ export type ValueDifference =
   | Filler;
 
 export type NodeDifferenceMap = Map<string, ObjectDifference>;
+export type SerializedNodeDifference = {
+  nodeKey: string;
+  diff: SerializedObjectDifference;
+};
 export { DifferenceKind, DiffErrorKind };

@@ -28,7 +28,7 @@ import {
 import { TelemetryEvent } from "../telemetry/types";
 import { Logger } from "../jsutils/logger";
 import { UpdateTreeStats } from "../telemetry/updateStats/types";
-import { ObjectDifference } from "../diff/types";
+import { SerializedNodeDifference } from "../diff/types";
 import { UpdateLogger } from "../telemetry/updateStats/updateLogger";
 import { CircularBuffer } from "../jsutils/circularBuffer";
 import type * as DifferenceKind from "../diff/differenceKind";
@@ -76,7 +76,7 @@ type HistoryChangeBase = {
     name: string;
     variables: VariableValues;
   };
-  data:
+  data?:
     | {
         current: OperationResult;
         incoming: OperationResult | undefined;
@@ -88,14 +88,11 @@ type HistoryChangeBase = {
 export type HistoryChange = (RegularHistoryChange | OptimisticHistoryChange) &
   HistoryChangeBase;
 
-type OptimisticHistoryChangeSerialized = Omit<
+export type OptimisticHistoryChangeSerialized = Omit<
   OptimisticHistoryChange,
   "nodeDiffs"
 > & {
-  nodeDiffs: {
-    nodeKey: string;
-    diff: ObjectDifference;
-  }[];
+  nodeDiffs: SerializedNodeDifference[];
 };
 
 type RegularHistoryChangeSerialized = Omit<

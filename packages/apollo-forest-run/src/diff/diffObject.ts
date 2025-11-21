@@ -493,7 +493,7 @@ function diffCompositeListLayout(
 ):
   | {
       layout: CompositeListLayoutDifference;
-      deletedIndexes?: Set<number>;
+      deletedIndexes: Set<number> | undefined;
     }
   | undefined
   | "BREAK" {
@@ -536,6 +536,7 @@ function diffCompositeListLayout(
       }
       return {
         layout,
+        deletedIndexes: undefined,
       };
     }
     return !itemDiffRequired ? "BREAK" : undefined;

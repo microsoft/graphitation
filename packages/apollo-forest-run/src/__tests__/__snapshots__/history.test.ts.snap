@@ -245,22 +245,25 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
         "nodeDiffs": [
           {
             "diff": {
-              "dirtyFields": Set {
+              "dirtyFields": [
                 "name",
-              },
+              ],
               "errors": undefined,
-              "fieldQueue": Set {},
-              "fieldState": Map {
-                "name" => {
-                  "fieldEntry": "name",
-                  "kind": 4,
-                  "state": {
-                    "kind": 0,
-                    "newValue": "Alice (optimistic)",
-                    "oldValue": "Alice",
+              "fieldQueue": [],
+              "fieldState": [
+                {
+                  "key": "name",
+                  "value": {
+                    "fieldEntry": "name",
+                    "kind": 4,
+                    "state": {
+                      "kind": 0,
+                      "newValue": "Alice (optimistic)",
+                      "oldValue": "Alice",
+                    },
                   },
                 },
-              },
+              ],
               "kind": 2,
             },
             "nodeKey": "User:1",
@@ -311,9 +314,9 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
       "nodeDiffs": [
         {
           "diff": {
-            "dirtyFields": Set {
+            "dirtyFields": [
               "name",
-            },
+            ],
             "errors": undefined,
             "kind": 2,
           },
@@ -815,22 +818,25 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
         "nodeDiffs": [
           {
             "diff": {
-              "dirtyFields": Set {
+              "dirtyFields": [
                 "name",
-              },
+              ],
               "errors": undefined,
-              "fieldQueue": Set {},
-              "fieldState": Map {
-                "name" => {
-                  "fieldEntry": "name",
-                  "kind": 4,
-                  "state": {
-                    "kind": 0,
-                    "newValue": "Alice (optimistic)",
-                    "oldValue": "Alice",
+              "fieldQueue": [],
+              "fieldState": [
+                {
+                  "key": "name",
+                  "value": {
+                    "fieldEntry": "name",
+                    "kind": 4,
+                    "state": {
+                      "kind": 0,
+                      "newValue": "Alice (optimistic)",
+                      "oldValue": "Alice",
+                    },
                   },
                 },
-              },
+              ],
               "kind": 2,
             },
             "nodeKey": "User:1",
@@ -909,9 +915,9 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
       "nodeDiffs": [
         {
           "diff": {
-            "dirtyFields": Set {
+            "dirtyFields": [
               "name",
-            },
+            ],
             "errors": undefined,
             "kind": 2,
           },

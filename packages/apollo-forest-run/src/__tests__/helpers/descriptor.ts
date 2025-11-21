@@ -8,7 +8,6 @@ import {
   FieldInfo,
   FieldMap,
   OperationDescriptor,
-  OperationEnv,
   PossibleSelection,
   PossibleSelections,
   VariableValues,
@@ -34,8 +33,7 @@ export const gql = (x: TemplateStringsArray) => parseOnce(x[0] ?? "");
 
 export function createTestOperation(
   documentOrString: DocumentNode | string,
-  variables: VariableValues | undefined = undefined,
-  context: OperationEnv = { overwrittenHistorySize: 0 },
+  variables?: VariableValues,
 ): OperationDescriptor {
   const document =
     typeof documentOrString === "string"
@@ -77,7 +75,7 @@ export function createTestOperation(
   }
 
   return describeOperation(
-    context,
+    {},
     docDescriptor,
     resultDescriptor,
     variables ?? {},

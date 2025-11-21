@@ -61,7 +61,6 @@ export type OperationEnv = {
   ) => Key | KeySpecifier | undefined;
 
   historyConfig?: HistoryConfig;
-  overwrittenHistorySize?: number;
 };
 
 export type DocumentDescriptor = {
