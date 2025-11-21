@@ -22,7 +22,7 @@ import {
 import { createPatches } from "../../__tests__/helpers/createPatches";
 import { createObjectAggregate } from "../../values/create";
 import { indexObject } from "../../forest/indexTree";
-import { isComplete, isDirty, isCompositeListDifference } from "../difference";
+import { isComplete, isDirty } from "../difference";
 import { gql, createTestOperation } from "../../__tests__/helpers/descriptor";
 import { createParentLocator, TraverseEnv } from "../../values";
 
