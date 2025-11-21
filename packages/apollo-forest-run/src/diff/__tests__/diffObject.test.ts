@@ -785,7 +785,7 @@ describe("diff lists of nodes", () => {
         ["a", null, "b", "c"],
         ["b", null],
         [2, null],
-        [0, 1, 3],
+        [0, 3],
       ],
       [[["a", "b"], "c"], ["c"], [1], [0]],
     ])(

@@ -556,6 +556,9 @@ function diffCompositeListLayout(
   for (let i = firstDirtyIndex; i < modelLen; i++) {
     if (modelChunk.data[i] === null) {
       layout.push(null);
+      if (baseChunk.data[i] === null) {
+        unusedBaseIndixes.delete(i);
+      }
       continue;
     }
     const modelKey = resolveItemKey(env, modelChunk, i);
