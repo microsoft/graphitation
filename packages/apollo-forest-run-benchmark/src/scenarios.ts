@@ -306,7 +306,7 @@ export const scenarios = [
     },
   },
   {
-    name: "write-changes-in-all-objects",
+    name: "write-optimistic-changes-in-all-objects",
     prepare: (ctx: ScenarioContext) => {
       const { operations, CacheFactory, configuration, watcherCount } = ctx;
       const cache = new CacheFactory(configuration);

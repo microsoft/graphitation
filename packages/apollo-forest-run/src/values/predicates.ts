@@ -22,10 +22,15 @@ import type {
   SourceObject,
   SourceScalar,
   SourceValue,
+  CompositeListChunk,
 } from "./types";
 import { ValueKind } from "./types";
 import { FieldInfo } from "../descriptor/types";
 import { assertNever } from "../jsutils/assert";
+import {
+  ChangedChunksTuple,
+  CompositeListDifferenceEntry,
+} from "../forest/types";
 
 export const isSourceObject = (value: unknown): value is SourceObject =>
   typeof value === "object" && value !== null;
@@ -205,6 +210,11 @@ export function isCompatibleValue(
   }
   assertNever(value);
 }
+
+export const isCompositeListEntryTuple = (
+  entry: ChangedChunksTuple,
+): entry is [CompositeListChunk, CompositeListDifferenceEntry] =>
+  entry[0].kind === ValueKind.CompositeList;
 
 export const isParentObjectRef = (
   parentRef: GraphChunkReference,

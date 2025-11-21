@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Operation history for trees",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}

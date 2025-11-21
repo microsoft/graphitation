@@ -28,6 +28,7 @@ const defaultRootNodeKeys: Record<
   mutation: "ROOT_MUTATION",
   subscription: "ROOT_SUBSCRIPTION",
 };
+export const OPERATION_HISTORY_SYMBOL = Symbol("Tree history");
 
 export function describeOperation(
   env: OperationEnv,
@@ -65,6 +66,9 @@ export function describeOperation(
     rootNodeKey: effectiveRootNodeKey,
     selections: new Map(),
     keyVariables: getKeyVars(documentDescriptor.definition),
+    historySize: env.historyConfig
+      ? getHistorySize(documentDescriptor.definition, variables, env)
+      : 0,
     variablesKey:
       variablesKey ??
       createVariablesKey(variableDefinitions, variablesWithDefaults),
@@ -128,6 +132,35 @@ function getKeyVars(doc: OperationDefinitionNode): VariableName[] | null {
     );
   }
   return value as string[];
+}
+
+function getHistorySize(
+  doc: OperationDefinitionNode,
+  variables: VariableValues,
+  env: OperationEnv,
+): number {
+  const { historyConfig } = env;
+
+  // If overwrittenHistorySize is set, use it (overrides partitioning)
+  if (typeof historyConfig?.overwrittenHistorySize === "number") {
+    return historyConfig.overwrittenHistorySize;
+  }
+
+  if (
+    historyConfig &&
+    historyConfig?.partitions &&
+    historyConfig.partitionKey
+  ) {
+    const partitionKey = historyConfig.partitionKey(doc, variables);
+    if (!partitionKey) {
+      return 0;
+    }
+
+    const partitionSize = historyConfig.partitions[partitionKey];
+    return partitionSize ?? 0;
+  }
+
+  return 0;
 }
 
 export function createVariablesKey(

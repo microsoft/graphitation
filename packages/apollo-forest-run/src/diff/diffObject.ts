@@ -420,18 +420,30 @@ function diffCompositeListValue(
     return undefined;
   }
 
-  const layoutDiffResult =
-    diff?.layout ?? diffCompositeListLayout(context, base, model);
+  let layoutDiffResult = diff?.layout;
+  let deletedKeys: Set<number> | undefined;
 
-  if (layoutDiffResult === "BREAK") {
-    // Fast-path, no further diffing necessary
-    return;
+  if (layoutDiffResult === undefined) {
+    const layoutDiff = diffCompositeListLayout(context, base, model);
+
+    switch (layoutDiff) {
+      case "BREAK":
+        // Fast-path, no further diffing necessary
+        return;
+      case undefined:
+        break;
+      default:
+        layoutDiffResult = layoutDiff.layout;
+        deletedKeys = layoutDiff.deletedIndexes;
+    }
   }
+
   const itemQueue = diff?.itemQueue ?? model.data.keys();
 
   if (layoutDiffResult) {
     diff = diff ?? Difference.createCompositeListDifference();
     diff.layout = layoutDiffResult;
+    diff.deletedKeys = deletedKeys;
   }
 
   for (const index of itemQueue) {
@@ -478,7 +490,13 @@ function diffCompositeListLayout(
   context: DiffContext,
   base: CompositeListValue,
   model: CompositeListValue,
-): CompositeListLayoutDifference | undefined | "BREAK" {
+):
+  | {
+      layout: CompositeListLayoutDifference;
+      deletedIndexes: Set<number> | undefined;
+    }
+  | undefined
+  | "BREAK" {
   // What constitutes layout change?
   // - Change of "keyed object" position in the list
   // - Change of list length
@@ -516,9 +534,17 @@ function diffCompositeListLayout(
       for (let i = 0; i < modelLen; i++) {
         layout.push(i);
       }
-      return layout;
+      return {
+        layout,
+        deletedIndexes: undefined,
+      };
     }
     return !itemDiffRequired ? "BREAK" : undefined;
+  }
+
+  const unusedBaseIndixes = new Set<number>();
+  for (let i = firstDirtyIndex; i < baseLen; i++) {
+    unusedBaseIndixes.add(i);
   }
   // TODO: lastDirtyIndex to isolate changed segment (prepend case)
 
@@ -530,6 +556,9 @@ function diffCompositeListLayout(
   for (let i = firstDirtyIndex; i < modelLen; i++) {
     if (modelChunk.data[i] === null) {
       layout.push(null);
+      if (baseChunk.data[i] === null) {
+        unusedBaseIndixes.delete(i);
+      }
       continue;
     }
     const modelKey = resolveItemKey(env, modelChunk, i);
@@ -545,6 +574,7 @@ function diffCompositeListLayout(
     );
     if (baseIndex !== -1) {
       layout.push(baseIndex);
+      unusedBaseIndixes.delete(baseIndex);
     } else {
       const value = Value.aggregateListItemValue(model, i);
       if (Value.isCompositeNullValue(value)) {
@@ -562,7 +592,11 @@ function diffCompositeListLayout(
       }
     }
   }
-  return layout;
+
+  return {
+    layout,
+    deletedIndexes: unusedBaseIndixes,
+  };
 }
 
 function resolveItemKey(

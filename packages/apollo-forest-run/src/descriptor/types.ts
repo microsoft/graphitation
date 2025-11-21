@@ -8,6 +8,7 @@ import {
   SelectionNode,
   ValueNode,
 } from "graphql";
+import { HistoryConfig } from "../cache/types";
 
 export type TypeName = string;
 export type FieldName = string;
@@ -58,6 +59,8 @@ export type OperationEnv = {
     directives?: Directives,
     source?: OperationDescriptor | undefined,
   ) => Key | KeySpecifier | undefined;
+
+  historyConfig?: HistoryConfig;
 };
 
 export type DocumentDescriptor = {
@@ -95,6 +98,7 @@ export type OperationDescriptor = {
   rootNodeKey: NodeKey; // e.g. ROOT_QUERY | ROOT_MUTATION, etc
   selections: Map<PossibleSelections, Map<TypeName | null, ResolvedSelection>>;
   cache: boolean;
+  historySize: number; // Size of operation history to keep
 };
 
 export type FormattedError = GraphQLFormattedError;

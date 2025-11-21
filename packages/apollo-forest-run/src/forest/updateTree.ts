@@ -60,7 +60,7 @@ export function updateTree(
     completeObject: completeObject.bind(null, env, base, getNodeChunks),
     findParent: createParentLocator(base.dataMap),
     statsLogger: createUpdateLogger(env.logUpdateStats),
-    logger: env.logger,
+    env,
   };
   const {
     operation,
@@ -133,6 +133,7 @@ export function updateTree(
       changes,
       changedNodes,
       affectedNodes,
+      missingFields,
       stats: statsLogger?.getStats(operation.debugName),
     };
   }
@@ -169,6 +170,7 @@ export function updateTree(
     changes,
     changedNodes,
     affectedNodes,
+    missingFields,
     stats: statsLogger?.getStats(operation.debugName),
   };
 }

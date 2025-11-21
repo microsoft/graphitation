@@ -13,6 +13,7 @@ import { isNodeValue, isObjectValue } from "../values/predicates";
 import { assert } from "../jsutils/assert";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { hasFieldEntry } from "../values/resolve";
+import { createOptimisticHistoryEntry } from "../values/history";
 
 export function invalidateReadResults(
   env: CacheEnv,
@@ -37,6 +38,17 @@ export function invalidateReadResults(
 
       if (results) {
         markChangedNodesAsDirty(results, nodeDiffs, incomingResult);
+        if (shouldPushOptimisticHistory(targetForest, results.outputTree)) {
+          results.outputTree.history.push(
+            createOptimisticHistoryEntry(
+              results.outputTree,
+              nodeDiffs,
+              incomingResult,
+              difference.newNodes,
+              env,
+            ),
+          );
+        }
       }
       if (optimisticResults) {
         markChangedNodesAsDirty(optimisticResults, nodeDiffs, incomingResult);
@@ -174,6 +186,13 @@ function markChangedNodesAsDirty(
       currentDirtyFields.add(field.name);
     }
   }
+}
+
+function shouldPushOptimisticHistory(
+  targetForest: DataForest | OptimisticLayer,
+  outputTree: IndexedTree,
+): boolean {
+  return targetForest.layerTag !== null && !!outputTree.operation.historySize;
 }
 
 const EMPTY_ARRAY = Object.freeze([]);

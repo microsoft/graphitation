@@ -778,6 +778,43 @@ describe("diff lists of nodes", () => {
       });
     });
   });
+  describe("records deleted items", () => {
+    test.each([
+      [["a", "b", "c"], ["b"], [1], [0, 2]],
+      [
+        ["a", null, "b", "c"],
+        ["b", null],
+        [2, null],
+        [0, 3],
+      ],
+      [[["a", "b"], "c"], ["c"], [1], [0]],
+    ])(
+      "#%#: %p → %p",
+      (oldListKeys, newListKeys, expectedLayout, expectedDeletedKeys) => {
+        const base = completeObject({
+          entityList: oldListKeys.map(keyToEntity),
+        });
+        const model = completeObject({
+          entityList: newListKeys.map(keyToEntity),
+        });
+
+        const { result } = diff(base, model);
+        const difference = result.difference;
+        assert(difference);
+
+        const fieldDiff = difference.fieldState.get("entityList");
+        expect(fieldDiff).toMatchObject({
+          kind: 4,
+          fieldEntry: "entityList",
+          state: {
+            kind: 3,
+            layout: expectedLayout,
+            deletedKeys: new Set(expectedDeletedKeys),
+          },
+        });
+      },
+    );
+  });
 });
 
 describe("diff lists of plain objects", () => {
