@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Tue, 30 Sep 2025 06:26:46 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 21 Nov 2025 14:29:17 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.20.0
+
+Fri, 21 Nov 2025 14:29:17 GMT
+
+### Minor changes
+
+- Operation history for trees (pavelglac@gmail.com)
 
 ## 0.19.1
 
