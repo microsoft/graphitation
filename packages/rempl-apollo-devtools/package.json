@@ -9,7 +9,7 @@
     "directory": "packages/apollo-devtools"
   },
   "scripts": {
-    "playground": "watch 'node scripts/playground' ./src & (cd ../../examples/apollo-devtools-playground && yarn && yarn start)",
+    "playground": "watch 'node scripts/playground' ./src & yarn workspace graphql-playground start",
     "build": "node scripts/build-single-bundle && node scripts/build-separated-bundles",
     "watch": "watch 'node scripts/build.js'",
     "lint": "monorepo-scripts lint",
@@ -18,6 +18,7 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
+    "@graphitation/apollo-forest-run": "^0.20.0",
     "@apollo/client": "~3.6.0",
     "@emotion/react": "^11.8.1",
     "@fluentui/react-components": "^9.18.9",

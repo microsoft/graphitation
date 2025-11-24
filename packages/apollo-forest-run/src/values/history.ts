@@ -187,18 +187,20 @@ export function serializeHistory(
     if (entry.kind === "Regular") {
       const missingFields: MissingFieldsSerialized = [];
       for (const [object, fields] of entry.missingFields) {
-        missingFields.push({
-          object,
-          fields: Array.from(fields).map((field) => {
-            const {
-              __refs,
-              selection: _selection,
-              watchBoundaries: _watchBoundaries,
-              ...rest
-            } = field;
-            return rest;
-          }),
-        });
+        if (fields.size > 0) {
+          missingFields.push({
+            object,
+            fields: Array.from(fields).map((field) => {
+              const {
+                __refs,
+                selection: _selection,
+                watchBoundaries: _watchBoundaries,
+                ...rest
+              } = field;
+              return rest;
+            }),
+          });
+        }
       }
 
       return {

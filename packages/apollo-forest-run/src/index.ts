@@ -33,5 +33,8 @@ export {
   ObjectDifference,
   Replacement,
 } from "./diff/differenceKind";
-export { ItemAdd, ItemIndexChange, ItemRemove } from "./diff/itemChangeKind";
+export * as ItemChangeKind from "./diff/itemChangeKind";
+export * as DifferenceKind from "./diff/differenceKind";
 export { serializeHistory } from "./values/history";
+
+export type { MissingFieldsSerialized } from "./values/types";

@@ -1,9 +1,13 @@
 import * as React from "react";
 import { NormalizedCacheObject } from "@apollo/client/cache";
 import { remplSubscriber } from "../rempl";
+import type { OperationHistoryResponse } from "../types";
 
 export type ApolloCacheContextType = {
   removeCacheItem: (key: string) => void;
+  getOperationHistory: (
+    operationKey: string,
+  ) => Promise<OperationHistoryResponse | null>;
   cache: NormalizedCacheObject;
 } | null;
 
@@ -35,13 +39,34 @@ export const ApolloCacheContextWrapper = ({
     [cache],
   );
 
+  // Memoize getOperationHistory to prevent unnecessary re-renders
+  const getOperationHistory = React.useCallback(
+    async (operationKey: string): Promise<OperationHistoryResponse | null> => {
+      return new Promise((resolve) => {
+        remplSubscriber.callRemote(
+          "getOperationHistory",
+          operationKey,
+          (history: OperationHistoryResponse | null) => {
+            resolve(history);
+          },
+        );
+      });
+    },
+    [], // No dependencies - this function is stable
+  );
+
+  // Memoize the context value to prevent unnecessary re-renders when cache changes
+  const contextValue = React.useMemo(
+    () => ({
+      cache,
+      removeCacheItem,
+      getOperationHistory,
+    }),
+    [cache, removeCacheItem, getOperationHistory],
+  );
+
   return (
-    <ApolloCacheContext.Provider
-      value={{
-        cache,
-        removeCacheItem,
-      }}
-    >
+    <ApolloCacheContext.Provider value={contextValue}>
       {children}
     </ApolloCacheContext.Provider>
   );
