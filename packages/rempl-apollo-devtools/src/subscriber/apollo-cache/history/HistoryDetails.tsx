@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Tooltip } from "@fluentui/react-components";
 import { Info16Regular } from "@fluentui/react-icons";
-import type { HistoryChangeSerialized as HistoryEntry } from "@graphitation/apollo-forest-run";
+import type { HistoryChangeSerialized } from "@graphitation/apollo-forest-run";
 import { OperationMetadata } from "./components";
 import { FieldChangesList } from "./FieldChangesList";
 import { NodeDiffsList } from "./NodeDiffsList";
@@ -11,7 +11,7 @@ import { MissingFieldsSection } from "./components/MissingFieldsSection";
 import { DataSnapshotsSection } from "./components/DataSnapshotsSection";
 
 export interface HistoryDetailsProps {
-  entry: HistoryEntry;
+  entry: HistoryChangeSerialized;
 }
 
 export const HistoryDetails: React.FC<HistoryDetailsProps> = ({ entry }) => {

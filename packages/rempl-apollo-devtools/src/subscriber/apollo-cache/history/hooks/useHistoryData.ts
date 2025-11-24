@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import type { HistoryChangeSerialized as HistoryEntry } from "@graphitation/apollo-forest-run";
+import type { HistoryChangeSerialized } from "@graphitation/apollo-forest-run";
 import type { OperationHistoryResponse } from "../../../types";
 
 export interface UseHistoryDataResult {
-  history: HistoryEntry[];
+  history: HistoryChangeSerialized[];
   operationData: OperationHistoryResponse["operation"] | null;
   totalCount: number;
   loading: boolean;

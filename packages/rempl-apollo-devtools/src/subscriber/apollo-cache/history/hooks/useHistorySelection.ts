@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import type { HistoryChangeSerialized as HistoryEntry } from "@graphitation/apollo-forest-run";
+import type { HistoryChangeSerialized } from "@graphitation/apollo-forest-run";
 
 export interface UseHistorySelectionOptions {
-  history: HistoryEntry[];
+  history: HistoryChangeSerialized[];
   initialIndex?: number | null;
 }
 

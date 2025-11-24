@@ -26,6 +26,25 @@ export const ArrayIndexItem: React.FC<ArrayIndexItemProps> = ({
   setRef,
 }) => {
   const classes = useArrayDiffViewerStyles();
+  const isUnchanged = item.state === "unchanged";
+
+  if (isUnchanged) {
+    return (
+      <div
+        className={`${classes.indexBox} ${classes.unchangedBox}`}
+        ref={setRef}
+      >
+        <div className={classes.indexLabel}>
+          <Text>[{item.index}]</Text>
+        </div>
+        <div
+          className={`${classes.indexContent} ${classes.indexContentCollapsed} ${classes.unchangedContent}`}
+        >
+          <em style={{ color: "#666" }}>unchanged</em>
+        </div>
+      </div>
+    );
+  }
 
   const getStateLabel = (state: string) => {
     switch (state) {
@@ -66,38 +85,23 @@ export const ArrayIndexItem: React.FC<ArrayIndexItemProps> = ({
 
   return (
     <div
-      className={`${classes.indexBox} ${
-        item.state === "unchanged" ? classes.unchangedBox : ""
-      }`}
+      className={classes.indexBox}
       ref={setRef}
-      onMouseEnter={item.state !== "unchanged" ? onMouseEnter : undefined}
-      onMouseLeave={item.state !== "unchanged" ? onMouseLeave : undefined}
-      onClick={item.state !== "unchanged" ? onClick : undefined}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      onClick={onClick}
     >
       <div className={classes.indexLabel}>
         <Text>[{item.index}]</Text>
-        {item.state !== "unchanged" && (
-          <Text
-            className={`${classes.stateLabel} ${getStateLabel(item.state)}`}
-          >
-            {item.state}
-          </Text>
-        )}
+        <Text className={`${classes.stateLabel} ${getStateLabel(item.state)}`}>
+          {item.state}
+        </Text>
       </div>
-      {item.state !== "unchanged" && (
-        <div className={getContentClassName()}>
-          {isExpanded
-            ? formatValueForDisplay(item.data)
-            : formatDataPreview(item.data)}
-        </div>
-      )}
-      {item.state === "unchanged" && (
-        <div
-          className={`${classes.indexContent} ${classes.indexContentCollapsed} ${classes.unchangedContent}`}
-        >
-          <em style={{ color: "#666" }}>unchanged</em>
-        </div>
-      )}
+      <div className={getContentClassName()}>
+        {isExpanded
+          ? formatValueForDisplay(item.data)
+          : formatDataPreview(item.data)}
+      </div>
       {showHoverInfo && (
         <Text className={classes.hoverInfo}>
           {isOld

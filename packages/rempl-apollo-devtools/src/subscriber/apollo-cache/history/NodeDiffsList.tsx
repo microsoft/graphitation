@@ -1,11 +1,11 @@
 import React from "react";
 import { Text, tokens } from "@fluentui/react-components";
-import type { SerializedNodeDifference as NodeDiff } from "@graphitation/apollo-forest-run";
+import type { SerializedNodeDifference } from "@graphitation/apollo-forest-run";
 import { useNodeDiffsListStyles } from "./NodeDiffsList.styles";
 import { FieldChangeItem } from "./components/FieldChangeItem";
 
 interface NodeDiffsListProps {
-  nodeDiffs: NodeDiff[];
+  nodeDiffs: SerializedNodeDifference[];
 }
 
 export const NodeDiffsList: React.FC<NodeDiffsListProps> = ({ nodeDiffs }) => {
@@ -29,7 +29,7 @@ export const NodeDiffsList: React.FC<NodeDiffsListProps> = ({ nodeDiffs }) => {
 };
 
 interface NodeDiffItemProps {
-  nodeDiff: NodeDiff;
+  nodeDiff: SerializedNodeDifference;
   classes: ReturnType<typeof useNodeDiffsListStyles>;
 }
 

@@ -1,5 +1,8 @@
 import React, { useMemo, useState, useRef } from "react";
-import { FixedSizeList as List } from "react-window";
+import {
+  VirtualizerScrollView,
+  ScrollToInterface,
+} from "@fluentui/react-virtualizer";
 import { mergeClasses, Button, Text, tokens } from "@fluentui/react-components";
 import {
   ChevronUp20Regular,
@@ -32,7 +35,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   newValue,
 }) => {
   const classes = useDiffViewerStyles();
-  const listRef = useRef<List>(null);
+  const listRef = useRef<ScrollToInterface>(null);
   const nonVirtualizedContainerRef = useRef<HTMLDivElement>(null);
   const [currentChangeIndex, setCurrentChangeIndex] = useState(0);
 
@@ -147,7 +150,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     );
 
     if (useVirtualization) {
-      listRef.current?.scrollToItem(safeLineNumber, "center");
+      listRef.current?.scrollTo(safeLineNumber, "auto");
       return;
     }
 
@@ -296,38 +299,31 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     );
   }
 
-  const Row = ({
-    index,
-    style,
-  }: {
-    index: number;
-    style: React.CSSProperties;
-  }) => {
-    const item = flatItems[index];
-
-    if (item.type === "header") {
-      return null; // Skip hunk headers in virtualized view
-    }
-
-    return (
-      <div style={style}>
-        <DiffLineComponent line={item.line} classes={classes} />
-      </div>
-    );
-  };
-
   return (
     <div className={classes.diffContainer}>
       {navigationBar}
-      <List
-        ref={listRef}
-        height={listHeight}
-        itemCount={flatItems.length}
+      <VirtualizerScrollView
+        imperativeRef={listRef}
+        numItems={flatItems.length}
         itemSize={lineHeight}
-        width="100%"
+        container={{
+          style: { height: listHeight, width: "100%", overflowY: "auto" },
+        }}
       >
-        {Row}
-      </List>
+        {(index) => {
+          const item = flatItems[index];
+
+          if (item.type === "header") {
+            return <div style={{ height: lineHeight }} />;
+          }
+
+          return (
+            <div style={{ height: lineHeight }}>
+              <DiffLineComponent line={item.line} classes={classes} />
+            </div>
+          );
+        }}
+      </VirtualizerScrollView>
     </div>
   );
 };

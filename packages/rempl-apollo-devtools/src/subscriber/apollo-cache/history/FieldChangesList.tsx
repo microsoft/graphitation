@@ -1,11 +1,11 @@
 import React from "react";
 import { Text } from "@fluentui/react-components";
-import type { HistoryFieldChange as FieldChange } from "@graphitation/apollo-forest-run";
+import type { HistoryFieldChange } from "@graphitation/apollo-forest-run";
 import { useFieldChangesListStyles } from "./FieldChangesList.styles";
 import { FieldChangeItem } from "./components/FieldChangeItem";
 
 interface FieldChangesListProps {
-  changes: FieldChange[];
+  changes: HistoryFieldChange[];
 }
 
 export const FieldChangesList: React.FC<FieldChangesListProps> = ({

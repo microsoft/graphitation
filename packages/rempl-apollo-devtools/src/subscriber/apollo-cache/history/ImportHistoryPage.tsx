@@ -8,7 +8,7 @@ import {
   Textarea,
 } from "@fluentui/react-components";
 import { ArrowUpload20Regular, Dismiss20Regular } from "@fluentui/react-icons";
-import type { HistoryChangeSerialized as HistoryEntry } from "@graphitation/apollo-forest-run";
+import type { HistoryChangeSerialized } from "@graphitation/apollo-forest-run";
 import { HistoryTimeline } from "./HistoryTimeline";
 import { HistoryDetails } from "./HistoryDetails";
 
@@ -97,7 +97,7 @@ export const ImportHistoryPage: React.FC = () => {
   const classes = useStyles();
   const [jsonInput, setJsonInput] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [history, setHistory] = useState<HistoryChangeSerialized[]>([]);
   const [totalEntries, setTotalEntries] = useState<number>(0);
   const [selectedEntryIndex, setSelectedEntryIndex] = useState<number | null>(
     null,
@@ -153,7 +153,7 @@ export const ImportHistoryPage: React.FC = () => {
       }
 
       // Import successful
-      setHistory(parsed.history as HistoryEntry[]);
+      setHistory(parsed.history as HistoryChangeSerialized[]);
       setTotalEntries(parsed.totalEntries);
       // Auto-select the most recent entry
       if (parsed.history.length > 0) {
@@ -204,8 +204,10 @@ export const ImportHistoryPage: React.FC = () => {
           <div className={classes.header}>
             <Text className={classes.title}>Import History from JSON</Text>
             <Text className={classes.description}>
-              <strong>How to get history from your app:</strong> Call{" "}
-              <span className={classes.code}>TODO</span>
+              <strong>How to get history from your app:</strong> Put debugger,
+              on data object you can call
+              <span className={classes.code}>Symbol(Tree history)</span>. Right
+              click on the symbol and copy the value. Then past it below.
             </Text>
           </div>
 

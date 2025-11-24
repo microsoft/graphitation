@@ -39,7 +39,6 @@ export const ApolloCacheContextWrapper = ({
     [cache],
   );
 
-  // Memoize getOperationHistory to prevent unnecessary re-renders
   const getOperationHistory = React.useCallback(
     async (operationKey: string): Promise<OperationHistoryResponse | null> => {
       return new Promise((resolve) => {
@@ -55,7 +54,6 @@ export const ApolloCacheContextWrapper = ({
     [], // No dependencies - this function is stable
   );
 
-  // Memoize the context value to prevent unnecessary re-renders when cache changes
   const contextValue = React.useMemo(
     () => ({
       cache,

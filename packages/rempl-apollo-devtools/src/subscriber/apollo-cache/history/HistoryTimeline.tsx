@@ -1,11 +1,11 @@
 import React from "react";
 import { Text } from "@fluentui/react-components";
-import type { HistoryChangeSerialized as HistoryEntry } from "@graphitation/apollo-forest-run";
+import type { HistoryChangeSerialized } from "@graphitation/apollo-forest-run";
 import { TimelineItem } from "./components/TimelineItem";
 import { useHistoryTimelineStyles } from "./HistoryTimeline.styles";
 
 interface HistoryTimelineProps {
-  history: HistoryEntry[];
+  history: HistoryChangeSerialized[];
   selectedIndex: number | null;
   totalCount?: number;
   onSelectEntry: (index: number) => void;
@@ -19,8 +19,7 @@ export const HistoryTimeline: React.FC<HistoryTimelineProps> = ({
 }) => {
   const classes = useHistoryTimelineStyles();
 
-  const startingUpdateNumber =
-    totalCount > history.length ? totalCount - history.length + 1 : 1;
+  const startingUpdateNumber = totalCount - history.length + 1;
 
   const timelineTitle =
     totalCount > history.length

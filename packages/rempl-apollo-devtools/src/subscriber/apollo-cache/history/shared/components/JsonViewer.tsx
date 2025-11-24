@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { FixedSizeList as List } from "react-window";
+import { VirtualizerScrollView } from "@fluentui/react-virtualizer";
 import { tokens } from "@fluentui/react-components";
 
 interface JsonViewerProps {
@@ -19,26 +19,6 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
     }
   }, [data]);
 
-  const Row = ({
-    index,
-    style,
-  }: {
-    index: number;
-    style: React.CSSProperties;
-  }) => (
-    <div
-      style={{
-        ...style,
-        whiteSpace: "pre",
-        fontFamily: tokens.fontFamilyMonospace,
-        fontSize: tokens.fontSizeBase200,
-        lineHeight: "20px",
-      }}
-    >
-      {lines[index]}
-    </div>
-  );
-
   const itemSize = 20;
   const height = Math.min(lines.length * itemSize, maxHeight);
 
@@ -50,14 +30,26 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
         padding: tokens.spacingHorizontalM,
       }}
     >
-      <List
-        height={height}
-        itemCount={lines.length}
+      <VirtualizerScrollView
+        numItems={lines.length}
         itemSize={itemSize}
-        width="100%"
+        container={{ style: { height, maxHeight, overflowY: "auto" } }}
       >
-        {Row}
-      </List>
+        {(index) => (
+          <div
+            key={index}
+            style={{
+              whiteSpace: "pre",
+              fontFamily: tokens.fontFamilyMonospace,
+              fontSize: tokens.fontSizeBase200,
+              lineHeight: "20px",
+              height: "20px",
+            }}
+          >
+            {lines[index]}
+          </div>
+        )}
+      </VirtualizerScrollView>
     </div>
   );
 };

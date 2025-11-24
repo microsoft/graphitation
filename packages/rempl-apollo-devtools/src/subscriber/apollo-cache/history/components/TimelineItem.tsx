@@ -7,11 +7,11 @@ import {
   Tooltip,
 } from "@fluentui/react-components";
 import { Warning16Filled } from "@fluentui/react-icons";
-import type { HistoryChangeSerialized as HistoryEntry } from "@graphitation/apollo-forest-run";
+import type { HistoryChangeSerialized } from "@graphitation/apollo-forest-run";
 import { useTimelineItemStyles } from "./TimelineItem.styles";
 
 export interface TimelineItemProps {
-  entry: HistoryEntry;
+  entry: HistoryChangeSerialized;
   index: number;
   isSelected: boolean;
   onClick: () => void;

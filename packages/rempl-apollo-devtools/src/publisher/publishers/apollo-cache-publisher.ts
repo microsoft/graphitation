@@ -1,21 +1,7 @@
 import { NormalizedCacheObject, ApolloClient } from "@apollo/client";
-import {
-  serializeHistory,
-  HistoryChange,
-} from "@graphitation/apollo-forest-run";
+import { serializeHistory, ForestRun } from "@graphitation/apollo-forest-run";
 import { RemplWrapper } from "../rempl-wrapper";
 import { ClientObject, WrapperCallbackParams } from "../../types";
-
-interface TreeWithHistory {
-  operation: {
-    debugName?: string;
-    id: number;
-    variables?: Record<string, any>;
-  };
-  history: Iterable<HistoryChange> & {
-    totalEntries: number;
-  };
-}
 
 export class ApolloCachePublisher {
   private apolloPublisher;
@@ -50,7 +36,7 @@ export class ApolloCachePublisher {
         }
 
         try {
-          const cacheInstance = this.activeClient.client.cache as any;
+          const cacheInstance = this.activeClient.client.cache as ForestRun;
 
           // Check if this is ForestRun cache
           if (cacheInstance.store?.dataForest?.trees) {
@@ -58,7 +44,7 @@ export class ApolloCachePublisher {
 
             // Find the matching tree
             for (const [, rawTree] of trees) {
-              const tree = rawTree as TreeWithHistory;
+              const tree = rawTree;
               const treeKey = `${tree.operation.debugName}:${tree.operation.id}`;
               if (
                 treeKey === operationKey ||
@@ -71,10 +57,10 @@ export class ApolloCachePublisher {
                     return {
                       history: serializeHistory(history),
                       operation: {
-                        name: tree.operation.debugName || "Anonymous Operation",
+                        name: tree.operation.debugName,
                         variables: tree.operation.variables || {},
                       },
-                      totalCount: tree.history.totalEntries || history.length,
+                      totalCount: tree.history.totalEntries,
                     };
                   }
                 }
@@ -101,7 +87,6 @@ export class ApolloCachePublisher {
 
     return this.getCache(client.client);
   };
-
 
   private cachePublishHandler({ activeClient }: WrapperCallbackParams) {
     if (!activeClient) {
