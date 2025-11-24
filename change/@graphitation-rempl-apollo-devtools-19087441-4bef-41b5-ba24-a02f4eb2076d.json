@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "History for operations. Dependency on ForestRun",
+  "packageName": "@graphitation/rempl-apollo-devtools",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}
