@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Tue, 25 Nov 2025 15:38:25 GMT",
+      "version": "0.20.1",
+      "tag": "@graphitation/apollo-forest-run_v0.20.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "8ddf7771cb80933916d7c1ad643e10b505d0173c",
+            "comment": "Add exports and fix missing fields array to not contain empty entries."
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 21 Nov 2025 14:29:17 GMT",
       "version": "0.20.0",
       "tag": "@graphitation/apollo-forest-run_v0.20.0",

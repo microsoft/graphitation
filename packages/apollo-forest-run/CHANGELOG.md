@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Fri, 21 Nov 2025 14:29:17 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 25 Nov 2025 15:38:25 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.20.1
+
+Tue, 25 Nov 2025 15:38:25 GMT
+
+### Patches
+
+- Add exports and fix missing fields array to not contain empty entries. (pavelglac@gmail.com)
 
 ## 0.20.0
 

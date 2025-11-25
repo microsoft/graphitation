@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Add exports and fix missing fields array to not contain empty entries.",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "pavelglac@gmail.com",
-  "dependentChangeType": "patch"
-}

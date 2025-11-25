@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/rempl-apollo-devtools",
   "license": "MIT",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "main": "./dist/apollo-devtools.js",
   "repository": {
     "type": "git",
@@ -24,7 +24,7 @@
     "@fluentui/react-data-grid-react-window": "^9.0.0-beta.21",
     "@fluentui/react-icons": "2.0.166-rc.3",
     "@fluentui/react-virtualizer": "9.0.0-alpha.47",
-    "@graphitation/apollo-forest-run": "^0.20.0",
+    "@graphitation/apollo-forest-run": "^0.20.1",
     "@graphql-tools/schema": "^7.1.5",
     "@types/lodash.debounce": "^4.0.6",
     "@types/lodash.isequal": "^4.5.5",
