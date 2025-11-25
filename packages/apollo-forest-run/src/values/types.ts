@@ -37,7 +37,7 @@ export type SourceObject = Brand<
       totalEntries: number;
       history: HistoryChangeSerialized[];
       historyWithoutData: HistoryChangeSerialized[];
-    }[];
+    };
     [name: string]: SourceValue | undefined;
   }, // There could be cases of missing fields for defer/include/skip and some Apollo quirks with missing fields
   typeof ObjectBrand

@@ -6,16 +6,16 @@ const MESSAGE = gql`
   query message($id: ID) {
     message(id: $id) {
       id
-      message
+      text
     }
   }
 `;
 
 const UPDATE_MESSAGE = gql`
-  mutation updateMessage($id: ID!, $message: String!) {
-    updateMessage(id: $id, message: $message) {
+  mutation updateMessage($id: ID!, $text: String!) {
+    updateMessage(id: $id, text: $text) {
       id
-      message
+      text
     }
   }
 `;
@@ -30,7 +30,7 @@ export default ({ id }: MessageProps) => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [editValue, setEditValue] = React.useState("");
 
-  const messageText = data?.message?.message || "";
+  const messageText = data?.message?.text || "";
 
   React.useEffect(() => {
     setEditValue(messageText);
@@ -41,7 +41,7 @@ export default ({ id }: MessageProps) => {
   };
 
   const handleSave = () => {
-    updateMessage({ variables: { id, message: editValue } });
+    updateMessage({ variables: { id, text: editValue } });
     setIsEditing(false);
   };
 

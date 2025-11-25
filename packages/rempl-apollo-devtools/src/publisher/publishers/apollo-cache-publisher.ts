@@ -1,4 +1,5 @@
 import { NormalizedCacheObject, ApolloClient } from "@apollo/client";
+import { serializeHistory, ForestRun } from "@graphitation/apollo-forest-run";
 import { RemplWrapper } from "../rempl-wrapper";
 import { ClientObject, WrapperCallbackParams } from "../../types";
 
@@ -25,6 +26,54 @@ export class ApolloCachePublisher {
         this.activeClient.client.cache.evict({ id: key });
       }
     });
+
+    // Fetch history for a specific operation on-demand
+    this.apolloPublisher.provide(
+      "getOperationHistory",
+      (operationKey: string) => {
+        if (!this.activeClient) {
+          return null;
+        }
+
+        try {
+          const cacheInstance = this.activeClient.client.cache as ForestRun;
+
+          // Check if this is ForestRun cache
+          if (cacheInstance.store?.dataForest?.trees) {
+            const trees = cacheInstance.store.dataForest.trees;
+
+            // Find the matching tree
+            for (const [, rawTree] of trees) {
+              const tree = rawTree;
+              const treeKey = `${tree.operation.debugName}:${tree.operation.id}`;
+              if (
+                treeKey === operationKey ||
+                operationKey.startsWith(treeKey)
+              ) {
+                if (tree.history) {
+                  const history = Array.from(tree.history);
+                  if (history.length > 0) {
+                    // Transform to JSON-friendly format and include tree operation data
+                    return {
+                      history: serializeHistory(history),
+                      operation: {
+                        name: tree.operation.debugName,
+                        variables: tree.operation.variables || {},
+                      },
+                      totalCount: tree.history.totalEntries,
+                    };
+                  }
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to get operation history:", e);
+        }
+
+        return null;
+      },
+    );
   }
 
   private getCache(client: ApolloClient<NormalizedCacheObject>) {

@@ -1,0 +1,137 @@
+import { makeStyles, shorthands, tokens } from "@fluentui/react-components";
+import {
+  SPACING_SM,
+  SPACING_LG,
+  SPACING_MD,
+  SPACING_XS,
+} from "./shared/styles/spacing";
+
+export const useFieldChangesListStyles = makeStyles({
+  container: {
+    display: "flex",
+    flexDirection: "column",
+    ...shorthands.gap(SPACING_SM),
+  },
+  emptyState: {
+    ...shorthands.padding("12px"),
+    textAlign: "center",
+    color: tokens.colorNeutralForeground3,
+    fontStyle: "italic",
+  },
+  changeItem: {
+    ...shorthands.borderRadius(tokens.borderRadiusMedium),
+    ...shorthands.border(
+      tokens.strokeWidthThin,
+      "solid",
+      tokens.colorNeutralStroke2,
+    ),
+    ...shorthands.overflow("hidden"),
+  },
+  fieldItem: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    ...shorthands.gap(SPACING_SM),
+    ...shorthands.padding(SPACING_SM, SPACING_MD),
+    cursor: "pointer",
+    backgroundColor: tokens.colorNeutralBackground2,
+    ...shorthands.transition("background-color", "0.15s"),
+    minWidth: 0,
+    "&:hover": {
+      backgroundColor: tokens.colorNeutralBackground2Hover,
+    },
+  },
+  chevron: {
+    fontSize: tokens.fontSizeBase400,
+    color: tokens.colorNeutralForeground3,
+    ...shorthands.transition("transform", "0.2s", "ease-in-out"),
+    flexShrink: 0,
+    marginLeft: "auto",
+  },
+  chevronExpanded: {
+    transform: "rotate(90deg)",
+  },
+  fieldPath: {
+    fontFamily: tokens.fontFamilyMonospace,
+    fontWeight: tokens.fontWeightSemibold,
+    color: tokens.colorNeutralForeground1,
+    ...shorthands.flex(1),
+    fontSize: tokens.fontSizeBase200,
+    ...shorthands.overflow("hidden"),
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    minWidth: 0,
+  },
+  changeKindBadge: {
+    fontSize: tokens.fontSizeBase100,
+    ...shorthands.padding("2px", SPACING_SM),
+    ...shorthands.borderRadius(tokens.borderRadiusSmall),
+    fontWeight: tokens.fontWeightSemibold,
+    flexShrink: 0,
+  },
+  badgeFiller: {
+    backgroundColor: "rgba(16, 124, 16, 0.15)",
+    color: tokens.colorPaletteGreenForeground1,
+  },
+  badgeReplacement: {
+    backgroundColor: "rgba(0, 120, 212, 0.15)",
+    color: tokens.colorBrandForeground1,
+  },
+  badgeList: {
+    backgroundColor: "rgba(245, 159, 0, 0.15)",
+    color: tokens.colorPaletteYellowForeground1,
+  },
+  previewText: {
+    color: tokens.colorNeutralForeground2,
+    fontSize: tokens.fontSizeBase200,
+    ...shorthands.overflow("hidden"),
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  changeContent: {
+    ...shorthands.padding(SPACING_MD, SPACING_MD),
+  },
+  valueComparison: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+    ...shorthands.gap(SPACING_LG),
+    width: "100%",
+    minWidth: 0,
+  },
+  valueBox: {
+    display: "flex",
+    flexDirection: "column",
+    ...shorthands.gap(SPACING_XS),
+    minWidth: 0,
+    maxWidth: "100%",
+    ...shorthands.overflow("hidden"),
+  },
+  valueLabel: {
+    fontSize: tokens.fontSizeBase200,
+    fontWeight: tokens.fontWeightSemibold,
+    color: tokens.colorNeutralForeground2,
+  },
+  codeBlock: {
+    fontFamily: tokens.fontFamilyMonospace,
+    fontSize: tokens.fontSizeBase200,
+    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS),
+    backgroundColor: tokens.colorNeutralBackground3,
+    ...shorthands.borderRadius(tokens.borderRadiusMedium),
+    maxHeight: "300px",
+    overflowY: "auto",
+    overflowX: "hidden",
+    ...shorthands.border(
+      tokens.strokeWidthThin,
+      "solid",
+      tokens.colorNeutralStroke2,
+    ),
+    whiteSpace: "pre-wrap",
+    wordBreak: "break-word",
+    overflowWrap: "anywhere",
+    minWidth: 0,
+    maxWidth: "100%",
+    boxSizing: "border-box",
+  },
+});
