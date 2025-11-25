@@ -37,4 +37,4 @@ export * as ItemChangeKind from "./diff/itemChangeKind";
 export * as DifferenceKind from "./diff/differenceKind";
 export { serializeHistory } from "./values/history";
 
-export type { MissingFieldsSerialized } from "./values/types";
+export type { MissingFieldsSerialized, SourceObject } from "./values/types";

@@ -103,7 +103,9 @@ const ChatContainer = () => {
 
   return (
     <div>
-      <button onClick={addIdOnlyMessageFunction}>Add ID-Only Message</button>
+      <button onClick={addIdOnlyMessageFunction}>
+        Add Message with missing text field
+      </button>
       <ChatRenderer
         ids={
           data?.chat?.messages?.map(

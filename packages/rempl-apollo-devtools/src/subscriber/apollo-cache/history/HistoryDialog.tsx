@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from "react";
+import React, { useContext } from "react";
 import type { CacheObjectWithSize } from "../types";
 import { ApolloCacheContext } from "../../contexts/apollo-cache-context";
 import { useHistoryData, useHistorySelection } from "./hooks";

@@ -79,8 +79,6 @@ export const getListItemChangeDescription = (
 
 export const buildIndexItems = (
   itemChanges: ListItemChange[],
-  previousLength?: number,
-  currentLength?: number,
 ): { oldItems: IndexItem[]; newItems: IndexItem[] } => {
   const oldItems: IndexItem[] = [];
   const newItems: IndexItem[] = [];
@@ -175,7 +173,7 @@ export const addGaps = (
     } else {
       // This index is unchanged, count consecutive unchanged items
       let unchangedCount = 0;
-      let startIdx = i;
+      const startIdx = i;
       while (i < totalLength && !itemsMap.has(i)) {
         unchangedCount++;
         i++;

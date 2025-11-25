@@ -1,9 +1,4 @@
 import { makeStyles, shorthands, tokens } from "@fluentui/react-components";
-import {
-  SPACING_SM,
-  SPACING_MD,
-  SPACING_XS,
-} from "./shared/styles/spacing";
 
 export const useNodeDiffsListStyles = makeStyles({
   container: {

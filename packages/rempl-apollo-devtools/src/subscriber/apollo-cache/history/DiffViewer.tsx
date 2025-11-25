@@ -39,7 +39,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   const nonVirtualizedContainerRef = useRef<HTMLDivElement>(null);
   const [currentChangeIndex, setCurrentChangeIndex] = useState(0);
 
-  const { hunks, totalLines, changeGroups, allChangeLines } = useMemo(() => {
+  const { hunks, totalLines, changeGroups } = useMemo(() => {
     const oldStr = formatValue(oldValue);
     const newStr = formatValue(newValue);
     const diffHunks = computeDiff(oldStr, newStr);
@@ -50,10 +50,6 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       startLine: number;
       endLine: number;
       type: "added" | "removed" | "mixed";
-    }> = [];
-    const allChangedLines: Array<{
-      lineIndex: number;
-      type: "added" | "removed";
     }> = [];
     let currentGroup: {
       startLine: number;
@@ -66,11 +62,6 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
       for (const line of hunk.lines) {
         if (line.type !== "context") {
-          allChangedLines.push({
-            lineIndex: lineCount,
-            type: line.type as "added" | "removed",
-          });
-
           if (!currentGroup) {
             currentGroup = {
               startLine: lineCount,
@@ -105,7 +96,6 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       hunks: diffHunks,
       totalLines: lineCount,
       changeGroups: groups,
-      allChangeLines: allChangedLines,
     };
   }, [oldValue, newValue]);
 

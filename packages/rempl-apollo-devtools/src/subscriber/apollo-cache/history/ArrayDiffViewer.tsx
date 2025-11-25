@@ -36,11 +36,7 @@ export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
   const summary = getSummary(itemChanges);
 
   // Build old and new index items
-  const { oldItems, newItems } = buildIndexItems(
-    itemChanges,
-    previousLength,
-    currentLength,
-  );
+  const { oldItems, newItems } = buildIndexItems(itemChanges);
 
   // Sort items by index
   const sortedOldItems = oldItems.sort((a, b) => a.index - b.index);

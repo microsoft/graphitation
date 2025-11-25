@@ -226,12 +226,6 @@ export const OptimisticUpdateDemo = () => {
     <div className={classes.container}>
       <div className={classes.header}>
         <Title3>Optimistic Updates Demo</Title3>
-        <Text className={classes.description}>
-          This demo shows optimistic updates in action. When you add, update, or
-          delete a message, the UI updates immediately (optimistically) before
-          the server responds. Check the Apollo DevTools to see optimistic
-          updates marked in the operation history!
-        </Text>
       </div>
 
       <Card className={classes.infoBox}>
