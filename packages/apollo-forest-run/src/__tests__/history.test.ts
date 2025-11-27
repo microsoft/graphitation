@@ -418,3 +418,47 @@ describe.each([true, false])("enableRichHistory: %p", (enableRichHistory) => {
     expect(historyWithoutData).toMatchSnapshot();
   });
 });
+
+describe("History getter", () => {
+  test("should call getter for history only when history is accessed", () => {
+    const historyModule = require("../values/history");
+    let getterCallCount = 0;
+
+    const appendHistoryToDataSpy = jest
+      .spyOn(historyModule, "appendHistoryToData")
+      .mockImplementation((tree: any) => {
+        Object.defineProperty(tree.result.data, OPERATION_HISTORY_SYMBOL, {
+          get() {
+            getterCallCount++;
+          },
+        });
+      });
+
+    const cache = new ForestRun({
+      historyConfig: {
+        overwrittenHistorySize: 1,
+      },
+    });
+
+    cache.write({
+      query: USER_QUERY,
+      result: { user: createUser("Alice v1") },
+    });
+    cache.write({
+      query: USER_QUERY,
+      result: { user: createUser("Alice v2") },
+    });
+
+    const data: any = cache.read({
+      query: USER_QUERY,
+      optimistic: true,
+    });
+    expect(appendHistoryToDataSpy).toHaveBeenCalledTimes(1);
+    expect(getterCallCount).toBe(0);
+
+    const _history = data[OPERATION_HISTORY_SYMBOL];
+    expect(getterCallCount).toBe(1);
+
+    appendHistoryToDataSpy.mockRestore();
+  });
+});
