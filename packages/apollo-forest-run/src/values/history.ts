@@ -43,7 +43,7 @@ function extractArrayChanges(
   layout: CompositeListLayoutDifference,
   oldData: SourceCompositeList,
   deletedKeys: Set<number> | undefined,
-  enableRichHistory: boolean = false,
+  enableRichHistory = false,
 ): { itemChanges: CompositeListLayoutChange[]; previousLength: number } {
   const itemChanges: CompositeListLayoutChange[] = [];
   let maxOldIndex = -1;
@@ -176,7 +176,7 @@ function processValueDifference(
       }
       break;
 
-    case DifferenceKind.CompositeListDifference:
+    case DifferenceKind.CompositeListDifference: {
       const { itemChanges, previousLength } = extractArrayChanges(
         valueDiff.layout ?? [],
         [],
@@ -191,6 +191,7 @@ function processValueDifference(
         currentLength: valueDiff.layout?.length ?? 0,
       });
       break;
+    }
   }
 }
 
