@@ -421,6 +421,7 @@ describe.each([true, false])("enableRichHistory: %p", (enableRichHistory) => {
 
 describe("History getter", () => {
   test("should call getter for history only when history is accessed", () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const historyModule = require("../values/history");
     let getterCallCount = 0;
 
