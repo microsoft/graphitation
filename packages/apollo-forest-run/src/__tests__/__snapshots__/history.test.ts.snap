@@ -429,39 +429,23 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
   {
     "history": [
       {
+        "changes": [
+          {
+            "kind": 0,
+            "newValue": "Alice (optimistic)",
+            "oldValue": "Alice",
+            "path": [
+              "User:1",
+              "name",
+            ],
+          },
+        ],
         "data": undefined,
         "kind": "Optimistic",
         "modifyingOperation": {
           "name": "query GetUserHistory",
           "variables": {},
         },
-        "nodeDiffs": [
-          {
-            "diff": {
-              "dirtyFields": [
-                "name",
-              ],
-              "errors": undefined,
-              "fieldQueue": [],
-              "fieldState": [
-                {
-                  "key": "name",
-                  "value": {
-                    "fieldEntry": "name",
-                    "kind": 4,
-                    "state": {
-                      "kind": 0,
-                      "newValue": "Alice (optimistic)",
-                      "oldValue": "Alice",
-                    },
-                  },
-                },
-              ],
-              "kind": 2,
-            },
-            "nodeKey": "User:1",
-          },
-        ],
         "timestamp": 1577836800000,
         "updatedNodes": [
           "ROOT_QUERY",
@@ -499,23 +483,20 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
 [
   [
     {
+      "changes": [
+        {
+          "kind": 0,
+          "path": [
+            "User:1",
+            "name",
+          ],
+        },
+      ],
       "kind": "Optimistic",
       "modifyingOperation": {
         "name": "query GetUserHistory",
         "variables": {},
       },
-      "nodeDiffs": [
-        {
-          "diff": {
-            "dirtyFields": [
-              "name",
-            ],
-            "errors": undefined,
-            "kind": 2,
-          },
-          "nodeKey": "User:1",
-        },
-      ],
       "timestamp": 1577836800000,
       "updatedNodes": [
         "ROOT_QUERY",
@@ -1311,6 +1292,17 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
   {
     "history": [
       {
+        "changes": [
+          {
+            "kind": 0,
+            "newValue": "Alice (optimistic)",
+            "oldValue": "Alice",
+            "path": [
+              "User:1",
+              "name",
+            ],
+          },
+        ],
         "data": {
           "current": {
             "data": {
@@ -1337,33 +1329,6 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
           "name": "query GetUserHistory",
           "variables": {},
         },
-        "nodeDiffs": [
-          {
-            "diff": {
-              "dirtyFields": [
-                "name",
-              ],
-              "errors": undefined,
-              "fieldQueue": [],
-              "fieldState": [
-                {
-                  "key": "name",
-                  "value": {
-                    "fieldEntry": "name",
-                    "kind": 4,
-                    "state": {
-                      "kind": 0,
-                      "newValue": "Alice (optimistic)",
-                      "oldValue": "Alice",
-                    },
-                  },
-                },
-              ],
-              "kind": 2,
-            },
-            "nodeKey": "User:1",
-          },
-        ],
         "timestamp": 1577836800000,
         "updatedNodes": [
           "ROOT_QUERY",
@@ -1429,23 +1394,20 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
 [
   [
     {
+      "changes": [
+        {
+          "kind": 0,
+          "path": [
+            "User:1",
+            "name",
+          ],
+        },
+      ],
       "kind": "Optimistic",
       "modifyingOperation": {
         "name": "query GetUserHistory",
         "variables": {},
       },
-      "nodeDiffs": [
-        {
-          "diff": {
-            "dirtyFields": [
-              "name",
-            ],
-            "errors": undefined,
-            "kind": 2,
-          },
-          "nodeKey": "User:1",
-        },
-      ],
       "timestamp": 1577836800000,
       "updatedNodes": [
         "ROOT_QUERY",
