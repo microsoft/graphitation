@@ -4,7 +4,6 @@ import { Info16Regular } from "@fluentui/react-icons";
 import type { HistoryChangeSerialized } from "@graphitation/apollo-forest-run";
 import { OperationMetadata } from "./components";
 import { FieldChangesList } from "./FieldChangesList";
-import { NodeDiffsList } from "./NodeDiffsList";
 import { SectionCard } from "./SectionCard";
 import { useHistoryDetailsStyles } from "./HistoryDetails.styles";
 import { MissingFieldsSection } from "./components/MissingFieldsSection";
@@ -31,15 +30,25 @@ export const HistoryDetails: React.FC<HistoryDetailsProps> = ({ entry }) => {
   const incomingValue = data?.incoming;
   const currentValue = data?.current;
 
-  const fieldChangeCount = entry.kind === "Regular" ? entry.changes.length : 0;
+  const fieldChangeCount = entry.changes.length;
   const fieldChangeLabel = `${fieldChangeCount} ${
     fieldChangeCount === 1 ? "change" : "changes"
   }`;
-  const nodeDiffCount =
-    entry.kind === "Optimistic" ? entry.nodeDiffs.length : 0;
-  const nodeDiffLabel = `${nodeDiffCount} ${
-    nodeDiffCount === 1 ? "node difference" : "node differences"
-  }`;
+
+  const isOptimistic = entry.kind === "Optimistic";
+  const OptimisticTitle = () => (
+    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      Field Changes
+      <Tooltip
+        content="Not all changes necessarily were applied to this query's result. For optimistic updates we displaying all changes made in cache not specifically for this query."
+        relationship="description"
+      >
+        <span style={{ display: "inline-flex", cursor: "help" }}>
+          <Info16Regular />
+        </span>
+      </Tooltip>
+    </div>
+  );
 
   return (
     <div className={classes.root}>
@@ -63,38 +72,16 @@ export const HistoryDetails: React.FC<HistoryDetailsProps> = ({ entry }) => {
             <MissingFieldsSection missingFields={entry.missingFields} />
           )}
 
-          {/* Changes or Node Diffs */}
-          {entry.kind === "Regular" ? (
-            <SectionCard
-              title="Field Changes"
-              badge={fieldChangeLabel}
-              defaultExpanded={true}
-            >
-              <FieldChangesList changes={entry.changes} />
-            </SectionCard>
-          ) : (
-            <SectionCard
-              title={
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
-                >
-                  Node Differences
-                  <Tooltip
-                    content="Optimistic updates may contain changes that are not fully applied to the cache if they don't match the query structure."
-                    relationship="description"
-                  >
-                    <span style={{ display: "inline-flex", cursor: "help" }}>
-                      <Info16Regular />
-                    </span>
-                  </Tooltip>
-                </div>
-              }
-              badge={nodeDiffLabel}
-              defaultExpanded={true}
-            >
-              <NodeDiffsList nodeDiffs={entry.nodeDiffs} />
-            </SectionCard>
-          )}
+          <SectionCard
+            title={isOptimistic ? <OptimisticTitle /> : "Field Changes"}
+            badge={fieldChangeLabel}
+            defaultExpanded={true}
+          >
+            <FieldChangesList
+              changes={entry.changes}
+              isOptimistic={isOptimistic}
+            />
+          </SectionCard>
 
           {/* Data Snapshots */}
           <DataSnapshotsSection

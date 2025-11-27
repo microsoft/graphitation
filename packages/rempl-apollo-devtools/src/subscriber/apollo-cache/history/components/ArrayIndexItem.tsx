@@ -1,5 +1,5 @@
 import React from "react";
-import { Text } from "@fluentui/react-components";
+import { Text, Tooltip } from "@fluentui/react-components";
 import type { IndexItem } from "./arrayDiffUtils";
 import { formatValueForDisplay, formatDataPreview } from "./arrayDiffUtils";
 import { useArrayDiffViewerStyles } from "../ArrayDiffViewer.styles";
@@ -8,6 +8,7 @@ interface ArrayIndexItemProps {
   item: IndexItem;
   isExpanded: boolean;
   isOld: boolean;
+  isOptimistic?: boolean;
   hoveredIndex: number | null;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
@@ -19,6 +20,7 @@ export const ArrayIndexItem: React.FC<ArrayIndexItemProps> = ({
   item,
   isExpanded,
   isOld,
+  isOptimistic,
   hoveredIndex,
   onMouseEnter,
   onMouseLeave,
@@ -27,6 +29,7 @@ export const ArrayIndexItem: React.FC<ArrayIndexItemProps> = ({
 }) => {
   const classes = useArrayDiffViewerStyles();
   const isUnchanged = item.state === "unchanged";
+  const isDataUnavailable = isOptimistic && item.data === undefined;
 
   if (isUnchanged) {
     return (
@@ -83,13 +86,29 @@ export const ArrayIndexItem: React.FC<ArrayIndexItemProps> = ({
     hoveredIndex === item.index &&
     (isOld ? item.newIndex !== undefined : item.oldIndex !== undefined);
 
+  const renderContent = () => {
+    if (isDataUnavailable) {
+      return (
+        <Tooltip
+          content="Data not available for optimistic updates."
+          relationship="description"
+        >
+          <span>not available</span>
+        </Tooltip>
+      );
+    }
+    return isExpanded
+      ? formatValueForDisplay(item.data)
+      : formatDataPreview(item.data);
+  };
+
   return (
     <div
       className={classes.indexBox}
       ref={setRef}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      onClick={onClick}
+      onClick={isOptimistic ? undefined : onClick}
     >
       <div className={classes.indexLabel}>
         <Text>[{item.index}]</Text>
@@ -97,11 +116,7 @@ export const ArrayIndexItem: React.FC<ArrayIndexItemProps> = ({
           {item.state}
         </Text>
       </div>
-      <div className={getContentClassName()}>
-        {isExpanded
-          ? formatValueForDisplay(item.data)
-          : formatDataPreview(item.data)}
-      </div>
+      <div className={getContentClassName()}>{renderContent()}</div>
       {showHoverInfo && (
         <Text className={classes.hoverInfo}>
           {isOld

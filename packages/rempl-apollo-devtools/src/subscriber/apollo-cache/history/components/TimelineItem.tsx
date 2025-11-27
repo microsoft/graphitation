@@ -26,13 +26,14 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
   const classes = useTimelineItemStyles();
 
   const hasIncompleteData =
-    entry.missingFields && entry.missingFields.length > 0;
+    entry.kind === "Regular" &&
+    entry.missingFields &&
+    entry.missingFields.length > 0;
   const missingFieldsCount = hasIncompleteData
     ? entry.missingFields!.reduce((sum, mf) => sum + mf.fields.length, 0)
     : 0;
 
-  const changeCount =
-    entry.kind === "Regular" ? entry.changes.length : entry.nodeDiffs.length;
+  const changeCount = entry.changes.length;
 
   const isOptimistic = entry.kind === "Optimistic";
 

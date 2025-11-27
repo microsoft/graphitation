@@ -8,6 +8,7 @@ interface ArrayRowProps {
   label: string;
   items: (IndexItem | "gap")[];
   isOld: boolean;
+  isOptimistic?: boolean;
   expandedIndex: number | null;
   hoveredOldIndex: number | null;
   hoveredNewIndex: number | null;
@@ -22,6 +23,7 @@ export const ArrayRow: React.FC<ArrayRowProps> = ({
   label,
   items,
   isOld,
+  isOptimistic,
   expandedIndex,
   hoveredOldIndex,
   hoveredNewIndex,
@@ -71,6 +73,7 @@ export const ArrayRow: React.FC<ArrayRowProps> = ({
                   item={item}
                   isExpanded={isExpanded}
                   isOld={isOld}
+                  isOptimistic={isOptimistic}
                   hoveredIndex={hoveredIndex}
                   onMouseEnter={() => {
                     if (item.state === "moved") {

@@ -6,10 +6,12 @@ import { FieldChangeItem } from "./components/FieldChangeItem";
 
 interface FieldChangesListProps {
   changes: HistoryFieldChange[];
+  isOptimistic?: boolean;
 }
 
 export const FieldChangesList: React.FC<FieldChangesListProps> = ({
   changes,
+  isOptimistic,
 }) => {
   const classes = useFieldChangesListStyles();
 
@@ -24,7 +26,11 @@ export const FieldChangesList: React.FC<FieldChangesListProps> = ({
   return (
     <div className={classes.container}>
       {changes.map((change, index) => (
-        <FieldChangeItem key={index} change={change} />
+        <FieldChangeItem
+          key={index}
+          change={change}
+          isOptimistic={isOptimistic}
+        />
       ))}
     </div>
   );

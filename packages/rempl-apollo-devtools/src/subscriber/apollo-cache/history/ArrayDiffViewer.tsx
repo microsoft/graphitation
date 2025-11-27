@@ -15,12 +15,14 @@ interface ArrayDiffViewerProps {
   itemChanges: ListItemChange[];
   previousLength?: number;
   currentLength?: number;
+  isOptimistic?: boolean;
 }
 
 export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
   itemChanges,
   previousLength,
   currentLength,
+  isOptimistic,
 }) => {
   const classes = useArrayDiffViewerStyles();
   const [showVisual, setShowVisual] = useState(true);
@@ -84,6 +86,7 @@ export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
           label="Old Array (Before):"
           items={oldItemsWithGaps}
           isOld={true}
+          isOptimistic={isOptimistic}
           expandedIndex={expandedOldIndex}
           hoveredOldIndex={hoveredOldIndex}
           hoveredNewIndex={hoveredNewIndex}
@@ -118,6 +121,7 @@ export const ArrayDiffViewer: React.FC<ArrayDiffViewerProps> = ({
           label="New Array (After):"
           items={newItemsWithGaps}
           isOld={false}
+          isOptimistic={isOptimistic}
           expandedIndex={expandedNewIndex}
           hoveredOldIndex={hoveredOldIndex}
           hoveredNewIndex={hoveredNewIndex}
