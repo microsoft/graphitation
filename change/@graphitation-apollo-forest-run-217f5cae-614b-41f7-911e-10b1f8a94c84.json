@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "fix optimistic updates for array modifications",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "pavelglac@gmail.com",
-  "dependentChangeType": "patch"
-}
