@@ -313,6 +313,9 @@ export function stripDataFromHistory(history: HistoryChangeSerialized[]) {
 
     return {
       ...entryRest,
+      modifyingOperation: {
+        name: entry.modifyingOperation?.name,
+      },
       changes: entry.changes.map((change) => {
         switch (change.kind) {
           case DifferenceKind.Replacement: {

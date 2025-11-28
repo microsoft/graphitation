@@ -89,7 +89,6 @@ exports[`enableRichHistory: false should capture list changes in history entries
     "missingFields": [],
     "modifyingOperation": {
       "name": "query GetTodoHistory",
-      "variables": {},
     },
     "timestamp": 1577836800000,
   },
@@ -223,7 +222,6 @@ exports[`enableRichHistory: false should capture missing fields in history entri
       ],
       "modifyingOperation": {
         "name": "query GetTodoHistory",
-        "variables": {},
       },
       "timestamp": 1577836800000,
     },
@@ -371,7 +369,6 @@ exports[`enableRichHistory: false should capture optimistic array changes in his
       "kind": "Optimistic",
       "modifyingOperation": {
         "name": "query GetTodoHistory",
-        "variables": {},
       },
       "timestamp": 1577836800000,
       "updatedNodes": [
@@ -416,7 +413,6 @@ exports[`enableRichHistory: false should capture optimistic array changes in his
       "missingFields": [],
       "modifyingOperation": {
         "name": "query GetTodoHistory",
-        "variables": {},
       },
       "timestamp": 1577836800000,
     },
@@ -495,7 +491,6 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
       "kind": "Optimistic",
       "modifyingOperation": {
         "name": "query GetUserHistory",
-        "variables": {},
       },
       "timestamp": 1577836800000,
       "updatedNodes": [
@@ -517,7 +512,6 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
       "missingFields": [],
       "modifyingOperation": {
         "name": "query GetUserHistory",
-        "variables": {},
       },
       "timestamp": 1577836800000,
     },
@@ -570,7 +564,6 @@ exports[`enableRichHistory: false should capture value changes in history entrie
     "missingFields": [],
     "modifyingOperation": {
       "name": "query GetUserHistory",
-      "variables": {},
     },
     "timestamp": 1577836800000,
   },
@@ -760,7 +753,6 @@ exports[`enableRichHistory: true should capture list changes in history entries 
     "missingFields": [],
     "modifyingOperation": {
       "name": "query GetTodoHistory",
-      "variables": {},
     },
     "timestamp": 1577836800000,
   },
@@ -950,7 +942,6 @@ exports[`enableRichHistory: true should capture missing fields in history entrie
       ],
       "modifyingOperation": {
         "name": "query GetTodoHistory",
-        "variables": {},
       },
       "timestamp": 1577836800000,
     },
@@ -1233,7 +1224,6 @@ exports[`enableRichHistory: true should capture optimistic array changes in hist
       "kind": "Optimistic",
       "modifyingOperation": {
         "name": "query GetTodoHistory",
-        "variables": {},
       },
       "timestamp": 1577836800000,
       "updatedNodes": [
@@ -1279,7 +1269,6 @@ exports[`enableRichHistory: true should capture optimistic array changes in hist
       "missingFields": [],
       "modifyingOperation": {
         "name": "query GetTodoHistory",
-        "variables": {},
       },
       "timestamp": 1577836800000,
     },
@@ -1406,7 +1395,6 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
       "kind": "Optimistic",
       "modifyingOperation": {
         "name": "query GetUserHistory",
-        "variables": {},
       },
       "timestamp": 1577836800000,
       "updatedNodes": [
@@ -1428,7 +1416,6 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
       "missingFields": [],
       "modifyingOperation": {
         "name": "query GetUserHistory",
-        "variables": {},
       },
       "timestamp": 1577836800000,
     },
@@ -1509,7 +1496,6 @@ exports[`enableRichHistory: true should capture value changes in history entries
     "missingFields": [],
     "modifyingOperation": {
       "name": "query GetUserHistory",
-      "variables": {},
     },
     "timestamp": 1577836800000,
   },
