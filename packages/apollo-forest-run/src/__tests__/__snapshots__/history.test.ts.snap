@@ -89,7 +89,6 @@ exports[`enableRichHistory: false should capture list changes in history entries
     "missingFields": [],
     "modifyingOperation": {
       "name": "query GetTodoHistory",
-      "variables": {},
     },
     "timestamp": 1577836800000,
   },
@@ -223,7 +222,197 @@ exports[`enableRichHistory: false should capture missing fields in history entri
       ],
       "modifyingOperation": {
         "name": "query GetTodoHistory",
-        "variables": {},
+      },
+      "timestamp": 1577836800000,
+    },
+  ],
+]
+`;
+
+exports[`enableRichHistory: false should capture optimistic array changes in history entries 1`] = `
+[
+  {
+    "history": [
+      {
+        "changes": [
+          {
+            "currentLength": 3,
+            "itemChanges": [
+              {
+                "data": undefined,
+                "index": 0,
+                "kind": 0,
+              },
+              {
+                "data": undefined,
+                "index": 1,
+                "kind": 2,
+                "oldIndex": 0,
+              },
+              {
+                "data": undefined,
+                "index": 2,
+                "kind": 0,
+              },
+              {
+                "data": undefined,
+                "kind": 1,
+                "oldIndex": 1,
+              },
+            ],
+            "kind": 3,
+            "path": [
+              "User:1",
+              "todos",
+            ],
+            "previousLength": 2,
+          },
+        ],
+        "data": undefined,
+        "kind": "Optimistic",
+        "modifyingOperation": {
+          "name": "query GetTodoHistory",
+          "variables": {},
+        },
+        "timestamp": 1577836800000,
+        "updatedNodes": [
+          "ROOT_QUERY",
+          "User:1",
+          "Todo:3",
+          "Todo:1",
+          "Todo:4",
+        ],
+      },
+      {
+        "changes": [
+          {
+            "currentLength": 3,
+            "itemChanges": [
+              {
+                "data": undefined,
+                "index": 0,
+                "kind": 0,
+              },
+              {
+                "data": undefined,
+                "index": 1,
+                "kind": 2,
+                "oldIndex": 0,
+              },
+              {
+                "data": undefined,
+                "index": 2,
+                "kind": 0,
+              },
+              {
+                "data": undefined,
+                "kind": 1,
+                "oldIndex": 1,
+              },
+            ],
+            "kind": 3,
+            "path": [
+              "Enable enableRichHistory for full path",
+            ],
+            "previousLength": 2,
+          },
+        ],
+        "data": undefined,
+        "kind": "Regular",
+        "missingFields": [],
+        "modifyingOperation": {
+          "name": "query GetTodoHistory",
+          "variables": {},
+        },
+        "timestamp": 1577836800000,
+      },
+    ],
+    "totalEntries": 2,
+  },
+]
+`;
+
+exports[`enableRichHistory: false should capture optimistic array changes in history entries 2`] = `
+[
+  [
+    {
+      "changes": [
+        {
+          "currentLength": 3,
+          "itemChanges": [
+            {
+              "index": 0,
+              "kind": 0,
+            },
+            {
+              "index": 1,
+              "kind": 2,
+              "oldIndex": 0,
+            },
+            {
+              "index": 2,
+              "kind": 0,
+            },
+            {
+              "kind": 1,
+              "oldIndex": 1,
+            },
+          ],
+          "kind": 3,
+          "path": [
+            "User:1",
+            "todos",
+          ],
+          "previousLength": 2,
+        },
+      ],
+      "kind": "Optimistic",
+      "modifyingOperation": {
+        "name": "query GetTodoHistory",
+      },
+      "timestamp": 1577836800000,
+      "updatedNodes": [
+        "ROOT_QUERY",
+        "User:1",
+        "Todo:3",
+        "Todo:1",
+        "Todo:4",
+      ],
+    },
+    {
+      "changes": [
+        {
+          "currentLength": 3,
+          "itemChanges": [
+            {
+              "index": 0,
+              "kind": 0,
+            },
+            {
+              "index": 1,
+              "kind": 2,
+              "oldIndex": 0,
+            },
+            {
+              "index": 2,
+              "kind": 0,
+            },
+            {
+              "kind": 1,
+              "oldIndex": 1,
+            },
+          ],
+          "kind": 3,
+          "path": [
+            "Enable enableRichHistory for full path",
+          ],
+          "previousLength": 2,
+        },
+      ],
+      "kind": "Regular",
+      "missingFields": [],
+      "modifyingOperation": {
+        "name": "query GetTodoHistory",
       },
       "timestamp": 1577836800000,
     },
@@ -236,39 +425,23 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
   {
     "history": [
       {
+        "changes": [
+          {
+            "kind": 0,
+            "newValue": "Alice (optimistic)",
+            "oldValue": "Alice",
+            "path": [
+              "User:1",
+              "name",
+            ],
+          },
+        ],
         "data": undefined,
         "kind": "Optimistic",
         "modifyingOperation": {
           "name": "query GetUserHistory",
           "variables": {},
         },
-        "nodeDiffs": [
-          {
-            "diff": {
-              "dirtyFields": [
-                "name",
-              ],
-              "errors": undefined,
-              "fieldQueue": [],
-              "fieldState": [
-                {
-                  "key": "name",
-                  "value": {
-                    "fieldEntry": "name",
-                    "kind": 4,
-                    "state": {
-                      "kind": 0,
-                      "newValue": "Alice (optimistic)",
-                      "oldValue": "Alice",
-                    },
-                  },
-                },
-              ],
-              "kind": 2,
-            },
-            "nodeKey": "User:1",
-          },
-        ],
         "timestamp": 1577836800000,
         "updatedNodes": [
           "ROOT_QUERY",
@@ -306,23 +479,19 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
 [
   [
     {
+      "changes": [
+        {
+          "kind": 0,
+          "path": [
+            "User:1",
+            "name",
+          ],
+        },
+      ],
       "kind": "Optimistic",
       "modifyingOperation": {
         "name": "query GetUserHistory",
-        "variables": {},
       },
-      "nodeDiffs": [
-        {
-          "diff": {
-            "dirtyFields": [
-              "name",
-            ],
-            "errors": undefined,
-            "kind": 2,
-          },
-          "nodeKey": "User:1",
-        },
-      ],
       "timestamp": 1577836800000,
       "updatedNodes": [
         "ROOT_QUERY",
@@ -343,7 +512,6 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
       "missingFields": [],
       "modifyingOperation": {
         "name": "query GetUserHistory",
-        "variables": {},
       },
       "timestamp": 1577836800000,
     },
@@ -396,7 +564,6 @@ exports[`enableRichHistory: false should capture value changes in history entrie
     "missingFields": [],
     "modifyingOperation": {
       "name": "query GetUserHistory",
-      "variables": {},
     },
     "timestamp": 1577836800000,
   },
@@ -586,7 +753,6 @@ exports[`enableRichHistory: true should capture list changes in history entries 
     "missingFields": [],
     "modifyingOperation": {
       "name": "query GetTodoHistory",
-      "variables": {},
     },
     "timestamp": 1577836800000,
   },
@@ -776,7 +942,333 @@ exports[`enableRichHistory: true should capture missing fields in history entrie
       ],
       "modifyingOperation": {
         "name": "query GetTodoHistory",
-        "variables": {},
+      },
+      "timestamp": 1577836800000,
+    },
+  ],
+]
+`;
+
+exports[`enableRichHistory: true should capture optimistic array changes in history entries 1`] = `
+[
+  {
+    "history": [
+      {
+        "changes": [
+          {
+            "currentLength": 3,
+            "itemChanges": [
+              {
+                "data": undefined,
+                "index": 0,
+                "kind": 0,
+              },
+              {
+                "data": undefined,
+                "index": 1,
+                "kind": 2,
+                "oldIndex": 0,
+              },
+              {
+                "data": undefined,
+                "index": 2,
+                "kind": 0,
+              },
+              {
+                "data": undefined,
+                "kind": 1,
+                "oldIndex": 1,
+              },
+            ],
+            "kind": 3,
+            "path": [
+              "User:1",
+              "todos",
+            ],
+            "previousLength": 2,
+          },
+        ],
+        "data": {
+          "current": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "todos": [
+                  {
+                    "__typename": "Todo",
+                    "id": "1",
+                    "text": "Write tests",
+                  },
+                  {
+                    "__typename": "Todo",
+                    "id": "2",
+                    "text": "Fix bug",
+                  },
+                ],
+              },
+            },
+          },
+          "incoming": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "todos": [
+                  {
+                    "__typename": "Todo",
+                    "id": "3",
+                    "text": "New task",
+                  },
+                  {
+                    "__typename": "Todo",
+                    "id": "1",
+                    "text": "Write tests",
+                  },
+                  {
+                    "__typename": "Todo",
+                    "id": "4",
+                    "text": "Another new task",
+                  },
+                ],
+              },
+            },
+          },
+          "updated": undefined,
+        },
+        "kind": "Optimistic",
+        "modifyingOperation": {
+          "name": "query GetTodoHistory",
+          "variables": {},
+        },
+        "timestamp": 1577836800000,
+        "updatedNodes": [
+          "ROOT_QUERY",
+          "User:1",
+          "Todo:3",
+          "Todo:1",
+          "Todo:4",
+        ],
+      },
+      {
+        "changes": [
+          {
+            "currentLength": 3,
+            "itemChanges": [
+              {
+                "data": {
+                  "__typename": "Todo",
+                  "id": "3",
+                  "text": "New task",
+                },
+                "index": 0,
+                "kind": 0,
+              },
+              {
+                "data": {
+                  "__typename": "Todo",
+                  "id": "1",
+                  "text": "Write tests",
+                },
+                "index": 1,
+                "kind": 2,
+                "oldIndex": 0,
+              },
+              {
+                "data": {
+                  "__typename": "Todo",
+                  "id": "4",
+                  "text": "Another new task",
+                },
+                "index": 2,
+                "kind": 0,
+              },
+              {
+                "data": {
+                  "__typename": "Todo",
+                  "id": "2",
+                  "text": "Fix bug",
+                },
+                "kind": 1,
+                "oldIndex": 1,
+              },
+            ],
+            "kind": 3,
+            "path": [
+              "user",
+              "todos",
+            ],
+            "previousLength": 2,
+          },
+        ],
+        "data": {
+          "current": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "todos": [
+                  {
+                    "__typename": "Todo",
+                    "id": "1",
+                    "text": "Write tests",
+                  },
+                  {
+                    "__typename": "Todo",
+                    "id": "2",
+                    "text": "Fix bug",
+                  },
+                ],
+              },
+            },
+          },
+          "incoming": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "todos": [
+                  {
+                    "__typename": "Todo",
+                    "id": "3",
+                    "text": "New task",
+                  },
+                  {
+                    "__typename": "Todo",
+                    "id": "1",
+                    "text": "Write tests",
+                  },
+                  {
+                    "__typename": "Todo",
+                    "id": "4",
+                    "text": "Another new task",
+                  },
+                ],
+              },
+            },
+          },
+          "updated": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "todos": [
+                  {
+                    "__typename": "Todo",
+                    "id": "3",
+                    "text": "New task",
+                  },
+                  {
+                    "__typename": "Todo",
+                    "id": "1",
+                    "text": "Write tests",
+                  },
+                  {
+                    "__typename": "Todo",
+                    "id": "4",
+                    "text": "Another new task",
+                  },
+                ],
+              },
+            },
+          },
+        },
+        "kind": "Regular",
+        "missingFields": [],
+        "modifyingOperation": {
+          "name": "query GetTodoHistory",
+          "variables": {},
+        },
+        "timestamp": 1577836800000,
+      },
+    ],
+    "totalEntries": 2,
+  },
+]
+`;
+
+exports[`enableRichHistory: true should capture optimistic array changes in history entries 2`] = `
+[
+  [
+    {
+      "changes": [
+        {
+          "currentLength": 3,
+          "itemChanges": [
+            {
+              "index": 0,
+              "kind": 0,
+            },
+            {
+              "index": 1,
+              "kind": 2,
+              "oldIndex": 0,
+            },
+            {
+              "index": 2,
+              "kind": 0,
+            },
+            {
+              "kind": 1,
+              "oldIndex": 1,
+            },
+          ],
+          "kind": 3,
+          "path": [
+            "User:1",
+            "todos",
+          ],
+          "previousLength": 2,
+        },
+      ],
+      "kind": "Optimistic",
+      "modifyingOperation": {
+        "name": "query GetTodoHistory",
+      },
+      "timestamp": 1577836800000,
+      "updatedNodes": [
+        "ROOT_QUERY",
+        "User:1",
+        "Todo:3",
+        "Todo:1",
+        "Todo:4",
+      ],
+    },
+    {
+      "changes": [
+        {
+          "currentLength": 3,
+          "itemChanges": [
+            {
+              "index": 0,
+              "kind": 0,
+            },
+            {
+              "index": 1,
+              "kind": 2,
+              "oldIndex": 0,
+            },
+            {
+              "index": 2,
+              "kind": 0,
+            },
+            {
+              "kind": 1,
+              "oldIndex": 1,
+            },
+          ],
+          "kind": 3,
+          "path": [
+            "user",
+            "todos",
+          ],
+          "previousLength": 2,
+        },
+      ],
+      "kind": "Regular",
+      "missingFields": [],
+      "modifyingOperation": {
+        "name": "query GetTodoHistory",
       },
       "timestamp": 1577836800000,
     },
@@ -789,6 +1281,17 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
   {
     "history": [
       {
+        "changes": [
+          {
+            "kind": 0,
+            "newValue": "Alice (optimistic)",
+            "oldValue": "Alice",
+            "path": [
+              "User:1",
+              "name",
+            ],
+          },
+        ],
         "data": {
           "current": {
             "data": {
@@ -815,33 +1318,6 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
           "name": "query GetUserHistory",
           "variables": {},
         },
-        "nodeDiffs": [
-          {
-            "diff": {
-              "dirtyFields": [
-                "name",
-              ],
-              "errors": undefined,
-              "fieldQueue": [],
-              "fieldState": [
-                {
-                  "key": "name",
-                  "value": {
-                    "fieldEntry": "name",
-                    "kind": 4,
-                    "state": {
-                      "kind": 0,
-                      "newValue": "Alice (optimistic)",
-                      "oldValue": "Alice",
-                    },
-                  },
-                },
-              ],
-              "kind": 2,
-            },
-            "nodeKey": "User:1",
-          },
-        ],
         "timestamp": 1577836800000,
         "updatedNodes": [
           "ROOT_QUERY",
@@ -907,23 +1383,19 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
 [
   [
     {
+      "changes": [
+        {
+          "kind": 0,
+          "path": [
+            "User:1",
+            "name",
+          ],
+        },
+      ],
       "kind": "Optimistic",
       "modifyingOperation": {
         "name": "query GetUserHistory",
-        "variables": {},
       },
-      "nodeDiffs": [
-        {
-          "diff": {
-            "dirtyFields": [
-              "name",
-            ],
-            "errors": undefined,
-            "kind": 2,
-          },
-          "nodeKey": "User:1",
-        },
-      ],
       "timestamp": 1577836800000,
       "updatedNodes": [
         "ROOT_QUERY",
@@ -944,7 +1416,6 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
       "missingFields": [],
       "modifyingOperation": {
         "name": "query GetUserHistory",
-        "variables": {},
       },
       "timestamp": 1577836800000,
     },
@@ -1025,7 +1496,6 @@ exports[`enableRichHistory: true should capture value changes in history entries
     "missingFields": [],
     "modifyingOperation": {
       "name": "query GetUserHistory",
-      "variables": {},
     },
     "timestamp": 1577836800000,
   },

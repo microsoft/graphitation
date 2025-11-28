@@ -11,19 +11,25 @@ import type {
   CompositeListLayoutChange,
   CompositeListLayoutDifference,
   NodeDifferenceMap,
-  SerializedNodeDifference,
+  ValueDifference,
 } from "../diff/types";
 import { createParentLocator, getDataPathForDebugging } from "./traverse";
-import { MissingFieldsSerialized, SourceCompositeList } from "./types";
+import {
+  CompositeListChunk,
+  MissingFieldsSerialized,
+  ObjectChunk,
+  SourceCompositeList,
+} from "./types";
 import { isCompositeListEntryTuple } from "./predicates";
 
 import * as ChangeKind from "../diff/itemChangeKind";
 import * as DifferenceKind from "../diff/differenceKind";
 import { OPERATION_HISTORY_SYMBOL } from "../descriptor/operation";
+import { getSourceValue } from "../forest/updateObject";
 
 function getChunkPath(
   currentTree: IndexedTree,
-  chunk: any,
+  chunk: CompositeListChunk | ObjectChunk,
   enableRichHistory: boolean,
 ): (string | number)[] {
   if (!enableRichHistory) {
@@ -37,16 +43,18 @@ function extractArrayChanges(
   layout: CompositeListLayoutDifference,
   oldData: SourceCompositeList,
   deletedKeys: Set<number> | undefined,
-  env: ForestEnv,
-): CompositeListLayoutChange[] {
-  const enableRichHistory = env.historyConfig?.enableRichHistory ?? false;
-  const changes: CompositeListLayoutChange[] = [];
+  enableRichHistory = false,
+): { itemChanges: CompositeListLayoutChange[]; previousLength: number } {
+  const itemChanges: CompositeListLayoutChange[] = [];
+  let maxOldIndex = -1;
+
   for (let index = 0; index < layout.length; index++) {
     const layoutValue = layout[index];
 
     if (typeof layoutValue === "number") {
+      maxOldIndex = Math.max(maxOldIndex, layoutValue);
       if (layoutValue !== index) {
-        changes.push({
+        itemChanges.push({
           kind: ChangeKind.ItemIndexChange,
           index,
           oldIndex: layoutValue,
@@ -57,7 +65,7 @@ function extractArrayChanges(
     } else if (layoutValue === null && oldData[index] === null) {
       continue;
     } else {
-      changes.push({
+      itemChanges.push({
         kind: ChangeKind.ItemAdd,
         index,
         data: enableRichHistory
@@ -72,7 +80,8 @@ function extractArrayChanges(
   if (deletedKeys) {
     for (const deletedKey of deletedKeys) {
       const index = deletedKey;
-      changes.push({
+      maxOldIndex = Math.max(maxOldIndex, index);
+      itemChanges.push({
         kind: ChangeKind.ItemRemove,
         oldIndex: index,
         data: enableRichHistory ? oldData[index] : undefined,
@@ -80,7 +89,7 @@ function extractArrayChanges(
     }
   }
 
-  return changes;
+  return { itemChanges, previousLength: maxOldIndex + 1 };
 }
 
 function getChanges(
@@ -100,17 +109,17 @@ function getChanges(
     if (isCompositeListEntryTuple(tuple)) {
       const [chunk, fieldChanges] = tuple;
       const layout = fieldChanges.layout;
-      const itemChanges = extractArrayChanges(
+      const { itemChanges, previousLength } = extractArrayChanges(
         layout ?? [],
         chunk.data,
         fieldChanges.deletedKeys,
-        env,
+        env.historyConfig?.enableRichHistory ?? false,
       );
       changes.push({
         path: chunkPath,
         kind: fieldChanges.kind,
         itemChanges,
-        previousLength: chunk.data.length,
+        previousLength,
         currentLength: layout?.length ?? 0,
       });
     } else {
@@ -126,6 +135,64 @@ function getChanges(
   }
 
   return changes;
+}
+
+function processValueDifference(
+  basePath: (string | number)[],
+  valueDiff: ValueDifference,
+  changes: HistoryFieldChange[],
+) {
+  switch (valueDiff.kind) {
+    case DifferenceKind.Replacement:
+      changes.push({
+        path: basePath,
+        kind: valueDiff.kind,
+        oldValue: getSourceValue(valueDiff.oldValue),
+        newValue: getSourceValue(valueDiff.newValue),
+      });
+      break;
+
+    case DifferenceKind.Filler:
+      changes.push({
+        path: basePath,
+        kind: valueDiff.kind,
+        newValue: getSourceValue(valueDiff.newValue),
+      });
+      break;
+
+    case DifferenceKind.ObjectDifference:
+      for (const [nestedFieldName, nestedFieldDiff] of valueDiff.fieldState) {
+        const nestedFieldDiffs = Array.isArray(nestedFieldDiff)
+          ? nestedFieldDiff
+          : [nestedFieldDiff];
+
+        for (const nestedFieldEntry of nestedFieldDiffs) {
+          processValueDifference(
+            [...basePath, nestedFieldName],
+            nestedFieldEntry.state,
+            changes,
+          );
+        }
+      }
+      break;
+
+    case DifferenceKind.CompositeListDifference: {
+      const { itemChanges, previousLength } = extractArrayChanges(
+        valueDiff.layout ?? [],
+        [],
+        valueDiff.deletedKeys,
+      );
+
+      changes.push({
+        path: basePath,
+        kind: DifferenceKind.CompositeListDifference,
+        itemChanges,
+        previousLength,
+        currentLength: valueDiff.layout?.length ?? 0,
+      });
+      break;
+    }
+  }
 }
 
 export function createRegularHistoryEntry(
@@ -208,28 +275,33 @@ export function serializeHistory(
         missingFields,
       };
     } else {
-      const nodeDiffs: SerializedNodeDifference[] = [];
+      const changes: HistoryFieldChange[] = [];
+
       if (entry.nodeDiffs) {
         for (const [nodeKey, diff] of entry.nodeDiffs) {
-          const { fieldState, fieldQueue, dirtyFields, ...restDiff } = diff;
-          const serializedDiff = {
-            ...restDiff,
-            fieldState: Array.from(fieldState.entries()).map(
-              ([key, value]) => ({
-                key,
-                value,
-              }),
-            ),
-            fieldQueue: Array.from(fieldQueue),
-            dirtyFields: dirtyFields ? Array.from(dirtyFields) : undefined,
-          };
-          nodeDiffs.push({ nodeKey, diff: serializedDiff });
+          for (const [fieldName, fieldDiff] of diff.fieldState) {
+            const fieldDiffs = Array.isArray(fieldDiff)
+              ? fieldDiff
+              : [fieldDiff];
+
+            for (const fieldEntry of fieldDiffs) {
+              processValueDifference(
+                [nodeKey, fieldName],
+                fieldEntry.state,
+                changes,
+              );
+            }
+          }
         }
       }
 
       return {
-        ...entry,
-        nodeDiffs,
+        kind: entry.kind,
+        updatedNodes: entry.updatedNodes,
+        changes,
+        timestamp: entry.timestamp,
+        modifyingOperation: entry.modifyingOperation,
+        data: entry.data,
       };
     }
   });
@@ -239,50 +311,36 @@ export function stripDataFromHistory(history: HistoryChangeSerialized[]) {
   return history.map((entry) => {
     const { data: _data, ...entryRest } = entry;
 
-    if (entry.kind === "Regular") {
-      return {
-        ...entryRest,
-        changes: entry.changes.map((change) => {
-          switch (change.kind) {
-            case DifferenceKind.Replacement: {
-              const {
-                oldValue: _oldValue,
-                newValue: _newValue,
-                ...changeRest
-              } = change;
-              return changeRest;
-            }
-            case DifferenceKind.Filler: {
-              const { newValue: _newValue, ...changeRest } = change;
-              return changeRest;
-            }
-            case DifferenceKind.CompositeListDifference:
-              return {
-                ...change,
-                itemChanges: change.itemChanges.map((itemChange) => {
-                  const { data: _data, ...itemRest } = itemChange;
-                  return itemRest;
-                }),
-              };
+    return {
+      ...entryRest,
+      modifyingOperation: {
+        name: entry.modifyingOperation?.name,
+      },
+      changes: entry.changes.map((change) => {
+        switch (change.kind) {
+          case DifferenceKind.Replacement: {
+            const {
+              oldValue: _oldValue,
+              newValue: _newValue,
+              ...changeRest
+            } = change;
+            return changeRest;
           }
-        }),
-      };
-    } else {
-      const nodeDiffs = [];
-
-      if (entry.nodeDiffs) {
-        for (const item of entry.nodeDiffs) {
-          const { nodeKey, diff } = item;
-          const { kind, dirtyFields, errors } = diff;
-          nodeDiffs.push({ nodeKey, diff: { kind, dirtyFields, errors } });
+          case DifferenceKind.Filler: {
+            const { newValue: _newValue, ...changeRest } = change;
+            return changeRest;
+          }
+          case DifferenceKind.CompositeListDifference:
+            return {
+              ...change,
+              itemChanges: change.itemChanges.map((itemChange) => {
+                const { data: _data, ...itemRest } = itemChange;
+                return itemRest;
+              }),
+            };
         }
-      }
-
-      return {
-        ...entryRest,
-        nodeDiffs,
-      };
-    }
+      }),
+    };
   });
 }
 

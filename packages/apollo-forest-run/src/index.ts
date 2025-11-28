@@ -21,10 +21,7 @@ export type {
   HistoryFieldChange,
 } from "./forest/types";
 
-export type {
-  CompositeListLayoutChange,
-  SerializedNodeDifference,
-} from "./diff/types";
+export type { CompositeListLayoutChange } from "./diff/types";
 
 export {
   CompositeListDifference,

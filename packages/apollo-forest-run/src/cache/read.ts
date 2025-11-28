@@ -128,7 +128,10 @@ function readOperation(
 
     if (
       readState.outputTree.history.items.length &&
-      !readState.outputTree.result.data[OPERATION_HISTORY_SYMBOL]
+      Object.getOwnPropertyDescriptor(
+        readState.outputTree.result.data,
+        OPERATION_HISTORY_SYMBOL,
+      ) === undefined
     ) {
       const outputTree = readState.outputTree;
 

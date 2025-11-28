@@ -165,8 +165,4 @@ export type ValueDifference =
   | Filler;
 
 export type NodeDifferenceMap = Map<string, ObjectDifference>;
-export type SerializedNodeDifference = {
-  nodeKey: string;
-  diff: SerializedObjectDifference;
-};
 export { DifferenceKind, DiffErrorKind };

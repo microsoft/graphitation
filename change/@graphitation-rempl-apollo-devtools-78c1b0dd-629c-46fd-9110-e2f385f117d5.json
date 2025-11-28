@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "fix optimistic updates for array modifications",
+  "packageName": "@graphitation/rempl-apollo-devtools",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}

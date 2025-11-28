@@ -7,20 +7,8 @@ import { ArrayDiffViewer } from "../ArrayDiffViewer";
 import { useFieldChangesListStyles } from "../FieldChangesList.styles";
 
 interface FieldChangeItemProps {
-  // We accept FieldChange (from history) or a compatible object from NodeDiffs
-  // which might include ObjectDifference (kind=2)
-  change:
-    | HistoryFieldChange
-    | {
-        kind: typeof DifferenceKind.ObjectDifference;
-        path: (string | number)[];
-        [key: string]: any;
-      }
-    | {
-        kind: typeof DifferenceKind.CompositeListDifference;
-        path: (string | number)[];
-        [key: string]: any;
-      };
+  change: HistoryFieldChange;
+  isOptimistic?: boolean;
 }
 
 const RICH_HISTORY_PLACEHOLDER = "Enable enableRichHistory for full path";
@@ -43,7 +31,10 @@ const formatFieldPath = (path: (string | number)[]): string => {
   return path.join(".");
 };
 
-export const FieldChangeItem: React.FC<FieldChangeItemProps> = ({ change }) => {
+export const FieldChangeItem: React.FC<FieldChangeItemProps> = ({
+  change,
+  isOptimistic,
+}) => {
   const classes = useFieldChangesListStyles();
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -59,8 +50,6 @@ export const FieldChangeItem: React.FC<FieldChangeItemProps> = ({ change }) => {
         return classes.badgeReplacement;
       case DifferenceKind.CompositeListDifference:
         return classes.badgeList;
-      case DifferenceKind.ObjectDifference:
-        return classes.badgeReplacement;
       default:
         return classes.badgeReplacement;
     }
@@ -74,8 +63,6 @@ export const FieldChangeItem: React.FC<FieldChangeItemProps> = ({ change }) => {
         return "Modified";
       case DifferenceKind.CompositeListDifference:
         return "List Change";
-      case DifferenceKind.ObjectDifference:
-        return "Deep Change";
       default:
         return String(changeKind);
     }
@@ -97,8 +84,6 @@ export const FieldChangeItem: React.FC<FieldChangeItemProps> = ({ change }) => {
         return `${itemCount} item ${itemCount === 1 ? "change" : "changes"}`;
       }
       return "List layout changed";
-    } else if (change.kind === DifferenceKind.ObjectDifference) {
-      return "Nested object changed";
     }
     return "";
   };
@@ -172,6 +157,7 @@ export const FieldChangeItem: React.FC<FieldChangeItemProps> = ({ change }) => {
                 itemChanges={change.itemChanges}
                 previousLength={change.previousLength}
                 currentLength={change.currentLength}
+                isOptimistic={isOptimistic}
               />
             ) : (
               <div className={classes.valueBox}>
@@ -181,15 +167,6 @@ export const FieldChangeItem: React.FC<FieldChangeItemProps> = ({ change }) => {
                 </Text>
               </div>
             ))}
-          {!richHistoryDisabled &&
-            change.kind === DifferenceKind.ObjectDifference && (
-              <div className={classes.valueBox}>
-                <Text style={{ fontStyle: "italic" }}>
-                  Deep object difference view is not implemented yet for
-                  optimistic layer.
-                </Text>
-              </div>
-            )}
         </div>
       )}
     </div>

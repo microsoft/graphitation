@@ -430,7 +430,7 @@ function accumulateMissingFields(
   }
 }
 
-function getSourceValue(
+export function getSourceValue(
   chunk: GraphValue | undefined,
 ): SourceValue | undefined {
   if (typeof chunk !== "object" || chunk == null) {

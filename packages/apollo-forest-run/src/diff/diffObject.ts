@@ -493,7 +493,7 @@ function diffCompositeListLayout(
 ):
   | {
       layout: CompositeListLayoutDifference;
-      deletedIndexes: Set<number> | undefined;
+      deletedIndexes: Set<number>;
     }
   | undefined
   | "BREAK" {
@@ -531,12 +531,16 @@ function diffCompositeListLayout(
   if (firstDirtyIndex === -1) {
     if (baseLen > modelLen) {
       const layout: CompositeListLayoutDifference = [];
+      const deletedIndexes = new Set<number>();
+      for (let i = modelLen; i < baseLen; i++) {
+        deletedIndexes.add(i);
+      }
       for (let i = 0; i < modelLen; i++) {
         layout.push(i);
       }
       return {
         layout,
-        deletedIndexes: undefined,
+        deletedIndexes,
       };
     }
     return !itemDiffRequired ? "BREAK" : undefined;

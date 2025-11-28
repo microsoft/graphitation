@@ -780,6 +780,7 @@ describe("diff lists of nodes", () => {
   });
   describe("records deleted items", () => {
     test.each([
+      [["a", "b"], ["a"], [0], [1]],
       [["a", "b", "c"], ["b"], [1], [0, 2]],
       [
         ["a", null, "b", "c"],

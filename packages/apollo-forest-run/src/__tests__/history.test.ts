@@ -1,6 +1,10 @@
+import type { CompositeListLayoutChange } from "../diff/types";
+
 import { ForestRun } from "../ForestRun";
 import { gql } from "./helpers/descriptor";
 import { OPERATION_HISTORY_SYMBOL } from "../descriptor/operation";
+
+import * as ItemChangeKind from "../diff/itemChangeKind";
 
 jest.useFakeTimers().setSystemTime(new Date("2020-01-01"));
 
@@ -333,5 +337,129 @@ describe.each([true, false])("enableRichHistory: %p", (enableRichHistory) => {
 
     expect(historyEntries).toMatchSnapshot();
     expect(historyWithoutData).toMatchSnapshot();
+  });
+
+  test("should capture optimistic array changes in history entries", () => {
+    const cache = new ForestRun({
+      historyConfig: {
+        enableRichHistory,
+        overwrittenHistorySize: 2,
+      },
+    });
+    const historyEntries: any[] = [];
+    const historyWithoutData: any[] = [];
+    cache.watch({
+      query: TODO_QUERY,
+      optimistic: true,
+      callback: (data) => {
+        const history = data.result[OPERATION_HISTORY_SYMBOL];
+        if (history) {
+          historyEntries.push(history);
+          historyWithoutData.push(history.historyWithoutData);
+        }
+      },
+    });
+    const newTodos = [
+      createTodo("3", "New task"),
+      createTodo("1", "Write tests"),
+      createTodo("4", "Another new task"),
+    ];
+
+    writeTodos(
+      [createTodo("1", "Write tests"), createTodo("2", "Fix bug")],
+      cache,
+    );
+
+    cache.recordOptimisticTransaction(() => {
+      cache.writeQuery({
+        query: TODO_QUERY,
+        data: {
+          user: {
+            __typename: "User",
+            id: "1",
+            todos: newTodos,
+          },
+        },
+      });
+    }, "test-optimistic-array-add");
+
+    writeTodos(newTodos, cache);
+    const optimisticEntry = historyEntries[0].history[0];
+
+    expect(optimisticEntry.kind).toBe("Optimistic");
+    expect(optimisticEntry.changes[0].currentLength).toBe(3);
+    expect(optimisticEntry.changes[0].previousLength).toBe(2);
+
+    const deletedItems = [];
+    const addedItems = [];
+    const movedItems = [];
+
+    optimisticEntry.changes[0].itemChanges.forEach(
+      (itemChange: CompositeListLayoutChange) => {
+        switch (itemChange.kind) {
+          case ItemChangeKind.ItemRemove:
+            deletedItems.push(itemChange);
+            break;
+          case ItemChangeKind.ItemAdd:
+            addedItems.push(itemChange);
+            break;
+          case ItemChangeKind.ItemIndexChange:
+            movedItems.push(itemChange);
+            break;
+        }
+      },
+    );
+
+    expect(deletedItems.length).toBe(1);
+    expect(addedItems.length).toBe(2);
+    expect(movedItems.length).toBe(1);
+
+    expect(historyEntries).toMatchSnapshot();
+    expect(historyWithoutData).toMatchSnapshot();
+  });
+});
+
+describe("History getter", () => {
+  test("should call getter for history only when history is accessed", () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const historyModule = require("../values/history");
+    let getterCallCount = 0;
+
+    const appendHistoryToDataSpy = jest
+      .spyOn(historyModule, "appendHistoryToData")
+      .mockImplementation((tree: any) => {
+        Object.defineProperty(tree.result.data, OPERATION_HISTORY_SYMBOL, {
+          get() {
+            getterCallCount++;
+          },
+        });
+      });
+
+    const cache = new ForestRun({
+      historyConfig: {
+        overwrittenHistorySize: 1,
+      },
+    });
+
+    cache.write({
+      query: USER_QUERY,
+      result: { user: createUser("Alice v1") },
+    });
+    cache.write({
+      query: USER_QUERY,
+      result: { user: createUser("Alice v2") },
+    });
+
+    const data: any = cache.read({
+      query: USER_QUERY,
+      optimistic: true,
+    });
+    expect(appendHistoryToDataSpy).toHaveBeenCalledTimes(1);
+    expect(getterCallCount).toBe(0);
+
+    const _history = data[OPERATION_HISTORY_SYMBOL];
+    expect(getterCallCount).toBe(1);
+
+    appendHistoryToDataSpy.mockRestore();
   });
 });
