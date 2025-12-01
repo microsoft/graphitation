@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Fri, 28 Nov 2025 10:37:16 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 01 Dec 2025 16:44:02 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.20.3
+
+Mon, 01 Dec 2025 16:44:02 GMT
+
+### Patches
+
+- fix cross-spawn and image-size (pavelglac@gmail.com)
 
 ## 0.20.2
 

@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Mon, 01 Dec 2025 16:44:02 GMT",
+      "version": "0.20.3",
+      "tag": "@graphitation/apollo-forest-run_v0.20.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "e034d015b99a19b656855e3c631cff10e2ce75ba",
+            "comment": "fix cross-spawn and image-size"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 28 Nov 2025 10:37:16 GMT",
       "version": "0.20.2",
       "tag": "@graphitation/apollo-forest-run_v0.20.2",
