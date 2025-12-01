@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "fix cross-spawn and image-size",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}
