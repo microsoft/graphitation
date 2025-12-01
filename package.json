@@ -29,7 +29,7 @@
     "beachball": "^2.47.1",
     "graphql": "^15.0.0",
     "lage": "^2.7.14",
-    "patch-package": "^6.4.7",
+    "patch-package": "^7.0.0",
     "prettier": "^2.8.7",
     "ts-jest": "^29.2.0"
   },
@@ -43,6 +43,7 @@
     "trim": "^1.0.1",
     "@babel/traverse": "^7.23.0",
     "micromatch": "^4.0.8",
-    "braces": "^3.0.3"
+    "braces": "^3.0.3",
+    "cross-spawn": "^7.0.5"
   }
 }
