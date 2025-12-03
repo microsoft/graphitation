@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "strip ids from keys.",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}
