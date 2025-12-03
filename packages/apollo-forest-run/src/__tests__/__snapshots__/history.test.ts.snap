@@ -190,34 +190,26 @@ exports[`enableRichHistory: false should capture missing fields in history entri
         {
           "fields": [
             {
-              "dataKey": "completed",
+              "alias": undefined,
               "name": "completed",
             },
           ],
-          "object": {
-            "__typename": "Todo",
-            "id": "1",
-            "text": "Write tests",
-          },
         },
         {
           "fields": [
             {
-              "dataKey": "__typename",
+              "alias": undefined,
               "name": "__typename",
             },
             {
-              "dataKey": "text",
+              "alias": undefined,
               "name": "text",
             },
             {
-              "dataKey": "completed",
+              "alias": undefined,
               "name": "completed",
             },
           ],
-          "object": {
-            "id": "5",
-          },
         },
       ],
       "modifyingOperation": {
@@ -360,7 +352,7 @@ exports[`enableRichHistory: false should capture optimistic array changes in his
           ],
           "kind": 3,
           "path": [
-            "User:1",
+            "User",
             "todos",
           ],
           "previousLength": 2,
@@ -373,10 +365,10 @@ exports[`enableRichHistory: false should capture optimistic array changes in his
       "timestamp": 1577836800000,
       "updatedNodes": [
         "ROOT_QUERY",
-        "User:1",
-        "Todo:3",
-        "Todo:1",
-        "Todo:4",
+        "User",
+        "Todo",
+        "Todo",
+        "Todo",
       ],
     },
     {
@@ -483,7 +475,7 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
         {
           "kind": 0,
           "path": [
-            "User:1",
+            "User",
             "name",
           ],
         },
@@ -495,7 +487,7 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
       "timestamp": 1577836800000,
       "updatedNodes": [
         "ROOT_QUERY",
-        "User:1",
+        "User",
       ],
     },
     {
@@ -910,34 +902,26 @@ exports[`enableRichHistory: true should capture missing fields in history entrie
         {
           "fields": [
             {
-              "dataKey": "completed",
+              "alias": undefined,
               "name": "completed",
             },
           ],
-          "object": {
-            "__typename": "Todo",
-            "id": "1",
-            "text": "Write tests",
-          },
         },
         {
           "fields": [
             {
-              "dataKey": "__typename",
+              "alias": undefined,
               "name": "__typename",
             },
             {
-              "dataKey": "text",
+              "alias": undefined,
               "name": "text",
             },
             {
-              "dataKey": "completed",
+              "alias": undefined,
               "name": "completed",
             },
           ],
-          "object": {
-            "id": "5",
-          },
         },
       ],
       "modifyingOperation": {
@@ -1215,7 +1199,7 @@ exports[`enableRichHistory: true should capture optimistic array changes in hist
           ],
           "kind": 3,
           "path": [
-            "User:1",
+            "User",
             "todos",
           ],
           "previousLength": 2,
@@ -1228,10 +1212,10 @@ exports[`enableRichHistory: true should capture optimistic array changes in hist
       "timestamp": 1577836800000,
       "updatedNodes": [
         "ROOT_QUERY",
-        "User:1",
-        "Todo:3",
-        "Todo:1",
-        "Todo:4",
+        "User",
+        "Todo",
+        "Todo",
+        "Todo",
       ],
     },
     {
@@ -1387,7 +1371,7 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
         {
           "kind": 0,
           "path": [
-            "User:1",
+            "User",
             "name",
           ],
         },
@@ -1399,7 +1383,7 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
       "timestamp": 1577836800000,
       "updatedNodes": [
         "ROOT_QUERY",
-        "User:1",
+        "User",
       ],
     },
     {

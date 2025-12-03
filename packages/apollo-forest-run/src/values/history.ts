@@ -27,6 +27,26 @@ import * as DifferenceKind from "../diff/differenceKind";
 import { OPERATION_HISTORY_SYMBOL } from "../descriptor/operation";
 import { getSourceValue } from "../forest/updateObject";
 
+function stripDataFromKeys(keys: (string | number)[]): (string | number)[] {
+  return keys.map((segment) => {
+    if (typeof segment === "string") {
+      const [typeName] = segment.split(":", 1);
+      return typeName;
+    }
+    return segment;
+  });
+}
+function stripDataFromMissingFields(missingFields: MissingFieldsSerialized) {
+  return missingFields.map((mf) => {
+    return {
+      fields: mf.fields.map(({ name, alias }) => ({
+        name,
+        alias,
+      })),
+    };
+  });
+}
+
 function getChunkPath(
   currentTree: IndexedTree,
   chunk: CompositeListChunk | ObjectChunk,
@@ -310,36 +330,57 @@ export function serializeHistory(
 export function stripDataFromHistory(history: HistoryChangeSerialized[]) {
   return history.map((entry) => {
     const { data: _data, ...entryRest } = entry;
+    const cleanModifyingOperation = {
+      name: entry.modifyingOperation?.name,
+    };
+
+    const cleanChanges = entry.changes.map((change) => {
+      const path = stripDataFromKeys(change.path);
+      switch (change.kind) {
+        case DifferenceKind.Replacement: {
+          const {
+            oldValue: _oldValue,
+            newValue: _newValue,
+            ...changeRest
+          } = change;
+          return {
+            ...changeRest,
+            path,
+          };
+        }
+        case DifferenceKind.Filler: {
+          const { newValue: _newValue, ...changeRest } = change;
+          return {
+            ...changeRest,
+            path,
+          };
+        }
+        case DifferenceKind.CompositeListDifference:
+          return {
+            ...change,
+            path,
+            itemChanges: change.itemChanges.map((itemChange) => {
+              const { data: _data, ...itemRest } = itemChange;
+              return itemRest;
+            }),
+          };
+      }
+    });
+
+    if (entry.kind === "Regular") {
+      return {
+        ...entryRest,
+        modifyingOperation: cleanModifyingOperation,
+        changes: cleanChanges,
+        missingFields: stripDataFromMissingFields(entry.missingFields),
+      };
+    }
 
     return {
       ...entryRest,
-      modifyingOperation: {
-        name: entry.modifyingOperation?.name,
-      },
-      changes: entry.changes.map((change) => {
-        switch (change.kind) {
-          case DifferenceKind.Replacement: {
-            const {
-              oldValue: _oldValue,
-              newValue: _newValue,
-              ...changeRest
-            } = change;
-            return changeRest;
-          }
-          case DifferenceKind.Filler: {
-            const { newValue: _newValue, ...changeRest } = change;
-            return changeRest;
-          }
-          case DifferenceKind.CompositeListDifference:
-            return {
-              ...change,
-              itemChanges: change.itemChanges.map((itemChange) => {
-                const { data: _data, ...itemRest } = itemChange;
-                return itemRest;
-              }),
-            };
-        }
-      }),
+      modifyingOperation: cleanModifyingOperation,
+      changes: cleanChanges,
+      updatedNodes: stripDataFromKeys(entry.updatedNodes),
     };
   });
 }
