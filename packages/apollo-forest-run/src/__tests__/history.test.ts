@@ -47,17 +47,30 @@ const TODO_QUERY_WITH_COMPLETED = gql`
   }
 `;
 
-const createUser = (name: string) => ({
+const createUser = (name: string, id = "1") => ({
   __typename: "User" as const,
-  id: "1",
+  id,
   name,
 });
 
-const createTodo = (id: string, text: string) => ({
+const createTodo = (id: string, text = "Default") => ({
   __typename: "Todo" as const,
   id,
   text,
 });
+
+const writeTodos = (todos: unknown[], cache: ForestRun) => {
+  cache.write({
+    query: TODO_QUERY,
+    result: {
+      user: {
+        __typename: "User",
+        id: "1",
+        todos,
+      },
+    },
+  });
+};
 
 describe("History size handling", () => {
   test("should not store history when partition is not present and overwrittenHistorySize is undefined", () => {
@@ -184,18 +197,6 @@ describe("History size handling", () => {
 });
 
 describe.each([true, false])("enableRichHistory: %p", (enableRichHistory) => {
-  const writeTodos = (todos: unknown[], cache: ForestRun) => {
-    cache.write({
-      query: TODO_QUERY,
-      result: {
-        user: {
-          __typename: "User",
-          id: "1",
-          todos,
-        },
-      },
-    });
-  };
   test("should capture value changes in history entries", () => {
     const cache = new ForestRun({
       historyConfig: {
@@ -329,6 +330,7 @@ describe.each([true, false])("enableRichHistory: %p", (enableRichHistory) => {
       [
         createTodo("1", "Write tests"),
         {
+          __typename: "Todo",
           id: "5",
         }, // missing text field
       ],
@@ -461,5 +463,209 @@ describe("History getter", () => {
     expect(getterCallCount).toBe(1);
 
     appendHistoryToDataSpy.mockRestore();
+  });
+});
+
+describe("History data stripping", () => {
+  const USER_ID = "secret-user";
+  const USER_NAME = "Sensitive Name";
+  const VARIABLE = "secret-variable";
+  const QUERY = gql`
+    query GetUserById($userId: ID!) {
+      user(id: $userId) {
+        __typename
+        id
+        name
+      }
+    }
+  `;
+  test("should strip all sensitive data from regular history entry", () => {
+    const cache = new ForestRun({
+      historyConfig: {
+        enableRichHistory: true,
+        overwrittenHistorySize: 2,
+      },
+    });
+
+    cache.write({
+      query: QUERY,
+      variables: { userId: VARIABLE },
+      result: {
+        user: createUser(USER_NAME, USER_ID),
+      },
+    });
+
+    cache.write({
+      query: QUERY,
+      variables: { userId: VARIABLE },
+      result: {
+        user: createUser(USER_NAME + " v2", USER_ID),
+      },
+    });
+
+    const data: any = cache.read({
+      query: QUERY,
+      variables: { userId: VARIABLE },
+      optimistic: true,
+    });
+
+    const history = data[OPERATION_HISTORY_SYMBOL];
+    const historyWithoutData = history.historyWithoutData;
+    const stringified = JSON.stringify(historyWithoutData);
+
+    expect(stringified).not.toContain(USER_ID);
+    expect(stringified).not.toContain(VARIABLE);
+    expect(stringified).not.toContain(USER_NAME);
+  });
+
+  test("should strip all sensitive data from regular history entry with missing fields", () => {
+    const TODO_ID_BASE = "secret-todo";
+    const TODO_TEXT_BASE = "Secret task ";
+    const cache = new ForestRun({
+      historyConfig: {
+        enableRichHistory: true,
+        overwrittenHistorySize: 2,
+      },
+    });
+
+    const historyWithoutData: any[] = [];
+
+    cache.watch({
+      query: TODO_QUERY_WITH_COMPLETED,
+      optimistic: true,
+      callback: (data) => {
+        const history = data.result[OPERATION_HISTORY_SYMBOL];
+        if (history) {
+          historyWithoutData.push(history.historyWithoutData);
+        }
+      },
+    });
+
+    writeTodos([createTodo(TODO_ID_BASE + "1", TODO_TEXT_BASE + "1")], cache);
+
+    writeTodos(
+      [
+        createTodo(TODO_ID_BASE + "1", TODO_TEXT_BASE + "1"),
+        {
+          id: TODO_ID_BASE + "5",
+        }, // missing text field
+      ],
+      cache,
+    );
+
+    const stringified = JSON.stringify(historyWithoutData, null, 2);
+
+    expect(stringified).not.toContain(TODO_ID_BASE);
+    expect(stringified).not.toContain(TODO_TEXT_BASE);
+    expect(stringified).not.toContain(USER_ID);
+  });
+
+  test("should strip all sensitive data from optimistic updates", () => {
+    const cache = new ForestRun({
+      historyConfig: {
+        enableRichHistory: true,
+        overwrittenHistorySize: 3,
+      },
+    });
+
+    const historyWithoutData: any[] = [];
+
+    cache.watch({
+      query: QUERY,
+      variables: { userId: VARIABLE },
+      optimistic: true,
+      callback: (data) => {
+        const history = data.result[OPERATION_HISTORY_SYMBOL];
+        if (history) {
+          historyWithoutData.push(history.historyWithoutData);
+        }
+      },
+    });
+
+    cache.write({
+      query: QUERY,
+      variables: { userId: VARIABLE },
+      result: { user: createUser(USER_NAME, USER_ID) },
+    });
+
+    cache.recordOptimisticTransaction(() => {
+      cache.writeQuery({
+        query: QUERY,
+        variables: { userId: VARIABLE },
+        data: { user: createUser(USER_NAME + " (optimistic)", USER_ID) },
+      });
+    }, "optimistic-update");
+
+    cache.write({
+      query: QUERY,
+      variables: { userId: VARIABLE },
+      result: { user: createUser(USER_NAME + " (final)", USER_ID) },
+    });
+
+    const stringified = JSON.stringify(historyWithoutData);
+
+    expect(stringified).not.toContain(USER_NAME);
+    expect(stringified).not.toContain(USER_ID);
+    expect(stringified).not.toContain(VARIABLE);
+  });
+
+  it("should keep consisent redacted ids in history entries", () => {
+    const cache = new ForestRun({
+      historyConfig: {
+        enableRichHistory: true,
+        overwrittenHistorySize: 3,
+      },
+    });
+
+    let historyWithoutData: any[] = [];
+
+    cache.watch({
+      query: TODO_QUERY,
+      optimistic: true,
+      callback: (data) => {
+        const history = data.result[OPERATION_HISTORY_SYMBOL];
+        if (history) {
+          historyWithoutData = history.historyWithoutData;
+        }
+      },
+    });
+
+    writeTodos([createTodo(USER_ID + "1"), createTodo(USER_ID + "2")], cache);
+
+    cache.recordOptimisticTransaction(() => {
+      writeTodos(
+        [
+          createTodo(USER_ID + "1", "Optimistic 1"),
+          createTodo(USER_ID + "2", "Optimistic 2"),
+        ],
+        cache,
+      );
+    }, "optimistic-update");
+
+    cache.removeOptimistic("optimistic-update");
+
+    cache.recordOptimisticTransaction(() => {
+      writeTodos(
+        [
+          createTodo(USER_ID + "2", "Optimistic 2 v2"),
+          createTodo(USER_ID + "1", "Optimistic 1 v2"),
+        ],
+        cache,
+      );
+    }, "optimistic-update-v2");
+
+    writeTodos(
+      [
+        createTodo(USER_ID + "1", "Final 1"),
+        createTodo(USER_ID + "2", "Final 2"),
+      ],
+      cache,
+    );
+
+    const stringified = JSON.stringify(historyWithoutData, null, 2);
+    expect(stringified).not.toContain(USER_ID);
+    expect(historyWithoutData[0].changes[0].path[0]).toBe(
+      historyWithoutData[1].changes[2].path[0],
+    );
   });
 });
