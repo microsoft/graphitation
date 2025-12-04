@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Thu, 04 Dec 2025 13:24:07 GMT",
+      "version": "0.20.4",
+      "tag": "@graphitation/apollo-forest-run_v0.20.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "cffd2569f8b78adb927b14dcfeb88caec9675253",
+            "comment": "strip ids from keys."
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 01 Dec 2025 16:44:02 GMT",
       "version": "0.20.3",
       "tag": "@graphitation/apollo-forest-run_v0.20.3",

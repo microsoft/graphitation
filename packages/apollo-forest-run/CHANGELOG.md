@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Mon, 01 Dec 2025 16:44:02 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 04 Dec 2025 13:24:07 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.20.4
+
+Thu, 04 Dec 2025 13:24:07 GMT
+
+### Patches
+
+- strip ids from keys. (pavelglac@gmail.com)
 
 ## 0.20.3
 
