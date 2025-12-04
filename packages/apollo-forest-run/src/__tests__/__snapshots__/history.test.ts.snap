@@ -136,10 +136,6 @@ exports[`enableRichHistory: false should capture missing fields in history entri
           {
             "fields": [
               {
-                "dataKey": "__typename",
-                "name": "__typename",
-              },
-              {
                 "dataKey": "text",
                 "name": "text",
               },
@@ -149,6 +145,7 @@ exports[`enableRichHistory: false should capture missing fields in history entri
               },
             ],
             "object": {
+              "__typename": "Todo",
               "id": "5",
             },
           },
@@ -194,13 +191,12 @@ exports[`enableRichHistory: false should capture missing fields in history entri
               "name": "completed",
             },
           ],
+          "object": {
+            "__typename": "Todo",
+          },
         },
         {
           "fields": [
-            {
-              "alias": undefined,
-              "name": "__typename",
-            },
             {
               "alias": undefined,
               "name": "text",
@@ -210,6 +206,9 @@ exports[`enableRichHistory: false should capture missing fields in history entri
               "name": "completed",
             },
           ],
+          "object": {
+            "__typename": "Todo",
+          },
         },
       ],
       "modifyingOperation": {
@@ -352,7 +351,7 @@ exports[`enableRichHistory: false should capture optimistic array changes in his
           ],
           "kind": 3,
           "path": [
-            "User",
+            "User:(redacted-id-0)",
             "todos",
           ],
           "previousLength": 2,
@@ -365,10 +364,10 @@ exports[`enableRichHistory: false should capture optimistic array changes in his
       "timestamp": 1577836800000,
       "updatedNodes": [
         "ROOT_QUERY",
-        "User",
-        "Todo",
-        "Todo",
-        "Todo",
+        "User:(redacted-id-0)",
+        "Todo:(redacted-id-1)",
+        "Todo:(redacted-id-2)",
+        "Todo:(redacted-id-3)",
       ],
     },
     {
@@ -475,7 +474,7 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
         {
           "kind": 0,
           "path": [
-            "User",
+            "User:(redacted-id-0)",
             "name",
           ],
         },
@@ -487,7 +486,7 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
       "timestamp": 1577836800000,
       "updatedNodes": [
         "ROOT_QUERY",
-        "User",
+        "User:(redacted-id-0)",
       ],
     },
     {
@@ -762,6 +761,7 @@ exports[`enableRichHistory: true should capture missing fields in history entrie
             "itemChanges": [
               {
                 "data": {
+                  "__typename": "Todo",
                   "id": "5",
                 },
                 "index": 1,
@@ -804,6 +804,7 @@ exports[`enableRichHistory: true should capture missing fields in history entrie
                     "text": "Write tests",
                   },
                   {
+                    "__typename": "Todo",
                     "id": "5",
                   },
                 ],
@@ -822,6 +823,7 @@ exports[`enableRichHistory: true should capture missing fields in history entrie
                     "text": "Write tests",
                   },
                   {
+                    "__typename": "Todo",
                     "id": "5",
                   },
                 ],
@@ -847,10 +849,6 @@ exports[`enableRichHistory: true should capture missing fields in history entrie
           {
             "fields": [
               {
-                "dataKey": "__typename",
-                "name": "__typename",
-              },
-              {
                 "dataKey": "text",
                 "name": "text",
               },
@@ -860,6 +858,7 @@ exports[`enableRichHistory: true should capture missing fields in history entrie
               },
             ],
             "object": {
+              "__typename": "Todo",
               "id": "5",
             },
           },
@@ -906,13 +905,12 @@ exports[`enableRichHistory: true should capture missing fields in history entrie
               "name": "completed",
             },
           ],
+          "object": {
+            "__typename": "Todo",
+          },
         },
         {
           "fields": [
-            {
-              "alias": undefined,
-              "name": "__typename",
-            },
             {
               "alias": undefined,
               "name": "text",
@@ -922,6 +920,9 @@ exports[`enableRichHistory: true should capture missing fields in history entrie
               "name": "completed",
             },
           ],
+          "object": {
+            "__typename": "Todo",
+          },
         },
       ],
       "modifyingOperation": {
@@ -1199,7 +1200,7 @@ exports[`enableRichHistory: true should capture optimistic array changes in hist
           ],
           "kind": 3,
           "path": [
-            "User",
+            "User:(redacted-id-0)",
             "todos",
           ],
           "previousLength": 2,
@@ -1212,10 +1213,10 @@ exports[`enableRichHistory: true should capture optimistic array changes in hist
       "timestamp": 1577836800000,
       "updatedNodes": [
         "ROOT_QUERY",
-        "User",
-        "Todo",
-        "Todo",
-        "Todo",
+        "User:(redacted-id-0)",
+        "Todo:(redacted-id-1)",
+        "Todo:(redacted-id-2)",
+        "Todo:(redacted-id-3)",
       ],
     },
     {
@@ -1371,7 +1372,7 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
         {
           "kind": 0,
           "path": [
-            "User",
+            "User:(redacted-id-0)",
             "name",
           ],
         },
@@ -1383,7 +1384,7 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
       "timestamp": 1577836800000,
       "updatedNodes": [
         "ROOT_QUERY",
-        "User",
+        "User:(redacted-id-0)",
       ],
     },
     {

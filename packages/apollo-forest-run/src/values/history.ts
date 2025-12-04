@@ -27,13 +27,23 @@ import * as DifferenceKind from "../diff/differenceKind";
 import { OPERATION_HISTORY_SYMBOL } from "../descriptor/operation";
 import { getSourceValue } from "../forest/updateObject";
 
-function stripDataFromKeys(keys: (string | number)[]): (string | number)[] {
-  return keys.map((segment) => {
-    if (typeof segment === "string") {
-      const [typeName] = segment.split(":", 1);
-      return typeName;
+function stripDataFromKeys(
+  keys: (string | number)[],
+  idObfuscationMap: Map<string, number>,
+): (string | number)[] {
+  return keys.map((key) => {
+    if (typeof key === "string" && key.indexOf(":") !== -1) {
+      let id = idObfuscationMap.get(key);
+
+      if (id === undefined) {
+        id = idObfuscationMap.size;
+        idObfuscationMap.set(key, id);
+      }
+
+      const [typeName] = key.split(":", 1);
+      return `${typeName}:(redacted-id-${id})`;
     }
-    return segment;
+    return key;
   });
 }
 function stripDataFromMissingFields(missingFields: MissingFieldsSerialized) {
@@ -43,6 +53,9 @@ function stripDataFromMissingFields(missingFields: MissingFieldsSerialized) {
         name,
         alias,
       })),
+      object: {
+        __typename: mf.object.__typename,
+      },
     };
   });
 }
@@ -328,6 +341,7 @@ export function serializeHistory(
 }
 
 export function stripDataFromHistory(history: HistoryChangeSerialized[]) {
+  const idObfuscationMap = new Map<string, number>();
   return history.map((entry) => {
     const { data: _data, ...entryRest } = entry;
     const cleanModifyingOperation = {
@@ -335,7 +349,7 @@ export function stripDataFromHistory(history: HistoryChangeSerialized[]) {
     };
 
     const cleanChanges = entry.changes.map((change) => {
-      const path = stripDataFromKeys(change.path);
+      const path = stripDataFromKeys(change.path, idObfuscationMap);
       switch (change.kind) {
         case DifferenceKind.Replacement: {
           const {
@@ -380,7 +394,7 @@ export function stripDataFromHistory(history: HistoryChangeSerialized[]) {
       ...entryRest,
       modifyingOperation: cleanModifyingOperation,
       changes: cleanChanges,
-      updatedNodes: stripDataFromKeys(entry.updatedNodes),
+      updatedNodes: stripDataFromKeys(entry.updatedNodes, idObfuscationMap),
     };
   });
 }

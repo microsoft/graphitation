@@ -53,7 +53,7 @@ const createUser = (name: string, id = "1") => ({
   name,
 });
 
-const createTodo = (id: string, text: string) => ({
+const createTodo = (id: string, text = "Default") => ({
   __typename: "Todo" as const,
   id,
   text,
@@ -330,6 +330,7 @@ describe.each([true, false])("enableRichHistory: %p", (enableRichHistory) => {
       [
         createTodo("1", "Write tests"),
         {
+          __typename: "Todo",
           id: "5",
         }, // missing text field
       ],
@@ -606,5 +607,65 @@ describe("History data stripping", () => {
     expect(stringified).not.toContain(USER_NAME);
     expect(stringified).not.toContain(USER_ID);
     expect(stringified).not.toContain(VARIABLE);
+  });
+
+  it("should keep consisent redacted ids in history entries", () => {
+    const cache = new ForestRun({
+      historyConfig: {
+        enableRichHistory: true,
+        overwrittenHistorySize: 3,
+      },
+    });
+
+    let historyWithoutData: any[] = [];
+
+    cache.watch({
+      query: TODO_QUERY,
+      optimistic: true,
+      callback: (data) => {
+        const history = data.result[OPERATION_HISTORY_SYMBOL];
+        if (history) {
+          historyWithoutData = history.historyWithoutData;
+        }
+      },
+    });
+
+    writeTodos([createTodo(USER_ID + "1"), createTodo(USER_ID + "2")], cache);
+
+    cache.recordOptimisticTransaction(() => {
+      writeTodos(
+        [
+          createTodo(USER_ID + "1", "Optimistic 1"),
+          createTodo(USER_ID + "2", "Optimistic 2"),
+        ],
+        cache,
+      );
+    }, "optimistic-update");
+
+    cache.removeOptimistic("optimistic-update");
+
+    cache.recordOptimisticTransaction(() => {
+      writeTodos(
+        [
+          createTodo(USER_ID + "2", "Optimistic 2 v2"),
+          createTodo(USER_ID + "1", "Optimistic 1 v2"),
+        ],
+        cache,
+      );
+    }, "optimistic-update-v2");
+
+    writeTodos(
+      [
+        createTodo(USER_ID + "1", "Final 1"),
+        createTodo(USER_ID + "2", "Final 2"),
+      ],
+      cache,
+    );
+
+    const stringified = JSON.stringify(historyWithoutData, null, 2);
+    expect(stringified).not.toContain(USER_ID);
+    expect(historyWithoutData[0].changes[0].path[0]).toBe(
+      historyWithoutData[1].changes[2].path[0],
+    );
   });
 });
