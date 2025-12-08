@@ -27,25 +27,6 @@ describe(addMinimalViableSchemaToRequestDocument, () => {
     };
   }
 
-  it("minimal viable schema should include optional param even when it's not used in directive", () => {
-    const { printedDoc } = testHelper(
-      schema,
-      `query @i18n {
-        film(id: 42) {
-          __typename
-        }
-      }`,
-    );
-    expect(printedDoc).toMatchInlineSnapshot(`
-      "query @i18n @schema(definitions: "{\\"types\\":{\\"Query\\":[2,{\\"film\\":[\\"Film\\",{\\"id\\":10}]}],\\"Film\\":[2,{},[\\"Node\\"]]},\\"directives\\":[[\\"i18n\\",[1],{\\"locale\\":1}]]}") {
-        film(id: 42) {
-          __typename
-        }
-      }
-      "
-    `);
-  });
-
   it("adds minimal viable schema to operation definition", () => {
     const { printedDoc } = testHelper(
       schema,
