@@ -16,7 +16,6 @@ import {
   isCompositeType,
   isEnumType,
   isInputObjectType,
-  isNonNullType,
   isObjectType,
   isScalarType,
   isSpecifiedScalarType,
@@ -39,7 +38,6 @@ import {
   encodeDirectiveLocation,
   EnumTypeDefinitionTuple,
   FieldDefinition,
-  getDirectiveDefinitionArgs,
   getDirectiveName,
   getFieldArgs,
   getFields,
@@ -102,7 +100,7 @@ export function extractMinimalViableSchemaForRequestDocument(
         assertExistingField(field, node, ancestors);
         assertAllArgumentsAreDefined(field, node, ancestors);
 
-        const fieldDef = addField(typeDef, field, node);
+        const fieldDef = addField(typeDef, field);
         addReferencedOutputType(schema, types, getFieldTypeReference(fieldDef));
         addReferencedInputTypes(schema, types, getFieldArgs(fieldDef));
       },
@@ -116,7 +114,7 @@ export function extractMinimalViableSchemaForRequestDocument(
           unknownDirectives.push(node);
           return;
         }
-        addDirective(directives, directive, node);
+        addDirective(directives, directive);
       },
       FragmentDefinition(node, _key, _parent, _path, ancestors): void {
         const type = typeInfo.getType();
@@ -223,31 +221,15 @@ function addCompositeType(
 function addField(
   type: ObjectTypeDefinitionTuple | InterfaceTypeDefinitionTuple,
   field: GraphQLField<unknown, unknown>,
-  fieldNode: FieldNode,
 ): FieldDefinition {
   const fields = getFields(type);
 
-  const existingFieldDef: FieldDefinition = fields[field.name];
-  const previouslyAddedArgs =
-    getFieldArgs(existingFieldDef) ?? Object.create(null);
-
-  const nodeArgs = new Set(fieldNode.arguments?.map((arg) => arg.name.value));
-
-  const argsFilter = (argDef: GraphQLArgument) =>
-    Boolean(
-      previouslyAddedArgs[argDef.name] ||
-        isNonNullType(argDef.type) ||
-        argDef.defaultValue !== undefined ||
-        nodeArgs.has(argDef.name),
-    );
-
-  return (fields[field.name] = encodeFieldDef(field, argsFilter));
+  return (fields[field.name] = encodeFieldDef(field));
 }
 
 function addDirective(
   directives: DirectiveDefinitionTuple[],
   directive: GraphQLDirective,
-  node: DirectiveNode,
 ) {
   const name = directive.name;
   let tuple = directives.find((d) => getDirectiveName(d) === name);
@@ -256,17 +238,7 @@ function addDirective(
     directives.push(tuple);
   }
 
-  const previouslyAddedArgs = getDirectiveDefinitionArgs(tuple);
-  const nodeArgs = new Set(node.arguments?.map((arg) => arg.name.value));
-
-  const argsFilter = (argDef: GraphQLArgument) =>
-    Boolean(
-      previouslyAddedArgs?.[argDef.name] ||
-        isNonNullType(argDef.type) ||
-        argDef.defaultValue !== undefined ||
-        nodeArgs.has(argDef.name),
-    );
-  const [hasArgs, argsRecord] = encodeArguments(directive.args, argsFilter);
+  const [hasArgs, argsRecord] = encodeArguments(directive.args);
   if (hasArgs) {
     setDirectiveDefinitionArgs(tuple, argsRecord);
   }

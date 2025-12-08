@@ -422,7 +422,16 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       );
       expect(sdl).toMatchInlineSnapshot(`
         "type Query {
-          countFilms: Int!
+          countFilms(filter: FilmFilterInput): Int!
+        }
+
+        input FilmFilterInput {
+          genre: FilmGenre
+        }
+
+        enum FilmGenre {
+          COMEDY
+          DRAMA
         }
         "
       `);
