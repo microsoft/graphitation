@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "extractMinimalViableSChemaForRequestDocument now returns optional arguments even when they are not used",
+  "packageName": "@graphitation/supermassive",
+  "email": "77059398+vejrj@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}
