@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Fri, 07 Nov 2025 11:36:34 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 08 Dec 2025 16:15:56 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.13.0
+
+Mon, 08 Dec 2025 16:15:56 GMT
+
+### Minor changes
+
+- extractMinimalViableSChemaForRequestDocument now returns optional arguments even when they are not used (77059398+vejrj@users.noreply.github.com)
 
 ## 3.12.0
 

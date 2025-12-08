@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Mon, 08 Dec 2025 16:15:56 GMT",
+      "version": "3.13.0",
+      "tag": "@graphitation/supermassive_v3.13.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/supermassive",
+            "commit": "85e5c51dd15101eaa469d5c132be5bb977fc5bfe",
+            "comment": "extractMinimalViableSChemaForRequestDocument now returns optional arguments even when they are not used"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 07 Nov 2025 11:36:34 GMT",
       "version": "3.12.0",
       "tag": "@graphitation/supermassive_v3.12.0",
