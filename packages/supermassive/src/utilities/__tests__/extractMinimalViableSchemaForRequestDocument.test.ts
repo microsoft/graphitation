@@ -413,7 +413,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       `);
     });
 
-    it("omits optional arguments", () => {
+    it("includes optional arguments", () => {
       const { sdl } = testHelper(
         schema,
         `query {
@@ -422,8 +422,38 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       );
       expect(sdl).toMatchInlineSnapshot(`
         "type Query {
-          countFilms: Int!
+          countFilms(filter: FilmFilterInput): Int!
         }
+
+        input FilmFilterInput {
+          genre: FilmGenre
+        }
+
+        enum FilmGenre {
+          COMEDY
+          DRAMA
+        }
+        "
+      `);
+    });
+
+    it("should include optional param even when it's not used in directive", () => {
+      const { sdl } = testHelper(
+        schema,
+        `query @i18n {
+        film(id: 42) {
+          __typename
+        }
+      }`,
+      );
+      expect(sdl).toMatchInlineSnapshot(`
+        "type Query {
+          film(id: ID!): Film
+        }
+
+        type Film implements Node
+
+        directive @i18n(locale: String) on QUERY
         "
       `);
     });
