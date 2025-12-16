@@ -25,6 +25,7 @@ import {
   visit,
   visitWithTypeInfo,
   locatedError,
+  isInterfaceType,
 } from "graphql";
 import {
   CompositeTypeTuple,
@@ -103,6 +104,24 @@ export function extractMinimalViableSchemaForRequestDocument(
         const fieldDef = addField(typeDef, field);
         addReferencedOutputType(schema, types, getFieldTypeReference(fieldDef));
         addReferencedInputTypes(schema, types, getFieldArgs(fieldDef));
+
+        if (isInterfaceType(parentType)) {
+          const possibleTypes = schema.getPossibleTypes(parentType);
+          for (const implementingType of possibleTypes) {
+            const implementingTypeDef = types[implementingType.name] as
+              | ObjectTypeDefinitionTuple
+              | InterfaceTypeDefinitionTuple
+              | undefined;
+
+            if (implementingTypeDef) {
+              const implementingField =
+                implementingType.getFields()[field.name];
+              if (implementingField) {
+                addField(implementingTypeDef, implementingField);
+              }
+            }
+          }
+        }
       },
       Directive(node, _key, _parent, _path) {
         if (isKnownDirective(node.name.value)) {
@@ -120,12 +139,14 @@ export function extractMinimalViableSchemaForRequestDocument(
         const type = typeInfo.getType();
         assertCompositeType(type, node, ancestors);
         addCompositeType(types, type);
+        addImplementingTypes(schema, types, type);
       },
       InlineFragment(node, _key, _parent, _path, ancestors): void {
         if (node?.typeCondition) {
           const type = typeInfo.getType();
           assertCompositeType(type, node, ancestors);
           addCompositeType(types, type);
+          addImplementingTypes(schema, types, type);
         }
       },
       FragmentSpread(node) {
@@ -218,6 +239,19 @@ function addCompositeType(
   return (types[type.name] = encodeCompositeType(type));
 }
 
+function addImplementingTypes(
+  schema: GraphQLSchema,
+  types: TypeDefinitionsRecord,
+  type: GraphQLCompositeType,
+): void {
+  if (isInterfaceType(type)) {
+    const possibleTypes = schema.getPossibleTypes(type);
+    for (const implementingType of possibleTypes) {
+      addCompositeType(types, implementingType);
+    }
+  }
+}
+
 function addField(
   type: ObjectTypeDefinitionTuple | InterfaceTypeDefinitionTuple,
   field: GraphQLField<unknown, unknown>,
@@ -250,6 +284,7 @@ function encodeCompositeType(type: GraphQLCompositeType): CompositeTypeTuple {
     return createUnionTypeDefinition(type.getTypes().map((type) => type.name));
   }
   const ifaces = type.getInterfaces().map((iface) => iface.name);
+
   return isObjectType(type)
     ? createObjectTypeDefinition({}, ifaces)
     : createInterfaceTypeDefinition({}, ifaces);

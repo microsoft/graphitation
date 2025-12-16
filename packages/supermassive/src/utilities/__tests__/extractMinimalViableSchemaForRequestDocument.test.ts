@@ -373,6 +373,14 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           id: ID!
           title(foo: String = "Bar"): String!
         }
+
+        type Series implements Node {
+          id: ID!
+        }
+
+        type Episode implements Node {
+          id: ID!
+        }
         "
       `);
     });
