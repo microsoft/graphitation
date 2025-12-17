@@ -76,6 +76,7 @@ export type ExtractMinimalViableSchemaResult = {
 export function extractMinimalViableSchemaForRequestDocument(
   schema: GraphQLSchema,
   requestDocument: DocumentNode,
+  includeInterfaceImplementingTypes = false,
 ): ExtractMinimalViableSchemaResult {
   const types: TypeDefinitionsRecord = {};
   const directives: DirectiveDefinitionTuple[] = [];
@@ -105,7 +106,7 @@ export function extractMinimalViableSchemaForRequestDocument(
         addReferencedOutputType(schema, types, getFieldTypeReference(fieldDef));
         addReferencedInputTypes(schema, types, getFieldArgs(fieldDef));
 
-        if (isInterfaceType(parentType)) {
+        if (includeInterfaceImplementingTypes && isInterfaceType(parentType)) {
           const possibleTypes = schema.getPossibleTypes(parentType);
           for (const implementingType of possibleTypes) {
             const implementingTypeDef = types[implementingType.name] as
@@ -139,14 +140,18 @@ export function extractMinimalViableSchemaForRequestDocument(
         const type = typeInfo.getType();
         assertCompositeType(type, node, ancestors);
         addCompositeType(types, type);
-        addImplementingTypes(schema, types, type);
+        if (includeInterfaceImplementingTypes) {
+          addImplementingTypes(schema, types, type);
+        }
       },
       InlineFragment(node, _key, _parent, _path, ancestors): void {
         if (node?.typeCondition) {
           const type = typeInfo.getType();
           assertCompositeType(type, node, ancestors);
           addCompositeType(types, type);
-          addImplementingTypes(schema, types, type);
+          if (includeInterfaceImplementingTypes) {
+            addImplementingTypes(schema, types, type);
+          }
         }
       },
       FragmentSpread(node) {

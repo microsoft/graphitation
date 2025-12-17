@@ -6,9 +6,17 @@ import { filmSDL } from "./fixtures/filmSDL";
 const schema = buildASTSchema(filmSDL.document);
 
 describe(extractMinimalViableSchemaForRequestDocument, () => {
-  function testHelper(schema: GraphQLSchema, doc: string) {
+  function testHelper(
+    schema: GraphQLSchema,
+    doc: string,
+    includeInterfaceImplementingTypes = false,
+  ) {
     const { definitions, unknownDirectives } =
-      extractMinimalViableSchemaForRequestDocument(schema, parse(doc));
+      extractMinimalViableSchemaForRequestDocument(
+        schema,
+        parse(doc),
+        includeInterfaceImplementingTypes,
+      );
     return { unknownDirectives, sdl: print(decodeASTSchema([definitions])) };
   }
 
@@ -343,7 +351,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
       `);
     });
 
-    it("selects on union and interface", () => {
+    it("selects on union and interface with includeInterfaceImplementingTypes enabled", () => {
       const { sdl } = testHelper(
         schema,
         `query {
@@ -357,6 +365,7 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
           }
         }
       }`,
+        true,
       );
       expect(sdl).toMatchInlineSnapshot(`
         "type Query {
@@ -384,6 +393,40 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
         "
       `);
     });
+  });
+
+  it("selects on union and interface", () => {
+    const { sdl } = testHelper(
+      schema,
+      `query {
+        screenable(id: 42) {
+          ... on Node {
+            id
+          }
+          ... on Film {
+            id
+            title
+          }
+        }
+      }`,
+    );
+    expect(sdl).toMatchInlineSnapshot(`
+      "type Query {
+        screenable(id: ID!): Screenable
+      }
+
+      union Screenable = Film | Series | Episode
+
+      interface Node {
+        id: ID!
+      }
+
+      type Film implements Node {
+        id: ID!
+        title(foo: String = "Bar"): String!
+      }
+      "
+    `);
   });
 
   describe("complex arguments", () => {
