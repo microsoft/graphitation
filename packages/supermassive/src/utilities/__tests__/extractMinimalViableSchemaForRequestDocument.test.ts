@@ -12,11 +12,9 @@ describe(extractMinimalViableSchemaForRequestDocument, () => {
     includeInterfaceImplementingTypes = false,
   ) {
     const { definitions, unknownDirectives } =
-      extractMinimalViableSchemaForRequestDocument(
-        schema,
-        parse(doc),
+      extractMinimalViableSchemaForRequestDocument(schema, parse(doc), {
         includeInterfaceImplementingTypes,
-      );
+      });
     return { unknownDirectives, sdl: print(decodeASTSchema([definitions])) };
   }
 

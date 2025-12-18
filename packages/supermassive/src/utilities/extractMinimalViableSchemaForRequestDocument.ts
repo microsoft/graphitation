@@ -73,15 +73,22 @@ export type ExtractMinimalViableSchemaResult = {
   fragmentSpreads: string[];
 };
 
+type ExtractMinimalViableSchemaForRequestDocumentOptions = {
+  includeInterfaceImplementingTypes?: boolean;
+};
+
 export function extractMinimalViableSchemaForRequestDocument(
   schema: GraphQLSchema,
   requestDocument: DocumentNode,
-  includeInterfaceImplementingTypes = false,
+  options?: ExtractMinimalViableSchemaForRequestDocumentOptions,
 ): ExtractMinimalViableSchemaResult {
   const types: TypeDefinitionsRecord = {};
   const directives: DirectiveDefinitionTuple[] = [];
   const unknownDirectives: DirectiveNode[] = [];
   const fragmentSpreads: string[] = [];
+
+  const includeInterfaceImplementingTypes =
+    options?.includeInterfaceImplementingTypes || false;
 
   const typeInfo = new TypeInfo(schema);
   visit(
