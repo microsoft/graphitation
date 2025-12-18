@@ -289,7 +289,6 @@ function encodeCompositeType(type: GraphQLCompositeType): CompositeTypeTuple {
     return createUnionTypeDefinition(type.getTypes().map((type) => type.name));
   }
   const ifaces = type.getInterfaces().map((iface) => iface.name);
-
   return isObjectType(type)
     ? createObjectTypeDefinition({}, ifaces)
     : createInterfaceTypeDefinition({}, ifaces);
