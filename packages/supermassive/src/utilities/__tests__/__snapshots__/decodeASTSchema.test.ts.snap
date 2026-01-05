@@ -30,7 +30,7 @@ type AnnotatedObject {
 
 type UndefinedType
 
-interface Bar {
+interface Bar implements Two {
   one: Type
   four(argument: String = "string"): String
   two(argument: InputType!): Type
