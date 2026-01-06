@@ -7,9 +7,11 @@ import {
   getFields,
   getInputObjectFields,
   InputValueDefinitionRecord,
+  InterfaceTypeDefinitionTuple,
   isInputObjectTypeDefinition,
   isInterfaceTypeDefinition,
   isObjectTypeDefinition,
+  ObjectTypeDefinitionTuple,
   SchemaDefinitions,
   setDirectiveDefinitionArgs,
   setFieldArgs,
@@ -89,7 +91,7 @@ export function mergeTypes(
         isInterfaceTypeDefinition(sourceDef))
     ) {
       mergeFields(getFields(targetDef), getFields(sourceDef));
-      // Note: not merging implemented interfaces - assuming they are fully defined by the first occurrence
+      mergeInterfaces(targetDef, sourceDef);
       continue;
     }
     if (
@@ -128,6 +130,29 @@ function mergeFields(
     if (sourceArgs) {
       const targetArgs = getFieldArgs(targetDef) ?? setFieldArgs(targetDef, {});
       mergeInputValues(targetArgs, sourceArgs);
+    }
+  }
+}
+
+function mergeInterfaces(
+  target: ObjectTypeDefinitionTuple | InterfaceTypeDefinitionTuple,
+  source: ObjectTypeDefinitionTuple | InterfaceTypeDefinitionTuple,
+): void {
+  const targetInterfaces = target[2];
+  const sourceInterfaces = source[2];
+
+  if (!sourceInterfaces) {
+    return;
+  }
+
+  if (!targetInterfaces) {
+    target[2] = [...sourceInterfaces];
+    return;
+  }
+
+  for (const interfaceName of sourceInterfaces) {
+    if (!targetInterfaces.includes(interfaceName)) {
+      targetInterfaces.push(interfaceName);
     }
   }
 }
