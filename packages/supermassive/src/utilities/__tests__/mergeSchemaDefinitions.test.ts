@@ -29,7 +29,7 @@ describe("mergeSchemaDefinitions", () => {
         name: String
       }
       
-      type User implements Contactable {
+      extend type User implements Contactable {
         email: String
       }
     `);
@@ -106,11 +106,11 @@ describe("mergeSchemaDefinitions", () => {
         name: String
       }
       
-      interface Node {
+      extend interface Node {
         typename: String
       }
       
-      input UserInput {
+      extend input UserInput {
         email: String
       }
     `);
@@ -204,7 +204,7 @@ describe("mergeSchemaDefinitions", () => {
         id: ID
       }
       
-      type User {
+      extend type User {
         name: String
       }
       
