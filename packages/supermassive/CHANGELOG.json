@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Tue, 06 Jan 2026 13:26:11 GMT",
+      "version": "3.14.1",
+      "tag": "@graphitation/supermassive_v3.14.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/supermassive",
+            "commit": "e9d4862ce1ec41571bd8300dde4fe249e760ee68",
+            "comment": "mergeSchemaDefinitions doesn't lose implementation + basic tests added"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 05 Jan 2026 11:02:15 GMT",
       "version": "3.14.0",
       "tag": "@graphitation/supermassive_v3.14.0",

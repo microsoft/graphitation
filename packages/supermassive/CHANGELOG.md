@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Mon, 05 Jan 2026 11:02:15 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 06 Jan 2026 13:26:11 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.14.1
+
+Tue, 06 Jan 2026 13:26:11 GMT
+
+### Patches
+
+- mergeSchemaDefinitions doesn't lose implementation + basic tests added (77059398+vejrj@users.noreply.github.com)
 
 ## 3.14.0
 
