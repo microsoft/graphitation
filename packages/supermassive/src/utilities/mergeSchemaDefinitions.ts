@@ -90,7 +90,6 @@ export function mergeTypes(
       (isInterfaceTypeDefinition(targetDef) &&
         isInterfaceTypeDefinition(sourceDef))
     ) {
-      // Note: not merging implemented interfaces - assuming they are fully defined by the first occurrence
       mergeFields(getFields(targetDef), getFields(sourceDef));
       mergeInterfaces(targetDef, sourceDef);
       continue;
