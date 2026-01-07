@@ -48,4 +48,48 @@ describe(stripFragmentReferenceFieldSelectionTransform, () => {
       `),
     );
   });
+
+  it("removes __fragments from subscription documents", () => {
+    const result = stripFragmentReferenceFieldSelectionTransform(graphql`
+      subscription UserUpdated {
+        userUpdated {
+          id
+          ... on Node {
+            __fragments @client
+          }
+        }
+      }
+    `);
+    expect(print(result)).toEqual(
+      print(graphql`
+        subscription UserUpdated {
+          userUpdated {
+            id
+          }
+        }
+      `),
+    );
+  });
+
+  it("removes __fragments from mutation documents", () => {
+    const result = stripFragmentReferenceFieldSelectionTransform(graphql`
+      mutation UpdateUser($id: ID!, $name: String!) {
+        updateUser(id: $id, name: $name) {
+          id
+          ... on Node {
+            __fragments @client
+          }
+        }
+      }
+    `);
+    expect(print(result)).toEqual(
+      print(graphql`
+        mutation UpdateUser($id: ID!, $name: String!) {
+          updateUser(id: $id, name: $name) {
+            id
+          }
+        }
+      `),
+    );
+  });
 });

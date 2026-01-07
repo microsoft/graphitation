@@ -68,14 +68,11 @@ export async function formatModuleFactory(
     const originalDocument = parse(docText, { noLocation: true });
     const optimizedDocument = optimizeDocumentNode(originalDocument);
 
-    if (!emitNarrowObservables) {
-      exports.executionQueryDocument = optimizedDocument;
-    } else {
-      if (!moduleName.endsWith("WatchNodeQuery.graphql")) {
-        exports.executionQueryDocument =
-          stripFragmentReferenceFieldSelectionTransform(optimizedDocument);
-      }
-
+    if (!moduleName.endsWith("WatchNodeQuery.graphql")) {
+      exports.executionQueryDocument =
+        stripFragmentReferenceFieldSelectionTransform(optimizedDocument);
+    }
+    if (emitNarrowObservables) {
       invariant(schema, "Expected a schema instance");
       exports.watchQueryDocument = reduceNodeWatchQueryTransform(
         schema,

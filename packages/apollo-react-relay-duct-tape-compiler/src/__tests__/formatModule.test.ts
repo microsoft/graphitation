@@ -780,6 +780,68 @@ describe("formatModule", () => {
     `);
   });
 
+  it("strips __fragments from subscription execution documents", async () => {
+    const result = await formatModule(
+      {
+        emitDocuments: true,
+        emitSupermassiveDocuments: false,
+        emitNarrowObservables: true,
+      },
+      {
+        definition: {
+          kind: "Request",
+          root: {
+            kind: "Root",
+            operation: "subscription",
+          },
+        } as Request,
+        typeText: `export type TestSubscription = {};`,
+        docText: `
+          subscription TestSubscription {
+            userUpdated {
+              id
+              ... on Node {
+                __fragments @client
+              }
+            }
+          }
+        `,
+      },
+    );
+    expect(result).not.toContain("__fragments");
+  });
+
+  it("strips __fragments from mutation execution documents", async () => {
+    const result = await formatModule(
+      {
+        emitDocuments: true,
+        emitSupermassiveDocuments: false,
+        emitNarrowObservables: true,
+      },
+      {
+        definition: {
+          kind: "Request",
+          root: {
+            kind: "Root",
+            operation: "mutation",
+          },
+        } as Request,
+        typeText: `export type TestMutation = {};`,
+        docText: `
+          mutation TestMutation($id: ID!, $name: String!) {
+            updateUser(id: $id, name: $name) {
+              id
+              ... on Node {
+                __fragments @client
+              }
+            }
+          }
+        `,
+      },
+    );
+    expect(result).not.toContain("__fragments");
+  });
+
   describe("--unstable_emitExecutionDocumentText=true", () => {
     it("adds document text with --emitDocuments=true", async () => {
       expect(
