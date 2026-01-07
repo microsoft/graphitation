@@ -72,10 +72,7 @@ export async function formatModuleFactory(
       exports.executionQueryDocument =
         stripFragmentReferenceFieldSelectionTransform(optimizedDocument);
     }
-
-    if (!emitNarrowObservables) {
-      exports.executionQueryDocument = optimizedDocument;
-    } else {
+    if (emitNarrowObservables) {
       invariant(schema, "Expected a schema instance");
       exports.watchQueryDocument = reduceNodeWatchQueryTransform(
         schema,
