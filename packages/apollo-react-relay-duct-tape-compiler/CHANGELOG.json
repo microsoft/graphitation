@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape-compiler",
   "entries": [
     {
+      "date": "Wed, 07 Jan 2026 22:51:38 GMT",
+      "version": "1.8.11",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.8.11",
+      "comments": {
+        "patch": [
+          {
+            "author": "ikjotdhody@microsoft.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "commit": "08860ceb2819033f7ec003a8fd6978661b87b9d6",
+            "comment": "Strip __fragments field for non-query operations from fat/broad query"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 06 Jan 2026 13:26:11 GMT",
       "version": "1.8.10",
       "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.8.10",

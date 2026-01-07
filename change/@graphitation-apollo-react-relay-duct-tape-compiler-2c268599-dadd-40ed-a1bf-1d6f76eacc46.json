@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Strip __fragments field for non-query operations from fat/broad query",
-  "packageName": "@graphitation/apollo-react-relay-duct-tape-compiler",
-  "email": "ikjotdhody@microsoft.com",
-  "dependentChangeType": "patch"
-}

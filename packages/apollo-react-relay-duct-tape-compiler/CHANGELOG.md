@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape-compiler
 
-<!-- This log was last generated on Tue, 06 Jan 2026 13:26:11 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 07 Jan 2026 22:51:38 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.8.11
+
+Wed, 07 Jan 2026 22:51:38 GMT
+
+### Patches
+
+- Strip __fragments field for non-query operations from fat/broad query (ikjotdhody@microsoft.com)
 
 ## 1.8.10
 
