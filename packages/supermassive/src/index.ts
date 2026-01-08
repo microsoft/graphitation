@@ -35,6 +35,7 @@ export {
   mergeSchemaDefinitions,
 } from "./utilities/mergeSchemaDefinitions";
 export { subtractSchemaDefinitions } from "./utilities/subtractSchemaDefinitions";
+export { isFragmentOf } from "./utilities/isFragmentOf";
 export { schemaFragmentFromMinimalViableSchemaDocument } from "./utilities/schemaFragmentFromMinimalViableSchemaDocument";
 export { pathToArray } from "./jsutils/Path";
 export { isPromise } from "./jsutils/isPromise";
