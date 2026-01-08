@@ -47,6 +47,15 @@ import {
   getDirectiveDefinitionArgs,
   getDirectiveLocations,
   decodeDirectiveLocation,
+  getObjectTypeDirectives,
+  getInterfaceTypeDiretives,
+  getEnumDirectives,
+  getUnionTypeDirectives,
+  ScalarTypeDefinitionTuple,
+  getScalarTypeDirectives,
+  getInputTypeDirectives,
+  getDirectiveArguments,
+  DirectiveTuple,
 } from "../schema/definition";
 import {
   inspectTypeReference,
@@ -57,7 +66,10 @@ import {
   unwrap,
 } from "../schema/reference";
 import { invariant } from "../jsutils/invariant";
-import { ValueNode as ConstValueNode } from "graphql/language/ast"; // TODO: use ConstValueNode in graphql@17
+import {
+  ValueNode as ConstValueNode,
+  DirectiveNode,
+} from "graphql/language/ast"; // TODO: use ConstValueNode in graphql@17
 import { inspect } from "../jsutils/inspect";
 
 /**
@@ -77,17 +89,19 @@ export function decodeASTSchema(
   for (const typeName in types) {
     const tuple = types[typeName];
     if (isScalarTypeDefinition(tuple)) {
-      definitions.push(decodeScalarType(typeName));
+      definitions.push(decodeScalarType(typeName, tuple, types, directives));
     } else if (isEnumTypeDefinition(tuple)) {
-      definitions.push(decodeEnumType(typeName, tuple));
+      definitions.push(decodeEnumType(typeName, tuple, types, directives));
     } else if (isObjectTypeDefinition(tuple)) {
-      definitions.push(decodeObjectType(typeName, tuple, types));
+      definitions.push(decodeObjectType(typeName, tuple, types, directives));
     } else if (isInterfaceTypeDefinition(tuple)) {
-      definitions.push(decodeInterfaceType(typeName, tuple, types));
+      definitions.push(decodeInterfaceType(typeName, tuple, types, directives));
     } else if (isUnionTypeDefinition(tuple)) {
-      definitions.push(decodeUnionType(typeName, tuple));
+      definitions.push(decodeUnionType(typeName, tuple, types, directives));
     } else if (isInputObjectTypeDefinition(tuple)) {
-      definitions.push(decodeInputObjectType(typeName, tuple, types));
+      definitions.push(
+        decodeInputObjectType(typeName, tuple, types, directives),
+      );
     }
   }
 
@@ -102,16 +116,26 @@ function nameNode(value: string): NameNode {
   return { kind: Kind.NAME, value };
 }
 
-function decodeScalarType(typeName: string): ScalarTypeDefinitionNode {
+function decodeScalarType(
+  typeName: string,
+  tuple: ScalarTypeDefinitionTuple,
+  types: TypeDefinitionsRecord,
+  directives?: DirectiveDefinitionTuple[],
+): ScalarTypeDefinitionNode {
   return {
     kind: Kind.SCALAR_TYPE_DEFINITION,
     name: nameNode(typeName),
+    directives:
+      directives &&
+      decodeDirectiveTuple(getScalarTypeDirectives(tuple), types, directives),
   };
 }
 
 function decodeEnumType(
   typeName: string,
   tuple: EnumTypeDefinitionTuple,
+  types: TypeDefinitionsRecord,
+  directives?: DirectiveDefinitionTuple[],
 ): EnumTypeDefinitionNode {
   return {
     kind: Kind.ENUM_TYPE_DEFINITION,
@@ -120,6 +144,9 @@ function decodeEnumType(
       kind: Kind.ENUM_VALUE_DEFINITION,
       name: nameNode(value),
     })),
+    directives:
+      directives &&
+      decodeDirectiveTuple(getEnumDirectives(tuple), types, directives),
   };
 }
 
@@ -127,6 +154,7 @@ function decodeObjectType(
   typeName: string,
   tuple: ObjectTypeDefinitionTuple,
   types: TypeDefinitionsRecord,
+  directives?: DirectiveDefinitionTuple[],
 ): ObjectTypeDefinitionNode {
   return {
     kind: Kind.OBJECT_TYPE_DEFINITION,
@@ -136,6 +164,9 @@ function decodeObjectType(
       kind: Kind.NAMED_TYPE,
       name: nameNode(name),
     })),
+    directives:
+      directives &&
+      decodeDirectiveTuple(getObjectTypeDirectives(tuple), types, directives),
   };
 }
 
@@ -143,6 +174,7 @@ function decodeInterfaceType(
   typeName: string,
   tuple: InterfaceTypeDefinitionTuple,
   types: TypeDefinitionsRecord,
+  directives?: DirectiveDefinitionTuple[],
 ): InterfaceTypeDefinitionNode {
   return {
     kind: Kind.INTERFACE_TYPE_DEFINITION,
@@ -152,12 +184,17 @@ function decodeInterfaceType(
       kind: Kind.NAMED_TYPE,
       name: nameNode(name),
     })),
+    directives:
+      directives &&
+      decodeDirectiveTuple(getInterfaceTypeDiretives(tuple), types, directives),
   };
 }
 
 function decodeUnionType(
   typeName: string,
   tuple: UnionTypeDefinitionTuple,
+  types: TypeDefinitionsRecord,
+  directives?: DirectiveDefinitionTuple[],
 ): UnionTypeDefinitionNode {
   return {
     kind: Kind.UNION_TYPE_DEFINITION,
@@ -166,6 +203,9 @@ function decodeUnionType(
       kind: Kind.NAMED_TYPE,
       name: nameNode(name),
     })),
+    directives:
+      directives &&
+      decodeDirectiveTuple(getUnionTypeDirectives(tuple), types, directives),
   };
 }
 
@@ -173,6 +213,7 @@ function decodeInputObjectType(
   typeName: string,
   tuple: InputObjectTypeDefinitionTuple,
   types: TypeDefinitionsRecord,
+  directives?: DirectiveDefinitionTuple[],
 ): InputObjectTypeDefinitionNode {
   return {
     kind: Kind.INPUT_OBJECT_TYPE_DEFINITION,
@@ -180,6 +221,9 @@ function decodeInputObjectType(
     fields: Object.entries(getInputObjectFields(tuple)).map(([name, value]) =>
       decodeInputValue(name, value, types),
     ),
+    directives:
+      directives &&
+      decodeDirectiveTuple(getInputTypeDirectives(tuple), types, directives),
   };
 }
 
@@ -337,4 +381,51 @@ function decodeDirective(
     // TODO? repeatable are irrelevant for execution
     repeatable: false,
   };
+}
+
+function decodeDirectiveTuple(
+  directiveTuples: DirectiveTuple[],
+  types: TypeDefinitionsRecord,
+  directives: DirectiveDefinitionTuple[],
+): ReadonlyArray<DirectiveNode> | undefined {
+  return directiveTuples.map(([directiveName, args]) => {
+    const directiveTuple = directives?.find(
+      (directive) => getDirectiveName(directive) === directiveName,
+    );
+
+    invariant(
+      directiveTuple !== undefined,
+      `Could not find directive definition for "${directiveName}"`,
+    );
+
+    const argumentDefinitions = getDirectiveArguments(directiveTuple);
+
+    return {
+      kind: Kind.DIRECTIVE,
+      name: nameNode(directiveName),
+      arguments:
+        args && argumentDefinitions
+          ? Object.entries(args)?.map(([argName, argValue]) => {
+              invariant(
+                argumentDefinitions[argName] !== undefined,
+                `Could not find directive argument definition "${argName}"for "${directiveName}" directive`,
+              );
+
+              const inputValueTypeRef = getInputValueTypeReference(
+                argumentDefinitions[argName],
+              );
+
+              return {
+                kind: Kind.ARGUMENT,
+                name: nameNode(argName),
+                value: valueToConstValueNode(
+                  argValue,
+                  inputValueTypeRef,
+                  types,
+                ),
+              };
+            })
+          : undefined,
+    };
+  });
 }

@@ -1,5 +1,6 @@
 import {
   DirectiveDefinitionTuple,
+  DirectiveTuple,
   FieldDefinitionRecord,
   getDirectiveDefinitionArgs,
   getDirectiveName,
@@ -16,6 +17,7 @@ import {
   setDirectiveDefinitionArgs,
   setFieldArgs,
   TypeDefinitionsRecord,
+  TypeDefinitionTuple,
 } from "../schema/definition";
 import { inspect } from "../jsutils/inspect";
 
@@ -43,6 +45,33 @@ export function mergeSchemaDefinitions(
     }
   }
   return accumulator;
+}
+
+function mergeFieldDirectives(
+  target: TypeDefinitionTuple,
+  source: TypeDefinitionTuple,
+): void {
+  const targetDirectives: DirectiveTuple[] | undefined = target[3];
+  const sourceDirectives: DirectiveTuple[] | undefined = source[3];
+
+  if (!sourceDirectives) {
+    return;
+  }
+
+  if (!targetDirectives) {
+    target[3] = [...sourceDirectives];
+    return;
+  }
+
+  for (const sourceDirective of sourceDirectives) {
+    const directiveName = sourceDirective[0];
+    const exists = targetDirectives.some(
+      (d: DirectiveTuple) => d[0] === directiveName,
+    );
+    if (!exists) {
+      targetDirectives.push(sourceDirective);
+    }
+  }
 }
 
 export function mergeDirectives(
@@ -84,6 +113,9 @@ export function mergeTypes(
       target[typeName] = sourceDef;
       continue;
     }
+
+    mergeFieldDirectives(targetDef, sourceDef);
+
     if (
       (isObjectTypeDefinition(targetDef) &&
         isObjectTypeDefinition(sourceDef)) ||

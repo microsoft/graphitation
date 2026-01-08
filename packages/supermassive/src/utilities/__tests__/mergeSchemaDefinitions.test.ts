@@ -245,7 +245,7 @@ describe("mergeSchemaDefinitions", () => {
       }
       
       extend type User implements Named {
-        name: String
+        name: String @testDirective
       }
       
       extend type User implements Contactable {
