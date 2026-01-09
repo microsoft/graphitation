@@ -47,6 +47,51 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
           "name": 6,
         },
       ],
+      [
+        "onType",
+        [
+          11,
+        ],
+      ],
+      [
+        "onObject",
+        [
+          11,
+        ],
+        {
+          "arg": 6,
+        },
+      ],
+      [
+        "onUnion",
+        [
+          15,
+        ],
+      ],
+      [
+        "onInterface",
+        [
+          14,
+        ],
+      ],
+      [
+        "onScalar",
+        [
+          10,
+        ],
+      ],
+      [
+        "onEnum",
+        [
+          16,
+        ],
+      ],
+      [
+        "onInputObject",
+        [
+          18,
+        ],
+      ],
     ],
     "types": {
       "AnnotatedEnum": [
@@ -400,6 +445,51 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema with directiv
         {
           "name": 6,
         },
+      ],
+      [
+        "onType",
+        [
+          11,
+        ],
+      ],
+      [
+        "onObject",
+        [
+          11,
+        ],
+        {
+          "arg": 6,
+        },
+      ],
+      [
+        "onUnion",
+        [
+          15,
+        ],
+      ],
+      [
+        "onInterface",
+        [
+          14,
+        ],
+      ],
+      [
+        "onScalar",
+        [
+          10,
+        ],
+      ],
+      [
+        "onEnum",
+        [
+          16,
+        ],
+      ],
+      [
+        "onInputObject",
+        [
+          18,
+        ],
       ],
     ],
     "types": {
