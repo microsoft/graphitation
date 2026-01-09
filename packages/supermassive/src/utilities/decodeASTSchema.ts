@@ -384,10 +384,14 @@ function decodeDirective(
 }
 
 function decodeDirectiveTuple(
-  directiveTuples: DirectiveTuple[],
+  directiveTuples: DirectiveTuple[] | undefined,
   types: TypeDefinitionsRecord,
   directives: DirectiveDefinitionTuple[],
 ): ReadonlyArray<DirectiveNode> | undefined {
+  if (!directiveTuples) {
+    return;
+  }
+
   return directiveTuples.map(([directiveName, args]) => {
     const directiveTuple = directives?.find(
       (directive) => getDirectiveName(directive) === directiveName,

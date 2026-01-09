@@ -541,8 +541,8 @@ export function getEnumValues(tuple: EnumTypeDefinitionTuple): string[] {
 
 export function getEnumDirectives(
   tuple: EnumTypeDefinitionTuple,
-): DirectiveTuple[] {
-  return tuple[EnumKeys.directives] || [];
+): DirectiveTuple[] | undefined {
+  return tuple[EnumKeys.directives];
 }
 
 export function getDirectiveDefinitionArgs(
@@ -636,14 +636,14 @@ export function createScalarTypeDefinition(
 
 export function getScalarTypeDirectives(
   def: ScalarTypeDefinitionTuple,
-): DirectiveTuple[] {
-  return def[ScalarKeys.directives] ?? [];
+): DirectiveTuple[] | undefined {
+  return def[ScalarKeys.directives];
 }
 
 export function getObjectTypeDirectives(
   def: ObjectTypeDefinitionTuple,
-): DirectiveTuple[] {
-  return def[ObjectKeys.directives] ?? [];
+): DirectiveTuple[] | undefined {
+  return def[ObjectKeys.directives];
 }
 
 export function getObjectTypeInterfaces(
@@ -660,14 +660,14 @@ export function getInterfaceTypeInterfaces(
 
 export function getInterfaceTypeDiretives(
   def: InterfaceTypeDefinitionTuple,
-): DirectiveTuple[] {
-  return def[InterfaceKeys.directives] ?? [];
+): DirectiveTuple[] | undefined {
+  return def[InterfaceKeys.directives];
 }
 
 export function getInputTypeDirectives(
   def: InputObjectTypeDefinitionTuple,
-): DirectiveTuple[] {
-  return def[InputObjectKeys.directives] ?? [];
+): DirectiveTuple[] | undefined {
+  return def[InputObjectKeys.directives];
 }
 
 export function getUnionTypeMembers(
@@ -678,8 +678,8 @@ export function getUnionTypeMembers(
 
 export function getUnionTypeDirectives(
   def: UnionTypeDefinitionTuple,
-): DirectiveTuple[] {
-  return def[UnionKeys.directives] ?? [];
+): DirectiveTuple[] | undefined {
+  return def[UnionKeys.directives];
 }
 
 export function getFieldArguments(
