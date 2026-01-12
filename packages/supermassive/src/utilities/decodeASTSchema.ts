@@ -56,6 +56,7 @@ import {
   getInputTypeDirectives,
   getDirectiveArguments,
   DirectiveTuple,
+  getDirectiveRepeatableKeyword,
 } from "../schema/definition";
 import {
   inspectTypeReference,
@@ -407,6 +408,7 @@ function decodeDirectiveTuple(
     return {
       kind: Kind.DIRECTIVE,
       name: nameNode(directiveName),
+      repeatable: getDirectiveRepeatableKeyword(directiveTuple),
       arguments:
         args && argumentDefinitions
           ? Object.entries(args)?.map(([argName, argValue]) => {

@@ -172,11 +172,13 @@ export type DirectiveDefinitionTuple = [
   name: DirectiveName,
   locations: DirectiveLocation[],
   arguments?: InputValueDefinitionRecord,
+  repeatable?: boolean,
 ];
 const enum DirectiveKeys {
   name = 0,
   locations = 1,
   arguments = 2,
+  repeatable = 3,
 }
 
 export type TypeDefinitionsRecord = Record<TypeName, TypeDefinitionTuple>;
@@ -692,4 +694,10 @@ export function getDirectiveArguments(
   def: DirectiveDefinitionTuple,
 ): InputValueDefinitionRecord | undefined {
   return Array.isArray(def) ? def[DirectiveKeys.arguments] : undefined;
+}
+
+export function getDirectiveRepeatableKeyword(
+  def: DirectiveDefinitionTuple,
+): boolean | undefined {
+  return Array.isArray(def) ? def[DirectiveKeys.repeatable] : undefined;
 }

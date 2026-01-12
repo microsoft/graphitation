@@ -51,7 +51,7 @@ export function encodeASTSchema(
   schemaFragment: DocumentNode,
   options?: EncodeASTSchemaOptions,
 ): SchemaDefinitions[] {
-  const includeDirectives = Boolean(options?.includeDirectives);
+  const includeDirectives = !options?.includeDirectives;
   const fragments: SchemaDefinitions[] = [{ types: {} }];
   const add = (name: string, def: TypeDefinitionTuple, extension = false) =>
     addTypeDefinition(fragments, name, def, extension);
@@ -303,14 +303,35 @@ function encodeDirective(
   node: DirectiveDefinitionNode,
 ): DirectiveDefinitionTuple {
   if (node.arguments?.length) {
-    return [
-      node.name.value,
-      node.locations.map((node) =>
-        encodeDirectiveLocation(node.value as DirectiveLocationEnum),
-      ),
-      encodeArguments(node),
-    ];
+    if (node.repeatable) {
+      return [
+        node.name.value,
+        node.locations.map((node) =>
+          encodeDirectiveLocation(node.value as DirectiveLocationEnum),
+        ),
+        encodeArguments(node),
+        node.repeatable,
+      ];
+    } else {
+      return [
+        node.name.value,
+        node.locations.map((node) =>
+          encodeDirectiveLocation(node.value as DirectiveLocationEnum),
+        ),
+        encodeArguments(node),
+      ];
+    }
   } else {
+    if (node.repeatable) {
+      [
+        node.name.value,
+        node.locations.map((node) =>
+          encodeDirectiveLocation(node.value as DirectiveLocationEnum),
+        ),
+        undefined,
+        node.repeatable || undefined,
+      ];
+    }
     return [
       node.name.value,
       node.locations.map((node) =>
