@@ -30,8 +30,8 @@ describe("formatValue", () => {
 
   describe("bigint values", () => {
     it("should format standalone bigint", () => {
-      expect(formatValue(BigInt(123))).toBe("123");
-      expect(formatValue(BigInt(0))).toBe("0");
+      expect(formatValue(BigInt(123))).toBe('"123n"');
+      expect(formatValue(BigInt(0))).toBe('"0n"');
     });
   });
 

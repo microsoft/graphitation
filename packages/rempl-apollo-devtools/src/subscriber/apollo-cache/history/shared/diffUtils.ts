@@ -146,7 +146,6 @@ export function computeDiff(oldText: string, newText: string): DiffHunk[] {
 export function formatValue(value: unknown): string {
   if (value === undefined) return "undefined";
   if (value === null) return "null";
-  if (typeof value === "bigint") return value.toString();
 
   try {
     return JSON.stringify(
