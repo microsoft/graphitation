@@ -9,16 +9,6 @@ export interface IndexItem {
   newIndex?: number; // for moved items
 }
 
-export const formatValueForDisplay = (value: unknown): string => {
-  if (value === undefined) return "undefined";
-  if (value === null) return "null";
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-};
-
 export const formatDataPreview = (data: unknown): string => {
   if (data === null) return "null";
   if (data === undefined) return "undefined";

@@ -45,7 +45,7 @@ export const OperationMetadata: React.FC<OperationMetadataProps> = ({
           {shouldInlineVariables ? (
             <Text className={classes.inlineVariables}>{variablesString}</Text>
           ) : (
-            <CodeBlock value={variables} language="json" maxHeight="200px" />
+            <CodeBlock value={variables} maxHeight="200px" />
           )}
         </div>
       )}

@@ -1,5 +1,6 @@
 import React from "react";
 import { makeStyles, shorthands, tokens } from "@fluentui/react-components";
+import { formatValue } from "../diffUtils";
 
 const useStyles = makeStyles({
   codeBlock: {
@@ -39,28 +40,11 @@ export interface CodeBlockProps {
 
 export const CodeBlock: React.FC<CodeBlockProps> = ({
   value,
-  language = "json",
   inline = false,
   maxHeight,
   className,
 }) => {
   const classes = useStyles();
-
-  const formatValue = (): string => {
-    if (typeof value === "string") {
-      return value;
-    }
-
-    if (language === "json") {
-      try {
-        return JSON.stringify(value, null, 2);
-      } catch (e) {
-        return String(value);
-      }
-    }
-
-    return String(value);
-  };
 
   const style = maxHeight ? { maxHeight } : undefined;
 
@@ -71,7 +55,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
       }`}
       style={style}
     >
-      <code>{formatValue()}</code>
+      <code>{formatValue(value)}</code>
     </pre>
   );
 };

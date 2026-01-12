@@ -9,6 +9,7 @@ import {
   ChevronDown20Regular,
 } from "@fluentui/react-icons";
 import { useDiffViewerStyles } from "./DiffViewer.styles";
+import { formatValue } from "./shared/diffUtils";
 
 interface DiffViewerProps {
   oldValue: unknown;
@@ -359,16 +360,6 @@ const DiffLineComponent: React.FC<DiffLineComponentProps> = ({
     </div>
   );
 };
-
-function formatValue(value: unknown): string {
-  if (value === undefined) return "undefined";
-  if (value === null) return "null";
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-}
 
 // LCS (Longest Common Subsequence) algorithm for better diff matching
 function computeLCS(
