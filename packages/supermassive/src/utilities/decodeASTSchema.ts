@@ -57,6 +57,7 @@ import {
   getDirectiveArguments,
   DirectiveTuple,
   getDirectiveRepeatableKeyword,
+  getFieldDirectives,
 } from "../schema/definition";
 import {
   inspectTypeReference,
@@ -123,12 +124,15 @@ function decodeScalarType(
   types: TypeDefinitionsRecord,
   directives?: DirectiveDefinitionTuple[],
 ): ScalarTypeDefinitionNode {
+  const decoded = decodeDirectiveTuple(
+    getScalarTypeDirectives(tuple),
+    types,
+    directives,
+  );
   return {
     kind: Kind.SCALAR_TYPE_DEFINITION,
     name: nameNode(typeName),
-    directives:
-      directives &&
-      decodeDirectiveTuple(getScalarTypeDirectives(tuple), types, directives),
+    ...(decoded && { directives: decoded }),
   };
 }
 
@@ -138,6 +142,11 @@ function decodeEnumType(
   types: TypeDefinitionsRecord,
   directives?: DirectiveDefinitionTuple[],
 ): EnumTypeDefinitionNode {
+  const decoded = decodeDirectiveTuple(
+    getEnumDirectives(tuple),
+    types,
+    directives,
+  );
   return {
     kind: Kind.ENUM_TYPE_DEFINITION,
     name: nameNode(typeName),
@@ -145,9 +154,7 @@ function decodeEnumType(
       kind: Kind.ENUM_VALUE_DEFINITION,
       name: nameNode(value),
     })),
-    directives:
-      directives &&
-      decodeDirectiveTuple(getEnumDirectives(tuple), types, directives),
+    ...(decoded && { directives: decoded }),
   };
 }
 
@@ -157,17 +164,20 @@ function decodeObjectType(
   types: TypeDefinitionsRecord,
   directives?: DirectiveDefinitionTuple[],
 ): ObjectTypeDefinitionNode {
+  const decoded = decodeDirectiveTuple(
+    getObjectTypeDirectives(tuple),
+    types,
+    directives,
+  );
   return {
     kind: Kind.OBJECT_TYPE_DEFINITION,
     name: nameNode(typeName),
-    fields: decodeFields(getObjectFields(tuple) ?? {}, types),
+    fields: decodeFields(getObjectFields(tuple) ?? {}, types, directives),
     interfaces: getObjectTypeInterfaces(tuple).map((name) => ({
       kind: Kind.NAMED_TYPE,
       name: nameNode(name),
     })),
-    directives:
-      directives &&
-      decodeDirectiveTuple(getObjectTypeDirectives(tuple), types, directives),
+    ...(decoded && { directives: decoded }),
   };
 }
 
@@ -177,6 +187,11 @@ function decodeInterfaceType(
   types: TypeDefinitionsRecord,
   directives?: DirectiveDefinitionTuple[],
 ): InterfaceTypeDefinitionNode {
+  const decoded = decodeDirectiveTuple(
+    getInterfaceTypeDiretives(tuple),
+    types,
+    directives,
+  );
   return {
     kind: Kind.INTERFACE_TYPE_DEFINITION,
     name: nameNode(typeName),
@@ -185,9 +200,7 @@ function decodeInterfaceType(
       kind: Kind.NAMED_TYPE,
       name: nameNode(name),
     })),
-    directives:
-      directives &&
-      decodeDirectiveTuple(getInterfaceTypeDiretives(tuple), types, directives),
+    ...(decoded && { directives: decoded }),
   };
 }
 
@@ -197,6 +210,11 @@ function decodeUnionType(
   types: TypeDefinitionsRecord,
   directives?: DirectiveDefinitionTuple[],
 ): UnionTypeDefinitionNode {
+  const decoded = decodeDirectiveTuple(
+    getUnionTypeDirectives(tuple),
+    types,
+    directives,
+  );
   return {
     kind: Kind.UNION_TYPE_DEFINITION,
     name: nameNode(typeName),
@@ -204,9 +222,7 @@ function decodeUnionType(
       kind: Kind.NAMED_TYPE,
       name: nameNode(name),
     })),
-    directives:
-      directives &&
-      decodeDirectiveTuple(getUnionTypeDirectives(tuple), types, directives),
+    ...(decoded && { directives: decoded }),
   };
 }
 
@@ -216,29 +232,39 @@ function decodeInputObjectType(
   types: TypeDefinitionsRecord,
   directives?: DirectiveDefinitionTuple[],
 ): InputObjectTypeDefinitionNode {
+  const decoded = decodeDirectiveTuple(
+    getInputTypeDirectives(tuple),
+    types,
+    directives,
+  );
   return {
     kind: Kind.INPUT_OBJECT_TYPE_DEFINITION,
     name: nameNode(typeName),
     fields: Object.entries(getInputObjectFields(tuple)).map(([name, value]) =>
       decodeInputValue(name, value, types),
     ),
-    directives:
-      directives &&
-      decodeDirectiveTuple(getInputTypeDirectives(tuple), types, directives),
+    ...(decoded && { directives: decoded }),
   };
 }
 
 function decodeFields(
   fields: Record<string, FieldDefinition>,
   types: TypeDefinitionsRecord,
+  directives?: DirectiveDefinitionTuple[],
 ): FieldDefinitionNode[] {
   return Object.entries(fields).map(([name, value]) => {
     const type = decodeTypeReference(getFieldTypeReference(value));
+    const decoded = decodeDirectiveTuple(
+      getFieldDirectives(value),
+      types,
+      directives,
+    );
     return {
       kind: Kind.FIELD_DEFINITION,
       name: nameNode(name),
       type,
       arguments: decodeArguments(getFieldArgs(value) ?? {}, types),
+      ...(decoded && { directives: decoded }),
     };
   });
 }
@@ -379,17 +405,16 @@ function decodeDirective(
       kind: Kind.NAME,
       value: decodeDirectiveLocation(loc),
     })),
-    // TODO? repeatable are irrelevant for execution
-    repeatable: false,
+    repeatable: Boolean(getDirectiveRepeatableKeyword(tuple)),
   };
 }
 
 function decodeDirectiveTuple(
   directiveTuples: DirectiveTuple[] | undefined,
   types: TypeDefinitionsRecord,
-  directives: DirectiveDefinitionTuple[],
+  directives?: DirectiveDefinitionTuple[],
 ): ReadonlyArray<DirectiveNode> | undefined {
-  if (!directiveTuples) {
+  if (!directiveTuples || !directives) {
     return;
   }
 
@@ -404,11 +429,12 @@ function decodeDirectiveTuple(
     );
 
     const argumentDefinitions = getDirectiveArguments(directiveTuple);
+    const isRepeatable = Boolean(getDirectiveRepeatableKeyword(directiveTuple));
 
     return {
       kind: Kind.DIRECTIVE,
       name: nameNode(directiveName),
-      repeatable: getDirectiveRepeatableKeyword(directiveTuple),
+      ...(isRepeatable && { isRepeatable }),
       arguments:
         args && argumentDefinitions
           ? Object.entries(args)?.map(([argName, argValue]) => {
@@ -431,7 +457,7 @@ function decodeDirectiveTuple(
                 ),
               };
             })
-          : undefined,
+          : [],
     };
   });
 }

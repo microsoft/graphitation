@@ -12,9 +12,4 @@ describe(encodeASTSchema, () => {
     const encoded = encodeASTSchema(kitchenSinkSDL.document);
     expect(encoded).toMatchSnapshot();
   });
-
-  test("correctly encodes kitchen sink AST schema with directives", () => {
-    const encoded = encodeASTSchema(kitchenSinkSDL.document);
-    expect(encoded).toMatchSnapshot();
-  });
 });
