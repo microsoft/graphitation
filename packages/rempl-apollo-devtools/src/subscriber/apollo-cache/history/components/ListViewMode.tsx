@@ -1,11 +1,9 @@
 import React from "react";
 import { Text, tokens } from "@fluentui/react-components";
 import type { CompositeListLayoutChange as ListItemChange } from "@graphitation/apollo-forest-run";
-import {
-  getListItemChangeDescription,
-  formatValueForDisplay,
-} from "./arrayDiffUtils";
+import { getListItemChangeDescription } from "./arrayDiffUtils";
 import { useArrayDiffViewerStyles } from "../ArrayDiffViewer.styles";
+import { formatValue } from "../shared/diffUtils";
 
 interface ListViewModeProps {
   itemChanges: ListItemChange[];
@@ -32,7 +30,7 @@ export const ListViewMode: React.FC<ListViewModeProps> = ({ itemChanges }) => {
                   fontFamily: tokens.fontFamilyMonospace,
                 }}
               >
-                {formatValueForDisplay(change.data)}
+                {formatValue(change.data)}
               </pre>
             )}
           </div>

@@ -1,8 +1,9 @@
 import React from "react";
 import { Text, Tooltip } from "@fluentui/react-components";
 import type { IndexItem } from "./arrayDiffUtils";
-import { formatValueForDisplay, formatDataPreview } from "./arrayDiffUtils";
+import { formatDataPreview } from "./arrayDiffUtils";
 import { useArrayDiffViewerStyles } from "../ArrayDiffViewer.styles";
+import { formatValue } from "../shared/diffUtils";
 
 interface ArrayIndexItemProps {
   item: IndexItem;
@@ -97,9 +98,7 @@ export const ArrayIndexItem: React.FC<ArrayIndexItemProps> = ({
         </Tooltip>
       );
     }
-    return isExpanded
-      ? formatValueForDisplay(item.data)
-      : formatDataPreview(item.data);
+    return isExpanded ? formatValue(item.data) : formatDataPreview(item.data);
   };
 
   return (

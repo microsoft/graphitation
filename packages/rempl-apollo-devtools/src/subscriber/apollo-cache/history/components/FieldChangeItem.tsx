@@ -5,6 +5,7 @@ import type { HistoryFieldChange } from "@graphitation/apollo-forest-run";
 import { DifferenceKind } from "@graphitation/apollo-forest-run";
 import { ArrayDiffViewer } from "../ArrayDiffViewer";
 import { useFieldChangesListStyles } from "../FieldChangesList.styles";
+import { formatValue } from "../shared/diffUtils";
 
 interface FieldChangeItemProps {
   change: HistoryFieldChange;
@@ -191,31 +192,4 @@ function formatValuePreview(value: unknown): string {
     return `{${keys.length} ${keys.length === 1 ? "field" : "fields"}}`;
   }
   return String(value);
-}
-
-function formatValue(value: unknown): string {
-  if (value === undefined) return "(unavailable)";
-  if (value === null) return "null";
-
-  // If it's a string, check if it's JSON
-  if (typeof value === "string") {
-    try {
-      const parsed = JSON.parse(value);
-      // If successfully parsed and it's an object or array, format it
-      if (typeof parsed === "object" && parsed !== null) {
-        return JSON.stringify(parsed, null, 2);
-      }
-    } catch {
-      // Not JSON, return the string as-is
-      return value;
-    }
-    return value;
-  }
-
-  // For objects, arrays, and other types, stringify with formatting
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
 }

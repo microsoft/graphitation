@@ -1,6 +1,7 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { VirtualizerScrollView } from "@fluentui/react-virtualizer";
 import { tokens } from "@fluentui/react-components";
+import { formatValue } from "../diffUtils";
 
 interface JsonViewerProps {
   data: unknown;
@@ -11,13 +12,7 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
   data,
   maxHeight = 400,
 }) => {
-  const lines = useMemo(() => {
-    try {
-      return JSON.stringify(data, null, 2).split("\n");
-    } catch {
-      return String(data).split("\n");
-    }
-  }, [data]);
+  const lines = formatValue(data).split("\n");
 
   const itemSize = 20;
   const height = Math.min(lines.length * itemSize, maxHeight);
