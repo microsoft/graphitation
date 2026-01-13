@@ -1,8 +1,16 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-<!-- This log was last generated on Thu, 04 Dec 2025 13:24:07 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 13 Jan 2026 10:08:10 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 2.1.3
+
+Tue, 13 Jan 2026 10:08:10 GMT
+
+### Patches
+
+- convert bigint to string (pavelglac@gmail.com)
 
 ## 2.1.2
 
