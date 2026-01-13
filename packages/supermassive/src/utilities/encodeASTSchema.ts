@@ -51,7 +51,7 @@ export function encodeASTSchema(
   schemaFragment: DocumentNode,
   options?: EncodeASTSchemaOptions,
 ): SchemaDefinitions[] {
-  const includeDirectives = !options?.includeDirectives;
+  const includeDirectives = Boolean(options?.includeDirectives);
   const fragments: SchemaDefinitions[] = [{ types: {} }];
   const add = (name: string, def: TypeDefinitionTuple, extension = false) =>
     addTypeDefinition(fragments, name, def, extension);
@@ -185,7 +185,7 @@ function encodeObjectType(
 ): ObjectTypeDefinitionTuple {
   const fields = Object.create(null);
   for (const field of node.fields ?? []) {
-    fields[field.name.value] = encodeField(field);
+    fields[field.name.value] = encodeField(field, includeDirectives);
   }
   return createObjectTypeDefinition(
     fields,
@@ -224,7 +224,7 @@ function encodeInterfaceType(
 ): InterfaceTypeDefinitionTuple {
   const fields = Object.create(null);
   for (const field of node.fields ?? []) {
-    fields[field.name.value] = encodeField(field);
+    fields[field.name.value] = encodeField(field, includeDirectives);
   }
   return createInterfaceTypeDefinition(
     fields,
@@ -271,10 +271,29 @@ function encodeInputObjectType(
 
 function encodeField(
   node: FieldDefinitionNode,
+  includeDirectives: boolean,
 ): TypeReference | FieldDefinitionTuple {
-  return !node.arguments?.length
-    ? typeReferenceFromNode(node.type)
-    : [typeReferenceFromNode(node.type), encodeArguments(node)];
+  if (!node.arguments?.length) {
+    return typeReferenceFromNode(node.type);
+  }
+
+  if (includeDirectives && node.directives?.length) {
+    console.log(
+      node.name,
+      node.directives
+        .map(encodeDirectiveTuple)
+        .filter<DirectiveTuple>((directive) => !!directive),
+    );
+    return [
+      typeReferenceFromNode(node.type),
+      encodeArguments(node),
+      node.directives
+        .map(encodeDirectiveTuple)
+        .filter<DirectiveTuple>((directive) => !!directive),
+    ];
+  }
+
+  return [typeReferenceFromNode(node.type), encodeArguments(node)];
 }
 
 function encodeArguments(

@@ -100,6 +100,7 @@ export type FieldDefinitionTuple = [
 const enum FieldKeys {
   type = 0,
   arguments = 1,
+  directives = 2,
 }
 export type FieldDefinition = TypeReference | FieldDefinitionTuple;
 export type FieldDefinitionRecord = Record<string, FieldDefinition>;
@@ -527,6 +528,12 @@ export function getFieldArgs(
   field: FieldDefinition,
 ): InputValueDefinitionRecord | undefined {
   return Array.isArray(field) ? field[FieldKeys.arguments] : undefined;
+}
+
+export function getFieldDirectives(
+  field: FieldDefinition,
+): DirectiveTuple[] | undefined {
+  return Array.isArray(field) ? field[FieldKeys.directives] : undefined;
 }
 
 export function setFieldArgs(
