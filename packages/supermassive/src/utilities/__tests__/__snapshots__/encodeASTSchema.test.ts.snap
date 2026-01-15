@@ -46,7 +46,9 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
         {
           "name": 6,
         },
-        true,
+        {
+          "isRepeatable": true,
+        },
       ],
       [
         "onType",

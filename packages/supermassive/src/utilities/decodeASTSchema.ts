@@ -47,17 +47,17 @@ import {
   getDirectiveDefinitionArgs,
   getDirectiveLocations,
   decodeDirectiveLocation,
-  getObjectTypeDirectives,
-  getInterfaceTypeDiretives,
-  getEnumDirectives,
-  getUnionTypeDirectives,
+  getObjectTypeMetadata,
+  getInterfaceTypeMetadata,
+  getEnumMetadata,
+  getUnionTypeMetadata,
   ScalarTypeDefinitionTuple,
-  getScalarTypeDirectives,
-  getInputTypeDirectives,
+  getScalarTypeMetadata,
+  getInputTypeMetadata,
   getDirectiveArguments,
   DirectiveTuple,
-  getDirectiveRepeatableKeyword,
-  getFieldDirectives,
+  getDirectiveMetadata,
+  getFieldMetadata,
 } from "../schema/definition";
 import {
   inspectTypeReference,
@@ -125,7 +125,7 @@ function decodeScalarType(
   directives?: DirectiveDefinitionTuple[],
 ): ScalarTypeDefinitionNode {
   const decoded = decodeDirectiveTuple(
-    getScalarTypeDirectives(tuple),
+    getScalarTypeMetadata(tuple)?.directives,
     types,
     directives,
   );
@@ -143,7 +143,7 @@ function decodeEnumType(
   directives?: DirectiveDefinitionTuple[],
 ): EnumTypeDefinitionNode {
   const decoded = decodeDirectiveTuple(
-    getEnumDirectives(tuple),
+    getEnumMetadata(tuple)?.directives,
     types,
     directives,
   );
@@ -165,7 +165,7 @@ function decodeObjectType(
   directives?: DirectiveDefinitionTuple[],
 ): ObjectTypeDefinitionNode {
   const decoded = decodeDirectiveTuple(
-    getObjectTypeDirectives(tuple),
+    getObjectTypeMetadata(tuple)?.directives,
     types,
     directives,
   );
@@ -188,7 +188,7 @@ function decodeInterfaceType(
   directives?: DirectiveDefinitionTuple[],
 ): InterfaceTypeDefinitionNode {
   const decoded = decodeDirectiveTuple(
-    getInterfaceTypeDiretives(tuple),
+    getInterfaceTypeMetadata(tuple)?.directives,
     types,
     directives,
   );
@@ -211,7 +211,7 @@ function decodeUnionType(
   directives?: DirectiveDefinitionTuple[],
 ): UnionTypeDefinitionNode {
   const decoded = decodeDirectiveTuple(
-    getUnionTypeDirectives(tuple),
+    getUnionTypeMetadata(tuple)?.directives,
     types,
     directives,
   );
@@ -233,7 +233,7 @@ function decodeInputObjectType(
   directives?: DirectiveDefinitionTuple[],
 ): InputObjectTypeDefinitionNode {
   const decoded = decodeDirectiveTuple(
-    getInputTypeDirectives(tuple),
+    getInputTypeMetadata(tuple)?.directives,
     types,
     directives,
   );
@@ -255,7 +255,7 @@ function decodeFields(
   return Object.entries(fields).map(([name, value]) => {
     const type = decodeTypeReference(getFieldTypeReference(value));
     const decoded = decodeDirectiveTuple(
-      getFieldDirectives(value),
+      getFieldMetadata(value)?.directives,
       types,
       directives,
     );
@@ -405,7 +405,7 @@ function decodeDirective(
       kind: Kind.NAME,
       value: decodeDirectiveLocation(loc),
     })),
-    repeatable: Boolean(getDirectiveRepeatableKeyword(tuple)),
+    repeatable: Boolean(getDirectiveMetadata(tuple)?.isRepeatable),
   };
 }
 
@@ -429,7 +429,9 @@ function decodeDirectiveTuple(
     );
 
     const argumentDefinitions = getDirectiveArguments(directiveTuple);
-    const isRepeatable = Boolean(getDirectiveRepeatableKeyword(directiveTuple));
+    const isRepeatable = Boolean(
+      getDirectiveMetadata(directiveTuple)?.isRepeatable,
+    );
 
     return {
       kind: Kind.DIRECTIVE,

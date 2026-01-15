@@ -39,6 +39,7 @@ import {
   createUnionTypeDefinition,
   encodeDirectiveLocation,
   DirectiveTuple,
+  TypeDefinitionMetadata,
 } from "../schema/definition";
 import { typeReferenceFromNode, TypeReference } from "../schema/reference";
 import { valueFromASTUntyped } from "./valueFromASTUntyped";
@@ -156,26 +157,34 @@ function encodeScalarType(
   type: ScalarTypeDefinitionNode | ScalarTypeExtensionNode,
   includeDirectives: boolean,
 ): ScalarTypeDefinitionTuple {
-  return createScalarTypeDefinition(
-    includeDirectives
-      ? type.directives
-          ?.map(encodeDirectiveTuple)
-          .filter<DirectiveTuple>((directive) => !!directive)
-      : undefined,
-  );
+  const metadata =
+    includeDirectives && type.directives
+      ? {
+          directives: type.directives
+            .map(encodeDirectiveTuple)
+            .filter<DirectiveTuple>((directive) => !!directive),
+        }
+      : undefined;
+
+  return createScalarTypeDefinition(metadata);
 }
 
 function encodeEnumType(
   node: EnumTypeDefinitionNode | EnumTypeExtensionNode,
   includeDirectives: boolean,
 ): EnumTypeDefinitionTuple {
+  const metadata =
+    includeDirectives && node.directives?.length
+      ? {
+          directives: node.directives
+            .map(encodeDirectiveTuple)
+            .filter<DirectiveTuple>((directive) => !!directive),
+        }
+      : undefined;
+
   return createEnumTypeDefinition(
     (node.values ?? []).map((value) => value.name.value),
-    includeDirectives
-      ? node.directives
-          ?.map(encodeDirectiveTuple)
-          .filter<DirectiveTuple>((directive) => !!directive)
-      : undefined,
+    metadata,
   );
 }
 
@@ -187,14 +196,18 @@ function encodeObjectType(
   for (const field of node.fields ?? []) {
     fields[field.name.value] = encodeField(field, includeDirectives);
   }
+  const metadata =
+    includeDirectives && node.directives?.length
+      ? {
+          directives: node.directives
+            .map(encodeDirectiveTuple)
+            .filter<DirectiveTuple>((directive) => !!directive),
+        }
+      : undefined;
   return createObjectTypeDefinition(
     fields,
     node.interfaces?.map((iface) => iface.name.value),
-    includeDirectives
-      ? node.directives
-          ?.map(encodeDirectiveTuple)
-          .filter<DirectiveTuple>((directive) => !!directive)
-      : undefined,
+    metadata,
   );
 }
 
@@ -226,14 +239,20 @@ function encodeInterfaceType(
   for (const field of node.fields ?? []) {
     fields[field.name.value] = encodeField(field, includeDirectives);
   }
+
+  const metadata =
+    includeDirectives && node.directives?.length
+      ? {
+          directives: node.directives
+            .map(encodeDirectiveTuple)
+            .filter<DirectiveTuple>((directive) => !!directive),
+        }
+      : undefined;
+
   return createInterfaceTypeDefinition(
     fields,
     node.interfaces?.map((iface) => iface.name.value),
-    includeDirectives
-      ? node.directives
-          ?.map(encodeDirectiveTuple)
-          .filter<DirectiveTuple>((directive) => !!directive)
-      : undefined,
+    metadata,
   );
 }
 
@@ -241,13 +260,18 @@ function encodeUnionType(
   node: UnionTypeDefinitionNode | UnionTypeExtensionNode,
   includeDirectives: boolean,
 ): UnionTypeDefinitionTuple {
+  const metadata =
+    includeDirectives && node.directives?.length
+      ? {
+          directives: node.directives
+            .map(encodeDirectiveTuple)
+            .filter<DirectiveTuple>((directive) => !!directive),
+        }
+      : undefined;
+
   return createUnionTypeDefinition(
     (node.types ?? []).map((type) => type.name.value),
-    includeDirectives
-      ? node.directives
-          ?.map(encodeDirectiveTuple)
-          .filter<DirectiveTuple>((directive) => !!directive)
-      : undefined,
+    metadata,
   );
 }
 
@@ -259,41 +283,46 @@ function encodeInputObjectType(
   for (const field of node.fields ?? []) {
     fields[field.name.value] = encodeInputValue(field);
   }
-  return createInputObjectTypeDefinition(
-    fields,
-    includeDirectives
-      ? node.directives
-          ?.map(encodeDirectiveTuple)
-          .filter<DirectiveTuple>((directive) => !!directive)
-      : undefined,
-  );
+
+  const metadata =
+    includeDirectives && node.directives?.length
+      ? {
+          directives: node.directives
+            .map(encodeDirectiveTuple)
+            .filter<DirectiveTuple>((directive) => !!directive),
+        }
+      : undefined;
+
+  return createInputObjectTypeDefinition(fields, metadata);
 }
 
 function encodeField(
   node: FieldDefinitionNode,
   includeDirectives: boolean,
 ): TypeReference | FieldDefinitionTuple {
-  let directiveTuples: DirectiveTuple[] | undefined;
+  let fieldMetadata: TypeDefinitionMetadata | undefined;
 
   if (includeDirectives && node.directives?.length) {
-    directiveTuples = node.directives
-      .map(encodeDirectiveTuple)
-      .filter<DirectiveTuple>((directive) => !!directive);
+    fieldMetadata = {
+      directives: node.directives
+        .map(encodeDirectiveTuple)
+        .filter<DirectiveTuple>((directive) => !!directive),
+    };
   }
 
   if (!node.arguments?.length) {
-    if (directiveTuples) {
-      return [typeReferenceFromNode(node.type), undefined, directiveTuples];
+    if (fieldMetadata) {
+      return [typeReferenceFromNode(node.type), undefined, fieldMetadata];
     }
 
     return typeReferenceFromNode(node.type);
   }
 
-  if (directiveTuples) {
+  if (fieldMetadata) {
     return [
       typeReferenceFromNode(node.type),
       encodeArguments(node),
-      directiveTuples,
+      fieldMetadata,
     ];
   }
   return [typeReferenceFromNode(node.type), encodeArguments(node)];
@@ -332,7 +361,7 @@ function encodeDirective(
           encodeDirectiveLocation(node.value as DirectiveLocationEnum),
         ),
         encodeArguments(node),
-        node.repeatable,
+        { isRepeatable: node.repeatable },
       ];
     } else {
       return [

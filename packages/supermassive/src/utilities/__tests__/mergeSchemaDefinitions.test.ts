@@ -349,11 +349,13 @@ extend type Query {
               "user24": [
                 6,
                 undefined,
-                [
-                  [
-                    "context",
+                {
+                  "directives": [
+                    [
+                      "context",
+                    ],
                   ],
-                ],
+                },
               ],
             },
           ],
@@ -409,23 +411,27 @@ extend type Query {
               "id": [
                 10,
                 undefined,
-                [
-                  [
-                    "onField",
+                {
+                  "directives": [
+                    [
+                      "onField",
+                    ],
                   ],
-                ],
+                },
               ],
               "name": 6,
             },
             [],
-            [
-              [
-                "onExtendInterface",
+            {
+              "directives": [
+                [
+                  "onExtendInterface",
+                ],
+                [
+                  "onInterface",
+                ],
               ],
-              [
-                "onInterface",
-              ],
-            ],
+            },
           ],
           "Query": [
             2,
@@ -435,14 +441,16 @@ extend type Query {
                 {
                   "id": 6,
                 },
-                [
-                  [
-                    "oneOf",
+                {
+                  "directives": [
+                    [
+                      "oneOf",
+                    ],
+                    [
+                      "context",
+                    ],
                   ],
-                  [
-                    "context",
-                  ],
-                ],
+                },
               ],
             },
           ],
@@ -452,25 +460,29 @@ extend type Query {
               "id": [
                 10,
                 undefined,
-                [
-                  [
-                    "onField",
+                {
+                  "directives": [
+                    [
+                      "onField",
+                    ],
                   ],
-                ],
+                },
               ],
               "name": 6,
             },
             [
               "IUser",
             ],
-            [
-              [
-                "onExtendType",
+            {
+              "directives": [
+                [
+                  "onExtendType",
+                ],
+                [
+                  "onType",
+                ],
               ],
-              [
-                "onType",
-              ],
-            ],
+            },
           ],
         },
       }

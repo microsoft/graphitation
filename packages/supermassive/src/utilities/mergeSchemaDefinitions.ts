@@ -5,11 +5,11 @@ import {
   getDirectiveDefinitionArgs,
   getDirectiveName,
   getFieldArgs,
-  getFieldDirectives,
+  getFieldMetadata,
   getFields,
   getInputObjectFields,
-  getTypeDefinitionDirectiveIndex,
-  getTypeDefinitionDirectives,
+  getTypeDefinitionMetadataIndex,
+  getTypeDefinitionMetadata,
   InputValueDefinitionRecord,
   InterfaceTypeDefinitionTuple,
   isInputObjectTypeDefinition,
@@ -22,6 +22,7 @@ import {
   setFieldDirectives,
   TypeDefinitionsRecord,
   TypeDefinitionTuple,
+  TypeDefinitionMetadata,
 } from "../schema/definition";
 import { inspect } from "../jsutils/inspect";
 
@@ -51,32 +52,41 @@ export function mergeSchemaDefinitions(
   return accumulator;
 }
 
-function mergeTypeDirectives(
+function mergeTypeMetadata(
   target: TypeDefinitionTuple,
   source: TypeDefinitionTuple,
 ): void {
-  const targetDirectives: DirectiveTuple[] | undefined =
-    getTypeDefinitionDirectives(target);
-  const sourceDirectives: DirectiveTuple[] | undefined =
-    getTypeDefinitionDirectives(source);
+  const targetMetadata: TypeDefinitionMetadata | undefined =
+    getTypeDefinitionMetadata(target);
+  const sourceMetadata: TypeDefinitionMetadata | undefined =
+    getTypeDefinitionMetadata(source);
 
-  const directiveIndex = getTypeDefinitionDirectiveIndex(target);
-  if (!sourceDirectives || !directiveIndex) {
+  const metadataIndex = getTypeDefinitionMetadataIndex(target);
+  if (!sourceMetadata || !metadataIndex) {
     return;
   }
 
-  if (!targetDirectives) {
-    target[directiveIndex] = [...sourceDirectives];
+  if (!targetMetadata) {
+    target[metadataIndex] ??= {};
+    const targetMetadata: TypeDefinitionMetadata = target[
+      metadataIndex
+    ] as TypeDefinitionMetadata;
+    if (sourceMetadata?.directives) {
+      targetMetadata.directives = [...sourceMetadata.directives];
+    }
+
     return;
   }
 
-  for (const sourceDirective of sourceDirectives) {
-    const directiveName = sourceDirective[0];
-    const exists = targetDirectives.some(
-      (d: DirectiveTuple) => d[0] === directiveName,
-    );
-    if (!exists) {
-      targetDirectives.push(sourceDirective);
+  if (sourceMetadata.directives && targetMetadata.directives) {
+    for (const sourceDirective of sourceMetadata.directives) {
+      const directiveName = sourceDirective[0];
+      const exists = targetMetadata.directives.some(
+        (d: DirectiveTuple) => d[0] === directiveName,
+      );
+      if (!exists) {
+        targetMetadata.directives.push(sourceDirective);
+      }
     }
   }
 }
@@ -121,7 +131,7 @@ export function mergeTypes(
       continue;
     }
 
-    mergeTypeDirectives(targetDef, sourceDef);
+    mergeTypeMetadata(targetDef, sourceDef);
 
     if (
       (isObjectTypeDefinition(targetDef) &&
@@ -171,11 +181,16 @@ function mergeFields(
       mergeInputValues(targetArgs, sourceArgs);
     }
 
-    const sourceDirectives = getFieldDirectives(sourceDef);
+    const sourceDirectives = getFieldMetadata(sourceDef);
     if (sourceDirectives) {
-      const targetDirectives =
-        getFieldDirectives(targetDef) ?? setFieldDirectives(targetDef, []);
-      mergeFieldDirectives(targetDirectives, sourceDirectives);
+      const targetMetadata =
+        getFieldMetadata(targetDef) ?? setFieldDirectives(targetDef, {});
+      if (targetMetadata.directives && sourceDirectives.directives) {
+        mergeFieldDirectives(
+          targetMetadata.directives,
+          sourceDirectives.directives,
+        );
+      }
     }
   }
 }
