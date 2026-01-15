@@ -43,7 +43,7 @@ import {
 import { typeReferenceFromNode, TypeReference } from "../schema/reference";
 import { valueFromASTUntyped } from "./valueFromASTUntyped";
 
-type EncodeASTSchemaOptions = {
+export type EncodeASTSchemaOptions = {
   includeDirectives?: boolean;
 };
 
@@ -273,26 +273,29 @@ function encodeField(
   node: FieldDefinitionNode,
   includeDirectives: boolean,
 ): TypeReference | FieldDefinitionTuple {
+  let directiveTuples: DirectiveTuple[] | undefined;
+
+  if (includeDirectives && node.directives?.length) {
+    directiveTuples = node.directives
+      .map(encodeDirectiveTuple)
+      .filter<DirectiveTuple>((directive) => !!directive);
+  }
+
   if (!node.arguments?.length) {
+    if (directiveTuples) {
+      return [typeReferenceFromNode(node.type), undefined, directiveTuples];
+    }
+
     return typeReferenceFromNode(node.type);
   }
 
-  if (includeDirectives && node.directives?.length) {
-    console.log(
-      node.name,
-      node.directives
-        .map(encodeDirectiveTuple)
-        .filter<DirectiveTuple>((directive) => !!directive),
-    );
+  if (directiveTuples) {
     return [
       typeReferenceFromNode(node.type),
       encodeArguments(node),
-      node.directives
-        .map(encodeDirectiveTuple)
-        .filter<DirectiveTuple>((directive) => !!directive),
+      directiveTuples,
     ];
   }
-
   return [typeReferenceFromNode(node.type), encodeArguments(node)];
 }
 

@@ -70,6 +70,12 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
         ],
       ],
       [
+        "onField",
+        [
+          4,
+        ],
+      ],
+      [
         "onInterface",
         [
           14,
@@ -85,6 +91,12 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
         "onEnum",
         [
           16,
+        ],
+      ],
+      [
+        "oneOf",
+        [
+          18,
         ],
       ],
       [

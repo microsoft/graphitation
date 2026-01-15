@@ -5,8 +5,11 @@ import {
   getDirectiveDefinitionArgs,
   getDirectiveName,
   getFieldArgs,
+  getFieldDirectives,
   getFields,
   getInputObjectFields,
+  getTypeDefinitionDirectiveIndex,
+  getTypeDefinitionDirectives,
   InputValueDefinitionRecord,
   InterfaceTypeDefinitionTuple,
   isInputObjectTypeDefinition,
@@ -16,6 +19,7 @@ import {
   SchemaDefinitions,
   setDirectiveDefinitionArgs,
   setFieldArgs,
+  setFieldDirectives,
   TypeDefinitionsRecord,
   TypeDefinitionTuple,
 } from "../schema/definition";
@@ -47,19 +51,22 @@ export function mergeSchemaDefinitions(
   return accumulator;
 }
 
-function mergeFieldDirectives(
+function mergeTypeDirectives(
   target: TypeDefinitionTuple,
   source: TypeDefinitionTuple,
 ): void {
-  const targetDirectives: DirectiveTuple[] | undefined = target[3];
-  const sourceDirectives: DirectiveTuple[] | undefined = source[3];
+  const targetDirectives: DirectiveTuple[] | undefined =
+    getTypeDefinitionDirectives(target);
+  const sourceDirectives: DirectiveTuple[] | undefined =
+    getTypeDefinitionDirectives(source);
 
-  if (!sourceDirectives) {
+  const directiveIndex = getTypeDefinitionDirectiveIndex(target);
+  if (!sourceDirectives || !directiveIndex) {
     return;
   }
 
   if (!targetDirectives) {
-    target[3] = [...sourceDirectives];
+    target[directiveIndex] = [...sourceDirectives];
     return;
   }
 
@@ -114,7 +121,7 @@ export function mergeTypes(
       continue;
     }
 
-    mergeFieldDirectives(targetDef, sourceDef);
+    mergeTypeDirectives(targetDef, sourceDef);
 
     if (
       (isObjectTypeDefinition(targetDef) &&
@@ -162,6 +169,26 @@ function mergeFields(
     if (sourceArgs) {
       const targetArgs = getFieldArgs(targetDef) ?? setFieldArgs(targetDef, {});
       mergeInputValues(targetArgs, sourceArgs);
+    }
+
+    const sourceDirectives = getFieldDirectives(sourceDef);
+    if (sourceDirectives) {
+      const targetDirectives =
+        getFieldDirectives(targetDef) ?? setFieldDirectives(targetDef, []);
+      mergeFieldDirectives(targetDirectives, sourceDirectives);
+    }
+  }
+}
+
+function mergeFieldDirectives(
+  target: DirectiveTuple[],
+  source: DirectiveTuple[],
+): void {
+  for (const sourceDirective of source) {
+    const directiveName = sourceDirective[0];
+    const exists = target.some((d: DirectiveTuple) => d[0] === directiveName);
+    if (!exists) {
+      target.push(sourceDirective);
     }
   }
 }

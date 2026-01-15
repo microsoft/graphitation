@@ -195,7 +195,7 @@ function decodeInterfaceType(
   return {
     kind: Kind.INTERFACE_TYPE_DEFINITION,
     name: nameNode(typeName),
-    fields: decodeFields(getFields(tuple), types),
+    fields: decodeFields(getFields(tuple), types, directives),
     interfaces: getInterfaceTypeInterfaces(tuple).map((name) => ({
       kind: Kind.NAMED_TYPE,
       name: nameNode(name),

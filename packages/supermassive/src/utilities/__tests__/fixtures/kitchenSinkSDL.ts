@@ -161,11 +161,15 @@ export const kitchenSinkSDL = gql`
 
   directive @onUnion on UNION
 
+  directive @onField on FIELD
+
   directive @onInterface on INTERFACE
 
   directive @onScalar on SCALAR
 
   directive @onEnum on ENUM
+
+  directive @oneOf on INPUT_OBJECT
 
   directive @onInputObject on INPUT_OBJECT
 

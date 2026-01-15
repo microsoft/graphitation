@@ -30,6 +30,33 @@ describe(decodeASTSchema, () => {
     expect(print(decoded)).toMatchSnapshot();
   });
 
+  test("correctly encodes swapi AST schema with directives", () => {
+    const doc = cleanUpDocument(swapiSDL.document);
+    const encoded = encodeASTSchema(doc, { includeDirectives: true });
+    const decoded = decodeASTSchema(encoded);
+
+    expect(decoded).toEqual(doc);
+    expect(encodeASTSchema(decoded, { includeDirectives: true })).toEqual(
+      encoded,
+    );
+    expect(print(decoded)).toMatchSnapshot();
+  });
+
+  test("correctly encodes kitchen sink AST schema with directives", () => {
+    const doc = cleanUpDocument(kitchenSinkSDL.document);
+    const encoded = [
+      mergeSchemaDefinitions(
+        { types: {}, directives: [] },
+        encodeASTSchema(doc, { includeDirectives: true }),
+      ),
+    ];
+    const decoded = decodeASTSchema(encoded);
+    expect(encodeASTSchema(decoded, { includeDirectives: true })).toEqual(
+      encoded,
+    );
+    expect(print(decoded)).toMatchSnapshot();
+  });
+
   test("correctly encodes a schema with a Boolean parameter", () => {
     const doc = cleanUpDocument(schemaWithBooleanParameter.document);
     const encoded = encodeASTSchema(doc);

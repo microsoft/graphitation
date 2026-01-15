@@ -25,11 +25,22 @@ const enum ScalarKeys {
   directives = 1,
 }
 
+// type TypeDefinitionMetadata = {
+//   directives?: DirectiveTuple[];
+//   description?: string;
+// };
+
+// type DirectiveDefinitionMetadata = {
+//   isRepeatable?: boolean;
+//   description?: string;
+// };
+
 export type ObjectTypeDefinitionTuple = [
   kind: TypeKind.OBJECT,
   fields: FieldDefinitionRecord,
   interfaces?: TypeName[],
   directives?: DirectiveTuple[],
+  //metadata?: TypeDefinitionMetadata,
 ];
 const enum ObjectKeys {
   fields = 1,
@@ -94,7 +105,8 @@ export type CompositeTypeTuple =
 
 export type FieldDefinitionTuple = [
   type: TypeReference,
-  arguments: InputValueDefinitionRecord,
+  // TODO should I really do it ?
+  arguments?: InputValueDefinitionRecord,
   directives?: DirectiveTuple[],
 ];
 const enum FieldKeys {
@@ -165,6 +177,7 @@ const DirectiveLocationToGraphQL = {
 } as const;
 
 export type DirectiveName = string;
+
 export type DirectiveTuple = [
   name: DirectiveName,
   arguments?: Record<string, unknown>, // JS values (cannot be a variable inside schema definition, so it is fine)
@@ -199,6 +212,42 @@ export type SchemaDefinitions = {
 
 const typeNameMetaFieldDef: FieldDefinition = "String";
 const specifiedScalarDefinition: ScalarTypeDefinitionTuple = [TypeKind.SCALAR];
+
+export function getTypeDefinitionDirectiveIndex(
+  typeDefinition: TypeDefinitionTuple,
+): number | undefined {
+  if (isObjectTypeDefinition(typeDefinition)) {
+    return ObjectKeys.directives;
+  } else if (isScalarTypeDefinition(typeDefinition)) {
+    return ScalarKeys.directives;
+  } else if (isEnumTypeDefinition(typeDefinition)) {
+    return EnumKeys.directives;
+  } else if (isInterfaceTypeDefinition(typeDefinition)) {
+    return InterfaceKeys.directives;
+  } else if (isInputObjectTypeDefinition(typeDefinition)) {
+    return InputObjectKeys.directives;
+  } else if (isUnionTypeDefinition(typeDefinition)) {
+    return UnionKeys.directives;
+  }
+}
+
+export function getTypeDefinitionDirectives(
+  typeDefinition: TypeDefinitionTuple,
+) {
+  if (isObjectTypeDefinition(typeDefinition)) {
+    return getObjectTypeDirectives(typeDefinition);
+  } else if (isScalarTypeDefinition(typeDefinition)) {
+    return getScalarTypeDirectives(typeDefinition);
+  } else if (isEnumTypeDefinition(typeDefinition)) {
+    return getEnumDirectives(typeDefinition);
+  } else if (isInterfaceTypeDefinition(typeDefinition)) {
+    return getInterfaceTypeDiretives(typeDefinition);
+  } else if (isInputObjectTypeDefinition(typeDefinition)) {
+    return getInputTypeDirectives(typeDefinition);
+  } else if (isUnionTypeDefinition(typeDefinition)) {
+    return getUnionTypeDirectives(typeDefinition);
+  }
+}
 
 export function findObjectType(
   defs: SchemaDefinitions,
@@ -541,6 +590,14 @@ export function setFieldArgs(
   args: InputValueDefinitionRecord,
 ): InputValueDefinitionRecord {
   field[FieldKeys.arguments] = args;
+  return args;
+}
+
+export function setFieldDirectives(
+  field: FieldDefinitionTuple,
+  args: DirectiveTuple[],
+): DirectiveTuple[] {
+  field[FieldKeys.directives] = args;
   return args;
 }
 

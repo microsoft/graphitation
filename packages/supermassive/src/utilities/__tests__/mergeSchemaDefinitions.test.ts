@@ -3,12 +3,18 @@ import {
   createSchemaDefinitions,
   mergeSchemaDefinitions,
 } from "../mergeSchemaDefinitions";
-import { encodeASTSchema } from "../encodeASTSchema";
+import {
+  encodeASTSchema,
+  type EncodeASTSchemaOptions,
+} from "../encodeASTSchema";
 import { SchemaDefinitions } from "../../schema/definition";
 
-function schema(sdl: string): SchemaDefinitions[] {
+function schema(
+  sdl: string,
+  options?: EncodeASTSchemaOptions,
+): SchemaDefinitions[] {
   const doc = parse(sdl);
-  return encodeASTSchema(doc);
+  return encodeASTSchema(doc, options);
 }
 
 describe("mergeSchemaDefinitions", () => {
@@ -315,6 +321,155 @@ describe("mergeSchemaDefinitions", () => {
             [
               "Node",
               "Named",
+            ],
+          ],
+        },
+      }
+    `);
+  });
+
+  it("merge directives from source to target", () => {
+    const defs = schema(
+      `
+extend type Query {
+  user24: String! @context
+  }
+    `,
+      { includeDirectives: true },
+    );
+
+    const result = mergeSchemaDefinitions({ types: {}, directives: [] }, defs);
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "directives": [],
+        "types": {
+          "Query": [
+            2,
+            {
+              "user24": [
+                6,
+                undefined,
+                [
+                  [
+                    "context",
+                  ],
+                ],
+              ],
+            },
+          ],
+        },
+      }
+    `);
+  });
+  it("merge directives from source to target", () => {
+    const defs = schema(
+      `
+interface IUser @onInterface {
+  id: ID! @onField
+}
+
+type User implements IUser @onType {
+  id: ID! @onField
+}
+
+extend type Query {
+  user(
+    id: String!
+  ): User @context
+  }
+    `,
+      { includeDirectives: true },
+    );
+    const defs2 = schema(
+      `
+extend interface IUser @onExtendInterface {
+      name: String!
+}      
+
+extend type User implements IUser @onExtendType {
+      name: String!
+}      
+extend type Query {
+  user(
+    id: String!
+  ): String @oneOf
+    }
+    `,
+      { includeDirectives: true },
+    );
+    const result = mergeSchemaDefinitions({ types: {}, directives: [] }, defs2);
+    const finalResult = mergeSchemaDefinitions(result, defs);
+    expect(finalResult).toMatchInlineSnapshot(`
+      {
+        "directives": [],
+        "types": {
+          "IUser": [
+            3,
+            {
+              "id": [
+                10,
+                undefined,
+                [
+                  [
+                    "onField",
+                  ],
+                ],
+              ],
+              "name": 6,
+            },
+            [],
+            [
+              [
+                "onExtendInterface",
+              ],
+              [
+                "onInterface",
+              ],
+            ],
+          ],
+          "Query": [
+            2,
+            {
+              "user": [
+                1,
+                {
+                  "id": 6,
+                },
+                [
+                  [
+                    "oneOf",
+                  ],
+                  [
+                    "context",
+                  ],
+                ],
+              ],
+            },
+          ],
+          "User": [
+            2,
+            {
+              "id": [
+                10,
+                undefined,
+                [
+                  [
+                    "onField",
+                  ],
+                ],
+              ],
+              "name": 6,
+            },
+            [
+              "IUser",
+            ],
+            [
+              [
+                "onExtendType",
+              ],
+              [
+                "onType",
+              ],
             ],
           ],
         },
