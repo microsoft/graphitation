@@ -46,6 +46,66 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
         {
           "name": 6,
         },
+        {
+          "repeatable": true,
+        },
+      ],
+      [
+        "onType",
+        [
+          11,
+        ],
+      ],
+      [
+        "onObject",
+        [
+          11,
+        ],
+        {
+          "arg": 6,
+        },
+      ],
+      [
+        "onUnion",
+        [
+          15,
+        ],
+      ],
+      [
+        "onField",
+        [
+          4,
+        ],
+      ],
+      [
+        "onInterface",
+        [
+          14,
+        ],
+      ],
+      [
+        "onScalar",
+        [
+          10,
+        ],
+      ],
+      [
+        "onEnum",
+        [
+          16,
+        ],
+      ],
+      [
+        "oneOf",
+        [
+          18,
+        ],
+      ],
+      [
+        "onInputObject",
+        [
+          18,
+        ],
       ],
     ],
     "types": {

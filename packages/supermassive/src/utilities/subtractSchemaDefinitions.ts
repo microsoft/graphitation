@@ -7,7 +7,7 @@ import {
   TypeDefinitionsRecord,
   TypeDefinitionTuple,
   getDirectiveDefinitionArgs,
-  getDirectiveName,
+  getDirectiveDefinitionName,
   getEnumValues,
   getFieldTypeReference,
   getFieldArgs,
@@ -461,9 +461,9 @@ function subtractDirectives(
   const result: DirectiveDefinitionTuple[] = [];
 
   for (const minuendDirective of minuendDirectives) {
-    const minuendName = getDirectiveName(minuendDirective);
+    const minuendName = getDirectiveDefinitionName(minuendDirective);
     const subtrahendDirective = subtrahendDirectives.find(
-      (d) => getDirectiveName(d) === minuendName,
+      (d) => getDirectiveDefinitionName(d) === minuendName,
     );
 
     if (!subtrahendDirective) {
@@ -519,9 +519,9 @@ function subtractDirectives(
 
   // Check for directives in subtrahend that don't exist in minuend
   for (const subtrahendDirective of subtrahendDirectives) {
-    const subtrahendName = getDirectiveName(subtrahendDirective);
+    const subtrahendName = getDirectiveDefinitionName(subtrahendDirective);
     const exists = minuendDirectives.some(
-      (d) => getDirectiveName(d) === subtrahendName,
+      (d) => getDirectiveDefinitionName(d) === subtrahendName,
     );
     if (!exists) {
       if (strict) {
