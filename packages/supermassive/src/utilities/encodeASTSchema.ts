@@ -148,7 +148,6 @@ function encodeObjectType(
   for (const field of node.fields ?? []) {
     fields[field.name.value] = encodeField(field, options);
   }
-
   return createObjectTypeDefinition(
     fields,
     node.interfaces?.map((iface) => iface.name.value),
@@ -164,7 +163,6 @@ function encodeDirectiveTuple(
   }
 
   const name = directive.name.value;
-
   const args = Object.create(null);
   for (const argument of directive.arguments ?? []) {
     args[argument.name.value] = valueFromASTUntyped(argument.value);
@@ -184,7 +182,6 @@ function encodeInterfaceType(
   for (const field of node.fields ?? []) {
     fields[field.name.value] = encodeField(field, options);
   }
-
   return createInterfaceTypeDefinition(
     fields,
     node.interfaces?.map((iface) => iface.name.value),
