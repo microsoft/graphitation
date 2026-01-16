@@ -39,7 +39,7 @@ import {
   encodeDirectiveLocation,
   EnumTypeDefinitionTuple,
   FieldDefinition,
-  getDirectiveName,
+  getDirectiveDefinitionName,
   getFieldArgs,
   getFields,
   getFieldTypeReference,
@@ -278,7 +278,7 @@ function addDirective(
   directive: GraphQLDirective,
 ) {
   const name = directive.name;
-  let tuple = directives.find((d) => getDirectiveName(d) === name);
+  let tuple = directives.find((d) => getDirectiveDefinitionName(d) === name);
   if (!tuple) {
     tuple = [directive.name, directive.locations.map(encodeDirectiveLocation)];
     directives.push(tuple);

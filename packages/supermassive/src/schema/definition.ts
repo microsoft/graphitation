@@ -191,7 +191,13 @@ export type DirectiveDefinitionTuple = [
   arguments?: InputValueDefinitionRecord,
   metadata?: DirectiveDefinitionMetadata,
 ];
+
 const enum DirectiveKeys {
+  name = 0,
+  arguments = 1,
+}
+
+const enum DirectiveDefinitionKeys {
   name = 0,
   locations = 1,
   arguments = 2,
@@ -483,14 +489,16 @@ export function isSubType(
   return false;
 }
 
-export function getDirectiveName(tuple: DirectiveDefinitionTuple): string {
-  return tuple[DirectiveKeys.name];
+export function getDirectiveDefinitionName(
+  tuple: DirectiveDefinitionTuple,
+): string {
+  return tuple[DirectiveDefinitionKeys.name];
 }
 
-export function getDirectiveLocations(
+export function getDirectiveDefinitionLocations(
   tuple: DirectiveDefinitionTuple,
 ): DirectiveLocation[] {
-  return tuple[DirectiveKeys.locations];
+  return tuple[DirectiveDefinitionKeys.locations];
 }
 
 export function encodeDirectiveLocation(
@@ -615,14 +623,16 @@ export function getEnumMetadata(
 export function getDirectiveDefinitionArgs(
   directive: DirectiveDefinitionTuple,
 ): InputValueDefinitionRecord | undefined {
-  return directive[DirectiveKeys.arguments];
+  return Array.isArray(directive)
+    ? directive[DirectiveDefinitionKeys.arguments]
+    : undefined;
 }
 
 export function setDirectiveDefinitionArgs(
   directive: DirectiveDefinitionTuple,
   args: InputValueDefinitionRecord,
 ): InputValueDefinitionRecord {
-  directive[DirectiveKeys.arguments] = args;
+  directive[DirectiveDefinitionKeys.arguments] = args;
   return args;
 }
 
@@ -755,14 +765,12 @@ export function getFieldArguments(
   return Array.isArray(def) ? def[FieldKeys.arguments] : undefined;
 }
 
-export function getDirectiveArguments(
-  def: DirectiveDefinitionTuple,
-): InputValueDefinitionRecord | undefined {
-  return Array.isArray(def) ? def[DirectiveKeys.arguments] : undefined;
-}
-
-export function getDirectiveMetadata(
+export function getDirectiveDefinitionMetadata(
   def: DirectiveDefinitionTuple,
 ): DirectiveDefinitionMetadata | undefined {
-  return Array.isArray(def) ? def[DirectiveKeys.metadata] : undefined;
+  return Array.isArray(def) ? def[DirectiveDefinitionKeys.metadata] : undefined;
+}
+
+export function getDirectiveName(tuple: DirectiveTuple): string {
+  return tuple[DirectiveKeys.name];
 }

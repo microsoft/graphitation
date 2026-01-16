@@ -3,7 +3,7 @@ import {
   DirectiveTuple,
   FieldDefinitionRecord,
   getDirectiveDefinitionArgs,
-  getDirectiveName,
+  getDirectiveDefinitionName,
   getFieldArgs,
   getFieldMetadata,
   getFields,
@@ -23,6 +23,7 @@ import {
   TypeDefinitionsRecord,
   TypeDefinitionTuple,
   TypeDefinitionMetadata,
+  getDirectiveName,
 } from "../schema/definition";
 import { inspect } from "../jsutils/inspect";
 
@@ -74,15 +75,14 @@ function mergeTypeMetadata(
     if (sourceMetadata?.directives) {
       targetMetadata.directives = [...sourceMetadata.directives];
     }
-
     return;
   }
 
   if (sourceMetadata.directives && targetMetadata.directives) {
     for (const sourceDirective of sourceMetadata.directives) {
-      const directiveName = sourceDirective[0];
+      const directiveName = getDirectiveName(sourceDirective);
       const exists = targetMetadata.directives.some(
-        (d: DirectiveTuple) => d[0] === directiveName,
+        (d: DirectiveTuple) => getDirectiveName(d) === directiveName,
       );
       if (!exists) {
         targetMetadata.directives.push(sourceDirective);
@@ -98,7 +98,8 @@ export function mergeDirectives(
   for (const sourceDirective of source) {
     const targetDirective = target.find(
       (directive) =>
-        getDirectiveName(directive) === getDirectiveName(sourceDirective),
+        getDirectiveDefinitionName(directive) ===
+        getDirectiveDefinitionName(sourceDirective),
     );
     if (!targetDirective) {
       target.push(sourceDirective);
@@ -200,8 +201,10 @@ function mergeFieldDirectives(
   source: DirectiveTuple[],
 ): void {
   for (const sourceDirective of source) {
-    const directiveName = sourceDirective[0];
-    const exists = target.some((d: DirectiveTuple) => d[0] === directiveName);
+    const directiveName = getDirectiveName(sourceDirective);
+    const exists = target.some(
+      (d: DirectiveTuple) => getDirectiveName(d) === directiveName,
+    );
     if (!exists) {
       target.push(sourceDirective);
     }
