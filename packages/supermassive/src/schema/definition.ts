@@ -25,14 +25,18 @@ const enum ScalarKeys {
   metadata = 1,
 }
 
+export type Description = {
+  value: string;
+  block?: boolean;
+};
 export type TypeDefinitionMetadata = {
   directives?: DirectiveTuple[];
-  description?: string;
+  description?: Description;
 };
 
 export type DirectiveDefinitionMetadata = {
-  isRepeatable?: boolean;
-  description?: string;
+  repeatable?: boolean;
+  description?: Description;
 };
 
 export type ObjectTypeDefinitionTuple = [
