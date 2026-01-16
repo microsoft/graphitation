@@ -40,92 +40,62 @@ import {
   encodeDirectiveLocation,
   DirectiveTuple,
   TypeDefinitionMetadata,
+  DirectiveDefinitionMetadata,
 } from "../schema/definition";
 import { typeReferenceFromNode, TypeReference } from "../schema/reference";
 import { valueFromASTUntyped } from "./valueFromASTUntyped";
 
 export type EncodeASTSchemaOptions = {
   includeDirectives?: boolean;
+  includeDescriptions?: boolean;
 };
 
 export function encodeASTSchema(
   schemaFragment: DocumentNode,
   options?: EncodeASTSchemaOptions,
 ): SchemaDefinitions[] {
-  const includeDirectives = Boolean(options?.includeDirectives);
   const fragments: SchemaDefinitions[] = [{ types: {} }];
   const add = (name: string, def: TypeDefinitionTuple, extension = false) =>
     addTypeDefinition(fragments, name, def, extension);
 
   for (const definition of schemaFragment.definitions) {
     if (definition.kind === "ObjectTypeDefinition") {
-      add(
-        definition.name.value,
-        encodeObjectType(definition, includeDirectives),
-      );
+      add(definition.name.value, encodeObjectType(definition, options));
     } else if (definition.kind === "InputObjectTypeDefinition") {
-      add(
-        definition.name.value,
-        encodeInputObjectType(definition, includeDirectives),
-      );
+      add(definition.name.value, encodeInputObjectType(definition, options));
     } else if (definition.kind === "EnumTypeDefinition") {
-      add(definition.name.value, encodeEnumType(definition, includeDirectives));
+      add(definition.name.value, encodeEnumType(definition, options));
     } else if (definition.kind === "UnionTypeDefinition") {
-      add(
-        definition.name.value,
-        encodeUnionType(definition, includeDirectives),
-      );
+      add(definition.name.value, encodeUnionType(definition, options));
     } else if (definition.kind === "InterfaceTypeDefinition") {
-      add(
-        definition.name.value,
-        encodeInterfaceType(definition, includeDirectives),
-      );
+      add(definition.name.value, encodeInterfaceType(definition, options));
     } else if (definition.kind === "ScalarTypeDefinition") {
-      add(
-        definition.name.value,
-        encodeScalarType(definition, includeDirectives),
-      );
+      add(definition.name.value, encodeScalarType(definition, options));
     } else if (definition.kind === "ObjectTypeExtension") {
-      add(
-        definition.name.value,
-        encodeObjectType(definition, includeDirectives),
-        true,
-      );
+      add(definition.name.value, encodeObjectType(definition, options), true);
     } else if (definition.kind === "InputObjectTypeExtension") {
       add(
         definition.name.value,
-        encodeInputObjectType(definition, includeDirectives),
+        encodeInputObjectType(definition, options),
         true,
       );
     } else if (definition.kind === "EnumTypeExtension") {
-      add(
-        definition.name.value,
-        encodeEnumType(definition, includeDirectives),
-        true,
-      );
+      add(definition.name.value, encodeEnumType(definition, options), true);
     } else if (definition.kind === "UnionTypeExtension") {
-      add(
-        definition.name.value,
-        encodeUnionType(definition, includeDirectives),
-        true,
-      );
+      add(definition.name.value, encodeUnionType(definition, options), true);
     } else if (definition.kind === "InterfaceTypeExtension") {
       add(
         definition.name.value,
-        encodeInterfaceType(definition, includeDirectives),
+        encodeInterfaceType(definition, options),
         true,
       );
     } else if (definition.kind === "ScalarTypeExtension") {
-      add(
-        definition.name.value,
-        encodeScalarType(definition, includeDirectives),
-        true,
-      );
+      add(definition.name.value, encodeScalarType(definition, options), true);
     } else if (definition.kind === "DirectiveDefinition") {
       if (!fragments[0].directives) {
         fragments[0].directives = [];
       }
-      fragments[0].directives.push(encodeDirective(definition));
+      fragments[0].directives.push(encodeDirective(definition, options));
     }
   }
   return fragments;
@@ -155,59 +125,34 @@ function addTypeDefinition(
 
 function encodeScalarType(
   type: ScalarTypeDefinitionNode | ScalarTypeExtensionNode,
-  includeDirectives: boolean,
+  options?: EncodeASTSchemaOptions,
 ): ScalarTypeDefinitionTuple {
-  const metadata =
-    includeDirectives && type.directives
-      ? {
-          directives: type.directives
-            .map(encodeDirectiveTuple)
-            .filter<DirectiveTuple>((directive) => !!directive),
-        }
-      : undefined;
-
-  return createScalarTypeDefinition(metadata);
+  return createScalarTypeDefinition(getTypeDefinitionMetadata(type, options));
 }
 
 function encodeEnumType(
   node: EnumTypeDefinitionNode | EnumTypeExtensionNode,
-  includeDirectives: boolean,
+  options?: EncodeASTSchemaOptions,
 ): EnumTypeDefinitionTuple {
-  const metadata =
-    includeDirectives && node.directives?.length
-      ? {
-          directives: node.directives
-            .map(encodeDirectiveTuple)
-            .filter<DirectiveTuple>((directive) => !!directive),
-        }
-      : undefined;
-
   return createEnumTypeDefinition(
     (node.values ?? []).map((value) => value.name.value),
-    metadata,
+    getTypeDefinitionMetadata(node, options),
   );
 }
 
 function encodeObjectType(
   node: ObjectTypeDefinitionNode | ObjectTypeExtensionNode,
-  includeDirectives: boolean,
+  options?: EncodeASTSchemaOptions,
 ): ObjectTypeDefinitionTuple {
   const fields = Object.create(null);
   for (const field of node.fields ?? []) {
-    fields[field.name.value] = encodeField(field, includeDirectives);
+    fields[field.name.value] = encodeField(field, options);
   }
-  const metadata =
-    includeDirectives && node.directives?.length
-      ? {
-          directives: node.directives
-            .map(encodeDirectiveTuple)
-            .filter<DirectiveTuple>((directive) => !!directive),
-        }
-      : undefined;
+
   return createObjectTypeDefinition(
     fields,
     node.interfaces?.map((iface) => iface.name.value),
-    metadata,
+    getTypeDefinitionMetadata(node, options),
   );
 }
 
@@ -233,82 +178,51 @@ function encodeDirectiveTuple(
 
 function encodeInterfaceType(
   node: InterfaceTypeDefinitionNode | InterfaceTypeExtensionNode,
-  includeDirectives: boolean,
+  options?: EncodeASTSchemaOptions,
 ): InterfaceTypeDefinitionTuple {
   const fields = Object.create(null);
   for (const field of node.fields ?? []) {
-    fields[field.name.value] = encodeField(field, includeDirectives);
+    fields[field.name.value] = encodeField(field, options);
   }
-
-  const metadata =
-    includeDirectives && node.directives?.length
-      ? {
-          directives: node.directives
-            .map(encodeDirectiveTuple)
-            .filter<DirectiveTuple>((directive) => !!directive),
-        }
-      : undefined;
 
   return createInterfaceTypeDefinition(
     fields,
     node.interfaces?.map((iface) => iface.name.value),
-    metadata,
+    getTypeDefinitionMetadata(node, options),
   );
 }
 
 function encodeUnionType(
   node: UnionTypeDefinitionNode | UnionTypeExtensionNode,
-  includeDirectives: boolean,
+  options?: EncodeASTSchemaOptions,
 ): UnionTypeDefinitionTuple {
-  const metadata =
-    includeDirectives && node.directives?.length
-      ? {
-          directives: node.directives
-            .map(encodeDirectiveTuple)
-            .filter<DirectiveTuple>((directive) => !!directive),
-        }
-      : undefined;
-
   return createUnionTypeDefinition(
     (node.types ?? []).map((type) => type.name.value),
-    metadata,
+    getTypeDefinitionMetadata(node, options),
   );
 }
 
 function encodeInputObjectType(
   node: InputObjectTypeDefinitionNode | InputObjectTypeExtensionNode,
-  includeDirectives: boolean,
+  options?: EncodeASTSchemaOptions,
 ): InputObjectTypeDefinitionTuple {
   const fields = Object.create(null);
   for (const field of node.fields ?? []) {
     fields[field.name.value] = encodeInputValue(field);
   }
 
-  const metadata =
-    includeDirectives && node.directives?.length
-      ? {
-          directives: node.directives
-            .map(encodeDirectiveTuple)
-            .filter<DirectiveTuple>((directive) => !!directive),
-        }
-      : undefined;
-
-  return createInputObjectTypeDefinition(fields, metadata);
+  return createInputObjectTypeDefinition(
+    fields,
+    getTypeDefinitionMetadata(node, options),
+  );
 }
 
 function encodeField(
   node: FieldDefinitionNode,
-  includeDirectives: boolean,
+  options?: EncodeASTSchemaOptions,
 ): TypeReference | FieldDefinitionTuple {
-  let fieldMetadata: TypeDefinitionMetadata | undefined;
-
-  if (includeDirectives && node.directives?.length) {
-    fieldMetadata = {
-      directives: node.directives
-        .map(encodeDirectiveTuple)
-        .filter<DirectiveTuple>((directive) => !!directive),
-    };
-  }
+  const fieldMetadata: TypeDefinitionMetadata | undefined =
+    getTypeDefinitionMetadata(node, options);
 
   if (!node.arguments?.length) {
     if (fieldMetadata) {
@@ -352,16 +266,20 @@ function encodeInputValue(
 
 function encodeDirective(
   node: DirectiveDefinitionNode,
+  options?: EncodeASTSchemaOptions,
 ): DirectiveDefinitionTuple {
+  const directiveDefinitionMetadata: DirectiveDefinitionMetadata | undefined =
+    getDirectiveDefinitionMetadata(node, options);
+
   if (node.arguments?.length) {
-    if (node.repeatable) {
+    if (directiveDefinitionMetadata) {
       return [
         node.name.value,
         node.locations.map((node) =>
           encodeDirectiveLocation(node.value as DirectiveLocationEnum),
         ),
         encodeArguments(node),
-        { isRepeatable: node.repeatable },
+        directiveDefinitionMetadata,
       ];
     } else {
       return [
@@ -373,14 +291,14 @@ function encodeDirective(
       ];
     }
   } else {
-    if (node.repeatable) {
+    if (directiveDefinitionMetadata) {
       [
         node.name.value,
         node.locations.map((node) =>
           encodeDirectiveLocation(node.value as DirectiveLocationEnum),
         ),
         undefined,
-        node.repeatable || undefined,
+        directiveDefinitionMetadata,
       ];
     }
     return [
@@ -390,4 +308,62 @@ function encodeDirective(
       ),
     ];
   }
+}
+
+function getDirectiveDefinitionMetadata<T>(
+  node: T & {
+    repeatable?: boolean;
+    description?: { value: string; block?: boolean };
+  },
+  options?: EncodeASTSchemaOptions,
+) {
+  let metadata: undefined | DirectiveDefinitionMetadata;
+  const { includeDescriptions } = options || {};
+
+  if (includeDescriptions && node.description) {
+    metadata ??= {};
+    metadata.description = {
+      block: node.description.block,
+      value: node.description.value,
+    };
+  }
+
+  if (node.repeatable) {
+    metadata ??= {};
+    metadata.repeatable = node.repeatable;
+  }
+
+  return metadata;
+}
+
+function getTypeDefinitionMetadata<T>(
+  node: T & {
+    directives?: readonly DirectiveNode[];
+    description?: { value: string; block?: boolean };
+  },
+  options?: EncodeASTSchemaOptions,
+) {
+  let metadata: undefined | TypeDefinitionMetadata;
+  const { includeDirectives, includeDescriptions } = options || {};
+
+  if (includeDirectives && node.directives?.length) {
+    const directives = node.directives
+      .map(encodeDirectiveTuple)
+      .filter<DirectiveTuple>((directive) => !!directive);
+
+    if (directives.length) {
+      metadata ??= {};
+      metadata.directives = directives;
+    }
+  }
+
+  if (includeDescriptions && node.description) {
+    metadata ??= {};
+    metadata.description = {
+      block: node.description.block,
+      value: node.description.value,
+    };
+  }
+
+  return metadata;
 }
