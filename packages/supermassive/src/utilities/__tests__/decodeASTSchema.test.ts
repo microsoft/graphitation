@@ -101,6 +101,34 @@ describe(decodeASTSchema, () => {
     expect(encodeASTSchema(decoded)).toEqual(encoded);
     expect(print(decoded)).toMatchSnapshot();
   });
+
+  test("correctly handles schema directives", () => {
+    const doc = cleanUpDocument(kitchenSinkSDL.document);
+    const encoded = [
+      mergeSchemaDefinitions(
+        { types: {}, directives: [] },
+        encodeASTSchema(doc, { includeDirectives: true }),
+      ),
+    ];
+    const decoded = decodeASTSchema(encoded);
+
+    const reEncoded = encodeASTSchema(decoded, { includeDirectives: true });
+    expect(reEncoded).toEqual(encoded);
+  });
+
+  test("correctly handles schema descriptions", () => {
+    const doc = cleanUpDocument(kitchenSinkSDL.document);
+    const encoded = [
+      mergeSchemaDefinitions(
+        { types: {}, directives: [] },
+        encodeASTSchema(doc, { includeDescriptions: true }),
+      ),
+    ];
+    const decoded = decodeASTSchema(encoded);
+
+    const reEncoded = encodeASTSchema(decoded, { includeDescriptions: true });
+    expect(reEncoded).toEqual(encoded);
+  });
 });
 
 function cleanUpDocument(doc: DocumentNode): DocumentNode {

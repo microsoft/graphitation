@@ -414,6 +414,1182 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
 ]
 `;
 
+exports[`encodeASTSchema correctly encodes schema with both directives and descriptions 1`] = `
+[
+  {
+    "directives": [
+      [
+        "skip",
+        [
+          4,
+          6,
+          7,
+        ],
+        {
+          "if": 7,
+        },
+        {
+          "description": {
+            "block": true,
+            "value": "This is a description of the \`@skip\` directive",
+          },
+        },
+      ],
+      [
+        "include",
+        [
+          4,
+          6,
+          7,
+        ],
+        {
+          "if": 7,
+        },
+      ],
+      [
+        "include2",
+        [
+          4,
+          6,
+          7,
+        ],
+        {
+          "if": 7,
+        },
+      ],
+      [
+        "myRepeatableDir",
+        [
+          11,
+          14,
+        ],
+        {
+          "name": 6,
+        },
+        {
+          "repeatable": true,
+        },
+      ],
+      [
+        "onType",
+        [
+          11,
+        ],
+      ],
+      [
+        "onObject",
+        [
+          11,
+        ],
+        {
+          "arg": 6,
+        },
+      ],
+      [
+        "onUnion",
+        [
+          15,
+        ],
+      ],
+      [
+        "onField",
+        [
+          4,
+        ],
+      ],
+      [
+        "onInterface",
+        [
+          14,
+        ],
+      ],
+      [
+        "onScalar",
+        [
+          10,
+        ],
+      ],
+      [
+        "onEnum",
+        [
+          16,
+        ],
+      ],
+      [
+        "oneOf",
+        [
+          18,
+        ],
+      ],
+      [
+        "onInputObject",
+        [
+          18,
+        ],
+      ],
+    ],
+    "types": {
+      "AnnotatedEnum": [
+        5,
+        [
+          "ANNOTATED_VALUE",
+          "OTHER_VALUE",
+        ],
+        {
+          "directives": [
+            [
+              "onEnum",
+            ],
+          ],
+        },
+      ],
+      "AnnotatedInput": [
+        6,
+        {
+          "annotatedField": "Type",
+        },
+        {
+          "directives": [
+            [
+              "onInputObject",
+            ],
+          ],
+        },
+      ],
+      "AnnotatedInterface": [
+        3,
+        {
+          "annotatedField": [
+            "Type",
+            {
+              "arg": "Type",
+            },
+            {
+              "directives": [
+                [
+                  "onField",
+                ],
+              ],
+            },
+          ],
+        },
+        [],
+        {
+          "directives": [
+            [
+              "onInterface",
+            ],
+          ],
+        },
+      ],
+      "AnnotatedObject": [
+        2,
+        {
+          "annotatedField": [
+            "Type",
+            {
+              "arg": [
+                "Type",
+                "default",
+              ],
+            },
+            {
+              "directives": [
+                [
+                  "onField",
+                ],
+              ],
+            },
+          ],
+        },
+        [],
+        {
+          "directives": [
+            [
+              "onObject",
+              {
+                "arg": "value",
+              },
+            ],
+          ],
+        },
+      ],
+      "AnnotatedScalar": [
+        1,
+        {
+          "directives": [
+            [
+              "onScalar",
+            ],
+          ],
+        },
+      ],
+      "AnnotatedUnion": [
+        4,
+        [
+          "A",
+          "B",
+        ],
+        {
+          "directives": [
+            [
+              "onUnion",
+            ],
+          ],
+        },
+      ],
+      "AnnotatedUnionTwo": [
+        4,
+        [
+          "A",
+          "B",
+        ],
+        {
+          "directives": [
+            [
+              "onUnion",
+            ],
+          ],
+        },
+      ],
+      "Bar": [
+        3,
+        {
+          "four": [
+            1,
+            {
+              "argument": [
+                1,
+                "string",
+              ],
+            },
+          ],
+          "one": "Type",
+        },
+      ],
+      "Baz": [
+        3,
+        {
+          "four": [
+            1,
+            {
+              "argument": [
+                1,
+                "string",
+              ],
+            },
+          ],
+          "one": "Type",
+          "two": [
+            "Type",
+            {
+              "argument": "InputType!",
+            },
+          ],
+        },
+        [
+          "Bar",
+          "Two",
+        ],
+      ],
+      "CustomScalar": [
+        1,
+      ],
+      "Feed": [
+        4,
+        [
+          "Story",
+          "Article",
+          "Advert",
+        ],
+      ],
+      "Foo": [
+        2,
+        {
+          "eight": [
+            "Type",
+            {
+              "argument": "OneOfInputType",
+            },
+          ],
+          "five": [
+            1,
+            {
+              "argument": [
+                11,
+                [
+                  "string",
+                  "string",
+                ],
+              ],
+            },
+          ],
+          "four": [
+            1,
+            {
+              "argument": [
+                1,
+                "string",
+              ],
+            },
+          ],
+          "one": [
+            "Type",
+            undefined,
+            {
+              "description": {
+                "block": false,
+                "value": "Description of the \`one\` field.",
+              },
+            },
+          ],
+          "seven": [
+            "Type",
+            {
+              "argument": [
+                3,
+                null,
+              ],
+            },
+          ],
+          "six": [
+            "Type",
+            {
+              "argument": [
+                "InputType",
+                {
+                  "key": "value",
+                },
+              ],
+            },
+          ],
+          "three": [
+            3,
+            {
+              "argument": "InputType",
+              "other": 1,
+            },
+            {
+              "description": {
+                "block": true,
+                "value": "This is a description of the \`three\` field.",
+              },
+            },
+          ],
+          "two": [
+            "Type",
+            {
+              "argument": "InputType!",
+            },
+            {
+              "description": {
+                "block": true,
+                "value": "This is a description of the \`two\` field.",
+              },
+            },
+          ],
+        },
+        [
+          "Bar",
+          "Baz",
+          "Two",
+        ],
+        {
+          "description": {
+            "block": true,
+            "value": "This is a description
+of the \`Foo\` type.",
+          },
+        },
+      ],
+      "InputType": [
+        6,
+        {
+          "answer": [
+            3,
+            42,
+          ],
+          "key": 6,
+        },
+      ],
+      "OneOfInputType": [
+        6,
+        {
+          "int": 3,
+          "string": 1,
+        },
+        {
+          "directives": [
+            [
+              "oneOf",
+            ],
+          ],
+        },
+      ],
+      "Site": [
+        5,
+        [
+          "DESKTOP",
+          "MOBILE",
+          "WEB",
+        ],
+      ],
+      "UndefinedEnum": [
+        5,
+        [],
+      ],
+      "UndefinedInput": [
+        6,
+        {},
+      ],
+      "UndefinedInterface": [
+        3,
+        {},
+      ],
+      "UndefinedType": [
+        2,
+        {},
+      ],
+      "UndefinedUnion": [
+        4,
+        [],
+      ],
+    },
+  },
+  {
+    "types": {
+      "Bar": [
+        3,
+        {
+          "two": [
+            "Type",
+            {
+              "argument": "InputType!",
+            },
+          ],
+        },
+        [
+          "Two",
+        ],
+      ],
+      "CustomScalar": [
+        1,
+        {
+          "directives": [
+            [
+              "onScalar",
+            ],
+          ],
+        },
+      ],
+      "Feed": [
+        4,
+        [
+          "Photo",
+          "Video",
+        ],
+      ],
+      "Foo": [
+        2,
+        {
+          "seven": [
+            "Type",
+            {
+              "argument": 11,
+            },
+          ],
+        },
+      ],
+      "InputType": [
+        6,
+        {
+          "other": [
+            4,
+            12300,
+          ],
+        },
+      ],
+      "Site": [
+        5,
+        [
+          "VR",
+        ],
+      ],
+    },
+  },
+  {
+    "types": {
+      "Bar": [
+        3,
+        {},
+        [],
+        {
+          "directives": [
+            [
+              "onInterface",
+            ],
+          ],
+        },
+      ],
+      "Feed": [
+        4,
+        [],
+        {
+          "directives": [
+            [
+              "onUnion",
+            ],
+          ],
+        },
+      ],
+      "Foo": [
+        2,
+        {},
+        [],
+        {
+          "directives": [
+            [
+              "onType",
+            ],
+          ],
+        },
+      ],
+      "InputType": [
+        6,
+        {},
+        {
+          "directives": [
+            [
+              "onInputObject",
+            ],
+          ],
+        },
+      ],
+      "Site": [
+        5,
+        [],
+        {
+          "directives": [
+            [
+              "onEnum",
+            ],
+          ],
+        },
+      ],
+    },
+  },
+]
+`;
+
+exports[`encodeASTSchema correctly encodes schema with descriptions when includeDescriptions is true 1`] = `
+[
+  {
+    "directives": [
+      [
+        "i18n",
+        [
+          1,
+        ],
+        {
+          "locale": 1,
+        },
+        {
+          "description": {
+            "block": true,
+            "value": "Directive Description",
+          },
+        },
+      ],
+    ],
+    "types": {
+      "AdvancedInputWithDescription": [
+        6,
+        {
+          "enumField": "NodeType!",
+        },
+        {
+          "description": {
+            "block": true,
+            "value": "Input Description
+second line
+third line",
+          },
+        },
+      ],
+      "EnumWithDescription": [
+        5,
+        [
+          "VALUE_WITH_DESCRIPTION",
+        ],
+        {
+          "description": {
+            "block": true,
+            "value": "Enum Description",
+          },
+        },
+      ],
+      "TypeWithDescription": [
+        2,
+        {
+          "fieldWithDescription": [
+            3,
+            undefined,
+            {
+              "description": {
+                "block": true,
+                "value": "Field Description",
+              },
+            },
+          ],
+        },
+        [
+          "Node",
+        ],
+        {
+          "description": {
+            "block": true,
+            "value": "Type Description",
+          },
+        },
+      ],
+    },
+  },
+]
+`;
+
+exports[`encodeASTSchema correctly encodes schema with directives when includeDirectives is true 1`] = `
+[
+  {
+    "directives": [
+      [
+        "skip",
+        [
+          4,
+          6,
+          7,
+        ],
+        {
+          "if": 7,
+        },
+      ],
+      [
+        "include",
+        [
+          4,
+          6,
+          7,
+        ],
+        {
+          "if": 7,
+        },
+      ],
+      [
+        "include2",
+        [
+          4,
+          6,
+          7,
+        ],
+        {
+          "if": 7,
+        },
+      ],
+      [
+        "myRepeatableDir",
+        [
+          11,
+          14,
+        ],
+        {
+          "name": 6,
+        },
+        {
+          "repeatable": true,
+        },
+      ],
+      [
+        "onType",
+        [
+          11,
+        ],
+      ],
+      [
+        "onObject",
+        [
+          11,
+        ],
+        {
+          "arg": 6,
+        },
+      ],
+      [
+        "onUnion",
+        [
+          15,
+        ],
+      ],
+      [
+        "onField",
+        [
+          4,
+        ],
+      ],
+      [
+        "onInterface",
+        [
+          14,
+        ],
+      ],
+      [
+        "onScalar",
+        [
+          10,
+        ],
+      ],
+      [
+        "onEnum",
+        [
+          16,
+        ],
+      ],
+      [
+        "oneOf",
+        [
+          18,
+        ],
+      ],
+      [
+        "onInputObject",
+        [
+          18,
+        ],
+      ],
+    ],
+    "types": {
+      "AnnotatedEnum": [
+        5,
+        [
+          "ANNOTATED_VALUE",
+          "OTHER_VALUE",
+        ],
+        {
+          "directives": [
+            [
+              "onEnum",
+            ],
+          ],
+        },
+      ],
+      "AnnotatedInput": [
+        6,
+        {
+          "annotatedField": "Type",
+        },
+        {
+          "directives": [
+            [
+              "onInputObject",
+            ],
+          ],
+        },
+      ],
+      "AnnotatedInterface": [
+        3,
+        {
+          "annotatedField": [
+            "Type",
+            {
+              "arg": "Type",
+            },
+            {
+              "directives": [
+                [
+                  "onField",
+                ],
+              ],
+            },
+          ],
+        },
+        [],
+        {
+          "directives": [
+            [
+              "onInterface",
+            ],
+          ],
+        },
+      ],
+      "AnnotatedObject": [
+        2,
+        {
+          "annotatedField": [
+            "Type",
+            {
+              "arg": [
+                "Type",
+                "default",
+              ],
+            },
+            {
+              "directives": [
+                [
+                  "onField",
+                ],
+              ],
+            },
+          ],
+        },
+        [],
+        {
+          "directives": [
+            [
+              "onObject",
+              {
+                "arg": "value",
+              },
+            ],
+          ],
+        },
+      ],
+      "AnnotatedScalar": [
+        1,
+        {
+          "directives": [
+            [
+              "onScalar",
+            ],
+          ],
+        },
+      ],
+      "AnnotatedUnion": [
+        4,
+        [
+          "A",
+          "B",
+        ],
+        {
+          "directives": [
+            [
+              "onUnion",
+            ],
+          ],
+        },
+      ],
+      "AnnotatedUnionTwo": [
+        4,
+        [
+          "A",
+          "B",
+        ],
+        {
+          "directives": [
+            [
+              "onUnion",
+            ],
+          ],
+        },
+      ],
+      "Bar": [
+        3,
+        {
+          "four": [
+            1,
+            {
+              "argument": [
+                1,
+                "string",
+              ],
+            },
+          ],
+          "one": "Type",
+        },
+      ],
+      "Baz": [
+        3,
+        {
+          "four": [
+            1,
+            {
+              "argument": [
+                1,
+                "string",
+              ],
+            },
+          ],
+          "one": "Type",
+          "two": [
+            "Type",
+            {
+              "argument": "InputType!",
+            },
+          ],
+        },
+        [
+          "Bar",
+          "Two",
+        ],
+      ],
+      "CustomScalar": [
+        1,
+      ],
+      "Feed": [
+        4,
+        [
+          "Story",
+          "Article",
+          "Advert",
+        ],
+      ],
+      "Foo": [
+        2,
+        {
+          "eight": [
+            "Type",
+            {
+              "argument": "OneOfInputType",
+            },
+          ],
+          "five": [
+            1,
+            {
+              "argument": [
+                11,
+                [
+                  "string",
+                  "string",
+                ],
+              ],
+            },
+          ],
+          "four": [
+            1,
+            {
+              "argument": [
+                1,
+                "string",
+              ],
+            },
+          ],
+          "one": "Type",
+          "seven": [
+            "Type",
+            {
+              "argument": [
+                3,
+                null,
+              ],
+            },
+          ],
+          "six": [
+            "Type",
+            {
+              "argument": [
+                "InputType",
+                {
+                  "key": "value",
+                },
+              ],
+            },
+          ],
+          "three": [
+            3,
+            {
+              "argument": "InputType",
+              "other": 1,
+            },
+          ],
+          "two": [
+            "Type",
+            {
+              "argument": "InputType!",
+            },
+          ],
+        },
+        [
+          "Bar",
+          "Baz",
+          "Two",
+        ],
+      ],
+      "InputType": [
+        6,
+        {
+          "answer": [
+            3,
+            42,
+          ],
+          "key": 6,
+        },
+      ],
+      "OneOfInputType": [
+        6,
+        {
+          "int": 3,
+          "string": 1,
+        },
+        {
+          "directives": [
+            [
+              "oneOf",
+            ],
+          ],
+        },
+      ],
+      "Site": [
+        5,
+        [
+          "DESKTOP",
+          "MOBILE",
+          "WEB",
+        ],
+      ],
+      "UndefinedEnum": [
+        5,
+        [],
+      ],
+      "UndefinedInput": [
+        6,
+        {},
+      ],
+      "UndefinedInterface": [
+        3,
+        {},
+      ],
+      "UndefinedType": [
+        2,
+        {},
+      ],
+      "UndefinedUnion": [
+        4,
+        [],
+      ],
+    },
+  },
+  {
+    "types": {
+      "Bar": [
+        3,
+        {
+          "two": [
+            "Type",
+            {
+              "argument": "InputType!",
+            },
+          ],
+        },
+        [
+          "Two",
+        ],
+      ],
+      "CustomScalar": [
+        1,
+        {
+          "directives": [
+            [
+              "onScalar",
+            ],
+          ],
+        },
+      ],
+      "Feed": [
+        4,
+        [
+          "Photo",
+          "Video",
+        ],
+      ],
+      "Foo": [
+        2,
+        {
+          "seven": [
+            "Type",
+            {
+              "argument": 11,
+            },
+          ],
+        },
+      ],
+      "InputType": [
+        6,
+        {
+          "other": [
+            4,
+            12300,
+          ],
+        },
+      ],
+      "Site": [
+        5,
+        [
+          "VR",
+        ],
+      ],
+    },
+  },
+  {
+    "types": {
+      "Bar": [
+        3,
+        {},
+        [],
+        {
+          "directives": [
+            [
+              "onInterface",
+            ],
+          ],
+        },
+      ],
+      "Feed": [
+        4,
+        [],
+        {
+          "directives": [
+            [
+              "onUnion",
+            ],
+          ],
+        },
+      ],
+      "Foo": [
+        2,
+        {},
+        [],
+        {
+          "directives": [
+            [
+              "onType",
+            ],
+          ],
+        },
+      ],
+      "InputType": [
+        6,
+        {},
+        {
+          "directives": [
+            [
+              "onInputObject",
+            ],
+          ],
+        },
+      ],
+      "Site": [
+        5,
+        [],
+        {
+          "directives": [
+            [
+              "onEnum",
+            ],
+          ],
+        },
+      ],
+    },
+  },
+]
+`;
+
 exports[`encodeASTSchema correctly encodes swapi AST schema 1`] = `
 [
   {
