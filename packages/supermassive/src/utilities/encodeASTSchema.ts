@@ -41,6 +41,7 @@ import {
   DirectiveTuple,
   TypeDefinitionMetadata,
   DirectiveDefinitionMetadata,
+  EnumTypeDefinitionMetadata,
 } from "../schema/definition";
 import { typeReferenceFromNode, TypeReference } from "../schema/reference";
 import { valueFromASTUntyped } from "./valueFromASTUntyped";
@@ -136,7 +137,7 @@ function encodeEnumType(
 ): EnumTypeDefinitionTuple {
   return createEnumTypeDefinition(
     (node.values ?? []).map((value) => value.name.value),
-    getTypeDefinitionMetadata(node, options),
+    getEnumTypeDefinitionMetadata(node, options),
   );
 }
 
@@ -333,13 +334,51 @@ function getDirectiveDefinitionMetadata<T>(
   return metadata;
 }
 
+function getEnumTypeDefinitionMetadata(
+  node: EnumTypeDefinitionNode | EnumTypeExtensionNode,
+  options?: EncodeASTSchemaOptions,
+): EnumTypeDefinitionMetadata | undefined {
+  const { includeDirectives, includeDescriptions } = options || {};
+  let valuesMetadadata: Record<string, TypeDefinitionMetadata> | undefined;
+
+  if (includeDirectives || includeDescriptions) {
+    for (const value of node?.values || []) {
+      if (value.directives?.length || value.description) {
+        if (includeDirectives && value.directives?.length) {
+          valuesMetadadata ??= {};
+          valuesMetadadata[value.name.value] ??= {};
+          valuesMetadadata[value.name.value]["directives"] = value.directives
+            .map(encodeDirectiveTuple)
+            .filter<DirectiveTuple>((directive) => !!directive);
+        }
+
+        if (includeDescriptions && value.description) {
+          valuesMetadadata ??= {};
+          valuesMetadadata[value.name.value] ??= {};
+          valuesMetadadata[value.name.value]["description"] = {
+            block: value.description.block,
+            value: value.description.value,
+          };
+        }
+      }
+    }
+  }
+  const enumTypeMetadata = getTypeDefinitionMetadata(node, options);
+  if (enumTypeMetadata || valuesMetadadata) {
+    return {
+      ...getTypeDefinitionMetadata(node, options),
+      ...(valuesMetadadata && { values: valuesMetadadata }),
+    };
+  }
+}
+
 function getTypeDefinitionMetadata<T>(
   node: T & {
     directives?: readonly DirectiveNode[];
     description?: { value: string; block?: boolean };
   },
   options?: EncodeASTSchemaOptions,
-) {
+): TypeDefinitionMetadata | undefined {
   let metadata: undefined | TypeDefinitionMetadata;
   const { includeDirectives, includeDescriptions } = options || {};
 

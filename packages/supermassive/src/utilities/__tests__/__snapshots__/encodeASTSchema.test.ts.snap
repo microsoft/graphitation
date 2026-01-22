@@ -78,6 +78,12 @@ exports[`encodeASTSchema correctly encodes kitchen sink AST schema 1`] = `
         ],
       ],
       [
+        "onEnumValue",
+        [
+          17,
+        ],
+      ],
+      [
         "onInterface",
         [
           14,
@@ -498,6 +504,12 @@ exports[`encodeASTSchema correctly encodes schema with both directives and descr
         ],
       ],
       [
+        "onEnumValue",
+        [
+          17,
+        ],
+      ],
+      [
         "onInterface",
         [
           14,
@@ -541,6 +553,15 @@ exports[`encodeASTSchema correctly encodes schema with both directives and descr
               "onEnum",
             ],
           ],
+          "values": {
+            "ANNOTATED_VALUE": {
+              "directives": [
+                [
+                  "onEnumValue",
+                ],
+              ],
+            },
+          },
         },
       ],
       "AnnotatedInput": [
@@ -833,6 +854,28 @@ of the \`Foo\` type.",
           "MOBILE",
           "WEB",
         ],
+        {
+          "values": {
+            "DESKTOP": {
+              "description": {
+                "block": true,
+                "value": "This is a description of the \`DESKTOP\` value",
+              },
+            },
+            "MOBILE": {
+              "description": {
+                "block": true,
+                "value": "This is a description of the \`MOBILE\` value",
+              },
+            },
+            "WEB": {
+              "description": {
+                "block": false,
+                "value": "This is a description of the \`WEB\` value",
+              },
+            },
+          },
+        },
       ],
       "UndefinedEnum": [
         5,
@@ -1135,6 +1178,12 @@ exports[`encodeASTSchema correctly encodes schema with directives when includeDi
         ],
       ],
       [
+        "onEnumValue",
+        [
+          17,
+        ],
+      ],
+      [
         "onInterface",
         [
           14,
@@ -1178,6 +1227,15 @@ exports[`encodeASTSchema correctly encodes schema with directives when includeDi
               "onEnum",
             ],
           ],
+          "values": {
+            "ANNOTATED_VALUE": {
+              "directives": [
+                [
+                  "onEnumValue",
+                ],
+              ],
+            },
+          },
         },
       ],
       "AnnotatedInput": [

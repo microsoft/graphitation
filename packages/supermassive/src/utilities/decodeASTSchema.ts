@@ -158,8 +158,11 @@ function decodeEnumType(
   types: TypeDefinitionsRecord,
   directiveDefinitions?: DirectiveDefinitionTuple[],
 ): EnumTypeDefinitionNode {
-  const { directives: metadataDirectives, description: metadataDescription } =
-    getEnumMetadata(tuple) || {};
+  const {
+    directives: metadataDirectives,
+    description: metadataDescription,
+    values,
+  } = getEnumMetadata(tuple) || {};
   const decodedDescription = decodeDescription(metadataDescription);
   const decodedDirectives = decodeDirective(
     metadataDirectives,
@@ -170,10 +173,26 @@ function decodeEnumType(
   return {
     kind: Kind.ENUM_TYPE_DEFINITION,
     name: nameNode(typeName),
-    values: getEnumValues(tuple).map((value) => ({
-      kind: Kind.ENUM_VALUE_DEFINITION,
-      name: nameNode(value),
-    })),
+    values: getEnumValues(tuple).map((value) => {
+      const valueMetadata = values?.[value];
+      const decodedValueDescription = decodeDescription(
+        valueMetadata?.description,
+      );
+      const decodedValueDirectives = decodeDirective(
+        valueMetadata?.directives,
+        types,
+        directiveDefinitions,
+      );
+
+      return {
+        kind: Kind.ENUM_VALUE_DEFINITION,
+        name: nameNode(value),
+        ...(decodedValueDirectives && { directives: decodedValueDirectives }),
+        ...(decodedValueDescription && {
+          description: decodedValueDescription,
+        }),
+      };
+    }),
     ...(decodedDirectives && { directives: decodedDirectives }),
     ...(decodedDescription && { description: decodedDescription }),
   };

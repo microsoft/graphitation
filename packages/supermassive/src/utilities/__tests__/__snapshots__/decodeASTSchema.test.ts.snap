@@ -106,6 +106,8 @@ directive @onUnion on UNION
 
 directive @onField on FIELD
 
+directive @onEnumValue on ENUM_VALUE
+
 directive @onInterface on INTERFACE
 
 directive @onScalar on SCALAR
@@ -173,7 +175,7 @@ enum Site @onEnum {
 }
 
 enum AnnotatedEnum @onEnum {
-  ANNOTATED_VALUE
+  ANNOTATED_VALUE @onEnumValue
   OTHER_VALUE
 }
 
@@ -211,6 +213,8 @@ directive @onObject(arg: String!) on OBJECT
 directive @onUnion on UNION
 
 directive @onField on FIELD
+
+directive @onEnumValue on ENUM_VALUE
 
 directive @onInterface on INTERFACE
 
