@@ -29,9 +29,13 @@ export type Description = {
   value: string;
   block?: boolean;
 };
-export type TypeDefinitionMetadata = {
+export interface TypeDefinitionMetadata {
   directives?: DirectiveTuple[];
   description?: Description;
+}
+
+export type EnumTypeDefinitionMetadata = TypeDefinitionMetadata & {
+  values?: Record<string, TypeDefinitionMetadata>;
 };
 
 export type DirectiveDefinitionMetadata = {
@@ -76,7 +80,7 @@ const enum UnionKeys {
 export type EnumTypeDefinitionTuple = [
   kind: TypeKind.ENUM,
   values: string[],
-  metadata?: TypeDefinitionMetadata,
+  metadata?: EnumTypeDefinitionMetadata,
 ];
 const enum EnumKeys {
   values = 1,
@@ -616,7 +620,7 @@ export function getEnumValues(tuple: EnumTypeDefinitionTuple): string[] {
 
 export function getEnumMetadata(
   tuple: EnumTypeDefinitionTuple,
-): TypeDefinitionMetadata | undefined {
+): EnumTypeDefinitionMetadata | undefined {
   return tuple[EnumKeys.metadata];
 }
 
@@ -692,7 +696,7 @@ export function createInputObjectTypeDefinition(
 
 export function createEnumTypeDefinition(
   values: string[],
-  metadata?: TypeDefinitionMetadata,
+  metadata?: EnumTypeDefinitionMetadata,
 ): EnumTypeDefinitionTuple {
   if (metadata) {
     return [TypeKind.ENUM, values, metadata];
