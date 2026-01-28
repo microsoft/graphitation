@@ -170,12 +170,24 @@ function generateImports(context: TsCodegenContext) {
       }
     };
 
+    const markBaseContextUsed = (contextTypeItem: ContextTypeItem) => {
+      if (contextTypeItem.isLegacy) {
+        legacyBaseContextUsed = true;
+      } else {
+        baseContextUsed = true;
+      }
+    };
+
     for (const [, root] of Object.entries(context.getContextMap())) {
       const rootValue: ContextTypeItem | undefined = root.__context;
       if (rootValue) {
         if (
           rootValue.values.every(({ id }) => uniqueContextImportNames.has(id))
         ) {
+          // When values is empty, we still need to mark base context as used
+          if (rootValue.values.length === 0) {
+            markBaseContextUsed(rootValue);
+          }
           continue;
         }
 
@@ -190,6 +202,10 @@ function generateImports(context: TsCodegenContext) {
             uniqueContextImportNames.has(id),
           )
         ) {
+          // When values is empty, we still need to mark base context as used
+          if (contextTypeItem.values.length === 0) {
+            markBaseContextUsed(contextTypeItem);
+          }
           continue;
         }
 
