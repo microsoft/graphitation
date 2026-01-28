@@ -3,7 +3,7 @@ import {
   DirectiveDefinitionTuple,
   DirectiveName,
   encodeDirectiveLocation,
-  getDirectiveName,
+  getDirectiveDefinitionName,
 } from "./definition";
 
 /**
@@ -106,7 +106,9 @@ export function isKnownDirective(
   directive: DirectiveName | DirectiveDefinitionTuple,
 ): boolean {
   const name =
-    typeof directive === "string" ? directive : getDirectiveName(directive);
+    typeof directive === "string"
+      ? directive
+      : getDirectiveDefinitionName(directive);
   return (
     isSpecifiedDirective(directive) ||
     name === SUPERMASSIVE_SCHEMA_DIRECTIVE_NAME
@@ -116,8 +118,10 @@ export function isSpecifiedDirective(
   directive: DirectiveName | DirectiveDefinitionTuple,
 ): boolean {
   const name =
-    typeof directive === "string" ? directive : getDirectiveName(directive);
+    typeof directive === "string"
+      ? directive
+      : getDirectiveDefinitionName(directive);
   return specifiedDirectives.some(
-    (specDirective) => getDirectiveName(specDirective) === name,
+    (specDirective) => getDirectiveDefinitionName(specDirective) === name,
   );
 }
