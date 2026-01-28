@@ -1336,6 +1336,53 @@ describe(generateTS, () => {
       `);
     });
 
+    test("just base context is used", () => {
+      const { resolvers } = runGenerateTest(
+        graphql`
+          extend type Query {
+            user(id: ID!): String! @context(extends: "baseContextOnly")
+          }
+
+          type User {
+            id: ID!
+          }
+        `,
+        {
+          contextTypeExtensions: {
+            baseContextTypePath: "@package/default-context",
+            baseContextTypeName: "DefaultContextType",
+            legacyBaseContextTypePath: "@package/default-context",
+            legacyBaseContextTypeName: "DefaultLegacyContextType",
+            groups: {
+              baseContextOnly: {},
+            },
+            contextTypes: {},
+          },
+        },
+      );
+      expect(resolvers).toMatchInlineSnapshot(`
+        "import type { PromiseOrValue } from "@graphitation/supermassive";
+        import type { ResolveInfo } from "@graphitation/supermassive";
+        import * as Models from "./models.interface";
+        import type { DefaultContextType } from "@package/default-context";
+        export declare namespace Query {
+            export interface Resolvers {
+                readonly user?: user;
+            }
+            export type user = (model: unknown, args: {
+                readonly id: string;
+            }, context: DefaultContextType, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        export declare namespace User {
+            export interface Resolvers {
+                readonly id?: id;
+            }
+            export type id = (model: Models.User, args: {}, context: unknown, info: ResolveInfo) => PromiseOrValue<string>;
+        }
+        "
+      `);
+    });
+
     test("enum is used as @context namespace value", () => {
       const { resolvers, models, enums, inputs, contextMappingOutput } =
         runGenerateTest(
