@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Thu, 06 Nov 2025 11:02:27 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 28 Jan 2026 12:22:13 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 5.5.1
+
+Wed, 28 Jan 2026 12:22:13 GMT
+
+### Patches
+
+- Fix missing base context in resolvers in empty schema (77059398+vejrj@users.noreply.github.com)
 
 ## 5.5.0
 

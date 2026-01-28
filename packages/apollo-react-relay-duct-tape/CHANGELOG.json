@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Wed, 28 Jan 2026 12:22:13 GMT",
+      "version": "1.4.26",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v1.4.26",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "comment": "Bump @graphitation/apollo-react-relay-duct-tape-compiler to v1.8.12",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 07 Jan 2026 22:51:38 GMT",
       "version": "1.4.25",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v1.4.25",

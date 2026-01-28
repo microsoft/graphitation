@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Fix missing base context in resolvers in empty schema",
-  "packageName": "@graphitation/ts-codegen",
-  "email": "77059398+vejrj@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}
