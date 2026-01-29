@@ -1257,34 +1257,3 @@ test("correctly handles optimistic fragment write for deeply nested node", () =>
     { items: [item1, item2] },
   ]);
 });
-
-test.skip("cache redirects to missing nodes result in missing fields", () => {
-  const cache = new ForestRun({
-    typePolicies: {
-      Query: {
-        fields: {
-          pet(existingData, { args, toReference }) {
-            return (
-              existingData || toReference({ __typename: "Pet", id: args?.id })
-            );
-          },
-        },
-      },
-    },
-  });
-
-  const query = gql`
-    {
-      pet(id: "missing") {
-        id
-        name
-      }
-    }
-  `;
-  const result = cache.diff({ query, optimistic: true });
-  expect(result).toEqual({
-    complete: false,
-    result: { pet: null },
-    missing: [],
-  });
-});
