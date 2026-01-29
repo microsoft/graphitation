@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "fix(apollo-forest-run): apollo-compatible behavior for corrupt writes",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
